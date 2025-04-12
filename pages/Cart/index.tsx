@@ -4,6 +4,7 @@ import Image from "next/image"
 import { Input, InputGroup, Button, Checkbox } from "rsuite"
 
 import Link from "next/link"
+import ItemCartTable from "@components/UserCarts/cartsTable";
 
 export default function CartMainPage(){
     return(
@@ -23,98 +24,9 @@ export default function CartMainPage(){
           <span className="text-gray-500 ml-2">5 items</span>
         </div>
 
-        {/* Cart Table Header */}
-        <div className="hidden md:grid md:grid-cols-12 border-b pb-2 mb-4 text-gray-500 font-medium">
-          <div className="md:col-span-6">Product</div>
-          <div className="md:col-span-2 text-center">Price</div>
-          <div className="md:col-span-2 text-center">Quantity</div>
-          <div className="md:col-span-2 text-right">Subtotal</div>
-        </div>
+<ItemCartTable />
 
-        {/* Cart Items */}
-        <div className="space-y-6">
-          <CartItem
-            checked={true}
-            image="https://png.pngtree.com/png-vector/20230905/ourmid/pngtree-composition-with-grocery-products-in-shopping-basket-diet-png-image_9948113.png"
-            name="Avocado Evokaado Avakaido Persea Americana Alligator Pear Black"
-            size="14oz"
-            price="$12.86"
-            quantity={4}
-            subtotal="$51.44"
-          />
-
-          <CartItem
-            checked={true}
-            image="https://png.pngtree.com/png-vector/20230905/ourmid/pngtree-composition-with-grocery-products-in-shopping-basket-diet-png-image_9948113.png"
-            name="Deliciously Ella Fruit And Nut Muesli 4x500g"
-            size="500g"
-            price="$20.53"
-            quantity={2}
-            subtotal="$41.06"
-          />
-
-          <CartItem
-            checked={true}
-            image="https://png.pngtree.com/png-vector/20230905/ourmid/pngtree-composition-with-grocery-products-in-shopping-basket-diet-png-image_9948113.png"
-            name="Mixed Nuts Cashew Nuts, Walnuts, Almonds And Blanched"
-            size="24 Oz"
-            price="$33.45"
-            quantity={1}
-            subtotal="$33.45"
-          />
-
-          <CartItem
-            checked={false}
-            image="https://png.pngtree.com/png-vector/20230905/ourmid/pngtree-composition-with-grocery-products-in-shopping-basket-diet-png-image_9948113.png"
-            name="Avocado Evokaado Avakaido Persea Americana Alligator Pear Black"
-            size="1 Pieces"
-            price="$10.99"
-            quantity={1}
-            subtotal="$10.99"
-          />
-
-          <CartItem
-            checked={false}
-            image="https://png.pngtree.com/png-vector/20230905/ourmid/pngtree-composition-with-grocery-products-in-shopping-basket-diet-png-image_9948113.png"
-            name="Avocado Evokaado Avakaido Persea Americana Alligator Pear Black"
-            size="6 Pieces"
-            price="$14.11"
-            quantity={2}
-            subtotal="$28.22"
-          />
-        </div>
-
-        {/* Promo Code */}
-        <div className="mt-8 border-t pt-6">
-          <p className="text-gray-600 mb-2">Do you have any promocode</p>
-          <div className="flex gap-2">
-            <Input value="SAVE25%" className="max-w-xs" />
-            <Button appearance="primary" color="green" className="bg-green-100 text-green-600 font-medium">
-              Apply
-            </Button>
-          </div>
-        </div>
-
-        {/* Order Summary */}
-        <div className="mt-8 flex flex-col md:flex-row md:items-center md:justify-between">
-          <div className="flex gap-8 mb-4 md:mb-0">
-            <div>
-              <p className="text-2xl font-bold">$165.16</p>
-              <p className="text-gray-500">Cost of items</p>
-            </div>
-            <div>
-              <p className="text-2xl font-bold text-gray-500">-$25</p>
-              <p className="text-gray-500">Promo code (SALE25)</p>
-            </div>
-            <div>
-              <p className="text-2xl font-bold text-green-500">$123.87</p>
-              <p className="text-gray-500">Total</p>
-            </div>
-          </div>
-          <Button appearance="primary" size="lg" className="bg-green-500 text-white font-medium px-12">
-            Checkout
-          </Button>
-        </div>
+     
    </div>
    </div>
         </RootLayout>
