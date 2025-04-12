@@ -2,7 +2,8 @@ import React from "react";
 
 import { Input, InputGroup, Panel, IconButton, FlexboxGrid } from "rsuite";
 import Image from "next/image";
-import ProdCategories from "../categories";
+import ProdCategories from "@components/ui/categories";
+
 
 export default function AllItems(){
     return(
