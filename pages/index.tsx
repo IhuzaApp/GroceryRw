@@ -1,6 +1,7 @@
-import AllItems from "@components/ui/items/items";
+import React from "react";
 import RootLayout from "@components/ui/layout";
 import SideBar from "@components/ui/sidebar";
+import AllItems from "@components/items/items";
 
 export default function Home() {
   return (
