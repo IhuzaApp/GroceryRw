@@ -10,15 +10,13 @@ export default function RootLayout({
 }) {
   return (
     <div className="bg-gray-80 min-h-screen pt-2">
-<HeaderLayout />
+      <HeaderLayout />
       {/* Main content */}
       <main className="px-4 pb-20 pt-6 md:pb-0">
         <SideBar />
         {children}
-        </main>
-<BottomBar />
- 
+      </main>
+      <BottomBar />
     </div>
   );
 }
-

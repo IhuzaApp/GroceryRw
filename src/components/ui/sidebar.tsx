@@ -3,7 +3,6 @@
 import React from "react";
 import { Input, InputGroup, Panel, IconButton, FlexboxGrid } from "rsuite";
 
-
 export default function SideBar() {
   return (
     <>
@@ -78,4 +77,3 @@ export default function SideBar() {
     </>
   );
 }
-

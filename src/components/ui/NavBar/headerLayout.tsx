@@ -1,9 +1,9 @@
 import React from "react";
 import { Input, InputGroup } from "rsuite";
 
-export default function HeaderLayout(){
-    return(
-      <header className="container sticky top-0 z-50 mx-auto rounded-full border-b bg-white p-2 shadow-lg">
+export default function HeaderLayout() {
+  return (
+    <header className="container sticky top-0 z-50 mx-auto rounded-full border-b bg-white p-2 shadow-lg">
       <div className="flex items-center justify-between gap-4 px-2 sm:px-4">
         {/* Left section (address + icon) */}
         <div className="hidden items-center gap-3 md:flex">
@@ -58,5 +58,5 @@ export default function HeaderLayout(){
         </div>
       </div>
     </header>
-    )
+  );
 }

@@ -6,7 +6,7 @@ import AllItems from "@components/items/items";
 export default function Home() {
   return (
     <RootLayout>
-     <AllItems />
+      <AllItems />
     </RootLayout>
   );
 }
