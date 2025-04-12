@@ -2,7 +2,7 @@ import RootLayout from "@components/ui/layout";
 import React from "react";
 import Image from "next/image"
 import { Input, InputGroup, Button, Checkbox } from "rsuite"
-import "rsuite/dist/rsuite.min.css"
+
 import Link from "next/link"
 
 export default function CartMainPage(){
