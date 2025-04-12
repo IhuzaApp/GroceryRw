@@ -1,5 +1,6 @@
 import type React from "react";
 import { Input, InputGroup } from "rsuite";
+import SideBar from "./sidebar";
 
 export default function RootLayout({
   children,
@@ -66,7 +67,10 @@ export default function RootLayout({
       </header>
 
       {/* Main content */}
-      <main className="px-4 pb-20 pt-6 md:pb-0">{children}</main>
+      <main className="px-4 pb-20 pt-6 md:pb-0">
+        <SideBar />
+        {children}
+        </main>
 
       {/* Mobile Bottom Nav */}
       <nav className="fixed bottom-0 left-0 flex w-full items-center justify-around border-t bg-white py-2 shadow md:hidden">
