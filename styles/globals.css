@@ -1,0 +1,37 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+body {
+  margin: 0;
+  padding: 0;
+  overflow-x: hidden;
+  overflow-y: auto;
+  scroll-behavior: smooth;
+}
+
+.rs-panel {
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1) !important;
+}
+
+.rs-input-group.rs-input-group-inside .rs-input {
+  padding-right: 36px;
+}
+
+.rs-input {
+  border-radius: 9999px !important;
+}
+
+.rs-input-group-addon {
+  border-radius: 0 9999px 9999px 0 !important;
+}
+
+.rs-flex-box-grid-item {
+  padding: 0 8px;
+}
+
+/* Fixing "bounce" on iOS */
+html,
+body {
+  -webkit-overflow-scrolling: touch;
+}

@@ -1,0 +1,300 @@
+"use client";
+
+import React from "react";
+import { Input, InputGroup, Panel, IconButton, FlexboxGrid } from "rsuite";
+import Image from "next/image";
+import ProdCategories from "./categories";
+
+export default function SideBar() {
+  return (
+    <>
+      {/* Sidebar */}
+      <div className="fixed left-0 top-1/4 z-50 ml-3 hidden rounded-full bg-white shadow-md md:block">
+        <div className="flex flex-col items-center gap-6 p-4">
+          <IconButton
+            icon={
+              <svg
+                viewBox="0 0 24 24"
+                fill="none"
+                className="h-6 w-6"
+                stroke="currentColor"
+                strokeWidth="2"
+              >
+                <path d="M3 6h18M3 12h18M3 18h18" />
+              </svg>
+            }
+            circle
+            appearance="subtle"
+            className="bg-green-50 text-green-600"
+          />
+          <IconButton
+            icon={
+              <svg
+                viewBox="0 0 24 24"
+                fill="none"
+                className="h-6 w-6"
+                stroke="currentColor"
+                strokeWidth="2"
+              >
+                <path d="M4 4h16v16H4z" />
+              </svg>
+            }
+            circle
+            appearance="subtle"
+          />
+          <IconButton
+            icon={
+              <svg
+                viewBox="0 0 24 24"
+                fill="none"
+                className="h-6 w-6"
+                stroke="currentColor"
+                strokeWidth="2"
+              >
+                <circle cx="12" cy="8" r="4" />
+                <path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2" />
+              </svg>
+            }
+            circle
+            appearance="subtle"
+          />
+          <IconButton
+            icon={
+              <svg
+                viewBox="0 0 24 24"
+                fill="none"
+                className="h-6 w-6"
+                stroke="currentColor"
+                strokeWidth="2"
+              >
+                <circle cx="12" cy="12" r="10" />
+                <path d="M12 6v6l4 2" />
+              </svg>
+            }
+            circle
+            appearance="subtle"
+          />
+        </div>
+      </div>
+
+      <div className="p-4 md:ml-16">
+        {" "}
+        {/* Adjust ml-* to match your sidebar width */}
+        <div className="container mx-auto">
+          {/* Banner */}
+          {/* Banner */}
+          <div className="relative z-10 -mx-4 flex hidden gap-4 overflow-x-auto px-4 pb-4 lg:flex">
+            <div className="relative h-[220px] min-w-[300px] flex-1 overflow-hidden rounded-xl bg-green-800">
+              <div className="max-w-[60%] p-6 text-white">
+                <h2 className="text-3xl font-bold leading-tight">
+                  MEAL PLAN WITH GROCERY STORE
+                </h2>
+              </div>
+              <div className="absolute bottom-0 right-0">
+                <Image
+                  src="https://png.pngtree.com/png-vector/20230905/ourmid/pngtree-composition-with-grocery-products-in-shopping-basket-diet-png-image_9948113.png"
+                  alt="Meal plan products"
+                  width={200}
+                  height={200}
+                  className="object-contain"
+                />
+              </div>
+            </div>
+
+            <div className="relative h-[220px] min-w-[300px] flex-1 overflow-hidden rounded-xl bg-purple-800">
+              <div className="max-w-[60%] p-6 text-white">
+                <h2 className="text-3xl font-bold leading-tight">
+                  MAKING THE MOST OF YOUR GROCERY
+                </h2>
+              </div>
+              <div className="absolute bottom-0 right-0">
+                <Image
+                  src="https://png.pngtree.com/png-vector/20230905/ourmid/pngtree-composition-with-grocery-products-in-shopping-basket-diet-png-image_9948113.png"
+                  alt="Ice cream products"
+                  width={200}
+                  height={200}
+                  className="object-contain"
+                />
+              </div>
+            </div>
+
+            <div className="relative h-[220px] min-w-[300px] flex-1 overflow-hidden rounded-xl bg-teal-800">
+              <div className="max-w-[60%] p-6 text-white">
+                <h2 className="text-3xl font-bold leading-tight">
+                  SHOPPING WITH GROCERY STORE
+                </h2>
+              </div>
+              <div className="absolute bottom-0 right-0">
+                <Image
+                  src="https://png.pngtree.com/png-vector/20230905/ourmid/pngtree-composition-with-grocery-products-in-shopping-basket-diet-png-image_9948113.png"
+                  alt="Ice cream products"
+                  width={200}
+                  height={200}
+                  className="object-contain"
+                />
+              </div>
+            </div>
+          </div>
+
+          {/* Categories */}
+          <ProdCategories />
+
+          {/* Popular Items */}
+          <div className="mt-8">
+            <div className="mb-4 flex items-center justify-between">
+              <h2 className="text-2xl font-bold text-gray-800">
+                Popular Items
+              </h2>
+              <div className="flex gap-2">
+                <IconButton
+                  icon={
+                    <svg
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      className="h-4 w-4"
+                    >
+                      <polyline points="15 18 9 12 15 6" />
+                    </svg>
+                  }
+                  circle
+                  size="sm"
+                  appearance="subtle"
+                />
+                <IconButton
+                  icon={
+                    <svg
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      className="h-4 w-4"
+                    >
+                      <polyline points="9 18 15 12 9 6" />
+                    </svg>
+                  }
+                  circle
+                  size="sm"
+                  appearance="subtle"
+                />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-4">
+              <ProductCard
+                image="https://media.istockphoto.com/id/171302954/photo/groceries.jpg?s=612x612&w=0&k=20&c=D3MmhT5DafwimcYyxCYXqXMxr1W25wZnyUf4PF1RYw8="
+                name="Mushroom"
+                size="24oz"
+                price="$8,92"
+              />
+              <ProductCard
+                image="https://media.istockphoto.com/id/171302954/photo/groceries.jpg?s=612x612&w=0&k=20&c=D3MmhT5DafwimcYyxCYXqXMxr1W25wZnyUf4PF1RYw8="
+                name="Deliciously Ella"
+                size="500g"
+                price="$20,72"
+              />
+              <ProductCard
+                image="https://media.istockphoto.com/id/171302954/photo/groceries.jpg?s=612x612&w=0&k=20&c=D3MmhT5DafwimcYyxCYXqXMxr1W25wZnyUf4PF1RYw8="
+                name="Mixed Nuts"
+                size="24oz"
+                price="$3,01"
+              />
+              <ProductCard
+                image="https://media.istockphoto.com/id/171302954/photo/groceries.jpg?s=612x612&w=0&k=20&c=D3MmhT5DafwimcYyxCYXqXMxr1W25wZnyUf4PF1RYw8="
+                name="Seasoned"
+                size="0.5 Kg"
+                price="$4,29"
+              />
+              <ProductCard
+                image="https://media.istockphoto.com/id/171302954/photo/groceries.jpg?s=612x612&w=0&k=20&c=D3MmhT5DafwimcYyxCYXqXMxr1W25wZnyUf4PF1RYw8="
+                name="6 Pieces Eggs"
+                size="6 Pieces"
+                price="$6,92"
+              />
+              <ProductCard
+                image="https://media.istockphoto.com/id/171302954/photo/groceries.jpg?s=612x612&w=0&k=20&c=D3MmhT5DafwimcYyxCYXqXMxr1W25wZnyUf4PF1RYw8="
+                name="Premium Muffin"
+                size="1 Pieces"
+                price="$8,92"
+              />
+            </div>
+          </div>
+
+          {/* New Arrival */}
+          {/* <div className="mt-8">
+        <h2 className="text-2xl font-bold text-gray-800">New Arrival</h2>
+      </div> */}
+        </div>
+      </div>
+    </>
+  );
+}
+function CategoryCard({ icon, name }: { icon: string; name: string }) {
+  return (
+    <div className="flex w-full flex-col items-center">
+      <Panel
+        shaded
+        bodyFill
+        className="mb-1 flex w-full items-center justify-center rounded-lg p-2"
+        style={{
+          background: "linear-gradient(to bottom right, #fff0e0, #ffe0c0)",
+        }}
+      >
+        <div className="flex items-center gap-2">
+          <span className="text-2xl">{icon}</span>
+          <span className="text-sm text-gray-700">{name}</span>
+        </div>
+      </Panel>
+    </div>
+  );
+}
+function ProductCard({
+  image,
+  name,
+  size,
+  price,
+}: {
+  image: string;
+  name: string;
+  size: string;
+  price: string;
+}) {
+  return (
+    <Panel shaded bodyFill style={{ borderRadius: "0.75rem", height: "100%" }}>
+      <div className="flex justify-center p-4">
+        <Image
+          src={image || "/placeholder.svg"}
+          alt={name}
+          width={120}
+          height={120}
+          className="object-contain"
+        />
+      </div>
+      <Panel>
+        <h3 className="font-medium text-gray-900">{name}</h3>
+        <p className="text-sm text-gray-500">{size}</p>
+        <div className="mt-2 flex items-center justify-between">
+          <span className="font-bold text-gray-900">{price}</span>
+          <IconButton
+            icon={
+              <svg
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                className="h-4 w-4"
+              >
+                <line x1="12" y1="5" x2="12" y2="19" />
+                <line x1="5" y1="12" x2="19" y2="12" />
+              </svg>
+            }
+            circle
+            size="sm"
+            appearance="subtle"
+          />
+        </div>
+      </Panel>
+    </Panel>
+  );
+}
