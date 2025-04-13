@@ -2,7 +2,7 @@ import React from "react";
 import { Input, InputGroup, Panel, IconButton, FlexboxGrid } from "rsuite";
 import Image from "next/image";
 
-export default function Products(){
+export default function Products({category} : any){
     return(
             <div className="mt-8">
             <div className="mb-4 flex items-center justify-between">
