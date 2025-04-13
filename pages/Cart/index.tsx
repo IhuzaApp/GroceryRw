@@ -32,7 +32,7 @@ export default function CartMainPage() {
           </div>
 
           <ItemCartTable />
-          <CheckoutItems />
+        
         </div>
       </div>
     </RootLayout>
