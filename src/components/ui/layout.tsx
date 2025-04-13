@@ -15,8 +15,9 @@ export default function RootLayout({
       <main className="px-4 pb-20 pt-6 md:pb-0">
         <SideBar />
         {children}
+        <BottomBar />
+
       </main>
-      <BottomBar />
     </div>
   );
 }

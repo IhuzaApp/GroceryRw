@@ -11,60 +11,7 @@ export default function AllItems() {
       {/* Adjust ml-* to match your sidebar width */}
       <div className="container mx-auto">
         {/* Banner */}
-        {/* Banner */}
-        <div className="relative z-10 -mx-4 flex hidden gap-4 overflow-x-auto px-4 pb-4 lg:flex">
-          <div className="relative h-[220px] min-w-[300px] flex-1 overflow-hidden rounded-xl bg-green-800">
-            <div className="max-w-[60%] p-6 text-white">
-              <h2 className="text-3xl font-bold leading-tight">
-                MEAL PLAN WITH GROCERY STORE
-              </h2>
-            </div>
-            <div className="absolute bottom-0 right-0">
-              <Image
-                src="https://png.pngtree.com/png-vector/20230905/ourmid/pngtree-composition-with-grocery-products-in-shopping-basket-diet-png-image_9948113.png"
-                alt="Meal plan products"
-                width={200}
-                height={200}
-                className="object-contain"
-              />
-            </div>
-          </div>
-
-          <div className="relative h-[220px] min-w-[300px] flex-1 overflow-hidden rounded-xl bg-purple-800">
-            <div className="max-w-[60%] p-6 text-white">
-              <h2 className="text-3xl font-bold leading-tight">
-                MAKING THE MOST OF YOUR GROCERY
-              </h2>
-            </div>
-            <div className="absolute bottom-0 right-0">
-              <Image
-                src="https://png.pngtree.com/png-vector/20230905/ourmid/pngtree-composition-with-grocery-products-in-shopping-basket-diet-png-image_9948113.png"
-                alt="Ice cream products"
-                width={200}
-                height={200}
-                className="object-contain"
-              />
-            </div>
-          </div>
-
-          <div className="relative h-[220px] min-w-[300px] flex-1 overflow-hidden rounded-xl bg-teal-800">
-            <div className="max-w-[60%] p-6 text-white">
-              <h2 className="text-3xl font-bold leading-tight">
-                SHOPPING WITH GROCERY STORE
-              </h2>
-            </div>
-            <div className="absolute bottom-0 right-0">
-              <Image
-                src="https://png.pngtree.com/png-vector/20230905/ourmid/pngtree-composition-with-grocery-products-in-shopping-basket-diet-png-image_9948113.png"
-                alt="Ice cream products"
-                width={200}
-                height={200}
-                className="object-contain"
-              />
-            </div>
-          </div>
-        </div>
-
+      
         {/* Categories */}
         <ProdCategories />
 
@@ -185,22 +132,24 @@ function ProductCard({
         <div className="mt-2 flex items-center justify-between">
           <span className="font-bold text-gray-900">{price}</span>
           <IconButton
-            icon={
-              <svg
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                className="h-4 w-4"
-              >
-                <line x1="12" y1="5" x2="12" y2="19" />
-                <line x1="5" y1="12" x2="19" y2="12" />
-              </svg>
-            }
-            circle
-            size="sm"
-            appearance="subtle"
-          />
+  icon={
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      className="h-5 w-5 text-white"
+    >
+      <line x1="12" y1="5" x2="12" y2="19" />
+      <line x1="5" y1="12" x2="19" y2="12" />
+    </svg>
+  }
+  circle
+  color="green"
+  size="sm"
+  appearance="primary"
+  className="bg-green-600 hover:bg-green-700"
+/>
         </div>
       </Panel>
     </Panel>
