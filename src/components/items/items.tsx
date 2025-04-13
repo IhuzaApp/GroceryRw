@@ -3,6 +3,7 @@ import React from "react";
 import { Input, InputGroup, Panel, IconButton, FlexboxGrid } from "rsuite";
 import Image from "next/image";
 import ProdCategories from "@components/ui/categories";
+import MainBanners from "@components/ui/banners";
 
 export default function AllItems() {
   return (
@@ -11,7 +12,7 @@ export default function AllItems() {
       {/* Adjust ml-* to match your sidebar width */}
       <div className="container mx-auto">
         {/* Banner */}
-      
+      <MainBanners />
         {/* Categories */}
         <ProdCategories />
 
