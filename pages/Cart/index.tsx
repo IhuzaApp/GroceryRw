@@ -5,7 +5,6 @@ import { Button, Checkbox } from "rsuite";
 
 import Link from "next/link";
 import ItemCartTable from "@components/UserCarts/cartsTable";
-import CheckoutItems from "@components/UserCarts/checkout/checkoutCard";
 
 export default function CartMainPage() {
   return (
