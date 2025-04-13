@@ -1,36 +1,41 @@
-import React from "react";
+import React, { useState } from "react";
 import { Panel } from "rsuite";
 
 function darkenColor(hex: string, amount: number): string {
-    let col = hex.startsWith("#") ? hex.slice(1) : hex;
-    if (col.length === 3) {
-      col = col.split("").map((c) => c + c).join("");
-    }
-  
-    const r = Math.max(0, parseInt(col.substring(0, 2), 16) - amount);
-    const g = Math.max(0, parseInt(col.substring(2, 4), 16) - amount);
-    const b = Math.max(0, parseInt(col.substring(4, 6), 16) - amount);
-  
-    return `#${[r, g, b]
-      .map((c) => c.toString(16).padStart(2, "0"))
-      .join("")}`;
+  let col = hex.startsWith("#") ? hex.slice(1) : hex;
+  if (col.length === 3) {
+    col = col.split("").map((c) => c + c).join("");
   }
 
+  const r = Math.max(0, parseInt(col.substring(0, 2), 16) - amount);
+  const g = Math.max(0, parseInt(col.substring(2, 4), 16) - amount);
+  const b = Math.max(0, parseInt(col.substring(4, 6), 16) - amount);
+
+  return `#${[r, g, b]
+    .map((c) => c.toString(16).padStart(2, "0"))
+    .join("")}`;
+}
+
 export default function ProdCategories() {
+  const [showAll, setShowAll] = useState(false);
+
+  const visibleCategories = showAll ? categories : categories.slice(0,9);
+
   return (
     <div className="p-0 sm:relative sm:mt-4 sm:p-4">
       <div className="mb-4 flex items-center justify-between">
-        <h2 className="text-2xl font-bold text-gray-800 sm:text-3xl">
-          Categories
-        </h2>
-        <a href="#" className="text-base text-green-500 sm:text-lg">
-          View All
-        </a>
+        <h2 className="text-2xl font-bold text-gray-800 sm:text-3xl">Categories</h2>
+        <button
+          onClick={() => setShowAll(!showAll)}
+          className="text-base text-green-500 hover:underline sm:text-lg"
+        >
+          {showAll ? "Show Less" : "View All"}
+        </button>
       </div>
 
       <div className="overflow-x-auto sm:overflow-hidden">
         <div className="flex gap-3 sm:grid sm:grid-cols-4 sm:gap-4 md:grid-cols-5 lg:grid-cols-7 xl:grid-cols-9">
-          {categories.map((cat) => (
+          {visibleCategories.map((cat) => (
             <CategoryCard
               key={cat.name}
               icon={cat.icon}
@@ -45,15 +50,18 @@ export default function ProdCategories() {
 }
 
 const categories = [
-    { icon: "/assets/icons/shop.png", name: "Super Market", bgColor: "#E6F7FF" },
+    { icon: "/assets/icons/shop.png", name: "Super Market", bgColor: "#E6F7FF" , CategorySelect: "Super Market"},
     { icon: "/assets/icons/bakery.png", name: "Bakery", bgColor: "#FFFAE6" },
+    { icon: "/assets/icons/vegitables.png", name: "Vegetables", bgColor: "#F1FFF0" },
+    { icon: "/assets/icons/vegitables.png", name: "Fruits", bgColor: "#F1FFF0" },
+
     { icon: "/assets/icons/drinks.png", name: "Drinks", bgColor: "#ffe6e6" },
     { icon: "/assets/icons/snacks.png", name: "Snacks", bgColor: "#F3EFEA" },
     { icon: "/assets/icons/hygien.png", name: "Hygien", bgColor: "#F0F8FF" },
     { icon: "/assets/icons/beauty.png", name: "Beauty", bgColor: "#ffe6f9" },
     { icon: "/assets/icons/pets.png", name: "Pet Food", bgColor: "#FFF0F5" },
     { icon: "/assets/icons/hygien.png", name: "Hygien", bgColor: "#F0F8FF" },
-    { icon: "/assets/icons/vegitables.png", name: "Vegetables", bgColor: "#F1FFF0" },
+
   ];
 
   function CategoryCard({
