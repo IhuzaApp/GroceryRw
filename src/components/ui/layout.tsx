@@ -16,7 +16,6 @@ export default function RootLayout({
         <SideBar />
         {children}
         <BottomBar />
-
       </main>
     </div>
   );
