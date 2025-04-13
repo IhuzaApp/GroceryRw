@@ -32,7 +32,6 @@ export default function CartMainPage() {
           </div>
 
           <ItemCartTable />
-        
         </div>
       </div>
     </RootLayout>

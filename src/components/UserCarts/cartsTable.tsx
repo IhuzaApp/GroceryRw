@@ -1,4 +1,4 @@
-'use client';
+"use client";
 
 import React, { useState } from "react";
 import { Input, Button, Checkbox } from "rsuite";
@@ -36,10 +36,16 @@ function CartItem({
   return (
     <div className="border-b pb-6 md:grid md:grid-cols-12 md:items-center md:gap-4">
       {/* Mobile */}
-      <div className="md:hidden flex flex-col gap-3">
+      <div className="flex flex-col gap-3 md:hidden">
         <div className="flex items-start gap-3">
           <Checkbox checked={checked} onChange={onToggle} />
-          <Image src={image} alt={name} width={80} height={80} className="rounded-md" />
+          <Image
+            src={image}
+            alt={name}
+            width={80}
+            height={80}
+            className="rounded-md"
+          />
           <div className="flex-1">
             <h3 className="font-medium text-gray-900">{name}</h3>
             <p className="text-sm text-gray-500">{size}</p>
@@ -51,17 +57,35 @@ function CartItem({
           <span className="font-bold">${price.toFixed(2)}</span>
         </div>
 
-        <div className="flex justify-between text-sm items-center">
+        <div className="flex items-center justify-between text-sm">
           <span className="text-gray-500">Quantity</span>
           <div className="flex items-center">
-            <Button appearance="subtle" className="h-8 w-8 p-0" onClick={onDecrease}>
-              <svg viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2" className="h-4 w-4">
+            <Button
+              appearance="subtle"
+              className="h-8 w-8 p-0"
+              onClick={onDecrease}
+            >
+              <svg
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+                strokeWidth="2"
+                className="h-4 w-4"
+              >
                 <line x1="5" y1="12" x2="19" y2="12" />
               </svg>
             </Button>
             <span className="mx-4 w-4 text-center font-medium">{quantity}</span>
-            <Button appearance="subtle" className="h-8 w-8 p-0" onClick={onIncrease}>
-              <svg viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2" className="h-4 w-4">
+            <Button
+              appearance="subtle"
+              className="h-8 w-8 p-0"
+              onClick={onIncrease}
+            >
+              <svg
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+                strokeWidth="2"
+                className="h-4 w-4"
+              >
                 <line x1="12" y1="5" x2="12" y2="19" />
                 <line x1="5" y1="12" x2="19" y2="12" />
               </svg>
@@ -79,37 +103,61 @@ function CartItem({
       </div>
 
       {/* Desktop */}
-      <div className="hidden md:block md:col-span-1">
+      <div className="hidden md:col-span-1 md:block">
         <Checkbox checked={checked} onChange={onToggle} />
       </div>
-      <div className="hidden md:block md:col-span-1">
-        <Image src={image} alt={name} width={80} height={80} className="rounded-md" />
+      <div className="hidden md:col-span-1 md:block">
+        <Image
+          src={image}
+          alt={name}
+          width={80}
+          height={80}
+          className="rounded-md"
+        />
       </div>
-      <div className="hidden md:block md:col-span-4">
+      <div className="hidden md:col-span-4 md:block">
         <h3 className="mb-1 font-medium text-gray-900">{name}</h3>
         <p className="text-sm text-gray-500">{size}</p>
       </div>
-      <div className="hidden md:block text-center md:col-span-2 font-bold">
+      <div className="hidden text-center font-bold md:col-span-2 md:block">
         ${price.toFixed(2)}
       </div>
-      <div className="hidden md:flex justify-center md:col-span-2 items-center">
-        <Button appearance="subtle" className="h-8 w-8 p-0" onClick={onDecrease}>
-          <svg viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2" className="h-4 w-4">
+      <div className="hidden items-center justify-center md:col-span-2 md:flex">
+        <Button
+          appearance="subtle"
+          className="h-8 w-8 p-0"
+          onClick={onDecrease}
+        >
+          <svg
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+            strokeWidth="2"
+            className="h-4 w-4"
+          >
             <line x1="5" y1="12" x2="19" y2="12" />
           </svg>
         </Button>
         <span className="mx-4 w-4 text-center font-medium">{quantity}</span>
-        <Button appearance="subtle" className="h-8 w-8 p-0" onClick={onIncrease}>
-          <svg viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2" className="h-4 w-4">
+        <Button
+          appearance="subtle"
+          className="h-8 w-8 p-0"
+          onClick={onIncrease}
+        >
+          <svg
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+            strokeWidth="2"
+            className="h-4 w-4"
+          >
             <line x1="12" y1="5" x2="12" y2="19" />
             <line x1="5" y1="12" x2="19" y2="12" />
           </svg>
         </Button>
       </div>
-      <div className="hidden md:block text-right md:col-span-2 font-bold">
+      <div className="hidden text-right font-bold md:col-span-2 md:block">
         ${subtotal}
       </div>
-      <div className="hidden md:block text-right md:col-span-1">
+      <div className="hidden text-right md:col-span-1 md:block">
         <Button color="red" appearance="subtle" onClick={onRemove}>
           ✕
         </Button>
@@ -123,7 +171,8 @@ export default function ItemCartTable() {
     {
       id: "1",
       checked: false,
-      image: "https://png.pngtree.com/png-vector/20230905/ourmid/pngtree-composition-with-grocery-products-in-shopping-basket-diet-png-image_9948113.png",
+      image:
+        "https://png.pngtree.com/png-vector/20230905/ourmid/pngtree-composition-with-grocery-products-in-shopping-basket-diet-png-image_9948113.png",
       name: "Avocado Evokaado",
       size: "14oz",
       price: 12.86,
@@ -132,7 +181,8 @@ export default function ItemCartTable() {
     {
       id: "2",
       checked: false,
-      image: "https://png.pngtree.com/png-vector/20230905/ourmid/pngtree-composition-with-grocery-products-in-shopping-basket-diet-png-image_9948113.png",
+      image:
+        "https://png.pngtree.com/png-vector/20230905/ourmid/pngtree-composition-with-grocery-products-in-shopping-basket-diet-png-image_9948113.png",
       name: "Fruit And Nut Muesli",
       size: "500g",
       price: 20.53,
@@ -141,7 +191,8 @@ export default function ItemCartTable() {
     {
       id: "3",
       checked: false,
-      image: "https://png.pngtree.com/png-vector/20230905/ourmid/pngtree-composition-with-grocery-products-in-shopping-basket-diet-png-image_9948113.png",
+      image:
+        "https://png.pngtree.com/png-vector/20230905/ourmid/pngtree-composition-with-grocery-products-in-shopping-basket-diet-png-image_9948113.png",
       name: "Mixed Nuts",
       size: "24 Oz",
       price: 33.45,
@@ -150,24 +201,24 @@ export default function ItemCartTable() {
   ]);
 
   const toggleCheck = (id: string) => {
-    setCartItems(prev =>
-      prev.map(item =>
+    setCartItems((prev) =>
+      prev.map((item) =>
         item.id === id ? { ...item, checked: !item.checked } : item
       )
     );
   };
 
   const increaseQuantity = (id: string) => {
-    setCartItems(prev =>
-      prev.map(item =>
+    setCartItems((prev) =>
+      prev.map((item) =>
         item.id === id ? { ...item, quantity: item.quantity + 1 } : item
       )
     );
   };
 
   const decreaseQuantity = (id: string) => {
-    setCartItems(prev =>
-      prev.map(item =>
+    setCartItems((prev) =>
+      prev.map((item) =>
         item.id === id && item.quantity > 1
           ? { ...item, quantity: item.quantity - 1 }
           : item
@@ -176,18 +227,14 @@ export default function ItemCartTable() {
   };
 
   const removeItem = (id: string) => {
-    setCartItems(prev => prev.filter(item => item.id !== id));
+    setCartItems((prev) => prev.filter((item) => item.id !== id));
   };
 
   const total = cartItems
-  .reduce(
-    (sum, item) => sum + item?.price * item.quantity,
-    0
-  )
-  .toFixed(2);
+    .reduce((sum, item) => sum + item?.price * item.quantity, 0)
+    .toFixed(2);
 
   console.log(total);
-  
 
   return (
     <>
@@ -200,7 +247,7 @@ export default function ItemCartTable() {
       </div>
 
       <div className="space-y-6">
-        {cartItems.map(item => (
+        {cartItems.map((item) => (
           <CartItem
             key={item.id}
             item={item}

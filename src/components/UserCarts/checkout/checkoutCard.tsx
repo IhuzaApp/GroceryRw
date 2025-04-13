@@ -33,7 +33,7 @@ export default function CheckoutItems({ Total }: CheckoutItemsProps) {
   const finalTotal = (Total - discount).toFixed(2);
 
   return (
-    <div className="fixed bottom-4 left-1/2 w-[95%] max-w-4xl -translate-x-1/2 rounded-2xl bg-white shadow-2xl z-50 p-6 border">
+    <div className="fixed bottom-4 left-1/2 z-50 w-[95%] max-w-4xl -translate-x-1/2 rounded-2xl border bg-white p-6 shadow-2xl">
       {/* Promo Code */}
       <div>
         <p className="mb-2 text-gray-600">Do you have any promo code?</p>
@@ -58,14 +58,18 @@ export default function CheckoutItems({ Total }: CheckoutItemsProps) {
       <hr className="mt-4" />
 
       {/* Order Summary */}
-      <div className="mt-6 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+      <div className="mt-6 flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
         <div className="flex gap-8">
           <div>
             <p className="text-2xl font-bold">${Total}</p>
             <p className="text-gray-500">Cost of items</p>
           </div>
           <div>
-            <p className={`text-2xl font-bold ${discount ? 'text-red-500' : 'text-gray-500'}`}>
+            <p
+              className={`text-2xl font-bold ${
+                discount ? "text-red-500" : "text-gray-500"
+              }`}
+            >
               -${discount.toFixed(2)}
             </p>
             <p className="text-gray-500">
@@ -77,7 +81,7 @@ export default function CheckoutItems({ Total }: CheckoutItemsProps) {
             <p className="text-gray-500">Total</p>
           </div>
         </div>
-      <ConfirmPayment />
+        <ConfirmPayment />
       </div>
     </div>
   );

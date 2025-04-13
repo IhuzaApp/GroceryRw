@@ -12,7 +12,7 @@ export default function AllItems() {
       {/* Adjust ml-* to match your sidebar width */}
       <div className="container mx-auto">
         {/* Banner */}
-      <MainBanners />
+        <MainBanners />
         {/* Categories */}
         <ProdCategories />
 
@@ -133,24 +133,24 @@ function ProductCard({
         <div className="mt-2 flex items-center justify-between">
           <span className="font-bold text-gray-900">{price}</span>
           <IconButton
-  icon={
-    <svg
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      className="h-5 w-5 text-white"
-    >
-      <line x1="12" y1="5" x2="12" y2="19" />
-      <line x1="5" y1="12" x2="19" y2="12" />
-    </svg>
-  }
-  circle
-  color="green"
-  size="sm"
-  appearance="primary"
-  className="bg-green-600 hover:bg-green-700"
-/>
+            icon={
+              <svg
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                className="h-5 w-5 text-white"
+              >
+                <line x1="12" y1="5" x2="12" y2="19" />
+                <line x1="5" y1="12" x2="19" y2="12" />
+              </svg>
+            }
+            circle
+            color="green"
+            size="sm"
+            appearance="primary"
+            className="bg-green-600 hover:bg-green-700"
+          />
         </div>
       </Panel>
     </Panel>
