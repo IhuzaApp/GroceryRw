@@ -4,7 +4,10 @@ import { Panel } from "rsuite";
 function darkenColor(hex: string, amount: number): string {
   let col = hex.startsWith("#") ? hex.slice(1) : hex;
   if (col.length === 3) {
-    col = col.split("").map((c) => c + c).join("");
+    col = col
+      .split("")
+      .map((c) => c + c)
+      .join("");
   }
 
   const r = Math.max(0, parseInt(col.substring(0, 2), 16) - amount);
@@ -62,12 +65,24 @@ export default function ProdCategories({
 const categories = [
   { icon: "/assets/icons/shop.png", name: "Super Market", bgColor: "#E6F7FF" },
   { icon: "/assets/icons/bakery.png", name: "Bakery", bgColor: "#FFFAE6" },
-  { icon: "/assets/icons/vegitables.png", name: "Vegetables", bgColor: "#F1FFF0" },
+  {
+    icon: "/assets/icons/vegitables.png",
+    name: "Vegetables",
+    bgColor: "#F1FFF0",
+  },
   { icon: "/assets/icons/fruits.png", name: "Fruits", bgColor: "#ffe6cc" },
-  { icon: "/assets/icons/Butchery.png", name: "Meat & Seafood", bgColor: "#ffe6f9" },
+  {
+    icon: "/assets/icons/Butchery.png",
+    name: "Meat & Seafood",
+    bgColor: "#ffe6f9",
+  },
   { icon: "/assets/icons/drinks.png", name: "Drinks", bgColor: "#ffe6e6" },
   { icon: "/assets/icons/snacks.png", name: "Snacks", bgColor: "#F3EFEA" },
-  { icon: "/assets/icons/hygien.png", name: "Care & Beauty", bgColor: "#F0F8FF" },
+  {
+    icon: "/assets/icons/hygien.png",
+    name: "Care & Beauty",
+    bgColor: "#F0F8FF",
+  },
   { icon: "/assets/icons/pets.png", name: "Pet Food", bgColor: "#FFF0F5" },
 ];
 
@@ -92,7 +107,7 @@ function CategoryCard({
         shaded
         bodyFill
         onClick={onClick}
-        className={`rounded-xl border p-3 text-center transition-all duration-300 hover:shadow-md cursor-pointer ${
+        className={`cursor-pointer rounded-xl border p-3 text-center transition-all duration-300 hover:shadow-md ${
           selected ? "ring-2 ring-green-500" : ""
         }`}
         style={{
@@ -100,14 +115,15 @@ function CategoryCard({
           transition: "background-color 0.3s ease",
         }}
         onMouseEnter={(e: { currentTarget: HTMLDivElement }) => {
-          (e.currentTarget as HTMLDivElement).style.backgroundColor = darkenedColor;
+          (e.currentTarget as HTMLDivElement).style.backgroundColor =
+            darkenedColor;
         }}
         onMouseLeave={(e: { currentTarget: HTMLDivElement }) => {
           (e.currentTarget as HTMLDivElement).style.backgroundColor = bgColor;
         }}
       >
         <div className="flex flex-col items-center justify-center gap-2">
-          <img src={icon} alt={name} className="w-10 h-10 mb-2" />
+          <img src={icon} alt={name} className="mb-2 h-10 w-10" />
           <span className="text-sm font-medium text-gray-800">{name}</span>
         </div>
       </Panel>
