@@ -24,7 +24,8 @@
       "@clients/*": ["src/clients/*"],
       "@config/*": ["src/config/*"],
       "@utils/*": ["src/utils/*"]
-    }
+    },
+    "types": []
   },
   "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx"],
   "exclude": ["node_modules"]
