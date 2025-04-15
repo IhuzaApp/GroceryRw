@@ -31,7 +31,7 @@ export default function UserProfile(){
                   125 Orders
                 </Tag>
               </div>
-              <Button appearance="primary" className="mt-4 bg-green-500 text-white">
+              <Button appearance="primary" color="green" className="mt-4 bg-green-500 text-white">
                 Edit Profile
               </Button>
             </div>
@@ -61,7 +61,7 @@ export default function UserProfile(){
    
         {/* Right Column - Tabs */}
         <div className="w-full md:w-2/3">
-          <Nav appearance="subtle" activeKey={activeTab} onSelect={setActiveTab} className="mb-4">
+          <Nav appearance="subtle" activeKey={activeTab} color="green" onSelect={setActiveTab} className="mb-4">
             <Nav.Item eventKey="account" className="px-4">
               Account
             </Nav.Item>
@@ -161,7 +161,7 @@ export default function UserProfile(){
             <Panel shaded bordered>
               <div className="flex justify-between items-center mb-4">
                 <h3 className="text-lg font-bold">Saved Addresses</h3>
-                <Button appearance="primary" className="bg-green-500 text-white">
+                <Button appearance="primary" color="green" className="bg-green-500 text-white">
                   Add New Address
                 </Button>
               </div>
