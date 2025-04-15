@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import React from "react";
 import { Input, InputGroup, Panel, IconButton, FlexboxGrid } from "rsuite";
 
@@ -40,7 +41,8 @@ export default function SideBar() {
             circle
             appearance="subtle"
           />
-          <IconButton
+<Link href={'/Myprofile'} passHref>
+<IconButton
             icon={
               <svg
                 viewBox="0 0 24 24"
@@ -56,6 +58,7 @@ export default function SideBar() {
             circle
             appearance="subtle"
           />
+</Link>
           <IconButton
             icon={
               <svg
