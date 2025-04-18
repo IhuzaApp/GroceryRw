@@ -1,18 +1,5 @@
 import RootLayout from "@components/ui/layout";
-import React, { useState } from "react";
-import {
-  Avatar,
-  Button,
-  Divider,
-  Drawer,
-  IconButton,
-  Input,
-  Nav,
-  Panel,
-  Placeholder,
-  Tag,
-  Toggle,
-} from "rsuite";
+import React from "react";
 import Image from "next/image";
 import Link from "next/link";
 import UserProfile from "@components/userProfile/useProfile";

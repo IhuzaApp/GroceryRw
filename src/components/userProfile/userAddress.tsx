@@ -1,0 +1,65 @@
+import React from "react";
+import { Button, Panel, Tag } from "rsuite";
+
+export default function UserAddress(){
+    return(
+        <>
+              <div className="mb-4 flex items-center justify-between">
+              <h3 className="text-lg font-bold">Saved Addresses</h3>
+              <Button
+                appearance="primary"
+                color="green"
+                className="bg-green-500 text-white"
+              >
+                Add New Address
+              </Button>
+            </div>
+
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+              <Panel bordered className="relative">
+                <Tag className="absolute right-2 top-2 border-green-200 bg-green-100 text-green-600">
+                  Default
+                </Tag>
+                <h4 className="font-bold">Home</h4>
+                <p className="mt-2 text-gray-600">
+                  2464 Royal Ln.
+                  <br />
+                  Mesa, AZ 85201
+                  <br />
+                  United States
+                </p>
+                <div className="mt-4 flex gap-2">
+                  <Button appearance="ghost" size="sm">
+                    Edit
+                  </Button>
+                  <Button appearance="ghost" size="sm">
+                    Delete
+                  </Button>
+                </div>
+              </Panel>
+
+              <Panel bordered>
+                <h4 className="font-bold">Work</h4>
+                <p className="mt-2 text-gray-600">
+                  875 Tech Park Dr.
+                  <br />
+                  Mesa, AZ 85210
+                  <br />
+                  United States
+                </p>
+                <div className="mt-4 flex gap-2">
+                  <Button appearance="ghost" size="sm">
+                    Edit
+                  </Button>
+                  <Button appearance="ghost" size="sm">
+                    Delete
+                  </Button>
+                  <Button appearance="ghost" size="sm">
+                    Set as Default
+                  </Button>
+                </div>
+              </Panel>
+            </div>
+        </>
+    )
+}
