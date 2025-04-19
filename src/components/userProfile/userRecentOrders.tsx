@@ -1,6 +1,7 @@
 import React from "react";
 import { Tag, Button, Avatar } from "rsuite";
 import { usePathname } from "next/navigation";
+import Link from "next/link";
 
 export default function UserRecentOrders({ filter }: any) {
   const pathname = usePathname();
@@ -54,9 +55,12 @@ export default function UserRecentOrders({ filter }: any) {
           </div>
 
           <div className="flex gap-2">
+            <Link href={'/CurrentPendingOrders/viewOrderDetails'} passHref>
             <Button appearance="ghost" size="sm">
               View Details
             </Button>
+            </Link>
+       
             {!isPendingOrdersPage && (
               <Button appearance="ghost" size="sm">
                 Reorder
