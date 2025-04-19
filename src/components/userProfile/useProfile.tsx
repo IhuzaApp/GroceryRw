@@ -80,29 +80,37 @@ export default function UserProfile() {
       {/* Right Column - Tabs */}
         <div className="w-full md:col-span-9">
           <div className="scrollbar-hide mb-4 overflow-x-auto whitespace-nowrap">
-            <Nav
-              appearance="subtle"
-              activeKey={activeTab}
-              color="green"
-              onSelect={setActiveTab}
-              className="flex min-w-max gap-2"
-            >
-              <Nav.Item eventKey="account" className="shrink-0 px-4">
-                Account
-              </Nav.Item>
-              <Nav.Item eventKey="orders" className="shrink-0 px-4">
-                Orders
-              </Nav.Item>
-              <Nav.Item eventKey="addresses" className="shrink-0 px-4">
-                Addresses
-              </Nav.Item>
-              <Nav.Item eventKey="payment" className="shrink-0 px-4">
-                Payment Methods
-              </Nav.Item>
-              <Nav.Item eventKey="preferences" className="shrink-0 px-4">
-                Preferences
-              </Nav.Item>
-            </Nav>
+          <Nav
+  appearance="default"
+  activeKey={activeTab}
+  onSelect={setActiveTab}
+  className="flex min-w-max gap-2"
+>
+  {[
+    { key: "account", label: "Account" },
+    { key: "orders", label: "Orders" },
+    { key: "addresses", label: "Addresses" },
+    { key: "payment", label: "Payment Methods" },
+    { key: "preferences", label: "Preferences" },
+  ].map((tab) => (
+    <Nav.Item
+      key={tab.key}
+      eventKey={tab.key}
+      className={`!px-4 !py-2 !text-sm !bg-transparent hover:!bg-transparent ${
+        activeTab === tab.key
+          ? "!text-green-600 font-semibold"
+          : "!text-black hover:!text-green-600"
+      }`}
+    >
+      {tab.label}
+    </Nav.Item>
+  ))}
+</Nav>
+
+
+
+
+
           </div>
 
           {activeTab === "account" && (
