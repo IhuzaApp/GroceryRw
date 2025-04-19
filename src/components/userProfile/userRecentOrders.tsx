@@ -17,10 +17,10 @@ export default function UserRecentOrders({ filter }: any) {
     <>
       <h3 className="mb-4 text-lg font-bold">Orders</h3>
 
-      {[1, 2, 3,4,5].map((order) => (
+      {[1, 2, 3, 4, 5].map((order) => (
         <div
           key={order}
-          className="mb-4 rounded-xl border border-gray-200 shadow-md p-4 bg-white"
+          className="mb-4 rounded-xl border border-gray-200 bg-white p-4 shadow-md"
         >
           {/* User Profile */}
           <div className="mb-4 flex items-center gap-3">
@@ -55,12 +55,12 @@ export default function UserRecentOrders({ filter }: any) {
           </div>
 
           <div className="flex gap-2">
-            <Link href={'/CurrentPendingOrders/viewOrderDetails'} passHref>
-            <Button appearance="ghost" size="sm">
-              View Details
-            </Button>
+            <Link href={"/CurrentPendingOrders/viewOrderDetails"} passHref>
+              <Button appearance="ghost" size="sm">
+                View Details
+              </Button>
             </Link>
-       
+
             {!isPendingOrdersPage && (
               <Button appearance="ghost" size="sm">
                 Reorder

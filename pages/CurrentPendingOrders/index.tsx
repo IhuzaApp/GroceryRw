@@ -22,7 +22,6 @@ export default function CurrentOrdersPage() {
               >
                 <path d="M19 12H5M12 19l-7-7 7-7" />
               </svg>
-      
             </Link>
             <h1 className="ml-4 text-2xl font-bold">Orders Track</h1>
           </div>
