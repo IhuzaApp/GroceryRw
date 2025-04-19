@@ -8,7 +8,6 @@ export default function MyProfilePage() {
   return (
     <RootLayout>
       <div className="p-4 md:ml-16">
-        {" "}
         {/* Adjust ml-* to match your sidebar width */}
         <div className="container mx-auto">
           {/* Profile Header */}
@@ -23,14 +22,13 @@ export default function MyProfilePage() {
               >
                 <path d="M19 12H5M12 19l-7-7 7-7" />
               </svg>
+              <span className="hover:underline">Back</span>
             </Link>
-            <h1 className="text-2xl font-bold">My Profile</h1>
+            <h1 className="ml-4 text-2xl font-bold">My Profile</h1>
           </div>
 
           {/* Profile Content */}
-          <div className="flex flex-col gap-6 md:flex-row">
-            <UserProfile />
-          </div>
+          <UserProfile />
         </div>
       </div>
     </RootLayout>
