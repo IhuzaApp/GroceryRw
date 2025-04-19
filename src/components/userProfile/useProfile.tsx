@@ -9,12 +9,10 @@ import UserPreference from "./userPreference";
 
 export default function UserProfile() {
   const [activeTab, setActiveTab] = useState("account");
-  const isMobile = typeof window !== "undefined" && window.innerWidth < 640;
   return (
-    <>
-      {" "}
+    <div className="grid  grid-cols-1 md:grid-cols-12 gap-6">
       {/* Left Column - User Info */}
-      <div className="w-full md:w-1/3">
+      <div className="w-full md:col-span-3">
         <Panel
           shaded
           bordered
@@ -80,8 +78,7 @@ export default function UserProfile() {
         </Panel>
       </div>
       {/* Right Column - Tabs */}
-      <div className="flex flex-col gap-6 md:flex-row">
-        <div className="w-full md:w-full">
+        <div className="w-full md:col-span-9">
           <div className="scrollbar-hide mb-4 overflow-x-auto whitespace-nowrap">
             <Nav
               appearance="subtle"
@@ -139,6 +136,5 @@ export default function UserProfile() {
           )}
         </div>
       </div>
-    </>
   );
 }
