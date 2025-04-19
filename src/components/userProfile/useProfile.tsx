@@ -10,7 +10,7 @@ import UserPreference from "./userPreference";
 export default function UserProfile() {
   const [activeTab, setActiveTab] = useState("account");
   return (
-    <div className="grid  grid-cols-1 md:grid-cols-12 gap-6">
+    <div className="grid  grid-cols-1 gap-6 md:grid-cols-12">
       {/* Left Column - User Info */}
       <div className="w-full md:col-span-3">
         <Panel
@@ -78,71 +78,66 @@ export default function UserProfile() {
         </Panel>
       </div>
       {/* Right Column - Tabs */}
-        <div className="w-full md:col-span-9">
-          <div className="scrollbar-hide mb-4 overflow-x-auto whitespace-nowrap">
+      <div className="w-full md:col-span-9">
+        <div className="scrollbar-hide mb-4 overflow-x-auto whitespace-nowrap">
           <Nav
-  appearance="default"
-  activeKey={activeTab}
-  onSelect={setActiveTab}
-  className="flex min-w-max gap-2"
->
-  {[
-    { key: "account", label: "Account" },
-    { key: "orders", label: "Orders" },
-    { key: "addresses", label: "Addresses" },
-    { key: "payment", label: "Payment Methods" },
-    { key: "preferences", label: "Preferences" },
-  ].map((tab) => (
-    <Nav.Item
-      key={tab.key}
-      eventKey={tab.key}
-      className={`!px-4 !py-2 !text-sm !bg-transparent hover:!bg-transparent ${
-        activeTab === tab.key
-          ? "!text-green-600 font-semibold"
-          : "!text-black hover:!text-green-600"
-      }`}
-    >
-      {tab.label}
-    </Nav.Item>
-  ))}
-</Nav>
-
-
-
-
-
-          </div>
-
-          {activeTab === "account" && (
-            <Panel shaded bordered>
-          <UserAccount />
-            </Panel>
-          )}
-
-          {activeTab === "orders" && (
-            <Panel shaded bordered>
-              <UserRecentOrders />
-            </Panel>
-          )}
-
-          {activeTab === "addresses" && (
-            <Panel shaded bordered>
-              <UserAddress />
-            </Panel>
-          )}
-
-          {activeTab === "payment" && (
-            <Panel shaded bordered>
-         <UserPayment />
-            </Panel>
-          )}
-
-          {activeTab === "preferences" && (
-            <Panel shaded bordered>
-         <UserPreference />
-            </Panel>
-          )}
+            appearance="default"
+            activeKey={activeTab}
+            onSelect={setActiveTab}
+            className="flex min-w-max gap-2"
+          >
+            {[
+              { key: "account", label: "Account" },
+              { key: "orders", label: "Orders" },
+              { key: "addresses", label: "Addresses" },
+              { key: "payment", label: "Payment Methods" },
+              { key: "preferences", label: "Preferences" },
+            ].map((tab) => (
+              <Nav.Item
+                key={tab.key}
+                eventKey={tab.key}
+                className={`!bg-transparent !px-4 !py-2 !text-sm hover:!bg-transparent ${
+                  activeTab === tab.key
+                    ? "font-semibold !text-green-600"
+                    : "!text-black hover:!text-green-600"
+                }`}
+              >
+                {tab.label}
+              </Nav.Item>
+            ))}
+          </Nav>
         </div>
+
+        {activeTab === "account" && (
+          <Panel shaded bordered>
+            <UserAccount />
+          </Panel>
+        )}
+
+        {activeTab === "orders" && (
+          <Panel shaded bordered>
+            <UserRecentOrders />
+          </Panel>
+        )}
+
+        {activeTab === "addresses" && (
+          <Panel shaded bordered>
+            <UserAddress />
+          </Panel>
+        )}
+
+        {activeTab === "payment" && (
+          <Panel shaded bordered>
+            <UserPayment />
+          </Panel>
+        )}
+
+        {activeTab === "preferences" && (
+          <Panel shaded bordered>
+            <UserPreference />
+          </Panel>
+        )}
       </div>
+    </div>
   );
 }
