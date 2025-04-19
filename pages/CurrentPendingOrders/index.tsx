@@ -1,10 +1,60 @@
 import RootLayout from "@components/ui/layout";
-import React from "react";
+import UserRecentOrders from "@components/userProfile/userRecentOrders";
+import Link from "next/link";
+import React, { useState } from "react";
 
-export default function CurrentOrdersPage(){
-    return(
-        <RootLayout>
-            <></>
-        </RootLayout>
-    )
+export default function CurrentOrdersPage() {
+  const [filter, setFilter] = useState("pending"); // 'pending' means not done
+
+  return (
+    <RootLayout>
+      <div className="p-4 md:ml-16">
+        <div className="container mx-auto">
+          {/* Profile Header */}
+          <div className="mb-6 flex items-center">
+            <Link href="/" className="flex items-center text-gray-700">
+              <svg
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                className="mr-2 h-5 w-5"
+              >
+                <path d="M19 12H5M12 19l-7-7 7-7" />
+              </svg>
+      
+            </Link>
+            <h1 className="ml-4 text-2xl font-bold">Orders Track</h1>
+          </div>
+
+          {/* Filter Buttons */}
+          <div className="mb-4 flex gap-3">
+            <button
+              className={`rounded px-4 py-2 text-sm font-medium ${
+                filter === "pending"
+                  ? "bg-blue-600 text-white"
+                  : "bg-gray-100 text-gray-800 hover:bg-gray-200"
+              }`}
+              onClick={() => setFilter("pending")}
+            >
+              Ongoing Orders
+            </button>
+            <button
+              className={`rounded px-4 py-2 text-sm font-medium ${
+                filter === "done"
+                  ? "bg-green-600 text-white"
+                  : "bg-gray-100 text-gray-800 hover:bg-gray-200"
+              }`}
+              onClick={() => setFilter("done")}
+            >
+              Completed Orders
+            </button>
+          </div>
+
+          {/* Orders List */}
+          <UserRecentOrders filter={filter} />
+        </div>
+      </div>
+    </RootLayout>
+  );
 }
