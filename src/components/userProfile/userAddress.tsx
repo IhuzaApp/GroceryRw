@@ -29,12 +29,12 @@ export default function UserAddress() {
             United States
           </p>
           <div className="mt-4 flex gap-2">
-            <Button appearance="ghost" size="sm">
+          <button className="rounded border border-purple-500 px-3 py-1 text-sm text-purple-500 hover:bg-purple-100">
               Edit
-            </Button>
-            <Button appearance="ghost" size="sm">
+            </button>
+            <button className="rounded border border-red-500 px-3 py-1 text-sm text-red-500 hover:bg-red-100">
               Delete
-            </Button>
+            </button>
           </div>
         </Panel>
 
@@ -48,15 +48,15 @@ export default function UserAddress() {
             United States
           </p>
           <div className="mt-4 flex gap-2">
-            <Button appearance="ghost" size="sm">
+          <button className="rounded border border-purple-500 px-3 py-1 text-sm text-purple-500 hover:bg-purple-100">
               Edit
-            </Button>
-            <Button appearance="ghost" size="sm">
+            </button>
+            <button className="rounded border border-red-500 px-3 py-1 text-sm text-red-500 hover:bg-red-100">
               Delete
-            </Button>
-            <Button appearance="ghost" size="sm">
+            </button>
+            <button className="rounded border border-green-700 px-3 py-1 text-sm text-green-700 hover:bg-green-100">
               Set as Default
-            </Button>
+            </button>
           </div>
         </Panel>
       </div>
