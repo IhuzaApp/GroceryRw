@@ -29,7 +29,7 @@ export default function UserAddress() {
             United States
           </p>
           <div className="mt-4 flex gap-2">
-          <button className="rounded border border-purple-500 px-3 py-1 text-sm text-purple-500 hover:bg-purple-100">
+            <button className="rounded border border-purple-500 px-3 py-1 text-sm text-purple-500 hover:bg-purple-100">
               Edit
             </button>
             <button className="rounded border border-red-500 px-3 py-1 text-sm text-red-500 hover:bg-red-100">
@@ -48,7 +48,7 @@ export default function UserAddress() {
             United States
           </p>
           <div className="mt-4 flex gap-2">
-          <button className="rounded border border-purple-500 px-3 py-1 text-sm text-purple-500 hover:bg-purple-100">
+            <button className="rounded border border-purple-500 px-3 py-1 text-sm text-purple-500 hover:bg-purple-100">
               Edit
             </button>
             <button className="rounded border border-red-500 px-3 py-1 text-sm text-red-500 hover:bg-red-100">

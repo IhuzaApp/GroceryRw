@@ -633,26 +633,6 @@ function NavItem({ icon, label, href }: { icon: any; label: any; href: any }) {
   );
 }
 
-// function ActionButton({
-//   icon,
-//   label,
-//   onClick,
-// }: {
-//   icon: any;
-//   label: string;
-//   onClick: () => void;
-// }) {
-//   return (
-//     <button
-//       onClick={onClick}
-//       className="flex flex-col items-center text-xs text-gray-700 hover:text-green-600"
-//     >
-//       <span className="text-xl">{icon}</span>
-//       <span>{label}</span>
-//     </button>
-//   );
-// }
-
 const ActionButton = ({
   icon,
   label,
