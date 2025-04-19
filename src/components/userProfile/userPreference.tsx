@@ -42,7 +42,7 @@ export default function UserPreference() {
               Organic
             </Tag>
             <button className="rounded border border-green-700 px-3 py-1 text-sm text-green-700 hover:bg-green-100">
-            + Add More
+              + Add More
             </button>
           </div>
         </div>
@@ -63,18 +63,16 @@ export default function UserPreference() {
               Beverages
             </Tag>
             <button className="rounded border border-purple-700 px-3 py-1 text-sm text-purple-700 hover:bg-purple-100">
-            + Add More
+              + Add More
             </button>
-
           </div>
         </div>
       </div>
 
       <div className="mt-6 flex justify-end">
-      <button className="rounded bg-green-600 px-3 py-2 text-sm text-White hover:bg-green-500">
-<span className="text-white">      Save Preferences</span>
-            </button>
-
+        <button className="text-White rounded bg-green-600 px-3 py-2 text-sm hover:bg-green-500">
+          <span className="text-white"> Save Preferences</span>
+        </button>
       </div>
     </>
   );

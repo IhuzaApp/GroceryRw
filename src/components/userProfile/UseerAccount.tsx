@@ -93,10 +93,9 @@ export default function UserAccount() {
       </div>
 
       <div className="mt-6 flex justify-end">
-
         <button className="rounded border bg-green-700 px-3 py-2 text-sm text-white hover:bg-green-600">
-        Save Changes
-            </button>
+          Save Changes
+        </button>
       </div>
     </>
   );
