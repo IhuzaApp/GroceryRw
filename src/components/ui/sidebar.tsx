@@ -104,7 +104,7 @@ export default function SideBar() {
           </Link>
           <Link
             className="rounded-full p-2 hover:bg-gray-200"
-            href={"/CurrentOrdersTrack"}
+            href={"/CurrentPendingOrders"}
             passHref
           >
             <svg
