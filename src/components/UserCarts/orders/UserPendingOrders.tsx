@@ -283,7 +283,7 @@ export default function UserPendingOrders() {
             <div className="flex flex-col items-center text-center">
               <div className="mb-3 h-24 w-24 overflow-hidden rounded-full">
                 <Image
-                  src={'/assets/images/profile.jpg'}
+                  src={"/assets/images/profile.jpg"}
                   alt={order.assignedTo.name}
                   width={96}
                   height={96}
