@@ -1,13 +1,28 @@
 import React from "react";
 import RootLayout from "@components/ui/layout";
 import Image from "next/image";
+import { useQuery } from '@apollo/client';
+import getAllCategories from '@/graphql/categories/getAllCategories.graphql';
 
 import ItemsSection from "@components/items/itemsSection";
 import MainBanners from "@components/ui/banners";
 import Link from "next/link";
 import { Button, Panel } from "rsuite";
 
+// Define Category type
+interface Category {
+  id: string;
+  name: string;
+  image_url: string;
+}
+
 export default function Home() {
+  // Fetch categories
+  const { data, loading, error } = useQuery<{ Categories: Category[] }>(getAllCategories);
+  if (loading) return <p>Loading categories...</p>;
+  if (error) return <p>Error loading categories: {error.message}</p>;
+  const categories = data?.Categories || [];
+  
   return (
     <RootLayout>
       <div className="p-4 md:ml-16">
@@ -30,14 +45,13 @@ export default function Home() {
             </div>
 
             <div className="-mx-4 flex gap-3 overflow-x-auto px-4 pb-4">
-              <ShopCategoryCard icon="🏪" name="Supermarkets" />
-              <ShopCategoryCard icon="🛒" name="Public Markets" />
-              <ShopCategoryCard icon="🥖" name="Bakeries" />
-              <ShopCategoryCard icon="🥩" name="Butchers" />
-              <ShopCategoryCard icon="🧀" name="Delicatessen" />
-              <ShopCategoryCard icon="🍷" name="Liquor Stores" />
-              <ShopCategoryCard icon="🥬" name="Organic Shops" />
-              <ShopCategoryCard icon="🍦" name="Specialty Foods" />
+              {categories.map(cat => (
+                <Link key={cat.id} href={`/shop/${cat.id}`} passHref>
+                  <a>
+                    <ShopCategoryCard icon="🛒" name={cat.name} />
+                  </a>
+                </Link>
+              ))}
             </div>
           </div>
 
