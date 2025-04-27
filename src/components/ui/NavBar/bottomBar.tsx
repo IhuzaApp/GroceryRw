@@ -20,11 +20,11 @@ export default function BottomBar() {
                   xmlns="http://www.w3.org/2000/svg"
                   fill="#000000"
                 >
-                  <g id="SVGRepo_bgCarrier" strokeWidth="0"></g>
+                  <g id="SVGRepo_bgCarrier" stroke-width="0"></g>
                   <g
                     id="SVGRepo_tracerCarrier"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
                   ></g>
                   <g id="SVGRepo_iconCarrier">
                     {" "}
@@ -32,9 +32,9 @@ export default function BottomBar() {
                     <g
                       id="Page-1"
                       stroke="none"
-                      strokeWidth="1"
+                      stroke-width="1"
                       fill="none"
-                      fillRule="evenodd"
+                      fill-rule="evenodd"
                     >
                       {" "}
                       <g
@@ -63,44 +63,44 @@ export default function BottomBar() {
                   fill="none"
                   xmlns="http://www.w3.org/2000/svg"
                 >
-                  <g id="SVGRepo_bgCarrier" strokeWidth="0"></g>
+                  <g id="SVGRepo_bgCarrier" stroke-width="0"></g>
                   <g
                     id="SVGRepo_tracerCarrier"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
                   ></g>
                   <g id="SVGRepo_iconCarrier">
                     {" "}
                     <path
                       d="M4 8C4 5.17157 4 3.75736 4.87868 2.87868C5.75736 2 7.17157 2 10 2H14C16.8284 2 18.2426 2 19.1213 2.87868C20 3.75736 20 5.17157 20 8V16C20 18.8284 20 20.2426 19.1213 21.1213C18.2426 22 16.8284 22 14 22H10C7.17157 22 5.75736 22 4.87868 21.1213C4 20.2426 4 18.8284 4 16V8Z"
                       stroke="#545454"
-                      strokeWidth="1.5"
+                      stroke-width="1.5"
                     ></path>{" "}
                     <path
                       d="M19.8978 16H7.89778C6.96781 16 6.50282 16 6.12132 16.1022C5.08604 16.3796 4.2774 17.1883 4 18.2235"
                       stroke="#545454"
-                      strokeWidth="1.5"
+                      stroke-width="1.5"
                     ></path>{" "}
                     <path
                       opacity="0.5"
                       d="M8 7H16"
                       stroke="#545454"
-                      strokeWidth="1.5"
-                      strokeLinecap="round"
+                      stroke-width="1.5"
+                      stroke-linecap="round"
                     ></path>{" "}
                     <path
                       opacity="0.5"
                       d="M8 10.5H13"
                       stroke="#545454"
-                      strokeWidth="1.5"
-                      strokeLinecap="round"
+                      stroke-width="1.5"
+                      stroke-linecap="round"
                     ></path>{" "}
                     <path
                       opacity="0.5"
                       d="M13 16V19.5309C13 19.8065 13 19.9443 12.9051 20C12.8103 20.0557 12.6806 19.9941 12.4211 19.8708L11.1789 19.2808C11.0911 19.2391 11.0472 19.2182 11 19.2182C10.9528 19.2182 10.9089 19.2391 10.8211 19.2808L9.57889 19.8708C9.31943 19.9941 9.18971 20.0557 9.09485 20C9 19.9443 9 19.8065 9 19.5309V16.45"
                       stroke="#545454"
-                      strokeWidth="1.5"
-                      strokeLinecap="round"
+                      stroke-width="1.5"
+                      stroke-linecap="round"
                     ></path>{" "}
                   </g>
                 </svg>
@@ -124,11 +124,11 @@ export default function BottomBar() {
                 fill="none"
                 xmlns="http://www.w3.org/2000/svg"
               >
-                <g id="SVGRepo_bgCarrier" strokeWidth="0"></g>
+                <g id="SVGRepo_bgCarrier" stroke-width="0"></g>
                 <g
                   id="SVGRepo_tracerCarrier"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
                 ></g>
                 <g id="SVGRepo_iconCarrier">
                   {" "}
@@ -183,55 +183,55 @@ export default function BottomBar() {
                   fill="none"
                   xmlns="http://www.w3.org/2000/svg"
                 >
-                  <g id="SVGRepo_bgCarrier" strokeWidth="0"></g>
+                  <g id="SVGRepo_bgCarrier" stroke-width="0"></g>
                   <g
                     id="SVGRepo_tracerCarrier"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
                   ></g>
                   <g id="SVGRepo_iconCarrier">
                     {" "}
                     <path
                       d="M6.72266 5.47968C6.81011 4.6032 7.11663 3.7628 7.61402 3.03585C8.11141 2.30889 8.78368 1.71874 9.56895 1.31971C10.3542 0.920684 11.2272 0.725607 12.1077 0.752437C12.9881 0.779267 13.8476 1.02714 14.6071 1.47324C15.3666 1.91935 16.0017 2.54934 16.4539 3.30524C16.9061 4.06113 17.1609 4.91863 17.1948 5.79881C17.2287 6.67899 17.0407 7.55355 16.648 8.342C16.2627 9.11563 15.6925 9.78195 14.9883 10.2821"
                       stroke="#5b428a"
-                      strokeWidth="1.5"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
+                      stroke-width="1.5"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
                     ></path>{" "}
                     <path
                       d="M7.43945 3.35268C8.25207 4.19161 9.22512 4.85854 10.3007 5.31379C11.3763 5.76904 12.5325 6.00332 13.7005 6.00268C14.8492 6.00382 15.9865 5.77762 17.0469 5.33742"
                       stroke="#5b428a"
-                      strokeWidth="1.5"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
+                      stroke-width="1.5"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
                     ></path>{" "}
                     <path
                       d="M10.8232 9.75268C10.5266 9.75268 10.2366 9.84065 9.98989 10.0055C9.74321 10.1703 9.55096 10.4046 9.43742 10.6787C9.32389 10.9527 9.29419 11.2543 9.35206 11.5453C9.40994 11.8363 9.5528 12.1036 9.76258 12.3133C9.97236 12.5231 10.2396 12.666 10.5306 12.7239C10.8216 12.7817 11.1232 12.752 11.3973 12.6385C11.6714 12.525 11.9056 12.3327 12.0704 12.086C12.2353 11.8394 12.3232 11.5493 12.3232 11.2527C12.3232 10.8549 12.1652 10.4733 11.8839 10.192C11.6026 9.91071 11.2211 9.75268 10.8232 9.75268Z"
                       stroke="#5b428a"
-                      strokeWidth="1.5"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
+                      stroke-width="1.5"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
                     ></path>{" "}
                     <path
                       d="M4.82324 7.17467V8.25268C4.82324 9.04832 5.13931 9.81139 5.70192 10.374C6.26453 10.9366 7.02759 11.2527 7.82324 11.2527H9.24649"
                       stroke="#5b428a"
-                      strokeWidth="1.5"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
+                      stroke-width="1.5"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
                     ></path>{" "}
                     <path
                       d="M21.7005 23.2527C21.7006 21.4693 21.211 19.7202 20.2852 18.196C19.3632 16.6779 18.0438 15.4409 16.4697 14.6187"
                       stroke="#5b428a"
-                      strokeWidth="1.5"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
+                      stroke-width="1.5"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
                     ></path>{" "}
                     <path
                       d="M2.2002 23.2527C2.2 21.4695 2.68926 19.7206 3.61465 18.1963C4.53542 16.6797 5.85284 15.4435 7.42453 14.621"
                       stroke="#5b428a"
-                      strokeWidth="1.5"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
+                      stroke-width="1.5"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
                     ></path>{" "}
                   </g>
                 </svg>
@@ -249,11 +249,11 @@ export default function BottomBar() {
                   fill="none"
                   xmlns="http://www.w3.org/2000/svg"
                 >
-                  <g id="SVGRepo_bgCarrier" strokeWidth="0"></g>
+                  <g id="SVGRepo_bgCarrier" stroke-width="0"></g>
                   <g
                     id="SVGRepo_tracerCarrier"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
                   ></g>
                   <g id="SVGRepo_iconCarrier">
                     {" "}
@@ -263,8 +263,8 @@ export default function BottomBar() {
                       fill="#1d4c62"
                     ></path>{" "}
                     <path
-                      fillRule="evenodd"
-                      clipRule="evenodd"
+                      fill-rule="evenodd"
+                      clip-rule="evenodd"
                       d="M5 8.51464C5 4.9167 8.13401 2 12 2C15.866 2 19 4.9167 19 8.51464C19 12.0844 16.7658 16.2499 13.2801 17.7396C12.4675 18.0868 11.5325 18.0868 10.7199 17.7396C7.23416 16.2499 5 12.0844 5 8.51464ZM12 11C13.1046 11 14 10.1046 14 9C14 7.89543 13.1046 7 12 7C10.8954 7 10 7.89543 10 9C10 10.1046 10.8954 11 12 11Z"
                       fill="#1d4c62"
                     ></path>{" "}
@@ -284,37 +284,37 @@ export default function BottomBar() {
                   fill="none"
                   xmlns="http://www.w3.org/2000/svg"
                 >
-                  <g id="SVGRepo_bgCarrier" strokeWidth="0"></g>
+                  <g id="SVGRepo_bgCarrier" stroke-width="0"></g>
                   <g
                     id="SVGRepo_tracerCarrier"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
                   ></g>
                   <g id="SVGRepo_iconCarrier">
                     {" "}
                     <path
                       d="M4 8C4 5.17157 4 3.75736 4.87868 2.87868C5.75736 2 7.17157 2 10 2H14C16.8284 2 18.2426 2 19.1213 2.87868C20 3.75736 20 5.17157 20 8V16C20 18.8284 20 20.2426 19.1213 21.1213C18.2426 22 16.8284 22 14 22H10C7.17157 22 5.75736 22 4.87868 21.1213C4 20.2426 4 18.8284 4 16V8Z"
                       stroke="#c2ab51"
-                      strokeWidth="1.5"
+                      stroke-width="1.5"
                     ></path>{" "}
                     <path
                       d="M19.8978 16H7.89778C6.96781 16 6.50282 16 6.12132 16.1022C5.08604 16.3796 4.2774 17.1883 4 18.2235"
                       stroke="#c2ab51"
-                      strokeWidth="1.5"
+                      stroke-width="1.5"
                     ></path>{" "}
                     <path
                       opacity="0.5"
                       d="M8 7H16"
                       stroke="#c2ab51"
-                      strokeWidth="1.5"
-                      strokeLinecap="round"
+                      stroke-width="1.5"
+                      stroke-linecap="round"
                     ></path>{" "}
                     <path
                       opacity="0.5"
                       d="M8 10.5H13"
                       stroke="#c2ab51"
-                      strokeWidth="1.5"
-                      strokeLinecap="round"
+                      stroke-width="1.5"
+                      stroke-linecap="round"
                     ></path>{" "}
                     <path
                       opacity="0.5"

@@ -4035,7 +4035,7 @@ export type Users = {
   phone: Scalars['String'];
   profile_picture?: Maybe<Scalars['String']>;
   role: Scalars['String'];
-  updated_at: Scalars['String'];
+  updated_at?: Maybe<Scalars['String']>;
 };
 
 
