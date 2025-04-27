@@ -2,6 +2,8 @@ import { useEffect, useState } from "react";
 import RootLayout from "@components/ui/layout";
 import Image from "next/image";
 import { GetServerSideProps } from "next";
+import { hasuraClient } from '../src/lib/hasuraClient';
+import { gql } from 'graphql-request';
 
 import ItemsSection from "@components/items/itemsSection";
 import MainBanners from "@components/ui/banners";
@@ -23,6 +25,130 @@ interface Data {
   deliveryIssues?: any[];
   notifications?: any[];
   platformSettings?: any[];
+}
+
+interface UsersResponse {
+  Users: Array<{
+    id: string;
+    name: string;
+    email: string;
+    created_at: string;
+  }>;
+}
+
+interface CategoriesResponse {
+  Categories: Array<{
+    id: string;
+    name: string;
+    description: string;
+    created_at: string;
+  }>;
+}
+
+interface ShopsResponse {
+  Shops: Array<{
+    id: string;
+    name: string;
+    description: string;
+    created_at: string;
+  }>;
+}
+
+interface ProductsResponse {
+  Products: Array<{
+    id: string;
+    name: string;
+    description: string;
+    price: string;
+    created_at: string;
+  }>;
+}
+
+interface AddressesResponse {
+  Addresses: Array<{
+    id: string;
+    user_id: string;
+    street: string;
+    city: string;
+    postal_code: string;
+    created_at: string;
+  }>;
+}
+
+interface CartsResponse {
+  Carts: Array<{
+    id: string;
+    user_id: string;
+    created_at: string;
+  }>;
+}
+
+interface CartItemsResponse {
+  Cart_Items: Array<{
+    id: string;
+    cart_id: string;
+    product_id: string;
+    quantity: number;
+    created_at: string;
+  }>;
+}
+
+interface OrdersResponse {
+  Orders: Array<{
+    id: string;
+    user_id: string;
+    status: string;
+    created_at: string;
+  }>;
+}
+
+interface OrderItemsResponse {
+  Order_Items: Array<{
+    id: string;
+    order_id: string;
+    product_id: string;
+    quantity: number;
+    price: string;
+    created_at: string;
+  }>;
+}
+
+interface ShopperAvailabilityResponse {
+  Shopper_Availability: Array<{
+    id: string;
+    user_id: string;
+    is_available: boolean;
+    created_at: string;
+  }>;
+}
+
+interface DeliveryIssuesResponse {
+  Delivery_Issues: Array<{
+    id: string;
+    order_id: string;
+    issue_type: string;
+    description: string;
+    created_at: string;
+  }>;
+}
+
+interface NotificationsResponse {
+  Notifications: Array<{
+    id: string;
+    user_id: string;
+    message: string;
+    is_read: boolean;
+    created_at: string;
+  }>;
+}
+
+interface PlatformSettingsResponse {
+  Platform_Settings: Array<{
+    id: string;
+    key: string;
+    value: string;
+    created_at: string;
+  }>;
 }
 
 export default function Home({ initialData }: { initialData: Data }) {
@@ -191,36 +317,6 @@ export default function Home({ initialData }: { initialData: Data }) {
 export const getServerSideProps: GetServerSideProps = async () => {
   try {
     const [
-      usersRes,
-      categoriesRes,
-      shopsRes,
-      productsRes,
-      addressesRes,
-      cartsRes,
-      cartItemsRes,
-      ordersRes,
-      orderItemsRes,
-      shopperAvailabilityRes,
-      deliveryIssuesRes,
-      notificationsRes,
-      platformSettingsRes,
-    ] = await Promise.all([
-      fetch("http://localhost:3000/api/users"),
-      fetch("http://localhost:3000/api/categories"),
-      fetch("http://localhost:3000/api/shops"),
-      fetch("http://localhost:3000/api/products"),
-      fetch("http://localhost:3000/api/addresses"),
-      fetch("http://localhost:3000/api/carts"),
-      fetch("http://localhost:3000/api/cart-items"),
-      fetch("http://localhost:3000/api/orders"),
-      fetch("http://localhost:3000/api/order-items"),
-      fetch("http://localhost:3000/api/shopper-availability"),
-      fetch("http://localhost:3000/api/delivery-issues"),
-      fetch("http://localhost:3000/api/notifications"),
-      fetch("http://localhost:3000/api/platform-settings"),
-    ]);
-
-    const [
       users,
       categories,
       shops,
@@ -235,42 +331,166 @@ export const getServerSideProps: GetServerSideProps = async () => {
       notifications,
       platformSettings,
     ] = await Promise.all([
-      usersRes.json(),
-      categoriesRes.json(),
-      shopsRes.json(),
-      productsRes.json(),
-      addressesRes.json(),
-      cartsRes.json(),
-      cartItemsRes.json(),
-      ordersRes.json(),
-      orderItemsRes.json(),
-      shopperAvailabilityRes.json(),
-      deliveryIssuesRes.json(),
-      notificationsRes.json(),
-      platformSettingsRes.json(),
+      hasuraClient.request<UsersResponse>(gql`
+        query GetUsers {
+          Users {
+            id
+            name
+            email
+            created_at
+          }
+        }
+      `),
+      hasuraClient.request<CategoriesResponse>(gql`
+        query GetCategories {
+          Categories {
+            id
+            name
+            description
+            created_at
+          }
+        }
+      `),
+      hasuraClient.request<ShopsResponse>(gql`
+        query GetShops {
+          Shops {
+            id
+            name
+            description
+            created_at
+          }
+        }
+      `),
+      hasuraClient.request<ProductsResponse>(gql`
+        query GetProducts {
+          Products {
+            id
+            name
+            description
+            price
+            created_at
+          }
+        }
+      `),
+      hasuraClient.request<AddressesResponse>(gql`
+        query GetAddresses {
+          Addresses {
+            id
+            user_id
+            street
+            city
+            postal_code
+            created_at
+          }
+        }
+      `),
+      hasuraClient.request<CartsResponse>(gql`
+        query GetCarts {
+          Carts {
+            id
+            user_id
+            created_at
+          }
+        }
+      `),
+      hasuraClient.request<CartItemsResponse>(gql`
+        query GetCartItems {
+          Cart_Items {
+            id
+            cart_id
+            product_id
+            quantity
+            created_at
+          }
+        }
+      `),
+      hasuraClient.request<OrdersResponse>(gql`
+        query GetOrders {
+          Orders {
+            id
+            user_id
+            status
+            created_at
+          }
+        }
+      `),
+      hasuraClient.request<OrderItemsResponse>(gql`
+        query GetOrderItems {
+          Order_Items {
+            id
+            order_id
+            product_id
+            quantity
+            price
+            created_at
+          }
+        }
+      `),
+      hasuraClient.request<ShopperAvailabilityResponse>(gql`
+        query GetShopperAvailability {
+          Shopper_Availability {
+            id
+            user_id
+            is_available
+            created_at
+          }
+        }
+      `),
+      hasuraClient.request<DeliveryIssuesResponse>(gql`
+        query GetDeliveryIssues {
+          Delivery_Issues {
+            id
+            order_id
+            issue_type
+            description
+            created_at
+          }
+        }
+      `),
+      hasuraClient.request<NotificationsResponse>(gql`
+        query GetNotifications {
+          Notifications {
+            id
+            user_id
+            message
+            is_read
+            created_at
+          }
+        }
+      `),
+      hasuraClient.request<PlatformSettingsResponse>(gql`
+        query GetPlatformSettings {
+          Platform_Settings {
+            id
+            key
+            value
+            created_at
+          }
+        }
+      `),
     ]);
 
     return {
       props: {
         initialData: {
-          users: users?.users || [],
-          categories: categories?.categories || [],
-          shops: shops?.shops || [],
-          products: products?.products || [],
-          addresses: addresses?.addresses || [],
-          carts: carts?.carts || [],
-          cartItems: cartItems?.cart_items || [],
-          orders: orders?.orders || [],
-          orderItems: orderItems?.order_items || [],
-          shopperAvailability: shopperAvailability?.shopper_availability || [],
-          deliveryIssues: deliveryIssues?.delivery_issues || [],
-          notifications: notifications?.notifications || [],
-          platformSettings: platformSettings?.platform_settings || [],
+          users: users?.Users || [],
+          categories: categories?.Categories || [],
+          shops: shops?.Shops || [],
+          products: products?.Products || [],
+          addresses: addresses?.Addresses || [],
+          carts: carts?.Carts || [],
+          cartItems: cartItems?.Cart_Items || [],
+          orders: orders?.Orders || [],
+          orderItems: orderItems?.Order_Items || [],
+          shopperAvailability: shopperAvailability?.Shopper_Availability || [],
+          deliveryIssues: deliveryIssues?.Delivery_Issues || [],
+          notifications: notifications?.Notifications || [],
+          platformSettings: platformSettings?.Platform_Settings || [],
         },
       },
     };
   } catch (error) {
-    console.error("Error fetching data:", error);
+    console.error('Error fetching data:', error);
     return {
       props: {
         initialData: {
