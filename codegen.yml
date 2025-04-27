@@ -18,4 +18,4 @@ generates:
             x-hasura-admin-secret: ${HASURA_GRAPHQL_ADMIN_SECRET}
   ./graphql.schema.json:
     plugins:
-      - "introspection"
+      - "introspection" 
