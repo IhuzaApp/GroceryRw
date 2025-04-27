@@ -1,0 +1,10 @@
+query GetNotifications {
+  Notifications {
+    id
+    user_id
+    type
+    message
+    is_read
+    created_at
+  }
+} 
