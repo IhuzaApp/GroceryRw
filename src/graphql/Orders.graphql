@@ -13,4 +13,4 @@ query GetOrders {
     delivery_time
     combined_order_id
   }
-} 
+}

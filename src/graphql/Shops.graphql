@@ -13,4 +13,4 @@ query GetShops {
     updated_at
     is_active
   }
-} 
+}

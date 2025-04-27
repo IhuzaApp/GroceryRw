@@ -11,4 +11,4 @@ query GetUsers {
     profile_picture
     is_active
   }
-} 
+}

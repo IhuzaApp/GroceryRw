@@ -15,4 +15,4 @@ generates:
       scalars:
         uuid: string
         timestamptz: string
-        jsonb: any 
+        jsonb: any
