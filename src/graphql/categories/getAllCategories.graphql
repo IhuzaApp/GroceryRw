@@ -1,0 +1,10 @@
+query getAllCategories {
+  Categories(order_by: {name: asc}) {
+    id
+    name
+    image
+    created_at
+    description
+    is_active
+  }
+}
