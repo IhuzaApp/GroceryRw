@@ -1,19 +1,45 @@
-import React from "react";
+import { useEffect, useState } from "react";
 import RootLayout from "@components/ui/layout";
 import Image from "next/image";
+import { GetServerSideProps } from 'next';
 
 import ItemsSection from "@components/items/itemsSection";
 import MainBanners from "@components/ui/banners";
 import Link from "next/link";
 import { Button, Panel } from "rsuite";
+import { log } from "node:console";
 
-export default function Home() {
+interface Data {
+  users?: any[];
+  categories?: any[];
+  shops?: any[];
+  products?: any[];
+  addresses?: any[];
+  carts?: any[];
+  cartItems?: any[];
+  orders?: any[];
+  orderItems?: any[];
+  shopperAvailability?: any[];
+  deliveryIssues?: any[];
+  notifications?: any[];
+  platformSettings?: any[];
+}
+
+export default function Home({ initialData }: { initialData: Data }) {
+  const [data, setData] = useState<Data>(initialData);
+
+  useEffect(() => {
+    console.log('Fetched data:', data);
+  }, [data]);
+  console.log();
+  
   return (
     <RootLayout>
       <div className="p-4 md:ml-16">
         {" "}
         {/* Adjust ml-* to match your sidebar width */}
         <div className="container mx-auto">
+
           {/* Banner */}
           <MainBanners />
           {/* Main Content */}
@@ -162,6 +188,111 @@ export default function Home() {
     </RootLayout>
   );
 }
+
+export const getServerSideProps: GetServerSideProps = async () => {
+  try {
+    const [
+      usersRes,
+      categoriesRes,
+      shopsRes,
+      productsRes,
+      addressesRes,
+      cartsRes,
+      cartItemsRes,
+      ordersRes,
+      orderItemsRes,
+      shopperAvailabilityRes,
+      deliveryIssuesRes,
+      notificationsRes,
+      platformSettingsRes,
+    ] = await Promise.all([
+      fetch('http://localhost:3000/api/users'),
+      fetch('http://localhost:3000/api/categories'),
+      fetch('http://localhost:3000/api/shops'),
+      fetch('http://localhost:3000/api/products'),
+      fetch('http://localhost:3000/api/addresses'),
+      fetch('http://localhost:3000/api/carts'),
+      fetch('http://localhost:3000/api/cart-items'),
+      fetch('http://localhost:3000/api/orders'),
+      fetch('http://localhost:3000/api/order-items'),
+      fetch('http://localhost:3000/api/shopper-availability'),
+      fetch('http://localhost:3000/api/delivery-issues'),
+      fetch('http://localhost:3000/api/notifications'),
+      fetch('http://localhost:3000/api/platform-settings'),
+    ]);
+
+    const [
+      users,
+      categories,
+      shops,
+      products,
+      addresses,
+      carts,
+      cartItems,
+      orders,
+      orderItems,
+      shopperAvailability,
+      deliveryIssues,
+      notifications,
+      platformSettings,
+    ] = await Promise.all([
+      usersRes.json(),
+      categoriesRes.json(),
+      shopsRes.json(),
+      productsRes.json(),
+      addressesRes.json(),
+      cartsRes.json(),
+      cartItemsRes.json(),
+      ordersRes.json(),
+      orderItemsRes.json(),
+      shopperAvailabilityRes.json(),
+      deliveryIssuesRes.json(),
+      notificationsRes.json(),
+      platformSettingsRes.json(),
+    ]);
+
+    return {
+      props: {
+        initialData: {
+          users: users?.users || [],
+          categories: categories?.categories || [],
+          shops: shops?.shops || [],
+          products: products?.products || [],
+          addresses: addresses?.addresses || [],
+          carts: carts?.carts || [],
+          cartItems: cartItems?.cart_items || [],
+          orders: orders?.orders || [],
+          orderItems: orderItems?.order_items || [],
+          shopperAvailability: shopperAvailability?.shopper_availability || [],
+          deliveryIssues: deliveryIssues?.delivery_issues || [],
+          notifications: notifications?.notifications || [],
+          platformSettings: platformSettings?.platform_settings || [],
+        },
+      },
+    };
+  } catch (error) {
+    console.error('Error fetching data:', error);
+    return {
+      props: {
+        initialData: {
+          users: [],
+          categories: [],
+          shops: [],
+          products: [],
+          addresses: [],
+          carts: [],
+          cartItems: [],
+          orders: [],
+          orderItems: [],
+          shopperAvailability: [],
+          deliveryIssues: [],
+          notifications: [],
+          platformSettings: [],
+        },
+      },
+    };
+  }
+};
 
 function ShopCategoryCard({ icon, name }: { icon: string; name: string }) {
   return (

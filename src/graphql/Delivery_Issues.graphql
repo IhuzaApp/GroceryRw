@@ -1,0 +1,12 @@
+query GetDeliveryIssues {
+  Delivery_Issues {
+    id
+    order_id
+    shopper_id
+    issue_type
+    description
+    status
+    created_at
+    updated_at
+  }
+} 

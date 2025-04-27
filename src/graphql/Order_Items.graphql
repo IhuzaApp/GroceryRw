@@ -1,0 +1,10 @@
+query GetOrderItems {
+  Order_Items {
+    id
+    order_id
+    product_id
+    quantity
+    price
+    created_at
+  }
+} 

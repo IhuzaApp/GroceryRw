@@ -1,0 +1,16 @@
+query GetOrders {
+  Orders {
+    id
+    user_id
+    shopper_id
+    total
+    status
+    delivery_address_id
+    delivery_photo_url
+    delivery_notes
+    created_at
+    updated_at
+    delivery_time
+    combined_order_id
+  }
+} 

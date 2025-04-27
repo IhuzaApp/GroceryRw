@@ -1,0 +1,11 @@
+query GetCartItems {
+  Cart_Items {
+    id
+    cart_id
+    product_id
+    quantity
+    price
+    created_at
+    updated_at
+  }
+} 
