@@ -9,4 +9,4 @@ query GetShopperAvailability {
     created_at
     updated_at
   }
-} 
+}

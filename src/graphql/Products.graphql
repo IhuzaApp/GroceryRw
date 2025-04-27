@@ -13,4 +13,4 @@ query GetProducts {
     updated_at
     is_active
   }
-} 
+}

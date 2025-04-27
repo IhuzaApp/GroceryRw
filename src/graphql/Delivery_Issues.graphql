@@ -9,4 +9,4 @@ query GetDeliveryIssues {
     created_at
     updated_at
   }
-} 
+}

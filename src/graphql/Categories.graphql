@@ -7,4 +7,4 @@ query GetCategories {
     created_at
     is_active
   }
-} 
+}

@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import RootLayout from "@components/ui/layout";
 import Image from "next/image";
-import { GetServerSideProps } from 'next';
+import { GetServerSideProps } from "next";
 
 import ItemsSection from "@components/items/itemsSection";
 import MainBanners from "@components/ui/banners";
@@ -29,17 +29,16 @@ export default function Home({ initialData }: { initialData: Data }) {
   const [data, setData] = useState<Data>(initialData);
 
   useEffect(() => {
-    console.log('Fetched data:', data);
+    console.log("Fetched data:", data);
   }, [data]);
   console.log();
-  
+
   return (
     <RootLayout>
       <div className="p-4 md:ml-16">
         {" "}
         {/* Adjust ml-* to match your sidebar width */}
         <div className="container mx-auto">
-
           {/* Banner */}
           <MainBanners />
           {/* Main Content */}
@@ -206,19 +205,19 @@ export const getServerSideProps: GetServerSideProps = async () => {
       notificationsRes,
       platformSettingsRes,
     ] = await Promise.all([
-      fetch('http://localhost:3000/api/users'),
-      fetch('http://localhost:3000/api/categories'),
-      fetch('http://localhost:3000/api/shops'),
-      fetch('http://localhost:3000/api/products'),
-      fetch('http://localhost:3000/api/addresses'),
-      fetch('http://localhost:3000/api/carts'),
-      fetch('http://localhost:3000/api/cart-items'),
-      fetch('http://localhost:3000/api/orders'),
-      fetch('http://localhost:3000/api/order-items'),
-      fetch('http://localhost:3000/api/shopper-availability'),
-      fetch('http://localhost:3000/api/delivery-issues'),
-      fetch('http://localhost:3000/api/notifications'),
-      fetch('http://localhost:3000/api/platform-settings'),
+      fetch("http://localhost:3000/api/users"),
+      fetch("http://localhost:3000/api/categories"),
+      fetch("http://localhost:3000/api/shops"),
+      fetch("http://localhost:3000/api/products"),
+      fetch("http://localhost:3000/api/addresses"),
+      fetch("http://localhost:3000/api/carts"),
+      fetch("http://localhost:3000/api/cart-items"),
+      fetch("http://localhost:3000/api/orders"),
+      fetch("http://localhost:3000/api/order-items"),
+      fetch("http://localhost:3000/api/shopper-availability"),
+      fetch("http://localhost:3000/api/delivery-issues"),
+      fetch("http://localhost:3000/api/notifications"),
+      fetch("http://localhost:3000/api/platform-settings"),
     ]);
 
     const [
@@ -271,7 +270,7 @@ export const getServerSideProps: GetServerSideProps = async () => {
       },
     };
   } catch (error) {
-    console.error('Error fetching data:', error);
+    console.error("Error fetching data:", error);
     return {
       props: {
         initialData: {

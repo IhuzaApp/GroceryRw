@@ -11,4 +11,4 @@ query GetAddresses {
     created_at
     updated_at
   }
-} 
+}
