@@ -10,6 +10,8 @@ interface ProductCardProps {
   unit: string;
   sale?: boolean;
   originalPrice?: string;
+  measurement_unit?: string;
+  quantity?: number;
 }
 
 export default function ItemsSection({
@@ -18,11 +20,13 @@ export default function ItemsSection({
   filteredProducts,
   setActiveCategory,
 }: any) {
-  const [categorySelected, setCategorySelected] = useState("Popular");
-  const [selectedShop, setSelectedShop] = useState<any>(null); // Store selected shop
+  // Extract unique categories from products
+  const allCategories: string[] = Array.from(
+    new Set(shop.products.map((p: any) => p.category))
+  );
+  const categories: string[] = ["all", ...allCategories];
 
-  const shopCategories = ["Super Market", "Bakery"];
-  const showShops = shopCategories.includes(categorySelected);
+  // Use the provided activeCategory and setActiveCategory for filtering
 
   return (
     <>
@@ -32,11 +36,11 @@ export default function ItemsSection({
           <Nav
             appearance="subtle"
             activeKey={activeCategory}
-            onSelect={setActiveCategory}
+            onSelect={(value) => setActiveCategory(value as string)}
           >
-            {shop.categories.map((category: any) => (
-              <Nav.Item key={category.id} className="px-4">
-                {category.name}
+            {categories.map((category: string) => (
+              <Nav.Item key={category} className="px-4 capitalize">
+                {category}
               </Nav.Item>
             ))}
           </Nav>
@@ -46,9 +50,9 @@ export default function ItemsSection({
       {/* Products Grid */}
       <div className="p-4">
         <h2 className="mb-4 text-xl font-bold">
-          {activeCategory !== "all"
-            ? "All Products"
-            : shop.categories.find((c: any) => c.id === activeCategory)?.name}
+          {activeCategory && activeCategory !== "all"
+            ? String(activeCategory).charAt(0).toUpperCase() + String(activeCategory).slice(1)
+            : "All Products"}
         </h2>
         <div className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-4">
           {filteredProducts.map((product: any) => (
@@ -60,6 +64,8 @@ export default function ItemsSection({
               unit={product.unit}
               sale={product.sale}
               originalPrice={product.originalPrice}
+              measurement_unit={product.measurement_unit}
+              quantity={product.quantity}
             />
           ))}
         </div>
@@ -75,12 +81,14 @@ function ProductCard({
   unit,
   sale,
   originalPrice,
+  measurement_unit,
+  quantity,
 }: ProductCardProps) {
   return (
-    <div className="overflow-hidden rounded-lg bg-white shadow-sm">
+    <div className="bg-white rounded-lg shadow-sm overflow-hidden">
       <div className="relative">
         <Image
-          src={image || "/placeholder.svg"}
+          src={image || "https://www.thedailymeal.com/img/gallery/you-should-think-twice-about-bagging-your-own-groceries-at-the-store/intro-1681220544.jpg"}
           alt={name}
           width={150}
           height={150}
@@ -89,34 +97,35 @@ function ProductCard({
         {sale && (
           <Badge
             content="SALE"
-            className="absolute left-2 top-2 rounded bg-red-500 px-2 py-1 text-xs font-bold text-white"
+            className="absolute top-2 left-2 bg-red-500 text-white px-2 py-1 rounded text-xs font-bold"
+          />
+        )}
+        {quantity !== undefined && (
+          <Badge
+            content={quantity}
+            className="absolute top-2 right-2 bg-blue-500 text-white px-2 py-1 rounded text-xs font-bold"
           />
         )}
       </div>
       <div className="p-3">
-        <h3 className="mb-1 font-medium text-gray-900">{name}</h3>
-        <p className="mb-2 text-sm text-gray-500">{unit}</p>
+        <h3 className="font-medium text-gray-900 mb-1">{name}</h3>
+        <p className="text-sm text-gray-500 mb-2">{unit}</p>
         <div className="flex items-center justify-between">
           <div>
-            <span className="font-bold text-gray-900">{price}</span>
+            <span className="font-bold text-gray-900">
+              ${price}
+              {measurement_unit ? ` / ${measurement_unit}` : ""}
+            </span>
             {sale && originalPrice && (
-              <span className="ml-2 text-sm text-gray-500 line-through">
-                {originalPrice}
-              </span>
+              <span className="ml-2 text-sm text-gray-500 line-through">{originalPrice}</span>
             )}
           </div>
           <Button
             appearance="primary"
             size="sm"
-            className="flex h-8 w-8 items-center justify-center rounded-full bg-green-500 p-0 text-white"
+            className="bg-green-500 text-white h-8 w-8 p-0 flex items-center justify-center rounded-full"
           >
-            <svg
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              className="h-4 w-4"
-            >
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="w-4 h-4">
               <line x1="12" y1="5" x2="12" y2="19" />
               <line x1="5" y1="12" x2="19" y2="12" />
             </svg>

@@ -1,5 +1,5 @@
 import { NextApiRequest, NextApiResponse } from "next";
-import { hasuraClient } from "../../src/lib/hasuraClient";
+import { hasuraClient } from "../../../src/lib/hasuraClient";
 import { gql } from "graphql-request";
 
 const GET_ADDRESSES = gql`
