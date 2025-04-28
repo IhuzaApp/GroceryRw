@@ -14,21 +14,40 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     return res.status(405).end(`Method ${req.method} Not Allowed`);
   }
 
-  const { name, email, password } = req.body;
-  if (!name || !email || !password) {
+  const { name, email, password, phone, gender } = req.body;
+  if (!name || !email || !password || !phone || !gender) {
     return res.status(400).json({ error: 'Missing required fields' });
   }
 
   try {
     const password_hash = await bcrypt.hash(password, 10);
     const mutation = gql`
-      mutation RegisterUser($name: String!, $email: String!, $password_hash: String!) {
-        insert_Users(objects: {name: $name, email: $email, password_hash: $password_hash, is_active: true}) {
+      mutation RegisterUser(
+        $name: String!
+        $email: String!
+        $phone: String!
+        $gender: String!
+        $password_hash: String!
+      ) {
+        insert_Users(
+          objects: { 
+            name: $name, 
+            email: $email, 
+            phone: $phone, 
+            gender: $gender,
+            role: "user", 
+            password_hash: $password_hash, 
+            is_active: true
+          }
+        ) {
           returning { id }
         }
       }
     `;
-    const data = await hasuraClient.request<{ insert_Users: { returning: { id: string }[] } }>(mutation, { name, email, password_hash });
+    const data = await hasuraClient.request<{ insert_Users: { returning: { id: string }[] } }>(
+      mutation,
+      { name, email, phone, gender, password_hash }
+    );
     const newId = data.insert_Users.returning[0]?.id;
     return res.status(200).json({ success: true, userId: newId });
   } catch (error) {

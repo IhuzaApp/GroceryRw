@@ -1,6 +1,10 @@
 import Link from "next/link";
 import React, { useState } from "react";
 import { Input, InputGroup, Checkbox, Button } from "rsuite";
+import { signIn } from "next-auth/react";
+import { useRouter } from "next/router";
+import toast from 'react-hot-toast';
+import { useAuth } from "../../../../context/AuthContext";
 
 export default function UserLogin() {
 
@@ -8,11 +12,26 @@ export default function UserLogin() {
     const [password, setPassword] = useState("")
     const [showPassword, setShowPassword] = useState(false)
     const [rememberMe, setRememberMe] = useState(false)
-  
-    const handleLogin = (e: React.FormEvent) => {
+    const router = useRouter();
+    // capture redirect param if any
+    const { redirect } = router.query as { redirect?: string };
+    const { login } = useAuth();
+
+    const handleLogin = async (e: React.FormEvent) => {
       e.preventDefault()
-      // Handle login logic here
-      console.log({ email, password, rememberMe })
+      try {
+        const res = await signIn('credentials', { redirect: false, email, password });
+        if (res?.error) {
+          toast.error(res.error);
+        } else {
+          // mark as logged in in AuthContext
+          login();
+          toast.success('Logged in successfully!');
+          router.push(redirect || '/');
+        }
+      } catch (err) {
+        toast.error('An unexpected error occurred.');
+      }
     }
     return (
         <form onSubmit={handleLogin}>

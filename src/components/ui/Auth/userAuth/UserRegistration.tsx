@@ -1,19 +1,50 @@
 import Link from "next/link";
 import React, { useState } from "react";
 import { Input, InputGroup, Checkbox, Button } from "rsuite";
+import toast from 'react-hot-toast';
+import { useRouter } from "next/router";
 
 export default function UserRegistration() {
-    const [name, setName] = useState("")
-    const [email, setEmail] = useState("")
-    const [password, setPassword] = useState("")
-    const [confirmPassword, setConfirmPassword] = useState("")
-    const [showPassword, setShowPassword] = useState(false)
-    const [agreeTerms, setAgreeTerms] = useState(false)
-  
-    const handleRegister = (e: React.FormEvent) => {
-      e.preventDefault()
-      // Handle registration logic here
-      console.log({ name, email, password, confirmPassword, agreeTerms })
+    const [name, setName] = useState("");
+    const [email, setEmail] = useState("");
+    const [password, setPassword] = useState("");
+    const [confirmPassword, setConfirmPassword] = useState("");
+    const [showPassword, setShowPassword] = useState(false);
+    const [agreeTerms, setAgreeTerms] = useState(false);
+    const [phone, setPhone] = useState("");
+    const [gender, setGender] = useState("male");
+    const router = useRouter();
+    const { redirect } = router.query as { redirect?: string };
+
+    const handleRegister = async (e: React.FormEvent) => {
+      e.preventDefault();
+      if (!phone) {
+        toast.error('Please enter your phone number');
+        return;
+      }
+      if (password !== confirmPassword) {
+        toast.error('Passwords do not match');
+        return;
+      }
+      try {
+        const res = await fetch('/api/auth/register', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ name, email, password, phone, gender })
+        });
+        const data = await res.json();
+        if (!res.ok) {
+          throw new Error(data.error || 'Registration failed');
+        }
+        toast.success('Account created successfully');
+        if (redirect) {
+          router.push(`/auth/login?redirect=${encodeURIComponent(redirect)}`);
+        } else {
+          router.push('/auth/login');
+        }
+      } catch (err: any) {
+        toast.error(err.message);
+      }
     }
     return (
         <form onSubmit={handleRegister}>
@@ -86,6 +117,36 @@ export default function UserRegistration() {
                     onChange={(value) => setConfirmPassword(value as string)}
                     className="w-full"
                     required />
+            </div>
+            <div className="mb-4">
+                <label htmlFor="phone" className="block text-gray-700 mb-2">
+                    Phone Number
+                </label>
+                <Input
+                    id="phone"
+                    type="tel"
+                    placeholder="Enter your phone number"
+                    value={phone}
+                    onChange={(value) => setPhone(value as string)}
+                    className="w-full"
+                    required
+                />
+            </div>
+            <div className="mb-4">
+                <label htmlFor="gender" className="block text-gray-700 mb-2">
+                    Gender
+                </label>
+                <select
+                    id="gender"
+                    value={gender}
+                    onChange={(e) => setGender(e.target.value)}
+                    className="w-full border px-3 py-2 rounded"
+                    required
+                >
+                    <option value="male">Male</option>
+                    <option value="female">Female</option>
+                    <option value="other">Other</option>
+                </select>
             </div>
             <div className="mb-6">
                 <Checkbox

@@ -3,7 +3,7 @@ import ProdCategories from "@components/ui/categories";
 import Image from "next/image";
 import { Input, InputGroup, Button, Badge, Nav, Modal, InputNumber } from "rsuite";
 import { useCart } from "../../context/CartContext";
-import { useAuth } from "../../context/AuthContext";
+import { useSession } from "next-auth/react";
 import { useRouter } from "next/router";
 
 interface ProductCardProps {
@@ -94,7 +94,7 @@ function ProductCard({
   quantity,
 }: ProductCardProps) {
   const { addItem } = useCart();
-  const { isLoggedIn } = useAuth();
+  const { data: session, status } = useSession();
   const router = useRouter();
   const [showModal, setShowModal] = useState(false);
   const [selectedQuantity, setSelectedQuantity] = useState(1);
@@ -170,13 +170,14 @@ function ProductCard({
         <Modal.Footer>
           <Button
             onClick={() => {
-              if (!isLoggedIn) {
+              if (status !== 'authenticated') {
                 // Save pending action and redirect to login
                 localStorage.setItem(
                   'pendingCartAction',
                   JSON.stringify({ shopId, productId: id, quantity: selectedQuantity })
                 );
-                router.push(`/Auth/Login?redirect=${router.asPath}`);
+                router.push(`/auth/login?redirect=${encodeURIComponent(router.asPath)}`);
+                return;
               } else {
                 addItem(id, selectedQuantity);
                 setShowModal(false);

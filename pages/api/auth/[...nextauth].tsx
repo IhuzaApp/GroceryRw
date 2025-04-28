@@ -24,16 +24,29 @@ export default NextAuth({
         const { email, password } = credentials;
         const query = gql`
           query GetUserByEmail($email: String!) {
-            Users(where: { email: { _eq: $email }, is_active: { _eq: true } }) {
+            Users(
+              where: { email: { _eq: $email }, is_active: { _eq: true } }
+            ) {
               id
               name
               email
               password_hash
+              phone
+              gender
+              address
             }
           }
         `;
         const res = await hasuraClient.request<{
-          Users: { id: string; name: string; email: string; password_hash: string }[];
+          Users: Array<{
+            id: string;
+            name: string;
+            email: string;
+            password_hash: string;
+            phone: string;
+            gender: string;
+            address: string;
+          }>;
         }>(query, { email });
         const user = res.Users[0];
         if (!user) {
@@ -43,7 +56,14 @@ export default NextAuth({
         if (!isValid) {
           throw new Error("Invalid credentials");
         }
-        return { id: user.id, name: user.name, email: user.email };
+        return {
+          id: user.id,
+          name: user.name,
+          email: user.email,
+          phone: user.phone,
+          gender: user.gender,
+          address: user.address,
+        };
       }
     })
   ],
@@ -54,12 +74,18 @@ export default NextAuth({
     async jwt({ token, user }) {
       if (user) {
         token.id = user.id;
+        token.phone = (user as any).phone;
+        token.gender = (user as any).gender;
+        token.address = (user as any).address;
       }
       return token;
     },
     async session({ session, token }) {
       if (token && session.user) {
         (session.user as any).id = token.id as string;
+        (session.user as any).phone = (token as any).phone;
+        (session.user as any).gender = (token as any).gender;
+        (session.user as any).address = (token as any).address;
       }
       return session;
     }
