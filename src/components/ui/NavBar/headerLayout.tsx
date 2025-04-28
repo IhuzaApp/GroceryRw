@@ -1,8 +1,10 @@
 import Link from "next/link";
 import React from "react";
 import { Input, InputGroup } from "rsuite";
+import { useCart } from '../../../context/CartContext';
 
 export default function HeaderLayout() {
+  const { count } = useCart();
   return (
     <header className="container sticky top-0 z-50 mx-auto rounded-full border-b bg-white p-2 shadow-lg">
       <div className="flex items-center justify-between gap-4 px-2 sm:px-4">
@@ -94,7 +96,7 @@ export default function HeaderLayout() {
                 </g>
               </svg>
             </div>
-            <span className="text-xl font-bold text-green-500">02</span>
+            <span className="text-xl font-bold text-green-500">{count}</span>
           </div>
         </Link>
       </div>
@@ -164,7 +166,7 @@ export default function HeaderLayout() {
                 </g>
               </svg>
             </div>
-            <span className="text-sm font-semibold text-green-500">02</span>
+            <span className="text-sm font-semibold text-green-500">{count}</span>
           </div>
         </Link>
       </div>

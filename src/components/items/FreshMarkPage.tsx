@@ -17,63 +17,65 @@ interface Product {
   description?: string;
 }
 
+interface Shop {
+  id: string;
+  name: string;
+  description: string;
+  image: string;
+  address: string;
+  latitude: string;
+  longitude: string;
+  operating_hours: any;
+  is_active: boolean;
+}
+
 interface FreshMarkPageProps {
+  shop: Shop;
   products?: Product[];
 }
 
-const FreshMarkPage: React.FC<FreshMarkPageProps> = ({ products }) => {
+const FreshMarkPage: React.FC<FreshMarkPageProps> = ({ shop, products }) => {
   const [activeCategory, setActiveCategory] = useState("all");
 
-  // Mock shop data
-  const shop = {
-    id: "freshmart",
-    name: "FreshMart",
-    image: "/placeholder.svg?height=200&width=200",
-    banner: "/placeholder.svg?height=200&width=800",
+  // Merge fetched shop details with additional mock fields and products
+  const shopData = {
+    ...shop,
+    banner: shop?.image, // fallback banner is shop image
     rating: 4.8,
     reviews: 1245,
     deliveryTime: "15-25 min",
     deliveryFee: "Free",
     distance: "1.2 mi",
-    description:
-      "Your one-stop shop for fresh groceries, household essentials, and more.",
-    categories: [
-      { id: "all", name: "All" },
-      { id: "fruits", name: "Fruits & Vegetables" },
-      { id: "dairy", name: "Dairy & Eggs" },
-      { id: "bakery", name: "Bakery" },
-      { id: "meat", name: "Meat & Seafood" },
-      { id: "snacks", name: "Snacks" },
-      { id: "beverages", name: "Beverages" },
-      { id: "household", name: "Household" },
-    ],
-    products: products || [
-      // ... keep the mock products here as fallback ...
-    ],
+    products: products || [],
   };
 
-  // Filter products by category
+  // Filter products by category using shopData.products
   const filteredProducts =
     activeCategory === "all"
-      ? shop.products
-      : shop.products.filter((product) => product.category === activeCategory);
+      ? shopData.products
+      : shopData.products.filter((product) => product.category === activeCategory);
+
+  const sanitizeSrc = (raw: string) => {
+    if (raw.startsWith('/')) return raw;
+    if (raw.startsWith('http')) return raw;
+    return '/assets/images/shop-placeholder.jpg';
+  }
 
   return (
     <RootLayout>
       <div className="p-4 md:ml-16">
-        {/* Adjust ml-* to match your sidebar width */}
         <div className="container mx-auto">
           {/* Shop Banner */}
           <div className="relative h-48 bg-gray-200">
             <Image
-              src="/assets/images/shop-placeholder.jpg"
-              alt={shop.name}
+              src={sanitizeSrc(shopData.image)}
+              alt={shopData?.name}
               fill
               className="object-cover"
             />
             <div className="absolute inset-0 flex items-end bg-black bg-opacity-30">
               <div className="p-6 text-white">
-                <h1 className="text-3xl font-bold">{shop.name}</h1>
+                <h1 className="text-3xl font-bold">{shopData.name}</h1>
                 <div className="mt-2 flex items-center">
                   <div className="flex items-center">
                     <svg
@@ -83,15 +85,15 @@ const FreshMarkPage: React.FC<FreshMarkPageProps> = ({ products }) => {
                     >
                       <path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z" />
                     </svg>
-                    <span className="ml-1 font-medium">{shop.rating}</span>
+                    <span className="ml-1 font-medium">{shopData.rating}</span>
                     <span className="ml-1 text-sm">
-                      ({shop.reviews} reviews)
+                      ({shopData.reviews} reviews)
                     </span>
                   </div>
                   <span className="mx-2">•</span>
-                  <span>{shop.deliveryTime}</span>
+                  <span>{shopData.deliveryTime}</span>
                   <span className="mx-2">•</span>
-                  <span>{shop.deliveryFee} delivery</span>
+                  <span>{shopData.deliveryFee} delivery</span>
                 </div>
               </div>
             </div>
@@ -113,11 +115,11 @@ const FreshMarkPage: React.FC<FreshMarkPageProps> = ({ products }) => {
 
           {/* Shop Description */}
           <div className="border-b bg-white px-4 py-3">
-            <p className="text-gray-600">{shop.description}</p>
+            <p className="text-gray-600">{shopData?.description}</p>
           </div>
           <ItemsSection
             activeCategory={activeCategory}
-            shop={shop}
+            shop={shopData}
             filteredProducts={filteredProducts}
             setActiveCategory={setActiveCategory}
           />
