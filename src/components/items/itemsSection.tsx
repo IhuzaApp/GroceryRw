@@ -3,6 +3,8 @@ import ProdCategories from "@components/ui/categories";
 import Image from "next/image";
 import { Input, InputGroup, Button, Badge, Nav, Modal, InputNumber } from "rsuite";
 import { useCart } from "../../context/CartContext";
+import { useAuth } from "../../context/AuthContext";
+import { useRouter } from "next/router";
 
 interface ProductCardProps {
   id: string;
@@ -14,6 +16,7 @@ interface ProductCardProps {
   originalPrice?: string;
   measurement_unit?: string;
   quantity?: number;
+  shopId: string;
 }
 
 export default function ItemsSection({
@@ -61,6 +64,7 @@ export default function ItemsSection({
             <ProductCard
               key={product.id}
               id={product.id}
+              shopId={shop.id}
               name={product.name}
               image={product.image}
               price={product.price}
@@ -79,6 +83,7 @@ export default function ItemsSection({
 
 function ProductCard({
   id,
+  shopId,
   name,
   image,
   price,
@@ -89,6 +94,8 @@ function ProductCard({
   quantity,
 }: ProductCardProps) {
   const { addItem } = useCart();
+  const { isLoggedIn } = useAuth();
+  const router = useRouter();
   const [showModal, setShowModal] = useState(false);
   const [selectedQuantity, setSelectedQuantity] = useState(1);
 
@@ -161,7 +168,22 @@ function ProductCard({
           </div>
         </Modal.Body>
         <Modal.Footer>
-          <Button onClick={() => { addItem(id, selectedQuantity); setShowModal(false); }} appearance="primary">
+          <Button
+            onClick={() => {
+              if (!isLoggedIn) {
+                // Save pending action and redirect to login
+                localStorage.setItem(
+                  'pendingCartAction',
+                  JSON.stringify({ shopId, productId: id, quantity: selectedQuantity })
+                );
+                router.push(`/Auth/Login?redirect=${router.asPath}`);
+              } else {
+                addItem(id, selectedQuantity);
+                setShowModal(false);
+              }
+            }}
+            appearance="primary"
+          >
             Add to Cart
           </Button>
           <Button onClick={() => setShowModal(false)} appearance="subtle">

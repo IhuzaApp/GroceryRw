@@ -20,6 +20,7 @@
       "@hooks/*": ["src/hooks/*"],
       "@context/*": ["src/context/*"],
       "@graphql/*": ["src/generated/*"],
+      "@graphqlmutations/*": ["src/graphql/*"],
       "@assets/*": ["src/assets/*"],
       "@clients/*": ["src/clients/*"],
       "@config/*": ["src/config/*"],
