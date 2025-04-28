@@ -220,8 +220,8 @@ export default function Home({ initialData }: { initialData: Data }) {
                               target.src = '/images/shop-placeholder.jpg';
                               target.onerror = null; // Prevent infinite loop
                             }}
-                          />
-                        </div>
+              />
+            </div>
                         <div className="p-5">
                           <h3 className="text-xl font-semibold text-gray-800 mb-2">{shop.name}</h3>
                           <p className="text-gray-500 text-sm leading-relaxed">
@@ -254,15 +254,15 @@ export default function Home({ initialData }: { initialData: Data }) {
                             </div>
                           </div>
                         </div>
-                      </div>
+          </div>
                     </Link>
                   ))
                 ) : (
                   <div className="col-span-full text-center text-gray-500 mt-8">
                     No shops found in this category
-                  </div>
+            </div>
                 )}
-              </div>
+            </div>
             )}
           </div>
         </div>
