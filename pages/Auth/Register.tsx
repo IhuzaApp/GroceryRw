@@ -30,6 +30,7 @@ export default function RegisterPage() {
           <p className="text-gray-500 mb-8">Sign up to start shopping for groceries</p>
 
           <UserRegistration />
+          {/* Add Phone and Gender Fields here for clarity */}
           <div className="text-center mt-8">
             <p className="text-gray-600">
               Already have an account?{" "}
