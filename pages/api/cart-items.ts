@@ -209,8 +209,32 @@ export default async function handler(
       console.error('Error fetching cart:', error);
       return res.status(500).json({ error: 'Failed to fetch cart' });
     }
+  } else if (req.method === 'DELETE') {
+    // Handle DELETE: remove a cart item
+    const session = (await getServerSession(req, res, authOptions as any)) as Session | null;
+    if (!session?.user?.id) {
+      return res.status(401).json({ error: 'Unauthorized' });
+    }
+    const { cart_item_id } = req.body as { cart_item_id?: string };
+    if (!cart_item_id) {
+      return res.status(400).json({ error: 'Missing cart_item_id' });
+    }
+    try {
+      const DELETE_ITEM = gql`
+        mutation DeleteCartItem($id: uuid!) {
+          delete_Cart_Items_by_pk(id: $id) {
+            id
+          }
+        }
+      `;
+      await hasuraClient.request(DELETE_ITEM, { id: cart_item_id });
+      return res.status(200).json({ success: true });
+    } catch (error) {
+      console.error('Error deleting cart item:', error);
+      return res.status(500).json({ error: 'Failed to delete cart item' });
+    }
   } else {
-    res.setHeader('Allow', ['GET', 'POST']);
+    res.setHeader('Allow', ['GET', 'POST', 'DELETE']);
     return res.status(405).end(`Method ${req.method} Not Allowed`);
   }
 } 

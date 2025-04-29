@@ -11,6 +11,7 @@ interface CartItemProps {
   onIncrease: () => void;
   onDecrease: () => void;
   onRemove: () => void;
+  loading?: boolean;
 }
 
 interface CartItemType {
@@ -39,6 +40,7 @@ function CartItem({
   onIncrease,
   onDecrease,
   onRemove,
+  loading,
 }: CartItemProps) {
   const { checked, image, name, size, price, quantity } = item;
   const subtotal = (price * quantity).toFixed(2);
@@ -85,7 +87,7 @@ function CartItem({
         </div>
 
         <div className="flex justify-end mt-2">
-          <Button color="red" appearance="subtle" onClick={onRemove}>
+          <Button color="red" appearance="subtle" onClick={onRemove} loading={loading}>
             ✕ Remove
           </Button>
         </div>
@@ -129,7 +131,7 @@ function CartItem({
         ${subtotal}
       </div>
       <div className="hidden md:flex md:justify-end md:col-span-1">
-        <Button color="red" appearance="subtle" onClick={onRemove}>
+        <Button color="red" appearance="subtle" onClick={onRemove} loading={loading}>
           ✕
         </Button>
       </div>
@@ -145,6 +147,8 @@ export default function ItemCartTable({
   onTotalChange?: (total: number) => void;
 }) {
   const [cartItems, setCartItems] = useState<CartItemType[]>([]);
+  // Track loading state for deletion per item
+  const [loadingIds, setLoadingIds] = useState<Set<string>>(new Set());
 
   useEffect(() => {
     // Fetch cart items including product metadata
@@ -191,8 +195,26 @@ export default function ItemCartTable({
     );
   };
 
-  const removeItem = (id: string) => {
-    setCartItems((prev) => prev.filter((item) => item.id !== id));
+  const removeItem = async (id: string) => {
+    // add to loading set
+    setLoadingIds(prev => new Set(prev).add(id));
+    try {
+      await fetch('/api/cart-items', {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ cart_item_id: id }),
+      });
+      // remove locally
+      setCartItems(prev => prev.filter(item => item.id !== id));
+    } catch (err) {
+      console.error('Failed to delete cart item:', err);
+    } finally {
+      setLoadingIds(prev => {
+        const newSet = new Set(prev);
+        newSet.delete(id);
+        return newSet;
+      });
+    }
   };
 
   const total = cartItems
@@ -228,6 +250,7 @@ export default function ItemCartTable({
             onIncrease={() => increaseQuantity(item.id)}
             onDecrease={() => decreaseQuantity(item.id)}
             onRemove={() => removeItem(item.id)}
+            loading={loadingIds.has(item.id)}
           />
         ))}
       </div>
