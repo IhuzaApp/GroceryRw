@@ -3,15 +3,19 @@ import { hasuraClient } from "../../../src/lib/hasuraClient";
 import { gql } from "graphql-request";
 
 const GET_DELIVERY_ISSUES = gql`
-  query GetDeliveryIssues {
-    Delivery_Issues {
-      id
-      order_id
-      issue_type
-      description
-      created_at
-    }
+query GetDeliveryIssues {
+  Delivery_Issues {
+    id
+    order_id
+    issue_type
+    description
+    created_at
+    shopper_id
+    status
+    updated_at
   }
+}
+
 `;
 
 interface DeliveryIssuesResponse {

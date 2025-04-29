@@ -13,7 +13,7 @@ interface CartItemProps {
   onRemove: () => void;
 }
 
-interface CartItemType {
+export interface CartItemType {
   id: string;
   checked: boolean;
   image: string;
@@ -21,6 +21,10 @@ interface CartItemType {
   size: string;
   price: number;
   quantity: number;
+}
+
+interface ItemCartTableProps {
+  initialItems: CartItemType[];
 }
 
 function CartItem({
@@ -166,39 +170,8 @@ function CartItem({
   );
 }
 
-export default function ItemCartTable() {
-  const [cartItems, setCartItems] = useState<CartItemType[]>([
-    {
-      id: "1",
-      checked: false,
-      image:
-        "https://png.pngtree.com/png-vector/20230905/ourmid/pngtree-composition-with-grocery-products-in-shopping-basket-diet-png-image_9948113.png",
-      name: "Avocado Evokaado",
-      size: "14oz",
-      price: 12.86,
-      quantity: 4,
-    },
-    {
-      id: "2",
-      checked: false,
-      image:
-        "https://png.pngtree.com/png-vector/20230905/ourmid/pngtree-composition-with-grocery-products-in-shopping-basket-diet-png-image_9948113.png",
-      name: "Fruit And Nut Muesli",
-      size: "500g",
-      price: 20.53,
-      quantity: 2,
-    },
-    {
-      id: "3",
-      checked: false,
-      image:
-        "https://png.pngtree.com/png-vector/20230905/ourmid/pngtree-composition-with-grocery-products-in-shopping-basket-diet-png-image_9948113.png",
-      name: "Mixed Nuts",
-      size: "24 Oz",
-      price: 33.45,
-      quantity: 1,
-    },
-  ]);
+export default function ItemCartTable({ initialItems }: ItemCartTableProps) {
+  const [cartItems, setCartItems] = useState<CartItemType[]>(initialItems);
 
   const toggleCheck = (id: string) => {
     setCartItems((prev) =>

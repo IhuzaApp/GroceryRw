@@ -382,7 +382,7 @@ export type Cart_Items = {
   price: Scalars['String']['output'];
   product_id: Scalars['uuid']['output'];
   quantity: Scalars['Int']['output'];
-  updated_at: Scalars['String']['output'];
+  updated_at?: Maybe<Scalars['String']['output']>;
 };
 
 /** aggregated selection of "Cart_Items" */
@@ -3911,6 +3911,7 @@ export type Users = {
   Shopper_Availabilities_aggregate: Shopper_Availability_Aggregate;
   created_at: Scalars['timestamptz']['output'];
   email: Scalars['String']['output'];
+  gender: Scalars['String']['output'];
   id: Scalars['uuid']['output'];
   is_active: Scalars['Boolean']['output'];
   name: Scalars['String']['output'];
@@ -4081,6 +4082,7 @@ export type Users_Bool_Exp = {
   _or?: InputMaybe<Array<Users_Bool_Exp>>;
   created_at?: InputMaybe<Timestamptz_Comparison_Exp>;
   email?: InputMaybe<String_Comparison_Exp>;
+  gender?: InputMaybe<String_Comparison_Exp>;
   id?: InputMaybe<Uuid_Comparison_Exp>;
   is_active?: InputMaybe<Boolean_Comparison_Exp>;
   name?: InputMaybe<String_Comparison_Exp>;
@@ -4111,6 +4113,7 @@ export type Users_Insert_Input = {
   Shopper_Availabilities?: InputMaybe<Shopper_Availability_Arr_Rel_Insert_Input>;
   created_at?: InputMaybe<Scalars['timestamptz']['input']>;
   email?: InputMaybe<Scalars['String']['input']>;
+  gender?: InputMaybe<Scalars['String']['input']>;
   id?: InputMaybe<Scalars['uuid']['input']>;
   is_active?: InputMaybe<Scalars['Boolean']['input']>;
   name?: InputMaybe<Scalars['String']['input']>;
@@ -4125,6 +4128,7 @@ export type Users_Insert_Input = {
 export type Users_Max_Fields = {
   created_at?: Maybe<Scalars['timestamptz']['output']>;
   email?: Maybe<Scalars['String']['output']>;
+  gender?: Maybe<Scalars['String']['output']>;
   id?: Maybe<Scalars['uuid']['output']>;
   name?: Maybe<Scalars['String']['output']>;
   password_hash?: Maybe<Scalars['String']['output']>;
@@ -4138,6 +4142,7 @@ export type Users_Max_Fields = {
 export type Users_Min_Fields = {
   created_at?: Maybe<Scalars['timestamptz']['output']>;
   email?: Maybe<Scalars['String']['output']>;
+  gender?: Maybe<Scalars['String']['output']>;
   id?: Maybe<Scalars['uuid']['output']>;
   name?: Maybe<Scalars['String']['output']>;
   password_hash?: Maybe<Scalars['String']['output']>;
@@ -4180,6 +4185,7 @@ export type Users_Order_By = {
   Shopper_Availabilities_aggregate?: InputMaybe<Shopper_Availability_Aggregate_Order_By>;
   created_at?: InputMaybe<Order_By>;
   email?: InputMaybe<Order_By>;
+  gender?: InputMaybe<Order_By>;
   id?: InputMaybe<Order_By>;
   is_active?: InputMaybe<Order_By>;
   name?: InputMaybe<Order_By>;
@@ -4202,6 +4208,8 @@ export type Users_Select_Column =
   /** column name */
   | 'email'
   /** column name */
+  | 'gender'
+  /** column name */
   | 'id'
   /** column name */
   | 'is_active'
@@ -4222,6 +4230,7 @@ export type Users_Select_Column =
 export type Users_Set_Input = {
   created_at?: InputMaybe<Scalars['timestamptz']['input']>;
   email?: InputMaybe<Scalars['String']['input']>;
+  gender?: InputMaybe<Scalars['String']['input']>;
   id?: InputMaybe<Scalars['uuid']['input']>;
   is_active?: InputMaybe<Scalars['Boolean']['input']>;
   name?: InputMaybe<Scalars['String']['input']>;
@@ -4244,6 +4253,7 @@ export type Users_Stream_Cursor_Input = {
 export type Users_Stream_Cursor_Value_Input = {
   created_at?: InputMaybe<Scalars['timestamptz']['input']>;
   email?: InputMaybe<Scalars['String']['input']>;
+  gender?: InputMaybe<Scalars['String']['input']>;
   id?: InputMaybe<Scalars['uuid']['input']>;
   is_active?: InputMaybe<Scalars['Boolean']['input']>;
   name?: InputMaybe<Scalars['String']['input']>;
@@ -4260,6 +4270,8 @@ export type Users_Update_Column =
   | 'created_at'
   /** column name */
   | 'email'
+  /** column name */
+  | 'gender'
   /** column name */
   | 'id'
   /** column name */
@@ -6035,37 +6047,37 @@ export type GetAddressesQuery = { Addresses: Array<{ id: string, user_id: string
 export type GetCartItemsQueryVariables = Exact<{ [key: string]: never; }>;
 
 
-export type GetCartItemsQuery = { Cart_Items: Array<{ id: string, cart_id: string, product_id: string, quantity: number, price: string, created_at: string, updated_at: string }> };
+export type GetCartItemsQuery = { Cart_Items: Array<{ id: string, cart_id: string, product_id: string, quantity: number, price: string, created_at: string, updated_at?: string | null, Cart: { created_at: string, id: string, is_active: boolean, shop_id: string, total: string, updated_at?: string | null, user_id: string }, Product: { category: string, created_at: string, description: string, id: string, image: string, is_active: boolean, measurement_unit: string, name: string, price: string, quantity: number, shop_id: string, updated_at?: string | null } }> };
 
 export type GetCartsQueryVariables = Exact<{ [key: string]: never; }>;
 
 
-export type GetCartsQuery = { Carts: Array<{ id: string, user_id: string, total: string, created_at: string, updated_at?: string | null }> };
+export type GetCartsQuery = { Carts: Array<{ id: string, user_id: string, total: string, created_at: string, updated_at?: string | null, is_active: boolean, shop_id: string, User: { created_at: string, email: string, gender: string, id: string, is_active: boolean, name: string, password_hash: string, phone: string, profile_picture?: string | null, role: string, updated_at?: string | null } }> };
 
 export type GetCategoriesQueryVariables = Exact<{ [key: string]: never; }>;
 
 
-export type GetCategoriesQuery = { Categories: Array<{ id: string, name: string, description: string, image: string, created_at: string, is_active: boolean }> };
+export type GetCategoriesQuery = { Categories: Array<{ id: string, name: string, description: string, image: string, created_at: string, is_active: boolean, Shops: Array<{ updated_at?: string | null, operating_hours: any, name: string, longitude: string, latitude: string, is_active: boolean, image: string, id: string, description: string, created_at: string, category_id: string, address: string }> }> };
 
 export type GetDeliveryIssuesQueryVariables = Exact<{ [key: string]: never; }>;
 
 
-export type GetDeliveryIssuesQuery = { Delivery_Issues: Array<{ id: string, order_id: string, shopper_id: string, issue_type: string, description: string, status: string, created_at: string, updated_at: string }> };
+export type GetDeliveryIssuesQuery = { Delivery_Issues: Array<{ id: string, order_id: string, shopper_id: string, issue_type: string, description: string, status: string, created_at: string, updated_at: string, Order: { combined_order_id?: string | null, created_at: string, delivery_address_id: string, delivery_notes: string, delivery_photo_url: string, delivery_time?: string | null, id: string, shopper_id: string, status: string, total: string, updated_at: string, user_id: string }, User: { created_at: string, email: string, gender: string, id: string, is_active: boolean, name: string, password_hash: string, phone: string, profile_picture?: string | null, role: string, updated_at?: string | null } }> };
 
 export type GetNotificationsQueryVariables = Exact<{ [key: string]: never; }>;
 
 
-export type GetNotificationsQuery = { Notifications: Array<{ id: string, user_id: string, type: string, message: string, is_read: boolean, created_at: string }> };
+export type GetNotificationsQuery = { Notifications: Array<{ id: string, user_id: string, type: string, message: string, is_read: boolean, created_at: string, User: { created_at: string, email: string, gender: string, id: string, is_active: boolean, name: string, password_hash: string, phone: string, profile_picture?: string | null, role: string, updated_at?: string | null } }> };
 
 export type GetOrderItemsQueryVariables = Exact<{ [key: string]: never; }>;
 
 
-export type GetOrderItemsQuery = { Order_Items: Array<{ id: string, order_id: string, product_id: string, quantity: number, price: string, created_at: string }> };
+export type GetOrderItemsQuery = { Order_Items: Array<{ id: string, order_id: string, product_id: string, quantity: number, price: string, created_at: string, Product: { category: string, created_at: string, description: string, id: string, image: string, is_active: boolean, measurement_unit: string, name: string, price: string, quantity: number, shop_id: string, updated_at?: string | null }, Order: { user_id: string, updated_at: string, total: string, shopper_id: string, status: string, id: string, delivery_time?: string | null, delivery_photo_url: string, delivery_notes: string, delivery_address_id: string, created_at: string, combined_order_id?: string | null } }> };
 
 export type GetOrdersQueryVariables = Exact<{ [key: string]: never; }>;
 
 
-export type GetOrdersQuery = { Orders: Array<{ id: string, user_id: string, shopper_id: string, total: string, status: string, delivery_address_id: string, delivery_photo_url: string, delivery_notes: string, created_at: string, updated_at: string, delivery_time?: string | null, combined_order_id?: string | null }> };
+export type GetOrdersQuery = { Orders: Array<{ id: string, user_id: string, shopper_id: string, total: string, status: string, delivery_address_id: string, delivery_photo_url: string, delivery_notes: string, created_at: string, updated_at: string, delivery_time?: string | null, combined_order_id?: string | null, Address: { city: string, created_at: string, id: string, is_default: boolean, latitude: string, longitude: string, postal_code?: string | null, street: string, updated_at: string, user_id: string }, Delivery_Issues: Array<{ created_at: string, description: string, id: string, issue_type: string, order_id: string, shopper_id: string, status: string, updated_at: string }>, Order_Items: Array<{ created_at: string, id: string, order_id: string, price: string, product_id: string, quantity: number }> }> };
 
 export type GetPlatformSettingsQueryVariables = Exact<{ [key: string]: never; }>;
 
@@ -6075,22 +6087,22 @@ export type GetPlatformSettingsQuery = { Platform_Settings: Array<{ id: string, 
 export type GetProductsQueryVariables = Exact<{ [key: string]: never; }>;
 
 
-export type GetProductsQuery = { Products: Array<{ id: string, name: string, description: string, shop_id: string, price: string, quantity: number, measurement_unit: string, image: string, category: string, created_at: string, updated_at?: string | null, is_active: boolean }> };
+export type GetProductsQuery = { Products: Array<{ id: string, name: string, description: string, shop_id: string, price: string, quantity: number, measurement_unit: string, image: string, category: string, created_at: string, updated_at?: string | null, is_active: boolean, Shop: { address: string, category_id: string, created_at: string, description: string, id: string, image: string, is_active: boolean, latitude: string, longitude: string, name: string, operating_hours: any, updated_at?: string | null }, Order_Items: Array<{ quantity: number, product_id: string, price: string, order_id: string, id: string, created_at: string }>, Cart_Items: Array<{ updated_at?: string | null, quantity: number, product_id: string, price: string, id: string, created_at: string, cart_id: string }> }> };
 
 export type GetShopperAvailabilityQueryVariables = Exact<{ [key: string]: never; }>;
 
 
-export type GetShopperAvailabilityQuery = { Shopper_Availability: Array<{ id: string, user_id: string, day_of_week: number, start_time: any, end_time: any, is_available: boolean, created_at: string, updated_at: string }> };
+export type GetShopperAvailabilityQuery = { Shopper_Availability: Array<{ id: string, user_id: string, day_of_week: number, start_time: any, end_time: any, is_available: boolean, created_at: string, updated_at: string, User: { updated_at?: string | null, role: string, profile_picture?: string | null, phone: string, password_hash: string, name: string, is_active: boolean, id: string, created_at: string, email: string, gender: string } }> };
 
 export type GetShopsQueryVariables = Exact<{ [key: string]: never; }>;
 
 
-export type GetShopsQuery = { Shops: Array<{ id: string, name: string, description: string, category_id: string, image: string, address: string, latitude: string, longitude: string, operating_hours: any, created_at: string, updated_at?: string | null, is_active: boolean }> };
+export type GetShopsQuery = { Shops: Array<{ id: string, name: string, description: string, category_id: string, image: string, address: string, latitude: string, longitude: string, operating_hours: any, created_at: string, updated_at?: string | null, is_active: boolean, Category: { created_at: string, description: string, id: string, image: string, is_active: boolean, name: string }, Products: Array<{ category: string, created_at: string, description: string, id: string, updated_at?: string | null, shop_id: string, quantity: number, price: string, name: string, measurement_unit: string, is_active: boolean, image: string }> }> };
 
 export type GetUsersQueryVariables = Exact<{ [key: string]: never; }>;
 
 
-export type GetUsersQuery = { Users: Array<{ id: string, name: string, email: string, phone: string, role: string, password_hash: string, created_at: string, updated_at?: string | null, profile_picture?: string | null, is_active: boolean }> };
+export type GetUsersQuery = { Users: Array<{ id: string, name: string, email: string, phone: string, role: string, password_hash: string, created_at: string, updated_at?: string | null, profile_picture?: string | null, is_active: boolean, gender: string, Addresses: Array<{ city: string, created_at: string, id: string, is_default: boolean, latitude: string, longitude: string, postal_code?: string | null, street: string, updated_at: string, user_id: string }>, Carts: Array<{ created_at: string, id: string, is_active: boolean, shop_id: string, total: string, updated_at?: string | null, user_id: string }>, Delivery_Issues: Array<{ created_at: string, description: string, id: string, issue_type: string, order_id: string, shopper_id: string, status: string, updated_at: string }>, Notifications: Array<{ created_at: string, id: string, is_read: boolean, message: string, type: string, user_id: string }>, Order?: { combined_order_id?: string | null, created_at: string, delivery_address_id: string, delivery_notes: string, delivery_photo_url: string, delivery_time?: string | null, id: string, shopper_id: string, status: string, total: string, updated_at: string, user_id: string } | null, Orders: Array<{ combined_order_id?: string | null, created_at: string, delivery_address_id: string, delivery_notes: string, delivery_photo_url: string, delivery_time?: string | null, id: string, shopper_id: string, status: string, total: string, updated_at: string, user_id: string }>, Shopper_Availabilities: Array<{ user_id: string, updated_at: string, start_time: any, is_available: boolean, id: string, end_time: any, day_of_week: number, created_at: string }> }> };
 
 export type AddCartMutationVariables = Exact<{
   total?: InputMaybe<Scalars['String']['input']>;
@@ -6138,6 +6150,29 @@ export const GetCartItemsDocument = gql`
     price
     created_at
     updated_at
+    Cart {
+      created_at
+      id
+      is_active
+      shop_id
+      total
+      updated_at
+      user_id
+    }
+    Product {
+      category
+      created_at
+      description
+      id
+      image
+      is_active
+      measurement_unit
+      name
+      price
+      quantity
+      shop_id
+      updated_at
+    }
   }
 }
     `;
@@ -6149,6 +6184,21 @@ export const GetCartsDocument = gql`
     total
     created_at
     updated_at
+    is_active
+    shop_id
+    User {
+      created_at
+      email
+      gender
+      id
+      is_active
+      name
+      password_hash
+      phone
+      profile_picture
+      role
+      updated_at
+    }
   }
 }
     `;
@@ -6161,6 +6211,20 @@ export const GetCategoriesDocument = gql`
     image
     created_at
     is_active
+    Shops {
+      updated_at
+      operating_hours
+      name
+      longitude
+      latitude
+      is_active
+      image
+      id
+      description
+      created_at
+      category_id
+      address
+    }
   }
 }
     `;
@@ -6175,6 +6239,33 @@ export const GetDeliveryIssuesDocument = gql`
     status
     created_at
     updated_at
+    Order {
+      combined_order_id
+      created_at
+      delivery_address_id
+      delivery_notes
+      delivery_photo_url
+      delivery_time
+      id
+      shopper_id
+      status
+      total
+      updated_at
+      user_id
+    }
+    User {
+      created_at
+      email
+      gender
+      id
+      is_active
+      name
+      password_hash
+      phone
+      profile_picture
+      role
+      updated_at
+    }
   }
 }
     `;
@@ -6187,6 +6278,19 @@ export const GetNotificationsDocument = gql`
     message
     is_read
     created_at
+    User {
+      created_at
+      email
+      gender
+      id
+      is_active
+      name
+      password_hash
+      phone
+      profile_picture
+      role
+      updated_at
+    }
   }
 }
     `;
@@ -6199,6 +6303,34 @@ export const GetOrderItemsDocument = gql`
     quantity
     price
     created_at
+    Product {
+      category
+      created_at
+      description
+      id
+      image
+      is_active
+      measurement_unit
+      name
+      price
+      quantity
+      shop_id
+      updated_at
+    }
+    Order {
+      user_id
+      updated_at
+      total
+      shopper_id
+      status
+      id
+      delivery_time
+      delivery_photo_url
+      delivery_notes
+      delivery_address_id
+      created_at
+      combined_order_id
+    }
   }
 }
     `;
@@ -6217,6 +6349,36 @@ export const GetOrdersDocument = gql`
     updated_at
     delivery_time
     combined_order_id
+    Address {
+      city
+      created_at
+      id
+      is_default
+      latitude
+      longitude
+      postal_code
+      street
+      updated_at
+      user_id
+    }
+    Delivery_Issues {
+      created_at
+      description
+      id
+      issue_type
+      order_id
+      shopper_id
+      status
+      updated_at
+    }
+    Order_Items {
+      created_at
+      id
+      order_id
+      price
+      product_id
+      quantity
+    }
   }
 }
     `;
@@ -6246,6 +6408,37 @@ export const GetProductsDocument = gql`
     created_at
     updated_at
     is_active
+    Shop {
+      address
+      category_id
+      created_at
+      description
+      id
+      image
+      is_active
+      latitude
+      longitude
+      name
+      operating_hours
+      updated_at
+    }
+    Order_Items {
+      quantity
+      product_id
+      price
+      order_id
+      id
+      created_at
+    }
+    Cart_Items {
+      updated_at
+      quantity
+      product_id
+      price
+      id
+      created_at
+      cart_id
+    }
   }
 }
     `;
@@ -6260,6 +6453,19 @@ export const GetShopperAvailabilityDocument = gql`
     is_available
     created_at
     updated_at
+    User {
+      updated_at
+      role
+      profile_picture
+      phone
+      password_hash
+      name
+      is_active
+      id
+      created_at
+      email
+      gender
+    }
   }
 }
     `;
@@ -6278,6 +6484,28 @@ export const GetShopsDocument = gql`
     created_at
     updated_at
     is_active
+    Category {
+      created_at
+      description
+      id
+      image
+      is_active
+      name
+    }
+    Products {
+      category
+      created_at
+      description
+      id
+      updated_at
+      shop_id
+      quantity
+      price
+      name
+      measurement_unit
+      is_active
+      image
+    }
   }
 }
     `;
@@ -6294,6 +6522,84 @@ export const GetUsersDocument = gql`
     updated_at
     profile_picture
     is_active
+    gender
+    Addresses {
+      city
+      created_at
+      id
+      is_default
+      latitude
+      longitude
+      postal_code
+      street
+      updated_at
+      user_id
+    }
+    Carts {
+      created_at
+      id
+      is_active
+      shop_id
+      total
+      updated_at
+      user_id
+    }
+    Delivery_Issues {
+      created_at
+      description
+      id
+      issue_type
+      order_id
+      shopper_id
+      status
+      updated_at
+    }
+    Notifications {
+      created_at
+      id
+      is_read
+      message
+      type
+      user_id
+    }
+    Order {
+      combined_order_id
+      created_at
+      delivery_address_id
+      delivery_notes
+      delivery_photo_url
+      delivery_time
+      id
+      shopper_id
+      status
+      total
+      updated_at
+      user_id
+    }
+    Orders {
+      combined_order_id
+      created_at
+      delivery_address_id
+      delivery_notes
+      delivery_photo_url
+      delivery_time
+      id
+      shopper_id
+      status
+      total
+      updated_at
+      user_id
+    }
+    Shopper_Availabilities {
+      user_id
+      updated_at
+      start_time
+      is_available
+      id
+      end_time
+      day_of_week
+      created_at
+    }
   }
 }
     `;

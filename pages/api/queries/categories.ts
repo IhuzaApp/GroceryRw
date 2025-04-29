@@ -3,14 +3,17 @@ import { hasuraClient } from "../../../src/lib/hasuraClient";
 import { gql } from "graphql-request";
 
 const GET_CATEGORIES = gql`
-  query GetCategories {
-    Categories {
-      id
-      name
-      description
-      created_at
-    }
+query GetCategories {
+  Categories {
+    id
+    name
+    description
+    created_at
+    image
+    is_active
   }
+}
+
 `;
 
 interface CategoriesResponse {
