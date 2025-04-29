@@ -6,5 +6,33 @@ query GetOrderItems {
     quantity
     price
     created_at
+    Product {
+      category
+      created_at
+      description
+      id
+      image
+      is_active
+      measurement_unit
+      name
+      price
+      quantity
+      shop_id
+      updated_at
+    }
+    Order {
+      user_id
+      updated_at
+      total
+      shopper_id
+      status
+      id
+      delivery_time
+      delivery_photo_url
+      delivery_notes
+      delivery_address_id
+      created_at
+      combined_order_id
+    }
   }
 }

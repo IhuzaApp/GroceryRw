@@ -6,5 +6,19 @@ query GetCategories {
     image
     created_at
     is_active
+    Shops {
+      updated_at
+      operating_hours
+      name
+      longitude
+      latitude
+      is_active
+      image
+      id
+      description
+      created_at
+      category_id
+      address
+    }
   }
 }

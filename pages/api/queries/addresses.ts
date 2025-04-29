@@ -3,17 +3,21 @@ import { hasuraClient } from "../../../src/lib/hasuraClient";
 import { gql } from "graphql-request";
 
 const GET_ADDRESSES = gql`
-  query GetAddresses {
-    Addresses {
-      id
-      user_id
-      street
-      city
-      state
-      postal_code
-      created_at
-    }
+query GetAddresses {
+  Addresses {
+    id
+    user_id
+    street
+    city
+    postal_code
+    created_at
+    is_default
+    latitude
+    longitude
+    updated_at
   }
+}
+
 `;
 
 interface AddressesResponse {

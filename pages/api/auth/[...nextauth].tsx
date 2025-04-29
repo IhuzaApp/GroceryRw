@@ -1,4 +1,4 @@
-import NextAuth from "next-auth";
+import NextAuth, { NextAuthOptions } from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
 import { GraphQLClient, gql } from "graphql-request";
 import bcrypt from "bcryptjs";
@@ -11,7 +11,7 @@ const hasuraClient = new GraphQLClient(HASURA_URL, {
   headers: { 'x-hasura-admin-secret': HASURA_SECRET }
 });
 
-export const authOptions = {
+export const authOptions: NextAuthOptions = {
   providers: [
     CredentialsProvider({
       name: "Credentials",

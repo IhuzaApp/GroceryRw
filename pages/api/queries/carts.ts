@@ -3,13 +3,18 @@ import { hasuraClient } from "../../../src/lib/hasuraClient";
 import { gql } from "graphql-request";
 
 const GET_CARTS = gql`
-  query GetCarts {
-    Carts {
-      id
-      user_id
-      created_at
-    }
+query GetCarts {
+  Carts {
+    id
+    user_id
+    created_at
+    is_active
+    shop_id
+    total
+    updated_at
   }
+}
+
 `;
 
 interface CartsResponse {
