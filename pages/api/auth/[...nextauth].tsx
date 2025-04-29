@@ -11,7 +11,7 @@ const hasuraClient = new GraphQLClient(HASURA_URL, {
   headers: { 'x-hasura-admin-secret': HASURA_SECRET }
 });
 
-export default NextAuth({
+export const authOptions = {
   providers: [
     CredentialsProvider({
       name: "Credentials",
@@ -90,4 +90,7 @@ export default NextAuth({
       return session;
     }
   }
-}); 
+};
+
+// NextAuth using the above options
+export default NextAuth(authOptions); 

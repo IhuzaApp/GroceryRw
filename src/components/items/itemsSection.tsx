@@ -5,6 +5,7 @@ import { Input, InputGroup, Button, Badge, Nav, Modal, InputNumber } from "rsuit
 import { useCart } from "../../context/CartContext";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/router";
+import toast from 'react-hot-toast';
 
 interface ProductCardProps {
   id: string;
@@ -59,7 +60,7 @@ export default function ItemsSection({
             ? String(activeCategory).charAt(0).toUpperCase() + String(activeCategory).slice(1)
             : "All Products"}
         </h2>
-        <div className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-4">
+        <div className="grid grid-cols-4 gap-4 md:grid-cols-5 lg:grid-cols-6">
           {filteredProducts.map((product: any) => (
             <ProductCard
               key={product.id}
@@ -169,8 +170,12 @@ function ProductCard({
         </Modal.Body>
         <Modal.Footer>
           <Button
-            onClick={() => {
-              if (status !== 'authenticated') {
+            onClick={async () => {
+              if (status === 'loading') {
+                // session still loading, do nothing
+                return;
+              }
+              if (status === 'unauthenticated') {
                 // Save pending action and redirect to login
                 localStorage.setItem(
                   'pendingCartAction',
@@ -178,12 +183,18 @@ function ProductCard({
                 );
                 router.push(`/auth/login?redirect=${encodeURIComponent(router.asPath)}`);
                 return;
-              } else {
-                addItem(id, selectedQuantity);
+              }
+              try {
+                await addItem(shopId, id, selectedQuantity);
+                toast.success('Added to cart');
                 setShowModal(false);
+              } catch (err: any) {
+                console.error('Add to cart failed:', err);
+                toast.error(err.message || 'Failed to add to cart');
               }
             }}
             appearance="primary"
+            disabled={status === 'loading'}
           >
             Add to Cart
           </Button>

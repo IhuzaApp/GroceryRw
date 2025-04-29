@@ -1,48 +1,39 @@
-import React, { createContext, useState, useContext, useEffect } from 'react';
+import React, { createContext, useState, useContext } from 'react';
+import { useSession } from 'next-auth/react';
 
 interface CartContextType {
   count: number;
-  addItem: (productId: string, quantity: number) => Promise<void>;
+  addItem: (shopId: string, productId: string, quantity: number) => Promise<void>;
 }
 
 const CartContext = createContext<CartContextType>({ count: 0, addItem: async () => {} });
 
 export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [count, setCount] = useState(0);
+  const { data: session, status } = useSession();
 
-  // Refresh cart items count
-  const refreshCart = async () => {
-    const cartId = localStorage.getItem('cartId');
-    if (!cartId) {
-      setCount(0);
-      return;
+  const addItem = async (shopId: string, productId: string, quantity: number) => {
+    if (status !== 'authenticated') {
+      throw new Error('User not authenticated');
     }
-    try {
-      const res = await fetch(`/api/cart-items?cart_id=${cartId}`);
-      const data = await res.json();
-      setCount(data.count ?? 0);
-    } catch {
-      setCount(0);
-    }
-  };
-
-  const addItem = async (productId: string, quantity: number) => {
-    let cartId = localStorage.getItem('cartId');
-    if (!cartId) {
-      cartId = crypto.randomUUID();
-      localStorage.setItem('cartId', cartId);
-    }
-    await fetch('/api/cart-items', {
+    // session.user.id is attached in NextAuth callbacks
+    const user_id = (session.user as any).id as string;
+    const res = await fetch('/api/cart-items', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ cart_id: cartId, product_id: productId, quantity }),
+      body: JSON.stringify({ user_id, shop_id: shopId, product_id: productId, quantity }),
     });
-    await refreshCart();
+    const data = await res.json();
+    if (!res.ok) {
+      throw new Error(data.error || 'Add to cart failed');
+    }
+    setCount(data.count ?? 0);
   };
 
-  useEffect(() => {
-    refreshCart();
-  }, []);
+  // Optionally refresh on session change
+  React.useEffect(() => {
+    setCount(0);
+  }, [status]);
 
   return <CartContext.Provider value={{ count, addItem }}>{children}</CartContext.Provider>;
 };
