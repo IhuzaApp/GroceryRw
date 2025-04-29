@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Input, Button, Checkbox } from "rsuite";
 import Image from "next/image";
 import CheckoutItems from "./checkout/checkoutCard";
@@ -13,7 +13,7 @@ interface CartItemProps {
   onRemove: () => void;
 }
 
-export interface CartItemType {
+interface CartItemType {
   id: string;
   checked: boolean;
   image: string;
@@ -23,8 +23,14 @@ export interface CartItemType {
   quantity: number;
 }
 
-interface ItemCartTableProps {
-  initialItems: CartItemType[];
+// Shape of items returned by the API (does not include 'checked')
+interface ApiCartItem {
+  id: string;
+  image: string;
+  name: string;
+  size: string;
+  price: number;
+  quantity: number;
 }
 
 function CartItem({
@@ -39,7 +45,7 @@ function CartItem({
 
   return (
     <div className="border-b pb-6 md:grid md:grid-cols-12 md:items-center md:gap-4">
-      {/* Mobile */}
+      {/* Mobile Layout */}
       <div className="flex flex-col gap-3 md:hidden">
         <div className="flex items-start gap-3">
           <Checkbox checked={checked} onChange={onToggle} />
@@ -56,61 +62,40 @@ function CartItem({
           </div>
         </div>
 
-        <div className="flex justify-between text-sm">
-          <span className="text-gray-500">Price</span>
-          <span className="font-bold">${price.toFixed(2)}</span>
-        </div>
-
-        <div className="flex items-center justify-between text-sm">
-          <span className="text-gray-500">Quantity</span>
-          <div className="flex items-center">
-            <Button
-              appearance="subtle"
-              className="h-8 w-8 p-0"
-              onClick={onDecrease}
-            >
-              <svg
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-                strokeWidth="2"
-                className="h-4 w-4"
-              >
+        <div className="grid grid-cols-2 gap-2 text-sm">
+          <div className="text-gray-500">Price</div>
+          <div className="text-right font-bold">${price.toFixed(2)}</div>
+          <div className="text-gray-500">Quantity</div>
+          <div className="flex items-center justify-end gap-2">
+            <Button appearance="subtle" className="h-6 w-6 p-0" onClick={onDecrease}>
+              <svg viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2" className="h-4 w-4">
                 <line x1="5" y1="12" x2="19" y2="12" />
               </svg>
             </Button>
-            <span className="mx-4 w-4 text-center font-medium">{quantity}</span>
-            <Button
-              appearance="subtle"
-              className="h-8 w-8 p-0"
-              onClick={onIncrease}
-            >
-              <svg
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-                strokeWidth="2"
-                className="h-4 w-4"
-              >
+            <span className="w-6 text-center">{quantity}</span>
+            <Button appearance="subtle" className="h-6 w-6 p-0" onClick={onIncrease}>
+              <svg viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2" className="h-4 w-4">
                 <line x1="12" y1="5" x2="12" y2="19" />
                 <line x1="5" y1="12" x2="19" y2="12" />
               </svg>
             </Button>
           </div>
+          <div className="text-gray-500">Subtotal</div>
+          <div className="text-right font-bold">${subtotal}</div>
         </div>
 
-        <div className="flex justify-between text-sm">
-          <span className="text-gray-500">Subtotal</span>
-          <span className="font-bold">${subtotal}</span>
+        <div className="flex justify-end mt-2">
+          <Button color="red" appearance="subtle" onClick={onRemove}>
+            ✕ Remove
+          </Button>
         </div>
-        <Button color="red" appearance="subtle" onClick={onRemove}>
-          Remove
-        </Button>
       </div>
 
-      {/* Desktop */}
-      <div className="hidden md:col-span-1 md:block">
+      {/* Desktop Layout */}
+      <div className="hidden md:block md:col-span-1">
         <Checkbox checked={checked} onChange={onToggle} />
       </div>
-      <div className="hidden md:col-span-1 md:block">
+      <div className="hidden md:block md:col-span-1">
         <Image
           src={image}
           alt={name}
@@ -119,49 +104,31 @@ function CartItem({
           className="rounded-md"
         />
       </div>
-      <div className="hidden md:col-span-4 md:block">
-        <h3 className="mb-1 font-medium text-gray-900">{name}</h3>
+      <div className="hidden md:block md:col-span-4">
+        <h3 className="font-medium text-gray-900">{name}</h3>
         <p className="text-sm text-gray-500">{size}</p>
       </div>
-      <div className="hidden text-center font-bold md:col-span-2 md:block">
+      <div className="hidden md:flex md:col-span-2 md:justify-center font-bold">
         ${price.toFixed(2)}
       </div>
-      <div className="hidden items-center justify-center md:col-span-2 md:flex">
-        <Button
-          appearance="subtle"
-          className="h-8 w-8 p-0"
-          onClick={onDecrease}
-        >
-          <svg
-            viewBox="0 0 24 24"
-            stroke="currentColor"
-            strokeWidth="2"
-            className="h-4 w-4"
-          >
+      <div className="hidden md:flex md:col-span-2 md:items-center md:justify-center">
+        <Button appearance="subtle" className="h-6 w-6 p-0" onClick={onDecrease}>
+          <svg viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2" className="h-4 w-4">
             <line x1="5" y1="12" x2="19" y2="12" />
           </svg>
         </Button>
-        <span className="mx-4 w-4 text-center font-medium">{quantity}</span>
-        <Button
-          appearance="subtle"
-          className="h-8 w-8 p-0"
-          onClick={onIncrease}
-        >
-          <svg
-            viewBox="0 0 24 24"
-            stroke="currentColor"
-            strokeWidth="2"
-            className="h-4 w-4"
-          >
+        <span className="mx-2 w-6 text-center">{quantity}</span>
+        <Button appearance="subtle" className="h-6 w-6 p-0" onClick={onIncrease}>
+          <svg viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2" className="h-4 w-4">
             <line x1="12" y1="5" x2="12" y2="19" />
             <line x1="5" y1="12" x2="19" y2="12" />
           </svg>
         </Button>
       </div>
-      <div className="hidden text-right font-bold md:col-span-2 md:block">
+      <div className="hidden md:flex md:justify-end md:col-span-2 font-bold">
         ${subtotal}
       </div>
-      <div className="hidden text-right md:col-span-1 md:block">
+      <div className="hidden md:flex md:justify-end md:col-span-1">
         <Button color="red" appearance="subtle" onClick={onRemove}>
           ✕
         </Button>
@@ -170,8 +137,33 @@ function CartItem({
   );
 }
 
-export default function ItemCartTable({ initialItems }: ItemCartTableProps) {
-  const [cartItems, setCartItems] = useState<CartItemType[]>(initialItems);
+export default function ItemCartTable({
+  shopId,
+  onTotalChange,
+}: {
+  shopId: string;
+  onTotalChange?: (total: number) => void;
+}) {
+  const [cartItems, setCartItems] = useState<CartItemType[]>([]);
+
+  useEffect(() => {
+    // Fetch cart items including product metadata
+    fetch(`/api/cart-items?shop_id=${shopId}`)
+      .then(res => res.json())
+      .then((data: { items?: ApiCartItem[] }) => {
+        // Ensure items is an array
+        const fetchedItems = data.items ?? [];
+        // Mark all fetched items as checked by default
+        setCartItems(
+          fetchedItems.map((item: ApiCartItem) => ({ ...item, checked: true }))
+        );
+      })
+      .catch(err => {
+        console.error('Failed to fetch cart items:', err);
+        // Reset to empty on error
+        setCartItems([]);
+      });
+  }, [shopId]);
 
   const toggleCheck = (id: string) => {
     setCartItems((prev) =>
@@ -207,6 +199,14 @@ export default function ItemCartTable({ initialItems }: ItemCartTableProps) {
     .reduce((sum, item) => sum + item?.price * item.quantity, 0)
     .toFixed(2);
 
+  // Notify parent of updated total
+  const totalNumber = parseFloat(total);
+  useEffect(() => {
+    if (onTotalChange) {
+      onTotalChange(totalNumber);
+    }
+  }, [totalNumber, onTotalChange]);
+
   console.log(total);
 
   return (
@@ -231,7 +231,6 @@ export default function ItemCartTable({ initialItems }: ItemCartTableProps) {
           />
         ))}
       </div>
-      <CheckoutItems Total={total} />
     </>
   );
 }

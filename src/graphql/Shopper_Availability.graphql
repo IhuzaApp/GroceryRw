@@ -8,18 +8,5 @@ query GetShopperAvailability {
     is_available
     created_at
     updated_at
-    User {
-      updated_at
-      role
-      profile_picture
-      phone
-      password_hash
-      name
-      is_active
-      id
-      created_at
-      email
-      gender
-    }
   }
 }

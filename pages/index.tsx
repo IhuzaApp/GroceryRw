@@ -253,7 +253,7 @@ export default function Home({ initialData }: { initialData: Data }) {
                               {shop.deliveryFee ?? "Free"}
                             </div>
                           </div>
-                        </div>
+            </div>
           </div>
                     </Link>
                   ))

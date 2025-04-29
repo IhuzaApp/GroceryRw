@@ -91,6 +91,7 @@ const GET_CART_WITH_ITEMS = gql`
   }
 `;
 
+// New query: fetch product details for multiple product IDs
 const GET_PRODUCTS_BY_IDS = gql`
   query GetProductsByIds($ids: [uuid!]!) {
     Products(where: { id: { _in: $ids } }) {
@@ -98,32 +99,7 @@ const GET_PRODUCTS_BY_IDS = gql`
       name
       image
       measurement_unit
-    }
-  }
-`;
-
-const GET_CART_WITHOUT_SHOP = gql`
-  query GetCartWithoutShop($user_id: uuid!) {
-    Carts(
-      where: { user_id: { _eq: $user_id }, is_active: { _eq: true } }
-      limit: 1
-    ) {
-      id
-      shop_id
-      Cart_Items {
-        id
-        product_id
-        price
-        quantity
-      }
-    }
-  }
-`;
-
-const GET_SHOP_NAME = gql`
-  query GetShopName($id: uuid!) {
-    Shops_by_pk(id: $id) {
-      name
+      quantity
     }
   }
 `;
@@ -174,7 +150,8 @@ export default async function handler(
         cart_id,
       });
       const items = itemsData.Cart_Items;
-      const count = items.reduce((sum, item) => sum + (item.quantity || 0), 0);
+      // Count distinct cart items (not sum of quantities)
+      const count = items.length;
       const totalValue = items.reduce(
         (sum, item) => sum + (parseFloat(item.price) || 0) * (item.quantity || 0),
         0
@@ -192,41 +169,40 @@ export default async function handler(
       return res.status(500).json({ error: 'Failed to add to cart' });
     }
   } else if (req.method === 'GET') {
-    // Handle GET: fetch user's active cart irrespective of shop
+    // Handle GET: fetch cart items and shop name
     const session = (await getServerSession(req, res, authOptions as any)) as Session | null;
     if (!session?.user?.id) {
       return res.status(401).json({ error: 'Unauthorized' });
     }
     const user_id = session.user.id;
+    const { shop_id } = req.query;
+    if (!shop_id || typeof shop_id !== 'string') {
+      return res.status(400).json({ error: 'Missing shop_id' });
+    }
     try {
-      // 1. Get active cart without specifying shop
-      const cartData = await hasuraClient.request<{
-        Carts: Array<{ id: string; shop_id: string; Cart_Items: Array<{ id: string; product_id: string; price: string; quantity: number }> }>;
-      }>(GET_CART_WITHOUT_SHOP, { user_id });
-      const cart = cartData.Carts[0];
-      if (!cart) {
-        return res.status(200).json({ items: [], count: 0, total: '0', shopName: '' });
-      }
-      // 2. Fetch shop name
-      const shopRes = await hasuraClient.request<{ Shops_by_pk?: { name: string } }>(GET_SHOP_NAME, { id: cart.shop_id });
-      const shopName = shopRes.Shops_by_pk?.name || '';
-      const rawItems = cart.Cart_Items;
-      // Fetch product details
-      const productIds = rawItems.map((i) => i.product_id);
-      const prodData = await hasuraClient.request<{ Products: Array<{ id: string; name: string; image: string | null; measurement_unit: string | null }> }>(GET_PRODUCTS_BY_IDS, { ids: productIds });
-      const prodMap = new Map(prodData.Products.map((p) => [p.id, p]));
-      const items = rawItems.map((item) => {
-        const prod = prodMap.get(item.product_id);
+      // 1) Fetch the cart with raw items
+      const data = await hasuraClient.request<{ Carts: Array<{ id: string; Cart_Items: Array<{ id: string; product_id: string; price: string; quantity: number }> }>; Shops_by_pk?: { name: string }; }>(GET_CART_WITH_ITEMS, { user_id, shop_id });
+      const cart = data.Carts[0];
+      const shopName = data.Shops_by_pk?.name || '';
+      const rawItems = cart?.Cart_Items || [];
+      // 2) Fetch product metadata
+      const productIds = rawItems.map(item => item.product_id);
+      const productsData = await hasuraClient.request<{ Products: Array<{ id: string; name: string; image: string; measurement_unit: string; quantity: number }> }>(GET_PRODUCTS_BY_IDS, { ids: productIds });
+      const productsMap = productsData.Products.reduce((map, p) => { map[p.id] = p; return map; }, {} as Record<string, { name: string; image: string; measurement_unit: string; quantity: number }>);
+      // 3) Combine items with metadata
+      const items = rawItems.map(item => {
+        const prod = productsMap[item.product_id];
         return {
           id: item.id,
-          name: prod?.name || '',
-          image: prod?.image || '/placeholder.svg',
-          size: prod?.measurement_unit || '',
           price: parseFloat(item.price),
           quantity: item.quantity,
+          name: prod?.name || '',
+          image: prod?.image || '',
+          size: prod ? `${prod.quantity}${prod.measurement_unit}` : '',
         };
       });
-      const count = items.reduce((sum, item) => sum + item.quantity, 0);
+      // Count distinct cart items (not sum of quantities)
+      const count = items.length;
       const totalValue = items.reduce((sum, item) => sum + item.price * item.quantity, 0);
       return res.status(200).json({ items, count, total: totalValue.toString(), shopName });
     } catch (error) {

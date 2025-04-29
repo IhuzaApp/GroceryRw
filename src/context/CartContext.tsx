@@ -30,9 +30,21 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setCount(data.count ?? 0);
   };
 
-  // Optionally refresh on session change
+  // On authentication, load existing cart item counts
   React.useEffect(() => {
-    setCount(0);
+    if (status === 'authenticated') {
+      fetch('/api/carts')
+        .then((res) => res.json())
+        .then((data: { carts: Array<{ count?: number }> }) => {
+          // Sum distinct item counts from all carts
+          const totalCount = data.carts.reduce(
+            (sum, c) => sum + (c.count ?? 0),
+            0
+          );
+          setCount(totalCount);
+        })
+        .catch((err) => console.error('Failed to fetch cart counts:', err));
+    }
   }, [status]);
 
   return <CartContext.Provider value={{ count, addItem }}>{children}</CartContext.Provider>;
