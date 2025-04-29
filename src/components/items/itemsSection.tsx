@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import ProdCategories from "@components/ui/categories";
 import Image from "next/image";
-import { Input, InputGroup, Button, Badge, Nav, Modal, InputNumber } from "rsuite";
+import { Input, InputGroup, Button, Badge, Nav } from "rsuite";
 import { useCart } from "../../context/CartContext";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/router";
@@ -151,58 +151,57 @@ function ProductCard({
           </div>
         </div>
       </div>
-      <Modal open={showModal} onClose={() => setShowModal(false)}>
-        <Modal.Header>
-          <Modal.Title>Add {name} to Cart</Modal.Title>
-        </Modal.Header>
-        <Modal.Body>
-          <div className="flex items-center">
-            <span className="mr-2">Quantity:</span>
-            <InputNumber
-              min={1}
-              value={selectedQuantity}
-              onChange={(val) => {
-                const v = typeof val === 'number' ? val : parseInt(val as string, 10) || 1;
-                setSelectedQuantity(v);
-              }}
-            />
+      {showModal && (
+        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
+          <div className="bg-white rounded-lg shadow-lg p-6 w-80">
+            <h3 className="text-lg font-bold mb-4">Add {name} to Cart</h3>
+            <div className="flex items-center mb-4">
+              <span className="mr-2">Quantity:</span>
+              <input
+                type="number"
+                min={1}
+                value={selectedQuantity}
+                onChange={e => setSelectedQuantity(
+                  Math.max(1, parseInt(e.target.value, 10) || 1)
+                )}
+                className="border p-1 w-16 rounded"
+              />
+            </div>
+            <div className="flex justify-end space-x-2">
+              <button
+                onClick={() => setShowModal(false)}
+                className="px-4 py-2 text-gray-700 rounded border"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={async () => {
+                  if (status === 'loading') return;
+                  if (status === 'unauthenticated') {
+                    localStorage.setItem(
+                      'pendingCartAction',
+                      JSON.stringify({ shopId, productId: id, quantity: selectedQuantity })
+                    );
+                    router.push(`/auth/login?redirect=${encodeURIComponent(router.asPath)}`);
+                    return;
+                  }
+                  try {
+                    await addItem(shopId, id, selectedQuantity);
+                    toast.success('Added to cart');
+                    setShowModal(false);
+                  } catch (err: any) {
+                    console.error('Add to cart failed:', err);
+                    toast.error(err.message || 'Failed to add to cart');
+                  }
+                }}
+                className="px-4 py-2 bg-green-500 text-white rounded"
+              >
+                Add to Cart
+              </button>
+            </div>
           </div>
-        </Modal.Body>
-        <Modal.Footer>
-          <Button
-            onClick={async () => {
-              if (status === 'loading') {
-                // session still loading, do nothing
-                return;
-              }
-              if (status === 'unauthenticated') {
-                // Save pending action and redirect to login
-                localStorage.setItem(
-                  'pendingCartAction',
-                  JSON.stringify({ shopId, productId: id, quantity: selectedQuantity })
-                );
-                router.push(`/auth/login?redirect=${encodeURIComponent(router.asPath)}`);
-                return;
-              }
-              try {
-                await addItem(shopId, id, selectedQuantity);
-                toast.success('Added to cart');
-                setShowModal(false);
-              } catch (err: any) {
-                console.error('Add to cart failed:', err);
-                toast.error(err.message || 'Failed to add to cart');
-              }
-            }}
-            appearance="primary"
-            disabled={status === 'loading'}
-          >
-            Add to Cart
-          </Button>
-          <Button onClick={() => setShowModal(false)} appearance="subtle">
-            Cancel
-          </Button>
-        </Modal.Footer>
-      </Modal>
+        </div>
+      )}
     </>
   );
 }

@@ -15,7 +15,7 @@ export default function UserRegistration() {
     const [gender, setGender] = useState("male");
     const router = useRouter();
     const { redirect } = router.query as { redirect?: string };
-
+  
     const handleRegister = async (e: React.FormEvent) => {
       e.preventDefault();
       if (!phone) {

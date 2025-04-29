@@ -1,118 +1,115 @@
-import React from "react";
-import { GetServerSideProps } from "next";
-import { getServerSession } from "next-auth/next";
-import type { Session } from "next-auth";
-import { authOptions } from "../api/auth/[...nextauth]";
-import { GraphQLClient, gql } from "graphql-request";
-import Link from "next/link";
-import RootLayout from "@components/ui/layout";
-import ItemCartTable, { CartItemType } from "@components/UserCarts/cartsTable";
+"use client"
 
-interface CartPageProps {
-  items: CartItemType[];
-  count: number;
-  total: string;
-  shopName: string;
-}
+import Image from "next/image"
+import { Input, InputGroup, Button, Checkbox, Badge, Panel } from "rsuite"
+import Link from "next/link"
+import { useState, useEffect } from "react"
+import RootLayout from "@components/ui/layout"
+import ItemCartTable from "@components/UserCarts/cartsTable"
+import CheckoutItems from "@components/UserCarts/checkout/checkoutCard"
 
-const CartPage: React.FC<CartPageProps> = ({ items, count, total, shopName }) => (
+export default function CartMainPage() {
+  // User's active shops (carts): id, name, and number of line items
+  const [shops, setShops] = useState<{ id: string; name: string; count?: number }[]>([])
+  const [selectedCartId, setSelectedCartId] = useState<string | null>(null)
+  const [cartTotal, setCartTotal] = useState<number>(0)
+
+  // Load user's carts on mount
+  useEffect(() => {
+    fetch('/api/carts')
+      .then(res => res.json())
+      .then((data: { carts: Array<{ id: string; name: string; count?: number }> }) => {
+        setShops(data.carts)
+        if (data.carts.length > 0) setSelectedCartId(data.carts[0].id)
+      })
+      .catch(err => console.error('Failed to load carts:', err))
+  }, [])
+
+  const handleSelectCart = (cartId: string) => setSelectedCartId(cartId)
+
+  return (
   <RootLayout>
     <div className="p-4 md:ml-16">
-      <div className="container mx-auto">
-        <div className="mb-6 flex items-center">
+        {/* Adjust ml-* to match your sidebar width */}
+        <div className="container mx-auto">
+
+        {/* Cart Selection */}
+        <div className="flex items-center mb-6">
           <Link href="/" className="flex items-center text-gray-700">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} className="mr-2 h-5 w-5">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="w-5 h-5 mr-2">
               <path d="M19 12H5M12 19l-7-7 7-7" />
             </svg>
           </Link>
-          <h1 className="text-2xl font-bold">Your Cart</h1>
-          <span className="ml-2 text-gray-500">{count} items</span>
-          <span className="ml-4 px-2 py-1 text-sm bg-gray-200 rounded">{shopName}</span>
+          <h1 className="text-2xl font-bold">My Shopping Carts</h1>
         </div>
-        <ItemCartTable initialItems={items} />
-        <div className="mt-6 text-right text-xl font-bold">Total: ${total}</div>
+
+        <div className="mb-6">
+  <div className="flex overflow-x-auto gap-3 mb-4 pb-2">
+    {shops.map((shop) => (
+      <div
+        key={shop.id}
+        onClick={() => handleSelectCart(shop.id)}
+        className={`relative flex-shrink-0 w-40 min-w-[10rem] cursor-pointer rounded-lg border-2 p-2 transition-all ${
+          selectedCartId === shop.id
+            ? "border-green-500 bg-green-50"
+            : "border-gray-200 bg-white hover:border-green-200"
+        }`}
+      >
+        <div className="flex items-center gap-2">
+          <div className="flex-shrink-0">
+            <div className="w-8 h-8 bg-white rounded-full flex items-center justify-center border">
+              <Image
+                src="/placeholder.svg"
+                alt={shop.name}
+                width={20}
+                height={20}
+                className="rounded-full"
+              />
+            </div>
+          </div>
+          <div className="truncate">
+            <h3 className="text-sm font-medium truncate">{shop.name}</h3>
+          </div>
+        </div>
+        {/* Show number of distinct items in this cart */}
+        <Badge content={shop.count} className="absolute -right-2 bg-green-500 text-white" />
+        {selectedCartId === shop.id && (
+          <div className="absolute top-1 -right-2 h-4 w-4 rounded-full bg-green-500 flex items-center justify-center">
+            <svg viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="3" className="w-3 h-3">
+              <polyline points="20 6 9 17 4 12" />
+            </svg>
+          </div>
+        )}
       </div>
-    </div>
-  </RootLayout>
-);
+    ))}
 
-export default CartPage;
+  </div>
+</div>
 
-export const getServerSideProps: GetServerSideProps<CartPageProps> = async ({ req, res }) => {
-  const session = (await getServerSession(req, res, authOptions as any)) as Session | null;
-  if (!session?.user?.id) {
-    return { redirect: { destination: '/api/auth/signin', permanent: false } };
-  }
-  const user_id = session.user.id;
-  const HASURA_URL = process.env.HASURA_GRAPHQL_URL!;
-  const HASURA_SECRET = process.env.HASURA_GRAPHQL_ADMIN_SECRET!;
-  const client = new GraphQLClient(HASURA_URL, { headers: { 'x-hasura-admin-secret': HASURA_SECRET } });
 
-  // 1. Get active cart and its items
-  const GET_CART = gql`
-    query GetActiveCart($user_id: uuid!) {
-      Carts(
-        where: { user_id: { _eq: $user_id }, is_active: { _eq: true } }
-        limit: 1
-      ) {
-        id
-        shop_id
-        Cart_Items {
-          id
-          product_id
-          price
-          quantity
-        }
-      }
-    }
-  `;
-  const cartRes = await client.request<{ Carts: Array<{ id: string; shop_id: string; Cart_Items: Array<{ id: string; product_id: string; price: string; quantity: number }> }> }>(GET_CART, { user_id });
-  const cart = cartRes.Carts[0];
-  if (!cart) {
-    return { props: { items: [], count: 0, total: '0', shopName: '' } };
-  }
-
-  // 2. Fetch shop name
-  const GET_SHOP = gql`
-    query GetShopName($id: uuid!) {
-      Shops_by_pk(id: $id) {
-        name
-      }
-    }
-  `;
-  const shopRes = await client.request<{ Shops_by_pk?: { name: string } }>(GET_SHOP, { id: cart.shop_id });
-  const shopName = shopRes.Shops_by_pk?.name || '';
-
-  // 3. Fetch product details
-  const productIds: string[] = cart.Cart_Items.map(ci => ci.product_id);
-  let items: CartItemType[] = [];
-  if (productIds.length) {
-    const GET_PRODUCTS = gql`
-      query GetProducts($ids: [uuid!]!) {
-        Products(where: { id: { _in: $ids } }) {
-          id
-          name
-          image
-          measurement_unit
-        }
-      }
-    `;
-    const prodRes = await client.request<{ Products: Array<{ id: string; name: string; image: string | null; measurement_unit: string | null }> }>(GET_PRODUCTS, { ids: productIds });
-    const prodMap = new Map(prodRes.Products.map(p => [p.id, p]));
-    items = cart.Cart_Items.map(ci => ({
-      id: ci.id,
-      checked: false,
-      image: prodMap.get(ci.product_id)?.image || '/placeholder.svg',
-      name: prodMap.get(ci.product_id)?.name || '',
-      size: prodMap.get(ci.product_id)?.measurement_unit || '',
-      price: parseFloat(ci.price),
-      quantity: ci.quantity,
-    }));
-  }
-
-  // 4. Compute count and total
-  const count = items.reduce((sum: number, it: CartItemType) => sum + it.quantity, 0);
-  const totalValue = items.reduce((sum: number, it: CartItemType) => sum + it.price * it.quantity, 0).toFixed(2);
-
-  return { props: { items, count, total: totalValue, shopName } };
-};
+        <div className="flex flex-col lg:flex-row gap-6">
+          {/* Cart Items Column */}
+          <div className="w-full lg:w-2/3">
+            {selectedCartId ? (
+              <>
+                <h2 className="text-xl font-semibold mb-4">
+                  {shops.find(s => s.id === selectedCartId)?.name}
+                </h2>
+                <ItemCartTable shopId={selectedCartId} onTotalChange={setCartTotal} />
+              </>
+            ) : (
+              <div className="p-4 text-gray-500">Select a cart to view items.</div>
+            )}
+          </div>
+          {/* Order Summary Column */}
+          {selectedCartId && (
+            <>
+              <CheckoutItems Total={cartTotal} />
+            </>
+          )}
+        </div>
+      </div>
+                </div>
+    </RootLayout>
+  )
+}
