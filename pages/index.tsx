@@ -195,13 +195,13 @@ export default function Home({ initialData }: { initialData: Data }) {
             </div>
 
             {isLoading ? (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-6">
                 {Array(6).fill(0).map((_, index) => (
                   <ShopSkeleton key={index} />
                 ))}
               </div>
             ) : (
-              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+              <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-6">
                 {filteredShops?.length ? (
                   filteredShops.map((shop) => (
                     <Link key={shop.id} href={`/shops/${shop.id}`}>

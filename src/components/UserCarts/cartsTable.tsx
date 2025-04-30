@@ -4,6 +4,7 @@ import React, { useState, useEffect } from "react";
 import { Input, Button, Checkbox } from "rsuite";
 import Image from "next/image";
 import CheckoutItems from "./checkout/checkoutCard";
+import { formatCurrency } from "../../lib/formatCurrency";
 
 interface CartItemProps {
   item: CartItemType;
@@ -66,7 +67,7 @@ function CartItem({
 
         <div className="grid grid-cols-2 gap-2 text-sm">
           <div className="text-gray-500">Price</div>
-          <div className="text-right font-bold">${price.toFixed(2)}</div>
+          <div className="text-right font-bold">{formatCurrency(price)}</div>
           <div className="text-gray-500">Quantity</div>
           <div className="flex items-center justify-end gap-2">
             <button
@@ -91,7 +92,7 @@ function CartItem({
             </button>
           </div>
           <div className="text-gray-500">Subtotal</div>
-          <div className="text-right font-bold">${subtotal}</div>
+          <div className="text-right font-bold">{formatCurrency(parseFloat(subtotal))}</div>
         </div>
 
         <div className="flex justify-end mt-2">
@@ -119,7 +120,7 @@ function CartItem({
         <p className="text-sm text-gray-500">{size}</p>
       </div>
       <div className="hidden md:flex md:col-span-2 md:justify-center font-bold">
-        ${price.toFixed(2)}
+        {formatCurrency(price)}
       </div>
       <div className="hidden md:flex md:col-span-2 md:items-center md:justify-center">
         <button
@@ -144,7 +145,7 @@ function CartItem({
         </button>
       </div>
       <div className="hidden md:flex md:justify-end md:col-span-2 font-bold">
-        ${subtotal}
+        {formatCurrency(parseFloat(subtotal))}
       </div>
       <div className="hidden md:flex md:justify-end md:col-span-1">
         <Button appearance="subtle" onClick={onRemove} loading={loading}>
@@ -158,31 +159,38 @@ function CartItem({
 export default function ItemCartTable({
   shopId,
   onTotalChange,
+  onLoadingChange,
 }: {
   shopId: string;
   onTotalChange?: (total: number) => void;
+  onLoadingChange?: (loading: boolean) => void;
 }) {
   const [cartItems, setCartItems] = useState<CartItemType[]>([]);
   const [loadingIds, setLoadingIds] = useState<Set<string>>(new Set());
+  const [isLoadingItems, setIsLoadingItems] = useState<boolean>(true);
 
   useEffect(() => {
+    setIsLoadingItems(true);
+    // Notify parent loading state for summary
+    onLoadingChange?.(true);
     // Fetch cart items including product metadata
     fetch(`/api/cart-items?shop_id=${shopId}`)
       .then(res => res.json())
       .then((data: { items?: ApiCartItem[] }) => {
-        // Ensure items is an array
         const fetchedItems = data.items ?? [];
-        // Mark all fetched items as checked by default
         setCartItems(
           fetchedItems.map((item: ApiCartItem) => ({ ...item, checked: true }))
         );
       })
       .catch(err => {
         console.error('Failed to fetch cart items:', err);
-        // Reset to empty on error
         setCartItems([]);
+      })
+      .finally(() => {
+        setIsLoadingItems(false);
+        onLoadingChange?.(false);
       });
-  }, [shopId]);
+  }, [shopId, onLoadingChange]);
 
   const toggleCheck = (id: string) => {
     setCartItems((prev) =>
@@ -279,17 +287,33 @@ export default function ItemCartTable({
       </div>
 
       <div className="space-y-6">
-        {cartItems.map((item) => (
-          <CartItem
-            key={item.id}
-            item={item}
-            onToggle={() => toggleCheck(item.id)}
-            onIncrease={() => increaseQuantity(item.id)}
-            onDecrease={() => decreaseQuantity(item.id)}
-            onRemove={() => removeItem(item.id)}
-            loading={loadingIds.has(item.id)}
-          />
-        ))}
+        {isLoadingItems ? (
+          // Show loading skeleton rows
+          Array(4)
+            .fill(0)
+            .map((_, idx) => (
+              <div key={idx} className="border-b pb-6 animate-pulse">
+                <div className="h-4 bg-gray-200 rounded mb-2" />
+                <div className="h-4 bg-gray-200 rounded w-1/2" />
+              </div>
+            ))
+        ) : cartItems.length > 0 ? (
+          // Render actual cart items
+          cartItems.map((item) => (
+            <CartItem
+              key={item.id}
+              item={item}
+              onToggle={() => toggleCheck(item.id)}
+              onIncrease={() => increaseQuantity(item.id)}
+              onDecrease={() => decreaseQuantity(item.id)}
+              onRemove={() => removeItem(item.id)}
+              loading={loadingIds.has(item.id)}
+            />
+          ))
+        ) : (
+          // Empty state when no items in cart
+          <div className="p-4 text-gray-500">No items in this cart.</div>
+        )}
       </div>
     </>
   );

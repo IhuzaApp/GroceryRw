@@ -2,6 +2,7 @@ import React from "react";
 import { Tag, Button, Avatar } from "rsuite";
 import { usePathname } from "next/navigation";
 import Link from "next/link";
+import { formatCurrency } from "../../lib/formatCurrency";
 
 export default function UserRecentOrders({ filter }: any) {
   const pathname = usePathname();
@@ -51,7 +52,7 @@ export default function UserRecentOrders({ filter }: any) {
 
           <div className="mb-3 flex justify-between text-sm text-gray-600">
             <span>5 items</span>
-            <span className="font-bold">$78.35</span>
+            <span className="font-bold">{formatCurrency(78.35)}</span>
           </div>
 
           <div className="flex gap-2">
