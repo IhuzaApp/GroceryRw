@@ -43,3 +43,15 @@ body {
   -ms-overflow-style: none; /* IE and Edge */
   scrollbar-width: none; /* Firefox */
 }
+
+/* NProgress customizations */
+#nprogress .bar {
+  background-color: #10B981 !important;
+  height: 4px !important;
+}
+#nprogress .peg {
+  box-shadow: 0 0 8px #10B981, 0 0 4px #10B981 !important;
+}
+#nprogress .spinner {
+  display: none !important;
+}

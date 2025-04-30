@@ -1,6 +1,5 @@
 import React, { useState } from "react";
 import { Input, Button, Panel } from "rsuite";
-import 'rsuite/dist/rsuite-no-reset.min.css';
 import ConfirmPayment from "./confirmPayment";
 import Link from "next/link"; // Make sure you import Link if you use it
 
@@ -109,7 +108,7 @@ export default function CheckoutItems({ Total }: CheckoutItemsProps) {
             <div className="space-y-3">
               <div className="flex justify-between">
                 <span className="text-gray-600">Subtotal</span>
-                <span className="font-medium">${3}</span>
+                <span className="font-medium">${Total.toFixed(2)}</span>
               </div>
 
               {discount > 0 && (
