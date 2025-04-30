@@ -233,8 +233,35 @@ export default async function handler(
       console.error('Error deleting cart item:', error);
       return res.status(500).json({ error: 'Failed to delete cart item' });
     }
+  } else if (req.method === 'PUT') {
+    // Handle PUT: update cart item quantity
+    const session = (await getServerSession(req, res, authOptions as any)) as Session | null;
+    if (!session?.user?.id) {
+      return res.status(401).json({ error: 'Unauthorized' });
+    }
+    const { cart_item_id, quantity } = req.body as { cart_item_id?: string; quantity?: number };
+    if (!cart_item_id || typeof quantity !== 'number') {
+      return res.status(400).json({ error: 'Missing or invalid fields' });
+    }
+    try {
+      const UPDATE_ITEM = gql`
+        mutation UpdateCartItem($id: uuid!, $quantity: Int!) {
+          update_Cart_Items_by_pk(
+            pk_columns: { id: $id },
+            _set: { quantity: $quantity }
+          ) {
+            id
+          }
+        }
+      `;
+      await hasuraClient.request(UPDATE_ITEM, { id: cart_item_id, quantity });
+      return res.status(200).json({ success: true });
+    } catch (error) {
+      console.error('Error updating cart item:', error);
+      return res.status(500).json({ error: 'Failed to update cart item' });
+    }
   } else {
-    res.setHeader('Allow', ['GET', 'POST', 'DELETE']);
+    res.setHeader('Allow', ['GET', 'POST', 'DELETE', 'PUT']);
     return res.status(405).end(`Method ${req.method} Not Allowed`);
   }
 } 
