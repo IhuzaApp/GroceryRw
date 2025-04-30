@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { Input, Button, Panel } from "rsuite";
 import ConfirmPayment from "./confirmPayment";
 import Link from "next/link"; // Make sure you import Link if you use it
+import { formatCurrency } from "../../../lib/formatCurrency";
 
 interface CheckoutItemsProps {
   Total: number;
@@ -13,7 +14,7 @@ export default function CheckoutItems({ Total }: CheckoutItemsProps) {
   const [appliedPromo, setAppliedPromo] = useState<string | null>(null);
 
   // Dummy values to complete your code (you can replace them dynamically)
-  const deliveryFee = 5; 
+  const deliveryFee = 5;
   const selectedCart = { promoCode: promoCode, deliveryTime: "30-45 mins" };
   const totalBeforeDiscount = Total;
 
@@ -35,7 +36,8 @@ export default function CheckoutItems({ Total }: CheckoutItemsProps) {
     }
   };
 
-  const finalTotal = (Total - discount + deliveryFee).toFixed(2);
+  // Compute numeric final total
+  const finalTotal = Total - discount + deliveryFee;
 
   return (
     <>
@@ -66,7 +68,7 @@ export default function CheckoutItems({ Total }: CheckoutItemsProps) {
         <div className="mt-6 flex flex-col gap-4">
           <div className="flex justify-between">
             <div>
-              <p className="text-2xl font-bold">${Total}</p>
+              <p className="text-2xl font-bold">{formatCurrency(Total)}</p>
               <p className="text-gray-500">Cost of items</p>
             </div>
             <div>
@@ -75,7 +77,7 @@ export default function CheckoutItems({ Total }: CheckoutItemsProps) {
                   discount ? "text-red-500" : "text-gray-500"
                 }`}
               >
-                -${discount.toFixed(2)}
+                -{formatCurrency(discount)}
               </p>
               <p className="text-gray-500">
                 Promo code {appliedPromo ? `(${appliedPromo})` : "(empty)"}
@@ -83,7 +85,7 @@ export default function CheckoutItems({ Total }: CheckoutItemsProps) {
             </div>
             <div>
               <p className="text-2xl font-bold text-green-500">
-                ${finalTotal}
+                {formatCurrency(finalTotal)}
               </p>
               <p className="text-gray-500">Total</p>
             </div>
@@ -108,25 +110,25 @@ export default function CheckoutItems({ Total }: CheckoutItemsProps) {
             <div className="space-y-3">
               <div className="flex justify-between">
                 <span className="text-gray-600">Subtotal</span>
-                <span className="font-medium">${Total.toFixed(2)}</span>
+                <span className="font-medium">{formatCurrency(Total)}</span>
               </div>
 
               {discount > 0 && (
                 <div className="flex justify-between text-green-600">
                   <span>Discount ({selectedCart.promoCode})</span>
-                  <span>-${discount.toFixed(2)}</span>
+                  <span>-{formatCurrency(discount)}</span>
                 </div>
               )}
 
               <div className="flex justify-between">
                 <span className="text-gray-600">Delivery Fee</span>
-                <span className="font-medium">${deliveryFee.toFixed(2)}</span>
+                <span className="font-medium">{formatCurrency(deliveryFee)}</span>
               </div>
 
               <div className="border-t pt-3 mt-3">
                 <div className="flex justify-between font-bold text-lg">
                   <span>Total</span>
-                  <span className="text-green-600">${finalTotal}</span>
+                  <span className="text-green-600">{formatCurrency(finalTotal)}</span>
                 </div>
               </div>
             </div>

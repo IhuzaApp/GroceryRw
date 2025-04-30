@@ -3,6 +3,7 @@ import Image from "next/image";
 import { Input, InputGroup, Button, Panel, Steps, Rate, Modal } from "rsuite";
 import Link from "next/link";
 import { useState } from "react";
+import { formatCurrency } from "../../../lib/formatCurrency";
 
 export default function UserPendingOrders() {
   const [feedbackModal, setFeedbackModal] = useState(false);
@@ -31,27 +32,27 @@ export default function UserPendingOrders() {
     status: "packing", // shopping, packing, on_the_way, delivered
     placedAt: "April 19, 2025 at 2:45 PM",
     estimatedDelivery: "April 19, 2025 between 4:30 PM - 5:00 PM",
-    total: "$78.35",
+    total: 78.35,
     items: [
       {
         name: "Avocado Persea Americana",
         quantity: 4,
-        price: "$12.86",
-        total: "$51.44",
+        price: 12.86,
+        total: 51.44,
         image: "/placeholder.svg?height=60&width=60",
       },
       {
         name: "Deliciously Ella Fruit And Nut Muesli",
         quantity: 2,
-        price: "$20.53",
-        total: "$41.06",
+        price: 20.53,
+        total: 41.06,
         image: "/placeholder.svg?height=60&width=60",
       },
       {
         name: "Mixed Nuts Cashew Nuts",
         quantity: 1,
-        price: "$33.45",
-        total: "$33.45",
+        price: 33.45,
+        total: 33.45,
         image: "/placeholder.svg?height=60&width=60",
       },
     ],
@@ -218,9 +219,9 @@ export default function UserPendingOrders() {
                     <h3 className="font-medium">{item.name}</h3>
                     <div className="mt-1 flex justify-between text-sm text-gray-600">
                       <span>
-                        {item.quantity} × {item.price}
+                        {item.quantity} × {formatCurrency(item.price)}
                       </span>
-                      <span className="font-bold">{item.total}</span>
+                      <span className="font-bold">{formatCurrency(item.total)}</span>
                     </div>
                   </div>
                 </div>
@@ -230,15 +231,15 @@ export default function UserPendingOrders() {
             <div className="mt-6 border-t pt-4">
               <div className="mb-2 flex justify-between">
                 <span className="text-gray-600">Subtotal</span>
-                <span className="font-medium">{order.total}</span>
+                <span className="font-medium">{formatCurrency(order.total)}</span>
               </div>
               <div className="mb-2 flex justify-between">
                 <span className="text-gray-600">Delivery Fee</span>
-                <span className="font-medium">$0.00</span>
+                <span className="font-medium">{formatCurrency(0)}</span>
               </div>
               <div className="mt-4 flex justify-between text-lg font-bold">
                 <span>Total</span>
-                <span>{order.total}</span>
+                <span>{formatCurrency(order.total)}</span>
               </div>
             </div>
           </Panel>

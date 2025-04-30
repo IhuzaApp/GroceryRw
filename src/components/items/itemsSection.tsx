@@ -1,4 +1,5 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import { formatCurrency } from "../../lib/formatCurrency";
 import ProdCategories from "@components/ui/categories";
 import Image from "next/image";
 import { Input, InputGroup, Button, Badge, Nav } from "rsuite";
@@ -26,6 +27,15 @@ export default function ItemsSection({
   filteredProducts,
   setActiveCategory,
 }: any) {
+  const [loadingProducts, setLoadingProducts] = useState<boolean>(false);
+
+  // Simulate loading when category changes
+  useEffect(() => {
+    setLoadingProducts(true);
+    const timer = setTimeout(() => setLoadingProducts(false), 300);
+    return () => clearTimeout(timer);
+  }, [activeCategory]);
+
   // Extract unique categories from products
   const allCategories: string[] = Array.from(
     new Set(shop.products.map((p: any) => p.category))
@@ -61,21 +71,37 @@ export default function ItemsSection({
             : "All Products"}
         </h2>
         <div className="grid grid-cols-4 gap-4 md:grid-cols-5 lg:grid-cols-6">
-          {filteredProducts.map((product: any) => (
-            <ProductCard
-              key={product.id}
-              id={product.id}
-              shopId={shop.id}
-              name={product.name}
-              image={product.image}
-              price={product.price}
-              unit={product.unit}
-              sale={product.sale}
-              originalPrice={product.originalPrice}
-              measurement_unit={product.measurement_unit}
-              quantity={product.quantity}
-            />
-          ))}
+          {loadingProducts
+            ? Array(12)
+                .fill(0)
+                .map((_, idx) => (
+                  <div
+                    key={idx}
+                    className="bg-white rounded-lg shadow-sm overflow-hidden animate-pulse"
+                  >
+                    <div className="h-40 bg-gray-200" />
+                    <div className="p-3 space-y-2">
+                      <div className="h-4 bg-gray-200 rounded w-3/4" />
+                      <div className="h-3 bg-gray-200 rounded w-1/2" />
+                      <div className="h-6 bg-gray-200 rounded w-1/2" />
+                    </div>
+                  </div>
+                ))
+            : filteredProducts.map((product: any) => (
+                <ProductCard
+                  key={product.id}
+                  id={product.id}
+                  shopId={shop.id}
+                  name={product.name}
+                  image={product.image}
+                  price={product.price}
+                  unit={product.unit}
+                  sale={product.sale}
+                  originalPrice={product.originalPrice}
+                  measurement_unit={product.measurement_unit}
+                  quantity={product.quantity}
+                />
+              ))}
         </div>
       </div>
     </>
@@ -130,11 +156,11 @@ function ProductCard({
           <div className="flex items-center justify-between">
             <div>
               <span className="font-bold text-gray-900">
-                ${price}
+                {formatCurrency(parseFloat(price))}
                 {measurement_unit ? ` / ${measurement_unit}` : ""}
               </span>
               {sale && originalPrice && (
-                <span className="ml-2 text-sm text-gray-500 line-through">{originalPrice}</span>
+                <span className="ml-2 text-sm text-gray-500 line-through">{formatCurrency(parseFloat(originalPrice || '0'))}</span>
               )}
             </div>
             <Button
