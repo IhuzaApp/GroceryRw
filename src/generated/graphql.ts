@@ -37,7 +37,7 @@ export type Addresses = {
   longitude: Scalars['String']['output'];
   postal_code?: Maybe<Scalars['String']['output']>;
   street: Scalars['String']['output'];
-  updated_at: Scalars['String']['output'];
+  updated_at?: Maybe<Scalars['String']['output']>;
   user_id: Scalars['uuid']['output'];
 };
 
@@ -722,6 +722,8 @@ export type Carts = {
   /** An aggregate relationship */
   Cart_Items_aggregate: Cart_Items_Aggregate;
   /** An object relationship */
+  Shop: Shops;
+  /** An object relationship */
   User: Users;
   created_at: Scalars['timestamptz']['output'];
   id: Scalars['uuid']['output'];
@@ -817,6 +819,7 @@ export type Carts_Arr_Rel_Insert_Input = {
 export type Carts_Bool_Exp = {
   Cart_Items?: InputMaybe<Cart_Items_Bool_Exp>;
   Cart_Items_aggregate?: InputMaybe<Cart_Items_Aggregate_Bool_Exp>;
+  Shop?: InputMaybe<Shops_Bool_Exp>;
   User?: InputMaybe<Users_Bool_Exp>;
   _and?: InputMaybe<Array<Carts_Bool_Exp>>;
   _not?: InputMaybe<Carts_Bool_Exp>;
@@ -838,6 +841,7 @@ export type Carts_Constraint =
 /** input type for inserting data into table "Carts" */
 export type Carts_Insert_Input = {
   Cart_Items?: InputMaybe<Cart_Items_Arr_Rel_Insert_Input>;
+  Shop?: InputMaybe<Shops_Obj_Rel_Insert_Input>;
   User?: InputMaybe<Users_Obj_Rel_Insert_Input>;
   created_at?: InputMaybe<Scalars['timestamptz']['input']>;
   id?: InputMaybe<Scalars['uuid']['input']>;
@@ -913,6 +917,7 @@ export type Carts_On_Conflict = {
 /** Ordering options when selecting data from "Carts". */
 export type Carts_Order_By = {
   Cart_Items_aggregate?: InputMaybe<Cart_Items_Aggregate_Order_By>;
+  Shop?: InputMaybe<Shops_Order_By>;
   User?: InputMaybe<Users_Order_By>;
   created_at?: InputMaybe<Order_By>;
   id?: InputMaybe<Order_By>;
@@ -2442,6 +2447,225 @@ export type Orders_Updates = {
   where: Orders_Bool_Exp;
 };
 
+/** columns and relationships of "Payment_Methods" */
+export type Payment_Methods = {
+  CCV?: Maybe<Scalars['String']['output']>;
+  create_at: Scalars['timestamptz']['output'];
+  id: Scalars['uuid']['output'];
+  is_default: Scalars['Boolean']['output'];
+  method: Scalars['String']['output'];
+  names: Scalars['String']['output'];
+  number: Scalars['String']['output'];
+  update_on?: Maybe<Scalars['String']['output']>;
+  user_id: Scalars['uuid']['output'];
+  validity?: Maybe<Scalars['String']['output']>;
+};
+
+/** aggregated selection of "Payment_Methods" */
+export type Payment_Methods_Aggregate = {
+  aggregate?: Maybe<Payment_Methods_Aggregate_Fields>;
+  nodes: Array<Payment_Methods>;
+};
+
+/** aggregate fields of "Payment_Methods" */
+export type Payment_Methods_Aggregate_Fields = {
+  count: Scalars['Int']['output'];
+  max?: Maybe<Payment_Methods_Max_Fields>;
+  min?: Maybe<Payment_Methods_Min_Fields>;
+};
+
+
+/** aggregate fields of "Payment_Methods" */
+export type Payment_Methods_Aggregate_FieldsCountArgs = {
+  columns?: InputMaybe<Array<Payment_Methods_Select_Column>>;
+  distinct?: InputMaybe<Scalars['Boolean']['input']>;
+};
+
+/** Boolean expression to filter rows from the table "Payment_Methods". All fields are combined with a logical 'AND'. */
+export type Payment_Methods_Bool_Exp = {
+  CCV?: InputMaybe<String_Comparison_Exp>;
+  _and?: InputMaybe<Array<Payment_Methods_Bool_Exp>>;
+  _not?: InputMaybe<Payment_Methods_Bool_Exp>;
+  _or?: InputMaybe<Array<Payment_Methods_Bool_Exp>>;
+  create_at?: InputMaybe<Timestamptz_Comparison_Exp>;
+  id?: InputMaybe<Uuid_Comparison_Exp>;
+  is_default?: InputMaybe<Boolean_Comparison_Exp>;
+  method?: InputMaybe<String_Comparison_Exp>;
+  names?: InputMaybe<String_Comparison_Exp>;
+  number?: InputMaybe<String_Comparison_Exp>;
+  update_on?: InputMaybe<String_Comparison_Exp>;
+  user_id?: InputMaybe<Uuid_Comparison_Exp>;
+  validity?: InputMaybe<String_Comparison_Exp>;
+};
+
+/** unique or primary key constraints on table "Payment_Methods" */
+export type Payment_Methods_Constraint =
+  /** unique or primary key constraint on columns "id" */
+  | 'Payment_Methods_pkey';
+
+/** input type for inserting data into table "Payment_Methods" */
+export type Payment_Methods_Insert_Input = {
+  CCV?: InputMaybe<Scalars['String']['input']>;
+  create_at?: InputMaybe<Scalars['timestamptz']['input']>;
+  id?: InputMaybe<Scalars['uuid']['input']>;
+  is_default?: InputMaybe<Scalars['Boolean']['input']>;
+  method?: InputMaybe<Scalars['String']['input']>;
+  names?: InputMaybe<Scalars['String']['input']>;
+  number?: InputMaybe<Scalars['String']['input']>;
+  update_on?: InputMaybe<Scalars['String']['input']>;
+  user_id?: InputMaybe<Scalars['uuid']['input']>;
+  validity?: InputMaybe<Scalars['String']['input']>;
+};
+
+/** aggregate max on columns */
+export type Payment_Methods_Max_Fields = {
+  CCV?: Maybe<Scalars['String']['output']>;
+  create_at?: Maybe<Scalars['timestamptz']['output']>;
+  id?: Maybe<Scalars['uuid']['output']>;
+  method?: Maybe<Scalars['String']['output']>;
+  names?: Maybe<Scalars['String']['output']>;
+  number?: Maybe<Scalars['String']['output']>;
+  update_on?: Maybe<Scalars['String']['output']>;
+  user_id?: Maybe<Scalars['uuid']['output']>;
+  validity?: Maybe<Scalars['String']['output']>;
+};
+
+/** aggregate min on columns */
+export type Payment_Methods_Min_Fields = {
+  CCV?: Maybe<Scalars['String']['output']>;
+  create_at?: Maybe<Scalars['timestamptz']['output']>;
+  id?: Maybe<Scalars['uuid']['output']>;
+  method?: Maybe<Scalars['String']['output']>;
+  names?: Maybe<Scalars['String']['output']>;
+  number?: Maybe<Scalars['String']['output']>;
+  update_on?: Maybe<Scalars['String']['output']>;
+  user_id?: Maybe<Scalars['uuid']['output']>;
+  validity?: Maybe<Scalars['String']['output']>;
+};
+
+/** response of any mutation on the table "Payment_Methods" */
+export type Payment_Methods_Mutation_Response = {
+  /** number of rows affected by the mutation */
+  affected_rows: Scalars['Int']['output'];
+  /** data from the rows affected by the mutation */
+  returning: Array<Payment_Methods>;
+};
+
+/** on_conflict condition type for table "Payment_Methods" */
+export type Payment_Methods_On_Conflict = {
+  constraint: Payment_Methods_Constraint;
+  update_columns?: Array<Payment_Methods_Update_Column>;
+  where?: InputMaybe<Payment_Methods_Bool_Exp>;
+};
+
+/** Ordering options when selecting data from "Payment_Methods". */
+export type Payment_Methods_Order_By = {
+  CCV?: InputMaybe<Order_By>;
+  create_at?: InputMaybe<Order_By>;
+  id?: InputMaybe<Order_By>;
+  is_default?: InputMaybe<Order_By>;
+  method?: InputMaybe<Order_By>;
+  names?: InputMaybe<Order_By>;
+  number?: InputMaybe<Order_By>;
+  update_on?: InputMaybe<Order_By>;
+  user_id?: InputMaybe<Order_By>;
+  validity?: InputMaybe<Order_By>;
+};
+
+/** primary key columns input for table: Payment_Methods */
+export type Payment_Methods_Pk_Columns_Input = {
+  id: Scalars['uuid']['input'];
+};
+
+/** select columns of table "Payment_Methods" */
+export type Payment_Methods_Select_Column =
+  /** column name */
+  | 'CCV'
+  /** column name */
+  | 'create_at'
+  /** column name */
+  | 'id'
+  /** column name */
+  | 'is_default'
+  /** column name */
+  | 'method'
+  /** column name */
+  | 'names'
+  /** column name */
+  | 'number'
+  /** column name */
+  | 'update_on'
+  /** column name */
+  | 'user_id'
+  /** column name */
+  | 'validity';
+
+/** input type for updating data in table "Payment_Methods" */
+export type Payment_Methods_Set_Input = {
+  CCV?: InputMaybe<Scalars['String']['input']>;
+  create_at?: InputMaybe<Scalars['timestamptz']['input']>;
+  id?: InputMaybe<Scalars['uuid']['input']>;
+  is_default?: InputMaybe<Scalars['Boolean']['input']>;
+  method?: InputMaybe<Scalars['String']['input']>;
+  names?: InputMaybe<Scalars['String']['input']>;
+  number?: InputMaybe<Scalars['String']['input']>;
+  update_on?: InputMaybe<Scalars['String']['input']>;
+  user_id?: InputMaybe<Scalars['uuid']['input']>;
+  validity?: InputMaybe<Scalars['String']['input']>;
+};
+
+/** Streaming cursor of the table "Payment_Methods" */
+export type Payment_Methods_Stream_Cursor_Input = {
+  /** Stream column input with initial value */
+  initial_value: Payment_Methods_Stream_Cursor_Value_Input;
+  /** cursor ordering */
+  ordering?: InputMaybe<Cursor_Ordering>;
+};
+
+/** Initial value of the column from where the streaming should start */
+export type Payment_Methods_Stream_Cursor_Value_Input = {
+  CCV?: InputMaybe<Scalars['String']['input']>;
+  create_at?: InputMaybe<Scalars['timestamptz']['input']>;
+  id?: InputMaybe<Scalars['uuid']['input']>;
+  is_default?: InputMaybe<Scalars['Boolean']['input']>;
+  method?: InputMaybe<Scalars['String']['input']>;
+  names?: InputMaybe<Scalars['String']['input']>;
+  number?: InputMaybe<Scalars['String']['input']>;
+  update_on?: InputMaybe<Scalars['String']['input']>;
+  user_id?: InputMaybe<Scalars['uuid']['input']>;
+  validity?: InputMaybe<Scalars['String']['input']>;
+};
+
+/** update columns of table "Payment_Methods" */
+export type Payment_Methods_Update_Column =
+  /** column name */
+  | 'CCV'
+  /** column name */
+  | 'create_at'
+  /** column name */
+  | 'id'
+  /** column name */
+  | 'is_default'
+  /** column name */
+  | 'method'
+  /** column name */
+  | 'names'
+  /** column name */
+  | 'number'
+  /** column name */
+  | 'update_on'
+  /** column name */
+  | 'user_id'
+  /** column name */
+  | 'validity';
+
+export type Payment_Methods_Updates = {
+  /** sets the columns of the filtered rows to the given values */
+  _set?: InputMaybe<Payment_Methods_Set_Input>;
+  /** filter the rows which have to be updated */
+  where: Payment_Methods_Bool_Exp;
+};
+
 /** Platform Settings */
 export type Platform_Settings = {
   created_at: Scalars['timestamptz']['output'];
@@ -3482,6 +3706,10 @@ export type Shopper_Availability_Variance_Order_By = {
 
 /** Shops */
 export type Shops = {
+  /** An array relationship */
+  Carts: Array<Carts>;
+  /** An aggregate relationship */
+  Carts_aggregate: Carts_Aggregate;
   /** An object relationship */
   Category: Categories;
   /** An array relationship */
@@ -3500,6 +3728,26 @@ export type Shops = {
   name: Scalars['String']['output'];
   operating_hours: Scalars['json']['output'];
   updated_at?: Maybe<Scalars['String']['output']>;
+};
+
+
+/** Shops */
+export type ShopsCartsArgs = {
+  distinct_on?: InputMaybe<Array<Carts_Select_Column>>;
+  limit?: InputMaybe<Scalars['Int']['input']>;
+  offset?: InputMaybe<Scalars['Int']['input']>;
+  order_by?: InputMaybe<Array<Carts_Order_By>>;
+  where?: InputMaybe<Carts_Bool_Exp>;
+};
+
+
+/** Shops */
+export type ShopsCarts_AggregateArgs = {
+  distinct_on?: InputMaybe<Array<Carts_Select_Column>>;
+  limit?: InputMaybe<Scalars['Int']['input']>;
+  offset?: InputMaybe<Scalars['Int']['input']>;
+  order_by?: InputMaybe<Array<Carts_Order_By>>;
+  where?: InputMaybe<Carts_Bool_Exp>;
 };
 
 
@@ -3591,6 +3839,8 @@ export type Shops_Arr_Rel_Insert_Input = {
 
 /** Boolean expression to filter rows from the table "Shops". All fields are combined with a logical 'AND'. */
 export type Shops_Bool_Exp = {
+  Carts?: InputMaybe<Carts_Bool_Exp>;
+  Carts_aggregate?: InputMaybe<Carts_Aggregate_Bool_Exp>;
   Category?: InputMaybe<Categories_Bool_Exp>;
   Products?: InputMaybe<Products_Bool_Exp>;
   Products_aggregate?: InputMaybe<Products_Aggregate_Bool_Exp>;
@@ -3620,6 +3870,7 @@ export type Shops_Constraint =
 
 /** input type for inserting data into table "Shops" */
 export type Shops_Insert_Input = {
+  Carts?: InputMaybe<Carts_Arr_Rel_Insert_Input>;
   Category?: InputMaybe<Categories_Obj_Rel_Insert_Input>;
   Products?: InputMaybe<Products_Arr_Rel_Insert_Input>;
   address?: InputMaybe<Scalars['String']['input']>;
@@ -3716,6 +3967,7 @@ export type Shops_On_Conflict = {
 
 /** Ordering options when selecting data from "Shops". */
 export type Shops_Order_By = {
+  Carts_aggregate?: InputMaybe<Carts_Aggregate_Order_By>;
   Category?: InputMaybe<Categories_Order_By>;
   Products_aggregate?: InputMaybe<Products_Aggregate_Order_By>;
   address?: InputMaybe<Order_By>;
@@ -4350,6 +4602,10 @@ export type Mutation_Root = {
   delete_Orders?: Maybe<Orders_Mutation_Response>;
   /** delete single row from the table: "Orders" */
   delete_Orders_by_pk?: Maybe<Orders>;
+  /** delete data from the table: "Payment_Methods" */
+  delete_Payment_Methods?: Maybe<Payment_Methods_Mutation_Response>;
+  /** delete single row from the table: "Payment_Methods" */
+  delete_Payment_Methods_by_pk?: Maybe<Payment_Methods>;
   /** delete data from the table: "Platform_Settings" */
   delete_Platform_Settings?: Maybe<Platform_Settings_Mutation_Response>;
   /** delete single row from the table: "Platform_Settings" */
@@ -4402,6 +4658,10 @@ export type Mutation_Root = {
   insert_Orders?: Maybe<Orders_Mutation_Response>;
   /** insert a single row into the table: "Orders" */
   insert_Orders_one?: Maybe<Orders>;
+  /** insert data into the table: "Payment_Methods" */
+  insert_Payment_Methods?: Maybe<Payment_Methods_Mutation_Response>;
+  /** insert a single row into the table: "Payment_Methods" */
+  insert_Payment_Methods_one?: Maybe<Payment_Methods>;
   /** insert data into the table: "Platform_Settings" */
   insert_Platform_Settings?: Maybe<Platform_Settings_Mutation_Response>;
   /** insert a single row into the table: "Platform_Settings" */
@@ -4470,6 +4730,12 @@ export type Mutation_Root = {
   update_Orders_by_pk?: Maybe<Orders>;
   /** update multiples rows of table: "Orders" */
   update_Orders_many?: Maybe<Array<Maybe<Orders_Mutation_Response>>>;
+  /** update data of the table: "Payment_Methods" */
+  update_Payment_Methods?: Maybe<Payment_Methods_Mutation_Response>;
+  /** update single row of the table: "Payment_Methods" */
+  update_Payment_Methods_by_pk?: Maybe<Payment_Methods>;
+  /** update multiples rows of table: "Payment_Methods" */
+  update_Payment_Methods_many?: Maybe<Array<Maybe<Payment_Methods_Mutation_Response>>>;
   /** update data of the table: "Platform_Settings" */
   update_Platform_Settings?: Maybe<Platform_Settings_Mutation_Response>;
   /** update single row of the table: "Platform_Settings" */
@@ -4596,6 +4862,18 @@ export type Mutation_RootDelete_OrdersArgs = {
 /** mutation root */
 export type Mutation_RootDelete_Orders_By_PkArgs = {
   user_id: Scalars['uuid']['input'];
+};
+
+
+/** mutation root */
+export type Mutation_RootDelete_Payment_MethodsArgs = {
+  where: Payment_Methods_Bool_Exp;
+};
+
+
+/** mutation root */
+export type Mutation_RootDelete_Payment_Methods_By_PkArgs = {
+  id: Scalars['uuid']['input'];
 };
 
 
@@ -4768,6 +5046,20 @@ export type Mutation_RootInsert_OrdersArgs = {
 export type Mutation_RootInsert_Orders_OneArgs = {
   object: Orders_Insert_Input;
   on_conflict?: InputMaybe<Orders_On_Conflict>;
+};
+
+
+/** mutation root */
+export type Mutation_RootInsert_Payment_MethodsArgs = {
+  objects: Array<Payment_Methods_Insert_Input>;
+  on_conflict?: InputMaybe<Payment_Methods_On_Conflict>;
+};
+
+
+/** mutation root */
+export type Mutation_RootInsert_Payment_Methods_OneArgs = {
+  object: Payment_Methods_Insert_Input;
+  on_conflict?: InputMaybe<Payment_Methods_On_Conflict>;
 };
 
 
@@ -5006,6 +5298,26 @@ export type Mutation_RootUpdate_Orders_ManyArgs = {
 
 
 /** mutation root */
+export type Mutation_RootUpdate_Payment_MethodsArgs = {
+  _set?: InputMaybe<Payment_Methods_Set_Input>;
+  where: Payment_Methods_Bool_Exp;
+};
+
+
+/** mutation root */
+export type Mutation_RootUpdate_Payment_Methods_By_PkArgs = {
+  _set?: InputMaybe<Payment_Methods_Set_Input>;
+  pk_columns: Payment_Methods_Pk_Columns_Input;
+};
+
+
+/** mutation root */
+export type Mutation_RootUpdate_Payment_Methods_ManyArgs = {
+  updates: Array<Payment_Methods_Updates>;
+};
+
+
+/** mutation root */
 export type Mutation_RootUpdate_Platform_SettingsArgs = {
   _set?: InputMaybe<Platform_Settings_Set_Input>;
   where: Platform_Settings_Bool_Exp;
@@ -5172,6 +5484,12 @@ export type Query_Root = {
   Orders_aggregate: Orders_Aggregate;
   /** fetch data from the table: "Orders" using primary key columns */
   Orders_by_pk?: Maybe<Orders>;
+  /** fetch data from the table: "Payment_Methods" */
+  Payment_Methods: Array<Payment_Methods>;
+  /** fetch aggregated fields from the table: "Payment_Methods" */
+  Payment_Methods_aggregate: Payment_Methods_Aggregate;
+  /** fetch data from the table: "Payment_Methods" using primary key columns */
+  Payment_Methods_by_pk?: Maybe<Payment_Methods>;
   /** fetch data from the table: "Platform_Settings" */
   Platform_Settings: Array<Platform_Settings>;
   /** fetch aggregated fields from the table: "Platform_Settings" */
@@ -5389,6 +5707,29 @@ export type Query_RootOrders_By_PkArgs = {
 };
 
 
+export type Query_RootPayment_MethodsArgs = {
+  distinct_on?: InputMaybe<Array<Payment_Methods_Select_Column>>;
+  limit?: InputMaybe<Scalars['Int']['input']>;
+  offset?: InputMaybe<Scalars['Int']['input']>;
+  order_by?: InputMaybe<Array<Payment_Methods_Order_By>>;
+  where?: InputMaybe<Payment_Methods_Bool_Exp>;
+};
+
+
+export type Query_RootPayment_Methods_AggregateArgs = {
+  distinct_on?: InputMaybe<Array<Payment_Methods_Select_Column>>;
+  limit?: InputMaybe<Scalars['Int']['input']>;
+  offset?: InputMaybe<Scalars['Int']['input']>;
+  order_by?: InputMaybe<Array<Payment_Methods_Order_By>>;
+  where?: InputMaybe<Payment_Methods_Bool_Exp>;
+};
+
+
+export type Query_RootPayment_Methods_By_PkArgs = {
+  id: Scalars['uuid']['input'];
+};
+
+
 export type Query_RootPlatform_SettingsArgs = {
   distinct_on?: InputMaybe<Array<Platform_Settings_Select_Column>>;
   limit?: InputMaybe<Scalars['Int']['input']>;
@@ -5568,6 +5909,14 @@ export type Subscription_Root = {
   Orders_by_pk?: Maybe<Orders>;
   /** fetch data from the table in a streaming manner: "Orders" */
   Orders_stream: Array<Orders>;
+  /** fetch data from the table: "Payment_Methods" */
+  Payment_Methods: Array<Payment_Methods>;
+  /** fetch aggregated fields from the table: "Payment_Methods" */
+  Payment_Methods_aggregate: Payment_Methods_Aggregate;
+  /** fetch data from the table: "Payment_Methods" using primary key columns */
+  Payment_Methods_by_pk?: Maybe<Payment_Methods>;
+  /** fetch data from the table in a streaming manner: "Payment_Methods" */
+  Payment_Methods_stream: Array<Payment_Methods>;
   /** fetch data from the table: "Platform_Settings" */
   Platform_Settings: Array<Platform_Settings>;
   /** fetch aggregated fields from the table: "Platform_Settings" */
@@ -5851,6 +6200,36 @@ export type Subscription_RootOrders_StreamArgs = {
 };
 
 
+export type Subscription_RootPayment_MethodsArgs = {
+  distinct_on?: InputMaybe<Array<Payment_Methods_Select_Column>>;
+  limit?: InputMaybe<Scalars['Int']['input']>;
+  offset?: InputMaybe<Scalars['Int']['input']>;
+  order_by?: InputMaybe<Array<Payment_Methods_Order_By>>;
+  where?: InputMaybe<Payment_Methods_Bool_Exp>;
+};
+
+
+export type Subscription_RootPayment_Methods_AggregateArgs = {
+  distinct_on?: InputMaybe<Array<Payment_Methods_Select_Column>>;
+  limit?: InputMaybe<Scalars['Int']['input']>;
+  offset?: InputMaybe<Scalars['Int']['input']>;
+  order_by?: InputMaybe<Array<Payment_Methods_Order_By>>;
+  where?: InputMaybe<Payment_Methods_Bool_Exp>;
+};
+
+
+export type Subscription_RootPayment_Methods_By_PkArgs = {
+  id: Scalars['uuid']['input'];
+};
+
+
+export type Subscription_RootPayment_Methods_StreamArgs = {
+  batch_size: Scalars['Int']['input'];
+  cursor: Array<InputMaybe<Payment_Methods_Stream_Cursor_Input>>;
+  where?: InputMaybe<Payment_Methods_Bool_Exp>;
+};
+
+
 export type Subscription_RootPlatform_SettingsArgs = {
   distinct_on?: InputMaybe<Array<Platform_Settings_Select_Column>>;
   limit?: InputMaybe<Scalars['Int']['input']>;
@@ -6042,7 +6421,7 @@ export type Uuid_Comparison_Exp = {
 export type GetAddressesQueryVariables = Exact<{ [key: string]: never; }>;
 
 
-export type GetAddressesQuery = { Addresses: Array<{ id: string, user_id: string, street: string, city: string, postal_code?: string | null, latitude: string, longitude: string, is_default: boolean, created_at: string, updated_at: string }> };
+export type GetAddressesQuery = { Addresses: Array<{ id: string, user_id: string, street: string, city: string, postal_code?: string | null, latitude: string, longitude: string, is_default: boolean, created_at: string, updated_at?: string | null }> };
 
 export type GetCartItemsQueryVariables = Exact<{ [key: string]: never; }>;
 
@@ -6077,7 +6456,7 @@ export type GetOrderItemsQuery = { Order_Items: Array<{ id: string, order_id: st
 export type GetOrdersQueryVariables = Exact<{ [key: string]: never; }>;
 
 
-export type GetOrdersQuery = { Orders: Array<{ id: string, user_id: string, shopper_id: string, total: string, status: string, delivery_address_id: string, delivery_photo_url: string, delivery_notes: string, created_at: string, updated_at: string, delivery_time?: string | null, combined_order_id?: string | null, Address: { city: string, created_at: string, id: string, is_default: boolean, latitude: string, longitude: string, postal_code?: string | null, street: string, updated_at: string, user_id: string }, Delivery_Issues: Array<{ created_at: string, description: string, id: string, issue_type: string, order_id: string, shopper_id: string, status: string, updated_at: string }>, Order_Items: Array<{ created_at: string, id: string, order_id: string, price: string, product_id: string, quantity: number }> }> };
+export type GetOrdersQuery = { Orders: Array<{ id: string, user_id: string, shopper_id: string, total: string, status: string, delivery_address_id: string, delivery_photo_url: string, delivery_notes: string, created_at: string, updated_at: string, delivery_time?: string | null, combined_order_id?: string | null, Address: { city: string, created_at: string, id: string, is_default: boolean, latitude: string, longitude: string, postal_code?: string | null, street: string, updated_at?: string | null, user_id: string }, Delivery_Issues: Array<{ created_at: string, description: string, id: string, issue_type: string, order_id: string, shopper_id: string, status: string, updated_at: string }>, Order_Items: Array<{ created_at: string, id: string, order_id: string, price: string, product_id: string, quantity: number }> }> };
 
 export type GetPlatformSettingsQueryVariables = Exact<{ [key: string]: never; }>;
 
@@ -6092,17 +6471,17 @@ export type GetProductsQuery = { Products: Array<{ id: string, name: string, des
 export type GetShopperAvailabilityQueryVariables = Exact<{ [key: string]: never; }>;
 
 
-export type GetShopperAvailabilityQuery = { Shopper_Availability: Array<{ id: string, user_id: string, day_of_week: number, start_time: any, end_time: any, is_available: boolean, created_at: string, updated_at: string, User: { updated_at?: string | null, role: string, profile_picture?: string | null, phone: string, password_hash: string, name: string, is_active: boolean, id: string, created_at: string, email: string, gender: string } }> };
+export type GetShopperAvailabilityQuery = { Shopper_Availability: Array<{ id: string, user_id: string, day_of_week: number, start_time: any, end_time: any, is_available: boolean, created_at: string, updated_at: string }> };
 
 export type GetShopsQueryVariables = Exact<{ [key: string]: never; }>;
 
 
-export type GetShopsQuery = { Shops: Array<{ id: string, name: string, description: string, category_id: string, image: string, address: string, latitude: string, longitude: string, operating_hours: any, created_at: string, updated_at?: string | null, is_active: boolean, Category: { created_at: string, description: string, id: string, image: string, is_active: boolean, name: string }, Products: Array<{ category: string, created_at: string, description: string, id: string, updated_at?: string | null, shop_id: string, quantity: number, price: string, name: string, measurement_unit: string, is_active: boolean, image: string }> }> };
+export type GetShopsQuery = { Shops: Array<{ id: string, name: string, description: string, category_id: string, image: string, address: string, latitude: string, longitude: string, operating_hours: any, created_at: string, updated_at?: string | null, is_active: boolean }> };
 
 export type GetUsersQueryVariables = Exact<{ [key: string]: never; }>;
 
 
-export type GetUsersQuery = { Users: Array<{ id: string, name: string, email: string, phone: string, role: string, password_hash: string, created_at: string, updated_at?: string | null, profile_picture?: string | null, is_active: boolean, gender: string, Addresses: Array<{ city: string, created_at: string, id: string, is_default: boolean, latitude: string, longitude: string, postal_code?: string | null, street: string, updated_at: string, user_id: string }>, Carts: Array<{ created_at: string, id: string, is_active: boolean, shop_id: string, total: string, updated_at?: string | null, user_id: string }>, Delivery_Issues: Array<{ created_at: string, description: string, id: string, issue_type: string, order_id: string, shopper_id: string, status: string, updated_at: string }>, Notifications: Array<{ created_at: string, id: string, is_read: boolean, message: string, type: string, user_id: string }>, Order?: { combined_order_id?: string | null, created_at: string, delivery_address_id: string, delivery_notes: string, delivery_photo_url: string, delivery_time?: string | null, id: string, shopper_id: string, status: string, total: string, updated_at: string, user_id: string } | null, Orders: Array<{ combined_order_id?: string | null, created_at: string, delivery_address_id: string, delivery_notes: string, delivery_photo_url: string, delivery_time?: string | null, id: string, shopper_id: string, status: string, total: string, updated_at: string, user_id: string }>, Shopper_Availabilities: Array<{ user_id: string, updated_at: string, start_time: any, is_available: boolean, id: string, end_time: any, day_of_week: number, created_at: string }> }> };
+export type GetUsersQuery = { Users: Array<{ id: string, name: string, email: string, phone: string, role: string, password_hash: string, created_at: string, updated_at?: string | null, profile_picture?: string | null, is_active: boolean }> };
 
 export type AddCartMutationVariables = Exact<{
   total?: InputMaybe<Scalars['String']['input']>;
@@ -6122,6 +6501,11 @@ export type AddItemsToCartMutationVariables = Exact<{
 
 
 export type AddItemsToCartMutation = { insert_Carts?: { affected_rows: number } | null };
+
+export type GetPaymentMethodQueryVariables = Exact<{ [key: string]: never; }>;
+
+
+export type GetPaymentMethodQuery = { Payment_Methods: Array<{ validity?: string | null, user_id: string, update_on?: string | null, number: string, names: string, method: string, is_default: boolean, id: string, create_at: string, CCV?: string | null }> };
 
 
 export const GetAddressesDocument = gql`
@@ -6453,19 +6837,6 @@ export const GetShopperAvailabilityDocument = gql`
     is_available
     created_at
     updated_at
-    User {
-      updated_at
-      role
-      profile_picture
-      phone
-      password_hash
-      name
-      is_active
-      id
-      created_at
-      email
-      gender
-    }
   }
 }
     `;
@@ -6484,28 +6855,6 @@ export const GetShopsDocument = gql`
     created_at
     updated_at
     is_active
-    Category {
-      created_at
-      description
-      id
-      image
-      is_active
-      name
-    }
-    Products {
-      category
-      created_at
-      description
-      id
-      updated_at
-      shop_id
-      quantity
-      price
-      name
-      measurement_unit
-      is_active
-      image
-    }
   }
 }
     `;
@@ -6522,84 +6871,6 @@ export const GetUsersDocument = gql`
     updated_at
     profile_picture
     is_active
-    gender
-    Addresses {
-      city
-      created_at
-      id
-      is_default
-      latitude
-      longitude
-      postal_code
-      street
-      updated_at
-      user_id
-    }
-    Carts {
-      created_at
-      id
-      is_active
-      shop_id
-      total
-      updated_at
-      user_id
-    }
-    Delivery_Issues {
-      created_at
-      description
-      id
-      issue_type
-      order_id
-      shopper_id
-      status
-      updated_at
-    }
-    Notifications {
-      created_at
-      id
-      is_read
-      message
-      type
-      user_id
-    }
-    Order {
-      combined_order_id
-      created_at
-      delivery_address_id
-      delivery_notes
-      delivery_photo_url
-      delivery_time
-      id
-      shopper_id
-      status
-      total
-      updated_at
-      user_id
-    }
-    Orders {
-      combined_order_id
-      created_at
-      delivery_address_id
-      delivery_notes
-      delivery_photo_url
-      delivery_time
-      id
-      shopper_id
-      status
-      total
-      updated_at
-      user_id
-    }
-    Shopper_Availabilities {
-      user_id
-      updated_at
-      start_time
-      is_available
-      id
-      end_time
-      day_of_week
-      created_at
-    }
   }
 }
     `;
@@ -6618,6 +6889,22 @@ export const AddItemsToCartDocument = gql`
     objects: {total: $total, is_active: $is_active, shop_id: $shop_id, user_id: $user_id}
   ) {
     affected_rows
+  }
+}
+    `;
+export const GetPaymentMethodDocument = gql`
+    query getPaymentMethod {
+  Payment_Methods {
+    validity
+    user_id
+    update_on
+    number
+    names
+    method
+    is_default
+    id
+    create_at
+    CCV
   }
 }
     `;
@@ -6673,6 +6960,9 @@ export function getSdk(client: GraphQLClient, withWrapper: SdkFunctionWrapper = 
     },
     AddItemsToCart(variables?: AddItemsToCartMutationVariables, requestHeaders?: GraphQLClientRequestHeaders): Promise<AddItemsToCartMutation> {
       return withWrapper((wrappedRequestHeaders) => client.request<AddItemsToCartMutation>(AddItemsToCartDocument, variables, {...requestHeaders, ...wrappedRequestHeaders}), 'AddItemsToCart', 'mutation', variables);
+    },
+    getPaymentMethod(variables?: GetPaymentMethodQueryVariables, requestHeaders?: GraphQLClientRequestHeaders): Promise<GetPaymentMethodQuery> {
+      return withWrapper((wrappedRequestHeaders) => client.request<GetPaymentMethodQuery>(GetPaymentMethodDocument, variables, {...requestHeaders, ...wrappedRequestHeaders}), 'getPaymentMethod', 'query', variables);
     }
   };
 }

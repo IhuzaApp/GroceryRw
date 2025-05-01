@@ -70,7 +70,7 @@ export default function ItemsSection({
             ? String(activeCategory).charAt(0).toUpperCase() + String(activeCategory).slice(1)
             : "All Products"}
         </h2>
-        <div className="grid grid-cols-4 gap-4 md:grid-cols-5 lg:grid-cols-6">
+        <div className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-6">
           {loadingProducts
             ? Array(12)
                 .fill(0)

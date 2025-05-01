@@ -159,10 +159,12 @@ function CartItem({
 export default function ItemCartTable({
   shopId,
   onTotalChange,
+  onUnitsChange,
   onLoadingChange,
 }: {
   shopId: string;
   onTotalChange?: (total: number) => void;
+  onUnitsChange?: (units: number) => void;
   onLoadingChange?: (loading: boolean) => void;
 }) {
   const [cartItems, setCartItems] = useState<CartItemType[]>([]);
@@ -251,6 +253,8 @@ export default function ItemCartTable({
       });
       // remove locally
       setCartItems(prev => prev.filter(item => item.id !== id));
+      // Notify cart count update
+      window.dispatchEvent(new Event('cartChanged'));
     } catch (err) {
       console.error('Failed to delete cart item:', err);
     } finally {
@@ -266,13 +270,22 @@ export default function ItemCartTable({
     .reduce((sum, item) => sum + item?.price * item.quantity, 0)
     .toFixed(2);
 
-  // Notify parent of updated total
+  // Calculate numeric total and notify parent
   const totalNumber = parseFloat(total);
+  // Calculate total units and notify parent
+  const totalUnits = cartItems.reduce((sum, item) => sum + item.quantity, 0);
+
   useEffect(() => {
     if (onTotalChange) {
       onTotalChange(totalNumber);
     }
   }, [totalNumber, onTotalChange]);
+
+  useEffect(() => {
+    if (onUnitsChange) {
+      onUnitsChange(totalUnits);
+    }
+  }, [totalUnits, onUnitsChange]);
 
   console.log(total);
 

@@ -123,20 +123,26 @@ export default function Home({ initialData }: { initialData: Data }) {
         const userAddr = JSON.parse(cookie);
         const userLat = parseFloat(userAddr.latitude);
         const userLng = parseFloat(userAddr.longitude);
+        const userAlt = parseFloat(userAddr.altitude || '0');
         const newDyn: Record<string, {distance: string; time: string; fee: string; open: boolean}> = {};
         filteredShops?.forEach((shop) => {
           if (shop.latitude && shop.longitude) {
             const shopLat = parseFloat(shop.latitude);
             const shopLng = parseFloat(shop.longitude);
             const distKm = getDistanceFromLatLonInKm(userLat, userLng, shopLat, shopLng);
-            const roundedKm = Math.round(distKm * 10) / 10;
-            const distance = `${roundedKm} km`;
-            const distMi = distKm * 0.621371;
-            const fast = (distMi / 40) * 60;
-            const slow = (distMi / 20) * 60;
-            const min = Math.round(fast + 40);
-            const max = Math.round(slow + 40);
-            const time = `${min}-${max} min`;
+            const shopAlt = parseFloat((shop as any).altitude || '0');
+            const altKm = (shopAlt - userAlt) / 1000;
+            const dist3D = Math.sqrt(distKm * distKm + altKm * altKm);
+            const roundedKm = Math.round(dist3D * 10) / 10;
+            const distance = `${Math.round(dist3D * 10) / 10} km`;
+            const travelTime = Math.ceil(dist3D); // 1 km ≈ 1 min
+            const totalTime = travelTime + 40;
+            let time = `${totalTime} mins`;
+            if (totalTime >= 60) {
+              const hours = Math.floor(totalTime / 60);
+              const mins = totalTime % 60;
+              time = `${hours}h ${mins}m`;
+            }
             const fee = distKm <= 3 ? '1000 frw' : `${1000 + Math.round((distKm - 3) * 300)} frw`;
             // Determine open/closed based on today's operating_hours object
             let isOpen = false;

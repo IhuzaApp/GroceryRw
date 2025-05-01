@@ -1,22 +1,85 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Input, Button, Panel } from "rsuite";
 import ConfirmPayment from "./confirmPayment";
 import Link from "next/link"; // Make sure you import Link if you use it
 import { formatCurrency } from "../../../lib/formatCurrency";
+import Cookies from 'js-cookie';
 
 interface CheckoutItemsProps {
   Total: number;
+  totalUnits: number;
+  shopLat: number;
+  shopLng: number;
+  shopAlt: number;
 }
 
-export default function CheckoutItems({ Total }: CheckoutItemsProps) {
+// Add helper to compute distance between two coordinates
+function getDistanceFromLatLonInKm(lat1: number, lon1: number, lat2: number, lon2: number): number {
+  const R = 6371;
+  const dLat = (lat2 - lat1) * (Math.PI / 180);
+  const dLon = (lon2 - lon1) * (Math.PI / 180);
+  const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+            Math.cos(lat1 * (Math.PI / 180)) * Math.cos(lat2 * (Math.PI / 180)) *
+            Math.sin(dLon / 2) * Math.sin(dLon / 2);
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  return R * c;
+}
+
+export default function CheckoutItems({ Total, totalUnits, shopLat, shopLng, shopAlt }: CheckoutItemsProps) {
+  // Re-render when the address cookie changes
+  const [, setTick] = useState(0);
+  useEffect(() => {
+    const handleAddressChange = () => setTick(t => t + 1);
+    window.addEventListener('addressChanged', handleAddressChange);
+    return () => window.removeEventListener('addressChanged', handleAddressChange);
+  }, []);
   const [promoCode, setPromoCode] = useState("");
   const [discount, setDiscount] = useState(0);
   const [appliedPromo, setAppliedPromo] = useState<string | null>(null);
 
-  // Dummy values to complete your code (you can replace them dynamically)
-  const deliveryFee = 5;
-  const selectedCart = { promoCode: promoCode, deliveryTime: "30-45 mins" };
-  const totalBeforeDiscount = Total;
+  // Service and Delivery Fee calculations
+  const serviceFee = 2000; // flat service fee in RWF
+  const baseDeliveryFee = 1000; // base delivery fee in RWF
+  // Surcharge based on units beyond 10 items
+  const extraUnits = Math.max(0, totalUnits - 10);
+  const unitsSurcharge = extraUnits * 50;
+  // Surcharge based on distance beyond 3km
+  let distanceKm = 0;
+  let userAlt = 0;
+  const cookie = Cookies.get('delivery_address');
+  if (cookie) {
+    try {
+      const userAddr = JSON.parse(cookie);
+      const userLat = parseFloat(userAddr.latitude);
+      const userLng = parseFloat(userAddr.longitude);
+      userAlt = parseFloat(userAddr.altitude || '0');
+      distanceKm = getDistanceFromLatLonInKm(userLat, userLng, shopLat, shopLng);
+    } catch (err) {
+      console.error("Error parsing delivery_address cookie:", err);
+    }
+  }
+  const extraDistance = Math.max(0, distanceKm - 3);
+  const distanceSurcharge = Math.ceil(extraDistance) * 300;
+  // Cap the distance-based delivery fee (before units) at 2500 RWF
+  const rawDistanceFee = baseDeliveryFee + distanceSurcharge;
+  const cappedDistanceFee = rawDistanceFee > 2500 ? 2500 : rawDistanceFee;
+  // Final delivery fee includes unit surcharge
+  const deliveryFee = cappedDistanceFee + unitsSurcharge;
+
+  // Compute total delivery time: travel time in 3D plus shopping time
+  const shoppingTime = 40; // minutes spent shopping at the store
+  const altKm = (shopAlt - userAlt) / 1000;
+  const distance3D = Math.sqrt(distanceKm * distanceKm + altKm * altKm);
+  const travelTime = Math.ceil(distance3D); // assume 1 km ≈ 1 minute travel
+  const totalTimeMinutes = travelTime + shoppingTime;
+  let deliveryTime: string;
+  if (totalTimeMinutes >= 60) {
+    const hours = Math.floor(totalTimeMinutes / 60);
+    const minutes = totalTimeMinutes % 60;
+    deliveryTime = `${hours}h ${minutes}m`;
+  } else {
+    deliveryTime = `${totalTimeMinutes} mins`;
+  }
 
   const handleApplyPromo = () => {
     const PROMO_CODES: { [code: string]: number } = {
@@ -36,8 +99,8 @@ export default function CheckoutItems({ Total }: CheckoutItemsProps) {
     }
   };
 
-  // Compute numeric final total
-  const finalTotal = Total - discount + deliveryFee;
+  // Compute numeric final total including service fee
+  const finalTotal = Total - discount + serviceFee + deliveryFee;
 
   return (
     <>
@@ -65,30 +128,36 @@ export default function CheckoutItems({ Total }: CheckoutItemsProps) {
 
         <hr className="mt-4" />
 
-        <div className="mt-6 flex flex-col gap-4">
+        <div className="mt-6 flex flex-col gap-2">
           <div className="flex justify-between">
-            <div>
-              <p className="text-2xl font-bold">{formatCurrency(Total)}</p>
-              <p className="text-gray-500">Cost of items</p>
+            <span className="text-sm text-gray-600">Subtotal</span>
+            <span className="text-sm">{formatCurrency(Total)}</span>
+          </div>
+          {discount > 0 && (
+            <div className="flex justify-between text-green-600">
+              <span className="text-sm">Discount ({appliedPromo})</span>
+              <span className="text-sm">-{formatCurrency(discount)}</span>
             </div>
-            <div>
-              <p
-                className={`text-2xl font-bold ${
-                  discount ? "text-red-500" : "text-gray-500"
-                }`}
-              >
-                -{formatCurrency(discount)}
-              </p>
-              <p className="text-gray-500">
-                Promo code {appliedPromo ? `(${appliedPromo})` : "(empty)"}
-              </p>
-            </div>
-            <div>
-              <p className="text-2xl font-bold text-green-500">
-                {formatCurrency(finalTotal)}
-              </p>
-              <p className="text-gray-500">Total</p>
-            </div>
+          )}
+          <div className="flex justify-between">
+            <span className="text-sm text-gray-600">Units</span>
+            <span className="text-sm">{totalUnits}</span>
+          </div>
+          <div className="flex justify-between">
+            <span className="text-sm text-gray-600">Service Fee</span>
+            <span className="text-sm">{formatCurrency(serviceFee)}</span>
+          </div>
+          <div className="flex justify-between">
+            <span className="text-sm text-gray-600">Delivery Fee</span>
+            <span className="text-sm">{formatCurrency(deliveryFee)}</span>
+          </div>
+          <div className="flex justify-between">
+            <span className="text-sm text-gray-600">Delivery Time</span>
+            <span className="text-sm">{deliveryTime}</span>
+          </div>
+          <div className="flex justify-between mt-2">
+            <span className="text-lg font-bold">Total</span>
+            <span className="text-lg font-bold text-green-500">{formatCurrency(finalTotal)}</span>
           </div>
           <ConfirmPayment />
         </div>
@@ -103,7 +172,7 @@ export default function CheckoutItems({ Total }: CheckoutItemsProps) {
             className="bg-white rounded-xl shadow-lg overflow-hidden border-0"
             style={{ boxShadow: "0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1)" }}
           >
-            <div className="bg-green-500 text-white p-4 -mx-4 -mt-4 mb-6">
+            <div className="bg-purple-800 text-white p-4 -mx-4 -mt-4 mb-6">
               <h2 className="text-xl font-bold">Order Summary</h2>
             </div>
 
@@ -115,10 +184,20 @@ export default function CheckoutItems({ Total }: CheckoutItemsProps) {
 
               {discount > 0 && (
                 <div className="flex justify-between text-green-600">
-                  <span>Discount ({selectedCart.promoCode})</span>
+                  <span>Discount ({appliedPromo})</span>
                   <span>-{formatCurrency(discount)}</span>
                 </div>
               )}
+
+              <div className="flex justify-between">
+                <span className="text-gray-600">Units</span>
+                <span className="font-medium">{totalUnits}</span>
+              </div>
+
+              <div className="flex justify-between">
+                <span className="text-gray-600">Service Fee</span>
+                <span className="font-medium">{formatCurrency(serviceFee)}</span>
+              </div>
 
               <div className="flex justify-between">
                 <span className="text-gray-600">Delivery Fee</span>
@@ -146,7 +225,7 @@ export default function CheckoutItems({ Total }: CheckoutItemsProps) {
                   <circle cx="12" cy="12" r="10" />
                   <polyline points="12 6 12 12 16 14" />
                 </svg>
-                <span>{selectedCart.deliveryTime}</span>
+                <span>{deliveryTime}</span>
               </div>
             </div>
 
@@ -159,13 +238,14 @@ export default function CheckoutItems({ Total }: CheckoutItemsProps) {
                   </div>
                   <span>•••• 4242</span>
                 </div>
-                <Button appearance="link" size="sm">
+                <Button color="green" appearance="link" size="sm">
                   Change
                 </Button>
               </div>
             </div>
 
             <Button
+              color="green"
               appearance="primary"
               block
               size="lg"

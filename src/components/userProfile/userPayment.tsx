@@ -1,63 +1,204 @@
-import React from "react";
-import { Panel, Tag } from "rsuite";
+import React, { useState, useEffect } from "react";
+import { Panel, Tag, Button, Modal, Form, Checkbox, toaster, SelectPicker } from "rsuite";
+
+// Helper to map methods to background colors
+const getMethodBg = (method: string) => {
+  switch (method.toLowerCase()) {
+    case 'visa':
+      return 'bg-blue-600';
+    case 'mastercard':
+    case 'mc':
+      return 'bg-orange-500';
+    case 'mtn momo':
+      return 'bg-yellow-500 text-black';
+    default:
+      return 'bg-gray-500';
+  }
+};
+
+interface PaymentMethod {
+  id: string;
+  user_id: string;
+  method: string;
+  names: string;
+  number: string;
+  CCV: string;
+  validity: string;
+  is_default: boolean;
+}
 
 export default function UserPayment() {
+  const [paymentMethods, setPaymentMethods] = useState<PaymentMethod[]>([]);
+  const [showModal, setShowModal] = useState(false);
+  const [formValue, setFormValue] = useState<any>({
+    method: '',
+    names: '',
+    number: '',
+    CCV: '',
+    validity: '',
+    is_default: false,
+  });
+
+  const fetchPaymentMethods = async () => {
+    try {
+      const res = await fetch('/api/queries/payment-methods');
+      const { paymentMethods } = await res.json();
+      setPaymentMethods(paymentMethods);
+    } catch (err) {
+      console.error('Error loading payment methods:', err);
+    }
+  };
+
+  useEffect(() => {
+    fetchPaymentMethods();
+  }, []);
+
+  const handleAdd = () => {
+    setFormValue({ method: '', names: '', number: '', CCV: '', validity: '', is_default: false });
+    setShowModal(true);
+  };
+
+  const handleSave = async () => {
+    const { method, names, number, CCV, validity, is_default } = formValue;
+    // Only require CCV and validity for card payments (not MTN Momo)
+    const isMomo = method === 'MTN Momo';
+    if (!method || !names || !number || (!isMomo && (!CCV || !validity))) {
+      toaster.push(<Tag color="red">Please fill out all required fields.</Tag>);
+      return;
+    }
+    try {
+      await fetch('/api/queries/payment-methods', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(formValue),
+      });
+      setShowModal(false);
+      fetchPaymentMethods();
+    } catch (err) {
+      console.error('Error saving payment method:', err);
+      toaster.push(<Tag color="red">Failed to save payment method.</Tag>);
+    }
+  };
+
+  const handleSetDefault = async (id: string) => {
+    try {
+      await fetch('/api/queries/payment-methods', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id, is_default: true }),
+      });
+      fetchPaymentMethods();
+    } catch (err) {
+      console.error('Error updating default method:', err);
+    }
+  };
+
   return (
     <>
       <div className="mb-4 flex items-center justify-between">
         <h3 className="text-lg font-bold">Payment Methods</h3>
-        <button className="rounded bg-green-700 px-4 py-2 text-white hover:bg-green-600">
+        <Button appearance="primary" color="green" onClick={handleAdd} size="sm">
           Add Payment Method
-        </button>
+        </Button>
       </div>
-
       <div className="space-y-4">
-        <Panel bordered className="relative">
-          <Tag className="absolute right-2 top-2 border-green-200 bg-green-100 text-green-600">
-            Default
-          </Tag>
-          <div className="flex items-center">
-            <div className="mr-3 flex h-8 w-12 items-center justify-center rounded bg-blue-600 text-white">
-              VISA
+        {paymentMethods.map((pm) => (
+          <Panel bordered className="relative" key={pm.id}>
+            {pm.is_default && (
+              <Tag className="absolute right-2 top-2 border-green-200 bg-green-100 text-green-600">
+                Default
+              </Tag>
+            )}
+            <div className="flex items-center">
+              <div
+                className={`mr-3 flex h-8 w-12 items-center justify-center rounded ${getMethodBg(pm.method)}`}
+              >
+                {pm.method}
+              </div>
+              <div>
+                <h4 className="font-bold">
+                  {`${pm.method} ending in ${pm.number.slice(-4)}`}
+                </h4>
+                <p className="text-sm text-gray-600">Expires {pm.validity}</p>
+              </div>
             </div>
-            <div>
-              <h4 className="font-bold">Visa ending in 4242</h4>
-              <p className="text-sm text-gray-600">Expires 05/2026</p>
+            <div className="mt-4 flex gap-2">
+              <Button appearance="ghost" size="sm">
+                Edit
+              </Button>
+              <Button appearance="ghost" color="red" size="sm">
+                Delete
+              </Button>
+              {!pm.is_default && (
+                <Button
+                  appearance="ghost"
+                  color="green"
+                  size="sm"
+                  onClick={() => handleSetDefault(pm.id)}
+                >
+                  Set as Default
+                </Button>
+              )}
             </div>
-          </div>
-          <div className="mt-4 flex gap-2">
-            <button className="rounded border border-purple-500 px-3 py-1 text-sm text-purple-500 hover:bg-purple-100">
-              Edit
-            </button>
-            <button className="rounded border border-red-500 px-3 py-1 text-sm text-red-500 hover:bg-red-100">
-              Delete
-            </button>
-          </div>
-        </Panel>
-
-        <Panel bordered>
-          <div className="flex items-center">
-            <div className="mr-3 flex h-8 w-12 items-center justify-center rounded bg-orange-500 text-white">
-              MC
-            </div>
-            <div>
-              <h4 className="font-bold">Mastercard ending in 8888</h4>
-              <p className="text-sm text-gray-600">Expires 11/2025</p>
-            </div>
-          </div>
-          <div className="mt-4 flex gap-2">
-            <button className="rounded border border-purple-500 px-3 py-1 text-sm text-purple-500 hover:bg-purple-100">
-              Edit
-            </button>
-            <button className="rounded border border-red-500 px-3 py-1 text-sm text-red-500 hover:bg-red-100">
-              Delete
-            </button>
-            <button className="rounded border border-green-700 px-3 py-1 text-sm text-green-700 hover:bg-green-100">
-              Set as Default
-            </button>
-          </div>
-        </Panel>
+          </Panel>
+        ))}
       </div>
+
+      <Modal size="sm" open={showModal} onClose={() => setShowModal(false)}>
+        <Modal.Header>
+          <Modal.Title>Add Payment Method</Modal.Title>
+        </Modal.Header>
+        <Modal.Body>
+          <Form fluid formValue={formValue} onChange={setFormValue}>
+            <Form.Group>
+              <Form.ControlLabel>Method</Form.ControlLabel>
+              <select
+                name="method"
+                value={formValue.method}
+                onChange={(e) => setFormValue({ ...formValue, method: e.target.value })}
+                className="block w-full px-3 py-2 border border-gray-300 bg-white rounded-md shadow-sm focus:outline-none focus:ring-green-500 focus:border-green-500"
+              >
+                <option value="">Select Payment Method</option>
+                <option value="Visa">Visa</option>
+                <option value="Mastercard">Mastercard</option>
+                <option value="MTN Momo">MTN Momo</option>
+              </select>
+            </Form.Group>
+            <Form.Group>
+              <Form.ControlLabel>{formValue.method === 'MTN Momo' ? 'Name on the number' : 'Name on Card'}</Form.ControlLabel>
+              <Form.Control name="names" />
+            </Form.Group>
+            <Form.Group>
+              <Form.ControlLabel>Number</Form.ControlLabel>
+              <Form.Control name="number" />
+            </Form.Group>
+            {formValue.method !== 'MTN Momo' && (
+              <>
+                <Form.Group>
+                  <Form.ControlLabel>CCV</Form.ControlLabel>
+                  <Form.Control name="CCV" />
+                </Form.Group>
+                <Form.Group>
+                  <Form.ControlLabel>Validity (MM/YYYY)</Form.ControlLabel>
+                  <Form.Control name="validity" />
+                </Form.Group>
+              </>
+            )}
+            <Form.Group>
+              <Form.ControlLabel>Set as Default</Form.ControlLabel>
+              <Form.Control name="is_default" accepter={Checkbox} />
+            </Form.Group>
+          </Form>
+        </Modal.Body>
+        <Modal.Footer>
+          <Button appearance="primary" color="green" onClick={handleSave}>
+            Save
+          </Button>
+          <Button onClick={() => setShowModal(false)} appearance="subtle">
+            Cancel
+          </Button>
+        </Modal.Footer>
+      </Modal>
     </>
   );
 }

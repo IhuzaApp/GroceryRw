@@ -47,6 +47,25 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   }, [status]);
 
+  // Refresh count when cart items change elsewhere
+  React.useEffect(() => {
+    if (status !== 'authenticated') return;
+    const handleCartChanged = () => {
+      fetch('/api/carts')
+        .then((res) => res.json())
+        .then((data: { carts: Array<{ count?: number }> }) => {
+          const totalCount = data.carts.reduce(
+            (sum, c) => sum + (c.count ?? 0),
+            0
+          );
+          setCount(totalCount);
+        })
+        .catch((err) => console.error('Failed to refresh cart counts:', err));
+    };
+    window.addEventListener('cartChanged', handleCartChanged);
+    return () => window.removeEventListener('cartChanged', handleCartChanged);
+  }, [status]);
+
   return <CartContext.Provider value={{ count, addItem }}>{children}</CartContext.Provider>;
 };
 
