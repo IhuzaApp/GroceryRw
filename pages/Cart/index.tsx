@@ -36,9 +36,10 @@ function CheckoutSkeleton() {
 
 export default function CartMainPage() {
   // User's active shops (carts): id, name, and number of line items
-  const [shops, setShops] = useState<{ id: string; name: string; count?: number }[]>([])
+  const [shops, setShops] = useState<{ id: string; name: string; count?: number; latitude: string; longitude: string }[]>([])
   const [selectedCartId, setSelectedCartId] = useState<string | null>(null)
   const [cartTotal, setCartTotal] = useState<number>(0)
+  const [cartUnits, setCartUnits] = useState<number>(0)
   const [loadingShops, setLoadingShops] = useState<boolean>(true)
   const [loadingItems, setLoadingItems] = useState<boolean>(false)
 
@@ -54,7 +55,7 @@ export default function CartMainPage() {
         }
         return res.json()
       })
-      .then((data: { carts: Array<{ id: string; name: string; count?: number }> }) => {
+      .then((data: { carts: Array<{ id: string; name: string; count?: number; latitude: string; longitude: string }> }) => {
         setShops(data.carts)
         if (data.carts.length > 0) setSelectedCartId(data.carts[0].id)
       })
@@ -66,6 +67,9 @@ export default function CartMainPage() {
   }, [])
 
   const handleSelectCart = (cartId: string) => setSelectedCartId(cartId)
+
+  // Find the selected shop to pass coordinates
+  const selectedShop = shops.find(s => s.id === selectedCartId)
 
   return (
   <RootLayout>
@@ -138,6 +142,7 @@ export default function CartMainPage() {
                 <ItemCartTable
                   shopId={selectedCartId}
                   onTotalChange={setCartTotal}
+                  onUnitsChange={setCartUnits}
                   onLoadingChange={setLoadingItems}
                 />
               </>
@@ -146,9 +151,19 @@ export default function CartMainPage() {
             )}
           </div>
           {/* Order Summary Column */}
-          {selectedCartId && (
+          {selectedCartId && selectedShop && (
             <>
-              {loadingItems ? <CheckoutSkeleton /> : <CheckoutItems Total={cartTotal} />}
+              {loadingItems ? (
+                <CheckoutSkeleton />
+              ) : (
+                <CheckoutItems
+                  Total={cartTotal}
+                  totalUnits={cartUnits}
+                  shopLat={parseFloat(selectedShop.latitude)}
+                  shopLng={parseFloat(selectedShop.longitude)}
+                  shopAlt={parseFloat((selectedShop as any).altitude || '0')}
+                />
+              )}
             </>
           )}
         </div>

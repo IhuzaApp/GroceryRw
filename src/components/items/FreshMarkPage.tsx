@@ -26,6 +26,7 @@ interface Shop {
   address: string;
   latitude: string;
   longitude: string;
+  altitude?: string;
   operating_hours: any;
   is_active: boolean;
 }
@@ -51,12 +52,17 @@ function getDistanceFromLatLonInKm(lat1: number, lon1: number, lat2: number, lon
 
 const FreshMarkPage: React.FC<FreshMarkPageProps> = ({ shop, products }) => {
   const [activeCategory, setActiveCategory] = useState("all");
+  // State to hold dynamic distance/time for hydration
+  const [dynamicDistance, setDynamicDistance] = useState("1.2 km");
+  const [dynamicDeliveryTime, setDynamicDeliveryTime] = useState("15-25 min");
+  // Track mount for hydration-safe rendering
+  const [isMounted, setIsMounted] = useState(false);
+  useEffect(() => { setIsMounted(true); }, []);
 
-  // Compute dynamic distance (in km) and delivery time based on saved user address
-  const cookie = Cookies.get('delivery_address');
-  let dynamicDistance = "1.2 km";
-  let dynamicDeliveryTime = "15-25 min";
-  if (cookie) {
+  // Compute dynamic distance/time on client only to avoid hydration mismatch
+  useEffect(() => {
+    const cookie = Cookies.get('delivery_address');
+    if (!cookie || !shop.latitude || !shop.longitude) return;
     try {
       const userAddr = JSON.parse(cookie);
       const userLat = parseFloat(userAddr.latitude);
@@ -64,19 +70,28 @@ const FreshMarkPage: React.FC<FreshMarkPageProps> = ({ shop, products }) => {
       const shopLat = parseFloat(shop.latitude);
       const shopLng = parseFloat(shop.longitude);
       const distKm = getDistanceFromLatLonInKm(userLat, userLng, shopLat, shopLng);
-      const distanceRoundedKm = Math.round(distKm * 10) / 10;
-      dynamicDistance = `${distanceRoundedKm} km`;
-      // Estimate travel time: speeds 40mph (fast) to 20mph (slow)
-      const distMi = distKm * 0.621371;
-      const travelFast = (distMi / 40) * 60;
-      const travelSlow = (distMi / 20) * 60;
-      const totalMin = Math.round(travelFast + 40);
-      const totalMax = Math.round(travelSlow + 40);
-      dynamicDeliveryTime = `${1}-${totalMax} min`;
+      const userAlt = parseFloat(userAddr.altitude || '0');
+      const shopAlt = parseFloat((shop as any).altitude || '0');
+      const altKm = (shopAlt - userAlt) / 1000;
+      const dist3D = Math.sqrt(distKm * distKm + altKm * altKm);
+      const roundedKm3D = Math.round(dist3D * 10) / 10;
+      setDynamicDistance(`${roundedKm3D} km`);
+      // Compute travel time (1 min per km) plus shopping time
+      const travelTime = Math.ceil(dist3D); // 1 km ≈ 1 min
+      const totalTime = travelTime + 40;
+      let timeStr: string;
+      if (totalTime >= 60) {
+        const hours = Math.floor(totalTime / 60);
+        const mins = totalTime % 60;
+        timeStr = `${hours}h ${mins}m`;
+      } else {
+        timeStr = `${totalTime} mins`;
+      }
+      setDynamicDeliveryTime(timeStr);
     } catch (err) {
       console.error('Error computing distance/time:', err);
     }
-  }
+  }, [shop.latitude, shop.longitude]);
 
   // Merge fetched shop details with additional mock fields and products
   const shopData = {
@@ -132,7 +147,7 @@ const FreshMarkPage: React.FC<FreshMarkPageProps> = ({ shop, products }) => {
                     </span>
                   </div>
                   <span className="mx-2">•</span>
-                  <span>{shopData.deliveryTime}</span>
+                  <span>{isMounted ? shopData.deliveryTime : "15-25 min"}</span>
                   <span className="mx-2">•</span>
                   <span>{shopData.deliveryFee} delivery</span>
                 </div>

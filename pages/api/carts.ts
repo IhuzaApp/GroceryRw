@@ -25,6 +25,8 @@ const GET_SHOPS_BY_IDS = gql`
     Shops(where: { id: { _in: $ids } }) {
       id
       name
+      latitude
+      longitude
     }
   }
 `;
@@ -57,15 +59,18 @@ export default async function handler(
     }, {} as Record<string, number>);
 
     // 2) Fetch shop metadata
-    let carts: Array<{ id: string; name: string; count: number }> = [];
+    let carts: Array<{ id: string; name: string; count: number; latitude: string; longitude: string }> = [];
     if (shopIds.length > 0) {
-      const shopsData = await hasuraClient.request<{
-        Shops: Array<{ id: string; name: string }>
-      }>(GET_SHOPS_BY_IDS, { ids: shopIds });
+      const shopsData = await hasuraClient.request<{ Shops: Array<{ id: string; name: string; latitude: string; longitude: string }> }>(
+        GET_SHOPS_BY_IDS,
+        { ids: shopIds }
+      );
       carts = shopsData.Shops.map((shop) => ({
         id: shop.id,
         name: shop.name,
         count: countsMap[shop.id] ?? 0,
+        latitude: shop.latitude,
+        longitude: shop.longitude,
       }));
     }
 
