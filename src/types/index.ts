@@ -43,6 +43,10 @@ export interface ShopsResponse {
     category_id: string;
     image: string;
     is_active: boolean;
+    latitude: string;
+    longitude: string;
+    operating_hours?: any;
+    updated_at?: string;
   }>;
 }
 

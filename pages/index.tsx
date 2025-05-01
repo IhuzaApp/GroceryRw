@@ -27,6 +27,7 @@ import MainBanners from "@components/ui/banners";
 import Link from "next/link";
 import { Button, Panel } from "rsuite";
 import { log } from "node:console";
+import Cookies from 'js-cookie';
 
 // Skeleton Loader Component
 function ShopSkeleton() {
@@ -71,11 +72,27 @@ function getShopImageUrl(imageUrl: string | undefined): string {
   return imageUrl;
 }
 
+// Helper for Haversine formula
+function getDistanceFromLatLonInKm(lat1: number, lon1: number, lat2: number, lon2: number): number {
+  const R = 6371;
+  const dLat = (lat2 - lat1) * (Math.PI / 180);
+  const dLon = (lon2 - lon1) * (Math.PI / 180);
+  const a =
+    Math.sin(dLat/2) * Math.sin(dLat/2) +
+    Math.cos(lat1*(Math.PI/180)) *
+    Math.cos(lat2*(Math.PI/180)) *
+    Math.sin(dLon/2) * Math.sin(dLon/2);
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+  return R * c;
+}
+
 export default function Home({ initialData }: { initialData: Data }) {
   const [data, setData] = useState<Data>(initialData);
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  // Precomputed dynamics per shop to avoid SSR mismatch
+  const [shopDynamics, setShopDynamics] = useState<Record<string, {distance: string; time: string; fee: string; open: boolean}>>({});
 
   useEffect(() => {
     console.log("Fetched data:", data);
@@ -91,7 +108,85 @@ export default function Home({ initialData }: { initialData: Data }) {
       })
     : data.shops;
 
-  console.log("Filtered shops:", filteredShops);
+  // console.log("Filtered shops:", filteredShops);
+
+  // Compute dynamics on client after mount when filteredShops changes
+  useEffect(() => {
+    // Function to compute distance, time, and fee for shops
+    const computeDynamics = () => {
+      const cookie = Cookies.get('delivery_address');
+      if (!cookie) {
+        setShopDynamics({});
+        return;
+      }
+      try {
+        const userAddr = JSON.parse(cookie);
+        const userLat = parseFloat(userAddr.latitude);
+        const userLng = parseFloat(userAddr.longitude);
+        const newDyn: Record<string, {distance: string; time: string; fee: string; open: boolean}> = {};
+        filteredShops?.forEach((shop) => {
+          if (shop.latitude && shop.longitude) {
+            const shopLat = parseFloat(shop.latitude);
+            const shopLng = parseFloat(shop.longitude);
+            const distKm = getDistanceFromLatLonInKm(userLat, userLng, shopLat, shopLng);
+            const roundedKm = Math.round(distKm * 10) / 10;
+            const distance = `${roundedKm} km`;
+            const distMi = distKm * 0.621371;
+            const fast = (distMi / 40) * 60;
+            const slow = (distMi / 20) * 60;
+            const min = Math.round(fast + 40);
+            const max = Math.round(slow + 40);
+            const time = `${min}-${max} min`;
+            const fee = distKm <= 3 ? '1000 frw' : `${1000 + Math.round((distKm - 3) * 300)} frw`;
+            // Determine open/closed based on today's operating_hours object
+            let isOpen = false;
+            const hoursObj = shop.operating_hours;
+            if (hoursObj && typeof hoursObj === 'object') {
+              const now = new Date();
+              const dayKey = now.toLocaleDateString('en-US', { weekday: 'long' }).toLowerCase();
+              const todaysHours = (hoursObj as any)[dayKey];
+              if (todaysHours && todaysHours.toLowerCase() !== 'closed') {
+                const parts = todaysHours.split('-').map((s: string) => s.trim());
+                if (parts.length === 2) {
+                  const parseTime = (tp: string): number | null => {
+                    const m = tp.match(/(\d{1,2})(?::(\d{2}))?\s*(am|pm)/i);
+                    if (!m) return null;
+                    let h = parseInt(m[1], 10);
+                    const mm = m[2] ? parseInt(m[2], 10) : 0;
+                    const ampm = m[3].toLowerCase();
+                    if (h === 12) h = 0;
+                    if (ampm === 'pm') h += 12;
+                    return h * 60 + mm;
+                  };
+                  const openMins = parseTime(parts[0]);
+                  const closeMins = parseTime(parts[1]);
+                  if (openMins !== null && closeMins !== null) {
+                    const nowMins = now.getHours() * 60 + now.getMinutes();
+                    if (openMins < closeMins) {
+                      isOpen = nowMins >= openMins && nowMins <= closeMins;
+                    } else {
+                      // Overnight schedule
+                      isOpen = nowMins >= openMins || nowMins <= closeMins;
+                    }
+                  }
+                }
+              }
+            }
+            newDyn[shop.id] = { distance, time, fee, open: isOpen };
+          }
+        });
+        setShopDynamics(newDyn);
+      } catch (err) {
+        console.error('Error computing shop dynamics:', err);
+      }
+    };
+    // Initial compute
+    computeDynamics();
+    // Recompute on address change
+    window.addEventListener('addressChanged', computeDynamics);
+    // Cleanup listener on unmount/filter change
+    return () => window.removeEventListener('addressChanged', computeDynamics);
+  }, [filteredShops]);
 
   const handleCategoryClick = (categoryId: string) => {
     setIsLoading(true);
@@ -203,66 +298,74 @@ export default function Home({ initialData }: { initialData: Data }) {
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-6">
                 {filteredShops?.length ? (
-                  filteredShops.map((shop) => (
-                    <Link key={shop.id} href={`/shops/${shop.id}`}>
-                      <div className="border rounded-2xl overflow-hidden shadow-sm hover:shadow-lg transition-all duration-300 transform hover:-translate-y-1 cursor-pointer">
-                        <div className="h-48 w-full relative bg-gray-100">
-                          <Image
-                            src={getShopImageUrl(shop.image)}
-                            alt={shop.name}
-                            fill
-                            sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-                            style={{ objectFit: "cover" }}
-                            className="transition-transform duration-300 hover:scale-105"
-                            priority={false}
-                            onError={(e) => {
-                              const target = e.target as HTMLImageElement;
-                              target.src = '/images/shop-placeholder.jpg';
-                              target.onerror = null; // Prevent infinite loop
-                            }}
-              />
-            </div>
-                        <div className="p-5">
-                          <h3 className="text-xl font-semibold text-gray-800 mb-2">{shop.name}</h3>
-                          <p className="text-gray-500 text-sm leading-relaxed">
-                            {shop.description?.slice(0, 80) || "No description"}
-                          </p>
-                          <div className="mt-2 flex items-center">
-                            <div className="flex items-center">
-                              <svg viewBox="0 0 24 24" fill="currentColor" className="h-4 w-4 text-yellow-400">
-                                <path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z" />
-                              </svg>
-                              <span className="ml-1 text-sm font-medium">{shop.rating ?? 4.5}</span>
-                            </div>
-                            <span className="mx-2 text-gray-300">•</span>
-                            <span className="text-sm text-gray-600">{shop.distance ?? "1.2 mi"}</span>
+                  filteredShops.map((shop) => {
+                    // Use precomputed dynamics, default to N/A
+                    const dyn = shopDynamics[shop.id] || { distance: 'N/A', time: 'N/A', fee: 'N/A', open: false };
+                    return (
+                      <Link key={shop.id} href={`/shops/${shop.id}`}>  
+                        <div className="relative border rounded-2xl overflow-hidden shadow-sm hover:shadow-lg transition-all duration-300 transform hover:-translate-y-1 cursor-pointer">
+                          {/* Open/Closed badge */}
+                    
+                          <div className="h-48 w-full relative bg-gray-100">
+                            <Image
+                              src={getShopImageUrl(shop.image)}
+                              alt={shop.name}
+                              fill
+                              sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                              style={{ objectFit: "cover" }}
+                              className="transition-transform duration-300 hover:scale-105"
+                              priority={false}
+                              onError={(e) => {
+                                const target = e.target as HTMLImageElement;
+                                target.src = '/images/shop-placeholder.jpg';
+                                target.onerror = null;
+                              }}
+                            />
                           </div>
-                          <div className="mt-2 flex items-center text-sm text-gray-600">
-                            <div className="flex items-center">
-                              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="mr-1 h-4 w-4">
-                                <circle cx="12" cy="12" r="10" />
-                                <polyline points="12 6 12 12 16 14" />
-                              </svg>
-                              {shop.deliveryTime ?? "15-25 min"}
-                            </div>
-                            <span className="mx-2 text-gray-300">•</span>
-                            <div className="flex items-center">
-                              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="mr-1 h-4 w-4">
-                                <path d="M12 2v20M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6" />
-                              </svg>
-                              {shop.deliveryFee ?? "Free"}
+                          <div className="p-5">
+                            <h3 className="text-xl font-semibold text-gray-800 mb-2">{shop.name}</h3>
+                            <p className="text-gray-500 text-sm leading-relaxed">
+                              {shop.description?.slice(0, 80) || "No description"}
+                            </p>
+                            <div className="mt-2 flex items-center text-sm text-gray-600">
+                              <div className="flex items-center">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="mr-1 h-4 w-4">
+                                  <circle cx="12" cy="12" r="10" />
+                                  <polyline points="12 6 12 12 16 14" />
+                                </svg>
+                                {dyn.time}
+                              </div>
+                              <span className="mx-2 text-gray-300">•</span>
+                              <div className="flex items-center text-sm text-gray-600">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="mr-1 h-4 w-4">
+                                  <path d="M12 2v20M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6" />
+                                </svg>
+                                {dyn.distance}
+                              </div>
+                              {dyn.open ? (
+                            <span className="absolute top-2 right-2 bg-green-100 text-green-800 px-2 py-1 rounded-full text-xs font-semibold">Open</span>
+                          ) : (
+                            <span className="absolute top-2 right-2 bg-red-100 text-red-800 px-2 py-1 rounded-full text-xs font-semibold">Closed</span>
+                          )}
+                              {/* <span className="mx-2 text-gray-300">•</span> */}
+                              {/* <div className="flex items-center text-sm text-gray-600">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="mr-1 h-4 w-4">
+                                  <path d="M12 2v20M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6" />
+                                </svg>
+                                {dyn.fee}
+                              </div> */}
                             </div>
                           </div>
-            </div>
-          </div>
-                    </Link>
-                  ))
+                        </div>
+                      </Link>
+                    );
+                  })
                 ) : (
                   <div className="col-span-full text-center text-gray-500 mt-8">
                     No shops found in this category
-            </div>
+                  </div>
                 )}
-            </div>
+              </div>
             )}
           </div>
         </div>
@@ -320,6 +423,10 @@ export const getServerSideProps: GetServerSideProps = async () => {
             category_id
             image
             is_active
+            latitude
+            longitude
+            operating_hours
+            updated_at
           }
         }
       `),

@@ -1,9 +1,10 @@
 import React from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import RootLayout from "@components/ui/layout";
 import ItemsSection from "@components/items/itemsSection";
+import Cookies from 'js-cookie';
 
 interface Product {
   id: string;
@@ -34,8 +35,48 @@ interface FreshMarkPageProps {
   products?: Product[];
 }
 
+// Add helper for Haversine formula
+function getDistanceFromLatLonInKm(lat1: number, lon1: number, lat2: number, lon2: number): number {
+  const R = 6371; // Radius of the earth in km
+  const dLat = (lat2 - lat1) * (Math.PI / 180);
+  const dLon = (lon2 - lon1) * (Math.PI / 180);
+  const a =
+    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+    Math.cos(lat1 * (Math.PI / 180)) *
+    Math.cos(lat2 * (Math.PI / 180)) *
+    Math.sin(dLon / 2) * Math.sin(dLon / 2);
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  return R * c;
+}
+
 const FreshMarkPage: React.FC<FreshMarkPageProps> = ({ shop, products }) => {
   const [activeCategory, setActiveCategory] = useState("all");
+
+  // Compute dynamic distance (in km) and delivery time based on saved user address
+  const cookie = Cookies.get('delivery_address');
+  let dynamicDistance = "1.2 km";
+  let dynamicDeliveryTime = "15-25 min";
+  if (cookie) {
+    try {
+      const userAddr = JSON.parse(cookie);
+      const userLat = parseFloat(userAddr.latitude);
+      const userLng = parseFloat(userAddr.longitude);
+      const shopLat = parseFloat(shop.latitude);
+      const shopLng = parseFloat(shop.longitude);
+      const distKm = getDistanceFromLatLonInKm(userLat, userLng, shopLat, shopLng);
+      const distanceRoundedKm = Math.round(distKm * 10) / 10;
+      dynamicDistance = `${distanceRoundedKm} km`;
+      // Estimate travel time: speeds 40mph (fast) to 20mph (slow)
+      const distMi = distKm * 0.621371;
+      const travelFast = (distMi / 40) * 60;
+      const travelSlow = (distMi / 20) * 60;
+      const totalMin = Math.round(travelFast + 40);
+      const totalMax = Math.round(travelSlow + 40);
+      dynamicDeliveryTime = `${1}-${totalMax} min`;
+    } catch (err) {
+      console.error('Error computing distance/time:', err);
+    }
+  }
 
   // Merge fetched shop details with additional mock fields and products
   const shopData = {
@@ -43,9 +84,9 @@ const FreshMarkPage: React.FC<FreshMarkPageProps> = ({ shop, products }) => {
     banner: shop?.image, // fallback banner is shop image
     rating: 4.8,
     reviews: 1245,
-    deliveryTime: "15-25 min",
+    deliveryTime: dynamicDeliveryTime,
     deliveryFee: "Free",
-    distance: "1.2 mi",
+    distance: dynamicDistance,
     products: products || [],
   };
 

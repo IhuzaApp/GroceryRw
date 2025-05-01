@@ -16,14 +16,17 @@ import { SessionProvider } from "next-auth/react";
 import { AuthProvider } from "../src/context/AuthContext";
 import { CartProvider } from "../src/context/CartContext";
 import { Toaster } from 'react-hot-toast';
+import { GoogleMapProvider } from '../src/context/GoogleMapProvider';
 
 export default function App({ Component, pageProps }: AppProps) {
   return (
     <SessionProvider session={(pageProps as any).session}>
       <AuthProvider>
         <CartProvider>
-          <Toaster position="top-right" />
-          <Component {...pageProps} />
+          <GoogleMapProvider>
+            <Toaster position="top-right" />
+            <Component {...pageProps} />
+          </GoogleMapProvider>
         </CartProvider>
       </AuthProvider>
     </SessionProvider>
