@@ -1,12 +1,13 @@
 import React, { useState, useEffect } from "react";
 import Image from "next/image";
 import { formatCurrency } from "../../lib/formatCurrency";
-import { Panel, Tag, Button, Nav, Input, Dropdown } from "rsuite";
+import { Panel, Tag, Button, Nav, Input, Dropdown, Modal } from "rsuite";
 import UserRecentOrders from "./userRecentOrders";
 import UserAddress from "./userAddress";
 import UserAccount from "./UseerAccount";
 import UserPayment from "./userPayment";
 import UserPreference from "./userPreference";
+import Cookies from 'js-cookie';
 
 export default function UserProfile() {
   const [activeTab, setActiveTab] = useState("account");
@@ -21,6 +22,26 @@ export default function UserProfile() {
   } | null>(null);
   const [orderCount, setOrderCount] = useState<number>(0);
   const [loading, setLoading] = useState<boolean>(true);
+  // Default address state
+  const [defaultAddr, setDefaultAddr] = useState<any | null>(null);
+  const [loadingAddr, setLoadingAddr] = useState<boolean>(true);
+  // State for temporary selected address (not persisted as default)
+  const [selectedAddr, setSelectedAddr] = useState<any | null>(null);
+  // Address selection modal state
+  const [addresses, setAddresses] = useState<any[]>([]);
+  const [showAddrModal, setShowAddrModal] = useState<boolean>(false);
+
+  // On mount, load any previously selected delivery address from cookie
+  useEffect(() => {
+    const saved = Cookies.get('delivery_address');
+    if (saved) {
+      try {
+        setSelectedAddr(JSON.parse(saved));
+      } catch {
+        // ignore invalid JSON
+      }
+    }
+  }, []);
 
   // Load current user data
   useEffect(() => {
@@ -33,6 +54,26 @@ export default function UserProfile() {
       })
       .catch(err => console.error('Failed to load user profile:', err))
       .finally(() => setLoading(false));
+  }, []);
+
+  // Load default address
+  useEffect(() => {
+    setLoadingAddr(true);
+    fetch('/api/queries/addresses')
+      .then(async (res) => {
+        if (!res.ok) throw new Error(`Failed to load addresses (${res.status})`);
+        return res.json();
+      })
+      .then((data) => {
+        const def = (data.addresses || []).find((a: any) => a.is_default);
+        setDefaultAddr(def || null);
+        setAddresses(data.addresses || []);
+      })
+      .catch((err) => {
+        console.error('Error fetching addresses:', err);
+        setDefaultAddr(null);
+      })
+      .finally(() => setLoadingAddr(false));
   }, []);
 
   return (
@@ -88,6 +129,29 @@ export default function UserProfile() {
                 >
                   Edit Profile
                 </Button>
+                {/* Default address under profile */}
+                <div className="mt-4 text-center w-full">
+                  <h3 className="font-medium">Default Address</h3>
+                  {loadingAddr ? (
+                    <div className="h-4 w-32 bg-gray-200 rounded mx-auto animate-pulse" />
+                  ) : (selectedAddr || defaultAddr) ? (
+                    <div>
+                      <p className="text-sm text-gray-600">
+                        {(selectedAddr || defaultAddr).street}, {(selectedAddr || defaultAddr).city} {(selectedAddr || defaultAddr).postal_code}
+                      </p>
+                      <Button size="sm" appearance="link" onClick={() => setShowAddrModal(true)}>
+                        Change Address
+                      </Button>
+                    </div>
+                  ) : (
+                    <div>
+                      <p className="text-sm text-gray-500">No address selected</p>
+                      <Button size="sm" appearance="link" onClick={() => setShowAddrModal(true)}>
+                        Select Address
+                      </Button>
+                    </div>
+                  )}
+                </div>
               </>
             )}
           </div>
@@ -182,6 +246,41 @@ export default function UserProfile() {
             <UserPreference />
           </Panel>
         )}
+        {/* Address selection modal */}
+        <Modal open={showAddrModal} onClose={() => setShowAddrModal(false)} size="lg">
+          <Modal.Header>
+            <Modal.Title>Select an Address</Modal.Title>
+          </Modal.Header>
+          <Modal.Body>
+            {addresses.length ? (
+              addresses.map((addr) => (
+                <Panel key={addr.id} bordered className="mb-2">
+                  <h4 className="font-bold">{addr.street}</h4>
+                  <p className="text-sm text-gray-600">
+                    {addr.city}, {addr.postal_code}
+                  </p>
+                  <Button
+                    size="sm"
+                    appearance="primary"
+                    className="mt-2"
+                    onClick={() => {
+                      setSelectedAddr(addr);
+                      Cookies.set('delivery_address', JSON.stringify(addr));
+                      setShowAddrModal(false);
+                    }}
+                  >
+                    Select
+                  </Button>
+                </Panel>
+              ))
+            ) : (
+              <p>No addresses saved.</p>
+            )}
+          </Modal.Body>
+          <Modal.Footer>
+            <Button onClick={() => setShowAddrModal(false)}>Close</Button>
+          </Modal.Footer>
+        </Modal>
       </div>
     </div>
   );
