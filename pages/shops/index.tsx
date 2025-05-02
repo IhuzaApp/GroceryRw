@@ -1,26 +1,43 @@
 import React from "react";
 import Link from "next/link";
-import Image from "next/image";
-
-import { useState } from "react";
 import RootLayout from "@components/ui/layout";
-import ItemsSection from "@components/items/itemsSection";
-import FreshMarkPage from "@components/items/FreshMarkPage";
+import { hasuraClient } from "../../src/lib/hasuraClient";
+import { gql } from "graphql-request";
 
-interface Product {
-  id: string;
-  name: string;
-  image: string;
-  price: string;
-  unit?: string;
-  category: string;
-  sale?: boolean;
-  originalPrice?: string;
-  description?: string;
+export default function ShopsList({ shops }: { shops: { id: string; name: string }[] }) {
+  return (
+    <RootLayout>
+      <div className="p-4">
+        <h1 className="text-2xl font-bold mb-4">Shops</h1>
+        <ul className="space-y-2">
+          {shops.map((shop) => (
+            <li key={shop.id}>
+              <Link href={`/shops/${shop.id}`}>
+                <a className="text-blue-600 hover:underline">{shop.name}</a>
+              </Link>
+            </li>
+          ))}
+        </ul>
+      </div>
+    </RootLayout>
+  );
 }
 
-interface FreshMarkPageProps {
-  products?: Product[];
+export async function getServerSideProps() {
+  const SHOP_LIST_QUERY = gql`
+    query GetShops {
+      Shops(where: { is_active: { _eq: true } }) {
+        id
+        name
+      }
+    }
+  `;
+  const data = await hasuraClient.request<{ Shops: { id: string; name: string }[] }>(
+    SHOP_LIST_QUERY
+  );
+  return {
+    props: {
+      shops: data.Shops || [],
+    },
+  };
 }
-
-export default FreshMarkPage;

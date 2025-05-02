@@ -1,3 +1,6 @@
+// @ts-nocheck
+// This file is auto-generated. Do not edit.
+
 import { useQuery, UseQueryOptions } from "@tanstack/react-query";
 export type Maybe<T> = T | null;
 export type InputMaybe<T> = Maybe<T>;
