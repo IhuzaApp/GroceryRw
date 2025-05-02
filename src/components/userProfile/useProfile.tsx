@@ -7,7 +7,7 @@ import UserAddress from "./userAddress";
 import UserAccount from "./UseerAccount";
 import UserPayment from "./userPayment";
 import UserPreference from "./userPreference";
-import Cookies from 'js-cookie';
+import Cookies from "js-cookie";
 
 export default function UserProfile() {
   const [activeTab, setActiveTab] = useState("account");
@@ -33,7 +33,7 @@ export default function UserProfile() {
 
   // On mount, load any previously selected delivery address from cookie
   useEffect(() => {
-    const saved = Cookies.get('delivery_address');
+    const saved = Cookies.get("delivery_address");
     if (saved) {
       try {
         setSelectedAddr(JSON.parse(saved));
@@ -46,22 +46,23 @@ export default function UserProfile() {
   // Load current user data
   useEffect(() => {
     setLoading(true);
-    fetch('/api/user')
-      .then(res => res.json())
+    fetch("/api/user")
+      .then((res) => res.json())
       .then((data: { user: any; orderCount: number }) => {
         setUser(data.user);
         setOrderCount(data.orderCount);
       })
-      .catch(err => console.error('Failed to load user profile:', err))
+      .catch((err) => console.error("Failed to load user profile:", err))
       .finally(() => setLoading(false));
   }, []);
 
   // Load default address
   useEffect(() => {
     setLoadingAddr(true);
-    fetch('/api/queries/addresses')
+    fetch("/api/queries/addresses")
       .then(async (res) => {
-        if (!res.ok) throw new Error(`Failed to load addresses (${res.status})`);
+        if (!res.ok)
+          throw new Error(`Failed to load addresses (${res.status})`);
         return res.json();
       })
       .then((data) => {
@@ -70,7 +71,7 @@ export default function UserProfile() {
         setAddresses(data.addresses || []);
       })
       .catch((err) => {
-        console.error('Error fetching addresses:', err);
+        console.error("Error fetching addresses:", err);
         setDefaultAddr(null);
       })
       .finally(() => setLoadingAddr(false));
@@ -89,10 +90,10 @@ export default function UserProfile() {
           <div className="flex flex-col items-center px-4 py-6 sm:py-8">
             {loading ? (
               <>
-                <div className="h-24 w-24 rounded-full bg-gray-200 animate-pulse" />
-                <div className="h-6 w-32 bg-gray-200 rounded mt-4 animate-pulse" />
-                <div className="h-4 w-24 bg-gray-200 rounded mt-2 animate-pulse" />
-                <div className="h-8 w-full bg-gray-200 rounded mt-6 animate-pulse" />
+                <div className="h-24 w-24 animate-pulse rounded-full bg-gray-200" />
+                <div className="mt-4 h-6 w-32 animate-pulse rounded bg-gray-200" />
+                <div className="mt-2 h-4 w-24 animate-pulse rounded bg-gray-200" />
+                <div className="mt-6 h-8 w-full animate-pulse rounded bg-gray-200" />
               </>
             ) : (
               <>
@@ -110,7 +111,13 @@ export default function UserProfile() {
                   {user?.name}
                 </h2>
                 <p className="text-center text-sm text-gray-500">
-                  Member since {user ? new Date(user.created_at).toLocaleString('default', { month: 'long', year: 'numeric' }) : ''}
+                  Member since{" "}
+                  {user
+                    ? new Date(user.created_at).toLocaleString("default", {
+                        month: "long",
+                        year: "numeric",
+                      })
+                    : ""}
                 </p>
 
                 <div className="mt-3 flex flex-wrap justify-center gap-2">
@@ -130,23 +137,35 @@ export default function UserProfile() {
                   Edit Profile
                 </Button>
                 {/* Default address under profile */}
-                <div className="mt-4 text-center w-full">
+                <div className="mt-4 w-full text-center">
                   <h3 className="font-medium">Default Address</h3>
                   {loadingAddr ? (
-                    <div className="h-4 w-32 bg-gray-200 rounded mx-auto animate-pulse" />
-                  ) : (selectedAddr || defaultAddr) ? (
+                    <div className="mx-auto h-4 w-32 animate-pulse rounded bg-gray-200" />
+                  ) : selectedAddr || defaultAddr ? (
                     <div>
                       <p className="text-sm text-gray-600">
-                        {(selectedAddr || defaultAddr).street}, {(selectedAddr || defaultAddr).city} {(selectedAddr || defaultAddr).postal_code}
+                        {(selectedAddr || defaultAddr).street},{" "}
+                        {(selectedAddr || defaultAddr).city}{" "}
+                        {(selectedAddr || defaultAddr).postal_code}
                       </p>
-                      <Button size="sm" appearance="link" onClick={() => setShowAddrModal(true)}>
+                      <Button
+                        size="sm"
+                        appearance="link"
+                        onClick={() => setShowAddrModal(true)}
+                      >
                         Change Address
                       </Button>
                     </div>
                   ) : (
                     <div>
-                      <p className="text-sm text-gray-500">No address selected</p>
-                      <Button size="sm" appearance="link" onClick={() => setShowAddrModal(true)}>
+                      <p className="text-sm text-gray-500">
+                        No address selected
+                      </p>
+                      <Button
+                        size="sm"
+                        appearance="link"
+                        onClick={() => setShowAddrModal(true)}
+                      >
                         Select Address
                       </Button>
                     </div>
@@ -160,9 +179,14 @@ export default function UserProfile() {
         <Panel header="Account Summary" shaded bordered className="mt-4">
           {loading ? (
             <div className="space-y-4">
-              {Array(4).fill(0).map((_, idx) => (
-                <div key={idx} className="h-4 bg-gray-200 rounded animate-pulse" />
-              ))}
+              {Array(4)
+                .fill(0)
+                .map((_, idx) => (
+                  <div
+                    key={idx}
+                    className="h-4 animate-pulse rounded bg-gray-200"
+                  />
+                ))}
             </div>
           ) : (
             <div className="space-y-4">
@@ -247,7 +271,11 @@ export default function UserProfile() {
           </Panel>
         )}
         {/* Address selection modal */}
-        <Modal open={showAddrModal} onClose={() => setShowAddrModal(false)} size="lg">
+        <Modal
+          open={showAddrModal}
+          onClose={() => setShowAddrModal(false)}
+          size="lg"
+        >
           <Modal.Header>
             <Modal.Title>Select an Address</Modal.Title>
           </Modal.Header>
@@ -265,7 +293,7 @@ export default function UserProfile() {
                     className="mt-2"
                     onClick={() => {
                       setSelectedAddr(addr);
-                      Cookies.set('delivery_address', JSON.stringify(addr));
+                      Cookies.set("delivery_address", JSON.stringify(addr));
                       setShowAddrModal(false);
                     }}
                   >

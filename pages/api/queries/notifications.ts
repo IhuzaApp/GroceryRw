@@ -3,17 +3,16 @@ import { hasuraClient } from "../../../src/lib/hasuraClient";
 import { gql } from "graphql-request";
 
 const GET_NOTIFICATIONS = gql`
-query GetNotifications {
-  Notifications {
-    id
-    user_id
-    message
-    is_read
-    created_at
-    type
+  query GetNotifications {
+    Notifications {
+      id
+      user_id
+      message
+      is_read
+      created_at
+      type
+    }
   }
-}
-
 `;
 
 interface NotificationsResponse {

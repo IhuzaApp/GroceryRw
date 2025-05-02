@@ -221,7 +221,9 @@ export default function UserPendingOrders() {
                       <span>
                         {item.quantity} × {formatCurrency(item.price)}
                       </span>
-                      <span className="font-bold">{formatCurrency(item.total)}</span>
+                      <span className="font-bold">
+                        {formatCurrency(item.total)}
+                      </span>
                     </div>
                   </div>
                 </div>
@@ -231,7 +233,9 @@ export default function UserPendingOrders() {
             <div className="mt-6 border-t pt-4">
               <div className="mb-2 flex justify-between">
                 <span className="text-gray-600">Subtotal</span>
-                <span className="font-medium">{formatCurrency(order.total)}</span>
+                <span className="font-medium">
+                  {formatCurrency(order.total)}
+                </span>
               </div>
               <div className="mb-2 flex justify-between">
                 <span className="text-gray-600">Delivery Fee</span>

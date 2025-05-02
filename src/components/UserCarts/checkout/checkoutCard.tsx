@@ -3,7 +3,7 @@ import { Input, Button, Panel } from "rsuite";
 import ConfirmPayment from "./confirmPayment";
 import Link from "next/link"; // Make sure you import Link if you use it
 import { formatCurrency } from "../../../lib/formatCurrency";
-import Cookies from 'js-cookie';
+import Cookies from "js-cookie";
 
 interface CheckoutItemsProps {
   Total: number;
@@ -14,24 +14,39 @@ interface CheckoutItemsProps {
 }
 
 // Add helper to compute distance between two coordinates
-function getDistanceFromLatLonInKm(lat1: number, lon1: number, lat2: number, lon2: number): number {
+function getDistanceFromLatLonInKm(
+  lat1: number,
+  lon1: number,
+  lat2: number,
+  lon2: number
+): number {
   const R = 6371;
   const dLat = (lat2 - lat1) * (Math.PI / 180);
   const dLon = (lon2 - lon1) * (Math.PI / 180);
-  const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-            Math.cos(lat1 * (Math.PI / 180)) * Math.cos(lat2 * (Math.PI / 180)) *
-            Math.sin(dLon / 2) * Math.sin(dLon / 2);
+  const a =
+    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+    Math.cos(lat1 * (Math.PI / 180)) *
+      Math.cos(lat2 * (Math.PI / 180)) *
+      Math.sin(dLon / 2) *
+      Math.sin(dLon / 2);
   const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
   return R * c;
 }
 
-export default function CheckoutItems({ Total, totalUnits, shopLat, shopLng, shopAlt }: CheckoutItemsProps) {
+export default function CheckoutItems({
+  Total,
+  totalUnits,
+  shopLat,
+  shopLng,
+  shopAlt,
+}: CheckoutItemsProps) {
   // Re-render when the address cookie changes
   const [, setTick] = useState(0);
   useEffect(() => {
-    const handleAddressChange = () => setTick(t => t + 1);
-    window.addEventListener('addressChanged', handleAddressChange);
-    return () => window.removeEventListener('addressChanged', handleAddressChange);
+    const handleAddressChange = () => setTick((t) => t + 1);
+    window.addEventListener("addressChanged", handleAddressChange);
+    return () =>
+      window.removeEventListener("addressChanged", handleAddressChange);
   }, []);
   const [promoCode, setPromoCode] = useState("");
   const [discount, setDiscount] = useState(0);
@@ -46,14 +61,19 @@ export default function CheckoutItems({ Total, totalUnits, shopLat, shopLng, sho
   // Surcharge based on distance beyond 3km
   let distanceKm = 0;
   let userAlt = 0;
-  const cookie = Cookies.get('delivery_address');
+  const cookie = Cookies.get("delivery_address");
   if (cookie) {
     try {
       const userAddr = JSON.parse(cookie);
       const userLat = parseFloat(userAddr.latitude);
       const userLng = parseFloat(userAddr.longitude);
-      userAlt = parseFloat(userAddr.altitude || '0');
-      distanceKm = getDistanceFromLatLonInKm(userLat, userLng, shopLat, shopLng);
+      userAlt = parseFloat(userAddr.altitude || "0");
+      distanceKm = getDistanceFromLatLonInKm(
+        userLat,
+        userLng,
+        shopLat,
+        shopLng
+      );
     } catch (err) {
       console.error("Error parsing delivery_address cookie:", err);
     }
@@ -155,24 +175,29 @@ export default function CheckoutItems({ Total, totalUnits, shopLat, shopLng, sho
             <span className="text-sm text-gray-600">Delivery Time</span>
             <span className="text-sm">{deliveryTime}</span>
           </div>
-          <div className="flex justify-between mt-2">
+          <div className="mt-2 flex justify-between">
             <span className="text-lg font-bold">Total</span>
-            <span className="text-lg font-bold text-green-500">{formatCurrency(finalTotal)}</span>
+            <span className="text-lg font-bold text-green-500">
+              {formatCurrency(finalTotal)}
+            </span>
           </div>
           <ConfirmPayment />
         </div>
       </div>
 
       {/* Desktop View - Only visible on medium and larger devices */}
-      <div className="hidden md:block w-full lg:w-1/3">
+      <div className="hidden w-full md:block lg:w-1/3">
         <div className="sticky top-20">
           <Panel
             shaded
             bordered
-            className="bg-white rounded-xl shadow-lg overflow-hidden border-0"
-            style={{ boxShadow: "0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1)" }}
+            className="overflow-hidden rounded-xl border-0 bg-white shadow-lg"
+            style={{
+              boxShadow:
+                "0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1)",
+            }}
           >
-            <div className="bg-purple-800 text-white p-4 -mx-4 -mt-4 mb-6">
+            <div className="-mx-4 -mt-4 mb-6 bg-purple-800 p-4 text-white">
               <h2 className="text-xl font-bold">Order Summary</h2>
             </div>
 
@@ -196,31 +221,37 @@ export default function CheckoutItems({ Total, totalUnits, shopLat, shopLng, sho
 
               <div className="flex justify-between">
                 <span className="text-gray-600">Service Fee</span>
-                <span className="font-medium">{formatCurrency(serviceFee)}</span>
+                <span className="font-medium">
+                  {formatCurrency(serviceFee)}
+                </span>
               </div>
 
               <div className="flex justify-between">
                 <span className="text-gray-600">Delivery Fee</span>
-                <span className="font-medium">{formatCurrency(deliveryFee)}</span>
+                <span className="font-medium">
+                  {formatCurrency(deliveryFee)}
+                </span>
               </div>
 
-              <div className="border-t pt-3 mt-3">
-                <div className="flex justify-between font-bold text-lg">
+              <div className="mt-3 border-t pt-3">
+                <div className="flex justify-between text-lg font-bold">
                   <span>Total</span>
-                  <span className="text-green-600">{formatCurrency(finalTotal)}</span>
+                  <span className="text-green-600">
+                    {formatCurrency(finalTotal)}
+                  </span>
                 </div>
               </div>
             </div>
 
             <div className="mt-6">
-              <h3 className="font-medium mb-2">Delivery Time</h3>
-              <div className="bg-gray-50 p-3 rounded-lg flex items-center">
+              <h3 className="mb-2 font-medium">Delivery Time</h3>
+              <div className="flex items-center rounded-lg bg-gray-50 p-3">
                 <svg
                   viewBox="0 0 24 24"
                   fill="none"
                   stroke="currentColor"
                   strokeWidth="2"
-                  className="w-5 h-5 text-green-500 mr-2"
+                  className="mr-2 h-5 w-5 text-green-500"
                 >
                   <circle cx="12" cy="12" r="10" />
                   <polyline points="12 6 12 12 16 14" />
@@ -230,10 +261,10 @@ export default function CheckoutItems({ Total, totalUnits, shopLat, shopLng, sho
             </div>
 
             <div className="mt-6">
-              <h3 className="font-medium mb-2">Payment Method</h3>
-              <div className="bg-gray-50 p-3 rounded-lg flex items-center justify-between">
+              <h3 className="mb-2 font-medium">Payment Method</h3>
+              <div className="flex items-center justify-between rounded-lg bg-gray-50 p-3">
                 <div className="flex items-center">
-                  <div className="w-10 h-6 bg-blue-600 rounded mr-2 flex items-center justify-center text-white text-xs">
+                  <div className="mr-2 flex h-6 w-10 items-center justify-center rounded bg-blue-600 text-xs text-white">
                     VISA
                   </div>
                   <span>•••• 4242</span>
@@ -249,7 +280,7 @@ export default function CheckoutItems({ Total, totalUnits, shopLat, shopLng, sho
               appearance="primary"
               block
               size="lg"
-              className="bg-green-500 hover:bg-green-600 text-white font-medium mt-6"
+              className="mt-6 bg-green-500 font-medium text-white hover:bg-green-600"
             >
               Proceed to Checkout
             </Button>

@@ -3,22 +3,21 @@ import { hasuraClient } from "../../../src/lib/hasuraClient";
 import { gql } from "graphql-request";
 
 const GET_USERS = gql`
-query GetUsers {
-  Users {
-    id
-    name
-    email
-    created_at
-    updated_at
-    gender
-    is_active
-    password_hash
-    phone
-    profile_picture
-    role
+  query GetUsers {
+    Users {
+      id
+      name
+      email
+      created_at
+      updated_at
+      gender
+      is_active
+      password_hash
+      phone
+      profile_picture
+      role
+    }
   }
-}
-
 `;
 
 interface UsersResponse {

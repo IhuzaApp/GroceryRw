@@ -6,9 +6,9 @@ import { useGoogleMap } from "../../context/GoogleMapProvider";
 function AddressSkeleton() {
   return (
     <Panel bordered className="animate-pulse p-4">
-      <div className="h-4 bg-gray-200 rounded w-3/4 mb-2" />
-      <div className="h-3 bg-gray-200 rounded w-1/2 mb-1" />
-      <div className="h-3 bg-gray-200 rounded w-1/3 mt-2" />
+      <div className="mb-2 h-4 w-3/4 rounded bg-gray-200" />
+      <div className="mb-1 h-3 w-1/2 rounded bg-gray-200" />
+      <div className="mt-2 h-3 w-1/3 rounded bg-gray-200" />
     </Panel>
   );
 }
@@ -22,7 +22,8 @@ interface UserAddressProps {
 export default function UserAddress({ onSelect }: UserAddressProps) {
   const { isLoaded } = useGoogleMap();
   // Autocomplete service and geocoder refs
-  const autocompleteServiceRef = useRef<google.maps.places.AutocompleteService | null>(null);
+  const autocompleteServiceRef =
+    useRef<google.maps.places.AutocompleteService | null>(null);
   const geocoderRef = useRef<google.maps.Geocoder | null>(null);
 
   const [addresses, setAddresses] = useState<any[]>([]);
@@ -31,7 +32,9 @@ export default function UserAddress({ onSelect }: UserAddressProps) {
   // Form and autocomplete state
   const [showModal, setShowModal] = useState<boolean>(false);
   const [street, setStreet] = useState<string>("");
-  const [suggestions, setSuggestions] = useState<google.maps.places.AutocompletePrediction[]>([]);
+  const [suggestions, setSuggestions] = useState<
+    google.maps.places.AutocompletePrediction[]
+  >([]);
   const [activeInput, setActiveInput] = useState<boolean>(false);
   const [city, setCity] = useState<string>("");
   const [postalCode, setPostalCode] = useState<string>("");
@@ -43,7 +46,8 @@ export default function UserAddress({ onSelect }: UserAddressProps) {
 
   useEffect(() => {
     if (isLoaded && !autocompleteServiceRef.current) {
-      autocompleteServiceRef.current = new google.maps.places.AutocompleteService();
+      autocompleteServiceRef.current =
+        new google.maps.places.AutocompleteService();
       geocoderRef.current = new google.maps.Geocoder();
     }
   }, [isLoaded]);
@@ -53,7 +57,7 @@ export default function UserAddress({ onSelect }: UserAddressProps) {
     setStreet(val);
     if (val && autocompleteServiceRef.current) {
       autocompleteServiceRef.current.getPlacePredictions(
-        { input: val, componentRestrictions: { country: ['rw'] } },
+        { input: val, componentRestrictions: { country: ["rw"] } },
         (preds, status) => {
           if (status === google.maps.places.PlacesServiceStatus.OK && preds) {
             setSuggestions(preds);
@@ -76,18 +80,21 @@ export default function UserAddress({ onSelect }: UserAddressProps) {
     setActiveInput(false);
     // Geocode to get lat/lng
     if (geocoderRef.current) {
-      geocoderRef.current.geocode({ address: sug.description }, (results, status) => {
-        if (status === 'OK' && results && results[0]) {
-          setLat(results[0].geometry.location.lat());
-          setLng(results[0].geometry.location.lng());
+      geocoderRef.current.geocode(
+        { address: sug.description },
+        (results, status) => {
+          if (status === "OK" && results && results[0]) {
+            setLat(results[0].geometry.location.lat());
+            setLng(results[0].geometry.location.lng());
+          }
         }
-      });
+      );
     }
   };
 
   useEffect(() => {
     setLoading(true);
-    fetch('/api/queries/addresses')
+    fetch("/api/queries/addresses")
       .then(async (res) => {
         if (!res.ok) {
           throw new Error(`Failed to load addresses (${res.status})`);
@@ -98,7 +105,7 @@ export default function UserAddress({ onSelect }: UserAddressProps) {
         setAddresses(data.addresses || []);
       })
       .catch((err) => {
-        console.error('Error fetching addresses:', err);
+        console.error("Error fetching addresses:", err);
         setError(err.message);
       })
       .finally(() => setLoading(false));
@@ -108,14 +115,15 @@ export default function UserAddress({ onSelect }: UserAddressProps) {
   const fetchAddresses = () => {
     setLoading(true);
     setError(null);
-    fetch('/api/queries/addresses')
+    fetch("/api/queries/addresses")
       .then(async (res) => {
-        if (!res.ok) throw new Error(`Failed to load addresses (${res.status})`);
+        if (!res.ok)
+          throw new Error(`Failed to load addresses (${res.status})`);
         return res.json();
       })
       .then((data) => setAddresses(data.addresses || []))
       .catch((err) => {
-        console.error('Error fetching addresses:', err);
+        console.error("Error fetching addresses:", err);
         setError(err.message);
       })
       .finally(() => setLoading(false));
@@ -125,19 +133,31 @@ export default function UserAddress({ onSelect }: UserAddressProps) {
   const handleSave = async () => {
     setSaving(true);
     try {
-      const res = await fetch('/api/queries/addresses', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ street, city, postal_code: postalCode, is_default: isDefault, latitude: lat, longitude: lng }),
+      const res = await fetch("/api/queries/addresses", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          street,
+          city,
+          postal_code: postalCode,
+          is_default: isDefault,
+          latitude: lat,
+          longitude: lng,
+        }),
       });
       if (!res.ok) throw new Error(`Save failed (${res.status})`);
       await res.json();
       fetchAddresses();
       setShowModal(false);
       // reset form
-      setStreet(''); setCity(''); setPostalCode(''); setIsDefault(false); setLat(null); setLng(null);
+      setStreet("");
+      setCity("");
+      setPostalCode("");
+      setIsDefault(false);
+      setLat(null);
+      setLng(null);
     } catch (err: any) {
-      alert(err.message || 'Failed to save address');
+      alert(err.message || "Failed to save address");
     } finally {
       setSaving(false);
     }
@@ -163,30 +183,30 @@ export default function UserAddress({ onSelect }: UserAddressProps) {
             .fill(0)
             .map((_, idx) => <AddressSkeleton key={idx} />)
         ) : error ? (
-          <div className="col-span-full text-red-600 p-4">{error}</div>
+          <div className="col-span-full p-4 text-red-600">{error}</div>
         ) : addresses.length ? (
           addresses.map((addr) => (
             <Panel key={addr.id} bordered className="relative">
               {addr.is_default && (
-          <Tag className="absolute right-2 top-2 border-green-200 bg-green-100 text-green-600">
-            Default
-          </Tag>
+                <Tag className="absolute right-2 top-2 border-green-200 bg-green-100 text-green-600">
+                  Default
+                </Tag>
               )}
               <h4 className="font-bold">{addr.street}</h4>
-          <p className="mt-2 text-gray-600">
+              <p className="mt-2 text-gray-600">
                 {addr.city}, {addr.postal_code}
-          </p>
-          <div className="mt-4 flex gap-2">
-            <button className="rounded border border-purple-500 px-3 py-1 text-sm text-purple-500 hover:bg-purple-100">
-              Edit
-            </button>
-            <button className="rounded border border-red-500 px-3 py-1 text-sm text-red-500 hover:bg-red-100">
-              Delete
-            </button>
+              </p>
+              <div className="mt-4 flex gap-2">
+                <button className="rounded border border-purple-500 px-3 py-1 text-sm text-purple-500 hover:bg-purple-100">
+                  Edit
+                </button>
+                <button className="rounded border border-red-500 px-3 py-1 text-sm text-red-500 hover:bg-red-100">
+                  Delete
+                </button>
                 {!addr.is_default && (
-            <button className="rounded border border-green-700 px-3 py-1 text-sm text-green-700 hover:bg-green-100">
-              Set as Default
-            </button>
+                  <button className="rounded border border-green-700 px-3 py-1 text-sm text-green-700 hover:bg-green-100">
+                    Set as Default
+                  </button>
                 )}
                 {onSelect && (
                   <button
@@ -196,11 +216,13 @@ export default function UserAddress({ onSelect }: UserAddressProps) {
                     Select
                   </button>
                 )}
-          </div>
-        </Panel>
+              </div>
+            </Panel>
           ))
         ) : (
-          <div className="col-span-full text-gray-500 p-4">No saved addresses.</div>
+          <div className="col-span-full p-4 text-gray-500">
+            No saved addresses.
+          </div>
         )}
       </div>
 
@@ -221,11 +243,11 @@ export default function UserAddress({ onSelect }: UserAddressProps) {
                 onChange={handleStreetChange}
               />
               {activeInput && suggestions.length > 0 && (
-                <div className="absolute bg-white border mt-1 w-full z-10 max-h-40 overflow-auto">
+                <div className="absolute z-10 mt-1 max-h-40 w-full overflow-auto border bg-white">
                   {suggestions.map((s) => (
                     <div
                       key={s.place_id}
-                      className="p-2 hover:bg-gray-100 cursor-pointer"
+                      className="cursor-pointer p-2 hover:bg-gray-100"
                       onClick={() => handleSelect(s)}
                     >
                       {s.description}
@@ -264,8 +286,15 @@ export default function UserAddress({ onSelect }: UserAddressProps) {
           </Form>
         </Modal.Body>
         <Modal.Footer>
-          <Button onClick={() => setShowModal(false)} appearance="subtle">Cancel</Button>
-          <Button onClick={handleSave} appearance="primary" loading={saving} disabled={!street || lat === null || lng === null}>
+          <Button onClick={() => setShowModal(false)} appearance="subtle">
+            Cancel
+          </Button>
+          <Button
+            onClick={handleSave}
+            appearance="primary"
+            loading={saving}
+            disabled={!street || lat === null || lng === null}
+          >
             Save
           </Button>
         </Modal.Footer>

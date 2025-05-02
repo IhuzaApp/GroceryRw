@@ -20,13 +20,19 @@ interface ShopResponse {
   Shops_by_pk: Shop;
 }
 
-export default function ShopByIdPage({ shop, products }: { shop: Shop, products: any[] }) {
+export default function ShopByIdPage({
+  shop,
+  products,
+}: {
+  shop: Shop;
+  products: any[];
+}) {
   return <FreshMarkPage shop={shop} products={products} />;
 }
 
 export const getServerSideProps: GetServerSideProps = async (context) => {
   const { id } = context.params as { id: string };
-  
+
   // Fetch shop details
   const shopQuery = gql`
     query GetShopById($id: uuid!) {
@@ -67,7 +73,7 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
   try {
     const [shopData, productsData] = await Promise.all([
       hasuraClient.request<ShopResponse>(shopQuery, { id }),
-      hasuraClient.request<ProductsResponse>(productsQuery, { shop_id: id })
+      hasuraClient.request<ProductsResponse>(productsQuery, { shop_id: id }),
     ]);
 
     return {
@@ -77,7 +83,7 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
       },
     };
   } catch (error) {
-    console.error('Error fetching data:', error);
+    console.error("Error fetching data:", error);
     return {
       props: {
         shop: null,

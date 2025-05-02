@@ -3,15 +3,15 @@ import { hasuraClient } from "../../../src/lib/hasuraClient";
 import { gql } from "graphql-request";
 
 const GET_PLATFORM_SETTINGS = gql`
-query GetPlatformSettings {
-  Platform_Settings {
-    id
-    key
-    value
-    created_at
-    updated_at
+  query GetPlatformSettings {
+    Platform_Settings {
+      id
+      key
+      value
+      created_at
+      updated_at
+    }
   }
-}
 `;
 
 interface PlatformSettingsResponse {
