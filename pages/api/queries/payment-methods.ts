@@ -93,6 +93,24 @@ const UPDATE_DEFAULT = gql`
   }
 `;
 
+const SET_DEFAULT_PAYMENT = gql`
+  mutation SetDefaultPayment($user_id: uuid!, $id: uuid!) {
+    reset: update_Payment_Methods(
+      where: { user_id: { _eq: $user_id }, is_default: { _eq: true } }
+      _set: { is_default: false }
+    ) {
+      affected_rows
+    }
+    setDefault: update_Payment_Methods_by_pk(
+      pk_columns: { id: $id }
+      _set: { is_default: true }
+    ) {
+      id
+      is_default
+    }
+  }
+`;
+
 export default async function handler(
   req: NextApiRequest,
   res: NextApiResponse
@@ -118,8 +136,11 @@ export default async function handler(
 
   if (req.method === "POST") {
     const { method, names, number, CCV, validity, is_default } = req.body;
-    if (!method || !names || !number || !CCV || !validity || typeof is_default !== "boolean") {
+    if (!method || !names || !number || typeof is_default !== "boolean") {
       return res.status(400).json({ error: "Missing or invalid fields" });
+    }
+    if (method.toLowerCase() !== 'mtn momo' && (!CCV || !validity)) {
+      return res.status(400).json({ error: "Missing CCV or validity for card payments" });
     }
     try {
       if (is_default) {
@@ -139,16 +160,24 @@ export default async function handler(
   }
 
   if (req.method === "PUT") {
+    console.log('PUT /api/queries/payment-methods called with body:', req.body, 'user_id:', user_id);
     const { id, is_default } = req.body;
     if (!id || typeof is_default !== "boolean") {
-      return res.status(400).json({ error: "Missing fields" });
+      return res.status(400).json({ error: "Missing id or is_default flag" });
     }
     try {
       if (is_default) {
-        await hasuraClient.request(RESET_DEFAULT, { user_id });
+        console.log("Resetting default for user", user_id);
+        const resetRes = await hasuraClient.request(RESET_DEFAULT, { user_id });
+        console.log("RESET_DEFAULT result:", resetRes);
       }
-      await hasuraClient.request(UPDATE_DEFAULT, { id, is_default });
-      return res.status(200).json({ success: true });
+      const updateRes = await hasuraClient.request<{ update_Payment_Methods_by_pk: Pick<PaymentMethod, 'id' | 'is_default'> | null; }>(UPDATE_DEFAULT, { id, is_default });
+      console.log("UPDATE_DEFAULT result:", updateRes);
+      const updated = updateRes.update_Payment_Methods_by_pk;
+      if (!updated) {
+        return res.status(400).json({ error: "Payment method not found or update failed" });
+      }
+      return res.status(200).json({ paymentMethod: updated });
     } catch (err) {
       console.error("Error updating payment default:", err);
       return res.status(500).json({ error: "Failed to update default" });

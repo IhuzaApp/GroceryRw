@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
-import { Panel, Tag, Button, Modal, Form, Checkbox, toaster, SelectPicker } from "rsuite";
+import { Panel, Tag, Button, Modal, Form, Checkbox, SelectPicker } from "rsuite";
+import toast from "react-hot-toast";
 
 // Helper to map methods to background colors
 const getMethodBg = (method: string) => {
@@ -43,6 +44,7 @@ export default function UserPayment() {
     try {
       const res = await fetch('/api/queries/payment-methods');
       const { paymentMethods } = await res.json();
+      console.log('Fetched payment methods:', paymentMethods);
       setPaymentMethods(paymentMethods);
     } catch (err) {
       console.error('Error loading payment methods:', err);
@@ -60,36 +62,48 @@ export default function UserPayment() {
 
   const handleSave = async () => {
     const { method, names, number, CCV, validity, is_default } = formValue;
-    // Only require CCV and validity for card payments (not MTN Momo)
     const isMomo = method === 'MTN Momo';
     if (!method || !names || !number || (!isMomo && (!CCV || !validity))) {
-      toaster.push(<Tag color="red">Please fill out all required fields.</Tag>);
+      toast.error("Please fill out all required fields");
       return;
     }
     try {
-      await fetch('/api/queries/payment-methods', {
+      const res = await fetch('/api/queries/payment-methods', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(formValue),
       });
+      if (!res.ok) {
+        const errorData = await res.json().catch(() => null);
+        throw new Error(errorData?.error || `Request failed with status ${res.status}`);
+      }
+      const { paymentMethod } = await res.json();
       setShowModal(false);
       fetchPaymentMethods();
+      toast.success("Payment method added!");
     } catch (err) {
       console.error('Error saving payment method:', err);
-      toaster.push(<Tag color="red">Failed to save payment method.</Tag>);
+      toast.error("Failed to save payment method");
     }
   };
 
   const handleSetDefault = async (id: string) => {
     try {
-      await fetch('/api/queries/payment-methods', {
+      const res = await fetch('/api/queries/payment-methods', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ id, is_default: true }),
       });
+      const data = await res.json().catch(() => null);
+      console.log('PUT /api/queries/payment-methods', res.status, data);
+      if (!res.ok) {
+        throw new Error(data?.error || `Request failed with status ${res.status}`);
+      }
+      toast.success('Default payment method updated!');
       fetchPaymentMethods();
-    } catch (err) {
+    } catch (err: any) {
       console.error('Error updating default method:', err);
+      toast.error(err.message || 'Failed to update default payment method');
     }
   };
 
