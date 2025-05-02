@@ -3,7 +3,7 @@ import { getServerSession } from "next-auth/next";
 import { authOptions } from "../auth/[...nextauth]";
 import { hasuraClient } from "../../../src/lib/hasuraClient";
 import { gql } from "graphql-request";
-import type { Session } from 'next-auth';
+import type { Session } from "next-auth";
 
 // Define the Address type
 interface Address {
@@ -88,7 +88,11 @@ export default async function handler(
   res: NextApiResponse
 ) {
   // Authenticate
-  const session = (await getServerSession(req, res, authOptions as any)) as Session | null;
+  const session = (await getServerSession(
+    req,
+    res,
+    authOptions as any
+  )) as Session | null;
   if (!session?.user?.id) {
     return res.status(401).json({ error: "Unauthorized" });
   }
@@ -96,7 +100,10 @@ export default async function handler(
 
   if (req.method === "GET") {
     try {
-      const data = await hasuraClient.request<{ Addresses: Address[] }>(GET_ADDRESSES, { user_id });
+      const data = await hasuraClient.request<{ Addresses: Address[] }>(
+        GET_ADDRESSES,
+        { user_id }
+      );
       return res.status(200).json({ addresses: data.Addresses });
     } catch (err) {
       console.error("Error fetching addresses:", err);
@@ -105,15 +112,25 @@ export default async function handler(
   }
 
   if (req.method === "POST") {
-    const { street, city, postal_code, is_default, latitude, longitude } = req.body;
-    if (!street || !city || !postal_code || typeof is_default !== "boolean" || latitude == null || longitude == null) {
+    const { street, city, postal_code, is_default, latitude, longitude } =
+      req.body;
+    if (
+      !street ||
+      !city ||
+      !postal_code ||
+      typeof is_default !== "boolean" ||
+      latitude == null ||
+      longitude == null
+    ) {
       return res.status(400).json({ error: "Missing or invalid fields" });
     }
     try {
       if (is_default) {
         await hasuraClient.request(RESET_DEFAULT, { user_id });
       }
-      const inserted = await hasuraClient.request<{ insert_Addresses_one: Address }>(INSERT_ADDRESS, {
+      const inserted = await hasuraClient.request<{
+        insert_Addresses_one: Address;
+      }>(INSERT_ADDRESS, {
         user_id,
         street,
         city,

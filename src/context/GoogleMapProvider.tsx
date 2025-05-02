@@ -37,4 +37,4 @@ export const useGoogleMap = (): GoogleMapContextType => {
     throw new Error("useGoogleMap must be used within a GoogleMapProvider");
   }
   return context;
-}; 
+};

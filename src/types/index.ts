@@ -154,4 +154,4 @@ export interface ShopCardProps {
   deliveryTime?: string;
   deliveryFee?: string;
   distance?: string;
-} 
+}

@@ -3,7 +3,7 @@ import { getServerSession } from "next-auth/next";
 import { authOptions } from "../auth/[...nextauth]";
 import { hasuraClient } from "../../../src/lib/hasuraClient";
 import { gql } from "graphql-request";
-import type { Session } from 'next-auth';
+import type { Session } from "next-auth";
 
 interface PaymentMethod {
   id: string;
@@ -115,7 +115,11 @@ export default async function handler(
   req: NextApiRequest,
   res: NextApiResponse
 ) {
-  const session = (await getServerSession(req, res, authOptions as any)) as Session | null;
+  const session = (await getServerSession(
+    req,
+    res,
+    authOptions as any
+  )) as Session | null;
   if (!session?.user?.id) {
     return res.status(401).json({ error: "Unauthorized" });
   }
@@ -123,10 +127,9 @@ export default async function handler(
 
   if (req.method === "GET") {
     try {
-      const data = await hasuraClient.request<{ Payment_Methods: PaymentMethod[] }>(
-        GET_PAYMENT_METHODS,
-        { user_id }
-      );
+      const data = await hasuraClient.request<{
+        Payment_Methods: PaymentMethod[];
+      }>(GET_PAYMENT_METHODS, { user_id });
       return res.status(200).json({ paymentMethods: data.Payment_Methods });
     } catch (err) {
       console.error("Error fetching payment methods:", err);
@@ -139,20 +142,29 @@ export default async function handler(
     if (!method || !names || !number || typeof is_default !== "boolean") {
       return res.status(400).json({ error: "Missing or invalid fields" });
     }
-    if (method.toLowerCase() !== 'mtn momo' && (!CCV || !validity)) {
-      return res.status(400).json({ error: "Missing CCV or validity for card payments" });
+    if (method.toLowerCase() !== "mtn momo" && (!CCV || !validity)) {
+      return res
+        .status(400)
+        .json({ error: "Missing CCV or validity for card payments" });
     }
     try {
       if (is_default) {
         await hasuraClient.request(RESET_DEFAULT, { user_id });
       }
       const inserted = await hasuraClient.request<{
-        insert_Payment_Methods_one: PaymentMethod
-      }>(
-        INSERT_PAYMENT_METHOD,
-        { user_id, method, names, number, CCV, validity, is_default }
-      );
-      return res.status(201).json({ paymentMethod: inserted.insert_Payment_Methods_one });
+        insert_Payment_Methods_one: PaymentMethod;
+      }>(INSERT_PAYMENT_METHOD, {
+        user_id,
+        method,
+        names,
+        number,
+        CCV,
+        validity,
+        is_default,
+      });
+      return res
+        .status(201)
+        .json({ paymentMethod: inserted.insert_Payment_Methods_one });
     } catch (err) {
       console.error("Error saving payment method:", err);
       return res.status(500).json({ error: "Failed to save payment method" });
@@ -160,7 +172,12 @@ export default async function handler(
   }
 
   if (req.method === "PUT") {
-    console.log('PUT /api/queries/payment-methods called with body:', req.body, 'user_id:', user_id);
+    console.log(
+      "PUT /api/queries/payment-methods called with body:",
+      req.body,
+      "user_id:",
+      user_id
+    );
     const { id, is_default } = req.body;
     if (!id || typeof is_default !== "boolean") {
       return res.status(400).json({ error: "Missing id or is_default flag" });
@@ -171,11 +188,18 @@ export default async function handler(
         const resetRes = await hasuraClient.request(RESET_DEFAULT, { user_id });
         console.log("RESET_DEFAULT result:", resetRes);
       }
-      const updateRes = await hasuraClient.request<{ update_Payment_Methods_by_pk: Pick<PaymentMethod, 'id' | 'is_default'> | null; }>(UPDATE_DEFAULT, { id, is_default });
+      const updateRes = await hasuraClient.request<{
+        update_Payment_Methods_by_pk: Pick<
+          PaymentMethod,
+          "id" | "is_default"
+        > | null;
+      }>(UPDATE_DEFAULT, { id, is_default });
       console.log("UPDATE_DEFAULT result:", updateRes);
       const updated = updateRes.update_Payment_Methods_by_pk;
       if (!updated) {
-        return res.status(400).json({ error: "Payment method not found or update failed" });
+        return res
+          .status(400)
+          .json({ error: "Payment method not found or update failed" });
       }
       return res.status(200).json({ paymentMethod: updated });
     } catch (err) {
@@ -186,4 +210,4 @@ export default async function handler(
 
   res.setHeader("Allow", ["GET", "POST", "PUT"]);
   return res.status(405).end(`Method ${req.method} Not Allowed`);
-} 
+}

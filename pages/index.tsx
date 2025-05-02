@@ -2,8 +2,8 @@ import { useEffect, useState } from "react";
 import RootLayout from "@components/ui/layout";
 import Image from "next/image";
 import { GetServerSideProps } from "next";
-import { hasuraClient } from '../src/lib/hasuraClient';
-import { gql } from 'graphql-request';
+import { hasuraClient } from "../src/lib/hasuraClient";
+import { gql } from "graphql-request";
 import {
   Data,
   UsersResponse,
@@ -19,25 +19,25 @@ import {
   DeliveryIssuesResponse,
   NotificationsResponse,
   PlatformSettingsResponse,
-  ShopCardProps
-} from '../src/types';
+  ShopCardProps,
+} from "../src/types";
 
 import ItemsSection from "@components/items/itemsSection";
 import MainBanners from "@components/ui/banners";
 import Link from "next/link";
 import { Button, Panel } from "rsuite";
 import { log } from "node:console";
-import Cookies from 'js-cookie';
+import Cookies from "js-cookie";
 
 // Skeleton Loader Component
 function ShopSkeleton() {
   return (
-    <div className="border rounded-2xl overflow-hidden shadow-sm animate-pulse">
+    <div className="animate-pulse overflow-hidden rounded-2xl border shadow-sm">
       <div className="h-48 w-full bg-gray-100"></div>
       <div className="p-4">
-        <div className="h-6 w-3/4 bg-gray-100 rounded mb-2"></div>
-        <div className="h-4 w-full bg-gray-100 rounded"></div>
-        <div className="h-4 w-2/3 bg-gray-100 rounded mt-2"></div>
+        <div className="mb-2 h-6 w-3/4 rounded bg-gray-100"></div>
+        <div className="h-4 w-full rounded bg-gray-100"></div>
+        <div className="mt-2 h-4 w-2/3 rounded bg-gray-100"></div>
       </div>
     </div>
   );
@@ -45,44 +45,50 @@ function ShopSkeleton() {
 
 function CategorySkeleton() {
   return (
-    <div className="h-8 p-2 border rounded-md bg-gray-100 animate-pulse" />
+    <div className="h-8 animate-pulse rounded-md border bg-gray-100 p-2" />
   );
 }
 
 // Add this helper function at the top of the file
 function getShopImageUrl(imageUrl: string | undefined): string {
   // List of valid image extensions
-  const validExtensions = ['.jpg', '.jpeg', '.png', '.webp', '.gif'];
-  
+  const validExtensions = [".jpg", ".jpeg", ".png", ".webp", ".gif"];
+
   // Check if the URL has a valid image extension
-  const hasValidExtension = validExtensions.some(ext => 
+  const hasValidExtension = validExtensions.some((ext) =>
     imageUrl?.toLowerCase().endsWith(ext)
   );
 
   // If the URL is invalid or doesn't have a valid extension, use the default image
   if (!imageUrl || !hasValidExtension) {
-    return '/images/shop-placeholder.jpg';
+    return "/images/shop-placeholder.jpg";
   }
 
   // If the URL is from example.com, use the default image
-  if (imageUrl.includes('example.com')) {
-    return '/images/shop-placeholder.jpg';
+  if (imageUrl.includes("example.com")) {
+    return "/images/shop-placeholder.jpg";
   }
 
   return imageUrl;
 }
 
 // Helper for Haversine formula
-function getDistanceFromLatLonInKm(lat1: number, lon1: number, lat2: number, lon2: number): number {
+function getDistanceFromLatLonInKm(
+  lat1: number,
+  lon1: number,
+  lat2: number,
+  lon2: number
+): number {
   const R = 6371;
   const dLat = (lat2 - lat1) * (Math.PI / 180);
   const dLon = (lon2 - lon1) * (Math.PI / 180);
   const a =
-    Math.sin(dLat/2) * Math.sin(dLat/2) +
-    Math.cos(lat1*(Math.PI/180)) *
-    Math.cos(lat2*(Math.PI/180)) *
-    Math.sin(dLon/2) * Math.sin(dLon/2);
-  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+    Math.cos(lat1 * (Math.PI / 180)) *
+      Math.cos(lat2 * (Math.PI / 180)) *
+      Math.sin(dLon / 2) *
+      Math.sin(dLon / 2);
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
   return R * c;
 }
 
@@ -92,7 +98,12 @@ export default function Home({ initialData }: { initialData: Data }) {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   // Precomputed dynamics per shop to avoid SSR mismatch
-  const [shopDynamics, setShopDynamics] = useState<Record<string, {distance: string; time: string; fee: string; open: boolean}>>({});
+  const [shopDynamics, setShopDynamics] = useState<
+    Record<
+      string,
+      { distance: string; time: string; fee: string; open: boolean }
+    >
+  >({});
 
   useEffect(() => {
     console.log("Fetched data:", data);
@@ -114,7 +125,7 @@ export default function Home({ initialData }: { initialData: Data }) {
   useEffect(() => {
     // Function to compute distance, time, and fee for shops
     const computeDynamics = () => {
-      const cookie = Cookies.get('delivery_address');
+      const cookie = Cookies.get("delivery_address");
       if (!cookie) {
         setShopDynamics({});
         return;
@@ -123,14 +134,22 @@ export default function Home({ initialData }: { initialData: Data }) {
         const userAddr = JSON.parse(cookie);
         const userLat = parseFloat(userAddr.latitude);
         const userLng = parseFloat(userAddr.longitude);
-        const userAlt = parseFloat(userAddr.altitude || '0');
-        const newDyn: Record<string, {distance: string; time: string; fee: string; open: boolean}> = {};
+        const userAlt = parseFloat(userAddr.altitude || "0");
+        const newDyn: Record<
+          string,
+          { distance: string; time: string; fee: string; open: boolean }
+        > = {};
         filteredShops?.forEach((shop) => {
           if (shop.latitude && shop.longitude) {
             const shopLat = parseFloat(shop.latitude);
             const shopLng = parseFloat(shop.longitude);
-            const distKm = getDistanceFromLatLonInKm(userLat, userLng, shopLat, shopLng);
-            const shopAlt = parseFloat((shop as any).altitude || '0');
+            const distKm = getDistanceFromLatLonInKm(
+              userLat,
+              userLng,
+              shopLat,
+              shopLng
+            );
+            const shopAlt = parseFloat((shop as any).altitude || "0");
             const altKm = (shopAlt - userAlt) / 1000;
             const dist3D = Math.sqrt(distKm * distKm + altKm * altKm);
             const roundedKm = Math.round(dist3D * 10) / 10;
@@ -143,16 +162,23 @@ export default function Home({ initialData }: { initialData: Data }) {
               const mins = totalTime % 60;
               time = `${hours}h ${mins}m`;
             }
-            const fee = distKm <= 3 ? '1000 frw' : `${1000 + Math.round((distKm - 3) * 300)} frw`;
+            const fee =
+              distKm <= 3
+                ? "1000 frw"
+                : `${1000 + Math.round((distKm - 3) * 300)} frw`;
             // Determine open/closed based on today's operating_hours object
             let isOpen = false;
             const hoursObj = shop.operating_hours;
-            if (hoursObj && typeof hoursObj === 'object') {
+            if (hoursObj && typeof hoursObj === "object") {
               const now = new Date();
-              const dayKey = now.toLocaleDateString('en-US', { weekday: 'long' }).toLowerCase();
+              const dayKey = now
+                .toLocaleDateString("en-US", { weekday: "long" })
+                .toLowerCase();
               const todaysHours = (hoursObj as any)[dayKey];
-              if (todaysHours && todaysHours.toLowerCase() !== 'closed') {
-                const parts = todaysHours.split('-').map((s: string) => s.trim());
+              if (todaysHours && todaysHours.toLowerCase() !== "closed") {
+                const parts = todaysHours
+                  .split("-")
+                  .map((s: string) => s.trim());
                 if (parts.length === 2) {
                   const parseTime = (tp: string): number | null => {
                     const m = tp.match(/(\d{1,2})(?::(\d{2}))?\s*(am|pm)/i);
@@ -161,7 +187,7 @@ export default function Home({ initialData }: { initialData: Data }) {
                     const mm = m[2] ? parseInt(m[2], 10) : 0;
                     const ampm = m[3].toLowerCase();
                     if (h === 12) h = 0;
-                    if (ampm === 'pm') h += 12;
+                    if (ampm === "pm") h += 12;
                     return h * 60 + mm;
                   };
                   const openMins = parseTime(parts[0]);
@@ -183,21 +209,21 @@ export default function Home({ initialData }: { initialData: Data }) {
         });
         setShopDynamics(newDyn);
       } catch (err) {
-        console.error('Error computing shop dynamics:', err);
+        console.error("Error computing shop dynamics:", err);
       }
     };
     // Initial compute
     computeDynamics();
     // Recompute on address change
-    window.addEventListener('addressChanged', computeDynamics);
+    window.addEventListener("addressChanged", computeDynamics);
     // Cleanup listener on unmount/filter change
-    return () => window.removeEventListener('addressChanged', computeDynamics);
+    return () => window.removeEventListener("addressChanged", computeDynamics);
   }, [filteredShops]);
 
   const handleCategoryClick = (categoryId: string) => {
     setIsLoading(true);
     setError(null);
-    
+
     // Simulate loading delay for better UX
     setTimeout(() => {
       try {
@@ -213,7 +239,7 @@ export default function Home({ initialData }: { initialData: Data }) {
   const clearFilter = () => {
     setIsLoading(true);
     setError(null);
-    
+
     setTimeout(() => {
       try {
         setSelectedCategory(null);
@@ -237,12 +263,14 @@ export default function Home({ initialData }: { initialData: Data }) {
 
           {/* Shop Categories */}
           <div className="mt-12">
-            <div className="flex items-center justify-between mb-8">
-              <h2 className="text-3xl font-bold text-gray-900">Shop by Category</h2>
+            <div className="mb-8 flex items-center justify-between">
+              <h2 className="text-3xl font-bold text-gray-900">
+                Shop by Category
+              </h2>
               {selectedCategory && (
                 <button
                   onClick={clearFilter}
-                  className="text-white bg-green-700 hover:bg-green-800 px-4 py-2 rounded-full text-sm transition-colors duration-200"
+                  className="rounded-full bg-green-700 px-4 py-2 text-sm text-white transition-colors duration-200 hover:bg-green-800"
                 >
                   Clear Filter
                 </button>
@@ -250,69 +278,77 @@ export default function Home({ initialData }: { initialData: Data }) {
             </div>
 
             {error && (
-              <div className="mb-6 p-4 bg-red-100 text-red-700 rounded-lg">
+              <div className="mb-6 rounded-lg bg-red-100 p-4 text-red-700">
                 {error}
               </div>
             )}
 
             {/* Categories Grid */}
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-7 gap-3">
-              {isLoading ? (
-                Array(5).fill(0).map((_, index) => (
-                  <CategorySkeleton key={index} />
-                ))
-              ) : (
-                data.categories?.map((category) => (
-                  <div
-                    key={category.id}
-                    onClick={() => handleCategoryClick(category.id)}
-                    className={`cursor-pointer p-2 text-center border rounded-md hover:shadow-md transition-all duration-200 transform hover:-translate-y-1 ${
-                      selectedCategory === category.id 
-                        ? "border-green-500 bg-green-50 shadow-md" 
-                        : "border-gray-200 hover:border-gray-300"
-                    }`}
-                  >
-                    <span className="text-xs font-medium text-gray-800">{category.name}</span>
-                  </div>
-                ))
-              )}
+            <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-7">
+              {isLoading
+                ? Array(5)
+                    .fill(0)
+                    .map((_, index) => <CategorySkeleton key={index} />)
+                : data.categories?.map((category) => (
+                    <div
+                      key={category.id}
+                      onClick={() => handleCategoryClick(category.id)}
+                      className={`transform cursor-pointer rounded-md border p-2 text-center transition-all duration-200 hover:-translate-y-1 hover:shadow-md ${
+                        selectedCategory === category.id
+                          ? "border-green-500 bg-green-50 shadow-md"
+                          : "border-gray-200 hover:border-gray-300"
+                      }`}
+                    >
+                      <span className="text-xs font-medium text-gray-800">
+                        {category.name}
+                      </span>
+                    </div>
+                  ))}
             </div>
           </div>
 
           {/* Shops */}
           <div className="mt-16">
-            <div className="flex items-center justify-between mb-8">
+            <div className="mb-8 flex items-center justify-between">
               <h2 className="text-3xl font-bold text-gray-900">
                 {selectedCategory
-                  ? data.categories?.find((c) => c.id === selectedCategory)?.name
+                  ? data.categories?.find((c) => c.id === selectedCategory)
+                      ?.name
                   : "All Shops"}
               </h2>
-              <Link 
-                href="#" 
-                className="text-gray-500 hover:text-gray-700 transition-colors duration-200"
+              <Link
+                href="#"
+                className="text-gray-500 transition-colors duration-200 hover:text-gray-700"
               >
                 View All
               </Link>
             </div>
 
             {isLoading ? (
-              <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-6">
-                {Array(6).fill(0).map((_, index) => (
-                  <ShopSkeleton key={index} />
-                ))}
+              <div className="grid grid-cols-1 gap-6 md:grid-cols-3 lg:grid-cols-4">
+                {Array(6)
+                  .fill(0)
+                  .map((_, index) => (
+                    <ShopSkeleton key={index} />
+                  ))}
               </div>
             ) : (
-              <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-6">
+              <div className="grid grid-cols-1 gap-6 md:grid-cols-3 lg:grid-cols-4">
                 {filteredShops?.length ? (
                   filteredShops.map((shop) => {
                     // Use precomputed dynamics, default to N/A
-                    const dyn = shopDynamics[shop.id] || { distance: 'N/A', time: 'N/A', fee: 'N/A', open: false };
+                    const dyn = shopDynamics[shop.id] || {
+                      distance: "N/A",
+                      time: "N/A",
+                      fee: "N/A",
+                      open: false,
+                    };
                     return (
-                      <Link key={shop.id} href={`/shops/${shop.id}`}>  
-                        <div className="relative border rounded-2xl overflow-hidden shadow-sm hover:shadow-lg transition-all duration-300 transform hover:-translate-y-1 cursor-pointer">
+                      <Link key={shop.id} href={`/shops/${shop.id}`}>
+                        <div className="relative transform cursor-pointer overflow-hidden rounded-2xl border shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-lg">
                           {/* Open/Closed badge */}
-                    
-                          <div className="h-48 w-full relative bg-gray-100">
+
+                          <div className="relative h-48 w-full bg-gray-100">
                             <Image
                               src={getShopImageUrl(shop.image)}
                               alt={shop.name}
@@ -323,19 +359,28 @@ export default function Home({ initialData }: { initialData: Data }) {
                               priority={false}
                               onError={(e) => {
                                 const target = e.target as HTMLImageElement;
-                                target.src = '/images/shop-placeholder.jpg';
+                                target.src = "/images/shop-placeholder.jpg";
                                 target.onerror = null;
                               }}
                             />
                           </div>
                           <div className="p-5">
-                            <h3 className="text-xl font-semibold text-gray-800 mb-2">{shop.name}</h3>
-                            <p className="text-gray-500 text-sm leading-relaxed">
-                              {shop.description?.slice(0, 80) || "No description"}
+                            <h3 className="mb-2 text-xl font-semibold text-gray-800">
+                              {shop.name}
+                            </h3>
+                            <p className="text-sm leading-relaxed text-gray-500">
+                              {shop.description?.slice(0, 80) ||
+                                "No description"}
                             </p>
                             <div className="mt-2 flex items-center text-sm text-gray-600">
                               <div className="flex items-center">
-                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="mr-1 h-4 w-4">
+                                <svg
+                                  viewBox="0 0 24 24"
+                                  fill="none"
+                                  stroke="currentColor"
+                                  strokeWidth="2"
+                                  className="mr-1 h-4 w-4"
+                                >
                                   <circle cx="12" cy="12" r="10" />
                                   <polyline points="12 6 12 12 16 14" />
                                 </svg>
@@ -343,16 +388,26 @@ export default function Home({ initialData }: { initialData: Data }) {
                               </div>
                               <span className="mx-2 text-gray-300">•</span>
                               <div className="flex items-center text-sm text-gray-600">
-                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="mr-1 h-4 w-4">
+                                <svg
+                                  viewBox="0 0 24 24"
+                                  fill="none"
+                                  stroke="currentColor"
+                                  strokeWidth="2"
+                                  className="mr-1 h-4 w-4"
+                                >
                                   <path d="M12 2v20M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6" />
                                 </svg>
                                 {dyn.distance}
                               </div>
                               {dyn.open ? (
-                            <span className="absolute top-2 right-2 bg-green-100 text-green-800 px-2 py-1 rounded-full text-xs font-semibold">Open</span>
-                          ) : (
-                            <span className="absolute top-2 right-2 bg-red-100 text-red-800 px-2 py-1 rounded-full text-xs font-semibold">Closed</span>
-                          )}
+                                <span className="absolute right-2 top-2 rounded-full bg-green-100 px-2 py-1 text-xs font-semibold text-green-800">
+                                  Open
+                                </span>
+                              ) : (
+                                <span className="absolute right-2 top-2 rounded-full bg-red-100 px-2 py-1 text-xs font-semibold text-red-800">
+                                  Closed
+                                </span>
+                              )}
                               {/* <span className="mx-2 text-gray-300">•</span> */}
                               {/* <div className="flex items-center text-sm text-gray-600">
                                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="mr-1 h-4 w-4">
@@ -367,7 +422,7 @@ export default function Home({ initialData }: { initialData: Data }) {
                     );
                   })
                 ) : (
-                  <div className="col-span-full text-center text-gray-500 mt-8">
+                  <div className="col-span-full mt-8 text-center text-gray-500">
                     No shops found in this category
                   </div>
                 )}
@@ -565,7 +620,7 @@ export const getServerSideProps: GetServerSideProps = async () => {
       },
     };
   } catch (error) {
-    console.error('Error fetching data:', error);
+    console.error("Error fetching data:", error);
     return {
       props: {
         initialData: {

@@ -4,7 +4,7 @@ import Image from "next/image";
 import { useState, useEffect } from "react";
 import RootLayout from "@components/ui/layout";
 import ItemsSection from "@components/items/itemsSection";
-import Cookies from 'js-cookie';
+import Cookies from "js-cookie";
 
 interface Product {
   id: string;
@@ -37,15 +37,21 @@ interface FreshMarkPageProps {
 }
 
 // Add helper for Haversine formula
-function getDistanceFromLatLonInKm(lat1: number, lon1: number, lat2: number, lon2: number): number {
+function getDistanceFromLatLonInKm(
+  lat1: number,
+  lon1: number,
+  lat2: number,
+  lon2: number
+): number {
   const R = 6371; // Radius of the earth in km
   const dLat = (lat2 - lat1) * (Math.PI / 180);
   const dLon = (lon2 - lon1) * (Math.PI / 180);
   const a =
     Math.sin(dLat / 2) * Math.sin(dLat / 2) +
     Math.cos(lat1 * (Math.PI / 180)) *
-    Math.cos(lat2 * (Math.PI / 180)) *
-    Math.sin(dLon / 2) * Math.sin(dLon / 2);
+      Math.cos(lat2 * (Math.PI / 180)) *
+      Math.sin(dLon / 2) *
+      Math.sin(dLon / 2);
   const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
   return R * c;
 }
@@ -57,11 +63,13 @@ const FreshMarkPage: React.FC<FreshMarkPageProps> = ({ shop, products }) => {
   const [dynamicDeliveryTime, setDynamicDeliveryTime] = useState("15-25 min");
   // Track mount for hydration-safe rendering
   const [isMounted, setIsMounted] = useState(false);
-  useEffect(() => { setIsMounted(true); }, []);
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
 
   // Compute dynamic distance/time on client only to avoid hydration mismatch
   useEffect(() => {
-    const cookie = Cookies.get('delivery_address');
+    const cookie = Cookies.get("delivery_address");
     if (!cookie || !shop.latitude || !shop.longitude) return;
     try {
       const userAddr = JSON.parse(cookie);
@@ -69,9 +77,14 @@ const FreshMarkPage: React.FC<FreshMarkPageProps> = ({ shop, products }) => {
       const userLng = parseFloat(userAddr.longitude);
       const shopLat = parseFloat(shop.latitude);
       const shopLng = parseFloat(shop.longitude);
-      const distKm = getDistanceFromLatLonInKm(userLat, userLng, shopLat, shopLng);
-      const userAlt = parseFloat(userAddr.altitude || '0');
-      const shopAlt = parseFloat((shop as any).altitude || '0');
+      const distKm = getDistanceFromLatLonInKm(
+        userLat,
+        userLng,
+        shopLat,
+        shopLng
+      );
+      const userAlt = parseFloat(userAddr.altitude || "0");
+      const shopAlt = parseFloat((shop as any).altitude || "0");
       const altKm = (shopAlt - userAlt) / 1000;
       const dist3D = Math.sqrt(distKm * distKm + altKm * altKm);
       const roundedKm3D = Math.round(dist3D * 10) / 10;
@@ -89,7 +102,7 @@ const FreshMarkPage: React.FC<FreshMarkPageProps> = ({ shop, products }) => {
       }
       setDynamicDeliveryTime(timeStr);
     } catch (err) {
-      console.error('Error computing distance/time:', err);
+      console.error("Error computing distance/time:", err);
     }
   }, [shop.latitude, shop.longitude]);
 
@@ -109,13 +122,15 @@ const FreshMarkPage: React.FC<FreshMarkPageProps> = ({ shop, products }) => {
   const filteredProducts =
     activeCategory === "all"
       ? shopData.products
-      : shopData.products.filter((product) => product.category === activeCategory);
+      : shopData.products.filter(
+          (product) => product.category === activeCategory
+        );
 
   const sanitizeSrc = (raw: string) => {
-    if (raw.startsWith('/')) return raw;
-    if (raw.startsWith('http')) return raw;
-    return '/assets/images/shop-placeholder.jpg';
-  }
+    if (raw.startsWith("/")) return raw;
+    if (raw.startsWith("http")) return raw;
+    return "/assets/images/shop-placeholder.jpg";
+  };
 
   return (
     <RootLayout>
@@ -185,4 +200,4 @@ const FreshMarkPage: React.FC<FreshMarkPageProps> = ({ shop, products }) => {
   );
 };
 
-export default FreshMarkPage; 
+export default FreshMarkPage;

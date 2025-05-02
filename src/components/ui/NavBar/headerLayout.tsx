@@ -1,45 +1,53 @@
 import Link from "next/link";
 import React, { useState, useEffect } from "react";
 import { Input, InputGroup, Modal } from "rsuite";
-import { useCart } from '../../../context/CartContext';
+import { useCart } from "../../../context/CartContext";
 import UserAddress from "../../userProfile/userAddress";
-import Cookies from 'js-cookie';
+import Cookies from "js-cookie";
 
 export default function HeaderLayout() {
   const { count } = useCart();
-  const [defaultAddress, setDefaultAddress] = useState<{ street: string; city: string; postal_code: string } | null>(null);
+  const [defaultAddress, setDefaultAddress] = useState<{
+    street: string;
+    city: string;
+    postal_code: string;
+  } | null>(null);
   const [showAddressModal, setShowAddressModal] = useState<boolean>(false);
 
   useEffect(() => {
     // Try loading the delivery address from cookie first
-    const saved = Cookies.get('delivery_address');
+    const saved = Cookies.get("delivery_address");
     if (saved) {
       try {
         setDefaultAddress(JSON.parse(saved));
       } catch {}
     } else {
       // Fall back to default address from API
-      fetch('/api/queries/addresses')
-        .then(res => res.json())
-        .then(data => {
+      fetch("/api/queries/addresses")
+        .then((res) => res.json())
+        .then((data) => {
           const def = (data.addresses || []).find((a: any) => a.is_default);
           setDefaultAddress(def || null);
           if (def) {
-            Cookies.set('delivery_address', JSON.stringify(def));
-            window.dispatchEvent(new Event('addressChanged'));
+            Cookies.set("delivery_address", JSON.stringify(def));
+            window.dispatchEvent(new Event("addressChanged"));
           }
         })
-        .catch(err => console.error('Error fetching addresses in header:', err));
+        .catch((err) =>
+          console.error("Error fetching addresses in header:", err)
+        );
     }
     // Listen for address changes and update
     const handleAddrChange = () => {
-      const updated = Cookies.get('delivery_address');
+      const updated = Cookies.get("delivery_address");
       if (updated) {
-        try { setDefaultAddress(JSON.parse(updated)); } catch {}
+        try {
+          setDefaultAddress(JSON.parse(updated));
+        } catch {}
       }
     };
-    window.addEventListener('addressChanged', handleAddrChange);
-    return () => window.removeEventListener('addressChanged', handleAddrChange);
+    window.addEventListener("addressChanged", handleAddrChange);
+    return () => window.removeEventListener("addressChanged", handleAddrChange);
   }, []);
 
   return (
@@ -59,7 +67,9 @@ export default function HeaderLayout() {
             </div>
             <div>
               <h2 className="font-medium text-gray-900">
-                {defaultAddress ? `${defaultAddress.street}, ${defaultAddress.city}` : 'No address set'}
+                {defaultAddress
+                  ? `${defaultAddress.street}, ${defaultAddress.city}`
+                  : "No address set"}
               </h2>
               <p className="text-xs text-gray-500">
                 <button
@@ -213,12 +223,18 @@ export default function HeaderLayout() {
                   </g>
                 </svg>
               </div>
-              <span className="text-sm font-semibold text-green-500">{count}</span>
+              <span className="text-sm font-semibold text-green-500">
+                {count}
+              </span>
             </div>
           </Link>
         </div>
       </header>
-      <Modal open={showAddressModal} onClose={() => setShowAddressModal(false)} size="lg">
+      <Modal
+        open={showAddressModal}
+        onClose={() => setShowAddressModal(false)}
+        size="lg"
+      >
         <Modal.Header>
           <Modal.Title>Manage Addresses</Modal.Title>
         </Modal.Header>
@@ -226,8 +242,8 @@ export default function HeaderLayout() {
           <UserAddress
             onSelect={(addr) => {
               setDefaultAddress(addr);
-              Cookies.set('delivery_address', JSON.stringify(addr));
-              window.dispatchEvent(new Event('addressChanged'));
+              Cookies.set("delivery_address", JSON.stringify(addr));
+              window.dispatchEvent(new Event("addressChanged"));
               setShowAddressModal(false);
             }}
           />

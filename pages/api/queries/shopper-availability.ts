@@ -3,19 +3,18 @@ import { hasuraClient } from "../../../src/lib/hasuraClient";
 import { gql } from "graphql-request";
 
 const GET_SHOPPER_AVAILABILITY = gql`
-query GetShopperAvailability {
-  Shopper_Availability {
-    id
-    user_id
-    is_available
-    created_at
-    end_time
-    day_of_week
-    start_time
-    updated_at
+  query GetShopperAvailability {
+    Shopper_Availability {
+      id
+      user_id
+      is_available
+      created_at
+      end_time
+      day_of_week
+      start_time
+      updated_at
+    }
   }
-}
-
 `;
 
 interface ShopperAvailabilityResponse {
