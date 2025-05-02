@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Input, Button, Panel } from "rsuite";
-import ConfirmPayment from "./confirmPayment";
+import { Input, Button, Panel, Modal, toaster, Notification } from "rsuite";
 import Link from "next/link"; // Make sure you import Link if you use it
 import { formatCurrency } from "../../../lib/formatCurrency";
 import Cookies from "js-cookie";
@@ -11,6 +10,7 @@ interface CheckoutItemsProps {
   shopLat: number;
   shopLng: number;
   shopAlt: number;
+  shopId: string;
 }
 
 // Add helper to compute distance between two coordinates
@@ -39,7 +39,11 @@ export default function CheckoutItems({
   shopLat,
   shopLng,
   shopAlt,
+  shopId,
 }: CheckoutItemsProps) {
+  // Order confirmation state
+  const [showConfirmation, setShowConfirmation] = useState(false);
+  const [newOrderId, setNewOrderId] = useState<string | null>(null);
   // Re-render when the address cookie changes
   const [, setTick] = useState(0);
   useEffect(() => {
@@ -51,6 +55,8 @@ export default function CheckoutItems({
   const [promoCode, setPromoCode] = useState("");
   const [discount, setDiscount] = useState(0);
   const [appliedPromo, setAppliedPromo] = useState<string | null>(null);
+  const [isCheckoutLoading, setIsCheckoutLoading] = useState(false);
+  const [deliveryNotes, setDeliveryNotes] = useState<string>("");
 
   // Service and Delivery Fee calculations
   const serviceFee = 2000; // flat service fee in RWF
@@ -100,6 +106,8 @@ export default function CheckoutItems({
   } else {
     deliveryTime = `${totalTimeMinutes} mins`;
   }
+  // Compute actual delivery timestamp for DB (current time + totalTimeMinutes)
+  const deliveryTimestamp = new Date(Date.now() + totalTimeMinutes * 60000).toISOString();
 
   const handleApplyPromo = () => {
     const PROMO_CODES: { [code: string]: number } = {
@@ -115,15 +123,119 @@ export default function CheckoutItems({
     } else {
       setDiscount(0);
       setAppliedPromo(null);
-      alert("Invalid promo code.");
+      toaster.push(
+        <Notification type="error" header="Invalid Promo Code">
+          Invalid promo code.
+        </Notification>,
+        { placement: "topEnd" }
+      );
     }
   };
 
   // Compute numeric final total including service fee
   const finalTotal = Total - discount + serviceFee + deliveryFee;
 
+  const handleProceedToCheckout = async () => {
+    // Validate cart has items
+    if (totalUnits <= 0) {
+      toaster.push(
+        <Notification type="warning" header="Empty Cart">
+          Your cart is empty.
+        </Notification>,
+        { placement: "topEnd" }
+      );
+      return;
+    }
+    // Get selected delivery address from cookie
+    const cookieValue = Cookies.get("delivery_address");
+    if (!cookieValue) {
+      toaster.push(
+        <Notification type="error" header="Address Required">
+          Please select a delivery address.
+        </Notification>,
+        { placement: "topEnd" }
+      );
+      return;
+    }
+    let addressObj;
+    try {
+      addressObj = JSON.parse(cookieValue);
+    } catch (err) {
+      console.error("Error parsing delivery_address cookie:", err);
+      toaster.push(
+        <Notification type="error" header="Invalid Address">
+          Invalid delivery address. Please select again.
+        </Notification>,
+        { placement: "topEnd" }
+      );
+      return;
+    }
+    const deliveryAddressId = addressObj.id;
+    if (!deliveryAddressId) {
+      toaster.push(
+        <Notification type="error" header="Invalid Address">
+          Please select a valid delivery address.
+        </Notification>,
+        { placement: "topEnd" }
+      );
+      return;
+    }
+    setIsCheckoutLoading(true);
+    try {
+      // Prepare checkout payload
+      const payload = {
+        shop_id: shopId,
+        delivery_address_id: deliveryAddressId,
+        service_fee: serviceFee.toString(),
+        delivery_fee: deliveryFee.toString(),
+        discount: discount > 0 ? discount.toString() : null,
+        voucher_code: appliedPromo,
+        delivery_time: deliveryTimestamp,
+        delivery_notes: deliveryNotes || null,
+      };
+      const res = await fetch("/api/checkout", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        throw new Error(data.error || "Checkout failed");
+      }
+      // Show confirmation modal with new order ID
+      setNewOrderId(data.order_id);
+      setShowConfirmation(true);
+    } catch (err: any) {
+      console.error("Checkout error:", err);
+      toaster.push(
+        <Notification type="error" header="Checkout Failed">
+          {err.message}
+        </Notification>,
+        { placement: "topEnd" }
+      );
+    } finally {
+      setIsCheckoutLoading(false);
+    }
+  };
+
   return (
     <>
+      {/* Confirmation Modal */}
+      <Modal open={showConfirmation} onClose={() => setShowConfirmation(false)}>
+        <Modal.Header>
+          <Modal.Title>Order Confirmed</Modal.Title>
+        </Modal.Header>
+        <Modal.Body>
+          {newOrderId
+            ? `Your order (${newOrderId}) has been placed successfully!`
+            : "Your order has been placed successfully!"}
+        </Modal.Body>
+        <Modal.Footer>
+          <Button appearance="primary" onClick={() => setShowConfirmation(false)}>
+            OK
+          </Button>
+        </Modal.Footer>
+      </Modal>
       {/* Mobile View - Only visible on small devices */}
       <div className="fixed bottom-4 left-1/2 z-50 w-[95%] max-w-4xl -translate-x-1/2 rounded-2xl border bg-white p-6 shadow-2xl md:hidden">
         <div>
@@ -181,7 +293,30 @@ export default function CheckoutItems({
               {formatCurrency(finalTotal)}
             </span>
           </div>
-          <ConfirmPayment />
+          {/* Delivery Notes Input */}
+          <div className="mt-2">
+            <h3 className="mb-1 font-medium">Add a Note</h3>
+            <Input
+              as="textarea"
+              rows={2}
+              value={deliveryNotes}
+              onChange={setDeliveryNotes}
+              placeholder="Enter any delivery instructions or notes"
+            />
+          </div>
+          {/* Proceed to Checkout Button */}
+          <div className="mt-2">
+            <Button
+              appearance="primary"
+              color="green"
+              block
+              size="lg"
+              loading={isCheckoutLoading}
+              onClick={handleProceedToCheckout}
+            >
+              Proceed to Checkout
+            </Button>
+          </div>
         </div>
       </div>
 
@@ -275,12 +410,25 @@ export default function CheckoutItems({
               </div>
             </div>
 
+            <div className="mt-4">
+              <h3 className="mb-2 font-medium">Add a Note</h3>
+              <Input
+                as="textarea"
+                rows={3}
+                value={deliveryNotes}
+                onChange={setDeliveryNotes}
+                placeholder="Enter any delivery instructions or notes"
+              />
+            </div>
+
             <Button
               color="green"
               appearance="primary"
               block
               size="lg"
               className="mt-6 bg-green-500 font-medium text-white hover:bg-green-600"
+              onClick={handleProceedToCheckout}
+              loading={isCheckoutLoading}
             >
               Proceed to Checkout
             </Button>

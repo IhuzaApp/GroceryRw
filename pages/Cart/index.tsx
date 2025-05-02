@@ -215,6 +215,7 @@ export default function CartMainPage() {
                   <CheckoutSkeleton />
                 ) : (
                   <CheckoutItems
+                    shopId={selectedCartId!}
                     Total={cartTotal}
                     totalUnits={cartUnits}
                     shopLat={parseFloat(selectedShop.latitude)}
