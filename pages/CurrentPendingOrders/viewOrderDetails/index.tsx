@@ -1,9 +1,7 @@
 import RootLayout from "@components/ui/layout";
-import Link from "next/link";
 import React, { useState, useEffect } from "react";
 import { useRouter } from "next/router";
-import { formatCurrency } from "../../../src/lib/formatCurrency";
-import UserPendingOrders from "@components/UserCarts/orders/UserPendingOrders";
+import UserOrderDetails from "@components/UserCarts/orders/UserOrderDetails";
 
 // Helper to display relative time
 function timeAgo(timestamp: string) {
@@ -60,7 +58,7 @@ export default function ViewOrderDetailsPage() {
     <RootLayout>
       <div className="p-4 md:ml-16">
         <div className="container mx-auto">
-    <UserPendingOrders order={order} />
+    <UserOrderDetails order={order} />
         </div>
       </div>
     </RootLayout>

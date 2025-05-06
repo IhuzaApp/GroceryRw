@@ -5,8 +5,8 @@ import Link from "next/link";
 import { useState } from "react";
 import { formatCurrency } from "../../../lib/formatCurrency";
 
-interface UserPendingOrdersProps { order: any; }
-export default function UserPendingOrders({ order }: UserPendingOrdersProps) {
+interface UserOrderDetailsProps { order: any; }
+export default function UserOrderDetails({ order }: UserOrderDetailsProps) {
   const [feedbackModal, setFeedbackModal] = useState(false);
   const [rating, setRating] = useState(0);
   const [comment, setComment] = useState("");
