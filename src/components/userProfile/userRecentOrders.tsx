@@ -4,7 +4,7 @@ import Link from "next/link";
 import { formatCurrency } from "../../lib/formatCurrency";
 import { useRouter } from "next/router";
 
-// Define the shape of an order including item counts
+// Define the shape of an order including assignment status
 type Order = {
   id: string;
   status: string;
@@ -24,6 +24,9 @@ type Order = {
   };
   itemsCount: number;
   unitsCount: number;
+  shopper_id: string | null;
+  service_fee?: number;
+  delivery_fee?: number;
 };
 
 // Props for the UserRecentOrders component
@@ -31,16 +34,62 @@ interface UserRecentOrdersProps {
   filter: string;
   orders: Order[];
   loading: boolean;
+  onRefresh?: () => void;
 }
 
-export default function UserRecentOrders({ filter, orders = [], loading }: UserRecentOrdersProps) {
+// Helper to display timestamps as relative time ago
+function timeAgo(timestamp: string): string {
+  const now = Date.now();
+  const past = new Date(timestamp).getTime();
+  const diff = now - past;
+  const seconds = Math.floor(diff / 1000);
+  if (seconds < 60) return `${seconds} sec${seconds !== 1 ? 's' : ''} ago`;
+  const minutes = Math.floor(seconds / 60);
+  if (minutes < 60) return `${minutes} min${minutes !== 1 ? 's' : ''} ago`;
+  const hours = Math.floor(minutes / 60);
+  if (hours < 24) return `${hours} hr${hours !== 1 ? 's' : ''} ago`;
+  const days = Math.floor(hours / 24);
+  if (days < 7) return `${days} day${days !== 1 ? 's' : ''} ago`;
+  const weeks = Math.floor(days / 7);
+  if (weeks < 4) return `${weeks} week${weeks !== 1 ? 's' : ''} ago`;
+  const months = Math.floor(days / 30);
+  if (months < 12) return `${months} month${months !== 1 ? 's' : ''} ago`;
+  const years = Math.floor(days / 365);
+  return `${years} year${years !== 1 ? 's' : ''} ago`;
+}
+
+export default function UserRecentOrders({ filter, orders = [], loading, onRefresh }: UserRecentOrdersProps) {
   const { pathname } = useRouter();
   const isPendingOrdersPage = pathname === "/CurrentPendingOrders";
   return (
     <>
-      <h3 className="mb-4 text-lg font-bold">Orders</h3>
+      <div className="mb-4 flex justify-between items-center">
+        <h3 className="text-lg font-bold">Orders</h3>
+        {onRefresh && (
+          <Button
+            appearance="link"
+            size="sm"
+            onClick={onRefresh}
+            disabled={loading}
+          >
+            Refresh
+          </Button>
+        )}
+      </div>
       {loading ? (
-        <p>Loading orders...</p>
+        <div className="space-y-4">
+          {[1, 2, 3].map((i) => (
+            <div
+              key={i}
+              className="mb-4 rounded-xl border border-gray-200 bg-white p-4 shadow-md animate-pulse"
+            >
+              <div className="h-4 bg-gray-200 rounded w-1/3 mb-2"></div>
+              <div className="h-3 bg-gray-200 rounded w-1/4 mb-4"></div>
+              <div className="h-4 bg-gray-200 rounded w-1/2 mb-2"></div>
+              <div className="h-4 bg-gray-200 rounded w-1/6"></div>
+            </div>
+          ))}
+        </div>
       ) : orders.length === 0 ? (
         <p>No orders found.</p>
       ) : (
@@ -80,24 +129,42 @@ export default function UserRecentOrders({ filter, orders = [], loading }: UserR
                 <div>
                   <span className="font-bold">Order #{order.id}</span>
                   <span className="ml-4 text-sm text-gray-500">
-                    {new Date(order.created_at).toLocaleDateString()}
+                    {timeAgo(order.created_at)}
                   </span>
                 </div>
-                <Tag
-                  color={order.status === "done" ? "green" : "blue"}
-                  className={
-                    order.status === "done"
-                      ? "bg-green-100 text-green-600"
-                      : "bg-blue-100 text-blue-600"
+                {/* Status Badge: Pending when no shopper, Ongoing when assigned, Completed when done */}
+                {(() => {
+                  const isDone = order.status === "done";
+                  const isAssigned = !!order.shopper_id;
+                  if (isDone) {
+                    return (
+                      <Tag color="green" className="bg-green-100 text-green-600">
+                        Completed
+                      </Tag>
+                    );
+                  } else if (!isAssigned) {
+                    return (
+                      <Tag color="orange" className="bg-yellow-100 text-yellow-600">
+                        Pending
+                      </Tag>
+                    );
+                  } else {
+                    return (
+                      <Tag color="blue" className="bg-blue-100 text-blue-600">
+                        Ongoing
+                      </Tag>
+                    );
                   }
-                >
-                  {order.status === "done" ? "Completed" : "Ongoing"}
-                </Tag>
+                })()}
               </div>
 
               <div className="mb-3 flex justify-between text-sm text-gray-600">
-                <span>{order.itemsCount} items ({order.unitsCount} units)</span>
-                <span className="font-bold">{formatCurrency(order.total)}</span>
+                <span className="text-green-600 font-bold">{order.itemsCount} items ({order.unitsCount} units)</span>
+                <span className="font-bold">
+                  {formatCurrency(
+                    order.total + (order.service_fee ?? 0) + (order.delivery_fee ?? 0)
+                  )}
+                </span>
               </div>
 
               <div className="flex gap-2">

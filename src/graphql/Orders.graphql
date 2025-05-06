@@ -42,5 +42,11 @@ query GetOrders {
       product_id
       quantity
     }
+    delivery_fee
+    service_fee
+    discount
+    voucher_code
+    OrderID
+    shop_id
   }
 }

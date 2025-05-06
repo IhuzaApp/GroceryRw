@@ -2,7 +2,7 @@ import { NextApiRequest, NextApiResponse } from "next";
 import { hasuraClient } from "../../../src/lib/hasuraClient";
 import { gql } from "graphql-request";
 
-// Fetch orders including item aggregates
+// Fetch orders including item aggregates, fees, and shopper assignment
 const GET_ORDERS = gql`
   query GetOrders {
     Orders {
@@ -11,7 +11,10 @@ const GET_ORDERS = gql`
       status
       created_at
       total
+      service_fee
+      delivery_fee
       shop_id
+      shopper_id
       Order_Items_aggregate {
         aggregate {
           count
@@ -43,7 +46,10 @@ interface OrdersResponse {
     status: string;
     created_at: string;
     total: string;
+    service_fee: string;
+    delivery_fee: string;
     shop_id: string;
+    shopper_id: string | null;
     Order_Items_aggregate: {
       aggregate: {
         count: number;
@@ -72,13 +78,20 @@ export default async function handler(
       const agg = o.Order_Items_aggregate.aggregate;
       const itemsCount = agg?.count ?? 0;
       const unitsCount = agg?.sum?.quantity ?? 0;
+      // Keep base total separate; fees in their own fields
+      const baseTotal = parseFloat(o.total || '0');
+      const serviceFee = parseFloat(o.service_fee || '0');
+      const deliveryFee = parseFloat(o.delivery_fee || '0');
       return {
         id: o.id,
         user_id: o.user_id,
         status: o.status,
         created_at: o.created_at,
-        total: o.total,
+        total: baseTotal,
+        service_fee: serviceFee,
+        delivery_fee: deliveryFee,
         shop_id: o.shop_id,
+        shopper_id: o.shopper_id,
         shop: shopMap.get(o.shop_id) || null,
         itemsCount,
         unitsCount,

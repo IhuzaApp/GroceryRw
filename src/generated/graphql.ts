@@ -6645,7 +6645,7 @@ export type GetOrderItemsQuery = { Order_Items: Array<{ id: string, order_id: st
 export type GetOrdersQueryVariables = Exact<{ [key: string]: never; }>;
 
 
-export type GetOrdersQuery = { Orders: Array<{ id: string, user_id: string, shopper_id?: string | null, total: string, status: string, delivery_address_id: string, delivery_photo_url?: string | null, delivery_notes?: string | null, created_at: string, updated_at?: string | null, delivery_time?: string | null, combined_order_id?: string | null, Address: { city: string, created_at: string, id: string, is_default: boolean, latitude: string, longitude: string, postal_code?: string | null, street: string, updated_at?: string | null, user_id: string }, Delivery_Issues: Array<{ created_at: string, description: string, id: string, issue_type: string, order_id: string, shopper_id: string, status: string, updated_at: string }>, Order_Items: Array<{ created_at: string, id: string, order_id: string, price: string, product_id: string, quantity: number }> }> };
+export type GetOrdersQuery = { Orders: Array<{ id: string, user_id: string, shopper_id?: string | null, total: string, status: string, delivery_address_id: string, delivery_photo_url?: string | null, delivery_notes?: string | null, created_at: string, updated_at?: string | null, delivery_time?: string | null, combined_order_id?: string | null, delivery_fee: string, service_fee: string, discount?: string | null, voucher_code?: string | null, OrderID: number, shop_id: string, Address: { city: string, created_at: string, id: string, is_default: boolean, latitude: string, longitude: string, postal_code?: string | null, street: string, updated_at?: string | null, user_id: string }, Delivery_Issues: Array<{ created_at: string, description: string, id: string, issue_type: string, order_id: string, shopper_id: string, status: string, updated_at: string }>, Order_Items: Array<{ created_at: string, id: string, order_id: string, price: string, product_id: string, quantity: number }> }> };
 
 export type GetPlatformSettingsQueryVariables = Exact<{ [key: string]: never; }>;
 
@@ -6952,6 +6952,12 @@ export const GetOrdersDocument = gql`
       product_id
       quantity
     }
+    delivery_fee
+    service_fee
+    discount
+    voucher_code
+    OrderID
+    shop_id
   }
 }
     `;
