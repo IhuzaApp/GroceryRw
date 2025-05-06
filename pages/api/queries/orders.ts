@@ -72,18 +72,25 @@ export default async function handler(
     const data = await hasuraClient.request<OrdersResponse>(GET_ORDERS);
     const orders = data.Orders;
     // 2. Fetch shops for these orders
-    const shopIds = Array.from(new Set(orders.map(o => o.shop_id)));
-    const shopsData = await hasuraClient.request<{ Shops: Array<{ id: string; name: string; address: string; image: string; }> }>(GET_SHOPS_BY_IDS, { ids: shopIds });
-    const shopMap = new Map(shopsData.Shops.map(s => [s.id, s]));
+    const shopIds = Array.from(new Set(orders.map((o) => o.shop_id)));
+    const shopsData = await hasuraClient.request<{
+      Shops: Array<{
+        id: string;
+        name: string;
+        address: string;
+        image: string;
+      }>;
+    }>(GET_SHOPS_BY_IDS, { ids: shopIds });
+    const shopMap = new Map(shopsData.Shops.map((s) => [s.id, s]));
     // 3. Enrich orders with shop details and item counts
-    const enriched = orders.map(o => {
+    const enriched = orders.map((o) => {
       const agg = o.Order_Items_aggregate.aggregate;
       const itemsCount = agg?.count ?? 0;
       const unitsCount = agg?.sum?.quantity ?? 0;
       // Compute grand total including fees
-      const baseTotal = parseFloat(o.total || '0');
-      const serviceFee = parseFloat(o.service_fee || '0');
-      const deliveryFee = parseFloat(o.delivery_fee || '0');
+      const baseTotal = parseFloat(o.total || "0");
+      const serviceFee = parseFloat(o.service_fee || "0");
+      const deliveryFee = parseFloat(o.delivery_fee || "0");
       const grandTotal = baseTotal + serviceFee + deliveryFee;
       return {
         id: o.id,

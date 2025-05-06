@@ -12,11 +12,11 @@ export default function CurrentOrdersPage() {
   const fetchOrders = useCallback(async () => {
     setLoading(true);
     try {
-      const res = await fetch('/api/queries/orders');
+      const res = await fetch("/api/queries/orders");
       const data = await res.json();
       setOrders(data.orders || []);
     } catch (error) {
-      console.error('Error fetching orders:', error);
+      console.error("Error fetching orders:", error);
     } finally {
       setLoading(false);
     }

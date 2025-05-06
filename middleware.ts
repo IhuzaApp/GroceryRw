@@ -7,8 +7,8 @@ export async function middleware(req: NextRequest) {
 
   // Allow unauthenticated access to home, shops, and Auth pages
   if (
-    pathname === "/" || 
-    pathname === "/shops" || 
+    pathname === "/" ||
+    pathname === "/shops" ||
     pathname.startsWith("/Auth")
   ) {
     return NextResponse.next();
@@ -16,9 +16,9 @@ export async function middleware(req: NextRequest) {
 
   // Allow public assets, API routes, and Next.js internals
   if (
-    pathname.includes('.') ||
-    pathname.startsWith('/api') ||
-    pathname.startsWith('/_next')
+    pathname.includes(".") ||
+    pathname.startsWith("/api") ||
+    pathname.startsWith("/_next")
   ) {
     return NextResponse.next();
   }
@@ -27,7 +27,7 @@ export async function middleware(req: NextRequest) {
   const token = await getToken({ req, secret: process.env.NEXTAUTH_SECRET });
   if (!token) {
     // Redirect unauthenticated users to the Login page with an absolute URL
-    return NextResponse.redirect(new URL('/Auth/Login', req.url));
+    return NextResponse.redirect(new URL("/Auth/Login", req.url));
   }
 
   // User is authenticated, allow
@@ -37,6 +37,6 @@ export async function middleware(req: NextRequest) {
 export const config = {
   matcher: [
     // Protect all routes except API, static files, home and shops
-    '/((?!api|_next|static|favicon.ico).*)',
+    "/((?!api|_next|static|favicon.ico).*)",
   ],
-}; 
+};

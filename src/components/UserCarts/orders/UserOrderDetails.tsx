@@ -5,7 +5,9 @@ import Link from "next/link";
 import { useState } from "react";
 import { formatCurrency } from "../../../lib/formatCurrency";
 
-interface UserOrderDetailsProps { order: any; }
+interface UserOrderDetailsProps {
+  order: any;
+}
 export default function UserOrderDetails({ order }: UserOrderDetailsProps) {
   const [feedbackModal, setFeedbackModal] = useState(false);
   const [rating, setRating] = useState(0);
@@ -28,18 +30,23 @@ export default function UserOrderDetails({ order }: UserOrderDetailsProps) {
     return () => window.removeEventListener("resize", handleResize);
   }, []);
 
-  const getStatusStep = (status: string) => {
+  const getStatusStep = (status: string, assignedTo: any) => {
+    // If no shopper is assigned yet
+    if (!assignedTo) {
+      return 0;
+    }
+    // Step indices shifted by +1 due to the new initial step
     switch (status) {
       case "shopping":
-        return 0;
-      case "packing":
         return 1;
-      case "on_the_way":
+      case "packing":
         return 2;
-      case "delivered":
+      case "on_the_way":
         return 3;
+      case "delivered":
+        return 4;
       default:
-        return 0;
+        return 1;
     }
   };
 
@@ -54,7 +61,10 @@ export default function UserOrderDetails({ order }: UserOrderDetailsProps) {
     <>
       {/* Order Tracking Header */}
       <div className="mb-6 flex items-center">
-        <Link href="/CurrentPendingOrders" className="flex items-center text-gray-700">
+        <Link
+          href="/CurrentPendingOrders"
+          className="flex items-center text-gray-700"
+        >
           <svg
             viewBox="0 0 24 24"
             fill="none"
@@ -74,10 +84,14 @@ export default function UserOrderDetails({ order }: UserOrderDetailsProps) {
           <h2 className="mb-4 text-xl font-bold">Order Status</h2>
           <div className="custom-steps-wrapper">
             <Steps
-              current={getStatusStep(order.status)}
+              current={getStatusStep(order.status, order.assignedTo)}
               className="custom-steps"
               vertical={isMobile}
             >
+              <Steps.Item
+                title="Awaiting Assignment"
+                description="Waiting for shopper assignment"
+              />
               <Steps.Item title="Shopping" description="Picking your items" />
               <Steps.Item
                 title="Packing"
@@ -163,7 +177,10 @@ export default function UserOrderDetails({ order }: UserOrderDetailsProps) {
                 >
                   <div className="h-16 w-16 flex-shrink-0">
                     <Image
-                      src={item.product.image ?? "https://media.istockphoto.com/id/171302954/photo/groceries.jpg?s=612x612&w=0&k=20&c=D3MmhT5DafwimcYyxCYXqXMxr1W25wZnyUf4PF1RYw8="}
+                      src={
+                        item.product.image ??
+                        "https://media.istockphoto.com/id/171302954/photo/groceries.jpg?s=612x612&w=0&k=20&c=D3MmhT5DafwimcYyxCYXqXMxr1W25wZnyUf4PF1RYw8="
+                      }
                       alt={item.product.name}
                       width={60}
                       height={60}

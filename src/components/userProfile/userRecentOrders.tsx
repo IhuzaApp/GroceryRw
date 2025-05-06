@@ -44,34 +44,39 @@ function timeAgo(timestamp: string): string {
   const past = new Date(timestamp).getTime();
   const diff = now - past;
   const seconds = Math.floor(diff / 1000);
-  if (seconds < 60) return `${seconds} sec${seconds !== 1 ? 's' : ''} ago`;
+  if (seconds < 60) return `${seconds} sec${seconds !== 1 ? "s" : ""} ago`;
   const minutes = Math.floor(seconds / 60);
-  if (minutes < 60) return `${minutes} min${minutes !== 1 ? 's' : ''} ago`;
+  if (minutes < 60) return `${minutes} min${minutes !== 1 ? "s" : ""} ago`;
   const hours = Math.floor(minutes / 60);
-  if (hours < 24) return `${hours} hr${hours !== 1 ? 's' : ''} ago`;
+  if (hours < 24) return `${hours} hr${hours !== 1 ? "s" : ""} ago`;
   const days = Math.floor(hours / 24);
-  if (days < 7) return `${days} day${days !== 1 ? 's' : ''} ago`;
+  if (days < 7) return `${days} day${days !== 1 ? "s" : ""} ago`;
   const weeks = Math.floor(days / 7);
-  if (weeks < 4) return `${weeks} week${weeks !== 1 ? 's' : ''} ago`;
+  if (weeks < 4) return `${weeks} week${weeks !== 1 ? "s" : ""} ago`;
   const months = Math.floor(days / 30);
-  if (months < 12) return `${months} month${months !== 1 ? 's' : ''} ago`;
+  if (months < 12) return `${months} month${months !== 1 ? "s" : ""} ago`;
   const years = Math.floor(days / 365);
-  return `${years} year${years !== 1 ? 's' : ''} ago`;
+  return `${years} year${years !== 1 ? "s" : ""} ago`;
 }
 
 // Helper to pad order IDs to at least 4 digits, with fallback
 function formatOrderID(id?: string | number): string {
-  const s = id != null ? id.toString() : '0';
+  const s = id != null ? id.toString() : "0";
   // pad to at least 4 characters
-  return s.length >= 4 ? s : s.padStart(4, '0');
+  return s.length >= 4 ? s : s.padStart(4, "0");
 }
 
-export default function UserRecentOrders({ filter, orders = [], loading, onRefresh }: UserRecentOrdersProps) {
+export default function UserRecentOrders({
+  filter,
+  orders = [],
+  loading,
+  onRefresh,
+}: UserRecentOrdersProps) {
   const { pathname } = useRouter();
   const isPendingOrdersPage = pathname === "/CurrentPendingOrders";
   return (
     <>
-      <div className="mb-4 flex justify-between items-center">
+      <div className="mb-4 flex items-center justify-between">
         <h3 className="text-lg font-bold">Orders</h3>
         {onRefresh && (
           <Button
@@ -89,12 +94,12 @@ export default function UserRecentOrders({ filter, orders = [], loading, onRefre
           {[1, 2, 3].map((i) => (
             <div
               key={i}
-              className="mb-4 rounded-xl border border-gray-200 bg-white p-4 shadow-md animate-pulse"
+              className="mb-4 animate-pulse rounded-xl border border-gray-200 bg-white p-4 shadow-md"
             >
-              <div className="h-4 bg-gray-200 rounded w-1/3 mb-2"></div>
-              <div className="h-3 bg-gray-200 rounded w-1/4 mb-4"></div>
-              <div className="h-4 bg-gray-200 rounded w-1/2 mb-2"></div>
-              <div className="h-4 bg-gray-200 rounded w-1/6"></div>
+              <div className="mb-2 h-4 w-1/3 rounded bg-gray-200"></div>
+              <div className="mb-4 h-3 w-1/4 rounded bg-gray-200"></div>
+              <div className="mb-2 h-4 w-1/2 rounded bg-gray-200"></div>
+              <div className="h-4 w-1/6 rounded bg-gray-200"></div>
             </div>
           ))}
         </div>
@@ -103,7 +108,9 @@ export default function UserRecentOrders({ filter, orders = [], loading, onRefre
       ) : (
         orders
           .filter((order: Order) =>
-            filter === "pending" ? order.status !== "done" : order.status === "done"
+            filter === "pending"
+              ? order.status !== "done"
+              : order.status === "done"
           )
           .map((order: Order) => (
             <div
@@ -127,7 +134,9 @@ export default function UserRecentOrders({ filter, orders = [], loading, onRefre
                   </svg>
                   <div>
                     <div className="font-semibold">{order?.shop?.name}</div>
-                    <div className="text-sm text-gray-500">{order?.shop?.address}</div>
+                    <div className="text-sm text-gray-500">
+                      {order?.shop?.address}
+                    </div>
                   </div>
                 </div>
               ) : null}
@@ -135,7 +144,9 @@ export default function UserRecentOrders({ filter, orders = [], loading, onRefre
               {/* Order Info */}
               <div className="mb-2 flex items-center justify-between">
                 <div>
-                  <span className="font-bold">Order #{formatOrderID(order?.OrderID)}</span>
+                  <span className="font-bold">
+                    Order #{formatOrderID(order?.OrderID)}
+                  </span>
                   <span className="ml-4 text-sm text-gray-500">
                     {timeAgo(order?.created_at)}
                   </span>
@@ -146,13 +157,19 @@ export default function UserRecentOrders({ filter, orders = [], loading, onRefre
                   const isAssigned = !!order?.shopper_id;
                   if (isDone) {
                     return (
-                      <Tag color="green" className="bg-green-100 text-green-600">
+                      <Tag
+                        color="green"
+                        className="bg-green-100 text-green-600"
+                      >
                         Completed
                       </Tag>
                     );
                   } else if (!isAssigned) {
                     return (
-                      <Tag color="orange" className="bg-yellow-100 text-yellow-600">
+                      <Tag
+                        color="orange"
+                        className="bg-yellow-100 text-yellow-600"
+                      >
                         Pending
                       </Tag>
                     );
@@ -167,10 +184,14 @@ export default function UserRecentOrders({ filter, orders = [], loading, onRefre
               </div>
 
               <div className="mb-3 flex justify-between text-sm text-gray-600">
-                <span className="text-green-600 font-bold">{order.itemsCount} items ({order.unitsCount} units)</span>
+                <span className="font-bold text-green-600">
+                  {order.itemsCount} items ({order.unitsCount} units)
+                </span>
                 <span className="font-bold">
                   {formatCurrency(
-                    order.total + (order.service_fee ?? 0) + (order.delivery_fee ?? 0)
+                    order.total +
+                      (order.service_fee ?? 0) +
+                      (order.delivery_fee ?? 0)
                   )}
                 </span>
               </div>
