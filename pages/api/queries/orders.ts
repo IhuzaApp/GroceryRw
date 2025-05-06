@@ -5,8 +5,9 @@ import { gql } from "graphql-request";
 // Fetch orders including item aggregates, fees, and shopper assignment
 const GET_ORDERS = gql`
   query GetOrders {
-    Orders {
+    Orders(order_by: { created_at: desc }) {
       id
+      OrderID
       user_id
       status
       created_at
@@ -42,6 +43,7 @@ const GET_SHOPS_BY_IDS = gql`
 interface OrdersResponse {
   Orders: Array<{
     id: string;
+    OrderID: string;
     user_id: string;
     status: string;
     created_at: string;
@@ -78,18 +80,18 @@ export default async function handler(
       const agg = o.Order_Items_aggregate.aggregate;
       const itemsCount = agg?.count ?? 0;
       const unitsCount = agg?.sum?.quantity ?? 0;
-      // Keep base total separate; fees in their own fields
+      // Compute grand total including fees
       const baseTotal = parseFloat(o.total || '0');
       const serviceFee = parseFloat(o.service_fee || '0');
       const deliveryFee = parseFloat(o.delivery_fee || '0');
+      const grandTotal = baseTotal + serviceFee + deliveryFee;
       return {
         id: o.id,
+        OrderID: o.OrderID,
         user_id: o.user_id,
         status: o.status,
         created_at: o.created_at,
-        total: baseTotal,
-        service_fee: serviceFee,
-        delivery_fee: deliveryFee,
+        total: grandTotal,
         shop_id: o.shop_id,
         shopper_id: o.shopper_id,
         shop: shopMap.get(o.shop_id) || null,
