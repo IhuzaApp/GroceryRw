@@ -1,10 +1,27 @@
 import RootLayout from "@components/ui/layout";
 import UserRecentOrders from "@components/userProfile/userRecentOrders";
 import Link from "next/link";
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 
 export default function CurrentOrdersPage() {
   const [filter, setFilter] = useState("pending"); // 'pending' means not done
+  const [orders, setOrders] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    async function fetchOrders() {
+      try {
+        const res = await fetch('/api/queries/orders');
+        const data = await res.json();
+        setOrders(data.orders || []);
+      } catch (error) {
+        console.error('Error fetching orders:', error);
+      } finally {
+        setLoading(false);
+      }
+    }
+    fetchOrders();
+  }, []);
 
   return (
     <RootLayout>
@@ -51,7 +68,7 @@ export default function CurrentOrdersPage() {
           </div>
 
           {/* Orders List */}
-          <UserRecentOrders filter={filter} />
+          <UserRecentOrders filter={filter} orders={orders} loading={loading} />
         </div>
       </div>
     </RootLayout>

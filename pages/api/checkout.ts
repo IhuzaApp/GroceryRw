@@ -39,6 +39,7 @@ const GET_PRODUCTS_BY_IDS = gql`
 const CREATE_ORDER = gql`
   mutation CreateOrder(
     $user_id: uuid!
+    $shop_id: uuid!
     $delivery_address_id: uuid!
     $total: String!
     $status: String!
@@ -52,6 +53,7 @@ const CREATE_ORDER = gql`
     insert_Orders_one(
       object: {
         user_id: $user_id
+        shop_id: $shop_id
         delivery_address_id: $delivery_address_id
         total: $total
         status: $status
@@ -164,6 +166,7 @@ export default async function handler(
       insert_Orders_one: { id: string }
     }>(CREATE_ORDER, {
       user_id,
+      shop_id,
       delivery_address_id,
       total: totalValue,
       status: "PENDING",
