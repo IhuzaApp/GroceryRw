@@ -107,7 +107,9 @@ export default function CheckoutItems({
     deliveryTime = `${totalTimeMinutes} mins`;
   }
   // Compute actual delivery timestamp for DB (current time + totalTimeMinutes)
-  const deliveryTimestamp = new Date(Date.now() + totalTimeMinutes * 60000).toISOString();
+  const deliveryTimestamp = new Date(
+    Date.now() + totalTimeMinutes * 60000
+  ).toISOString();
 
   const handleApplyPromo = () => {
     const PROMO_CODES: { [code: string]: number } = {
@@ -231,7 +233,10 @@ export default function CheckoutItems({
             : "Your order has been placed successfully!"}
         </Modal.Body>
         <Modal.Footer>
-          <Button appearance="primary" onClick={() => setShowConfirmation(false)}>
+          <Button
+            appearance="primary"
+            onClick={() => setShowConfirmation(false)}
+          >
             OK
           </Button>
         </Modal.Footer>

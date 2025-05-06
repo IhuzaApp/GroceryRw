@@ -4,11 +4,15 @@ import RootLayout from "@components/ui/layout";
 import { hasuraClient } from "../../src/lib/hasuraClient";
 import { gql } from "graphql-request";
 
-export default function ShopsList({ shops }: { shops: { id: string; name: string }[] }) {
+export default function ShopsList({
+  shops,
+}: {
+  shops: { id: string; name: string }[];
+}) {
   return (
     <RootLayout>
       <div className="p-4">
-        <h1 className="text-2xl font-bold mb-4">Shops</h1>
+        <h1 className="mb-4 text-2xl font-bold">Shops</h1>
         <ul className="space-y-2">
           {shops.map((shop) => (
             <li key={shop.id}>
@@ -32,9 +36,9 @@ export async function getServerSideProps() {
       }
     }
   `;
-  const data = await hasuraClient.request<{ Shops: { id: string; name: string }[] }>(
-    SHOP_LIST_QUERY
-  );
+  const data = await hasuraClient.request<{
+    Shops: { id: string; name: string }[];
+  }>(SHOP_LIST_QUERY);
   return {
     props: {
       shops: data.Shops || [],

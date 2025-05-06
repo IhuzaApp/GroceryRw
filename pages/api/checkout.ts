@@ -102,11 +102,7 @@ export default async function handler(
   }
 
   // Authenticate user
-  const session = (await getServerSession(
-    req,
-    res,
-    authOptions as any
-  )) as any;
+  const session = (await getServerSession(req, res, authOptions as any)) as any;
   if (!session?.user?.id) {
     return res.status(401).json({ error: "Unauthorized" });
   }
@@ -122,18 +118,33 @@ export default async function handler(
     delivery_time,
     delivery_notes,
   } = req.body;
-  if (!shop_id || !delivery_address_id || !service_fee || !delivery_fee || !delivery_time) {
+  if (
+    !shop_id ||
+    !delivery_address_id ||
+    !service_fee ||
+    !delivery_fee ||
+    !delivery_time
+  ) {
     return res.status(400).json({ error: "Missing required checkout fields" });
   }
 
   try {
     // 1. Load cart and items
     const cartData = await hasuraClient.request<{
-      Carts: Array<{ id: string; Cart_Items: Array<{ product_id: string; quantity: number; price: string }> }>
+      Carts: Array<{
+        id: string;
+        Cart_Items: Array<{
+          product_id: string;
+          quantity: number;
+          price: string;
+        }>;
+      }>;
     }>(GET_CART_WITH_ITEMS, { user_id, shop_id });
     const cart = cartData.Carts[0];
     if (!cart) {
-      return res.status(400).json({ error: "No active cart found for this shop." });
+      return res
+        .status(400)
+        .json({ error: "No active cart found for this shop." });
     }
     const items = cart.Cart_Items;
     if (items.length === 0) {
@@ -143,16 +154,22 @@ export default async function handler(
     // 2. Validate product availability
     const productIds = items.map((i) => i.product_id);
     const prodData = await hasuraClient.request<{
-      Products: Array<{ id: string; quantity: number }>
+      Products: Array<{ id: string; quantity: number }>;
     }>(GET_PRODUCTS_BY_IDS, { ids: productIds });
     const stockMap = new Map(prodData.Products.map((p) => [p.id, p.quantity]));
     for (const item of items) {
       const available = stockMap.get(item.product_id);
       if (available === undefined) {
-        return res.status(400).json({ error: `Product ${item.product_id} not found.` });
+        return res
+          .status(400)
+          .json({ error: `Product ${item.product_id} not found.` });
       }
       if (item.quantity > available) {
-        return res.status(400).json({ error: `Insufficient stock for product ${item.product_id}.` });
+        return res
+          .status(400)
+          .json({
+            error: `Insufficient stock for product ${item.product_id}.`,
+          });
       }
     }
 
@@ -163,7 +180,7 @@ export default async function handler(
 
     // 4. Create order record
     const orderRes = await hasuraClient.request<{
-      insert_Orders_one: { id: string }
+      insert_Orders_one: { id: string };
     }>(CREATE_ORDER, {
       user_id,
       shop_id,
@@ -197,4 +214,4 @@ export default async function handler(
     console.error("Checkout error:", err);
     return res.status(500).json({ error: err.message || "Checkout failed" });
   }
-} 
+}
