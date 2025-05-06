@@ -54,7 +54,7 @@ export default function UserOrderDetails({ order }: UserOrderDetailsProps) {
     <>
       {/* Order Tracking Header */}
       <div className="mb-6 flex items-center">
-        <Link href="/profile" className="flex items-center text-gray-700">
+        <Link href="/CurrentPendingOrders" className="flex items-center text-gray-700">
           <svg
             viewBox="0 0 24 24"
             fill="none"
