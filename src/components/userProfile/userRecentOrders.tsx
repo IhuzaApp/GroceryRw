@@ -4,9 +4,10 @@ import Link from "next/link";
 import { formatCurrency } from "../../lib/formatCurrency";
 import { useRouter } from "next/router";
 
-// Define the shape of an order including assignment status
+// Define the shape of an order including assignment status and external OrderID
 type Order = {
   id: string;
+  OrderID: string;
   status: string;
   created_at: string;
   total: number;
@@ -56,6 +57,13 @@ function timeAgo(timestamp: string): string {
   if (months < 12) return `${months} month${months !== 1 ? 's' : ''} ago`;
   const years = Math.floor(days / 365);
   return `${years} year${years !== 1 ? 's' : ''} ago`;
+}
+
+// Helper to pad order IDs to at least 4 digits, with fallback
+function formatOrderID(id?: string | number): string {
+  const s = id != null ? id.toString() : '0';
+  // pad to at least 4 characters
+  return s.length >= 4 ? s : s.padStart(4, '0');
 }
 
 export default function UserRecentOrders({ filter, orders = [], loading, onRefresh }: UserRecentOrdersProps) {
@@ -118,8 +126,8 @@ export default function UserRecentOrders({ filter, orders = [], loading, onRefre
                     <path d="M0.138 0.125 0.125 0.075H0.031a0.025 0.025 0 0 0 0 0.05h0.056L0.168 0.45H0.5v-0.05H0.207l-0.008 -0.034L0.525 0.304V0.125ZM0.475 0.263 0.186 0.318 0.15 0.175h0.325ZM0.175 0.475a0.038 0.038 0 1 0 0.038 0.038A0.038 0.038 0 0 0 0.175 0.475m0.3 0a0.038 0.038 0 1 0 0.038 0.038A0.038 0.038 0 0 0 0.475 0.475" />
                   </svg>
                   <div>
-                    <div className="font-semibold">{order.shop.name}</div>
-                    <div className="text-sm text-gray-500">{order.shop.address}</div>
+                    <div className="font-semibold">{order?.shop?.name}</div>
+                    <div className="text-sm text-gray-500">{order?.shop?.address}</div>
                   </div>
                 </div>
               ) : null}
@@ -127,15 +135,15 @@ export default function UserRecentOrders({ filter, orders = [], loading, onRefre
               {/* Order Info */}
               <div className="mb-2 flex items-center justify-between">
                 <div>
-                  <span className="font-bold">Order #{order.id}</span>
+                  <span className="font-bold">Order #{formatOrderID(order?.OrderID)}</span>
                   <span className="ml-4 text-sm text-gray-500">
-                    {timeAgo(order.created_at)}
+                    {timeAgo(order?.created_at)}
                   </span>
                 </div>
                 {/* Status Badge: Pending when no shopper, Ongoing when assigned, Completed when done */}
                 {(() => {
                   const isDone = order.status === "done";
-                  const isAssigned = !!order.shopper_id;
+                  const isAssigned = !!order?.shopper_id;
                   if (isDone) {
                     return (
                       <Tag color="green" className="bg-green-100 text-green-600">
