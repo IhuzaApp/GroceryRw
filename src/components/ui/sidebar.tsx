@@ -1,11 +1,54 @@
 "use client";
 
+import React, { useState, useEffect } from "react";
 import Link from "next/link";
-import React from "react";
+import { useRouter } from "next/router";
+import { useAuth } from "../../context/AuthContext";
+import { toast } from "react-hot-toast";
+import LoadingOverlay from "./LoadingOverlay";
 
 export default function SideBar() {
+  // Get toggleRole & current role from auth context
+  const { role, toggleRole } = useAuth();
+  const router = useRouter();
+  const [isSwitching, setIsSwitching] = useState(false);
+
+  // Clear loading overlay when navigation completes or errors
+  useEffect(() => {
+    const handleFinish = () => setIsSwitching(false);
+    router.events.on('routeChangeComplete', handleFinish);
+    router.events.on('routeChangeError', handleFinish);
+    return () => {
+      router.events.off('routeChangeComplete', handleFinish);
+      router.events.off('routeChangeError', handleFinish);
+    };
+  }, [router.events]);
+
+  // Handler to update role in DB and local context
+  const handleSwitch = async () => {
+    const nextRole = role === 'user' ? 'shopper' : 'user';
+    setIsSwitching(true);
+    try {
+      const res = await fetch('/api/user/updateRole', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ role: nextRole }),
+      });
+      if (!res.ok) throw new Error('Failed to update role');
+      // Update local state after successful DB update
+      toggleRole();
+      toast.success(`Switched to ${nextRole === 'user' ? 'User' : 'Shopper'}`);
+      router.push('/');
+    } catch (error) {
+      console.error('Error updating role:', error);
+      toast.error('Failed to switch account');
+      setIsSwitching(false);
+    }
+  };
+
   return (
     <>
+      {isSwitching && <LoadingOverlay />}
       {/* Sidebar */}
       <div className="fixed left-0 top-1/4 z-50 ml-3 hidden rounded-full bg-white shadow-md md:block">
         <div className="flex flex-col items-center gap-6 p-4">
@@ -44,28 +87,7 @@ export default function SideBar() {
               </g>
             </svg>
           </Link>
-          <button className="rounded-full p-2 hover:bg-gray-200">
-            <svg
-              width="30px"
-              height="30px"
-              viewBox="0 0 1024 1024"
-              xmlns="http://www.w3.org/2000/svg"
-              fill="#000000"
-            >
-              <g id="SVGRepo_bgCarrier" strokeWidth="0"></g>
-              <g
-                id="SVGRepo_tracerCarrier"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              ></g>
-              <g id="SVGRepo_iconCarrier">
-                <path
-                  fill="#4f4f4f"
-                  d="M118.656 438.656a32 32 0 0 1 0-45.248L416 96l4.48-3.776A32 32 0 0 1 461.248 96l3.712 4.48a32.064 32.064 0 0 1-3.712 40.832L218.56 384H928a32 32 0 1 1 0 64H141.248a32 32 0 0 1-22.592-9.344zM64 608a32 32 0 0 1 32-32h786.752a32 32 0 0 1 22.656 54.592L608 928l-4.48 3.776a32.064 32.064 0 0 1-40.832-49.024L805.632 640H96a32 32 0 0 1-32-32z"
-                ></path>
-              </g>
-            </svg>{" "}
-          </button>
+      
           <Link
             className="rounded-full p-2 hover:bg-gray-200"
             href={"/Myprofile"}
@@ -139,6 +161,33 @@ export default function SideBar() {
               </g>
             </svg>
           </Link>
+          {/* Switch account */}
+          <button
+            onClick={handleSwitch}
+            title={`Switch to ${role === 'user' ? 'Shopper' : 'User'}`}
+            className="rounded-full p-2 hover:bg-gray-200"
+          >
+            <svg
+              width="30px"
+              height="30px"
+              viewBox="0 0 1024 1024"
+              xmlns="http://www.w3.org/2000/svg"
+              fill="#000000"
+            >
+              <g id="SVGRepo_bgCarrier" strokeWidth="0"></g>
+              <g
+                id="SVGRepo_tracerCarrier"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              ></g>
+              <g id="SVGRepo_iconCarrier">
+                <path
+                  fill="#4f4f4f"
+                  d="M118.656 438.656a32 32 0 0 1 0-45.248L416 96l4.48-3.776A32 32 0 0 1 461.248 96l3.712 4.48a32.064 32.064 0 0 1-3.712 40.832L218.56 384H928a32 32 0 1 1 0 64H141.248a32 32 0 0 1-22.592-9.344zM64 608a32 32 0 0 1 32-32h786.752a32 32 0 0 1 22.656 54.592L608 928l-4.48 3.776a32.064 32.064 0 0 1-40.832-49.024L805.632 640H96a32 32 0 0 1-32-32z"
+                ></path>
+              </g>
+            </svg>{" "}
+          </button>
         </div>
       </div>
     </>
