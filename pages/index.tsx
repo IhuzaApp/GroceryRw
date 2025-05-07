@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useAuth } from "../src/context/AuthContext";
 import RootLayout from "@components/ui/layout";
 import Image from "next/image";
 import { GetServerSideProps } from "next";
@@ -28,6 +29,7 @@ import Link from "next/link";
 import { Button, Panel } from "rsuite";
 import { log } from "node:console";
 import Cookies from "js-cookie";
+import ShopperDashboard from "@components/shopper/dashboard/ShopperDashboard";
 
 // Skeleton Loader Component
 function ShopSkeleton() {
@@ -93,6 +95,11 @@ function getDistanceFromLatLonInKm(
 }
 
 export default function Home({ initialData }: { initialData: Data }) {
+  const { role } = useAuth();
+  // If user is a shopper, delegate to dedicated dashboard component
+  if (role === 'shopper') {
+    return <ShopperDashboard />;
+  }
   const [data, setData] = useState<Data>(initialData);
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
