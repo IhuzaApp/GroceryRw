@@ -250,10 +250,10 @@ export default function MapSection({ mapLoaded, availableOrders }: MapSectionPro
   }, [mapLoaded, availableOrders]);
 
   return (
-    <div className="p-4 relative">
+    <div className="relative">
       <div
         ref={mapRef}
-        className="h-[400px] md:h-[600px] rounded-lg overflow-hidden"
+        className="h-[calc(100vh-4rem-3.5rem)] md:h-[600px] rounded-lg overflow-hidden"
       />
       {!mapLoaded && (
         <div className="absolute inset-0 flex items-center justify-center bg-gray-100">

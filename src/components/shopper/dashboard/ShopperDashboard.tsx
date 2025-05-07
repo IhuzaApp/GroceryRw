@@ -65,8 +65,8 @@ export default function ShopperDashboard() {
             </select>
           </div>
         </div>
-        {/* Orders List */}
-        <div className="p-4">
+        {/* Orders List (hidden on mobile) */}
+        <div className="hidden md:block p-4">
           {isLoading ? (
             <div className="flex justify-center py-12">
               <Loader content="Loading orders..." />
