@@ -95,7 +95,17 @@ function getDistanceFromLatLonInKm(
 }
 
 export default function Home({ initialData }: { initialData: Data }) {
-  const { role } = useAuth();
+  const { role, authReady } = useAuth();
+  if (!authReady) {
+    // Show loader while checking auth
+    return (
+      <RootLayout>
+        <div className="h-screen flex items-center justify-center">
+          <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-gray-900"></div>
+        </div>
+      </RootLayout>
+    );
+  }
   // If user is a shopper, delegate to dedicated dashboard component
   if (role === 'shopper') {
     return <ShopperDashboard />;
