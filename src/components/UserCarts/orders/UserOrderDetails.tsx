@@ -4,6 +4,13 @@ import { Input, InputGroup, Button, Panel, Steps, Rate, Modal } from "rsuite";
 import Link from "next/link";
 import { useState } from "react";
 import { formatCurrency } from "../../../lib/formatCurrency";
+import EstimatedDeliveryTime from "./EstimatedDeliveryTime";
+
+// Helper to pad order IDs to at least 4 digits
+function formatOrderID(id?: string | number): string {
+  const s = id != null ? id.toString() : "0";
+  return s.length >= 4 ? s : s.padStart(4, "0");
+}
 
 interface UserOrderDetailsProps {
   order: any;
@@ -75,7 +82,9 @@ export default function UserOrderDetails({ order }: UserOrderDetailsProps) {
             <path d="M19 12H5M12 19l-7-7 7-7" />
           </svg>
         </Link>
-        <h1 className="text-2xl font-bold">Order #{order.id}</h1>
+        <h1 className="text-2xl font-bold">
+          Order #{formatOrderID(order.OrderID)}
+        </h1>
         <span className="ml-2 text-gray-500">Placed on {order.placedAt}</span>
       </div>
 
@@ -113,7 +122,10 @@ export default function UserOrderDetails({ order }: UserOrderDetailsProps) {
           {/* Delivery Info */}
           <div>
             <p className="text-gray-600">Estimated delivery time:</p>
-            <p className="font-bold">{order.estimatedDelivery}</p>
+            <EstimatedDeliveryTime
+              estimatedDelivery={order.estimatedDelivery}
+              status={order.status}
+            />
           </div>
 
           {/* Action Buttons */}
@@ -142,7 +154,7 @@ export default function UserOrderDetails({ order }: UserOrderDetailsProps) {
                 </svg>
                 Contact Support
               </Button>
-
+{/* 
               <Button
                 appearance="primary"
                 className="flex items-center justify-center bg-green-500 text-white transition hover:bg-green-600"
@@ -157,7 +169,7 @@ export default function UserOrderDetails({ order }: UserOrderDetailsProps) {
                   <path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"></path>
                 </svg>
                 Track Live
-              </Button>
+              </Button> */}
             </div>
           )}
         </div>
@@ -205,17 +217,21 @@ export default function UserOrderDetails({ order }: UserOrderDetailsProps) {
             <div className="mt-6 border-t pt-4">
               <div className="mb-2 flex justify-between">
                 <span className="text-gray-600">Subtotal</span>
-                <span className="font-medium">
-                  {formatCurrency(order.total)}
-                </span>
+                <span className="font-medium">{formatCurrency(order.total)}</span>
+              </div>
+              <div className="mb-2 flex justify-between">
+                <span className="text-gray-600">Service Fee</span>
+                <span className="font-medium">{formatCurrency(order.serviceFee)}</span>
               </div>
               <div className="mb-2 flex justify-between">
                 <span className="text-gray-600">Delivery Fee</span>
-                <span className="font-medium">{formatCurrency(0)}</span>
+                <span className="font-medium">{formatCurrency(order.deliveryFee)}</span>
               </div>
               <div className="mt-4 flex justify-between text-lg font-bold">
                 <span>Total</span>
-                <span>{formatCurrency(order.total)}</span>
+                <span>{formatCurrency(
+                  (Number(order.total) || 0) + (Number(order.serviceFee) || 0) + (Number(order.deliveryFee) || 0)
+                )}</span>
               </div>
             </div>
           </Panel>
