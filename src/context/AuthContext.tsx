@@ -2,6 +2,7 @@ import React, { createContext, useState, useContext, useEffect } from "react";
 
 interface AuthContextType {
   isLoggedIn: boolean;
+  authReady: boolean;
   login: () => void;
   logout: () => void;
   // Role of the current session: 'user' or 'shopper'
@@ -11,6 +12,7 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType>({
   isLoggedIn: false,
+  authReady: false,
   login: () => {},
   logout: () => {},
   role: 'user',
@@ -21,15 +23,19 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
   children,
 }) => {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
-  // Manage user vs shopper role
+  // Manage user vs shopper role and readiness
   const [role, setRole] = useState<'user' | 'shopper'>('user');
+  const [authReady, setAuthReady] = useState(false);
 
   useEffect(() => {
-    setIsLoggedIn(localStorage.getItem("isLoggedIn") === "true");
-    const storedRole = localStorage.getItem("role");
+    const loggedIn = localStorage.getItem('isLoggedIn') === 'true';
+    setIsLoggedIn(loggedIn);
+    const storedRole = localStorage.getItem('role');
     if (storedRole === 'shopper') {
       setRole('shopper');
     }
+    // Mark auth check complete
+    setAuthReady(true);
   }, []);
 
   const login = () => {
@@ -49,7 +55,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
   };
 
   return (
-    <AuthContext.Provider value={{ isLoggedIn, login, logout, role, toggleRole }}>
+    <AuthContext.Provider value={{ isLoggedIn, authReady, login, logout, role, toggleRole }}>
       {children}
     </AuthContext.Provider>
   );

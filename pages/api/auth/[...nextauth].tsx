@@ -31,6 +31,7 @@ export const authOptions: NextAuthOptions = {
               password_hash
               phone
               gender
+              role
             }
           }
         `;
@@ -42,6 +43,7 @@ export const authOptions: NextAuthOptions = {
             password_hash: string;
             phone: string;
             gender: string;
+            role: string;
           }>;
         }>(query, { email });
         const user = res.Users[0];
@@ -58,7 +60,8 @@ export const authOptions: NextAuthOptions = {
           email: user.email,
           phone: user.phone,
           gender: user.gender,
-        };
+          role: user.role,
+        } as any;
       },
     }),
   ],
@@ -71,6 +74,7 @@ export const authOptions: NextAuthOptions = {
         token.id = user.id;
         token.phone = (user as any).phone;
         token.gender = (user as any).gender;
+        token.role = (user as any).role;
       }
       return token;
     },
@@ -79,6 +83,7 @@ export const authOptions: NextAuthOptions = {
         (session.user as any).id = token.id as string;
         (session.user as any).phone = (token as any).phone;
         (session.user as any).gender = (token as any).gender;
+        (session.user as any).role = (token as any).role;
       }
       return session;
     },

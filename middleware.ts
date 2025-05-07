@@ -30,6 +30,14 @@ export async function middleware(req: NextRequest) {
     return NextResponse.redirect(new URL("/Auth/Login", req.url));
   }
 
+  // Protect shopper routes
+  if (pathname.startsWith('/shopper')) {
+    // If no session or not a shopper, redirect to home
+    if (token.role !== 'shopper') {
+      return NextResponse.redirect(new URL('/', req.url));
+    }
+  }
+
   // User is authenticated, allow
   return NextResponse.next();
 }
@@ -38,5 +46,6 @@ export const config = {
   matcher: [
     // Protect all routes except API, static files, home and shops
     "/((?!api|_next|static|favicon.ico).*)",
+    '/shopper/:path*',
   ],
 };
