@@ -12,6 +12,19 @@ interface MapSectionProps {
   availableOrders: Array<{ id: string }>;
 }
 
+// Haversine formula to compute distance in km
+function getDistanceKm(lat1: number, lon1: number, lat2: number, lon2: number): number {
+  const R = 6371;
+  const dLat = (lat2 - lat1) * (Math.PI / 180);
+  const dLon = (lon2 - lon1) * (Math.PI / 180);
+  const a =
+    Math.sin(dLat/2) * Math.sin(dLat/2) +
+    Math.cos(lat1 * Math.PI/180) * Math.cos(lat2 * Math.PI/180) *
+    Math.sin(dLon/2) * Math.sin(dLon/2);
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  return R * c;
+}
+
 // Shop data type
 interface Shop {
   id: string;
@@ -28,6 +41,13 @@ interface PendingOrder {
   longitude: number;
   earnings: number;
   shopName: string;
+  shopAddress: string;
+  shopLat: number;
+  shopLng: number;
+  createdAt: string;
+  itemsCount: number;
+  addressStreet: string;
+  addressCity: string;
 }
 
 export default function MapSection({ mapLoaded, availableOrders }: MapSectionProps) {
@@ -113,10 +133,20 @@ export default function MapSection({ mapLoaded, availableOrders }: MapSectionPro
       .then((data: PendingOrder[]) => {
         console.log('Pending orders to map:', data);
         setPendingOrders(data);
-        const jitter = 0.0002;
-        data.forEach((order, i) => {
-          const lat = order.latitude + jitter * i;
-          const lng = order.longitude + jitter * i;
+        data.forEach((order) => {
+          // use exact coords
+          const lat = order.latitude;
+          const lng = order.longitude;
+          // time since creation
+          const created = new Date(order.createdAt);
+          const diffMs = Date.now() - created.getTime();
+          const diffMins = Math.floor(diffMs / 60000);
+          const timeStr = diffMins >= 60
+            ? `${Math.floor(diffMins/60)}h ${diffMins%60}m ago`
+            : `${diffMins} mins ago`;
+          // distance between shop and delivery address
+          const distKm = getDistanceKm(order.shopLat, order.shopLng, order.latitude, order.longitude);
+          const distanceStr = `${Math.round(distKm*10)/10} km`;
           const earningsStr = formatCurrency(order.earnings);
           // Earnings badge icon
           const pendingIcon = L.divIcon({
@@ -127,17 +157,40 @@ export default function MapSection({ mapLoaded, availableOrders }: MapSectionPro
             popupAnchor: [0, -15],
           });
           const marker = L.marker([lat, lng], { icon: pendingIcon, zIndexOffset: 1000 }).addTo(map);
-          // Popup with order details and action
+          // Enhanced popup with icons and flex layout
           const popupContent = `
-            <div style="font-size:14px;">
-              <strong>Order:</strong> ${order.id}<br/>
-              <strong>Shop:</strong> ${order.shopName}<br/>
-              <button id="accept-batch-${order.id}" style="margin-top:6px;padding:4px 8px;background:#10b981;color:#fff;border:none;border-radius:4px;cursor:pointer;">
+            <div style="font-size:14px; line-height:1.4; min-width:200px;">
+              <div style="display:flex;align-items:center;margin-bottom:4px;">
+                <span style="margin-right:6px;">🆔</span><strong>${order.id}</strong>
+              </div>
+              <div style="display:flex;align-items:center;margin-bottom:4px;">
+                <span style="margin-right:6px;">🏪</span><span>${order.shopName}</span>
+              </div>
+              <div style="display:flex;align-items:center;margin-bottom:4px;">
+                <span style="margin-right:6px;">📍</span><span>${order.shopAddress}</span>
+              </div>
+              <div style="display:flex;align-items:center;margin-bottom:4px;">
+                <span style="margin-right:6px;">⏱️</span><span>${timeStr}</span>
+              </div>
+              <div style="display:flex;align-items:center;margin-bottom:4px;">
+                <span style="margin-right:6px;">📏</span><span>Distance: ${distanceStr}</span>
+              </div>
+              <div style="display:flex;align-items:center;margin-bottom:4px;">
+                <span style="margin-right:6px;">🛒</span><span>Items: ${order.itemsCount}</span>
+              </div>
+              <div style="display:flex;align-items:center;margin-bottom:4px;">
+                <span style="margin-right:6px;">🚚</span><span>Deliver to: ${order.addressStreet}, ${order.addressCity}</span>
+              </div>
+              <div style="display:flex;align-items:center;">
+                <span style="margin-right:6px;">💰</span><span>Estimated Earnings: ${earningsStr}</span>
+              </div>
+              <button id="accept-batch-${order.id}" style="margin-top:8px;padding:6px 12px;background:#10b981;color:#fff;border:none;border-radius:4px;cursor:pointer;">
                 Accept Batch
               </button>
             </div>
           `;
-          marker.bindPopup(popupContent);
+          // Bind popup with max width
+          marker.bindPopup(popupContent, { maxWidth: 250 });
           marker.on('popupopen', () => {
             const btn = document.getElementById(`accept-batch-${order.id}`) as HTMLButtonElement | null;
             if (btn) {
