@@ -3,11 +3,21 @@
 import React, { useState, useEffect } from "react";
 import ShopperLayout from "@components/shopper/ShopperLayout";
 import OrderCard from "./OrderCard";
-import MapSection from "./MapSection";
+import dynamic from "next/dynamic";
 import { Button, Loader } from "rsuite";
 import "rsuite/dist/rsuite.min.css";
 import Link from "next/link";
 import Image from "next/image";
+
+// Dynamically load MapSection only on client (disable SSR)
+const MapSection = dynamic(() => import("./MapSection"), {
+  ssr: false,
+  loading: () => (
+    <div className="h-[300px] md:h-[400px] rounded-lg overflow-hidden flex items-center justify-center bg-gray-100 p-4">
+      <Loader size="lg" content="Loading map..." />
+    </div>
+  ),
+});
 
 export default function ShopperDashboard() {
   const [isLoading, setIsLoading] = useState(true);

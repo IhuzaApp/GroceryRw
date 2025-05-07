@@ -1,0 +1,28 @@
+import type { NextApiRequest, NextApiResponse } from 'next';
+import { hasuraClient } from '../../../src/lib/hasuraClient';
+import { gql } from 'graphql-request';
+
+const GetShops = gql`
+  query GetShopLocations {
+    Shops {
+      id
+      name
+      latitude
+      longitude
+      is_active
+    }
+  }
+`;
+
+export default async function handler(
+  req: NextApiRequest,
+  res: NextApiResponse
+) {
+  try {
+    const data = await hasuraClient.request<{ Shops: Array<{ id: string; name: string; latitude: string; longitude: string; is_active: boolean }> }>(GetShops);
+    res.status(200).json(data.Shops);
+  } catch (error) {
+    console.error('Error fetching shops:', error);
+    res.status(500).json({ error: 'Failed to fetch shops' });
+  }
+} 
