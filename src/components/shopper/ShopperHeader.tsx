@@ -25,7 +25,7 @@ export default function ShopperHeader() {
   };
 
   return (
-    <header className="sticky top-0 z-10 bg-white p-4 flex items-center justify-between border-b">
+    <header className="sticky top-0 z-[1000] bg-white p-4 flex items-center justify-between border-b">
       <div className="flex items-center gap-3">
         <div className="w-10 h-10 bg-green-500 rounded-full flex items-center justify-center">
           <svg viewBox="0 0 24 24" className="w-6 h-6 text-white" fill="currentColor">

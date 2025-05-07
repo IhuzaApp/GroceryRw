@@ -9,11 +9,15 @@ interface ShopperLayoutProps {
 
 export default function ShopperLayout({ children }: ShopperLayoutProps) {
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="flex flex-col h-screen bg-gray-50">
+      {/* Fixed header */}
       <ShopperHeader />
-      <div className="flex">
+      {/* Main content wrapper */}
+      <div className="flex flex-1 overflow-hidden">
+        {/* Sidebar and bottom nav inside sidebar component */}
         <ShopperSidebar />
-        <div className="flex-1">{children}</div>
+        {/* Scrollable content area with padding for bottom nav on mobile */}
+        <div className="flex-1 overflow-auto pb-16 md:pb-0">{children}</div>
       </div>
     </div>
   );
