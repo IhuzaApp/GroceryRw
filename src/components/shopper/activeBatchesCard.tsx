@@ -117,16 +117,16 @@ export default function ActiveBatches({ initialOrders = [], initialError = null 
   return (
     <div className={`min-h-screen bg-gray-50 ${isMobile ? "pb-16" : ""}`}>
       {/* Main Content */}
-      <main className="p-4 max-w-6xl mx-auto">
+      <main className="p-4 max-w-1xl mx-auto">
         {/* Page Title - Desktop Only */}
         <div className="flex items-center justify-between mb-6">
           <h1 className="text-2xl font-bold">Active Batches</h1>
-          <Button appearance="ghost">
+          <button className="p-2 rounded-full hover:bg-gray-200 transition-colors">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="w-5 h-5">
               <circle cx="11" cy="11" r="8" />
               <path d="M21 21l-4.35-4.35" />
             </svg>
-          </Button>
+          </button>
         </div>
 
         {error && (
@@ -162,9 +162,9 @@ export default function ActiveBatches({ initialOrders = [], initialError = null 
             <h3 className="text-lg font-medium mb-2">No Active Batches</h3>
             <p className="text-gray-500 mb-4">You don't have any active batches at the moment.</p>
             <Link href="/Plasa">
-              <Button appearance="primary" className="bg-green-500 text-white">
+              <button className="px-4 py-2 bg-[#125C13] text-white rounded-md hover:bg-[#0A400B] transition-colors font-medium">
                 Find Orders
-              </Button>
+              </button>
             </Link>
           </div>
         )}
@@ -198,32 +198,36 @@ function ActiveOrderCard({ order }: { order: any }) {
     switch (status) {
       case "accepted":
         return (
-          <Link href={`/shopper/order/${order.id}`}>
-            <Button appearance="primary" className="bg-green-500 text-white">
+          <Link href={`/Plasa/active-batches/batch/${order.id}`}>
+            <button className="px-4 py-2 bg-[#125C13] text-white rounded-md hover:bg-[#0A400B] transition-colors font-medium">
               Start Shopping
-            </Button>
+            </button>
           </Link>
         )
       case "picked":
+      case "shopping":
         return (
-          <Link href={`/shopper/order/${order.id}`}>
-            <Button appearance="primary" className="bg-green-500 text-white">
-              Navigate to Customer
-            </Button>
+          <Link href={`/Plasa/active-batches/batch/${order.id}`}>
+            <button className="px-4 py-2 bg-[#125C13] text-white rounded-md hover:bg-[#0A400B] transition-colors font-medium">
+              View Details
+            </button>
           </Link>
         )
       case "at_customer":
+      case "on_the_way":
         return (
           <Link href={`/Plasa/active-batches/batch/${order.id}`}>
-            <Button appearance="primary" className="bg-green-500 text-white">
+            <button className="px-4 py-2 bg-[#125C13] text-white rounded-md hover:bg-[#0A400B] transition-colors font-medium">
               Confirm Delivery
-            </Button>
+            </button>
           </Link>
         )
       default:
         return (
           <Link href={`/Plasa/active-batches/batch/${order.id}`}>
-            <Button appearance="ghost">View Details</Button>
+            <button className="px-4 py-2 bg-[#125C13] text-white rounded-md hover:bg-[#0A400B] transition-colors font-medium">
+              View Details
+            </button>
           </Link>
         )
     }
@@ -284,9 +288,25 @@ function ActiveOrderCard({ order }: { order: any }) {
         </div>
 
         <div className="flex justify-between items-center">
-          <Link href={`/Plasa/active-batches/batch/${order.id}`}>
-            <Button appearance="ghost">View Details</Button>
-          </Link>
+          <a 
+            href={`https://maps.google.com/?q=${order.customerLat},${order.customerLng}`} 
+            target="_blank" 
+            rel="noopener noreferrer"
+          >
+            <Button appearance="ghost" className="flex items-center">
+              <svg
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                className="w-4 h-4 mr-1"
+              >
+                <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z" />
+                <circle cx="12" cy="10" r="3" />
+              </svg>
+              Directions
+            </Button>
+          </a>
           {getNextActionButton(order.status)}
         </div>
       </div>

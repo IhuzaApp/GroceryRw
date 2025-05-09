@@ -23,17 +23,22 @@ export const authOptions: NextAuthOptions = {
         if (!credentials) return null;
         const { email, password } = credentials;
         const query = gql`
-          query GetUserByEmail($email: String!) {
-            Users(where: { email: { _eq: $email }, is_active: { _eq: true } }) {
-              id
-              name
-              email
-              password_hash
-              phone
-              gender
-              role
-            }
-          }
+ query GetUserByEmail($email: String!) {
+  Users(where: {email: {_eq: $email}, is_active: {_eq: true}}) {
+    id
+    name
+    email
+    password_hash
+    phone
+    gender
+    role
+    created_at
+    is_active
+    profile_picture
+    updated_at
+  }
+}
+
         `;
         const res = await hasuraClient.request<{
           Users: Array<{
@@ -68,6 +73,36 @@ export const authOptions: NextAuthOptions = {
   session: { strategy: "jwt" },
   jwt: { secret: NEXTAUTH_SECRET },
   secret: NEXTAUTH_SECRET,
+  cookies: {
+    sessionToken: {
+      name: `next-auth.session-token`,
+      options: {
+        httpOnly: true,
+        sameSite: "lax",
+        path: "/",
+        secure: false,
+      },
+    },
+    callbackUrl: {
+      name: `next-auth.callback-url`,
+      options: {
+        httpOnly: true,
+        sameSite: "lax",
+        path: "/",
+        secure: false,
+      },
+    },
+    csrfToken: {
+      name: `next-auth.csrf-token`,
+      options: {
+        httpOnly: true,
+        sameSite: "lax",
+        path: "/",
+        secure: false,
+      },
+    },
+  },
+  useSecureCookies: false,
   callbacks: {
     async jwt({ token, user }) {
       if (user) {

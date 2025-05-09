@@ -23,18 +23,28 @@ export async function middleware(req: NextRequest) {
     return NextResponse.next();
   }
 
-  // Check for NextAuth token
-  const token = await getToken({ req, secret: process.env.NEXTAUTH_SECRET });
+  // Check for NextAuth token with relative path setting
+  const token = await getToken({ 
+    req, 
+    secret: process.env.NEXTAUTH_SECRET,
+    secureCookie: process.env.NODE_ENV === "production"
+  });
+  
   if (!token) {
-    // Redirect unauthenticated users to the Login page with an absolute URL
-    return NextResponse.redirect(new URL("/Auth/Login", req.url));
+    // Use relative URL paths to avoid port-specific redirects
+    const url = req.nextUrl.clone();
+    url.pathname = "/Auth/Login";
+    url.search = `callbackUrl=${encodeURIComponent(req.url)}`;
+    return NextResponse.redirect(url);
   }
 
   // Protect shopper routes
   if (pathname.startsWith('/shopper')) {
     // If no session or not a shopper, redirect to home
     if (token.role !== 'shopper') {
-      return NextResponse.redirect(new URL('/', req.url));
+      const url = req.nextUrl.clone();
+      url.pathname = "/";
+      return NextResponse.redirect(url);
     }
   }
 

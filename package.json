@@ -36,6 +36,7 @@
     "react-hot-toast": "^2.5.2",
     "react-leaflet": "4.2.1",
     "react-query": "^3.39.2",
+    "react-responsive": "^10.0.1",
     "rsuite": "^5.79.1",
     "tailwind": "^4.0.0",
     "tailwindcss-animate": "^1.0.7",
