@@ -106,8 +106,9 @@ export default function Home({ initialData }: { initialData: Data }) {
       </RootLayout>
     );
   }
+  console.log("role", role);
   // If user is a shopper, delegate to dedicated dashboard component
-  if (role === 'shopper') {
+  if (role === "shopper") {
     return <ShopperDashboard />;
   }
   const [data, setData] = useState<Data>(initialData);

@@ -1,8 +1,13 @@
 export function formatCurrency(value: number): string {
-  // Format number with no fractional digits, then prefix the currency code
-  const formattedNumber = new Intl.NumberFormat("rw-RW", {
+  // Use a consistent format that doesn't depend on locale settings
+  // This ensures server and client render the same output
+  const formatter = new Intl.NumberFormat('en-US', {
     minimumFractionDigits: 0,
     maximumFractionDigits: 0,
-  }).format(value);
+  });
+  
+  // Force the same formatting on both server and client
+  const formattedNumber = formatter.format(value);
+  
   return `RWF ${formattedNumber}`;
 }

@@ -3,7 +3,6 @@
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import ShopperLayout from '@/components/shopper/ShopperLayout';
 
 export default function PlasaSidebar() {
   const [isMobile, setIsMobile] = useState(false);
@@ -17,7 +16,7 @@ export default function PlasaSidebar() {
   }, []);
 
   const isActive = (path: string) =>
-    pathname === path || pathname.startsWith(`${path}/`);
+    pathname ? (pathname === path || pathname.startsWith(`${path}/`)) : false;
 
   return (
     <>
