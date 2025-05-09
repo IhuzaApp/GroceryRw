@@ -3,8 +3,9 @@
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import ShopperLayout from '@/components/shopper/ShopperLayout';
 
-export default function ShopperSidebar() {
+export default function PlasaSidebar() {
   const [isMobile, setIsMobile] = useState(false);
   const pathname = usePathname();
 
@@ -24,13 +25,13 @@ export default function ShopperSidebar() {
       <div className="hidden md:block w-64 bg-white border-r min-h-[calc(100vh-73px)] sticky top-[73px]">
         <div className="p-4">
           <nav className="space-y-1">
-            <Link href="/shopper">
+            <Link href="/" passHref>
               <div
                 className={`flex items-center px-4 py-3 rounded-lg ${
-                  isActive("/shopper") &&
-                  !isActive("/shopper/active-orders") &&
-                  !isActive("/shopper/earnings") &&
-                  !isActive("/shopper/settings")
+                  isActive("/") &&
+                  !isActive("/Plasa/active-batches") &&
+                  !isActive("/Plasa/earnings") &&
+                  !isActive("/Plasa/settings")
                     ? "bg-green-50 text-green-600"
                     : "text-gray-700 hover:bg-gray-100"
                 }`}
@@ -45,13 +46,13 @@ export default function ShopperSidebar() {
                   <path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z" />
                   <polyline points="9 22 9 12 15 12 15 22" />
                 </svg>
-                <span>Available Orders</span>
+                <span>Available batches</span>
               </div>
             </Link>
-            <Link href="/shopper/active-orders">
+            <Link href="/Plasa/active-batches" passHref>
               <div
                 className={`flex items-center px-4 py-3 rounded-lg ${
-                  isActive("/shopper/active-orders")
+                  isActive("/Plasa/active-batches")
                     ? "bg-green-50 text-green-600"
                     : "text-gray-700 hover:bg-gray-100"
                 }`}
@@ -67,13 +68,13 @@ export default function ShopperSidebar() {
                   <path d="M9 17l6-6" />
                   <path d="M15 17v-6h-6" />
                 </svg>
-                <span>Active Orders</span>
+                <span>Active batches</span>
               </div>
             </Link>
-            <Link href="/shopper/earnings">
+            <Link href="/Plasa/earnings" passHref>
               <div
                 className={`flex items-center px-4 py-3 rounded-lg ${
-                  isActive("/shopper/earnings")
+                  isActive("/Plasa/earnings")
                     ? "bg-green-50 text-green-600"
                     : "text-gray-700 hover:bg-gray-100"
                 }`}
@@ -90,10 +91,10 @@ export default function ShopperSidebar() {
                 <span>Earnings</span>
               </div>
             </Link>
-            <Link href="/shopper/settings">
+            <Link href="/Plasa/settings" passHref>
               <div
                 className={`flex items-center px-4 py-3 rounded-lg ${
-                  isActive("/shopper/settings")
+                  isActive("/Plasa/settings")
                     ? "bg-green-50 text-green-600"
                     : "text-gray-700 hover:bg-gray-100"
                 }`}
@@ -155,8 +156,9 @@ export default function ShopperSidebar() {
       {isMobile && (
         <div className="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t py-2 px-4 flex justify-around z-[1000]">
           <Link
-            href="/shopper"
-            className={`flex flex-col items-center ${isActive("/shopper") && !isActive("/shopper/active-orders") ? "text-green-500" : "text-gray-500"}`}
+            href="/"
+            passHref
+            className={`flex flex-col items-center ${isActive("/Plasa") && !isActive("/Plasa/active-batches") ? "text-green-500" : "text-gray-500"}`}
           >
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="w-6 h-6">
               <path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z" />
@@ -165,19 +167,21 @@ export default function ShopperSidebar() {
             <span className="text-xs mt-1">Home</span>
           </Link>
           <Link
-            href="/shopper/active-orders"
-            className={`flex flex-col items-center ${isActive("/shopper/active-orders") ? "text-green-500" : "text-gray-500"}`}
+            href="/Plasa/active-batches"
+            passHref
+            className={`flex flex-col items-center ${isActive("/Plasa/active-batches") ? "text-green-500" : "text-gray-500"}`}
           >
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="w-6 h-6">
               <path d="M9 17H5a2 2 0 01-2-2V5a2 2 0 012-2h14a2 2 0 012 2v10a2 2 0 01-2 2h-4" />
               <path d="M9 17l6-6" />
               <path d="M15 17v-6h-6" />
             </svg>
-            <span className="text-xs mt-1">Active</span>
+            <span className="text-xs mt-1">Active Batches</span>
           </Link>
           <Link
-            href="/shopper/earnings"
-            className={`flex flex-col items-center ${isActive("/shopper/earnings") ? "text-green-500" : "text-gray-500"}`}
+            href="/Plasa/earnings"
+            passHref
+            className={`flex flex-col items-center ${isActive("/Plasa/earnings") ? "text-green-500" : "text-gray-500"}`}
           >
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="w-6 h-6">
               <path d="M12 2v20M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6" />
@@ -185,8 +189,9 @@ export default function ShopperSidebar() {
             <span className="text-xs mt-1">Earnings</span>
           </Link>
           <Link
-            href="/shopper/settings"
-            className={`flex flex-col items-center ${isActive("/shopper/settings") ? "text-green-500" : "text-gray-500"}`}
+            href="/Plasa/settings"
+            passHref
+            className={`flex flex-col items-center ${isActive("/Plasa/settings") ? "text-green-500" : "text-gray-500"}`}
           >
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="w-6 h-6">
               <circle cx="12" cy="8" r="4" />

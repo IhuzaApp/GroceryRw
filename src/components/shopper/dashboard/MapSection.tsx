@@ -131,13 +131,13 @@ export default function MapSection({ mapLoaded, availableOrders }: MapSectionPro
         navigator.geolocation.clearWatch(watchIdRef.current);
         watchIdRef.current = null;
       }
-      // Zoom out map on offline first
-      if (mapInstanceRef.current && typeof mapInstanceRef.current.setZoom === 'function') {
-        mapInstanceRef.current.setZoom(14);
-      }
-      // Then remove the user marker from the map when offline
+      // Remove the user marker from the map when offline
       if (userMarkerRef.current) {
         userMarkerRef.current.remove();
+      }
+      // Zoom out map on offline
+      if (mapInstanceRef.current && typeof mapInstanceRef.current.setZoom === 'function') {
+        mapInstanceRef.current.setZoom(14);
       }
     }
     // Cleanup on unmount
@@ -372,7 +372,14 @@ export default function MapSection({ mapLoaded, availableOrders }: MapSectionPro
     return () => {
       map.remove();
     };
-  }, [mapLoaded, availableOrders]);
+  }, [mapLoaded]);
+
+  useEffect(() => {
+    // Listen for dashboard toggle event
+    const onToggle = () => handleGoLive();
+    window.addEventListener('toggleGoLive', onToggle);
+    return () => window.removeEventListener('toggleGoLive', onToggle);
+  }, [handleGoLive]);
 
   return (
     <div className="relative">
@@ -389,7 +396,7 @@ export default function MapSection({ mapLoaded, availableOrders }: MapSectionPro
       {mapLoaded && (
         <button
           onClick={handleGoLive}
-          className={`absolute bottom-5 left-1/2 transform -translate-x-1/2 z-[1000] font-bold py-2 rounded-full shadow-lg w-[90%] md:w-auto md:px-4 ${isOnline ? 'bg-red-500 text-white' : 'bg-green-500 text-white'}`}
+          className={`hidden md:block absolute bottom-5 left-1/2 transform -translate-x-1/2 z-[1000] font-bold py-2 rounded-full shadow-lg w-[90%] md:w-auto md:px-4 ${isOnline ? 'bg-red-500 text-white' : 'bg-green-500 text-white'}`}
         >
           {isOnline ? 'Go Offline' : 'Start Plas'}
         </button>
