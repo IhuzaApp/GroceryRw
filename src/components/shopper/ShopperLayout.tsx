@@ -2,12 +2,17 @@
 import React from "react";
 import ShopperHeader from "@components/shopper/ShopperHeader";
 import ShopperSidebar from "@components/shopper/ShopperSidebar";
+import { useSession } from "next-auth/react";
 
 interface ShopperLayoutProps {
   children: React.ReactNode;
 }
 
 export default function ShopperLayout({ children }: ShopperLayoutProps) {
+    const { data: session, status } = useSession();
+    // session contains user: { id, name, email, phone, gender, address }
+    // status is 'authenticated' | 'loading' | 'unauthenticated'
+    console.log(session);
   return (
     <div className="flex flex-col h-screen bg-gray-50">
       {/* Fixed header */}
