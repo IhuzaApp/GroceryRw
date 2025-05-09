@@ -1,4 +1,4 @@
-"use client"
+"use client";
 
 import React, { useState, useEffect } from "react";
 import ShopperLayout from "@components/shopper/ShopperLayout";
@@ -6,14 +6,12 @@ import OrderCard from "./OrderCard";
 import dynamic from "next/dynamic";
 import { Button, Loader } from "rsuite";
 import "rsuite/dist/rsuite.min.css";
-import Link from "next/link";
-import Image from "next/image";
 
 // Dynamically load MapSection only on client (disable SSR)
 const MapSection = dynamic(() => import("./MapSection"), {
   ssr: false,
   loading: () => (
-    <div className="h-[300px] md:h-[400px] rounded-lg overflow-hidden flex items-center justify-center bg-gray-100 p-4">
+    <div className="h-[300px] md:h-[400px] w-full flex items-center justify-center bg-gray-100">
       <Loader size="lg" content="Loading map..." />
     </div>
   ),
@@ -26,9 +24,39 @@ export default function ShopperDashboard() {
   const [isMobile, setIsMobile] = useState(false);
 
   const mockOrders = [
-    { id: "ORD-1234", shopName: "FreshMart", shopAddress: "123 Market St, Mesa, AZ", customerAddress: "456 Pine Ave, Mesa, AZ", distance: "1.2 mi", items: 8, total: "$45.67", estimatedEarnings: "$12.50", createdAt: "10 mins ago" },
-    { id: "ORD-5678", shopName: "GreenGrocer", shopAddress: "789 Oak Rd, Mesa, AZ", customerAddress: "101 Maple Dr, Mesa, AZ", distance: "2.5 mi", items: 12, total: "$78.90", estimatedEarnings: "$15.75", createdAt: "15 mins ago" },
-    { id: "ORD-9012", shopName: "Value Foods", shopAddress: "202 Cedar Ln, Mesa, AZ", customerAddress: "303 Elm St, Mesa, AZ", distance: "3.1 mi", items: 5, total: "$32.45", estimatedEarnings: "$10.25", createdAt: "22 mins ago" },
+    {
+      id: "ORD-1234",
+      shopName: "FreshMart",
+      shopAddress: "123 Market St, Mesa, AZ",
+      customerAddress: "456 Pine Ave, Mesa, AZ",
+      distance: "1.2 mi",
+      items: 8,
+      total: "$45.67",
+      estimatedEarnings: "$12.50",
+      createdAt: "10 mins ago",
+    },
+    {
+      id: "ORD-5678",
+      shopName: "GreenGrocer",
+      shopAddress: "789 Oak Rd, Mesa, AZ",
+      customerAddress: "101 Maple Dr, Mesa, AZ",
+      distance: "2.5 mi",
+      items: 12,
+      total: "$78.90",
+      estimatedEarnings: "$15.75",
+      createdAt: "15 mins ago",
+    },
+    {
+      id: "ORD-9012",
+      shopName: "Value Foods",
+      shopAddress: "202 Cedar Ln, Mesa, AZ",
+      customerAddress: "303 Elm St, Mesa, AZ",
+      distance: "3.1 mi",
+      items: 5,
+      total: "$32.45",
+      estimatedEarnings: "$10.25",
+      createdAt: "22 mins ago",
+    },
   ];
 
   useEffect(() => {
@@ -50,11 +78,14 @@ export default function ShopperDashboard() {
 
   return (
     <ShopperLayout>
-      <div className={`min-h-screen bg-gray-50 ${isMobile ? "pb-16" : ""}`}>
+      <div className={`${isMobile ? 'h-full overflow-hidden' : 'min-h-screen'} bg-gray-50`}>
         {/* Map Section */}
-        <MapSection mapLoaded={mapLoaded} availableOrders={availableOrders} />
+        <div className="w-full">
+          <MapSection mapLoaded={mapLoaded} availableOrders={availableOrders} />
+        </div>
+
         {/* Desktop Title and Sort */}
-        <div className="hidden md:flex items-center justify-between p-4">
+        <div className="hidden md:flex items-center justify-between px-4 pt-4">
           <h1 className="text-2xl font-bold">Available Orders</h1>
           <div className="flex items-center">
             <span className="text-sm text-gray-500 mr-2">Sort by:</span>
@@ -65,8 +96,9 @@ export default function ShopperDashboard() {
             </select>
           </div>
         </div>
+
         {/* Orders List (hidden on mobile) */}
-        <div className="hidden md:block p-4">
+        <div className="hidden md:block px-4 pb-4">
           {isLoading ? (
             <div className="flex justify-center py-12">
               <Loader content="Loading orders..." />
@@ -96,4 +128,4 @@ export default function ShopperDashboard() {
       </div>
     </ShopperLayout>
   );
-} 
+}

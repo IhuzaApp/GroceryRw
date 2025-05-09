@@ -1,7 +1,7 @@
-"use client"
-import React from 'react';
-import ShopperHeader from '@components/shopper/ShopperHeader';
-import ShopperSidebar from '@components/shopper/ShopperSidebar';
+"use client";
+import React from "react";
+import ShopperHeader from "@components/shopper/ShopperHeader";
+import ShopperSidebar from "@components/shopper/ShopperSidebar";
 
 interface ShopperLayoutProps {
   children: React.ReactNode;
@@ -11,14 +11,28 @@ export default function ShopperLayout({ children }: ShopperLayoutProps) {
   return (
     <div className="flex flex-col h-screen bg-gray-50">
       {/* Fixed header */}
-      <ShopperHeader />
+      <div className="fixed top-0 left-0 right-0 z-50">
+        <ShopperHeader />
+      </div>
+
       {/* Main content wrapper */}
-      <div className="flex flex-1 overflow-hidden">
-        {/* Sidebar and bottom nav inside sidebar component */}
+      <div className="flex flex-1 pt-[64px] overflow-hidden">
+        {/* Sidebar - visible on desktop */}
+        <div className="hidden md:block">
+          <ShopperSidebar />
+        </div>
+
+        {/* Scrollable content area */}
+        <div className="flex-1 overflow-auto pb-20 md:pb-0 px-2 sm:px-4">
+          {children}
+        </div>
+      </div>
+
+      {/* Bottom nav (inside ShopperSidebar or create separate if needed) */}
+      <div className="md:hidden fixed bottom-0 left-0 right-0 z-40">
+        {/* If ShopperSidebar includes mobile nav logic, remove this and handle there */}
         <ShopperSidebar />
-        {/* Scrollable content area with padding for bottom nav on mobile */}
-        <div className="flex-1 overflow-auto pb-16 md:pb-0">{children}</div>
       </div>
     </div>
   );
-} 
+}
