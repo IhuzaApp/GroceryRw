@@ -3,12 +3,10 @@
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { Toggle } from "rsuite";
 import "rsuite/dist/rsuite.min.css";
 import { usePathname } from "next/navigation";
 
 export default function ShopperHeader() {
-  const [isAvailable, setIsAvailable] = useState(true);
   const [isMobile, setIsMobile] = useState(false);
   const pathname = usePathname();
 
@@ -18,11 +16,6 @@ export default function ShopperHeader() {
     window.addEventListener("resize", checkIfMobile);
     return () => window.removeEventListener("resize", checkIfMobile);
   }, []);
-
-  const handleToggleAvailability = (checked: boolean) => {
-    setIsAvailable(checked);
-    // In a real app, send availability to backend
-  };
 
   return (
     <header className="sticky top-0 z-[1000] bg-white p-4 flex items-center justify-between border-b">
@@ -34,12 +27,7 @@ export default function ShopperHeader() {
         </div>
         <div>
       
-          <div className="flex items-center text-md">
-            <span className={`mr-2 ${isAvailable ? 'text-green-500' : 'text-gray-500'}`}>
-              {isAvailable ? 'Available' : 'Unavailable'}
-            </span>
-            <Toggle size="sm" checked={isAvailable} onChange={handleToggleAvailability} className="scale-75 origin-left" />
-          </div>
+
         </div>
       </div>
 
