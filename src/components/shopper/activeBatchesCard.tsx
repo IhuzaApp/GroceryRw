@@ -1,13 +1,41 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useRef } from "react"
 import Link from "next/link"
-import { Button, Panel, Badge, Loader } from "rsuite"
+import { Button, Panel, Badge, Loader, toaster, Message } from "rsuite"
 import "rsuite/dist/rsuite.min.css"
+import { useAuth } from "../../context/AuthContext"
 
-export default function ActiveBatches() {
-  const [isLoading, setIsLoading] = useState(false)
+// Define interfaces for order data
+interface Order {
+  id: string;
+  status: string;
+  createdAt: string;
+  shopName: string;
+  shopAddress: string;
+  shopLat: number;
+  shopLng: number;
+  customerName: string;
+  customerAddress: string;
+  customerLat: number;
+  customerLng: number;
+  items: number;
+  total: number;
+  estimatedEarnings: string;
+}
+
+interface ActiveBatchesProps {
+  initialOrders?: Order[];
+  initialError?: string | null;
+}
+
+export default function ActiveBatches({ initialOrders = [], initialError = null }: ActiveBatchesProps) {
+  const { role } = useAuth()
+  const [isLoading, setIsLoading] = useState(!initialOrders.length)
   const [isMobile, setIsMobile] = useState(false)
+  const [activeOrders, setActiveOrders] = useState<Order[]>(initialOrders)
+  const [error, setError] = useState<string | null>(initialError)
+  const fetchedRef = useRef(false)
 
   useEffect(() => {
     const checkIfMobile = () => {
@@ -22,41 +50,77 @@ export default function ActiveBatches() {
     }
   }, [])
 
-  // Mock active orders data
-  const activeOrders = [
-    {
-      id: "ORD-1234",
-      status: "accepted",
-      shopName: "FreshMart",
-      shopAddress: "123 Market St, Mesa, AZ",
-      customerName: "John Smith",
-      customerAddress: "456 Pine Ave, Mesa, AZ",
-      items: 8,
-      total: "$45.67",
-      estimatedEarnings: "$12.50",
-      createdAt: "Today at 2:15 PM",
-    },
-    {
-      id: "ORD-5678",
-      status: "picked",
-      shopName: "GreenGrocer",
-      shopAddress: "789 Oak Rd, Mesa, AZ",
-      customerName: "Sarah Johnson",
-      customerAddress: "101 Maple Dr, Mesa, AZ",
-      items: 12,
-      total: "$78.90",
-      estimatedEarnings: "$15.75",
-      createdAt: "Today at 1:30 PM",
-    },
-  ]
+  // Only fetch orders client-side if we don't have them from server-side
+  useEffect(() => {
+    // Skip fetching if we already have data or already attempted a fetch
+    if (initialOrders.length > 0 || fetchedRef.current) {
+      return;
+    }
+    
+    // Skip if not a shopper
+    if (role !== 'shopper') {
+      setIsLoading(false);
+      return;
+    }
+    
+    // Set flag to prevent multiple fetches
+    fetchedRef.current = true;
+    
+    const controller = new AbortController();
+    const signal = controller.signal;
+    
+    async function fetchActiveBatches() {
+      setIsLoading(true)
+      setError(null)
+      
+      try {
+        const response = await fetch('http://localhost:3003/api/shopper/activeBatches', {
+          signal,
+          headers: {
+            'Content-Type': 'application/json',
+          }
+        })
+        
+        if (!response.ok) {
+          throw new Error('Failed to fetch active batches')
+        }
+        
+        const data = await response.json()
+        setActiveOrders(data)
+      } catch (err) {
+        // Don't set error if it was canceled
+        if (err instanceof Error && err.name === 'AbortError') {
+          return;
+        }
+        
+        console.error('Error fetching active batches:', err)
+        const errorMessage = err instanceof Error ? err.message : 'An unknown error occurred'
+        setError(errorMessage)
+        toaster.push(
+          <Message showIcon type="error" header="Error">
+            Failed to load active batches.
+          </Message>,
+          { placement: 'topEnd' }
+        )
+      } finally {
+        setIsLoading(false)
+      }
+    }
+
+    fetchActiveBatches()
+    
+    return () => {
+      controller.abort();
+    }
+  }, [role, initialOrders.length])
 
   return (
     <div className={`min-h-screen bg-gray-50 ${isMobile ? "pb-16" : ""}`}>
       {/* Main Content */}
-      <main className="p-4 max-w-1xl mx-auto">
+      <main className="p-4 max-w-6xl mx-auto">
         {/* Page Title - Desktop Only */}
         <div className="flex items-center justify-between mb-6">
-          <h1 className="text-2xl font-bold">Active Orders</h1>
+          <h1 className="text-2xl font-bold">Active Batches</h1>
           <Button appearance="ghost">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="w-5 h-5">
               <circle cx="11" cy="11" r="8" />
@@ -64,6 +128,12 @@ export default function ActiveBatches() {
             </svg>
           </Button>
         </div>
+
+        {error && (
+          <div className="mb-6 bg-red-50 p-4 rounded-lg border border-red-200 text-red-600">
+            {error}
+          </div>
+        )}
 
         {isLoading ? (
           <div className="flex justify-center py-12">
@@ -89,9 +159,9 @@ export default function ActiveBatches() {
                 <path d="M8 12h8" />
               </svg>
             </div>
-            <h3 className="text-lg font-medium mb-2">No Active Orders</h3>
-            <p className="text-gray-500 mb-4">You don't have any active orders at the moment.</p>
-            <Link href="/shopper">
+            <h3 className="text-lg font-medium mb-2">No Active Batches</h3>
+            <p className="text-gray-500 mb-4">You don't have any active batches at the moment.</p>
+            <Link href="/Plasa">
               <Button appearance="primary" className="bg-green-500 text-white">
                 Find Orders
               </Button>
@@ -144,7 +214,7 @@ function ActiveOrderCard({ order }: { order: any }) {
         )
       case "at_customer":
         return (
-          <Link href={`/shopper/order/${order.id}`}>
+          <Link href={`/Plasa/active-batches/batch/${order.id}`}>
             <Button appearance="primary" className="bg-green-500 text-white">
               Confirm Delivery
             </Button>
@@ -152,7 +222,7 @@ function ActiveOrderCard({ order }: { order: any }) {
         )
       default:
         return (
-          <Link href={`/shopper/order/${order.id}`}>
+          <Link href={`/Plasa/active-batches/batch/${order.id}`}>
             <Button appearance="ghost">View Details</Button>
           </Link>
         )
@@ -214,7 +284,7 @@ function ActiveOrderCard({ order }: { order: any }) {
         </div>
 
         <div className="flex justify-between items-center">
-          <Link href={`/shopper/order/${order.id}`}>
+          <Link href={`/Plasa/active-batches/batch/${order.id}`}>
             <Button appearance="ghost">View Details</Button>
           </Link>
           {getNextActionButton(order.status)}

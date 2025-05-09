@@ -41,6 +41,10 @@ const GET_ORDER_DETAILS = gql`
           name
           image
           price
+          description
+          measurement_unit
+          category
+          quantity
         }
         order_id
       }
