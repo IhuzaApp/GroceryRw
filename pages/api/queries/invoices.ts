@@ -17,7 +17,8 @@ const GET_INVOICE_BY_ID = gql`
       discount
       status
       invoice_items
-      customer: customerByCustomerId {
+      customer_id
+      User {
         id
         name
         email
@@ -63,31 +64,35 @@ const GET_USER_INVOICES = gql`
 // GraphQL mutation to create a new invoice
 const CREATE_INVOICE = gql`
   mutation CreateInvoice(
-    $order_id: uuid!,
-    $invoice_number: String!,
-    $customer_id: uuid!,
-    $total_amount: String!,
-    $subtotal: String!,
-    $tax: String!,
-    $service_fee: String!,
-    $delivery_fee: String!,
-    $discount: String!,
-    $invoice_items: jsonb!,
+    $order_id: uuid!
+    $invoice_number: String!
+    $customer_id: uuid!
+    $total_amount: String!
+    $subtotal: String!
+    $tax: String!
+    $service_fee: String!
+    $delivery_fee: String!
+    $discount: String!
+    $invoice_items: jsonb!
     $status: String!
   ) {
-    insert_Invoices(objects: [{
-      order_id: $order_id,
-      invoice_number: $invoice_number,
-      customer_id: $customer_id,
-      total_amount: $total_amount,
-      subtotal: $subtotal,
-      tax: $tax,
-      service_fee: $service_fee,
-      delivery_fee: $delivery_fee,
-      discount: $discount,
-      invoice_items: $invoice_items,
-      status: $status
-    }]) {
+    insert_Invoices(
+      objects: [
+        {
+          order_id: $order_id
+          invoice_number: $invoice_number
+          customer_id: $customer_id
+          total_amount: $total_amount
+          subtotal: $subtotal
+          tax: $tax
+          service_fee: $service_fee
+          delivery_fee: $delivery_fee
+          discount: $discount
+          invoice_items: $invoice_items
+          status: $status
+        }
+      ]
+    ) {
       returning {
         id
         invoice_number
@@ -109,8 +114,8 @@ export default async function handler(
   req: NextApiRequest,
   res: NextApiResponse
 ) {
-  if (req.method !== 'GET') {
-    res.setHeader('Allow', ['GET']);
+  if (req.method !== "GET") {
+    res.setHeader("Allow", ["GET"]);
     return res.status(405).json({ error: `Method ${req.method} Not Allowed` });
   }
 
@@ -118,38 +123,35 @@ export default async function handler(
 
   try {
     // Get a single invoice by ID
-    if (id && typeof id === 'string') {
+    if (id && typeof id === "string") {
       const data = await hasuraClient.request<{
         Invoices_by_pk: any;
-      }>(
-        GET_INVOICE_BY_ID,
-        { id }
-      );
-      
+      }>(GET_INVOICE_BY_ID, { id });
+
       if (!data.Invoices_by_pk) {
         return res.status(404).json({ error: "Invoice not found" });
       }
-      
+
       return res.status(200).json(data.Invoices_by_pk);
     }
-    
+
     // Get all invoices for a user
-    if (userId && typeof userId === 'string') {
+    if (userId && typeof userId === "string") {
       const data = await hasuraClient.request<{
         Invoices: any[];
-      }>(
-        GET_USER_INVOICES,
-        { userId }
-      );
-      
+      }>(GET_USER_INVOICES, { userId });
+
       return res.status(200).json(data.Invoices);
     }
-    
-    return res.status(400).json({ error: "Missing required parameter: id or userId" });
+
+    return res
+      .status(400)
+      .json({ error: "Missing required parameter: id or userId" });
   } catch (error) {
-    console.error('Error fetching invoice(s):', error);
-    return res.status(500).json({ 
-      error: error instanceof Error ? error.message : 'Failed to fetch invoice(s)' 
+    console.error("Error fetching invoice(s):", error);
+    return res.status(500).json({
+      error:
+        error instanceof Error ? error.message : "Failed to fetch invoice(s)",
     });
   }
 }
@@ -159,5 +161,5 @@ export {
   GET_INVOICE_BY_ID,
   GET_USER_INVOICES,
   CREATE_INVOICE,
-  generateInvoiceNumber
-}; 
+  generateInvoiceNumber,
+};

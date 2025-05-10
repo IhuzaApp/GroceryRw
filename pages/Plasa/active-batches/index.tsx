@@ -1,10 +1,10 @@
-import React from 'react';
-import ShopperLayout from '@components/shopper/ShopperLayout';
-import ActiveBatches from '@components/shopper/activeBatchesCard';
-import { GetServerSideProps } from 'next';
-import { hasuraClient } from '../../../src/lib/hasuraClient';
-import { gql } from 'graphql-request';
-import { getSession } from 'next-auth/react';
+import React from "react";
+import ShopperLayout from "@components/shopper/ShopperLayout";
+import ActiveBatches from "@components/shopper/activeBatchesCard";
+import { GetServerSideProps } from "next";
+import { hasuraClient } from "../../../src/lib/hasuraClient";
+import { gql } from "graphql-request";
+import { getSession } from "next-auth/react";
 
 interface Order {
   id: string;
@@ -28,25 +28,30 @@ interface ActiveBatchesPageProps {
   error: string | null;
 }
 
-export default function ActiveBatchesPage({ activeOrders, error }: ActiveBatchesPageProps) {
+export default function ActiveBatchesPage({
+  activeOrders,
+  error,
+}: ActiveBatchesPageProps) {
   return (
     <ShopperLayout>
       <ActiveBatches initialOrders={activeOrders} initialError={error} />
     </ShopperLayout>
-  )
+  );
 }
 
-export const getServerSideProps: GetServerSideProps<ActiveBatchesPageProps> = async (context) => {
+export const getServerSideProps: GetServerSideProps<
+  ActiveBatchesPageProps
+> = async (context) => {
   // Get session to identify the shopper
   const session = await getSession(context);
   const userId = (session as any)?.user?.id;
-  
+
   if (!userId) {
     return {
       props: {
         activeOrders: [],
-        error: "You must be logged in as a shopper"
-      }
+        error: "You must be logged in as a shopper",
+      },
     };
   }
 
@@ -54,10 +59,18 @@ export const getServerSideProps: GetServerSideProps<ActiveBatchesPageProps> = as
   const GET_ACTIVE_ORDERS = gql`
     query GetActiveOrders($shopperId: uuid!) {
       Orders(
-        where: { 
-          shopper_id: { _eq: $shopperId }, 
-          status: { _in: ["accepted", "picked", "in_progress", "at_customer", "shopping"] } 
-        },
+        where: {
+          shopper_id: { _eq: $shopperId }
+          status: {
+            _in: [
+              "accepted"
+              "picked"
+              "in_progress"
+              "at_customer"
+              "shopping"
+            ]
+          }
+        }
         order_by: { created_at: desc }
       ) {
         id
@@ -100,13 +113,23 @@ export const getServerSideProps: GetServerSideProps<ActiveBatchesPageProps> = as
         service_fee: string | null;
         delivery_fee: string | null;
         total: number | null;
-        Shop: { name: string; address: string; latitude: string; longitude: string };
+        Shop: {
+          name: string;
+          address: string;
+          latitude: string;
+          longitude: string;
+        };
         User: { id: string; name: string };
-        Address: { latitude: string; longitude: string; street: string; city: string };
-        Order_Items_aggregate: { 
-          aggregate: { 
+        Address: {
+          latitude: string;
+          longitude: string;
+          street: string;
+          city: string;
+        };
+        Order_Items_aggregate: {
+          aggregate: {
             count: number | null;
-          } | null 
+          } | null;
         };
       }>;
     }>(GET_ACTIVE_ORDERS, { shopperId: userId });
@@ -128,24 +151,26 @@ export const getServerSideProps: GetServerSideProps<ActiveBatchesPageProps> = as
       items: o.Order_Items_aggregate.aggregate?.count ?? 0,
       total: o.total ?? 0,
       estimatedEarnings: (
-        parseFloat(o.service_fee || '0') + 
-        parseFloat(o.delivery_fee || '0')
+        parseFloat(o.service_fee || "0") + parseFloat(o.delivery_fee || "0")
       ).toFixed(2),
     }));
 
     return {
       props: {
         activeOrders,
-        error: null
-      }
+        error: null,
+      },
     };
   } catch (error) {
     console.error("Error fetching active batches:", error);
     return {
       props: {
         activeOrders: [],
-        error: error instanceof Error ? error.message : 'Failed to load active batches'
-      }
+        error:
+          error instanceof Error
+            ? error.message
+            : "Failed to load active batches",
+      },
     };
   }
-}
+};

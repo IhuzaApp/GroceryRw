@@ -20,14 +20,14 @@ export default function ProductImageModal({
 }: ProductImageModalProps) {
   return (
     <Modal open={open} onClose={onClose} size="md">
-      <Modal.Header className="bg-gray-100 border-b">
+      <Modal.Header className="border-b bg-gray-100">
         <Modal.Title className="text-xl font-semibold text-gray-800">
           {selectedProductName}
         </Modal.Title>
       </Modal.Header>
       <Modal.Body>
         {selectedImage && currentOrderItem && (
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-start">
+          <div className="grid grid-cols-1 items-start gap-6 md:grid-cols-2">
             {/* Left: Product Image */}
             <div className="flex justify-center">
               <Image
@@ -35,7 +35,7 @@ export default function ProductImageModal({
                 alt={selectedProductName || "Product"}
                 width={300}
                 height={300}
-                className="object-contain rounded-lg shadow-md max-h-[300px]"
+                className="max-h-[300px] rounded-lg object-contain shadow-md"
               />
             </div>
 
@@ -48,9 +48,12 @@ export default function ProductImageModal({
 
               {/* Description */}
               <div>
-                <h4 className="text-sm font-medium text-gray-600">Description</h4>
+                <h4 className="text-sm font-medium text-gray-600">
+                  Description
+                </h4>
                 <p className="text-sm text-gray-700">
-                  {currentOrderItem.product.description || "No description available for this product."}
+                  {currentOrderItem.product.description ||
+                    "No description available for this product."}
                 </p>
               </div>
 
@@ -58,7 +61,9 @@ export default function ProductImageModal({
               <div className="grid grid-cols-2 gap-4 border-t pt-4">
                 {/* Category */}
                 <div>
-                  <h4 className="text-sm font-medium text-gray-600">Category</h4>
+                  <h4 className="text-sm font-medium text-gray-600">
+                    Category
+                  </h4>
                   <p className="text-sm text-gray-700">
                     {currentOrderItem.product.category || "General"}
                   </p>
@@ -75,7 +80,7 @@ export default function ProductImageModal({
                 {/* Price */}
                 <div className="col-span-2">
                   <h4 className="text-sm font-medium text-gray-600">Price</h4>
-                  <p className="text-green-600 font-bold">
+                  <p className="font-bold text-green-600">
                     {formatCurrency(currentOrderItem.product.price)}
                   </p>
                 </div>
@@ -91,4 +96,4 @@ export default function ProductImageModal({
       </Modal.Footer>
     </Modal>
   );
-} 
+}

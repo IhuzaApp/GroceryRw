@@ -165,11 +165,9 @@ export default async function handler(
           .json({ error: `Product ${item.product_id} not found.` });
       }
       if (item.quantity > available) {
-        return res
-          .status(400)
-          .json({
-            error: `Insufficient stock for product ${item.product_id}.`,
-          });
+        return res.status(400).json({
+          error: `Insufficient stock for product ${item.product_id}.`,
+        });
       }
     }
 

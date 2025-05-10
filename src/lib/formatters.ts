@@ -33,6 +33,6 @@ export function formatMessageTime(timestamp: string): string {
  * @returns boolean indicating if user is on mobile
  */
 export function isMobileDevice(): boolean {
-  if (typeof window === 'undefined') return false;
+  if (typeof window === "undefined") return false;
   return window.innerWidth < 768;
-} 
+}

@@ -23,22 +23,21 @@ export const authOptions: NextAuthOptions = {
         if (!credentials) return null;
         const { email, password } = credentials;
         const query = gql`
- query GetUserByEmail($email: String!) {
-  Users(where: {email: {_eq: $email}, is_active: {_eq: true}}) {
-    id
-    name
-    email
-    password_hash
-    phone
-    gender
-    role
-    created_at
-    is_active
-    profile_picture
-    updated_at
-  }
-}
-
+          query GetUserByEmail($email: String!) {
+            Users(where: { email: { _eq: $email }, is_active: { _eq: true } }) {
+              id
+              name
+              email
+              password_hash
+              phone
+              gender
+              role
+              created_at
+              is_active
+              profile_picture
+              updated_at
+            }
+          }
         `;
         const res = await hasuraClient.request<{
           Users: Array<{
