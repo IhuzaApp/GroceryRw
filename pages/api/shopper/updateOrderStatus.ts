@@ -42,7 +42,7 @@ export default async function handler(
   }
 
   // Validate status value
-  const validStatuses = ['accepted', 'shopping', 'picked', 'in_progress', 'at_customer', 'delivered'];
+  const validStatuses = ['accepted', 'shopping', 'picked', 'in_progress', 'on_the_way', 'at_customer', 'delivered'];
   if (!validStatuses.includes(status)) {
     return res.status(400).json({ error: 'Invalid status value' });
   }
@@ -53,18 +53,24 @@ export default async function handler(
       query CheckOrderAssignment($orderId: uuid!, $shopperId: uuid!) {
         Orders(where: { id: { _eq: $orderId }, shopper_id: { _eq: $shopperId } }) {
           id
+          status
         }
       }
     `;
 
+    console.log('Checking assignment for shopper:', userId, 'order:', orderId);
+    
     const assignmentCheck = await hasuraClient.request<{
-      Orders: Array<{ id: string }>
+      Orders: Array<{ id: string, status: string }>
     }>(CHECK_ASSIGNMENT, {
       orderId,
       shopperId: userId
     });
 
+    console.log('Assignment check result:', JSON.stringify(assignmentCheck));
+
     if (!assignmentCheck.Orders || assignmentCheck.Orders.length === 0) {
+      console.error('Authorization failed: Shopper not assigned to this order');
       return res.status(403).json({ error: 'You are not assigned to this order' });
     }
 
@@ -80,12 +86,14 @@ export default async function handler(
       { id: orderId, status }
     );
 
+    console.log('Order status updated successfully:', data.update_Orders_by_pk);
+
     return res.status(200).json({ 
       success: true, 
       order: data.update_Orders_by_pk 
     });
   } catch (error) {
     console.error('Error updating order status:', error);
-    return res.status(500).json({ error: 'Failed to update order status' });
+    return res.status(500).json({ error: error instanceof Error ? error.message : 'Failed to update order status' });
   }
 } 

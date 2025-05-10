@@ -15,6 +15,7 @@ import "rsuite/dist/rsuite-no-reset.min.css";
 import { SessionProvider } from "next-auth/react";
 import { AuthProvider } from "../src/context/AuthContext";
 import { CartProvider } from "../src/context/CartContext";
+import { ChatProvider } from "../src/context/ChatContext";
 import { Toaster } from "react-hot-toast";
 import { GoogleMapProvider } from "../src/context/GoogleMapProvider";
 
@@ -27,10 +28,12 @@ export default function App({ Component, pageProps }: AppProps) {
     >
       <AuthProvider>
         <CartProvider>
-          <GoogleMapProvider>
-            <Toaster position="top-right" />
-            <Component {...pageProps} />
-          </GoogleMapProvider>
+          <ChatProvider>
+            <GoogleMapProvider>
+              <Toaster position="top-right" />
+              <Component {...pageProps} />
+            </GoogleMapProvider>
+          </ChatProvider>
         </CartProvider>
       </AuthProvider>
     </SessionProvider>

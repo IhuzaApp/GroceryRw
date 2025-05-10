@@ -4937,6 +4937,216 @@ export type Users_Updates = {
   where: Users_Bool_Exp;
 };
 
+/** chat_conversations */
+export type Chat_Conversations = {
+  /** An object relationship */
+  Customer: Users;
+  /** An object relationship */
+  Order: Orders;
+  /** An object relationship */
+  Shopper: Users;
+  content?: Maybe<Scalars['String']['output']>;
+  created_at: Scalars['timestamptz']['output'];
+  customer_id: Scalars['uuid']['output'];
+  id: Scalars['uuid']['output'];
+  is_read: Scalars['Boolean']['output'];
+  order_id: Scalars['uuid']['output'];
+  shopper_id: Scalars['uuid']['output'];
+  updated_at?: Maybe<Scalars['timestamptz']['output']>;
+};
+
+/** aggregated selection of "chat_conversations" */
+export type Chat_Conversations_Aggregate = {
+  aggregate?: Maybe<Chat_Conversations_Aggregate_Fields>;
+  nodes: Array<Chat_Conversations>;
+};
+
+/** aggregate fields of "chat_conversations" */
+export type Chat_Conversations_Aggregate_Fields = {
+  count: Scalars['Int']['output'];
+  max?: Maybe<Chat_Conversations_Max_Fields>;
+  min?: Maybe<Chat_Conversations_Min_Fields>;
+};
+
+
+/** aggregate fields of "chat_conversations" */
+export type Chat_Conversations_Aggregate_FieldsCountArgs = {
+  columns?: InputMaybe<Array<Chat_Conversations_Select_Column>>;
+  distinct?: InputMaybe<Scalars['Boolean']['input']>;
+};
+
+/** Boolean expression to filter rows from the table "chat_conversations". All fields are combined with a logical 'AND'. */
+export type Chat_Conversations_Bool_Exp = {
+  Customer?: InputMaybe<Users_Bool_Exp>;
+  Order?: InputMaybe<Orders_Bool_Exp>;
+  Shopper?: InputMaybe<Users_Bool_Exp>;
+  _and?: InputMaybe<Array<Chat_Conversations_Bool_Exp>>;
+  _not?: InputMaybe<Chat_Conversations_Bool_Exp>;
+  _or?: InputMaybe<Array<Chat_Conversations_Bool_Exp>>;
+  content?: InputMaybe<String_Comparison_Exp>;
+  created_at?: InputMaybe<Timestamptz_Comparison_Exp>;
+  customer_id?: InputMaybe<Uuid_Comparison_Exp>;
+  id?: InputMaybe<Uuid_Comparison_Exp>;
+  is_read?: InputMaybe<Boolean_Comparison_Exp>;
+  order_id?: InputMaybe<Uuid_Comparison_Exp>;
+  shopper_id?: InputMaybe<Uuid_Comparison_Exp>;
+  updated_at?: InputMaybe<Timestamptz_Comparison_Exp>;
+};
+
+/** unique or primary key constraints on table "chat_conversations" */
+export type Chat_Conversations_Constraint =
+  /** unique or primary key constraint on columns "id" */
+  | 'chat_conversations_pkey';
+
+/** input type for inserting data into table "chat_conversations" */
+export type Chat_Conversations_Insert_Input = {
+  Customer?: InputMaybe<Users_Obj_Rel_Insert_Input>;
+  Order?: InputMaybe<Orders_Obj_Rel_Insert_Input>;
+  Shopper?: InputMaybe<Users_Obj_Rel_Insert_Input>;
+  content?: InputMaybe<Scalars['String']['input']>;
+  created_at?: InputMaybe<Scalars['timestamptz']['input']>;
+  customer_id?: InputMaybe<Scalars['uuid']['input']>;
+  id?: InputMaybe<Scalars['uuid']['input']>;
+  is_read?: InputMaybe<Scalars['Boolean']['input']>;
+  order_id?: InputMaybe<Scalars['uuid']['input']>;
+  shopper_id?: InputMaybe<Scalars['uuid']['input']>;
+  updated_at?: InputMaybe<Scalars['timestamptz']['input']>;
+};
+
+/** aggregate max on columns */
+export type Chat_Conversations_Max_Fields = {
+  content?: Maybe<Scalars['String']['output']>;
+  created_at?: Maybe<Scalars['timestamptz']['output']>;
+  customer_id?: Maybe<Scalars['uuid']['output']>;
+  id?: Maybe<Scalars['uuid']['output']>;
+  order_id?: Maybe<Scalars['uuid']['output']>;
+  shopper_id?: Maybe<Scalars['uuid']['output']>;
+  updated_at?: Maybe<Scalars['timestamptz']['output']>;
+};
+
+/** aggregate min on columns */
+export type Chat_Conversations_Min_Fields = {
+  content?: Maybe<Scalars['String']['output']>;
+  created_at?: Maybe<Scalars['timestamptz']['output']>;
+  customer_id?: Maybe<Scalars['uuid']['output']>;
+  id?: Maybe<Scalars['uuid']['output']>;
+  order_id?: Maybe<Scalars['uuid']['output']>;
+  shopper_id?: Maybe<Scalars['uuid']['output']>;
+  updated_at?: Maybe<Scalars['timestamptz']['output']>;
+};
+
+/** response of any mutation on the table "chat_conversations" */
+export type Chat_Conversations_Mutation_Response = {
+  /** number of rows affected by the mutation */
+  affected_rows: Scalars['Int']['output'];
+  /** data from the rows affected by the mutation */
+  returning: Array<Chat_Conversations>;
+};
+
+/** on_conflict condition type for table "chat_conversations" */
+export type Chat_Conversations_On_Conflict = {
+  constraint: Chat_Conversations_Constraint;
+  update_columns?: Array<Chat_Conversations_Update_Column>;
+  where?: InputMaybe<Chat_Conversations_Bool_Exp>;
+};
+
+/** Ordering options when selecting data from "chat_conversations". */
+export type Chat_Conversations_Order_By = {
+  Customer?: InputMaybe<Users_Order_By>;
+  Order?: InputMaybe<Orders_Order_By>;
+  Shopper?: InputMaybe<Users_Order_By>;
+  content?: InputMaybe<Order_By>;
+  created_at?: InputMaybe<Order_By>;
+  customer_id?: InputMaybe<Order_By>;
+  id?: InputMaybe<Order_By>;
+  is_read?: InputMaybe<Order_By>;
+  order_id?: InputMaybe<Order_By>;
+  shopper_id?: InputMaybe<Order_By>;
+  updated_at?: InputMaybe<Order_By>;
+};
+
+/** primary key columns input for table: chat_conversations */
+export type Chat_Conversations_Pk_Columns_Input = {
+  id: Scalars['uuid']['input'];
+};
+
+/** select columns of table "chat_conversations" */
+export type Chat_Conversations_Select_Column =
+  /** column name */
+  | 'content'
+  /** column name */
+  | 'created_at'
+  /** column name */
+  | 'customer_id'
+  /** column name */
+  | 'id'
+  /** column name */
+  | 'is_read'
+  /** column name */
+  | 'order_id'
+  /** column name */
+  | 'shopper_id'
+  /** column name */
+  | 'updated_at';
+
+/** input type for updating data in table "chat_conversations" */
+export type Chat_Conversations_Set_Input = {
+  content?: InputMaybe<Scalars['String']['input']>;
+  created_at?: InputMaybe<Scalars['timestamptz']['input']>;
+  customer_id?: InputMaybe<Scalars['uuid']['input']>;
+  id?: InputMaybe<Scalars['uuid']['input']>;
+  is_read?: InputMaybe<Scalars['Boolean']['input']>;
+  order_id?: InputMaybe<Scalars['uuid']['input']>;
+  shopper_id?: InputMaybe<Scalars['uuid']['input']>;
+  updated_at?: InputMaybe<Scalars['timestamptz']['input']>;
+};
+
+/** Streaming cursor of the table "chat_conversations" */
+export type Chat_Conversations_Stream_Cursor_Input = {
+  /** Stream column input with initial value */
+  initial_value: Chat_Conversations_Stream_Cursor_Value_Input;
+  /** cursor ordering */
+  ordering?: InputMaybe<Cursor_Ordering>;
+};
+
+/** Initial value of the column from where the streaming should start */
+export type Chat_Conversations_Stream_Cursor_Value_Input = {
+  content?: InputMaybe<Scalars['String']['input']>;
+  created_at?: InputMaybe<Scalars['timestamptz']['input']>;
+  customer_id?: InputMaybe<Scalars['uuid']['input']>;
+  id?: InputMaybe<Scalars['uuid']['input']>;
+  is_read?: InputMaybe<Scalars['Boolean']['input']>;
+  order_id?: InputMaybe<Scalars['uuid']['input']>;
+  shopper_id?: InputMaybe<Scalars['uuid']['input']>;
+  updated_at?: InputMaybe<Scalars['timestamptz']['input']>;
+};
+
+/** update columns of table "chat_conversations" */
+export type Chat_Conversations_Update_Column =
+  /** column name */
+  | 'content'
+  /** column name */
+  | 'created_at'
+  /** column name */
+  | 'customer_id'
+  /** column name */
+  | 'id'
+  /** column name */
+  | 'is_read'
+  /** column name */
+  | 'order_id'
+  /** column name */
+  | 'shopper_id'
+  /** column name */
+  | 'updated_at';
+
+export type Chat_Conversations_Updates = {
+  /** sets the columns of the filtered rows to the given values */
+  _set?: InputMaybe<Chat_Conversations_Set_Input>;
+  /** filter the rows which have to be updated */
+  where: Chat_Conversations_Bool_Exp;
+};
+
 /** ordering argument of a cursor */
 export type Cursor_Ordering =
   /** ascending ordering of the cursor */
@@ -5015,6 +5225,10 @@ export type Mutation_Root = {
   delete_Users?: Maybe<Users_Mutation_Response>;
   /** delete single row from the table: "Users" */
   delete_Users_by_pk?: Maybe<Users>;
+  /** delete data from the table: "chat_conversations" */
+  delete_chat_conversations?: Maybe<Chat_Conversations_Mutation_Response>;
+  /** delete single row from the table: "chat_conversations" */
+  delete_chat_conversations_by_pk?: Maybe<Chat_Conversations>;
   /** insert data into the table: "Addresses" */
   insert_Addresses?: Maybe<Addresses_Mutation_Response>;
   /** insert a single row into the table: "Addresses" */
@@ -5071,6 +5285,10 @@ export type Mutation_Root = {
   insert_Users?: Maybe<Users_Mutation_Response>;
   /** insert a single row into the table: "Users" */
   insert_Users_one?: Maybe<Users>;
+  /** insert data into the table: "chat_conversations" */
+  insert_chat_conversations?: Maybe<Chat_Conversations_Mutation_Response>;
+  /** insert a single row into the table: "chat_conversations" */
+  insert_chat_conversations_one?: Maybe<Chat_Conversations>;
   /** update data of the table: "Addresses" */
   update_Addresses?: Maybe<Addresses_Mutation_Response>;
   /** update single row of the table: "Addresses" */
@@ -5155,6 +5373,12 @@ export type Mutation_Root = {
   update_Users_by_pk?: Maybe<Users>;
   /** update multiples rows of table: "Users" */
   update_Users_many?: Maybe<Array<Maybe<Users_Mutation_Response>>>;
+  /** update data of the table: "chat_conversations" */
+  update_chat_conversations?: Maybe<Chat_Conversations_Mutation_Response>;
+  /** update single row of the table: "chat_conversations" */
+  update_chat_conversations_by_pk?: Maybe<Chat_Conversations>;
+  /** update multiples rows of table: "chat_conversations" */
+  update_chat_conversations_many?: Maybe<Array<Maybe<Chat_Conversations_Mutation_Response>>>;
 };
 
 
@@ -5322,6 +5546,18 @@ export type Mutation_RootDelete_UsersArgs = {
 
 /** mutation root */
 export type Mutation_RootDelete_Users_By_PkArgs = {
+  id: Scalars['uuid']['input'];
+};
+
+
+/** mutation root */
+export type Mutation_RootDelete_Chat_ConversationsArgs = {
+  where: Chat_Conversations_Bool_Exp;
+};
+
+
+/** mutation root */
+export type Mutation_RootDelete_Chat_Conversations_By_PkArgs = {
   id: Scalars['uuid']['input'];
 };
 
@@ -5519,6 +5755,20 @@ export type Mutation_RootInsert_UsersArgs = {
 export type Mutation_RootInsert_Users_OneArgs = {
   object: Users_Insert_Input;
   on_conflict?: InputMaybe<Users_On_Conflict>;
+};
+
+
+/** mutation root */
+export type Mutation_RootInsert_Chat_ConversationsArgs = {
+  objects: Array<Chat_Conversations_Insert_Input>;
+  on_conflict?: InputMaybe<Chat_Conversations_On_Conflict>;
+};
+
+
+/** mutation root */
+export type Mutation_RootInsert_Chat_Conversations_OneArgs = {
+  object: Chat_Conversations_Insert_Input;
+  on_conflict?: InputMaybe<Chat_Conversations_On_Conflict>;
 };
 
 
@@ -5811,6 +6061,26 @@ export type Mutation_RootUpdate_Users_ManyArgs = {
   updates: Array<Users_Updates>;
 };
 
+
+/** mutation root */
+export type Mutation_RootUpdate_Chat_ConversationsArgs = {
+  _set?: InputMaybe<Chat_Conversations_Set_Input>;
+  where: Chat_Conversations_Bool_Exp;
+};
+
+
+/** mutation root */
+export type Mutation_RootUpdate_Chat_Conversations_By_PkArgs = {
+  _set?: InputMaybe<Chat_Conversations_Set_Input>;
+  pk_columns: Chat_Conversations_Pk_Columns_Input;
+};
+
+
+/** mutation root */
+export type Mutation_RootUpdate_Chat_Conversations_ManyArgs = {
+  updates: Array<Chat_Conversations_Updates>;
+};
+
 /** column ordering options */
 export type Order_By =
   /** in ascending order, nulls last */
@@ -5911,6 +6181,12 @@ export type Query_Root = {
   Users_aggregate: Users_Aggregate;
   /** fetch data from the table: "Users" using primary key columns */
   Users_by_pk?: Maybe<Users>;
+  /** fetch data from the table: "chat_conversations" */
+  chat_conversations: Array<Chat_Conversations>;
+  /** fetch aggregated fields from the table: "chat_conversations" */
+  chat_conversations_aggregate: Chat_Conversations_Aggregate;
+  /** fetch data from the table: "chat_conversations" using primary key columns */
+  chat_conversations_by_pk?: Maybe<Chat_Conversations>;
 };
 
 
@@ -6235,6 +6511,29 @@ export type Query_RootUsers_By_PkArgs = {
   id: Scalars['uuid']['input'];
 };
 
+
+export type Query_RootChat_ConversationsArgs = {
+  distinct_on?: InputMaybe<Array<Chat_Conversations_Select_Column>>;
+  limit?: InputMaybe<Scalars['Int']['input']>;
+  offset?: InputMaybe<Scalars['Int']['input']>;
+  order_by?: InputMaybe<Array<Chat_Conversations_Order_By>>;
+  where?: InputMaybe<Chat_Conversations_Bool_Exp>;
+};
+
+
+export type Query_RootChat_Conversations_AggregateArgs = {
+  distinct_on?: InputMaybe<Array<Chat_Conversations_Select_Column>>;
+  limit?: InputMaybe<Scalars['Int']['input']>;
+  offset?: InputMaybe<Scalars['Int']['input']>;
+  order_by?: InputMaybe<Array<Chat_Conversations_Order_By>>;
+  where?: InputMaybe<Chat_Conversations_Bool_Exp>;
+};
+
+
+export type Query_RootChat_Conversations_By_PkArgs = {
+  id: Scalars['uuid']['input'];
+};
+
 export type Subscription_Root = {
   /** An array relationship */
   Addresses: Array<Addresses>;
@@ -6348,6 +6647,14 @@ export type Subscription_Root = {
   Users_by_pk?: Maybe<Users>;
   /** fetch data from the table in a streaming manner: "Users" */
   Users_stream: Array<Users>;
+  /** fetch data from the table: "chat_conversations" */
+  chat_conversations: Array<Chat_Conversations>;
+  /** fetch aggregated fields from the table: "chat_conversations" */
+  chat_conversations_aggregate: Chat_Conversations_Aggregate;
+  /** fetch data from the table: "chat_conversations" using primary key columns */
+  chat_conversations_by_pk?: Maybe<Chat_Conversations>;
+  /** fetch data from the table in a streaming manner: "chat_conversations" */
+  chat_conversations_stream: Array<Chat_Conversations>;
 };
 
 
@@ -6770,6 +7077,36 @@ export type Subscription_RootUsers_StreamArgs = {
   where?: InputMaybe<Users_Bool_Exp>;
 };
 
+
+export type Subscription_RootChat_ConversationsArgs = {
+  distinct_on?: InputMaybe<Array<Chat_Conversations_Select_Column>>;
+  limit?: InputMaybe<Scalars['Int']['input']>;
+  offset?: InputMaybe<Scalars['Int']['input']>;
+  order_by?: InputMaybe<Array<Chat_Conversations_Order_By>>;
+  where?: InputMaybe<Chat_Conversations_Bool_Exp>;
+};
+
+
+export type Subscription_RootChat_Conversations_AggregateArgs = {
+  distinct_on?: InputMaybe<Array<Chat_Conversations_Select_Column>>;
+  limit?: InputMaybe<Scalars['Int']['input']>;
+  offset?: InputMaybe<Scalars['Int']['input']>;
+  order_by?: InputMaybe<Array<Chat_Conversations_Order_By>>;
+  where?: InputMaybe<Chat_Conversations_Bool_Exp>;
+};
+
+
+export type Subscription_RootChat_Conversations_By_PkArgs = {
+  id: Scalars['uuid']['input'];
+};
+
+
+export type Subscription_RootChat_Conversations_StreamArgs = {
+  batch_size: Scalars['Int']['input'];
+  cursor: Array<InputMaybe<Chat_Conversations_Stream_Cursor_Input>>;
+  where?: InputMaybe<Chat_Conversations_Bool_Exp>;
+};
+
 /** Boolean expression to compare columns of type "timestamptz". All fields are combined with logical 'AND'. */
 export type Timestamptz_Comparison_Exp = {
   _eq?: InputMaybe<Scalars['timestamptz']['input']>;
@@ -6892,6 +7229,11 @@ export type AddItemsToCartMutationVariables = Exact<{
 
 
 export type AddItemsToCartMutation = { insert_Carts?: { affected_rows: number } | null };
+
+export type GetChat_ConversationsQueryVariables = Exact<{ [key: string]: never; }>;
+
+
+export type GetChat_ConversationsQuery = { chat_conversations: Array<{ content?: string | null, created_at: string, customer_id: string, id: string, is_read: boolean, order_id: string, shopper_id: string, updated_at?: string | null, Shopper: { created_at: string, email: string, gender: string, id: string, is_active: boolean, name: string, password_hash: string, phone: string, profile_picture?: string | null, role: string, updated_at?: string | null }, Order: { id: string, found: boolean, discount?: string | null, delivery_time?: string | null, delivery_photo_url?: string | null, delivery_notes?: string | null, delivery_fee: string, delivery_address_id: string, created_at: string, combined_order_id?: string | null, service_fee: string, shop_id: string, shopper_id?: string | null, status: string, total: string, updated_at?: string | null, voucher_code?: string | null, user_id: string }, Customer: { created_at: string, email: string, gender: string, id: string, is_active: boolean, name: string, password_hash: string, phone: string, profile_picture?: string | null, role: string, updated_at?: string | null } }> };
 
 export type GetPaymentMethodQueryVariables = Exact<{ [key: string]: never; }>;
 
@@ -7289,6 +7631,66 @@ export const AddItemsToCartDocument = gql`
   }
 }
     `;
+export const GetChat_ConversationsDocument = gql`
+    query getChat_Conversations {
+  chat_conversations {
+    content
+    created_at
+    customer_id
+    id
+    is_read
+    order_id
+    shopper_id
+    updated_at
+    Shopper {
+      created_at
+      email
+      gender
+      id
+      is_active
+      name
+      password_hash
+      phone
+      profile_picture
+      role
+      updated_at
+    }
+    Order {
+      id
+      found
+      discount
+      delivery_time
+      delivery_photo_url
+      delivery_notes
+      delivery_fee
+      delivery_address_id
+      created_at
+      combined_order_id
+      service_fee
+      shop_id
+      shopper_id
+      status
+      total
+      updated_at
+      voucher_code
+      user_id
+    }
+    Customer {
+      created_at
+      email
+      gender
+      id
+      is_active
+      name
+      password_hash
+      phone
+      profile_picture
+      role
+      updated_at
+    }
+  }
+}
+    `;
 export const GetPaymentMethodDocument = gql`
     query getPaymentMethod {
   Payment_Methods {
@@ -7357,6 +7759,9 @@ export function getSdk(client: GraphQLClient, withWrapper: SdkFunctionWrapper = 
     },
     AddItemsToCart(variables?: AddItemsToCartMutationVariables, requestHeaders?: GraphQLClientRequestHeaders): Promise<AddItemsToCartMutation> {
       return withWrapper((wrappedRequestHeaders) => client.request<AddItemsToCartMutation>(AddItemsToCartDocument, variables, {...requestHeaders, ...wrappedRequestHeaders}), 'AddItemsToCart', 'mutation', variables);
+    },
+    getChat_Conversations(variables?: GetChat_ConversationsQueryVariables, requestHeaders?: GraphQLClientRequestHeaders): Promise<GetChat_ConversationsQuery> {
+      return withWrapper((wrappedRequestHeaders) => client.request<GetChat_ConversationsQuery>(GetChat_ConversationsDocument, variables, {...requestHeaders, ...wrappedRequestHeaders}), 'getChat_Conversations', 'query', variables);
     },
     getPaymentMethod(variables?: GetPaymentMethodQueryVariables, requestHeaders?: GraphQLClientRequestHeaders): Promise<GetPaymentMethodQuery> {
       return withWrapper((wrappedRequestHeaders) => client.request<GetPaymentMethodQuery>(GetPaymentMethodDocument, variables, {...requestHeaders, ...wrappedRequestHeaders}), 'getPaymentMethod', 'query', variables);

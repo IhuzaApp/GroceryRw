@@ -19,6 +19,7 @@
     "bcryptjs": "^3.0.2",
     "cookie": "^1.0.2",
     "extract-files": "^13.0.0",
+    "firebase": "^11.7.1",
     "graphql": "^16.6.0",
     "graphql-config": "^4.3.6",
     "graphql-request": "^7.1.2",
