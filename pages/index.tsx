@@ -96,21 +96,7 @@ function getDistanceFromLatLonInKm(
 
 export default function Home({ initialData }: { initialData: Data }) {
   const { role, authReady } = useAuth();
-  if (!authReady) {
-    // Show loader while checking auth
-    return (
-      <RootLayout>
-        <div className="flex h-screen items-center justify-center">
-          <div className="h-16 w-16 animate-spin rounded-full border-b-2 border-gray-900"></div>
-        </div>
-      </RootLayout>
-    );
-  }
-  console.log("role", role);
-  // If user is a shopper, delegate to dedicated dashboard component
-  if (role === "shopper") {
-    return <ShopperDashboard />;
-  }
+  // Initialize ALL hooks at the top level, before ANY conditional returns
   const [data, setData] = useState<Data>(initialData);
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
@@ -123,24 +109,30 @@ export default function Home({ initialData }: { initialData: Data }) {
     >
   >({});
 
+  // Define hooks that don't have conditional dependencies first
   useEffect(() => {
-    console.log("Fetched data:", data);
-    console.log("Categories:", data.categories);
-    console.log("Shops:", data.shops);
-  }, [data]);
+    if (authReady) {
+      console.log("Fetched data:", data);
+      console.log("Categories:", data.categories);
+      console.log("Shops:", data.shops);
+    }
+  }, [data, authReady]);
 
-  const filteredShops = selectedCategory
-    ? data.shops?.filter((shop) => {
-        console.log("Shop category_id:", shop.category_id);
-        console.log("Selected category:", selectedCategory);
-        return shop.category_id && shop.category_id === selectedCategory;
-      })
-    : data.shops;
-
-  // console.log("Filtered shops:", filteredShops);
+  // Calculate filteredShops before using it in other hooks
+  const filteredShops = !authReady || role === "shopper" 
+    ? [] 
+    : selectedCategory
+      ? data.shops?.filter((shop) => {
+          console.log("Shop category_id:", shop.category_id);
+          console.log("Selected category:", selectedCategory);
+          return shop.category_id && shop.category_id === selectedCategory;
+        })
+      : data.shops;
 
   // Compute dynamics on client after mount when filteredShops changes
   useEffect(() => {
+    if (!authReady || role === "shopper") return;
+    
     // Function to compute distance, time, and fee for shops
     const computeDynamics = () => {
       const cookie = Cookies.get("delivery_address");
@@ -236,7 +228,7 @@ export default function Home({ initialData }: { initialData: Data }) {
     window.addEventListener("addressChanged", computeDynamics);
     // Cleanup listener on unmount/filter change
     return () => window.removeEventListener("addressChanged", computeDynamics);
-  }, [filteredShops]);
+  }, [filteredShops, authReady, role]);
 
   const handleCategoryClick = (categoryId: string) => {
     setIsLoading(true);
@@ -268,6 +260,22 @@ export default function Home({ initialData }: { initialData: Data }) {
       }
     }, 300);
   };
+
+  if (!authReady) {
+    // Show loader while checking auth
+    return (
+      <RootLayout>
+        <div className="flex h-screen items-center justify-center">
+          <div className="h-16 w-16 animate-spin rounded-full border-b-2 border-gray-900"></div>
+        </div>
+      </RootLayout>
+    );
+  }
+
+  // If user is a shopper, delegate to dedicated dashboard component
+  if (role === "shopper") {
+    return <ShopperDashboard />;
+  }
 
   return (
     <RootLayout>

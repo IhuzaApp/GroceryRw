@@ -331,9 +331,9 @@ export default function ChatDrawer({
             appearance="ghost"
             size="sm"
             className="whitespace-nowrap"
-            onClick={() => setMessage("They're out of stock")}
+            onClick={() => setMessage("They&#39;re out of stock")}
           >
-            They're out of stock
+            They&#39;re out of stock
           </Button>
           <Button
             appearance="ghost"
