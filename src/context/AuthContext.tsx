@@ -13,7 +13,7 @@ interface AuthContextType {
   login: () => void;
   logout: () => void;
   // Role of the current session: 'user' or 'shopper'
-  role: 'user' | 'shopper';
+  role: "user" | "shopper";
   toggleRole: () => void;
   user: User | null;
 }
@@ -23,7 +23,7 @@ const AuthContext = createContext<AuthContextType>({
   authReady: false,
   login: () => {},
   logout: () => {},
-  role: 'user',
+  role: "user",
   toggleRole: () => {},
   user: null,
 });
@@ -33,7 +33,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
 }) => {
   const { data: session } = useSession();
   const [isLoggedIn, setIsLoggedIn] = useState(false);
-  const [role, setRole] = useState<'user' | 'shopper'>('user');
+  const [role, setRole] = useState<"user" | "shopper">("user");
   const [authReady, setAuthReady] = useState(false);
   const [user, setUser] = useState<User | null>(null);
 
@@ -64,13 +64,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
   };
 
   const toggleRole = () => {
-    const next = role === 'user' ? 'shopper' : 'user';
-    localStorage.setItem('role', next);
+    const next = role === "user" ? "shopper" : "user";
+    localStorage.setItem("role", next);
     setRole(next);
   };
 
   return (
-    <AuthContext.Provider value={{ isLoggedIn, authReady, login, logout, role, toggleRole, user }}>
+    <AuthContext.Provider
+      value={{ isLoggedIn, authReady, login, logout, role, toggleRole, user }}
+    >
       {children}
     </AuthContext.Provider>
   );

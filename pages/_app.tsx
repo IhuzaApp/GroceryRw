@@ -21,8 +21,8 @@ import { GoogleMapProvider } from "../src/context/GoogleMapProvider";
 
 export default function App({ Component, pageProps }: AppProps) {
   return (
-    <SessionProvider 
-      session={(pageProps as any).session} 
+    <SessionProvider
+      session={(pageProps as any).session}
       basePath="/api/auth"
       refetchInterval={0} // Disable automatic refetching
     >

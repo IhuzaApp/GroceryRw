@@ -13,7 +13,7 @@ export default function RootLayout({
   // session contains user: { id, name, email, phone, gender, address }
   // status is 'authenticated' | 'loading' | 'unauthenticated'
   console.log(session);
-  
+
   return (
     <div className="bg-gray-80 min-h-screen pt-2">
       <HeaderLayout />

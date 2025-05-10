@@ -40,7 +40,7 @@ export default function QuantityConfirmationModal({
 
   return (
     <Modal open={open} onClose={onClose} size="xs">
-      <Modal.Header className="bg-gray-100 border-b">
+      <Modal.Header className="border-b bg-gray-100">
         <Modal.Title className="text-lg font-semibold text-gray-800">
           Confirm Quantity Found
         </Modal.Title>
@@ -48,19 +48,22 @@ export default function QuantityConfirmationModal({
       <Modal.Body>
         <div className="space-y-4">
           <div className="text-center">
-            <h3 className="text-md font-medium text-gray-800">{currentItem.product.name}</h3>
+            <h3 className="text-md font-medium text-gray-800">
+              {currentItem.product.name}
+            </h3>
             <p className="text-sm text-gray-600">
-              Customer requested: {currentItem.quantity} {currentItem.product.measurement_unit || 'items'}
+              Customer requested: {currentItem.quantity}{" "}
+              {currentItem.product.measurement_unit || "items"}
             </p>
           </div>
-          
+
           <div className="mt-4">
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+            <label className="mb-2 block text-sm font-medium text-gray-700">
               How many did you find? (Max: {currentItem.quantity})
             </label>
             <div className="flex items-center justify-center">
-              <button 
-                className="px-3 py-1 border rounded-l-md bg-gray-100 hover:bg-gray-200"
+              <button
+                className="rounded-l-md border bg-gray-100 px-3 py-1 hover:bg-gray-200"
                 onClick={() => setFoundQuantity(Math.max(1, foundQuantity - 1))}
                 disabled={foundQuantity <= 1}
               >
@@ -75,28 +78,38 @@ export default function QuantityConfirmationModal({
                   const newValue = parseInt(e.target.value) || 1;
                   if (newValue > currentItem.quantity) {
                     // Show visual feedback that this exceeds the maximum
-                    e.target.classList.add('bg-red-50');
-                    setTimeout(() => e.target.classList.remove('bg-red-50'), 500);
+                    e.target.classList.add("bg-red-50");
+                    setTimeout(
+                      () => e.target.classList.remove("bg-red-50"),
+                      500
+                    );
                   }
-                  setFoundQuantity(Math.min(currentItem.quantity, Math.max(1, newValue)));
+                  setFoundQuantity(
+                    Math.min(currentItem.quantity, Math.max(1, newValue))
+                  );
                 }}
-                className="w-16 text-center border-t border-b py-1"
+                className="w-16 border-b border-t py-1 text-center"
               />
-              <button 
-                className="px-3 py-1 border rounded-r-md bg-gray-100 hover:bg-gray-200"
-                onClick={() => setFoundQuantity(Math.min(currentItem.quantity, foundQuantity + 1))}
+              <button
+                className="rounded-r-md border bg-gray-100 px-3 py-1 hover:bg-gray-200"
+                onClick={() =>
+                  setFoundQuantity(
+                    Math.min(currentItem.quantity, foundQuantity + 1)
+                  )
+                }
                 disabled={foundQuantity >= currentItem.quantity}
               >
                 +
               </button>
             </div>
             {foundQuantity === currentItem.quantity ? (
-              <p className="text-xs text-green-600 text-center mt-2">
+              <p className="mt-2 text-center text-xs text-green-600">
                 All items will be marked as found
               </p>
             ) : (
-              <p className="text-xs text-orange-600 text-center mt-2">
-                {foundQuantity} of {currentItem.quantity} items will be marked as found
+              <p className="mt-2 text-center text-xs text-orange-600">
+                {foundQuantity} of {currentItem.quantity} items will be marked
+                as found
               </p>
             )}
           </div>
@@ -112,4 +125,4 @@ export default function QuantityConfirmationModal({
       </Modal.Footer>
     </Modal>
   );
-} 
+}

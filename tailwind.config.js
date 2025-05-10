@@ -68,7 +68,7 @@ module.exports = {
           800: "#1f2937",
           900: "#111827",
         },
-        'dark-green': '#125C13',
+        "dark-green": "#125C13",
       },
       borderRadius: {
         lg: "var(--radius)",
@@ -76,9 +76,9 @@ module.exports = {
         sm: "calc(var(--radius) - 4px)",
       },
       backgroundImage: {
-        'gradient-radial': 'radial-gradient(var(--tw-gradient-stops))',
-        'gradient-conic':
-          'conic-gradient(from 180deg at 50% 50%, var(--tw-gradient-stops))',
+        "gradient-radial": "radial-gradient(var(--tw-gradient-stops))",
+        "gradient-conic":
+          "conic-gradient(from 180deg at 50% 50%, var(--tw-gradient-stops))",
       },
     },
   },

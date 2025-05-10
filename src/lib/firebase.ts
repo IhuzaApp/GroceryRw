@@ -11,7 +11,7 @@ const firebaseConfig = {
   storageBucket: "bokiee-2e726.firebasestorage.app",
   messagingSenderId: "421990441361",
   appId: "1:421990441361:web:475e3c34284122e0157a30",
-  measurementId: "G-SLDEDK550H"
+  measurementId: "G-SLDEDK550H",
 };
 
 // Initialize Firebase
@@ -36,4 +36,4 @@ export const authenticateWithFirebase = async (customToken: string) => {
   }
 };
 
-export default app; 
+export default app;

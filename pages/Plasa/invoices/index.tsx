@@ -4,7 +4,16 @@ import ShopperLayout from "@components/shopper/ShopperLayout";
 import { GetServerSideProps } from "next";
 import { hasuraClient } from "../../../src/lib/hasuraClient";
 import { getSession } from "next-auth/react";
-import { Panel, Table, Pagination, Loader, InputGroup, Input, Stack, Button } from "rsuite";
+import {
+  Panel,
+  Table,
+  Pagination,
+  Loader,
+  InputGroup,
+  Input,
+  Stack,
+  Button,
+} from "rsuite";
 import { formatCurrency } from "../../../src/lib/formatCurrency";
 import SearchIcon from "@rsuite/icons/Search";
 import { GET_USER_INVOICES } from "../../api/queries/invoices";
@@ -31,25 +40,37 @@ interface InvoicesPageProps {
   error: string | null;
 }
 
-export default function InvoicesPage({ initialInvoices, error }: InvoicesPageProps) {
+export default function InvoicesPage({
+  initialInvoices,
+  error,
+}: InvoicesPageProps) {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
-  const [invoices, setInvoices] = useState<InvoiceItem[]>(initialInvoices?.invoices || []);
-  const [totalCount, setTotalCount] = useState<number>(initialInvoices?.totalCount || 0);
+  const [invoices, setInvoices] = useState<InvoiceItem[]>(
+    initialInvoices?.invoices || []
+  );
+  const [totalCount, setTotalCount] = useState<number>(
+    initialInvoices?.totalCount || 0
+  );
   const [page, setPage] = useState(1);
   const [limit] = useState(10);
   const [searchTerm, setSearchTerm] = useState("");
-  
+
   // Filter invoices based on search term
   useEffect(() => {
     if (!initialInvoices?.invoices) return;
-    
-    const filtered = initialInvoices.invoices.filter(invoice => 
-      invoice.invoice_number.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      invoice.order.OrderID.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      invoice.order.shop.name.toLowerCase().includes(searchTerm.toLowerCase())
+
+    const filtered = initialInvoices.invoices.filter(
+      (invoice) =>
+        invoice.invoice_number
+          .toLowerCase()
+          .includes(searchTerm.toLowerCase()) ||
+        invoice.order.OrderID.toLowerCase().includes(
+          searchTerm.toLowerCase()
+        ) ||
+        invoice.order.shop.name.toLowerCase().includes(searchTerm.toLowerCase())
     );
-    
+
     setInvoices(filtered);
     setTotalCount(filtered.length);
   }, [searchTerm, initialInvoices]);
@@ -57,7 +78,7 @@ export default function InvoicesPage({ initialInvoices, error }: InvoicesPagePro
   if (loading) {
     return (
       <ShopperLayout>
-        <div className="flex items-center justify-center h-[calc(100vh-200px)]">
+        <div className="flex h-[calc(100vh-200px)] items-center justify-center">
           <Loader size="lg" content="Loading invoices..." />
         </div>
       </ShopperLayout>
@@ -90,14 +111,14 @@ export default function InvoicesPage({ initialInvoices, error }: InvoicesPagePro
 
   return (
     <ShopperLayout>
-      <div className="p-4 max-w-6xl mx-auto">
-        <h1 className="text-2xl font-bold mb-6">My Invoices</h1>
-        
+      <div className="mx-auto max-w-6xl p-4">
+        <h1 className="mb-6 text-2xl font-bold">My Invoices</h1>
+
         <Panel bordered className="mb-6">
           <Stack spacing={10} justifyContent="space-between">
             <InputGroup inside style={{ width: 300 }}>
-              <Input 
-                placeholder="Search invoices..." 
+              <Input
+                placeholder="Search invoices..."
                 value={searchTerm}
                 onChange={handleSearch}
               />
@@ -109,7 +130,12 @@ export default function InvoicesPage({ initialInvoices, error }: InvoicesPagePro
         </Panel>
 
         {paginatedInvoices.length === 0 ? (
-          <Panel bordered header="No Invoices Found" shaded className="text-center py-8">
+          <Panel
+            bordered
+            header="No Invoices Found"
+            shaded
+            className="py-8 text-center"
+          >
             <p className="mb-4">You don't have any invoices yet.</p>
           </Panel>
         ) : (
@@ -144,14 +170,18 @@ export default function InvoicesPage({ initialInvoices, error }: InvoicesPagePro
               <Table.Column width={120}>
                 <Table.HeaderCell>Date</Table.HeaderCell>
                 <Table.Cell>
-                  {(rowData: InvoiceItem) => new Date(rowData.created_at).toLocaleDateString()}
+                  {(rowData: InvoiceItem) =>
+                    new Date(rowData.created_at).toLocaleDateString()
+                  }
                 </Table.Cell>
               </Table.Column>
 
               <Table.Column width={120}>
                 <Table.HeaderCell>Amount</Table.HeaderCell>
                 <Table.Cell>
-                  {(rowData: InvoiceItem) => formatCurrency(rowData.total_amount)}
+                  {(rowData: InvoiceItem) =>
+                    formatCurrency(rowData.total_amount)
+                  }
                 </Table.Cell>
               </Table.Column>
 
@@ -159,11 +189,13 @@ export default function InvoicesPage({ initialInvoices, error }: InvoicesPagePro
                 <Table.HeaderCell>Status</Table.HeaderCell>
                 <Table.Cell>
                   {(rowData: InvoiceItem) => (
-                    <span className={`inline-block px-2 py-1 rounded-full text-xs font-medium ${
-                      rowData.status.toLowerCase() === 'paid' 
-                        ? 'bg-green-100 text-green-800' 
-                        : 'bg-yellow-100 text-yellow-800'
-                    }`}>
+                    <span
+                      className={`inline-block rounded-full px-2 py-1 text-xs font-medium ${
+                        rowData.status.toLowerCase() === "paid"
+                          ? "bg-green-100 text-green-800"
+                          : "bg-yellow-100 text-yellow-800"
+                      }`}
+                    >
                       {rowData.status}
                     </span>
                   )}
@@ -195,7 +227,7 @@ export default function InvoicesPage({ initialInvoices, error }: InvoicesPagePro
                 boundaryLinks
                 maxButtons={5}
                 size="md"
-                layout={['total', '-', 'limit', '|', 'pager', 'skip']}
+                layout={["total", "-", "limit", "|", "pager", "skip"]}
                 total={totalCount}
                 limitOptions={[10, 20, 30]}
                 limit={limit}
@@ -210,43 +242,42 @@ export default function InvoicesPage({ initialInvoices, error }: InvoicesPagePro
   );
 }
 
-export const getServerSideProps: GetServerSideProps<InvoicesPageProps> = async (context) => {
+export const getServerSideProps: GetServerSideProps<InvoicesPageProps> = async (
+  context
+) => {
   const session = await getSession(context);
-  
+
   if (!session || !session.user?.id) {
     return {
       redirect: {
-        destination: '/auth/signin',
+        destination: "/auth/signin",
         permanent: false,
       },
     };
   }
-  
+
   try {
     const data = await hasuraClient.request<{
       Invoices: InvoiceItem[];
       Invoices_aggregate: { aggregate: { count: number } };
-    }>(
-      GET_USER_INVOICES,
-      { user_id: session.user.id }
-    );
-    
+    }>(GET_USER_INVOICES, { user_id: session.user.id });
+
     return {
       props: {
         initialInvoices: {
           invoices: data.Invoices,
-          totalCount: data.Invoices_aggregate.aggregate.count
+          totalCount: data.Invoices_aggregate.aggregate.count,
         },
-        error: null
-      }
+        error: null,
+      },
     };
   } catch (err) {
     console.error("Error fetching invoices:", err);
     return {
       props: {
         initialInvoices: null,
-        error: err instanceof Error ? err.message : 'Failed to load invoices'
-      }
+        error: err instanceof Error ? err.message : "Failed to load invoices",
+      },
     };
   }
-} 
+};

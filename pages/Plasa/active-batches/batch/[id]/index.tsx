@@ -1,72 +1,79 @@
-"use client"
+"use client";
 
-import { useState } from "react"
-import { useRouter } from "next/router"
-import ShopperLayout from "@components/shopper/ShopperLayout"
-import BatchDetails from "@components/shopper/batchDetails"
-import { GetServerSideProps } from "next"
-import { hasuraClient } from "../../../../../src/lib/hasuraClient"
-import { gql } from "graphql-request"
-import { getSession } from "next-auth/react"
-import { collection, query, where, getDocs, deleteDoc, updateDoc } from "firebase/firestore"
-import { db } from "../../../../../src/lib/firebase"
+import { useState } from "react";
+import { useRouter } from "next/router";
+import ShopperLayout from "@components/shopper/ShopperLayout";
+import BatchDetails from "@components/shopper/batchDetails";
+import { GetServerSideProps } from "next";
+import { hasuraClient } from "../../../../../src/lib/hasuraClient";
+import { gql } from "graphql-request";
+import { getSession } from "next-auth/react";
+import {
+  collection,
+  query,
+  where,
+  getDocs,
+  deleteDoc,
+  updateDoc,
+} from "firebase/firestore";
+import { db } from "../../../../../src/lib/firebase";
 
 // Define interfaces for the order data
 interface OrderItem {
-  id: string
-  quantity: number
-  price: number
+  id: string;
+  quantity: number;
+  price: number;
   product: {
-    id: string
-    name: string
-    image: string
-    price: number
-  }
+    id: string;
+    name: string;
+    image: string;
+    price: number;
+  };
 }
 
 interface OrderDetailsType {
-  id: string
-  OrderID: string
-  placedAt: string
-  estimatedDelivery: string
-  deliveryNotes: string
-  total: number
-  serviceFee: string
-  deliveryFee: string
-  status: string
-  deliveryPhotoUrl: string
-  discount: number
+  id: string;
+  OrderID: string;
+  placedAt: string;
+  estimatedDelivery: string;
+  deliveryNotes: string;
+  total: number;
+  serviceFee: string;
+  deliveryFee: string;
+  status: string;
+  deliveryPhotoUrl: string;
+  discount: number;
   user: {
-    id: string
-    name: string
-    email: string
-    profile_picture: string
-  }
+    id: string;
+    name: string;
+    email: string;
+    profile_picture: string;
+  };
   shop: {
-    id: string
-    name: string
-    address: string
-    image: string
-  }
-  Order_Items: OrderItem[]
+    id: string;
+    name: string;
+    address: string;
+    image: string;
+  };
+  Order_Items: OrderItem[];
   address: {
-    id: string
-    street: string
-    city: string
-    postal_code: string
-    latitude: string
-    longitude: string
-  }
+    id: string;
+    street: string;
+    city: string;
+    postal_code: string;
+    latitude: string;
+    longitude: string;
+  };
   assignedTo: {
-    id: string
-    name: string
-    profile_picture: string
+    id: string;
+    name: string;
+    profile_picture: string;
     orders: {
       aggregate: {
-        count: number
-      }
-    }
-  }
+        count: number;
+      };
+    };
+  };
 }
 
 interface BatchDetailsPageProps {
@@ -74,10 +81,13 @@ interface BatchDetailsPageProps {
   error: string | null;
 }
 
-export default function BatchDetailsPage({ orderData, error }: BatchDetailsPageProps) {
-  const router = useRouter()
-  const [loading, setLoading] = useState(false)
-  
+export default function BatchDetailsPage({
+  orderData,
+  error,
+}: BatchDetailsPageProps) {
+  const router = useRouter();
+  const [loading, setLoading] = useState(false);
+
   // Function to delete messages from Firebase for an order
   const deleteFirebaseMessages = async (orderId: string) => {
     try {
@@ -85,144 +95,165 @@ export default function BatchDetailsPage({ orderData, error }: BatchDetailsPageP
       const conversationsRef = collection(db, "chat_conversations");
       const q = query(conversationsRef, where("orderId", "==", orderId));
       const querySnapshot = await getDocs(q);
-      
+
       if (querySnapshot.empty) {
         console.log(`No chat conversation found for order ${orderId}`);
         return;
       }
-      
+
       // For each conversation (should be only one per order)
       for (const conversationDoc of querySnapshot.docs) {
         const conversationId = conversationDoc.id;
         console.log(`Deleting messages for conversation ${conversationId}`);
-        
+
         // Get all messages in the subcollection
-        const messagesRef = collection(db, "chat_conversations", conversationId, "messages");
+        const messagesRef = collection(
+          db,
+          "chat_conversations",
+          conversationId,
+          "messages"
+        );
         const messagesSnapshot = await getDocs(messagesRef);
-        
+
         // Delete each message
-        const deletePromises = messagesSnapshot.docs.map(doc => deleteDoc(doc.ref));
+        const deletePromises = messagesSnapshot.docs.map((doc) =>
+          deleteDoc(doc.ref)
+        );
         await Promise.all(deletePromises);
-        
-        console.log(`Deleted ${messagesSnapshot.docs.length} messages for conversation ${conversationId}`);
-        
+
+        console.log(
+          `Deleted ${messagesSnapshot.docs.length} messages for conversation ${conversationId}`
+        );
+
         // Optionally: Update the conversation to show it's been cleared
         // You can either delete the conversation document or update it
         // Here we'll update it to indicate messages were cleared
         await updateDoc(conversationDoc.ref, {
           lastMessage: "Order completed - chat history cleared",
-          unreadCount: 0
+          unreadCount: 0,
         });
       }
     } catch (error) {
       console.error("Error deleting Firebase messages:", error);
       // Continue with status update even if message deletion fails
     }
-  }
-  
+  };
+
   const handleUpdateStatus = async (orderId: string, newStatus: string) => {
-    setLoading(true)
+    setLoading(true);
     try {
       // If status is being updated to 'delivered', delete Firebase messages first
-      if (newStatus === 'delivered') {
+      if (newStatus === "delivered") {
         await deleteFirebaseMessages(orderId);
       }
-      
-      const response = await fetch('/api/shopper/updateOrderStatus', {
-        method: 'POST',
+
+      const response = await fetch("/api/shopper/updateOrderStatus", {
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
         body: JSON.stringify({
           orderId,
           status: newStatus,
         }),
-      })
-      
+      });
+
       if (!response.ok) {
-        const errorData = await response.json().catch(() => ({ error: 'Unknown error' }));
-        const errorMessage = errorData.error || `Server returned ${response.status}`;
+        const errorData = await response
+          .json()
+          .catch(() => ({ error: "Unknown error" }));
+        const errorMessage =
+          errorData.error || `Server returned ${response.status}`;
         console.error(`Error ${response.status}: ${errorMessage}`);
         throw new Error(`Failed to update order status: ${errorMessage}`);
       }
-      
+
       const result = await response.json();
-      
+
       // If order is now delivered, generate invoice
-      if (newStatus === 'delivered') {
+      if (newStatus === "delivered") {
         try {
-          console.log('Generating invoice for order:', orderId);
-          const invoiceResponse = await fetch('/api/invoices/generate', {
-            method: 'POST',
+          console.log("Generating invoice for order:", orderId);
+          const invoiceResponse = await fetch("/api/invoices/generate", {
+            method: "POST",
             headers: {
-              'Content-Type': 'application/json',
+              "Content-Type": "application/json",
             },
             body: JSON.stringify({
               orderId,
             }),
           });
-          
+
           if (!invoiceResponse.ok) {
-            const invoiceErrorData = await invoiceResponse.json().catch(() => ({ error: 'Unknown error' }));
-            console.error('Error generating invoice:', invoiceErrorData.error);
+            const invoiceErrorData = await invoiceResponse
+              .json()
+              .catch(() => ({ error: "Unknown error" }));
+            console.error("Error generating invoice:", invoiceErrorData.error);
             // Don't throw error here, as we don't want to fail the order status update
             // just because invoice generation failed
           } else {
             const invoiceData = await invoiceResponse.json();
-            console.log('Invoice generated successfully:', invoiceData.invoice.invoice_number);
-            
+            console.log(
+              "Invoice generated successfully:",
+              invoiceData.invoice.invoice_number
+            );
+
             // Navigate to the invoice page after a short delay
             setTimeout(() => {
               // Updated to match the new structure from the API
-              const invoiceId = invoiceData.invoice.id || 
-                (invoiceData.invoice.returning && invoiceData.invoice.returning[0]?.id);
-              
+              const invoiceId =
+                invoiceData.invoice.id ||
+                (invoiceData.invoice.returning &&
+                  invoiceData.invoice.returning[0]?.id);
+
               if (invoiceId) {
                 router.push(`/Plasa/invoices/${invoiceId}`);
               } else {
-                console.error('Missing invoice ID in response:', invoiceData);
+                console.error("Missing invoice ID in response:", invoiceData);
               }
             }, 1500);
           }
         } catch (invoiceErr) {
-          console.error('Exception while generating invoice:', invoiceErr);
+          console.error("Exception while generating invoice:", invoiceErr);
           // Don't throw error, continue with status update
         }
       }
-      
+
       return result;
     } catch (err) {
-      console.error("Error updating order status:", err)
-      throw err
+      console.error("Error updating order status:", err);
+      throw err;
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
-    return (
-      <ShopperLayout>
-      <BatchDetails 
-        orderData={orderData} 
-        error={error} 
+  return (
+    <ShopperLayout>
+      <BatchDetails
+        orderData={orderData}
+        error={error}
         onUpdateStatus={handleUpdateStatus}
       />
-      </ShopperLayout>
-    )
-  }
+    </ShopperLayout>
+  );
+}
 
-export const getServerSideProps: GetServerSideProps<BatchDetailsPageProps> = async (context) => {
+export const getServerSideProps: GetServerSideProps<
+  BatchDetailsPageProps
+> = async (context) => {
   const { id } = context.params || {};
   const session = await getSession(context);
-  
-  if (!id || typeof id !== 'string') {
+
+  if (!id || typeof id !== "string") {
     return {
       props: {
         orderData: null,
-        error: "Order ID is required"
-      }
+        error: "Order ID is required",
+      },
     };
   }
-  
+
   // GraphQL query to fetch a single order with nested details
   const GET_ORDER_DETAILS = gql`
     query GetOrderDetails($id: uuid!) {
@@ -288,23 +319,23 @@ export const getServerSideProps: GetServerSideProps<BatchDetailsPageProps> = asy
       }
     }
   `;
-  
+
   try {
     const data = await hasuraClient.request<{ Orders: any[] }>(
       GET_ORDER_DETAILS,
       { id }
     );
-    
+
     const order = data.Orders[0];
-  if (!order) {
+    if (!order) {
       return {
         props: {
           orderData: null,
-          error: "Order not found"
-        }
+          error: "Order not found",
+        },
       };
     }
-    
+
     // Format timestamps to human-readable strings
     const formattedOrder = {
       ...order,
@@ -312,25 +343,28 @@ export const getServerSideProps: GetServerSideProps<BatchDetailsPageProps> = asy
         dateStyle: "medium",
         timeStyle: "short",
       }),
-      estimatedDelivery: order.estimatedDelivery ? new Date(order.estimatedDelivery).toLocaleString(
-        "en-US",
-        { dateStyle: "medium", timeStyle: "short" }
-      ) : null,
+      estimatedDelivery: order.estimatedDelivery
+        ? new Date(order.estimatedDelivery).toLocaleString("en-US", {
+            dateStyle: "medium",
+            timeStyle: "short",
+          })
+        : null,
     };
-    
+
     return {
       props: {
         orderData: formattedOrder,
-        error: null
-      }
+        error: null,
+      },
     };
   } catch (err) {
     console.error("Error fetching order details:", err);
     return {
       props: {
         orderData: null,
-        error: err instanceof Error ? err.message : 'Failed to load order details'
-      }
+        error:
+          err instanceof Error ? err.message : "Failed to load order details",
+      },
     };
   }
-}
+};

@@ -23,10 +23,7 @@ export default async function handler(
   try {
     const mutation = gql`
       mutation UpdateUserRole($id: uuid!, $role: String!) {
-        update_Users_by_pk(
-          pk_columns: { id: $id }
-          _set: { role: $role }
-        ) {
+        update_Users_by_pk(pk_columns: { id: $id }, _set: { role: $role }) {
           id
           role
         }
@@ -44,4 +41,4 @@ export default async function handler(
     console.error("Error updating user role:", error);
     return res.status(500).json({ error: "Failed to update user role" });
   }
-} 
+}

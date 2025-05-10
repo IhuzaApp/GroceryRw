@@ -93,20 +93,23 @@ export default function ChatDrawer({
       try {
         setUploadingImage(true);
         const file = e.target.files[0];
-        
+
         // Upload image to Firebase Storage
         const storage = getStorage();
-        const storageRef = ref(storage, `chat_images/${orderId}/${Date.now()}_${file.name}`);
-        
+        const storageRef = ref(
+          storage,
+          `chat_images/${orderId}/${Date.now()}_${file.name}`
+        );
+
         // Upload the file
         const snapshot = await uploadBytes(storageRef, file);
-        
+
         // Get download URL
         const downloadURL = await getDownloadURL(snapshot.ref);
-        
+
         // Send message with image
         await sendMessage(orderId, "", downloadURL);
-        
+
         setShowAttachmentOptions(false);
       } catch (error) {
         console.error("Error uploading image:", error);
@@ -148,70 +151,107 @@ export default function ChatDrawer({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-y-0 right-0 w-96 bg-white shadow-lg z-50 flex flex-col">
+    <div className="fixed inset-y-0 right-0 z-50 flex w-96 flex-col bg-white shadow-lg">
       {/* Header */}
-      <header className="bg-white p-4 border-b flex items-center justify-between sticky top-0 z-10">
+      <header className="sticky top-0 z-10 flex items-center justify-between border-b bg-white p-4">
         <div className="flex items-center">
-          <Button appearance="subtle" className="h-8 w-8 p-0 flex items-center justify-center mr-3" onClick={onClose}>
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="w-5 h-5">
+          <Button
+            appearance="subtle"
+            className="mr-3 flex h-8 w-8 items-center justify-center p-0"
+            onClick={onClose}
+          >
+            <svg
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              className="h-5 w-5"
+            >
               <path d="M18 6L6 18M6 6l12 12" />
             </svg>
           </Button>
           <div className="flex items-center">
-            <Avatar src={customerAvatar} alt={customerName} size="sm" circle className="mr-3" />
+            <Avatar
+              src={customerAvatar}
+              alt={customerName}
+              size="sm"
+              circle
+              className="mr-3"
+            />
             <div>
               <h1 className="font-bold">{customerName}</h1>
-              <div className="text-xs text-gray-500">
-                Order #{orderId}
-              </div>
+              <div className="text-xs text-gray-500">Order #{orderId}</div>
             </div>
           </div>
         </div>
       </header>
 
       {/* Chat Messages */}
-      <div className="flex-1 overflow-y-auto p-4 bg-gray-100">
+      <div className="flex-1 overflow-y-auto bg-gray-100 p-4">
         {messages.length === 0 ? (
-          <div className="flex flex-col items-center justify-center h-full text-gray-500">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="w-12 h-12 mb-3">
+          <div className="flex h-full flex-col items-center justify-center text-gray-500">
+            <svg
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              className="mb-3 h-12 w-12"
+            >
               <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
             </svg>
             <p>No messages yet</p>
-            <p className="text-sm">Start the conversation with {customerName}</p>
+            <p className="text-sm">
+              Start the conversation with {customerName}
+            </p>
           </div>
         ) : (
           <div>
             {messageGroups.map((group, groupIndex) => (
               <div key={groupIndex} className="mb-6">
-                <div className="flex justify-center mb-4">
-                  <div className="bg-gray-200 rounded-full px-3 py-1 text-xs text-gray-600">{group.date}</div>
+                <div className="mb-4 flex justify-center">
+                  <div className="rounded-full bg-gray-200 px-3 py-1 text-xs text-gray-600">
+                    {group.date}
+                  </div>
                 </div>
 
                 {group.messages.map((msg, index) => {
                   const isShopperMessage = msg.sender === "shopper";
-                  const showAvatar = index === 0 || group.messages[index - 1].sender !== msg.sender;
+                  const showAvatar =
+                    index === 0 ||
+                    group.messages[index - 1].sender !== msg.sender;
 
                   return (
-                    <div key={msg.id} className={`flex ${isShopperMessage ? "justify-end" : "justify-start"} mb-4`}>
+                    <div
+                      key={msg.id}
+                      className={`flex ${
+                        isShopperMessage ? "justify-end" : "justify-start"
+                      } mb-4`}
+                    >
                       {!isShopperMessage && showAvatar && (
                         <Avatar
                           src={customerAvatar}
                           alt={customerName}
                           size="xs"
                           circle
-                          className="mr-2 self-end mb-1"
+                          className="mb-1 mr-2 self-end"
                         />
                       )}
 
-                      <div className={`max-w-[75%] ${!isShopperMessage && !showAvatar ? "ml-8" : ""}`}>
+                      <div
+                        className={`max-w-[75%] ${
+                          !isShopperMessage && !showAvatar ? "ml-8" : ""
+                        }`}
+                      >
                         <div
                           className={`rounded-2xl px-4 py-2 ${
                             isShopperMessage
-                              ? "bg-blue-500 text-white rounded-tr-none"
-                              : "bg-white text-gray-800 rounded-tl-none"
+                              ? "rounded-tr-none bg-blue-500 text-white"
+                              : "rounded-tl-none bg-white text-gray-800"
                           }`}
                         >
-                          {msg.text && <p className="whitespace-pre-wrap">{msg.text}</p>}
+                          {msg.text && (
+                            <p className="whitespace-pre-wrap">{msg.text}</p>
+                          )}
                           {msg.image && (
                             <div className="mt-2">
                               <Image
@@ -219,13 +259,15 @@ export default function ChatDrawer({
                                 alt="Shared image"
                                 width={300}
                                 height={200}
-                                className="rounded-lg max-w-full"
+                                className="max-w-full rounded-lg"
                               />
                             </div>
                           )}
                         </div>
-                        <div className="flex items-center mt-1">
-                          <span className="text-xs text-gray-500">{formatMessageTime(msg.timestamp)}</span>
+                        <div className="mt-1 flex items-center">
+                          <span className="text-xs text-gray-500">
+                            {formatMessageTime(msg.timestamp)}
+                          </span>
                           {isShopperMessage && (
                             <span className="ml-1">
                               {msg.status === "sent" ? (
@@ -234,7 +276,7 @@ export default function ChatDrawer({
                                   fill="none"
                                   stroke="currentColor"
                                   strokeWidth="2"
-                                  className="w-3 h-3 text-gray-400"
+                                  className="h-3 w-3 text-gray-400"
                                 >
                                   <polyline points="20 6 9 17 4 12" />
                                 </svg>
@@ -244,7 +286,7 @@ export default function ChatDrawer({
                                   fill="none"
                                   stroke="currentColor"
                                   strokeWidth="2"
-                                  className="w-3 h-3 text-blue-500"
+                                  className="h-3 w-3 text-blue-500"
                                 >
                                   <path d="M18 6L7 17L2 12" />
                                   <path d="M22 6L11 17L8 14" />
@@ -261,7 +303,7 @@ export default function ChatDrawer({
                           alt="Shopper"
                           size="xs"
                           circle
-                          className="ml-2 self-end mb-1"
+                          className="mb-1 ml-2 self-end"
                         />
                       )}
                     </div>
@@ -275,27 +317,42 @@ export default function ChatDrawer({
       </div>
 
       {/* Quick Replies */}
-      <div className="bg-white border-t p-2 overflow-x-auto whitespace-nowrap">
+      <div className="overflow-x-auto whitespace-nowrap border-t bg-white p-2">
         <div className="flex gap-2">
-          <Button appearance="ghost" size="sm" className="whitespace-nowrap" onClick={() => setMessage("I found it")}>
+          <Button
+            appearance="ghost"
+            size="sm"
+            className="whitespace-nowrap"
+            onClick={() => setMessage("I found it")}
+          >
             I found it
           </Button>
-          <Button appearance="ghost" size="sm" className="whitespace-nowrap" onClick={() => setMessage("They're out of stock")}>
+          <Button
+            appearance="ghost"
+            size="sm"
+            className="whitespace-nowrap"
+            onClick={() => setMessage("They're out of stock")}
+          >
             They're out of stock
           </Button>
-          <Button appearance="ghost" size="sm" className="whitespace-nowrap" onClick={() => setMessage("Would you like an alternative?")}>
+          <Button
+            appearance="ghost"
+            size="sm"
+            className="whitespace-nowrap"
+            onClick={() => setMessage("Would you like an alternative?")}
+          >
             Alternative?
           </Button>
         </div>
       </div>
 
       {/* Message Input */}
-      <div className="bg-white border-t p-3 sticky bottom-0">
+      <div className="sticky bottom-0 border-t bg-white p-3">
         <div className="relative flex items-center">
           <div className="relative">
             <Button
               appearance="subtle"
-              className="h-10 w-10 p-0 flex items-center justify-center"
+              className="flex h-10 w-10 items-center justify-center p-0"
               onClick={handleAttachmentClick}
               disabled={isSending || uploadingImage}
             >
@@ -304,7 +361,7 @@ export default function ChatDrawer({
                 fill="none"
                 stroke="currentColor"
                 strokeWidth="2"
-                className="w-5 h-5 text-gray-500"
+                className="h-5 w-5 text-gray-500"
               >
                 <path d="M21.44 11.05l-9.19 9.19a6 6 0 01-8.49-8.49l9.19-9.19a4 4 0 015.66 5.66l-9.2 9.19a2 2 0 01-2.83-2.83l8.49-8.48" />
               </svg>
@@ -312,10 +369,10 @@ export default function ChatDrawer({
 
             {/* Attachment Options Popup */}
             {showAttachmentOptions && (
-              <div className="absolute bottom-12 left-0 bg-white rounded-lg shadow-lg p-2 z-10">
+              <div className="absolute bottom-12 left-0 z-10 rounded-lg bg-white p-2 shadow-lg">
                 <div className="flex flex-col gap-2">
                   <button
-                    className="flex items-center gap-2 p-2 hover:bg-gray-100 rounded-md"
+                    className="flex items-center gap-2 rounded-md p-2 hover:bg-gray-100"
                     onClick={() => fileInputRef.current?.click()}
                   >
                     <svg
@@ -323,7 +380,7 @@ export default function ChatDrawer({
                       fill="none"
                       stroke="currentColor"
                       strokeWidth="2"
-                      className="w-5 h-5 text-blue-500"
+                      className="h-5 w-5 text-blue-500"
                     >
                       <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
                       <circle cx="8.5" cy="8.5" r="1.5" />
@@ -332,15 +389,17 @@ export default function ChatDrawer({
                     <span>Gallery</span>
                   </button>
                   <button
-                    className="flex items-center gap-2 p-2 hover:bg-gray-100 rounded-md"
-                    onClick={() => alert("Camera functionality would open here")}
+                    className="flex items-center gap-2 rounded-md p-2 hover:bg-gray-100"
+                    onClick={() =>
+                      alert("Camera functionality would open here")
+                    }
                   >
                     <svg
                       viewBox="0 0 24 24"
                       fill="none"
                       stroke="currentColor"
                       strokeWidth="2"
-                      className="w-5 h-5 text-red-500"
+                      className="h-5 w-5 text-red-500"
                     >
                       <path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z" />
                       <circle cx="12" cy="13" r="4" />
@@ -351,11 +410,17 @@ export default function ChatDrawer({
               </div>
             )}
 
-            <input type="file" accept="image/*" ref={fileInputRef} className="hidden" onChange={handleImageUpload} />
+            <input
+              type="file"
+              accept="image/*"
+              ref={fileInputRef}
+              className="hidden"
+              onChange={handleImageUpload}
+            />
           </div>
 
           <textarea
-            className="flex-1 border rounded-full px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
+            className="flex-1 resize-none rounded-full border px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
             placeholder="Type a message..."
             value={message}
             onChange={(e) => setMessage(e.target.value)}
@@ -367,7 +432,7 @@ export default function ChatDrawer({
 
           <Button
             appearance={message.trim() ? "primary" : "subtle"}
-            className={`h-10 w-10 p-0 flex items-center justify-center ml-2 rounded-full ${
+            className={`ml-2 flex h-10 w-10 items-center justify-center rounded-full p-0 ${
               message.trim() ? "bg-blue-500 text-white" : "text-gray-400"
             }`}
             onClick={handleSendMessage}
@@ -376,7 +441,13 @@ export default function ChatDrawer({
             {isSending || uploadingImage ? (
               <Loader size="sm" />
             ) : (
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="w-5 h-5">
+              <svg
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                className="h-5 w-5"
+              >
                 <path d="M22 2L11 13" />
                 <path d="M22 2l-7 20-4-9-9-4 20-7z" />
               </svg>
@@ -386,4 +457,4 @@ export default function ChatDrawer({
       </div>
     </div>
   );
-} 
+}

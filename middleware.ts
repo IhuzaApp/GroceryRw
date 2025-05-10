@@ -24,12 +24,12 @@ export async function middleware(req: NextRequest) {
   }
 
   // Check for NextAuth token with relative path setting
-  const token = await getToken({ 
-    req, 
+  const token = await getToken({
+    req,
     secret: process.env.NEXTAUTH_SECRET,
-    secureCookie: process.env.NODE_ENV === "production"
+    secureCookie: process.env.NODE_ENV === "production",
   });
-  
+
   if (!token) {
     // Use relative URL paths to avoid port-specific redirects
     const url = req.nextUrl.clone();
@@ -39,9 +39,9 @@ export async function middleware(req: NextRequest) {
   }
 
   // Protect shopper routes
-  if (pathname.startsWith('/shopper')) {
+  if (pathname.startsWith("/shopper")) {
     // If no session or not a shopper, redirect to home
-    if (token.role !== 'shopper') {
+    if (token.role !== "shopper") {
       const url = req.nextUrl.clone();
       url.pathname = "/";
       return NextResponse.redirect(url);
@@ -56,6 +56,6 @@ export const config = {
   matcher: [
     // Protect all routes except API, static files, home and shops
     "/((?!api|_next|static|favicon.ico).*)",
-    '/shopper/:path*',
+    "/shopper/:path*",
   ],
 };

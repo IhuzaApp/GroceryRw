@@ -78,7 +78,9 @@ export default function UserRecentOrders({
   const [visibleCount, setVisibleCount] = useState(10);
   // Apply filter once, then slice for pagination
   const filteredOrders = orders.filter((order: Order) =>
-    filter === "pending" ? order.status !== "delivered" : order.status === "delivered"
+    filter === "pending"
+      ? order.status !== "delivered"
+      : order.status === "delivered"
   );
   const visibleOrders = filteredOrders.slice(0, visibleCount);
 
@@ -159,10 +161,7 @@ export default function UserRecentOrders({
                 const isAssigned = !!order?.shopper_id;
                 if (isDone) {
                   return (
-                    <Tag
-                      color="green"
-                      className="bg-green-100 text-green-600"
-                    >
+                    <Tag color="green" className="bg-green-100 text-green-600">
                       Completed
                     </Tag>
                   );

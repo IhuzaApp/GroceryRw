@@ -100,8 +100,8 @@ export default function Home({ initialData }: { initialData: Data }) {
     // Show loader while checking auth
     return (
       <RootLayout>
-        <div className="h-screen flex items-center justify-center">
-          <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-gray-900"></div>
+        <div className="flex h-screen items-center justify-center">
+          <div className="h-16 w-16 animate-spin rounded-full border-b-2 border-gray-900"></div>
         </div>
       </RootLayout>
     );

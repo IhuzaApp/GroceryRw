@@ -16,32 +16,32 @@ export default function SideBar() {
   // Clear loading overlay when navigation completes or errors
   useEffect(() => {
     const handleFinish = () => setIsSwitching(false);
-    router.events.on('routeChangeComplete', handleFinish);
-    router.events.on('routeChangeError', handleFinish);
+    router.events.on("routeChangeComplete", handleFinish);
+    router.events.on("routeChangeError", handleFinish);
     return () => {
-      router.events.off('routeChangeComplete', handleFinish);
-      router.events.off('routeChangeError', handleFinish);
+      router.events.off("routeChangeComplete", handleFinish);
+      router.events.off("routeChangeError", handleFinish);
     };
   }, [router.events]);
 
   // Handler to update role in DB and local context
   const handleSwitch = async () => {
-    const nextRole = role === 'user' ? 'shopper' : 'user';
+    const nextRole = role === "user" ? "shopper" : "user";
     setIsSwitching(true);
     try {
-      const res = await fetch('/api/user/updateRole', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+      const res = await fetch("/api/user/updateRole", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ role: nextRole }),
       });
-      if (!res.ok) throw new Error('Failed to update role');
+      if (!res.ok) throw new Error("Failed to update role");
       // Update local state after successful DB update
       toggleRole();
-      toast.success(`Switched to ${nextRole === 'user' ? 'User' : 'Shopper'}`);
-      router.push('/');
+      toast.success(`Switched to ${nextRole === "user" ? "User" : "Shopper"}`);
+      router.push("/");
     } catch (error) {
-      console.error('Error updating role:', error);
-      toast.error('Failed to switch account');
+      console.error("Error updating role:", error);
+      toast.error("Failed to switch account");
       setIsSwitching(false);
     }
   };
@@ -87,7 +87,7 @@ export default function SideBar() {
               </g>
             </svg>
           </Link>
-      
+
           <Link
             className="rounded-full p-2 hover:bg-gray-200"
             href={"/Myprofile"}
@@ -164,7 +164,7 @@ export default function SideBar() {
           {/* Switch account */}
           <button
             onClick={handleSwitch}
-            title={`Switch to ${role === 'user' ? 'Shopper' : 'User'}`}
+            title={`Switch to ${role === "user" ? "Shopper" : "User"}`}
             className="rounded-full p-2 hover:bg-gray-200"
           >
             <svg
