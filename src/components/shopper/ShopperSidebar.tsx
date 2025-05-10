@@ -208,6 +208,25 @@ export default function PlasaSidebar() {
                 Account
               </h3>
             </div>
+            <Link href="/Plasa/ShopperProfile" passHref>
+              <div className={`flex items-center rounded-lg px-4 py-3 ${
+                isActive("/Plasa/ShopperProfile")
+                  ? "bg-green-50 text-green-600"
+                  : "text-gray-700 hover:bg-gray-100"
+              }`}>
+                <svg
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  className="mr-3 h-5 w-5"
+                >
+                  <circle cx="12" cy="12" r="10" />
+                  <path d="M12 16v-4M12 8h.01" />
+                </svg>
+                <span>My Profile</span>
+              </div>
+            </Link>
             <Link href="/">
               <div className="flex items-center rounded-lg px-4 py-3 text-gray-700 hover:bg-gray-100">
                 <svg
@@ -248,10 +267,8 @@ export default function PlasaSidebar() {
           <Link
             href="/"
             passHref
-            className={`flex flex-col items-center ${
-              isActive("/Plasa") && !isActive("/Plasa/active-batches")
-                ? "text-green-500"
-                : "text-gray-500"
+            className={`flex flex-col items-center p-2 ${
+              pathname === "/" ? "text-green-600" : "text-gray-600"
             }`}
           >
             <svg
@@ -266,13 +283,12 @@ export default function PlasaSidebar() {
             </svg>
             <span className="mt-1 text-xs">Home</span>
           </Link>
+
           <Link
             href="/Plasa/active-batches"
             passHref
-            className={`flex flex-col items-center ${
-              isActive("/Plasa/active-batches")
-                ? "text-green-500"
-                : "text-gray-500"
+            className={`flex flex-col items-center p-2 ${
+              pathname?.startsWith("/Plasa/active-batches") ? "text-green-600" : "text-gray-600"
             }`}
           >
             <svg
@@ -286,63 +302,14 @@ export default function PlasaSidebar() {
               <path d="M9 17l6-6" />
               <path d="M15 17v-6h-6" />
             </svg>
-            <span className="mt-1 text-xs">Active Batches</span>
+            <span className="mt-1 text-xs">Active</span>
           </Link>
-          <Link
-            href="/Plasa/invoices"
-            passHref
-            className={`flex flex-col items-center ${
-              isActive("/Plasa/invoices") ? "text-green-500" : "text-gray-500"
-            }`}
-          >
-            <svg
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              className="h-6 w-6"
-            >
-              <path d="M21 16V8a2 2 0 00-1-1.73l-7-4a2 2 0 00-2 0l-7 4A2 2 0 003 8v8a2 2 0 001 1.73l7 4a2 2 0 002 0l7-4A2 2 0 0021 16z" />
-              <line x1="12" y1="22.08" x2="12" y2="12" />
-              <line x1="12" y1="12" x2="12" y2="12" />
-              <polyline points="7.5 4.21 12 6.81 16.5 4.21" />
-            </svg>
-            <span className="mt-1 text-xs">Invoices</span>
-          </Link>
+
           <Link
             href="/Plasa/earnings"
             passHref
-            className={`flex flex-col items-center ${
-              isActive("/Plasa/earnings") ? "text-green-500" : "text-gray-500"
-            }`}
-          >
-            <div className="relative">
-              <svg
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                className="h-6 w-6"
-              >
-                <path d="M12 2v20M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6" />
-              </svg>
-              {!loadingEarnings && dailyEarnings > 0 && (
-                <span className="absolute -right-2 -top-2 flex h-4 w-4 items-center justify-center rounded-full bg-green-500 text-[8px] text-white">
-                  +
-                </span>
-              )}
-            </div>
-            <span className="mt-1 text-xs">
-              {loadingEarnings
-                ? "Earnings"
-                : formatCompactCurrency(dailyEarnings)}
-            </span>
-          </Link>
-          <Link
-            href="/Plasa/settings"
-            passHref
-            className={`flex flex-col items-center ${
-              isActive("/Plasa/settings") ? "text-green-500" : "text-gray-500"
+            className={`flex flex-col items-center p-2 ${
+              pathname?.startsWith("/Plasa/earnings") ? "text-green-600" : "text-gray-600"
             }`}
           >
             <svg
@@ -352,8 +319,27 @@ export default function PlasaSidebar() {
               strokeWidth="2"
               className="h-6 w-6"
             >
-              <circle cx="12" cy="8" r="4" />
-              <path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2" />
+              <path d="M12 2v20M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6" />
+            </svg>
+            <span className="mt-1 text-xs">Earnings</span>
+          </Link>
+
+          <Link
+            href="/Plasa/ShopperProfile"
+            passHref
+            className={`flex flex-col items-center p-2 ${
+              pathname?.startsWith("/Plasa/ShopperProfile") ? "text-green-600" : "text-gray-600"
+            }`}
+          >
+            <svg
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              className="h-6 w-6"
+            >
+              <circle cx="12" cy="12" r="10" />
+              <path d="M12 16v-4M12 8h.01" />
             </svg>
             <span className="mt-1 text-xs">Profile</span>
           </Link>
