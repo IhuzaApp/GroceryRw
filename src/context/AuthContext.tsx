@@ -1,4 +1,11 @@
 import React, { createContext, useState, useContext, useEffect } from "react";
+import { useSession } from "next-auth/react";
+
+interface User {
+  id: string | null;
+  name: string | null;
+  profilePicture: string | null;
+}
 
 interface AuthContextType {
   isLoggedIn: boolean;
@@ -8,6 +15,7 @@ interface AuthContextType {
   // Role of the current session: 'user' or 'shopper'
   role: 'user' | 'shopper';
   toggleRole: () => void;
+  user: User | null;
 }
 
 const AuthContext = createContext<AuthContextType>({
@@ -17,26 +25,33 @@ const AuthContext = createContext<AuthContextType>({
   logout: () => {},
   role: 'user',
   toggleRole: () => {},
+  user: null,
 });
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
   children,
 }) => {
+  const { data: session } = useSession();
   const [isLoggedIn, setIsLoggedIn] = useState(false);
-  // Manage user vs shopper role and readiness
   const [role, setRole] = useState<'user' | 'shopper'>('user');
   const [authReady, setAuthReady] = useState(false);
+  const [user, setUser] = useState<User | null>(null);
 
   useEffect(() => {
-    const loggedIn = localStorage.getItem('isLoggedIn') === 'true';
-    setIsLoggedIn(loggedIn);
-    const storedRole = localStorage.getItem('role');
-    if (storedRole === 'shopper') {
-      setRole('shopper');
+    if (session) {
+      setIsLoggedIn(true);
+      setUser({
+        id: session.user.id,
+        name: session.user.name,
+        profilePicture: session.user.profilePicture || "",
+      });
+      setRole(session.user.role);
+    } else {
+      setIsLoggedIn(false);
+      setUser(null);
     }
-    // Mark auth check complete
     setAuthReady(true);
-  }, []);
+  }, [session]);
 
   const login = () => {
     localStorage.setItem("isLoggedIn", "true");
@@ -47,7 +62,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
     localStorage.removeItem("isLoggedIn");
     setIsLoggedIn(false);
   };
-  // Toggle between 'user' and 'shopper'
+
   const toggleRole = () => {
     const next = role === 'user' ? 'shopper' : 'user';
     localStorage.setItem('role', next);
@@ -55,7 +70,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
   };
 
   return (
-    <AuthContext.Provider value={{ isLoggedIn, authReady, login, logout, role, toggleRole }}>
+    <AuthContext.Provider value={{ isLoggedIn, authReady, login, logout, role, toggleRole, user }}>
       {children}
     </AuthContext.Provider>
   );

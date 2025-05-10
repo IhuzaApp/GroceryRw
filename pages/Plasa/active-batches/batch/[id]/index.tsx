@@ -8,6 +8,8 @@ import { GetServerSideProps } from "next"
 import { hasuraClient } from "../../../../../src/lib/hasuraClient"
 import { gql } from "graphql-request"
 import { getSession } from "next-auth/react"
+import { collection, query, where, getDocs, deleteDoc, updateDoc } from "firebase/firestore"
+import { db } from "../../../../../src/lib/firebase"
 
 // Define interfaces for the order data
 interface OrderItem {
@@ -76,9 +78,56 @@ export default function BatchDetailsPage({ orderData, error }: BatchDetailsPageP
   const router = useRouter()
   const [loading, setLoading] = useState(false)
   
-  const handleUpdateStatus = async (orderId: string, newStatus: string) => {
-        setLoading(true)
+  // Function to delete messages from Firebase for an order
+  const deleteFirebaseMessages = async (orderId: string) => {
     try {
+      // First, find the conversation for this order
+      const conversationsRef = collection(db, "chat_conversations");
+      const q = query(conversationsRef, where("orderId", "==", orderId));
+      const querySnapshot = await getDocs(q);
+      
+      if (querySnapshot.empty) {
+        console.log(`No chat conversation found for order ${orderId}`);
+        return;
+      }
+      
+      // For each conversation (should be only one per order)
+      for (const conversationDoc of querySnapshot.docs) {
+        const conversationId = conversationDoc.id;
+        console.log(`Deleting messages for conversation ${conversationId}`);
+        
+        // Get all messages in the subcollection
+        const messagesRef = collection(db, "chat_conversations", conversationId, "messages");
+        const messagesSnapshot = await getDocs(messagesRef);
+        
+        // Delete each message
+        const deletePromises = messagesSnapshot.docs.map(doc => deleteDoc(doc.ref));
+        await Promise.all(deletePromises);
+        
+        console.log(`Deleted ${messagesSnapshot.docs.length} messages for conversation ${conversationId}`);
+        
+        // Optionally: Update the conversation to show it's been cleared
+        // You can either delete the conversation document or update it
+        // Here we'll update it to indicate messages were cleared
+        await updateDoc(conversationDoc.ref, {
+          lastMessage: "Order completed - chat history cleared",
+          unreadCount: 0
+        });
+      }
+    } catch (error) {
+      console.error("Error deleting Firebase messages:", error);
+      // Continue with status update even if message deletion fails
+    }
+  }
+  
+  const handleUpdateStatus = async (orderId: string, newStatus: string) => {
+    setLoading(true)
+    try {
+      // If status is being updated to 'delivered', delete Firebase messages first
+      if (newStatus === 'delivered') {
+        await deleteFirebaseMessages(orderId);
+      }
+      
       const response = await fetch('/api/shopper/updateOrderStatus', {
         method: 'POST',
         headers: {
@@ -91,7 +140,10 @@ export default function BatchDetailsPage({ orderData, error }: BatchDetailsPageP
       })
       
       if (!response.ok) {
-        throw new Error('Failed to update order status')
+        const errorData = await response.json().catch(() => ({ error: 'Unknown error' }));
+        const errorMessage = errorData.error || `Server returned ${response.status}`;
+        console.error(`Error ${response.status}: ${errorMessage}`);
+        throw new Error(`Failed to update order status: ${errorMessage}`);
       }
       
       return await response.json()

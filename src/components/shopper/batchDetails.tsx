@@ -2,13 +2,16 @@
 
 import React, { useState } from "react"
 import { useRouter } from "next/router"
-import { Button, Steps, Panel, Modal, Uploader, Loader, Tag, Divider, Checkbox } from "rsuite"
+import { Button, Steps, Panel, Modal, Uploader, Loader, Tag, Divider, Checkbox, toaster, Notification } from "rsuite"
 import "rsuite/dist/rsuite.min.css"
 import Link from "next/link"
 import Image from "next/image"
 import { formatCurrency } from "../../lib/formatCurrency"
 import ProductImageModal from "./ProductImageModal"
 import QuantityConfirmationModal from "./QuantityConfirmationModal"
+import { useChat } from "../../context/ChatContext"
+import { isMobileDevice } from "../../lib/formatters"
+import ChatDrawer from "../chat/ChatDrawer"
 
 // Define interfaces for the order data
 interface OrderItem {
@@ -82,6 +85,7 @@ interface BatchDetailsProps {
 
 export default function BatchDetails({ orderData, error, onUpdateStatus }: BatchDetailsProps) {
   const router = useRouter()
+  const { openChat, isDrawerOpen, closeChat, currentChatId } = useChat()
   
   const [loading, setLoading] = useState(false)
   const [order, setOrder] = useState<OrderDetailsType | null>(orderData)
@@ -141,11 +145,33 @@ export default function BatchDetails({ orderData, error, onUpdateStatus }: Batch
           break
         case 'delivered':
           setCurrentStep(3)
+          // Show success notification when order is delivered
+          toaster.push(
+            <Notification type="success" header="Order Delivered" closable>
+              Order was successfully marked as delivered and chat history has been cleared.
+            </Notification>,
+            { placement: 'topEnd' }
+          )
           break
       }
     } catch (err) {
       console.error("Error updating order status:", err)
-      setErrorState(err instanceof Error ? err.message : 'Failed to update order status')
+      // Display toast notification for error
+      toaster.push(
+        <Notification type="error" header="Update Failed" closable>
+          {err instanceof Error 
+            ? `Failed to update status: ${err.message}`
+            : 'Failed to update order status. Please try again.'}
+        </Notification>,
+        { placement: 'topEnd' }
+      )
+      
+      // Also set the error state for display in the UI
+      setErrorState(
+        err instanceof Error 
+          ? `Failed to update status: ${err.message}`
+          : 'Failed to update order status. Please try again.'
+      )
     } finally {
       setLoading(false)
     }
@@ -284,6 +310,23 @@ export default function BatchDetails({ orderData, error, onUpdateStatus }: Batch
     }
   }
 
+  // Function to handle chat button click
+  const handleChatClick = () => {
+    if (!order?.user) return;
+    
+    openChat(
+      order.id,
+      order.user.id,
+      order.user.name,
+      order.user.profile_picture
+    );
+    
+    // If on mobile, navigate to chat page
+    if (isMobileDevice()) {
+      router.push(`/Plasa/chat/${order.id}`);
+    }
+  };
+
   if (loading && !order) {
     return (
       <div className="flex items-center justify-center h-[calc(100vh-200px)]">
@@ -338,6 +381,18 @@ export default function BatchDetails({ orderData, error, onUpdateStatus }: Batch
         setFoundQuantity={setFoundQuantity}
         onConfirm={confirmFoundQuantity}
       />
+
+      {/* Chat Drawer - will only show on desktop when chat is open */}
+      {isDrawerOpen && currentChatId === order?.id && (
+        <ChatDrawer
+          isOpen={isDrawerOpen}
+          onClose={closeChat}
+          orderId={order.id}
+          customerId={order.user.id}
+          customerName={order.user.name}
+          customerAvatar={order.user.profile_picture}
+        />
+      )}
 
     <div className="mb-4 flex items-center justify-between">
       <Button
@@ -406,6 +461,7 @@ export default function BatchDetails({ orderData, error, onUpdateStatus }: Batch
         {/* Customer Information */}
         <div className="bg-white p-4 rounded-lg border">
           <h3 className="text-lg font-bold mb-2">Customer Details</h3>
+          <div className="flex items-center justify-between">
           <div className="flex items-center">
             <div className="w-12 h-12 bg-gray-100 rounded-full mr-3 overflow-hidden flex-shrink-0">
               {order.user.profile_picture ? (
@@ -429,6 +485,19 @@ export default function BatchDetails({ orderData, error, onUpdateStatus }: Batch
               <h4 className="font-medium">{order.user.name}</h4>
               <p className="text-sm text-gray-500">{order.user.email}</p>
             </div>
+            </div>
+            
+            {/* Message Button */}
+            <Button 
+              appearance="ghost" 
+              className="flex items-center text-blue-600" 
+              onClick={handleChatClick}
+            >
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="w-4 h-4 mr-1">
+                <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
+              </svg>
+              Message
+            </Button>
           </div>
 
           <div className="mt-3">
