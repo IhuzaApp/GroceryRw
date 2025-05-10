@@ -77,7 +77,7 @@ export default function MapSection({
   const [isActivelyTracking, setIsActivelyTracking] = useState(false);
   // Track active notification types to prevent duplicates
   const activeToastTypesRef = useRef<Set<string>>(new Set());
-  
+
   // Function to get cookies as an object
   const getCookies = () => {
     return document.cookie
@@ -88,38 +88,42 @@ export default function MapSection({
         return acc;
       }, {} as Record<string, string>);
   };
-  
+
   // Function to save location to cookies
   const saveLocationToCookies = (lat: number, lng: number) => {
     document.cookie = `user_latitude=${lat}; path=/; max-age=86400`; // 24 hours
     document.cookie = `user_longitude=${lng}; path=/; max-age=86400`;
   };
-  
+
   // Function that reduces duplicate toast notifications
-  const reduceToastDuplicates = (toastType: string, content: React.ReactNode, options: any = {}) => {
+  const reduceToastDuplicates = (
+    toastType: string,
+    content: React.ReactNode,
+    options: any = {}
+  ) => {
     // Skip if we already have this type of toast active
     if (activeToastTypesRef.current.has(toastType)) {
       return;
     }
-    
+
     // Add to active toasts
     activeToastTypesRef.current.add(toastType);
-    
+
     // Show toast and clean up when closed
     return toaster.push(content, {
       ...options,
       onClose: () => {
         // Remove from active toast types
         activeToastTypesRef.current.delete(toastType);
-        
+
         // Call original onClose if provided
         if (options.onClose) {
           options.onClose();
         }
-      }
+      },
     });
   };
-  
+
   // Function to get single location from browser
   const getSingleLocation = () => {
     return new Promise<GeolocationPosition>((resolve, reject) => {
@@ -127,7 +131,7 @@ export default function MapSection({
         reject(new Error("Geolocation not supported"));
         return;
       }
-      
+
       navigator.geolocation.getCurrentPosition(
         (position) => resolve(position),
         (error) => reject(error),
@@ -140,40 +144,43 @@ export default function MapSection({
     if (!isOnline) {
       // Going online - get current location from cookies or geolocation
       setIsRefreshingLocation(true);
-      
+
       // Check if we have location saved in cookies
       const cookieMap = getCookies();
-      
+
       if (cookieMap["user_latitude"] && cookieMap["user_longitude"]) {
         // Use saved location first
         const lat = parseFloat(cookieMap["user_latitude"]);
         const lng = parseFloat(cookieMap["user_longitude"]);
-        
+
         try {
-            if (userMarkerRef.current && mapInstanceRef.current) {
+          if (userMarkerRef.current && mapInstanceRef.current) {
             userMarkerRef.current.setLatLng([lat, lng]);
-              userMarkerRef.current.addTo(mapInstanceRef.current);
+            userMarkerRef.current.addTo(mapInstanceRef.current);
             mapInstanceRef.current.setView([lat, lng], 16);
           }
-          
+
           setIsOnline(true);
           setIsRefreshingLocation(false);
-          
+
           // Ask user if they want to enable active tracking
           reduceToastDuplicates(
             "saved-location-prompt",
-            <Message 
-              showIcon 
-              type="info" 
-              header="Using Saved Location" 
+            <Message
+              showIcon
+              type="info"
+              header="Using Saved Location"
               closable
             >
               <div>
-                <p>Using your saved location. Would you like to enable active tracking?</p>
+                <p>
+                  Using your saved location. Would you like to enable active
+                  tracking?
+                </p>
                 <div className="mt-2 flex space-x-2">
-                  <Button 
-                    appearance="primary" 
-                    size="sm" 
+                  <Button
+                    appearance="primary"
+                    size="sm"
                     onClick={() => {
                       setIsActivelyTracking(true);
                       startLocationTracking();
@@ -181,15 +188,16 @@ export default function MapSection({
                   >
                     Enable Tracking
                   </Button>
-                  <Button 
-                    appearance="subtle" 
-                    size="sm" 
+                  <Button
+                    appearance="subtle"
+                    size="sm"
                     onClick={() => {
                       setIsActivelyTracking(false);
                       reduceToastDuplicates(
                         "static-location-info",
                         <Message showIcon type="info">
-                          Using static location. Use the refresh button to update.
+                          Using static location. Use the refresh button to
+                          update.
                         </Message>,
                         { placement: "topEnd", duration: 3000 }
                       );
@@ -215,20 +223,22 @@ export default function MapSection({
       // Going offline - clear watch and cookies
       setIsOnline(false);
       setIsActivelyTracking(false);
-      
+
       if (watchIdRef.current !== null) {
         navigator.geolocation.clearWatch(watchIdRef.current);
         watchIdRef.current = null;
       }
-      
+
       // Clear user location cookies
-      document.cookie = "user_latitude=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
-      document.cookie = "user_longitude=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
-      
+      document.cookie =
+        "user_latitude=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
+      document.cookie =
+        "user_longitude=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
+
       if (userMarkerRef.current) {
         userMarkerRef.current.remove();
       }
-      
+
       reduceToastDuplicates(
         "going-offline",
         <Message showIcon type="info" header="Offline">
@@ -248,14 +258,14 @@ export default function MapSection({
         acc[k] = v;
         return acc;
       }, {} as Record<string, string>);
-    
+
     if (cookieMap["user_latitude"] && cookieMap["user_longitude"]) {
       setIsOnline(true);
-      
+
       // Log found cookies for debugging
       console.log("Found location cookies:", {
         lat: cookieMap["user_latitude"],
-        lng: cookieMap["user_longitude"]
+        lng: cookieMap["user_longitude"],
       });
     }
   }, []);
@@ -265,18 +275,18 @@ export default function MapSection({
     if (isOnline) {
       // Check if we already have location cookies
       const cookieMap = getCookies();
-      
+
       // If cookies exist, use them first
       if (cookieMap["user_latitude"] && cookieMap["user_longitude"]) {
         const lat = parseFloat(cookieMap["user_latitude"]);
         const lng = parseFloat(cookieMap["user_longitude"]);
-        
+
         try {
           // Update marker position from cookies
-            if (userMarkerRef.current && mapInstanceRef.current) {
+          if (userMarkerRef.current && mapInstanceRef.current) {
             userMarkerRef.current.setLatLng([lat, lng]);
             userMarkerRef.current.addTo(mapInstanceRef.current);
-            
+
             if (
               typeof mapInstanceRef.current.setView === "function" &&
               mapInstanceRef.current.getContainer() &&
@@ -289,7 +299,7 @@ export default function MapSection({
           console.error("Error setting position from cookies:", error);
         }
       }
-      
+
       // Only start tracking if actively tracking is enabled
       if (isActivelyTracking) {
         console.log("Starting active location tracking");
@@ -302,20 +312,20 @@ export default function MapSection({
         navigator.geolocation.clearWatch(watchIdRef.current);
         watchIdRef.current = null;
       }
-      
+
       // Remove the user marker from the map when offline
       if (userMarkerRef.current) {
         userMarkerRef.current.remove();
       }
-      
+
       // Reset active tracking state
       setIsActivelyTracking(false);
-      
+
       // Reset map view when offline
       if (
         mapInstanceRef.current &&
         typeof mapInstanceRef.current.setView === "function" &&
-        mapInstanceRef.current.getContainer() && 
+        mapInstanceRef.current.getContainer() &&
         (mapInstanceRef.current as any)._loaded
       ) {
         try {
@@ -325,7 +335,7 @@ export default function MapSection({
         }
       }
     }
-    
+
     // Cleanup on unmount
     return () => {
       if (watchIdRef.current !== null) {
@@ -400,18 +410,21 @@ export default function MapSection({
       const lng = parseFloat(initCookies["user_longitude"]);
       try {
         if (userMarkerRef.current) {
-      userMarkerRef.current.setLatLng([lat, lng]);
+          userMarkerRef.current.setLatLng([lat, lng]);
         }
         if (
-          map && 
-          typeof map.setView === "function" && 
-          map.getContainer() && 
+          map &&
+          typeof map.setView === "function" &&
+          map.getContainer() &&
           (map as any)._loaded
         ) {
-      map.setView([lat, lng], 18);
+          map.setView([lat, lng], 18);
         }
       } catch (error) {
-        console.error("Error setting initial map position from cookies:", error);
+        console.error(
+          "Error setting initial map position from cookies:",
+          error
+        );
       }
     } else if (navigator.geolocation) {
       // No stored location, use live geolocation
@@ -420,39 +433,45 @@ export default function MapSection({
           const { latitude, longitude } = position.coords;
           try {
             if (userMarkerRef.current) {
-            userMarkerRef.current.setLatLng([latitude, longitude]);
+              userMarkerRef.current.setLatLng([latitude, longitude]);
             }
             if (
-              mapInstanceRef.current && 
-              typeof mapInstanceRef.current.setView === "function" && 
-              mapInstanceRef.current.getContainer() && 
+              mapInstanceRef.current &&
+              typeof mapInstanceRef.current.setView === "function" &&
+              mapInstanceRef.current.getContainer() &&
               (mapInstanceRef.current as any)._loaded
             ) {
-            mapInstanceRef.current.setView([latitude, longitude], 18);
+              mapInstanceRef.current.setView([latitude, longitude], 18);
             }
           } catch (error) {
-            console.error("Error setting initial map position from geolocation:", error);
+            console.error(
+              "Error setting initial map position from geolocation:",
+              error
+            );
           }
         },
         (error) => {
           console.error("Error obtaining initial location:", error);
-          
+
           // Use fallback location (Kigali city center) when location is unavailable
           const fallbackLat = -1.9706;
           const fallbackLng = 30.1044;
-          
+
           // Show appropriate error message based on error code
           let errorMessage = "Could not access your location.";
           const errorKey = `init-location-error-${error.code}`;
-          
+
           if (error.code === 1) {
-            errorMessage = "Location permission denied. Please enable location access in your browser settings.";
+            errorMessage =
+              "Location permission denied. Please enable location access in your browser settings.";
           } else if (error.code === 2) {
-            errorMessage = "Location unavailable. Using default location instead.";
+            errorMessage =
+              "Location unavailable. Using default location instead.";
           } else if (error.code === 3) {
-            errorMessage = "Location request timed out. Using default location instead.";
+            errorMessage =
+              "Location request timed out. Using default location instead.";
           }
-          
+
           reduceToastDuplicates(
             errorKey,
             <Message showIcon type="info" header="Location Notice">
@@ -460,7 +479,7 @@ export default function MapSection({
             </Message>,
             { placement: "topEnd", duration: 5000 }
           );
-          
+
           // After a short delay, show the manual positioning hint
           setTimeout(() => {
             reduceToastDuplicates(
@@ -471,33 +490,33 @@ export default function MapSection({
               { placement: "topEnd", duration: 6000 }
             );
           }, 5500);
-          
+
           // Center map on fallback location with a wider view
           try {
             if (
-              mapInstanceRef.current && 
-              typeof mapInstanceRef.current.setView === "function" && 
-              mapInstanceRef.current.getContainer() && 
+              mapInstanceRef.current &&
+              typeof mapInstanceRef.current.setView === "function" &&
+              mapInstanceRef.current.getContainer() &&
               (mapInstanceRef.current as any)._loaded
             ) {
               const map = mapInstanceRef.current;
               map.setView([fallbackLat, fallbackLng], 13);
-              
+
               // Set up manual position selection
               const setupManualPositioning = () => {
-                map.on('click', function onMapClick(e) {
+                map.on("click", function onMapClick(e) {
                   const { lat, lng } = e.latlng;
-                  
+
                   // Update user marker position
                   if (userMarkerRef.current) {
                     userMarkerRef.current.setLatLng([lat, lng]);
                     userMarkerRef.current.addTo(map);
                   }
-                  
+
                   // Store the position in cookies
                   document.cookie = `user_latitude=${lat}; path=/`;
                   document.cookie = `user_longitude=${lng}; path=/`;
-                  
+
                   reduceToastDuplicates(
                     "manual-position-set",
                     <Message showIcon type="success" header="Position Set">
@@ -505,22 +524,23 @@ export default function MapSection({
                     </Message>,
                     { placement: "topEnd", duration: 3000 }
                   );
-                  
+
                   // Remove the handler after first use
-                  map.off('click', onMapClick);
+                  map.off("click", onMapClick);
                 });
               };
-              
+
               setupManualPositioning();
             }
           } catch (error) {
             console.error("Error setting fallback map position:", error);
           }
         },
-        { 
-          enableHighAccuracy: true, 
-          maximumAge: 0, 
-          timeout: 15000 }
+        {
+          enableHighAccuracy: true,
+          maximumAge: 0,
+          timeout: 15000,
+        }
       );
     }
     // Hide the user marker if offline on initial load
@@ -709,7 +729,8 @@ export default function MapSection({
       reduceToastDuplicates(
         "geolocation-not-supported",
         <Message showIcon type="error" header="Geolocation Error">
-          Geolocation is not supported by your browser. Please use a different browser.
+          Geolocation is not supported by your browser. Please use a different
+          browser.
         </Message>,
         { placement: "topEnd", duration: 5000 }
       );
@@ -721,20 +742,20 @@ export default function MapSection({
       // Success callback
       (position) => {
         const { latitude, longitude } = position.coords;
-        
+
         // Save to cookies
         saveLocationToCookies(latitude, longitude);
-        
+
         // Update map marker
         if (userMarkerRef.current && mapInstanceRef.current) {
           try {
             userMarkerRef.current.setLatLng([latitude, longitude]);
             userMarkerRef.current.addTo(mapInstanceRef.current);
             mapInstanceRef.current.setView([latitude, longitude], 16);
-            
+
             setIsOnline(true);
             setIsRefreshingLocation(false);
-            
+
             // Show success message
             reduceToastDuplicates(
               "location-updated",
@@ -743,18 +764,23 @@ export default function MapSection({
               </Message>,
               { placement: "topEnd", duration: 3000 }
             );
-            
+
             // Ask user if they want to enable active tracking
             setTimeout(() => {
               reduceToastDuplicates(
                 "tracking-prompt",
-                <Message showIcon type="info" header="Location Tracking" closable>
+                <Message
+                  showIcon
+                  type="info"
+                  header="Location Tracking"
+                  closable
+                >
                   <div>
                     <p>Would you like to enable active location tracking?</p>
                     <div className="mt-2 flex space-x-2">
-                      <Button 
-                        appearance="primary" 
-                        size="sm" 
+                      <Button
+                        appearance="primary"
+                        size="sm"
                         onClick={() => {
                           setIsActivelyTracking(true);
                           startLocationTracking();
@@ -762,15 +788,16 @@ export default function MapSection({
                       >
                         Enable Tracking
                       </Button>
-                      <Button 
-                        appearance="subtle" 
-                        size="sm" 
+                      <Button
+                        appearance="subtle"
+                        size="sm"
                         onClick={() => {
                           setIsActivelyTracking(false);
                           reduceToastDuplicates(
                             "static-location-info",
                             <Message showIcon type="info">
-                              Using static location. Use the refresh button to update.
+                              Using static location. Use the refresh button to
+                              update.
                             </Message>,
                             { placement: "topEnd", duration: 3000 }
                           );
@@ -794,15 +821,18 @@ export default function MapSection({
       (error) => {
         console.error("Geolocation error:", error);
         setIsRefreshingLocation(false);
-        
+
         // Show error message based on error code
         const errorKey = `location-error-${error.code}`;
-        const errorMessage = 
-          error.code === 1 ? "Location permission denied. Please enable location access in your browser settings." :
-          error.code === 2 ? "Location unavailable. Please check your device settings." :
-          error.code === 3 ? "Location request timed out. Please try again." :
-          "Error getting your location. Please try again.";
-        
+        const errorMessage =
+          error.code === 1
+            ? "Location permission denied. Please enable location access in your browser settings."
+            : error.code === 2
+            ? "Location unavailable. Please check your device settings."
+            : error.code === 3
+            ? "Location request timed out. Please try again."
+            : "Error getting your location. Please try again.";
+
         reduceToastDuplicates(
           errorKey,
           <Message showIcon type="error" header="Location Error">
@@ -810,7 +840,7 @@ export default function MapSection({
           </Message>,
           { placement: "topEnd", duration: 5000 }
         );
-        
+
         // Set up manual location mode
         if (mapInstanceRef.current) {
           reduceToastDuplicates(
@@ -820,21 +850,21 @@ export default function MapSection({
             </Message>,
             { placement: "topEnd", duration: 5000 }
           );
-          
+
           try {
             const mapInstance = mapInstanceRef.current;
             const onMapClick = (e: L.LeafletMouseEvent) => {
               const { lat, lng } = e.latlng;
-              
+
               // Save the position to cookies
               saveLocationToCookies(lat, lng);
-              
+
               // Update marker
               if (userMarkerRef.current) {
                 userMarkerRef.current.setLatLng([lat, lng]);
                 userMarkerRef.current.addTo(mapInstance);
               }
-              
+
               reduceToastDuplicates(
                 "manual-location-set",
                 <Message showIcon type="success" header="Location Set">
@@ -842,14 +872,14 @@ export default function MapSection({
                 </Message>,
                 { placement: "topEnd", duration: 3000 }
               );
-              
+
               setIsOnline(true);
-              
+
               // Remove handler after first use
-              mapInstance.off('click', onMapClick);
+              mapInstance.off("click", onMapClick);
             };
-            
-            mapInstance.on('click', onMapClick);
+
+            mapInstance.on("click", onMapClick);
           } catch (mapError) {
             console.error("Error setting up manual mode:", mapError);
           }
@@ -859,7 +889,7 @@ export default function MapSection({
       {
         enableHighAccuracy: true,
         timeout: 15000,
-        maximumAge: 0
+        maximumAge: 0,
       }
     );
   };
@@ -871,9 +901,11 @@ export default function MapSection({
       <Message showIcon type="info" header="Location Troubleshooting">
         <div>
           <p>Try the following steps to fix location issues:</p>
-          <ol className="list-decimal pl-4 mt-1">
+          <ol className="mt-1 list-decimal pl-4">
             <li>Make sure you&#39;re outdoors or near a window</li>
-            <li>Check that location services are enabled in your device settings</li>
+            <li>
+              Check that location services are enabled in your device settings
+            </li>
             <li>Ensure your browser has permission to access your location</li>
             <li>Try using a different browser or device</li>
           </ol>
@@ -882,7 +914,7 @@ export default function MapSection({
       { placement: "topEnd", duration: 10000 }
     );
   };
-  
+
   // Helper function to start location tracking
   const startLocationTracking = () => {
     // Clear any existing watch first
@@ -890,20 +922,20 @@ export default function MapSection({
       navigator.geolocation.clearWatch(watchIdRef.current);
       watchIdRef.current = null;
     }
-    
+
     if (navigator.geolocation) {
       // Reset the error counter
       locationErrorCountRef.current = 0;
-      
+
       watchIdRef.current = navigator.geolocation.watchPosition(
         (position) => {
           const { latitude, longitude } = position.coords;
           // Reset error counter on success
           locationErrorCountRef.current = 0;
-          
+
           // Save to cookies
           saveLocationToCookies(latitude, longitude);
-          
+
           // Update marker position and recenter map
           if (userMarkerRef.current && mapInstanceRef.current) {
             try {
@@ -926,10 +958,10 @@ export default function MapSection({
         },
         (error) => {
           console.error("Error watching location:", error);
-          
+
           // Increment the error counter
           locationErrorCountRef.current += 1;
-          
+
           // Handle different error cases
           if (error.code === 1) {
             // Permission denied
@@ -940,7 +972,7 @@ export default function MapSection({
               </Message>,
               { placement: "topEnd", duration: 5000 }
             );
-            
+
             // Automatically stop tracking if permission denied
             setIsActivelyTracking(false);
             if (watchIdRef.current !== null) {
@@ -952,35 +984,46 @@ export default function MapSection({
             reduceToastDuplicates(
               "location-unavailable",
               <Message showIcon type="warning" header="Location Unavailable">
-                Your location is currently unavailable. Using your last saved position.
+                Your location is currently unavailable. Using your last saved
+                position.
               </Message>,
               { placement: "topEnd", duration: 5000 }
             );
-            
+
             // If we've had multiple failures, show the troubleshooting guide
             if (locationErrorCountRef.current >= 3) {
               showLocationTroubleshootingGuide();
-              
+
               // After persistent failures, suggest turning off tracking
               if (locationErrorCountRef.current >= 5) {
                 reduceToastDuplicates(
                   "tracking-issues",
                   <Message showIcon type="info" header="Active Tracking Issue">
                     <div>
-                      <p>Automatic location tracking is not working well. Would you like to disable it?</p>
+                      <p>
+                        Automatic location tracking is not working well. Would
+                        you like to disable it?
+                      </p>
                       <div className="mt-2 flex space-x-2">
-                        <button 
+                        <button
                           onClick={() => {
                             setIsActivelyTracking(false);
                             if (watchIdRef.current !== null) {
-                              navigator.geolocation.clearWatch(watchIdRef.current);
+                              navigator.geolocation.clearWatch(
+                                watchIdRef.current
+                              );
                               watchIdRef.current = null;
                             }
-                            
+
                             reduceToastDuplicates(
                               "tracking-disabled",
-                              <Message showIcon type="success" header="Tracking Disabled">
-                                Using static location. Use the refresh button to update manually.
+                              <Message
+                                showIcon
+                                type="success"
+                                header="Tracking Disabled"
+                              >
+                                Using static location. Use the refresh button to
+                                update manually.
                               </Message>,
                               { placement: "topEnd", duration: 3000 }
                             );
@@ -989,7 +1032,7 @@ export default function MapSection({
                         >
                           Disable Tracking
                         </button>
-                        <button 
+                        <button
                           onClick={() => {
                             // Just close the notification
                           }}
@@ -1015,13 +1058,13 @@ export default function MapSection({
             );
           }
         },
-        { 
-          enableHighAccuracy: true, 
-          maximumAge: 0, 
-          timeout: 15000
+        {
+          enableHighAccuracy: true,
+          maximumAge: 0,
+          timeout: 15000,
         }
       );
-      
+
       setIsActivelyTracking(true);
     } else {
       reduceToastDuplicates(
@@ -1047,9 +1090,9 @@ export default function MapSection({
       );
       return;
     }
-    
+
     setIsRefreshingLocation(true);
-    
+
     // Show loading toast
     reduceToastDuplicates(
       "location-updating",
@@ -1062,16 +1105,16 @@ export default function MapSection({
     navigator.geolocation.getCurrentPosition(
       (position) => {
         const { latitude, longitude } = position.coords;
-        
+
         // Save to cookies
         saveLocationToCookies(latitude, longitude);
-        
+
         // Update marker and map view
         if (userMarkerRef.current && mapInstanceRef.current) {
           try {
             userMarkerRef.current.setLatLng([latitude, longitude]);
             userMarkerRef.current.addTo(mapInstanceRef.current);
-            
+
             if (
               typeof mapInstanceRef.current.setView === "function" &&
               mapInstanceRef.current.getContainer() &&
@@ -1079,7 +1122,7 @@ export default function MapSection({
             ) {
               mapInstanceRef.current.setView([latitude, longitude], 16);
             }
-            
+
             // Success message
             reduceToastDuplicates(
               "location-updated",
@@ -1092,25 +1135,28 @@ export default function MapSection({
             console.error("Error updating map on refresh:", error);
           }
         }
-        
+
         setIsRefreshingLocation(false);
       },
       (error) => {
         console.error("Error refreshing location:", error);
         setIsRefreshingLocation(false);
-        
+
         // Error message based on error type
         let errorMessage = "Could not update your location.";
         const errorKey = `location-error-${error.code}`;
-        
+
         if (error.code === 1) {
-          errorMessage = "Location permission denied. Please enable location access.";
+          errorMessage =
+            "Location permission denied. Please enable location access.";
         } else if (error.code === 2) {
-          errorMessage = "Location unavailable. Using your saved location instead.";
+          errorMessage =
+            "Location unavailable. Using your saved location instead.";
         } else if (error.code === 3) {
-          errorMessage = "Location request timed out. Using your saved location instead.";
+          errorMessage =
+            "Location request timed out. Using your saved location instead.";
         }
-        
+
         reduceToastDuplicates(
           errorKey,
           <Message showIcon type="error" header="Location Error">
@@ -1137,23 +1183,29 @@ export default function MapSection({
 
       {mapLoaded && (
         <>
-        <button
-          onClick={handleGoLive}
-          className={`absolute bottom-5 left-1/2 z-[1000] hidden w-[90%] -translate-x-1/2 transform rounded-full py-2 font-bold shadow-lg md:block md:w-auto md:px-4 ${
-            isOnline ? "bg-red-500 text-white" : "bg-green-500 text-white"
-          }`}
-        >
-          {isOnline ? "Go Offline" : "Start Plas"}
-        </button>
-          
+          <button
+            onClick={handleGoLive}
+            className={`absolute bottom-5 left-1/2 z-[1000] hidden w-[90%] -translate-x-1/2 transform rounded-full py-2 font-bold shadow-lg md:block md:w-auto md:px-4 ${
+              isOnline ? "bg-red-500 text-white" : "bg-green-500 text-white"
+            }`}
+          >
+            {isOnline ? "Go Offline" : "Start Plas"}
+          </button>
+
           {/* Add tracking mode indicator */}
           {isOnline && (
             <div className="absolute bottom-20 left-1/2 z-[1000] -translate-x-1/2 transform rounded-full bg-white px-3 py-1 text-sm font-semibold shadow-md">
               <div className="flex items-center">
-                <span className={`mr-2 inline-block h-3 w-3 rounded-full ${isActivelyTracking ? 'bg-green-500 animate-pulse' : 'bg-blue-500'}`}></span>
-                {isActivelyTracking ? 'Live Tracking' : 'Static Location'}
-                
-                <button 
+                <span
+                  className={`mr-2 inline-block h-3 w-3 rounded-full ${
+                    isActivelyTracking
+                      ? "animate-pulse bg-green-500"
+                      : "bg-blue-500"
+                  }`}
+                ></span>
+                {isActivelyTracking ? "Live Tracking" : "Static Location"}
+
+                <button
                   onClick={() => {
                     if (isActivelyTracking) {
                       // Disable tracking
@@ -1164,8 +1216,13 @@ export default function MapSection({
                       }
                       reduceToastDuplicates(
                         "tracking-disabled",
-                        <Message showIcon type="info" header="Tracking Disabled">
-                          Using static location. Use the refresh button to update.
+                        <Message
+                          showIcon
+                          type="info"
+                          header="Tracking Disabled"
+                        >
+                          Using static location. Use the refresh button to
+                          update.
                         </Message>,
                         { placement: "topEnd", duration: 3000 }
                       );
@@ -1174,7 +1231,11 @@ export default function MapSection({
                       startLocationTracking();
                       reduceToastDuplicates(
                         "tracking-enabled",
-                        <Message showIcon type="success" header="Tracking Enabled">
+                        <Message
+                          showIcon
+                          type="success"
+                          header="Tracking Enabled"
+                        >
                           Your location will update automatically as you move.
                         </Message>,
                         { placement: "topEnd", duration: 3000 }
@@ -1183,12 +1244,12 @@ export default function MapSection({
                   }}
                   className="ml-3 text-xs text-blue-600 hover:text-blue-800 hover:underline"
                 >
-                  {isActivelyTracking ? 'Disable' : 'Enable'}
+                  {isActivelyTracking ? "Disable" : "Enable"}
                 </button>
               </div>
             </div>
           )}
-          
+
           {/* Add refresh location button - visible on both mobile and desktop */}
           {isOnline && (
             <button

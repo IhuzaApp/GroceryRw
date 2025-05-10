@@ -276,9 +276,9 @@ export default function UserProfile() {
 
         {activeTab === "orders" && (
           <Panel shaded bordered>
-            <UserRecentOrders 
+            <UserRecentOrders
               filter="all"
-              orders={userOrders} 
+              orders={userOrders}
               loading={ordersLoading}
               onRefresh={refreshOrders}
             />

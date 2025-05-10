@@ -6,12 +6,16 @@ import { gql } from "graphql-request";
 
 // GraphQL mutation to assign a shopper and update status
 const ASSIGN_ORDER = gql`
-  mutation AssignOrder($id: uuid!, $shopper_id: uuid!, $updated_at: timestamptz!) {
+  mutation AssignOrder(
+    $id: uuid!
+    $shopper_id: uuid!
+    $updated_at: timestamptz!
+  ) {
     update_Orders_by_pk(
       pk_columns: { id: $id }
-      _set: { 
-        shopper_id: $shopper_id, 
-        status: "shopping",
+      _set: {
+        shopper_id: $shopper_id
+        status: "shopping"
         updated_at: $updated_at
       }
     ) {
@@ -50,7 +54,11 @@ export default async function handler(
   }
 
   // Authenticate the shopper
-  const session = await getServerSession(req, res, authOptions as any) as SessionUser;
+  const session = (await getServerSession(
+    req,
+    res,
+    authOptions as any
+  )) as SessionUser;
   const userId = session?.user?.id;
   if (!userId) {
     return res.status(401).json({ error: "Unauthorized" });
@@ -68,7 +76,7 @@ export default async function handler(
     const data = await hasuraClient.request<OrderResponse>(ASSIGN_ORDER, {
       id: orderId,
       shopper_id: userId,
-      updated_at: currentTimestamp
+      updated_at: currentTimestamp,
     });
 
     return res

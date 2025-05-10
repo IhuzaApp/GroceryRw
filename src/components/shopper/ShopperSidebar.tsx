@@ -39,17 +39,17 @@ export default function PlasaSidebar() {
       setLoadingEarnings(true);
       try {
         // Fetch earnings using the new API endpoint
-        const response = await fetch('/api/shopper/dailyEarnings');
+        const response = await fetch("/api/shopper/dailyEarnings");
         if (!response.ok) {
-          throw new Error('Failed to fetch earnings data');
+          throw new Error("Failed to fetch earnings data");
         }
-        
+
         const data: EarningsResponse = await response.json();
-        
+
         if (data.success) {
           setDailyEarnings(data.earnings.total);
         } else {
-          throw new Error('Earnings data not successful');
+          throw new Error("Earnings data not successful");
         }
       } catch (error) {
         console.error("Error fetching daily earnings:", error);
@@ -58,11 +58,11 @@ export default function PlasaSidebar() {
         setLoadingEarnings(false);
       }
     };
-    
+
     fetchDailyEarnings();
     // Set up an interval to refresh the earnings every 5 minutes
     const interval = setInterval(fetchDailyEarnings, 5 * 60 * 1000);
-    
+
     return () => clearInterval(interval);
   }, []);
 
@@ -333,7 +333,9 @@ export default function PlasaSidebar() {
               )}
             </div>
             <span className="mt-1 text-xs">
-              {loadingEarnings ? "Earnings" : formatCompactCurrency(dailyEarnings)}
+              {loadingEarnings
+                ? "Earnings"
+                : formatCompactCurrency(dailyEarnings)}
             </span>
           </Link>
           <Link

@@ -6,13 +6,14 @@ import { authOptions } from "../auth/[...nextauth]";
 
 // GraphQL mutation to update order status
 const UPDATE_ORDER_STATUS = gql`
-  mutation UpdateOrderStatus($id: uuid!, $status: String!, $updated_at: timestamptz!) {
+  mutation UpdateOrderStatus(
+    $id: uuid!
+    $status: String!
+    $updated_at: timestamptz!
+  ) {
     update_Orders_by_pk(
-      pk_columns: { id: $id }, 
-      _set: { 
-        status: $status,
-        updated_at: $updated_at
-      }
+      pk_columns: { id: $id }
+      _set: { status: $status, updated_at: $updated_at }
     ) {
       id
       status
@@ -101,10 +102,10 @@ export default async function handler(
         status: string;
         updated_at: string;
       };
-    }>(UPDATE_ORDER_STATUS, { 
-      id: orderId, 
+    }>(UPDATE_ORDER_STATUS, {
+      id: orderId,
       status,
-      updated_at: currentTimestamp
+      updated_at: currentTimestamp,
     });
 
     console.log("Order status updated successfully:", data.update_Orders_by_pk);
@@ -115,13 +116,11 @@ export default async function handler(
     });
   } catch (error) {
     console.error("Error updating order status:", error);
-    return res
-      .status(500)
-      .json({
-        error:
-          error instanceof Error
-            ? error.message
-            : "Failed to update order status",
-      });
+    return res.status(500).json({
+      error:
+        error instanceof Error
+          ? error.message
+          : "Failed to update order status",
+    });
   }
 }
