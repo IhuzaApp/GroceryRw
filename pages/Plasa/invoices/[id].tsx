@@ -89,7 +89,7 @@ export default function InvoicePage({ invoiceData, error }: InvoicePageProps) {
         <div className="p-4">
           <Panel bordered header="Invoice Not Found" shaded>
             <p>
-              The invoice you're looking for doesn't exist or you don't have
+              The invoice you&#39;re looking for doesn&#39;t exist or you don&#39;t have
               permission to view it.
             </p>
             <Button appearance="primary" onClick={() => router.back()}>

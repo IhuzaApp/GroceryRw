@@ -150,9 +150,9 @@ export default function MapSection({
         const lng = parseFloat(cookieMap["user_longitude"]);
         
         try {
-          if (userMarkerRef.current && mapInstanceRef.current) {
+            if (userMarkerRef.current && mapInstanceRef.current) {
             userMarkerRef.current.setLatLng([lat, lng]);
-            userMarkerRef.current.addTo(mapInstanceRef.current);
+              userMarkerRef.current.addTo(mapInstanceRef.current);
             mapInstanceRef.current.setView([lat, lng], 16);
           }
           
@@ -273,7 +273,7 @@ export default function MapSection({
         
         try {
           // Update marker position from cookies
-          if (userMarkerRef.current && mapInstanceRef.current) {
+            if (userMarkerRef.current && mapInstanceRef.current) {
             userMarkerRef.current.setLatLng([lat, lng]);
             userMarkerRef.current.addTo(mapInstanceRef.current);
             
@@ -313,7 +313,7 @@ export default function MapSection({
       
       // Reset map view when offline
       if (
-        mapInstanceRef.current && 
+        mapInstanceRef.current &&
         typeof mapInstanceRef.current.setView === "function" &&
         mapInstanceRef.current.getContainer() && 
         (mapInstanceRef.current as any)._loaded
@@ -400,7 +400,7 @@ export default function MapSection({
       const lng = parseFloat(initCookies["user_longitude"]);
       try {
         if (userMarkerRef.current) {
-          userMarkerRef.current.setLatLng([lat, lng]);
+      userMarkerRef.current.setLatLng([lat, lng]);
         }
         if (
           map && 
@@ -408,7 +408,7 @@ export default function MapSection({
           map.getContainer() && 
           (map as any)._loaded
         ) {
-          map.setView([lat, lng], 18);
+      map.setView([lat, lng], 18);
         }
       } catch (error) {
         console.error("Error setting initial map position from cookies:", error);
@@ -420,7 +420,7 @@ export default function MapSection({
           const { latitude, longitude } = position.coords;
           try {
             if (userMarkerRef.current) {
-              userMarkerRef.current.setLatLng([latitude, longitude]);
+            userMarkerRef.current.setLatLng([latitude, longitude]);
             }
             if (
               mapInstanceRef.current && 
@@ -428,7 +428,7 @@ export default function MapSection({
               mapInstanceRef.current.getContainer() && 
               (mapInstanceRef.current as any)._loaded
             ) {
-              mapInstanceRef.current.setView([latitude, longitude], 18);
+            mapInstanceRef.current.setView([latitude, longitude], 18);
             }
           } catch (error) {
             console.error("Error setting initial map position from geolocation:", error);
@@ -872,7 +872,7 @@ export default function MapSection({
         <div>
           <p>Try the following steps to fix location issues:</p>
           <ol className="list-decimal pl-4 mt-1">
-            <li>Make sure you're outdoors or near a window</li>
+            <li>Make sure you&#39;re outdoors or near a window</li>
             <li>Check that location services are enabled in your device settings</li>
             <li>Ensure your browser has permission to access your location</li>
             <li>Try using a different browser or device</li>
@@ -1137,14 +1137,14 @@ export default function MapSection({
 
       {mapLoaded && (
         <>
-          <button
-            onClick={handleGoLive}
-            className={`absolute bottom-5 left-1/2 z-[1000] hidden w-[90%] -translate-x-1/2 transform rounded-full py-2 font-bold shadow-lg md:block md:w-auto md:px-4 ${
-              isOnline ? "bg-red-500 text-white" : "bg-green-500 text-white"
-            }`}
-          >
-            {isOnline ? "Go Offline" : "Start Plas"}
-          </button>
+        <button
+          onClick={handleGoLive}
+          className={`absolute bottom-5 left-1/2 z-[1000] hidden w-[90%] -translate-x-1/2 transform rounded-full py-2 font-bold shadow-lg md:block md:w-auto md:px-4 ${
+            isOnline ? "bg-red-500 text-white" : "bg-green-500 text-white"
+          }`}
+        >
+          {isOnline ? "Go Offline" : "Start Plas"}
+        </button>
           
           {/* Add tracking mode indicator */}
           {isOnline && (

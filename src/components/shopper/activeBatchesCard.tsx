@@ -174,7 +174,7 @@ export default function ActiveBatches({
             </div>
             <h3 className="mb-2 text-lg font-medium">No Active Batches</h3>
             <p className="mb-4 text-gray-500">
-              You don't have any active batches at the moment.
+              You don&#39;t have any active batches at the moment.
             </p>
             <Link href="/Plasa">
               <button className="rounded-md bg-[#125C13] px-4 py-2 font-medium text-white transition-colors hover:bg-[#0A400B]">

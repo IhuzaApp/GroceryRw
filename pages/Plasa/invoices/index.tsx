@@ -136,7 +136,7 @@ export default function InvoicesPage({
             shaded
             className="py-8 text-center"
           >
-            <p className="mb-4">You don't have any invoices yet.</p>
+            <p className="mb-4">You don&#39;t have any invoices yet.</p>
           </Panel>
         ) : (
           <>

@@ -386,7 +386,7 @@ export default function BatchDetails({
       <div className="p-4">
         <Panel bordered header="Order Not Found" shaded>
           <p>
-            The order you're looking for doesn't exist or you don't have
+            The order you&#39;re looking for doesn&#39;t exist or you don&#39;t have
             permission to view it.
           </p>
           <Button appearance="primary" onClick={() => router.push("/Plasa")}>
