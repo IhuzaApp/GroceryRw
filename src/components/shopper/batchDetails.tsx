@@ -145,10 +145,14 @@ export default function BatchDetails({ orderData, error, onUpdateStatus }: Batch
           break
         case 'delivered':
           setCurrentStep(3)
+          // Close chat drawer if open when order is delivered
+          if (isDrawerOpen && currentChatId === order.id) {
+            closeChat();
+          }
           // Show success notification when order is delivered
           toaster.push(
             <Notification type="success" header="Order Delivered" closable>
-              Order was successfully marked as delivered and chat history has been cleared.
+              Order was successfully marked as delivered. An invoice has been generated and chat history has been cleared.
             </Notification>,
             { placement: 'topEnd' }
           )
@@ -293,23 +297,6 @@ export default function BatchDetails({ orderData, error, onUpdateStatus }: Batch
     }
   }
 
-  // Helper function to get status tag with appropriate color
-  const getStatusTag = (status: string) => {
-    switch (status) {
-      case 'accepted':
-        return <Tag color="blue">Accepted</Tag>
-      case 'shopping':
-        return <Tag color="orange">Shopping</Tag>
-      case 'on_the_way':
-      case 'at_customer':
-        return <Tag color="violet">On The Way</Tag>
-      case 'delivered':
-        return <Tag color="green">Delivered</Tag>
-      default:
-        return <Tag color="cyan">{status}</Tag>
-    }
-  }
-
   // Function to handle chat button click
   const handleChatClick = () => {
     if (!order?.user) return;
@@ -326,6 +313,23 @@ export default function BatchDetails({ orderData, error, onUpdateStatus }: Batch
       router.push(`/Plasa/chat/${order.id}`);
     }
   };
+
+  // Helper function to get status tag with appropriate color
+  const getStatusTag = (status: string) => {
+    switch (status) {
+      case 'accepted':
+        return <Tag color="blue">Accepted</Tag>
+      case 'shopping':
+        return <Tag color="orange">Shopping</Tag>
+      case 'on_the_way':
+      case 'at_customer':
+        return <Tag color="violet">On The Way</Tag>
+      case 'delivered':
+        return <Tag color="green">Delivered</Tag>
+      default:
+        return <Tag color="cyan">{status}</Tag>
+    }
+  }
 
   if (loading && !order) {
     return (
@@ -383,7 +387,7 @@ export default function BatchDetails({ orderData, error, onUpdateStatus }: Batch
       />
 
       {/* Chat Drawer - will only show on desktop when chat is open */}
-      {isDrawerOpen && currentChatId === order?.id && (
+      {isDrawerOpen && currentChatId === order?.id && order.status !== 'delivered' && (
         <ChatDrawer
           isOpen={isDrawerOpen}
           onClose={closeChat}
@@ -487,17 +491,30 @@ export default function BatchDetails({ orderData, error, onUpdateStatus }: Batch
             </div>
             </div>
             
-            {/* Message Button */}
-            <Button 
-              appearance="ghost" 
-              className="flex items-center text-blue-600" 
-              onClick={handleChatClick}
-            >
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="w-4 h-4 mr-1">
-                <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
-              </svg>
-              Message
-            </Button>
+            {/* Message Button - disabled if order is delivered */}
+            {order.status !== 'delivered' ? (
+              <Button 
+                appearance="ghost" 
+                className="flex items-center text-blue-600" 
+                onClick={handleChatClick}
+              >
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="w-4 h-4 mr-1">
+                  <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
+                </svg>
+                Message
+              </Button>
+            ) : (
+              <Button 
+                appearance="ghost" 
+                className="flex items-center text-gray-400 cursor-not-allowed" 
+                disabled
+              >
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="w-4 h-4 mr-1">
+                  <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
+                </svg>
+                Chat Closed
+              </Button>
+            )}
           </div>
 
           <div className="mt-3">
