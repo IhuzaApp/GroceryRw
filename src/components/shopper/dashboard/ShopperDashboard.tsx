@@ -69,8 +69,9 @@ export default function ShopperDashboard() {
         acc[k] = v;
         return acc;
       }, {} as Record<string, string>);
-    
-    const hasLocationCookies = cookies["user_latitude"] && cookies["user_longitude"];
+
+    const hasLocationCookies =
+      cookies["user_latitude"] && cookies["user_longitude"];
     return hasLocationCookies;
   };
 
@@ -147,18 +148,18 @@ export default function ShopperDashboard() {
   useEffect(() => {
     // Initial check
     updateOnlineStatus();
-    
+
     // Create a custom event listener to detect when toggling online/offline
     const handleCustomEvent = () => {
       // Give the cookies time to be set or cleared
       setTimeout(updateOnlineStatus, 300);
     };
-    
+
     window.addEventListener("toggleGoLive", handleCustomEvent);
-    
+
     // Also check periodically for any cookie changes
     const intervalId = setInterval(updateOnlineStatus, 5000);
-    
+
     return () => {
       window.removeEventListener("toggleGoLive", handleCustomEvent);
       clearInterval(intervalId);
@@ -270,13 +271,13 @@ export default function ShopperDashboard() {
               {!isExpanded && (
                 <div className="absolute right-4 top-2 flex items-center">
                   {/* Status indicator dot */}
-                  <span 
+                  <span
                     className={`mr-2 inline-block h-2 w-2 rounded-full ${
-                      isOnline ? "bg-green-500 animate-pulse" : "bg-gray-400"
-                    }`} 
+                      isOnline ? "animate-pulse bg-green-500" : "bg-gray-400"
+                    }`}
                     title={isOnline ? "Online" : "Offline"}
                   />
-                  
+
                   {/* Toggle button - RED means "Go Offline" when already online, GREEN means "Start Plas" when offline */}
                   <button
                     onClick={() =>
@@ -284,7 +285,7 @@ export default function ShopperDashboard() {
                     }
                     className={`rounded px-3 py-1 font-bold shadow ${
                       isOnline
-                        ? "bg-red-500 text-white"  // Red when online (action: Go Offline)
+                        ? "bg-red-500 text-white" // Red when online (action: Go Offline)
                         : "bg-green-500 text-white" // Green when offline (action: Start Plas)
                     }`}
                   >

@@ -119,9 +119,10 @@ export default function Home({ initialData }: { initialData: Data }) {
   }, [data, authReady]);
 
   // Calculate filteredShops before using it in other hooks
-  const filteredShops = !authReady || role === "shopper" 
-    ? [] 
-    : selectedCategory
+  const filteredShops =
+    !authReady || role === "shopper"
+      ? []
+      : selectedCategory
       ? data.shops?.filter((shop) => {
           console.log("Shop category_id:", shop.category_id);
           console.log("Selected category:", selectedCategory);
@@ -132,7 +133,7 @@ export default function Home({ initialData }: { initialData: Data }) {
   // Compute dynamics on client after mount when filteredShops changes
   useEffect(() => {
     if (!authReady || role === "shopper") return;
-    
+
     // Function to compute distance, time, and fee for shops
     const computeDynamics = () => {
       const cookie = Cookies.get("delivery_address");

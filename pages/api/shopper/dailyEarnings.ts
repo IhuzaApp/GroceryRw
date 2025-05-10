@@ -21,7 +21,7 @@ const GET_DAILY_ORDERS = gql`
       service_fee
       delivery_fee
     }
-    
+
     # Completed orders (delivered)
     completedOrders: Orders(
       where: {
@@ -70,24 +70,30 @@ export default async function handler(
     const data = await hasuraClient.request<{
       activeOrders: Order[];
       completedOrders: Order[];
-    }>(GET_DAILY_ORDERS, { 
+    }>(GET_DAILY_ORDERS, {
       shopperId: userId,
-      startDate: today.toISOString()
+      startDate: today.toISOString(),
     });
 
     // Calculate earnings from active orders
-    const activeEarnings = data.activeOrders.reduce((sum: number, order: Order) => {
-      const serviceFee = parseFloat(order.service_fee || "0");
-      const deliveryFee = parseFloat(order.delivery_fee || "0");
-      return sum + serviceFee + deliveryFee;
-    }, 0);
+    const activeEarnings = data.activeOrders.reduce(
+      (sum: number, order: Order) => {
+        const serviceFee = parseFloat(order.service_fee || "0");
+        const deliveryFee = parseFloat(order.delivery_fee || "0");
+        return sum + serviceFee + deliveryFee;
+      },
+      0
+    );
 
     // Calculate earnings from completed orders
-    const completedEarnings = data.completedOrders.reduce((sum: number, order: Order) => {
-      const serviceFee = parseFloat(order.service_fee || "0");
-      const deliveryFee = parseFloat(order.delivery_fee || "0");
-      return sum + serviceFee + deliveryFee;
-    }, 0);
+    const completedEarnings = data.completedOrders.reduce(
+      (sum: number, order: Order) => {
+        const serviceFee = parseFloat(order.service_fee || "0");
+        const deliveryFee = parseFloat(order.delivery_fee || "0");
+        return sum + serviceFee + deliveryFee;
+      },
+      0
+    );
 
     // Total earnings for the day
     const totalEarnings = activeEarnings + completedEarnings;
@@ -97,18 +103,21 @@ export default async function handler(
       earnings: {
         active: activeEarnings,
         completed: completedEarnings,
-        total: totalEarnings
+        total: totalEarnings,
       },
       orderCounts: {
         active: data.activeOrders.length,
         completed: data.completedOrders.length,
-        total: data.activeOrders.length + data.completedOrders.length
-      }
+        total: data.activeOrders.length + data.completedOrders.length,
+      },
     });
   } catch (error) {
     console.error("Error fetching daily earnings:", error);
-    return res.status(500).json({ 
-      error: error instanceof Error ? error.message : "Failed to fetch daily earnings"
+    return res.status(500).json({
+      error:
+        error instanceof Error
+          ? error.message
+          : "Failed to fetch daily earnings",
     });
   }
-} 
+}
