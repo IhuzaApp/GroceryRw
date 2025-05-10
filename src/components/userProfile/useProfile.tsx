@@ -22,6 +22,9 @@ export default function UserProfile() {
   } | null>(null);
   const [orderCount, setOrderCount] = useState<number>(0);
   const [loading, setLoading] = useState<boolean>(true);
+  // User orders state
+  const [userOrders, setUserOrders] = useState<any[]>([]);
+  const [ordersLoading, setOrdersLoading] = useState<boolean>(true);
   // Default address state
   const [defaultAddr, setDefaultAddr] = useState<any | null>(null);
   const [loadingAddr, setLoadingAddr] = useState<boolean>(true);
@@ -56,6 +59,18 @@ export default function UserProfile() {
       .finally(() => setLoading(false));
   }, []);
 
+  // Load user orders
+  useEffect(() => {
+    setOrdersLoading(true);
+    fetch("/api/queries/orders")
+      .then((res) => res.json())
+      .then((data) => {
+        setUserOrders(data.orders || []);
+      })
+      .catch((err) => console.error("Error fetching orders:", err))
+      .finally(() => setOrdersLoading(false));
+  }, []);
+
   // Load default address
   useEffect(() => {
     setLoadingAddr(true);
@@ -76,6 +91,18 @@ export default function UserProfile() {
       })
       .finally(() => setLoadingAddr(false));
   }, []);
+
+  // Function to refresh orders
+  const refreshOrders = () => {
+    setOrdersLoading(true);
+    fetch("/api/queries/orders")
+      .then((res) => res.json())
+      .then((data) => {
+        setUserOrders(data.orders || []);
+      })
+      .catch((err) => console.error("Error refreshing orders:", err))
+      .finally(() => setOrdersLoading(false));
+  };
 
   return (
     <div className="grid  grid-cols-1 gap-6 md:grid-cols-12">
@@ -249,7 +276,12 @@ export default function UserProfile() {
 
         {activeTab === "orders" && (
           <Panel shaded bordered>
-            <UserRecentOrders />
+            <UserRecentOrders 
+              filter="all"
+              orders={userOrders} 
+              loading={ordersLoading}
+              onRefresh={refreshOrders}
+            />
           </Panel>
         )}
 

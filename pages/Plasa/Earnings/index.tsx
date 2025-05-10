@@ -1,5 +1,6 @@
 import React from "react";
 import ShopperLayout from "@components/shopper/ShopperLayout";
+
 const EarningsPage: React.FC = () => {
   return (
     <ShopperLayout>
@@ -9,3 +10,5 @@ const EarningsPage: React.FC = () => {
     </ShopperLayout>
   );
 };
+
+export default EarningsPage;

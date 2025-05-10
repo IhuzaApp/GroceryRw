@@ -38,14 +38,16 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
   const [user, setUser] = useState<User | null>(null);
 
   useEffect(() => {
-    if (session) {
+    if (session && session.user) {
       setIsLoggedIn(true);
       setUser({
-        id: session.user.id,
-        name: session.user.name,
-        profilePicture: session.user.profilePicture || "",
+        id: session.user.id || null,
+        name: session.user.name || null,
+        // Use image property from default session
+        profilePicture: session.user.image || null,
       });
-      setRole(session.user.role);
+      // Safely set role with a fallback
+      setRole((session.user as any)?.role || "user");
     } else {
       setIsLoggedIn(false);
       setUser(null);
