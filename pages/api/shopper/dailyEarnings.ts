@@ -80,7 +80,9 @@ export default async function handler(
       (sum: number, order: Order) => {
         const serviceFee = parseFloat(order.service_fee || "0");
         const deliveryFee = parseFloat(order.delivery_fee || "0");
-        return sum + serviceFee + deliveryFee;
+        const orderTotal = serviceFee + deliveryFee;
+        console.log(`Active order ${order.id}: service_fee=${serviceFee}, delivery_fee=${deliveryFee}, total=${orderTotal}`);
+        return sum + orderTotal;
       },
       0
     );
@@ -90,13 +92,17 @@ export default async function handler(
       (sum: number, order: Order) => {
         const serviceFee = parseFloat(order.service_fee || "0");
         const deliveryFee = parseFloat(order.delivery_fee || "0");
-        return sum + serviceFee + deliveryFee;
+        const orderTotal = serviceFee + deliveryFee;
+        console.log(`Completed order ${order.id}: service_fee=${serviceFee}, delivery_fee=${deliveryFee}, total=${orderTotal}`);
+        return sum + orderTotal;
       },
       0
     );
 
     // Total earnings for the day
     const totalEarnings = activeEarnings + completedEarnings;
+
+    console.log(`Daily earnings summary: active=${activeEarnings}, completed=${completedEarnings}, total=${totalEarnings}`);
 
     return res.status(200).json({
       success: true,
