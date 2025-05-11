@@ -1,189 +1,172 @@
-import type { NextApiRequest, NextApiResponse } from "next";
-import { hasuraClient } from "../../../src/lib/hasuraClient";
-import { gql } from "graphql-request";
-import { getServerSession } from "next-auth/next";
-import { authOptions } from "../auth/[...nextauth]";
-import { CREATE_INVOICE, generateInvoiceNumber } from "../queries/invoices";
+import type { NextApiRequest, NextApiResponse } from 'next';
+import { getServerSession } from 'next-auth';
+import { authOptions } from '../auth/[...nextauth]';
+import { gql } from 'graphql-request';
+import { hasuraClient } from '../../../src/lib/hasuraClient';
 
 // GraphQL query to get order details for invoice
-const GET_ORDER_DETAILS = gql`
-  query GetOrderDetailsForInvoice($orderId: uuid!) {
-    Orders_by_pk(id: $orderId) {
+const GET_ORDER_DETAILS_FOR_INVOICE = gql`
+  query GetOrderDetailsForInvoice($order_id: uuid!) {
+    Orders_by_pk(id: $order_id) {
       id
       OrderID
-      created_at
+      status
       total
       service_fee
       delivery_fee
-      discount
-      status
-      user: userByUserId {
-        id
+      created_at
+      updated_at
+      userByUserId {
         name
         email
       }
-      shop: Shop {
-        id
+      Shop {
         name
         address
+        image
       }
       Order_Items {
         id
-        quantity
         price
-        product: Product {
-          id
+        quantity
+        Product {
           name
           price
           measurement_unit
         }
       }
+      shopper_id
     }
   }
 `;
+
+// Type definition for order details
+interface OrderDetails {
+  Orders_by_pk: {
+    id: string;
+    OrderID: string;
+    status: string;
+    total: number;
+    service_fee: string;
+    delivery_fee: string;
+    created_at: string;
+    updated_at: string;
+    userByUserId: {
+      name: string;
+      email: string;
+    };
+    Shop: {
+      name: string;
+      address: string;
+      image?: string;
+    };
+    Order_Items: Array<{
+      id: string;
+      price: number;
+      quantity: number;
+      Product: {
+        name: string;
+        price: number;
+        measurement_unit?: string;
+      };
+    }>;
+    shopper_id: string;
+  } | null;
+}
 
 export default async function handler(
   req: NextApiRequest,
   res: NextApiResponse
 ) {
-  if (req.method !== "POST") {
-    res.setHeader("Allow", ["POST"]);
-    return res.status(405).json({ error: `Method ${req.method} Not Allowed` });
-  }
-
-  // Authenticate the user
-  const session = await getServerSession(req, res, authOptions as any);
-  const userId = (session as any)?.user?.id;
-
-  if (!userId) {
-    return res.status(401).json({ error: "Unauthorized" });
-  }
-
-  const { orderId } = req.body;
-
-  if (!orderId) {
-    return res.status(400).json({ error: "Missing required field: orderId" });
+  // Only allow POST method
+  if (req.method !== 'POST') {
+    return res.status(405).json({ error: 'Method not allowed' });
   }
 
   try {
-    console.log("Generating invoice for order:", orderId);
-
-    // Get order details
-    const orderData = await hasuraClient.request<{
-      Orders_by_pk: {
-        id: string;
-        OrderID: string;
-        created_at: string;
-        total: number;
-        service_fee: string;
-        delivery_fee: string;
-        discount: number;
-        status: string;
-        user: {
-          id: string;
-          name: string;
-          email: string;
-        };
-        shop: {
-          id: string;
-          name: string;
-          address: string;
-        };
-        Order_Items: Array<{
-          id: string;
-          quantity: number;
-          price: string;
-          product: {
-            id: string;
-            name: string;
-            price: string;
-            measurement_unit?: string;
-          };
-        }>;
-      } | null;
-    }>(GET_ORDER_DETAILS, { orderId });
-
-    const order = orderData.Orders_by_pk;
-
-    if (!order) {
-      return res.status(404).json({ error: "Order not found" });
+    // Get user session
+    const session = await getServerSession(req, res, authOptions);
+    
+    if (!session || !session.user) {
+      return res.status(401).json({ error: 'Unauthorized' });
     }
 
-    if (order.status !== "delivered") {
-      return res.status(400).json({
-        error: "Cannot generate invoice for orders that are not delivered",
-      });
+    const { orderId } = req.body;
+
+    // Validate required fields
+    if (!orderId) {
+      return res.status(400).json({ error: 'Missing required field: orderId' });
     }
 
-    // Calculate values for invoice
-    const subtotal = order.Order_Items.reduce(
-      (sum: number, item: any) => sum + parseFloat(item.price) * item.quantity,
-      0
-    );
+    // Check if hasuraClient is available (it should be on server side)
+    if (!hasuraClient) {
+      return res.status(500).json({ error: 'Database client not available' });
+    }
 
-    const serviceFee = parseFloat(order.service_fee || "0");
-    const deliveryFee = parseFloat(order.delivery_fee || "0");
-    const discount = order.discount || 0;
-
-    // In a real app, tax might be calculated differently
-    const taxRate = 0.18; // 18% VAT
-    const tax = subtotal * taxRate;
-
-    // Create invoice items JSON array
-    const invoiceItems = order.Order_Items.map((item: any) => ({
-      product_id: item.product.id,
-      product_name: item.product.name,
-      unit_price: parseFloat(item.price),
-      quantity: item.quantity,
-      total_price: parseFloat(item.price) * item.quantity,
-      measurement_unit: item.product.measurement_unit || "unit",
-    }));
-
-    // Generate invoice number using helper function from queries/invoices.ts
-    const invoiceNumber = generateInvoiceNumber(order.id);
-
-    // Create invoice in database using the mutation from queries/invoices.ts
-    const invoiceData = await hasuraClient.request<{
-      insert_Invoices: {
-        returning: [
-          {
-            id: string;
-            invoice_number: string;
-            created_at: string;
-          }
-        ];
-      };
-    }>(CREATE_INVOICE, {
-      order_id: order.id,
-      invoice_number: invoiceNumber,
-      customer_id: order.user.id,
-      total_amount: order.total.toString(),
-      subtotal: subtotal.toString(),
-      tax: tax.toString(),
-      service_fee: serviceFee.toString(),
-      delivery_fee: deliveryFee.toString(),
-      discount: discount.toString(),
-      invoice_items: invoiceItems,
-      status: "paid", // Assuming delivered orders are paid
+    // Get order details for invoice
+    const orderDetails = await hasuraClient.request<OrderDetails>(GET_ORDER_DETAILS_FOR_INVOICE, {
+      order_id: orderId,
     });
 
-    const invoice = invoiceData.insert_Invoices.returning[0];
+    if (!orderDetails.Orders_by_pk) {
+      return res.status(404).json({ error: 'Order not found' });
+    }
+
+    const order = orderDetails.Orders_by_pk;
+    
+    // Verify the user is authorized to access this order (either as customer or shopper)
+    if (order.shopper_id !== session.user.id && order.userByUserId.email !== session.user.email) {
+      return res.status(403).json({ error: 'Not authorized to access this order' });
+    }
+    
+    // Calculate totals
+    // Use the actual items from the order and calculate based on quantities
+    const items = order.Order_Items;
+    // For the invoice, we want to show just the items that are in the order
+    // We'll calculate the total based on the quantities in the database
+    const itemsTotal = items.reduce((total, item) => {
+      // Use the item's price and quantity directly
+      return total + (parseFloat(item.price) * item.quantity);
+    }, 0);
+    
+    const serviceFee = parseFloat(order.service_fee);
+    const deliveryFee = parseFloat(order.delivery_fee);
+    
+    // Generate invoice data that matches what's shown in the Order Summary
+    const invoiceData = {
+      invoiceNumber: `INV-${order.OrderID}-${new Date().getTime().toString().slice(-6)}`,
+      orderId: order.id,
+      orderNumber: order.OrderID,
+      customer: order.userByUserId.name,
+      customerEmail: order.userByUserId.email,
+      shop: order.Shop.name,
+      shopAddress: order.Shop.address,
+      dateCreated: new Date(order.created_at).toLocaleString(),
+      dateCompleted: new Date(order.updated_at).toLocaleString(),
+      status: order.status,
+      items: items.map(item => ({
+        name: item.Product.name,
+        quantity: item.quantity,
+        unitPrice: item.price,
+        total: parseFloat(item.price) * item.quantity,
+        unit: item.Product.measurement_unit || 'item'
+      })),
+      subtotal: itemsTotal,
+      serviceFee,
+      deliveryFee,
+      // When in shopping mode, the displayed total should match the subtotal without fees
+      // For other modes, include the fees
+      total: order.status === "shopping" ? itemsTotal : (itemsTotal + serviceFee + deliveryFee)
+    };
 
     return res.status(200).json({
       success: true,
-      message: "Invoice generated successfully",
-      invoice: {
-        id: invoice.id,
-        invoice_number: invoice.invoice_number,
-        created_at: invoice.created_at,
-        returning: [invoice], // Include this for backward compatibility
-      },
+      invoice: invoiceData
     });
   } catch (error) {
-    console.error("Error generating invoice:", error);
+    console.error('Error generating invoice:', error);
     return res.status(500).json({
-      error:
-        error instanceof Error ? error.message : "Failed to generate invoice",
+      error: error instanceof Error ? error.message : 'An unexpected error occurred'
     });
   }
 }
