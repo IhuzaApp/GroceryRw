@@ -15,7 +15,7 @@ const ASSIGN_ORDER = gql`
       pk_columns: { id: $id }
       _set: {
         shopper_id: $shopper_id
-        status: "shopping"
+        status: "accepted"
         updated_at: $updated_at
       }
     ) {
@@ -23,6 +23,15 @@ const ASSIGN_ORDER = gql`
       shopper_id
       status
       updated_at
+    }
+  }
+`;
+
+// GraphQL query to check if shopper has a wallet
+const CHECK_WALLET = gql`
+  query CheckShopperWallet($shopper_id: uuid!) {
+    Wallets(where: {shopper_id: {_eq: $shopper_id}}) {
+      id
     }
   }
 `;
@@ -42,6 +51,13 @@ interface OrderResponse {
     status: string;
     updated_at: string;
   };
+}
+
+// Define interface for wallet response
+interface WalletResponse {
+  Wallets: Array<{
+    id: string;
+  }>;
 }
 
 export default async function handler(
@@ -70,6 +86,16 @@ export default async function handler(
   }
 
   try {
+    // Check if shopper has a wallet
+    const walletData = await hasuraClient.request<WalletResponse>(CHECK_WALLET, {
+      shopper_id: userId,
+    });
+
+    // If no wallet exists, return an error
+    if (!walletData.Wallets || walletData.Wallets.length === 0) {
+      return res.status(400).json({ error: "no_wallet" });
+    }
+
     // Get current timestamp for updated_at
     const currentTimestamp = new Date().toISOString();
 
