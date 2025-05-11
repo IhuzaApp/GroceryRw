@@ -14,6 +14,9 @@ import {
   Checkbox,
   toaster,
   Notification,
+  Input,
+  Form,
+  Message,
 } from "rsuite";
 import "rsuite/dist/rsuite.min.css";
 import Link from "next/link";
@@ -117,6 +120,14 @@ export default function BatchDetails({
   const [showQuantityModal, setShowQuantityModal] = useState(false);
   const [currentItem, setCurrentItem] = useState<OrderItem | null>(null);
   const [foundQuantity, setFoundQuantity] = useState(1);
+  const [showPaymentModal, setShowPaymentModal] = useState(false);
+  const [momoCode, setMomoCode] = useState("");
+  const [privateKey, setPrivateKey] = useState("");
+  const [paymentLoading, setPaymentLoading] = useState(false);
+  const [showOtpModal, setShowOtpModal] = useState(false);
+  const [otp, setOtp] = useState("");
+  const [generatedOtp, setGeneratedOtp] = useState("");
+  const [otpVerifyLoading, setOtpVerifyLoading] = useState(false);
 
   const [currentStep, setCurrentStep] = useState(() => {
     if (!orderData) return 0;
@@ -136,7 +147,129 @@ export default function BatchDetails({
     }
   });
 
+  // Generate a 5-digit OTP
+  const generateOtp = () => {
+    const randomOtp = Math.floor(10000 + Math.random() * 90000).toString();
+    setGeneratedOtp(randomOtp);
+    // Store in session storage
+    if (typeof window !== 'undefined') {
+      sessionStorage.setItem('payment_otp', randomOtp);
+    }
+    // Log to console for testing purposes (in production, this would be sent via SMS/email)
+    console.log('Generated OTP:', randomOtp);
+    return randomOtp;
+  };
+
+  // Function to generate a random private key
+  const generatePrivateKey = () => {
+    const randomKey = Math.random().toString(36).substring(2, 10);
+    setPrivateKey(randomKey);
+    // Store in session storage
+    if (typeof window !== 'undefined') {
+      sessionStorage.setItem('payment_private_key', randomKey);
+    }
+    return randomKey;
+  };
+
+  // Function to show payment modal
+  const handleShowPaymentModal = () => {
+    // Generate a new private key when opening the modal
+    generatePrivateKey();
+    setShowPaymentModal(true);
+  };
+
+  // Handle payment submission
+  const handlePaymentSubmit = async () => {
+    if (!order?.id) return;
+
+    setPaymentLoading(true);
+    try {
+      // Generate OTP
+      generateOtp();
+      
+      // Close payment modal and show OTP modal
+      setShowPaymentModal(false);
+      setShowOtpModal(true);
+      setPaymentLoading(false);
+    } catch (err) {
+      console.error("Payment processing error:", err);
+      toaster.push(
+        <Notification type="error" header="Payment Failed" closable>
+          {err instanceof Error ? err.message : "Failed to process payment. Please try again."}
+        </Notification>,
+        { placement: "topEnd" }
+      );
+      setPaymentLoading(false);
+    }
+  };
+
+  // Handle OTP verification
+  const handleVerifyOtp = async () => {
+    if (!otp || !generatedOtp || !order?.id) return;
+
+    setOtpVerifyLoading(true);
+    try {
+      // Verify OTP
+      if (otp !== generatedOtp) {
+        throw new Error("Invalid OTP. Please try again.");
+      }
+
+      // Make API request to update wallet balance
+      const response = await fetch("/api/shopper/processPayment", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          orderId: order.id,
+          momoCode,
+          privateKey,
+          orderAmount: calculateFoundItemsTotal(),
+        }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || "Payment processing failed");
+      }
+
+      // Close OTP modal and proceed with status update
+      setShowOtpModal(false);
+      handleUpdateStatus("on_the_way");
+      
+      // Clear payment info
+      setMomoCode("");
+      setPrivateKey("");
+      setOtp("");
+      setGeneratedOtp("");
+      
+      // Show success notification
+      toaster.push(
+        <Notification type="success" header="Payment Processed" closable>
+          Payment has been processed successfully. Your reserved wallet balance has been updated.
+        </Notification>,
+        { placement: "topEnd" }
+      );
+    } catch (err) {
+      console.error("OTP verification error:", err);
+      toaster.push(
+        <Notification type="error" header="Verification Failed" closable>
+          {err instanceof Error ? err.message : "Failed to verify OTP. Please try again."}
+        </Notification>,
+        { placement: "topEnd" }
+      );
+    } finally {
+      setOtpVerifyLoading(false);
+    }
+  };
+
   const handleUpdateStatus = async (newStatus: string) => {
+    // For the "on_the_way" status, we'll show the payment modal instead of immediately updating
+    if (newStatus === "on_the_way" && !showPaymentModal) {
+      handleShowPaymentModal();
+      return;
+    }
+
     if (!order?.id) return;
 
     try {
@@ -446,6 +579,104 @@ export default function BatchDetails({
         setFoundQuantity={setFoundQuantity}
         onConfirm={confirmFoundQuantity}
       />
+
+      {/* MoMo Payment Modal */}
+      <Modal open={showPaymentModal} onClose={() => setShowPaymentModal(false)}>
+        <Modal.Header>
+          <Modal.Title>Process Payment</Modal.Title>
+        </Modal.Header>
+        <Modal.Body>
+          <Form fluid>
+            <Form.Group>
+              <Form.ControlLabel>MoMo Code</Form.ControlLabel>
+              <Form.Control
+                name="momoCode"
+                value={momoCode}
+                onChange={value => setMomoCode(value)}
+              />
+              <Form.HelpText>Enter your MoMo code to process this payment</Form.HelpText>
+            </Form.Group>
+            
+            <Form.Group>
+              <Form.ControlLabel>Private Key</Form.ControlLabel>
+              <Input 
+                value={privateKey}
+                disabled
+                className="mb-2"
+              />
+              <Message type="info" className="mb-3">
+                This is your private verification key. It will be used only for this transaction.
+              </Message>
+            </Form.Group>
+
+            <Form.Group>
+              <Form.ControlLabel>Payment Amount</Form.ControlLabel>
+              <Input 
+                value={formatCurrency(calculateFoundItemsTotal())}
+                disabled
+              />
+              <Form.HelpText>
+                This amount will be removed from your reserved wallet balance.
+                Service fee ({formatCurrency(parseFloat(order?.serviceFee || "0"))}) and 
+                delivery fee ({formatCurrency(parseFloat(order?.deliveryFee || "0"))}) 
+                were already added to your available wallet balance when you started shopping.
+              </Form.HelpText>
+            </Form.Group>
+          </Form>
+        </Modal.Body>
+        <Modal.Footer>
+          <Button 
+            onClick={handlePaymentSubmit} 
+            appearance="primary" 
+            color="green"
+            loading={paymentLoading}
+          >
+            Process Payment
+          </Button>
+          <Button onClick={() => setShowPaymentModal(false)} appearance="subtle">
+            Cancel
+          </Button>
+        </Modal.Footer>
+      </Modal>
+
+      {/* OTP Verification Modal */}
+      <Modal open={showOtpModal} onClose={() => setShowOtpModal(false)}>
+        <Modal.Header>
+          <Modal.Title>Enter OTP</Modal.Title>
+        </Modal.Header>
+        <Modal.Body>
+          <Form fluid>
+            <Form.Group>
+              <Form.ControlLabel>One-Time Password (OTP)</Form.ControlLabel>
+              <Form.Control
+                name="otp"
+                value={otp}
+                onChange={value => setOtp(value)}
+              />
+              <Form.HelpText>
+                Please enter the 5-digit OTP. For testing, check the browser console (F12 &gt; Console) to see the generated OTP.
+              </Form.HelpText>
+            </Form.Group>
+            
+            <Message type="info" className="mb-3">
+              In a production environment, this OTP would be sent to your phone number or email. For this demo, you can find it in the browser console.
+            </Message>
+          </Form>
+        </Modal.Body>
+        <Modal.Footer>
+          <Button 
+            onClick={handleVerifyOtp} 
+            appearance="primary" 
+            color="green"
+            loading={otpVerifyLoading}
+          >
+            Verify OTP
+          </Button>
+          <Button onClick={() => setShowOtpModal(false)} appearance="subtle">
+            Cancel
+          </Button>
+        </Modal.Footer>
+      </Modal>
 
       {/* Chat Drawer - will only show on desktop when chat is open */}
       {isDrawerOpen &&
@@ -837,7 +1068,7 @@ export default function BatchDetails({
                   <strong>Note:</strong> The total reflects only the value of found items. 
                   Service fee ({formatCurrency(parseFloat(order.serviceFee || "0"))}) and 
                   delivery fee ({formatCurrency(parseFloat(order.deliveryFee || "0"))}) 
-                  will be added to your wallet as earnings.
+                  were already added to your wallet as earnings when you started shopping.
                 </p>
               </div>
             )}
