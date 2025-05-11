@@ -63,3 +63,20 @@ mutation createWalletTransaction(
     related_order_id
   }
 }
+
+mutation createMultipleWalletTransactions(
+  $transactions: [Wallet_Transactions_insert_input!]!
+) {
+  insert_Wallet_Transactions(objects: $transactions) {
+    returning {
+      id
+      amount
+      type
+      status
+      created_at
+      wallet_id
+      related_order_id
+    }
+    affected_rows
+  }
+}

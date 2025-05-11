@@ -53,3 +53,23 @@ mutation createWallet($shopper_id: uuid!) {
     last_updated
   }
 }
+
+mutation updateWalletBalances(
+  $wallet_id: uuid!
+  $available_balance: String!
+  $reserved_balance: String!
+) {
+  update_Wallets_by_pk(
+    pk_columns: { id: $wallet_id }
+    _set: { 
+      available_balance: $available_balance,
+      reserved_balance: $reserved_balance,
+      last_updated: "now()"
+    }
+  ) {
+    id
+    available_balance
+    reserved_balance
+    last_updated
+  }
+}

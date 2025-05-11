@@ -22,6 +22,64 @@ const UPDATE_ORDER_STATUS = gql`
   }
 `;
 
+// GraphQL query to get order details with fees
+const GET_ORDER_DETAILS = gql`
+  query GetOrderDetails($orderId: uuid!) {
+    Orders_by_pk(id: $orderId) {
+      id
+      total
+      service_fee
+      delivery_fee
+      shopper_id
+    }
+  }
+`;
+
+// GraphQL query to get shopper wallet
+const GET_SHOPPER_WALLET = gql`
+  query GetShopperWallet($shopper_id: uuid!) {
+    Wallets(where: { shopper_id: { _eq: $shopper_id } }) {
+      id
+      available_balance
+      reserved_balance
+    }
+  }
+`;
+
+// GraphQL mutation to update wallet balances
+const UPDATE_WALLET_BALANCES = gql`
+  mutation UpdateWalletBalances(
+    $wallet_id: uuid!
+    $available_balance: String!
+    $reserved_balance: String!
+  ) {
+    update_Wallets_by_pk(
+      pk_columns: { id: $wallet_id }
+      _set: { 
+        available_balance: $available_balance,
+        reserved_balance: $reserved_balance,
+        last_updated: "now()"
+      }
+    ) {
+      id
+      available_balance
+      reserved_balance
+      last_updated
+    }
+  }
+`;
+
+// GraphQL mutation to create wallet transactions
+const CREATE_WALLET_TRANSACTIONS = gql`
+  mutation CreateWalletTransactions(
+    $transactions: [Wallet_Transactions_insert_input!]!
+  ) {
+    insert_Wallet_Transactions(objects: $transactions) {
+      affected_rows
+    }
+  }
+`;
+
 export default async function handler(
   req: NextApiRequest,
   res: NextApiResponse
@@ -90,6 +148,98 @@ export default async function handler(
       return res
         .status(403)
         .json({ error: "You are not assigned to this order" });
+    }
+
+    // Special handling for "shopping" status - update wallet balances
+    if (status === "shopping") {
+      try {
+        // Get order details with fees
+        const orderDetails = await hasuraClient.request<{
+          Orders_by_pk: {
+            id: string;
+            total: string;
+            service_fee: string;
+            delivery_fee: string;
+            shopper_id: string;
+          };
+        }>(GET_ORDER_DETAILS, {
+          orderId,
+        });
+
+        if (!orderDetails.Orders_by_pk) {
+          return res.status(404).json({ error: "Order not found" });
+        }
+
+        const order = orderDetails.Orders_by_pk;
+        
+        // Get shopper wallet
+        const walletData = await hasuraClient.request<{
+          Wallets: Array<{
+            id: string;
+            available_balance: string;
+            reserved_balance: string;
+          }>;
+        }>(GET_SHOPPER_WALLET, {
+          shopper_id: userId,
+        });
+
+        if (!walletData.Wallets || walletData.Wallets.length === 0) {
+          return res.status(400).json({ error: "Shopper wallet not found" });
+        }
+
+        const wallet = walletData.Wallets[0];
+        
+        // Calculate new balances
+        const orderTotal = parseFloat(order.total);
+        const serviceFee = parseFloat(order.service_fee || "0");
+        const deliveryFee = parseFloat(order.delivery_fee || "0");
+        
+        const currentAvailableBalance = parseFloat(wallet.available_balance);
+        const currentReservedBalance = parseFloat(wallet.reserved_balance);
+        
+        // Add service fee and delivery fee to available balance
+        const newAvailableBalance = (currentAvailableBalance + serviceFee + deliveryFee).toFixed(2);
+        
+        // Add order total to reserved balance
+        const newReservedBalance = (currentReservedBalance + orderTotal).toFixed(2);
+
+        // Update wallet balances
+        await hasuraClient.request(UPDATE_WALLET_BALANCES, {
+          wallet_id: wallet.id,
+          available_balance: newAvailableBalance,
+          reserved_balance: newReservedBalance,
+        });
+
+        // Create wallet transactions
+        const transactions = [
+          {
+            wallet_id: wallet.id,
+            amount: orderTotal.toFixed(2),
+            type: "reserve",
+            status: "completed",
+            related_order_id: orderId,
+          },
+          {
+            wallet_id: wallet.id,
+            amount: (serviceFee + deliveryFee).toFixed(2),
+            type: "earnings",
+            status: "completed",
+            related_order_id: orderId,
+          },
+        ];
+
+        await hasuraClient.request(CREATE_WALLET_TRANSACTIONS, {
+          transactions,
+        });
+
+        console.log("Wallet balances updated for shopping status");
+      } catch (walletError) {
+        console.error("Error updating wallet balances:", walletError);
+        return res.status(500).json({
+          error: "Failed to update wallet balances",
+          details: walletError instanceof Error ? walletError.message : "Unknown error",
+        });
+      }
     }
 
     // Get current timestamp for updated_at
