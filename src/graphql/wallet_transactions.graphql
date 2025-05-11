@@ -39,7 +39,7 @@ query getAllWallettTtransactions {
 }
 
 mutation createWalletTransaction(
-  $amount: numeric!
+  $amount: String!
   $type: String!
   $status: String!
   $wallet_id: uuid!
