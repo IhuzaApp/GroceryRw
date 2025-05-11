@@ -2,13 +2,14 @@ import React from "react";
 import { Modal, Button } from "rsuite";
 import Image from "next/image";
 import { formatCurrency } from "../../lib/formatCurrency";
+import { OrderItem } from "../../types/order";
 
 interface ProductImageModalProps {
   open: boolean;
   onClose: () => void;
   selectedImage: string | null;
   selectedProductName: string | null;
-  currentOrderItem: any | null;
+  currentOrderItem: OrderItem | null;
 }
 
 export default function ProductImageModal({

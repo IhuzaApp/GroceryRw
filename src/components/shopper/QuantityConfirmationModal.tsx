@@ -1,23 +1,6 @@
 import React from "react";
 import { Modal, Button } from "rsuite";
-
-interface OrderItem {
-  id: string;
-  quantity: number;
-  price: number;
-  product: {
-    id: string;
-    name: string;
-    image: string;
-    price: number;
-    description?: string;
-    measurement_unit?: string;
-    category?: string;
-    quantity?: number;
-  };
-  found?: boolean;
-  foundQuantity?: number;
-}
+import { OrderItem } from "../../types/order";
 
 interface QuantityConfirmationModalProps {
   open: boolean;

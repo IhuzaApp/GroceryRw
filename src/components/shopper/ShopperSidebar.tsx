@@ -81,7 +81,6 @@ export default function PlasaSidebar() {
                   isActive("/") &&
                   !isActive("/Plasa/active-batches") &&
                   !isActive("/Plasa/earnings") &&
-                  !isActive("/Plasa/invoices") &&
                   !isActive("/Plasa/settings")
                     ? "bg-green-50 text-green-600"
                     : "text-gray-700 hover:bg-gray-100"
@@ -152,31 +151,6 @@ export default function PlasaSidebar() {
                     </span>
                   )}
                 </div>
-              </div>
-            </Link>
-            <Link href="/Plasa/invoices" passHref>
-              <div
-                className={`flex items-center rounded-lg px-4 py-3 ${
-                  isActive("/Plasa/invoices")
-                    ? "bg-green-50 text-green-600"
-                    : "text-gray-700 hover:bg-gray-100"
-                }`}
-              >
-                <svg
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  className="mr-3 h-5 w-5"
-                >
-                  <path d="M21 16V8a2 2 0 00-1-1.73l-7-4a2 2 0 00-2 0l-7 4A2 2 0 003 8v8a2 2 0 001 1.73l7 4a2 2 0 002 0l7-4A2 2 0 0021 16z" />
-                  <polyline points="7.5 4.21 12 6.81 16.5 4.21" />
-                  <polyline points="7.5 19.79 7.5 14.6 3 12" />
-                  <polyline points="21 12 16.5 14.6 16.5 19.79" />
-                  <polyline points="3.27 6.96 12 12.01 20.73 6.96" />
-                  <line x1="12" y1="22.08" x2="12" y2="12" />
-                </svg>
-                <span>Invoices</span>
               </div>
             </Link>
             <Link href="/Plasa/settings" passHref>

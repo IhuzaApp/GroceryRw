@@ -24,74 +24,17 @@ import Image from "next/image";
 import { formatCurrency } from "../../lib/formatCurrency";
 import ProductImageModal from "./ProductImageModal";
 import QuantityConfirmationModal from "./QuantityConfirmationModal";
+import PaymentModal from "./PaymentModal";
+import OtpVerificationModal from "./OtpVerificationModal";
+import InvoiceModal from "./InvoiceModal";
 import { useChat } from "../../context/ChatContext";
 import { isMobileDevice } from "../../lib/formatters";
 import ChatDrawer from "../chat/ChatDrawer";
+import { OrderItem, OrderDetailsType } from "../../types/order";
+import { recordPaymentTransactions, generateInvoice } from "../../lib/walletTransactions";
+import { useSession } from "next-auth/react";
 
 // Define interfaces for the order data
-interface OrderItem {
-  id: string;
-  quantity: number;
-  price: number;
-  product: {
-    id: string;
-    name: string;
-    image: string;
-    price: number;
-    description?: string;
-    measurement_unit?: string;
-    category?: string;
-    quantity?: number;
-  };
-  found?: boolean;
-  foundQuantity?: number;
-}
-
-interface OrderDetailsType {
-  id: string;
-  OrderID: string;
-  placedAt: string;
-  estimatedDelivery: string;
-  deliveryNotes: string;
-  total: number;
-  serviceFee: string;
-  deliveryFee: string;
-  status: string;
-  deliveryPhotoUrl: string;
-  discount: number;
-  user: {
-    id: string;
-    name: string;
-    email: string;
-    profile_picture: string;
-  };
-  shop: {
-    id: string;
-    name: string;
-    address: string;
-    image: string;
-  };
-  Order_Items: OrderItem[];
-  address: {
-    id: string;
-    street: string;
-    city: string;
-    postal_code: string;
-    latitude: string;
-    longitude: string;
-  };
-  assignedTo: {
-    id: string;
-    name: string;
-    profile_picture: string;
-    orders: {
-      aggregate: {
-        count: number;
-      };
-    };
-  };
-}
-
 interface BatchDetailsProps {
   orderData: OrderDetailsType | null;
   error: string | null;
@@ -104,6 +47,7 @@ export default function BatchDetails({
   onUpdateStatus,
 }: BatchDetailsProps) {
   const router = useRouter();
+  const { data: session } = useSession();
   const { openChat, isDrawerOpen, closeChat, currentChatId } = useChat();
 
   const [loading, setLoading] = useState(false);
@@ -128,6 +72,11 @@ export default function BatchDetails({
   const [otp, setOtp] = useState("");
   const [generatedOtp, setGeneratedOtp] = useState("");
   const [otpVerifyLoading, setOtpVerifyLoading] = useState(false);
+  const [showInvoiceModal, setShowInvoiceModal] = useState(false);
+  const [invoiceData, setInvoiceData] = useState<any>(null);
+  const [invoiceLoading, setInvoiceLoading] = useState(false);
+  const [walletData, setWalletData] = useState<any>(null);
+  const [walletLoading, setWalletLoading] = useState(false);
 
   const [currentStep, setCurrentStep] = useState(() => {
     if (!orderData) return 0;
@@ -157,6 +106,10 @@ export default function BatchDetails({
     }
     // Log to console for testing purposes (in production, this would be sent via SMS/email)
     console.log('Generated OTP:', randomOtp);
+    // Show as alert for demo purposes
+    setTimeout(() => {
+      alert(`For testing purposes, your OTP is: ${randomOtp}`);
+    }, 500);
     return randomOtp;
   };
 
@@ -168,14 +121,36 @@ export default function BatchDetails({
     if (typeof window !== 'undefined') {
       sessionStorage.setItem('payment_private_key', randomKey);
     }
+    console.log('Generated Private Key:', randomKey);
     return randomKey;
   };
 
-  // Function to show payment modal
-  const handleShowPaymentModal = () => {
-    // Generate a new private key when opening the modal
-    generatePrivateKey();
-    setShowPaymentModal(true);
+  // Function to fetch wallet balance
+  const fetchWalletBalance = async () => {
+    if (!session?.user?.id) return null;
+    
+    setWalletLoading(true);
+    try {
+      const response = await fetch(`/api/shopper/wallet?shopperId=${session.user.id}`, {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to fetch wallet data");
+      }
+
+      const data = await response.json();
+      setWalletData(data.wallet);
+      return data.wallet;
+    } catch (error) {
+      console.error("Error fetching wallet:", error);
+      return null;
+    } finally {
+      setWalletLoading(false);
+    }
   };
 
   // Handle payment submission
@@ -184,7 +159,29 @@ export default function BatchDetails({
 
     setPaymentLoading(true);
     try {
-      // Generate OTP
+      // First check if there's enough balance in the wallet
+      const wallet = await fetchWalletBalance();
+      
+      if (wallet) {
+        const orderAmount = calculateFoundItemsTotal();
+        const reservedBalance = parseFloat(wallet.reserved_balance);
+        
+        if (reservedBalance < orderAmount) {
+          // Not enough balance, show error toast
+          toaster.push(
+            <Notification type="error" header="Insufficient Balance" closable>
+              <p>Your reserved wallet balance ({formatCurrency(reservedBalance)}) is insufficient for this order ({formatCurrency(orderAmount)}).</p>
+              <p>Please raise a ticket to request a top-up on your wallet.</p>
+            </Notification>,
+            { placement: "topEnd", duration: 5000 }
+          );
+          setPaymentLoading(false);
+          setShowPaymentModal(false);
+          return;
+        }
+      }
+      
+      // If we have enough balance or couldn't check, proceed with OTP
       generateOtp();
       
       // Close payment modal and show OTP modal
@@ -203,6 +200,13 @@ export default function BatchDetails({
     }
   };
 
+  // Function to show payment modal
+  const handleShowPaymentModal = () => {
+    // Generate a new private key when opening the modal
+    generatePrivateKey();
+    setShowPaymentModal(true);
+  };
+
   // Handle OTP verification
   const handleVerifyOtp = async () => {
     if (!otp || !generatedOtp || !order?.id) return;
@@ -215,27 +219,71 @@ export default function BatchDetails({
       }
 
       // Make API request to update wallet balance
-      const response = await fetch("/api/shopper/processPayment", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          orderId: order.id,
-          momoCode,
-          privateKey,
-          orderAmount: calculateFoundItemsTotal(),
-        }),
-      });
+      try {
+        const response = await fetch("/api/shopper/processPayment", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            orderId: order.id,
+            momoCode,
+            privateKey,
+            orderAmount: calculateFoundItemsTotal(), // Only the value of found items (no fees)
+          }),
+        });
 
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || "Payment processing failed");
+        if (!response.ok) {
+          const errorData = await response.json();
+          throw new Error(errorData.error || "Payment processing failed");
+        }
+      } catch (paymentError) {
+        console.error("Payment processing error:", paymentError);
+        // Continue with the flow but show warning
+        toaster.push(
+          <Notification type="warning" header="Payment Warning" closable>
+            {paymentError instanceof Error 
+              ? paymentError.message 
+              : "There was an issue with payment processing, but your order will continue."}
+          </Notification>,
+          { placement: "topEnd" }
+        );
       }
 
-      // Close OTP modal and proceed with status update
+      // Record wallet transaction (wrapped in try/catch to prevent blocking flow)
+      if (session?.user?.id) {
+        try {
+          await recordPaymentTransactions(
+            session.user.id as string,
+            order.id,
+            calculateFoundItemsTotal() // This only includes found items value, not fees
+          );
+        } catch (txError) {
+          console.error("Error recording transaction:", txError);
+          // Not blocking the flow
+        }
+      }
+
+      // Close OTP modal
       setShowOtpModal(false);
-      handleUpdateStatus("on_the_way");
+      
+      // Generate invoice (wrapped in try/catch to prevent blocking flow)
+      setInvoiceLoading(true);
+      try {
+        const invoice = await generateInvoice(order.id);
+        if (invoice) {
+          setInvoiceData(invoice);
+          setShowInvoiceModal(true);
+        }
+      } catch (invoiceError) {
+        console.error("Error generating invoice:", invoiceError);
+        // Continue with status update even if invoice generation fails
+      } finally {
+        setInvoiceLoading(false);
+      }
+      
+      // Update order status
+      await handleUpdateStatus("on_the_way");
       
       // Clear payment info
       setMomoCode("");
@@ -403,7 +451,9 @@ export default function BatchDetails({
         // Use foundQuantity if available, otherwise use full quantity
         const quantity =
           item.foundQuantity !== undefined ? item.foundQuantity : item.quantity;
-        return total + item.price * quantity;
+        const itemPrice = parseFloat(item.price);
+        const itemTotal = itemPrice * quantity;
+        return total + itemTotal;
       },
       0
     );
@@ -430,8 +480,11 @@ export default function BatchDetails({
 
   // Calculate the true total based on found items (for shopping mode)
   const calculateFoundItemsTotal = () => {
-    // Return just the found items total without adding fees
-    return calculateFoundTotal();
+    // Return the found items total - this is what's shown as the subtotal in Order Summary
+    // and what should be deducted from the reserved wallet balance
+    const foundTotal = calculateFoundTotal();
+    console.log(`Found items total for payment: ${foundTotal.toString()}`);
+    return foundTotal;
   };
 
   // Function to get the right action button based on current status
@@ -581,102 +634,36 @@ export default function BatchDetails({
       />
 
       {/* MoMo Payment Modal */}
-      <Modal open={showPaymentModal} onClose={() => setShowPaymentModal(false)}>
-        <Modal.Header>
-          <Modal.Title>Process Payment</Modal.Title>
-        </Modal.Header>
-        <Modal.Body>
-          <Form fluid>
-            <Form.Group>
-              <Form.ControlLabel>MoMo Code</Form.ControlLabel>
-              <Form.Control
-                name="momoCode"
-                value={momoCode}
-                onChange={value => setMomoCode(value)}
-              />
-              <Form.HelpText>Enter your MoMo code to process this payment</Form.HelpText>
-            </Form.Group>
-            
-            <Form.Group>
-              <Form.ControlLabel>Private Key</Form.ControlLabel>
-              <Input 
-                value={privateKey}
-                disabled
-                className="mb-2"
-              />
-              <Message type="info" className="mb-3">
-                This is your private verification key. It will be used only for this transaction.
-              </Message>
-            </Form.Group>
-
-            <Form.Group>
-              <Form.ControlLabel>Payment Amount</Form.ControlLabel>
-              <Input 
-                value={formatCurrency(calculateFoundItemsTotal())}
-                disabled
-              />
-              <Form.HelpText>
-                This amount will be removed from your reserved wallet balance.
-                Service fee ({formatCurrency(parseFloat(order?.serviceFee || "0"))}) and 
-                delivery fee ({formatCurrency(parseFloat(order?.deliveryFee || "0"))}) 
-                were already added to your available wallet balance when you started shopping.
-              </Form.HelpText>
-            </Form.Group>
-          </Form>
-        </Modal.Body>
-        <Modal.Footer>
-          <Button 
-            onClick={handlePaymentSubmit} 
-            appearance="primary" 
-            color="green"
-            loading={paymentLoading}
-          >
-            Process Payment
-          </Button>
-          <Button onClick={() => setShowPaymentModal(false)} appearance="subtle">
-            Cancel
-          </Button>
-        </Modal.Footer>
-      </Modal>
+      <PaymentModal 
+        open={showPaymentModal}
+        onClose={() => setShowPaymentModal(false)}
+        onSubmit={handlePaymentSubmit}
+        momoCode={momoCode}
+        setMomoCode={setMomoCode}
+        privateKey={privateKey}
+        orderAmount={calculateFoundItemsTotal()}
+        serviceFee={parseFloat(order?.serviceFee || "0")}
+        deliveryFee={parseFloat(order?.deliveryFee || "0")}
+        paymentLoading={paymentLoading}
+      />
 
       {/* OTP Verification Modal */}
-      <Modal open={showOtpModal} onClose={() => setShowOtpModal(false)}>
-        <Modal.Header>
-          <Modal.Title>Enter OTP</Modal.Title>
-        </Modal.Header>
-        <Modal.Body>
-          <Form fluid>
-            <Form.Group>
-              <Form.ControlLabel>One-Time Password (OTP)</Form.ControlLabel>
-              <Form.Control
-                name="otp"
-                value={otp}
-                onChange={value => setOtp(value)}
-              />
-              <Form.HelpText>
-                Please enter the 5-digit OTP. For testing, check the browser console (F12 &gt; Console) to see the generated OTP.
-              </Form.HelpText>
-            </Form.Group>
-            
-            <Message type="info" className="mb-3">
-              In a production environment, this OTP would be sent to your phone number or email. For this demo, you can find it in the browser console.
-            </Message>
-          </Form>
-        </Modal.Body>
-        <Modal.Footer>
-          <Button 
-            onClick={handleVerifyOtp} 
-            appearance="primary" 
-            color="green"
-            loading={otpVerifyLoading}
-          >
-            Verify OTP
-          </Button>
-          <Button onClick={() => setShowOtpModal(false)} appearance="subtle">
-            Cancel
-          </Button>
-        </Modal.Footer>
-      </Modal>
+      <OtpVerificationModal 
+        open={showOtpModal}
+        onClose={() => setShowOtpModal(false)}
+        onVerify={handleVerifyOtp}
+        otp={otp}
+        setOtp={setOtp}
+        loading={otpVerifyLoading}
+      />
+
+      {/* Invoice Modal */}
+      <InvoiceModal
+        open={showInvoiceModal}
+        onClose={() => setShowInvoiceModal(false)}
+        invoiceData={invoiceData}
+        loading={invoiceLoading}
+      />
 
       {/* Chat Drawer - will only show on desktop when chat is open */}
       {isDrawerOpen &&
