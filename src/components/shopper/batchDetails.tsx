@@ -276,6 +276,31 @@ export default function BatchDetails({
     );
   };
 
+  // Calculate original subtotal (items only, no fees)
+  const calculateOriginalSubtotal = () => {
+    if (!order) return 0;
+
+    return order.Order_Items.reduce(
+      (total, item) => total + item.price * item.quantity, 
+      0
+    );
+  };
+
+  // Calculate the true total (subtotal + fees)
+  const calculateTrueTotal = () => {
+    const subtotal = calculateOriginalSubtotal();
+    const serviceFee = parseFloat(order?.serviceFee || "0");
+    const deliveryFee = parseFloat(order?.deliveryFee || "0");
+    
+    return subtotal + serviceFee + deliveryFee;
+  };
+
+  // Calculate the true total based on found items (for shopping mode)
+  const calculateFoundItemsTotal = () => {
+    // Return just the found items total without adding fees
+    return calculateFoundTotal();
+  };
+
   // Function to get the right action button based on current status
   const getActionButton = () => {
     if (!order) return null;
@@ -696,35 +721,32 @@ export default function BatchDetails({
         {/* Found Items Summary - only show when shopping */}
         {order.status === "shopping" && (
           <div className="mb-6 rounded-lg border bg-white p-4">
-            <h3 className="mb-3 text-lg font-bold">Found Items Summary</h3>
+            <h3 className="mb-3 text-lg font-bold">Item Status</h3>
             <div className="space-y-2">
-              <div className="flex justify-between">
-                <span>Total Items</span>
-                <span>{order.Order_Items.length}</span>
-              </div>
-              <div className="flex justify-between">
-                <span>Found Items</span>
-                <span>
-                  {order.Order_Items.filter((item) => item.found).length}
-                </span>
-              </div>
-              <div className="flex justify-between">
-                <span>Partial Finds</span>
-                <span>
-                  {
-                    order.Order_Items.filter(
-                      (item) =>
-                        item.found &&
-                        item.foundQuantity &&
-                        item.foundQuantity < item.quantity
-                    ).length
-                  }
-                </span>
-              </div>
-              <Divider />
-              <div className="flex justify-between font-bold">
-                <span>Total for Found Items</span>
-                <span>{formatCurrency(calculateFoundTotal())}</span>
+              <div className="flex flex-wrap gap-2">
+                {order.Order_Items.map((item) => (
+                  <div 
+                    key={item.id} 
+                    className={`rounded-lg border p-2 ${
+                      item.found ? 'border-green-200 bg-green-50' : 'border-gray-200 bg-gray-50'
+                    }`}
+                  >
+                    <div className="font-medium">{item.product.name}</div>
+                    <div className="text-sm">
+                      {item.found ? (
+                        item.foundQuantity && item.foundQuantity < item.quantity ? (
+                          <span className="text-orange-600">
+                            Found: {item.foundQuantity} of {item.quantity}
+                          </span>
+                        ) : (
+                          <span className="text-green-600">Found: {item.quantity}</span>
+                        )
+                      ) : (
+                        <span className="text-gray-500">Not found</span>
+                      )}
+                    </div>
+                  </div>
+                ))}
               </div>
               
               {!order.Order_Items.some(item => item.found) && (
@@ -752,23 +774,47 @@ export default function BatchDetails({
             <div className="flex justify-between">
               <span>Subtotal</span>
               <span>
-                {formatCurrency(
-                  order.total -
-                    parseFloat(order.serviceFee || "0") -
-                    parseFloat(order.deliveryFee || "0")
-                )}
+                {order.status === "shopping" 
+                  ? formatCurrency(calculateFoundTotal())
+                  : formatCurrency(calculateOriginalSubtotal())}
               </span>
             </div>
-            <div className="flex justify-between">
-              <span>Delivery Fee</span>
-              <span>
-                {formatCurrency(parseFloat(order.deliveryFee || "0"))}
-              </span>
-            </div>
-            <div className="flex justify-between">
-              <span>Service Fee</span>
-              <span>{formatCurrency(parseFloat(order.serviceFee || "0"))}</span>
-            </div>
+            
+            {order.status === "shopping" ? (
+              <>
+                <div className="flex justify-between">
+                  <span>Items Found</span>
+                  <span>{order.Order_Items.filter(item => item.found).length} of {order.Order_Items.length}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span>Units Found</span>
+                  <span>
+                    {order.Order_Items.reduce((total, item) => {
+                      if (item.found) {
+                        return total + (item.foundQuantity || item.quantity);
+                      }
+                      return total;
+                    }, 0)} of {order.Order_Items.reduce((total, item) => total + item.quantity, 0)}
+                  </span>
+                </div>
+                <div className="flex justify-between">
+                  <span>Items Not Found</span>
+                  <span>{order.Order_Items.filter(item => !item.found).length}</span>
+                </div>
+              </>
+            ) : (
+              <>
+                <div className="flex justify-between">
+                  <span>Delivery Fee</span>
+                  <span>{formatCurrency(parseFloat(order.deliveryFee || "0"))}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span>Service Fee</span>
+                  <span>{formatCurrency(parseFloat(order.serviceFee || "0"))}</span>
+                </div>
+              </>
+            )}
+            
             {order.discount > 0 && (
               <div className="flex justify-between text-green-600">
                 <span>Discount</span>
@@ -778,8 +824,23 @@ export default function BatchDetails({
             <Divider />
             <div className="flex justify-between text-lg font-bold">
               <span>Total</span>
-              <span>{formatCurrency(order.total)}</span>
+              <span>
+                {order.status === "shopping"
+                  ? formatCurrency(calculateFoundItemsTotal())
+                  : formatCurrency(calculateOriginalSubtotal())}
+              </span>
             </div>
+            
+            {order.status === "shopping" && (
+              <div className="mt-4 rounded-md bg-blue-50 p-3 text-sm text-blue-700">
+                <p>
+                  <strong>Note:</strong> The total reflects only the value of found items. 
+                  Service fee ({formatCurrency(parseFloat(order.serviceFee || "0"))}) and 
+                  delivery fee ({formatCurrency(parseFloat(order.deliveryFee || "0"))}) 
+                  will be added to your wallet as earnings.
+                </p>
+              </div>
+            )}
           </div>
         </div>
 
