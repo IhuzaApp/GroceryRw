@@ -16,3 +16,4 @@ generates:
         uuid: string
         timestamptz: string
         jsonb: any
+        numeric: number
