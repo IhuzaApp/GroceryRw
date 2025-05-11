@@ -682,7 +682,11 @@ export default function MapSection({
                       // Show toast with create wallet button
                       reduceToastDuplicates(
                         "no-wallet",
-                        <Message showIcon type="warning" header="Wallet Required">
+                        <Message
+                          showIcon
+                          type="warning"
+                          header="Wallet Required"
+                        >
                           <div>
                             <p>You need a wallet to accept batches.</p>
                             <div className="mt-2">
@@ -692,25 +696,37 @@ export default function MapSection({
                                 onClick={() => {
                                   fetch("/api/queries/createWallet", {
                                     method: "POST",
-                                    headers: { "Content-Type": "application/json" }
+                                    headers: {
+                                      "Content-Type": "application/json",
+                                    },
                                   })
-                                    .then(res => res.json())
-                                    .then(data => {
+                                    .then((res) => res.json())
+                                    .then((data) => {
                                       if (data.success) {
                                         reduceToastDuplicates(
                                           "wallet-created",
-                                          <Message showIcon type="success" header="Wallet Created">
-                                            Your wallet has been created successfully.
+                                          <Message
+                                            showIcon
+                                            type="success"
+                                            header="Wallet Created"
+                                          >
+                                            Your wallet has been created
+                                            successfully.
                                           </Message>,
                                           { placement: "topEnd" }
                                         );
-                                        
+
                                         // Try accepting the batch again after wallet creation
                                         setTimeout(() => {
                                           fetch("/api/shopper/assignOrder", {
                                             method: "POST",
-                                            headers: { "Content-Type": "application/json" },
-                                            body: JSON.stringify({ orderId: order.id }),
+                                            headers: {
+                                              "Content-Type":
+                                                "application/json",
+                                            },
+                                            body: JSON.stringify({
+                                              orderId: order.id,
+                                            }),
                                           })
                                             .then((res) => res.json())
                                             .then((data) => {
@@ -718,7 +734,11 @@ export default function MapSection({
                                                 // Success toast
                                                 reduceToastDuplicates(
                                                   "order-assigned",
-                                                  <Message showIcon type="success" header="Assigned">
+                                                  <Message
+                                                    showIcon
+                                                    type="success"
+                                                    header="Assigned"
+                                                  >
                                                     Order assigned!
                                                   </Message>,
                                                   { placement: "topEnd" }
@@ -726,27 +746,43 @@ export default function MapSection({
                                                 // Remove marker and update state
                                                 map.removeLayer(marker);
                                                 setPendingOrders((prev) =>
-                                                  prev.filter((o) => o.id !== order.id)
+                                                  prev.filter(
+                                                    (o) => o.id !== order.id
+                                                  )
                                                 );
                                               } else {
                                                 // Error toast
                                                 reduceToastDuplicates(
                                                   "order-assign-failed",
-                                                  <Message showIcon type="error" header="Error">
-                                                    Failed to assign: {data.error || "Unknown error"}
+                                                  <Message
+                                                    showIcon
+                                                    type="error"
+                                                    header="Error"
+                                                  >
+                                                    Failed to assign:{" "}
+                                                    {data.error ||
+                                                      "Unknown error"}
                                                   </Message>,
                                                   { placement: "topEnd" }
                                                 );
                                                 btn.disabled = false;
-                                                btn.style.background = "#3b82f6";
+                                                btn.style.background =
+                                                  "#3b82f6";
                                                 btn.innerHTML = "Accept Batch";
                                               }
                                             })
                                             .catch((err) => {
-                                              console.error("Assign failed:", err);
+                                              console.error(
+                                                "Assign failed:",
+                                                err
+                                              );
                                               reduceToastDuplicates(
                                                 "order-assign-failed",
-                                                <Message showIcon type="error" header="Error">
+                                                <Message
+                                                  showIcon
+                                                  type="error"
+                                                  header="Error"
+                                                >
                                                   Failed to assign.
                                                 </Message>,
                                                 { placement: "topEnd" }
@@ -759,18 +795,29 @@ export default function MapSection({
                                       } else {
                                         reduceToastDuplicates(
                                           "wallet-creation-failed",
-                                          <Message showIcon type="error" header="Error">
+                                          <Message
+                                            showIcon
+                                            type="error"
+                                            header="Error"
+                                          >
                                             Failed to create wallet.
                                           </Message>,
                                           { placement: "topEnd" }
                                         );
                                       }
                                     })
-                                    .catch(err => {
-                                      console.error("Wallet creation failed:", err);
+                                    .catch((err) => {
+                                      console.error(
+                                        "Wallet creation failed:",
+                                        err
+                                      );
                                       reduceToastDuplicates(
                                         "wallet-creation-failed",
-                                        <Message showIcon type="error" header="Error">
+                                        <Message
+                                          showIcon
+                                          type="error"
+                                          header="Error"
+                                        >
                                           Failed to create wallet.
                                         </Message>,
                                         { placement: "topEnd" }
@@ -785,14 +832,14 @@ export default function MapSection({
                         </Message>,
                         { placement: "topEnd", duration: 10000 }
                       );
-                      
+
                       // Reset button
                       btn.disabled = false;
                       btn.style.background = "#3b82f6";
                       btn.innerHTML = "Accept Batch";
                       return;
                     }
-                    
+
                     // Success toast
                     reduceToastDuplicates(
                       "order-assigned",

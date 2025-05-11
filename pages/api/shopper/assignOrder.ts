@@ -30,7 +30,7 @@ const ASSIGN_ORDER = gql`
 // GraphQL query to check if shopper has a wallet
 const CHECK_WALLET = gql`
   query CheckShopperWallet($shopper_id: uuid!) {
-    Wallets(where: {shopper_id: {_eq: $shopper_id}}) {
+    Wallets(where: { shopper_id: { _eq: $shopper_id } }) {
       id
     }
   }
@@ -86,10 +86,17 @@ export default async function handler(
   }
 
   try {
+    if (!hasuraClient) {
+      throw new Error("Hasura client is not initialized");
+    }
+
     // Check if shopper has a wallet
-    const walletData = await hasuraClient.request<WalletResponse>(CHECK_WALLET, {
-      shopper_id: userId,
-    });
+    const walletData = await hasuraClient.request<WalletResponse>(
+      CHECK_WALLET,
+      {
+        shopper_id: userId,
+      }
+    );
 
     // If no wallet exists, return an error
     if (!walletData.Wallets || walletData.Wallets.length === 0) {
@@ -98,6 +105,10 @@ export default async function handler(
 
     // Get current timestamp for updated_at
     const currentTimestamp = new Date().toISOString();
+
+    if (!hasuraClient) {
+      throw new Error("Hasura client is not initialized");
+    }
 
     const data = await hasuraClient.request<OrderResponse>(ASSIGN_ORDER, {
       id: orderId,

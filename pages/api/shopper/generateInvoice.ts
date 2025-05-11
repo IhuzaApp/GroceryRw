@@ -36,9 +36,9 @@ export default async function handler(
       query CheckOrderAccess($orderId: uuid!, $userId: uuid!) {
         Orders(
           where: {
-            id: { _eq: $orderId },
+            id: { _eq: $orderId }
             _or: [
-              { user_id: { _eq: $userId } },
+              { user_id: { _eq: $userId } }
               { shopper_id: { _eq: $userId } }
             ]
           }
@@ -47,6 +47,10 @@ export default async function handler(
         }
       }
     `;
+
+    if (!hasuraClient) {
+      throw new Error("Hasura client is not initialized");
+    }
 
     const accessCheck = await hasuraClient.request<{
       Orders: Array<{ id: string }>;
@@ -71,7 +75,8 @@ export default async function handler(
   } catch (error) {
     console.error("Error generating invoice:", error);
     return res.status(500).json({
-      error: error instanceof Error ? error.message : "Failed to generate invoice",
+      error:
+        error instanceof Error ? error.message : "Failed to generate invoice",
     });
   }
-} 
+}

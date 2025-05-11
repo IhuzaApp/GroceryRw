@@ -1,7 +1,17 @@
 import React, { useState, useEffect } from "react";
 import Image from "next/image";
 import { formatCurrency } from "../../../lib/formatCurrency";
-import { Panel, Tag, Button, Nav, Toggle, DatePicker, SelectPicker, Loader, Message } from "rsuite";
+import {
+  Panel,
+  Tag,
+  Button,
+  Nav,
+  Toggle,
+  DatePicker,
+  SelectPicker,
+  Loader,
+  Message,
+} from "rsuite";
 import Cookies from "js-cookie";
 import { useSession } from "next-auth/react";
 
@@ -33,35 +43,46 @@ export default function ShopperProfileComponent() {
     created_at: string;
   } | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
-  
+
   // Shopper-specific states
   const [stats, setStats] = useState<ShopperStats>({
     totalDeliveries: 0,
     completionRate: 0,
     averageRating: 0,
-    totalEarnings: 0
+    totalEarnings: 0,
   });
-  
+
   // Schedule states
   const [schedule, setSchedule] = useState<TimeSlot[]>([]);
   const [scheduleLoading, setScheduleLoading] = useState<boolean>(true);
   const [hasSchedule, setHasSchedule] = useState<boolean>(false);
-  const [saveMessage, setSaveMessage] = useState<{ type: 'success' | 'error' | 'info', text: string } | null>(null);
-  
+  const [saveMessage, setSaveMessage] = useState<{
+    type: "success" | "error" | "info";
+    text: string;
+  } | null>(null);
+
   // Default address state
   const [defaultAddr, setDefaultAddr] = useState<any | null>(null);
   const [loadingAddr, setLoadingAddr] = useState<boolean>(true);
-  
+
   // State for temporary selected address (not persisted as default)
   const [selectedAddr, setSelectedAddr] = useState<any | null>(null);
-  
+
   // Address selection modal state
   const [addresses, setAddresses] = useState<any[]>([]);
   const [showAddrModal, setShowAddrModal] = useState<boolean>(false);
 
   // Days of the week
-  const days = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
-  
+  const days = [
+    "Monday",
+    "Tuesday",
+    "Wednesday",
+    "Thursday",
+    "Friday",
+    "Saturday",
+    "Sunday",
+  ];
+
   // Time slots
   const generateTimeSlots = () => {
     const slots = [];
@@ -78,13 +99,13 @@ export default function ShopperProfileComponent() {
   // Function to format time for display
   const formatTimeForDisplay = (time: string | undefined): string => {
     if (!time) return "09:00:00";
-    
+
     // If time already has seconds, return as is
-    if (time.split(':').length === 3) return time;
-    
+    if (time.split(":").length === 3) return time;
+
     // If time has only hours and minutes, add seconds
-    if (time.split(':').length === 2) return `${time}:00`;
-    
+    if (time.split(":").length === 2) return `${time}:00`;
+
     // Default fallback
     return "09:00:00";
   };
@@ -108,7 +129,7 @@ export default function ShopperProfileComponent() {
       .then((res) => res.json())
       .then((data: { user: any; orderCount: number }) => {
         setUser(data.user);
-        
+
         // Now fetch shopper stats
         return fetch("/api/shopper/stats");
       })
@@ -119,7 +140,7 @@ export default function ShopperProfileComponent() {
           totalDeliveries: data.totalDeliveries || 0,
           completionRate: data.completionRate || 0,
           averageRating: data.averageRating || 0,
-          totalEarnings: data.totalEarnings || 0
+          totalEarnings: data.totalEarnings || 0,
         });
       })
       .catch((err) => console.error("Failed to load shopper profile:", err))
@@ -133,51 +154,67 @@ export default function ShopperProfileComponent() {
       .then((res) => res.json())
       .then((data) => {
         console.log("Loaded schedule data:", data);
-        
+
         // Use the hasSchedule flag from the API response if available
         if (data.hasSchedule !== undefined) {
           setHasSchedule(data.hasSchedule);
         } else {
-          setHasSchedule(data.schedule && Array.isArray(data.schedule) && data.schedule.length > 0);
+          setHasSchedule(
+            data.schedule &&
+              Array.isArray(data.schedule) &&
+              data.schedule.length > 0
+          );
         }
-        
-        if (data.schedule && Array.isArray(data.schedule) && data.schedule.length > 0) {
+
+        if (
+          data.schedule &&
+          Array.isArray(data.schedule) &&
+          data.schedule.length > 0
+        ) {
           // Map the received schedule to ensure all days are represented
           const daysMap = new Map();
-          
+
           // First, initialize with default values for all days
-          days.forEach(day => {
+          days.forEach((day) => {
             daysMap.set(day, {
               day,
               startTime: "09:00",
               endTime: "17:00",
-              available: day !== "Sunday"
+              available: day !== "Sunday",
             });
           });
-          
+
           // Then, override with actual data from the server
-          data.schedule.forEach((slot: { day: string, startTime?: string, endTime?: string, available?: boolean }) => {
-            console.log(`Slot for ${slot.day}:`, slot);
-            daysMap.set(slot.day, {
-              day: slot.day,
-              startTime: formatTimeForDisplay(slot.startTime),
-              endTime: formatTimeForDisplay(slot.endTime),
-              available: typeof slot.available === 'boolean' ? slot.available : true
-            });
-          });
-          
+          data.schedule.forEach(
+            (slot: {
+              day: string;
+              startTime?: string;
+              endTime?: string;
+              available?: boolean;
+            }) => {
+              console.log(`Slot for ${slot.day}:`, slot);
+              daysMap.set(slot.day, {
+                day: slot.day,
+                startTime: formatTimeForDisplay(slot.startTime),
+                endTime: formatTimeForDisplay(slot.endTime),
+                available:
+                  typeof slot.available === "boolean" ? slot.available : true,
+              });
+            }
+          );
+
           // Convert map back to array
           const fullSchedule = Array.from(daysMap.values());
           console.log("Processed schedule:", fullSchedule);
-          
+
           setSchedule(fullSchedule);
         } else {
           // Initialize default schedule if none exists
-          const defaultSchedule = days.map(day => ({
+          const defaultSchedule = days.map((day) => ({
             day,
             startTime: "09:00",
             endTime: "17:00",
-            available: day !== "Sunday"
+            available: day !== "Sunday",
           }));
           setSchedule(defaultSchedule);
         }
@@ -185,11 +222,11 @@ export default function ShopperProfileComponent() {
       .catch((err) => {
         console.error("Error fetching schedule:", err);
         // Initialize default schedule on error
-        const defaultSchedule = days.map(day => ({
+        const defaultSchedule = days.map((day) => ({
           day,
           startTime: "09:00",
           endTime: "17:00",
-          available: day !== "Sunday"
+          available: day !== "Sunday",
         }));
         setSchedule(defaultSchedule);
         setHasSchedule(false);
@@ -200,7 +237,7 @@ export default function ShopperProfileComponent() {
   // Load schedule on component mount
   useEffect(() => {
     loadSchedule();
-  }, []);
+  }, [loadSchedule]);
 
   // Load default address
   useEffect(() => {
@@ -225,17 +262,19 @@ export default function ShopperProfileComponent() {
 
   // Handle availability toggle
   const handleAvailabilityToggle = (day: string, available: boolean) => {
-    setSchedule(prev => 
-      prev.map(slot => 
-        slot.day === day ? { ...slot, available } : slot
-      )
+    setSchedule((prev) =>
+      prev.map((slot) => (slot.day === day ? { ...slot, available } : slot))
     );
   };
 
   // Handle time change
-  const handleTimeChange = (day: string, field: 'startTime' | 'endTime', value: string) => {
-    setSchedule(prev => 
-      prev.map(slot => 
+  const handleTimeChange = (
+    day: string,
+    field: "startTime" | "endTime",
+    value: string
+  ) => {
+    setSchedule((prev) =>
+      prev.map((slot) =>
         slot.day === day ? { ...slot, [field]: value } : slot
       )
     );
@@ -245,70 +284,85 @@ export default function ShopperProfileComponent() {
   const configureSchedule = () => {
     if (!session) {
       console.error("No session available. Please log in.");
-      setSaveMessage({ type: 'error', text: 'Please log in to configure your schedule.' });
+      setSaveMessage({
+        type: "error",
+        text: "Please log in to configure your schedule.",
+      });
       return;
     }
 
-    setSaveMessage({ type: 'info', text: 'Configuring your schedule...' });
-    
+    setSaveMessage({ type: "info", text: "Configuring your schedule..." });
+
     fetch("/api/shopper/schedule", {
       method: "POST",
       headers: {
-        "Content-Type": "application/json"
+        "Content-Type": "application/json",
       },
-      credentials: 'include',
-      body: JSON.stringify({ schedule })
+      credentials: "include",
+      body: JSON.stringify({ schedule }),
     })
-      .then(res => {
+      .then((res) => {
         if (!res.ok) {
           throw new Error(`HTTP error! Status: ${res.status}`);
         }
         return res.json();
       })
-      .then(data => {
-
-        setSaveMessage({ type: 'success', text: 'Schedule configured successfully!' });
+      .then((data) => {
+        setSaveMessage({
+          type: "success",
+          text: "Schedule configured successfully!",
+        });
         setHasSchedule(true);
         // Reload schedule to get the latest data
         loadSchedule();
       })
-      .catch(err => {
-   
-        setSaveMessage({ type: 'error', text: 'Failed to configure schedule. Please try again.' });
+      .catch((err) => {
+        setSaveMessage({
+          type: "error",
+          text: "Failed to configure schedule. Please try again.",
+        });
       });
   };
 
   // Save schedule updates to backend
   const saveScheduleUpdates = () => {
     if (!session) {
- 
-      setSaveMessage({ type: 'error', text: 'Please log in to save your schedule.' });
+      setSaveMessage({
+        type: "error",
+        text: "Please log in to save your schedule.",
+      });
       return;
     }
 
-    setSaveMessage({ type: 'info', text: 'Saving your schedule...' });
-    
+    setSaveMessage({ type: "info", text: "Saving your schedule..." });
+
     fetch("/api/shopper/schedule", {
       method: "POST",
       headers: {
-        "Content-Type": "application/json"
+        "Content-Type": "application/json",
       },
-      credentials: 'include',
-      body: JSON.stringify({ schedule })
+      credentials: "include",
+      body: JSON.stringify({ schedule }),
     })
-      .then(res => {
+      .then((res) => {
         if (!res.ok) {
           throw new Error(`HTTP error! Status: ${res.status}`);
         }
         return res.json();
       })
-      .then(data => {
+      .then((data) => {
         console.log("Schedule saved:", data);
-        setSaveMessage({ type: 'success', text: 'Schedule updated successfully!' });
+        setSaveMessage({
+          type: "success",
+          text: "Schedule updated successfully!",
+        });
       })
-      .catch(err => {
+      .catch((err) => {
         console.error("Error saving schedule:", err);
-        setSaveMessage({ type: 'error', text: 'Failed to update schedule. Please try again.' });
+        setSaveMessage({
+          type: "error",
+          text: "Failed to update schedule. Please try again.",
+        });
       });
   };
 
@@ -381,7 +435,7 @@ export default function ShopperProfileComponent() {
                 >
                   Edit Profile
                 </Button>
-                
+
                 {/* Default address under profile */}
                 <div className="mt-4 w-full text-center">
                   <h3 className="font-medium">Service Area</h3>
@@ -446,17 +500,21 @@ export default function ShopperProfileComponent() {
               </div>
               <div className="flex items-center justify-between">
                 <span className="text-gray-600">Average Rating</span>
-                <span className="font-bold text-yellow-500">{stats.averageRating.toFixed(1)} ★</span>
+                <span className="font-bold text-yellow-500">
+                  {stats.averageRating.toFixed(1)} ★
+                </span>
               </div>
               <div className="flex items-center justify-between">
                 <span className="text-gray-600">Total Earnings</span>
-                <span className="font-bold text-green-600">{formatCurrency(stats.totalEarnings)}</span>
+                <span className="font-bold text-green-600">
+                  {formatCurrency(stats.totalEarnings)}
+                </span>
               </div>
             </div>
           )}
         </Panel>
       </div>
-      
+
       {/* Right Column - Tabs */}
       <div className="w-full md:col-span-9">
         <div className="scrollbar-hide mb-4 overflow-x-auto whitespace-nowrap">
@@ -505,18 +563,26 @@ export default function ShopperProfileComponent() {
             ) : (
               <div className="space-y-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700">Name</label>
+                  <label className="block text-sm font-medium text-gray-700">
+                    Name
+                  </label>
                   <p className="mt-1">{user?.name}</p>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700">Email</label>
+                  <label className="block text-sm font-medium text-gray-700">
+                    Email
+                  </label>
                   <p className="mt-1">{user?.email}</p>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700">Phone</label>
+                  <label className="block text-sm font-medium text-gray-700">
+                    Phone
+                  </label>
                   <p className="mt-1">{user?.phone || "Not provided"}</p>
                 </div>
-                <Button appearance="primary" color="green">Update Information</Button>
+                <Button appearance="primary" color="green">
+                  Update Information
+                </Button>
               </div>
             )}
           </Panel>
@@ -530,12 +596,13 @@ export default function ShopperProfileComponent() {
             ) : (
               <>
                 <p className="mb-4 text-gray-600">
-                  Set your availability for each day of the week. Orders will only be assigned to you during your available hours.
+                  Set your availability for each day of the week. Orders will
+                  only be assigned to you during your available hours.
                 </p>
-                
+
                 {saveMessage && (
-                  <Message 
-                    type={saveMessage.type} 
+                  <Message
+                    type={saveMessage.type}
                     className="mb-4"
                     closable
                     onClose={() => setSaveMessage(null)}
@@ -543,13 +610,15 @@ export default function ShopperProfileComponent() {
                     {saveMessage.text}
                   </Message>
                 )}
-                
+
                 {!hasSchedule ? (
                   <div className="mb-4">
-                    <p className="mb-2 text-gray-700">You haven't configured your work schedule yet.</p>
-                    <Button 
-                      appearance="primary" 
-                      color="green" 
+                    <p className="mb-2 text-gray-700">
+                      You haven&apos;t configured your work schedule yet.
+                    </p>
+                    <Button
+                      appearance="primary"
+                      color="green"
                       onClick={configureSchedule}
                     >
                       Configure Schedule
@@ -565,33 +634,54 @@ export default function ShopperProfileComponent() {
                         <div className="font-medium">Start Time</div>
                         <div className="font-medium">End Time</div>
                       </div>
-                      
+
                       <div className="divide-y">
                         {schedule.map((slot) => (
-                          <div key={slot.day} className="grid grid-cols-4 gap-4 p-4 md:grid-cols-7">
+                          <div
+                            key={slot.day}
+                            className="grid grid-cols-4 gap-4 p-4 md:grid-cols-7"
+                          >
                             <div className="flex items-center">{slot.day}</div>
                             <div className="flex items-center">
-                              <Toggle 
-                                checked={slot.available} 
-                                onChange={(checked) => handleAvailabilityToggle(slot.day, checked)}
+                              <Toggle
+                                checked={slot.available}
+                                onChange={(checked) =>
+                                  handleAvailabilityToggle(slot.day, checked)
+                                }
                                 checkedChildren="Yes"
                                 unCheckedChildren="No"
                               />
                             </div>
                             <div>
-                              <SelectPicker 
+                              <SelectPicker
                                 value={slot.startTime}
                                 disabled={!slot.available}
                                 data={timeSlots}
                                 cleanable={false}
                                 block
-                                onChange={(value) => handleTimeChange(slot.day, 'startTime', value as string)}
+                                onChange={(value) =>
+                                  handleTimeChange(
+                                    slot.day,
+                                    "startTime",
+                                    value as string
+                                  )
+                                }
                                 renderValue={(value) => {
                                   // console.log(`Rendering startTime for ${slot.day}:`, value);
-                                  return value ? value.split(':').slice(0, 2).join(':') : '';
+                                  return value
+                                    ? value.split(":").slice(0, 2).join(":")
+                                    : "";
                                 }}
                               />
-                              <div className="mt-1 text-xs text-gray-500">Current: {slot.startTime ? slot.startTime.split(':').slice(0, 2).join(':') : ''}</div>
+                              <div className="mt-1 text-xs text-gray-500">
+                                Current:{" "}
+                                {slot.startTime
+                                  ? slot.startTime
+                                      .split(":")
+                                      .slice(0, 2)
+                                      .join(":")
+                                  : ""}
+                              </div>
                             </div>
                             <div>
                               <SelectPicker
@@ -600,21 +690,40 @@ export default function ShopperProfileComponent() {
                                 data={timeSlots}
                                 cleanable={false}
                                 block
-                                onChange={(value) => handleTimeChange(slot.day, 'endTime', value as string)}
+                                onChange={(value) =>
+                                  handleTimeChange(
+                                    slot.day,
+                                    "endTime",
+                                    value as string
+                                  )
+                                }
                                 renderValue={(value) => {
-                              
-                                  return value ? value.split(':').slice(0, 2).join(':') : '';
+                                  return value
+                                    ? value.split(":").slice(0, 2).join(":")
+                                    : "";
                                 }}
                               />
-                              <div className="mt-1 text-xs text-gray-500">Current: {slot.endTime ? slot.endTime.split(':').slice(0, 2).join(':') : ''}</div>
+                              <div className="mt-1 text-xs text-gray-500">
+                                Current:{" "}
+                                {slot.endTime
+                                  ? slot.endTime
+                                      .split(":")
+                                      .slice(0, 2)
+                                      .join(":")
+                                  : ""}
+                              </div>
                             </div>
                           </div>
                         ))}
                       </div>
                     </div>
-                    
+
                     <div className="mt-4">
-                      <Button appearance="primary" color="green" onClick={saveScheduleUpdates}>
+                      <Button
+                        appearance="primary"
+                        color="green"
+                        onClick={saveScheduleUpdates}
+                      >
                         Save Updates
                       </Button>
                     </div>
@@ -631,34 +740,38 @@ export default function ShopperProfileComponent() {
             <p className="mb-4 text-gray-600">
               Add details about the vehicle(s) you use for deliveries.
             </p>
-            
+
             <div className="rounded-lg border p-4">
               <h4 className="mb-2 font-medium">Primary Vehicle</h4>
               <div className="grid gap-4 md:grid-cols-2">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700">Type</label>
+                  <label className="block text-sm font-medium text-gray-700">
+                    Type
+                  </label>
                   <SelectPicker
                     data={[
-                      { label: 'Car', value: 'car' },
-                      { label: 'Motorcycle', value: 'motorcycle' },
-                      { label: 'Bicycle', value: 'bicycle' },
-                      { label: 'Scooter', value: 'scooter' },
-                      { label: 'On foot', value: 'foot' },
+                      { label: "Car", value: "car" },
+                      { label: "Motorcycle", value: "motorcycle" },
+                      { label: "Bicycle", value: "bicycle" },
+                      { label: "Scooter", value: "scooter" },
+                      { label: "On foot", value: "foot" },
                     ]}
                     block
                     placeholder="Select vehicle type"
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700">Model (Optional)</label>
-                  <input 
-                    type="text" 
+                  <label className="block text-sm font-medium text-gray-700">
+                    Model (Optional)
+                  </label>
+                  <input
+                    type="text"
                     className="mt-1 block w-full rounded-md border border-gray-300 p-2 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
                     placeholder="e.g. Toyota Corolla"
                   />
                 </div>
               </div>
-              
+
               <Button appearance="primary" color="blue" className="mt-4">
                 Save Vehicle Info
               </Button>
@@ -672,40 +785,48 @@ export default function ShopperProfileComponent() {
             <p className="mb-4 text-gray-600">
               Manage your payment methods for receiving earnings.
             </p>
-            
+
             <div className="rounded-lg border p-4">
               <h4 className="mb-2 font-medium">Bank Account</h4>
               <div className="grid gap-4 md:grid-cols-2">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700">Account Name</label>
-                  <input 
-                    type="text" 
+                  <label className="block text-sm font-medium text-gray-700">
+                    Account Name
+                  </label>
+                  <input
+                    type="text"
                     className="mt-1 block w-full rounded-md border border-gray-300 p-2 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700">Account Number</label>
-                  <input 
-                    type="text" 
+                  <label className="block text-sm font-medium text-gray-700">
+                    Account Number
+                  </label>
+                  <input
+                    type="text"
                     className="mt-1 block w-full rounded-md border border-gray-300 p-2 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700">Bank Name</label>
-                  <input 
-                    type="text" 
+                  <label className="block text-sm font-medium text-gray-700">
+                    Bank Name
+                  </label>
+                  <input
+                    type="text"
                     className="mt-1 block w-full rounded-md border border-gray-300 p-2 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700">Routing Number</label>
-                  <input 
-                    type="text" 
+                  <label className="block text-sm font-medium text-gray-700">
+                    Routing Number
+                  </label>
+                  <input
+                    type="text"
                     className="mt-1 block w-full rounded-md border border-gray-300 p-2 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
                   />
                 </div>
               </div>
-              
+
               <Button appearance="primary" color="blue" className="mt-4">
                 Save Payment Info
               </Button>
@@ -719,7 +840,7 @@ export default function ShopperProfileComponent() {
             <p className="mb-4 text-gray-600">
               Customize your delivery preferences and notification settings.
             </p>
-            
+
             <div className="space-y-6">
               <div>
                 <h4 className="mb-2 font-medium">Order Preferences</h4>
@@ -727,11 +848,11 @@ export default function ShopperProfileComponent() {
                   <span>Maximum order distance</span>
                   <SelectPicker
                     data={[
-                      { label: '5 km', value: 5 },
-                      { label: '10 km', value: 10 },
-                      { label: '15 km', value: 15 },
-                      { label: '20 km', value: 20 },
-                      { label: 'No limit', value: 0 },
+                      { label: "5 km", value: 5 },
+                      { label: "10 km", value: 10 },
+                      { label: "15 km", value: 15 },
+                      { label: "20 km", value: 20 },
+                      { label: "No limit", value: 0 },
                     ]}
                     defaultValue={10}
                     cleanable={false}
@@ -741,12 +862,12 @@ export default function ShopperProfileComponent() {
                   <span>Maximum order size</span>
                   <SelectPicker
                     data={[
-                      { label: 'Small (1-10 items)', value: 'small' },
-                      { label: 'Medium (11-30 items)', value: 'medium' },
-                      { label: 'Large (31+ items)', value: 'large' },
-                      { label: 'No limit', value: 'no_limit' },
+                      { label: "Small (1-10 items)", value: "small" },
+                      { label: "Medium (11-30 items)", value: "medium" },
+                      { label: "Large (31+ items)", value: "large" },
+                      { label: "No limit", value: "no_limit" },
                     ]}
-                    defaultValue={'no_limit'}
+                    defaultValue={"no_limit"}
                     cleanable={false}
                   />
                 </div>
@@ -754,17 +875,17 @@ export default function ShopperProfileComponent() {
                   <span>Preferred shop types</span>
                   <SelectPicker
                     data={[
-                      { label: 'Grocery', value: 'grocery' },
-                      { label: 'Pharmacy', value: 'pharmacy' },
-                      { label: 'Convenience store', value: 'convenience' },
-                      { label: 'All types', value: 'all' },
+                      { label: "Grocery", value: "grocery" },
+                      { label: "Pharmacy", value: "pharmacy" },
+                      { label: "Convenience store", value: "convenience" },
+                      { label: "All types", value: "all" },
                     ]}
-                    defaultValue={'all'}
+                    defaultValue={"all"}
                     cleanable={false}
                   />
                 </div>
               </div>
-              
+
               <div>
                 <h4 className="mb-2 font-medium">Notification Preferences</h4>
                 <div className="space-y-2">
@@ -782,7 +903,7 @@ export default function ShopperProfileComponent() {
                   </div>
                 </div>
               </div>
-              
+
               <Button appearance="primary" color="green">
                 Save Preferences
               </Button>
@@ -792,4 +913,4 @@ export default function ShopperProfileComponent() {
       </div>
     </div>
   );
-} 
+}

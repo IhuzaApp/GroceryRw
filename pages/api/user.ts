@@ -51,6 +51,10 @@ export default async function handler(
 
   try {
     // Fetch user profile
+    if (!hasuraClient) {
+      throw new Error("Hasura client is not initialized");
+    }
+
     const userData = await hasuraClient.request<{ Users_by_pk: any }>(
       GET_CURRENT_USER,
       { id: user_id }
@@ -58,6 +62,10 @@ export default async function handler(
     const user = userData.Users_by_pk;
 
     // Fetch order count
+    if (!hasuraClient) {
+      throw new Error("Hasura client is not initialized");
+    }
+
     const orderData = await hasuraClient.request<{
       Orders_aggregate: { aggregate: { count: number } };
     }>(GET_ORDER_COUNT, { user_id });

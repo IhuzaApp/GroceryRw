@@ -59,4 +59,4 @@ export interface OrderDetailsType {
       };
     };
   };
-} 
+}

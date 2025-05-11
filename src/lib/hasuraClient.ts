@@ -1,7 +1,7 @@
 import { GraphQLClient } from "graphql-request";
 
 // Check if code is running on client side
-const isClient = typeof window !== 'undefined';
+const isClient = typeof window !== "undefined";
 
 // Only validate environment variables on the server side
 if (!isClient) {
@@ -15,10 +15,11 @@ if (!isClient) {
 }
 
 // Create the client only on server side, or with next public variables on client side
-export const hasuraClient = !isClient 
+export const hasuraClient = !isClient
   ? new GraphQLClient(process.env.HASURA_GRAPHQL_URL as string, {
       headers: {
-        "x-hasura-admin-secret": process.env.HASURA_GRAPHQL_ADMIN_SECRET as string,
+        "x-hasura-admin-secret": process.env
+          .HASURA_GRAPHQL_ADMIN_SECRET as string,
       },
     })
   : null; // Return null on client side to prevent direct usage

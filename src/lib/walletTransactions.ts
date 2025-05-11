@@ -2,7 +2,7 @@ import { gql } from "graphql-request";
 import { hasuraClient } from "./hasuraClient";
 
 // Helper to determine if code is running on client or server
-const isClient = typeof window !== 'undefined';
+const isClient = typeof window !== "undefined";
 
 // GraphQL mutation to create wallet transactions
 const CREATE_WALLET_TRANSACTIONS = gql`
@@ -28,10 +28,8 @@ const CREATE_WALLET_TRANSACTIONS = gql`
 const UPDATE_WALLET_BALANCES = gql`
   mutation UpdateWalletBalances($wallet_id: uuid!, $reserved_balance: String!) {
     update_Wallets_by_pk(
-      pk_columns: { id: $wallet_id }, 
-      _set: { 
-        reserved_balance: $reserved_balance 
-      }
+      pk_columns: { id: $wallet_id }
+      _set: { reserved_balance: $reserved_balance }
     ) {
       id
       reserved_balance
@@ -113,7 +111,7 @@ export const recordPaymentTransactions = async (
 
       return await response.json();
     }
-    
+
     // Server-side implementation
     if (!hasuraClient) {
       throw new Error("Hasura client is not available on the client side");
@@ -136,19 +134,21 @@ export const recordPaymentTransactions = async (
 
     const wallet = walletResponse.Wallets[0];
     const walletId = wallet.id;
-    
+
     // Calculate new reserved balance
     const currentReserved = parseFloat(wallet.reserved_balance);
-    
+
     // The reserved balance should be sufficient for the order amount
     if (currentReserved < orderAmount) {
       throw new Error("Insufficient reserved balance");
     }
-    
-    // Calculate the new reserved balance after deducting only the order amount 
+
+    // Calculate the new reserved balance after deducting only the order amount
     // (excluding service fee and delivery fee which were already added to available balance)
     const newReserved = currentReserved - orderAmount;
-    console.log(`Updating reserved balance: ${currentReserved} - ${orderAmount} = ${newReserved}`);
+    console.log(
+      `Updating reserved balance: ${currentReserved} - ${orderAmount} = ${newReserved}`
+    );
 
     // Update the wallet balances - only change the reserved balance
     await hasuraClient.request(UPDATE_WALLET_BALANCES, {
@@ -164,7 +164,8 @@ export const recordPaymentTransactions = async (
         type: "payment",
         status: "completed",
         related_order_id: orderId,
-        description: "Payment for found order items (excluding service and delivery fees)",
+        description:
+          "Payment for found order items (excluding service and delivery fees)",
       },
     ];
 
@@ -175,8 +176,8 @@ export const recordPaymentTransactions = async (
     return {
       transactionResponse: response,
       newBalance: {
-        reserved: newReserved
-      }
+        reserved: newReserved,
+      },
     };
   } catch (error) {
     console.error("Error recording wallet transactions:", error);
@@ -207,7 +208,7 @@ export const generateInvoice = async (orderId: string) => {
       const data = await response.json();
       return data.invoice;
     }
-    
+
     // Server-side implementation
     if (!hasuraClient) {
       throw new Error("Hasura client is not available on the client side");
@@ -252,20 +253,25 @@ export const generateInvoice = async (orderId: string) => {
     }
 
     const order = orderDetails.Orders_by_pk;
-    
+
     // Calculate totals
-    // Use the actual items from the order and calculate based on quantities 
+    // Use the actual items from the order and calculate based on quantities
     const items = order.Order_Items;
     const itemsTotal = items.reduce((total, item) => {
-      return total + (parseFloat(item.price) * item.quantity);
+      const price =
+        typeof item.price === "string" ? parseFloat(item.price) : item.price;
+      return total + price * item.quantity;
     }, 0);
-    
+
     const serviceFee = parseFloat(order.service_fee);
     const deliveryFee = parseFloat(order.delivery_fee);
-    
+
     // Generate invoice data that matches what's shown in the Order Summary
     const invoiceData = {
-      invoiceNumber: `INV-${order.OrderID}-${new Date().getTime().toString().slice(-6)}`,
+      invoiceNumber: `INV-${order.OrderID}-${new Date()
+        .getTime()
+        .toString()
+        .slice(-6)}`,
       orderId: order.id,
       orderNumber: order.OrderID,
       customer: order.userByUserId.name,
@@ -275,19 +281,25 @@ export const generateInvoice = async (orderId: string) => {
       dateCreated: new Date(order.created_at).toLocaleString(),
       dateCompleted: new Date(order.updated_at).toLocaleString(),
       status: order.status,
-      items: items.map(item => ({
+      items: items.map((item) => ({
         name: item.Product.name,
         quantity: item.quantity,
         unitPrice: item.price,
-        total: parseFloat(item.price) * item.quantity,
-        unit: item.Product.measurement_unit || 'item'
+        total:
+          (typeof item.price === "string"
+            ? parseFloat(item.price)
+            : item.price) * item.quantity,
+        unit: item.Product.measurement_unit || "item",
       })),
       subtotal: itemsTotal,
       serviceFee,
       deliveryFee,
       // When in shopping mode, the displayed total should match the subtotal without fees
       // For other modes, include the fees
-      total: order.status === "shopping" ? itemsTotal : (itemsTotal + serviceFee + deliveryFee)
+      total:
+        order.status === "shopping"
+          ? itemsTotal
+          : itemsTotal + serviceFee + deliveryFee,
     };
 
     return invoiceData;
@@ -295,4 +307,4 @@ export const generateInvoice = async (orderId: string) => {
     console.error("Error generating invoice:", error);
     throw error;
   }
-}; 
+};

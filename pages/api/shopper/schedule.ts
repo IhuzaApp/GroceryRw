@@ -50,29 +50,40 @@ const GET_SHOPPER_AVAILABILITY = gql`
 `;
 
 const ADD_SHOPPER_AVAILABILITY = gql`
-  mutation AddShopperAvailability($day_of_week: Int!, $end_time: timetz!, $start_time: timetz!, $user_id: uuid!, $is_available: Boolean!) {
-    insert_Shopper_Availability(objects: {
-      day_of_week: $day_of_week,
-      end_time: $end_time,
-      start_time: $start_time,
-      user_id: $user_id,
-      is_available: $is_available
-    }) {
+  mutation AddShopperAvailability(
+    $day_of_week: Int!
+    $end_time: timetz!
+    $start_time: timetz!
+    $user_id: uuid!
+    $is_available: Boolean!
+  ) {
+    insert_Shopper_Availability(
+      objects: {
+        day_of_week: $day_of_week
+        end_time: $end_time
+        start_time: $start_time
+        user_id: $user_id
+        is_available: $is_available
+      }
+    ) {
       affected_rows
     }
   }
 `;
 
 const UPDATE_SHOPPER_AVAILABILITY = gql`
-  mutation UpdateShopperAvailability($user_id: uuid!, $day_of_week: Int!, $start_time: timetz!, $end_time: timetz!, $is_available: Boolean!) {
+  mutation UpdateShopperAvailability(
+    $user_id: uuid!
+    $day_of_week: Int!
+    $start_time: timetz!
+    $end_time: timetz!
+    $is_available: Boolean!
+  ) {
     update_Shopper_Availability(
-      where: { 
-        user_id: { _eq: $user_id },
-        day_of_week: { _eq: $day_of_week }
-      },
+      where: { user_id: { _eq: $user_id }, day_of_week: { _eq: $day_of_week } }
       _set: {
-        start_time: $start_time,
-        end_time: $end_time,
+        start_time: $start_time
+        end_time: $end_time
         is_available: $is_available
       }
     ) {
@@ -83,13 +94,29 @@ const UPDATE_SHOPPER_AVAILABILITY = gql`
 
 // Helper function to convert day string to number
 const dayToNumber = (day: string): number => {
-  const days = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
+  const days = [
+    "Monday",
+    "Tuesday",
+    "Wednesday",
+    "Thursday",
+    "Friday",
+    "Saturday",
+    "Sunday",
+  ];
   return days.indexOf(day) + 1; // 1-based index (Monday = 1, Sunday = 7)
 };
 
 // Helper function to convert number to day string
 const numberToDay = (num: number): string => {
-  const days = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
+  const days = [
+    "Monday",
+    "Tuesday",
+    "Wednesday",
+    "Thursday",
+    "Friday",
+    "Saturday",
+    "Sunday",
+  ];
   return days[num - 1] || "Unknown"; // 1-based index (1 = Monday, 7 = Sunday)
 };
 
@@ -113,9 +140,16 @@ export default async function handler(
     // GET request to fetch schedule
     if (req.method === "GET") {
       try {
-        const data = await hasuraClient.request<GetShopperAvailabilityResponse>(GET_SHOPPER_AVAILABILITY, {
-          user_id: userId,
-        });
+        if (!hasuraClient) {
+          throw new Error("Hasura client is not initialized");
+        }
+
+        const data = await hasuraClient.request<GetShopperAvailabilityResponse>(
+          GET_SHOPPER_AVAILABILITY,
+          {
+            user_id: userId,
+          }
+        );
 
         console.log("Retrieved availability data:", data.Shopper_Availability);
 
@@ -128,106 +162,138 @@ export default async function handler(
             endTime: item.end_time,
             available: item.is_available,
           };
-          console.log(`Transformed item for ${transformedItem.day}:`, transformedItem);
+          console.log(
+            `Transformed item for ${transformedItem.day}:`,
+            transformedItem
+          );
           return transformedItem;
         });
 
         console.log("Transformed schedule data:", scheduleData);
 
-        return res.status(200).json({ 
+        return res.status(200).json({
           schedule: scheduleData,
-          hasSchedule: scheduleData.length > 0 
+          hasSchedule: scheduleData.length > 0,
         });
       } catch (error) {
         console.error("Error fetching schedule:", error);
-        return res.status(500).json({ error: "Failed to fetch schedule", details: error });
+        return res
+          .status(500)
+          .json({ error: "Failed to fetch schedule", details: error });
       }
     }
-    
+
     // POST request to save schedule
     else if (req.method === "POST") {
       const { schedule } = req.body;
-      
+
       if (!schedule || !Array.isArray(schedule)) {
         return res.status(400).json({ error: "Invalid schedule data" });
       }
-      
+
       try {
         // First, get the current availability data
-        const currentData = await hasuraClient.request<GetShopperAvailabilityResponse>(GET_SHOPPER_AVAILABILITY, {
-          user_id: userId,
-        });
-        
+        if (!hasuraClient) {
+          throw new Error("Hasura client is not initialized");
+        }
+
+        const currentData =
+          await hasuraClient.request<GetShopperAvailabilityResponse>(
+            GET_SHOPPER_AVAILABILITY,
+            {
+              user_id: userId,
+            }
+          );
+
         const currentAvailability = currentData.Shopper_Availability || [];
         const hasExistingSchedule = currentAvailability.length > 0;
-        
+
         console.log("Current availability count:", currentAvailability.length);
-        
+
         // Process each schedule item
         const results = await Promise.all(
           schedule.map(async (slot) => {
             const dayNumber = dayToNumber(slot.day);
-            
+
             // Check if this day already exists in the database
             const existingDay = currentAvailability.find(
-              item => item.day_of_week === dayNumber
+              (item) => item.day_of_week === dayNumber
             );
-            
+
             if (existingDay) {
               console.log(`Updating day ${slot.day} (${dayNumber})`);
               // Update existing entry
-              return hasuraClient.request<{ update_Shopper_Availability: { affected_rows: number } }>(
-                UPDATE_SHOPPER_AVAILABILITY, {
-                  user_id: userId,
-                  day_of_week: dayNumber,
-                  start_time: slot.startTime,
-                  end_time: slot.endTime,
-                  is_available: slot.available
-                }
-              );
+              if (!hasuraClient) {
+                throw new Error("Hasura client is not initialized");
+              }
+
+              return hasuraClient.request<{
+                update_Shopper_Availability: { affected_rows: number };
+              }>(UPDATE_SHOPPER_AVAILABILITY, {
+                user_id: userId,
+                day_of_week: dayNumber,
+                start_time: slot.startTime,
+                end_time: slot.endTime,
+                is_available: slot.available,
+              });
             } else {
-              console.log(`Creating new entry for day ${slot.day} (${dayNumber})`);
+              console.log(
+                `Creating new entry for day ${slot.day} (${dayNumber})`
+              );
               // Create new entry
+              if (!hasuraClient) {
+                throw new Error("Hasura client is not initialized");
+              }
+
               return hasuraClient.request<AddShopperAvailabilityResponse>(
-                ADD_SHOPPER_AVAILABILITY, {
+                ADD_SHOPPER_AVAILABILITY,
+                {
                   day_of_week: dayNumber,
                   start_time: slot.startTime,
                   end_time: slot.endTime,
                   user_id: userId,
-                  is_available: slot.available
+                  is_available: slot.available,
                 }
               );
             }
           })
         );
-        
+
         // Count total affected rows
         const totalAffectedRows = results.reduce((total, result) => {
-          if ('update_Shopper_Availability' in result) {
-            return total + (result.update_Shopper_Availability?.affected_rows || 0);
-          } else if ('insert_Shopper_Availability' in result) {
-            return total + (result.insert_Shopper_Availability?.affected_rows || 0);
+          if ("update_Shopper_Availability" in result) {
+            return (
+              total + (result.update_Shopper_Availability?.affected_rows || 0)
+            );
+          } else if ("insert_Shopper_Availability" in result) {
+            return (
+              total + (result.insert_Shopper_Availability?.affected_rows || 0)
+            );
           }
           return total;
         }, 0);
-        
-        return res.status(200).json({ 
-          success: true, 
+
+        return res.status(200).json({
+          success: true,
           affected_rows: totalAffectedRows,
-          had_existing_schedule: hasExistingSchedule
+          had_existing_schedule: hasExistingSchedule,
         });
       } catch (error) {
         console.error("Error saving schedule:", error);
-        return res.status(500).json({ error: "Failed to save schedule", details: error });
+        return res
+          .status(500)
+          .json({ error: "Failed to save schedule", details: error });
       }
     }
-    
+
     // Method not allowed
     else {
       return res.status(405).json({ error: "Method not allowed" });
     }
   } catch (error) {
     console.error("Error handling shopper availability:", error);
-    return res.status(500).json({ error: "Internal server error", details: error });
+    return res
+      .status(500)
+      .json({ error: "Internal server error", details: error });
   }
-} 
+}

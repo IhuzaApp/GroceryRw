@@ -127,6 +127,10 @@ export default async function handler(
 
   if (req.method === "GET") {
     try {
+      if (!hasuraClient) {
+        throw new Error("Hasura client is not initialized");
+      }
+
       const data = await hasuraClient.request<{
         Payment_Methods: PaymentMethod[];
       }>(GET_PAYMENT_METHODS, { user_id });
@@ -148,6 +152,10 @@ export default async function handler(
         .json({ error: "Missing CCV or validity for card payments" });
     }
     try {
+      if (!hasuraClient) {
+        throw new Error("Hasura client is not initialized");
+      }
+
       if (is_default) {
         await hasuraClient.request(RESET_DEFAULT, { user_id });
       }
@@ -183,6 +191,10 @@ export default async function handler(
       return res.status(400).json({ error: "Missing id or is_default flag" });
     }
     try {
+      if (!hasuraClient) {
+        throw new Error("Hasura client is not initialized");
+      }
+
       if (is_default) {
         console.log("Resetting default for user", user_id);
         const resetRes = await hasuraClient.request(RESET_DEFAULT, { user_id });

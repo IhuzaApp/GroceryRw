@@ -71,6 +71,10 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
   `;
 
   try {
+    if (!hasuraClient) {
+      throw new Error("Hasura client is not initialized");
+    }
+
     const [shopData, productsData] = await Promise.all([
       hasuraClient.request<ShopResponse>(shopQuery, { id }),
       hasuraClient.request<ProductsResponse>(productsQuery, { shop_id: id }),

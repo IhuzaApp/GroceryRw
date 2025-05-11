@@ -51,6 +51,11 @@ export default async function handler(
   const user_id = session.user.id;
 
   try {
+    // Check if hasuraClient is available
+    if (!hasuraClient) {
+      throw new Error("Hasura client is not initialized");
+    }
+
     // 1) Get all active carts for this user with item counts
     const data = await hasuraClient.request<{
       Carts: Array<{
@@ -74,6 +79,10 @@ export default async function handler(
       longitude: string;
     }> = [];
     if (shopIds.length > 0) {
+      if (!hasuraClient) {
+        throw new Error("Hasura client is not initialized");
+      }
+
       const shopsData = await hasuraClient.request<{
         Shops: Array<{
           id: string;

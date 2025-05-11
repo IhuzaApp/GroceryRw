@@ -183,11 +183,13 @@ export default function PlasaSidebar() {
               </h3>
             </div>
             <Link href="/Plasa/ShopperProfile" passHref>
-              <div className={`flex items-center rounded-lg px-4 py-3 ${
-                isActive("/Plasa/ShopperProfile")
-                  ? "bg-green-50 text-green-600"
-                  : "text-gray-700 hover:bg-gray-100"
-              }`}>
+              <div
+                className={`flex items-center rounded-lg px-4 py-3 ${
+                  isActive("/Plasa/ShopperProfile")
+                    ? "bg-green-50 text-green-600"
+                    : "text-gray-700 hover:bg-gray-100"
+                }`}
+              >
                 <svg
                   viewBox="0 0 24 24"
                   fill="none"
@@ -262,7 +264,9 @@ export default function PlasaSidebar() {
             href="/Plasa/active-batches"
             passHref
             className={`flex flex-col items-center p-2 ${
-              pathname?.startsWith("/Plasa/active-batches") ? "text-green-600" : "text-gray-600"
+              pathname?.startsWith("/Plasa/active-batches")
+                ? "text-green-600"
+                : "text-gray-600"
             }`}
           >
             <svg
@@ -283,7 +287,9 @@ export default function PlasaSidebar() {
             href="/Plasa/earnings"
             passHref
             className={`flex flex-col items-center p-2 ${
-              pathname?.startsWith("/Plasa/earnings") ? "text-green-600" : "text-gray-600"
+              pathname?.startsWith("/Plasa/earnings")
+                ? "text-green-600"
+                : "text-gray-600"
             }`}
           >
             <svg
@@ -302,7 +308,9 @@ export default function PlasaSidebar() {
             href="/Plasa/ShopperProfile"
             passHref
             className={`flex flex-col items-center p-2 ${
-              pathname?.startsWith("/Plasa/ShopperProfile") ? "text-green-600" : "text-gray-600"
+              pathname?.startsWith("/Plasa/ShopperProfile")
+                ? "text-green-600"
+                : "text-gray-600"
             }`}
           >
             <svg

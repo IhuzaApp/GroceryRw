@@ -55,9 +55,9 @@ const UPDATE_WALLET_BALANCES = gql`
   ) {
     update_Wallets_by_pk(
       pk_columns: { id: $wallet_id }
-      _set: { 
-        available_balance: $available_balance,
-        reserved_balance: $reserved_balance,
+      _set: {
+        available_balance: $available_balance
+        reserved_balance: $reserved_balance
         last_updated: "now()"
       }
     ) {
@@ -134,6 +134,10 @@ export default async function handler(
 
     console.log("Checking assignment for shopper:", userId, "order:", orderId);
 
+    if (!hasuraClient) {
+      throw new Error("Hasura client is not initialized");
+    }
+
     const assignmentCheck = await hasuraClient.request<{
       Orders: Array<{ id: string; status: string }>;
     }>(CHECK_ASSIGNMENT, {
@@ -154,6 +158,10 @@ export default async function handler(
     if (status === "shopping") {
       try {
         // Get order details with fees
+        if (!hasuraClient) {
+          throw new Error("Hasura client is not initialized");
+        }
+
         const orderDetails = await hasuraClient.request<{
           Orders_by_pk: {
             id: string;
@@ -171,8 +179,12 @@ export default async function handler(
         }
 
         const order = orderDetails.Orders_by_pk;
-        
+
         // Get shopper wallet
+        if (!hasuraClient) {
+          throw new Error("Hasura client is not initialized");
+        }
+
         const walletData = await hasuraClient.request<{
           Wallets: Array<{
             id: string;
@@ -188,22 +200,32 @@ export default async function handler(
         }
 
         const wallet = walletData.Wallets[0];
-        
+
         // Calculate new balances
         const orderTotal = parseFloat(order.total);
         const serviceFee = parseFloat(order.service_fee || "0");
         const deliveryFee = parseFloat(order.delivery_fee || "0");
-        
+
         const currentAvailableBalance = parseFloat(wallet.available_balance);
         const currentReservedBalance = parseFloat(wallet.reserved_balance);
-        
+
         // Add service fee and delivery fee to available balance
-        const newAvailableBalance = (currentAvailableBalance + serviceFee + deliveryFee).toFixed(2);
-        
+        const newAvailableBalance = (
+          currentAvailableBalance +
+          serviceFee +
+          deliveryFee
+        ).toFixed(2);
+
         // Add order total to reserved balance
-        const newReservedBalance = (currentReservedBalance + orderTotal).toFixed(2);
+        const newReservedBalance = (
+          currentReservedBalance + orderTotal
+        ).toFixed(2);
 
         // Update wallet balances
+        if (!hasuraClient) {
+          throw new Error("Hasura client is not initialized");
+        }
+
         await hasuraClient.request(UPDATE_WALLET_BALANCES, {
           wallet_id: wallet.id,
           available_balance: newAvailableBalance,
@@ -228,6 +250,10 @@ export default async function handler(
           },
         ];
 
+        if (!hasuraClient) {
+          throw new Error("Hasura client is not initialized");
+        }
+
         await hasuraClient.request(CREATE_WALLET_TRANSACTIONS, {
           transactions,
         });
@@ -236,8 +262,10 @@ export default async function handler(
       } catch (walletError) {
         console.error("Error updating wallet balances:", walletError);
         return res.status(500).json({
-          error: "Failed to update wallet balances",
-          details: walletError instanceof Error ? walletError.message : "Unknown error",
+          error:
+            walletError instanceof Error
+              ? walletError.message
+              : "Unknown error",
         });
       }
     }
@@ -246,7 +274,11 @@ export default async function handler(
     const currentTimestamp = new Date().toISOString();
 
     // Update the order status
-    const data = await hasuraClient.request<{
+    if (!hasuraClient) {
+      throw new Error("Hasura client is not initialized");
+    }
+
+    const updateResult = await hasuraClient.request<{
       update_Orders_by_pk: {
         id: string;
         status: string;
@@ -258,11 +290,14 @@ export default async function handler(
       updated_at: currentTimestamp,
     });
 
-    console.log("Order status updated successfully:", data.update_Orders_by_pk);
+    console.log(
+      "Order status updated successfully:",
+      updateResult.update_Orders_by_pk
+    );
 
     return res.status(200).json({
       success: true,
-      order: data.update_Orders_by_pk,
+      order: updateResult.update_Orders_by_pk,
     });
   } catch (error) {
     console.error("Error updating order status:", error);

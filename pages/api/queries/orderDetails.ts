@@ -86,6 +86,10 @@ export default async function handler(
   }
 
   try {
+    if (!hasuraClient) {
+      throw new Error("Hasura client is not initialized");
+    }
+
     const data = await hasuraClient.request<{ Orders: any[] }>(
       GET_ORDER_DETAILS,
       { id: orderId }

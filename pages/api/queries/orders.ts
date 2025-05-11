@@ -68,11 +68,20 @@ export default async function handler(
   res: NextApiResponse
 ) {
   try {
+    if (!hasuraClient) {
+      throw new Error("Hasura client is not initialized");
+    }
+
     // 1. Fetch orders
     const data = await hasuraClient.request<OrdersResponse>(GET_ORDERS);
     const orders = data.Orders;
     // 2. Fetch shops for these orders
     const shopIds = Array.from(new Set(orders.map((o) => o.shop_id)));
+
+    if (!hasuraClient) {
+      throw new Error("Hasura client is not initialized");
+    }
+
     const shopsData = await hasuraClient.request<{
       Shops: Array<{
         id: string;

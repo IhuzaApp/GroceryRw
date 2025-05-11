@@ -130,6 +130,9 @@ export default async function handler(
 
   try {
     // 1. Load cart and items
+    if (!hasuraClient) {
+      throw new Error("Hasura client is not initialized");
+    }
     const cartData = await hasuraClient.request<{
       Carts: Array<{
         id: string;
@@ -153,6 +156,9 @@ export default async function handler(
 
     // 2. Validate product availability
     const productIds = items.map((i) => i.product_id);
+    if (!hasuraClient) {
+      throw new Error("Hasura client is not initialized");
+    }
     const prodData = await hasuraClient.request<{
       Products: Array<{ id: string; quantity: number }>;
     }>(GET_PRODUCTS_BY_IDS, { ids: productIds });
@@ -177,6 +183,9 @@ export default async function handler(
       .toFixed(2);
 
     // 4. Create order record
+    if (!hasuraClient) {
+      throw new Error("Hasura client is not initialized");
+    }
     const orderRes = await hasuraClient.request<{
       insert_Orders_one: { id: string };
     }>(CREATE_ORDER, {
@@ -201,9 +210,15 @@ export default async function handler(
       quantity: i.quantity,
       price: i.price,
     }));
+    if (!hasuraClient) {
+      throw new Error("Hasura client is not initialized");
+    }
     await hasuraClient.request(CREATE_ORDER_ITEMS, { objects: orderItems });
 
     // 6. Archive the cart
+    if (!hasuraClient) {
+      throw new Error("Hasura client is not initialized");
+    }
     await hasuraClient.request(ARCHIVE_CART, { cart_id: cart.id });
 
     // 7. Respond with new order ID

@@ -29,6 +29,11 @@ export default async function handler(
         }
       }
     `;
+
+    if (!hasuraClient) {
+      throw new Error("Hasura client is not initialized");
+    }
+
     const response = await hasuraClient.request<{
       update_Users_by_pk: { id: string; role: string };
     }>(mutation, {
