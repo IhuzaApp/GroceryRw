@@ -219,6 +219,7 @@ export default function BatchDetails({
       }
 
       // Make API request to update wallet balance
+      let paymentSuccess = false;
       try {
         const response = await fetch("/api/shopper/processPayment", {
           method: "POST",
@@ -237,20 +238,25 @@ export default function BatchDetails({
           const errorData = await response.json();
           throw new Error(errorData.error || "Payment processing failed");
         }
+        
+        paymentSuccess = true;
       } catch (paymentError) {
         console.error("Payment processing error:", paymentError);
-        // Continue with the flow but show warning
+        // Show error and stop the flow
         toaster.push(
-          <Notification type="warning" header="Payment Warning" closable>
+          <Notification type="error" header="Payment Failed" closable>
             {paymentError instanceof Error 
               ? paymentError.message 
-              : "There was an issue with payment processing, but your order will continue."}
+              : "Payment processing failed. Please try again."}
           </Notification>,
           { placement: "topEnd" }
         );
+        setOtpVerifyLoading(false);
+        return;
       }
 
       // Record wallet transaction (wrapped in try/catch to prevent blocking flow)
+      let transactionSuccess = false;
       if (session?.user?.id) {
         try {
           await recordPaymentTransactions(
@@ -258,9 +264,18 @@ export default function BatchDetails({
             order.id,
             calculateFoundItemsTotal() // This only includes found items value, not fees
           );
+          transactionSuccess = true;
         } catch (txError) {
           console.error("Error recording transaction:", txError);
-          // Not blocking the flow
+          // Show warning but continue
+          toaster.push(
+            <Notification type="warning" header="Transaction Warning" closable>
+              {txError instanceof Error 
+                ? txError.message 
+                : "There was an issue recording the transaction, but your payment was processed."}
+            </Notification>,
+            { placement: "topEnd" }
+          );
         }
       }
 
@@ -269,35 +284,72 @@ export default function BatchDetails({
       
       // Generate invoice (wrapped in try/catch to prevent blocking flow)
       setInvoiceLoading(true);
+      let invoiceSuccess = false;
       try {
         const invoice = await generateInvoice(order.id);
         if (invoice) {
           setInvoiceData(invoice);
           setShowInvoiceModal(true);
+          invoiceSuccess = true;
         }
       } catch (invoiceError) {
         console.error("Error generating invoice:", invoiceError);
-        // Continue with status update even if invoice generation fails
+        // Show warning but continue
+        toaster.push(
+          <Notification type="warning" header="Invoice Warning" closable>
+            {invoiceError instanceof Error 
+              ? invoiceError.message 
+              : "There was an issue generating the invoice, but your payment was processed."}
+          </Notification>,
+          { placement: "topEnd" }
+        );
       } finally {
         setInvoiceLoading(false);
       }
       
-      // Update order status
-      await handleUpdateStatus("on_the_way");
-      
-      // Clear payment info
-      setMomoCode("");
-      setPrivateKey("");
-      setOtp("");
-      setGeneratedOtp("");
-      
-      // Show success notification
-      toaster.push(
-        <Notification type="success" header="Payment Processed" closable>
-          Payment has been processed successfully. Your reserved wallet balance has been updated.
-        </Notification>,
-        { placement: "topEnd" }
-      );
+      // Only update order status if payment was successful
+      if (paymentSuccess) {
+        // Update order status directly without showing payment modal again
+        try {
+          setLoading(true);
+          await onUpdateStatus(order.id, "on_the_way");
+
+          // Update local state
+          setOrder({
+            ...order,
+            status: "on_the_way",
+          });
+
+          // Update step
+          setCurrentStep(2);
+          
+          // Clear payment info
+          setMomoCode("");
+          setPrivateKey("");
+          setOtp("");
+          setGeneratedOtp("");
+          
+          // Show success notification
+          toaster.push(
+            <Notification type="success" header="Payment Processed" closable>
+              Payment has been processed successfully. Your reserved wallet balance has been updated.
+            </Notification>,
+            { placement: "topEnd" }
+          );
+        } catch (updateError) {
+          console.error("Error updating order status:", updateError);
+          toaster.push(
+            <Notification type="error" header="Status Update Failed" closable>
+              {updateError instanceof Error 
+                ? updateError.message 
+                : "Failed to update order status. Please try again."}
+            </Notification>,
+            { placement: "topEnd" }
+          );
+        } finally {
+          setLoading(false);
+        }
+      }
     } catch (err) {
       console.error("OTP verification error:", err);
       toaster.push(
@@ -451,7 +503,7 @@ export default function BatchDetails({
         // Use foundQuantity if available, otherwise use full quantity
         const quantity =
           item.foundQuantity !== undefined ? item.foundQuantity : item.quantity;
-        const itemPrice = parseFloat(item.price);
+        const itemPrice = Number(item.price);
         const itemTotal = itemPrice * quantity;
         return total + itemTotal;
       },
@@ -485,6 +537,12 @@ export default function BatchDetails({
     const foundTotal = calculateFoundTotal();
     console.log(`Found items total for payment: ${foundTotal.toString()}`);
     return foundTotal;
+  };
+
+  // Determine if we should show order items and summary
+  const shouldShowOrderDetails = () => {
+    if (!order) return false;
+    return order.status === "accepted" || order.status === "shopping";
   };
 
   // Function to get the right action button based on current status
@@ -874,67 +932,69 @@ export default function BatchDetails({
         </div>
 
         {/* Order Items */}
-        <div className="mb-6 rounded-lg border bg-white p-4">
-          <h3 className="mb-3 text-lg font-bold">Order Items</h3>
-          <div className="space-y-4">
-            {order.Order_Items.map((item) => (
-              <div key={item.id} className="flex items-center border-b pb-3">
-                <div
-                  className="mr-3 h-12 w-12 flex-shrink-0 cursor-pointer overflow-hidden rounded-lg bg-gray-100"
-                  onClick={() => showProductImage(item)}
-                >
-                  {item.product.image ? (
-                    <Image
-                      src={item.product.image}
-                      alt={item.product.name}
-                      width={48}
-                      height={48}
-                      className="h-full w-full object-cover"
-                    />
-                  ) : (
-                    <div className="flex h-full w-full items-center justify-center bg-gray-200 text-gray-400">
-                      <svg
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="currentColor"
-                        strokeWidth="2"
-                        className="h-6 w-6"
-                      >
-                        <path d="M9 17h6M9 12h6M9 7h6" />
-                      </svg>
-                    </div>
-                  )}
-                </div>
-                <div className="flex-grow">
-                  <p className="font-medium">{item.product.name}</p>
-                  <p className="text-sm text-gray-500">
-                    {formatCurrency(item.price)} × {item.quantity}
-                  </p>
-                  {item.found &&
-                    item.foundQuantity &&
-                    item.foundQuantity < item.quantity && (
-                      <p className="text-xs text-orange-600">
-                        Found: {item.foundQuantity} of {item.quantity}
-                      </p>
+        {shouldShowOrderDetails() && (
+          <div className="mb-6 rounded-lg border bg-white p-4">
+            <h3 className="mb-3 text-lg font-bold">Order Items</h3>
+            <div className="space-y-4">
+              {order.Order_Items.map((item) => (
+                <div key={item.id} className="flex items-center border-b pb-3">
+                  <div
+                    className="mr-3 h-12 w-12 flex-shrink-0 cursor-pointer overflow-hidden rounded-lg bg-gray-100"
+                    onClick={() => showProductImage(item)}
+                  >
+                    {item.product.image ? (
+                      <Image
+                        src={item.product.image}
+                        alt={item.product.name}
+                        width={48}
+                        height={48}
+                        className="h-full w-full object-cover"
+                      />
+                    ) : (
+                      <div className="flex h-full w-full items-center justify-center bg-gray-200 text-gray-400">
+                        <svg
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          stroke="currentColor"
+                          strokeWidth="2"
+                          className="h-6 w-6"
+                        >
+                          <path d="M9 17h6M9 12h6M9 7h6" />
+                        </svg>
+                      </div>
                     )}
-                </div>
-                <div className="flex flex-col items-end text-right">
-                  <div className="mb-2 font-bold">
-                    {formatCurrency(item.price * item.quantity)}
                   </div>
-                  {order.status === "shopping" && (
-                    <Checkbox
-                      checked={item.found || false}
-                      onChange={(_, checked) => toggleItemFound(item, checked)}
-                    >
-                      Found
-                    </Checkbox>
-                  )}
+                  <div className="flex-grow">
+                    <p className="font-medium">{item.product.name}</p>
+                    <p className="text-sm text-gray-500">
+                      {formatCurrency(item.price)} × {item.quantity}
+                    </p>
+                    {item.found &&
+                      item.foundQuantity &&
+                      item.foundQuantity < item.quantity && (
+                        <p className="text-xs text-orange-600">
+                          Found: {item.foundQuantity} of {item.quantity}
+                        </p>
+                      )}
+                  </div>
+                  <div className="flex flex-col items-end text-right">
+                    <div className="mb-2 font-bold">
+                      {formatCurrency(item.price * item.quantity)}
+                    </div>
+                    {order.status === "shopping" && (
+                      <Checkbox
+                        checked={item.found || false}
+                        onChange={(_, checked) => toggleItemFound(item, checked)}
+                      >
+                        Found
+                      </Checkbox>
+                    )}
+                  </div>
                 </div>
-              </div>
-            ))}
+              ))}
+            </div>
           </div>
-        </div>
+        )}
 
         {/* Found Items Summary - only show when shopping */}
         {order.status === "shopping" && (
@@ -986,81 +1046,83 @@ export default function BatchDetails({
         )}
 
         {/* Order Summary */}
-        <div className="mb-6 rounded-lg border bg-white p-4">
-          <h3 className="mb-3 text-lg font-bold">Order Summary</h3>
-          <div className="space-y-2">
-            <div className="flex justify-between">
-              <span>Subtotal</span>
-              <span>
-                {order.status === "shopping" 
-                  ? formatCurrency(calculateFoundTotal())
-                  : formatCurrency(calculateOriginalSubtotal())}
-              </span>
-            </div>
-            
-            {order.status === "shopping" ? (
-              <>
-                <div className="flex justify-between">
-                  <span>Items Found</span>
-                  <span>{order.Order_Items.filter(item => item.found).length} of {order.Order_Items.length}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span>Units Found</span>
-                  <span>
-                    {order.Order_Items.reduce((total, item) => {
-                      if (item.found) {
-                        return total + (item.foundQuantity || item.quantity);
-                      }
-                      return total;
-                    }, 0)} of {order.Order_Items.reduce((total, item) => total + item.quantity, 0)}
-                  </span>
-                </div>
-                <div className="flex justify-between">
-                  <span>Items Not Found</span>
-                  <span>{order.Order_Items.filter(item => !item.found).length}</span>
-                </div>
-              </>
-            ) : (
-              <>
-                <div className="flex justify-between">
-                  <span>Delivery Fee</span>
-                  <span>{formatCurrency(parseFloat(order.deliveryFee || "0"))}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span>Service Fee</span>
-                  <span>{formatCurrency(parseFloat(order.serviceFee || "0"))}</span>
-                </div>
-              </>
-            )}
-            
-            {order.discount > 0 && (
-              <div className="flex justify-between text-green-600">
-                <span>Discount</span>
-                <span>-{formatCurrency(order.discount)}</span>
+        {shouldShowOrderDetails() && (
+          <div className="mb-6 rounded-lg border bg-white p-4">
+            <h3 className="mb-3 text-lg font-bold">Order Summary</h3>
+            <div className="space-y-2">
+              <div className="flex justify-between">
+                <span>Subtotal</span>
+                <span>
+                  {order.status === "shopping" 
+                    ? formatCurrency(calculateFoundTotal())
+                    : formatCurrency(calculateOriginalSubtotal())}
+                </span>
               </div>
-            )}
-            <Divider />
-            <div className="flex justify-between text-lg font-bold">
-              <span>Total</span>
-              <span>
-                {order.status === "shopping"
-                  ? formatCurrency(calculateFoundItemsTotal())
-                  : formatCurrency(calculateOriginalSubtotal())}
-              </span>
-            </div>
-            
-            {order.status === "shopping" && (
-              <div className="mt-4 rounded-md bg-blue-50 p-3 text-sm text-blue-700">
-                <p>
-                  <strong>Note:</strong> The total reflects only the value of found items. 
-                  Service fee ({formatCurrency(parseFloat(order.serviceFee || "0"))}) and 
-                  delivery fee ({formatCurrency(parseFloat(order.deliveryFee || "0"))}) 
-                  were already added to your wallet as earnings when you started shopping.
-                </p>
+              
+              {order.status === "shopping" ? (
+                <>
+                  <div className="flex justify-between">
+                    <span>Items Found</span>
+                    <span>{order.Order_Items.filter(item => item.found).length} of {order.Order_Items.length}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span>Units Found</span>
+                    <span>
+                      {order.Order_Items.reduce((total, item) => {
+                        if (item.found) {
+                          return total + (item.foundQuantity || item.quantity);
+                        }
+                        return total;
+                      }, 0)} of {order.Order_Items.reduce((total, item) => total + item.quantity, 0)}
+                    </span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span>Items Not Found</span>
+                    <span>{order.Order_Items.filter(item => !item.found).length}</span>
+                  </div>
+                </>
+              ) : (
+                <>
+                  <div className="flex justify-between">
+                    <span>Delivery Fee</span>
+                    <span>{formatCurrency(parseFloat(order.deliveryFee || "0"))}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span>Service Fee</span>
+                    <span>{formatCurrency(parseFloat(order.serviceFee || "0"))}</span>
+                  </div>
+                </>
+              )}
+              
+              {order.discount > 0 && (
+                <div className="flex justify-between text-green-600">
+                  <span>Discount</span>
+                  <span>-{formatCurrency(order.discount)}</span>
+                </div>
+              )}
+              <Divider />
+              <div className="flex justify-between text-lg font-bold">
+                <span>Total</span>
+                <span>
+                  {order.status === "shopping"
+                    ? formatCurrency(calculateFoundItemsTotal())
+                    : formatCurrency(calculateOriginalSubtotal())}
+                </span>
               </div>
-            )}
+              
+              {order.status === "shopping" && (
+                <div className="mt-4 rounded-md bg-blue-50 p-3 text-sm text-blue-700">
+                  <p>
+                    <strong>Note:</strong> The total reflects only the value of found items. 
+                    Service fee ({formatCurrency(parseFloat(order.serviceFee || "0"))}) and 
+                    delivery fee ({formatCurrency(parseFloat(order.deliveryFee || "0"))}) 
+                    were already added to your wallet as earnings when you started shopping.
+                  </p>
+                </div>
+              )}
+            </div>
           </div>
-        </div>
+        )}
 
         {/* Delivery Notes if any */}
         {order.deliveryNotes && (
