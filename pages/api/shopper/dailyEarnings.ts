@@ -67,6 +67,10 @@ export default async function handler(
     const today = new Date();
     today.setHours(0, 0, 0, 0);
 
+    if (!hasuraClient) {
+      throw new Error("Hasura client is not initialized");
+    }
+
     const data = await hasuraClient.request<{
       activeOrders: Order[];
       completedOrders: Order[];
@@ -81,7 +85,9 @@ export default async function handler(
         const serviceFee = parseFloat(order.service_fee || "0");
         const deliveryFee = parseFloat(order.delivery_fee || "0");
         const orderTotal = serviceFee + deliveryFee;
-        console.log(`Active order ${order.id}: service_fee=${serviceFee}, delivery_fee=${deliveryFee}, total=${orderTotal}`);
+        console.log(
+          `Active order ${order.id}: service_fee=${serviceFee}, delivery_fee=${deliveryFee}, total=${orderTotal}`
+        );
         return sum + orderTotal;
       },
       0
@@ -93,7 +99,9 @@ export default async function handler(
         const serviceFee = parseFloat(order.service_fee || "0");
         const deliveryFee = parseFloat(order.delivery_fee || "0");
         const orderTotal = serviceFee + deliveryFee;
-        console.log(`Completed order ${order.id}: service_fee=${serviceFee}, delivery_fee=${deliveryFee}, total=${orderTotal}`);
+        console.log(
+          `Completed order ${order.id}: service_fee=${serviceFee}, delivery_fee=${deliveryFee}, total=${orderTotal}`
+        );
         return sum + orderTotal;
       },
       0
@@ -102,7 +110,9 @@ export default async function handler(
     // Total earnings for the day
     const totalEarnings = activeEarnings + completedEarnings;
 
-    console.log(`Daily earnings summary: active=${activeEarnings}, completed=${completedEarnings}, total=${totalEarnings}`);
+    console.log(
+      `Daily earnings summary: active=${activeEarnings}, completed=${completedEarnings}, total=${totalEarnings}`
+    );
 
     return res.status(200).json({
       success: true,

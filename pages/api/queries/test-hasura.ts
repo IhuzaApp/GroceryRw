@@ -20,6 +20,10 @@ export default async function handler(
       !!process.env.HASURA_GRAPHQL_ADMIN_SECRET
     );
 
+    if (!hasuraClient) {
+      throw new Error("Hasura client is not initialized");
+    }
+
     const data = await hasuraClient.request(TEST_QUERY);
     console.log("Connection successful:", data);
 

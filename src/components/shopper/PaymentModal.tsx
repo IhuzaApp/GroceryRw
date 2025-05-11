@@ -45,10 +45,15 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
       </Modal.Header>
       <Modal.Body>
         <Message type="info" className="mb-4">
-          <p><strong>IMPORTANT: This is a demo payment flow.</strong></p>
-          <p>In production, this would connect to a payment provider. For this demo, just enter any MoMo code.</p>
+          <p>
+            <strong>IMPORTANT: This is a demo payment flow.</strong>
+          </p>
+          <p>
+            In production, this would connect to a payment provider. For this
+            demo, just enter any MoMo code.
+          </p>
         </Message>
-        
+
         <Form fluid>
           <Form.Group>
             <Form.ControlLabel>MoMo Code</Form.ControlLabel>
@@ -66,7 +71,8 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
               <Input value={privateKey} disabled />
             </InputGroup>
             <Form.HelpText>
-              This is a one-time key for this transaction. Keep it for your records.
+              This is a one-time key for this transaction. Keep it for your
+              records.
             </Form.HelpText>
           </Form.Group>
 
@@ -76,15 +82,21 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
             <h4 className="mb-2 font-medium">Payment Summary</h4>
             <div className="flex justify-between">
               <span>Value of Found Items:</span>
-              <span className="font-medium">{formattedCurrency(orderAmount)}</span>
+              <span className="font-medium">
+                {formattedCurrency(orderAmount)}
+              </span>
             </div>
             <div className="flex justify-between text-green-600">
               <span>Service Fee (You Earn):</span>
-              <span className="font-medium">{formattedCurrency(serviceFee)}</span>
+              <span className="font-medium">
+                {formattedCurrency(serviceFee)}
+              </span>
             </div>
             <div className="flex justify-between text-green-600">
               <span>Delivery Fee (You Earn):</span>
-              <span className="font-medium">{formattedCurrency(deliveryFee)}</span>
+              <span className="font-medium">
+                {formattedCurrency(deliveryFee)}
+              </span>
             </div>
             <Divider />
             <div className="flex justify-between font-bold">
@@ -94,7 +106,9 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
           </div>
 
           <Message type="warning" className="mb-3">
-            After clicking "Proceed", you'll receive an OTP in a popup alert. You'll need to enter this OTP to complete the payment process.
+            After clicking &quot;Proceed&quot;, you&apos;ll receive an OTP in a
+            popup alert. You&apos;ll need to enter this OTP to complete the
+            payment process.
           </Message>
         </Form>
       </Modal.Body>
@@ -116,4 +130,4 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
   );
 };
 
-export default PaymentModal; 
+export default PaymentModal;

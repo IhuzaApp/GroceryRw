@@ -1,8 +1,8 @@
-import type { NextApiRequest, NextApiResponse } from 'next';
-import { getServerSession } from 'next-auth';
-import { authOptions } from '../auth/[...nextauth]';
-import { gql } from 'graphql-request';
-import { hasuraClient } from '../../../src/lib/hasuraClient';
+import type { NextApiRequest, NextApiResponse } from "next";
+import { getServerSession } from "next-auth";
+import { authOptions } from "../auth/[...nextauth]";
+import { gql } from "graphql-request";
+import { hasuraClient } from "../../../src/lib/hasuraClient";
 
 // GraphQL query to get order details for invoice
 const GET_ORDER_DETAILS_FOR_INVOICE = gql`
@@ -62,7 +62,7 @@ interface OrderDetails {
     };
     Order_Items: Array<{
       id: string;
-      price: number;
+      price: string;
       quantity: number;
       Product: {
         name: string;
@@ -79,46 +79,54 @@ export default async function handler(
   res: NextApiResponse
 ) {
   // Only allow POST method
-  if (req.method !== 'POST') {
-    return res.status(405).json({ error: 'Method not allowed' });
+  if (req.method !== "POST") {
+    return res.status(405).json({ error: "Method not allowed" });
   }
 
   try {
     // Get user session
     const session = await getServerSession(req, res, authOptions);
-    
+
     if (!session || !session.user) {
-      return res.status(401).json({ error: 'Unauthorized' });
+      return res.status(401).json({ error: "Unauthorized" });
     }
 
     const { orderId } = req.body;
 
     // Validate required fields
     if (!orderId) {
-      return res.status(400).json({ error: 'Missing required field: orderId' });
+      return res.status(400).json({ error: "Missing required field: orderId" });
     }
 
     // Check if hasuraClient is available (it should be on server side)
     if (!hasuraClient) {
-      return res.status(500).json({ error: 'Database client not available' });
+      return res.status(500).json({ error: "Database client not available" });
     }
 
     // Get order details for invoice
-    const orderDetails = await hasuraClient.request<OrderDetails>(GET_ORDER_DETAILS_FOR_INVOICE, {
-      order_id: orderId,
-    });
+    const orderDetails = await hasuraClient.request<OrderDetails>(
+      GET_ORDER_DETAILS_FOR_INVOICE,
+      {
+        order_id: orderId,
+      }
+    );
 
     if (!orderDetails.Orders_by_pk) {
-      return res.status(404).json({ error: 'Order not found' });
+      return res.status(404).json({ error: "Order not found" });
     }
 
     const order = orderDetails.Orders_by_pk;
-    
+
     // Verify the user is authorized to access this order (either as customer or shopper)
-    if (order.shopper_id !== session.user.id && order.userByUserId.email !== session.user.email) {
-      return res.status(403).json({ error: 'Not authorized to access this order' });
+    if (
+      order.shopper_id !== session.user.id &&
+      order.userByUserId.email !== session.user.email
+    ) {
+      return res
+        .status(403)
+        .json({ error: "Not authorized to access this order" });
     }
-    
+
     // Calculate totals
     // Use the actual items from the order and calculate based on quantities
     const items = order.Order_Items;
@@ -126,15 +134,18 @@ export default async function handler(
     // We'll calculate the total based on the quantities in the database
     const itemsTotal = items.reduce((total, item) => {
       // Use the item's price and quantity directly
-      return total + (parseFloat(item.price) * item.quantity);
+      return total + parseFloat(item.price) * item.quantity;
     }, 0);
-    
+
     const serviceFee = parseFloat(order.service_fee);
     const deliveryFee = parseFloat(order.delivery_fee);
-    
+
     // Generate invoice data that matches what's shown in the Order Summary
     const invoiceData = {
-      invoiceNumber: `INV-${order.OrderID}-${new Date().getTime().toString().slice(-6)}`,
+      invoiceNumber: `INV-${order.OrderID}-${new Date()
+        .getTime()
+        .toString()
+        .slice(-6)}`,
       orderId: order.id,
       orderNumber: order.OrderID,
       customer: order.userByUserId.name,
@@ -144,29 +155,33 @@ export default async function handler(
       dateCreated: new Date(order.created_at).toLocaleString(),
       dateCompleted: new Date(order.updated_at).toLocaleString(),
       status: order.status,
-      items: items.map(item => ({
+      items: items.map((item) => ({
         name: item.Product.name,
         quantity: item.quantity,
         unitPrice: item.price,
         total: parseFloat(item.price) * item.quantity,
-        unit: item.Product.measurement_unit || 'item'
+        unit: item.Product.measurement_unit || "item",
       })),
       subtotal: itemsTotal,
       serviceFee,
       deliveryFee,
       // When in shopping mode, the displayed total should match the subtotal without fees
       // For other modes, include the fees
-      total: order.status === "shopping" ? itemsTotal : (itemsTotal + serviceFee + deliveryFee)
+      total:
+        order.status === "shopping"
+          ? itemsTotal
+          : itemsTotal + serviceFee + deliveryFee,
     };
 
     return res.status(200).json({
       success: true,
-      invoice: invoiceData
+      invoice: invoiceData,
     });
   } catch (error) {
-    console.error('Error generating invoice:', error);
+    console.error("Error generating invoice:", error);
     return res.status(500).json({
-      error: error instanceof Error ? error.message : 'An unexpected error occurred'
+      error:
+        error instanceof Error ? error.message : "An unexpected error occurred",
     });
   }
 }

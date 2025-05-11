@@ -49,6 +49,10 @@ export default async function handler(
     // Cutoff timestamp: 20 minutes ago
     const cutoff = new Date(Date.now() - 20 * 60 * 1000).toISOString();
 
+    if (!hasuraClient) {
+      throw new Error("Hasura client is not initialized");
+    }
+
     const data = await hasuraClient.request<{
       Orders: Array<{
         id: string;

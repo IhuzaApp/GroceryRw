@@ -1,8 +1,8 @@
-import type { NextApiRequest, NextApiResponse } from 'next';
-import { getServerSession } from 'next-auth';
-import { authOptions } from '../auth/[...nextauth]';
-import { gql } from 'graphql-request';
-import { hasuraClient } from '../../../src/lib/hasuraClient';
+import type { NextApiRequest, NextApiResponse } from "next";
+import { getServerSession } from "next-auth";
+import { authOptions } from "../auth/[...nextauth]";
+import { gql } from "graphql-request";
+import { hasuraClient } from "../../../src/lib/hasuraClient";
 
 // GraphQL query to get wallet information
 const GET_WALLET_BY_SHOPPER_ID = gql`
@@ -20,10 +20,8 @@ const GET_WALLET_BY_SHOPPER_ID = gql`
 const UPDATE_WALLET_BALANCES = gql`
   mutation UpdateWalletBalances($wallet_id: uuid!, $reserved_balance: String!) {
     update_Wallets_by_pk(
-      pk_columns: { id: $wallet_id }, 
-      _set: { 
-        reserved_balance: $reserved_balance 
-      }
+      pk_columns: { id: $wallet_id }
+      _set: { reserved_balance: $reserved_balance }
     ) {
       id
       reserved_balance
@@ -66,59 +64,68 @@ export default async function handler(
   res: NextApiResponse
 ) {
   // Only allow POST method
-  if (req.method !== 'POST') {
-    return res.status(405).json({ error: 'Method not allowed' });
+  if (req.method !== "POST") {
+    return res.status(405).json({ error: "Method not allowed" });
   }
 
   try {
     // Get user session
     const session = await getServerSession(req, res, authOptions);
-    
+
     if (!session || !session.user) {
-      return res.status(401).json({ error: 'Unauthorized' });
+      return res.status(401).json({ error: "Unauthorized" });
     }
 
     const { shopperId, orderId, orderAmount } = req.body;
 
     // Validate required fields
     if (!shopperId || !orderId || orderAmount === undefined) {
-      return res.status(400).json({ error: 'Missing required fields' });
+      return res.status(400).json({ error: "Missing required fields" });
     }
 
     // Verify the authenticated user matches the shopperId
     if (session.user.id !== shopperId) {
-      return res.status(403).json({ error: 'Not authorized to record transactions for this shopper' });
+      return res.status(403).json({
+        error: "Not authorized to record transactions for this shopper",
+      });
     }
 
     // Check if hasuraClient is available (it should be on server side)
     if (!hasuraClient) {
-      return res.status(500).json({ error: 'Database client not available' });
+      return res.status(500).json({ error: "Database client not available" });
     }
 
     // Get wallet information
-    const walletResponse = await hasuraClient.request<WalletData>(GET_WALLET_BY_SHOPPER_ID, {
-      shopper_id: shopperId,
-    });
+    const walletResponse = await hasuraClient.request<WalletData>(
+      GET_WALLET_BY_SHOPPER_ID,
+      {
+        shopper_id: shopperId,
+      }
+    );
 
     if (!walletResponse.Wallets || walletResponse.Wallets.length === 0) {
-      return res.status(404).json({ error: 'Wallet not found for this shopper' });
+      return res
+        .status(404)
+        .json({ error: "Wallet not found for this shopper" });
     }
 
     const wallet = walletResponse.Wallets[0];
     const walletId = wallet.id;
-    
+
     // Calculate new reserved balance
     const currentReserved = parseFloat(wallet.reserved_balance);
-    
+
     // The reserved balance should be sufficient for the order amount
     if (currentReserved < orderAmount) {
-      return res.status(400).json({ error: 'Insufficient reserved balance' });
+      return res.status(400).json({ error: "Insufficient reserved balance" });
     }
-    
-    // Calculate the new reserved balance after deducting only the order amount 
+
+    // Calculate the new reserved balance after deducting only the order amount
     // (excluding service fee and delivery fee which were already added to available balance)
     const newReserved = currentReserved - orderAmount;
-    console.log(`Updating reserved balance: ${currentReserved} - ${orderAmount} = ${newReserved}`);
+    console.log(
+      `Updating reserved balance: ${currentReserved} - ${orderAmount} = ${newReserved}`
+    );
 
     // Update the wallet balances - only change the reserved balance
     await hasuraClient.request(UPDATE_WALLET_BALANCES, {
@@ -131,30 +138,36 @@ export default async function handler(
       {
         wallet_id: walletId,
         amount: orderAmount.toFixed(2),
-        type: 'payment',
-        status: 'completed',
+        type: "payment",
+        status: "completed",
         related_order_id: orderId,
-        description: 'Payment for found order items (excluding service and delivery fees)',
+        description:
+          "Payment for found order items (excluding service and delivery fees)",
       },
     ];
 
-    console.log(`Recording transaction for order ${orderId}, amount: ${orderAmount.toFixed(2)} (found items only)`);
+    console.log(
+      `Recording transaction for order ${orderId}, amount: ${orderAmount.toFixed(
+        2
+      )} (found items only)`
+    );
     const response = await hasuraClient.request(CREATE_WALLET_TRANSACTIONS, {
       transactions,
     });
 
     return res.status(200).json({
       success: true,
-      message: 'Transaction recorded and wallet balance updated successfully',
+      message: "Transaction recorded and wallet balance updated successfully",
       data: response,
       newBalance: {
-        reserved: newReserved
-      }
+        reserved: newReserved,
+      },
     });
   } catch (error) {
-    console.error('Error recording transaction:', error);
+    console.error("Error recording transaction:", error);
     return res.status(500).json({
-      error: error instanceof Error ? error.message : 'An unexpected error occurred'
+      error:
+        error instanceof Error ? error.message : "An unexpected error occurred",
     });
   }
-} 
+}

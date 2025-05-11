@@ -58,8 +58,8 @@ const handler = async (req: NextApiRequest, res: NextApiResponse) => {
         }
         # Get completed deliveries
         CompletedOrders: Orders_aggregate(
-          where: { 
-            shopper_id: { _eq: $shopperId },
+          where: {
+            shopper_id: { _eq: $shopperId }
             status: { _eq: "delivered" }
           }
         ) {
@@ -86,22 +86,29 @@ const handler = async (req: NextApiRequest, res: NextApiResponse) => {
       }
     `;
 
-    const data = await hasuraClient.request<GraphQLResponse>(query, { shopperId: userId });
+    if (!hasuraClient) {
+      throw new Error("Hasura client is not initialized");
+    }
+
+    const data = await hasuraClient.request<GraphQLResponse>(query, {
+      shopperId: userId,
+    });
     console.log("Raw stats data:", JSON.stringify(data, null, 2));
 
     // Calculate total deliveries
     const totalDeliveries = data.Orders_aggregate.aggregate.count || 0;
-    
+
     // Calculate completion rate
     const completedDeliveries = data.CompletedOrders.aggregate.count || 0;
-    const completionRate = totalDeliveries > 0 
-      ? Math.round((completedDeliveries / totalDeliveries) * 100) 
-      : 0;
-    
+    const completionRate =
+      totalDeliveries > 0
+        ? Math.round((completedDeliveries / totalDeliveries) * 100)
+        : 0;
+
     // Calculate average rating
     const averageRating = data.Ratings_aggregate.aggregate.avg?.rating || 0;
     const ratingCount = data.Ratings_aggregate.aggregate.count || 0;
-    
+
     // Calculate total earnings
     let totalEarnings = 0;
     if (data.Orders && Array.isArray(data.Orders)) {
@@ -109,32 +116,36 @@ const handler = async (req: NextApiRequest, res: NextApiResponse) => {
         const serviceFee = parseFloat(order.service_fee || "0");
         const deliveryFee = parseFloat(order.delivery_fee || "0");
         const orderTotal = serviceFee + deliveryFee;
-        console.log(`Order ${order.id} (${order.status}): service_fee=${serviceFee}, delivery_fee=${deliveryFee}, total=${orderTotal}`);
+        console.log(
+          `Order ${order.id} (${order.status}): service_fee=${serviceFee}, delivery_fee=${deliveryFee}, total=${orderTotal}`
+        );
         return sum + orderTotal;
       }, 0);
     }
-    
+
     console.log("Calculated stats:", {
       totalDeliveries,
       completedDeliveries,
       completionRate,
       averageRating,
       ratingCount,
-      totalEarnings
+      totalEarnings,
     });
 
     const response: ShopperStatsResponse = {
       totalDeliveries,
       completionRate,
       averageRating,
-      totalEarnings
+      totalEarnings,
     };
 
     return res.status(200).json(response);
   } catch (error: any) {
     console.error("Error fetching shopper stats:", error);
-    return res.status(500).json({ error: error.message || "Failed to fetch shopper stats" });
+    return res
+      .status(500)
+      .json({ error: error.message || "Failed to fetch shopper stats" });
   }
 };
 
-export default handler; 
+export default handler;

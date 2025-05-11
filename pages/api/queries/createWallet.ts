@@ -72,6 +72,10 @@ export default async function handler(
 
   try {
     // Check if wallet already exists
+    if (!hasuraClient) {
+      throw new Error("Hasura client is not initialized");
+    }
+
     const checkResult = await hasuraClient.request<{
       Wallets: Array<{ id: string }>;
     }>(CHECK_WALLET, {
@@ -88,6 +92,10 @@ export default async function handler(
     }
 
     // Create new wallet
+    if (!hasuraClient) {
+      throw new Error("Hasura client is not initialized");
+    }
+
     const data = await hasuraClient.request<WalletResponse>(CREATE_WALLET, {
       shopper_id: userId,
     });
@@ -101,4 +109,4 @@ export default async function handler(
     console.error("Error creating wallet:", error);
     return res.status(500).json({ error: "Failed to create wallet" });
   }
-} 
+}

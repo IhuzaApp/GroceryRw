@@ -1,10 +1,5 @@
 import React from "react";
-import {
-  Modal,
-  Button,
-  Form,
-  Message,
-} from "rsuite";
+import { Modal, Button, Form, Message } from "rsuite";
 
 interface OtpVerificationModalProps {
   open: boolean;
@@ -35,23 +30,29 @@ const OtpVerificationModal: React.FC<OtpVerificationModalProps> = ({
             <Form.Control
               name="otp"
               value={otp}
-              onChange={value => setOtp(value)}
+              onChange={(value) => setOtp(value)}
             />
             <Form.HelpText>
               Please enter the 5-digit OTP shown in the alert popup.
             </Form.HelpText>
           </Form.Group>
-          
+
           <Message type="info" className="mb-3">
-            <p><strong>IMPORTANT:</strong> An alert popup should have displayed the OTP. If you missed it, refresh the page and try again.</p>
-            <p>In a production environment, this OTP would be sent to your phone number or email.</p>
+            <p>
+              <strong>IMPORTANT:</strong> An alert popup should have displayed
+              the OTP. If you missed it, refresh the page and try again.
+            </p>
+            <p>
+              In a production environment, this OTP would be sent to your phone
+              number or email.
+            </p>
           </Message>
         </Form>
       </Modal.Body>
       <Modal.Footer>
-        <Button 
-          onClick={onVerify} 
-          appearance="primary" 
+        <Button
+          onClick={onVerify}
+          appearance="primary"
           color="green"
           loading={loading}
         >
@@ -65,4 +66,4 @@ const OtpVerificationModal: React.FC<OtpVerificationModalProps> = ({
   );
 };
 
-export default OtpVerificationModal; 
+export default OtpVerificationModal;

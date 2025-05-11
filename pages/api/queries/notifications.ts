@@ -30,6 +30,10 @@ export default async function handler(
   res: NextApiResponse
 ) {
   try {
+    if (!hasuraClient) {
+      throw new Error("Hasura client is not initialized");
+    }
+
     const data = await hasuraClient.request<NotificationsResponse>(
       GET_NOTIFICATIONS
     );

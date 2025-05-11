@@ -36,6 +36,10 @@ export default async function handler(
   res: NextApiResponse
 ) {
   try {
+    if (!hasuraClient) {
+      throw new Error("Hasura client is not initialized");
+    }
+
     const data = await hasuraClient.request<ProductsResponse>(GET_PRODUCTS);
     res.status(200).json({ products: data.Products });
   } catch (error) {

@@ -33,6 +33,9 @@ export default async function handler(
       "Making request to Hasura with URL:",
       process.env.HASURA_GRAPHQL_URL
     );
+    if (!hasuraClient) {
+      throw new Error("Hasura client is not initialized");
+    }
     const data = await hasuraClient.request<CategoriesResponse>(GET_CATEGORIES);
     console.log("Received data:", JSON.stringify(data, null, 2));
 

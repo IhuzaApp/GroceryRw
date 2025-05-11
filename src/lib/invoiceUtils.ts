@@ -32,10 +32,12 @@ interface InvoiceData {
  * @param invoiceData The invoice data to convert
  * @returns A promise that resolves when the download is complete
  */
-export const downloadInvoiceAsPdf = async (invoiceData: InvoiceData): Promise<void> => {
+export const downloadInvoiceAsPdf = async (
+  invoiceData: InvoiceData
+): Promise<void> => {
   // In a real implementation, this would generate a PDF and trigger a download
   console.log("Downloading invoice as PDF:", invoiceData);
-  
+
   // For now, we'll just create a simple text representation and download it
   const invoiceText = `
 INVOICE #${invoiceData.invoiceNumber}
@@ -58,9 +60,14 @@ ${invoiceData.customerEmail}
 
 ITEMS
 -----
-${invoiceData.items.map(item => 
-  `${item.name} - ${item.quantity} ${item.unit} x ${formatCurrency(item.unitPrice)} = ${formatCurrency(item.total)}`
-).join('\n')}
+${invoiceData.items
+  .map(
+    (item) =>
+      `${item.name} - ${item.quantity} ${item.unit} x ${formatCurrency(
+        item.unitPrice
+      )} = ${formatCurrency(item.total)}`
+  )
+  .join("\n")}
 
 SUMMARY
 -------
@@ -74,11 +81,11 @@ The payment reflects only the value of found items.
 `;
 
   // Create a Blob with the text content
-  const blob = new Blob([invoiceText], { type: 'text/plain' });
-  
+  const blob = new Blob([invoiceText], { type: "text/plain" });
+
   // Create a download link and trigger the download
   const url = URL.createObjectURL(blob);
-  const link = document.createElement('a');
+  const link = document.createElement("a");
   link.href = url;
   link.download = `invoice-${invoiceData.invoiceNumber}.txt`;
   document.body.appendChild(link);
@@ -93,10 +100,10 @@ The payment reflects only the value of found items.
  * @returns Formatted currency string
  */
 const formatCurrency = (amount: number): string => {
-  return new Intl.NumberFormat('en-RW', {
-    style: 'currency',
-    currency: 'RWF',
+  return new Intl.NumberFormat("en-RW", {
+    style: "currency",
+    currency: "RWF",
     minimumFractionDigits: 0,
-    maximumFractionDigits: 0
+    maximumFractionDigits: 0,
   }).format(amount);
-}; 
+};

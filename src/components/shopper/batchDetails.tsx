@@ -31,7 +31,10 @@ import { useChat } from "../../context/ChatContext";
 import { isMobileDevice } from "../../lib/formatters";
 import ChatDrawer from "../chat/ChatDrawer";
 import { OrderItem, OrderDetailsType } from "../../types/order";
-import { recordPaymentTransactions, generateInvoice } from "../../lib/walletTransactions";
+import {
+  recordPaymentTransactions,
+  generateInvoice,
+} from "../../lib/walletTransactions";
 import { useSession } from "next-auth/react";
 
 // Define interfaces for the order data
@@ -101,11 +104,11 @@ export default function BatchDetails({
     const randomOtp = Math.floor(10000 + Math.random() * 90000).toString();
     setGeneratedOtp(randomOtp);
     // Store in session storage
-    if (typeof window !== 'undefined') {
-      sessionStorage.setItem('payment_otp', randomOtp);
+    if (typeof window !== "undefined") {
+      sessionStorage.setItem("payment_otp", randomOtp);
     }
     // Log to console for testing purposes (in production, this would be sent via SMS/email)
-    console.log('Generated OTP:', randomOtp);
+    console.log("Generated OTP:", randomOtp);
     // Show as alert for demo purposes
     setTimeout(() => {
       alert(`For testing purposes, your OTP is: ${randomOtp}`);
@@ -118,25 +121,28 @@ export default function BatchDetails({
     const randomKey = Math.random().toString(36).substring(2, 10);
     setPrivateKey(randomKey);
     // Store in session storage
-    if (typeof window !== 'undefined') {
-      sessionStorage.setItem('payment_private_key', randomKey);
+    if (typeof window !== "undefined") {
+      sessionStorage.setItem("payment_private_key", randomKey);
     }
-    console.log('Generated Private Key:', randomKey);
+    console.log("Generated Private Key:", randomKey);
     return randomKey;
   };
 
   // Function to fetch wallet balance
   const fetchWalletBalance = async () => {
     if (!session?.user?.id) return null;
-    
+
     setWalletLoading(true);
     try {
-      const response = await fetch(`/api/shopper/wallet?shopperId=${session.user.id}`, {
-        method: "GET",
-        headers: {
-          "Content-Type": "application/json",
-        },
-      });
+      const response = await fetch(
+        `/api/shopper/wallet?shopperId=${session.user.id}`,
+        {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+          },
+        }
+      );
 
       if (!response.ok) {
         throw new Error("Failed to fetch wallet data");
@@ -161,16 +167,19 @@ export default function BatchDetails({
     try {
       // First check if there's enough balance in the wallet
       const wallet = await fetchWalletBalance();
-      
+
       if (wallet) {
         const orderAmount = calculateFoundItemsTotal();
         const reservedBalance = parseFloat(wallet.reserved_balance);
-        
+
         if (reservedBalance < orderAmount) {
           // Not enough balance, show error toast
           toaster.push(
             <Notification type="error" header="Insufficient Balance" closable>
-              <p>Your reserved wallet balance ({formatCurrency(reservedBalance)}) is insufficient for this order ({formatCurrency(orderAmount)}).</p>
+              <p>
+                Your reserved wallet balance ({formatCurrency(reservedBalance)})
+                is insufficient for this order ({formatCurrency(orderAmount)}).
+              </p>
               <p>Please raise a ticket to request a top-up on your wallet.</p>
             </Notification>,
             { placement: "topEnd", duration: 5000 }
@@ -180,10 +189,10 @@ export default function BatchDetails({
           return;
         }
       }
-      
+
       // If we have enough balance or couldn't check, proceed with OTP
       generateOtp();
-      
+
       // Close payment modal and show OTP modal
       setShowPaymentModal(false);
       setShowOtpModal(true);
@@ -192,7 +201,9 @@ export default function BatchDetails({
       console.error("Payment processing error:", err);
       toaster.push(
         <Notification type="error" header="Payment Failed" closable>
-          {err instanceof Error ? err.message : "Failed to process payment. Please try again."}
+          {err instanceof Error
+            ? err.message
+            : "Failed to process payment. Please try again."}
         </Notification>,
         { placement: "topEnd" }
       );
@@ -238,15 +249,15 @@ export default function BatchDetails({
           const errorData = await response.json();
           throw new Error(errorData.error || "Payment processing failed");
         }
-        
+
         paymentSuccess = true;
       } catch (paymentError) {
         console.error("Payment processing error:", paymentError);
         // Show error and stop the flow
         toaster.push(
           <Notification type="error" header="Payment Failed" closable>
-            {paymentError instanceof Error 
-              ? paymentError.message 
+            {paymentError instanceof Error
+              ? paymentError.message
               : "Payment processing failed. Please try again."}
           </Notification>,
           { placement: "topEnd" }
@@ -270,8 +281,8 @@ export default function BatchDetails({
           // Show warning but continue
           toaster.push(
             <Notification type="warning" header="Transaction Warning" closable>
-              {txError instanceof Error 
-                ? txError.message 
+              {txError instanceof Error
+                ? txError.message
                 : "There was an issue recording the transaction, but your payment was processed."}
             </Notification>,
             { placement: "topEnd" }
@@ -281,7 +292,7 @@ export default function BatchDetails({
 
       // Close OTP modal
       setShowOtpModal(false);
-      
+
       // Generate invoice (wrapped in try/catch to prevent blocking flow)
       setInvoiceLoading(true);
       let invoiceSuccess = false;
@@ -297,8 +308,8 @@ export default function BatchDetails({
         // Show warning but continue
         toaster.push(
           <Notification type="warning" header="Invoice Warning" closable>
-            {invoiceError instanceof Error 
-              ? invoiceError.message 
+            {invoiceError instanceof Error
+              ? invoiceError.message
               : "There was an issue generating the invoice, but your payment was processed."}
           </Notification>,
           { placement: "topEnd" }
@@ -306,7 +317,7 @@ export default function BatchDetails({
       } finally {
         setInvoiceLoading(false);
       }
-      
+
       // Only update order status if payment was successful
       if (paymentSuccess) {
         // Update order status directly without showing payment modal again
@@ -322,17 +333,18 @@ export default function BatchDetails({
 
           // Update step
           setCurrentStep(2);
-          
+
           // Clear payment info
           setMomoCode("");
           setPrivateKey("");
           setOtp("");
           setGeneratedOtp("");
-          
+
           // Show success notification
           toaster.push(
             <Notification type="success" header="Payment Processed" closable>
-              Payment has been processed successfully. Your reserved wallet balance has been updated.
+              Payment has been processed successfully. Your reserved wallet
+              balance has been updated.
             </Notification>,
             { placement: "topEnd" }
           );
@@ -340,8 +352,8 @@ export default function BatchDetails({
           console.error("Error updating order status:", updateError);
           toaster.push(
             <Notification type="error" header="Status Update Failed" closable>
-              {updateError instanceof Error 
-                ? updateError.message 
+              {updateError instanceof Error
+                ? updateError.message
                 : "Failed to update order status. Please try again."}
             </Notification>,
             { placement: "topEnd" }
@@ -354,7 +366,9 @@ export default function BatchDetails({
       console.error("OTP verification error:", err);
       toaster.push(
         <Notification type="error" header="Verification Failed" closable>
-          {err instanceof Error ? err.message : "Failed to verify OTP. Please try again."}
+          {err instanceof Error
+            ? err.message
+            : "Failed to verify OTP. Please try again."}
         </Notification>,
         { placement: "topEnd" }
       );
@@ -516,7 +530,7 @@ export default function BatchDetails({
     if (!order) return 0;
 
     return order.Order_Items.reduce(
-      (total, item) => total + item.price * item.quantity, 
+      (total, item) => total + item.price * item.quantity,
       0
     );
   };
@@ -526,7 +540,7 @@ export default function BatchDetails({
     const subtotal = calculateOriginalSubtotal();
     const serviceFee = parseFloat(order?.serviceFee || "0");
     const deliveryFee = parseFloat(order?.deliveryFee || "0");
-    
+
     return subtotal + serviceFee + deliveryFee;
   };
 
@@ -564,8 +578,8 @@ export default function BatchDetails({
         );
       case "shopping":
         // Check if any items are marked as found
-        const hasFoundItems = order.Order_Items.some(item => item.found);
-        
+        const hasFoundItems = order.Order_Items.some((item) => item.found);
+
         return (
           <Button
             appearance="primary"
@@ -692,7 +706,7 @@ export default function BatchDetails({
       />
 
       {/* MoMo Payment Modal */}
-      <PaymentModal 
+      <PaymentModal
         open={showPaymentModal}
         onClose={() => setShowPaymentModal(false)}
         onSubmit={handlePaymentSubmit}
@@ -706,7 +720,7 @@ export default function BatchDetails({
       />
 
       {/* OTP Verification Modal */}
-      <OtpVerificationModal 
+      <OtpVerificationModal
         open={showOtpModal}
         onClose={() => setShowOtpModal(false)}
         onVerify={handleVerifyOtp}
@@ -984,7 +998,9 @@ export default function BatchDetails({
                     {order.status === "shopping" && (
                       <Checkbox
                         checked={item.found || false}
-                        onChange={(_, checked) => toggleItemFound(item, checked)}
+                        onChange={(_, checked) =>
+                          toggleItemFound(item, checked)
+                        }
                       >
                         Found
                       </Checkbox>
@@ -1003,21 +1019,26 @@ export default function BatchDetails({
             <div className="space-y-2">
               <div className="flex flex-wrap gap-2">
                 {order.Order_Items.map((item) => (
-                  <div 
-                    key={item.id} 
+                  <div
+                    key={item.id}
                     className={`rounded-lg border p-2 ${
-                      item.found ? 'border-green-200 bg-green-50' : 'border-gray-200 bg-gray-50'
+                      item.found
+                        ? "border-green-200 bg-green-50"
+                        : "border-gray-200 bg-gray-50"
                     }`}
                   >
                     <div className="font-medium">{item.product.name}</div>
                     <div className="text-sm">
                       {item.found ? (
-                        item.foundQuantity && item.foundQuantity < item.quantity ? (
+                        item.foundQuantity &&
+                        item.foundQuantity < item.quantity ? (
                           <span className="text-orange-600">
                             Found: {item.foundQuantity} of {item.quantity}
                           </span>
                         ) : (
-                          <span className="text-green-600">Found: {item.quantity}</span>
+                          <span className="text-green-600">
+                            Found: {item.quantity}
+                          </span>
                         )
                       ) : (
                         <span className="text-gray-500">Not found</span>
@@ -1026,17 +1047,28 @@ export default function BatchDetails({
                   </div>
                 ))}
               </div>
-              
-              {!order.Order_Items.some(item => item.found) && (
+
+              {!order.Order_Items.some((item) => item.found) && (
                 <div className="mt-4 rounded-md bg-yellow-50 p-3 text-sm text-yellow-700">
                   <div className="flex">
                     <div className="flex-shrink-0">
-                      <svg className="h-5 w-5 text-yellow-400" viewBox="0 0 20 20" fill="currentColor">
-                        <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                      <svg
+                        className="h-5 w-5 text-yellow-400"
+                        viewBox="0 0 20 20"
+                        fill="currentColor"
+                      >
+                        <path
+                          fillRule="evenodd"
+                          d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z"
+                          clipRule="evenodd"
+                        />
                       </svg>
                     </div>
                     <div className="ml-3">
-                      <p>Please mark items as found to enable the Make Payment button.</p>
+                      <p>
+                        Please mark items as found to enable the Make Payment
+                        button.
+                      </p>
                     </div>
                   </div>
                 </div>
@@ -1053,17 +1085,20 @@ export default function BatchDetails({
               <div className="flex justify-between">
                 <span>Subtotal</span>
                 <span>
-                  {order.status === "shopping" 
+                  {order.status === "shopping"
                     ? formatCurrency(calculateFoundTotal())
                     : formatCurrency(calculateOriginalSubtotal())}
                 </span>
               </div>
-              
+
               {order.status === "shopping" ? (
                 <>
                   <div className="flex justify-between">
                     <span>Items Found</span>
-                    <span>{order.Order_Items.filter(item => item.found).length} of {order.Order_Items.length}</span>
+                    <span>
+                      {order.Order_Items.filter((item) => item.found).length} of{" "}
+                      {order.Order_Items.length}
+                    </span>
                   </div>
                   <div className="flex justify-between">
                     <span>Units Found</span>
@@ -1073,27 +1108,38 @@ export default function BatchDetails({
                           return total + (item.foundQuantity || item.quantity);
                         }
                         return total;
-                      }, 0)} of {order.Order_Items.reduce((total, item) => total + item.quantity, 0)}
+                      }, 0)}{" "}
+                      of{" "}
+                      {order.Order_Items.reduce(
+                        (total, item) => total + item.quantity,
+                        0
+                      )}
                     </span>
                   </div>
                   <div className="flex justify-between">
                     <span>Items Not Found</span>
-                    <span>{order.Order_Items.filter(item => !item.found).length}</span>
+                    <span>
+                      {order.Order_Items.filter((item) => !item.found).length}
+                    </span>
                   </div>
                 </>
               ) : (
                 <>
                   <div className="flex justify-between">
                     <span>Delivery Fee</span>
-                    <span>{formatCurrency(parseFloat(order.deliveryFee || "0"))}</span>
+                    <span>
+                      {formatCurrency(parseFloat(order.deliveryFee || "0"))}
+                    </span>
                   </div>
                   <div className="flex justify-between">
                     <span>Service Fee</span>
-                    <span>{formatCurrency(parseFloat(order.serviceFee || "0"))}</span>
+                    <span>
+                      {formatCurrency(parseFloat(order.serviceFee || "0"))}
+                    </span>
                   </div>
                 </>
               )}
-              
+
               {order.discount > 0 && (
                 <div className="flex justify-between text-green-600">
                   <span>Discount</span>
@@ -1109,14 +1155,17 @@ export default function BatchDetails({
                     : formatCurrency(calculateOriginalSubtotal())}
                 </span>
               </div>
-              
+
               {order.status === "shopping" && (
                 <div className="mt-4 rounded-md bg-blue-50 p-3 text-sm text-blue-700">
                   <p>
-                    <strong>Note:</strong> The total reflects only the value of found items. 
-                    Service fee ({formatCurrency(parseFloat(order.serviceFee || "0"))}) and 
-                    delivery fee ({formatCurrency(parseFloat(order.deliveryFee || "0"))}) 
-                    were already added to your wallet as earnings when you started shopping.
+                    <strong>Note:</strong> The total reflects only the value of
+                    found items. Service fee (
+                    {formatCurrency(parseFloat(order.serviceFee || "0"))}) and
+                    delivery fee (
+                    {formatCurrency(parseFloat(order.deliveryFee || "0"))}) were
+                    already added to your wallet as earnings when you started
+                    shopping.
                   </p>
                 </div>
               )}

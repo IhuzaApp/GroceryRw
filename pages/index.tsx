@@ -464,6 +464,10 @@ export default function Home({ initialData }: { initialData: Data }) {
 
 export const getServerSideProps: GetServerSideProps = async () => {
   try {
+    if (!hasuraClient) {
+      throw new Error("Hasura client is not initialized");
+    }
+
     const [
       users,
       categories,

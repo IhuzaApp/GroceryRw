@@ -36,6 +36,11 @@ export async function getServerSideProps() {
       }
     }
   `;
+
+  if (!hasuraClient) {
+    throw new Error("Hasura client is not initialized");
+  }
+
   const data = await hasuraClient.request<{
     Shops: { id: string; name: string }[];
   }>(SHOP_LIST_QUERY);

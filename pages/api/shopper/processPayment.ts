@@ -33,10 +33,8 @@ const GET_SHOPPER_WALLET = gql`
 const UPDATE_WALLET_BALANCES = gql`
   mutation UpdateWalletBalances($wallet_id: uuid!, $reserved_balance: String!) {
     update_Wallets_by_pk(
-      pk_columns: { id: $wallet_id }, 
-      _set: { 
-        reserved_balance: $reserved_balance 
-      }
+      pk_columns: { id: $wallet_id }
+      _set: { reserved_balance: $reserved_balance }
     ) {
       id
       reserved_balance
@@ -46,7 +44,9 @@ const UPDATE_WALLET_BALANCES = gql`
 
 // GraphQL mutation to create wallet transactions
 const CREATE_WALLET_TRANSACTIONS = gql`
-  mutation createWalletTransactions($transactions: [Wallet_Transactions_insert_input!]!) {
+  mutation createWalletTransactions(
+    $transactions: [Wallet_Transactions_insert_input!]!
+  ) {
     insert_Wallet_Transactions(objects: $transactions) {
       returning {
         id
@@ -87,74 +87,84 @@ export default async function handler(
   try {
     // Get user session
     const session = await getServerSession(req, res, authOptions);
-    
+
     if (!session || !session.user) {
-      return res.status(401).json({ error: 'Unauthorized' });
+      return res.status(401).json({ error: "Unauthorized" });
     }
 
     const { orderId, momoCode, privateKey, orderAmount } = req.body;
 
     // Validate required fields
     if (!orderId || !momoCode || !privateKey || orderAmount === undefined) {
-      return res.status(400).json({ error: 'Missing required fields' });
+      return res.status(400).json({ error: "Missing required fields" });
     }
 
     // Check if hasuraClient is available (it should be on server side)
     if (!hasuraClient) {
-      return res.status(500).json({ error: 'Database client not available' });
+      return res.status(500).json({ error: "Database client not available" });
     }
 
     // Verify the shopper is authorized to process this order
-    const orderResponse = await hasuraClient.request<OrderDetails>(GET_ORDER_DETAILS, {
-      order_id: orderId,
-    });
+    const orderResponse = await hasuraClient.request<OrderDetails>(
+      GET_ORDER_DETAILS,
+      {
+        order_id: orderId,
+      }
+    );
 
     const order = orderResponse.Orders_by_pk;
     if (!order) {
-      return res.status(404).json({ error: 'Order not found' });
+      return res.status(404).json({ error: "Order not found" });
     }
 
     // Check if the user is the assigned shopper
     if (order.shopper_id !== session.user.id) {
-      return res.status(403).json({ error: 'Not authorized to process this order' });
+      return res
+        .status(403)
+        .json({ error: "Not authorized to process this order" });
     }
 
     // Get the shopper's wallet
-    const walletResponse = await hasuraClient.request<WalletData>(GET_SHOPPER_WALLET, {
-      shopper_id: session.user.id,
-    });
+    const walletResponse = await hasuraClient.request<WalletData>(
+      GET_SHOPPER_WALLET,
+      {
+        shopper_id: session.user.id,
+      }
+    );
 
     const wallets = walletResponse.Wallets;
     if (!wallets || wallets.length === 0) {
-      return res.status(404).json({ error: 'Wallet not found' });
+      return res.status(404).json({ error: "Wallet not found" });
     }
 
     const wallet = wallets[0];
-    
+
     // Validate the momoCode (In a real app, this would connect to a payment service)
     // For this example, we'll accept any non-empty code
-    if (!momoCode || momoCode.trim() === '') {
-      return res.status(400).json({ error: 'MoMo code cannot be empty' });
+    if (!momoCode || momoCode.trim() === "") {
+      return res.status(400).json({ error: "MoMo code cannot be empty" });
     }
-    
+
     // Validate private key matches session storage (in a real app, this would be more secure)
     // For this example, we'll just make sure it's not empty
     if (!privateKey || privateKey.length < 4) {
-      return res.status(400).json({ error: 'Invalid private key' });
+      return res.status(400).json({ error: "Invalid private key" });
     }
 
     // Calculate new balances
     const currentReserved = parseFloat(wallet.reserved_balance);
-    
+
     // The reserved balance should be sufficient for the order amount
     if (currentReserved < orderAmount) {
-      return res.status(400).json({ error: 'Insufficient reserved balance' });
+      return res.status(400).json({ error: "Insufficient reserved balance" });
     }
-    
-    // Calculate the new reserved balance after deducting only the order amount 
+
+    // Calculate the new reserved balance after deducting only the order amount
     // (excluding service fee and delivery fee which were already added to available balance)
     const newReserved = currentReserved - orderAmount;
-    console.log(`Updating reserved balance: ${currentReserved} - ${orderAmount} = ${newReserved}`);
+    console.log(
+      `Updating reserved balance: ${currentReserved} - ${orderAmount} = ${newReserved}`
+    );
 
     // Update the wallet balances - only change the reserved balance
     await hasuraClient.request(UPDATE_WALLET_BALANCES, {
@@ -167,10 +177,11 @@ export default async function handler(
       {
         wallet_id: wallet.id,
         amount: orderAmount.toFixed(2),
-        type: 'payment',
-        status: 'completed',
+        type: "payment",
+        status: "completed",
         related_order_id: orderId,
-        description: 'Payment for found order items (excluding service and delivery fees)',
+        description:
+          "Payment for found order items (excluding service and delivery fees)",
       },
     ];
 
@@ -178,17 +189,18 @@ export default async function handler(
       transactions,
     });
 
-    return res.status(200).json({ 
-      success: true, 
-      message: 'Payment processed successfully',
+    return res.status(200).json({
+      success: true,
+      message: "Payment processed successfully",
       newBalance: {
-        reserved: newReserved
-      }
+        reserved: newReserved,
+      },
     });
   } catch (error) {
-    console.error('Error processing payment:', error);
-    return res.status(500).json({ 
-      error: error instanceof Error ? error.message : 'An unexpected error occurred' 
+    console.error("Error processing payment:", error);
+    return res.status(500).json({
+      error:
+        error instanceof Error ? error.message : "An unexpected error occurred",
     });
   }
-} 
+}

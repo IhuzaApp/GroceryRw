@@ -26,7 +26,10 @@ export default function ShopperProfilePage() {
       <div className="container mx-auto px-4 py-8">
         {/* Profile Header */}
         <div className="mb-6 flex items-center">
-          <Link href="/Plasa/active-batches" className="flex items-center text-gray-700">
+          <Link
+            href="/Plasa/active-batches"
+            className="flex items-center text-gray-700"
+          >
             <svg
               viewBox="0 0 24 24"
               fill="none"
@@ -50,12 +53,12 @@ export default function ShopperProfilePage() {
 
 // Protect this page: redirect to login if not authenticated
 export const getServerSideProps: GetServerSideProps = async (context) => {
-  const session = await getServerSession(
+  const session = (await getServerSession(
     context.req,
     context.res,
     authOptions as any
-  ) as Session | null;
-  
+  )) as Session | null;
+
   if (!session) {
     return {
       redirect: {
@@ -64,10 +67,10 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
       },
     };
   }
-  
+
   // Check if the user has the shopper role
   const userRole = session.user?.role;
-  
+
   if (userRole !== "shopper") {
     return {
       redirect: {
@@ -76,6 +79,6 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
       },
     };
   }
-  
+
   return { props: {} };
-}; 
+};

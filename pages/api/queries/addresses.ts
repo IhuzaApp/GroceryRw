@@ -100,6 +100,9 @@ export default async function handler(
 
   if (req.method === "GET") {
     try {
+      if (!hasuraClient) {
+        throw new Error("Hasura client is not initialized");
+      }
       const data = await hasuraClient.request<{ Addresses: Address[] }>(
         GET_ADDRESSES,
         { user_id }
@@ -125,6 +128,9 @@ export default async function handler(
       return res.status(400).json({ error: "Missing or invalid fields" });
     }
     try {
+      if (!hasuraClient) {
+        throw new Error("Hasura client is not initialized");
+      }
       if (is_default) {
         await hasuraClient.request(RESET_DEFAULT, { user_id });
       }
