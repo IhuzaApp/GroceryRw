@@ -19,6 +19,14 @@ interface MapSectionProps {
     total: string;
     estimatedEarnings: string;
     createdAt: string;
+    // Additional properties
+    shopLatitude?: number;
+    shopLongitude?: number;
+    customerLatitude?: number;
+    customerLongitude?: number;
+    priorityLevel?: number;
+    minutesAgo?: number;
+    status?: string;
   }>;
   isInitializing?: boolean;
 }
@@ -626,108 +634,87 @@ export default function MapSection({
     // Also, render the available orders from availableOrders prop
     // These are more recent orders (within 24 hours)
     if (availableOrders && availableOrders.length > 0) {
-      // Get availableOrders API data for complete information including coordinates
-      fetch("/api/shopper/availableOrders")
-        .then((res) => res.json())
-        .then((data) => {
-          // Create a map for faster lookup
-          const orderMap = new Map();
-          availableOrders.forEach(order => {
-            orderMap.set(order.id, order);
-          });
-          
-          // Render markers for each order in the data
-          data.forEach((apiOrder: {
-            id: string;
-            createdAt: string;
-            shopName: string;
-            shopAddress: string;
-            shopLatitude: number;
-            shopLongitude: number;
-            customerLatitude: number;
-            customerLongitude: number;
-            customerAddress: string;
-            itemsCount: number;
-            earnings: number;
-          }) => {
-            const order = orderMap.get(apiOrder.id);
-            if (order) {
-              // Create a marker at the shop location
-              const badgeColor = getOrderTimeBadgeColor(apiOrder.createdAt);
-              const earningsStr = order.estimatedEarnings;
-              
-              // Earnings badge icon with color based on time
-              const orderIcon = L.divIcon({
-                html: `<div style="background:#fff;border:2px solid ${badgeColor};border-radius:12px;padding:4px 12px;font-size:12px;color:${badgeColor};white-space:nowrap;">${earningsStr}</div>`,
-                className: "",
-                iconSize: [90, 30],
-                iconAnchor: [60, 15],
-                popupAnchor: [0, -15],
-              });
-              
-              const marker = L.marker([apiOrder.shopLatitude, apiOrder.shopLongitude], {
-                icon: orderIcon,
-                zIndexOffset: 1000,
-              }).addTo(map);
-              
-              // Calculate time since creation
-              const created = new Date(apiOrder.createdAt);
-              const diffMs = Date.now() - created.getTime();
-              const diffMins = Math.floor(diffMs / 60000);
-              const timeStr =
-                diffMins >= 60
-                  ? `${Math.floor(diffMins / 60)}h ${diffMins % 60}m ago`
-                  : `${diffMins} mins ago`;
-                  
-              // Calculate distance between shop and delivery address
-              const distKm = getDistanceKm(
-                apiOrder.shopLatitude,
-                apiOrder.shopLongitude,
-                apiOrder.customerLatitude,
-                apiOrder.customerLongitude
-              );
-              const distanceStr = `${Math.round(distKm * 10) / 10} km`;
-              
-              // Enhanced popup with icons and flex layout
-              const popupContent = `
-                <div style="font-size:14px; line-height:1.4; min-width:200px;">
-                  <div style="display:flex;align-items:center;margin-bottom:4px;">
-                    <span style="margin-right:6px;">🆔</span><strong>${apiOrder.id}</strong>
-                  </div>
-                  <div style="display:flex;align-items:center;margin-bottom:4px;">
-                    <span style="margin-right:6px;">🏪</span><span>${apiOrder.shopName}</span>
-                  </div>
-                  <div style="display:flex;align-items:center;margin-bottom:4px;">
-                    <span style="margin-right:6px;">📍</span><span>${apiOrder.shopAddress}</span>
-                  </div>
-                  <div style="display:flex;align-items:center;margin-bottom:4px;">
-                    <span style="margin-right:6px;">⏱️</span><span>${timeStr}</span>
-                  </div>
-                  <div style="display:flex;align-items:center;margin-bottom:4px;">
-                    <span style="margin-right:6px;">📏</span><span>Distance: ${distanceStr}</span>
-                  </div>
-                  <div style="display:flex;align-items:center;margin-bottom:4px;">
-                    <span style="margin-right:6px;">🛒</span><span>Items: ${apiOrder.itemsCount}</span>
-                  </div>
-                  <div style="display:flex;align-items:center;margin-bottom:4px;">
-                    <span style="margin-right:6px;">🚚</span><span>Deliver to: ${apiOrder.customerAddress}</span>
-                  </div>
-                  <div style="display:flex;align-items:center;">
-                    <span style="margin-right:6px;">💰</span><span>Estimated Earnings: ${earningsStr}</span>
-                  </div>
-                  <button id="accept-batch-${apiOrder.id}" style="margin-top:8px;padding:6px 12px;background:#10b981;color:#fff;border:none;border-radius:4px;cursor:pointer;">
-                    Accept Batch
-                  </button>
-                </div>
-              `;
-              
-              // Bind popup with max width
-              marker.bindPopup(popupContent, { maxWidth: 250 });
-              attachAcceptHandler(marker, apiOrder.id, map);
-            }
-          });
-        })
-        .catch(err => console.error("Error fetching full order details:", err));
+      console.log(`MapSection: Preparing to render ${availableOrders.length} order markers`);
+      
+      // Render markers for each available order
+      availableOrders.forEach((order) => {
+        // Skip if missing coordinates
+        if (!order.shopLatitude || !order.shopLongitude || 
+            isNaN(order.shopLatitude) || isNaN(order.shopLongitude)) {
+          console.warn(`MapSection: Skipping order ${order.id} due to missing coordinates`);
+          return;
+        }
+        
+        const badgeColor = getOrderTimeBadgeColor(order.createdAt);
+        const earningsStr = order.estimatedEarnings;
+        
+        // Earnings badge icon with color based on time
+        const orderIcon = L.divIcon({
+          html: `<div style="background:#fff;border:2px solid ${badgeColor};border-radius:12px;padding:4px 12px;font-size:12px;color:${badgeColor};white-space:nowrap;">${earningsStr}</div>`,
+          className: "",
+          iconSize: [90, 30],
+          iconAnchor: [60, 15],
+          popupAnchor: [0, -15],
+        });
+        
+        const marker = L.marker([order.shopLatitude, order.shopLongitude], {
+          icon: orderIcon,
+          zIndexOffset: 1000,
+        }).addTo(map);
+        
+        // Calculate time since creation based on createdAt
+        const timeStr = order.createdAt;
+        
+        // Calculate distance between shop and delivery address
+        let distanceStr = "Unknown";
+        if (order.shopLatitude && order.shopLongitude && 
+            order.customerLatitude && order.customerLongitude) {
+          const distKm = getDistanceKm(
+            order.shopLatitude,
+            order.shopLongitude,
+            order.customerLatitude,
+            order.customerLongitude
+          );
+          distanceStr = `${Math.round(distKm * 10) / 10} km`;
+        }
+        
+        // Enhanced popup with icons and flex layout
+        const popupContent = `
+          <div style="font-size:14px; line-height:1.4; min-width:200px;">
+            <div style="display:flex;align-items:center;margin-bottom:4px;">
+              <span style="margin-right:6px;">🆔</span><strong>${order.id}</strong>
+            </div>
+            <div style="display:flex;align-items:center;margin-bottom:4px;">
+              <span style="margin-right:6px;">🏪</span><span>${order.shopName}</span>
+            </div>
+            <div style="display:flex;align-items:center;margin-bottom:4px;">
+              <span style="margin-right:6px;">📍</span><span>${order.shopAddress}</span>
+            </div>
+            <div style="display:flex;align-items:center;margin-bottom:4px;">
+              <span style="margin-right:6px;">⏱️</span><span>${timeStr}</span>
+            </div>
+            <div style="display:flex;align-items:center;margin-bottom:4px;">
+              <span style="margin-right:6px;">📏</span><span>Distance: ${distanceStr}</span>
+            </div>
+            <div style="display:flex;align-items:center;margin-bottom:4px;">
+              <span style="margin-right:6px;">🛒</span><span>Items: ${order.items}</span>
+            </div>
+            <div style="display:flex;align-items:center;margin-bottom:4px;">
+              <span style="margin-right:6px;">🚚</span><span>Deliver to: ${order.customerAddress}</span>
+            </div>
+            <div style="display:flex;align-items:center;">
+              <span style="margin-right:6px;">💰</span><span>Estimated Earnings: ${earningsStr}</span>
+            </div>
+            <button id="accept-batch-${order.id}" style="margin-top:8px;padding:6px 12px;background:#10b981;color:#fff;border:none;border-radius:4px;cursor:pointer;">
+              Accept Batch
+            </button>
+          </div>
+        `;
+        
+        // Bind popup with max width
+        marker.bindPopup(popupContent, { maxWidth: 250 });
+        attachAcceptHandler(marker, order.id, map);
+      });
     }
 
     return () => {
