@@ -98,6 +98,7 @@ export default async function handler(
     if (!order) {
       return res.status(404).json({ error: "Order not found" });
     }
+    
     // Format timestamps to human-readable strings
     const formattedOrder = {
       ...order,
@@ -105,11 +106,12 @@ export default async function handler(
         dateStyle: "medium",
         timeStyle: "short",
       }),
-      estimatedDelivery: new Date(order.estimatedDelivery).toLocaleString(
-        "en-US",
-        { dateStyle: "medium", timeStyle: "short" }
-      ),
+      // Handle case where estimatedDelivery might be null
+      estimatedDelivery: order.estimatedDelivery 
+        ? new Date(order.estimatedDelivery).toISOString() 
+        : null
     };
+    
     res.status(200).json({ order: formattedOrder });
   } catch (error) {
     console.error("Error fetching order details:", error);
