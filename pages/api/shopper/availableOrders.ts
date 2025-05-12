@@ -2,7 +2,7 @@ import type { NextApiRequest, NextApiResponse } from "next";
 import { hasuraClient } from "../../../src/lib/hasuraClient";
 import { gql } from "graphql-request";
 
-// Fetch orders unassigned for the last 60 minutes, with detailed info
+// Fetch orders unassigned with detailed info
 const GET_AVAILABLE_ORDERS = gql`
   query GetAvailableOrders($createdAfter: timestamptz!) {
     Orders(
@@ -48,8 +48,10 @@ export default async function handler(
   }
 
   try {
-    // Get orders from the last 60 minutes
-    const cutoff = new Date(Date.now() - 60 * 60 * 1000).toISOString();
+    // Get orders from the last 24 hours by default, or use query parameter
+    const hoursParam = req.query.hours ? parseInt(req.query.hours as string) : 24;
+    const hours = isNaN(hoursParam) ? 24 : hoursParam;
+    const cutoff = new Date(Date.now() - hours * 60 * 60 * 1000).toISOString();
 
     if (!hasuraClient) {
       throw new Error("Hasura client is not initialized");
@@ -77,8 +79,25 @@ export default async function handler(
       }>;
     }>(GET_AVAILABLE_ORDERS, { createdAfter: cutoff });
 
-    // Return the raw data for client-side filtering
-    res.status(200).json(data.Orders);
+    // Transform data to make it easier to use on the client
+    const availableOrders = data.Orders.map(order => ({
+      id: order.id,
+      createdAt: order.created_at,
+      shopName: order.shop.name,
+      shopAddress: order.shop.address,
+      shopLatitude: parseFloat(order.shop.latitude),
+      shopLongitude: parseFloat(order.shop.longitude),
+      customerLatitude: parseFloat(order.address.latitude),
+      customerLongitude: parseFloat(order.address.longitude),
+      customerAddress: `${order.address.street}, ${order.address.city}`,
+      itemsCount: order.Order_Items_aggregate.aggregate?.count ?? 0,
+      serviceFee: parseFloat(order.service_fee || "0"),
+      deliveryFee: parseFloat(order.delivery_fee || "0"),
+      earnings: parseFloat(order.service_fee || "0") + parseFloat(order.delivery_fee || "0"),
+    }));
+
+    // Return the processed data
+    res.status(200).json(availableOrders);
   } catch (error) {
     console.error("Error fetching available orders:", error);
     res.status(500).json({ error: "Failed to fetch available orders" });
