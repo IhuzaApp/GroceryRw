@@ -26,10 +26,68 @@ import {
 import ItemsSection from "@components/items/itemsSection";
 import MainBanners from "@components/ui/banners";
 import Link from "next/link";
-import { Button, Panel } from "rsuite";
+import { Button, Panel, Loader, Progress } from "rsuite";
 import { log } from "node:console";
 import Cookies from "js-cookie";
 import ShopperDashboard from "@components/shopper/dashboard/ShopperDashboard";
+
+// Enhanced Loading Component
+function LoadingScreen() {
+  const [loadingProgress, setLoadingProgress] = useState(0);
+  const [loadingMessage, setLoadingMessage] = useState("Initializing...");
+  
+  // Simulate loading progress
+  useEffect(() => {
+    const messages = [
+      "Initializing...",
+      "Loading user data...",
+      "Setting up your dashboard...",
+      "Almost ready...",
+      "Finalizing..."
+    ];
+    
+    let progress = 0;
+    const interval = setInterval(() => {
+      progress += Math.floor(Math.random() * 15) + 5;
+      
+      if (progress >= 100) {
+        progress = 100;
+        clearInterval(interval);
+      }
+      
+      setLoadingProgress(progress);
+      
+      // Update message based on progress
+      const messageIndex = Math.min(
+        Math.floor(progress / 25),
+        messages.length - 1
+      );
+      setLoadingMessage(messages[messageIndex]);
+    }, 800);
+    
+    return () => clearInterval(interval);
+  }, []);
+
+  return (
+    <div className="flex h-screen flex-col items-center justify-center bg-white">
+      <div className="mb-6 flex h-24 w-24 items-center justify-center">
+        <Loader size="lg" content="" speed="slow" />
+      </div>
+      
+      <h2 className="mb-2 text-xl font-semibold text-gray-800">Setting up your experience</h2>
+      <p className="mb-6 text-gray-500">{loadingMessage}</p>
+      
+      <div className="w-64 px-4">
+        <Progress.Line
+          percent={loadingProgress}
+          showInfo={false}
+          strokeColor="#10b981"
+          trailColor="#e5e7eb"
+        />
+      </div>
+    </div>
+  );
+}
 
 // Skeleton Loader Component
 function ShopSkeleton() {
@@ -109,12 +167,16 @@ export default function Home({ initialData }: { initialData: Data }) {
     >
   >({});
 
+  // Add a state to track if all initial data is loaded
+  const [dataLoaded, setDataLoaded] = useState(false);
+
   // Define hooks that don't have conditional dependencies first
   useEffect(() => {
     if (authReady) {
       console.log("Fetched data:", data);
       console.log("Categories:", data.categories);
       console.log("Shops:", data.shops);
+      setDataLoaded(true);
     }
   }, [data, authReady]);
 
@@ -262,18 +324,11 @@ export default function Home({ initialData }: { initialData: Data }) {
     }, 300);
   };
 
-  if (!authReady) {
-    // Show loader while checking auth
-    return (
-      <RootLayout>
-        <div className="flex h-screen items-center justify-center">
-          <div className="h-16 w-16 animate-spin rounded-full border-b-2 border-gray-900"></div>
-        </div>
-      </RootLayout>
-    );
+  // Now to the core rendering logic of the Home component
+  if (!authReady || !dataLoaded) {
+    return <LoadingScreen />;
   }
 
-  // If user is a shopper, delegate to dedicated dashboard component
   if (role === "shopper") {
     return <ShopperDashboard />;
   }

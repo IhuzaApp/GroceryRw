@@ -116,7 +116,7 @@ export default function PlasaSidebar() {
                 className={`flex items-center rounded-lg px-4 py-3 ${
                   isActive("/") &&
                   !isActive("/Plasa/active-batches") &&
-                  !isActive("/Plasa/earnings") &&
+                  !isActive("/Plasa/Earnings") &&
                   !isActive("/Plasa/settings")
                     ? "bg-green-50 text-green-600"
                     : "text-gray-700 hover:bg-gray-100"
@@ -157,10 +157,10 @@ export default function PlasaSidebar() {
                 <span>Active batches</span>
               </div>
             </Link>
-            <Link href="/Plasa/earnings" passHref>
+            <Link href="/Plasa/Earnings" passHref>
               <div
                 className={`flex items-center justify-between rounded-lg px-4 py-3 ${
-                  isActive("/Plasa/earnings")
+                  isActive("/Plasa/Earnings")
                     ? "bg-green-50 text-green-600"
                     : "text-gray-700 hover:bg-gray-100"
                 }`}
@@ -323,10 +323,10 @@ export default function PlasaSidebar() {
           </Link>
 
           <Link
-            href="/Plasa/earnings"
+            href="/Plasa/Earnings"
             passHref
             className={`flex flex-col items-center p-2 ${
-              pathname?.startsWith("/Plasa/earnings")
+              pathname?.startsWith("/Plasa/Earnings")
                 ? "text-green-600"
                 : "text-gray-600"
             }`}

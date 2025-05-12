@@ -10,6 +10,7 @@ import { formatCurrency } from "../../../lib/formatCurrency";
 interface MapSectionProps {
   mapLoaded: boolean;
   availableOrders: Array<{ id: string }>;
+  isInitializing?: boolean;
 }
 
 // Haversine formula to compute distance in km
@@ -60,6 +61,7 @@ interface PendingOrder {
 export default function MapSection({
   mapLoaded,
   availableOrders,
+  isInitializing = false,
 }: MapSectionProps) {
   const mapRef = useRef<HTMLDivElement | null>(null);
   const [shops, setShops] = useState<Shop[]>([]);
@@ -1331,6 +1333,24 @@ export default function MapSection({
       { enableHighAccuracy: true, maximumAge: 0, timeout: 15000 }
     );
   };
+
+  // If the dashboard is initializing, show a simpler loading state
+  if (isInitializing) {
+    return (
+      <div className="h-[300px] w-full bg-gray-100 md:h-[400px]">
+        {/* Intentionally empty during initialization - parent handles loading UI */}
+      </div>
+    );
+  }
+
+  // Show map loading state when map is not ready but dashboard is initialized
+  if (!mapLoaded) {
+    return (
+      <div className="flex h-[300px] w-full items-center justify-center bg-gray-100 md:h-[400px]">
+        <Loader size="lg" content="Loading map..." />
+      </div>
+    );
+  }
 
   return (
     <div className="relative">
