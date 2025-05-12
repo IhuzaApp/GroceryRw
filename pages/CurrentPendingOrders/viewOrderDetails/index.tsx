@@ -2,22 +2,46 @@ import RootLayout from "@components/ui/layout";
 import React, { useState, useEffect } from "react";
 import { useRouter } from "next/router";
 import UserOrderDetails from "@components/UserCarts/orders/UserOrderDetails";
+import { Button } from "rsuite";
+import Link from "next/link";
 
 export default function ViewOrderDetailsPage() {
   const router = useRouter();
   const { orderId } = router.query;
   const [order, setOrder] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     if (!orderId) return;
     async function fetchDetails() {
       try {
+        setLoading(true);
+        setError(null);
         const res = await fetch(`/api/queries/orderDetails?orderId=${orderId}`);
+        
+        if (!res.ok) {
+          const errorData = await res.json();
+          throw new Error(errorData.error || "Failed to fetch order details");
+        }
+        
         const data = await res.json();
+        
+        // Validate that we have the necessary data
+        if (!data.order) {
+          throw new Error("Order data is missing");
+        }
+        
+        // Ensure estimatedDelivery exists
+        if (!data.order.estimatedDelivery) {
+          console.warn("Order is missing estimated delivery time");
+          // We'll still set the order but the component will handle the missing time
+        }
+        
         setOrder(data.order);
       } catch (err) {
-        console.error(err);
+        console.error("Error fetching order details:", err);
+        setError(err instanceof Error ? err.message : "An unknown error occurred");
       } finally {
         setLoading(false);
       }
@@ -75,10 +99,41 @@ export default function ViewOrderDetailsPage() {
       </RootLayout>
     );
   }
+  
+  if (error) {
+    return (
+      <RootLayout>
+        <div className="p-4 md:ml-16">
+          <div className="container mx-auto text-center py-12">
+            <div className="bg-red-50 p-6 rounded-lg">
+              <h2 className="text-2xl font-bold text-red-700 mb-4">Error Loading Order</h2>
+              <p className="text-red-600 mb-6">{error}</p>
+              <Link href="/CurrentPendingOrders" passHref>
+                <Button appearance="primary" color="red">
+                  Return to Orders
+                </Button>
+              </Link>
+            </div>
+          </div>
+        </div>
+      </RootLayout>
+    );
+  }
+  
   if (!order) {
     return (
       <RootLayout>
-        <p className="p-4">Order not found.</p>
+        <div className="p-4 md:ml-16">
+          <div className="container mx-auto text-center py-12">
+            <h2 className="text-2xl font-bold mb-4">Order Not Found</h2>
+            <p className="mb-6">We couldn't find the order you're looking for.</p>
+            <Link href="/CurrentPendingOrders" passHref>
+              <Button appearance="primary">
+                Return to Orders
+              </Button>
+            </Link>
+          </div>
+        </div>
       </RootLayout>
     );
   }

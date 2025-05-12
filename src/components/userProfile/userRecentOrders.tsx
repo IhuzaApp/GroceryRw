@@ -10,6 +10,7 @@ type Order = {
   OrderID: string;
   status: string;
   created_at: string;
+  delivery_time: string;
   total: number;
   user: {
     id: string;
@@ -57,6 +58,51 @@ function timeAgo(timestamp: string): string {
   if (months < 12) return `${months} month${months !== 1 ? "s" : ""} ago`;
   const years = Math.floor(days / 365);
   return `${years} year${years !== 1 ? "s" : ""} ago`;
+}
+
+// Helper to display estimated delivery time
+function EstimatedDelivery({ deliveryTime, status }: { deliveryTime: string, status: string }) {
+  if (!deliveryTime) return null;
+  if (status === "delivered") {
+    return <span className="text-green-600 font-medium">Delivered</span>;
+  }
+  
+  const now = new Date();
+  const est = new Date(deliveryTime);
+  const diffMs = est.getTime() - now.getTime();
+  
+  if (diffMs <= 0) {
+    return <span className="text-red-500 font-medium">Delivery time exceeded</span>;
+  }
+  
+  const days = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+  const hours = Math.floor((diffMs % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+  const mins = Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60));
+  
+  let text: string;
+  if (days > 0) {
+    text = `Delivery in ${days} day${days > 1 ? 's' : ''}${hours > 0 ? ` ${hours}h` : ''}`;
+  } else if (hours > 0) {
+    text = `Delivery in ${hours}h${mins > 0 ? ` ${mins}m` : ''}`;
+  } else {
+    text = `Delivery in ${mins} minutes`;
+  }
+  
+  return (
+    <div className="flex items-center gap-1">
+      <svg
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="2"
+        className="h-4 w-4 text-green-500"
+      >
+        <circle cx="12" cy="12" r="10"></circle>
+        <polyline points="12 6 12 12 16 14"></polyline>
+      </svg>
+      <span className="text-green-600 font-medium">{text}</span>
+    </div>
+  );
 }
 
 // Helper to pad order IDs to at least 4 digits, with fallback
@@ -196,6 +242,13 @@ export default function UserRecentOrders({
                 )}
               </span>
             </div>
+
+            {/* Estimated Delivery Time */}
+            {order.delivery_time && (
+              <div className="mb-3">
+                <EstimatedDelivery deliveryTime={order.delivery_time} status={order.status} />
+              </div>
+            )}
 
             <div className="flex gap-2">
               <Link

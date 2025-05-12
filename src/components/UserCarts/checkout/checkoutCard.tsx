@@ -101,18 +101,25 @@ export default function CheckoutItems({
   const distance3D = Math.sqrt(distanceKm * distanceKm + altKm * altKm);
   const travelTime = Math.ceil(distance3D); // assume 1 km ≈ 1 minute travel
   const totalTimeMinutes = travelTime + shoppingTime;
+  
+  // Calculate the delivery timestamp (current time + totalTimeMinutes)
+  const deliveryDate = new Date(Date.now() + totalTimeMinutes * 60000);
+  const deliveryTimestamp = deliveryDate.toISOString();
+  
+  // Format the delivery time for display
   let deliveryTime: string;
-  if (totalTimeMinutes >= 60) {
-    const hours = Math.floor(totalTimeMinutes / 60);
-    const minutes = totalTimeMinutes % 60;
-    deliveryTime = `${hours}h ${minutes}m`;
+  const diffMs = deliveryDate.getTime() - Date.now();
+  const days = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+  const hours = Math.floor((diffMs % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+  const mins = Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60));
+  
+  if (days > 0) {
+    deliveryTime = `Will be delivered in ${days} day${days > 1 ? 's' : ''}${hours > 0 ? ` ${hours}h` : ''}`;
+  } else if (hours > 0) {
+    deliveryTime = `Will be delivered in ${hours}h${mins > 0 ? ` ${mins}m` : ''}`;
   } else {
-    deliveryTime = `${totalTimeMinutes} mins`;
+    deliveryTime = `Will be delivered in ${mins} minutes`;
   }
-  // Compute actual delivery timestamp for DB (current time + totalTimeMinutes)
-  const deliveryTimestamp = new Date(
-    Date.now() + totalTimeMinutes * 60000
-  ).toISOString();
 
   const handleApplyPromo = () => {
     const PROMO_CODES: { [code: string]: number } = {
@@ -343,7 +350,7 @@ export default function CheckoutItems({
             </div>
             <div className="flex justify-between">
               <span className="text-sm text-gray-600">Delivery Time</span>
-              <span className="text-sm">{deliveryTime}</span>
+              <span className="text-sm font-medium text-green-600">{deliveryTime}</span>
             </div>
             <div className="mt-2 flex justify-between">
               <span className="text-lg font-bold">Total</span>
@@ -451,7 +458,7 @@ export default function CheckoutItems({
                   <circle cx="12" cy="12" r="10" />
                   <polyline points="12 6 12 12 16 14" />
                 </svg>
-                <span>{deliveryTime}</span>
+                <span className="font-medium text-green-600">{deliveryTime}</span>
               </div>
             </div>
 
