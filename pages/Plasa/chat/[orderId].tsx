@@ -28,6 +28,7 @@ import {
 } from "firebase/firestore";
 import { db, storage } from "../../../src/lib/firebase";
 import { getStorage, ref, uploadBytes, getDownloadURL } from "firebase/storage";
+import { formatCurrency } from "../../../src/lib/formatCurrency";
 
 // Define message interface
 interface Message {
@@ -40,6 +41,12 @@ interface Message {
   timestamp: any;
   read: boolean;
   image?: string;
+}
+
+// Helper to format order ID
+function formatOrderID(id?: string | number): string {
+  const s = id != null ? id.toString() : "0";
+  return s.length >= 4 ? s : s.padStart(4, "0");
 }
 
 export default function ChatPage() {
@@ -361,340 +368,326 @@ export default function ChatPage() {
 
   return (
     <ShopperLayout>
-      <div className="flex h-screen flex-col bg-gray-50">
-        {/* Header */}
-        <header className="sticky top-0 z-10 flex items-center justify-between border-b bg-white p-4">
-          <div className="flex items-center">
-            <Link href="/Plasa/active-batches" className="mr-2">
+      <div className="p-4 h-[calc(100vh-80px)]">
+        {isLoading ? (
+          <div className="max-w-2xl mx-auto">
+            <div className="animate-pulse space-y-4">
+              <div className="h-8 bg-gray-200 rounded w-1/3"></div>
+              <div className="h-64 bg-gray-200 rounded"></div>
+            </div>
+          </div>
+        ) : !customerData ? (
+          <div className="max-w-2xl mx-auto">
+            <div className="bg-red-50 p-4 rounded-md">
+              <h3 className="text-red-800 font-medium">Error</h3>
+              <p className="text-red-700 mt-2">Error fetching customer data</p>
               <Button
-                appearance="subtle"
-                className="flex h-8 w-8 items-center justify-center p-0"
+                appearance="primary"
+                color="red"
+                className="mt-4"
+                onClick={() => router.push("/Plasa")}
               >
-                <svg
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  className="h-5 w-5"
-                >
-                  <path d="M19 12H5M12 19l-7-7 7-7" />
-                </svg>
+                Back to Dashboard
               </Button>
-            </Link>
-            <div className="flex items-center">
-              <Avatar
-                src={
-                  customerData?.avatar || "/placeholder.svg?height=80&width=80"
-                }
-                alt={customerData?.name || "Customer"}
-                size="sm"
-                circle
-                className="mr-3"
-              />
-              <div>
-                <h1 className="font-bold">
-                  {customerData?.name || "Customer"}
-                </h1>
-                <div className="flex items-center text-xs">
-                  <span className="mr-2 text-green-600">
-                    {customerData?.lastSeen || "Offline"}
-                  </span>
-                  {order && (
-                    <span className="text-gray-500">
-                      Order #{order.OrderID || order.id}
-                    </span>
-                  )}
+            </div>
+          </div>
+        ) : !user ? (
+          <div className="max-w-3xl mx-auto">
+            <div className="bg-blue-50 p-6 rounded-lg text-center">
+              <h2 className="text-xl font-semibold text-blue-700 mb-4">Sign in Required</h2>
+              <p className="text-blue-600 mb-6">Please sign in to view messages.</p>
+              <Link href="/login" passHref>
+                <Button appearance="primary" color="blue">
+                  Sign In
+                </Button>
+              </Link>
+            </div>
+          </div>
+        ) : (
+          <div className="max-w-1xl mx-auto w-full h-full flex flex-col">
+            <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden flex-1 flex flex-col h-full">
+              {/* Order info */}
+              <div className="p-4 border-b border-gray-200 flex items-center justify-between bg-gray-50 shrink-0">
+                <div className="flex items-center">
+                  <div className="h-10 w-10 rounded-full bg-gray-200 flex-shrink-0 flex items-center justify-center text-gray-600 mr-3">
+                    {customerData?.name?.substring(0, 2).toUpperCase() || 'CU'}
+                  </div>
+                  <div>
+                    <h2 className="font-medium">
+                      {customerData?.name || 'Customer'} - Order #{formatOrderID(order?.OrderID || orderId)}
+                    </h2>
+                    <div className="flex items-center text-sm text-gray-500">
+                      <span
+                        className={`
+                        px-2 py-0.5 rounded-full text-xs mr-2
+                        ${
+                          order?.status === 'shopping' ? 'bg-orange-100 text-orange-800' : 
+                          order?.status === 'on_the_way' ? 'bg-blue-100 text-blue-800' : 
+                          order?.status === 'delivered' ? 'bg-green-100 text-green-800' : 
+                          'bg-gray-100 text-gray-800'
+                        }
+                      `}
+                      >
+                        {order?.status === 'shopping' ? 'Shopping' : 
+                         order?.status === 'packing' ? 'Packing' : 
+                         order?.status === 'on_the_way' ? 'On the way' : 
+                         order?.status?.charAt(0).toUpperCase() + order?.status?.slice(1) || 'Unknown'}
+                      </span>
+                      <span>{formatCurrency(order?.total || 0)}</span>
+                    </div>
+                  </div>
                 </div>
+                <div className="flex items-center space-x-2">
+                  <Button 
+                    appearance="ghost" 
+                    className="flex items-center justify-center h-8 w-8 p-0"
+                    onClick={() => router.push(`/Plasa/orders/${orderId}`)}
+                  >
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="h-4 w-4">
+                      <path d="M4 6h16M4 12h16M4 18h7"></path>
+                    </svg>
+                  </Button>
+                </div>
+              </div>
+
+              {/* Messages - make this area scrollable */}
+              <div className="flex-1 p-4 overflow-y-auto space-y-4 bg-gray-100" ref={messagesEndRef}>
+                {messages.length === 0 ? (
+                  <div className="flex h-full flex-col items-center justify-center text-gray-500 py-20">
+                    <svg
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      className="mb-3 h-12 w-12"
+                    >
+                      <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
+                    </svg>
+                    <p>No messages yet</p>
+                    <p className="text-sm">
+                      Start the conversation with {customerData?.name || 'the customer'}
+                    </p>
+                  </div>
+                ) : (
+                  messageGroups.map((group, groupIndex) => (
+                    <div key={groupIndex} className="space-y-4">
+                      <div className="flex justify-center">
+                        <div className="rounded-full bg-gray-200 px-3 py-1 text-xs text-gray-600">
+                          {group.date}
+                        </div>
+                      </div>
+
+                      {group.messages.map((msg) => {
+                        const isShopperMessage = msg.senderType === "shopper";
+                        const messageText = msg.text || msg.message || "";
+
+                        return (
+                          <div
+                            key={msg.id}
+                            className={`flex items-start gap-3 ${
+                              isShopperMessage ? "flex-row-reverse" : ""
+                            }`}
+                          >
+                            <div
+                              className={`
+                                h-8 w-8 rounded-full flex-shrink-0 flex items-center justify-center
+                                ${
+                                  isShopperMessage
+                                    ? "bg-green-500 text-white"
+                                    : "bg-gray-200 text-gray-600"
+                                }
+                              `}
+                            >
+                              {isShopperMessage
+                                ? user?.name?.substring(0, 2).toUpperCase() || "SH"
+                                : customerData?.name?.substring(0, 2).toUpperCase() || "CU"}
+                            </div>
+
+                            <div
+                              className={`
+                                rounded-lg p-3 max-w-[85%]
+                                ${
+                                  isShopperMessage
+                                    ? "bg-green-500 text-white"
+                                    : "bg-gray-100 text-gray-800"
+                                }
+                              `}
+                            >
+                              {messageText && <p className="text-sm">{messageText}</p>}
+                              {msg.image && (
+                                <div className="mt-2">
+                                <Avatar color="blue" circle  size="xs"/>
+                                </div>
+                              )}
+                              <span
+                                className={`
+                                  text-xs mt-1 block
+                                  ${
+                                    isShopperMessage ? "text-green-200" : "text-gray-500"
+                                  }
+                                `}
+                              >
+                                {formatMessageTime(msg.timestamp)}
+                              </span>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  ))
+                )}
+              </div>
+
+              {/* Quick Replies */}
+              <div className="overflow-x-auto whitespace-nowrap border-t bg-white p-2 shrink-0">
+                <div className="flex gap-2">
+                  <Button
+                    appearance="ghost"
+                    size="sm"
+                    className="whitespace-nowrap"
+                    onClick={() => setMessage("I found it")}
+                  >
+                    I found it
+                  </Button>
+                  <Button
+                    appearance="ghost"
+                    size="sm"
+                    className="whitespace-nowrap"
+                    onClick={() => setMessage("They're out of stock")}
+                  >
+                    They're out of stock
+                  </Button>
+                  <Button
+                    appearance="ghost"
+                    size="sm"
+                    className="whitespace-nowrap"
+                    onClick={() => setMessage("Would you like an alternative?")}
+                  >
+                    Alternative?
+                  </Button>
+                </div>
+              </div>
+
+              {/* Message input - fixed at bottom */}
+              <div className="p-4 border-t border-gray-200 bg-white shrink-0">
+                <div className="flex items-center gap-2">
+                  <Button
+                    appearance="subtle"
+                    className="rounded-full h-10 w-10 flex items-center justify-center p-0"
+                    onClick={handleAttachmentClick}
+                    disabled={isSending || uploadingImage || order?.status === "delivered"}
+                  >
+                    <svg
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      className="h-4 w-4"
+                    >
+                      <path d="M21.44 11.05l-9.19 9.19a6 6 0 01-8.49-8.49l9.19-9.19a4 4 0 015.66 5.66l-9.2 9.19a2 2 0 01-2.83-2.83l8.49-8.48" />
+                    </svg>
+                  </Button>
+
+                  {/* Attachment Options Popup */}
+                  {showAttachmentOptions && (
+                    <div className="absolute bottom-16 left-4 z-10 rounded-lg bg-white p-2 shadow-lg">
+                      <div className="flex flex-col gap-2">
+                        <button
+                          className="flex items-center gap-2 rounded-md p-2 hover:bg-gray-100"
+                          onClick={() => fileInputRef.current?.click()}
+                        >
+                          <svg
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            strokeWidth="2"
+                            className="h-5 w-5 text-blue-500"
+                          >
+                            <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
+                            <circle cx="8.5" cy="8.5" r="1.5" />
+                            <polyline points="21 15 16 10 5 21" />
+                          </svg>
+                          <span>Gallery</span>
+                        </button>
+                        <button
+                          className="flex items-center gap-2 rounded-md p-2 hover:bg-gray-100"
+                          onClick={() => alert("Camera functionality would open here")}
+                        >
+                          <svg
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            strokeWidth="2"
+                            className="h-5 w-5 text-red-500"
+                          >
+                            <path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z" />
+                            <circle cx="12" cy="13" r="4" />
+                          </svg>
+                          <span>Camera</span>
+                        </button>
+                      </div>
+                    </div>
+                  )}
+
+                  <input
+                    type="file"
+                    accept="image/*"
+                    ref={fileInputRef}
+                    className="hidden"
+                    onChange={handleImageUpload}
+                  />
+
+                  <input
+                    type="text"
+                    placeholder={
+                      order?.status === "delivered"
+                        ? "Chat is closed for delivered orders"
+                        : "Type your message..."
+                    }
+                    className="flex-1 border border-gray-300 rounded-full px-4 py-2 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                    value={message}
+                    onChange={(e) => setMessage(e.target.value)}
+                    onKeyPress={handleKeyPress}
+                    disabled={isSending || uploadingImage || order?.status === "delivered"}
+                  />
+
+                  <Button
+                    appearance={message.trim() && order?.status !== "delivered" ? "primary" : "subtle"}
+                    className={`rounded-full h-10 w-10 p-0 flex items-center justify-center ${
+                      message.trim() && order?.status !== "delivered" ? "bg-green-500 text-white" : "text-gray-400"
+                    }`}
+                    onClick={handleSendMessage}
+                    disabled={
+                      (!message.trim() && !uploadingImage) ||
+                      isSending ||
+                      order?.status === "delivered"
+                    }
+                  >
+                    {isSending || uploadingImage ? (
+                      <Loader size="sm" />
+                    ) : (
+                      <svg
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                        className="h-4 w-4"
+                      >
+                        <path d="M22 2L11 13" />
+                        <path d="M22 2l-7 20-4-9-9-4 20-7z" />
+                      </svg>
+                    )}
+                  </Button>
+                </div>
+                {order?.status === "delivered" && (
+                  <div className="mt-2 text-center text-xs text-gray-500">
+                    This order has been delivered. The chat is now closed.
+                  </div>
+                )}
               </div>
             </div>
           </div>
-        </header>
-
-        {/* Chat Messages */}
-        <div className="flex-1 overflow-y-auto bg-gray-100 p-4">
-          {messages.length === 0 ? (
-            <div className="flex h-full flex-col items-center justify-center text-gray-500">
-              <svg
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                className="mb-3 h-12 w-12"
-              >
-                <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
-              </svg>
-              <p>No messages yet</p>
-              <p className="text-sm">
-                Start the conversation with{" "}
-                {customerData?.name || "the customer"}
-              </p>
-            </div>
-          ) : (
-            <div>
-              {messageGroups.map((group, groupIndex) => (
-                <div key={groupIndex} className="mb-6">
-                  <div className="mb-4 flex justify-center">
-                    <div className="rounded-full bg-gray-200 px-3 py-1 text-xs text-gray-600">
-                      {group.date}
-                    </div>
-                  </div>
-
-                  {group.messages.map((msg, index) => {
-                    const isShopperMessage = msg.senderType === "shopper";
-                    const showAvatar =
-                      index === 0 ||
-                      group.messages[index - 1].senderType !== msg.senderType;
-
-                    // Get message content from either text or message field
-                    const messageContent = msg.text || msg.message || "";
-
-                    return (
-                      <div
-                        key={msg.id}
-                        className={`flex ${
-                          isShopperMessage ? "justify-end" : "justify-start"
-                        } mb-4`}
-                      >
-                        {!isShopperMessage && showAvatar && (
-                          <Avatar
-                            src={
-                              customerData?.avatar ||
-                              "/placeholder.svg?height=80&width=80"
-                            }
-                            alt={customerData?.name || "Customer"}
-                            size="xs"
-                            circle
-                            className="mb-1 mr-2 self-end"
-                          />
-                        )}
-
-                        <div
-                          className={`max-w-[75%] ${
-                            !isShopperMessage && !showAvatar ? "ml-8" : ""
-                          }`}
-                        >
-                          <div
-                            className={`rounded-2xl px-4 py-2 ${
-                              isShopperMessage
-                                ? "rounded-tr-none bg-blue-500 text-white"
-                                : "rounded-tl-none bg-white text-gray-800"
-                            }`}
-                          >
-                            {messageContent && (
-                              <p className="whitespace-pre-wrap">
-                                {messageContent}
-                              </p>
-                            )}
-                            {msg.image && (
-                              <div className="mt-2">
-                                <Image
-                                  src={msg.image}
-                                  alt="Shared image"
-                                  width={300}
-                                  height={200}
-                                  className="max-w-full rounded-lg"
-                                />
-                              </div>
-                            )}
-                          </div>
-                          <div className="mt-1 flex items-center">
-                            <span className="text-xs text-gray-500">
-                              {formatMessageTime(msg.timestamp)}
-                            </span>
-                            {isShopperMessage && (
-                              <span className="ml-1">
-                                {msg.read ? (
-                                  <svg
-                                    viewBox="0 0 24 24"
-                                    fill="none"
-                                    stroke="currentColor"
-                                    strokeWidth="2"
-                                    className="h-3 w-3 text-blue-500"
-                                  >
-                                    <path d="M18 6L7 17L2 12" />
-                                    <path d="M22 6L11 17L8 14" />
-                                  </svg>
-                                ) : (
-                                  <svg
-                                    viewBox="0 0 24 24"
-                                    fill="none"
-                                    stroke="currentColor"
-                                    strokeWidth="2"
-                                    className="h-3 w-3 text-gray-400"
-                                  >
-                                    <polyline points="20 6 9 17 4 12" />
-                                  </svg>
-                                )}
-                              </span>
-                            )}
-                          </div>
-                        </div>
-
-                        {isShopperMessage && showAvatar && (
-                          <Avatar
-                            src="/placeholder.svg?height=80&width=80"
-                            alt="Shopper"
-                            size="xs"
-                            circle
-                            className="mb-1 ml-2 self-end"
-                          />
-                        )}
-                      </div>
-                    );
-                  })}
-                </div>
-              ))}
-              <div ref={messagesEndRef} />
-            </div>
-          )}
-        </div>
-
-        {/* Quick Replies */}
-        <div className="overflow-x-auto whitespace-nowrap border-t bg-white p-2">
-          <div className="flex gap-2">
-            <Button
-              appearance="ghost"
-              size="sm"
-              className="whitespace-nowrap"
-              onClick={() => setMessage("I found it")}
-            >
-              I found it
-            </Button>
-            <Button
-              appearance="ghost"
-              size="sm"
-              className="whitespace-nowrap"
-              onClick={() => setMessage("They're out of stock")}
-            >
-              They're out of stock
-            </Button>
-            <Button
-              appearance="ghost"
-              size="sm"
-              className="whitespace-nowrap"
-              onClick={() => setMessage("Would you like an alternative?")}
-            >
-              Alternative?
-            </Button>
-          </div>
-        </div>
-
-        {/* Message Input */}
-        <div className="sticky bottom-0 border-t bg-white p-3">
-          <div className="relative flex items-center">
-            <div className="relative">
-              <Button
-                appearance="subtle"
-                className="flex h-10 w-10 items-center justify-center p-0"
-                onClick={handleAttachmentClick}
-                disabled={isSending || uploadingImage}
-              >
-                <svg
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  className="h-5 w-5 text-gray-500"
-                >
-                  <path d="M21.44 11.05l-9.19 9.19a6 6 0 01-8.49-8.49l9.19-9.19a4 4 0 015.66 5.66l-9.2 9.19a2 2 0 01-2.83-2.83l8.49-8.48" />
-                </svg>
-              </Button>
-
-              {/* Attachment Options Popup */}
-              {showAttachmentOptions && (
-                <div className="absolute bottom-12 left-0 z-10 rounded-lg bg-white p-2 shadow-lg">
-                  <div className="flex flex-col gap-2">
-                    <button
-                      className="flex items-center gap-2 rounded-md p-2 hover:bg-gray-100"
-                      onClick={() => fileInputRef.current?.click()}
-                    >
-                      <svg
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="currentColor"
-                        strokeWidth="2"
-                        className="h-5 w-5 text-blue-500"
-                      >
-                        <rect
-                          x="3"
-                          y="3"
-                          width="18"
-                          height="18"
-                          rx="2"
-                          ry="2"
-                        />
-                        <circle cx="8.5" cy="8.5" r="1.5" />
-                        <polyline points="21 15 16 10 5 21" />
-                      </svg>
-                      <span>Gallery</span>
-                    </button>
-                    <button
-                      className="flex items-center gap-2 rounded-md p-2 hover:bg-gray-100"
-                      onClick={() =>
-                        alert("Camera functionality would open here")
-                      }
-                    >
-                      <svg
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="currentColor"
-                        strokeWidth="2"
-                        className="h-5 w-5 text-red-500"
-                      >
-                        <path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z" />
-                        <circle cx="12" cy="13" r="4" />
-                      </svg>
-                      <span>Camera</span>
-                    </button>
-                  </div>
-                </div>
-              )}
-
-              <input
-                type="file"
-                accept="image/*"
-                ref={fileInputRef}
-                className="hidden"
-                onChange={handleImageUpload}
-              />
-            </div>
-
-            <textarea
-              className="flex-1 resize-none rounded-full border px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-              placeholder="Type a message..."
-              value={message}
-              onChange={(e) => setMessage(e.target.value)}
-              onKeyPress={handleKeyPress}
-              rows={1}
-              style={{ maxHeight: "100px" }}
-              disabled={isSending || uploadingImage}
-            />
-
-            <Button
-              appearance={message.trim() ? "primary" : "subtle"}
-              className={`ml-2 flex h-10 w-10 items-center justify-center rounded-full p-0 ${
-                message.trim() ? "bg-blue-500 text-white" : "text-gray-400"
-              }`}
-              onClick={handleSendMessage}
-              disabled={(!message.trim() && !uploadingImage) || isSending}
-            >
-              {isSending || uploadingImage ? (
-                <Loader size="sm" />
-              ) : (
-                <svg
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  className="h-5 w-5"
-                >
-                  <path d="M22 2L11 13" />
-                  <path d="M22 2l-7 20-4-9-9-4 20-7z" />
-                </svg>
-              )}
-            </Button>
-          </div>
-        </div>
+        )}
       </div>
     </ShopperLayout>
   );

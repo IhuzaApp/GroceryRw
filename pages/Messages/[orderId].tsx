@@ -94,52 +94,32 @@ const Message: React.FC<MessageProps> = ({
       className={`mb-4 flex ${isCurrentUser ? "justify-end" : "justify-start"}`}
     >
       {!isCurrentUser && (
-        <Avatar
-          src="/placeholder.svg?height=40&width=40"
-          alt="Shopper"
-          size="xs"
-          circle
-          className="mr-2 self-end"
-        />
+     <Avatar color="blue" circle  size="xs"/>
       )}
       <div
-        className={`max-w-[75%] ${
+        className={`max-w-[85%] ${
           isCurrentUser
             ? "bg-green-100 text-green-900"
-            : "bg-gray-100 text-gray-900"
-        } rounded-lg p-3`}
+            : "bg-blue-100 text-gray-900"
+        } rounded-[20px] p-3`}
       >
         {!isCurrentUser && (
-          <div className="mb-1 text-xs font-medium text-gray-600">
-            {senderName}
+          <div className="mb-1 flex text-xs gap-2 font-medium text-gray-600">
+            {senderName}    <span className="text-xs text-gray-500">
+            {formatMessageDate(message.timestamp)}
+          </span>
           </div>
         )}
         <div className="whitespace-pre-wrap text-sm">{messageContent}</div>
         {message.image && (
           <div className="mt-2">
-            <Image
-              src={message.image}
-              alt="Shared image"
-              width={300}
-              height={200}
-              className="max-w-full rounded-lg"
-            />
+              <Avatar color="blue" circle />
           </div>
         )}
-        <div className="mt-1 flex items-center justify-end">
-          <span className="text-xs text-gray-500">
-            {formatMessageDate(message.timestamp)}
-          </span>
-        </div>
+     
       </div>
       {isCurrentUser && (
-        <Avatar
-          src="/placeholder.svg?height=40&width=40"
-          alt="You"
-          size="xs"
-          circle
-          className="ml-2 self-end"
-        />
+           <Avatar color="green" circle size="xs" />
       )}
     </div>
   );
@@ -161,6 +141,7 @@ export default function ChatPage() {
   const [shopper, setShopper] = useState<any>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [conversationId, setConversationId] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
 
   // Scroll to bottom of messages
   const scrollToBottom = () => {
@@ -201,6 +182,7 @@ export default function ChatPage() {
           }
         } catch (error) {
           console.error("Error fetching order:", error);
+          setError("Error fetching order. Please try again later.");
         } finally {
           setLoading(false);
         }
@@ -251,6 +233,7 @@ export default function ChatPage() {
       }
     } catch (error) {
       console.error("Error getting/creating conversation:", error);
+      setError("Error getting/creating conversation. Please try again later.");
     }
   };
 
@@ -315,6 +298,7 @@ export default function ChatPage() {
       },
       (error) => {
         console.error("Error in messages listener:", error);
+        setError("Error in messages listener. Please try again later.");
       }
     );
 
@@ -385,6 +369,7 @@ export default function ChatPage() {
       setNewMessage("");
     } catch (error) {
       console.error("Error sending message:", error);
+      setError("Error sending message. Please try again later.");
     } finally {
       setIsSending(false);
     }
@@ -457,83 +442,43 @@ export default function ChatPage() {
       setShowAttachmentOptions(false);
     } catch (error) {
       console.error("Error uploading image:", error);
+      setError("Error uploading image. Please try again later.");
     } finally {
       setUploadingImage(false);
     }
   };
 
-  // Render loading state
-  if (loading) {
-    return (
-      <RootLayout>
-        <div className="p-4 md:ml-16">
-          <div className="container mx-auto max-w-4xl">
-            <div className="mb-6 flex items-center">
-              <Link href="/Messages" passHref>
-                <Button appearance="link" className="mr-2">
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    width="24"
-                    height="24"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="2"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    className="h-5 w-5"
-                  >
-                    <path d="M19 12H5" />
-                    <path d="M12 19l-7-7 7-7" />
-                  </svg>
-                </Button>
-              </Link>
-              <h1 className="text-2xl font-bold">Loading...</h1>
-            </div>
-            <div className="flex justify-center p-12">
-              <Loader size="lg" content="Loading messages..." />
+  // Render the chat interface
+  return (
+    <RootLayout>
+      <div className="p-4 md:ml-16 h-[calc(100vh-80px)]">
+        {loading ? (
+          <div className="max-w-1xl mx-auto">
+            <div className="animate-pulse space-y-4">
+              <div className="h-8 bg-gray-200 rounded w-1/3"></div>
+              <div className="h-64 bg-gray-200 rounded"></div>
             </div>
           </div>
-        </div>
-      </RootLayout>
-    );
-  }
-
-  // Render authentication required
-  if (status !== "authenticated") {
-    return (
-      <RootLayout>
-        <div className="p-4 md:ml-16">
-          <div className="container mx-auto max-w-4xl">
-            <div className="mb-6 flex items-center">
-              <Link href="/Messages" passHref>
-                <Button appearance="link" className="mr-2">
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    width="24"
-                    height="24"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="2"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    className="h-5 w-5"
-                  >
-                    <path d="M19 12H5" />
-                    <path d="M12 19l-7-7 7-7" />
-                  </svg>
-                </Button>
-              </Link>
-              <h1 className="text-2xl font-bold">Sign In Required</h1>
+        ) : error ? (
+          <div className="max-w-1xl mx-auto">
+            <div className="bg-red-50 p-4 rounded-md">
+              <h3 className="text-red-800 font-medium">Error</h3>
+              <p className="text-red-700 mt-2">{error}</p>
+              <Button
+                appearance="primary"
+                color="red"
+                className="mt-4"
+                onClick={() => router.push("/Messages")}
+              >
+                Back to Messages
+              </Button>
             </div>
-            <div className="rounded-lg bg-blue-50 p-6 text-center">
-              <h2 className="mb-4 text-xl font-semibold text-blue-700">
-                Sign in Required
-              </h2>
-              <p className="mb-6 text-blue-600">
-                Please sign in to view your messages.
-              </p>
+          </div>
+        ) : !session?.user ? (
+          <div className="max-w-1xl mx-auto">
+            <div className="bg-blue-50 p-6 rounded-lg text-center">
+              <h2 className="text-xl font-semibold text-blue-700 mb-4">Sign in Required</h2>
+              <p className="text-blue-600 mb-6">Please sign in to view your messages.</p>
               <Link href="/login" passHref>
                 <Button appearance="primary" color="blue">
                   Sign In
@@ -541,143 +486,73 @@ export default function ChatPage() {
               </Link>
             </div>
           </div>
-        </div>
-      </RootLayout>
-    );
-  }
-
-  // Render order not found
-  if (!order) {
-    return (
-      <RootLayout>
-        <div className="p-4 md:ml-16">
-          <div className="container mx-auto max-w-4xl">
-            <div className="mb-6 flex items-center">
-              <Link href="/Messages" passHref>
-                <Button appearance="link" className="mr-2">
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    width="24"
-                    height="24"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="2"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    className="h-5 w-5"
-                  >
-                    <path d="M19 12H5" />
-                    <path d="M12 19l-7-7 7-7" />
-                  </svg>
-                </Button>
-              </Link>
-              <h1 className="text-2xl font-bold">Order Not Found</h1>
-            </div>
-            <div className="rounded-lg bg-red-50 p-6 text-center">
-              <h2 className="mb-4 text-xl font-semibold text-red-700">
-                Order Not Found
-              </h2>
-              <p className="mb-6 text-red-600">
-                The order you are looking for does not exist or you don't have
-                access to it.
-              </p>
-              <Link href="/Messages" passHref>
-                <Button appearance="primary" color="red">
-                  Back to Messages
-                </Button>
-              </Link>
-            </div>
-          </div>
-        </div>
-      </RootLayout>
-    );
-  }
-
-  return (
-    <RootLayout>
-      <div className="p-4 md:ml-16">
-        <div className="container mx-auto max-w-4xl">
-          {/* Header */}
-          <div className="mb-6 flex items-center">
-            <Link href="/Messages" passHref>
-              <Button appearance="link" className="mr-2">
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  width="24"
-                  height="24"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  className="h-5 w-5"
-                >
-                  <path d="M19 12H5" />
-                  <path d="M12 19l-7-7 7-7" />
-                </svg>
-              </Button>
-            </Link>
-            <h1 className="text-2xl font-bold">
-              Chat with {shopper?.name || "Shopper"}
-            </h1>
-          </div>
-
-          {/* Order Info */}
-          <Panel shaded bordered className="mb-6">
-            <div className="flex justify-between">
-              <div>
-                <h3 className="text-lg font-bold">
-                  Order #{formatOrderID(order.OrderID)}
-                </h3>
-                <p className="text-sm text-gray-500">
-                  {order.shop?.name || "Shop"}
-                </p>
-              </div>
-              <div className="text-right">
-                <div className="rounded bg-blue-100 px-2 py-0.5 text-xs font-medium text-blue-800">
-                  {order.status === "shopping"
-                    ? "Shopping"
-                    : order.status === "packing"
-                    ? "Packing"
-                    : order.status === "on_the_way"
-                    ? "On the way"
-                    : order.status}
+        ) : (
+          <div className="max-w-1xl mx-auto w-full h-full flex flex-col">
+            <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden flex-1 flex flex-col h-full">
+              {/* Order info */}
+              <div className="p-4 border-b border-gray-200 flex items-center justify-between bg-gray-50 shrink-0">
+                <div className="flex items-center">
+                  <div className="h-10 w-10 rounded-full bg-gray-200 flex-shrink-0 flex items-center justify-center text-gray-600 mr-3">
+                    {order?.shop?.name?.substring(0, 2).toUpperCase() || 'SH'}
+                  </div>
+                  <div>
+                    <h2 className="font-medium">
+                      {order?.shop?.name || 'Shop'} - Order #{formatOrderID(order?.OrderID || orderId)}
+                    </h2>
+                    <div className="flex items-center text-sm text-gray-500">
+                      <span
+                        className={`
+                        px-2 py-0.5 rounded-full text-xs mr-2
+                        ${
+                          order?.status === 'shopping' ? 'bg-orange-100 text-orange-800' : 
+                          order?.status === 'on_the_way' ? 'bg-blue-100 text-blue-800' : 
+                          order?.status === 'delivered' ? 'bg-green-100 text-green-800' : 
+                          'bg-gray-100 text-gray-800'
+                        }
+                      `}
+                      >
+                        {order?.status === 'shopping' ? 'Shopping' : 
+                         order?.status === 'packing' ? 'Packing' : 
+                         order?.status === 'on_the_way' ? 'On the way' : 
+                         order?.status?.charAt(0).toUpperCase() + order?.status?.slice(1) || 'Unknown'}
+                      </span>
+                      <span>{formatCurrency(order?.total || 0)}</span>
+                    </div>
+                  </div>
                 </div>
-                <p className="mt-1 text-sm font-bold">
-                  {formatCurrency(order.total || 0)}
-                </p>
-              </div>
-            </div>
-          </Panel>
-
-          {/* Chat Messages */}
-          <Panel
-            shaded
-            bordered
-            className="mb-6 max-h-[600px] min-h-[400px] overflow-y-auto"
-          >
-            <div className="p-4">
-              {messages.length === 0 ? (
-                <div className="flex h-64 flex-col items-center justify-center text-gray-500">
-                  <svg
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="2"
-                    className="mb-3 h-12 w-12"
+                <div className="flex items-center space-x-2">
+                  <Button 
+                    appearance="ghost" 
+                    className="flex items-center justify-center h-8 w-8 p-0"
+                    onClick={() => router.push(`/CurrentPendingOrders/viewOrderDetails?orderId=${orderId}`)}
                   >
-                    <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
-                  </svg>
-                  <p>No messages yet</p>
-                  <p className="text-sm">
-                    Start the conversation with your shopper
-                  </p>
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="h-4 w-4">
+                      <path d="M4 6h16M4 12h16M4 18h7"></path>
+                    </svg>
+                  </Button>
                 </div>
-              ) : (
-                <div>
-                  {messages.map((message) => (
+              </div>
+
+              {/* Messages - make this area scrollable */}
+              <div className="flex-1 p-4 overflow-y-auto space-y-4 bg-gray-100" ref={messagesEndRef}>
+                {messages.length === 0 ? (
+                  <div className="flex h-full flex-col items-center justify-center text-gray-500 py-20">
+                    <svg
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      className="mb-3 h-12 w-12"
+                    >
+                      <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
+                    </svg>
+                    <p>No messages yet</p>
+                    <p className="text-sm">
+                      Start the conversation with your shopper
+                    </p>
+                  </div>
+                ) : (
+                  messages.map((message) => (
                     <Message
                       key={message.id}
                       message={message}
@@ -688,30 +563,25 @@ export default function ChatPage() {
                           : "You"
                       }
                     />
-                  ))}
-                  <div ref={messagesEndRef} />
-                </div>
-              )}
-            </div>
-          </Panel>
+                  ))
+                )}
+              </div>
 
-          {/* Message Input */}
-          <Panel shaded bordered>
-            <div className="relative">
-              <div className="flex items-center">
-                <div className="relative">
+              {/* Message input - fixed at bottom */}
+              <div className="p-4 border-t border-gray-200 bg-white shrink-0">
+                <div className="flex items-center gap-2">
                   <Button
                     appearance="subtle"
-                    className="flex h-10 w-10 items-center justify-center p-0"
+                    className="rounded-full h-10 w-10 flex items-center justify-center p-0"
                     onClick={handleAttachmentClick}
-                    disabled={isSending || uploadingImage}
+                    disabled={isSending || uploadingImage || order?.status === "delivered"}
                   >
                     <svg
                       viewBox="0 0 24 24"
                       fill="none"
                       stroke="currentColor"
                       strokeWidth="2"
-                      className="h-5 w-5 text-gray-500"
+                      className="h-4 w-4"
                     >
                       <path d="M21.44 11.05l-9.19 9.19a6 6 0 01-8.49-8.49l9.19-9.19a4 4 0 015.66 5.66l-9.2 9.19a2 2 0 01-2.83-2.83l8.49-8.48" />
                     </svg>
@@ -719,7 +589,7 @@ export default function ChatPage() {
 
                   {/* Attachment Options Popup */}
                   {showAttachmentOptions && (
-                    <div className="absolute bottom-12 left-0 z-10 rounded-lg bg-white p-2 shadow-lg">
+                    <div className="absolute bottom-16 left-4 z-10 rounded-lg bg-white p-2 shadow-lg">
                       <div className="flex flex-col gap-2">
                         <button
                           className="flex items-center gap-2 rounded-md p-2 hover:bg-gray-100"
@@ -732,18 +602,27 @@ export default function ChatPage() {
                             strokeWidth="2"
                             className="h-5 w-5 text-blue-500"
                           >
-                            <rect
-                              x="3"
-                              y="3"
-                              width="18"
-                              height="18"
-                              rx="2"
-                              ry="2"
-                            />
+                            <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
                             <circle cx="8.5" cy="8.5" r="1.5" />
                             <polyline points="21 15 16 10 5 21" />
                           </svg>
                           <span>Gallery</span>
+                        </button>
+                        <button
+                          className="flex items-center gap-2 rounded-md p-2 hover:bg-gray-100"
+                          onClick={() => alert("Camera functionality would open here")}
+                        >
+                          <svg
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            strokeWidth="2"
+                            className="h-5 w-5 text-red-500"
+                          >
+                            <path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z" />
+                            <circle cx="12" cy="13" r="4" />
+                          </svg>
+                          <span>Camera</span>
                         </button>
                       </div>
                     </div>
@@ -756,78 +635,58 @@ export default function ChatPage() {
                     className="hidden"
                     onChange={handleImageUpload}
                   />
+
+                  <input
+                    type="text"
+                    placeholder={
+                      order?.status === "delivered"
+                        ? "Chat is closed for delivered orders"
+                        : "Type your message..."
+                    }
+                    className="flex-1 border border-gray-300 rounded-full px-4 py-2 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                    value={newMessage}
+                    onChange={(e) => setNewMessage(e.target.value)}
+                    onKeyPress={handleKeyPress}
+                    disabled={isSending || uploadingImage || order?.status === "delivered"}
+                  />
+
+                  <Button
+                    appearance={newMessage.trim() && order?.status !== "delivered" ? "primary" : "subtle"}
+                    className={`rounded-full h-10 w-10 p-0 flex items-center justify-center ${
+                      newMessage.trim() && order?.status !== "delivered" ? "bg-green-500 text-white" : "text-gray-400"
+                    }`}
+                    onClick={handleSendMessage}
+                    disabled={
+                      (!newMessage.trim() && !uploadingImage) ||
+                      isSending ||
+                      order?.status === "delivered"
+                    }
+                  >
+                    {isSending || uploadingImage ? (
+                      <Loader size="sm" />
+                    ) : (
+                      <svg
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                        className="h-4 w-4"
+                      >
+                        <path d="M22 2L11 13" />
+                        <path d="M22 2l-7 20-4-9-9-4 20-7z" />
+                      </svg>
+                    )}
+                  </Button>
                 </div>
-
-                <textarea
-                  className="flex-1 resize-none rounded-full border px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  placeholder="Type a message..."
-                  value={newMessage}
-                  onChange={(e) => setNewMessage(e.target.value)}
-                  onKeyPress={handleKeyPress}
-                  rows={1}
-                  style={{ maxHeight: "100px" }}
-                  disabled={isSending || uploadingImage}
-                />
-
-                <Button
-                  appearance={newMessage.trim() ? "primary" : "subtle"}
-                  className={`ml-2 flex h-10 w-10 items-center justify-center rounded-full p-0 ${
-                    newMessage.trim()
-                      ? "bg-blue-500 text-white"
-                      : "text-gray-400"
-                  }`}
-                  onClick={() => handleSendMessage()}
-                  disabled={
-                    (!newMessage.trim() && !uploadingImage) || isSending
-                  }
-                >
-                  {isSending || uploadingImage ? (
-                    <Loader size="sm" />
-                  ) : (
-                    <svg
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth="2"
-                      className="h-5 w-5"
-                    >
-                      <path d="M22 2L11 13" />
-                      <path d="M22 2l-7 20-4-9-9-4 20-7z" />
-                    </svg>
-                  )}
-                </Button>
-              </div>
-
-              {/* Quick Replies */}
-              <div className="mt-3 flex flex-wrap gap-2">
-                <Button
-                  appearance="ghost"
-                  size="sm"
-                  className="whitespace-nowrap"
-                  onClick={() => setNewMessage("How's my order going?")}
-                >
-                  How's my order going?
-                </Button>
-                <Button
-                  appearance="ghost"
-                  size="sm"
-                  className="whitespace-nowrap"
-                  onClick={() => setNewMessage("Any issues with my items?")}
-                >
-                  Any issues with items?
-                </Button>
-                <Button
-                  appearance="ghost"
-                  size="sm"
-                  className="whitespace-nowrap"
-                  onClick={() => setNewMessage("Thanks for your help!")}
-                >
-                  Thanks!
-                </Button>
+                {order?.status === "delivered" && (
+                  <div className="mt-2 text-center text-xs text-gray-500">
+                    This order has been delivered. The chat is now closed.
+                  </div>
+                )}
               </div>
             </div>
-          </Panel>
-        </div>
+          </div>
+        )}
       </div>
     </RootLayout>
   );
