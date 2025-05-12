@@ -4,6 +4,9 @@ import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { formatCompactCurrency } from "../../lib/formatCurrency";
+import { toast } from "react-hot-toast";
+import { signOut } from "next-auth/react";
+import { useAuth } from "../../context/AuthContext";
 
 // Define interface for earnings response
 interface EarningsResponse {
@@ -24,7 +27,9 @@ export default function PlasaSidebar() {
   const [isMobile, setIsMobile] = useState(false);
   const [dailyEarnings, setDailyEarnings] = useState(0);
   const [loadingEarnings, setLoadingEarnings] = useState(true);
+  const [isSwitchingRole, setIsSwitchingRole] = useState(false);
   const pathname = usePathname();
+  const { toggleRole } = useAuth();
 
   useEffect(() => {
     const checkIfMobile = () => setIsMobile(window.innerWidth < 768);
@@ -68,6 +73,37 @@ export default function PlasaSidebar() {
 
   const isActive = (path: string) =>
     pathname ? pathname === path || pathname.startsWith(`${path}/`) : false;
+
+  const handleSwitchToCustomer = async () => {
+    setIsSwitchingRole(true);
+    try {
+      // 1. Update role in database
+      const res = await fetch("/api/user/updateRole", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ role: "user" }),
+      });
+      
+      if (!res.ok) {
+        throw new Error("Failed to switch to customer");
+      }
+      
+      // 2. Update local state via context
+      toggleRole();
+      
+      toast.success("Switched to customer mode");
+      
+      // 3. Sign out to refresh the session with new role
+      signOut({ 
+        redirect: true,
+        callbackUrl: "/"
+      });
+    } catch (error) {
+      console.error("Error switching role:", error);
+      toast.error("Failed to switch to customer mode");
+      setIsSwitchingRole(false);
+    }
+  };
 
   return (
     <>
@@ -203,22 +239,23 @@ export default function PlasaSidebar() {
                 <span>My Profile</span>
               </div>
             </Link>
-            <Link href="/">
-              <div className="flex items-center rounded-lg px-4 py-3 text-gray-700 hover:bg-gray-100">
-                <svg
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  className="mr-3 h-5 w-5"
-                >
-                  <path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4" />
-                  <polyline points="16 17 21 12 16 7" />
-                  <line x1="21" y1="12" x2="9" y2="12" />
-                </svg>
-                <span>Switch to Customer</span>
-              </div>
-            </Link>
+            <div 
+              onClick={handleSwitchToCustomer} 
+              className="flex cursor-pointer items-center rounded-lg px-4 py-3 text-gray-700 hover:bg-gray-100"
+            >
+              <svg
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                className="mr-3 h-5 w-5"
+              >
+                <path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4" />
+                <polyline points="16 17 21 12 16 7" />
+                <line x1="21" y1="12" x2="9" y2="12" />
+              </svg>
+              <span>{isSwitchingRole ? "Switching..." : "Switch to Customer"}</span>
+            </div>
             <div className="flex cursor-pointer items-center rounded-lg px-4 py-3 text-gray-700 hover:bg-gray-100">
               <svg
                 viewBox="0 0 24 24"
@@ -325,6 +362,24 @@ export default function PlasaSidebar() {
             </svg>
             <span className="mt-1 text-xs">Profile</span>
           </Link>
+
+          <div
+            onClick={handleSwitchToCustomer}
+            className="flex flex-col items-center p-2 text-gray-600 cursor-pointer"
+          >
+            <svg
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              className="h-6 w-6"
+            >
+              <path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4" />
+              <polyline points="16 17 21 12 16 7" />
+              <line x1="21" y1="12" x2="9" y2="12" />
+            </svg>
+            <span className="mt-1 text-xs">{isSwitchingRole ? "..." : "Customer"}</span>
+          </div>
         </div>
       )}
     </>

@@ -8,7 +8,7 @@ const publicPaths = [
   "/shops",
   "/Auth/Login",
   "/Auth/Register",
-  "/api",
+  "/api", // All API routes are public
   "/_next",
   "/favicon.ico",
   "/static",
@@ -24,6 +24,11 @@ const isPublicPath = (path: string) => {
 
 export async function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl;
+
+  // Skip middleware for API routes entirely
+  if (pathname.startsWith("/api/")) {
+    return NextResponse.next();
+  }
 
   // Skip middleware for public paths
   if (isPublicPath(pathname)) {
@@ -55,13 +60,10 @@ export async function middleware(req: NextRequest) {
         return NextResponse.next();
       }
       
-      // Only redirect to login for non-API paths
-      if (!pathname.startsWith("/api/")) {
-        const url = req.nextUrl.clone();
-        url.pathname = "/Auth/Login";
-        url.search = `callbackUrl=${encodeURIComponent(req.url)}`;
-        return NextResponse.redirect(url);
-      }
+      const url = req.nextUrl.clone();
+      url.pathname = "/Auth/Login";
+      url.search = `callbackUrl=${encodeURIComponent(req.url)}`;
+      return NextResponse.redirect(url);
     }
 
     // Protect shopper routes
