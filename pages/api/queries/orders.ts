@@ -4,8 +4,11 @@ import { gql } from "graphql-request";
 
 // Fetch orders including item aggregates, fees, and shopper assignment
 const GET_ORDERS = gql`
-  query GetOrders {
-    Orders(order_by: { created_at: desc }) {
+  query GetOrders($user_id: uuid) {
+    Orders(
+      where: { user_id: { _eq: $user_id } }
+      order_by: { created_at: desc }
+    ) {
       id
       OrderID
       user_id
@@ -72,8 +75,26 @@ export default async function handler(
       throw new Error("Hasura client is not initialized");
     }
 
+    // Extract user_id from query parameters or from session
+    let userId = req.query.user_id as string;
+    
+    // If no user_id provided in query, try to get it from the session
+    if (!userId && req.headers.authorization) {
+      try {
+        const token = req.headers.authorization.split(' ')[1];
+        // This is a simplified example. In a real app, you would verify the token
+        // and extract the user ID from it using your authentication library
+        const payload = JSON.parse(Buffer.from(token.split('.')[1], 'base64').toString());
+        userId = payload.sub || payload.user_id;
+      } catch (error) {
+        console.error("Error extracting user ID from token:", error);
+      }
+    }
+
     // 1. Fetch orders
-    const data = await hasuraClient.request<OrdersResponse>(GET_ORDERS);
+    const data = await hasuraClient.request<OrdersResponse>(GET_ORDERS, {
+      user_id: userId,
+    });
     const orders = data.Orders;
     // 2. Fetch shops for these orders
     const shopIds = Array.from(new Set(orders.map((o) => o.shop_id)));
