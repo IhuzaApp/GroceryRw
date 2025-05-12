@@ -79,7 +79,7 @@ export const authOptions: NextAuthOptions = {
         httpOnly: true,
         sameSite: "lax",
         path: "/",
-        secure: false,
+        secure: process.env.NEXTAUTH_SECURE_COOKIES === "true",
       },
     },
     callbackUrl: {
@@ -88,7 +88,7 @@ export const authOptions: NextAuthOptions = {
         httpOnly: true,
         sameSite: "lax",
         path: "/",
-        secure: false,
+        secure: process.env.NEXTAUTH_SECURE_COOKIES === "true",
       },
     },
     csrfToken: {
@@ -97,11 +97,11 @@ export const authOptions: NextAuthOptions = {
         httpOnly: true,
         sameSite: "lax",
         path: "/",
-        secure: false,
+        secure: process.env.NEXTAUTH_SECURE_COOKIES === "true",
       },
     },
   },
-  useSecureCookies: false,
+  useSecureCookies: process.env.NEXTAUTH_SECURE_COOKIES === "true",
   callbacks: {
     async jwt({ token, user }) {
       if (user) {
