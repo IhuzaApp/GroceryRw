@@ -121,7 +121,7 @@ export default function UserOrderDetails({ order }: UserOrderDetailsProps) {
         <div className="mt-4 flex flex-col items-start justify-between gap-4 md:flex-row md:items-center">
           {/* Delivery Info */}
           <div className="w-full">
-            <p className="text-gray-600 mb-2">Estimated delivery time:</p>
+            <p className="mb-2 text-gray-600">Estimated delivery time:</p>
             <EstimatedDeliveryTime
               estimatedDelivery={order.estimatedDelivery}
               status={order.status}
@@ -248,45 +248,45 @@ export default function UserOrderDetails({ order }: UserOrderDetailsProps) {
 
           <Panel shaded bordered>
             <h2 className="mb-4 text-xl font-bold">Delivery Information</h2>
-            
+
             {/* Delivery Time */}
             <div className="mb-6">
-              <h3 className="font-semibold mb-2">Estimated Delivery Time</h3>
+              <h3 className="mb-2 font-semibold">Estimated Delivery Time</h3>
               <EstimatedDeliveryTime
                 estimatedDelivery={order.estimatedDelivery}
                 status={order.status}
               />
             </div>
-            
+
             {/* Delivery Address */}
             <div>
-              <h3 className="font-semibold mb-2">Delivery Address</h3>
+              <h3 className="mb-2 font-semibold">Delivery Address</h3>
               <div className="flex items-start gap-3">
                 <div className="mt-1 text-green-600">
-                <svg
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
+                  <svg
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
                     className="h-5 w-5"
-                >
-                  <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"></path>
-                  <circle cx="12" cy="10" r="3"></circle>
-                </svg>
-              </div>
-              <div>
+                  >
+                    <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"></path>
+                    <circle cx="12" cy="10" r="3"></circle>
+                  </svg>
+                </div>
+                <div>
                   <p className="font-medium">{order.address?.street}</p>
-                    <p className="text-gray-600">
+                  <p className="text-gray-600">
                     {order.address?.city}, {order.address?.postal_code}
-                    </p>
+                  </p>
                 </div>
               </div>
             </div>
-            
+
             {/* Delivery Notes if any */}
             {order.deliveryNotes && (
               <div className="mt-6">
-                <h3 className="font-semibold mb-2">Delivery Notes</h3>
+                <h3 className="mb-2 font-semibold">Delivery Notes</h3>
                 <div className="rounded-lg bg-gray-50 p-3 text-gray-700">
                   <p>{order.deliveryNotes}</p>
                 </div>

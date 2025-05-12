@@ -16,7 +16,9 @@ export default function CurrentOrdersPage() {
     try {
       // Include user_id in the request if session exists
       const userId = session?.user?.id;
-      const res = await fetch(`/api/queries/orders${userId ? `?user_id=${userId}` : ''}`);
+      const res = await fetch(
+        `/api/queries/orders${userId ? `?user_id=${userId}` : ""}`
+      );
       const data = await res.json();
       setOrders(data.orders || []);
     } catch (error) {
@@ -35,10 +37,15 @@ export default function CurrentOrdersPage() {
     return (
       <RootLayout>
         <div className="p-4 md:ml-16">
-          <div className="container mx-auto text-center py-12">
-            <h1 className="text-2xl font-bold mb-4">Please Sign In</h1>
-            <p className="mb-6">You need to be logged in to view your orders.</p>
-            <Link href="/login" className="bg-blue-600 text-white px-6 py-2 rounded-md hover:bg-blue-700">
+          <div className="container mx-auto py-12 text-center">
+            <h1 className="mb-4 text-2xl font-bold">Please Sign In</h1>
+            <p className="mb-6">
+              You need to be logged in to view your orders.
+            </p>
+            <Link
+              href="/login"
+              className="rounded-md bg-blue-600 px-6 py-2 text-white hover:bg-blue-700"
+            >
               Sign In
             </Link>
           </div>

@@ -61,33 +61,43 @@ function timeAgo(timestamp: string): string {
 }
 
 // Helper to display estimated delivery time
-function EstimatedDelivery({ deliveryTime, status }: { deliveryTime: string, status: string }) {
+function EstimatedDelivery({
+  deliveryTime,
+  status,
+}: {
+  deliveryTime: string;
+  status: string;
+}) {
   if (!deliveryTime) return null;
   if (status === "delivered") {
-    return <span className="text-green-600 font-medium">Delivered</span>;
+    return <span className="font-medium text-green-600">Delivered</span>;
   }
-  
+
   const now = new Date();
   const est = new Date(deliveryTime);
   const diffMs = est.getTime() - now.getTime();
-  
+
   if (diffMs <= 0) {
-    return <span className="text-red-500 font-medium">Delivery time exceeded</span>;
+    return (
+      <span className="font-medium text-red-500">Delivery time exceeded</span>
+    );
   }
-  
+
   const days = Math.floor(diffMs / (1000 * 60 * 60 * 24));
   const hours = Math.floor((diffMs % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
   const mins = Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60));
-  
+
   let text: string;
   if (days > 0) {
-    text = `Delivery in ${days} day${days > 1 ? 's' : ''}${hours > 0 ? ` ${hours}h` : ''}`;
+    text = `Delivery in ${days} day${days > 1 ? "s" : ""}${
+      hours > 0 ? ` ${hours}h` : ""
+    }`;
   } else if (hours > 0) {
-    text = `Delivery in ${hours}h${mins > 0 ? ` ${mins}m` : ''}`;
+    text = `Delivery in ${hours}h${mins > 0 ? ` ${mins}m` : ""}`;
   } else {
     text = `Delivery in ${mins} minutes`;
   }
-  
+
   return (
     <div className="flex items-center gap-1">
       <svg
@@ -100,7 +110,7 @@ function EstimatedDelivery({ deliveryTime, status }: { deliveryTime: string, sta
         <circle cx="12" cy="12" r="10"></circle>
         <polyline points="12 6 12 12 16 14"></polyline>
       </svg>
-      <span className="text-green-600 font-medium">{text}</span>
+      <span className="font-medium text-green-600">{text}</span>
     </div>
   );
 }
@@ -246,7 +256,10 @@ export default function UserRecentOrders({
             {/* Estimated Delivery Time */}
             {order.delivery_time && (
               <div className="mb-3">
-                <EstimatedDelivery deliveryTime={order.delivery_time} status={order.status} />
+                <EstimatedDelivery
+                  deliveryTime={order.delivery_time}
+                  status={order.status}
+                />
               </div>
             )}
 

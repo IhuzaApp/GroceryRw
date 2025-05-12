@@ -12,10 +12,19 @@ import {
   formatMessageTime,
 } from "../../../src/lib/formatters";
 import { useAuth } from "../../../src/context/AuthContext";
-import { 
-  collection, query, where, orderBy, getDocs, 
-  addDoc, serverTimestamp, onSnapshot, Timestamp,
-  doc, getDoc, updateDoc, 
+import {
+  collection,
+  query,
+  where,
+  orderBy,
+  getDocs,
+  addDoc,
+  serverTimestamp,
+  onSnapshot,
+  Timestamp,
+  doc,
+  getDoc,
+  updateDoc,
 } from "firebase/firestore";
 import { db, storage } from "../../../src/lib/firebase";
 import { getStorage, ref, uploadBytes, getDownloadURL } from "firebase/storage";
@@ -23,8 +32,8 @@ import { getStorage, ref, uploadBytes, getDownloadURL } from "firebase/storage";
 // Define message interface
 interface Message {
   id: string;
-  text?: string;         // Customer message format
-  message?: string;      // Shopper message format (for compatibility)
+  text?: string; // Customer message format
+  message?: string; // Shopper message format (for compatibility)
   senderId: string;
   senderType: "customer" | "shopper";
   recipientId: string;
@@ -37,7 +46,7 @@ export default function ChatPage() {
   const router = useRouter();
   const { orderId } = router.query;
   const { user } = useAuth();
-  
+
   const [message, setMessage] = useState("");
   const [isLoading, setIsLoading] = useState(true);
   const [isSending, setIsSending] = useState(false);
@@ -67,18 +76,18 @@ export default function ChatPage() {
         // Fetch order details
         const res = await fetch(`/api/queries/orderDetails?id=${orderId}`);
         const data = await res.json();
-        
+
         if (data.order) {
           setOrder(data.order);
-          
+
           // Set customer data
           setCustomerData({
             id: data.order.user_id,
             name: data.order.user_name || "Customer",
-            avatar: "/placeholder.svg?height=80&width=80",
-            lastSeen: "Online now",
+          avatar: "/placeholder.svg?height=80&width=80",
+          lastSeen: "Online now",
           });
-          
+
           // Get or create conversation
           await getOrCreateConversation(data.order.id, data.order.user_id);
         }
@@ -93,17 +102,17 @@ export default function ChatPage() {
   }, [orderId, user?.id]);
 
   // Get or create conversation
-  const getOrCreateConversation = async (orderIdStr: string, customerId: string) => {
+  const getOrCreateConversation = async (
+    orderIdStr: string,
+    customerId: string
+  ) => {
     try {
       // Check if conversation exists
       const conversationsRef = collection(db, "chat_conversations");
-      const q = query(
-        conversationsRef,
-        where("orderId", "==", orderIdStr)
-      );
-      
+      const q = query(conversationsRef, where("orderId", "==", orderIdStr));
+
       const querySnapshot = await getDocs(q);
-      
+
       if (!querySnapshot.empty) {
         // Conversation exists
         const conversationDoc = querySnapshot.docs[0];
@@ -119,7 +128,7 @@ export default function ChatPage() {
           lastMessageTime: serverTimestamp(),
           unreadCount: 0,
         };
-        
+
         const docRef = await addDoc(conversationsRef, newConversation);
         setConversationId(docRef.id);
       }
@@ -144,32 +153,41 @@ export default function ChatPage() {
   // Set up messages listener
   useEffect(() => {
     if (!conversationId || !user?.id) return;
-    
+
     // Set up listener for messages in this conversation
-    const messagesRef = collection(db, "chat_conversations", conversationId, "messages");
+    const messagesRef = collection(
+      db,
+      "chat_conversations",
+      conversationId,
+      "messages"
+    );
     const q = query(messagesRef, orderBy("timestamp", "asc"));
-    
+
     const unsubscribe = onSnapshot(q, (snapshot) => {
-      const messagesList = snapshot.docs.map(doc => ({
+      const messagesList = snapshot.docs.map((doc) => ({
         id: doc.id,
         ...doc.data(),
         // Convert Firestore timestamp to regular Date if needed
-        timestamp: doc.data().timestamp instanceof Timestamp
-          ? doc.data().timestamp.toDate()
-          : doc.data().timestamp,
+        timestamp:
+          doc.data().timestamp instanceof Timestamp
+            ? doc.data().timestamp.toDate()
+            : doc.data().timestamp,
       })) as Message[];
-      
+
       setMessages(messagesList);
-      
+
       // Mark messages as read if they were sent to the current user
       messagesList.forEach(async (message) => {
-        if (
-          message.senderType === "customer" && 
-          !message.read
-        ) {
-          const messageRef = doc(db, "chat_conversations", conversationId, "messages", message.id);
+        if (message.senderType === "customer" && !message.read) {
+          const messageRef = doc(
+            db,
+            "chat_conversations",
+            conversationId,
+            "messages",
+            message.id
+          );
           await updateDoc(messageRef, { read: true });
-          
+
           // Update unread count in conversation
           const convRef = doc(db, "chat_conversations", conversationId);
           await updateDoc(convRef, {
@@ -177,11 +195,11 @@ export default function ChatPage() {
           });
         }
       });
-      
+
       // Scroll to bottom after messages load
       setTimeout(scrollToBottom, 100);
     });
-    
+
     return () => unsubscribe();
   }, [conversationId, user?.id]);
 
@@ -195,31 +213,37 @@ export default function ChatPage() {
   };
 
   const handleSendMessage = async () => {
-    if (!message.trim() || !user?.id || !conversationId || !customerData?.id) return;
+    if (!message.trim() || !user?.id || !conversationId || !customerData?.id)
+      return;
 
     try {
       setIsSending(true);
-      
+
       // Add new message to Firestore
-      const messagesRef = collection(db, "chat_conversations", conversationId, "messages");
+      const messagesRef = collection(
+        db,
+        "chat_conversations",
+        conversationId,
+        "messages"
+      );
       await addDoc(messagesRef, {
-        text: message.trim(),      
-        message: message.trim(),   
+        text: message.trim(),
+        message: message.trim(),
         senderId: user.id,
-        senderName: user.name || 'Shopper',
+        senderName: user.name || "Shopper",
         senderType: "shopper",
         recipientId: customerData.id,
         timestamp: serverTimestamp(),
-        read: false
+        read: false,
       });
-      
+
       // Update conversation with last message
       const convRef = doc(db, "chat_conversations", conversationId);
       await updateDoc(convRef, {
         lastMessage: message.trim(),
         lastMessageTime: serverTimestamp(),
       });
-      
+
       // Clear input
       setMessage("");
     } catch (error) {
@@ -241,38 +265,53 @@ export default function ChatPage() {
   };
 
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (!e.target.files || !e.target.files[0] || !user?.id || !conversationId || !customerData?.id) return;
-    
+    if (
+      !e.target.files ||
+      !e.target.files[0] ||
+      !user?.id ||
+      !conversationId ||
+      !customerData?.id
+    )
+      return;
+
     try {
       setUploadingImage(true);
       const file = e.target.files[0];
-      
+
       // Upload image to Firebase Storage
-      const storageRef = ref(storage, `chat_images/${orderId}/${Date.now()}_${file.name}`);
+      const storageRef = ref(
+        storage,
+        `chat_images/${orderId}/${Date.now()}_${file.name}`
+      );
       const snapshot = await uploadBytes(storageRef, file);
       const downloadURL = await getDownloadURL(snapshot.ref);
-      
+
       // Add message with image
-      const messagesRef = collection(db, "chat_conversations", conversationId, "messages");
+      const messagesRef = collection(
+        db,
+        "chat_conversations",
+        conversationId,
+        "messages"
+      );
       await addDoc(messagesRef, {
-        text: "",         // Use text field for consistency
-        message: "",      // Also include message field for compatibility
+        text: "", // Use text field for consistency
+        message: "", // Also include message field for compatibility
         senderId: user.id,
-        senderName: user.name || 'Shopper',
+        senderName: user.name || "Shopper",
         senderType: "shopper",
         recipientId: customerData.id,
         timestamp: serverTimestamp(),
         read: false,
-        image: downloadURL
+        image: downloadURL,
       });
-      
+
       // Update conversation
       const convRef = doc(db, "chat_conversations", conversationId);
       await updateDoc(convRef, {
         lastMessage: "📷 Image",
         lastMessageTime: serverTimestamp(),
       });
-      
+
       setShowAttachmentOptions(false);
     } catch (error) {
       console.error("Error uploading image:", error);
@@ -386,7 +425,8 @@ export default function ChatPage() {
               </svg>
               <p>No messages yet</p>
               <p className="text-sm">
-                Start the conversation with {customerData?.name || "the customer"}
+                Start the conversation with{" "}
+                {customerData?.name || "the customer"}
               </p>
             </div>
           ) : (
@@ -404,7 +444,7 @@ export default function ChatPage() {
                     const showAvatar =
                       index === 0 ||
                       group.messages[index - 1].senderType !== msg.senderType;
-                    
+
                     // Get message content from either text or message field
                     const messageContent = msg.text || msg.message || "";
 
@@ -417,7 +457,10 @@ export default function ChatPage() {
                       >
                         {!isShopperMessage && showAvatar && (
                           <Avatar
-                            src={customerData?.avatar || "/placeholder.svg?height=80&width=80"}
+                            src={
+                              customerData?.avatar ||
+                              "/placeholder.svg?height=80&width=80"
+                            }
                             alt={customerData?.name || "Customer"}
                             size="xs"
                             circle
@@ -438,7 +481,9 @@ export default function ChatPage() {
                             }`}
                           >
                             {messageContent && (
-                              <p className="whitespace-pre-wrap">{messageContent}</p>
+                              <p className="whitespace-pre-wrap">
+                                {messageContent}
+                              </p>
                             )}
                             {msg.image && (
                               <div className="mt-2">
@@ -570,7 +615,14 @@ export default function ChatPage() {
                         strokeWidth="2"
                         className="h-5 w-5 text-blue-500"
                       >
-                        <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
+                        <rect
+                          x="3"
+                          y="3"
+                          width="18"
+                          height="18"
+                          rx="2"
+                          ry="2"
+                        />
                         <circle cx="8.5" cy="8.5" r="1.5" />
                         <polyline points="21 15 16 10 5 21" />
                       </svg>

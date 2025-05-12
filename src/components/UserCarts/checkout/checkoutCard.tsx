@@ -47,14 +47,14 @@ export default function CheckoutItems({
   const [, setTick] = useState(0);
   // Mobile checkout card expand/collapse state
   const [isExpanded, setIsExpanded] = useState(false);
-  
+
   useEffect(() => {
     const handleAddressChange = () => setTick((t) => t + 1);
     window.addEventListener("addressChanged", handleAddressChange);
     return () =>
       window.removeEventListener("addressChanged", handleAddressChange);
   }, []);
-  
+
   const [promoCode, setPromoCode] = useState("");
   const [discount, setDiscount] = useState(0);
   const [appliedPromo, setAppliedPromo] = useState<string | null>(null);
@@ -101,22 +101,26 @@ export default function CheckoutItems({
   const distance3D = Math.sqrt(distanceKm * distanceKm + altKm * altKm);
   const travelTime = Math.ceil(distance3D); // assume 1 km ≈ 1 minute travel
   const totalTimeMinutes = travelTime + shoppingTime;
-  
+
   // Calculate the delivery timestamp (current time + totalTimeMinutes)
   const deliveryDate = new Date(Date.now() + totalTimeMinutes * 60000);
   const deliveryTimestamp = deliveryDate.toISOString();
-  
+
   // Format the delivery time for display
   let deliveryTime: string;
   const diffMs = deliveryDate.getTime() - Date.now();
   const days = Math.floor(diffMs / (1000 * 60 * 60 * 24));
   const hours = Math.floor((diffMs % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
   const mins = Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60));
-  
+
   if (days > 0) {
-    deliveryTime = `Will be delivered in ${days} day${days > 1 ? 's' : ''}${hours > 0 ? ` ${hours}h` : ''}`;
+    deliveryTime = `Will be delivered in ${days} day${days > 1 ? "s" : ""}${
+      hours > 0 ? ` ${hours}h` : ""
+    }`;
   } else if (hours > 0) {
-    deliveryTime = `Will be delivered in ${hours}h${mins > 0 ? ` ${mins}m` : ''}`;
+    deliveryTime = `Will be delivered in ${hours}h${
+      mins > 0 ? ` ${mins}m` : ""
+    }`;
   } else {
     deliveryTime = `Will be delivered in ${mins} minutes`;
   }
@@ -214,7 +218,7 @@ export default function CheckoutItems({
       if (!res.ok) {
         throw new Error(data.error || "Checkout failed");
       }
-      
+
       // Show success toast instead of modal
       toaster.push(
         <Notification type="success" header="Order Confirmed">
@@ -222,12 +226,11 @@ export default function CheckoutItems({
         </Notification>,
         { placement: "topEnd" }
       );
-      
+
       // Short delay before redirecting to give the user time to see the toast
       setTimeout(() => {
         router.push("/CurrentPendingOrders");
       }, 1500);
-      
     } catch (err: any) {
       console.error("Checkout error:", err);
       toaster.push(
@@ -249,13 +252,15 @@ export default function CheckoutItems({
   return (
     <>
       {/* Mobile View - Only visible on small devices */}
-      <div className="fixed bottom-0 left-0 right-0 z-50 w-full bg-white shadow-2xl transition-all duration-300 md:hidden" 
-           style={{ 
-             maxHeight: isExpanded ? '90vh' : '160px',
-             overflow: 'hidden'
-           }}>
+      <div
+        className="fixed bottom-0 left-0 right-0 z-50 w-full bg-white shadow-2xl transition-all duration-300 md:hidden"
+        style={{
+          maxHeight: isExpanded ? "90vh" : "160px",
+          overflow: "hidden",
+        }}
+      >
         {/* Header with toggle button */}
-        <div 
+        <div
           className="flex items-center justify-between border-b p-4"
           onClick={toggleExpand} // Make the entire header clickable to toggle
         >
@@ -269,22 +274,32 @@ export default function CheckoutItems({
             <span className="mr-2 font-bold text-green-600">
               {formatCurrency(finalTotal)}
             </span>
-            <button 
-              className="flex h-8 w-8 items-center justify-center rounded-full bg-gray-100"
-            >
+            <button className="flex h-8 w-8 items-center justify-center rounded-full bg-gray-100">
               {isExpanded ? (
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="h-5 w-5">
+                <svg
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  className="h-5 w-5"
+                >
                   <polyline points="18 15 12 9 6 15"></polyline>
                 </svg>
               ) : (
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="h-5 w-5">
+                <svg
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  className="h-5 w-5"
+                >
                   <polyline points="6 9 12 15 18 9"></polyline>
                 </svg>
               )}
             </button>
           </div>
         </div>
-        
+
         {/* Checkout button when collapsed */}
         {!isExpanded && (
           <div className="p-4">
@@ -300,88 +315,93 @@ export default function CheckoutItems({
             </Button>
           </div>
         )}
-        
+
         {/* Expanded content */}
-        <div className={`p-4 ${isExpanded ? 'block' : 'hidden'} overflow-y-auto`} style={{ maxHeight: 'calc(90vh - 60px)' }}>
-        <div>
-          <p className="mb-2 text-gray-600">Do you have any promo code?</p>
-          <div className="flex flex-wrap gap-2">
-            <Input
-              value={promoCode}
-              onChange={setPromoCode}
-              placeholder="Enter promo code"
-              className="max-w-md"
-            />
-            <Button
-              appearance="primary"
-              color="green"
-              className="bg-green-100 font-medium text-green-600"
-              onClick={handleApplyPromo}
-            >
-              Apply
-            </Button>
-          </div>
-        </div>
-
-        <hr className="mt-4" />
-
-        <div className="mt-6 flex flex-col gap-2">
-          <div className="flex justify-between">
-            <span className="text-sm text-gray-600">Subtotal</span>
-            <span className="text-sm">{formatCurrency(Total)}</span>
-          </div>
-          {discount > 0 && (
-            <div className="flex justify-between text-green-600">
-              <span className="text-sm">Discount ({appliedPromo})</span>
-              <span className="text-sm">-{formatCurrency(discount)}</span>
+        <div
+          className={`p-4 ${isExpanded ? "block" : "hidden"} overflow-y-auto`}
+          style={{ maxHeight: "calc(90vh - 60px)" }}
+        >
+          <div>
+            <p className="mb-2 text-gray-600">Do you have any promo code?</p>
+            <div className="flex flex-wrap gap-2">
+              <Input
+                value={promoCode}
+                onChange={setPromoCode}
+                placeholder="Enter promo code"
+                className="max-w-md"
+              />
+              <Button
+                appearance="primary"
+                color="green"
+                className="bg-green-100 font-medium text-green-600"
+                onClick={handleApplyPromo}
+              >
+                Apply
+              </Button>
             </div>
-          )}
-          <div className="flex justify-between">
-            <span className="text-sm text-gray-600">Units</span>
-            <span className="text-sm">{totalUnits}</span>
           </div>
-          <div className="flex justify-between">
-            <span className="text-sm text-gray-600">Service Fee</span>
-            <span className="text-sm">{formatCurrency(serviceFee)}</span>
-          </div>
-          <div className="flex justify-between">
-            <span className="text-sm text-gray-600">Delivery Fee</span>
-            <span className="text-sm">{formatCurrency(deliveryFee)}</span>
-          </div>
-          <div className="flex justify-between">
-            <span className="text-sm text-gray-600">Delivery Time</span>
-              <span className="text-sm font-medium text-green-600">{deliveryTime}</span>
-          </div>
-          <div className="mt-2 flex justify-between">
-            <span className="text-lg font-bold">Total</span>
-            <span className="text-lg font-bold text-green-500">
-              {formatCurrency(finalTotal)}
-            </span>
-          </div>
-          {/* Delivery Notes Input */}
-          <div className="mt-2">
-            <h3 className="mb-1 font-medium">Add a Note</h3>
-            <Input
-              as="textarea"
-              rows={2}
-              value={deliveryNotes}
-              onChange={setDeliveryNotes}
-              placeholder="Enter any delivery instructions or notes"
+
+          <hr className="mt-4" />
+
+          <div className="mt-6 flex flex-col gap-2">
+            <div className="flex justify-between">
+              <span className="text-sm text-gray-600">Subtotal</span>
+              <span className="text-sm">{formatCurrency(Total)}</span>
+            </div>
+            {discount > 0 && (
+              <div className="flex justify-between text-green-600">
+                <span className="text-sm">Discount ({appliedPromo})</span>
+                <span className="text-sm">-{formatCurrency(discount)}</span>
+              </div>
+            )}
+            <div className="flex justify-between">
+              <span className="text-sm text-gray-600">Units</span>
+              <span className="text-sm">{totalUnits}</span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-sm text-gray-600">Service Fee</span>
+              <span className="text-sm">{formatCurrency(serviceFee)}</span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-sm text-gray-600">Delivery Fee</span>
+              <span className="text-sm">{formatCurrency(deliveryFee)}</span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-sm text-gray-600">Delivery Time</span>
+              <span className="text-sm font-medium text-green-600">
+                {deliveryTime}
+              </span>
+            </div>
+            <div className="mt-2 flex justify-between">
+              <span className="text-lg font-bold">Total</span>
+              <span className="text-lg font-bold text-green-500">
+                {formatCurrency(finalTotal)}
+              </span>
+            </div>
+            {/* Delivery Notes Input */}
+            <div className="mt-2">
+              <h3 className="mb-1 font-medium">Add a Note</h3>
+              <Input
+                as="textarea"
+                rows={2}
+                value={deliveryNotes}
+                onChange={setDeliveryNotes}
+                placeholder="Enter any delivery instructions or notes"
                 onClick={(e) => e.stopPropagation()} // Prevent closing when clicking on input
-            />
-          </div>
-          {/* Proceed to Checkout Button */}
-          <div className="mt-2">
-            <Button
-              appearance="primary"
-              color="green"
-              block
-              size="lg"
-              loading={isCheckoutLoading}
-              onClick={handleProceedToCheckout}
-            >
-              Proceed to Checkout
-            </Button>
+              />
+            </div>
+            {/* Proceed to Checkout Button */}
+            <div className="mt-2">
+              <Button
+                appearance="primary"
+                color="green"
+                block
+                size="lg"
+                loading={isCheckoutLoading}
+                onClick={handleProceedToCheckout}
+              >
+                Proceed to Checkout
+              </Button>
             </div>
           </div>
         </div>
@@ -458,7 +478,9 @@ export default function CheckoutItems({
                   <circle cx="12" cy="12" r="10" />
                   <polyline points="12 6 12 12 16 14" />
                 </svg>
-                <span className="font-medium text-green-600">{deliveryTime}</span>
+                <span className="font-medium text-green-600">
+                  {deliveryTime}
+                </span>
               </div>
             </div>
 

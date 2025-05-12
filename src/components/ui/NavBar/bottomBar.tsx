@@ -458,15 +458,15 @@ export default function BottomBar() {
                   strokeWidth="1.5"
                   strokeLinecap="round"
                 />
-                      <path
+                <path
                   d="M5.5 15H7.5"
                   stroke="#4d4d4d"
                   strokeWidth="1.5"
                   strokeLinecap="round"
                 />
-                      <path
+                <path
                   d="M17.5 7.5C18.0523 7.5 18.5 7.05228 18.5 6.5C18.5 5.94772 18.0523 5.5 17.5 5.5C16.9477 5.5 16.5 5.94772 16.5 6.5C16.5 7.05228 16.9477 7.5 17.5 7.5Z"
-                        fill="#4d4d4d"
+                  fill="#4d4d4d"
                 />
                 <path
                   d="M15.5 3.5H9.5C7.29086 3.5 5.5 5.29086 5.5 7.5V16.5C5.5 18.7091 7.29086 20.5 9.5 20.5H15.5C17.7091 20.5 19.5 18.7091 19.5 16.5V7.5C19.5 5.29086 17.7091 3.5 15.5 3.5Z"

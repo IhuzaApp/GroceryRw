@@ -17,8 +17,7 @@ const publicPaths = [
 // Helper function to check if a path is public
 const isPublicPath = (path: string) => {
   return publicPaths.some(
-    (publicPath) =>
-      path === publicPath || path.startsWith(`${publicPath}/`)
+    (publicPath) => path === publicPath || path.startsWith(`${publicPath}/`)
   );
 };
 
@@ -51,15 +50,18 @@ export async function middleware(req: NextRequest) {
     // If no token is found, check for cookies before redirecting
   if (!token) {
       // Check for any auth-related cookies as a fallback
-      const sessionCookie = req.cookies.get("next-auth.session-token") || 
-                            req.cookies.get("__Secure-next-auth.session-token");
-                            
+      const sessionCookie =
+        req.cookies.get("next-auth.session-token") ||
+        req.cookies.get("__Secure-next-auth.session-token");
+
       if (sessionCookie) {
-        console.log("Session cookie found but token verification failed, allowing access");
+        console.log(
+          "Session cookie found but token verification failed, allowing access"
+        );
         // If we have a session cookie but token verification failed, let the request through
         return NextResponse.next();
       }
-      
+
     const url = req.nextUrl.clone();
     url.pathname = "/Auth/Login";
     url.search = `callbackUrl=${encodeURIComponent(req.url)}`;
@@ -79,7 +81,7 @@ export async function middleware(req: NextRequest) {
   return NextResponse.next();
   } catch (error) {
     console.error("Authentication middleware error:", error);
-    
+
     // In case of any error, allow the request to proceed
     // The pages themselves can handle authentication if needed
     return NextResponse.next();
@@ -87,7 +89,5 @@ export async function middleware(req: NextRequest) {
 }
 
 export const config = {
-  matcher: [
-    "/((?!api|_next/static|_next/image|favicon.ico).*)",
-  ],
+  matcher: ["/((?!api|_next/static|_next/image|favicon.ico).*)"],
 };

@@ -87,9 +87,10 @@ export default async function handler(
 
   // Ensure we have a single string ID
   const orderId = Array.isArray(id) ? id[0] : id;
-  
+
   // Validate the UUID format
-  const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+  const uuidRegex =
+    /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
   if (!uuidRegex.test(orderId)) {
     return res.status(400).json({ error: "Invalid order ID format" });
   }
@@ -103,14 +104,14 @@ export default async function handler(
       GET_ORDER_DETAILS,
       { id: orderId }
     );
-    
+
     // Check if order exists
     if (!data.Orders || data.Orders.length === 0) {
       return res.status(404).json({ error: "Order not found" });
     }
-    
+
     const order = data.Orders[0];
-    
+
     // Format timestamps to human-readable strings
     const formattedOrder = {
       ...order,
@@ -119,11 +120,11 @@ export default async function handler(
         timeStyle: "short",
       }),
       // Handle case where estimatedDelivery might be null
-      estimatedDelivery: order.estimatedDelivery 
-        ? new Date(order.estimatedDelivery).toISOString() 
-        : null
+      estimatedDelivery: order.estimatedDelivery
+        ? new Date(order.estimatedDelivery).toISOString()
+        : null,
     };
-    
+
     res.status(200).json({ order: formattedOrder });
   } catch (error) {
     console.error("Error fetching order details:", error);

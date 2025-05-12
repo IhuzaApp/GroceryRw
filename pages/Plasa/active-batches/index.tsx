@@ -57,7 +57,7 @@ export const getServerSideProps: GetServerSideProps<
 
   // Check if the user is a shopper
   const userRole = (session as any)?.user?.role;
-  if (userRole !== 'shopper') {
+  if (userRole !== "shopper") {
     return {
       props: {
         activeOrders: [],
@@ -152,8 +152,10 @@ export const getServerSideProps: GetServerSideProps<
     type OrderData = typeof data.Orders[number];
 
     // Log the number of orders found
-    console.log(`Found ${data.Orders.length} active orders for shopper ${userId} on server-side`);
-    
+    console.log(
+      `Found ${data.Orders.length} active orders for shopper ${userId} on server-side`
+    );
+
     // If no orders were found, return an empty array but no error
     if (data.Orders.length === 0) {
       return {
