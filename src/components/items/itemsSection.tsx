@@ -253,26 +253,26 @@ function ProductCard({
                   </svg>
                 )}
               </Button>
-              <Button
-                appearance="primary"
-                size="sm"
+            <Button
+              appearance="primary"
+              size="sm"
                 className="flex h-8 w-8 items-center justify-center rounded-full bg-gray-200 p-0 text-gray-700 hover:bg-gray-300"
-                onClick={() => {
-                  setShowModal(true);
-                  setSelectedQuantity(1);
-                }}
+              onClick={() => {
+                setShowModal(true);
+                setSelectedQuantity(1);
+              }}
+            >
+              <svg
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                className="h-4 w-4"
               >
-                <svg
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  className="h-4 w-4"
-                >
-                  <line x1="12" y1="5" x2="12" y2="19" />
-                  <line x1="5" y1="12" x2="19" y2="12" />
-                </svg>
-              </Button>
+                <line x1="12" y1="5" x2="12" y2="19" />
+                <line x1="5" y1="12" x2="19" y2="12" />
+              </svg>
+            </Button>
             </div>
           </div>
         </div>
@@ -314,15 +314,15 @@ function ProductCard({
                   >
                     -
                   </button>
-                  <input
-                    type="number"
-                    min={1}
-                    value={selectedQuantity}
-                    onChange={(e) =>
-                      setSelectedQuantity(
-                        Math.max(1, parseInt(e.target.value, 10) || 1)
-                      )
-                    }
+              <input
+                type="number"
+                min={1}
+                value={selectedQuantity}
+                onChange={(e) =>
+                  setSelectedQuantity(
+                    Math.max(1, parseInt(e.target.value, 10) || 1)
+                  )
+                }
                     className="h-8 w-16 border-y border-gray-300 p-0 text-center focus:outline-none"
                     onFocus={(e) => e.target.select()}
                     autoFocus

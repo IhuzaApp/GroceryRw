@@ -38,6 +38,7 @@ export default function ActiveBatches({
   const [isMobile, setIsMobile] = useState(false);
   const [activeOrders, setActiveOrders] = useState<Order[]>(initialOrders);
   const [error, setError] = useState<string | null>(initialError);
+  const [fetchAttempted, setFetchAttempted] = useState(false);
   const fetchedRef = useRef(false);
 
   useEffect(() => {
@@ -98,7 +99,18 @@ export default function ActiveBatches({
         }
 
         const data = await response.json();
-        setActiveOrders(data);
+        
+        // Handle the new response format
+        if (data.noOrdersFound) {
+          // This is not an error, just no batches found
+          setActiveOrders([]);
+          console.log("No active batches found:", data.message);
+        } else {
+          // Normal array of orders
+          setActiveOrders(Array.isArray(data) ? data : []);
+        }
+        
+        setFetchAttempted(true);
       } catch (err) {
         // Don't set error if it was canceled
         if (err instanceof Error && err.name === "AbortError") {
@@ -109,6 +121,7 @@ export default function ActiveBatches({
         const errorMessage =
           err instanceof Error ? err.message : "An unknown error occurred";
         setError(errorMessage);
+        setFetchAttempted(true);
         toaster.push(
           <Message showIcon type="error" header="Error">
             {errorMessage}
@@ -214,13 +227,25 @@ export default function ActiveBatches({
             </div>
             <h3 className="mb-2 text-lg font-medium">No Active Batches</h3>
             <p className="mb-4 text-gray-500">
-              You don&#39;t have any active batches at the moment.
+              {fetchAttempted || initialOrders !== undefined 
+                ? "You don't have any active batches at the moment."
+                : "Unable to fetch your active batches. Please try again."}
             </p>
+            <div className="flex flex-col items-center justify-center gap-3 sm:flex-row">
             <Link href="/Plasa">
               <button className="rounded-md bg-[#125C13] px-4 py-2 font-medium text-white transition-colors hover:bg-[#0A400B]">
                 Find Orders
               </button>
             </Link>
+              {(!fetchAttempted && !initialOrders.length) && (
+                <button 
+                  onClick={() => window.location.reload()} 
+                  className="rounded-md border border-gray-300 px-4 py-2 font-medium text-gray-700 transition-colors hover:bg-gray-100"
+                >
+                  Retry Loading
+                </button>
+              )}
+            </div>
           </div>
         )}
       </main>

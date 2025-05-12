@@ -3,14 +3,16 @@ import { useRouter } from 'next/router';
 import { useSession } from 'next-auth/react';
 import RootLayout from '@components/ui/layout';
 import Link from 'next/link';
+import Image from 'next/image';
 import { Avatar, Button, Input, Loader, Panel } from 'rsuite';
 import { 
   collection, query, where, orderBy, addDoc, 
   serverTimestamp, onSnapshot, Timestamp,
-  doc, getDoc, updateDoc
+  doc, getDoc, updateDoc, getDocs
 } from 'firebase/firestore';
-import { db } from '../../src/lib/firebase';
+import { db, storage } from '../../src/lib/firebase';
 import { formatCurrency } from '../../src/lib/formatCurrency';
+import { getStorage, ref, uploadBytes, getDownloadURL } from "firebase/storage";
 
 // Helper to format date for messages
 function formatMessageDate(timestamp: any) {
@@ -45,29 +47,69 @@ function formatOrderID(id?: string | number): string {
 // Define message interface
 interface Message {
   id: string;
-  text: string;
+  text?: string;         // Customer message format
+  message?: string;      // Shopper message format (for compatibility)
   senderId: string;
+  senderType: "customer" | "shopper";
   recipientId: string;
   timestamp: any;
   read: boolean;
-  [key: string]: any;
+  image?: string;
 }
 
 // Message component
 interface MessageProps {
   message: Message;
   isCurrentUser: boolean;
+  senderName: string;
 }
 
-const Message: React.FC<MessageProps> = ({ message, isCurrentUser }) => {
+const Message: React.FC<MessageProps> = ({ message, isCurrentUser, senderName }) => {
+  // Get message content from either text or message field
+  const messageContent = message.text || message.message || "";
+  
   return (
     <div className={`flex mb-4 ${isCurrentUser ? 'justify-end' : 'justify-start'}`}>
+      {!isCurrentUser && (
+        <Avatar
+          src="/placeholder.svg?height=40&width=40"
+          alt="Shopper"
+          size="xs"
+          circle
+          className="mr-2 self-end"
+        />
+      )}
       <div className={`max-w-[75%] ${isCurrentUser ? 'bg-green-100 text-green-900' : 'bg-gray-100 text-gray-900'} p-3 rounded-lg`}>
-        <div className="text-sm">{message.text}</div>
-        <div className="text-xs text-right mt-1 text-gray-500">
-          {formatMessageDate(message.timestamp)}
+        {!isCurrentUser && (
+          <div className="text-xs font-medium mb-1 text-gray-600">{senderName}</div>
+        )}
+        <div className="text-sm whitespace-pre-wrap">{messageContent}</div>
+        {message.image && (
+          <div className="mt-2">
+            <Image
+              src={message.image}
+              alt="Shared image"
+              width={300}
+              height={200}
+              className="max-w-full rounded-lg"
+            />
+          </div>
+        )}
+        <div className="mt-1 flex items-center justify-end">
+          <span className="text-xs text-gray-500">
+            {formatMessageDate(message.timestamp)}
+          </span>
         </div>
       </div>
+      {isCurrentUser && (
+        <Avatar
+          src="/placeholder.svg?height=40&width=40"
+          alt="You"
+          size="xs"
+          circle
+          className="ml-2 self-end"
+        />
+      )}
     </div>
   );
 };
@@ -81,8 +123,13 @@ export default function ChatPage() {
   const [messages, setMessages] = useState<Message[]>([]);
   const [newMessage, setNewMessage] = useState('');
   const [loading, setLoading] = useState(true);
+  const [isSending, setIsSending] = useState(false);
+  const [showAttachmentOptions, setShowAttachmentOptions] = useState(false);
+  const [uploadingImage, setUploadingImage] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const [shopper, setShopper] = useState<any>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [conversationId, setConversationId] = useState<string | null>(null);
 
   // Scroll to bottom of messages
   const scrollToBottom = () => {
@@ -101,13 +148,21 @@ export default function ChatPage() {
             setOrder(data.order);
             
             // Fetch shopper details if available
-            if (data.order.shopper_id) {
-              const shopperDocRef = doc(db, 'shoppers', data.order.shopper_id);
-              const shopperDoc = await getDoc(shopperDocRef);
+            // The shopper ID might be in assignedTo.id or shopper_id
+            const shopperId = data.order.assignedTo?.id || data.order.shopper_id;
+            if (shopperId) {
+              setShopper({
+                id: shopperId,
+                name: data.order.assignedTo?.name || "Shopper",
+                avatar: data.order.assignedTo?.profile_picture || "/placeholder.svg?height=80&width=80"
+              });
               
-              if (shopperDoc.exists()) {
-                setShopper(shopperDoc.data());
+              // Get or create conversation immediately if we have shopper ID
+              if (session?.user?.id) {
+                getOrCreateConversation(shopperId);
               }
+            } else {
+              console.error("No shopper assigned to this order");
             }
           }
         } catch (error) {
@@ -119,44 +174,105 @@ export default function ChatPage() {
       
       fetchOrder();
     }
-  }, [orderId, status]);
+  }, [orderId, status, session?.user?.id]);
+
+  // Get or create conversation
+  const getOrCreateConversation = async (shopperId: string) => {
+    if (!orderId || !session?.user?.id) return;
+
+    try {
+      console.log("Creating conversation with:", {
+        orderId,
+        customerId: session.user.id,
+        shopperId
+      });
+      
+      // Check if conversation exists
+      const conversationsRef = collection(db, "chat_conversations");
+      const q = query(
+        conversationsRef,
+        where("orderId", "==", orderId)
+      );
+      
+      const querySnapshot = await getDocs(q);
+      
+      if (!querySnapshot.empty) {
+        // Conversation exists
+        const conversationDoc = querySnapshot.docs[0];
+        console.log("Found existing conversation:", conversationDoc.id);
+        setConversationId(conversationDoc.id);
+      } else {
+        // Create new conversation
+        const newConversation = {
+          orderId,
+          customerId: session.user.id,
+          shopperId: shopperId,
+          createdAt: serverTimestamp(),
+          lastMessage: "",
+          lastMessageTime: serverTimestamp(),
+          unreadCount: 0,
+        };
+        
+        console.log("Creating new conversation:", newConversation);
+        const docRef = await addDoc(conversationsRef, newConversation);
+        console.log("Created conversation:", docRef.id);
+        setConversationId(docRef.id);
+      }
+    } catch (error) {
+      console.error("Error getting/creating conversation:", error);
+    }
+  };
 
   // Set up messages listener
   useEffect(() => {
-    if (orderId && status === 'authenticated') {
-      const messagesRef = collection(db, 'messages');
-      const q = query(
-        messagesRef,
-        where('orderId', '==', orderId),
-        orderBy('timestamp', 'asc')
-      );
+    if (!conversationId || !session?.user?.id) return;
+    
+    console.log("Setting up message listener for conversation:", conversationId);
+    
+    // Set up listener for messages in this conversation
+    const messagesRef = collection(db, "chat_conversations", conversationId, "messages");
+    const q = query(messagesRef, orderBy("timestamp", "asc"));
+    
+    const unsubscribe = onSnapshot(q, (snapshot) => {
+      console.log("Messages snapshot received, count:", snapshot.docs.length);
       
-      const unsubscribe = onSnapshot(q, (snapshot) => {
-        const messagesList = snapshot.docs.map(doc => ({
-          id: doc.id,
-          ...doc.data()
-        })) as Message[];
-        
-        setMessages(messagesList);
-        
-        // Mark messages as read
-        messagesList.forEach(async (message) => {
-          if (
-            message.recipientId === session?.user?.id && 
-            !message.read
-          ) {
-            const messageRef = doc(db, 'messages', message.id);
-            await updateDoc(messageRef, { read: true });
-          }
-        });
-        
-        // Scroll to bottom after messages load
-        setTimeout(scrollToBottom, 100);
+      const messagesList = snapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data(),
+        // Convert Firestore timestamp to regular Date if needed
+        timestamp: doc.data().timestamp instanceof Timestamp
+          ? doc.data().timestamp.toDate()
+          : doc.data().timestamp,
+      })) as Message[];
+      
+      console.log("Processed messages:", messagesList);
+      setMessages(messagesList);
+      
+      // Mark messages as read if they were sent to the current user
+      messagesList.forEach(async (message) => {
+        if (
+          message.senderType === "shopper" && 
+          !message.read
+        ) {
+          const messageRef = doc(db, "chat_conversations", conversationId, "messages", message.id);
+          await updateDoc(messageRef, { read: true });
+          
+          // Update unread count in conversation
+          const convRef = doc(db, "chat_conversations", conversationId);
+          await updateDoc(convRef, {
+            unreadCount: 0,
+          });
+        }
       });
       
-      return () => unsubscribe();
-    }
-  }, [orderId, session, status]);
+      // Scroll to bottom after messages load
+      setTimeout(scrollToBottom, 100);
+    }, (error) => {
+      console.error("Error in messages listener:", error);
+    });
+    
+    return () => unsubscribe();
+  }, [conversationId, session?.user?.id]);
 
   // Scroll to bottom when messages change
   useEffect(() => {
@@ -164,29 +280,113 @@ export default function ChatPage() {
   }, [messages]);
 
   // Handle sending a new message
-  const handleSendMessage = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleSendMessage = async (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
     
-    if (!newMessage.trim() || !session?.user?.id || !orderId || !order?.shopper_id) {
+    if (!newMessage.trim() || !session?.user?.id || !conversationId || !shopper?.id) {
+      console.log("Cannot send message, missing data:", {
+        hasMessage: !!newMessage.trim(),
+        hasUser: !!session?.user?.id,
+        hasConversation: !!conversationId,
+        hasShopperId: !!shopper?.id
+      });
       return;
     }
     
     try {
-      // Add new message to Firestore
-      await addDoc(collection(db, 'messages'), {
-        orderId,
+      setIsSending(true);
+      
+      console.log("Sending message:", {
         text: newMessage.trim(),
         senderId: session.user.id,
         senderName: session.user.name || 'Customer',
-        recipientId: order.shopper_id,
+        recipientId: shopper.id
+      });
+      
+      // Add new message to Firestore
+      const messagesRef = collection(db, "chat_conversations", conversationId, "messages");
+      await addDoc(messagesRef, {
+        text: newMessage.trim(),     // Use text field for customer messages
+        message: newMessage.trim(),  // Also include message field for compatibility
+        senderId: session.user.id,
+        senderName: session.user.name || 'Customer',
+        senderType: "customer",
+        recipientId: shopper.id,
         timestamp: serverTimestamp(),
         read: false
+      });
+      
+      // Update conversation with last message
+      const convRef = doc(db, "chat_conversations", conversationId);
+      await updateDoc(convRef, {
+        lastMessage: newMessage.trim(),
+        lastMessageTime: serverTimestamp(),
+        unreadCount: 1, // Increment unread count for shopper
       });
       
       // Clear input
       setNewMessage('');
     } catch (error) {
       console.error('Error sending message:', error);
+    } finally {
+      setIsSending(false);
+    }
+  };
+
+  const handleKeyPress = (e: React.KeyboardEvent) => {
+    if (e.key === "Enter" && !e.shiftKey) {
+      e.preventDefault();
+      handleSendMessage();
+    }
+  };
+
+  const handleAttachmentClick = () => {
+    setShowAttachmentOptions(!showAttachmentOptions);
+  };
+
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (!e.target.files || !e.target.files[0] || !session?.user?.id || !conversationId || !shopper?.id) return;
+    
+    try {
+      setUploadingImage(true);
+      const file = e.target.files[0];
+      
+      console.log("Uploading image for conversation:", conversationId);
+      
+      // Upload image to Firebase Storage
+      const storageRef = ref(storage, `chat_images/${orderId}/${Date.now()}_${file.name}`);
+      const snapshot = await uploadBytes(storageRef, file);
+      const downloadURL = await getDownloadURL(snapshot.ref);
+      
+      console.log("Image uploaded, URL:", downloadURL);
+      
+      // Add message with image
+      const messagesRef = collection(db, "chat_conversations", conversationId, "messages");
+      await addDoc(messagesRef, {
+        text: "",         // Use text field for customer messages
+        message: "",      // Also include message field for compatibility
+        senderId: session.user.id,
+        senderName: session.user.name || 'Customer',
+        senderType: "customer",
+        recipientId: shopper.id,
+        timestamp: serverTimestamp(),
+        read: false,
+        image: downloadURL
+      });
+      
+      // Update conversation
+      const convRef = doc(db, "chat_conversations", conversationId);
+      await updateDoc(convRef, {
+        lastMessage: "📷 Image",
+        lastMessageTime: serverTimestamp(),
+        unreadCount: 1, // Increment unread count for shopper
+      });
+      
+      setShowAttachmentOptions(false);
+    } catch (error) {
+      console.error('Error uploading image:', error);
+    } finally {
+      setUploadingImage(false);
     }
   };
 
@@ -253,7 +453,7 @@ export default function ChatPage() {
                   </svg>
                 </Button>
               </Link>
-              <h1 className="text-2xl font-bold">Chat</h1>
+              <h1 className="text-2xl font-bold">Sign In Required</h1>
             </div>
             <div className="rounded-lg bg-blue-50 p-6 text-center">
               <h2 className="mb-4 text-xl font-semibold text-blue-700">Sign in Required</h2>
@@ -296,16 +496,14 @@ export default function ChatPage() {
                   </svg>
                 </Button>
               </Link>
-              <h1 className="text-2xl font-bold">Chat</h1>
+              <h1 className="text-2xl font-bold">Order Not Found</h1>
             </div>
-            <div className="rounded-lg bg-yellow-50 p-6 text-center">
-              <h2 className="mb-4 text-xl font-semibold text-yellow-700">Order Not Found</h2>
-              <p className="mb-6 text-yellow-600">
-                The order you're looking for doesn't exist or you don't have permission to view it.
-              </p>
+            <div className="rounded-lg bg-red-50 p-6 text-center">
+              <h2 className="mb-4 text-xl font-semibold text-red-700">Order Not Found</h2>
+              <p className="mb-6 text-red-600">The order you are looking for does not exist or you don't have access to it.</p>
               <Link href="/Messages" passHref>
-                <Button appearance="primary" color="yellow">
-                  Return to Messages
+                <Button appearance="primary" color="red">
+                  Back to Messages
                 </Button>
               </Link>
             </div>
@@ -341,104 +539,189 @@ export default function ChatPage() {
               </Button>
             </Link>
             <h1 className="text-2xl font-bold">
-              Chat: Order #{formatOrderID(order.OrderID)}
+              Chat with {shopper?.name || 'Shopper'}
             </h1>
           </div>
-          
-          {/* Order info panel */}
-          <Panel bordered className="mb-4">
-            <div className="flex justify-between items-start">
+
+          {/* Order Info */}
+          <Panel shaded bordered className="mb-6">
+            <div className="flex justify-between">
               <div>
-                <h3 className="font-bold text-lg">
-                  {order.shop?.name || 'Shop'}
+                <h3 className="text-lg font-bold">
+                  Order #{formatOrderID(order.OrderID)}
                 </h3>
-                <p className="text-gray-600">
-                  Status: <span className="font-medium">{order.status}</span>
-                </p>
-                <p className="text-gray-600">
-                  Total: <span className="font-medium">{formatCurrency(order.total)}</span>
+                <p className="text-sm text-gray-500">
+                  {order.shop?.name || 'Shop'}
                 </p>
               </div>
               <div className="text-right">
-                <Link href={`/CurrentPendingOrders/viewOrderDetails?id=${order.id}`} passHref>
-                  <Button appearance="ghost" color="blue">
-                    View Order Details
-                  </Button>
-                </Link>
+                <div className="rounded bg-blue-100 px-2 py-0.5 text-xs font-medium text-blue-800">
+                  {order.status === 'shopping' ? 'Shopping' : 
+                    order.status === 'packing' ? 'Packing' : 
+                    order.status === 'on_the_way' ? 'On the way' : 
+                    order.status}
+                </div>
+                <p className="mt-1 text-sm font-bold">
+                  {formatCurrency(order.total || 0)}
+                </p>
               </div>
             </div>
-            
-            {shopper && (
-              <div className="flex items-center mt-4 pt-4 border-t">
-                <Avatar circle className="mr-3" size="sm">
-                  {shopper.name ? shopper.name.charAt(0).toUpperCase() : 'S'}
-                </Avatar>
-                <div>
-                  <p className="font-medium">
-                    Your Shopper: {shopper.name || 'Shopper'}
-                  </p>
-                  {shopper.phone && (
-                    <p className="text-sm text-gray-600">
-                      Contact: {shopper.phone}
-                    </p>
-                  )}
-                </div>
-              </div>
-            )}
           </Panel>
-          
-          {/* Messages container */}
-          <Panel bordered className="mb-4 p-0 overflow-hidden flex flex-col" style={{ height: '60vh' }}>
-            {/* Messages list */}
-            <div className="flex-1 overflow-y-auto p-4">
+
+          {/* Chat Messages */}
+          <Panel shaded bordered className="mb-6 min-h-[400px] max-h-[600px] overflow-y-auto">
+            <div className="p-4">
               {messages.length === 0 ? (
-                <div className="text-center py-12 text-gray-500">
-                  <p>No messages yet. Send a message to your shopper!</p>
-                </div>
-              ) : (
-                messages.map((message) => (
-                  <Message 
-                    key={message.id}
-                    message={message}
-                    isCurrentUser={message.senderId === session?.user?.id}
-                  />
-                ))
-              )}
-              <div ref={messagesEndRef} />
-            </div>
-            
-            {/* Message input */}
-            <div className="border-t p-3 bg-gray-50">
-              <form onSubmit={handleSendMessage} className="flex">
-                <Input 
-                  value={newMessage}
-                  onChange={(value) => setNewMessage(value)}
-                  placeholder="Type a message..."
-                  className="flex-1 mr-2"
-                />
-                <Button 
-                  appearance="primary" 
-                  color="green"
-                  type="submit"
-                  disabled={!newMessage.trim()}
-                >
+                <div className="flex h-64 flex-col items-center justify-center text-gray-500">
                   <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    width="24"
-                    height="24"
                     viewBox="0 0 24 24"
                     fill="none"
                     stroke="currentColor"
                     strokeWidth="2"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    className="h-5 w-5"
+                    className="mb-3 h-12 w-12"
                   >
-                    <path d="M22 2L11 13" />
-                    <path d="M22 2l-7 20-4-9-9-4 20-7z" />
+                    <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
                   </svg>
+                  <p>No messages yet</p>
+                  <p className="text-sm">
+                    Start the conversation with your shopper
+                  </p>
+                </div>
+              ) : (
+                <div>
+                  {messages.map((message) => (
+                    <Message
+                      key={message.id}
+                      message={message}
+                      isCurrentUser={message.senderType === "customer"}
+                      senderName={message.senderType === "shopper" ? (shopper?.name || "Shopper") : "You"}
+                    />
+                  ))}
+                  <div ref={messagesEndRef} />
+                </div>
+              )}
+            </div>
+          </Panel>
+
+          {/* Message Input */}
+          <Panel shaded bordered>
+            <div className="relative">
+              <div className="flex items-center">
+                <div className="relative">
+                  <Button
+                    appearance="subtle"
+                    className="flex h-10 w-10 items-center justify-center p-0"
+                    onClick={handleAttachmentClick}
+                    disabled={isSending || uploadingImage}
+                  >
+                    <svg
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      className="h-5 w-5 text-gray-500"
+                    >
+                      <path d="M21.44 11.05l-9.19 9.19a6 6 0 01-8.49-8.49l9.19-9.19a4 4 0 015.66 5.66l-9.2 9.19a2 2 0 01-2.83-2.83l8.49-8.48" />
+                    </svg>
+                  </Button>
+
+                  {/* Attachment Options Popup */}
+                  {showAttachmentOptions && (
+                    <div className="absolute bottom-12 left-0 z-10 rounded-lg bg-white p-2 shadow-lg">
+                      <div className="flex flex-col gap-2">
+                        <button
+                          className="flex items-center gap-2 rounded-md p-2 hover:bg-gray-100"
+                          onClick={() => fileInputRef.current?.click()}
+                        >
+                          <svg
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            strokeWidth="2"
+                            className="h-5 w-5 text-blue-500"
+                          >
+                            <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
+                            <circle cx="8.5" cy="8.5" r="1.5" />
+                            <polyline points="21 15 16 10 5 21" />
+                          </svg>
+                          <span>Gallery</span>
+                        </button>
+                      </div>
+                    </div>
+                  )}
+
+                  <input
+                    type="file"
+                    accept="image/*"
+                    ref={fileInputRef}
+                    className="hidden"
+                    onChange={handleImageUpload}
+                  />
+                </div>
+
+                <textarea
+                  className="flex-1 resize-none rounded-full border px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  placeholder="Type a message..."
+                  value={newMessage}
+                  onChange={(e) => setNewMessage(e.target.value)}
+                  onKeyPress={handleKeyPress}
+                  rows={1}
+                  style={{ maxHeight: "100px" }}
+                  disabled={isSending || uploadingImage}
+                />
+
+                <Button
+                  appearance={newMessage.trim() ? "primary" : "subtle"}
+                  className={`ml-2 flex h-10 w-10 items-center justify-center rounded-full p-0 ${
+                    newMessage.trim() ? "bg-blue-500 text-white" : "text-gray-400"
+                  }`}
+                  onClick={() => handleSendMessage()}
+                  disabled={(!newMessage.trim() && !uploadingImage) || isSending}
+                >
+                  {isSending || uploadingImage ? (
+                    <Loader size="sm" />
+                  ) : (
+                    <svg
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      className="h-5 w-5"
+                    >
+                      <path d="M22 2L11 13" />
+                      <path d="M22 2l-7 20-4-9-9-4 20-7z" />
+                    </svg>
+                  )}
                 </Button>
-              </form>
+              </div>
+
+              {/* Quick Replies */}
+              <div className="mt-3 flex flex-wrap gap-2">
+                <Button
+                  appearance="ghost"
+                  size="sm"
+                  className="whitespace-nowrap"
+                  onClick={() => setNewMessage("How's my order going?")}
+                >
+                  How's my order going?
+                </Button>
+                <Button
+                  appearance="ghost"
+                  size="sm"
+                  className="whitespace-nowrap"
+                  onClick={() => setNewMessage("Any issues with my items?")}
+                >
+                  Any issues with items?
+                </Button>
+                <Button
+                  appearance="ghost"
+                  size="sm"
+                  className="whitespace-nowrap"
+                  onClick={() => setNewMessage("Thanks for your help!")}
+                >
+                  Thanks!
+                </Button>
+              </div>
             </div>
           </Panel>
         </div>

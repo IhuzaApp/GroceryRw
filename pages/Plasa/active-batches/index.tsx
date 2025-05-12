@@ -55,6 +55,17 @@ export const getServerSideProps: GetServerSideProps<
     };
   }
 
+  // Check if the user is a shopper
+  const userRole = (session as any)?.user?.role;
+  if (userRole !== 'shopper') {
+    return {
+      props: {
+        activeOrders: [],
+        error: "This page is only accessible to shoppers",
+      },
+    };
+  }
+
   // Define GraphQL query to fetch active orders directly
   const GET_ACTIVE_ORDERS = gql`
     query GetActiveOrders($shopperId: uuid!) {
@@ -139,6 +150,19 @@ export const getServerSideProps: GetServerSideProps<
     }>(GET_ACTIVE_ORDERS, { shopperId: userId });
 
     type OrderData = typeof data.Orders[number];
+
+    // Log the number of orders found
+    console.log(`Found ${data.Orders.length} active orders for shopper ${userId} on server-side`);
+    
+    // If no orders were found, return an empty array but no error
+    if (data.Orders.length === 0) {
+      return {
+        props: {
+          activeOrders: [],
+          error: null, // No error, just no orders found
+        },
+      };
+    }
 
     const activeOrders = data.Orders.map((o: OrderData) => ({
       id: o.id,

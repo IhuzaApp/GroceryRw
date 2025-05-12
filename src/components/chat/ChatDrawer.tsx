@@ -9,7 +9,8 @@ import { getStorage, ref, uploadBytes, getDownloadURL } from "firebase/storage";
 interface ChatMessage {
   id: string;
   sender: "customer" | "shopper";
-  text: string;
+  text?: string;        // Customer message format
+  message?: string;     // Shopper message format
   timestamp: string;
   status: "sent" | "delivered" | "read";
   image?: string;
@@ -249,8 +250,8 @@ export default function ChatDrawer({
                               : "rounded-tl-none bg-white text-gray-800"
                           }`}
                         >
-                          {msg.text && (
-                            <p className="whitespace-pre-wrap">{msg.text}</p>
+                          {(msg.text || msg.message) && (
+                            <p className="whitespace-pre-wrap">{msg.text || msg.message}</p>
                           )}
                           {msg.image && (
                             <div className="mt-2">

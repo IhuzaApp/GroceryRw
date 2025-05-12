@@ -549,7 +549,6 @@ export default function BatchDetails({
     // Return the found items total - this is what's shown as the subtotal in Order Summary
     // and what should be deducted from the reserved wallet balance
     const foundTotal = calculateFoundTotal();
-    console.log(`Found items total for payment: ${foundTotal.toString()}`);
     return foundTotal;
   };
 

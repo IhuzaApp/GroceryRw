@@ -42,14 +42,14 @@ export async function middleware(req: NextRequest) {
 
   try {
     // Check for NextAuth token with more permissive settings
-    const token = await getToken({
-      req,
-      secret: process.env.NEXTAUTH_SECRET,
+  const token = await getToken({
+    req,
+    secret: process.env.NEXTAUTH_SECRET,
       secureCookie: process.env.NEXTAUTH_SECURE_COOKIES === "true",
-    });
+  });
 
     // If no token is found, check for cookies before redirecting
-    if (!token) {
+  if (!token) {
       // Check for any auth-related cookies as a fallback
       const sessionCookie = req.cookies.get("next-auth.session-token") || 
                             req.cookies.get("__Secure-next-auth.session-token");
@@ -60,23 +60,23 @@ export async function middleware(req: NextRequest) {
         return NextResponse.next();
       }
       
+    const url = req.nextUrl.clone();
+    url.pathname = "/Auth/Login";
+    url.search = `callbackUrl=${encodeURIComponent(req.url)}`;
+    return NextResponse.redirect(url);
+  }
+
+  // Protect shopper routes
+  if (pathname.startsWith("/shopper")) {
+      if (!token || token.role !== "shopper") {
       const url = req.nextUrl.clone();
-      url.pathname = "/Auth/Login";
-      url.search = `callbackUrl=${encodeURIComponent(req.url)}`;
+      url.pathname = "/";
       return NextResponse.redirect(url);
     }
+  }
 
-    // Protect shopper routes
-    if (pathname.startsWith("/shopper")) {
-      if (!token || token.role !== "shopper") {
-        const url = req.nextUrl.clone();
-        url.pathname = "/";
-        return NextResponse.redirect(url);
-      }
-    }
-
-    // User is authenticated, allow
-    return NextResponse.next();
+  // User is authenticated, allow
+  return NextResponse.next();
   } catch (error) {
     console.error("Authentication middleware error:", error);
     

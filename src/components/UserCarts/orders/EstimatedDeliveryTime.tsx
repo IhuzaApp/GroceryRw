@@ -103,8 +103,8 @@ const EstimatedDeliveryTime: React.FC<EstimatedDeliveryTimeProps> = ({
       text = `Delayed by ${hours}h${mins > 0 ? ` ${mins}m` : ""}`;
     } else {
       text = `Delayed by ${mins} minute${mins !== 1 ? "s" : ""}`;
-    }
-    
+  }
+
     return (
       <div className="flex items-center rounded-lg bg-red-50 p-3 text-red-700">
         <svg
