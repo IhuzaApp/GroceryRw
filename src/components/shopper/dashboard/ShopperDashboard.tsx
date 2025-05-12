@@ -79,6 +79,8 @@ export default function ShopperDashboard() {
   const [sortBy, setSortBy] = useState<"newest" | "earnings" | "distance" | "priority">("newest");
   const [showHistorical, setShowHistorical] = useState(false);
   const [sortedOrders, setSortedOrders] = useState<any[]>([]);
+  const [lastRefreshed, setLastRefreshed] = useState<Date>(new Date());
+  const [isAutoRefreshing, setIsAutoRefreshing] = useState<boolean>(true);
 
   const toggleExpanded = () => setIsExpanded((prev) => !prev);
 
@@ -103,89 +105,183 @@ export default function ShopperDashboard() {
     setIsOnline(Boolean(hasLocationCookies));
   };
 
-  // Function to load and filter orders
+  // Enhanced loadOrders function with better debugging and handling for all PENDING orders
   const loadOrders = () => {
-    if (!currentLocation) return;
+    if (!currentLocation) {
+      console.log("Cannot load orders: No current location available");
+      return;
+    }
+    
     setIsLoading(true);
+    console.log("Fetching available orders...");
     
-    // Adjust the API endpoint based on whether we want to show historical orders
-    // Use 24 hours by default, or 7 days if showing historical orders
-    const hoursParam = showHistorical ? 168 : 24; // 24 hours or 7 days (168 hours)
-    
-    fetch(`/api/shopper/availableOrders?hours=${hoursParam}`)
-      .then((res) => res.json())
+    // Add timestamp to prevent caching
+    const timestamp = new Date().getTime();
+    fetch(`/api/shopper/availableOrders?_=${timestamp}`)
+      .then((res) => {
+        if (!res.ok) {
+          throw new Error(`HTTP error! Status: ${res.status}`);
+        }
+        return res.json();
+      })
       .then((data) => {
-        // Filter orders by distance from user
-        const nearbyOrders = data.filter((order: {
-          customerLatitude: number;
-          customerLongitude: number;
-        }) => {
-          const distKm = getDistanceKm(
-            currentLocation.lat,
-            currentLocation.lng,
-            order.customerLatitude,
-            order.customerLongitude
-          );
-          return distKm <= 10; // Only show orders within 10km
+        console.log(`Received ${data.length} orders from API`);
+        
+        // Debug: Log all received orders first
+        data.forEach((order: any, idx: number) => {
+          console.log(`Order ${idx + 1}/${data.length}:`, {
+            id: order.id,
+            created: new Date(order.createdAt).toLocaleString(),
+            status: order.status || 'PENDING',
+            shop: order.shopName,
+            shopCoords: `${order.shopLatitude}, ${order.shopLongitude}`,
+            customerCoords: `${order.customerLatitude}, ${order.customerLongitude}`,
+            items: order.itemsCount
+          });
         });
+        
+        // Convert location strings to numbers if they're strings
+        const safeLocation = {
+          lat: typeof currentLocation.lat === 'string' ? parseFloat(currentLocation.lat) : currentLocation.lat,
+          lng: typeof currentLocation.lng === 'string' ? parseFloat(currentLocation.lng) : currentLocation.lng
+        };
+        
+        console.log(`Current location for distance calculation: ${safeLocation.lat}, ${safeLocation.lng}`);
+        
+        // Filter orders by distance from user
+        const nearbyOrders = data.filter((order: any) => {
+          try {
+            // Skip orders with invalid coordinates
+            if (!order.customerLatitude || !order.customerLongitude || 
+                isNaN(order.customerLatitude) || isNaN(order.customerLongitude) ||
+                !order.shopLatitude || !order.shopLongitude ||
+                isNaN(order.shopLatitude) || isNaN(order.shopLongitude)) {
+              console.warn(`Skipping order with invalid coordinates`);
+              return false;
+            }
+            
+            // Calculate using customer location
+            const distKm = getDistanceKm(
+              safeLocation.lat,
+              safeLocation.lng,
+              order.customerLatitude,
+              order.customerLongitude
+            );
+            
+            // Calculate using shop location as backup if customer is out of range
+            const shopDistKm = getDistanceKm(
+              safeLocation.lat,
+              safeLocation.lng,
+              order.shopLatitude,
+              order.shopLongitude
+            );
+            
+            // Use the shorter of the two distances
+            const finalDist = Math.min(distKm, shopDistKm);
+            
+            console.log(`Order ${order.id} distance: ${finalDist.toFixed(2)}km (customer), ${shopDistKm.toFixed(2)}km (shop)`);
+            
+            // Increased radius to see more orders for debugging
+            return finalDist <= 50; // 50km radius to see all orders during debugging
+          } catch (err) {
+            console.error(`Error calculating distance for order:`, err);
+            return false; // Skip orders with calculation errors
+          }
+        });
+        
+        console.log(`Found ${nearbyOrders.length} orders within 50km range for debugging`);
 
         // Format orders for the OrderCard component
-        const formattedOrders = nearbyOrders.map((order: {
-          id: string;
-          shopName: string;
-          shopAddress: string;
-          customerAddress: string;
-          customerLatitude: number;
-          customerLongitude: number;
-          itemsCount: number;
-          earnings: number;
-          createdAt: string;
-          pendingMinutes?: number;
-          priorityLevel?: number;
-        }) => {
-          const distKm = getDistanceKm(
-            currentLocation.lat,
-            currentLocation.lng,
-            order.customerLatitude,
-            order.customerLongitude
-          );
-          const distMi = (distKm * 0.621371).toFixed(1);
-          const minutesAgo = Math.floor((Date.now() - new Date(order.createdAt).getTime()) / 60000);
-          
-          return {
-            id: order.id,
-            shopName: order.shopName,
-            shopAddress: order.shopAddress,
-            customerAddress: order.customerAddress,
-            distance: `${distMi} mi`,
-            items: order.itemsCount,
-            total: `$${order.earnings.toFixed(2)}`,
-            estimatedEarnings: `$${order.earnings.toFixed(2)}`,
-            createdAt: relativeTime(order.createdAt),
-            // Add additional properties for sorting and filtering
-            rawDistance: distKm,
-            rawEarnings: order.earnings,
-            rawCreatedAt: new Date(order.createdAt).getTime(),
-            minutesAgo: minutesAgo,
-            priorityLevel: order.priorityLevel || 
+        const formattedOrders = nearbyOrders.map((order: any) => {
+          try {
+            // Calculate shop distance for display
+            const shopDistKm = getDistanceKm(
+              safeLocation.lat,
+              safeLocation.lng,
+              order.shopLatitude,
+              order.shopLongitude
+            );
+            
+            // Calculate customer distance for display
+            const custDistKm = getDistanceKm(
+              safeLocation.lat,
+              safeLocation.lng,
+              order.customerLatitude,
+              order.customerLongitude
+            );
+            
+            // Use the shorter distance for display
+            const distKm = Math.min(shopDistKm, custDistKm);
+            const distMi = (distKm * 0.621371).toFixed(1);
+            
+            // Use provided pendingMinutes or calculate if not provided
+            const minutesAgo = order.pendingMinutes || 
+              Math.floor((Date.now() - new Date(order.createdAt).getTime()) / 60000);
+            
+            // Use provided priorityLevel or calculate based on age
+            const priorityLevel = order.priorityLevel || 
               (minutesAgo >= 24 * 60 ? 5 : 
                minutesAgo >= 4 * 60 ? 4 : 
                minutesAgo >= 60 ? 3 : 
-               minutesAgo >= 30 ? 2 : 1)
-          };
-        });
+               minutesAgo >= 30 ? 2 : 1);
+            
+            return {
+              id: order.id,
+              shopName: order.shopName || "Unknown Shop",
+              shopAddress: order.shopAddress || "No address available",
+              customerAddress: order.customerAddress || "No address available",
+              distance: `${distMi} mi`,
+              items: order.itemsCount || 0,
+              total: `$${(order.earnings || 0).toFixed(2)}`,
+              estimatedEarnings: `$${(order.earnings || 0).toFixed(2)}`,
+              createdAt: relativeTime(order.createdAt),
+              status: order.status || 'PENDING',
+              // Add additional properties for sorting and filtering
+              rawDistance: distKm,
+              rawEarnings: order.earnings || 0,
+              rawCreatedAt: new Date(order.createdAt).getTime(),
+              minutesAgo: minutesAgo,
+              priorityLevel: priorityLevel,
+              // Keep original coordinates for map rendering
+              shopLatitude: order.shopLatitude,
+              shopLongitude: order.shopLongitude,
+              customerLatitude: order.customerLatitude,
+              customerLongitude: order.customerLongitude
+            };
+          } catch (err) {
+            console.error(`Error formatting order ${order.id}:`, err);
+            return null; // Skip orders with formatting errors
+          }
+        }).filter(Boolean); // Remove any null entries from formatting errors
+        
+        console.log(`Formatted ${formattedOrders.length} orders for display`);
+        console.log("Sample order:", formattedOrders.length > 0 ? formattedOrders[0] : "No orders");
         
         // Set available orders and then apply sorting
         setAvailableOrders(formattedOrders);
         sortOrders(formattedOrders, sortBy);
+        setLastRefreshed(new Date());
       })
-      .catch((err) => console.error("Error fetching available orders:", err))
-      .finally(() => setIsLoading(false));
+      .catch((err) => {
+        console.error("Error fetching available orders:", err);
+      })
+      .finally(() => {
+        setIsLoading(false);
+      });
   };
 
   // Function to sort orders based on the selected criteria
   const sortOrders = (orders: FormattedOrder[], criteria: "newest" | "earnings" | "distance" | "priority") => {
     let sorted = [...orders];
+    
+    // First apply filtering based on criteria
+    if (criteria === "newest") {
+      // For "newest", only show orders less than 1 hour old
+      sorted = sorted.filter(order => order.minutesAgo < 60);
+    } else if (criteria === "priority") {
+      // For "priority", only show orders 1 hour or older
+      sorted = sorted.filter(order => order.minutesAgo >= 60);
+    }
     
     // Apply sorting based on criteria
     if (criteria === "newest") {
@@ -204,7 +300,7 @@ export default function ShopperDashboard() {
       });
     }
     
-    // Apply filtering for 10+ minute old orders if not showing historical
+    // Additionally, apply filtering for 10+ minute old orders if not showing historical
     if (!showHistorical) {
       // Show only orders pending for at least 10 minutes
       sorted = sorted.filter(order => order.minutesAgo >= 10);
@@ -224,6 +320,33 @@ export default function ShopperDashboard() {
     setShowHistorical(!showHistorical);
     // Reload orders when this changes to get the correct time window
     loadOrders();
+  };
+
+  // Add automatic refresh with polling
+  useEffect(() => {
+    // Set up polling for automatic refresh if enabled
+    let intervalId: NodeJS.Timeout | null = null;
+    
+    if (isAutoRefreshing && currentLocation) {
+      console.log("Setting up auto-refresh for orders (30s interval)");
+      intervalId = setInterval(() => {
+        console.log("Auto-refreshing orders...");
+        loadOrders();
+      }, 30000); // Refresh every 30 seconds
+    }
+    
+    // Cleanup function to clear interval when component unmounts
+    return () => {
+      if (intervalId) {
+        console.log("Clearing auto-refresh interval");
+        clearInterval(intervalId);
+      }
+    };
+  }, [currentLocation, isAutoRefreshing, showHistorical, sortBy]);
+
+  // Add toggle for auto-refresh
+  const toggleAutoRefresh = () => {
+    setIsAutoRefreshing(prev => !prev);
   };
 
   useEffect(() => {
@@ -349,6 +472,20 @@ export default function ShopperDashboard() {
             <div className="flex items-center justify-between px-4 pt-4">
               <h1 className="text-2xl font-bold">Available Batches</h1>
               <div className="flex items-center space-x-2">
+                <span className="text-xs text-gray-500">
+                  {lastRefreshed && `Last updated: ${lastRefreshed.toLocaleTimeString()}`}
+                </span>
+                <button
+                  onClick={toggleAutoRefresh}
+                  className={`rounded-md px-2 py-1 text-xs font-medium ${
+                    isAutoRefreshing
+                      ? "bg-green-100 text-green-700"
+                      : "bg-gray-100 text-gray-700"
+                  }`}
+                  title={isAutoRefreshing ? "Auto-refresh is on (30s)" : "Auto-refresh is off"}
+                >
+                  {isAutoRefreshing ? "Auto" : "Manual"}
+                </button>
                 <button
                   onClick={toggleHistorical}
                   className={`rounded-md px-3 py-1 text-sm font-medium ${
@@ -378,8 +515,9 @@ export default function ShopperDashboard() {
                       ? "bg-green-600 text-white" 
                       : "bg-gray-200 text-gray-800 hover:bg-gray-300"
                   }`}
+                  title="Orders less than 1 hour old"
                 >
-                  Newest
+                  Newest (1h)
                 </button>
                 <button
                   onClick={() => handleSortChange("earnings")}
@@ -408,10 +546,23 @@ export default function ShopperDashboard() {
                       ? "bg-purple-600 text-white" 
                       : "bg-gray-200 text-gray-800 hover:bg-gray-300"
                   }`}
+                  title="All orders by priority level, including older orders"
                 >
                   Priority
                 </button>
               </div>
+            </div>
+
+            {/* Filtering info message */}
+            <div className="mb-4 px-4">
+              <p className="text-xs text-gray-500">
+                {sortBy === "newest" 
+                  ? "Showing recent orders less than 1 hour old" 
+                  : sortBy === "priority" 
+                    ? "Showing orders pending for 1+ hours by priority level" 
+                    : `Sorting by ${sortBy}`}
+                {!showHistorical && " • Only orders pending for 10+ minutes"}
+              </p>
             </div>
 
             {isLoading ? (
@@ -492,6 +643,19 @@ export default function ShopperDashboard() {
                 <div className="mb-4 flex items-center justify-between">
                   <h2 className="text-lg font-semibold">Available Orders</h2>
                   <div className="flex items-center space-x-2">
+                    <span className="text-xs text-gray-500">
+                      {lastRefreshed && `${lastRefreshed.toLocaleTimeString()}`}
+                    </span>
+                    <button
+                      onClick={toggleAutoRefresh}
+                      className={`rounded-md px-2 py-1 text-xs font-medium ${
+                        isAutoRefreshing
+                          ? "bg-green-100 text-green-700"
+                          : "bg-gray-100 text-gray-700"
+                      }`}
+                    >
+                      {isAutoRefreshing ? "A" : "M"}
+                    </button>
                     <button
                       onClick={toggleHistorical}
                       className={`rounded-md px-2 py-1 text-xs font-medium ${
@@ -521,8 +685,9 @@ export default function ShopperDashboard() {
                         ? "bg-green-600 text-white" 
                         : "bg-gray-200 text-gray-800"
                     }`}
+                    title="Orders less than 1 hour old"
                   >
-                    Newest
+                    Recent (1h)
                   </button>
                   <button
                     onClick={() => handleSortChange("earnings")}
@@ -551,9 +716,22 @@ export default function ShopperDashboard() {
                         ? "bg-purple-600 text-white" 
                         : "bg-gray-200 text-gray-800"
                     }`}
+                    title="All orders by priority level, including older orders"
                   >
                     Priority
                   </button>
+                </div>
+                
+                {/* Filtering info message */}
+                <div className="mb-4 px-4 md:hidden">
+                  <p className="text-xs text-gray-500">
+                    {sortBy === "newest" 
+                      ? "Showing orders < 1 hour old" 
+                      : sortBy === "priority" 
+                        ? "Orders pending 1+ hours by priority" 
+                        : `Sorting by ${sortBy}`}
+                    {!showHistorical && " • 10+ min pending"}
+                  </p>
                 </div>
                 
                 {isLoading ? (
