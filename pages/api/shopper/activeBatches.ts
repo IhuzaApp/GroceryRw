@@ -101,6 +101,8 @@ export default async function handler(
       }>;
     }>(GET_ACTIVE_ORDERS, { shopperId: userId });
 
+    console.log(`Found ${data.Orders.length} active orders for shopper ${userId}`);
+
     const activeOrders = data.Orders.map((o) => ({
       id: o.id,
       status: o.status,
@@ -123,6 +125,20 @@ export default async function handler(
     res.status(200).json(activeOrders);
   } catch (error) {
     console.error("Error fetching active batches:", error);
-    res.status(500).json({ error: "Failed to fetch active batches" });
+    
+    // Enhanced error logging
+    if (error instanceof Error) {
+      console.error("Error details:", {
+        message: error.message,
+        stack: error.stack,
+        name: error.name,
+      });
+    }
+    
+    // Return a more informative error response
+    res.status(500).json({ 
+      error: "Failed to fetch active batches", 
+      message: error instanceof Error ? error.message : String(error)
+    });
   }
 }

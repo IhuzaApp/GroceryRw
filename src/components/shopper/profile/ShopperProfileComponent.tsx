@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import Image from "next/image";
 import { formatCurrency } from "../../../lib/formatCurrency";
 import {
@@ -147,8 +147,8 @@ export default function ShopperProfileComponent() {
       .finally(() => setLoading(false));
   }, []);
 
-  // Load schedule
-  const loadSchedule = () => {
+  // Load schedule using useCallback to memoize the function
+  const loadSchedule = useCallback(() => {
     setScheduleLoading(true);
     fetch("/api/shopper/schedule")
       .then((res) => res.json())
@@ -232,12 +232,12 @@ export default function ShopperProfileComponent() {
         setHasSchedule(false);
       })
       .finally(() => setScheduleLoading(false));
-  };
+  }, [days, formatTimeForDisplay]); // Add only stable dependencies
 
   // Load schedule on component mount
   useEffect(() => {
     loadSchedule();
-  }, [loadSchedule]);
+  }, []); // Keep empty dependency array, loadSchedule is stable with useCallback
 
   // Load default address
   useEffect(() => {
@@ -281,7 +281,7 @@ export default function ShopperProfileComponent() {
   };
 
   // Configure schedule - add default schedule to database
-  const configureSchedule = () => {
+  const configureSchedule = useCallback(() => {
     if (!session) {
       console.error("No session available. Please log in.");
       setSaveMessage({
@@ -322,10 +322,10 @@ export default function ShopperProfileComponent() {
           text: "Failed to configure schedule. Please try again.",
         });
       });
-  };
+  }, [session, schedule, loadSchedule, setSaveMessage, setHasSchedule]);
 
   // Save schedule updates to backend
-  const saveScheduleUpdates = () => {
+  const saveScheduleUpdates = useCallback(() => {
     if (!session) {
       setSaveMessage({
         type: "error",
@@ -364,7 +364,7 @@ export default function ShopperProfileComponent() {
           text: "Failed to update schedule. Please try again.",
         });
       });
-  };
+  }, [session, schedule, setSaveMessage]);
 
   // Clear save message after 5 seconds
   useEffect(() => {
