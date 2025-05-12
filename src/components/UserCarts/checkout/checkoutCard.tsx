@@ -3,6 +3,7 @@ import { Input, Button, Panel, Modal, toaster, Notification } from "rsuite";
 import Link from "next/link"; // Make sure you import Link if you use it
 import { formatCurrency } from "../../../lib/formatCurrency";
 import Cookies from "js-cookie";
+import { useRouter } from "next/router";
 
 interface CheckoutItemsProps {
   Total: number;
@@ -41,17 +42,19 @@ export default function CheckoutItems({
   shopAlt,
   shopId,
 }: CheckoutItemsProps) {
-  // Order confirmation state
-  const [showConfirmation, setShowConfirmation] = useState(false);
-  const [newOrderId, setNewOrderId] = useState<string | null>(null);
+  const router = useRouter();
   // Re-render when the address cookie changes
   const [, setTick] = useState(0);
+  // Mobile checkout card expand/collapse state
+  const [isExpanded, setIsExpanded] = useState(false);
+  
   useEffect(() => {
     const handleAddressChange = () => setTick((t) => t + 1);
     window.addEventListener("addressChanged", handleAddressChange);
     return () =>
       window.removeEventListener("addressChanged", handleAddressChange);
   }, []);
+  
   const [promoCode, setPromoCode] = useState("");
   const [discount, setDiscount] = useState(0);
   const [appliedPromo, setAppliedPromo] = useState<string | null>(null);
@@ -204,9 +207,20 @@ export default function CheckoutItems({
       if (!res.ok) {
         throw new Error(data.error || "Checkout failed");
       }
-      // Show confirmation modal with new order ID
-      setNewOrderId(data.order_id);
-      setShowConfirmation(true);
+      
+      // Show success toast instead of modal
+      toaster.push(
+        <Notification type="success" header="Order Confirmed">
+          Your order has been placed successfully!
+        </Notification>,
+        { placement: "topEnd" }
+      );
+      
+      // Short delay before redirecting to give the user time to see the toast
+      setTimeout(() => {
+        router.push("/CurrentPendingOrders");
+      }, 1500);
+      
     } catch (err: any) {
       console.error("Checkout error:", err);
       toaster.push(
@@ -222,95 +236,46 @@ export default function CheckoutItems({
 
   return (
     <>
-      {/* Confirmation Modal */}
-      <Modal open={showConfirmation} onClose={() => setShowConfirmation(false)}>
-        <Modal.Header>
-          <Modal.Title>Order Confirmed</Modal.Title>
-        </Modal.Header>
-        <Modal.Body>
-          {newOrderId
-            ? `Your order (${newOrderId}) has been placed successfully!`
-            : "Your order has been placed successfully!"}
-        </Modal.Body>
-        <Modal.Footer>
-          <Button
-            appearance="primary"
-            onClick={() => setShowConfirmation(false)}
-          >
-            OK
-          </Button>
-        </Modal.Footer>
-      </Modal>
       {/* Mobile View - Only visible on small devices */}
-      <div className="fixed bottom-4 left-1/2 z-50 w-[95%] max-w-4xl -translate-x-1/2 rounded-2xl border bg-white p-6 shadow-2xl md:hidden">
-        <div>
-          <p className="mb-2 text-gray-600">Do you have any promo code?</p>
-          <div className="flex flex-wrap gap-2">
-            <Input
-              value={promoCode}
-              onChange={setPromoCode}
-              placeholder="Enter promo code"
-              className="max-w-md"
-            />
-            <Button
-              appearance="primary"
-              color="green"
-              className="bg-green-100 font-medium text-green-600"
-              onClick={handleApplyPromo}
-            >
-              Apply
-            </Button>
-          </div>
-        </div>
-
-        <hr className="mt-4" />
-
-        <div className="mt-6 flex flex-col gap-2">
-          <div className="flex justify-between">
-            <span className="text-sm text-gray-600">Subtotal</span>
-            <span className="text-sm">{formatCurrency(Total)}</span>
-          </div>
-          {discount > 0 && (
-            <div className="flex justify-between text-green-600">
-              <span className="text-sm">Discount ({appliedPromo})</span>
-              <span className="text-sm">-{formatCurrency(discount)}</span>
-            </div>
-          )}
-          <div className="flex justify-between">
-            <span className="text-sm text-gray-600">Units</span>
-            <span className="text-sm">{totalUnits}</span>
-          </div>
-          <div className="flex justify-between">
-            <span className="text-sm text-gray-600">Service Fee</span>
-            <span className="text-sm">{formatCurrency(serviceFee)}</span>
-          </div>
-          <div className="flex justify-between">
-            <span className="text-sm text-gray-600">Delivery Fee</span>
-            <span className="text-sm">{formatCurrency(deliveryFee)}</span>
-          </div>
-          <div className="flex justify-between">
-            <span className="text-sm text-gray-600">Delivery Time</span>
-            <span className="text-sm">{deliveryTime}</span>
-          </div>
-          <div className="mt-2 flex justify-between">
-            <span className="text-lg font-bold">Total</span>
-            <span className="text-lg font-bold text-green-500">
-              {formatCurrency(finalTotal)}
+      <div className="fixed bottom-0 left-0 right-0 z-50 w-full bg-white shadow-2xl transition-all duration-300 md:hidden" 
+           style={{ 
+             height: isExpanded ? 'auto' : 'auto',
+             maxHeight: isExpanded ? '90vh' : '160px',
+             transform: `translateY(${isExpanded ? '0' : '0'}px)`,
+             overflow: 'hidden'
+           }}>
+        {/* Header with toggle button */}
+        <div className="flex items-center justify-between border-b p-4">
+          <div className="flex items-center">
+            <span className="text-lg font-bold">Order Summary</span>
+            <span className="ml-2 rounded-full bg-green-100 px-2 py-1 text-xs font-medium text-green-800">
+              {totalUnits} items
             </span>
           </div>
-          {/* Delivery Notes Input */}
-          <div className="mt-2">
-            <h3 className="mb-1 font-medium">Add a Note</h3>
-            <Input
-              as="textarea"
-              rows={2}
-              value={deliveryNotes}
-              onChange={setDeliveryNotes}
-              placeholder="Enter any delivery instructions or notes"
-            />
+          <div className="flex items-center">
+            <span className="mr-2 font-bold text-green-600">
+              {formatCurrency(finalTotal)}
+            </span>
+            <button 
+              onClick={() => setIsExpanded(!isExpanded)}
+              className="flex h-8 w-8 items-center justify-center rounded-full bg-gray-100"
+            >
+              {isExpanded ? (
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="h-5 w-5">
+                  <polyline points="18 15 12 9 6 15"></polyline>
+                </svg>
+              ) : (
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="h-5 w-5">
+                  <polyline points="6 9 12 15 18 9"></polyline>
+                </svg>
+              )}
+            </button>
           </div>
-          {/* Proceed to Checkout Button */}
-          <div className="mt-2">
+        </div>
+        
+        {/* Checkout button when collapsed */}
+        {!isExpanded && (
+          <div className="p-4">
             <Button
               appearance="primary"
               color="green"
@@ -321,6 +286,90 @@ export default function CheckoutItems({
             >
               Proceed to Checkout
             </Button>
+          </div>
+        )}
+        
+        {/* Expanded content */}
+        <div className={`p-4 ${isExpanded ? 'block' : 'hidden'}`}>
+          <div>
+            <p className="mb-2 text-gray-600">Do you have any promo code?</p>
+            <div className="flex flex-wrap gap-2">
+              <Input
+                value={promoCode}
+                onChange={setPromoCode}
+                placeholder="Enter promo code"
+                className="max-w-md"
+              />
+              <Button
+                appearance="primary"
+                color="green"
+                className="bg-green-100 font-medium text-green-600"
+                onClick={handleApplyPromo}
+              >
+                Apply
+              </Button>
+            </div>
+          </div>
+
+          <hr className="mt-4" />
+
+          <div className="mt-6 flex flex-col gap-2">
+            <div className="flex justify-between">
+              <span className="text-sm text-gray-600">Subtotal</span>
+              <span className="text-sm">{formatCurrency(Total)}</span>
+            </div>
+            {discount > 0 && (
+              <div className="flex justify-between text-green-600">
+                <span className="text-sm">Discount ({appliedPromo})</span>
+                <span className="text-sm">-{formatCurrency(discount)}</span>
+              </div>
+            )}
+            <div className="flex justify-between">
+              <span className="text-sm text-gray-600">Units</span>
+              <span className="text-sm">{totalUnits}</span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-sm text-gray-600">Service Fee</span>
+              <span className="text-sm">{formatCurrency(serviceFee)}</span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-sm text-gray-600">Delivery Fee</span>
+              <span className="text-sm">{formatCurrency(deliveryFee)}</span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-sm text-gray-600">Delivery Time</span>
+              <span className="text-sm">{deliveryTime}</span>
+            </div>
+            <div className="mt-2 flex justify-between">
+              <span className="text-lg font-bold">Total</span>
+              <span className="text-lg font-bold text-green-500">
+                {formatCurrency(finalTotal)}
+              </span>
+            </div>
+            {/* Delivery Notes Input */}
+            <div className="mt-2">
+              <h3 className="mb-1 font-medium">Add a Note</h3>
+              <Input
+                as="textarea"
+                rows={2}
+                value={deliveryNotes}
+                onChange={setDeliveryNotes}
+                placeholder="Enter any delivery instructions or notes"
+              />
+            </div>
+            {/* Proceed to Checkout Button */}
+            <div className="mt-2">
+              <Button
+                appearance="primary"
+                color="green"
+                block
+                size="lg"
+                loading={isCheckoutLoading}
+                onClick={handleProceedToCheckout}
+              >
+                Proceed to Checkout
+              </Button>
+            </div>
           </div>
         </div>
       </div>

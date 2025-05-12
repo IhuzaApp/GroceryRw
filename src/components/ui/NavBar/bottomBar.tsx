@@ -1,8 +1,11 @@
 import React, { useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/router";
+import { Toaster } from "react-hot-toast";
 
 export default function BottomBar() {
   const [open, setOpen] = useState(false);
+  const router = useRouter();
 
   return (
     <>
@@ -52,7 +55,18 @@ export default function BottomBar() {
                 </svg>
               }
               label="Ask Support"
-              onClick={() => alert("Ask")}
+              onClick={() => {
+                toaster.push(
+                  <Notification type="success" header="Order Confirmed">
+                    Your order has been placed successfully!
+                  </Notification>,
+                  { placement: "topEnd" }
+                );
+
+                setTimeout(() => {
+                  router.push("/CurrentPendingOrders");
+                }, 1500);
+              }}
             />
             <ActionButton
               icon={

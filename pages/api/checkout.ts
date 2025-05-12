@@ -92,6 +92,24 @@ const ARCHIVE_CART = gql`
   }
 `;
 
+// Delete cart items
+const DELETE_CART_ITEMS = gql`
+  mutation DeleteCartItems($cart_id: uuid!) {
+    delete_Cart_Items(where: { cart_id: { _eq: $cart_id } }) {
+      affected_rows
+    }
+  }
+`;
+
+// Delete cart
+const DELETE_CART = gql`
+  mutation DeleteCart($cart_id: uuid!) {
+    delete_Carts_by_pk(id: $cart_id) {
+      id
+    }
+  }
+`;
+
 export default async function handler(
   req: NextApiRequest,
   res: NextApiResponse
@@ -215,13 +233,25 @@ export default async function handler(
     }
     await hasuraClient.request(CREATE_ORDER_ITEMS, { objects: orderItems });
 
-    // 6. Archive the cart
+    // 6. Archive the cart (no longer needed, we'll delete it instead)
     if (!hasuraClient) {
       throw new Error("Hasura client is not initialized");
     }
-    await hasuraClient.request(ARCHIVE_CART, { cart_id: cart.id });
+    // await hasuraClient.request(ARCHIVE_CART, { cart_id: cart.id });
 
-    // 7. Respond with new order ID
+    // 7. Delete cart items
+    if (!hasuraClient) {
+      throw new Error("Hasura client is not initialized");
+    }
+    await hasuraClient.request(DELETE_CART_ITEMS, { cart_id: cart.id });
+
+    // 8. Delete the cart
+    if (!hasuraClient) {
+      throw new Error("Hasura client is not initialized");
+    }
+    await hasuraClient.request(DELETE_CART, { cart_id: cart.id });
+
+    // 9. Respond with new order ID
     return res.status(201).json({ order_id: orderId });
   } catch (err: any) {
     console.error("Checkout error:", err);
