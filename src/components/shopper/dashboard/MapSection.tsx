@@ -9,7 +9,17 @@ import { formatCurrency } from "../../../lib/formatCurrency";
 
 interface MapSectionProps {
   mapLoaded: boolean;
-  availableOrders: Array<{ id: string }>;
+  availableOrders: Array<{
+    id: string;
+    shopName: string;
+    shopAddress: string;
+    customerAddress: string;
+    distance: string;
+    items: number;
+    total: string;
+    estimatedEarnings: string;
+    createdAt: string;
+  }>;
   isInitializing?: boolean;
 }
 
@@ -56,6 +66,23 @@ interface PendingOrder {
   itemsCount: number;
   addressStreet: string;
   addressCity: string;
+}
+
+// Add this function near the top with other utility functions
+function getOrderTimeBadgeColor(createdAtStr: string): string {
+  // Get age in minutes
+  const created = new Date(createdAtStr);
+  const diffMs = Date.now() - created.getTime();
+  const diffMins = Math.floor(diffMs / 60000);
+  
+  // Color by age: green for <30min, orange for 30-60min, purple for >60min
+  if (diffMins < 30) {
+    return "#10b981"; // green
+  } else if (diffMins < 60) {
+    return "#f59e0b"; // orange
+  } else {
+    return "#8b5cf6"; // purple
+  }
 }
 
 export default function MapSection({
@@ -579,307 +606,128 @@ export default function MapSection({
       })
       .catch((err) => console.error("Shop fetch error:", err));
 
-    // Fetch and render pending orders (>20min unassigned)
+    // Fetch and display older pending orders (>20min unassigned)
     fetch("/api/shopper/pendingOrders")
       .then((res) => res.json())
       .then((data: PendingOrder[]) => {
-        console.log("Pending orders to map:", data);
         setPendingOrders(data);
         data.forEach((order) => {
-          // use exact coords
-          const lat = order.latitude;
-          const lng = order.longitude;
-          // time since creation
-          const created = new Date(order.createdAt);
-          const diffMs = Date.now() - created.getTime();
-          const diffMins = Math.floor(diffMs / 60000);
-          const timeStr =
-            diffMins >= 60
-              ? `${Math.floor(diffMins / 60)}h ${diffMins % 60}m ago`
-              : `${diffMins} mins ago`;
-          // distance between shop and delivery address
-          const distKm = getDistanceKm(
-            order.shopLat,
-            order.shopLng,
-            order.latitude,
-            order.longitude
-          );
-          const distanceStr = `${Math.round(distKm * 10) / 10} km`;
-          const earningsStr = formatCurrency(order.earnings);
-          // Earnings badge icon
-          const pendingIcon = L.divIcon({
-            html: `<div style="background:#fff;border:2px solid #8b5cf6;border-radius:12px;padding:4px 12px;font-size:12px;color:#8b5cf6;white-space:nowrap;">${earningsStr}</div>`,
-            className: "",
-            iconSize: [90, 30],
-            iconAnchor: [60, 15],
-            popupAnchor: [0, -15],
-          });
-          const marker = L.marker([lat, lng], {
-            icon: pendingIcon,
-            zIndexOffset: 1000,
-          }).addTo(map);
-          // Enhanced popup with icons and flex layout
-          const popupContent = `
-            <div style="font-size:14px; line-height:1.4; min-width:200px;">
-              <div style="display:flex;align-items:center;margin-bottom:4px;">
-                <span style="margin-right:6px;">🆔</span><strong>${order.id}</strong>
-              </div>
-              <div style="display:flex;align-items:center;margin-bottom:4px;">
-                <span style="margin-right:6px;">🏪</span><span>${order.shopName}</span>
-              </div>
-              <div style="display:flex;align-items:center;margin-bottom:4px;">
-                <span style="margin-right:6px;">📍</span><span>${order.shopAddress}</span>
-              </div>
-              <div style="display:flex;align-items:center;margin-bottom:4px;">
-                <span style="margin-right:6px;">⏱️</span><span>${timeStr}</span>
-              </div>
-              <div style="display:flex;align-items:center;margin-bottom:4px;">
-                <span style="margin-right:6px;">📏</span><span>Distance: ${distanceStr}</span>
-              </div>
-              <div style="display:flex;align-items:center;margin-bottom:4px;">
-                <span style="margin-right:6px;">🛒</span><span>Items: ${order.itemsCount}</span>
-              </div>
-              <div style="display:flex;align-items:center;margin-bottom:4px;">
-                <span style="margin-right:6px;">🚚</span><span>Deliver to: ${order.addressStreet}, ${order.addressCity}</span>
-              </div>
-              <div style="display:flex;align-items:center;">
-                <span style="margin-right:6px;">💰</span><span>Estimated Earnings: ${earningsStr}</span>
-              </div>
-              <button id="accept-batch-${order.id}" style="margin-top:8px;padding:6px 12px;background:#10b981;color:#fff;border:none;border-radius:4px;cursor:pointer;">
-                Accept Batch
-              </button>
-            </div>
-          `;
-          // Bind popup with max width
-          marker.bindPopup(popupContent, { maxWidth: 250 });
-          marker.on("popupopen", () => {
-            const btn = document.getElementById(
-              `accept-batch-${order.id}`
-            ) as HTMLButtonElement | null;
-            if (btn) {
-              btn.addEventListener("click", () => {
-                // Show loading state on button
-                btn.disabled = true;
-                // Change button to green and show spinner
-                btn.style.background = "#10b981";
-                btn.innerHTML =
-                  '<span class="animate-spin mr-2 inline-block w-4 h-4 border-2 border-white border-t-transparent rounded-full"></span>Assigning...';
-                // Toast assigning
-                reduceToastDuplicates(
-                  "order-assigning",
-                  <Message showIcon type="info" header="Assigning">
-                    Assigning order...
-                  </Message>,
-                  { placement: "topEnd" }
-                );
-                fetch("/api/shopper/assignOrder", {
-                  method: "POST",
-                  headers: { "Content-Type": "application/json" },
-                  body: JSON.stringify({ orderId: order.id }),
-                })
-                  .then((res) => res.json())
-                  .then((data) => {
-                    // Check if there's a wallet error
-                    if (data.error === "no_wallet") {
-                      // Show toast with create wallet button
-                      reduceToastDuplicates(
-                        "no-wallet",
-                        <Message
-                          showIcon
-                          type="warning"
-                          header="Wallet Required"
-                        >
-                          <div>
-                            <p>You need a wallet to accept batches.</p>
-                            <div className="mt-2">
-                              <Button
-                                appearance="primary"
-                                size="sm"
-                                onClick={() => {
-                                  fetch("/api/queries/createWallet", {
-                                    method: "POST",
-                                    headers: {
-                                      "Content-Type": "application/json",
-                                    },
-                                  })
-                                    .then((res) => res.json())
-                                    .then((data) => {
-                                      if (data.success) {
-                                        reduceToastDuplicates(
-                                          "wallet-created",
-                                          <Message
-                                            showIcon
-                                            type="success"
-                                            header="Wallet Created"
-                                          >
-                                            Your wallet has been created
-                                            successfully.
-                                          </Message>,
-                                          { placement: "topEnd" }
-                                        );
-
-                                        // Try accepting the batch again after wallet creation
-                                        setTimeout(() => {
-                                          fetch("/api/shopper/assignOrder", {
-                                            method: "POST",
-                                            headers: {
-                                              "Content-Type":
-                                                "application/json",
-                                            },
-                                            body: JSON.stringify({
-                                              orderId: order.id,
-                                            }),
-                                          })
-                                            .then((res) => res.json())
-                                            .then((data) => {
-                                              if (data.success) {
-                                                // Success toast
-                                                reduceToastDuplicates(
-                                                  "order-assigned",
-                                                  <Message
-                                                    showIcon
-                                                    type="success"
-                                                    header="Assigned"
-                                                  >
-                                                    Order assigned!
-                                                  </Message>,
-                                                  { placement: "topEnd" }
-                                                );
-                                                // Remove marker and update state
-                                                map.removeLayer(marker);
-                                                setPendingOrders((prev) =>
-                                                  prev.filter(
-                                                    (o) => o.id !== order.id
-                                                  )
-                                                );
-                                              } else {
-                                                // Error toast
-                                                reduceToastDuplicates(
-                                                  "order-assign-failed",
-                                                  <Message
-                                                    showIcon
-                                                    type="error"
-                                                    header="Error"
-                                                  >
-                                                    Failed to assign:{" "}
-                                                    {data.error ||
-                                                      "Unknown error"}
-                                                  </Message>,
-                                                  { placement: "topEnd" }
-                                                );
-                                                btn.disabled = false;
-                                                btn.style.background =
-                                                  "#3b82f6";
-                                                btn.innerHTML = "Accept Batch";
-                                              }
-                                            })
-                                            .catch((err) => {
-                                              console.error(
-                                                "Assign failed:",
-                                                err
-                                              );
-                                              reduceToastDuplicates(
-                                                "order-assign-failed",
-                                                <Message
-                                                  showIcon
-                                                  type="error"
-                                                  header="Error"
-                                                >
-                                                  Failed to assign.
-                                                </Message>,
-                                                { placement: "topEnd" }
-                                              );
-                                              btn.disabled = false;
-                                              btn.style.background = "#3b82f6";
-                                              btn.innerHTML = "Accept Batch";
-                                            });
-                                        }, 1000); // Small delay to let the wallet creation complete
-                                      } else {
-                                        reduceToastDuplicates(
-                                          "wallet-creation-failed",
-                                          <Message
-                                            showIcon
-                                            type="error"
-                                            header="Error"
-                                          >
-                                            Failed to create wallet.
-                                          </Message>,
-                                          { placement: "topEnd" }
-                                        );
-                                      }
-                                    })
-                                    .catch((err) => {
-                                      console.error(
-                                        "Wallet creation failed:",
-                                        err
-                                      );
-                                      reduceToastDuplicates(
-                                        "wallet-creation-failed",
-                                        <Message
-                                          showIcon
-                                          type="error"
-                                          header="Error"
-                                        >
-                                          Failed to create wallet.
-                                        </Message>,
-                                        { placement: "topEnd" }
-                                      );
-                                    });
-                                }}
-                              >
-                                Create Wallet
-                              </Button>
-                            </div>
-                          </div>
-                        </Message>,
-                        { placement: "topEnd", duration: 10000 }
-                      );
-
-                      // Reset button
-                      btn.disabled = false;
-                      btn.style.background = "#3b82f6";
-                      btn.innerHTML = "Accept Batch";
-                      return;
-                    }
-
-                    // Success toast
-                    reduceToastDuplicates(
-                      "order-assigned",
-                      <Message showIcon type="success" header="Assigned">
-                        Order assigned!
-                      </Message>,
-                      { placement: "topEnd" }
-                    );
-                    // Remove marker and update state
-                    map.removeLayer(marker);
-                    setPendingOrders((prev) =>
-                      prev.filter((o) => o.id !== order.id)
-                    );
-                  })
-                  .catch((err) => {
-                    console.error("Assign failed:", err);
-                    reduceToastDuplicates(
-                      "order-assign-failed",
-                      <Message showIcon type="error" header="Error">
-                        Failed to assign.
-                      </Message>,
-                      { placement: "topEnd" }
-                    );
-                    btn.disabled = false;
-                    btn.style.background = "#3b82f6";
-                    btn.innerHTML = "Accept Batch";
-                  });
-              });
-            }
-          });
+          renderPendingOrderMarker(order, map);
         });
       })
       .catch((err) => console.error("Pending orders fetch error:", err));
 
+    // Also, render the available orders from availableOrders prop
+    // These are more recent orders (within 24 hours)
+    if (availableOrders && availableOrders.length > 0) {
+      // Get availableOrders API data for complete information including coordinates
+      fetch("/api/shopper/availableOrders")
+        .then((res) => res.json())
+        .then((data) => {
+          // Create a map for faster lookup
+          const orderMap = new Map();
+          availableOrders.forEach(order => {
+            orderMap.set(order.id, order);
+          });
+          
+          // Render markers for each order in the data
+          data.forEach((apiOrder: {
+            id: string;
+            createdAt: string;
+            shopName: string;
+            shopAddress: string;
+            shopLatitude: number;
+            shopLongitude: number;
+            customerLatitude: number;
+            customerLongitude: number;
+            customerAddress: string;
+            itemsCount: number;
+            earnings: number;
+          }) => {
+            const order = orderMap.get(apiOrder.id);
+            if (order) {
+              // Create a marker at the shop location
+              const badgeColor = getOrderTimeBadgeColor(apiOrder.createdAt);
+              const earningsStr = order.estimatedEarnings;
+              
+              // Earnings badge icon with color based on time
+              const orderIcon = L.divIcon({
+                html: `<div style="background:#fff;border:2px solid ${badgeColor};border-radius:12px;padding:4px 12px;font-size:12px;color:${badgeColor};white-space:nowrap;">${earningsStr}</div>`,
+                className: "",
+                iconSize: [90, 30],
+                iconAnchor: [60, 15],
+                popupAnchor: [0, -15],
+              });
+              
+              const marker = L.marker([apiOrder.shopLatitude, apiOrder.shopLongitude], {
+                icon: orderIcon,
+                zIndexOffset: 1000,
+              }).addTo(map);
+              
+              // Calculate time since creation
+              const created = new Date(apiOrder.createdAt);
+              const diffMs = Date.now() - created.getTime();
+              const diffMins = Math.floor(diffMs / 60000);
+              const timeStr =
+                diffMins >= 60
+                  ? `${Math.floor(diffMins / 60)}h ${diffMins % 60}m ago`
+                  : `${diffMins} mins ago`;
+                  
+              // Calculate distance between shop and delivery address
+              const distKm = getDistanceKm(
+                apiOrder.shopLatitude,
+                apiOrder.shopLongitude,
+                apiOrder.customerLatitude,
+                apiOrder.customerLongitude
+              );
+              const distanceStr = `${Math.round(distKm * 10) / 10} km`;
+              
+              // Enhanced popup with icons and flex layout
+              const popupContent = `
+                <div style="font-size:14px; line-height:1.4; min-width:200px;">
+                  <div style="display:flex;align-items:center;margin-bottom:4px;">
+                    <span style="margin-right:6px;">🆔</span><strong>${apiOrder.id}</strong>
+                  </div>
+                  <div style="display:flex;align-items:center;margin-bottom:4px;">
+                    <span style="margin-right:6px;">🏪</span><span>${apiOrder.shopName}</span>
+                  </div>
+                  <div style="display:flex;align-items:center;margin-bottom:4px;">
+                    <span style="margin-right:6px;">📍</span><span>${apiOrder.shopAddress}</span>
+                  </div>
+                  <div style="display:flex;align-items:center;margin-bottom:4px;">
+                    <span style="margin-right:6px;">⏱️</span><span>${timeStr}</span>
+                  </div>
+                  <div style="display:flex;align-items:center;margin-bottom:4px;">
+                    <span style="margin-right:6px;">📏</span><span>Distance: ${distanceStr}</span>
+                  </div>
+                  <div style="display:flex;align-items:center;margin-bottom:4px;">
+                    <span style="margin-right:6px;">🛒</span><span>Items: ${apiOrder.itemsCount}</span>
+                  </div>
+                  <div style="display:flex;align-items:center;margin-bottom:4px;">
+                    <span style="margin-right:6px;">🚚</span><span>Deliver to: ${apiOrder.customerAddress}</span>
+                  </div>
+                  <div style="display:flex;align-items:center;">
+                    <span style="margin-right:6px;">💰</span><span>Estimated Earnings: ${earningsStr}</span>
+                  </div>
+                  <button id="accept-batch-${apiOrder.id}" style="margin-top:8px;padding:6px 12px;background:#10b981;color:#fff;border:none;border-radius:4px;cursor:pointer;">
+                    Accept Batch
+                  </button>
+                </div>
+              `;
+              
+              // Bind popup with max width
+              marker.bindPopup(popupContent, { maxWidth: 250 });
+              attachAcceptHandler(marker, apiOrder.id, map);
+            }
+          });
+        })
+        .catch(err => console.error("Error fetching full order details:", err));
+    }
+
     return () => {
       map.remove();
     };
-  }, [mapLoaded]);
+  }, [mapLoaded, availableOrders]);
 
   useEffect(() => {
     // Listen for dashboard toggle event
@@ -1332,6 +1180,309 @@ export default function MapSection({
       },
       { enableHighAccuracy: true, maximumAge: 0, timeout: 15000 }
     );
+  };
+
+  // Helper function to render a pending order marker
+  const renderPendingOrderMarker = (order: PendingOrder, map: L.Map) => {
+    // Use shop coordinates instead of delivery address
+    const lat = order.shopLat;
+    const lng = order.shopLng;
+    
+    // time since creation
+    const created = new Date(order.createdAt);
+    const diffMs = Date.now() - created.getTime();
+    const diffMins = Math.floor(diffMs / 60000);
+    const timeStr =
+      diffMins >= 60
+        ? `${Math.floor(diffMins / 60)}h ${diffMins % 60}m ago`
+        : `${diffMins} mins ago`;
+    
+    // distance between shop and delivery address
+    const distKm = getDistanceKm(
+      order.shopLat,
+      order.shopLng,
+      order.latitude,
+      order.longitude
+    );
+    const distanceStr = `${Math.round(distKm * 10) / 10} km`;
+    const earningsStr = formatCurrency(order.earnings);
+    
+    // Use purple color for older pending orders
+    const pendingIcon = L.divIcon({
+      html: `<div style="background:#fff;border:2px solid #8b5cf6;border-radius:12px;padding:4px 12px;font-size:12px;color:#8b5cf6;white-space:nowrap;">${earningsStr}</div>`,
+      className: "",
+      iconSize: [90, 30],
+      iconAnchor: [60, 15],
+      popupAnchor: [0, -15],
+    });
+    
+    const marker = L.marker([lat, lng], {
+      icon: pendingIcon,
+      zIndexOffset: 1000,
+    }).addTo(map);
+    
+    // Enhanced popup with icons and flex layout
+    const popupContent = `
+      <div style="font-size:14px; line-height:1.4; min-width:200px;">
+        <div style="display:flex;align-items:center;margin-bottom:4px;">
+          <span style="margin-right:6px;">🆔</span><strong>${order.id}</strong>
+        </div>
+        <div style="display:flex;align-items:center;margin-bottom:4px;">
+          <span style="margin-right:6px;">🏪</span><span>${order.shopName}</span>
+        </div>
+        <div style="display:flex;align-items:center;margin-bottom:4px;">
+          <span style="margin-right:6px;">📍</span><span>${order.shopAddress}</span>
+        </div>
+        <div style="display:flex;align-items:center;margin-bottom:4px;">
+          <span style="margin-right:6px;">⏱️</span><span>${timeStr}</span>
+        </div>
+        <div style="display:flex;align-items:center;margin-bottom:4px;">
+          <span style="margin-right:6px;">📏</span><span>Distance: ${distanceStr}</span>
+        </div>
+        <div style="display:flex;align-items:center;margin-bottom:4px;">
+          <span style="margin-right:6px;">🛒</span><span>Items: ${order.itemsCount}</span>
+        </div>
+        <div style="display:flex;align-items:center;margin-bottom:4px;">
+          <span style="margin-right:6px;">🚚</span><span>Deliver to: ${order.addressStreet}, ${order.addressCity}</span>
+        </div>
+        <div style="display:flex;align-items:center;">
+          <span style="margin-right:6px;">💰</span><span>Estimated Earnings: ${earningsStr}</span>
+        </div>
+        <button id="accept-batch-${order.id}" style="margin-top:8px;padding:6px 12px;background:#10b981;color:#fff;border:none;border-radius:4px;cursor:pointer;">
+          Accept Batch
+        </button>
+      </div>
+    `;
+    
+    // Bind popup with max width
+    marker.bindPopup(popupContent, { maxWidth: 250 });
+    attachAcceptHandler(marker, order.id, map);
+  };
+
+  // Helper function to attach the accept order handler to markers
+  const attachAcceptHandler = (marker: L.Marker, orderId: string, map: L.Map) => {
+    marker.on("popupopen", () => {
+      const btn = document.getElementById(
+        `accept-batch-${orderId}`
+      ) as HTMLButtonElement | null;
+      
+      if (btn) {
+        btn.addEventListener("click", () => {
+          // Show loading state on button
+          btn.disabled = true;
+          // Change button to green and show spinner
+          btn.style.background = "#10b981";
+          btn.innerHTML =
+            '<span class="animate-spin mr-2 inline-block w-4 h-4 border-2 border-white border-t-transparent rounded-full"></span>Assigning...';
+          // Toast assigning
+          reduceToastDuplicates(
+            "order-assigning",
+            <Message showIcon type="info" header="Assigning">
+              Assigning order...
+            </Message>,
+            { placement: "topEnd" }
+          );
+          
+          fetch("/api/shopper/assignOrder", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ orderId: orderId }),
+          })
+            .then((res) => res.json())
+            .then((data) => {
+              // Check if there's a wallet error
+              if (data.error === "no_wallet") {
+                // Show toast with create wallet button
+                reduceToastDuplicates(
+                  "no-wallet",
+                  <Message
+                    showIcon
+                    type="warning"
+                    header="Wallet Required"
+                  >
+                    <div>
+                      <p>You need a wallet to accept batches.</p>
+                      <div className="mt-2">
+                        <Button
+                          appearance="primary"
+                          size="sm"
+                          onClick={() => {
+                            fetch("/api/queries/createWallet", {
+                              method: "POST",
+                              headers: {
+                                "Content-Type": "application/json",
+                              },
+                            })
+                              .then((res) => res.json())
+                              .then((data) => {
+                                if (data.success) {
+                                  reduceToastDuplicates(
+                                    "wallet-created",
+                                    <Message
+                                      showIcon
+                                      type="success"
+                                      header="Wallet Created"
+                                    >
+                                      Your wallet has been created
+                                      successfully.
+                                    </Message>,
+                                    { placement: "topEnd" }
+                                  );
+
+                                  // Try accepting the batch again after wallet creation
+                                  setTimeout(() => {
+                                    fetch("/api/shopper/assignOrder", {
+                                      method: "POST",
+                                      headers: {
+                                        "Content-Type":
+                                          "application/json",
+                                      },
+                                      body: JSON.stringify({
+                                        orderId: orderId,
+                                      }),
+                                    })
+                                      .then((res) => res.json())
+                                      .then((data) => {
+                                        if (data.success) {
+                                          // Success toast
+                                          reduceToastDuplicates(
+                                            "order-assigned",
+                                            <Message
+                                              showIcon
+                                              type="success"
+                                              header="Assigned"
+                                            >
+                                              Order assigned!
+                                            </Message>,
+                                            { placement: "topEnd" }
+                                          );
+                                          // Remove marker and update state
+                                          map.removeLayer(marker);
+                                          setPendingOrders((prev) =>
+                                            prev.filter(
+                                              (o) => o.id !== orderId
+                                            )
+                                          );
+                                        } else {
+                                          // Error toast
+                                          reduceToastDuplicates(
+                                            "order-assign-failed",
+                                            <Message
+                                              showIcon
+                                              type="error"
+                                              header="Error"
+                                            >
+                                              Failed to assign:{" "}
+                                              {data.error ||
+                                                "Unknown error"}
+                                            </Message>,
+                                            { placement: "topEnd" }
+                                          );
+                                          btn.disabled = false;
+                                          btn.style.background =
+                                            "#3b82f6";
+                                          btn.innerHTML = "Accept Batch";
+                                        }
+                                      })
+                                      .catch((err) => {
+                                        console.error(
+                                          "Assign failed:",
+                                          err
+                                        );
+                                        reduceToastDuplicates(
+                                          "order-assign-failed",
+                                          <Message
+                                            showIcon
+                                            type="error"
+                                            header="Error"
+                                          >
+                                            Failed to assign.
+                                          </Message>,
+                                          { placement: "topEnd" }
+                                        );
+                                        btn.disabled = false;
+                                        btn.style.background = "#3b82f6";
+                                        btn.innerHTML = "Accept Batch";
+                                      });
+                                  }, 1000); // Small delay to let the wallet creation complete
+                                } else {
+                                  reduceToastDuplicates(
+                                    "wallet-creation-failed",
+                                    <Message
+                                      showIcon
+                                      type="error"
+                                      header="Error"
+                                    >
+                                      Failed to create wallet.
+                                    </Message>,
+                                    { placement: "topEnd" }
+                                  );
+                                }
+                              })
+                              .catch((err) => {
+                                console.error(
+                                  "Wallet creation failed:",
+                                  err
+                                );
+                                reduceToastDuplicates(
+                                  "wallet-creation-failed",
+                                  <Message
+                                    showIcon
+                                    type="error"
+                                    header="Error"
+                                  >
+                                    Failed to create wallet.
+                                  </Message>,
+                                  { placement: "topEnd" }
+                                );
+                              });
+                          }}
+                        >
+                          Create Wallet
+                        </Button>
+                      </div>
+                    </div>
+                  </Message>,
+                  { placement: "topEnd", duration: 10000 }
+                );
+
+                // Reset button
+                btn.disabled = false;
+                btn.style.background = "#3b82f6";
+                btn.innerHTML = "Accept Batch";
+                return;
+              }
+
+              // Success toast
+              reduceToastDuplicates(
+                "order-assigned",
+                <Message showIcon type="success" header="Assigned">
+                  Order assigned!
+                </Message>,
+                { placement: "topEnd" }
+              );
+              // Remove marker and update state
+              map.removeLayer(marker);
+              setPendingOrders((prev) =>
+                prev.filter((o) => o.id !== orderId)
+              );
+            })
+            .catch((err) => {
+              console.error("Assign failed:", err);
+              reduceToastDuplicates(
+                "order-assign-failed",
+                <Message showIcon type="error" header="Error">
+                  Failed to assign.
+                </Message>,
+                { placement: "topEnd" }
+              );
+              btn.disabled = false;
+              btn.style.background = "#3b82f6";
+              btn.innerHTML = "Accept Batch";
+            });
+        });
+      }
+    });
   };
 
   // If the dashboard is initializing, show a simpler loading state

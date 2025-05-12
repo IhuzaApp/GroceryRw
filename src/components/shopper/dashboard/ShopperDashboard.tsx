@@ -88,44 +88,42 @@ export default function ShopperDashboard() {
     setIsLoading(true);
     fetch("/api/shopper/availableOrders")
       .then((res) => res.json())
-      .then((data: any[]) => {
-        const filtered = data.filter((o) => {
-          const lat = parseFloat(o.address.latitude);
-          const lng = parseFloat(o.address.longitude);
+      .then((data) => {
+        // Filter orders by distance from user
+        const nearbyOrders = data.filter((order) => {
           const distKm = getDistanceKm(
             currentLocation.lat,
             currentLocation.lng,
-            lat,
-            lng
+            order.customerLatitude,
+            order.customerLongitude
           );
-          return distKm <= 10;
+          return distKm <= 10; // Only show orders within 10km
         });
-        const orders = filtered.map((o) => {
-          const lat = parseFloat(o.address.latitude);
-          const lng = parseFloat(o.address.longitude);
+
+        // Format orders for the OrderCard component
+        const formattedOrders = nearbyOrders.map((order) => {
           const distKm = getDistanceKm(
             currentLocation.lat,
             currentLocation.lng,
-            lat,
-            lng
+            order.customerLatitude,
+            order.customerLongitude
           );
           const distMi = (distKm * 0.621371).toFixed(1);
-          const earnings = (
-            parseFloat(o.service_fee || "0") + parseFloat(o.delivery_fee || "0")
-          ).toFixed(2);
           return {
-            id: o.id,
-            shopName: o.shop.name,
-            shopAddress: o.shop.address,
-            customerAddress: `${o.address.street}, ${o.address.city}`,
+            id: order.id,
+            shopName: order.shopName,
+            shopAddress: order.shopAddress,
+            customerAddress: order.customerAddress,
             distance: `${distMi} mi`,
-            items: o.Order_Items_aggregate.aggregate?.count ?? 0,
-            total: `$${earnings}`,
-            estimatedEarnings: `$${earnings}`,
-            createdAt: relativeTime(o.created_at),
+            items: order.itemsCount,
+            total: `$${order.earnings.toFixed(2)}`,
+            estimatedEarnings: `$${order.earnings.toFixed(2)}`,
+            createdAt: relativeTime(order.createdAt),
           };
         });
-        setAvailableOrders(orders);
+        
+        // Set all orders for the map to use (shop locations)
+        setAvailableOrders(formattedOrders);
       })
       .catch((err) => console.error("Error fetching available orders:", err))
       .finally(() => setIsLoading(false));
@@ -234,7 +232,11 @@ export default function ShopperDashboard() {
       >
         {/* Map Section */}
         <div className="w-full">
-          <MapSection mapLoaded={mapLoaded} availableOrders={availableOrders} isInitializing={isInitializing} />
+          <MapSection 
+            mapLoaded={mapLoaded} 
+            availableOrders={availableOrders} 
+            isInitializing={isInitializing} 
+          />
         </div>
 
         {/* Desktop Title and Sort */}
