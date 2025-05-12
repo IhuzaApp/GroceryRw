@@ -18,32 +18,36 @@ interface PaymentHistoryProps {
   onViewAllPayments: () => void;
 }
 
-const PaymentHistory: React.FC<PaymentHistoryProps> = ({ 
-  nextPayout, 
+const PaymentHistory: React.FC<PaymentHistoryProps> = ({
+  nextPayout,
   payments,
-  onViewAllPayments
+  onViewAllPayments,
 }) => {
   return (
     <div>
       <div className="mb-6">
-        <h3 className="font-medium mb-2">Next Payout</h3>
-        <div className="bg-green-50 border border-green-200 rounded-lg p-4">
-          <div className="flex justify-between items-center">
+        <h3 className="mb-2 font-medium">Next Payout</h3>
+        <div className="rounded-lg border border-green-200 bg-green-50 p-4">
+          <div className="flex items-center justify-between">
             <div>
-              <div className="text-lg font-bold">${nextPayout.amount.toFixed(2)}</div>
-              <div className="text-sm text-gray-500">Scheduled for {nextPayout.date}</div>
+              <div className="text-lg font-bold">
+                ${nextPayout.amount.toFixed(2)}
+              </div>
+              <div className="text-sm text-gray-500">
+                Scheduled for {nextPayout.date}
+              </div>
             </div>
             <Button appearance="primary">View Details</Button>
           </div>
         </div>
       </div>
 
-      <h3 className="font-medium mb-4">Payment History</h3>
+      <h3 className="mb-4 font-medium">Payment History</h3>
       <div className="space-y-4">
         {payments.map((item, index) => (
           <div
             key={index}
-            className="flex justify-between items-center p-4 border border-gray-200 rounded-lg"
+            className="flex items-center justify-between rounded-lg border border-gray-200 p-4"
           >
             <div>
               <div className="font-medium">Payout</div>
@@ -57,11 +61,16 @@ const PaymentHistory: React.FC<PaymentHistoryProps> = ({
         ))}
       </div>
 
-      <Button appearance="primary" color="green" className="w-full mt-4" onClick={onViewAllPayments}>
+      <Button
+        appearance="primary"
+        color="green"
+        className="mt-4 w-full"
+        onClick={onViewAllPayments}
+      >
         View All Payments
       </Button>
     </div>
   );
 };
 
-export default PaymentHistory; 
+export default PaymentHistory;

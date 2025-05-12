@@ -22,27 +22,28 @@ const EarningsSummaryCard: React.FC<EarningsSummaryCardProps> = ({
     <Panel shaded bordered bodyFill className="p-4">
       <div className="pb-2">
         <div className="text-sm text-gray-500">{title}</div>
-        <div className="text-2xl font-bold flex items-center">
-          <span className={`h-5 w-5 mr-1 ${iconColor}`}>{icon}</span>
+        <div className="flex items-center text-2xl font-bold">
+          <span className={`mr-1 h-5 w-5 ${iconColor}`}>{icon}</span>
           {amount}
         </div>
       </div>
       <div>
         {trend && (
-          <div className="text-xs text-gray-500 flex items-center">
-            <svg 
-              viewBox="0 0 24 24" 
-              fill="none" 
-              stroke="currentColor" 
-              strokeWidth="2" 
-              strokeLinecap="round" 
-              strokeLinejoin="round" 
-              className="h-3 w-3 text-green-500 mr-1"
+          <div className="flex items-center text-xs text-gray-500">
+            <svg
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              className="mr-1 h-3 w-3 text-green-500"
             >
               <polyline points="23 6 13.5 15.5 8.5 10.5 1 18"></polyline>
               <polyline points="17 6 23 6 23 12"></polyline>
             </svg>
-            <span className="text-green-500 font-medium mr-1">{trend}</span> {trendText}
+            <span className="mr-1 font-medium text-green-500">{trend}</span>{" "}
+            {trendText}
           </div>
         )}
       </div>
@@ -50,4 +51,4 @@ const EarningsSummaryCard: React.FC<EarningsSummaryCardProps> = ({
   );
 };
 
-export default EarningsSummaryCard; 
+export default EarningsSummaryCard;

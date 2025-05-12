@@ -22,7 +22,7 @@ interface Order {
 
 function getBadgeColor(order: Order): string {
   const minutesAgo = order.minutesAgo || 0;
-  
+
   if (minutesAgo < 10) {
     return "bg-blue-100 text-blue-800";
   } else if (minutesAgo < 60) {
@@ -34,29 +34,31 @@ function getBadgeColor(order: Order): string {
   }
 }
 
-function getPriorityLabel(priorityLevel: number): { text: string; class: string } | null {
+function getPriorityLabel(
+  priorityLevel: number
+): { text: string; class: string } | null {
   if (!priorityLevel || priorityLevel <= 1) return null;
-  
+
   switch (priorityLevel) {
     case 5:
-      return { 
-        text: "CRITICAL", 
-        class: "bg-red-600 text-white" 
+      return {
+        text: "CRITICAL",
+        class: "bg-red-600 text-white",
       };
     case 4:
-      return { 
-        text: "HIGH PRIORITY", 
-        class: "bg-orange-500 text-white" 
+      return {
+        text: "HIGH PRIORITY",
+        class: "bg-orange-500 text-white",
       };
     case 3:
-      return { 
-        text: "PRIORITY", 
-        class: "bg-yellow-500 text-white" 
+      return {
+        text: "PRIORITY",
+        class: "bg-yellow-500 text-white",
       };
     case 2:
-      return { 
-        text: "LOW PRIORITY", 
-        class: "bg-blue-500 text-white" 
+      return {
+        text: "LOW PRIORITY",
+        class: "bg-blue-500 text-white",
       };
     default:
       return null;
@@ -66,11 +68,22 @@ function getPriorityLabel(priorityLevel: number): { text: string; class: string 
 export default function OrderCard({ order }: { order: Order }) {
   const badgeColorClass = getBadgeColor(order);
   const priorityInfo = getPriorityLabel(order.priorityLevel || 0);
-  
+
   return (
-    <Panel shaded bordered bodyFill className={`overflow-hidden ${order.priorityLevel && order.priorityLevel >= 4 ? 'border-2 border-red-500' : ''}`}>
+    <Panel
+      shaded
+      bordered
+      bodyFill
+      className={`overflow-hidden ${
+        order.priorityLevel && order.priorityLevel >= 4
+          ? "border-2 border-red-500"
+          : ""
+      }`}
+    >
       {priorityInfo && (
-        <div className={`text-center text-xs font-bold py-1 ${priorityInfo.class}`}>
+        <div
+          className={`py-1 text-center text-xs font-bold ${priorityInfo.class}`}
+        >
           {priorityInfo.text}
         </div>
       )}
@@ -141,9 +154,13 @@ export default function OrderCard({ order }: { order: Order }) {
                 View Details
               </Button>
             </Link>
-            <Button 
-              appearance="primary" 
-              className={`${order.priorityLevel && order.priorityLevel >= 4 ? 'bg-red-500' : 'bg-green-500'} text-white`}
+            <Button
+              appearance="primary"
+              className={`${
+                order.priorityLevel && order.priorityLevel >= 4
+                  ? "bg-red-500"
+                  : "bg-green-500"
+              } text-white`}
               onClick={() => {
                 window.location.href = `/shopper/order/${order.id}?action=accept`;
               }}

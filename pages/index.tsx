@@ -35,7 +35,7 @@ import ShopperDashboard from "@components/shopper/dashboard/ShopperDashboard";
 function LoadingScreen() {
   const [loadingProgress, setLoadingProgress] = useState(0);
   const [loadingMessage, setLoadingMessage] = useState("Initializing...");
-  
+
   // Simulate loading progress
   useEffect(() => {
     const messages = [
@@ -43,20 +43,20 @@ function LoadingScreen() {
       "Loading user data...",
       "Setting up your dashboard...",
       "Almost ready...",
-      "Finalizing..."
+      "Finalizing...",
     ];
-    
+
     let progress = 0;
     const interval = setInterval(() => {
       progress += Math.floor(Math.random() * 15) + 5;
-      
+
       if (progress >= 100) {
         progress = 100;
         clearInterval(interval);
       }
-      
+
       setLoadingProgress(progress);
-      
+
       // Update message based on progress
       const messageIndex = Math.min(
         Math.floor(progress / 25),
@@ -64,7 +64,7 @@ function LoadingScreen() {
       );
       setLoadingMessage(messages[messageIndex]);
     }, 800);
-    
+
     return () => clearInterval(interval);
   }, []);
 
@@ -73,10 +73,12 @@ function LoadingScreen() {
       <div className="mb-6 flex h-24 w-24 items-center justify-center">
         <Loader size="lg" content="" speed="slow" />
       </div>
-      
-      <h2 className="mb-2 text-xl font-semibold text-gray-800">Setting up your experience</h2>
+
+      <h2 className="mb-2 text-xl font-semibold text-gray-800">
+        Setting up your experience
+      </h2>
       <p className="mb-6 text-gray-500">{loadingMessage}</p>
-      
+
       <div className="w-64 px-4">
         <Progress.Line
           percent={loadingProgress}

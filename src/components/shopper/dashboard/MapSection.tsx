@@ -82,7 +82,7 @@ function getOrderTimeBadgeColor(createdAtStr: string): string {
   const created = new Date(createdAtStr);
   const diffMs = Date.now() - created.getTime();
   const diffMins = Math.floor(diffMs / 60000);
-  
+
   // Color coding:
   // - Blue: Very recent orders (<10 min) - not normally visible in list view with 10 min filter
   // - Green: Recent orders (10-60 min)
@@ -634,20 +634,28 @@ export default function MapSection({
     // Also, render the available orders from availableOrders prop
     // These are more recent orders (within 24 hours)
     if (availableOrders && availableOrders.length > 0) {
-      console.log(`MapSection: Preparing to render ${availableOrders.length} order markers`);
-      
+      console.log(
+        `MapSection: Preparing to render ${availableOrders.length} order markers`
+      );
+
       // Render markers for each available order
       availableOrders.forEach((order) => {
         // Skip if missing coordinates
-        if (!order.shopLatitude || !order.shopLongitude || 
-            isNaN(order.shopLatitude) || isNaN(order.shopLongitude)) {
-          console.warn(`MapSection: Skipping order ${order.id} due to missing coordinates`);
+        if (
+          !order.shopLatitude ||
+          !order.shopLongitude ||
+          isNaN(order.shopLatitude) ||
+          isNaN(order.shopLongitude)
+        ) {
+          console.warn(
+            `MapSection: Skipping order ${order.id} due to missing coordinates`
+          );
           return;
         }
-        
+
         const badgeColor = getOrderTimeBadgeColor(order.createdAt);
         const earningsStr = order.estimatedEarnings;
-        
+
         // Earnings badge icon with color based on time
         const orderIcon = L.divIcon({
           html: `<div style="background:#fff;border:2px solid ${badgeColor};border-radius:12px;padding:4px 12px;font-size:12px;color:${badgeColor};white-space:nowrap;">${earningsStr}</div>`,
@@ -656,19 +664,23 @@ export default function MapSection({
           iconAnchor: [60, 15],
           popupAnchor: [0, -15],
         });
-        
+
         const marker = L.marker([order.shopLatitude, order.shopLongitude], {
           icon: orderIcon,
           zIndexOffset: 1000,
         }).addTo(map);
-        
+
         // Calculate time since creation based on createdAt
         const timeStr = order.createdAt;
-        
+
         // Calculate distance between shop and delivery address
         let distanceStr = "Unknown";
-        if (order.shopLatitude && order.shopLongitude && 
-            order.customerLatitude && order.customerLongitude) {
+        if (
+          order.shopLatitude &&
+          order.shopLongitude &&
+          order.customerLatitude &&
+          order.customerLongitude
+        ) {
           const distKm = getDistanceKm(
             order.shopLatitude,
             order.shopLongitude,
@@ -677,7 +689,7 @@ export default function MapSection({
           );
           distanceStr = `${Math.round(distKm * 10) / 10} km`;
         }
-        
+
         // Enhanced popup with icons and flex layout
         const popupContent = `
           <div style="font-size:14px; line-height:1.4; min-width:200px;">
@@ -710,7 +722,7 @@ export default function MapSection({
             </button>
           </div>
         `;
-        
+
         // Bind popup with max width
         marker.bindPopup(popupContent, { maxWidth: 250 });
         attachAcceptHandler(marker, order.id, map);
@@ -1180,7 +1192,7 @@ export default function MapSection({
     // Use shop coordinates instead of delivery address
     const lat = order.shopLat;
     const lng = order.shopLng;
-    
+
     // time since creation
     const created = new Date(order.createdAt);
     const diffMs = Date.now() - created.getTime();
@@ -1189,7 +1201,7 @@ export default function MapSection({
       diffMins >= 60
         ? `${Math.floor(diffMins / 60)}h ${diffMins % 60}m ago`
         : `${diffMins} mins ago`;
-    
+
     // distance between shop and delivery address
     const distKm = getDistanceKm(
       order.shopLat,
@@ -1199,7 +1211,7 @@ export default function MapSection({
     );
     const distanceStr = `${Math.round(distKm * 10) / 10} km`;
     const earningsStr = formatCurrency(order.earnings);
-    
+
     // Use purple color for older pending orders
     const pendingIcon = L.divIcon({
       html: `<div style="background:#fff;border:2px solid #8b5cf6;border-radius:12px;padding:4px 12px;font-size:12px;color:#8b5cf6;white-space:nowrap;">${earningsStr}</div>`,
@@ -1208,12 +1220,12 @@ export default function MapSection({
       iconAnchor: [60, 15],
       popupAnchor: [0, -15],
     });
-    
+
     const marker = L.marker([lat, lng], {
       icon: pendingIcon,
       zIndexOffset: 1000,
     }).addTo(map);
-    
+
     // Enhanced popup with icons and flex layout
     const popupContent = `
       <div style="font-size:14px; line-height:1.4; min-width:200px;">
@@ -1246,19 +1258,23 @@ export default function MapSection({
         </button>
       </div>
     `;
-    
+
     // Bind popup with max width
     marker.bindPopup(popupContent, { maxWidth: 250 });
     attachAcceptHandler(marker, order.id, map);
   };
 
   // Helper function to attach the accept order handler to markers
-  const attachAcceptHandler = (marker: L.Marker, orderId: string, map: L.Map) => {
+  const attachAcceptHandler = (
+    marker: L.Marker,
+    orderId: string,
+    map: L.Map
+  ) => {
     marker.on("popupopen", () => {
       const btn = document.getElementById(
         `accept-batch-${orderId}`
       ) as HTMLButtonElement | null;
-      
+
       if (btn) {
         btn.addEventListener("click", () => {
           // Show loading state on button
@@ -1275,7 +1291,7 @@ export default function MapSection({
             </Message>,
             { placement: "topEnd" }
           );
-          
+
           fetch("/api/shopper/assignOrder", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
@@ -1288,11 +1304,7 @@ export default function MapSection({
                 // Show toast with create wallet button
                 reduceToastDuplicates(
                   "no-wallet",
-                  <Message
-                    showIcon
-                    type="warning"
-                    header="Wallet Required"
-                  >
+                  <Message showIcon type="warning" header="Wallet Required">
                     <div>
                       <p>You need a wallet to accept batches.</p>
                       <div className="mt-2">
@@ -1316,8 +1328,7 @@ export default function MapSection({
                                       type="success"
                                       header="Wallet Created"
                                     >
-                                      Your wallet has been created
-                                      successfully.
+                                      Your wallet has been created successfully.
                                     </Message>,
                                     { placement: "topEnd" }
                                   );
@@ -1327,8 +1338,7 @@ export default function MapSection({
                                     fetch("/api/shopper/assignOrder", {
                                       method: "POST",
                                       headers: {
-                                        "Content-Type":
-                                          "application/json",
+                                        "Content-Type": "application/json",
                                       },
                                       body: JSON.stringify({
                                         orderId: orderId,
@@ -1352,9 +1362,7 @@ export default function MapSection({
                                           // Remove marker and update state
                                           map.removeLayer(marker);
                                           setPendingOrders((prev) =>
-                                            prev.filter(
-                                              (o) => o.id !== orderId
-                                            )
+                                            prev.filter((o) => o.id !== orderId)
                                           );
                                         } else {
                                           // Error toast
@@ -1366,22 +1374,17 @@ export default function MapSection({
                                               header="Error"
                                             >
                                               Failed to assign:{" "}
-                                              {data.error ||
-                                                "Unknown error"}
+                                              {data.error || "Unknown error"}
                                             </Message>,
                                             { placement: "topEnd" }
                                           );
                                           btn.disabled = false;
-                                          btn.style.background =
-                                            "#3b82f6";
+                                          btn.style.background = "#3b82f6";
                                           btn.innerHTML = "Accept Batch";
                                         }
                                       })
                                       .catch((err) => {
-                                        console.error(
-                                          "Assign failed:",
-                                          err
-                                        );
+                                        console.error("Assign failed:", err);
                                         reduceToastDuplicates(
                                           "order-assign-failed",
                                           <Message
@@ -1413,17 +1416,10 @@ export default function MapSection({
                                 }
                               })
                               .catch((err) => {
-                                console.error(
-                                  "Wallet creation failed:",
-                                  err
-                                );
+                                console.error("Wallet creation failed:", err);
                                 reduceToastDuplicates(
                                   "wallet-creation-failed",
-                                  <Message
-                                    showIcon
-                                    type="error"
-                                    header="Error"
-                                  >
+                                  <Message showIcon type="error" header="Error">
                                     Failed to create wallet.
                                   </Message>,
                                   { placement: "topEnd" }
@@ -1456,9 +1452,7 @@ export default function MapSection({
               );
               // Remove marker and update state
               map.removeLayer(marker);
-              setPendingOrders((prev) =>
-                prev.filter((o) => o.id !== orderId)
-              );
+              setPendingOrders((prev) => prev.filter((o) => o.id !== orderId));
             })
             .catch((err) => {
               console.error("Assign failed:", err);

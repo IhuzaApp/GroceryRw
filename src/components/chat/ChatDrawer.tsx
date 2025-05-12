@@ -152,11 +152,11 @@ export default function ChatDrawer({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-y-0 right-0 z-50 w-[450px] flex flex-col bg-white shadow-lg">
+    <div className="fixed inset-y-0 right-0 z-50 flex w-[450px] flex-col bg-white shadow-lg">
       {/* Header */}
-      <div className="p-4 border-b border-gray-200 flex items-center justify-between bg-gray-50 shrink-0">
+      <div className="flex shrink-0 items-center justify-between border-b border-gray-200 bg-gray-50 p-4">
         <div className="flex items-center">
-          <div className="h-10 w-10 rounded-[20px] bg-gray-200 flex-shrink-0 flex items-center justify-center text-gray-600 mr-3">
+          <div className="mr-3 flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-[20px] bg-gray-200 text-gray-600">
             {customerName.substring(0, 2).toUpperCase()}
           </div>
           <div>
@@ -186,7 +186,7 @@ export default function ChatDrawer({
       </div>
 
       {/* Messages */}
-      <div className="flex-1 p-4 overflow-y-auto space-y-4">
+      <div className="flex-1 space-y-4 overflow-y-auto p-4">
         {messages.length === 0 ? (
           <div className="flex h-full flex-col items-center justify-center text-gray-500">
             <svg
@@ -225,7 +225,7 @@ export default function ChatDrawer({
                   >
                     <div
                       className={`
-                        h-8 w-8 rounded-[20px] flex-shrink-0 flex items-center justify-center
+                        flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-[20px]
                         ${
                           isShopperMessage
                             ? "bg-green-500 text-white"
@@ -240,7 +240,7 @@ export default function ChatDrawer({
 
                     <div
                       className={`
-                        rounded-lg p-3 max-w-[85%]
+                        max-w-[85%] rounded-lg p-3
                         ${
                           isShopperMessage
                             ? "bg-green-500 text-white"
@@ -251,14 +251,16 @@ export default function ChatDrawer({
                       {messageText && <p className="text-sm">{messageText}</p>}
                       {msg.image && (
                         <div className="mt-2">
-                       <Avatar color="blue" circle  size="xs"/>
+                          <Avatar color="blue" circle size="xs" />
                         </div>
                       )}
                       <span
                         className={`
-                          text-xs mt-1 block
+                          mt-1 block text-xs
                           ${
-                            isShopperMessage ? "text-green-200" : "text-gray-500"
+                            isShopperMessage
+                              ? "text-green-200"
+                              : "text-gray-500"
                           }
                         `}
                       >
@@ -275,7 +277,7 @@ export default function ChatDrawer({
       </div>
 
       {/* Quick Replies */}
-      <div className="overflow-x-auto whitespace-nowrap border-t bg-white p-2 shrink-0">
+      <div className="shrink-0 overflow-x-auto whitespace-nowrap border-t bg-white p-2">
         <div className="flex gap-2">
           <Button
             appearance="ghost"
@@ -305,11 +307,11 @@ export default function ChatDrawer({
       </div>
 
       {/* Message Input */}
-      <div className="p-4 border-t border-gray-200 bg-white shrink-0">
+      <div className="shrink-0 border-t border-gray-200 bg-white p-4">
         <div className="flex items-center gap-2">
           <Button
             appearance="subtle"
-            className="rounded-[20px] h-10 w-10 flex items-center justify-center p-0"
+            className="flex h-10 w-10 items-center justify-center rounded-[20px] p-0"
             onClick={handleAttachmentClick}
             disabled={isSending || uploadingImage}
           >
@@ -376,7 +378,7 @@ export default function ChatDrawer({
           <input
             type="text"
             placeholder="Type your message..."
-            className="flex-1 border border-gray-300 rounded-[20px] px-4 py-2 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
+            className="flex-1 rounded-[20px] border border-gray-300 px-4 py-2 focus:border-transparent focus:outline-none focus:ring-2 focus:ring-green-500"
             value={message}
             onChange={(e) => setMessage(e.target.value)}
             onKeyPress={handleKeyPress}
@@ -385,7 +387,7 @@ export default function ChatDrawer({
 
           <Button
             appearance={message.trim() ? "primary" : "subtle"}
-            className={`rounded-[20px] h-10 w-10 p-0 flex items-center justify-center ${
+            className={`flex h-10 w-10 items-center justify-center rounded-[20px] p-0 ${
               message.trim() ? "bg-green-500 text-white" : "text-gray-400"
             }`}
             onClick={handleSendMessage}
