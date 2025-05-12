@@ -134,7 +134,7 @@ function ProductCard({
 
   const handleQuickAdd = async (e: React.MouseEvent) => {
     e.stopPropagation();
-    
+
     if (status === "loading") return;
     if (status === "unauthenticated") {
       localStorage.setItem(
@@ -145,25 +145,27 @@ function ProductCard({
           quantity: 1,
         })
       );
-      router.push(
-        `/auth/login?redirect=${encodeURIComponent(
-          router.asPath
-        )}`
-      );
+      router.push(`/auth/login?redirect=${encodeURIComponent(router.asPath)}`);
       return;
     }
-    
+
     setIsAdding(true);
     const toastId = toast.loading("Adding to cart...");
-    
+
     try {
       await addItem(shopId, id, 1);
-      
+
       // Update toast with success message
       toast.success(
         <div className="flex items-center gap-2">
           <div className="flex h-6 w-6 items-center justify-center rounded-full bg-green-100">
-            <svg viewBox="0 0 24 24" className="h-4 w-4 text-green-500" fill="none" stroke="currentColor" strokeWidth="2">
+            <svg
+              viewBox="0 0 24 24"
+              className="h-4 w-4 text-green-500"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+            >
               <path d="M5 13l4 4L19 7" />
             </svg>
           </div>
@@ -253,51 +255,51 @@ function ProductCard({
                   </svg>
                 )}
               </Button>
-            <Button
-              appearance="primary"
-              size="sm"
+              <Button
+                appearance="primary"
+                size="sm"
                 className="flex h-8 w-8 items-center justify-center rounded-full bg-gray-200 p-0 text-gray-700 hover:bg-gray-300"
-              onClick={() => {
-                setShowModal(true);
-                setSelectedQuantity(1);
-              }}
-            >
-              <svg
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                className="h-4 w-4"
+                onClick={() => {
+                  setShowModal(true);
+                  setSelectedQuantity(1);
+                }}
               >
-                <line x1="12" y1="5" x2="12" y2="19" />
-                <line x1="5" y1="12" x2="19" y2="12" />
-              </svg>
-            </Button>
+                <svg
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  className="h-4 w-4"
+                >
+                  <line x1="12" y1="5" x2="12" y2="19" />
+                  <line x1="5" y1="12" x2="19" y2="12" />
+                </svg>
+              </Button>
             </div>
           </div>
         </div>
       </div>
       {showModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
-          <div 
+          <div
             className="w-80 rounded-lg bg-white p-6 shadow-lg"
             onKeyDown={(e) => {
               // Enter key submits the form
-              if (e.key === 'Enter') {
+              if (e.key === "Enter") {
                 e.preventDefault();
-                document.getElementById('add-to-cart-btn')?.click();
+                document.getElementById("add-to-cart-btn")?.click();
               }
               // Escape key closes the modal
-              if (e.key === 'Escape') {
+              if (e.key === "Escape") {
                 setShowModal(false);
               }
               // Up arrow increases quantity
-              if (e.key === 'ArrowUp') {
+              if (e.key === "ArrowUp") {
                 e.preventDefault();
                 setSelectedQuantity(selectedQuantity + 1);
               }
               // Down arrow decreases quantity
-              if (e.key === 'ArrowDown') {
+              if (e.key === "ArrowDown") {
                 e.preventDefault();
                 setSelectedQuantity(Math.max(1, selectedQuantity - 1));
               }
@@ -309,20 +311,22 @@ function ProductCard({
                 <span className="text-sm font-medium">Quantity:</span>
                 <div className="flex items-center">
                   <button
-                    onClick={() => setSelectedQuantity(Math.max(1, selectedQuantity - 1))}
+                    onClick={() =>
+                      setSelectedQuantity(Math.max(1, selectedQuantity - 1))
+                    }
                     className="flex h-8 w-8 items-center justify-center rounded-l border border-gray-300 bg-gray-100 text-gray-600 hover:bg-gray-200"
                   >
                     -
                   </button>
-              <input
-                type="number"
-                min={1}
-                value={selectedQuantity}
-                onChange={(e) =>
-                  setSelectedQuantity(
-                    Math.max(1, parseInt(e.target.value, 10) || 1)
-                  )
-                }
+                  <input
+                    type="number"
+                    min={1}
+                    value={selectedQuantity}
+                    onChange={(e) =>
+                      setSelectedQuantity(
+                        Math.max(1, parseInt(e.target.value, 10) || 1)
+                      )
+                    }
                     className="h-8 w-16 border-y border-gray-300 p-0 text-center focus:outline-none"
                     onFocus={(e) => e.target.select()}
                     autoFocus
@@ -335,7 +339,7 @@ function ProductCard({
                   </button>
                 </div>
               </div>
-              
+
               {/* Quick quantity buttons */}
               <div className="mt-2 flex flex-wrap gap-2">
                 {[1, 2, 3, 5, 10].map((qty) => (
@@ -380,23 +384,31 @@ function ProductCard({
                     );
                     return;
                   }
-                  
+
                   // Show loading state
                   const toastId = toast.loading("Adding to cart...");
-                  
+
                   try {
                     await addItem(shopId, id, selectedQuantity);
-                    
+
                     // Update toast with success message
                     toast.success(
                       <div className="flex items-center gap-2">
                         <div className="flex h-6 w-6 items-center justify-center rounded-full bg-green-100">
-                          <svg viewBox="0 0 24 24" className="h-4 w-4 text-green-500" fill="none" stroke="currentColor" strokeWidth="2">
+                          <svg
+                            viewBox="0 0 24 24"
+                            className="h-4 w-4 text-green-500"
+                            fill="none"
+                            stroke="currentColor"
+                            strokeWidth="2"
+                          >
                             <path d="M5 13l4 4L19 7" />
                           </svg>
                         </div>
                         <div>
-                          <p className="font-medium">{selectedQuantity} × {name}</p>
+                          <p className="font-medium">
+                            {selectedQuantity} × {name}
+                          </p>
                           <p className="text-xs text-gray-500">Added to cart</p>
                         </div>
                       </div>,
@@ -405,7 +417,7 @@ function ProductCard({
                         duration: 2000,
                       }
                     );
-                    
+
                     setShowModal(false);
                   } catch (err: any) {
                     console.error("Add to cart failed:", err);

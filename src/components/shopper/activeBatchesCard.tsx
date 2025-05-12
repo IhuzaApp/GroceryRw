@@ -78,15 +78,12 @@ export default function ActiveBatches({
       setError(null);
 
       try {
-        const response = await fetch(
-          "/api/shopper/activeBatches",
-          {
-            signal,
-            headers: {
-              "Content-Type": "application/json",
-            },
-          }
-        );
+        const response = await fetch("/api/shopper/activeBatches", {
+          signal,
+          headers: {
+            "Content-Type": "application/json",
+          },
+        });
 
         if (!response.ok) {
           const errorData = await response.json().catch(() => ({}));
@@ -99,7 +96,7 @@ export default function ActiveBatches({
         }
 
         const data = await response.json();
-        
+
         // Handle the new response format
         if (data.noOrdersFound) {
           // This is not an error, just no batches found
@@ -109,7 +106,7 @@ export default function ActiveBatches({
           // Normal array of orders
           setActiveOrders(Array.isArray(data) ? data : []);
         }
-        
+
         setFetchAttempted(true);
       } catch (err) {
         // Don't set error if it was canceled
@@ -164,9 +161,11 @@ export default function ActiveBatches({
         {/* Display a warning when user doesn't have the shopper role */}
         {!isLoading && role !== "shopper" && (
           <div className="mb-6 rounded-lg border border-yellow-200 bg-yellow-50 p-4">
-            <h3 className="font-semibold text-yellow-800">Shopper Access Required</h3>
+            <h3 className="font-semibold text-yellow-800">
+              Shopper Access Required
+            </h3>
             <p className="mt-1 text-yellow-700">
-              This page is only accessible to users with shopper privileges. 
+              This page is only accessible to users with shopper privileges.
               Your current role is: <strong>{role}</strong>
             </p>
             <p className="mt-2 text-yellow-700">
@@ -174,14 +173,18 @@ export default function ActiveBatches({
             </p>
             <ul className="mt-1 list-inside list-disc text-yellow-700">
               <li>Logging out and logging back in</li>
-              <li>Checking with an administrator to verify your account type</li>
+              <li>
+                Checking with an administrator to verify your account type
+              </li>
             </ul>
           </div>
         )}
 
         {error && (
           <div className="mb-6 rounded-lg border border-red-200 bg-red-50 p-4">
-            <h3 className="font-semibold text-red-800">There was a problem loading your batches</h3>
+            <h3 className="font-semibold text-red-800">
+              There was a problem loading your batches
+            </h3>
             <p className="mt-1 text-red-600">{error}</p>
             <div className="mt-3 text-sm text-red-700">
               <p>This might be because:</p>
@@ -227,19 +230,19 @@ export default function ActiveBatches({
             </div>
             <h3 className="mb-2 text-lg font-medium">No Active Batches</h3>
             <p className="mb-4 text-gray-500">
-              {fetchAttempted || initialOrders !== undefined 
+              {fetchAttempted || initialOrders !== undefined
                 ? "You don't have any active batches at the moment."
                 : "Unable to fetch your active batches. Please try again."}
             </p>
             <div className="flex flex-col items-center justify-center gap-3 sm:flex-row">
-            <Link href="/Plasa">
-              <button className="rounded-md bg-[#125C13] px-4 py-2 font-medium text-white transition-colors hover:bg-[#0A400B]">
-                Find Orders
-              </button>
-            </Link>
-              {(!fetchAttempted && !initialOrders.length) && (
-                <button 
-                  onClick={() => window.location.reload()} 
+              <Link href="/Plasa">
+                <button className="rounded-md bg-[#125C13] px-4 py-2 font-medium text-white transition-colors hover:bg-[#0A400B]">
+                  Find Orders
+                </button>
+              </Link>
+              {!fetchAttempted && !initialOrders.length && (
+                <button
+                  onClick={() => window.location.reload()}
                   className="rounded-md border border-gray-300 px-4 py-2 font-medium text-gray-700 transition-colors hover:bg-gray-100"
                 >
                   Retry Loading

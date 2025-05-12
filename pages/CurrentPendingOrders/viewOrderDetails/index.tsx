@@ -19,29 +19,31 @@ export default function ViewOrderDetailsPage() {
         setLoading(true);
         setError(null);
         const res = await fetch(`/api/queries/orderDetails?orderId=${orderId}`);
-        
+
         if (!res.ok) {
           const errorData = await res.json();
           throw new Error(errorData.error || "Failed to fetch order details");
         }
-        
+
         const data = await res.json();
-        
+
         // Validate that we have the necessary data
         if (!data.order) {
           throw new Error("Order data is missing");
         }
-        
+
         // Ensure estimatedDelivery exists
         if (!data.order.estimatedDelivery) {
           console.warn("Order is missing estimated delivery time");
           // We'll still set the order but the component will handle the missing time
         }
-        
+
         setOrder(data.order);
       } catch (err) {
         console.error("Error fetching order details:", err);
-        setError(err instanceof Error ? err.message : "An unknown error occurred");
+        setError(
+          err instanceof Error ? err.message : "An unknown error occurred"
+        );
       } finally {
         setLoading(false);
       }
@@ -99,15 +101,17 @@ export default function ViewOrderDetailsPage() {
       </RootLayout>
     );
   }
-  
+
   if (error) {
     return (
       <RootLayout>
         <div className="p-4 md:ml-16">
-          <div className="container mx-auto text-center py-12">
-            <div className="bg-red-50 p-6 rounded-lg">
-              <h2 className="text-2xl font-bold text-red-700 mb-4">Error Loading Order</h2>
-              <p className="text-red-600 mb-6">{error}</p>
+          <div className="container mx-auto py-12 text-center">
+            <div className="rounded-lg bg-red-50 p-6">
+              <h2 className="mb-4 text-2xl font-bold text-red-700">
+                Error Loading Order
+              </h2>
+              <p className="mb-6 text-red-600">{error}</p>
               <Link href="/CurrentPendingOrders" passHref>
                 <Button appearance="primary" color="red">
                   Return to Orders
@@ -119,18 +123,18 @@ export default function ViewOrderDetailsPage() {
       </RootLayout>
     );
   }
-  
+
   if (!order) {
     return (
       <RootLayout>
         <div className="p-4 md:ml-16">
-          <div className="container mx-auto text-center py-12">
-            <h2 className="text-2xl font-bold mb-4">Order Not Found</h2>
-            <p className="mb-6">We couldn't find the order you're looking for.</p>
+          <div className="container mx-auto py-12 text-center">
+            <h2 className="mb-4 text-2xl font-bold">Order Not Found</h2>
+            <p className="mb-6">
+              We couldn't find the order you're looking for.
+            </p>
             <Link href="/CurrentPendingOrders" passHref>
-              <Button appearance="primary">
-                Return to Orders
-              </Button>
+              <Button appearance="primary">Return to Orders</Button>
             </Link>
           </div>
         </div>

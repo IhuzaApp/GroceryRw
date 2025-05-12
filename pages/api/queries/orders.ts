@@ -79,14 +79,16 @@ export default async function handler(
 
     // Extract user_id from query parameters or from session
     let userId = req.query.user_id as string;
-    
+
     // If no user_id provided in query, try to get it from the session
     if (!userId && req.headers.authorization) {
       try {
-        const token = req.headers.authorization.split(' ')[1];
+        const token = req.headers.authorization.split(" ")[1];
         // This is a simplified example. In a real app, you would verify the token
         // and extract the user ID from it using your authentication library
-        const payload = JSON.parse(Buffer.from(token.split('.')[1], 'base64').toString());
+        const payload = JSON.parse(
+          Buffer.from(token.split(".")[1], "base64").toString()
+        );
         userId = payload.sub || payload.user_id;
       } catch (error) {
         console.error("Error extracting user ID from token:", error);

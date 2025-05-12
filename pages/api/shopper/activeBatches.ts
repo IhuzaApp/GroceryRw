@@ -62,23 +62,19 @@ export default async function handler(
   const userId = (session as any)?.user?.id;
 
   if (!userId) {
-    return res
-      .status(401)
-      .json({ 
-        error: "You must be logged in as a shopper",
-        message: "Authentication required. Please log in again."
-      });
+    return res.status(401).json({
+      error: "You must be logged in as a shopper",
+      message: "Authentication required. Please log in again.",
+    });
   }
 
   // Check if the user is a shopper
   const userRole = (session as any)?.user?.role;
-  if (userRole !== 'shopper') {
-    return res
-      .status(403)
-      .json({ 
-        error: "Access denied", 
-        message: "This API endpoint is only accessible to shoppers." 
-      });
+  if (userRole !== "shopper") {
+    return res.status(403).json({
+      error: "Access denied",
+      message: "This API endpoint is only accessible to shoppers.",
+    });
   }
 
   try {
@@ -115,14 +111,16 @@ export default async function handler(
       }>;
     }>(GET_ACTIVE_ORDERS, { shopperId: userId });
 
-    console.log(`Found ${data.Orders.length} active orders for shopper ${userId}`);
+    console.log(
+      `Found ${data.Orders.length} active orders for shopper ${userId}`
+    );
 
     // If no orders were found, return a specific message but with 200 status code
     if (data.Orders.length === 0) {
       return res.status(200).json({
         orders: [],
         message: "No active batches found",
-        noOrdersFound: true
+        noOrdersFound: true,
       });
     }
 
@@ -148,7 +146,7 @@ export default async function handler(
     res.status(200).json(activeOrders);
   } catch (error) {
     console.error("Error fetching active batches:", error);
-    
+
     // Enhanced error logging
     if (error instanceof Error) {
       console.error("Error details:", {
@@ -157,12 +155,13 @@ export default async function handler(
         name: error.name,
       });
     }
-    
+
     // Return a more informative error response
-    res.status(500).json({ 
-      error: "Failed to fetch active batches", 
+    res.status(500).json({
+      error: "Failed to fetch active batches",
       message: error instanceof Error ? error.message : String(error),
-      detail: "There was a problem connecting to the database or processing your request."
+      detail:
+        "There was a problem connecting to the database or processing your request.",
     });
   }
 }

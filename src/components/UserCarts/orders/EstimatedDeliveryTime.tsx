@@ -44,7 +44,9 @@ const EstimatedDeliveryTime: React.FC<EstimatedDeliveryTimeProps> = ({
         </svg>
         <div>
           <div className="font-bold">Delivered Successfully</div>
-          <div className="text-sm">Your order was delivered on {absoluteTime}</div>
+          <div className="text-sm">
+            Your order was delivered on {absoluteTime}
+          </div>
         </div>
       </div>
     );
@@ -57,7 +59,7 @@ const EstimatedDeliveryTime: React.FC<EstimatedDeliveryTimeProps> = ({
       (diffMs % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60)
     );
     const mins = Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60));
-    
+
     if (days > 0) {
       text = `Delivery in ${days} day${days > 1 ? "s" : ""}${
         hours > 0 ? ` ${hours}h` : ""
@@ -67,7 +69,7 @@ const EstimatedDeliveryTime: React.FC<EstimatedDeliveryTimeProps> = ({
     } else {
       text = `Delivery in ${mins} minute${mins !== 1 ? "s" : ""}`;
     }
-    
+
     return (
       <div className="flex items-center rounded-lg bg-blue-50 p-3 text-blue-700">
         <svg
@@ -94,7 +96,7 @@ const EstimatedDeliveryTime: React.FC<EstimatedDeliveryTimeProps> = ({
       (lateMs % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60)
     );
     const mins = Math.floor((lateMs % (1000 * 60 * 60)) / (1000 * 60));
-    
+
     if (days > 0) {
       text = `Delayed by ${days} day${days > 1 ? "s" : ""}${
         hours > 0 ? ` ${hours}h` : ""
@@ -103,7 +105,7 @@ const EstimatedDeliveryTime: React.FC<EstimatedDeliveryTimeProps> = ({
       text = `Delayed by ${hours}h${mins > 0 ? ` ${mins}m` : ""}`;
     } else {
       text = `Delayed by ${mins} minute${mins !== 1 ? "s" : ""}`;
-  }
+    }
 
     return (
       <div className="flex items-center rounded-lg bg-red-50 p-3 text-red-700">

@@ -83,4 +83,4 @@ export default async function handler(
     console.error("Error fetching available orders:", error);
     res.status(500).json({ error: "Failed to fetch available orders" });
   }
-} 
+}
