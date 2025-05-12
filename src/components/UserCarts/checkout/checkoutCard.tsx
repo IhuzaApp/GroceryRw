@@ -234,18 +234,24 @@ export default function CheckoutItems({
     }
   };
 
+  // Toggle mobile checkout card expanded/collapsed state
+  const toggleExpand = () => {
+    setIsExpanded(!isExpanded);
+  };
+
   return (
     <>
       {/* Mobile View - Only visible on small devices */}
       <div className="fixed bottom-0 left-0 right-0 z-50 w-full bg-white shadow-2xl transition-all duration-300 md:hidden" 
            style={{ 
-             height: isExpanded ? 'auto' : 'auto',
              maxHeight: isExpanded ? '90vh' : '160px',
-             transform: `translateY(${isExpanded ? '0' : '0'}px)`,
              overflow: 'hidden'
            }}>
         {/* Header with toggle button */}
-        <div className="flex items-center justify-between border-b p-4">
+        <div 
+          className="flex items-center justify-between border-b p-4"
+          onClick={toggleExpand} // Make the entire header clickable to toggle
+        >
           <div className="flex items-center">
             <span className="text-lg font-bold">Order Summary</span>
             <span className="ml-2 rounded-full bg-green-100 px-2 py-1 text-xs font-medium text-green-800">
@@ -257,7 +263,6 @@ export default function CheckoutItems({
               {formatCurrency(finalTotal)}
             </span>
             <button 
-              onClick={() => setIsExpanded(!isExpanded)}
               className="flex h-8 w-8 items-center justify-center rounded-full bg-gray-100"
             >
               {isExpanded ? (
@@ -290,7 +295,7 @@ export default function CheckoutItems({
         )}
         
         {/* Expanded content */}
-        <div className={`p-4 ${isExpanded ? 'block' : 'hidden'}`}>
+        <div className={`p-4 ${isExpanded ? 'block' : 'hidden'} overflow-y-auto`} style={{ maxHeight: 'calc(90vh - 60px)' }}>
           <div>
             <p className="mb-2 text-gray-600">Do you have any promo code?</p>
             <div className="flex flex-wrap gap-2">
@@ -355,6 +360,7 @@ export default function CheckoutItems({
                 value={deliveryNotes}
                 onChange={setDeliveryNotes}
                 placeholder="Enter any delivery instructions or notes"
+                onClick={(e) => e.stopPropagation()} // Prevent closing when clicking on input
               />
             </div>
             {/* Proceed to Checkout Button */}
@@ -460,6 +466,25 @@ export default function CheckoutItems({
                 </div>
                 <Button color="green" appearance="link" size="sm">
                   Change
+                </Button>
+              </div>
+            </div>
+
+            <div className="mt-4">
+              <h3 className="mb-2 font-medium">Promo Code</h3>
+              <div className="flex gap-2">
+                <Input
+                  value={promoCode}
+                  onChange={setPromoCode}
+                  placeholder="Enter promo code"
+                />
+                <Button
+                  appearance="primary"
+                  color="green"
+                  className="bg-green-100 font-medium text-green-600"
+                  onClick={handleApplyPromo}
+                >
+                  Apply
                 </Button>
               </div>
             </div>

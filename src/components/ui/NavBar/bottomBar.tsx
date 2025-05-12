@@ -1,11 +1,12 @@
 import React, { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/router";
-import { Toaster } from "react-hot-toast";
+import { useCart } from "../../../context/CartContext";
 
 export default function BottomBar() {
   const [open, setOpen] = useState(false);
   const router = useRouter();
+  const { count } = useCart();
 
   return (
     <>
@@ -56,16 +57,7 @@ export default function BottomBar() {
               }
               label="Ask Support"
               onClick={() => {
-                toaster.push(
-                  <Notification type="success" header="Order Confirmed">
-                    Your order has been placed successfully!
-                  </Notification>,
-                  { placement: "topEnd" }
-                );
-
-                setTimeout(() => {
-                  router.push("/CurrentPendingOrders");
-                }, 1500);
+                router.push("/Support");
               }}
             />
             <ActionButton
@@ -120,7 +112,7 @@ export default function BottomBar() {
                 </svg>
               }
               label="Chief Recipe"
-              onClick={() => alert("help")}
+              onClick={() => router.push("/Recipes")}
             />
           </div>
         )}
@@ -129,7 +121,12 @@ export default function BottomBar() {
       {/* Floating Cart Button (Lifted) */}
       <div className="fixed bottom-24 right-4 z-50 md:hidden">
         <Link href="/Cart" passHref>
-          <div className="flex h-14 w-14 flex-col items-center justify-center rounded-full bg-[#115e59] text-white shadow-lg transition hover:bg-[#115e59]">
+          <div className="relative flex h-14 w-14 flex-col items-center justify-center rounded-full bg-[#115e59] text-white shadow-lg transition hover:bg-[#115e59]">
+            {count > 0 && (
+              <div className="absolute -right-2 -top-2 flex h-6 w-6 items-center justify-center rounded-full bg-red-500 text-xs font-bold text-white">
+                {count}
+              </div>
+            )}
             <span className="text-2xl">
               <svg
                 width="30px"
@@ -179,7 +176,6 @@ export default function BottomBar() {
                 </g>
               </svg>
             </span>
-            {/* <span className="text-[10px] font-semibold leading-none">Cart</span> */}
           </div>
         </Link>
       </div>
