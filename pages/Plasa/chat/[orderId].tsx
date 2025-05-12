@@ -91,8 +91,8 @@ export default function ChatPage() {
           setCustomerData({
             id: data.order.user_id,
             name: data.order.user_name || "Customer",
-          avatar: "/placeholder.svg?height=80&width=80",
-          lastSeen: "Online now",
+            avatar: "/placeholder.svg?height=80&width=80",
+            lastSeen: "Online now",
           });
 
           // Get or create conversation
@@ -368,19 +368,19 @@ export default function ChatPage() {
 
   return (
     <ShopperLayout>
-      <div className="p-4 h-[calc(100vh-80px)]">
+      <div className="h-[calc(100vh-80px)] p-4">
         {isLoading ? (
-          <div className="max-w-2xl mx-auto">
+          <div className="mx-auto max-w-2xl">
             <div className="animate-pulse space-y-4">
-              <div className="h-8 bg-gray-200 rounded w-1/3"></div>
-              <div className="h-64 bg-gray-200 rounded"></div>
+              <div className="h-8 w-1/3 rounded bg-gray-200"></div>
+              <div className="h-64 rounded bg-gray-200"></div>
             </div>
           </div>
         ) : !customerData ? (
-          <div className="max-w-2xl mx-auto">
-            <div className="bg-red-50 p-4 rounded-md">
-              <h3 className="text-red-800 font-medium">Error</h3>
-              <p className="text-red-700 mt-2">Error fetching customer data</p>
+          <div className="mx-auto max-w-2xl">
+            <div className="rounded-md bg-red-50 p-4">
+              <h3 className="font-medium text-red-800">Error</h3>
+              <p className="mt-2 text-red-700">Error fetching customer data</p>
               <Button
                 appearance="primary"
                 color="red"
@@ -392,10 +392,14 @@ export default function ChatPage() {
             </div>
           </div>
         ) : !user ? (
-          <div className="max-w-3xl mx-auto">
-            <div className="bg-blue-50 p-6 rounded-lg text-center">
-              <h2 className="text-xl font-semibold text-blue-700 mb-4">Sign in Required</h2>
-              <p className="text-blue-600 mb-6">Please sign in to view messages.</p>
+          <div className="mx-auto max-w-3xl">
+            <div className="rounded-lg bg-blue-50 p-6 text-center">
+              <h2 className="mb-4 text-xl font-semibold text-blue-700">
+                Sign in Required
+              </h2>
+              <p className="mb-6 text-blue-600">
+                Please sign in to view messages.
+              </p>
               <Link href="/login" passHref>
                 <Button appearance="primary" color="blue">
                   Sign In
@@ -404,46 +408,60 @@ export default function ChatPage() {
             </div>
           </div>
         ) : (
-          <div className="max-w-1xl mx-auto w-full h-full flex flex-col">
-            <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden flex-1 flex flex-col h-full">
+          <div className="max-w-1xl mx-auto flex h-full w-full flex-col">
+            <div className="flex h-full flex-1 flex-col overflow-hidden rounded-lg border border-gray-200 bg-white shadow-sm">
               {/* Order info */}
-              <div className="p-4 border-b border-gray-200 flex items-center justify-between bg-gray-50 shrink-0">
+              <div className="flex shrink-0 items-center justify-between border-b border-gray-200 bg-gray-50 p-4">
                 <div className="flex items-center">
-                  <div className="h-10 w-10 rounded-full bg-gray-200 flex-shrink-0 flex items-center justify-center text-gray-600 mr-3">
-                    {customerData?.name?.substring(0, 2).toUpperCase() || 'CU'}
+                  <div className="mr-3 flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-gray-200 text-gray-600">
+                    {customerData?.name?.substring(0, 2).toUpperCase() || "CU"}
                   </div>
                   <div>
                     <h2 className="font-medium">
-                      {customerData?.name || 'Customer'} - Order #{formatOrderID(order?.OrderID || orderId)}
+                      {customerData?.name || "Customer"} - Order #
+                      {formatOrderID(order?.OrderID || orderId)}
                     </h2>
                     <div className="flex items-center text-sm text-gray-500">
                       <span
                         className={`
-                        px-2 py-0.5 rounded-full text-xs mr-2
+                        mr-2 rounded-full px-2 py-0.5 text-xs
                         ${
-                          order?.status === 'shopping' ? 'bg-orange-100 text-orange-800' : 
-                          order?.status === 'on_the_way' ? 'bg-blue-100 text-blue-800' : 
-                          order?.status === 'delivered' ? 'bg-green-100 text-green-800' : 
-                          'bg-gray-100 text-gray-800'
+                          order?.status === "shopping"
+                            ? "bg-orange-100 text-orange-800"
+                            : order?.status === "on_the_way"
+                            ? "bg-blue-100 text-blue-800"
+                            : order?.status === "delivered"
+                            ? "bg-green-100 text-green-800"
+                            : "bg-gray-100 text-gray-800"
                         }
                       `}
                       >
-                        {order?.status === 'shopping' ? 'Shopping' : 
-                         order?.status === 'packing' ? 'Packing' : 
-                         order?.status === 'on_the_way' ? 'On the way' : 
-                         order?.status?.charAt(0).toUpperCase() + order?.status?.slice(1) || 'Unknown'}
+                        {order?.status === "shopping"
+                          ? "Shopping"
+                          : order?.status === "packing"
+                          ? "Packing"
+                          : order?.status === "on_the_way"
+                          ? "On the way"
+                          : order?.status?.charAt(0).toUpperCase() +
+                              order?.status?.slice(1) || "Unknown"}
                       </span>
                       <span>{formatCurrency(order?.total || 0)}</span>
                     </div>
                   </div>
                 </div>
                 <div className="flex items-center space-x-2">
-                  <Button 
-                    appearance="ghost" 
-                    className="flex items-center justify-center h-8 w-8 p-0"
+                  <Button
+                    appearance="ghost"
+                    className="flex h-8 w-8 items-center justify-center p-0"
                     onClick={() => router.push(`/Plasa/orders/${orderId}`)}
                   >
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="h-4 w-4">
+                    <svg
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      className="h-4 w-4"
+                    >
                       <path d="M4 6h16M4 12h16M4 18h7"></path>
                     </svg>
                   </Button>
@@ -451,9 +469,12 @@ export default function ChatPage() {
               </div>
 
               {/* Messages - make this area scrollable */}
-              <div className="flex-1 p-4 overflow-y-auto space-y-4 bg-gray-100" ref={messagesEndRef}>
+              <div
+                className="flex-1 space-y-4 overflow-y-auto bg-gray-100 p-4"
+                ref={messagesEndRef}
+              >
                 {messages.length === 0 ? (
-                  <div className="flex h-full flex-col items-center justify-center text-gray-500 py-20">
+                  <div className="flex h-full flex-col items-center justify-center py-20 text-gray-500">
                     <svg
                       viewBox="0 0 24 24"
                       fill="none"
@@ -465,7 +486,8 @@ export default function ChatPage() {
                     </svg>
                     <p>No messages yet</p>
                     <p className="text-sm">
-                      Start the conversation with {customerData?.name || 'the customer'}
+                      Start the conversation with{" "}
+                      {customerData?.name || "the customer"}
                     </p>
                   </div>
                 ) : (
@@ -490,7 +512,7 @@ export default function ChatPage() {
                           >
                             <div
                               className={`
-                                h-8 w-8 rounded-full flex-shrink-0 flex items-center justify-center
+                                flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full
                                 ${
                                   isShopperMessage
                                     ? "bg-green-500 text-white"
@@ -499,13 +521,16 @@ export default function ChatPage() {
                               `}
                             >
                               {isShopperMessage
-                                ? user?.name?.substring(0, 2).toUpperCase() || "SH"
-                                : customerData?.name?.substring(0, 2).toUpperCase() || "CU"}
+                                ? user?.name?.substring(0, 2).toUpperCase() ||
+                                  "SH"
+                                : customerData?.name
+                                    ?.substring(0, 2)
+                                    .toUpperCase() || "CU"}
                             </div>
 
                             <div
                               className={`
-                                rounded-lg p-3 max-w-[85%]
+                                max-w-[85%] rounded-lg p-3
                                 ${
                                   isShopperMessage
                                     ? "bg-green-500 text-white"
@@ -513,17 +538,21 @@ export default function ChatPage() {
                                 }
                               `}
                             >
-                              {messageText && <p className="text-sm">{messageText}</p>}
+                              {messageText && (
+                                <p className="text-sm">{messageText}</p>
+                              )}
                               {msg.image && (
                                 <div className="mt-2">
-                                <Avatar color="blue" circle  size="xs"/>
+                                  <Avatar color="blue" circle size="xs" />
                                 </div>
                               )}
                               <span
                                 className={`
-                                  text-xs mt-1 block
+                                  mt-1 block text-xs
                                   ${
-                                    isShopperMessage ? "text-green-200" : "text-gray-500"
+                                    isShopperMessage
+                                      ? "text-green-200"
+                                      : "text-gray-500"
                                   }
                                 `}
                               >
@@ -539,7 +568,7 @@ export default function ChatPage() {
               </div>
 
               {/* Quick Replies */}
-              <div className="overflow-x-auto whitespace-nowrap border-t bg-white p-2 shrink-0">
+              <div className="shrink-0 overflow-x-auto whitespace-nowrap border-t bg-white p-2">
                 <div className="flex gap-2">
                   <Button
                     appearance="ghost"
@@ -569,13 +598,17 @@ export default function ChatPage() {
               </div>
 
               {/* Message input - fixed at bottom */}
-              <div className="p-4 border-t border-gray-200 bg-white shrink-0">
+              <div className="shrink-0 border-t border-gray-200 bg-white p-4">
                 <div className="flex items-center gap-2">
                   <Button
                     appearance="subtle"
-                    className="rounded-full h-10 w-10 flex items-center justify-center p-0"
+                    className="flex h-10 w-10 items-center justify-center rounded-full p-0"
                     onClick={handleAttachmentClick}
-                    disabled={isSending || uploadingImage || order?.status === "delivered"}
+                    disabled={
+                      isSending ||
+                      uploadingImage ||
+                      order?.status === "delivered"
+                    }
                   >
                     <svg
                       viewBox="0 0 24 24"
@@ -603,7 +636,14 @@ export default function ChatPage() {
                             strokeWidth="2"
                             className="h-5 w-5 text-blue-500"
                           >
-                            <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
+                            <rect
+                              x="3"
+                              y="3"
+                              width="18"
+                              height="18"
+                              rx="2"
+                              ry="2"
+                            />
                             <circle cx="8.5" cy="8.5" r="1.5" />
                             <polyline points="21 15 16 10 5 21" />
                           </svg>
@@ -611,7 +651,9 @@ export default function ChatPage() {
                         </button>
                         <button
                           className="flex items-center gap-2 rounded-md p-2 hover:bg-gray-100"
-                          onClick={() => alert("Camera functionality would open here")}
+                          onClick={() =>
+                            alert("Camera functionality would open here")
+                          }
                         >
                           <svg
                             viewBox="0 0 24 24"
@@ -644,17 +686,27 @@ export default function ChatPage() {
                         ? "Chat is closed for delivered orders"
                         : "Type your message..."
                     }
-                    className="flex-1 border border-gray-300 rounded-full px-4 py-2 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                    className="flex-1 rounded-full border border-gray-300 px-4 py-2 focus:border-transparent focus:outline-none focus:ring-2 focus:ring-green-500"
                     value={message}
                     onChange={(e) => setMessage(e.target.value)}
                     onKeyPress={handleKeyPress}
-                    disabled={isSending || uploadingImage || order?.status === "delivered"}
+                    disabled={
+                      isSending ||
+                      uploadingImage ||
+                      order?.status === "delivered"
+                    }
                   />
 
                   <Button
-                    appearance={message.trim() && order?.status !== "delivered" ? "primary" : "subtle"}
-                    className={`rounded-full h-10 w-10 p-0 flex items-center justify-center ${
-                      message.trim() && order?.status !== "delivered" ? "bg-green-500 text-white" : "text-gray-400"
+                    appearance={
+                      message.trim() && order?.status !== "delivered"
+                        ? "primary"
+                        : "subtle"
+                    }
+                    className={`flex h-10 w-10 items-center justify-center rounded-full p-0 ${
+                      message.trim() && order?.status !== "delivered"
+                        ? "bg-green-500 text-white"
+                        : "text-gray-400"
                     }`}
                     onClick={handleSendMessage}
                     disabled={

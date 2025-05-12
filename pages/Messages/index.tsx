@@ -68,9 +68,9 @@ export default function MessagesPage() {
   const [loading, setLoading] = useState(true);
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [orders, setOrders] = useState<Record<string, any>>({});
-  const [searchQuery, setSearchQuery] = useState('');
+  const [searchQuery, setSearchQuery] = useState("");
   const [showUnreadOnly, setShowUnreadOnly] = useState(false);
-  const [sortOrder, setSortOrder] = useState<'newest' | 'oldest'>('newest');
+  const [sortOrder, setSortOrder] = useState<"newest" | "oldest">("newest");
 
   // Fetch conversations and their associated orders
   useEffect(() => {
@@ -234,33 +234,41 @@ export default function MessagesPage() {
 
   // Filter and sort conversations
   const filteredConversations = conversations
-    .filter(conversation => {
+    .filter((conversation) => {
       // Apply search filter
       if (searchQuery) {
         const order = orders[conversation.orderId];
-        const shopName = order?.shop?.name?.toLowerCase() || '';
-        const orderNumber = formatOrderID(order?.OrderID || conversation.orderId).toLowerCase();
-        const messageText = conversation.lastMessage?.toLowerCase() || '';
-        
+        const shopName = order?.shop?.name?.toLowerCase() || "";
+        const orderNumber = formatOrderID(
+          order?.OrderID || conversation.orderId
+        ).toLowerCase();
+        const messageText = conversation.lastMessage?.toLowerCase() || "";
+
         const searchLower = searchQuery.toLowerCase();
-        return shopName.includes(searchLower) || 
-               orderNumber.includes(searchLower) || 
-               messageText.includes(searchLower);
+        return (
+          shopName.includes(searchLower) ||
+          orderNumber.includes(searchLower) ||
+          messageText.includes(searchLower)
+        );
       }
-      
+
       // Apply unread filter
       if (showUnreadOnly) {
         return conversation.unreadCount > 0;
       }
-      
+
       return true;
     })
     .sort((a, b) => {
-      const timeA = a.lastMessageTime ? new Date(a.lastMessageTime).getTime() : 0;
-      const timeB = b.lastMessageTime ? new Date(b.lastMessageTime).getTime() : 0;
-      
+      const timeA = a.lastMessageTime
+        ? new Date(a.lastMessageTime).getTime()
+        : 0;
+      const timeB = b.lastMessageTime
+        ? new Date(b.lastMessageTime).getTime()
+        : 0;
+
       // Sort by time
-      if (sortOrder === 'newest') {
+      if (sortOrder === "newest") {
         return timeB - timeA; // newest first
       } else {
         return timeA - timeB; // oldest first
@@ -297,7 +305,7 @@ export default function MessagesPage() {
     return (
       <RootLayout>
         <div className="p-4 md:ml-16">
-          <div className="max-w-3xl mx-auto">
+          <div className="mx-auto max-w-3xl">
             <h1 className="mb-6 text-2xl font-bold">Messages</h1>
             <div className="rounded-lg bg-blue-50 p-6 text-center">
               <h2 className="mb-4 text-xl font-semibold text-blue-700">
@@ -323,7 +331,7 @@ export default function MessagesPage() {
     return (
       <RootLayout>
         <div className="p-4 md:ml-16">
-          <div className="max-w-3xl mx-auto">
+          <div className="mx-auto max-w-3xl">
             <h1 className="mb-6 text-2xl font-bold">Messages</h1>
             <div className="rounded-lg bg-gray-50 p-6 text-center">
               <h2 className="mb-4 text-xl font-semibold text-gray-700">
@@ -352,34 +360,41 @@ export default function MessagesPage() {
           <div className="mb-6 flex items-center justify-between">
             <h2 className="text-xl font-semibold">Recent Messages</h2>
             <div className="relative">
-              <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <span className="absolute left-3 top-1/2 -translate-y-1/2 transform text-gray-400">
+                <svg
+                  width="16"
+                  height="16"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                >
                   <circle cx="11" cy="11" r="8"></circle>
                   <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
                 </svg>
               </span>
-              <Input 
-                type="text" 
-                placeholder="Search messages..." 
-                className="pl-10 w-64" 
+              <Input
+                type="text"
+                placeholder="Search messages..."
+                className="w-64 pl-10"
                 value={searchQuery}
                 onChange={(value) => setSearchQuery(value)}
               />
             </div>
           </div>
 
-          <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
-            <div className="p-4 border-b border-gray-200 flex justify-between">
+          <div className="overflow-hidden rounded-lg border border-gray-200 bg-white shadow-sm">
+            <div className="flex justify-between border-b border-gray-200 p-4">
               <div className="flex space-x-4">
-                <Button 
-                  appearance={!showUnreadOnly ? "primary" : "ghost"} 
+                <Button
+                  appearance={!showUnreadOnly ? "primary" : "ghost"}
                   color={!showUnreadOnly ? "green" : undefined}
                   size="sm"
                   onClick={() => setShowUnreadOnly(false)}
                 >
                   All Messages
                 </Button>
-                <Button 
+                <Button
                   appearance={showUnreadOnly ? "primary" : "ghost"}
                   color={showUnreadOnly ? "green" : undefined}
                   size="sm"
@@ -389,10 +404,12 @@ export default function MessagesPage() {
                 </Button>
               </div>
               <div>
-                <select 
-                  className="text-sm border border-gray-300 rounded px-2 py-1"
+                <select
+                  className="rounded border border-gray-300 px-2 py-1 text-sm"
                   value={sortOrder}
-                  onChange={(e) => setSortOrder(e.target.value as 'newest' | 'oldest')}
+                  onChange={(e) =>
+                    setSortOrder(e.target.value as "newest" | "oldest")
+                  }
                 >
                   <option value="newest">Sort by: Newest</option>
                   <option value="oldest">Sort by: Oldest</option>
@@ -410,24 +427,33 @@ export default function MessagesPage() {
                   const order = orders[conversation.orderId];
                   const hasUnread = conversation.unreadCount > 0;
                   const hasError = order?.error;
-                  
+
                   return (
-                    <Link 
-                      key={conversation.id} 
-                      href={`/Messages/${conversation.orderId}`} 
+                    <Link
+                      key={conversation.id}
+                      href={`/Messages/${conversation.orderId}`}
                       className="block p-4 hover:bg-gray-50"
                     >
                       <div className="flex items-start gap-4">
-                        <div className={`h-12 w-12 rounded-full bg-gray-200 flex-shrink-0 flex items-center justify-center text-gray-600 ${hasError ? 'opacity-70' : ''}`}>
-                          {order?.shop?.name?.substring(0, 2).toUpperCase() || 'SH'}
+                        <div
+                          className={`flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-full bg-gray-200 text-gray-600 ${
+                            hasError ? "opacity-70" : ""
+                          }`}
+                        >
+                          {order?.shop?.name?.substring(0, 2).toUpperCase() ||
+                            "SH"}
                         </div>
-                        
-                        <div className="flex-1 min-w-0">
-                          <div className="flex justify-between items-start mb-1">
-                            <h3 className="font-medium flex items-center">
-                              <span>{hasError ? 'Shop' : (order?.shop?.name || 'Shop')}</span>
+
+                        <div className="min-w-0 flex-1">
+                          <div className="mb-1 flex items-start justify-between">
+                            <h3 className="flex items-center font-medium">
+                              <span>
+                                {hasError
+                                  ? "Shop"
+                                  : order?.shop?.name || "Shop"}
+                              </span>
                               {hasUnread && (
-                                <span className="ml-2 bg-green-100 text-green-800 text-xs px-2 py-0.5 rounded-full">
+                                <span className="ml-2 rounded-full bg-green-100 px-2 py-0.5 text-xs text-green-800">
                                   New
                                 </span>
                               )}
@@ -436,40 +462,58 @@ export default function MessagesPage() {
                               {timeAgo(conversation.lastMessageTime)}
                             </span>
                           </div>
-                          
+
                           <p className="text-sm font-medium">
                             {hasError ? (
-                              <span>Order {conversation.orderId.substring(0, 8)}...</span>
+                              <span>
+                                Order {conversation.orderId.substring(0, 8)}...
+                              </span>
                             ) : (
-                              <>Order #{formatOrderID(order?.OrderID || conversation.orderId)}</>
+                              <>
+                                Order #
+                                {formatOrderID(
+                                  order?.OrderID || conversation.orderId
+                                )}
+                              </>
                             )}
                           </p>
-                          
-                          <p className="text-sm text-gray-600 truncate">
-                            {conversation.lastMessage || 'No messages yet'}
+
+                          <p className="truncate text-sm text-gray-600">
+                            {conversation.lastMessage || "No messages yet"}
                           </p>
-                          
+
                           <div className="mt-2 flex items-center text-xs text-gray-500">
                             {order && !hasError && (
                               <>
-                                <span className={`
-                                  px-2 py-0.5 rounded-full
-                                  ${order.status === 'shopping' ? 'bg-orange-100 text-orange-800' : 
-                                    order.status === 'on_the_way' ? 'bg-blue-100 text-blue-800' : 
-                                    order.status === 'delivered' ? 'bg-green-100 text-green-800' : 
-                                    'bg-gray-100 text-gray-800'}
-                                `}>
-                                  {order.status === 'shopping' ? 'Shopping' : 
-                                    order.status === 'packing' ? 'Packing' : 
-                                    order.status === 'on_the_way' ? 'On the way' : 
-                                    order.status.charAt(0).toUpperCase() + order.status.slice(1)}
+                                <span
+                                  className={`
+                                  rounded-full px-2 py-0.5
+                                  ${
+                                    order.status === "shopping"
+                                      ? "bg-orange-100 text-orange-800"
+                                      : order.status === "on_the_way"
+                                      ? "bg-blue-100 text-blue-800"
+                                      : order.status === "delivered"
+                                      ? "bg-green-100 text-green-800"
+                                      : "bg-gray-100 text-gray-800"
+                                  }
+                                `}
+                                >
+                                  {order.status === "shopping"
+                                    ? "Shopping"
+                                    : order.status === "packing"
+                                    ? "Packing"
+                                    : order.status === "on_the_way"
+                                    ? "On the way"
+                                    : order.status.charAt(0).toUpperCase() +
+                                      order.status.slice(1)}
                                 </span>
                                 <span className="mx-2">•</span>
                                 <span>{formatCurrency(order.total || 0)}</span>
                               </>
                             )}
                             {hasError && (
-                              <span className="bg-gray-100 text-gray-800 px-2 py-0.5 rounded-full">
+                              <span className="rounded-full bg-gray-100 px-2 py-0.5 text-gray-800">
                                 Order details unavailable
                               </span>
                             )}
@@ -483,7 +527,7 @@ export default function MessagesPage() {
             </div>
 
             {filteredConversations.length > 10 && (
-              <div className="p-4 border-t border-gray-200 text-center">
+              <div className="border-t border-gray-200 p-4 text-center">
                 <Button appearance="ghost" size="sm">
                   Load More
                 </Button>
