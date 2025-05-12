@@ -80,9 +80,18 @@ export default async function handler(
     return res.status(405).end(`Method ${req.method} Not Allowed`);
   }
 
-  const { orderId } = req.query;
-  if (typeof orderId !== "string") {
-    return res.status(400).json({ error: "Missing or invalid orderId" });
+  const { id } = req.query;
+  if (!id || (Array.isArray(id) && id.length === 0)) {
+    return res.status(400).json({ error: "Missing order ID" });
+  }
+
+  // Ensure we have a single string ID
+  const orderId = Array.isArray(id) ? id[0] : id;
+  
+  // Validate the UUID format
+  const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+  if (!uuidRegex.test(orderId)) {
+    return res.status(400).json({ error: "Invalid order ID format" });
   }
 
   try {
@@ -94,10 +103,13 @@ export default async function handler(
       GET_ORDER_DETAILS,
       { id: orderId }
     );
-    const order = data.Orders[0];
-    if (!order) {
+    
+    // Check if order exists
+    if (!data.Orders || data.Orders.length === 0) {
       return res.status(404).json({ error: "Order not found" });
     }
+    
+    const order = data.Orders[0];
     
     // Format timestamps to human-readable strings
     const formattedOrder = {

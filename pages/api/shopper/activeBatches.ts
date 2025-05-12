@@ -64,7 +64,21 @@ export default async function handler(
   if (!userId) {
     return res
       .status(401)
-      .json({ error: "You must be logged in as a shopper" });
+      .json({ 
+        error: "You must be logged in as a shopper",
+        message: "Authentication required. Please log in again."
+      });
+  }
+
+  // Check if the user is a shopper
+  const userRole = (session as any)?.user?.role;
+  if (userRole !== 'shopper') {
+    return res
+      .status(403)
+      .json({ 
+        error: "Access denied", 
+        message: "This API endpoint is only accessible to shoppers." 
+      });
   }
 
   try {
@@ -103,6 +117,15 @@ export default async function handler(
 
     console.log(`Found ${data.Orders.length} active orders for shopper ${userId}`);
 
+    // If no orders were found, return a specific message but with 200 status code
+    if (data.Orders.length === 0) {
+      return res.status(200).json({
+        orders: [],
+        message: "No active batches found",
+        noOrdersFound: true
+      });
+    }
+
     const activeOrders = data.Orders.map((o) => ({
       id: o.id,
       status: o.status,
@@ -138,7 +161,8 @@ export default async function handler(
     // Return a more informative error response
     res.status(500).json({ 
       error: "Failed to fetch active batches", 
-      message: error instanceof Error ? error.message : String(error)
+      message: error instanceof Error ? error.message : String(error),
+      detail: "There was a problem connecting to the database or processing your request."
     });
   }
 }

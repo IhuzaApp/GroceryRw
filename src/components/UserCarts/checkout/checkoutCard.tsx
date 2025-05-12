@@ -303,85 +303,85 @@ export default function CheckoutItems({
         
         {/* Expanded content */}
         <div className={`p-4 ${isExpanded ? 'block' : 'hidden'} overflow-y-auto`} style={{ maxHeight: 'calc(90vh - 60px)' }}>
-          <div>
-            <p className="mb-2 text-gray-600">Do you have any promo code?</p>
-            <div className="flex flex-wrap gap-2">
-              <Input
-                value={promoCode}
-                onChange={setPromoCode}
-                placeholder="Enter promo code"
-                className="max-w-md"
-              />
-              <Button
-                appearance="primary"
-                color="green"
-                className="bg-green-100 font-medium text-green-600"
-                onClick={handleApplyPromo}
-              >
-                Apply
-              </Button>
-            </div>
+        <div>
+          <p className="mb-2 text-gray-600">Do you have any promo code?</p>
+          <div className="flex flex-wrap gap-2">
+            <Input
+              value={promoCode}
+              onChange={setPromoCode}
+              placeholder="Enter promo code"
+              className="max-w-md"
+            />
+            <Button
+              appearance="primary"
+              color="green"
+              className="bg-green-100 font-medium text-green-600"
+              onClick={handleApplyPromo}
+            >
+              Apply
+            </Button>
           </div>
+        </div>
 
-          <hr className="mt-4" />
+        <hr className="mt-4" />
 
-          <div className="mt-6 flex flex-col gap-2">
-            <div className="flex justify-between">
-              <span className="text-sm text-gray-600">Subtotal</span>
-              <span className="text-sm">{formatCurrency(Total)}</span>
+        <div className="mt-6 flex flex-col gap-2">
+          <div className="flex justify-between">
+            <span className="text-sm text-gray-600">Subtotal</span>
+            <span className="text-sm">{formatCurrency(Total)}</span>
+          </div>
+          {discount > 0 && (
+            <div className="flex justify-between text-green-600">
+              <span className="text-sm">Discount ({appliedPromo})</span>
+              <span className="text-sm">-{formatCurrency(discount)}</span>
             </div>
-            {discount > 0 && (
-              <div className="flex justify-between text-green-600">
-                <span className="text-sm">Discount ({appliedPromo})</span>
-                <span className="text-sm">-{formatCurrency(discount)}</span>
-              </div>
-            )}
-            <div className="flex justify-between">
-              <span className="text-sm text-gray-600">Units</span>
-              <span className="text-sm">{totalUnits}</span>
-            </div>
-            <div className="flex justify-between">
-              <span className="text-sm text-gray-600">Service Fee</span>
-              <span className="text-sm">{formatCurrency(serviceFee)}</span>
-            </div>
-            <div className="flex justify-between">
-              <span className="text-sm text-gray-600">Delivery Fee</span>
-              <span className="text-sm">{formatCurrency(deliveryFee)}</span>
-            </div>
-            <div className="flex justify-between">
-              <span className="text-sm text-gray-600">Delivery Time</span>
+          )}
+          <div className="flex justify-between">
+            <span className="text-sm text-gray-600">Units</span>
+            <span className="text-sm">{totalUnits}</span>
+          </div>
+          <div className="flex justify-between">
+            <span className="text-sm text-gray-600">Service Fee</span>
+            <span className="text-sm">{formatCurrency(serviceFee)}</span>
+          </div>
+          <div className="flex justify-between">
+            <span className="text-sm text-gray-600">Delivery Fee</span>
+            <span className="text-sm">{formatCurrency(deliveryFee)}</span>
+          </div>
+          <div className="flex justify-between">
+            <span className="text-sm text-gray-600">Delivery Time</span>
               <span className="text-sm font-medium text-green-600">{deliveryTime}</span>
-            </div>
-            <div className="mt-2 flex justify-between">
-              <span className="text-lg font-bold">Total</span>
-              <span className="text-lg font-bold text-green-500">
-                {formatCurrency(finalTotal)}
-              </span>
-            </div>
-            {/* Delivery Notes Input */}
-            <div className="mt-2">
-              <h3 className="mb-1 font-medium">Add a Note</h3>
-              <Input
-                as="textarea"
-                rows={2}
-                value={deliveryNotes}
-                onChange={setDeliveryNotes}
-                placeholder="Enter any delivery instructions or notes"
+          </div>
+          <div className="mt-2 flex justify-between">
+            <span className="text-lg font-bold">Total</span>
+            <span className="text-lg font-bold text-green-500">
+              {formatCurrency(finalTotal)}
+            </span>
+          </div>
+          {/* Delivery Notes Input */}
+          <div className="mt-2">
+            <h3 className="mb-1 font-medium">Add a Note</h3>
+            <Input
+              as="textarea"
+              rows={2}
+              value={deliveryNotes}
+              onChange={setDeliveryNotes}
+              placeholder="Enter any delivery instructions or notes"
                 onClick={(e) => e.stopPropagation()} // Prevent closing when clicking on input
-              />
-            </div>
-            {/* Proceed to Checkout Button */}
-            <div className="mt-2">
-              <Button
-                appearance="primary"
-                color="green"
-                block
-                size="lg"
-                loading={isCheckoutLoading}
-                onClick={handleProceedToCheckout}
-              >
-                Proceed to Checkout
-              </Button>
+            />
+          </div>
+          {/* Proceed to Checkout Button */}
+          <div className="mt-2">
+            <Button
+              appearance="primary"
+              color="green"
+              block
+              size="lg"
+              loading={isCheckoutLoading}
+              onClick={handleProceedToCheckout}
+            >
+              Proceed to Checkout
+            </Button>
             </div>
           </div>
         </div>

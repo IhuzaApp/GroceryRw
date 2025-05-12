@@ -11,72 +11,122 @@ import {
   formatMessageDate,
   formatMessageTime,
 } from "../../../src/lib/formatters";
-import { useChat } from "../../../src/context/ChatContext";
 import { useAuth } from "../../../src/context/AuthContext";
+import { 
+  collection, query, where, orderBy, getDocs, 
+  addDoc, serverTimestamp, onSnapshot, Timestamp,
+  doc, getDoc, updateDoc, 
+} from "firebase/firestore";
+import { db, storage } from "../../../src/lib/firebase";
 import { getStorage, ref, uploadBytes, getDownloadURL } from "firebase/storage";
+
+// Define message interface
+interface Message {
+  id: string;
+  text?: string;         // Customer message format
+  message?: string;      // Shopper message format (for compatibility)
+  senderId: string;
+  senderType: "customer" | "shopper";
+  recipientId: string;
+  timestamp: any;
+  read: boolean;
+  image?: string;
+}
 
 export default function ChatPage() {
   const router = useRouter();
   const { orderId } = router.query;
   const { user } = useAuth();
-  const { openChat, sendMessage, getMessages, markMessagesAsRead } = useChat();
-
+  
   const [message, setMessage] = useState("");
   const [isLoading, setIsLoading] = useState(true);
   const [isSending, setIsSending] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
   const [showAttachmentOptions, setShowAttachmentOptions] = useState(false);
   const [uploadingImage, setUploadingImage] = useState(false);
+  const [messages, setMessages] = useState<Message[]>([]);
+  const [conversationId, setConversationId] = useState<string | null>(null);
   const [customerData, setCustomerData] = useState<{
     id: string;
     name: string;
     avatar: string;
     lastSeen: string;
   } | null>(null);
+  const [order, setOrder] = useState<any>(null);
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  // Get messages from context
-  const messages = orderId ? getMessages(orderId as string) : [];
-
   // Initialize chat and fetch customer data
   useEffect(() => {
-    if (!orderId || !user) return;
+    if (!orderId || !user?.id) return;
 
-    const initializeChat = async () => {
+    const fetchOrderAndCustomer = async () => {
       setIsLoading(true);
       try {
-        // In a real app, you would fetch customer data from API
-        // For now, we'll use mock data
-        const mockCustomer = {
-          id: "cust-123",
-          name: "Sarah Johnson",
-          avatar: "/placeholder.svg?height=80&width=80",
-          lastSeen: "Online now",
-        };
-
-        setCustomerData(mockCustomer);
-
-        // Initialize chat in context
-        await openChat(
-          orderId as string,
-          mockCustomer.id,
-          mockCustomer.name,
-          mockCustomer.avatar
-        );
-
-        // Mark messages as read
-        markMessagesAsRead(orderId as string);
+        // Fetch order details
+        const res = await fetch(`/api/queries/orderDetails?id=${orderId}`);
+        const data = await res.json();
+        
+        if (data.order) {
+          setOrder(data.order);
+          
+          // Set customer data
+          setCustomerData({
+            id: data.order.user_id,
+            name: data.order.user_name || "Customer",
+            avatar: "/placeholder.svg?height=80&width=80",
+            lastSeen: "Online now",
+          });
+          
+          // Get or create conversation
+          await getOrCreateConversation(data.order.id, data.order.user_id);
+        }
       } catch (error) {
-        console.error("Error initializing chat:", error);
+        console.error("Error fetching order details:", error);
       } finally {
         setIsLoading(false);
       }
     };
 
-    initializeChat();
-  }, [orderId, user, openChat, markMessagesAsRead]);
+    fetchOrderAndCustomer();
+  }, [orderId, user?.id]);
+
+  // Get or create conversation
+  const getOrCreateConversation = async (orderIdStr: string, customerId: string) => {
+    try {
+      // Check if conversation exists
+      const conversationsRef = collection(db, "chat_conversations");
+      const q = query(
+        conversationsRef,
+        where("orderId", "==", orderIdStr)
+      );
+      
+      const querySnapshot = await getDocs(q);
+      
+      if (!querySnapshot.empty) {
+        // Conversation exists
+        const conversationDoc = querySnapshot.docs[0];
+        setConversationId(conversationDoc.id);
+      } else {
+        // Create new conversation
+        const newConversation = {
+          orderId: orderIdStr,
+          customerId,
+          shopperId: user?.id,
+          createdAt: serverTimestamp(),
+          lastMessage: "",
+          lastMessageTime: serverTimestamp(),
+          unreadCount: 0,
+        };
+        
+        const docRef = await addDoc(conversationsRef, newConversation);
+        setConversationId(docRef.id);
+      }
+    } catch (error) {
+      console.error("Error getting/creating conversation:", error);
+    }
+  };
 
   useEffect(() => {
     const checkIfMobile = () => {
@@ -91,28 +141,86 @@ export default function ChatPage() {
     };
   }, []);
 
+  // Set up messages listener
+  useEffect(() => {
+    if (!conversationId || !user?.id) return;
+    
+    // Set up listener for messages in this conversation
+    const messagesRef = collection(db, "chat_conversations", conversationId, "messages");
+    const q = query(messagesRef, orderBy("timestamp", "asc"));
+    
+    const unsubscribe = onSnapshot(q, (snapshot) => {
+      const messagesList = snapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data(),
+        // Convert Firestore timestamp to regular Date if needed
+        timestamp: doc.data().timestamp instanceof Timestamp
+          ? doc.data().timestamp.toDate()
+          : doc.data().timestamp,
+      })) as Message[];
+      
+      setMessages(messagesList);
+      
+      // Mark messages as read if they were sent to the current user
+      messagesList.forEach(async (message) => {
+        if (
+          message.senderType === "customer" && 
+          !message.read
+        ) {
+          const messageRef = doc(db, "chat_conversations", conversationId, "messages", message.id);
+          await updateDoc(messageRef, { read: true });
+          
+          // Update unread count in conversation
+          const convRef = doc(db, "chat_conversations", conversationId);
+          await updateDoc(convRef, {
+            unreadCount: 0,
+          });
+        }
+      });
+      
+      // Scroll to bottom after messages load
+      setTimeout(scrollToBottom, 100);
+    });
+    
+    return () => unsubscribe();
+  }, [conversationId, user?.id]);
+
   // Scroll to bottom when messages change
   useEffect(() => {
     scrollToBottom();
   }, [messages]);
-
-  // Mark messages as read when new messages arrive
-  useEffect(() => {
-    if (orderId) {
-      markMessagesAsRead(orderId as string);
-    }
-  }, [messages, orderId, markMessagesAsRead]);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   };
 
   const handleSendMessage = async () => {
-    if (!orderId || !message.trim()) return;
+    if (!message.trim() || !user?.id || !conversationId || !customerData?.id) return;
 
     try {
       setIsSending(true);
-      await sendMessage(orderId as string, message);
+      
+      // Add new message to Firestore
+      const messagesRef = collection(db, "chat_conversations", conversationId, "messages");
+      await addDoc(messagesRef, {
+        text: message.trim(),      
+        message: message.trim(),   
+        senderId: user.id,
+        senderName: user.name || 'Shopper',
+        senderType: "shopper",
+        recipientId: customerData.id,
+        timestamp: serverTimestamp(),
+        read: false
+      });
+      
+      // Update conversation with last message
+      const convRef = doc(db, "chat_conversations", conversationId);
+      await updateDoc(convRef, {
+        lastMessage: message.trim(),
+        lastMessageTime: serverTimestamp(),
+      });
+      
+      // Clear input
       setMessage("");
     } catch (error) {
       console.error("Error sending message:", error);
@@ -133,28 +241,38 @@ export default function ChatPage() {
   };
 
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (!orderId || !e.target.files || !e.target.files[0]) return;
-
+    if (!e.target.files || !e.target.files[0] || !user?.id || !conversationId || !customerData?.id) return;
+    
     try {
       setUploadingImage(true);
       const file = e.target.files[0];
-
+      
       // Upload image to Firebase Storage
-      const storage = getStorage();
-      const storageRef = ref(
-        storage,
-        `chat_images/${orderId}/${Date.now()}_${file.name}`
-      );
-
-      // Upload the file
+      const storageRef = ref(storage, `chat_images/${orderId}/${Date.now()}_${file.name}`);
       const snapshot = await uploadBytes(storageRef, file);
-
-      // Get download URL
       const downloadURL = await getDownloadURL(snapshot.ref);
-
-      // Send message with image
-      await sendMessage(orderId as string, "", downloadURL);
-
+      
+      // Add message with image
+      const messagesRef = collection(db, "chat_conversations", conversationId, "messages");
+      await addDoc(messagesRef, {
+        text: "",         // Use text field for consistency
+        message: "",      // Also include message field for compatibility
+        senderId: user.id,
+        senderName: user.name || 'Shopper',
+        senderType: "shopper",
+        recipientId: customerData.id,
+        timestamp: serverTimestamp(),
+        read: false,
+        image: downloadURL
+      });
+      
+      // Update conversation
+      const convRef = doc(db, "chat_conversations", conversationId);
+      await updateDoc(convRef, {
+        lastMessage: "📷 Image",
+        lastMessageTime: serverTimestamp(),
+      });
+      
       setShowAttachmentOptions(false);
     } catch (error) {
       console.error("Error uploading image:", error);
@@ -163,16 +281,11 @@ export default function ChatPage() {
     }
   };
 
-  const handleCameraClick = () => {
-    // In a real app, this would open the camera
-    alert("Camera functionality would open here");
-    setShowAttachmentOptions(false);
-  };
-
+  // Group messages by date for better display
   const groupMessagesByDate = () => {
-    const groups: { date: string; messages: any[] }[] = [];
+    const groups: { date: string; messages: Message[] }[] = [];
     let currentDate = "";
-    let currentGroup: any[] = [];
+    let currentGroup: Message[] = [];
 
     messages.forEach((message) => {
       const messageDate = formatMessageDate(message.timestamp);
@@ -247,63 +360,20 @@ export default function ChatPage() {
                   <span className="mr-2 text-green-600">
                     {customerData?.lastSeen || "Offline"}
                   </span>
+                  {order && (
+                    <span className="text-gray-500">
+                      Order #{order.OrderID || order.id}
+                    </span>
+                  )}
                 </div>
               </div>
             </div>
           </div>
-          <div className="flex items-center">
-            <Link href={`/Plasa/active-batches/batch/${orderId}`}>
-              <Button appearance="ghost" size="sm">
-                <svg
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  className="mr-1 h-4 w-4"
-                >
-                  <path d="M9 17H5a2 2 0 01-2-2V5a2 2 0 012-2h14a2 2 0 012 2v10a2 2 0 01-2 2h-4" />
-                  <path d="M9 17l6-6" />
-                  <path d="M15 17v-6h-6" />
-                </svg>
-                View Order
-              </Button>
-            </Link>
-          </div>
         </header>
-
-        {/* Order Info Banner */}
-        <div className="flex items-center justify-between bg-blue-50 p-3">
-          <div className="flex items-center">
-            <svg
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              className="mr-2 h-5 w-5 text-blue-600"
-            >
-              <path d="M9 17H5a2 2 0 01-2-2V5a2 2 0 012-2h14a2 2 0 012 2v10a2 2 0 01-2 2h-4" />
-              <path d="M9 17l6-6" />
-              <path d="M15 17v-6h-6" />
-            </svg>
-            <span className="text-sm">
-              Order <span className="font-medium">{orderId}</span> • You are
-              currently shopping
-            </span>
-          </div>
-          <Link href={`/Plasa/active-batches/batch/${orderId}`}>
-            <Button appearance="link" size="sm" className="p-0 text-blue-600">
-              Details
-            </Button>
-          </Link>
-        </div>
 
         {/* Chat Messages */}
         <div className="flex-1 overflow-y-auto bg-gray-100 p-4">
-          {isLoading ? (
-            <div className="flex h-full items-center justify-center">
-              <Loader content="Loading conversation..." />
-            </div>
-          ) : messages.length === 0 ? (
+          {messages.length === 0 ? (
             <div className="flex h-full flex-col items-center justify-center text-gray-500">
               <svg
                 viewBox="0 0 24 24"
@@ -316,11 +386,11 @@ export default function ChatPage() {
               </svg>
               <p>No messages yet</p>
               <p className="text-sm">
-                Start the conversation with {customerData?.name}
+                Start the conversation with {customerData?.name || "the customer"}
               </p>
             </div>
           ) : (
-            <div className="mx-auto max-w-3xl">
+            <div>
               {messageGroups.map((group, groupIndex) => (
                 <div key={groupIndex} className="mb-6">
                   <div className="mb-4 flex justify-center">
@@ -329,11 +399,14 @@ export default function ChatPage() {
                     </div>
                   </div>
 
-                  {group.messages.map((msg: any, index: number) => {
-                    const isShopperMessage = msg.sender === "shopper";
+                  {group.messages.map((msg, index) => {
+                    const isShopperMessage = msg.senderType === "shopper";
                     const showAvatar =
                       index === 0 ||
-                      group.messages[index - 1].sender !== msg.sender;
+                      group.messages[index - 1].senderType !== msg.senderType;
+                    
+                    // Get message content from either text or message field
+                    const messageContent = msg.text || msg.message || "";
 
                     return (
                       <div
@@ -344,10 +417,7 @@ export default function ChatPage() {
                       >
                         {!isShopperMessage && showAvatar && (
                           <Avatar
-                            src={
-                              customerData?.avatar ||
-                              "/placeholder.svg?height=80&width=80"
-                            }
+                            src={customerData?.avatar || "/placeholder.svg?height=80&width=80"}
                             alt={customerData?.name || "Customer"}
                             size="xs"
                             circle
@@ -367,8 +437,8 @@ export default function ChatPage() {
                                 : "rounded-tl-none bg-white text-gray-800"
                             }`}
                           >
-                            {msg.text && (
-                              <p className="whitespace-pre-wrap">{msg.text}</p>
+                            {messageContent && (
+                              <p className="whitespace-pre-wrap">{messageContent}</p>
                             )}
                             {msg.image && (
                               <div className="mt-2">
@@ -388,17 +458,7 @@ export default function ChatPage() {
                             </span>
                             {isShopperMessage && (
                               <span className="ml-1">
-                                {msg.status === "sent" ? (
-                                  <svg
-                                    viewBox="0 0 24 24"
-                                    fill="none"
-                                    stroke="currentColor"
-                                    strokeWidth="2"
-                                    className="h-3 w-3 text-gray-400"
-                                  >
-                                    <polyline points="20 6 9 17 4 12" />
-                                  </svg>
-                                ) : (
+                                {msg.read ? (
                                   <svg
                                     viewBox="0 0 24 24"
                                     fill="none"
@@ -408,6 +468,16 @@ export default function ChatPage() {
                                   >
                                     <path d="M18 6L7 17L2 12" />
                                     <path d="M22 6L11 17L8 14" />
+                                  </svg>
+                                ) : (
+                                  <svg
+                                    viewBox="0 0 24 24"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    strokeWidth="2"
+                                    className="h-3 w-3 text-gray-400"
+                                  >
+                                    <polyline points="20 6 9 17 4 12" />
                                   </svg>
                                 )}
                               </span>
@@ -451,15 +521,7 @@ export default function ChatPage() {
               className="whitespace-nowrap"
               onClick={() => setMessage("They're out of stock")}
             >
-              Out of stock
-            </Button>
-            <Button
-              appearance="ghost"
-              size="sm"
-              className="whitespace-nowrap"
-              onClick={() => setMessage("Thank you!")}
-            >
-              Thank you!
+              They're out of stock
             </Button>
             <Button
               appearance="ghost"
@@ -508,14 +570,7 @@ export default function ChatPage() {
                         strokeWidth="2"
                         className="h-5 w-5 text-blue-500"
                       >
-                        <rect
-                          x="3"
-                          y="3"
-                          width="18"
-                          height="18"
-                          rx="2"
-                          ry="2"
-                        />
+                        <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
                         <circle cx="8.5" cy="8.5" r="1.5" />
                         <polyline points="21 15 16 10 5 21" />
                       </svg>
@@ -523,7 +578,9 @@ export default function ChatPage() {
                     </button>
                     <button
                       className="flex items-center gap-2 rounded-md p-2 hover:bg-gray-100"
-                      onClick={handleCameraClick}
+                      onClick={() =>
+                        alert("Camera functionality would open here")
+                      }
                     >
                       <svg
                         viewBox="0 0 24 24"

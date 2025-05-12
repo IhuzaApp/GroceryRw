@@ -16,6 +16,11 @@ import {
 } from "../services/chatService";
 import { useAuth } from "./AuthContext";
 
+// Extend the FirebaseChatMessage interface to include both text and message fields
+interface ExtendedFirebaseChatMessage extends FirebaseChatMessage {
+  text?: string; // Add text field for compatibility
+}
+
 // For backwards compatibility with existing components
 export interface ChatMessage {
   id: string;
@@ -67,12 +72,12 @@ const ChatContext = createContext<ChatContextType>({
 
 // Convert a Firebase chat message to our local format
 const convertFirebaseMessage = (
-  fbMessage: FirebaseChatMessage
+  fbMessage: ExtendedFirebaseChatMessage
 ): ChatMessage => {
   return {
     id: fbMessage.id || `msg-${Date.now()}`,
     sender: fbMessage.senderType,
-    text: fbMessage.message,
+    text: fbMessage.message || fbMessage.text || "", // Handle both message and text fields
     timestamp: fbMessage.timestamp
       ? typeof fbMessage.timestamp === "string"
         ? fbMessage.timestamp

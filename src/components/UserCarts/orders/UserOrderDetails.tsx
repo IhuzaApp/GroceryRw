@@ -263,22 +263,22 @@ export default function UserOrderDetails({ order }: UserOrderDetailsProps) {
               <h3 className="font-semibold mb-2">Delivery Address</h3>
               <div className="flex items-start gap-3">
                 <div className="mt-1 text-green-600">
-                  <svg
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="2"
+                <svg
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
                     className="h-5 w-5"
-                  >
-                    <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"></path>
-                    <circle cx="12" cy="10" r="3"></circle>
-                  </svg>
-                </div>
-                <div>
+                >
+                  <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"></path>
+                  <circle cx="12" cy="10" r="3"></circle>
+                </svg>
+              </div>
+              <div>
                   <p className="font-medium">{order.address?.street}</p>
-                  <p className="text-gray-600">
+                    <p className="text-gray-600">
                     {order.address?.city}, {order.address?.postal_code}
-                  </p>
+                    </p>
                 </div>
               </div>
             </div>
