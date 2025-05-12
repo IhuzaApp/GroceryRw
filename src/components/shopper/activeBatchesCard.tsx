@@ -78,7 +78,7 @@ export default function ActiveBatches({
 
       try {
         const response = await fetch(
-          "http://localhost:3003/api/shopper/activeBatches",
+          "/api/shopper/activeBatches",
           {
             signal,
             headers: {
@@ -88,7 +88,13 @@ export default function ActiveBatches({
         );
 
         if (!response.ok) {
-          throw new Error("Failed to fetch active batches");
+          const errorData = await response.json().catch(() => ({}));
+          console.error("API Error Response:", response.status, errorData);
+          throw new Error(
+            `Failed to fetch active batches (${response.status}): ${
+              errorData.error || response.statusText
+            }`
+          );
         }
 
         const data = await response.json();
@@ -105,7 +111,7 @@ export default function ActiveBatches({
         setError(errorMessage);
         toaster.push(
           <Message showIcon type="error" header="Error">
-            Failed to load active batches.
+            {errorMessage}
           </Message>,
           { placement: "topEnd" }
         );
@@ -142,9 +148,43 @@ export default function ActiveBatches({
           </button>
         </div>
 
+        {/* Display a warning when user doesn't have the shopper role */}
+        {!isLoading && role !== "shopper" && (
+          <div className="mb-6 rounded-lg border border-yellow-200 bg-yellow-50 p-4">
+            <h3 className="font-semibold text-yellow-800">Shopper Access Required</h3>
+            <p className="mt-1 text-yellow-700">
+              This page is only accessible to users with shopper privileges. 
+              Your current role is: <strong>{role}</strong>
+            </p>
+            <p className="mt-2 text-yellow-700">
+              If you believe you should have shopper access, please try:
+            </p>
+            <ul className="mt-1 list-inside list-disc text-yellow-700">
+              <li>Logging out and logging back in</li>
+              <li>Checking with an administrator to verify your account type</li>
+            </ul>
+          </div>
+        )}
+
         {error && (
-          <div className="mb-6 rounded-lg border border-red-200 bg-red-50 p-4 text-red-600">
-            {error}
+          <div className="mb-6 rounded-lg border border-red-200 bg-red-50 p-4">
+            <h3 className="font-semibold text-red-800">There was a problem loading your batches</h3>
+            <p className="mt-1 text-red-600">{error}</p>
+            <div className="mt-3 text-sm text-red-700">
+              <p>This might be because:</p>
+              <ul className="mt-1 list-inside list-disc">
+                <li>You are not logged in as a shopper</li>
+                <li>Your session may have expired (try refreshing)</li>
+                <li>There may be a network issue (check your connection)</li>
+                <li>The server might be temporarily unavailable</li>
+              </ul>
+            </div>
+            <button
+              onClick={() => window.location.reload()}
+              className="mt-3 rounded bg-red-600 px-4 py-1.5 text-sm font-medium text-white hover:bg-red-700"
+            >
+              Try Again
+            </button>
           </div>
         )}
 
