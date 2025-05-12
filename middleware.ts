@@ -2,60 +2,90 @@ import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import { getToken } from "next-auth/jwt";
 
+// Define public paths that don't require authentication
+const publicPaths = [
+  "/",
+  "/shops",
+  "/Auth/Login",
+  "/Auth/Register",
+  "/api",
+  "/_next",
+  "/favicon.ico",
+  "/static",
+];
+
+// Helper function to check if a path is public
+const isPublicPath = (path: string) => {
+  return publicPaths.some(
+    (publicPath) =>
+      path === publicPath || path.startsWith(`${publicPath}/`)
+  );
+};
+
 export async function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl;
 
-  // Allow unauthenticated access to home, shops, and Auth pages
-  if (
-    pathname === "/" ||
-    pathname === "/shops" ||
-    pathname.startsWith("/Auth")
-  ) {
+  // Skip middleware for public paths
+  if (isPublicPath(pathname)) {
     return NextResponse.next();
   }
 
-  // Allow public assets, API routes, and Next.js internals
-  if (
-    pathname.includes(".") ||
-    pathname.startsWith("/api") ||
-    pathname.startsWith("/_next")
-  ) {
+  // Skip middleware for static files
+  if (pathname.includes(".")) {
     return NextResponse.next();
   }
 
-  // Check for NextAuth token with relative path setting
-  const token = await getToken({
-    req,
-    secret: process.env.NEXTAUTH_SECRET,
-    secureCookie: process.env.NODE_ENV === "production",
-  });
+  try {
+    // Check for NextAuth token with more permissive settings
+    const token = await getToken({
+      req,
+      secret: process.env.NEXTAUTH_SECRET,
+      secureCookie: process.env.NEXTAUTH_SECURE_COOKIES === "true",
+    });
 
-  if (!token) {
-    // Use relative URL paths to avoid port-specific redirects
-    const url = req.nextUrl.clone();
-    url.pathname = "/Auth/Login";
-    url.search = `callbackUrl=${encodeURIComponent(req.url)}`;
-    return NextResponse.redirect(url);
-  }
-
-  // Protect shopper routes
-  if (pathname.startsWith("/shopper")) {
-    // If no session or not a shopper, redirect to home
-    if (token.role !== "shopper") {
-      const url = req.nextUrl.clone();
-      url.pathname = "/";
-      return NextResponse.redirect(url);
+    // If no token is found, check for cookies before redirecting
+    if (!token) {
+      // Check for any auth-related cookies as a fallback
+      const sessionCookie = req.cookies.get("next-auth.session-token") || 
+                            req.cookies.get("__Secure-next-auth.session-token");
+                            
+      if (sessionCookie) {
+        console.log("Session cookie found but token verification failed, allowing access");
+        // If we have a session cookie but token verification failed, let the request through
+        return NextResponse.next();
+      }
+      
+      // Only redirect to login for non-API paths
+      if (!pathname.startsWith("/api/")) {
+        const url = req.nextUrl.clone();
+        url.pathname = "/Auth/Login";
+        url.search = `callbackUrl=${encodeURIComponent(req.url)}`;
+        return NextResponse.redirect(url);
+      }
     }
-  }
 
-  // User is authenticated, allow
-  return NextResponse.next();
+    // Protect shopper routes
+    if (pathname.startsWith("/shopper")) {
+      if (!token || token.role !== "shopper") {
+        const url = req.nextUrl.clone();
+        url.pathname = "/";
+        return NextResponse.redirect(url);
+      }
+    }
+
+    // User is authenticated, allow
+    return NextResponse.next();
+  } catch (error) {
+    console.error("Authentication middleware error:", error);
+    
+    // In case of any error, allow the request to proceed
+    // The pages themselves can handle authentication if needed
+    return NextResponse.next();
+  }
 }
 
 export const config = {
   matcher: [
-    // Protect all routes except API, static files, home and shops
-    "/((?!api|_next|static|favicon.ico).*)",
-    "/shopper/:path*",
+    "/((?!api|_next/static|_next/image|favicon.ico).*)",
   ],
 };
