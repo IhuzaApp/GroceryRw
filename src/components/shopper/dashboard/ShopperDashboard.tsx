@@ -48,6 +48,7 @@ function relativeTime(iso: string): string {
 
 export default function ShopperDashboard() {
   const [isLoading, setIsLoading] = useState(true);
+  const [isInitializing, setIsInitializing] = useState(true);
   const [availableOrders, setAvailableOrders] = useState<any[]>([]);
   const [mapLoaded, setMapLoaded] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
@@ -196,8 +197,33 @@ export default function ShopperDashboard() {
 
   // Fetch available orders based on location
   useEffect(() => {
-    loadOrders();
+    if (currentLocation) {
+      loadOrders();
+    }
   }, [currentLocation]);
+
+  // Track initialization state
+  useEffect(() => {
+    // Consider dashboard initialized when location is set and map is loaded
+    if (currentLocation && mapLoaded) {
+      // Add slight delay to ensure smooth transition
+      const timer = setTimeout(() => setIsInitializing(false), 500);
+      return () => clearTimeout(timer);
+    }
+  }, [currentLocation, mapLoaded]);
+
+  // Initializing loading screen
+  if (isInitializing) {
+    return (
+      <ShopperLayout>
+        <div className="flex h-screen w-full flex-col items-center justify-center bg-gray-50">
+          <Loader size="lg" content="" />
+          <p className="mt-4 text-lg font-medium text-gray-600">Initializing Shopper Dashboard</p>
+          <p className="mt-2 text-sm text-gray-500">Getting your location and nearby orders...</p>
+        </div>
+      </ShopperLayout>
+    );
+  }
 
   return (
     <ShopperLayout>
@@ -208,7 +234,7 @@ export default function ShopperDashboard() {
       >
         {/* Map Section */}
         <div className="w-full">
-          <MapSection mapLoaded={mapLoaded} availableOrders={availableOrders} />
+          <MapSection mapLoaded={mapLoaded} availableOrders={availableOrders} isInitializing={isInitializing} />
         </div>
 
         {/* Desktop Title and Sort */}
