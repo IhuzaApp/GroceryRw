@@ -80,21 +80,42 @@ export default async function handler(
     }>(GET_AVAILABLE_ORDERS, { createdAfter: cutoff });
 
     // Transform data to make it easier to use on the client
-    const availableOrders = data.Orders.map(order => ({
-      id: order.id,
-      createdAt: order.created_at,
-      shopName: order.shop.name,
-      shopAddress: order.shop.address,
-      shopLatitude: parseFloat(order.shop.latitude),
-      shopLongitude: parseFloat(order.shop.longitude),
-      customerLatitude: parseFloat(order.address.latitude),
-      customerLongitude: parseFloat(order.address.longitude),
-      customerAddress: `${order.address.street}, ${order.address.city}`,
-      itemsCount: order.Order_Items_aggregate.aggregate?.count ?? 0,
-      serviceFee: parseFloat(order.service_fee || "0"),
-      deliveryFee: parseFloat(order.delivery_fee || "0"),
-      earnings: parseFloat(order.service_fee || "0") + parseFloat(order.delivery_fee || "0"),
-    }));
+    const availableOrders = data.Orders.map(order => {
+      // Calculate metrics for sorting and filtering
+      const createdAt = new Date(order.created_at);
+      const pendingMinutes = Math.floor((Date.now() - createdAt.getTime()) / 60000);
+      
+      // Calculate priority level (1-5) for UI highlighting
+      // Orders over 24 hours old get highest priority as they're at risk of being cancelled
+      let priorityLevel = 1; // Default - lowest priority (fresh orders)
+      if (pendingMinutes >= 24 * 60) {
+        priorityLevel = 5; // Critical - pending for 24+ hours
+      } else if (pendingMinutes >= 4 * 60) {
+        priorityLevel = 4; // High - pending for 4+ hours
+      } else if (pendingMinutes >= 60) {
+        priorityLevel = 3; // Medium - pending for 1+ hour
+      } else if (pendingMinutes >= 30) {
+        priorityLevel = 2; // Low - pending for 30+ minutes
+      }
+      
+      return {
+        id: order.id,
+        createdAt: order.created_at,
+        shopName: order.shop.name,
+        shopAddress: order.shop.address,
+        shopLatitude: parseFloat(order.shop.latitude),
+        shopLongitude: parseFloat(order.shop.longitude),
+        customerLatitude: parseFloat(order.address.latitude),
+        customerLongitude: parseFloat(order.address.longitude),
+        customerAddress: `${order.address.street}, ${order.address.city}`,
+        itemsCount: order.Order_Items_aggregate.aggregate?.count ?? 0,
+        serviceFee: parseFloat(order.service_fee || "0"),
+        deliveryFee: parseFloat(order.delivery_fee || "0"),
+        earnings: parseFloat(order.service_fee || "0") + parseFloat(order.delivery_fee || "0"),
+        pendingMinutes,
+        priorityLevel
+      };
+    });
 
     // Return the processed data
     res.status(200).json(availableOrders);

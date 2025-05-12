@@ -46,6 +46,24 @@ function relativeTime(iso: string): string {
     : `${diffMins} mins ago`;
 }
 
+// Define a type for the order objects after formatting
+interface FormattedOrder {
+  id: string;
+  shopName: string;
+  shopAddress: string;
+  customerAddress: string;
+  distance: string;
+  items: number;
+  total: string;
+  estimatedEarnings: string;
+  createdAt: string;
+  rawDistance: number;
+  rawEarnings: number;
+  rawCreatedAt: number;
+  minutesAgo: number;
+  priorityLevel: number;
+}
+
 export default function ShopperDashboard() {
   const [isLoading, setIsLoading] = useState(true);
   const [isInitializing, setIsInitializing] = useState(true);
@@ -58,6 +76,9 @@ export default function ShopperDashboard() {
   } | null>(null);
   const [isExpanded, setIsExpanded] = useState(false);
   const [isOnline, setIsOnline] = useState(false);
+  const [sortBy, setSortBy] = useState<"newest" | "earnings" | "distance" | "priority">("newest");
+  const [showHistorical, setShowHistorical] = useState(false);
+  const [sortedOrders, setSortedOrders] = useState<any[]>([]);
 
   const toggleExpanded = () => setIsExpanded((prev) => !prev);
 
@@ -86,11 +107,19 @@ export default function ShopperDashboard() {
   const loadOrders = () => {
     if (!currentLocation) return;
     setIsLoading(true);
-    fetch("/api/shopper/availableOrders")
+    
+    // Adjust the API endpoint based on whether we want to show historical orders
+    // Use 24 hours by default, or 7 days if showing historical orders
+    const hoursParam = showHistorical ? 168 : 24; // 24 hours or 7 days (168 hours)
+    
+    fetch(`/api/shopper/availableOrders?hours=${hoursParam}`)
       .then((res) => res.json())
       .then((data) => {
         // Filter orders by distance from user
-        const nearbyOrders = data.filter((order) => {
+        const nearbyOrders = data.filter((order: {
+          customerLatitude: number;
+          customerLongitude: number;
+        }) => {
           const distKm = getDistanceKm(
             currentLocation.lat,
             currentLocation.lng,
@@ -101,7 +130,19 @@ export default function ShopperDashboard() {
         });
 
         // Format orders for the OrderCard component
-        const formattedOrders = nearbyOrders.map((order) => {
+        const formattedOrders = nearbyOrders.map((order: {
+          id: string;
+          shopName: string;
+          shopAddress: string;
+          customerAddress: string;
+          customerLatitude: number;
+          customerLongitude: number;
+          itemsCount: number;
+          earnings: number;
+          createdAt: string;
+          pendingMinutes?: number;
+          priorityLevel?: number;
+        }) => {
           const distKm = getDistanceKm(
             currentLocation.lat,
             currentLocation.lng,
@@ -109,6 +150,8 @@ export default function ShopperDashboard() {
             order.customerLongitude
           );
           const distMi = (distKm * 0.621371).toFixed(1);
+          const minutesAgo = Math.floor((Date.now() - new Date(order.createdAt).getTime()) / 60000);
+          
           return {
             id: order.id,
             shopName: order.shopName,
@@ -119,14 +162,68 @@ export default function ShopperDashboard() {
             total: `$${order.earnings.toFixed(2)}`,
             estimatedEarnings: `$${order.earnings.toFixed(2)}`,
             createdAt: relativeTime(order.createdAt),
+            // Add additional properties for sorting and filtering
+            rawDistance: distKm,
+            rawEarnings: order.earnings,
+            rawCreatedAt: new Date(order.createdAt).getTime(),
+            minutesAgo: minutesAgo,
+            priorityLevel: order.priorityLevel || 
+              (minutesAgo >= 24 * 60 ? 5 : 
+               minutesAgo >= 4 * 60 ? 4 : 
+               minutesAgo >= 60 ? 3 : 
+               minutesAgo >= 30 ? 2 : 1)
           };
         });
         
-        // Set all orders for the map to use (shop locations)
+        // Set available orders and then apply sorting
         setAvailableOrders(formattedOrders);
+        sortOrders(formattedOrders, sortBy);
       })
       .catch((err) => console.error("Error fetching available orders:", err))
       .finally(() => setIsLoading(false));
+  };
+
+  // Function to sort orders based on the selected criteria
+  const sortOrders = (orders: FormattedOrder[], criteria: "newest" | "earnings" | "distance" | "priority") => {
+    let sorted = [...orders];
+    
+    // Apply sorting based on criteria
+    if (criteria === "newest") {
+      sorted.sort((a, b) => b.rawCreatedAt - a.rawCreatedAt);
+    } else if (criteria === "earnings") {
+      sorted.sort((a, b) => b.rawEarnings - a.rawEarnings);
+    } else if (criteria === "distance") {
+      sorted.sort((a, b) => a.rawDistance - b.rawDistance);
+    } else if (criteria === "priority") {
+      // First by priority level (descending), then by age within each priority level
+      sorted.sort((a, b) => {
+        if (a.priorityLevel !== b.priorityLevel) {
+          return b.priorityLevel - a.priorityLevel; // Higher priority first
+        }
+        return b.minutesAgo - a.minutesAgo; // Older orders first within same priority
+      });
+    }
+    
+    // Apply filtering for 10+ minute old orders if not showing historical
+    if (!showHistorical) {
+      // Show only orders pending for at least 10 minutes
+      sorted = sorted.filter(order => order.minutesAgo >= 10);
+    }
+    
+    setSortedOrders(sorted);
+  };
+
+  // Handle sort change
+  const handleSortChange = (newSortBy: "newest" | "earnings" | "distance" | "priority") => {
+    setSortBy(newSortBy);
+    sortOrders(availableOrders, newSortBy);
+  };
+
+  // Handle toggle for historical vs. current batches
+  const toggleHistorical = () => {
+    setShowHistorical(!showHistorical);
+    // Reload orders when this changes to get the correct time window
+    loadOrders();
   };
 
   useEffect(() => {
@@ -198,7 +295,7 @@ export default function ShopperDashboard() {
     if (currentLocation) {
       loadOrders();
     }
-  }, [currentLocation]);
+  }, [currentLocation, showHistorical]);
 
   // Track initialization state
   useEffect(() => {
@@ -209,6 +306,13 @@ export default function ShopperDashboard() {
       return () => clearTimeout(timer);
     }
   }, [currentLocation, mapLoaded]);
+
+  // Add this useEffect to update sorting when sortBy changes
+  useEffect(() => {
+    if (availableOrders.length > 0) {
+      sortOrders(availableOrders, sortBy);
+    }
+  }, [sortBy, availableOrders]);
 
   // Initializing loading screen
   if (isInitializing) {
@@ -242,23 +346,81 @@ export default function ShopperDashboard() {
         {/* Desktop Title and Sort */}
         {!isMobile && (
           <div className="px-2 pb-2 md:block">
-            <h1 className="px-4 pt-4 text-2xl font-bold">Available Batches</h1>
-            <div className="mb-2 flex items-center justify-between px-4">
+            <div className="flex items-center justify-between px-4 pt-4">
+              <h1 className="text-2xl font-bold">Available Batches</h1>
+              <div className="flex items-center space-x-2">
+                <button
+                  onClick={toggleHistorical}
+                  className={`rounded-md px-3 py-1 text-sm font-medium ${
+                    showHistorical
+                      ? "bg-blue-100 text-blue-700"
+                      : "bg-gray-100 text-gray-700"
+                  }`}
+                >
+                  {showHistorical ? "Showing All Pending" : "Showing Recent (10+ min)"}
+                </button>
+                <button
+                  onClick={loadOrders}
+                  className="rounded-md bg-green-600 px-3 py-1 text-sm font-medium text-white hover:bg-green-700"
+                >
+                  Refresh
+                </button>
+              </div>
+            </div>
+            
+            <div className="mb-4 mt-2 flex items-center px-4">
               <span className="mr-2 text-sm text-gray-500">Sort by:</span>
-              <select className="rounded border p-1 text-sm">
-                <option>Newest</option>
-                <option>Distance</option>
-                <option>Earnings</option>
-              </select>
+              <div className="flex space-x-2">
+                <button
+                  onClick={() => handleSortChange("newest")}
+                  className={`rounded px-3 py-1 text-sm ${
+                    sortBy === "newest" 
+                      ? "bg-green-600 text-white" 
+                      : "bg-gray-200 text-gray-800 hover:bg-gray-300"
+                  }`}
+                >
+                  Newest
+                </button>
+                <button
+                  onClick={() => handleSortChange("earnings")}
+                  className={`rounded px-3 py-1 text-sm ${
+                    sortBy === "earnings" 
+                      ? "bg-green-600 text-white" 
+                      : "bg-gray-200 text-gray-800 hover:bg-gray-300"
+                  }`}
+                >
+                  Earnings
+                </button>
+                <button
+                  onClick={() => handleSortChange("distance")}
+                  className={`rounded px-3 py-1 text-sm ${
+                    sortBy === "distance" 
+                      ? "bg-green-600 text-white" 
+                      : "bg-gray-200 text-gray-800 hover:bg-gray-300"
+                  }`}
+                >
+                  Distance
+                </button>
+                <button
+                  onClick={() => handleSortChange("priority")}
+                  className={`rounded px-3 py-1 text-sm ${
+                    sortBy === "priority" 
+                      ? "bg-purple-600 text-white" 
+                      : "bg-gray-200 text-gray-800 hover:bg-gray-300"
+                  }`}
+                >
+                  Priority
+                </button>
+              </div>
             </div>
 
             {isLoading ? (
               <div className="flex justify-center py-12">
                 <Loader content="Loading orders..." />
               </div>
-            ) : availableOrders.length > 0 ? (
+            ) : sortedOrders.length > 0 ? (
               <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
-                {availableOrders.map((order) => (
+                {sortedOrders.map((order) => (
                   <OrderCard key={order.id} order={order} />
                 ))}
               </div>
@@ -266,7 +428,9 @@ export default function ShopperDashboard() {
               <div className="rounded-lg border bg-white p-8 text-center">
                 <h3 className="mb-2 text-lg font-medium">No Orders Nearby</h3>
                 <p className="mb-4 text-gray-500">
-                  There are currently no available orders in your area.
+                  {showHistorical 
+                    ? "There are no pending orders in your area."
+                    : "There are no orders pending for 10+ minutes in your area."}
                 </p>
                 <Button
                   appearance="primary"
@@ -327,32 +491,93 @@ export default function ShopperDashboard() {
               <div className="h-full overflow-y-auto px-4">
                 <div className="mb-4 flex items-center justify-between">
                   <h2 className="text-lg font-semibold">Available Orders</h2>
-                  <Button
-                    appearance="primary"
-                    className="bg-green-500 text-white"
-                    onClick={loadOrders}
-                  >
-                    Refresh
-                  </Button>
+                  <div className="flex items-center space-x-2">
+                    <button
+                      onClick={toggleHistorical}
+                      className={`rounded-md px-2 py-1 text-xs font-medium ${
+                        showHistorical
+                          ? "bg-blue-100 text-blue-700"
+                          : "bg-gray-100 text-gray-700"
+                      }`}
+                    >
+                      {showHistorical ? "All Pending" : "10+ min"}
+                    </button>
+                    <Button
+                      appearance="primary"
+                      className="bg-green-500 text-white"
+                      onClick={loadOrders}
+                      size="sm"
+                    >
+                      Refresh
+                    </Button>
+                  </div>
                 </div>
+                
+                <div className="mb-4 flex justify-start space-x-2">
+                  <button
+                    onClick={() => handleSortChange("newest")}
+                    className={`rounded px-3 py-1 text-xs ${
+                      sortBy === "newest" 
+                        ? "bg-green-600 text-white" 
+                        : "bg-gray-200 text-gray-800"
+                    }`}
+                  >
+                    Newest
+                  </button>
+                  <button
+                    onClick={() => handleSortChange("earnings")}
+                    className={`rounded px-3 py-1 text-xs ${
+                      sortBy === "earnings" 
+                        ? "bg-green-600 text-white" 
+                        : "bg-gray-200 text-gray-800"
+                    }`}
+                  >
+                    Earnings
+                  </button>
+                  <button
+                    onClick={() => handleSortChange("distance")}
+                    className={`rounded px-3 py-1 text-xs ${
+                      sortBy === "distance" 
+                        ? "bg-green-600 text-white" 
+                        : "bg-gray-200 text-gray-800"
+                    }`}
+                  >
+                    Distance
+                  </button>
+                  <button
+                    onClick={() => handleSortChange("priority")}
+                    className={`rounded px-3 py-1 text-xs ${
+                      sortBy === "priority" 
+                        ? "bg-purple-600 text-white" 
+                        : "bg-gray-200 text-gray-800"
+                    }`}
+                  >
+                    Priority
+                  </button>
+                </div>
+                
                 {isLoading ? (
                   <Loader content="Loading orders..." />
-                ) : availableOrders.length > 0 ? (
+                ) : sortedOrders.length > 0 ? (
                   <div className="space-y-4 pb-16">
-                    {availableOrders.map((order) => (
+                    {sortedOrders.map((order) => (
                       <OrderCard key={order.id} order={order} />
                     ))}
                   </div>
                 ) : (
                   <div className="py-8 text-center">
-                    <p className="text-gray-500">No available orders nearby.</p>
+                    <p className="text-gray-500">
+                      {showHistorical 
+                        ? "No pending orders available." 
+                        : "No orders pending for 10+ minutes."}
+                    </p>
                   </div>
                 )}
               </div>
             ) : (
               <div className="flex items-center justify-between px-4">
                 <p className="text-sm text-gray-500">
-                  Available Orders: {availableOrders.length}
+                  Available Orders: {sortedOrders.length}
                 </p>
               </div>
             )}

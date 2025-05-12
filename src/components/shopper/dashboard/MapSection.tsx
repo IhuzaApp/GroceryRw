@@ -75,10 +75,16 @@ function getOrderTimeBadgeColor(createdAtStr: string): string {
   const diffMs = Date.now() - created.getTime();
   const diffMins = Math.floor(diffMs / 60000);
   
-  // Color by age: green for <30min, orange for 30-60min, purple for >60min
-  if (diffMins < 30) {
-    return "#10b981"; // green
+  // Color coding:
+  // - Blue: Very recent orders (<10 min) - not normally visible in list view with 10 min filter
+  // - Green: Recent orders (10-60 min)
+  // - Orange: Older orders (1-24 hours)
+  // - Purple: Historical orders (>24 hours)
+  if (diffMins < 10) {
+    return "#3b82f6"; // blue
   } else if (diffMins < 60) {
+    return "#10b981"; // green
+  } else if (diffMins < 24 * 60) {
     return "#f59e0b"; // orange
   } else {
     return "#8b5cf6"; // purple
