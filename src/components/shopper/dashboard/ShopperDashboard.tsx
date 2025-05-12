@@ -113,6 +113,13 @@ export default function ShopperDashboard() {
       console.log("Cannot load orders: No current location available");
       return;
     }
+    
+    if (!isOnline) {
+      console.log("Cannot load orders: User is offline");
+      setAvailableOrders([]);
+      setSortedOrders([]);
+      return;
+    }
 
     setIsLoading(true);
     console.log("Fetching available orders...");
@@ -177,7 +184,7 @@ export default function ShopperDashboard() {
             }
 
             // Calculate using customer location
-            const distKm = getDistanceKm(
+          const distKm = getDistanceKm(
               safeLocation.lat,
               safeLocation.lng,
               order.customerLatitude,
@@ -235,7 +242,7 @@ export default function ShopperDashboard() {
 
               // Use the shorter distance for display
               const distKm = Math.min(shopDistKm, custDistKm);
-              const distMi = (distKm * 0.621371).toFixed(1);
+          const distMi = (distKm * 0.621371).toFixed(1);
 
               // Use provided pendingMinutes or calculate if not provided
               const minutesAgo =
@@ -257,13 +264,13 @@ export default function ShopperDashboard() {
                   ? 2
                   : 1);
 
-              return {
+          return {
                 id: order.id,
                 shopName: order.shopName || "Unknown Shop",
                 shopAddress: order.shopAddress || "No address available",
                 customerAddress:
                   order.customerAddress || "No address available",
-                distance: `${distMi} mi`,
+            distance: `${distMi} mi`,
                 items: order.itemsCount || 0,
                 total: `$${(order.earnings || 0).toFixed(2)}`,
                 estimatedEarnings: `$${(order.earnings || 0).toFixed(2)}`,
@@ -368,15 +375,15 @@ export default function ShopperDashboard() {
   useEffect(() => {
     // Set up polling for automatic refresh if enabled
     let intervalId: NodeJS.Timeout | null = null;
-
-    if (isAutoRefreshing && currentLocation) {
+    
+    if (isAutoRefreshing && currentLocation && isOnline) {
       console.log("Setting up auto-refresh for orders (30s interval)");
       intervalId = setInterval(() => {
         console.log("Auto-refreshing orders...");
         loadOrders();
       }, 30000); // Refresh every 30 seconds
     }
-
+    
     // Cleanup function to clear interval when component unmounts
     return () => {
       if (intervalId) {
@@ -384,7 +391,7 @@ export default function ShopperDashboard() {
         clearInterval(intervalId);
       }
     };
-  }, [currentLocation, isAutoRefreshing, showHistorical, sortBy]);
+  }, [currentLocation, isAutoRefreshing, showHistorical, sortBy, isOnline]);
 
   // Add toggle for auto-refresh
   const toggleAutoRefresh = () => {
@@ -427,6 +434,15 @@ export default function ShopperDashboard() {
     };
   }, []);
 
+  // Effect to clear orders when user goes offline
+  useEffect(() => {
+    if (!isOnline) {
+      console.log("User went offline, clearing order data");
+      setAvailableOrders([]);
+      setSortedOrders([]);
+    }
+  }, [isOnline]);
+
   // Read last known location from cookies or get fresh position
   useEffect(() => {
     const cookies = document.cookie
@@ -457,10 +473,10 @@ export default function ShopperDashboard() {
 
   // Fetch available orders based on location
   useEffect(() => {
-    if (currentLocation) {
-      loadOrders();
+    if (currentLocation && isOnline) {
+    loadOrders();
     }
-  }, [currentLocation, showHistorical]);
+  }, [currentLocation, showHistorical, isOnline]);
 
   // Track initialization state
   useEffect(() => {
@@ -609,18 +625,39 @@ export default function ShopperDashboard() {
             {/* Filtering info message */}
             <div className="mb-4 px-4">
               <p className="text-xs text-gray-500">
-                {sortBy === "newest"
-                  ? "Showing recent orders less than 1 hour old"
-                  : sortBy === "priority"
-                  ? "Showing orders pending for 1+ hours by priority level"
-                  : `Sorting by ${sortBy}`}
-                {!showHistorical && " • Only orders pending for 10+ minutes"}
+                {!isOnline 
+                  ? "Go online to see available orders" 
+                  : sortBy === "newest"
+                    ? "Showing recent orders less than 1 hour old"
+                    : sortBy === "priority"
+                      ? "Showing orders pending for 1+ hours by priority level"
+                      : `Sorting by ${sortBy}`}
+                {isOnline && !showHistorical && " • Only orders pending for 10+ minutes"}
               </p>
             </div>
 
             {isLoading ? (
               <div className="flex justify-center py-12">
                 <Loader content="Loading orders..." />
+              </div>
+            ) : !isOnline ? (
+              <div className="rounded-lg border bg-white p-8 text-center">
+                <h3 className="mb-2 text-lg font-medium">You're Currently Offline</h3>
+                <p className="mb-4 text-gray-500">
+                  To see available orders, please go online first by enabling your location.
+                </p>
+                <div className="flex flex-col space-y-3 md:flex-row md:justify-center md:space-x-3 md:space-y-0">
+                  <Button
+                    appearance="primary"
+                    className="bg-green-500 text-white"
+                    onClick={() => window.dispatchEvent(new Event("toggleGoLive"))}
+                  >
+                    Go Online
+                  </Button>
+                  <p className="mt-4 text-xs text-gray-400">
+                    You'll be asked to allow location access
+                  </p>
+                </div>
               </div>
             ) : sortedOrders.length > 0 ? (
               <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
@@ -719,14 +756,14 @@ export default function ShopperDashboard() {
                     >
                       {showHistorical ? "All Pending" : "10+ min"}
                     </button>
-                    <Button
-                      appearance="primary"
-                      className="bg-green-500 text-white"
-                      onClick={loadOrders}
+                  <Button
+                    appearance="primary"
+                    className="bg-green-500 text-white"
+                    onClick={loadOrders}
                       size="sm"
-                    >
-                      Refresh
-                    </Button>
+                  >
+                    Refresh
+                  </Button>
                   </div>
                 </div>
 
@@ -778,17 +815,37 @@ export default function ShopperDashboard() {
                 {/* Filtering info message */}
                 <div className="mb-4 px-4 md:hidden">
                   <p className="text-xs text-gray-500">
-                    {sortBy === "newest"
-                      ? "Showing orders < 1 hour old"
-                      : sortBy === "priority"
-                      ? "Orders pending 1+ hours by priority"
-                      : `Sorting by ${sortBy}`}
-                    {!showHistorical && " • 10+ min pending"}
+                    {!isOnline 
+                      ? "Go online to see available orders" 
+                      : sortBy === "newest"
+                        ? "Showing orders < 1 hour old"
+                        : sortBy === "priority"
+                          ? "Orders pending 1+ hours by priority"
+                          : `Sorting by ${sortBy}`}
+                    {isOnline && !showHistorical && " • 10+ min pending"}
                   </p>
                 </div>
 
                 {isLoading ? (
                   <Loader content="Loading orders..." />
+                ) : !isOnline ? (
+                  <div className="py-8 text-center">
+                    <h3 className="mb-2 text-base font-medium">You're Currently Offline</h3>
+                    <p className="mb-4 text-sm text-gray-500">
+                      To see available orders, please go online first by enabling your location.
+                    </p>
+                    <Button
+                      appearance="primary"
+                      className="bg-green-500 text-white"
+                      onClick={() => window.dispatchEvent(new Event("toggleGoLive"))}
+                      size="sm"
+                    >
+                      Go Online
+                    </Button>
+                    <p className="mt-4 text-xs text-gray-400">
+                      You'll be asked to allow location access
+                    </p>
+                  </div>
                 ) : sortedOrders.length > 0 ? (
                   <div className="space-y-4 pb-16">
                     {sortedOrders.map((order) => (
@@ -808,7 +865,9 @@ export default function ShopperDashboard() {
             ) : (
               <div className="flex items-center justify-between px-4">
                 <p className="text-sm text-gray-500">
-                  Available Orders: {sortedOrders.length}
+                  {!isOnline 
+                    ? "Go online to see available orders" 
+                    : `Available Orders: ${sortedOrders.length}`}
                 </p>
               </div>
             )}
