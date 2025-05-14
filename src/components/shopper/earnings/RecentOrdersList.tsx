@@ -35,19 +35,19 @@ const RecentOrdersList: React.FC<RecentOrdersListProps> = ({
 }) => {
   // Local pagination state (used when serverPagination is false)
   const [localCurrentPage, setLocalCurrentPage] = useState(1);
-  
+
   // Use external or local pagination state
   const currentPage = externalCurrentPage || localCurrentPage;
-  
+
   // Format currency in RWF
   const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat('en-RW', {
-      style: 'currency',
-      currency: 'RWF',
-      maximumFractionDigits: 0
+    return new Intl.NumberFormat("en-RW", {
+      style: "currency",
+      currency: "RWF",
+      maximumFractionDigits: 0,
     }).format(amount);
   };
-  
+
   // Handle pagination change
   const handlePageChange = (page: number) => {
     if (serverPagination && onPageChange) {
@@ -58,15 +58,15 @@ const RecentOrdersList: React.FC<RecentOrdersListProps> = ({
       setLocalCurrentPage(page);
     }
   };
-  
+
   // Calculate total pages for local pagination
-  const totalPages = serverPagination 
+  const totalPages = serverPagination
     ? Math.ceil((totalOrders || 0) / pageSize)
     : Math.ceil(orders.length / pageSize);
-    
+
   // Get current page items for local pagination
-  const displayedOrders = serverPagination 
-    ? orders 
+  const displayedOrders = serverPagination
+    ? orders
     : orders.slice((currentPage - 1) * pageSize, currentPage * pageSize);
 
   return (
@@ -75,13 +75,19 @@ const RecentOrdersList: React.FC<RecentOrdersListProps> = ({
         <h3 className="font-medium">Recent Orders</h3>
         {!isLoading && orders.length > 0 && (
           <span className="text-sm text-gray-500">
-            {serverPagination 
-              ? `Showing ${((currentPage - 1) * pageSize) + 1}-${Math.min(currentPage * pageSize, totalOrders || 0)} of ${totalOrders}` 
-              : `Showing ${((currentPage - 1) * pageSize) + 1}-${Math.min(currentPage * pageSize, orders.length)} of ${orders.length}`}
+            {serverPagination
+              ? `Showing ${(currentPage - 1) * pageSize + 1}-${Math.min(
+                  currentPage * pageSize,
+                  totalOrders || 0
+                )} of ${totalOrders}`
+              : `Showing ${(currentPage - 1) * pageSize + 1}-${Math.min(
+                  currentPage * pageSize,
+                  orders.length
+                )} of ${orders.length}`}
           </span>
         )}
       </div>
-      
+
       {isLoading ? (
         <div className="flex justify-center py-8">
           <Loader size="md" content="Loading recent orders..." />
@@ -94,9 +100,15 @@ const RecentOrdersList: React.FC<RecentOrdersListProps> = ({
         <div className="space-y-4">
           {displayedOrders.map((item, index) => {
             // Calculate service fee and delivery fee if not provided directly
-            const serviceFee = item.serviceFee !== undefined ? item.serviceFee : (item.amount * 0.6);
-            const deliveryFee = item.deliveryFee !== undefined ? item.deliveryFee : (item.amount * 0.4);
-            
+            const serviceFee =
+              item.serviceFee !== undefined
+                ? item.serviceFee
+                : item.amount * 0.6;
+            const deliveryFee =
+              item.deliveryFee !== undefined
+                ? item.deliveryFee
+                : item.amount * 0.4;
+
             return (
               <div
                 key={item.id || index}
@@ -149,7 +161,7 @@ const RecentOrdersList: React.FC<RecentOrdersListProps> = ({
           />
         </div>
       )}
-      
+
       {/* Load more button as an alternative to pagination */}
       {!isLoading && !serverPagination && currentPage < totalPages && (
         <Button

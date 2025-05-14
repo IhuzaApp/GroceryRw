@@ -3,7 +3,10 @@ import NProgress from "nprogress";
 import "nprogress/nprogress.css";
 import { useEffect } from "react";
 import { signIn, useSession } from "next-auth/react";
-import { isRoleSwitchInProgress, clearRoleSwitchFlag } from "../src/lib/sessionRefresh";
+import {
+  isRoleSwitchInProgress,
+  clearRoleSwitchFlag,
+} from "../src/lib/sessionRefresh";
 
 // Configure NProgress
 NProgress.configure({ showSpinner: false });
@@ -25,20 +28,20 @@ import { GoogleMapProvider } from "../src/context/GoogleMapProvider";
 // Component to handle session refresh after role switching
 function SessionRefreshHandler({ children }: { children: React.ReactNode }) {
   const { data: session, status } = useSession();
-  
+
   useEffect(() => {
     // Check if we need to refresh the session due to role switching
     const isSwitchingRole = isRoleSwitchInProgress();
-    
-    if (isSwitchingRole && status === 'authenticated') {
+
+    if (isSwitchingRole && status === "authenticated") {
       // Clear the flag
       clearRoleSwitchFlag();
-      
+
       // Force reload the page to ensure we have the latest session data
       window.location.reload();
     }
   }, [status]);
-  
+
   return <>{children}</>;
 }
 

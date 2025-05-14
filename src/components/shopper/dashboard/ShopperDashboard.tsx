@@ -120,7 +120,7 @@ export default function ShopperDashboard() {
       console.log("Cannot load orders: No current location available");
       return;
     }
-    
+
     if (!isOnline) {
       console.log("Cannot load orders: User is offline");
       setAvailableOrders([]);
@@ -147,9 +147,9 @@ export default function ShopperDashboard() {
     const timestamp = new Date().getTime();
     // Include shopper's location and set max travel time to 15 minutes
     const url = `/api/shopper/availableOrders?_=${timestamp}&latitude=${safeLocation.lat}&longitude=${safeLocation.lng}&maxTravelTime=15`;
-    
+
     console.log(`Requesting orders with URL: ${url}`);
-    
+
     fetch(url)
       .then((res) => {
         if (!res.ok) {
@@ -158,7 +158,9 @@ export default function ShopperDashboard() {
         return res.json();
       })
       .then((data) => {
-        console.log(`Received ${data.length} orders from API within 15 min travel time`);
+        console.log(
+          `Received ${data.length} orders from API within 15 min travel time`
+        );
 
         // Debug: Log all received orders first
         data.forEach((order: any, idx: number) => {
@@ -171,66 +173,68 @@ export default function ShopperDashboard() {
             customerCoords: `${order.customerLatitude}, ${order.customerLongitude}`,
             items: order.itemsCount,
             travelTime: `${order.travelTimeMinutes} min`,
-            distance: `${order.distance} km` 
+            distance: `${order.distance} km`,
           });
         });
 
         // Format orders for the OrderCard component - use formatted data from API
-        const formattedOrders = data.map((order: any) => {
-          try {
-            // Calculate createdAt as Date for sorting
-            const createdAtDate = new Date(order.createdAt);
-            const minutesAgo = Math.floor(
-              (Date.now() - createdAtDate.getTime()) / 60000
-            );
+        const formattedOrders = data
+          .map((order: any) => {
+            try {
+              // Calculate createdAt as Date for sorting
+              const createdAtDate = new Date(order.createdAt);
+              const minutesAgo = Math.floor(
+                (Date.now() - createdAtDate.getTime()) / 60000
+              );
 
-            // Format timestamps
-            const createdTimeFormatted = relativeTime(order.createdAt);
+              // Format timestamps
+              const createdTimeFormatted = relativeTime(order.createdAt);
 
-            // Note - now using API-calculated distance in km
-            const distanceStr = `${order.distance} km`;
-            
-            return {
-              id: order.id,
-              shopName: order.shopName || "Unknown Shop",
-              shopAddress: order.shopAddress || "No address available",
-              customerAddress:
-                order.customerAddress || "No address available",
-              distance: distanceStr,
-              items: order.itemsCount || 0,
-              total: `$${(order.earnings || 0).toFixed(2)}`,
-              estimatedEarnings: `$${(order.earnings || 0).toFixed(2)}`,
-              createdAt: createdTimeFormatted,
-              status: order.status || "PENDING",
-              // Add additional properties for sorting and filtering
-              rawDistance: order.distance || 0,
-              rawEarnings: order.earnings || 0,
-              rawCreatedAt: createdAtDate.getTime(),
-              minutesAgo: minutesAgo,
-              priorityLevel: order.priorityLevel || 1,
-              // Keep original coordinates for map rendering
-              shopLatitude: order.shopLatitude,
-              shopLongitude: order.shopLongitude,
-              customerLatitude: order.customerLatitude,
-              customerLongitude: order.customerLongitude,
-              // Add travel time
-              travelTimeMinutes: order.travelTimeMinutes
-            };
-          } catch (err) {
-            console.error(`Error formatting order ${order.id}:`, err);
-            return null; // Skip orders with formatting errors
-          }
-        }).filter(Boolean); // Remove any null entries from formatting errors
+              // Note - now using API-calculated distance in km
+              const distanceStr = `${order.distance} km`;
+
+              return {
+                id: order.id,
+                shopName: order.shopName || "Unknown Shop",
+                shopAddress: order.shopAddress || "No address available",
+                customerAddress:
+                  order.customerAddress || "No address available",
+                distance: distanceStr,
+                items: order.itemsCount || 0,
+                total: `$${(order.earnings || 0).toFixed(2)}`,
+                estimatedEarnings: `$${(order.earnings || 0).toFixed(2)}`,
+                createdAt: createdTimeFormatted,
+                status: order.status || "PENDING",
+                // Add additional properties for sorting and filtering
+                rawDistance: order.distance || 0,
+                rawEarnings: order.earnings || 0,
+                rawCreatedAt: createdAtDate.getTime(),
+                minutesAgo: minutesAgo,
+                priorityLevel: order.priorityLevel || 1,
+                // Keep original coordinates for map rendering
+                shopLatitude: order.shopLatitude,
+                shopLongitude: order.shopLongitude,
+                customerLatitude: order.customerLatitude,
+                customerLongitude: order.customerLongitude,
+                // Add travel time
+                travelTimeMinutes: order.travelTimeMinutes,
+              };
+            } catch (err) {
+              console.error(`Error formatting order ${order.id}:`, err);
+              return null; // Skip orders with formatting errors
+            }
+          })
+          .filter(Boolean); // Remove any null entries from formatting errors
 
         console.log(`Formatted ${formattedOrders.length} orders for display`);
-        
+
         // Set available orders
         setAvailableOrders(formattedOrders);
-        
+
         // Apply sort
         const sorted = sortOrders(formattedOrders, sortBy);
         setSortedOrders(sorted);
-        
+
         setLastRefreshed(new Date());
         setIsLoading(false);
       })
@@ -266,7 +270,7 @@ export default function ShopperDashboard() {
 
     // Additionally, apply filtering - changed from 10 to 15 minutes
     if (!showHistorical) {
-      // Show only orders pending for at least 15 minutes 
+      // Show only orders pending for at least 15 minutes
       sorted = sorted.filter((order) => order.minutesAgo >= 15);
     }
 
@@ -292,7 +296,7 @@ export default function ShopperDashboard() {
   useEffect(() => {
     // Set up polling for automatic refresh if enabled
     let intervalId: NodeJS.Timeout | null = null;
-    
+
     if (isAutoRefreshing && currentLocation && isOnline) {
       console.log("Setting up auto-refresh for orders (30s interval)");
       intervalId = setInterval(() => {
@@ -300,7 +304,7 @@ export default function ShopperDashboard() {
         loadOrders();
       }, 30000); // Refresh every 30 seconds
     }
-    
+
     // Cleanup function to clear interval when component unmounts
     return () => {
       if (intervalId) {
@@ -391,7 +395,7 @@ export default function ShopperDashboard() {
   // Fetch available orders based on location
   useEffect(() => {
     if (currentLocation && isOnline) {
-    loadOrders();
+      loadOrders();
     }
   }, [currentLocation, showHistorical, isOnline]);
 
@@ -542,14 +546,16 @@ export default function ShopperDashboard() {
             {/* Filtering info message */}
             <div className="mb-4 px-4">
               <p className="text-xs text-gray-500">
-                {!isOnline 
-                  ? "Go online to see available orders" 
+                {!isOnline
+                  ? "Go online to see available orders"
                   : sortBy === "newest"
-                    ? "Showing recent orders less than 1 hour old"
-                    : sortBy === "priority"
-                      ? "Showing orders pending for 1+ hours by priority level"
-                      : `Sorting by ${sortBy}`}
-                {isOnline && !showHistorical && " • Only orders pending for 15+ minutes"}
+                  ? "Showing recent orders less than 1 hour old"
+                  : sortBy === "priority"
+                  ? "Showing orders pending for 1+ hours by priority level"
+                  : `Sorting by ${sortBy}`}
+                {isOnline &&
+                  !showHistorical &&
+                  " • Only orders pending for 15+ minutes"}
               </p>
             </div>
 
@@ -559,15 +565,20 @@ export default function ShopperDashboard() {
               </div>
             ) : !isOnline ? (
               <div className="rounded-lg border bg-white p-8 text-center">
-                <h3 className="mb-2 text-lg font-medium">You're Currently Offline</h3>
+                <h3 className="mb-2 text-lg font-medium">
+                  You're Currently Offline
+                </h3>
                 <p className="mb-4 text-gray-500">
-                  To see available orders, please go online first by enabling your location.
+                  To see available orders, please go online first by enabling
+                  your location.
                 </p>
                 <div className="flex flex-col space-y-3 md:flex-row md:justify-center md:space-x-3 md:space-y-0">
                   <Button
                     appearance="primary"
                     className="bg-green-500 text-white"
-                    onClick={() => window.dispatchEvent(new Event("toggleGoLive"))}
+                    onClick={() =>
+                      window.dispatchEvent(new Event("toggleGoLive"))
+                    }
                   >
                     Go Online
                   </Button>
@@ -579,10 +590,10 @@ export default function ShopperDashboard() {
             ) : sortedOrders.length > 0 ? (
               <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
                 {sortedOrders.map((order) => (
-                  <OrderCard 
-                    key={order.id} 
-                    order={order} 
-                    onOrderAccepted={loadOrders} 
+                  <OrderCard
+                    key={order.id}
+                    order={order}
+                    onOrderAccepted={loadOrders}
                   />
                 ))}
               </div>
@@ -677,14 +688,14 @@ export default function ShopperDashboard() {
                     >
                       {showHistorical ? "All Pending" : "15+ min"}
                     </button>
-                  <Button
-                    appearance="primary"
-                    className="bg-green-500 text-white"
-                    onClick={loadOrders}
+                    <Button
+                      appearance="primary"
+                      className="bg-green-500 text-white"
+                      onClick={loadOrders}
                       size="sm"
-                  >
-                    Refresh
-                  </Button>
+                    >
+                      Refresh
+                    </Button>
                   </div>
                 </div>
 
@@ -736,13 +747,13 @@ export default function ShopperDashboard() {
                 {/* Filtering info message */}
                 <div className="mb-4 px-4 md:hidden">
                   <p className="text-xs text-gray-500">
-                    {!isOnline 
-                      ? "Go online to see available orders" 
+                    {!isOnline
+                      ? "Go online to see available orders"
                       : sortBy === "newest"
-                        ? "Showing orders < 1 hour old"
-                        : sortBy === "priority"
-                          ? "Orders pending 1+ hours by priority"
-                          : `Sorting by ${sortBy}`}
+                      ? "Showing orders < 1 hour old"
+                      : sortBy === "priority"
+                      ? "Orders pending 1+ hours by priority"
+                      : `Sorting by ${sortBy}`}
                     {isOnline && !showHistorical && " • 15+ min pending"}
                   </p>
                 </div>
@@ -751,14 +762,19 @@ export default function ShopperDashboard() {
                   <Loader content="Loading orders..." />
                 ) : !isOnline ? (
                   <div className="py-8 text-center">
-                    <h3 className="mb-2 text-base font-medium">You're Currently Offline</h3>
+                    <h3 className="mb-2 text-base font-medium">
+                      You're Currently Offline
+                    </h3>
                     <p className="mb-4 text-sm text-gray-500">
-                      To see available orders, please go online first by enabling your location.
+                      To see available orders, please go online first by
+                      enabling your location.
                     </p>
                     <Button
                       appearance="primary"
                       className="bg-green-500 text-white"
-                      onClick={() => window.dispatchEvent(new Event("toggleGoLive"))}
+                      onClick={() =>
+                        window.dispatchEvent(new Event("toggleGoLive"))
+                      }
                       size="sm"
                     >
                       Go Online
@@ -770,10 +786,10 @@ export default function ShopperDashboard() {
                 ) : sortedOrders.length > 0 ? (
                   <div className="space-y-4 pb-16">
                     {sortedOrders.map((order) => (
-                      <OrderCard 
-                        key={order.id} 
-                        order={order} 
-                        onOrderAccepted={loadOrders} 
+                      <OrderCard
+                        key={order.id}
+                        order={order}
+                        onOrderAccepted={loadOrders}
                       />
                     ))}
                   </div>
@@ -790,8 +806,8 @@ export default function ShopperDashboard() {
             ) : (
               <div className="flex items-center justify-between px-4">
                 <p className="text-sm text-gray-500">
-                  {!isOnline 
-                    ? "Go online to see available orders" 
+                  {!isOnline
+                    ? "Go online to see available orders"
                     : `Available Orders: ${sortedOrders.length}`}
                 </p>
               </div>

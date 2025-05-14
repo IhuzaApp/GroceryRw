@@ -14,7 +14,7 @@ const GET_WALLET_AND_TRANSACTIONS = gql`
       reserved_balance
       shopper_id
     }
-    
+
     # Get wallet transactions
     Wallet_Transactions(
       where: { Wallet: { shopper_id: { _eq: $shopper_id } } }
@@ -93,16 +93,21 @@ export default async function handler(
     );
 
     // Format wallet data
-    const wallet = data.Wallets.length > 0 
-      ? {
-          id: data.Wallets[0].id,
-          availableBalance: parseFloat(data.Wallets[0].available_balance || "0"),
-          reservedBalance: parseFloat(data.Wallets[0].reserved_balance || "0"),
-        }
-      : null;
-      
+    const wallet =
+      data.Wallets.length > 0
+        ? {
+            id: data.Wallets[0].id,
+            availableBalance: parseFloat(
+              data.Wallets[0].available_balance || "0"
+            ),
+            reservedBalance: parseFloat(
+              data.Wallets[0].reserved_balance || "0"
+            ),
+          }
+        : null;
+
     // Format transaction history
-    const transactions = data.Wallet_Transactions.map(tx => ({
+    const transactions = data.Wallet_Transactions.map((tx) => ({
       id: tx.id,
       amount: parseFloat(tx.amount || "0"),
       type: tx.type,
@@ -111,21 +116,19 @@ export default async function handler(
       date: new Date(tx.created_at).toLocaleDateString(),
       time: new Date(tx.created_at).toLocaleTimeString(),
       orderId: tx.related_order_id,
-      orderNumber: tx.Order?.OrderID || null
+      orderNumber: tx.Order?.OrderID || null,
     }));
 
     return res.status(200).json({
       success: true,
       wallet,
-      transactions
+      transactions,
     });
   } catch (error) {
     console.error("Error fetching wallet data:", error);
     return res.status(500).json({
       error:
-        error instanceof Error
-          ? error.message
-          : "Failed to fetch wallet data",
+        error instanceof Error ? error.message : "Failed to fetch wallet data",
     });
   }
-} 
+}

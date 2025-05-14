@@ -29,9 +29,7 @@ const PerformanceMetrics: React.FC<PerformanceMetricsProps> = ({
     if (metric.metric === "Customer Rating") {
       return (
         <div className="flex items-center">
-          <span className="mr-1">
-            {metric.value}
-          </span>
+          <span className="mr-1">{metric.value}</span>
           <span className="text-yellow-500">/5</span>
           <div className="ml-2 flex">
             {[...Array(5)].map((_, i) => (
@@ -42,7 +40,9 @@ const PerformanceMetrics: React.FC<PerformanceMetricsProps> = ({
                 strokeWidth={i < Math.floor(metric.value) ? "0" : "1.5"}
                 stroke="currentColor"
                 className={`h-4 w-4 ${
-                  i < Math.floor(metric.value) ? "text-yellow-500" : "text-gray-300"
+                  i < Math.floor(metric.value)
+                    ? "text-yellow-500"
+                    : "text-gray-300"
                 }`}
               >
                 <path
@@ -56,7 +56,7 @@ const PerformanceMetrics: React.FC<PerformanceMetricsProps> = ({
         </div>
       );
     }
-    
+
     if (metric.max) {
       return (
         <span>
@@ -65,21 +65,19 @@ const PerformanceMetrics: React.FC<PerformanceMetricsProps> = ({
         </span>
       );
     }
-    
+
     return metric.value;
   };
 
   return (
     <Panel shaded bordered bodyFill className="p-4">
-      <h3 className="mb-4 font-semibold text-lg">Performance Metrics</h3>
+      <h3 className="mb-4 text-lg font-semibold">Performance Metrics</h3>
       <div className="space-y-6">
         {metrics.map((item, index) => (
           <div key={index}>
             <div className="mb-1 flex items-center justify-between">
               <span className="text-sm font-medium">{item.metric}</span>
-              <span className="text-sm">
-                {formatRating(item)}
-              </span>
+              <span className="text-sm">{formatRating(item)}</span>
             </div>
             <div className="h-2 w-full rounded-full bg-gray-200">
               <div
@@ -104,9 +102,7 @@ const PerformanceMetrics: React.FC<PerformanceMetricsProps> = ({
             <div key={index} className="rounded-lg bg-gray-50 p-3">
               <div className="text-sm text-gray-500">{stat.title}</div>
               <div className="flex items-center text-xl font-bold">
-                <span className={`mr-1 ${stat.iconColor}`}>
-                  {stat.icon}
-                </span>
+                <span className={`mr-1 ${stat.iconColor}`}>{stat.icon}</span>
                 {stat.value}
               </div>
             </div>

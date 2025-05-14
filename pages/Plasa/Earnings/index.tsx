@@ -103,7 +103,7 @@ const EarningsPage: React.FC = () => {
     totalKilometers: 0,
     totalItems: 0,
     avgTimePerOrder: 0,
-    storesVisited: 0
+    storesVisited: 0,
   });
   const [recentOrders, setRecentOrders] = useState<any[]>([]);
   const [recentOrdersLoading, setRecentOrdersLoading] = useState(true);
@@ -170,15 +170,17 @@ const EarningsPage: React.FC = () => {
       }
       const data = await response.json();
       if (data.success) {
-        setWallet(data.wallet || { id: '', availableBalance: 0, reservedBalance: 0 });
+        setWallet(
+          data.wallet || { id: "", availableBalance: 0, reservedBalance: 0 }
+        );
         setTransactions(data.transactions || []);
       } else {
-        setWallet({ id: '', availableBalance: 0, reservedBalance: 0 });
+        setWallet({ id: "", availableBalance: 0, reservedBalance: 0 });
         setTransactions([]);
       }
     } catch (error) {
       console.error("Error fetching wallet data:", error);
-      setWallet({ id: '', availableBalance: 0, reservedBalance: 0 });
+      setWallet({ id: "", availableBalance: 0, reservedBalance: 0 });
       setTransactions([]);
     } finally {
       setWalletLoading(false);
@@ -208,7 +210,9 @@ const EarningsPage: React.FC = () => {
   const fetchRecentOrders = async (page: number = 1) => {
     try {
       setRecentOrdersLoading(true);
-      const response = await fetch(`/api/shopper/recentOrders?page=${page}&limit=${ordersPerPage}`);
+      const response = await fetch(
+        `/api/shopper/recentOrders?page=${page}&limit=${ordersPerPage}`
+      );
       if (!response.ok) {
         throw new Error("Failed to fetch recent orders");
       }
@@ -234,7 +238,9 @@ const EarningsPage: React.FC = () => {
   const fetchDailyEarnings = async (selectedPeriod: string) => {
     try {
       setDailyEarningsLoading(true);
-      const response = await fetch(`/api/shopper/dailyEarnings?period=${selectedPeriod}`);
+      const response = await fetch(
+        `/api/shopper/dailyEarnings?period=${selectedPeriod}`
+      );
       if (!response.ok) {
         throw new Error("Failed to fetch daily earnings");
       }
@@ -263,31 +269,33 @@ const EarningsPage: React.FC = () => {
         { metric: "Acceptance Rate", value: 82, max: 100, percentage: 82 },
       ];
     }
-    
+
     return [
-      { 
-        metric: "Customer Rating", 
-        value: earningsStats.performance.customerRating, 
-        max: 5, 
-        percentage: Math.round((earningsStats.performance.customerRating / 5) * 100) 
+      {
+        metric: "Customer Rating",
+        value: earningsStats.performance.customerRating,
+        max: 5,
+        percentage: Math.round(
+          (earningsStats.performance.customerRating / 5) * 100
+        ),
       },
-      { 
-        metric: "On-time Delivery", 
-        value: earningsStats.performance.onTimeDelivery, 
-        max: 100, 
-        percentage: earningsStats.performance.onTimeDelivery 
+      {
+        metric: "On-time Delivery",
+        value: earningsStats.performance.onTimeDelivery,
+        max: 100,
+        percentage: earningsStats.performance.onTimeDelivery,
       },
-      { 
-        metric: "Order Accuracy", 
-        value: earningsStats.performance.orderAccuracy, 
-        max: 100, 
-        percentage: earningsStats.performance.orderAccuracy 
+      {
+        metric: "Order Accuracy",
+        value: earningsStats.performance.orderAccuracy,
+        max: 100,
+        percentage: earningsStats.performance.orderAccuracy,
       },
-      { 
-        metric: "Acceptance Rate", 
-        value: earningsStats.performance.acceptanceRate, 
-        max: 100, 
-        percentage: earningsStats.performance.acceptanceRate 
+      {
+        metric: "Acceptance Rate",
+        value: earningsStats.performance.acceptanceRate,
+        max: 100,
+        percentage: earningsStats.performance.acceptanceRate,
       },
     ];
   };
@@ -297,30 +305,45 @@ const EarningsPage: React.FC = () => {
     if (!earningsStats.goals) {
       // Fallback to default values if API doesn't provide goals data
       return [
-        { goal: "Weekly Target", current: 1248.5, target: 1500, percentage: 83 },
-        { goal: "Monthly Target", current: 3820.75, target: 6000, percentage: 64 },
-        { goal: "Quarterly Bonus", current: 8500, target: 15000, percentage: 57 },
+        {
+          goal: "Weekly Target",
+          current: 1248.5,
+          target: 1500,
+          percentage: 83,
+        },
+        {
+          goal: "Monthly Target",
+          current: 3820.75,
+          target: 6000,
+          percentage: 64,
+        },
+        {
+          goal: "Quarterly Bonus",
+          current: 8500,
+          target: 15000,
+          percentage: 57,
+        },
       ];
     }
-    
+
     return [
-      { 
-        goal: "Weekly Target", 
-        current: earningsStats.goals.weekly.current, 
-        target: earningsStats.goals.weekly.target, 
-        percentage: earningsStats.goals.weekly.percentage 
+      {
+        goal: "Weekly Target",
+        current: earningsStats.goals.weekly.current,
+        target: earningsStats.goals.weekly.target,
+        percentage: earningsStats.goals.weekly.percentage,
       },
-      { 
-        goal: "Monthly Target", 
-        current: earningsStats.goals.monthly.current, 
-        target: earningsStats.goals.monthly.target, 
-        percentage: earningsStats.goals.monthly.percentage 
+      {
+        goal: "Monthly Target",
+        current: earningsStats.goals.monthly.current,
+        target: earningsStats.goals.monthly.target,
+        percentage: earningsStats.goals.monthly.percentage,
       },
-      { 
-        goal: "Quarterly Bonus", 
-        current: earningsStats.goals.quarterly.current, 
-        target: earningsStats.goals.quarterly.target, 
-        percentage: earningsStats.goals.quarterly.percentage 
+      {
+        goal: "Quarterly Bonus",
+        current: earningsStats.goals.quarterly.current,
+        target: earningsStats.goals.quarterly.target,
+        percentage: earningsStats.goals.quarterly.percentage,
       },
     ];
   };
@@ -344,18 +367,18 @@ const EarningsPage: React.FC = () => {
 
   // Format number with decimal places but no currency symbol
   const formatNumber = (amount: number) => {
-    return new Intl.NumberFormat('en-RW', {
+    return new Intl.NumberFormat("en-RW", {
       minimumFractionDigits: 0,
-      maximumFractionDigits: 0
+      maximumFractionDigits: 0,
     }).format(amount);
   };
 
   // Format currency for display
   const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat('en-RW', {
-      style: 'currency',
-      currency: 'RWF',
-      maximumFractionDigits: 0
+    return new Intl.NumberFormat("en-RW", {
+      style: "currency",
+      currency: "RWF",
+      maximumFractionDigits: 0,
     }).format(amount);
   };
 
@@ -447,63 +470,63 @@ const EarningsPage: React.FC = () => {
               </div>
             ) : (
               <>
-            <EarningsSummaryCard
-              title="Total Earnings"
+                <EarningsSummaryCard
+                  title="Total Earnings"
                   amount={earningsStats.totalEarnings}
                   useCurrency={true}
-              icon={
-                <svg
-                  viewBox="0 0 24 24"
-                  fill="currentColor"
-                  className="h-full w-full"
-                >
+                  icon={
+                    <svg
+                      viewBox="0 0 24 24"
+                      fill="currentColor"
+                      className="h-full w-full"
+                    >
                       <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm.31-8.86c-1.77-.45-2.34-.94-2.34-1.67 0-.84.79-1.43 2.1-1.43 1.38 0 1.9.66 1.94 1.64h1.71c-.05-1.34-.87-2.57-2.49-2.97V5H10.9v1.69c-1.51.32-2.72 1.3-2.72 2.81 0 1.79 1.49 2.69 3.66 3.21 1.95.46 2.34 1.15 2.34 1.87 0 .53-.39 1.39-2.1 1.39-1.6 0-2.23-.72-2.32-1.64H8.04c.1 1.7 1.36 2.66 2.86 2.97V19h2.34v-1.67c1.52-.29 2.72-1.16 2.73-2.77-.01-2.2-1.9-2.96-3.66-3.42z" />
-                </svg>
-              }
+                    </svg>
+                  }
                   iconColor="text-yellow-500"
-            />
-            <EarningsSummaryCard
-              title="Completed Orders"
+                />
+                <EarningsSummaryCard
+                  title="Completed Orders"
                   amount={earningsStats.completedOrders.toString()}
-              icon={
-                <svg
-                  viewBox="0 0 24 24"
-                  fill="currentColor"
-                  className="h-full w-full"
-                >
-                  <path d="M7 18c-1.1 0-1.99.9-1.99 2S5.9 22 7 22s2-.9 2-2-.9-2-2-2zM1 4h2l3.6 7.59-1.35 2.44C4.52 15.37 5.48 17 7 17h11c.55 0 1-.45 1-1s-.45-1-1-1H7l1.1-2h7.45c.75 0 1.41-.41 1.75-1.03l3.58-6.49c.37-.66-.11-1.48-.87-1.48H5.21l-.67-1.43c-.16-.35-.52-.57-.9-.57H2c-.55 0-1 .45-1 1s.45 1 1 1zm16 14c-1.1 0-1.99.9-1.99 2s.89 2 1.99 2 2-.9 2-2-.9-2-2-2z" />
-                </svg>
-              }
-              iconColor="text-blue-500"
-            />
-            <EarningsSummaryCard
-              title="Active Hours"
+                  icon={
+                    <svg
+                      viewBox="0 0 24 24"
+                      fill="currentColor"
+                      className="h-full w-full"
+                    >
+                      <path d="M7 18c-1.1 0-1.99.9-1.99 2S5.9 22 7 22s2-.9 2-2-.9-2-2-2zM1 4h2l3.6 7.59-1.35 2.44C4.52 15.37 5.48 17 7 17h11c.55 0 1-.45 1-1s-.45-1-1-1H7l1.1-2h7.45c.75 0 1.41-.41 1.75-1.03l3.58-6.49c.37-.66-.11-1.48-.87-1.48H5.21l-.67-1.43c-.16-.35-.52-.57-.9-.57H2c-.55 0-1 .45-1 1s.45 1 1 1zm16 14c-1.1 0-1.99.9-1.99 2s.89 2 1.99 2 2-.9 2-2-.9-2-2-2z" />
+                    </svg>
+                  }
+                  iconColor="text-blue-500"
+                />
+                <EarningsSummaryCard
+                  title="Active Hours"
                   amount={earningsStats.activeHours.toString()}
-              icon={
-                <svg
-                  viewBox="0 0 24 24"
-                  fill="currentColor"
-                  className="h-full w-full"
-                >
-                  <path d="M11.99 2C6.47 2 2 6.48 2 12s4.47 10 9.99 10C17.52 22 22 17.52 22 12S17.52 2 11.99 2zM12 20c-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8-3.58 8-8 8zm.5-13H11v6l5.25 3.15.75-1.23-4.5-2.67z" />
-                </svg>
-              }
-              iconColor="text-purple-500"
-            />
-            <EarningsSummaryCard
-              title="Customer Rating"
+                  icon={
+                    <svg
+                      viewBox="0 0 24 24"
+                      fill="currentColor"
+                      className="h-full w-full"
+                    >
+                      <path d="M11.99 2C6.47 2 2 6.48 2 12s4.47 10 9.99 10C17.52 22 22 17.52 22 12S17.52 2 11.99 2zM12 20c-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8-3.58 8-8 8zm.5-13H11v6l5.25 3.15.75-1.23-4.5-2.67z" />
+                    </svg>
+                  }
+                  iconColor="text-purple-500"
+                />
+                <EarningsSummaryCard
+                  title="Customer Rating"
                   amount={earningsStats.rating.toString()}
-              icon={
-                <svg
-                  viewBox="0 0 24 24"
-                  fill="currentColor"
-                  className="h-full w-full"
-                >
-                  <path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z" />
-                </svg>
-              }
-              iconColor="text-yellow-500"
-            />
+                  icon={
+                    <svg
+                      viewBox="0 0 24 24"
+                      fill="currentColor"
+                      className="h-full w-full"
+                    >
+                      <path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z" />
+                    </svg>
+                  }
+                  iconColor="text-yellow-500"
+                />
               </>
             )}
           </div>
@@ -522,9 +545,9 @@ const EarningsPage: React.FC = () => {
                   Your earnings for each day this week
                 </p>
 
-                <DailyEarningsChart 
-                  data={dailyEarnings} 
-                  isLoading={dailyEarningsLoading} 
+                <DailyEarningsChart
+                  data={dailyEarnings}
+                  isLoading={dailyEarningsLoading}
                   period={period}
                 />
 
@@ -551,24 +574,29 @@ const EarningsPage: React.FC = () => {
                   <div className="flex justify-center py-8">
                     <Loader size="md" content="Loading earnings data..." />
                   </div>
-                ) : !earningsStats.storeBreakdown || !earningsStats.earningsComponents ? (
-                  <div className="text-center py-8">
+                ) : !earningsStats.storeBreakdown ||
+                  !earningsStats.earningsComponents ? (
+                  <div className="py-8 text-center">
                     <p>No earnings breakdown data available.</p>
                   </div>
                 ) : (
                   <>
-                <EarningsBreakdown
-                      storeBreakdown={earningsStats.storeBreakdown.map(store => ({
-                        ...store,
-                        amount: parseFloat(store.amount.toFixed(2))
-                      }))}
-                      earningsComponents={earningsStats.earningsComponents.map(component => ({
-                        ...component,
-                        amount: parseFloat(component.amount.toFixed(2))
-                      }))}
-                />
+                    <EarningsBreakdown
+                      storeBreakdown={earningsStats.storeBreakdown.map(
+                        (store) => ({
+                          ...store,
+                          amount: parseFloat(store.amount.toFixed(2)),
+                        })
+                      )}
+                      earningsComponents={earningsStats.earningsComponents.map(
+                        (component) => ({
+                          ...component,
+                          amount: parseFloat(component.amount.toFixed(2)),
+                        })
+                      )}
+                    />
 
-                <ActivityHeatmap />
+                    <ActivityHeatmap />
                   </>
                 )}
               </Panel>
@@ -586,10 +614,12 @@ const EarningsPage: React.FC = () => {
                     <Loader size="md" content="Loading wallet data..." />
                   </div>
                 ) : (
-                <PaymentHistory
+                  <PaymentHistory
                     wallet={wallet}
                     transactions={transactions}
-                    onViewAllPayments={() => console.log("View all payments clicked")}
+                    onViewAllPayments={() =>
+                      console.log("View all payments clicked")
+                    }
                     isLoading={walletLoading}
                   />
                 )}
@@ -604,10 +634,10 @@ const EarningsPage: React.FC = () => {
                 <Loader size="md" content="Loading delivery stats..." />
               </div>
             ) : (
-            <PerformanceMetrics
+              <PerformanceMetrics
                 metrics={getPerformanceMetrics()}
                 deliveryStats={formattedDeliveryStats}
-            />
+              />
             )}
 
             <EarningsGoals goals={getEarningsGoals()} />

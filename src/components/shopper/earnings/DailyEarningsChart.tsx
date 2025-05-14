@@ -9,7 +9,7 @@ import {
   ResponsiveContainer,
   Cell,
   ReferenceLine,
-  Legend
+  Legend,
 } from "recharts";
 import { Loader } from "rsuite";
 
@@ -24,17 +24,17 @@ interface DailyEarningsChartProps {
   period?: string;
 }
 
-const DailyEarningsChart: React.FC<DailyEarningsChartProps> = ({ 
-  data = [], 
+const DailyEarningsChart: React.FC<DailyEarningsChartProps> = ({
+  data = [],
   isLoading = false,
-  period = 'this-week'
+  period = "this-week",
 }) => {
   // Format currency in RWF
   const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat('en-RW', {
-      style: 'currency',
-      currency: 'RWF',
-      maximumFractionDigits: 0
+    return new Intl.NumberFormat("en-RW", {
+      style: "currency",
+      currency: "RWF",
+      maximumFractionDigits: 0,
     }).format(amount);
   };
 
@@ -58,11 +58,15 @@ const DailyEarningsChart: React.FC<DailyEarningsChartProps> = ({
           </p>
           {averageEarnings > 0 && (
             <p className="mt-1 text-xs text-gray-300">
-              {payload[0].value > averageEarnings 
-                ? `${Math.round((payload[0].value / averageEarnings - 1) * 100)}% above average` 
-                : payload[0].value < averageEarnings 
-                  ? `${Math.round((1 - payload[0].value / averageEarnings) * 100)}% below average`
-                  : 'At average'}
+              {payload[0].value > averageEarnings
+                ? `${Math.round(
+                    (payload[0].value / averageEarnings - 1) * 100
+                  )}% above average`
+                : payload[0].value < averageEarnings
+                ? `${Math.round(
+                    (1 - payload[0].value / averageEarnings) * 100
+                  )}% below average`
+                : "At average"}
             </p>
           )}
         </div>
@@ -84,7 +88,9 @@ const DailyEarningsChart: React.FC<DailyEarningsChartProps> = ({
   if (data.length === 0) {
     return (
       <div className="flex h-[300px] items-center justify-center rounded-lg border border-gray-200 bg-gray-50">
-        <p className="text-gray-500">No earnings data available for this period</p>
+        <p className="text-gray-500">
+          No earnings data available for this period
+        </p>
       </div>
     );
   }
@@ -92,24 +98,32 @@ const DailyEarningsChart: React.FC<DailyEarningsChartProps> = ({
   // Determine chart title based on period
   const getChartTitle = () => {
     switch (period) {
-      case 'today':
-        return 'Hourly Earnings Today';
-      case 'this-week':
-        return 'Daily Earnings This Week';
-      case 'last-week':
-        return 'Daily Earnings Last Week';
-      case 'this-month':
-        return 'Weekly Earnings This Month';
-      case 'last-month':
-        return 'Weekly Earnings Last Month';
+      case "today":
+        return "Hourly Earnings Today";
+      case "this-week":
+        return "Daily Earnings This Week";
+      case "last-week":
+        return "Daily Earnings Last Week";
+      case "this-month":
+        return "Weekly Earnings This Month";
+      case "last-month":
+        return "Weekly Earnings Last Month";
       default:
-        return 'Earnings';
+        return "Earnings";
     }
   };
 
   // Colors for the bars - gradient from light to dark green
-  const barColors = ['#10B981', '#059669', '#047857', '#065F46', '#064E3B', '#022C22', '#064E3B'];
-  
+  const barColors = [
+    "#10B981",
+    "#059669",
+    "#047857",
+    "#065F46",
+    "#064E3B",
+    "#022C22",
+    "#064E3B",
+  ];
+
   return (
     <div className="h-[300px] w-full">
       <ResponsiveContainer width="100%" height="100%">
@@ -118,14 +132,14 @@ const DailyEarningsChart: React.FC<DailyEarningsChartProps> = ({
           margin={{ top: 20, right: 10, left: 10, bottom: 10 }}
         >
           <CartesianGrid strokeDasharray="3 3" vertical={false} opacity={0.2} />
-          <XAxis 
-            dataKey="day" 
+          <XAxis
+            dataKey="day"
             axisLine={false}
             tickLine={false}
             tick={{ fontSize: 12 }}
           />
-          <YAxis 
-            tickFormatter={(value) => formatCurrency(value).replace('RWF', '')}
+          <YAxis
+            tickFormatter={(value) => formatCurrency(value).replace("RWF", "")}
             axisLine={false}
             tickLine={false}
             tick={{ fontSize: 12 }}
@@ -133,27 +147,25 @@ const DailyEarningsChart: React.FC<DailyEarningsChartProps> = ({
           />
           <Tooltip content={<CustomTooltip />} />
           <Legend formatter={() => getChartTitle()} />
-          <ReferenceLine 
-            y={averageEarnings} 
-            stroke="#4B5563" 
-            strokeDasharray="3 3" 
-            label={{ 
-              value: 'Average', 
-              position: 'insideBottomRight',
-              fill: '#4B5563',
-              fontSize: 10
-            }} 
+          <ReferenceLine
+            y={averageEarnings}
+            stroke="#4B5563"
+            strokeDasharray="3 3"
+            label={{
+              value: "Average",
+              position: "insideBottomRight",
+              fill: "#4B5563",
+              fontSize: 10,
+            }}
           />
-          <Bar 
-            dataKey="earnings" 
-            name="Earnings"
-            radius={[4, 4, 0, 0]}
-          >
+          <Bar dataKey="earnings" name="Earnings" radius={[4, 4, 0, 0]}>
             {data.map((entry, index) => (
-              <Cell 
-                key={`cell-${index}`} 
-                fill={entry.earnings > averageEarnings ? '#059669' : '#10B981'}
-                stroke={entry.earnings > averageEarnings ? '#047857' : '#059669'}
+              <Cell
+                key={`cell-${index}`}
+                fill={entry.earnings > averageEarnings ? "#059669" : "#10B981"}
+                stroke={
+                  entry.earnings > averageEarnings ? "#047857" : "#059669"
+                }
                 strokeWidth={1}
               />
             ))}

@@ -1,7 +1,10 @@
 import type React from "react";
-import { useEffect } from 'react';
-import { useRouter } from 'next/router';
-import { clearRoleSwitchFlag, isRoleSwitchInProgress } from '../../src/lib/sessionRefresh';
+import { useEffect } from "react";
+import { useRouter } from "next/router";
+import {
+  clearRoleSwitchFlag,
+  isRoleSwitchInProgress,
+} from "../../src/lib/sessionRefresh";
 
 import Link from "next/link";
 import Image from "next/image";
@@ -15,11 +18,11 @@ export default function LoginPage() {
   useEffect(() => {
     const isSwitchingRole = isRoleSwitchInProgress();
     const callbackUrl = router.query.callbackUrl as string;
-    
+
     if (isSwitchingRole) {
       // Clear the role switch flag
       clearRoleSwitchFlag();
-      
+
       // If we have a callback URL, redirect to it
       if (callbackUrl) {
         router.push(callbackUrl);

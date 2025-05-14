@@ -24,10 +24,10 @@ const EarningsBreakdown: React.FC<EarningsBreakdownProps> = ({
 }) => {
   // Format currency
   const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat('en-RW', {
-      style: 'currency',
-      currency: 'RWF',
-      maximumFractionDigits: 0
+    return new Intl.NumberFormat("en-RW", {
+      style: "currency",
+      currency: "RWF",
+      maximumFractionDigits: 0,
     }).format(amount);
   };
 
@@ -41,7 +41,9 @@ const EarningsBreakdown: React.FC<EarningsBreakdownProps> = ({
             <div key={index}>
               <div className="mb-1 flex items-center justify-between">
                 <span className="text-sm">{item.store}</span>
-                <span className="text-sm font-medium">{formatCurrency(item.amount)}</span>
+                <span className="text-sm font-medium">
+                  {formatCurrency(item.amount)}
+                </span>
               </div>
               <div className="h-2 w-full rounded-full bg-gray-200">
                 <div
@@ -65,7 +67,9 @@ const EarningsBreakdown: React.FC<EarningsBreakdownProps> = ({
             <div key={index}>
               <div className="mb-1 flex items-center justify-between">
                 <span className="text-sm">{item.type}</span>
-                <span className="text-sm font-medium">{formatCurrency(item.amount)}</span>
+                <span className="text-sm font-medium">
+                  {formatCurrency(item.amount)}
+                </span>
               </div>
               <div className="h-2 w-full rounded-full bg-gray-200">
                 <div
