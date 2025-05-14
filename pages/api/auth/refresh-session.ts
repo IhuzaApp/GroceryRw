@@ -1,8 +1,8 @@
-import { NextApiRequest, NextApiResponse } from 'next';
-import { getServerSession } from 'next-auth/next';
-import { authOptions } from './[...nextauth]';
-import { hasuraClient } from '../../../src/lib/hasuraClient';
-import { gql } from 'graphql-request';
+import { NextApiRequest, NextApiResponse } from "next";
+import { getServerSession } from "next-auth/next";
+import { authOptions } from "./[...nextauth]";
+import { hasuraClient } from "../../../src/lib/hasuraClient";
+import { gql } from "graphql-request";
 
 /**
  * API endpoint to refresh the user's session with the latest data from the database
@@ -11,8 +11,8 @@ export default async function handler(
   req: NextApiRequest,
   res: NextApiResponse
 ) {
-  if (req.method !== 'POST') {
-    return res.status(405).json({ error: 'Method not allowed' });
+  if (req.method !== "POST") {
+    return res.status(405).json({ error: "Method not allowed" });
   }
 
   try {
@@ -20,7 +20,7 @@ export default async function handler(
     const session = await getServerSession(req, res, authOptions);
 
     if (!session || !session.user) {
-      return res.status(401).json({ error: 'Not authenticated' });
+      return res.status(401).json({ error: "Not authenticated" });
     }
 
     // Fetch the latest user data from the database
@@ -57,7 +57,7 @@ export default async function handler(
     const user = userData.Users_by_pk;
 
     if (!user) {
-      return res.status(404).json({ error: 'User not found' });
+      return res.status(404).json({ error: "User not found" });
     }
 
     // Return the latest user data
@@ -70,11 +70,11 @@ export default async function handler(
         role: user.role,
         phone: user.phone,
         gender: user.gender,
-        image: user.profile_picture
-      }
+        image: user.profile_picture,
+      },
     });
   } catch (error) {
-    console.error('Error refreshing session:', error);
-    return res.status(500).json({ error: 'Failed to refresh session' });
+    console.error("Error refreshing session:", error);
+    return res.status(500).json({ error: "Failed to refresh session" });
   }
-} 
+}

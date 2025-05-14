@@ -85,10 +85,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
           ...session,
           user: {
             ...session?.user,
-            role: result.user.role
-          }
+            role: result.user.role,
+          },
         });
-        
+
         // Update local state
         setRole(result.user.role);
       }
@@ -99,7 +99,16 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
 
   return (
     <AuthContext.Provider
-      value={{ isLoggedIn, authReady, login, logout, role, toggleRole, refreshRole, user }}
+      value={{
+        isLoggedIn,
+        authReady,
+        login,
+        logout,
+        role,
+        toggleRole,
+        refreshRole,
+        user,
+      }}
     >
       {children}
     </AuthContext.Provider>

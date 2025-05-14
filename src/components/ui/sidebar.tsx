@@ -31,11 +31,11 @@ export default function SideBar() {
     setIsSwitching(true);
     try {
       // Use the utility function to handle role switching
-      await initiateRoleSwitch(nextRole as 'user' | 'shopper');
-      
+      await initiateRoleSwitch(nextRole as "user" | "shopper");
+
       // Update local state after successful DB update
       toggleRole();
-      
+
       toast.success(`Switched to ${nextRole === "user" ? "User" : "Shopper"}`);
     } catch (error) {
       console.error("Error updating role:", error);

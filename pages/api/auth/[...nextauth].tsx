@@ -121,11 +121,11 @@ export const authOptions: NextAuthOptions = {
               }
             }
           `;
-          
+
           const res = await hasuraClient.request<{
-            Users_by_pk: { id: string; role: string }
+            Users_by_pk: { id: string; role: string };
           }>(query, { id: token.id });
-          
+
           if (res.Users_by_pk) {
             // Update the role in the token
             token.role = res.Users_by_pk.role;

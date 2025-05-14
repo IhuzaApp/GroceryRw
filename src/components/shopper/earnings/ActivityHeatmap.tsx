@@ -73,7 +73,7 @@ const ActivityHeatmap: React.FC<ActivityHeatmapProps> = ({ data }) => {
     return (
       <div className="mt-8">
         <h3 className="mb-4 font-medium">Busiest Times</h3>
-        <div className="text-center text-red-500 py-4">
+        <div className="py-4 text-center text-red-500">
           Error loading activity data
         </div>
       </div>
@@ -81,38 +81,51 @@ const ActivityHeatmap: React.FC<ActivityHeatmapProps> = ({ data }) => {
   }
 
   // Use random data if activityData is empty
-  const finalActivityData = activityData.length > 0 
-    ? activityData 
-    : hours.map(() => days.map(() => Math.floor(Math.random() * 4)));
+  const finalActivityData =
+    activityData.length > 0
+      ? activityData
+      : hours.map(() => days.map(() => Math.floor(Math.random() * 4)));
 
   return (
     <div className="mt-8">
       <h3 className="mb-4 font-medium">Busiest Times</h3>
-      
+
       {/* Summary Stats */}
       {summary && (
         <div className="mb-4 grid grid-cols-2 gap-4">
           <div className="rounded-lg bg-green-50 p-3">
             <div className="text-sm text-gray-600">Busiest Day</div>
-            <div className="mt-1 text-lg font-semibold">{summary.busiestDay}</div>
+            <div className="mt-1 text-lg font-semibold">
+              {summary.busiestDay}
+            </div>
             <div className="text-xs text-gray-500">
-              {summary.busiestDayCount} orders ({Math.round((summary.busiestDayCount / summary.totalOrders) * 100)}% of total)
+              {summary.busiestDayCount} orders (
+              {Math.round(
+                (summary.busiestDayCount / summary.totalOrders) * 100
+              )}
+              % of total)
             </div>
           </div>
           <div className="rounded-lg bg-green-50 p-3">
             <div className="text-sm text-gray-600">Busiest Hour</div>
-            <div className="mt-1 text-lg font-semibold">{summary.busiestHour}</div>
+            <div className="mt-1 text-lg font-semibold">
+              {summary.busiestHour}
+            </div>
             <div className="text-xs text-gray-500">
-              {summary.busiestHourCount} orders ({Math.round((summary.busiestHourCount / summary.totalOrders) * 100)}% of total)
+              {summary.busiestHourCount} orders (
+              {Math.round(
+                (summary.busiestHourCount / summary.totalOrders) * 100
+              )}
+              % of total)
             </div>
           </div>
         </div>
       )}
-      
+
       {/* Time labels (hours) */}
-      <div className="flex mb-2">
-        <div className="w-10 text-xs text-right pr-2"></div>
-        <div className="grid grid-cols-7 gap-1 flex-1">
+      <div className="mb-2 flex">
+        <div className="w-10 pr-2 text-right text-xs"></div>
+        <div className="grid flex-1 grid-cols-7 gap-1">
           {days.map((day, i) => (
             <div key={i} className="text-center text-xs font-medium">
               {day}
@@ -120,24 +133,22 @@ const ActivityHeatmap: React.FC<ActivityHeatmapProps> = ({ data }) => {
           ))}
         </div>
       </div>
-      
+
       {/* Heatmap grid with hour labels */}
       {hours.map((hour, hourIndex) => (
-        <div key={hourIndex} className="flex mb-1 items-center">
+        <div key={hourIndex} className="mb-1 flex items-center">
           {/* Hour label */}
-          <div className="w-10 text-xs text-right pr-2">
-            {hour}:00
-          </div>
-          
+          <div className="w-10 pr-2 text-right text-xs">{hour}:00</div>
+
           {/* Day cells for this hour */}
-          <div className="grid grid-cols-7 gap-1 flex-1">
+          <div className="grid flex-1 grid-cols-7 gap-1">
             {days.map((_, dayIndex) => {
               const activityLevel = finalActivityData[hourIndex][dayIndex];
               let bgColor = "bg-gray-100";
               if (activityLevel === 1) bgColor = "bg-green-100";
               if (activityLevel === 2) bgColor = "bg-green-300";
               if (activityLevel === 3) bgColor = "bg-green-500";
-              
+
               return (
                 <div
                   key={`${hourIndex}-${dayIndex}`}
@@ -160,9 +171,9 @@ const ActivityHeatmap: React.FC<ActivityHeatmapProps> = ({ data }) => {
         </div>
         <div className="text-xs">More active</div>
       </div>
-      
+
       {summary && (
-        <div className="mt-4 text-xs text-center text-gray-500">
+        <div className="mt-4 text-center text-xs text-gray-500">
           Based on analysis of {summary.totalOrders} total orders
         </div>
       )}

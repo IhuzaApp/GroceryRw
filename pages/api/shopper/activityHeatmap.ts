@@ -49,7 +49,7 @@ export default async function handler(
       .map(() => Array(7).fill(0));
 
     // Count orders by hour and day
-    orders.forEach(order => {
+    orders.forEach((order) => {
       const orderDate = new Date(order.created_at);
       const hour = orderDate.getHours();
       // Convert JavaScript's 0-6 day (Sunday-Saturday) to 0-6 (Monday-Sunday)
@@ -66,11 +66,11 @@ export default async function handler(
     }
 
     // Normalize the data to scale 0-3 for heatmap intensity
-    const normalizedActivityData: number[][] = activityData.map(hourData =>
-      hourData.map(count => {
+    const normalizedActivityData: number[][] = activityData.map((hourData) =>
+      hourData.map((count) => {
         if (count === 0) return 0;
         if (maxCount === 0) return 0;
-        
+
         // Convert raw counts to intensity levels 0-3
         const intensity = Math.ceil((count / maxCount) * 3);
         return Math.min(Math.max(intensity, 0), 3); // Ensure between 0-3
@@ -81,34 +81,42 @@ export default async function handler(
     const totalOrders = orders.length;
     const ordersByDay = Array(7).fill(0);
     const ordersByHour = Array(24).fill(0);
-    
+
     // Count orders by day and hour for summary
-    orders.forEach(order => {
+    orders.forEach((order) => {
       const orderDate = new Date(order.created_at);
       const hour = orderDate.getHours();
       const day = (orderDate.getDay() + 6) % 7; // 0 is Monday, 6 is Sunday
       ordersByDay[day]++;
       ordersByHour[hour]++;
     });
-    
+
     // Find busiest day and hour
     let busiestDayIndex = 0;
     let busiestHourIndex = 0;
-    
+
     for (let d = 0; d < 7; d++) {
       if (ordersByDay[d] > ordersByDay[busiestDayIndex]) {
         busiestDayIndex = d;
       }
     }
-    
+
     for (let h = 0; h < 24; h++) {
       if (ordersByHour[h] > ordersByHour[busiestHourIndex]) {
         busiestHourIndex = h;
       }
     }
-    
-    const days = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
-    
+
+    const days = [
+      "Monday",
+      "Tuesday",
+      "Wednesday",
+      "Thursday",
+      "Friday",
+      "Saturday",
+      "Sunday",
+    ];
+
     const summary = {
       totalOrders,
       busiestDay: days[busiestDayIndex],
@@ -116,14 +124,14 @@ export default async function handler(
       busiestHour: `${busiestHourIndex}:00`,
       busiestHourCount: ordersByHour[busiestHourIndex],
       ordersByDay,
-      ordersByHour
+      ordersByHour,
     };
 
     return res.status(200).json({
       success: true,
       activityData: normalizedActivityData,
       rawActivityData: activityData,
-      summary
+      summary,
     });
   } catch (error) {
     console.error("Error fetching activity heatmap data:", error);
@@ -134,4 +142,4 @@ export default async function handler(
           : "Failed to fetch activity heatmap data",
     });
   }
-} 
+}

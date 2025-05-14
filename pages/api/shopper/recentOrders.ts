@@ -7,15 +7,12 @@ import { authOptions } from "../auth/[...nextauth]";
 // Fetch recent orders for a shopper with their status delivered
 const GET_SHOPPER_RECENT_ORDERS = gql`
   query GetShopperRecentOrders(
-    $shopper_id: uuid!, 
-    $limit: Int!, 
+    $shopper_id: uuid!
+    $limit: Int!
     $offset: Int!
   ) {
     Orders(
-      where: { 
-        shopper_id: { _eq: $shopper_id },
-        status: { _eq: "delivered" }
-      }
+      where: { shopper_id: { _eq: $shopper_id }, status: { _eq: "delivered" } }
       order_by: { updated_at: desc }
       limit: $limit
       offset: $offset
@@ -44,13 +41,10 @@ const GET_SHOPPER_RECENT_ORDERS = gql`
         }
       }
     }
-    
+
     # Get total count of delivered orders
     Orders_aggregate(
-      where: { 
-        shopper_id: { _eq: $shopper_id },
-        status: { _eq: "delivered" }
-      }
+      where: { shopper_id: { _eq: $shopper_id }, status: { _eq: "delivered" } }
     ) {
       aggregate {
         count
@@ -121,37 +115,43 @@ export default async function handler(
     const offset = (page - 1) * limit;
 
     // Fetch recent completed orders with pagination
-    const data = await hasuraClient.request<OrdersResponse>(GET_SHOPPER_RECENT_ORDERS, {
-      shopper_id: shopperId,
-      limit,
-      offset
-    });
+    const data = await hasuraClient.request<OrdersResponse>(
+      GET_SHOPPER_RECENT_ORDERS,
+      {
+        shopper_id: shopperId,
+        limit,
+        offset,
+      }
+    );
 
     // Get total count of orders
     const totalOrders = data.Orders_aggregate.aggregate.count;
 
     // Format orders for the frontend
-    const recentOrders = data.Orders.map(order => {
+    const recentOrders = data.Orders.map((order) => {
       // Get fee amounts
       const serviceFee = parseFloat(order.service_fee || "0");
       const deliveryFee = parseFloat(order.delivery_fee || "0");
       const totalEarnings = serviceFee + deliveryFee;
-      
+
       // Calculate time difference between creation and completion
       const createdAt = new Date(order.created_at);
       const completedAt = new Date(order.updated_at);
-      const minutesTaken = Math.floor((completedAt.getTime() - createdAt.getTime()) / (1000 * 60));
-      
+      const minutesTaken = Math.floor(
+        (completedAt.getTime() - createdAt.getTime()) / (1000 * 60)
+      );
+
       // Format date for display
-      const orderDate = completedAt.toLocaleDateString('en-US', {
-        month: 'short',
-        day: 'numeric', 
-        year: 'numeric'
+      const orderDate = completedAt.toLocaleDateString("en-US", {
+        month: "short",
+        day: "numeric",
+        year: "numeric",
       });
-      
+
       // Get item counts
-      const itemCount = order.Order_Items_aggregate.aggregate?.sum?.quantity || 0;
-      
+      const itemCount =
+        order.Order_Items_aggregate.aggregate?.sum?.quantity || 0;
+
       return {
         id: order.id,
         orderNumber: order.OrderID,
@@ -162,7 +162,7 @@ export default async function handler(
         serviceFee: serviceFee,
         deliveryFee: deliveryFee,
         tip: 0, // Tip information not available in the current data model
-        minutesTaken
+        minutesTaken,
       };
     });
 
@@ -172,7 +172,7 @@ export default async function handler(
       total: totalOrders,
       page,
       limit,
-      totalPages: Math.ceil(totalOrders / limit)
+      totalPages: Math.ceil(totalOrders / limit),
     });
   } catch (error) {
     console.error("Error fetching recent orders:", error);
@@ -183,4 +183,4 @@ export default async function handler(
           : "Failed to fetch recent orders",
     });
   }
-} 
+}

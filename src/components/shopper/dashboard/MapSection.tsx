@@ -183,33 +183,41 @@ export default function MapSection({
   };
 
   // Standardize the marker safety function
-  const safeAddMarker = (marker: L.Marker, map: L.Map, name: string): boolean => {
+  const safeAddMarker = (
+    marker: L.Marker,
+    map: L.Map,
+    name: string
+  ): boolean => {
     try {
       // Extra validation to prevent appendChild errors
       if (!map) {
         console.warn(`Map is undefined when adding marker for ${name}`);
         return false;
       }
-      
+
       // Check if the map container exists and is in the DOM
       const container = map.getContainer();
       if (!container) {
-        console.warn(`Map container is undefined when adding marker for ${name}`);
+        console.warn(
+          `Map container is undefined when adding marker for ${name}`
+        );
         return false;
       }
-      
+
       // Check if container is actually in the DOM
       if (!document.body.contains(container)) {
-        console.warn(`Map container is not in DOM when adding marker for ${name}`);
+        console.warn(
+          `Map container is not in DOM when adding marker for ${name}`
+        );
         return false;
       }
-      
+
       // Verify map is properly initialized
       if (!(map as any)._loaded) {
         console.warn(`Map not fully loaded when adding marker for ${name}`);
         return false;
       }
-      
+
       // If all checks pass, add the marker
       marker.addTo(map);
       return true;
@@ -281,7 +289,7 @@ export default function MapSection({
           if (userMarkerRef.current && mapInstanceRef.current) {
             try {
               userMarkerRef.current.setLatLng([latitude, longitude]);
-              
+
               // Check if map is fully initialized using our helper
               if (isMapReady(mapInstanceRef.current)) {
                 mapInstanceRef.current.setView(
@@ -664,7 +672,7 @@ export default function MapSection({
         icon: pendingIcon,
         zIndexOffset: 1000,
       });
-      
+
       // Use our enhanced safety function to add the marker
       if (safeAddMarker(marker, map, `pending order ${order.id}`)) {
         // Enhanced popup with icons and flex layout
@@ -705,7 +713,10 @@ export default function MapSection({
         attachAcceptHandler(marker, order.id, map);
       }
     } catch (error) {
-      console.error(`Error rendering pending order marker for ${order.id}:`, error);
+      console.error(
+        `Error rendering pending order marker for ${order.id}:`,
+        error
+      );
     }
   };
 
@@ -930,11 +941,11 @@ export default function MapSection({
     // Clear any existing map instance first to prevent container reuse
     if (mapInstanceRef.current) {
       try {
-        console.log('Cleaning up existing map instance...');
+        console.log("Cleaning up existing map instance...");
         mapInstanceRef.current.remove();
         mapInstanceRef.current = null;
       } catch (err) {
-        console.error('Error cleaning up map:', err);
+        console.error("Error cleaning up map:", err);
       }
     }
 
@@ -942,38 +953,38 @@ export default function MapSection({
     // Using a small delay prevents container reuse errors
     let initTimeout = setTimeout(() => {
       try {
-        console.log('Creating new map instance...');
+        console.log("Creating new map instance...");
         if (!mapRef.current) {
-          console.error('Map container is no longer available');
+          console.error("Map container is no longer available");
           return;
         }
 
         // Create the base map
-    const map = L.map(mapRef.current, {
-      center: [-1.9706, 30.1044],
-      zoom: 14,
-      minZoom: 10,
-      maxBounds: [
-        [-2.8, 28.8],
-        [-1.0, 31.5],
-      ],
-      scrollWheelZoom: false,
-      attributionControl: false,
-    });
+        const map = L.map(mapRef.current, {
+          center: [-1.9706, 30.1044],
+          zoom: 14,
+          minZoom: 10,
+          maxBounds: [
+            [-2.8, 28.8],
+            [-1.0, 31.5],
+          ],
+          scrollWheelZoom: false,
+          attributionControl: false,
+        });
 
-        console.log('Map created, adding base layer...');
-    mapInstanceRef.current = map;
+        console.log("Map created, adding base layer...");
+        mapInstanceRef.current = map;
 
         // Add base layer
-    L.tileLayer(
-      "https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png",
-      {
-        // attributionControl disabled, no attribution shown
-      }
-    ).addTo(map);
+        L.tileLayer(
+          "https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png",
+          {
+            // attributionControl disabled, no attribution shown
+          }
+        ).addTo(map);
 
         // Initialize user marker but don't add it yet
-    const userIconHtml = `
+        const userIconHtml = `
       <div style="
         background: white;
         border: 2px solid #3b82f6;
@@ -987,22 +998,23 @@ export default function MapSection({
         <span style="font-size: 16px;">👤</span>
       </div>
     `;
-        
-    const userIcon = L.divIcon({
-      html: userIconHtml,
-      className: "",
-      iconSize: [32, 32],
-      iconAnchor: [16, 32],
-      popupAnchor: [0, -32],
-    });
-        
-        userMarkerRef.current = L.marker([-1.9706, 30.1044], { icon: userIcon });
-        
+
+        const userIcon = L.divIcon({
+          html: userIconHtml,
+          className: "",
+          iconSize: [32, 32],
+          iconAnchor: [16, 32],
+          popupAnchor: [0, -32],
+        });
+
+        userMarkerRef.current = L.marker([-1.9706, 30.1044], {
+          icon: userIcon,
+        });
+
         // Sequence the operations with delays to ensure map is stable
         initMapSequence(map);
-        
       } catch (error) {
-        console.error('Error initializing map:', error);
+        console.error("Error initializing map:", error);
       }
     }, 300); // Significant delay to ensure DOM is ready
 
@@ -1010,16 +1022,16 @@ export default function MapSection({
     const initMapSequence = (map: L.Map) => {
       try {
         // Step 1: Check for cookies and set user location
-        console.log('Setting up initial map position...');
+        console.log("Setting up initial map position...");
         const initCookies = getCookies();
-        
-    if (initCookies["user_latitude"] && initCookies["user_longitude"]) {
-      const lat = parseFloat(initCookies["user_latitude"]);
-      const lng = parseFloat(initCookies["user_longitude"]);
-          
-        if (userMarkerRef.current) {
-          userMarkerRef.current.setLatLng([lat, lng]);
-            
+
+        if (initCookies["user_latitude"] && initCookies["user_longitude"]) {
+          const lat = parseFloat(initCookies["user_latitude"]);
+          const lng = parseFloat(initCookies["user_longitude"]);
+
+          if (userMarkerRef.current) {
+            userMarkerRef.current.setLatLng([lat, lng]);
+
             try {
               if (isOnline) {
                 map.setView([lat, lng], 16);
@@ -1028,134 +1040,164 @@ export default function MapSection({
                 map.setView([-1.9706, 30.1044], 14);
               }
             } catch (viewError) {
-              console.error('Error setting initial view:', viewError);
+              console.error("Error setting initial view:", viewError);
             }
           }
         }
-        
+
         // Wait before loading shop markers
         let shopTimeout = setTimeout(() => loadShopMarkers(map), 500);
-        
+
         // Clean up timeout
         return () => {
           clearTimeout(shopTimeout);
         };
-                          } catch (error) {
-        console.error('Error in map sequence:', error);
+      } catch (error) {
+        console.error("Error in map sequence:", error);
       }
     };
-    
+
     // Load shop markers with delay and safety checks
     const loadShopMarkers = (map: L.Map) => {
-      console.log('Starting to load shop markers...');
-      
+      console.log("Starting to load shop markers...");
+
       // Safety check that the map is still valid
       if (!map || !mapRef.current || !document.body.contains(mapRef.current)) {
-        console.warn('Map no longer valid, skipping shop markers');
+        console.warn("Map no longer valid, skipping shop markers");
         return;
       }
-      
-    fetch("/api/shopper/shops")
-      .then((res) => res.json())
-      .then((data: Shop[]) => {
-        setShops(data);
+
+      fetch("/api/shopper/shops")
+        .then((res) => res.json())
+        .then((data: Shop[]) => {
+          setShops(data);
           console.log(`Loaded ${data.length} shops, adding markers...`);
-          
+
           // Safety check again before processing
-          if (!map || !mapRef.current || !document.body.contains(mapRef.current)) {
-            console.warn('Map no longer valid before adding shop markers');
+          if (
+            !map ||
+            !mapRef.current ||
+            !document.body.contains(mapRef.current)
+          ) {
+            console.warn("Map no longer valid before adding shop markers");
             return;
           }
-          
+
           try {
             // First add all shop markers
-        data.forEach((shop) => {
+            data.forEach((shop) => {
               try {
-          const lat = parseFloat(shop.latitude);
-          const lng = parseFloat(shop.longitude);
-                
+                const lat = parseFloat(shop.latitude);
+                const lng = parseFloat(shop.longitude);
+
                 if (isNaN(lat) || isNaN(lng)) {
-                  console.warn(`Invalid coordinates for shop ${shop.name}, skipping marker`);
+                  console.warn(
+                    `Invalid coordinates for shop ${shop.name}, skipping marker`
+                  );
                   return;
                 }
-                
-          const shopIconHtml = `
+
+                const shopIconHtml = `
             <img src="https://static-00.iconduck.com/assets.00/shop-icon-2048x1878-qov4lrv1.png" style="
               width: 32px;
               height: 32px;
               filter: ${shop.is_active ? "none" : "grayscale(100%)"};
             " />
           `;
-                
+
                 // Create the marker but defer adding to the map
                 try {
-          const shopIcon = L.divIcon({
-            html: shopIconHtml,
-            className: "",
-            iconSize: [32, 32],
-            iconAnchor: [16, 32],
-            popupAnchor: [0, -32],
-          });
-                  
+                  const shopIcon = L.divIcon({
+                    html: shopIconHtml,
+                    className: "",
+                    iconSize: [32, 32],
+                    iconAnchor: [16, 32],
+                    popupAnchor: [0, -32],
+                  });
+
                   // Create marker and add directly - with safety check
-                  if (map && map.getContainer() && document.body.contains(map.getContainer())) {
+                  if (
+                    map &&
+                    map.getContainer() &&
+                    document.body.contains(map.getContainer())
+                  ) {
                     const marker = L.marker([lat, lng], { icon: shopIcon });
                     marker.addTo(map);
-                    marker.bindPopup(`${shop.name}${shop.is_active ? "" : " (Disabled)"}`);
+                    marker.bindPopup(
+                      `${shop.name}${shop.is_active ? "" : " (Disabled)"}`
+                    );
                   }
                 } catch (markerError) {
-                  console.error(`Error creating shop marker for ${shop.name}:`, markerError);
+                  console.error(
+                    `Error creating shop marker for ${shop.name}:`,
+                    markerError
+                  );
                 }
               } catch (error) {
                 console.error(`Error processing shop ${shop.name}:`, error);
               }
             });
-            
+
             // Then after shop markers are done, load pending orders with delay
             let pendingTimeout = setTimeout(() => loadPendingOrders(map), 300);
-            
+
             return () => {
               clearTimeout(pendingTimeout);
             };
           } catch (error) {
-            console.error('Error processing shop markers:', error);
+            console.error("Error processing shop markers:", error);
           }
-      })
-      .catch((err) => console.error("Shop fetch error:", err));
+        })
+        .catch((err) => console.error("Shop fetch error:", err));
     };
-    
+
     // Load pending orders with delay and safety checks
     const loadPendingOrders = (map: L.Map) => {
-      console.log('Starting to load pending orders...');
-      
+      console.log("Starting to load pending orders...");
+
       // Skip if offline or map is no longer valid
-      if (!isOnline || !map || !mapRef.current || !document.body.contains(mapRef.current)) {
-        console.log('Map no longer valid or offline, skipping pending orders');
+      if (
+        !isOnline ||
+        !map ||
+        !mapRef.current ||
+        !document.body.contains(mapRef.current)
+      ) {
+        console.log("Map no longer valid or offline, skipping pending orders");
         return;
       }
-      
-    fetch("/api/shopper/pendingOrders")
-      .then((res) => res.json())
-      .then((data: PendingOrder[]) => {
-        setPendingOrders(data);
-          console.log(`Loaded ${data.length} pending orders, adding markers...`);
-          
+
+      fetch("/api/shopper/pendingOrders")
+        .then((res) => res.json())
+        .then((data: PendingOrder[]) => {
+          setPendingOrders(data);
+          console.log(
+            `Loaded ${data.length} pending orders, adding markers...`
+          );
+
           // Check map is still valid
-          if (!map || !mapRef.current || !document.body.contains(mapRef.current)) {
-            console.warn('Map no longer valid before adding pending order markers');
+          if (
+            !map ||
+            !mapRef.current ||
+            !document.body.contains(mapRef.current)
+          ) {
+            console.warn(
+              "Map no longer valid before adding pending order markers"
+            );
             return;
           }
-          
+
           try {
             // Add pending order markers
-        data.forEach((order) => {
+            data.forEach((order) => {
               try {
                 // Use shop coordinates instead of delivery address
                 const lat = order.shopLat;
                 const lng = order.shopLng;
-                
+
                 if (isNaN(lat) || isNaN(lng)) {
-                  console.warn(`Invalid coordinates for pending order ${order.id}, skipping marker`);
+                  console.warn(
+                    `Invalid coordinates for pending order ${order.id}, skipping marker`
+                  );
                   return;
                 }
 
@@ -1188,14 +1230,18 @@ export default function MapSection({
                 });
 
                 // Safely add the marker with container check
-                if (map && map.getContainer() && document.body.contains(map.getContainer())) {
+                if (
+                  map &&
+                  map.getContainer() &&
+                  document.body.contains(map.getContainer())
+                ) {
                   const marker = L.marker([lat, lng], {
                     icon: pendingIcon,
                     zIndexOffset: 1000,
                   });
-                  
+
                   marker.addTo(map);
-                    
+
                   // Enhanced popup with icons and flex layout
                   const popupContent = `
                     <div style="font-size:14px; line-height:1.4; min-width:200px;">
@@ -1234,102 +1280,122 @@ export default function MapSection({
                   attachAcceptHandler(marker, order.id, map);
                 }
               } catch (error) {
-                console.error(`Error adding pending order marker for ${order.id}:`, error);
+                console.error(
+                  `Error adding pending order marker for ${order.id}:`,
+                  error
+                );
               }
             });
-            
+
             // Finally load available orders
-            let availableTimeout = setTimeout(() => loadAvailableOrders(map), 300);
-            
+            let availableTimeout = setTimeout(
+              () => loadAvailableOrders(map),
+              300
+            );
+
             return () => {
               clearTimeout(availableTimeout);
             };
           } catch (error) {
-            console.error('Error processing pending orders:', error);
-        }
-      })
-      .catch((err) => console.error("Pending orders fetch error:", err));
+            console.error("Error processing pending orders:", error);
+          }
+        })
+        .catch((err) => console.error("Pending orders fetch error:", err));
     };
-    
+
     // Load available orders with delay and safety checks
     const loadAvailableOrders = (map: L.Map) => {
-      console.log('Starting to load available orders...');
-      
+      console.log("Starting to load available orders...");
+
       // Skip if offline or map is no longer valid
-      if (!isOnline || !availableOrders || availableOrders.length === 0 ||
-          !map || !mapRef.current || !document.body.contains(mapRef.current)) {
-        console.log('Map no longer valid or no available orders, skipping available orders');
+      if (
+        !isOnline ||
+        !availableOrders ||
+        availableOrders.length === 0 ||
+        !map ||
+        !mapRef.current ||
+        !document.body.contains(mapRef.current)
+      ) {
+        console.log(
+          "Map no longer valid or no available orders, skipping available orders"
+        );
         return;
       }
-      
+
       console.log(`Processing ${availableOrders.length} available orders...`);
-      
+
       try {
         // Add available order markers
-      availableOrders.forEach((order) => {
+        availableOrders.forEach((order) => {
           try {
-        // Skip if missing coordinates
-        if (
-          !order.shopLatitude ||
-          !order.shopLongitude ||
-          isNaN(order.shopLatitude) ||
-          isNaN(order.shopLongitude)
-        ) {
-          console.warn(
+            // Skip if missing coordinates
+            if (
+              !order.shopLatitude ||
+              !order.shopLongitude ||
+              isNaN(order.shopLatitude) ||
+              isNaN(order.shopLongitude)
+            ) {
+              console.warn(
                 `Missing coordinates for available order ${order.id}, skipping marker`
-          );
-          return;
-        }
-            
-            // Safety check before creating the marker
-            if (!map || !map.getContainer() || !document.body.contains(map.getContainer())) {
-              console.warn('Map no longer valid before adding available order marker');
+              );
               return;
             }
 
-        const badgeColor = getOrderTimeBadgeColor(order.createdAt);
-        const earningsStr = order.estimatedEarnings;
+            // Safety check before creating the marker
+            if (
+              !map ||
+              !map.getContainer() ||
+              !document.body.contains(map.getContainer())
+            ) {
+              console.warn(
+                "Map no longer valid before adding available order marker"
+              );
+              return;
+            }
 
-        // Earnings badge icon with color based on time
-        const orderIcon = L.divIcon({
-          html: `<div style="background:#fff;border:2px solid ${badgeColor};border-radius:12px;padding:4px 12px;font-size:12px;color:${badgeColor};white-space:nowrap;">${earningsStr}</div>`,
-            className: "",
-            iconSize: [90, 30],
-            iconAnchor: [60, 15],
-            popupAnchor: [0, -15],
-          });
+            const badgeColor = getOrderTimeBadgeColor(order.createdAt);
+            const earningsStr = order.estimatedEarnings;
+
+            // Earnings badge icon with color based on time
+            const orderIcon = L.divIcon({
+              html: `<div style="background:#fff;border:2px solid ${badgeColor};border-radius:12px;padding:4px 12px;font-size:12px;color:${badgeColor};white-space:nowrap;">${earningsStr}</div>`,
+              className: "",
+              iconSize: [90, 30],
+              iconAnchor: [60, 15],
+              popupAnchor: [0, -15],
+            });
 
             // Create the marker with safe add
-        const marker = L.marker([order.shopLatitude, order.shopLongitude], {
-          icon: orderIcon,
-            zIndexOffset: 1000,
+            const marker = L.marker([order.shopLatitude, order.shopLongitude], {
+              icon: orderIcon,
+              zIndexOffset: 1000,
             });
-            
+
             // Safely add to map
             marker.addTo(map);
 
-        // Calculate time since creation based on createdAt
-        const timeStr = order.createdAt;
+            // Calculate time since creation based on createdAt
+            const timeStr = order.createdAt;
 
-        // Calculate distance between shop and delivery address
-        let distanceStr = "Unknown";
-        if (
-          order.shopLatitude &&
-          order.shopLongitude &&
-          order.customerLatitude &&
-          order.customerLongitude
-        ) {
-          const distKm = getDistanceKm(
-            order.shopLatitude,
-            order.shopLongitude,
-            order.customerLatitude,
-            order.customerLongitude
-          );
-          distanceStr = `${Math.round(distKm * 10) / 10} km`;
-        }
+            // Calculate distance between shop and delivery address
+            let distanceStr = "Unknown";
+            if (
+              order.shopLatitude &&
+              order.shopLongitude &&
+              order.customerLatitude &&
+              order.customerLongitude
+            ) {
+              const distKm = getDistanceKm(
+                order.shopLatitude,
+                order.shopLongitude,
+                order.customerLatitude,
+                order.customerLongitude
+              );
+              distanceStr = `${Math.round(distKm * 10) / 10} km`;
+            }
 
-          // Enhanced popup with icons and flex layout
-          const popupContent = `
+            // Enhanced popup with icons and flex layout
+            const popupContent = `
             <div style="font-size:14px; line-height:1.4; min-width:200px;">
               <div style="display:flex;align-items:center;margin-bottom:4px;">
                 <span style="margin-right:6px;">🆔</span><strong>${order.id}</strong>
@@ -1361,27 +1427,27 @@ export default function MapSection({
             </div>
           `;
 
-          // Bind popup with max width
-          marker.bindPopup(popupContent, { maxWidth: 250 });
-        attachAcceptHandler(marker, order.id, map);
+            // Bind popup with max width
+            marker.bindPopup(popupContent, { maxWidth: 250 });
+            attachAcceptHandler(marker, order.id, map);
           } catch (error) {
             console.error(`Error adding available order marker:`, error);
           }
-      });
+        });
       } catch (error) {
-        console.error('Error processing available orders:', error);
-    }
+        console.error("Error processing available orders:", error);
+      }
     };
 
     // Cleanup on unmount or deps change
     return () => {
       clearTimeout(initTimeout);
-      
+
       if (watchIdRef.current !== null) {
         navigator.geolocation.clearWatch(watchIdRef.current);
         watchIdRef.current = null;
       }
-      
+
       if (mapInstanceRef.current) {
         try {
           console.log("Cleaning up map on unmount");
@@ -1421,25 +1487,25 @@ export default function MapSection({
         if (userMarkerRef.current) {
           try {
             userMarkerRef.current.setLatLng([latitude, longitude]);
-            
+
             // Only add to map if map is ready
             if (
-              mapInstanceRef.current && 
-              typeof mapInstanceRef.current.addLayer === "function" && 
+              mapInstanceRef.current &&
+              typeof mapInstanceRef.current.addLayer === "function" &&
               (mapInstanceRef.current as any)._loaded
             ) {
-            userMarkerRef.current.addTo(mapInstanceRef.current);
+              userMarkerRef.current.addTo(mapInstanceRef.current);
             }
           } catch (error) {
             console.error("Error updating marker position:", error);
           }
         }
-        
+
         // Set map view with safety checks
         if (
-          mapInstanceRef.current && 
-          typeof mapInstanceRef.current.setView === "function" && 
-          mapInstanceRef.current.getContainer() && 
+          mapInstanceRef.current &&
+          typeof mapInstanceRef.current.setView === "function" &&
+          mapInstanceRef.current.getContainer() &&
           (mapInstanceRef.current as any)._loaded
         ) {
           try {
@@ -1451,64 +1517,59 @@ export default function MapSection({
           console.warn("Map not fully loaded, cannot set view");
         }
 
-            setIsOnline(true);
-            setIsRefreshingLocation(false);
+        setIsOnline(true);
+        setIsRefreshingLocation(false);
 
-            // Show success message
-            reduceToastDuplicates(
-              "location-updated",
-              <Message showIcon type="success" header="Location Updated">
-                Your current location has been detected. ✅
-              </Message>,
-              { placement: "topEnd", duration: 3000 }
-            );
+        // Show success message
+        reduceToastDuplicates(
+          "location-updated",
+          <Message showIcon type="success" header="Location Updated">
+            Your current location has been detected. ✅
+          </Message>,
+          { placement: "topEnd", duration: 3000 }
+        );
 
-            // Ask user if they want to enable active tracking
-            setTimeout(() => {
-              reduceToastDuplicates(
-                "tracking-prompt",
-                <Message
-                  showIcon
-                  type="info"
-                  header="Location Tracking"
-                  closable
-                >
-                  <div>
-                    <p>Would you like to enable active location tracking?</p>
-                    <div className="mt-2 flex space-x-2">
-                      <Button
-                        appearance="primary"
-                        size="sm"
-                        onClick={() => {
-                          setIsActivelyTracking(true);
-                          startLocationTracking();
-                        }}
-                      >
-                        Enable Tracking
-                      </Button>
-                      <Button
-                        appearance="subtle"
-                        size="sm"
-                        onClick={() => {
-                          setIsActivelyTracking(false);
-                          reduceToastDuplicates(
-                            "static-location-info",
-                            <Message showIcon type="info">
-                              Using static location. Use the refresh button to
-                              update.
-                            </Message>,
-                            { placement: "topEnd", duration: 3000 }
-                          );
-                        }}
-                      >
-                        Stay Static
-                      </Button>
-                    </div>
-                  </div>
-                </Message>,
-                { placement: "topEnd", duration: 10000 }
-              );
-            }, 1000);
+        // Ask user if they want to enable active tracking
+        setTimeout(() => {
+          reduceToastDuplicates(
+            "tracking-prompt",
+            <Message showIcon type="info" header="Location Tracking" closable>
+              <div>
+                <p>Would you like to enable active location tracking?</p>
+                <div className="mt-2 flex space-x-2">
+                  <Button
+                    appearance="primary"
+                    size="sm"
+                    onClick={() => {
+                      setIsActivelyTracking(true);
+                      startLocationTracking();
+                    }}
+                  >
+                    Enable Tracking
+                  </Button>
+                  <Button
+                    appearance="subtle"
+                    size="sm"
+                    onClick={() => {
+                      setIsActivelyTracking(false);
+                      reduceToastDuplicates(
+                        "static-location-info",
+                        <Message showIcon type="info">
+                          Using static location. Use the refresh button to
+                          update.
+                        </Message>,
+                        { placement: "topEnd", duration: 3000 }
+                      );
+                    }}
+                  >
+                    Stay Static
+                  </Button>
+                </div>
+              </div>
+            </Message>,
+            { placement: "topEnd", duration: 10000 }
+          );
+        }, 1000);
       },
       // Error callback
       (error) => {
@@ -1622,20 +1683,20 @@ export default function MapSection({
         if (userMarkerRef.current && mapInstanceRef.current) {
           try {
             userMarkerRef.current.setLatLng([latitude, longitude]);
-            
+
             // Only add to map if the map is ready
             if (isMapReady(mapInstanceRef.current)) {
               userMarkerRef.current.addTo(mapInstanceRef.current);
               mapInstanceRef.current.setView([latitude, longitude], 16);
 
-            // Success message
-            reduceToastDuplicates(
-              "location-updated",
-              <Message showIcon type="success" header="Location Updated">
-                Your location has been successfully updated.
-              </Message>,
-              { placement: "topEnd", duration: 3000 }
-            );
+              // Success message
+              reduceToastDuplicates(
+                "location-updated",
+                <Message showIcon type="success" header="Location Updated">
+                  Your location has been successfully updated.
+                </Message>,
+                { placement: "topEnd", duration: 3000 }
+              );
             } else {
               console.warn("Map not fully ready when updating location");
               // Still show success since we saved to cookies
@@ -1653,7 +1714,8 @@ export default function MapSection({
             reduceToastDuplicates(
               "location-update-error",
               <Message showIcon type="error" header="Map Error">
-                Your location was saved, but there was an error updating the map.
+                Your location was saved, but there was an error updating the
+                map.
               </Message>,
               { placement: "topEnd", duration: 3000 }
             );

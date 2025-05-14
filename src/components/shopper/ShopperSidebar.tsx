@@ -53,7 +53,12 @@ export default function PlasaSidebar() {
         const data: EarningsResponse = await response.json();
 
         // Add proper null checks for data and data.earnings
-        if (data && data.success && data.earnings && typeof data.earnings.total === 'number') {
+        if (
+          data &&
+          data.success &&
+          data.earnings &&
+          typeof data.earnings.total === "number"
+        ) {
           setDailyEarnings(data.earnings.total);
         } else {
           console.warn("Earnings data incomplete or invalid:", data);
@@ -81,11 +86,11 @@ export default function PlasaSidebar() {
     setIsSwitchingRole(true);
     try {
       // Use the utility function to handle role switching
-      await initiateRoleSwitch('user');
-      
+      await initiateRoleSwitch("user");
+
       // Update local state via context
       toggleRole();
-      
+
       toast.success("Switched to customer mode");
     } catch (error) {
       console.error("Error switching role:", error);

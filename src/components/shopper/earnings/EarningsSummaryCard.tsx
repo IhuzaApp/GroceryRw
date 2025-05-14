@@ -22,17 +22,18 @@ const EarningsSummaryCard: React.FC<EarningsSummaryCardProps> = ({
 }) => {
   // Format currency in RWF if needed
   const formatRwfCurrency = (value: number) => {
-    return new Intl.NumberFormat('en-RW', {
-      style: 'currency',
-      currency: 'RWF',
-      maximumFractionDigits: 0
+    return new Intl.NumberFormat("en-RW", {
+      style: "currency",
+      currency: "RWF",
+      maximumFractionDigits: 0,
     }).format(value);
   };
 
   // Format the amount as currency if it's a number and useCurrency is true
-  const displayAmount = useCurrency && typeof amount === 'number' 
-    ? formatRwfCurrency(amount) 
-    : amount;
+  const displayAmount =
+    useCurrency && typeof amount === "number"
+      ? formatRwfCurrency(amount)
+      : amount;
 
   return (
     <Panel shaded bordered bodyFill className="p-4">
