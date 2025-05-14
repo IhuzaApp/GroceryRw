@@ -109,6 +109,30 @@ export const authOptions: NextAuthOptions = {
         token.phone = (user as any).phone;
         token.gender = (user as any).gender;
         token.role = (user as any).role;
+      } else if (token.id) {
+        // If no user but we have a token ID, fetch the latest user data
+        // This ensures we always have the latest role
+        try {
+          const query = gql`
+            query GetUserById($id: uuid!) {
+              Users_by_pk(id: $id) {
+                id
+                role
+              }
+            }
+          `;
+          
+          const res = await hasuraClient.request<{
+            Users_by_pk: { id: string; role: string }
+          }>(query, { id: token.id });
+          
+          if (res.Users_by_pk) {
+            // Update the role in the token
+            token.role = res.Users_by_pk.role;
+          }
+        } catch (error) {
+          console.error("Error fetching user role:", error);
+        }
       }
       return token;
     },

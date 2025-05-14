@@ -8,7 +8,7 @@ import { authOptions } from "../auth/[...nextauth]";
 const GET_DAILY_EARNINGS = gql`
   query GetDailyEarnings($shopper_id: uuid!, $start_date: timestamptz!, $end_date: timestamptz!) {
     Orders(
-      where: { 
+      where: {
         shopper_id: { _eq: $shopper_id },
         status: { _eq: "delivered" },
         updated_at: { _gte: $start_date, _lte: $end_date }
@@ -24,9 +24,9 @@ const GET_DAILY_EARNINGS = gql`
 
 interface OrdersResponse {
   Orders: Array<{
-    id: string;
-    service_fee: string | null;
-    delivery_fee: string | null;
+  id: string;
+  service_fee: string | null;
+  delivery_fee: string | null;
     updated_at: string;
   }>;
 }
@@ -227,15 +227,15 @@ export default async function handler(
   }
 
   try {
-    // Get session to identify the shopper
-    const session = await getServerSession(req, res, authOptions as any);
+  // Get session to identify the shopper
+  const session = await getServerSession(req, res, authOptions as any);
     const shopperId = (session as any)?.user?.id;
 
     if (!shopperId) {
-      return res
-        .status(401)
-        .json({ error: "You must be logged in as a shopper" });
-    }
+    return res
+      .status(401)
+      .json({ error: "You must be logged in as a shopper" });
+  }
 
     if (!hasuraClient) {
       throw new Error("Hasura client is not initialized");

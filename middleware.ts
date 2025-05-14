@@ -39,6 +39,27 @@ export async function middleware(req: NextRequest) {
     return NextResponse.next();
   }
 
+  // Check if there's a refresh parameter in the URL, which indicates role switching
+  const isRefreshing = req.nextUrl.searchParams.has('refresh');
+  
+  // Check if role has been changed (cookie set by updateRole API)
+  const roleChanged = req.cookies.get('role_changed')?.value === 'true';
+  const newRole = req.cookies.get('new_role')?.value;
+  
+  // If role has been changed, redirect to auth/signout to force session refresh
+  if (roleChanged && newRole && !pathname.includes('signout')) {
+    // Create response
+    const response = NextResponse.redirect(new URL('/api/auth/signout', req.url));
+    
+    // Clear the role_changed cookie
+    response.cookies.delete('role_changed');
+    
+    // Store the new role and return URL in cookies for the signout page
+    response.cookies.set('return_to', req.url);
+    
+    return response;
+  }
+  
   try {
     // Check for NextAuth token with more permissive settings
     const token = await getToken({
@@ -66,6 +87,23 @@ export async function middleware(req: NextRequest) {
       url.pathname = "/Auth/Login";
       url.search = `callbackUrl=${encodeURIComponent(req.url)}`;
       return NextResponse.redirect(url);
+    }
+
+    // Handle role-specific redirects
+    if (token.role === "shopper") {
+      // If user is a shopper and trying to access user routes, redirect to shopper dashboard
+      if (pathname.startsWith("/user") && !pathname.startsWith("/user/profile")) {
+        const url = req.nextUrl.clone();
+        url.pathname = "/Plasa";
+        return NextResponse.redirect(url);
+      }
+    } else if (token.role === "user") {
+      // If user is a customer and trying to access shopper routes, redirect to home
+      if (pathname.startsWith("/Plasa")) {
+        const url = req.nextUrl.clone();
+        url.pathname = "/";
+        return NextResponse.redirect(url);
+      }
     }
 
     // Protect shopper routes

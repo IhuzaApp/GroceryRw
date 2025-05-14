@@ -41,7 +41,19 @@ export default async function handler(
       role,
     });
     const updated = response.update_Users_by_pk;
-    return res.status(200).json({ role: updated.role });
+    
+    // Set a cookie to indicate role has been changed
+    // This will be used by our middleware to force session refresh
+    res.setHeader('Set-Cookie', [
+      `role_changed=true; Path=/; HttpOnly; SameSite=Lax; Max-Age=60`,
+      `new_role=${role}; Path=/; HttpOnly; SameSite=Lax; Max-Age=60`
+    ]);
+
+    return res.status(200).json({ 
+      role: updated.role,
+      success: true,
+      message: "Role updated successfully. Please sign out and sign in again to apply changes."
+    });
   } catch (error) {
     console.error("Error updating user role:", error);
     return res.status(500).json({ error: "Failed to update user role" });
