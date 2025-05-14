@@ -314,17 +314,18 @@ const EarningsPage: React.FC = () => {
 
   // Format number with decimal places but no currency symbol
   const formatNumber = (amount: number) => {
-    return new Intl.NumberFormat('en-US', {
-      minimumFractionDigits: 2,
-      maximumFractionDigits: 2
+    return new Intl.NumberFormat('en-RW', {
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 0
     }).format(amount);
   };
 
   // Format currency for display
   const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat('en-US', {
+    return new Intl.NumberFormat('en-RW', {
       style: 'currency',
-      currency: 'USD',
+      currency: 'RWF',
+      maximumFractionDigits: 0
     }).format(amount);
   };
 
@@ -413,7 +414,8 @@ const EarningsPage: React.FC = () => {
               <>
                 <EarningsSummaryCard
                   title="Total Earnings"
-                  amount={formatNumber(earningsStats.totalEarnings)}
+                  amount={earningsStats.totalEarnings}
+                  useCurrency={true}
                   icon={
                     <svg
                       viewBox="0 0 24 24"
