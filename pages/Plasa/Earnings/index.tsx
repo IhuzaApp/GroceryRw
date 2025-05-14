@@ -109,6 +109,9 @@ const EarningsPage: React.FC = () => {
   const [recentOrdersLoading, setRecentOrdersLoading] = useState(true);
   const [dailyEarnings, setDailyEarnings] = useState<any[]>([]);
   const [dailyEarningsLoading, setDailyEarningsLoading] = useState(true);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalOrders, setTotalOrders] = useState(0);
+  const ordersPerPage = 5;
 
   // Fetch earnings stats
   useEffect(() => {
@@ -201,23 +204,27 @@ const EarningsPage: React.FC = () => {
     }
   };
 
-  // Function to fetch recent orders
-  const fetchRecentOrders = async () => {
+  // Function to fetch recent orders with pagination
+  const fetchRecentOrders = async (page: number = 1) => {
     try {
       setRecentOrdersLoading(true);
-      const response = await fetch("/api/shopper/recentOrders?limit=5");
+      const response = await fetch(`/api/shopper/recentOrders?page=${page}&limit=${ordersPerPage}`);
       if (!response.ok) {
         throw new Error("Failed to fetch recent orders");
       }
       const data = await response.json();
       if (data.success) {
         setRecentOrders(data.orders);
+        setTotalOrders(data.total || 0);
+        setCurrentPage(page);
       } else {
         setRecentOrders([]);
+        setTotalOrders(0);
       }
     } catch (error) {
       console.error("Error fetching recent orders:", error);
       setRecentOrders([]);
+      setTotalOrders(0);
     } finally {
       setRecentOrdersLoading(false);
     }
@@ -396,6 +403,11 @@ const EarningsPage: React.FC = () => {
     },
   ];
 
+  // Handle page change for recent orders
+  const handleOrdersPageChange = (page: number) => {
+    fetchRecentOrders(page);
+  };
+
   return (
     <ShopperLayout>
       <div className="container mx-auto px-4 py-8">
@@ -518,8 +530,12 @@ const EarningsPage: React.FC = () => {
 
                 <RecentOrdersList
                   orders={recentOrders}
-                  onViewAllOrders={() => console.log("View all orders clicked")}
                   isLoading={recentOrdersLoading}
+                  pageSize={ordersPerPage}
+                  currentPage={currentPage}
+                  totalOrders={totalOrders}
+                  onPageChange={handleOrdersPageChange}
+                  serverPagination={true}
                 />
               </Panel>
             </Tabs.Tab>

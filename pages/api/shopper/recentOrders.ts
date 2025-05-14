@@ -6,14 +6,19 @@ import { authOptions } from "../auth/[...nextauth]";
 
 // Fetch recent orders for a shopper with their status delivered
 const GET_SHOPPER_RECENT_ORDERS = gql`
-  query GetShopperRecentOrders($shopper_id: uuid!, $limit: Int!) {
+  query GetShopperRecentOrders(
+    $shopper_id: uuid!, 
+    $limit: Int!, 
+    $offset: Int!
+  ) {
     Orders(
       where: { 
         shopper_id: { _eq: $shopper_id },
         status: { _eq: "delivered" }
       }
-      order_by: { created_at: desc }
+      order_by: { updated_at: desc }
       limit: $limit
+      offset: $offset
     ) {
       id
       OrderID
@@ -37,6 +42,18 @@ const GET_SHOPPER_RECENT_ORDERS = gql`
             quantity
           }
         }
+      }
+    }
+    
+    # Get total count of delivered orders
+    Orders_aggregate(
+      where: { 
+        shopper_id: { _eq: $shopper_id },
+        status: { _eq: "delivered" }
+      }
+    ) {
+      aggregate {
+        count
       }
     }
   }
@@ -68,6 +85,11 @@ interface OrdersResponse {
       } | null;
     };
   }>;
+  Orders_aggregate: {
+    aggregate: {
+      count: number;
+    };
+  };
 }
 
 export default async function handler(
@@ -93,14 +115,20 @@ export default async function handler(
       throw new Error("Hasura client is not initialized");
     }
 
-    // Get limit from query params or use default
+    // Get pagination parameters from query params
+    const page = parseInt(req.query.page as string) || 1;
     const limit = parseInt(req.query.limit as string) || 5;
+    const offset = (page - 1) * limit;
 
-    // Fetch recent completed orders
+    // Fetch recent completed orders with pagination
     const data = await hasuraClient.request<OrdersResponse>(GET_SHOPPER_RECENT_ORDERS, {
       shopper_id: shopperId,
-      limit
+      limit,
+      offset
     });
+
+    // Get total count of orders
+    const totalOrders = data.Orders_aggregate.aggregate.count;
 
     // Format orders for the frontend
     const recentOrders = data.Orders.map(order => {
@@ -115,7 +143,7 @@ export default async function handler(
       const minutesTaken = Math.floor((completedAt.getTime() - createdAt.getTime()) / (1000 * 60));
       
       // Format date for display
-      const orderDate = createdAt.toLocaleDateString('en-US', {
+      const orderDate = completedAt.toLocaleDateString('en-US', {
         month: 'short',
         day: 'numeric', 
         year: 'numeric'
@@ -140,7 +168,11 @@ export default async function handler(
 
     return res.status(200).json({
       success: true,
-      orders: recentOrders
+      orders: recentOrders,
+      total: totalOrders,
+      page,
+      limit,
+      totalPages: Math.ceil(totalOrders / limit)
     });
   } catch (error) {
     console.error("Error fetching recent orders:", error);

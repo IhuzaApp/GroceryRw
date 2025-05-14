@@ -7,6 +7,7 @@ import { formatCompactCurrency } from "../../lib/formatCurrency";
 import { toast } from "react-hot-toast";
 import { signOut } from "next-auth/react";
 import { useAuth } from "../../context/AuthContext";
+import { initiateRoleSwitch } from "../../lib/sessionRefresh";
 
 // Define interface for earnings response
 interface EarningsResponse {
@@ -77,27 +78,13 @@ export default function PlasaSidebar() {
   const handleSwitchToCustomer = async () => {
     setIsSwitchingRole(true);
     try {
-      // 1. Update role in database
-      const res = await fetch("/api/user/updateRole", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ role: "user" }),
-      });
-
-      if (!res.ok) {
-        throw new Error("Failed to switch to customer");
-      }
-
-      // 2. Update local state via context
+      // Use the utility function to handle role switching
+      await initiateRoleSwitch('user');
+      
+      // Update local state via context
       toggleRole();
-
+      
       toast.success("Switched to customer mode");
-
-      // 3. Sign out to refresh the session with new role
-      signOut({
-        redirect: true,
-        callbackUrl: "/",
-      });
     } catch (error) {
       console.error("Error switching role:", error);
       toast.error("Failed to switch to customer mode");

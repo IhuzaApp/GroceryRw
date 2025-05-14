@@ -6,6 +6,7 @@ import { useRouter } from "next/router";
 import { useAuth } from "../../context/AuthContext";
 import { toast } from "react-hot-toast";
 import LoadingOverlay from "./LoadingOverlay";
+import { initiateRoleSwitch } from "../../lib/sessionRefresh";
 
 export default function SideBar() {
   // Get toggleRole & current role from auth context
@@ -29,16 +30,13 @@ export default function SideBar() {
     const nextRole = role === "user" ? "shopper" : "user";
     setIsSwitching(true);
     try {
-      const res = await fetch("/api/user/updateRole", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ role: nextRole }),
-      });
-      if (!res.ok) throw new Error("Failed to update role");
+      // Use the utility function to handle role switching
+      await initiateRoleSwitch(nextRole as 'user' | 'shopper');
+      
       // Update local state after successful DB update
       toggleRole();
+      
       toast.success(`Switched to ${nextRole === "user" ? "User" : "Shopper"}`);
-      router.push("/");
     } catch (error) {
       console.error("Error updating role:", error);
       toast.error("Failed to switch account");
