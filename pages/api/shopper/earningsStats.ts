@@ -19,6 +19,11 @@ const GET_EARNINGS_STATS = gql`
       service_fee
       created_at
       updated_at
+      shop_id
+      Shop {
+        id
+        name
+      }
     }
     
     # Get completed orders count
@@ -32,6 +37,21 @@ const GET_EARNINGS_STATS = gql`
         count
       }
     }
+    
+    # Get store breakdown - each distinct shop
+    distinctShops: Orders(
+      where: { 
+        shopper_id: { _eq: $shopperId },
+        status: { _eq: "delivered" }
+      }
+      distinct_on: shop_id
+    ) {
+      shop_id
+      Shop {
+        id
+        name
+      }
+    }
   }
 `;
 
@@ -41,6 +61,19 @@ interface Order {
   delivery_fee: string | null;
   created_at: string;
   updated_at: string;
+  shop_id: string;
+  Shop: {
+    id: string;
+    name: string;
+  };
+}
+
+interface Shop {
+  shop_id: string;
+  Shop: {
+    id: string;
+    name: string;
+  };
 }
 
 interface GraphQLResponse {
@@ -50,6 +83,13 @@ interface GraphQLResponse {
       count: number;
     };
   };
+  distinctShops: Shop[];
+}
+
+interface StoreEarnings {
+  store: string;
+  amount: number;
+  percentage: number;
 }
 
 export default async function handler(
@@ -84,20 +124,59 @@ export default async function handler(
     let totalEarnings = 0;
     let totalActiveHours = 0;
     
+    // Create a map to track earnings by store
+    const storeEarningsMap = new Map<string, number>();
+    
     if (data.Orders && Array.isArray(data.Orders)) {
-      totalEarnings = data.Orders.reduce((sum: number, order) => {
+      data.Orders.forEach(order => {
         const serviceFee = parseFloat(order.service_fee || "0");
         const deliveryFee = parseFloat(order.delivery_fee || "0");
-        return sum + serviceFee + deliveryFee;
-      }, 0);
-      
-      // Calculate active hours (time from created_at to updated_at)
-      totalActiveHours = data.Orders.reduce((totalHours: number, order) => {
+        const orderTotal = serviceFee + deliveryFee;
+        
+        // Add to total earnings
+        totalEarnings += orderTotal;
+        
+        // Calculate active hours
         const startTime = new Date(order.created_at);
         const endTime = new Date(order.updated_at);
         const hoursDiff = (endTime.getTime() - startTime.getTime()) / (1000 * 60 * 60);
-        return totalHours + hoursDiff;
-      }, 0);
+        totalActiveHours += hoursDiff;
+        
+        // Add to store earnings
+        const storeName = order.Shop?.name || 'Unknown Store';
+        if (storeEarningsMap.has(storeName)) {
+          storeEarningsMap.set(storeName, storeEarningsMap.get(storeName)! + orderTotal);
+        } else {
+          storeEarningsMap.set(storeName, orderTotal);
+        }
+      });
+    }
+    
+    // Format store earnings data
+    let storeEarnings: StoreEarnings[] = Array.from(storeEarningsMap.entries())
+      .map(([store, amount]) => ({
+        store,
+        amount,
+        percentage: Math.round((amount / totalEarnings) * 100) || 0
+      }))
+      .sort((a, b) => b.amount - a.amount);
+    
+    // Keep top 3 stores and combine the rest as "Other Stores"
+    if (storeEarnings.length > 3) {
+      const topStores = storeEarnings.slice(0, 3);
+      const otherStores = storeEarnings.slice(3);
+      
+      const otherStoresAmount = otherStores.reduce((sum, store) => sum + store.amount, 0);
+      const otherStoresPercentage = Math.round((otherStoresAmount / totalEarnings) * 100) || 0;
+      
+      storeEarnings = [
+        ...topStores,
+        {
+          store: "Other Stores",
+          amount: otherStoresAmount,
+          percentage: otherStoresPercentage
+        }
+      ];
     }
     
     // Calculate average hours per order
@@ -106,13 +185,26 @@ export default async function handler(
       ? totalActiveHours / completedOrdersCount 
       : 0;
 
+    // Mock data for earnings components
+    const earningsComponents = [
+      { type: "Delivery Fee", amount: data.Orders.reduce((sum, order) => sum + parseFloat(order.delivery_fee || "0"), 0), percentage: 0 },
+      { type: "Service Fee", amount: data.Orders.reduce((sum, order) => sum + parseFloat(order.service_fee || "0"), 0), percentage: 0 }
+    ];
+    
+    // Calculate percentages for earnings components
+    earningsComponents.forEach(component => {
+      component.percentage = Math.round((component.amount / totalEarnings) * 100) || 0;
+    });
+
     return res.status(200).json({
       success: true,
       stats: {
         totalEarnings,
         completedOrders: completedOrdersCount,
         activeHours: parseFloat(averageActiveHours.toFixed(1)),
-        rating: 0 // As per requirement, leave rating as 0
+        rating: 0, // As per requirement, leave rating as 0
+        storeBreakdown: storeEarnings,
+        earningsComponents
       }
     });
   } catch (error) {
