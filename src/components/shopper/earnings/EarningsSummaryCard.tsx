@@ -8,6 +8,7 @@ interface EarningsSummaryCardProps {
   trendText?: string;
   icon: React.ReactNode;
   iconColor?: string;
+  useCurrency?: boolean;
 }
 
 const EarningsSummaryCard: React.FC<EarningsSummaryCardProps> = ({
@@ -17,14 +18,29 @@ const EarningsSummaryCard: React.FC<EarningsSummaryCardProps> = ({
   trendText = "from last week",
   icon,
   iconColor = "text-green-500",
+  useCurrency = false,
 }) => {
+  // Format currency in RWF if needed
+  const formatRwfCurrency = (value: number) => {
+    return new Intl.NumberFormat('en-RW', {
+      style: 'currency',
+      currency: 'RWF',
+      maximumFractionDigits: 0
+    }).format(value);
+  };
+
+  // Format the amount as currency if it's a number and useCurrency is true
+  const displayAmount = useCurrency && typeof amount === 'number' 
+    ? formatRwfCurrency(amount) 
+    : amount;
+
   return (
     <Panel shaded bordered bodyFill className="p-4">
       <div className="pb-2">
         <div className="text-sm text-gray-500">{title}</div>
         <div className="flex items-center text-2xl font-bold">
           <span className={`mr-1 h-5 w-5 ${iconColor}`}>{icon}</span>
-          {amount}
+          {displayAmount}
         </div>
       </div>
       <div>
