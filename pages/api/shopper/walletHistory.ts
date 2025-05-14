@@ -28,6 +28,9 @@ const GET_WALLET_AND_TRANSACTIONS = gql`
       created_at
       related_order_id
       wallet_id
+      Order {
+        OrderID
+      }
     }
   }
 `;
@@ -48,6 +51,9 @@ interface WalletTransaction {
   created_at: string;
   related_order_id: string | null;
   wallet_id: string;
+  Order: {
+    OrderID: number | null;
+  } | null;
 }
 
 interface GraphQLResponse {
@@ -105,6 +111,7 @@ export default async function handler(
       date: new Date(tx.created_at).toLocaleDateString(),
       time: new Date(tx.created_at).toLocaleTimeString(),
       orderId: tx.related_order_id,
+      orderNumber: tx.Order?.OrderID || null
     }));
 
     return res.status(200).json({

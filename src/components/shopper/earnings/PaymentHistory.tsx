@@ -16,6 +16,7 @@ interface Transaction {
   date: string;
   time?: string;
   orderId?: string | null;
+  orderNumber?: number | null;
 }
 
 interface PaymentHistoryProps {
@@ -110,7 +111,9 @@ const PaymentHistory: React.FC<PaymentHistoryProps> = ({
                 </div>
                 <div className="text-sm text-gray-500">{item.date}</div>
                 {item.orderId && (
-                  <div className="text-xs text-gray-400">Order ID: {item.orderId}</div>
+                  <div className="text-xs text-gray-400">
+                    Order: #{item.orderNumber || 'Unknown'}
+                  </div>
                 )}
               </div>
               <div className="text-right">

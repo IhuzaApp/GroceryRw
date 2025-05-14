@@ -16,17 +16,71 @@ interface EarningsStats {
   completedOrders: number;
   activeHours: number;
   rating: number;
+  storeBreakdown?: StoreBreakdown[];
+  earningsComponents?: EarningsComponent[];
+}
+
+// Interface for wallet data
+interface Wallet {
+  id: string;
+  availableBalance: number;
+  reservedBalance: number;
+}
+
+// Interface for transaction data
+interface Transaction {
+  id: string;
+  amount: number;
+  type: string;
+  status: string;
+  description: string;
+  date: string;
+  time?: string;
+  orderId?: string | null;
+  orderNumber?: number | null;
+}
+
+// Interface for delivery stats
+interface DeliveryStats {
+  totalKilometers: number;
+  totalItems: number;
+  avgTimePerOrder: number;
+  storesVisited: number;
+}
+
+// Interface for store breakdown
+interface StoreBreakdown {
+  store: string;
+  amount: number;
+  percentage: number;
+}
+
+// Interface for earnings component
+interface EarningsComponent {
+  type: string;
+  amount: number;
+  percentage: number;
 }
 
 const EarningsPage: React.FC = () => {
   const [period, setPeriod] = useState("this-week");
   const [activeTab, setActiveTab] = useState("earnings");
   const [loading, setLoading] = useState(true);
+  const [walletLoading, setWalletLoading] = useState(true);
+  const [deliveryStatsLoading, setDeliveryStatsLoading] = useState(true);
   const [earningsStats, setEarningsStats] = useState<EarningsStats>({
     totalEarnings: 0,
     completedOrders: 0,
     activeHours: 0,
     rating: 0,
+  });
+  const [wallet, setWallet] = useState<Wallet | null>(null);
+  const [transactions, setTransactions] = useState<Transaction[]>([]);
+  const [deliveryStats, setDeliveryStats] = useState<DeliveryStats>({
+    totalKilometers: 0,
+    totalItems: 0,
+    avgTimePerOrder: 0,
+    storesVisited: 0
   });
 
   // Fetch earnings stats
@@ -51,6 +105,57 @@ const EarningsPage: React.FC = () => {
 
     fetchEarningsStats();
   }, []);
+
+  // Fetch wallet and transaction data when the Payouts tab is selected
+  useEffect(() => {
+    if (activeTab === "payouts") {
+      fetchWalletData();
+    }
+  }, [activeTab]);
+
+  // Fetch delivery stats when the component loads
+  useEffect(() => {
+    fetchDeliveryStats();
+  }, []);
+
+  // Function to fetch wallet and transaction data
+  const fetchWalletData = async () => {
+    try {
+      setWalletLoading(true);
+      const response = await fetch("/api/shopper/walletHistory");
+      if (!response.ok) {
+        throw new Error("Failed to fetch wallet data");
+      }
+      const data = await response.json();
+      if (data.success) {
+        setWallet(data.wallet);
+        setTransactions(data.transactions);
+      }
+    } catch (error) {
+      console.error("Error fetching wallet data:", error);
+    } finally {
+      setWalletLoading(false);
+    }
+  };
+
+  // Function to fetch delivery stats
+  const fetchDeliveryStats = async () => {
+    try {
+      setDeliveryStatsLoading(true);
+      const response = await fetch("/api/shopper/deliveryStats");
+      if (!response.ok) {
+        throw new Error("Failed to fetch delivery stats");
+      }
+      const data = await response.json();
+      if (data.success) {
+        setDeliveryStats(data.stats);
+      }
+    } catch (error) {
+      console.error("Error fetching delivery stats:", error);
+    } finally {
+      setDeliveryStatsLoading(false);
+    }
+  };
 
   // Mock data for daily earnings chart
   const dailyEarnings = [
@@ -102,23 +207,6 @@ const EarningsPage: React.FC = () => {
     },
   ];
 
-  // Mock data for store breakdown
-  const storeBreakdown = [
-    { store: "Whole Foods", amount: 475, percentage: 38 },
-    { store: "Target", amount: 340, percentage: 27 },
-    { store: "Costco", amount: 220, percentage: 18 },
-    { store: "Safeway", amount: 180, percentage: 14 },
-    { store: "Other Stores", amount: 33.5, percentage: 3 },
-  ];
-
-  // Mock data for earnings components
-  const earningsComponents = [
-    { type: "Base Pay", amount: 620, percentage: 50 },
-    { type: "Tips", amount: 398.5, percentage: 32 },
-    { type: "Batch Pay", amount: 180, percentage: 14 },
-    { type: "Peak Boost", amount: 50, percentage: 4 },
-  ];
-
   // Mock data for performance metrics
   const performanceMetrics = [
     { metric: "Customer Rating", value: 4.92, max: 5, percentage: 98 },
@@ -127,65 +215,11 @@ const EarningsPage: React.FC = () => {
     { metric: "Acceptance Rate", value: 82, max: 100, percentage: 82 },
   ];
 
-  // Mock data for delivery stats
-  const deliveryStats = [
-    {
-      title: "Total Miles",
-      value: 428,
-      icon: (
-        <svg viewBox="0 0 24 24" fill="currentColor" className="h-4 w-4">
-          <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z" />
-        </svg>
-      ),
-      iconColor: "text-red-500",
-    },
-    {
-      title: "Total Items",
-      value: "1,245",
-      icon: (
-        <svg viewBox="0 0 24 24" fill="currentColor" className="h-4 w-4">
-          <path d="M7 18c-1.1 0-1.99.9-1.99 2S5.9 22 7 22s2-.9 2-2-.9-2-2-2zM1 4h2l3.6 7.59-1.35 2.44C4.52 15.37 5.48 17 7 17h11c.55 0 1-.45 1-1s-.45-1-1-1H7l1.1-2h7.45c.75 0 1.41-.41 1.75-1.03l3.58-6.49c.37-.66-.11-1.48-.87-1.48H5.21l-.67-1.43c-.16-.35-.52-.57-.9-.57H2c-.55 0-1 .45-1 1s.45 1 1 1zm16 14c-1.1 0-1.99.9-1.99 2s.89 2 1.99 2 2-.9 2-2-.9-2-2-2z" />
-        </svg>
-      ),
-      iconColor: "text-blue-500",
-    },
-    {
-      title: "Avg. Time per Order",
-      value: "42 min",
-      icon: (
-        <svg viewBox="0 0 24 24" fill="currentColor" className="h-4 w-4">
-          <path d="M11.99 2C6.47 2 2 6.48 2 12s4.47 10 9.99 10C17.52 22 22 17.52 22 12S17.52 2 11.99 2zM12 20c-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8-3.58 8-8 8zm.5-13H11v6l5.25 3.15.75-1.23-4.5-2.67z" />
-        </svg>
-      ),
-      iconColor: "text-purple-500",
-    },
-    {
-      title: "Stores Visited",
-      value: 12,
-      icon: (
-        <svg viewBox="0 0 24 24" fill="currentColor" className="h-4 w-4">
-          <path d="M20 4H4v2h16V4zm1 10v-2l-1-5H4l-1 5v2h1v6h10v-6h4v6h2v-6h1zm-9 4H6v-4h6v4z" />
-        </svg>
-      ),
-      iconColor: "text-green-500",
-    },
-  ];
-
   // Mock data for earnings goals
   const earningsGoals = [
     { goal: "Weekly Target", current: 1248.5, target: 1500, percentage: 83 },
     { goal: "Monthly Target", current: 3820.75, target: 6000, percentage: 64 },
     { goal: "Quarterly Bonus", current: 8500, target: 15000, percentage: 57 },
-  ];
-
-  // Mock data for payment history
-  const nextPayout = { amount: 748.5, date: "May 15, 2025" };
-  const paymentHistory = [
-    { date: "May 1, 2025", amount: 820.75, status: "Completed" },
-    { date: "April 15, 2025", amount: 945.25, status: "Completed" },
-    { date: "April 1, 2025", amount: 780.5, status: "Completed" },
-    { date: "March 15, 2025", amount: 890.0, status: "Completed" },
-    { date: "March 1, 2025", amount: 810.25, status: "Completed" },
   ];
 
   const handlePeriodChange = (value: string | null, event: SyntheticEvent) => {
@@ -211,6 +245,58 @@ const EarningsPage: React.FC = () => {
       maximumFractionDigits: 2
     }).format(amount);
   };
+
+  // Format currency for display
+  const formatCurrency = (amount: number) => {
+    return new Intl.NumberFormat('en-US', {
+      style: 'currency',
+      currency: 'USD',
+    }).format(amount);
+  };
+
+  // Create delivery stats for the performance metrics component
+  const formattedDeliveryStats = [
+    {
+      title: "Total Kilometers",
+      value: deliveryStats.totalKilometers,
+      icon: (
+        <svg viewBox="0 0 24 24" fill="currentColor" className="h-4 w-4">
+          <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z" />
+        </svg>
+      ),
+      iconColor: "text-red-500",
+    },
+    {
+      title: "Total Items",
+      value: deliveryStats.totalItems.toLocaleString(),
+      icon: (
+        <svg viewBox="0 0 24 24" fill="currentColor" className="h-4 w-4">
+          <path d="M7 18c-1.1 0-1.99.9-1.99 2S5.9 22 7 22s2-.9 2-2-.9-2-2-2zM1 4h2l3.6 7.59-1.35 2.44C4.52 15.37 5.48 17 7 17h11c.55 0 1-.45 1-1s-.45-1-1-1H7l1.1-2h7.45c.75 0 1.41-.41 1.75-1.03l3.58-6.49c.37-.66-.11-1.48-.87-1.48H5.21l-.67-1.43c-.16-.35-.52-.57-.9-.57H2c-.55 0-1 .45-1 1s.45 1 1 1zm16 14c-1.1 0-1.99.9-1.99 2s.89 2 1.99 2 2-.9 2-2-.9-2-2-2z" />
+        </svg>
+      ),
+      iconColor: "text-blue-500",
+    },
+    {
+      title: "Avg. Time per Order",
+      value: `${deliveryStats.avgTimePerOrder} min`,
+      icon: (
+        <svg viewBox="0 0 24 24" fill="currentColor" className="h-4 w-4">
+          <path d="M11.99 2C6.47 2 2 6.48 2 12s4.47 10 9.99 10C17.52 22 22 17.52 22 12S17.52 2 11.99 2zM12 20c-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8-3.58 8-8 8zm.5-13H11v6l5.25 3.15.75-1.23-4.5-2.67z" />
+        </svg>
+      ),
+      iconColor: "text-purple-500",
+    },
+    {
+      title: "Stores Visited",
+      value: deliveryStats.storesVisited,
+      icon: (
+        <svg viewBox="0 0 24 24" fill="currentColor" className="h-4 w-4">
+          <path d="M20 4H4v2h16V4zm1 10v-2l-1-5H4l-1 5v2h1v6h10v-6h4v6h2v-6h1zm-9 4H6v-4h6v4z" />
+        </svg>
+      ),
+      iconColor: "text-green-500",
+    },
+  ];
 
   return (
     <ShopperLayout>
@@ -341,12 +427,30 @@ const EarningsPage: React.FC = () => {
                   How your earnings are distributed
                 </p>
 
-                <EarningsBreakdown
-                  storeBreakdown={storeBreakdown}
-                  earningsComponents={earningsComponents}
-                />
+                {loading ? (
+                  <div className="flex justify-center py-8">
+                    <Loader size="md" content="Loading earnings data..." />
+                  </div>
+                ) : !earningsStats.storeBreakdown || !earningsStats.earningsComponents ? (
+                  <div className="text-center py-8">
+                    <p>No earnings breakdown data available.</p>
+                  </div>
+                ) : (
+                  <>
+                    <EarningsBreakdown
+                      storeBreakdown={earningsStats.storeBreakdown.map(store => ({
+                        ...store,
+                        amount: parseFloat(store.amount.toFixed(2))
+                      }))}
+                      earningsComponents={earningsStats.earningsComponents.map(component => ({
+                        ...component,
+                        amount: parseFloat(component.amount.toFixed(2))
+                      }))}
+                    />
 
-                <ActivityHeatmap />
+                    <ActivityHeatmap />
+                  </>
+                )}
               </Panel>
             </Tabs.Tab>
 
@@ -357,23 +461,34 @@ const EarningsPage: React.FC = () => {
                   Your recent payouts and upcoming payments
                 </p>
 
-                <PaymentHistory
-                  nextPayout={nextPayout}
-                  payments={paymentHistory}
-                  onViewAllPayments={() =>
-                    console.log("View all payments clicked")
-                  }
-                />
+                {walletLoading ? (
+                  <div className="flex justify-center py-8">
+                    <Loader size="md" content="Loading wallet data..." />
+                  </div>
+                ) : (
+                  <PaymentHistory
+                    wallet={wallet}
+                    transactions={transactions}
+                    onViewAllPayments={() => console.log("View all payments clicked")}
+                    isLoading={walletLoading}
+                  />
+                )}
               </Panel>
             </Tabs.Tab>
           </Tabs>
 
           {/* Performance Metrics and Goals */}
           <div className="mb-6 grid grid-cols-1 gap-6 lg:grid-cols-2">
-            <PerformanceMetrics
-              metrics={performanceMetrics}
-              deliveryStats={deliveryStats}
-            />
+            {deliveryStatsLoading ? (
+              <div className="flex h-96 items-center justify-center rounded-lg border">
+                <Loader size="md" content="Loading delivery stats..." />
+              </div>
+            ) : (
+              <PerformanceMetrics
+                metrics={performanceMetrics}
+                deliveryStats={formattedDeliveryStats}
+              />
+            )}
 
             <EarningsGoals goals={earningsGoals} />
           </div>

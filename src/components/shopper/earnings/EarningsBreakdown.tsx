@@ -22,6 +22,14 @@ const EarningsBreakdown: React.FC<EarningsBreakdownProps> = ({
   storeBreakdown,
   earningsComponents,
 }) => {
+  // Format currency
+  const formatCurrency = (amount: number) => {
+    return new Intl.NumberFormat('en-US', {
+      style: 'currency',
+      currency: 'USD',
+    }).format(amount);
+  };
+
   return (
     <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
       {/* Store Type Breakdown */}
@@ -32,7 +40,7 @@ const EarningsBreakdown: React.FC<EarningsBreakdownProps> = ({
             <div key={index}>
               <div className="mb-1 flex items-center justify-between">
                 <span className="text-sm">{item.store}</span>
-                <span className="text-sm font-medium">${item.amount}</span>
+                <span className="text-sm font-medium">{formatCurrency(item.amount)}</span>
               </div>
               <div className="h-2 w-full rounded-full bg-gray-200">
                 <div
@@ -56,17 +64,15 @@ const EarningsBreakdown: React.FC<EarningsBreakdownProps> = ({
             <div key={index}>
               <div className="mb-1 flex items-center justify-between">
                 <span className="text-sm">{item.type}</span>
-                <span className="text-sm font-medium">${item.amount}</span>
+                <span className="text-sm font-medium">{formatCurrency(item.amount)}</span>
               </div>
               <div className="h-2 w-full rounded-full bg-gray-200">
                 <div
                   className={`h-2 rounded-full ${
-                    item.type === "Base Pay"
+                    item.type === "Delivery Fee"
                       ? "bg-blue-500"
-                      : item.type === "Tips"
+                      : item.type === "Service Fee"
                       ? "bg-purple-500"
-                      : item.type === "Batch Pay"
-                      ? "bg-yellow-500"
                       : "bg-orange-500"
                   }`}
                   style={{ width: `${item.percentage}%` }}
