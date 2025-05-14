@@ -52,10 +52,12 @@ export default function PlasaSidebar() {
 
         const data: EarningsResponse = await response.json();
 
-        if (data.success) {
+        // Add proper null checks for data and data.earnings
+        if (data && data.success && data.earnings && typeof data.earnings.total === 'number') {
           setDailyEarnings(data.earnings.total);
         } else {
-          throw new Error("Earnings data not successful");
+          console.warn("Earnings data incomplete or invalid:", data);
+          setDailyEarnings(0);
         }
       } catch (error) {
         console.error("Error fetching daily earnings:", error);

@@ -257,6 +257,12 @@ export default async function handler(
     // Format data based on the selected period
     const formattedData = formatEarningsData(data.Orders, period);
 
+    // Calculate the total earnings
+    const totalEarnings = data.Orders.reduce((total, order) => {
+      return total + calculateOrderEarnings(order);
+    }, 0);
+
+    // Create a response that includes the earnings structure expected by the Sidebar
     return res.status(200).json({
       success: true,
       data: formattedData,
@@ -264,6 +270,17 @@ export default async function handler(
         start: startDate.toISOString(),
         end: endDate.toISOString(),
         type: period
+      },
+      // Add this earnings object structure that the sidebar expects
+      earnings: {
+        active: 0,  // Assume 0 for active since we're only fetching completed ones
+        completed: totalEarnings,
+        total: totalEarnings
+      },
+      orderCounts: {
+        active: 0,  // Assume 0 for active since we're only fetching completed ones
+        completed: data.Orders.length,
+        total: data.Orders.length
       }
     });
   } catch (error) {
