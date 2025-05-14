@@ -50,9 +50,10 @@ const PaymentHistory: React.FC<PaymentHistoryProps> = ({
 
   // Format currency
   const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat('en-US', {
+    return new Intl.NumberFormat('en-RW', {
       style: 'currency',
-      currency: 'USD',
+      currency: 'RWF',
+      maximumFractionDigits: 0
     }).format(amount);
   };
 
