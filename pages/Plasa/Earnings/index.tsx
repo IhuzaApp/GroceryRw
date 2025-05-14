@@ -105,6 +105,10 @@ const EarningsPage: React.FC = () => {
     avgTimePerOrder: 0,
     storesVisited: 0
   });
+  const [recentOrders, setRecentOrders] = useState<any[]>([]);
+  const [recentOrdersLoading, setRecentOrdersLoading] = useState(true);
+  const [dailyEarnings, setDailyEarnings] = useState<any[]>([]);
+  const [dailyEarningsLoading, setDailyEarningsLoading] = useState(true);
 
   // Fetch earnings stats
   useEffect(() => {
@@ -141,6 +145,18 @@ const EarningsPage: React.FC = () => {
     fetchDeliveryStats();
   }, []);
 
+  // Fetch recent orders when the earnings tab is selected or on component load
+  useEffect(() => {
+    if (activeTab === "earnings") {
+      fetchRecentOrders();
+    }
+  }, [activeTab]);
+
+  // Add useEffect to fetch daily earnings
+  useEffect(() => {
+    fetchDailyEarnings(period);
+  }, [period]);
+
   // Function to fetch wallet and transaction data
   const fetchWalletData = async () => {
     try {
@@ -151,18 +167,16 @@ const EarningsPage: React.FC = () => {
       }
       const data = await response.json();
       if (data.success) {
-        setWallet(data.wallet || mockWallet);
-        setTransactions(data.transactions && data.transactions.length > 0 ? data.transactions : mockTransactions);
+        setWallet(data.wallet || { id: '', availableBalance: 0, reservedBalance: 0 });
+        setTransactions(data.transactions || []);
       } else {
-        // Use mock data if no real data is available
-        setWallet(mockWallet);
-        setTransactions(mockTransactions);
+        setWallet({ id: '', availableBalance: 0, reservedBalance: 0 });
+        setTransactions([]);
       }
     } catch (error) {
       console.error("Error fetching wallet data:", error);
-      // Use mock data if there's an error
-      setWallet(mockWallet);
-      setTransactions(mockTransactions);
+      setWallet({ id: '', availableBalance: 0, reservedBalance: 0 });
+      setTransactions([]);
     } finally {
       setWalletLoading(false);
     }
@@ -187,48 +201,49 @@ const EarningsPage: React.FC = () => {
     }
   };
 
-  // Mock data for daily earnings chart
-  const dailyEarnings = [
-    { day: "Monday", earnings: 102.5 },
-    { day: "Tuesday", earnings: 145.8 },
-    { day: "Wednesday", earnings: 76.2 },
-    { day: "Thursday", earnings: 110.4 },
-    { day: "Friday", earnings: 158.9 },
-    { day: "Saturday", earnings: 225.3 },
-    { day: "Sunday", earnings: 183.7 },
-  ];
+  // Function to fetch recent orders
+  const fetchRecentOrders = async () => {
+    try {
+      setRecentOrdersLoading(true);
+      const response = await fetch("/api/shopper/recentOrders?limit=5");
+      if (!response.ok) {
+        throw new Error("Failed to fetch recent orders");
+      }
+      const data = await response.json();
+      if (data.success) {
+        setRecentOrders(data.orders);
+      } else {
+        setRecentOrders([]);
+      }
+    } catch (error) {
+      console.error("Error fetching recent orders:", error);
+      setRecentOrders([]);
+    } finally {
+      setRecentOrdersLoading(false);
+    }
+  };
 
-  // Mock data for recent orders
-  const recentOrders = [
-    {
-      date: "May 13, 2025",
-      store: "Whole Foods",
-      items: 32,
-      amount: 28.75,
-      tip: 15,
-    },
-    {
-      date: "May 12, 2025",
-      store: "Kroger",
-      items: 45,
-      amount: 35.25,
-      tip: 20,
-    },
-    {
-      date: "May 11, 2025",
-      store: "Safeway",
-      items: 24,
-      amount: 24.5,
-      tip: 12,
-    },
-    {
-      date: "May 10, 2025",
-      store: "Walmart",
-      items: 28,
-      amount: 26.75,
-      tip: 15,
-    },
-  ];
+  // Function to fetch daily earnings
+  const fetchDailyEarnings = async (selectedPeriod: string) => {
+    try {
+      setDailyEarningsLoading(true);
+      const response = await fetch(`/api/shopper/dailyEarnings?period=${selectedPeriod}`);
+      if (!response.ok) {
+        throw new Error("Failed to fetch daily earnings");
+      }
+      const data = await response.json();
+      if (data.success) {
+        setDailyEarnings(data.data);
+      } else {
+        setDailyEarnings([]);
+      }
+    } catch (error) {
+      console.error("Error fetching daily earnings:", error);
+      setDailyEarnings([]);
+    } finally {
+      setDailyEarningsLoading(false);
+    }
+  };
 
   // Create performance metrics using data from the API
   const getPerformanceMetrics = () => {
@@ -306,7 +321,8 @@ const EarningsPage: React.FC = () => {
   const handlePeriodChange = (value: string | null, event: SyntheticEvent) => {
     if (value) {
       setPeriod(value);
-      // In a real app, you would fetch data for the selected period here
+      // Fetch data for the selected period
+      fetchDailyEarnings(value);
     }
   };
 
@@ -380,63 +396,6 @@ const EarningsPage: React.FC = () => {
     },
   ];
 
-  // Mock wallet data
-  const mockWallet: Wallet = {
-    id: "mock-wallet-id",
-    availableBalance: 125000,
-    reservedBalance: 25000
-  };
-
-  // Mock transaction data
-  const mockTransactions: Transaction[] = [
-    {
-      id: "tx-1",
-      amount: 35000,
-      type: "Payment",
-      status: "Completed",
-      description: "Order delivery payment",
-      date: "May 15, 2025",
-      orderId: "order-123",
-      orderNumber: 1001
-    },
-    {
-      id: "tx-2",
-      amount: 42500,
-      type: "Payment",
-      status: "Completed",
-      description: "Order delivery payment",
-      date: "May 13, 2025",
-      orderId: "order-124",
-      orderNumber: 1002
-    },
-    {
-      id: "tx-3",
-      amount: 65000,
-      type: "Withdrawal",
-      status: "Completed",
-      description: "Weekly payout",
-      date: "May 10, 2025"
-    },
-    {
-      id: "tx-4",
-      amount: 12500,
-      type: "Refund",
-      status: "Pending",
-      description: "Delivery issues refund",
-      date: "May 8, 2025",
-      orderId: "order-120",
-      orderNumber: 998
-    },
-    {
-      id: "tx-5",
-      amount: 150000,
-      type: "Deposit",
-      status: "Completed",
-      description: "Initial account funding",
-      date: "May 1, 2025"
-    }
-  ];
-
   return (
     <ShopperLayout>
       <div className="container mx-auto px-4 py-8">
@@ -476,63 +435,63 @@ const EarningsPage: React.FC = () => {
               </div>
             ) : (
               <>
-                <EarningsSummaryCard
-                  title="Total Earnings"
+            <EarningsSummaryCard
+              title="Total Earnings"
                   amount={earningsStats.totalEarnings}
                   useCurrency={true}
-                  icon={
-                    <svg
-                      viewBox="0 0 24 24"
-                      fill="currentColor"
-                      className="h-full w-full"
-                    >
+              icon={
+                <svg
+                  viewBox="0 0 24 24"
+                  fill="currentColor"
+                  className="h-full w-full"
+                >
                       <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm.31-8.86c-1.77-.45-2.34-.94-2.34-1.67 0-.84.79-1.43 2.1-1.43 1.38 0 1.9.66 1.94 1.64h1.71c-.05-1.34-.87-2.57-2.49-2.97V5H10.9v1.69c-1.51.32-2.72 1.3-2.72 2.81 0 1.79 1.49 2.69 3.66 3.21 1.95.46 2.34 1.15 2.34 1.87 0 .53-.39 1.39-2.1 1.39-1.6 0-2.23-.72-2.32-1.64H8.04c.1 1.7 1.36 2.66 2.86 2.97V19h2.34v-1.67c1.52-.29 2.72-1.16 2.73-2.77-.01-2.2-1.9-2.96-3.66-3.42z" />
-                    </svg>
-                  }
+                </svg>
+              }
                   iconColor="text-yellow-500"
-                />
-                <EarningsSummaryCard
-                  title="Completed Orders"
+            />
+            <EarningsSummaryCard
+              title="Completed Orders"
                   amount={earningsStats.completedOrders.toString()}
-                  icon={
-                    <svg
-                      viewBox="0 0 24 24"
-                      fill="currentColor"
-                      className="h-full w-full"
-                    >
-                      <path d="M7 18c-1.1 0-1.99.9-1.99 2S5.9 22 7 22s2-.9 2-2-.9-2-2-2zM1 4h2l3.6 7.59-1.35 2.44C4.52 15.37 5.48 17 7 17h11c.55 0 1-.45 1-1s-.45-1-1-1H7l1.1-2h7.45c.75 0 1.41-.41 1.75-1.03l3.58-6.49c.37-.66-.11-1.48-.87-1.48H5.21l-.67-1.43c-.16-.35-.52-.57-.9-.57H2c-.55 0-1 .45-1 1s.45 1 1 1zm16 14c-1.1 0-1.99.9-1.99 2s.89 2 1.99 2 2-.9 2-2-.9-2-2-2z" />
-                    </svg>
-                  }
-                  iconColor="text-blue-500"
-                />
-                <EarningsSummaryCard
-                  title="Active Hours"
+              icon={
+                <svg
+                  viewBox="0 0 24 24"
+                  fill="currentColor"
+                  className="h-full w-full"
+                >
+                  <path d="M7 18c-1.1 0-1.99.9-1.99 2S5.9 22 7 22s2-.9 2-2-.9-2-2-2zM1 4h2l3.6 7.59-1.35 2.44C4.52 15.37 5.48 17 7 17h11c.55 0 1-.45 1-1s-.45-1-1-1H7l1.1-2h7.45c.75 0 1.41-.41 1.75-1.03l3.58-6.49c.37-.66-.11-1.48-.87-1.48H5.21l-.67-1.43c-.16-.35-.52-.57-.9-.57H2c-.55 0-1 .45-1 1s.45 1 1 1zm16 14c-1.1 0-1.99.9-1.99 2s.89 2 1.99 2 2-.9 2-2-.9-2-2-2z" />
+                </svg>
+              }
+              iconColor="text-blue-500"
+            />
+            <EarningsSummaryCard
+              title="Active Hours"
                   amount={earningsStats.activeHours.toString()}
-                  icon={
-                    <svg
-                      viewBox="0 0 24 24"
-                      fill="currentColor"
-                      className="h-full w-full"
-                    >
-                      <path d="M11.99 2C6.47 2 2 6.48 2 12s4.47 10 9.99 10C17.52 22 22 17.52 22 12S17.52 2 11.99 2zM12 20c-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8-3.58 8-8 8zm.5-13H11v6l5.25 3.15.75-1.23-4.5-2.67z" />
-                    </svg>
-                  }
-                  iconColor="text-purple-500"
-                />
-                <EarningsSummaryCard
-                  title="Customer Rating"
+              icon={
+                <svg
+                  viewBox="0 0 24 24"
+                  fill="currentColor"
+                  className="h-full w-full"
+                >
+                  <path d="M11.99 2C6.47 2 2 6.48 2 12s4.47 10 9.99 10C17.52 22 22 17.52 22 12S17.52 2 11.99 2zM12 20c-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8-3.58 8-8 8zm.5-13H11v6l5.25 3.15.75-1.23-4.5-2.67z" />
+                </svg>
+              }
+              iconColor="text-purple-500"
+            />
+            <EarningsSummaryCard
+              title="Customer Rating"
                   amount={earningsStats.rating.toString()}
-                  icon={
-                    <svg
-                      viewBox="0 0 24 24"
-                      fill="currentColor"
-                      className="h-full w-full"
-                    >
-                      <path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z" />
-                    </svg>
-                  }
-                  iconColor="text-yellow-500"
-                />
+              icon={
+                <svg
+                  viewBox="0 0 24 24"
+                  fill="currentColor"
+                  className="h-full w-full"
+                >
+                  <path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z" />
+                </svg>
+              }
+              iconColor="text-yellow-500"
+            />
               </>
             )}
           </div>
@@ -551,11 +510,16 @@ const EarningsPage: React.FC = () => {
                   Your earnings for each day this week
                 </p>
 
-                <DailyEarningsChart data={dailyEarnings} />
+                <DailyEarningsChart 
+                  data={dailyEarnings} 
+                  isLoading={dailyEarningsLoading} 
+                  period={period}
+                />
 
                 <RecentOrdersList
                   orders={recentOrders}
                   onViewAllOrders={() => console.log("View all orders clicked")}
+                  isLoading={recentOrdersLoading}
                 />
               </Panel>
             </Tabs.Tab>
@@ -577,7 +541,7 @@ const EarningsPage: React.FC = () => {
                   </div>
                 ) : (
                   <>
-                    <EarningsBreakdown
+                <EarningsBreakdown
                       storeBreakdown={earningsStats.storeBreakdown.map(store => ({
                         ...store,
                         amount: parseFloat(store.amount.toFixed(2))
@@ -586,9 +550,9 @@ const EarningsPage: React.FC = () => {
                         ...component,
                         amount: parseFloat(component.amount.toFixed(2))
                       }))}
-                    />
+                />
 
-                    <ActivityHeatmap />
+                <ActivityHeatmap />
                   </>
                 )}
               </Panel>
@@ -606,7 +570,7 @@ const EarningsPage: React.FC = () => {
                     <Loader size="md" content="Loading wallet data..." />
                   </div>
                 ) : (
-                  <PaymentHistory
+                <PaymentHistory
                     wallet={wallet}
                     transactions={transactions}
                     onViewAllPayments={() => console.log("View all payments clicked")}
@@ -624,10 +588,10 @@ const EarningsPage: React.FC = () => {
                 <Loader size="md" content="Loading delivery stats..." />
               </div>
             ) : (
-              <PerformanceMetrics
+            <PerformanceMetrics
                 metrics={getPerformanceMetrics()}
                 deliveryStats={formattedDeliveryStats}
-              />
+            />
             )}
 
             <EarningsGoals goals={getEarningsGoals()} />
