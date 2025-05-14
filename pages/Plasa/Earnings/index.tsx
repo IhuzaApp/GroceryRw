@@ -1,6 +1,6 @@
-import React, { useState, SyntheticEvent } from "react";
+import React, { useState, SyntheticEvent, useEffect } from "react";
 import ShopperLayout from "@components/shopper/ShopperLayout";
-import { Panel, Button, SelectPicker, Nav, Tabs } from "rsuite";
+import { Panel, Button, SelectPicker, Nav, Tabs, Loader } from "rsuite";
 import EarningsSummaryCard from "@components/shopper/earnings/EarningsSummaryCard";
 import DailyEarningsChart from "@components/shopper/earnings/DailyEarningsChart";
 import RecentOrdersList from "@components/shopper/earnings/RecentOrdersList";
@@ -10,9 +10,47 @@ import PerformanceMetrics from "@components/shopper/earnings/PerformanceMetrics"
 import EarningsGoals from "@components/shopper/earnings/EarningsGoals";
 import PaymentHistory from "@components/shopper/earnings/PaymentHistory";
 
+// Interface for earnings stats
+interface EarningsStats {
+  totalEarnings: number;
+  completedOrders: number;
+  activeHours: number;
+  rating: number;
+}
+
 const EarningsPage: React.FC = () => {
   const [period, setPeriod] = useState("this-week");
   const [activeTab, setActiveTab] = useState("earnings");
+  const [loading, setLoading] = useState(true);
+  const [earningsStats, setEarningsStats] = useState<EarningsStats>({
+    totalEarnings: 0,
+    completedOrders: 0,
+    activeHours: 0,
+    rating: 0,
+  });
+
+  // Fetch earnings stats
+  useEffect(() => {
+    const fetchEarningsStats = async () => {
+      try {
+        setLoading(true);
+        const response = await fetch("/api/shopper/earningsStats");
+        if (!response.ok) {
+          throw new Error("Failed to fetch earnings stats");
+        }
+        const data = await response.json();
+        if (data.success) {
+          setEarningsStats(data.stats);
+        }
+      } catch (error) {
+        console.error("Error fetching earnings stats:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchEarningsStats();
+  }, []);
 
   // Mock data for daily earnings chart
   const dailyEarnings = [
@@ -166,6 +204,14 @@ const EarningsPage: React.FC = () => {
     }
   };
 
+  // Format number with decimal places but no currency symbol
+  const formatNumber = (amount: number) => {
+    return new Intl.NumberFormat('en-US', {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2
+    }).format(amount);
+  };
+
   return (
     <ShopperLayout>
       <div className="container mx-auto px-4 py-8">
@@ -199,68 +245,70 @@ const EarningsPage: React.FC = () => {
 
           {/* Earnings Summary Cards */}
           <div className="mb-6 grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
-            <EarningsSummaryCard
-              title="Total Earnings"
-              amount="$1,248.50"
-              trend="+12%"
-              icon={
-                <svg
-                  viewBox="0 0 24 24"
-                  fill="currentColor"
-                  className="h-full w-full"
-                >
-                  <path d="M11.8 10.9c-2.27-.59-3-1.2-3-2.15 0-1.09 1.01-1.85 2.7-1.85 1.78 0 2.44.85 2.5 2.1h2.21c-.07-1.72-1.12-3.3-3.21-3.81V3h-3v2.16c-1.94.42-3.5 1.68-3.5 3.61 0 2.31 1.91 3.46 4.7 4.13 2.5.6 3 1.48 3 2.41 0 .69-.49 1.79-2.7 1.79-2.06 0-2.87-.92-2.98-2.1h-2.2c.12 2.19 1.76 3.42 3.68 3.83V21h3v-2.15c1.95-.37 3.5-1.5 3.5-3.55 0-2.84-2.43-3.81-4.7-4.4z" />
-                </svg>
-              }
-            />
-            <EarningsSummaryCard
-              title="Completed Orders"
-              amount="42"
-              trend="+8"
-              trendText="from last week"
-              icon={
-                <svg
-                  viewBox="0 0 24 24"
-                  fill="currentColor"
-                  className="h-full w-full"
-                >
-                  <path d="M7 18c-1.1 0-1.99.9-1.99 2S5.9 22 7 22s2-.9 2-2-.9-2-2-2zM1 4h2l3.6 7.59-1.35 2.44C4.52 15.37 5.48 17 7 17h11c.55 0 1-.45 1-1s-.45-1-1-1H7l1.1-2h7.45c.75 0 1.41-.41 1.75-1.03l3.58-6.49c.37-.66-.11-1.48-.87-1.48H5.21l-.67-1.43c-.16-.35-.52-.57-.9-.57H2c-.55 0-1 .45-1 1s.45 1 1 1zm16 14c-1.1 0-1.99.9-1.99 2s.89 2 1.99 2 2-.9 2-2-.9-2-2-2z" />
-                </svg>
-              }
-              iconColor="text-blue-500"
-            />
-            <EarningsSummaryCard
-              title="Active Hours"
-              amount="28.5"
-              trend="+3.5"
-              trendText="from last week"
-              icon={
-                <svg
-                  viewBox="0 0 24 24"
-                  fill="currentColor"
-                  className="h-full w-full"
-                >
-                  <path d="M11.99 2C6.47 2 2 6.48 2 12s4.47 10 9.99 10C17.52 22 22 17.52 22 12S17.52 2 11.99 2zM12 20c-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8-3.58 8-8 8zm.5-13H11v6l5.25 3.15.75-1.23-4.5-2.67z" />
-                </svg>
-              }
-              iconColor="text-purple-500"
-            />
-            <EarningsSummaryCard
-              title="Customer Rating"
-              amount="4.92"
-              trend="+0.1"
-              trendText="from last week"
-              icon={
-                <svg
-                  viewBox="0 0 24 24"
-                  fill="currentColor"
-                  className="h-full w-full"
-                >
-                  <path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z" />
-                </svg>
-              }
-              iconColor="text-yellow-500"
-            />
+            {loading ? (
+              <div className="col-span-4 flex justify-center py-8">
+                <Loader size="lg" content="Loading earnings data..." />
+              </div>
+            ) : (
+              <>
+                <EarningsSummaryCard
+                  title="Total Earnings"
+                  amount={formatNumber(earningsStats.totalEarnings)}
+                  icon={
+                    <svg
+                      viewBox="0 0 24 24"
+                      fill="currentColor"
+                      className="h-full w-full"
+                    >
+                      <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm.31-8.86c-1.77-.45-2.34-.94-2.34-1.67 0-.84.79-1.43 2.1-1.43 1.38 0 1.9.66 1.94 1.64h1.71c-.05-1.34-.87-2.57-2.49-2.97V5H10.9v1.69c-1.51.32-2.72 1.3-2.72 2.81 0 1.79 1.49 2.69 3.66 3.21 1.95.46 2.34 1.15 2.34 1.87 0 .53-.39 1.39-2.1 1.39-1.6 0-2.23-.72-2.32-1.64H8.04c.1 1.7 1.36 2.66 2.86 2.97V19h2.34v-1.67c1.52-.29 2.72-1.16 2.73-2.77-.01-2.2-1.9-2.96-3.66-3.42z" />
+                    </svg>
+                  }
+                  iconColor="text-yellow-500"
+                />
+                <EarningsSummaryCard
+                  title="Completed Orders"
+                  amount={earningsStats.completedOrders.toString()}
+                  icon={
+                    <svg
+                      viewBox="0 0 24 24"
+                      fill="currentColor"
+                      className="h-full w-full"
+                    >
+                      <path d="M7 18c-1.1 0-1.99.9-1.99 2S5.9 22 7 22s2-.9 2-2-.9-2-2-2zM1 4h2l3.6 7.59-1.35 2.44C4.52 15.37 5.48 17 7 17h11c.55 0 1-.45 1-1s-.45-1-1-1H7l1.1-2h7.45c.75 0 1.41-.41 1.75-1.03l3.58-6.49c.37-.66-.11-1.48-.87-1.48H5.21l-.67-1.43c-.16-.35-.52-.57-.9-.57H2c-.55 0-1 .45-1 1s.45 1 1 1zm16 14c-1.1 0-1.99.9-1.99 2s.89 2 1.99 2 2-.9 2-2-.9-2-2-2z" />
+                    </svg>
+                  }
+                  iconColor="text-blue-500"
+                />
+                <EarningsSummaryCard
+                  title="Active Hours"
+                  amount={earningsStats.activeHours.toString()}
+                  icon={
+                    <svg
+                      viewBox="0 0 24 24"
+                      fill="currentColor"
+                      className="h-full w-full"
+                    >
+                      <path d="M11.99 2C6.47 2 2 6.48 2 12s4.47 10 9.99 10C17.52 22 22 17.52 22 12S17.52 2 11.99 2zM12 20c-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8-3.58 8-8 8zm.5-13H11v6l5.25 3.15.75-1.23-4.5-2.67z" />
+                    </svg>
+                  }
+                  iconColor="text-purple-500"
+                />
+                <EarningsSummaryCard
+                  title="Customer Rating"
+                  amount={earningsStats.rating.toString()}
+                  icon={
+                    <svg
+                      viewBox="0 0 24 24"
+                      fill="currentColor"
+                      className="h-full w-full"
+                    >
+                      <path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z" />
+                    </svg>
+                  }
+                  iconColor="text-yellow-500"
+                />
+              </>
+            )}
           </div>
 
           {/* Earnings Tabs */}
