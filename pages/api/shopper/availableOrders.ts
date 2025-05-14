@@ -35,6 +35,33 @@ const GET_AVAILABLE_ORDERS = gql`
   }
 `;
 
+// Haversine formula to calculate distance in kilometers between two coordinates
+function calculateDistanceKm(
+  lat1: number,
+  lon1: number,
+  lat2: number,
+  lon2: number
+): number {
+  const R = 6371; // Radius of the Earth in km
+  const dLat = (lat2 - lat1) * (Math.PI / 180);
+  const dLon = (lon2 - lon1) * (Math.PI / 180);
+  const a =
+    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+    Math.cos(lat1 * (Math.PI / 180)) *
+      Math.cos(lat2 * (Math.PI / 180)) *
+      Math.sin(dLon / 2) *
+      Math.sin(dLon / 2);
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  return R * c;
+}
+
+// Estimate travel time in minutes based on distance
+// Average car speed in city is around 30 km/h (0.5 km per minute)
+function estimateTravelTimeMinutes(distanceKm: number): number {
+  const avgSpeedKmPerMinute = 0.5; // 30 km/h = 0.5 km per minute
+  return Math.round(distanceKm / avgSpeedKmPerMinute);
+}
+
 export default async function handler(
   req: NextApiRequest,
   res: NextApiResponse
@@ -56,6 +83,15 @@ export default async function handler(
     console.log(
       `[availableOrders] Request received at ${new Date().toISOString()}`
     );
+
+    // Get shopper's current location from query params
+    const shopperLatitude = parseFloat(req.query.latitude as string) || 0;
+    const shopperLongitude = parseFloat(req.query.longitude as string) || 0;
+    // Changed from 10 to 15 minutes max travel time
+    const maxTravelTime = parseInt(req.query.maxTravelTime as string) || 15;
+    
+    console.log(`[availableOrders] Shopper location: ${shopperLatitude}, ${shopperLongitude}`);
+    console.log(`[availableOrders] Max travel time: ${maxTravelTime} minutes`);
 
     if (!hasuraClient) {
       throw new Error("Hasura client is not initialized");
@@ -91,26 +127,6 @@ export default async function handler(
       `[availableOrders] Retrieved ${data.Orders.length} PENDING orders from database`
     );
 
-    // Detailed logging of each order
-    data.Orders.forEach((order, index) => {
-      console.log(`[availableOrders] Order ${index + 1}:
-        ID: ${order.id}
-        Created: ${order.created_at}
-        Status: ${order.status}
-        Shop: ${order.shop?.name || "N/A"}
-        Shop Coords: ${order.shop?.latitude || "N/A"}, ${
-        order.shop?.longitude || "N/A"
-      }
-        Customer Address: ${order.address?.street || "N/A"}, ${
-        order.address?.city || "N/A"
-      }
-        Customer Coords: ${order.address?.latitude || "N/A"}, ${
-        order.address?.longitude || "N/A"
-      }
-        Items Count: ${order.Order_Items_aggregate?.aggregate?.count || 0}
-      `);
-    });
-
     // Transform data to make it easier to use on the client
     const availableOrders = data.Orders.map((order) => {
       // Calculate metrics for sorting and filtering
@@ -132,6 +148,29 @@ export default async function handler(
       const customerLongitude = order.address?.longitude
         ? parseFloat(order.address.longitude)
         : 0;
+        
+      // Calculate distance from shopper to shop in kilometers
+      const distanceToShopKm = calculateDistanceKm(
+        shopperLatitude,
+        shopperLongitude,
+        shopLatitude,
+        shopLongitude
+      );
+      
+      // Calculate distance between shop and customer in kilometers
+      const shopToCustomerDistanceKm = calculateDistanceKm(
+        shopLatitude,
+        shopLongitude,
+        customerLatitude,
+        customerLongitude
+      );
+      
+      // Calculate travel time from shopper to shop
+      const travelTimeMinutes = estimateTravelTimeMinutes(distanceToShopKm);
+      
+      // Round distances to 1 decimal place
+      const formattedDistanceToShop = Math.round(distanceToShopKm * 10) / 10;
+      const formattedShopToCustomerDistance = Math.round(shopToCustomerDistanceKm * 10) / 10;
 
       // Calculate priority level (1-5) for UI highlighting
       // Orders over 24 hours old get highest priority as they're at risk of being cancelled
@@ -167,16 +206,42 @@ export default async function handler(
         pendingMinutes,
         priorityLevel,
         status: order.status,
+        // Add new fields for distance and travel time
+        distance: formattedDistanceToShop,
+        shopToCustomerDistance: formattedShopToCustomerDistance,
+        travelTimeMinutes: travelTimeMinutes
       };
     });
-
-    // Log the transformed orders
-    console.log(
-      `[availableOrders] Returning ${availableOrders.length} orders to client`
+    
+    // Filter orders by travel time - only show orders within 15 minutes travel time
+    const filteredOrders = availableOrders.filter(
+      order => order.travelTimeMinutes <= maxTravelTime
     );
 
-    // Return the processed data
-    res.status(200).json(availableOrders);
+    // Log the filtered orders
+    console.log(
+      `[availableOrders] Filtered to ${filteredOrders.length} orders within ${maxTravelTime} minutes travel time`
+    );
+
+    // Detailed logging of filtered orders
+    filteredOrders.forEach((order, index) => {
+      console.log(`[availableOrders] Filtered Order ${index + 1}:
+        ID: ${order.id}
+        Created: ${order.createdAt}
+        Status: ${order.status}
+        Shop: ${order.shopName}
+        Shop Coords: ${order.shopLatitude}, ${order.shopLongitude}
+        Travel time to shop: ${order.travelTimeMinutes} min
+        Distance to shop: ${order.distance} km
+        Customer Address: ${order.customerAddress}
+        Customer Coords: ${order.customerLatitude}, ${order.customerLongitude}
+        Distance shop to customer: ${order.shopToCustomerDistance} km
+        Items Count: ${order.itemsCount}
+      `);
+    });
+
+    // Return the processed and filtered data
+    res.status(200).json(filteredOrders);
   } catch (error: any) {
     console.error("[availableOrders] Error fetching available orders:", error);
     res

@@ -1,9 +1,10 @@
 "use client";
 
-import React from "react";
+import React, { useState } from "react";
 import Link from "next/link";
-import { Button, Panel, Badge } from "rsuite";
+import { Button, Panel, Badge, Loader } from "rsuite";
 import "rsuite/dist/rsuite.min.css";
+import { toast } from "react-hot-toast";
 
 interface Order {
   id: string;
@@ -18,6 +19,12 @@ interface Order {
   rawCreatedAt?: number;
   minutesAgo?: number;
   priorityLevel?: number;
+  travelTimeMinutes?: number;
+}
+
+interface OrderCardProps {
+  order: Order;
+  onOrderAccepted?: () => void; // Callback for when order is accepted
 }
 
 function getBadgeColor(order: Order): string {
@@ -65,9 +72,88 @@ function getPriorityLabel(
   }
 }
 
-export default function OrderCard({ order }: { order: Order }) {
+export default function OrderCard({ order, onOrderAccepted }: OrderCardProps) {
   const badgeColorClass = getBadgeColor(order);
   const priorityInfo = getPriorityLabel(order.priorityLevel || 0);
+  const [isAccepting, setIsAccepting] = useState(false);
+
+  const handleAcceptOrder = async () => {
+    setIsAccepting(true);
+    try {
+      // Call the assignOrder API endpoint
+      const response = await fetch("/api/shopper/assignOrder", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ orderId: order.id }),
+      });
+      
+      const data = await response.json();
+      
+      if (data.success) {
+        toast.success("Order assigned successfully!");
+        
+        // Call the callback instead of reloading page
+        if (onOrderAccepted) {
+          onOrderAccepted();
+        }
+      } else if (data.error === "no_wallet") {
+        // Handle wallet creation
+        toast.error("You need a wallet to accept batches");
+        
+        try {
+          // Create wallet automatically
+          const walletResponse = await fetch("/api/queries/createWallet", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+          });
+          
+          const walletData = await walletResponse.json();
+          
+          if (walletData.success) {
+            toast.success("Wallet created successfully. Trying to accept the batch again...");
+            
+            // Try accepting the order again after wallet is created
+            setTimeout(async () => {
+              const retryResponse = await fetch("/api/shopper/assignOrder", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ orderId: order.id }),
+              });
+              
+              const retryData = await retryResponse.json();
+              
+              if (retryData.success) {
+                toast.success("Order assigned successfully!");
+                
+                // Call the callback instead of reloading page
+                if (onOrderAccepted) {
+                  onOrderAccepted();
+                }
+              } else {
+                toast.error(retryData.error || "Failed to assign order after wallet creation");
+              }
+              
+              setIsAccepting(false);
+            }, 1000); // Give a little time for wallet to be fully created
+            
+            return; // Return early to prevent setIsAccepting(false) below
+          } else {
+            toast.error("Failed to create wallet. Please try again later.");
+          }
+        } catch (walletError) {
+          console.error("Error creating wallet:", walletError);
+          toast.error("Failed to create wallet. Please try again later.");
+        }
+      } else {
+        toast.error(data.error || "Failed to assign order");
+      }
+    } catch (error) {
+      console.error("Error accepting order:", error);
+      toast.error("An error occurred while accepting the order");
+    } finally {
+      setIsAccepting(false);
+    }
+  };
 
   return (
     <Panel
@@ -111,6 +197,23 @@ export default function OrderCard({ order }: { order: Order }) {
             <polyline points="12 6 12 12 16 14" />
           </svg>
           <span className="mr-3">Distance: {order.distance}</span>
+          
+          {order.travelTimeMinutes !== undefined && (
+            <>
+              <svg 
+                viewBox="0 0 24 24" 
+                fill="none" 
+                stroke="currentColor" 
+                strokeWidth={2} 
+                className="mr-1 h-4 w-4"
+              >
+                <path d="M12 2v2M12 8v4l3 3M2 12h2M20 12h2" />
+                <circle cx="12" cy="12" r="10" />
+              </svg>
+              <span className="mr-3">Travel time: {order.travelTimeMinutes} min</span>
+            </>
+          )}
+          
           <svg
             viewBox="0 0 24 24"
             fill="none"
@@ -149,7 +252,7 @@ export default function OrderCard({ order }: { order: Order }) {
             </p>
           </div>
           <div className="flex gap-2">
-            <Link href={`/shopper/order/${order.id}`}>
+            <Link href={`/Plasa/orders/${order.id}`}>
               <Button appearance="ghost" className="text-gray-700">
                 View Details
               </Button>
@@ -161,11 +264,17 @@ export default function OrderCard({ order }: { order: Order }) {
                   ? "bg-red-500"
                   : "bg-green-500"
               } text-white`}
-              onClick={() => {
-                window.location.href = `/shopper/order/${order.id}?action=accept`;
-              }}
+              onClick={handleAcceptOrder}
+              disabled={isAccepting}
             >
-              Accept Order
+              {isAccepting ? (
+                <div className="flex items-center">
+                  <span className="mr-2 inline-block h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent"></span>
+                  Accepting...
+                </div>
+              ) : (
+                "Accept Order"
+              )}
             </Button>
           </div>
         </div>

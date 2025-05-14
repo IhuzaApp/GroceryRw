@@ -62,6 +62,13 @@ interface FormattedOrder {
   rawCreatedAt: number;
   minutesAgo: number;
   priorityLevel: number;
+  // Add travel time
+  travelTimeMinutes?: number;
+  // Keep coordinates for map
+  shopLatitude?: number;
+  shopLongitude?: number;
+  customerLatitude?: number;
+  customerLongitude?: number;
 }
 
 export default function ShopperDashboard() {
@@ -124,9 +131,26 @@ export default function ShopperDashboard() {
     setIsLoading(true);
     console.log("Fetching available orders...");
 
+    // Convert location strings to numbers if they're strings
+    const safeLocation = {
+      lat:
+        typeof currentLocation.lat === "string"
+          ? parseFloat(currentLocation.lat)
+          : currentLocation.lat,
+      lng:
+        typeof currentLocation.lng === "string"
+          ? parseFloat(currentLocation.lng)
+          : currentLocation.lng,
+    };
+
     // Add timestamp to prevent caching
     const timestamp = new Date().getTime();
-    fetch(`/api/shopper/availableOrders?_=${timestamp}`)
+    // Include shopper's location and set max travel time to 15 minutes
+    const url = `/api/shopper/availableOrders?_=${timestamp}&latitude=${safeLocation.lat}&longitude=${safeLocation.lng}&maxTravelTime=15`;
+    
+    console.log(`Requesting orders with URL: ${url}`);
+    
+    fetch(url)
       .then((res) => {
         if (!res.ok) {
           throw new Error(`HTTP error! Status: ${res.status}`);
@@ -134,7 +158,7 @@ export default function ShopperDashboard() {
         return res.json();
       })
       .then((data) => {
-        console.log(`Received ${data.length} orders from API`);
+        console.log(`Received ${data.length} orders from API within 15 min travel time`);
 
         // Debug: Log all received orders first
         data.forEach((order: any, idx: number) => {
@@ -146,170 +170,72 @@ export default function ShopperDashboard() {
             shopCoords: `${order.shopLatitude}, ${order.shopLongitude}`,
             customerCoords: `${order.customerLatitude}, ${order.customerLongitude}`,
             items: order.itemsCount,
+            travelTime: `${order.travelTimeMinutes} min`,
+            distance: `${order.distance} km` 
           });
         });
 
-        // Convert location strings to numbers if they're strings
-        const safeLocation = {
-          lat:
-            typeof currentLocation.lat === "string"
-              ? parseFloat(currentLocation.lat)
-              : currentLocation.lat,
-          lng:
-            typeof currentLocation.lng === "string"
-              ? parseFloat(currentLocation.lng)
-              : currentLocation.lng,
-        };
-
-        console.log(
-          `Current location for distance calculation: ${safeLocation.lat}, ${safeLocation.lng}`
-        );
-
-        // Filter orders by distance from user
-        const nearbyOrders = data.filter((order: any) => {
+        // Format orders for the OrderCard component - use formatted data from API
+        const formattedOrders = data.map((order: any) => {
           try {
-            // Skip orders with invalid coordinates
-            if (
-              !order.customerLatitude ||
-              !order.customerLongitude ||
-              isNaN(order.customerLatitude) ||
-              isNaN(order.customerLongitude) ||
-              !order.shopLatitude ||
-              !order.shopLongitude ||
-              isNaN(order.shopLatitude) ||
-              isNaN(order.shopLongitude)
-            ) {
-              console.warn(`Skipping order with invalid coordinates`);
-              return false;
-            }
-
-            // Calculate using customer location
-          const distKm = getDistanceKm(
-              safeLocation.lat,
-              safeLocation.lng,
-              order.customerLatitude,
-              order.customerLongitude
+            // Calculate createdAt as Date for sorting
+            const createdAtDate = new Date(order.createdAt);
+            const minutesAgo = Math.floor(
+              (Date.now() - createdAtDate.getTime()) / 60000
             );
 
-            // Calculate using shop location as backup if customer is out of range
-            const shopDistKm = getDistanceKm(
-              safeLocation.lat,
-              safeLocation.lng,
-              order.shopLatitude,
-              order.shopLongitude
-            );
+            // Format timestamps
+            const createdTimeFormatted = relativeTime(order.createdAt);
 
-            // Use the shorter of the two distances
-            const finalDist = Math.min(distKm, shopDistKm);
-
-            console.log(
-              `Order ${order.id} distance: ${finalDist.toFixed(
-                2
-              )}km (customer), ${shopDistKm.toFixed(2)}km (shop)`
-            );
-
-            // Increased radius to see more orders for debugging
-            return finalDist <= 50; // 50km radius to see all orders during debugging
+            // Note - now using API-calculated distance in km
+            const distanceStr = `${order.distance} km`;
+            
+            return {
+              id: order.id,
+              shopName: order.shopName || "Unknown Shop",
+              shopAddress: order.shopAddress || "No address available",
+              customerAddress:
+                order.customerAddress || "No address available",
+              distance: distanceStr,
+              items: order.itemsCount || 0,
+              total: `$${(order.earnings || 0).toFixed(2)}`,
+              estimatedEarnings: `$${(order.earnings || 0).toFixed(2)}`,
+              createdAt: createdTimeFormatted,
+              status: order.status || "PENDING",
+              // Add additional properties for sorting and filtering
+              rawDistance: order.distance || 0,
+              rawEarnings: order.earnings || 0,
+              rawCreatedAt: createdAtDate.getTime(),
+              minutesAgo: minutesAgo,
+              priorityLevel: order.priorityLevel || 1,
+              // Keep original coordinates for map rendering
+              shopLatitude: order.shopLatitude,
+              shopLongitude: order.shopLongitude,
+              customerLatitude: order.customerLatitude,
+              customerLongitude: order.customerLongitude,
+              // Add travel time
+              travelTimeMinutes: order.travelTimeMinutes
+            };
           } catch (err) {
-            console.error(`Error calculating distance for order:`, err);
-            return false; // Skip orders with calculation errors
+            console.error(`Error formatting order ${order.id}:`, err);
+            return null; // Skip orders with formatting errors
           }
-        });
-
-        console.log(
-          `Found ${nearbyOrders.length} orders within 50km range for debugging`
-        );
-
-        // Format orders for the OrderCard component
-        const formattedOrders = nearbyOrders
-          .map((order: any) => {
-            try {
-              // Calculate shop distance for display
-              const shopDistKm = getDistanceKm(
-                safeLocation.lat,
-                safeLocation.lng,
-                order.shopLatitude,
-                order.shopLongitude
-              );
-
-              // Calculate customer distance for display
-              const custDistKm = getDistanceKm(
-                safeLocation.lat,
-                safeLocation.lng,
-                order.customerLatitude,
-                order.customerLongitude
-              );
-
-              // Use the shorter distance for display
-              const distKm = Math.min(shopDistKm, custDistKm);
-          const distMi = (distKm * 0.621371).toFixed(1);
-
-              // Use provided pendingMinutes or calculate if not provided
-              const minutesAgo =
-                order.pendingMinutes ||
-                Math.floor(
-                  (Date.now() - new Date(order.createdAt).getTime()) / 60000
-                );
-
-              // Use provided priorityLevel or calculate based on age
-              const priorityLevel =
-                order.priorityLevel ||
-                (minutesAgo >= 24 * 60
-                  ? 5
-                  : minutesAgo >= 4 * 60
-                  ? 4
-                  : minutesAgo >= 60
-                  ? 3
-                  : minutesAgo >= 30
-                  ? 2
-                  : 1);
-
-          return {
-                id: order.id,
-                shopName: order.shopName || "Unknown Shop",
-                shopAddress: order.shopAddress || "No address available",
-                customerAddress:
-                  order.customerAddress || "No address available",
-            distance: `${distMi} mi`,
-                items: order.itemsCount || 0,
-                total: `$${(order.earnings || 0).toFixed(2)}`,
-                estimatedEarnings: `$${(order.earnings || 0).toFixed(2)}`,
-                createdAt: relativeTime(order.createdAt),
-                status: order.status || "PENDING",
-                // Add additional properties for sorting and filtering
-                rawDistance: distKm,
-                rawEarnings: order.earnings || 0,
-                rawCreatedAt: new Date(order.createdAt).getTime(),
-                minutesAgo: minutesAgo,
-                priorityLevel: priorityLevel,
-                // Keep original coordinates for map rendering
-                shopLatitude: order.shopLatitude,
-                shopLongitude: order.shopLongitude,
-                customerLatitude: order.customerLatitude,
-                customerLongitude: order.customerLongitude,
-              };
-            } catch (err) {
-              console.error(`Error formatting order ${order.id}:`, err);
-              return null; // Skip orders with formatting errors
-            }
-          })
-          .filter(Boolean); // Remove any null entries from formatting errors
+        }).filter(Boolean); // Remove any null entries from formatting errors
 
         console.log(`Formatted ${formattedOrders.length} orders for display`);
-        console.log(
-          "Sample order:",
-          formattedOrders.length > 0 ? formattedOrders[0] : "No orders"
-        );
-
-        // Set available orders and then apply sorting
+        
+        // Set available orders
         setAvailableOrders(formattedOrders);
-        sortOrders(formattedOrders, sortBy);
+        
+        // Apply sort
+        const sorted = sortOrders(formattedOrders, sortBy);
+        setSortedOrders(sorted);
+        
         setLastRefreshed(new Date());
+        setIsLoading(false);
       })
       .catch((err) => {
         console.error("Error fetching available orders:", err);
-      })
-      .finally(() => {
         setIsLoading(false);
       });
   };
@@ -320,15 +246,6 @@ export default function ShopperDashboard() {
     criteria: "newest" | "earnings" | "distance" | "priority"
   ) => {
     let sorted = [...orders];
-
-    // First apply filtering based on criteria
-    if (criteria === "newest") {
-      // For "newest", only show orders less than 1 hour old
-      sorted = sorted.filter((order) => order.minutesAgo < 60);
-    } else if (criteria === "priority") {
-      // For "priority", only show orders 1 hour or older
-      sorted = sorted.filter((order) => order.minutesAgo >= 60);
-    }
 
     // Apply sorting based on criteria
     if (criteria === "newest") {
@@ -347,13 +264,13 @@ export default function ShopperDashboard() {
       });
     }
 
-    // Additionally, apply filtering for 10+ minute old orders if not showing historical
+    // Additionally, apply filtering - changed from 10 to 15 minutes
     if (!showHistorical) {
-      // Show only orders pending for at least 10 minutes
-      sorted = sorted.filter((order) => order.minutesAgo >= 10);
+      // Show only orders pending for at least 15 minutes 
+      sorted = sorted.filter((order) => order.minutesAgo >= 15);
     }
 
-    setSortedOrders(sorted);
+    return sorted;
   };
 
   // Handle sort change
@@ -563,7 +480,7 @@ export default function ShopperDashboard() {
                 >
                   {showHistorical
                     ? "Showing All Pending"
-                    : "Showing Recent (10+ min)"}
+                    : "Showing Recent (15+ min)"}
                 </button>
                 <button
                   onClick={loadOrders}
@@ -632,7 +549,7 @@ export default function ShopperDashboard() {
                     : sortBy === "priority"
                       ? "Showing orders pending for 1+ hours by priority level"
                       : `Sorting by ${sortBy}`}
-                {isOnline && !showHistorical && " • Only orders pending for 10+ minutes"}
+                {isOnline && !showHistorical && " • Only orders pending for 15+ minutes"}
               </p>
             </div>
 
@@ -662,7 +579,11 @@ export default function ShopperDashboard() {
             ) : sortedOrders.length > 0 ? (
               <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
                 {sortedOrders.map((order) => (
-                  <OrderCard key={order.id} order={order} />
+                  <OrderCard 
+                    key={order.id} 
+                    order={order} 
+                    onOrderAccepted={loadOrders} 
+                  />
                 ))}
               </div>
             ) : (
@@ -671,7 +592,7 @@ export default function ShopperDashboard() {
                 <p className="mb-4 text-gray-500">
                   {showHistorical
                     ? "There are no pending orders in your area."
-                    : "There are no orders pending for 10+ minutes in your area."}
+                    : "There are no orders pending for 15+ minutes in your area."}
                 </p>
                 <Button
                   appearance="primary"
@@ -754,7 +675,7 @@ export default function ShopperDashboard() {
                           : "bg-gray-100 text-gray-700"
                       }`}
                     >
-                      {showHistorical ? "All Pending" : "10+ min"}
+                      {showHistorical ? "All Pending" : "15+ min"}
                     </button>
                   <Button
                     appearance="primary"
@@ -822,7 +743,7 @@ export default function ShopperDashboard() {
                         : sortBy === "priority"
                           ? "Orders pending 1+ hours by priority"
                           : `Sorting by ${sortBy}`}
-                    {isOnline && !showHistorical && " • 10+ min pending"}
+                    {isOnline && !showHistorical && " • 15+ min pending"}
                   </p>
                 </div>
 
@@ -849,7 +770,11 @@ export default function ShopperDashboard() {
                 ) : sortedOrders.length > 0 ? (
                   <div className="space-y-4 pb-16">
                     {sortedOrders.map((order) => (
-                      <OrderCard key={order.id} order={order} />
+                      <OrderCard 
+                        key={order.id} 
+                        order={order} 
+                        onOrderAccepted={loadOrders} 
+                      />
                     ))}
                   </div>
                 ) : (
@@ -857,7 +782,7 @@ export default function ShopperDashboard() {
                     <p className="text-gray-500">
                       {showHistorical
                         ? "No pending orders available."
-                        : "No orders pending for 10+ minutes."}
+                        : "No orders pending for 15+ minutes."}
                     </p>
                   </div>
                 )}
