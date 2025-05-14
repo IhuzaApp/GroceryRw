@@ -18,6 +18,29 @@ interface EarningsStats {
   rating: number;
   storeBreakdown?: StoreBreakdown[];
   earningsComponents?: EarningsComponent[];
+  performance?: {
+    customerRating: number;
+    onTimeDelivery: number;
+    orderAccuracy: number;
+    acceptanceRate: number;
+  };
+  goals?: {
+    weekly: {
+      current: number;
+      target: number;
+      percentage: number;
+    };
+    monthly: {
+      current: number;
+      target: number;
+      percentage: number;
+    };
+    quarterly: {
+      current: number;
+      target: number;
+      percentage: number;
+    };
+  };
 }
 
 // Interface for wallet data
@@ -122,7 +145,7 @@ const EarningsPage: React.FC = () => {
   const fetchWalletData = async () => {
     try {
       setWalletLoading(true);
-      const response = await fetch("/api/shopper/walletHistory");
+      const response = await fetch("/api/shopper/wallet");
       if (!response.ok) {
         throw new Error("Failed to fetch wallet data");
       }
@@ -159,34 +182,27 @@ const EarningsPage: React.FC = () => {
 
   // Mock data for daily earnings chart
   const dailyEarnings = [
-    { day: "Mon", amount: 180, height: "60%" },
-    { day: "Tue", amount: 220, height: "73%" },
-    { day: "Wed", amount: 165, height: "55%" },
-    { day: "Thu", amount: 195, height: "65%" },
-    { day: "Fri", amount: 300, height: "100%" },
-    { day: "Sat", amount: 120, height: "40%" },
-    { day: "Sun", amount: 68.5, height: "23%" },
+    { day: "Monday", earnings: 102.5 },
+    { day: "Tuesday", earnings: 145.8 },
+    { day: "Wednesday", earnings: 76.2 },
+    { day: "Thursday", earnings: 110.4 },
+    { day: "Friday", earnings: 158.9 },
+    { day: "Saturday", earnings: 225.3 },
+    { day: "Sunday", earnings: 183.7 },
   ];
 
   // Mock data for recent orders
   const recentOrders = [
     {
-      date: "May 12, 2025",
+      date: "May 13, 2025",
       store: "Whole Foods",
       items: 32,
-      amount: 28.5,
+      amount: 28.75,
       tip: 15,
     },
     {
       date: "May 12, 2025",
-      store: "Target",
-      items: 18,
-      amount: 22.75,
-      tip: 10,
-    },
-    {
-      date: "May 11, 2025",
-      store: "Costco",
+      store: "Kroger",
       items: 45,
       amount: 35.25,
       tip: 20,
@@ -207,20 +223,78 @@ const EarningsPage: React.FC = () => {
     },
   ];
 
-  // Mock data for performance metrics
-  const performanceMetrics = [
-    { metric: "Customer Rating", value: 4.92, max: 5, percentage: 98 },
-    { metric: "On-time Delivery", value: 97, max: 100, percentage: 97 },
-    { metric: "Order Accuracy", value: 99, max: 100, percentage: 99 },
-    { metric: "Acceptance Rate", value: 82, max: 100, percentage: 82 },
-  ];
+  // Create performance metrics using data from the API
+  const getPerformanceMetrics = () => {
+    if (!earningsStats.performance) {
+      // Fallback to default values if API doesn't provide performance data
+      return [
+        { metric: "Customer Rating", value: 4.92, max: 5, percentage: 98 },
+        { metric: "On-time Delivery", value: 97, max: 100, percentage: 97 },
+        { metric: "Order Accuracy", value: 99, max: 100, percentage: 99 },
+        { metric: "Acceptance Rate", value: 82, max: 100, percentage: 82 },
+      ];
+    }
+    
+    return [
+      { 
+        metric: "Customer Rating", 
+        value: earningsStats.performance.customerRating, 
+        max: 5, 
+        percentage: Math.round((earningsStats.performance.customerRating / 5) * 100) 
+      },
+      { 
+        metric: "On-time Delivery", 
+        value: earningsStats.performance.onTimeDelivery, 
+        max: 100, 
+        percentage: earningsStats.performance.onTimeDelivery 
+      },
+      { 
+        metric: "Order Accuracy", 
+        value: earningsStats.performance.orderAccuracy, 
+        max: 100, 
+        percentage: earningsStats.performance.orderAccuracy 
+      },
+      { 
+        metric: "Acceptance Rate", 
+        value: earningsStats.performance.acceptanceRate, 
+        max: 100, 
+        percentage: earningsStats.performance.acceptanceRate 
+      },
+    ];
+  };
 
-  // Mock data for earnings goals
-  const earningsGoals = [
-    { goal: "Weekly Target", current: 1248.5, target: 1500, percentage: 83 },
-    { goal: "Monthly Target", current: 3820.75, target: 6000, percentage: 64 },
-    { goal: "Quarterly Bonus", current: 8500, target: 15000, percentage: 57 },
-  ];
+  // Create earnings goals using data from the API
+  const getEarningsGoals = () => {
+    if (!earningsStats.goals) {
+      // Fallback to default values if API doesn't provide goals data
+      return [
+        { goal: "Weekly Target", current: 1248.5, target: 1500, percentage: 83 },
+        { goal: "Monthly Target", current: 3820.75, target: 6000, percentage: 64 },
+        { goal: "Quarterly Bonus", current: 8500, target: 15000, percentage: 57 },
+      ];
+    }
+    
+    return [
+      { 
+        goal: "Weekly Target", 
+        current: earningsStats.goals.weekly.current, 
+        target: earningsStats.goals.weekly.target, 
+        percentage: earningsStats.goals.weekly.percentage 
+      },
+      { 
+        goal: "Monthly Target", 
+        current: earningsStats.goals.monthly.current, 
+        target: earningsStats.goals.monthly.target, 
+        percentage: earningsStats.goals.monthly.percentage 
+      },
+      { 
+        goal: "Quarterly Bonus", 
+        current: earningsStats.goals.quarterly.current, 
+        target: earningsStats.goals.quarterly.target, 
+        percentage: earningsStats.goals.quarterly.percentage 
+      },
+    ];
+  };
 
   const handlePeriodChange = (value: string | null, event: SyntheticEvent) => {
     if (value) {
@@ -485,12 +559,12 @@ const EarningsPage: React.FC = () => {
               </div>
             ) : (
               <PerformanceMetrics
-                metrics={performanceMetrics}
+                metrics={getPerformanceMetrics()}
                 deliveryStats={formattedDeliveryStats}
               />
             )}
 
-            <EarningsGoals goals={earningsGoals} />
+            <EarningsGoals goals={getEarningsGoals()} />
           </div>
         </div>
       </div>
