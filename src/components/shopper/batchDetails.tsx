@@ -159,18 +159,18 @@ export default function BatchDetails({
     }
   };
 
-  // Function to generate and display invoice 
+  // Function to generate and display invoice
   const generateAndShowInvoice = async (orderId: string): Promise<boolean> => {
     if (!orderId) return false;
-    
+
     try {
       setInvoiceLoading(true);
       const invoice = await generateInvoice(orderId);
-      
+
       if (!invoice) {
         throw new Error("No invoice data returned");
       }
-      
+
       console.log("Generated invoice:", invoice);
       setInvoiceData(invoice);
       setShowInvoiceModal(true);
@@ -195,8 +195,11 @@ export default function BatchDetails({
   const generateInvoiceAndRedirect = async (orderId: string) => {
     try {
       setInvoiceLoading(true);
-      console.log("Generating invoice after delivery confirmation for order:", orderId);
-      
+      console.log(
+        "Generating invoice after delivery confirmation for order:",
+        orderId
+      );
+
       // Make API request to generate invoice and save to database
       const invoiceResponse = await fetch("/api/invoices/generate", {
         method: "POST",
@@ -207,22 +210,24 @@ export default function BatchDetails({
           orderId,
         }),
       });
-      
+
       if (!invoiceResponse.ok) {
-        throw new Error(`Failed to generate invoice: ${invoiceResponse.statusText}`);
+        throw new Error(
+          `Failed to generate invoice: ${invoiceResponse.statusText}`
+        );
       }
-      
+
       const invoiceResult = await invoiceResponse.json();
       console.log("Invoice generation response:", invoiceResult);
-      
+
       if (invoiceResult.success && invoiceResult.invoice) {
         setInvoiceData(invoiceResult.invoice);
-        
+
         // Show the invoice modal
         setShowInvoiceModal(true);
-        
+
         // User will navigate to the invoice page by clicking the "Check Invoice Details" button in the modal
-        
+
         return true;
       } else {
         throw new Error("Invalid invoice data returned from API");
@@ -317,7 +322,7 @@ export default function BatchDetails({
       const orderAmount = calculateFoundItemsTotal();
       // Get the original order total for refund calculation
       const originalOrderTotal = calculateOriginalSubtotal();
-      
+
       console.log("Calculated order amount for payment:", orderAmount);
       console.log("Original order total:", originalOrderTotal);
 
@@ -335,7 +340,7 @@ export default function BatchDetails({
             momoCode,
             privateKey,
             orderAmount: orderAmount, // Only the value of found items (no fees)
-            originalOrderTotal: originalOrderTotal // Original subtotal for refund calculation
+            originalOrderTotal: originalOrderTotal, // Original subtotal for refund calculation
           }),
         });
 
@@ -346,18 +351,19 @@ export default function BatchDetails({
 
         const paymentData = await response.json();
         console.log("Payment process response:", paymentData);
-        
+
         // Check if a refund was created
         if (paymentData.refund) {
           console.log("Refund created:", paymentData.refund);
           toaster.push(
             <Notification type="info" header="Refund Scheduled" closable>
-              A refund of {formatCurrency(paymentData.refundAmount)} has been scheduled for items not found.
+              A refund of {formatCurrency(paymentData.refundAmount)} has been
+              scheduled for items not found.
             </Notification>,
             { placement: "topEnd", duration: 5000 }
           );
         }
-        
+
         paymentSuccess = true;
         walletUpdated = true;
       } catch (paymentError) {
@@ -477,14 +483,15 @@ export default function BatchDetails({
           if (isDrawerOpen && currentChatId === order.id) {
             closeChat();
           }
-          
+
           // Generate invoice and show the delivery photo modal
           const invoiceGenerated = await generateInvoiceAndRedirect(order.id);
-          
+
           // Show success notification when order is delivered
           toaster.push(
             <Notification type="success" header="Order Delivered" closable>
-              Order was successfully marked as delivered. Please upload a delivery confirmation photo.
+              Order was successfully marked as delivered. Please upload a
+              delivery confirmation photo.
             </Notification>,
             { placement: "topEnd" }
           );
@@ -581,20 +588,21 @@ export default function BatchDetails({
         // Use foundQuantity if available, otherwise use full quantity
         const quantity =
           item.foundQuantity !== undefined ? item.foundQuantity : item.quantity;
-        
+
         // Convert to number and ensure price is properly parsed
-        const itemPrice = typeof item.price === 'string' 
-          ? parseFloat(item.price) 
-          : Number(item.price);
-        
+        const itemPrice =
+          typeof item.price === "string"
+            ? parseFloat(item.price)
+            : Number(item.price);
+
         // Calculate subtotal for this item
         const itemTotal = itemPrice * quantity;
-        
+
         return total + itemTotal;
       },
       0
     );
-    
+
     // Round to 2 decimal places to avoid floating point issues
     return parseFloat(total.toFixed(2));
   };

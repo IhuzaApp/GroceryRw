@@ -73,7 +73,7 @@ export const getServerSideProps: GetServerSideProps<
         where: {
           shopper_id: { _eq: $shopperId }
           _and: [
-            { status: { _nin: ["null", "PENDING", "delivered"] } },
+            { status: { _nin: ["null", "PENDING", "delivered"] } }
             { status: { _is_null: false } }
           ]
         }

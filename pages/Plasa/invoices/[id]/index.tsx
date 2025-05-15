@@ -5,7 +5,10 @@ import { useRouter } from "next/router";
 import { Panel, Button, Loader, Divider } from "rsuite";
 import ShopperLayout from "../../../../src/components/shopper/ShopperLayout";
 import { formatCurrency } from "../../../../src/lib/formatCurrency";
-import { downloadInvoiceAsPdf, InvoiceData } from "../../../../src/lib/invoiceUtils";
+import {
+  downloadInvoiceAsPdf,
+  InvoiceData,
+} from "../../../../src/lib/invoiceUtils";
 
 interface InvoicePageProps {
   initialInvoiceData: InvoiceData | null;
@@ -18,7 +21,9 @@ export default function InvoicePage({
 }: InvoicePageProps) {
   const router = useRouter();
   const { id } = router.query;
-  const [invoiceData, setInvoiceData] = useState<InvoiceData | null>(initialInvoiceData);
+  const [invoiceData, setInvoiceData] = useState<InvoiceData | null>(
+    initialInvoiceData
+  );
   const [loading, setLoading] = useState(!initialInvoiceData);
   const [errorMessage, setErrorMessage] = useState<string | null>(error);
 
@@ -26,7 +31,7 @@ export default function InvoicePage({
     // If we don't have invoice data, try to fetch it
     const fetchInvoiceData = async () => {
       if (!id || !loading) return;
-      
+
       try {
         setLoading(true);
         const response = await fetch(`/api/invoices/${id}`, {
@@ -183,9 +188,7 @@ export default function InvoicePage({
 
           {/* Items Table */}
           <div className="mb-6">
-            <h3 className="mb-2 text-sm font-medium text-gray-600">
-              Items
-            </h3>
+            <h3 className="mb-2 text-sm font-medium text-gray-600">Items</h3>
             <div className="overflow-x-auto">
               <table className="w-full">
                 <thead className="border-b bg-gray-50 text-left">
@@ -250,12 +253,12 @@ export default function InvoicePage({
   );
 }
 
-export const getServerSideProps: GetServerSideProps<
-  InvoicePageProps
-> = async (context) => {
+export const getServerSideProps: GetServerSideProps<InvoicePageProps> = async (
+  context
+) => {
   const { id } = context.params || {};
   const session = await getSession(context);
-  
+
   if (!session?.user) {
     return {
       redirect: {
@@ -287,8 +290,11 @@ export const getServerSideProps: GetServerSideProps<
     return {
       props: {
         initialInvoiceData: null,
-        error: error instanceof Error ? error.message : "Failed to load invoice data",
+        error:
+          error instanceof Error
+            ? error.message
+            : "Failed to load invoice data",
       },
     };
   }
-}; 
+};

@@ -1,7 +1,7 @@
 // This is a placeholder for PDF generation functionality
 // In a real application, you would use a library like jspdf or pdfmake
 // to generate actual PDF files
-import { formatCurrency } from './formatCurrency';
+import { formatCurrency } from "./formatCurrency";
 
 export interface InvoiceItem {
   name: string;

@@ -44,13 +44,13 @@ export default function OrderDetailsPage() {
     try {
       // Fetch order details from API
       const response = await fetch(`/api/shopper/orderDetails?id=${id}`);
-      
+
       if (!response.ok) {
         throw new Error("Failed to fetch order details");
       }
-      
+
       const data = await response.json();
-      
+
       if (data.success) {
         setOrderDetails(data.order);
       } else {
@@ -66,7 +66,7 @@ export default function OrderDetailsPage() {
 
   const handleAcceptOrder = async () => {
     if (!id) return;
-    
+
     setIsAccepting(true);
     try {
       const response = await fetch("/api/shopper/assignOrder", {
@@ -74,28 +74,30 @@ export default function OrderDetailsPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ orderId: id }),
       });
-      
+
       const data = await response.json();
-      
+
       if (data.success) {
         toast.success("Order assigned successfully!");
         // Refresh order details
         fetchOrderDetails();
       } else if (data.error === "no_wallet") {
         toast.error("You need a wallet to accept batches");
-        
+
         try {
           // Create wallet automatically
           const walletResponse = await fetch("/api/queries/createWallet", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
           });
-          
+
           const walletData = await walletResponse.json();
-          
+
           if (walletData.success) {
-            toast.success("Wallet created. Trying to accept the batch again...");
-            
+            toast.success(
+              "Wallet created. Trying to accept the batch again..."
+            );
+
             // Try again after wallet creation
             setTimeout(async () => {
               const retryResponse = await fetch("/api/shopper/assignOrder", {
@@ -103,19 +105,19 @@ export default function OrderDetailsPage() {
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ orderId: id }),
               });
-              
+
               const retryData = await retryResponse.json();
-              
+
               if (retryData.success) {
                 toast.success("Order assigned successfully!");
                 fetchOrderDetails();
               } else {
                 toast.error(retryData.error || "Failed to assign order");
               }
-              
+
               setIsAccepting(false);
             }, 1000);
-            
+
             return;
           } else {
             toast.error("Failed to create wallet");
@@ -135,7 +137,9 @@ export default function OrderDetailsPage() {
     }
   };
 
-  const getStatusColor = (status: string) => {
+  const getStatusColor = (
+    status: string
+  ): "red" | "orange" | "yellow" | "green" | "cyan" | "blue" | "violet" => {
     switch (status?.toUpperCase()) {
       case "PENDING":
         return "orange";
@@ -150,7 +154,7 @@ export default function OrderDetailsPage() {
       case "CANCELLED":
         return "red";
       default:
-        return "gray";
+        return "violet";
     }
   };
 
@@ -176,7 +180,8 @@ export default function OrderDetailsPage() {
             <div className="p-8 text-center">
               <h2 className="mb-4 text-xl font-semibold">Order Not Found</h2>
               <p className="mb-4 text-gray-600">
-                The order you're looking for could not be found or you don't have permission to view it.
+                The order you&apos;re looking for could not be found or you
+                don&apos;t have permission to view it.
               </p>
               <Link href="/">
                 <Button appearance="primary" color="green">
@@ -190,7 +195,9 @@ export default function OrderDetailsPage() {
             <Panel shaded bordered bodyFill className="mb-4">
               <div className="p-6">
                 <div className="mb-4 flex items-center justify-between">
-                  <h1 className="text-2xl font-bold">Order #{orderDetails.id.substring(0, 8)}</h1>
+                  <h1 className="text-2xl font-bold">
+                    Order #{orderDetails.id.substring(0, 8)}
+                  </h1>
                   <Tag color={getStatusColor(orderDetails.status)}>
                     {orderDetails.status}
                   </Tag>
@@ -200,14 +207,20 @@ export default function OrderDetailsPage() {
 
                 <div className="mb-6 grid grid-cols-1 gap-6 md:grid-cols-2">
                   <div>
-                    <h3 className="mb-2 text-lg font-semibold">Shop Information</h3>
+                    <h3 className="mb-2 text-lg font-semibold">
+                      Shop Information
+                    </h3>
                     <p className="font-medium">{orderDetails.shopName}</p>
                     <p className="text-gray-600">{orderDetails.shopAddress}</p>
                   </div>
 
                   <div>
-                    <h3 className="mb-2 text-lg font-semibold">Customer Information</h3>
-                    <p className="text-gray-600">{orderDetails.customerAddress}</p>
+                    <h3 className="mb-2 text-lg font-semibold">
+                      Customer Information
+                    </h3>
+                    <p className="text-gray-600">
+                      {orderDetails.customerAddress}
+                    </p>
                   </div>
                 </div>
 
@@ -225,28 +238,41 @@ export default function OrderDetailsPage() {
                         </thead>
                         <tbody>
                           {orderDetails.items.map((item, index) => (
-                            <tr key={index} className={index % 2 === 0 ? "bg-white" : "bg-gray-50"}>
+                            <tr
+                              key={index}
+                              className={
+                                index % 2 === 0 ? "bg-white" : "bg-gray-50"
+                              }
+                            >
                               <td className="px-4 py-3">{item.name}</td>
                               <td className="px-4 py-3">{item.quantity}</td>
-                              <td className="px-4 py-3">{formatCurrency(item.price)}</td>
+                              <td className="px-4 py-3">
+                                {formatCurrency(item.price)}
+                              </td>
                             </tr>
                           ))}
                         </tbody>
                       </table>
                     </div>
                   ) : (
-                    <p className="text-gray-500">No items information available</p>
+                    <p className="text-gray-500">
+                      No items information available
+                    </p>
                   )}
                 </div>
 
                 <div className="mb-6 rounded border bg-gray-50 p-4">
                   <div className="flex justify-between">
                     <span className="font-medium">Total Order Amount:</span>
-                    <span className="font-bold">{formatCurrency(orderDetails.total)}</span>
+                    <span className="font-bold">
+                      {formatCurrency(orderDetails.total)}
+                    </span>
                   </div>
                   <div className="mt-2 flex justify-between text-green-600">
                     <span className="font-medium">Estimated Earnings:</span>
-                    <span className="font-bold">{formatCurrency(orderDetails.estimatedEarnings)}</span>
+                    <span className="font-bold">
+                      {formatCurrency(orderDetails.estimatedEarnings)}
+                    </span>
                   </div>
                 </div>
 
@@ -270,7 +296,7 @@ export default function OrderDetailsPage() {
                     </Button>
                   </div>
                 )}
-                
+
                 {orderDetails.status === "ASSIGNED" && (
                   <div className="flex justify-end space-x-4">
                     <Button appearance="ghost" color="red">
@@ -288,4 +314,4 @@ export default function OrderDetailsPage() {
       </div>
     </ShopperLayout>
   );
-} 
+}

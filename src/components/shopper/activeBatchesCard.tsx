@@ -157,13 +157,15 @@ export default function ActiveBatches({
             </svg>
           </button>
         </div>
-        
+
         {/* Description about what orders are shown */}
         <div className="mb-4 rounded-md bg-blue-50 p-3 text-sm text-blue-700">
           <p>
-            <span className="font-semibold">Note:</span> This page shows all your assigned orders
-            except those with status "PENDING", "null", or "delivered". You can track orders in
-            various states including accepted, shopping, on the way, and at customer location.
+            <span className="font-semibold">Note:</span> This page shows all
+            your assigned orders except those with status &quot;PENDING&quot;,
+            &quot;null&quot;, or &quot;delivered&quot;. You can track orders in
+            various states including accepted, shopping, on the way, and at
+            customer location.
           </p>
         </div>
 
@@ -239,7 +241,7 @@ export default function ActiveBatches({
             <h3 className="mb-2 text-lg font-semibold">No Active Orders</h3>
             <p className="mb-4 text-gray-600">
               {fetchAttempted || initialOrders !== undefined
-                ? "You don't have any active orders assigned to you at the moment. This includes orders in any state except 'PENDING', 'null', or 'delivered'."
+                ? "You don&apos;t have any active orders assigned to you at the moment. This includes orders in any state except &apos;PENDING&apos;, &apos;null&apos;, or &apos;delivered&apos;."
                 : "Unable to fetch your active orders. Please try again."}
             </p>
             <div className="flex flex-col items-center justify-center gap-3 sm:flex-row">

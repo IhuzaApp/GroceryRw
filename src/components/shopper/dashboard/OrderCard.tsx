@@ -86,12 +86,12 @@ export default function OrderCard({ order, onOrderAccepted }: OrderCardProps) {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ orderId: order.id }),
       });
-      
+
       const data = await response.json();
-      
+
       if (data.success) {
         toast.success("Order assigned successfully!");
-        
+
         // Call the callback instead of reloading page
         if (onOrderAccepted) {
           onOrderAccepted();
@@ -99,19 +99,21 @@ export default function OrderCard({ order, onOrderAccepted }: OrderCardProps) {
       } else if (data.error === "no_wallet") {
         // Handle wallet creation
         toast.error("You need a wallet to accept batches");
-        
+
         try {
           // Create wallet automatically
           const walletResponse = await fetch("/api/queries/createWallet", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
           });
-          
+
           const walletData = await walletResponse.json();
-          
+
           if (walletData.success) {
-            toast.success("Wallet created successfully. Trying to accept the batch again...");
-            
+            toast.success(
+              "Wallet created successfully. Trying to accept the batch again..."
+            );
+
             // Try accepting the order again after wallet is created
             setTimeout(async () => {
               const retryResponse = await fetch("/api/shopper/assignOrder", {
@@ -119,23 +121,26 @@ export default function OrderCard({ order, onOrderAccepted }: OrderCardProps) {
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ orderId: order.id }),
               });
-              
+
               const retryData = await retryResponse.json();
-              
+
               if (retryData.success) {
                 toast.success("Order assigned successfully!");
-                
+
                 // Call the callback instead of reloading page
                 if (onOrderAccepted) {
                   onOrderAccepted();
                 }
               } else {
-                toast.error(retryData.error || "Failed to assign order after wallet creation");
+                toast.error(
+                  retryData.error ||
+                    "Failed to assign order after wallet creation"
+                );
               }
-              
+
               setIsAccepting(false);
             }, 1000); // Give a little time for wallet to be fully created
-            
+
             return; // Return early to prevent setIsAccepting(false) below
           } else {
             toast.error("Failed to create wallet. Please try again later.");
@@ -197,23 +202,25 @@ export default function OrderCard({ order, onOrderAccepted }: OrderCardProps) {
             <polyline points="12 6 12 12 16 14" />
           </svg>
           <span className="mr-3">Distance: {order.distance}</span>
-          
+
           {order.travelTimeMinutes !== undefined && (
             <>
-              <svg 
-                viewBox="0 0 24 24" 
-                fill="none" 
-                stroke="currentColor" 
-                strokeWidth={2} 
+              <svg
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth={2}
                 className="mr-1 h-4 w-4"
               >
                 <path d="M12 2v2M12 8v4l3 3M2 12h2M20 12h2" />
                 <circle cx="12" cy="12" r="10" />
               </svg>
-              <span className="mr-3">Travel time: {order.travelTimeMinutes} min</span>
+              <span className="mr-3">
+                Travel time: {order.travelTimeMinutes} min
+              </span>
             </>
           )}
-          
+
           <svg
             viewBox="0 0 24 24"
             fill="none"

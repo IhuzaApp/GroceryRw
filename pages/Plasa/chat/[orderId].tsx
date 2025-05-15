@@ -582,9 +582,9 @@ export default function ChatPage() {
                     appearance="ghost"
                     size="sm"
                     className="whitespace-nowrap"
-                    onClick={() => setMessage("They're out of stock")}
+                    onClick={() => setMessage("They&apos;re out of stock")}
                   >
-                    They're out of stock
+                    They&apos;re out of stock
                   </Button>
                   <Button
                     appearance="ghost"

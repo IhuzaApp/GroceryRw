@@ -68,7 +68,7 @@ export default async function handler(
     // Extract the order ID from the invoice ID
     // The format we're using is inv_TIMESTAMP
     // For now, let's simulate a database lookup based on the invoice ID
-    
+
     // This would typically be a database query to find the invoice by ID
     // For now, we'll use a simplistic approach to create a demo invoice
     const invoiceData: InvoiceData = {
@@ -89,15 +89,15 @@ export default async function handler(
           quantity: 2,
           unitPrice: 9.99,
           total: 19.98,
-          unit: "item"
+          unit: "item",
         },
         {
           name: "Sample Product 2",
           quantity: 1,
-          unitPrice: 15.50,
-          total: 15.50,
-          unit: "kg"
-        }
+          unitPrice: 15.5,
+          total: 15.5,
+          unit: "kg",
+        },
       ],
       subtotal: 35.48,
       serviceFee: 2.99,
@@ -117,4 +117,4 @@ export default async function handler(
         error instanceof Error ? error.message : "An unexpected error occurred",
     });
   }
-} 
+}

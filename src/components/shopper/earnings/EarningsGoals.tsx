@@ -132,7 +132,9 @@ const EarningsGoals: React.FC<EarningsGoalsProps> = ({
                 <div className="mt-0.5 flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-full bg-green-100 text-green-600">
                   3
                 </div>
-                <span>Focus on stores you're familiar with to shop faster</span>
+                <span>
+                  Focus on stores you&apos;re familiar with to shop faster
+                </span>
               </li>
               <li className="flex items-start gap-2">
                 <div className="mt-0.5 flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-full bg-green-100 text-green-600">

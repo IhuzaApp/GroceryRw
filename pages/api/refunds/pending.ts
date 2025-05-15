@@ -8,10 +8,10 @@ import { hasuraClient } from "../../../src/lib/hasuraClient";
 const GET_PENDING_REFUNDS = gql`
   query GetPendingRefunds($user_id: uuid!) {
     Refunds(
-      where: { 
-        user_id: { _eq: $user_id }, 
-        status: { _eq: "pending" }, 
-        paid: { _eq: false } 
+      where: {
+        user_id: { _eq: $user_id }
+        status: { _eq: "pending" }
+        paid: { _eq: false }
       }
       order_by: { created_at: desc }
     ) {
@@ -80,21 +80,25 @@ export default async function handler(
     }
 
     // Get pending refunds for this user
-    const refundResponse = await hasuraClient.request<RefundData>(GET_PENDING_REFUNDS, {
-      user_id: userId,
-    });
+    const refundResponse = await hasuraClient.request<RefundData>(
+      GET_PENDING_REFUNDS,
+      {
+        user_id: userId,
+      }
+    );
 
     const refunds = refundResponse.Refunds || [];
 
     return res.status(200).json({
       success: true,
       refunds: refunds,
-      count: refunds.length
+      count: refunds.length,
     });
   } catch (error) {
     console.error("Error fetching pending refunds:", error);
     return res.status(500).json({
-      error: error instanceof Error ? error.message : "An unexpected error occurred",
+      error:
+        error instanceof Error ? error.message : "An unexpected error occurred",
     });
   }
-} 
+}

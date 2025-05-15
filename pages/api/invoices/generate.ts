@@ -44,30 +44,30 @@ const GET_ORDER_DETAILS_FOR_INVOICE = gql`
 // GraphQL mutation to insert invoice data into the Invoices table
 const ADD_INVOICE = gql`
   mutation addInvoiceDetails(
-    $customer_id: uuid = "", 
-    $delivery_fee: String = "", 
-    $discount: String = "", 
-    $invoice_items: jsonb = "", 
-    $invoice_number: String = "", 
-    $order_id: uuid = "", 
-    $service_fee: String = "", 
-    $status: String = "", 
-    $subtotal: String = "", 
-    $tax: String = "", 
+    $customer_id: uuid = ""
+    $delivery_fee: String = ""
+    $discount: String = ""
+    $invoice_items: jsonb = ""
+    $invoice_number: String = ""
+    $order_id: uuid = ""
+    $service_fee: String = ""
+    $status: String = ""
+    $subtotal: String = ""
+    $tax: String = ""
     $total_amount: String = ""
   ) {
     insert_Invoices(
       objects: {
-        customer_id: $customer_id, 
-        delivery_fee: $delivery_fee, 
-        discount: $discount, 
-        invoice_items: $invoice_items, 
-        invoice_number: $invoice_number, 
-        order_id: $order_id, 
-        service_fee: $service_fee, 
-        status: $status, 
-        subtotal: $subtotal, 
-        tax: $tax, 
+        customer_id: $customer_id
+        delivery_fee: $delivery_fee
+        discount: $discount
+        invoice_items: $invoice_items
+        invoice_number: $invoice_number
+        order_id: $order_id
+        service_fee: $service_fee
+        status: $status
+        subtotal: $subtotal
+        tax: $tax
         total_amount: $total_amount
       }
     ) {
@@ -193,10 +193,9 @@ export default async function handler(
     const deliveryFee = parseFloat(order.delivery_fee);
 
     // Create a unique invoice number
-    const invoiceNumber = `INV-${order.OrderID || order.id.slice(-8)}-${new Date()
-      .getTime()
-      .toString()
-      .slice(-6)}`;
+    const invoiceNumber = `INV-${
+      order.OrderID || order.id.slice(-8)
+    }-${new Date().getTime().toString().slice(-6)}`;
 
     // Prepare invoice items for storage in jsonb format
     const invoiceItems = items.map((item) => ({
@@ -217,19 +216,22 @@ export default async function handler(
     const totalAmount = (itemsTotal + serviceFee + deliveryFee).toFixed(2);
 
     // Save invoice data to the database
-    const saveResult = await hasuraClient.request<AddInvoiceResult>(ADD_INVOICE, {
-      customer_id: order.userByUserId.id,
-      delivery_fee: deliveryFeeStr,
-      discount: discountStr,
-      invoice_items: invoiceItems,
-      invoice_number: invoiceNumber,
-      order_id: order.id,
-      service_fee: serviceFeeStr,
-      status: "completed",
-      subtotal: subtotalStr,
-      tax: taxStr,
-      total_amount: totalAmount
-    });
+    const saveResult = await hasuraClient.request<AddInvoiceResult>(
+      ADD_INVOICE,
+      {
+        customer_id: order.userByUserId.id,
+        delivery_fee: deliveryFeeStr,
+        discount: discountStr,
+        invoice_items: invoiceItems,
+        invoice_number: invoiceNumber,
+        order_id: order.id,
+        service_fee: serviceFeeStr,
+        status: "completed",
+        subtotal: subtotalStr,
+        tax: taxStr,
+        total_amount: totalAmount,
+      }
+    );
 
     console.log("Invoice saved to database:", saveResult);
 
@@ -267,13 +269,13 @@ export default async function handler(
     console.log("Generated invoice data:", {
       id: invoiceData.id,
       invoiceNumber: invoiceData.invoiceNumber,
-      orderId: invoiceData.orderId
+      orderId: invoiceData.orderId,
     });
 
     return res.status(200).json({
       success: true,
       invoice: invoiceData,
-      dbRecord: saveResult.insert_Invoices.returning[0] || null
+      dbRecord: saveResult.insert_Invoices.returning[0] || null,
     });
   } catch (error) {
     console.error("Error generating invoice:", error);
