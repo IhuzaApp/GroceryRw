@@ -26,7 +26,7 @@ import ProductImageModal from "./ProductImageModal";
 import QuantityConfirmationModal from "./QuantityConfirmationModal";
 import PaymentModal from "./PaymentModal";
 import OtpVerificationModal from "./OtpVerificationModal";
-import InvoiceModal from "./InvoiceModal";
+import DeliveryConfirmationModal from "./DeliveryConfirmationModal";
 import { useChat } from "../../context/ChatContext";
 import { isMobileDevice } from "../../lib/formatters";
 import ChatDrawer from "../chat/ChatDrawer";
@@ -315,10 +315,15 @@ export default function BatchDetails({
 
       // Get the actual order amount being processed
       const orderAmount = calculateFoundItemsTotal();
+      // Get the original order total for refund calculation
+      const originalOrderTotal = calculateOriginalSubtotal();
+      
       console.log("Calculated order amount for payment:", orderAmount);
+      console.log("Original order total:", originalOrderTotal);
 
-      // Make API request to update wallet balance
+      // Make API request to update wallet balance and process payment
       let paymentSuccess = false;
+      let walletUpdated = false;
       try {
         const response = await fetch("/api/shopper/processPayment", {
           method: "POST",
@@ -330,6 +335,7 @@ export default function BatchDetails({
             momoCode,
             privateKey,
             orderAmount: orderAmount, // Only the value of found items (no fees)
+            originalOrderTotal: originalOrderTotal // Original subtotal for refund calculation
           }),
         });
 
@@ -338,7 +344,22 @@ export default function BatchDetails({
           throw new Error(errorData.error || "Payment processing failed");
         }
 
+        const paymentData = await response.json();
+        console.log("Payment process response:", paymentData);
+        
+        // Check if a refund was created
+        if (paymentData.refund) {
+          console.log("Refund created:", paymentData.refund);
+          toaster.push(
+            <Notification type="info" header="Refund Scheduled" closable>
+              A refund of {formatCurrency(paymentData.refundAmount)} has been scheduled for items not found.
+            </Notification>,
+            { placement: "topEnd", duration: 5000 }
+          );
+        }
+        
         paymentSuccess = true;
+        walletUpdated = true;
       } catch (paymentError) {
         console.error("Payment processing error:", paymentError);
         // Show error and stop the flow
@@ -355,99 +376,51 @@ export default function BatchDetails({
         return;
       }
 
-      // Record wallet transaction (wrapped in try/catch to prevent blocking flow)
-      let transactionSuccess = false;
-      if (session?.user?.id) {
-        try {
-          // Log the calculated amount for transaction
-          console.log("Recording transaction with amount:", orderAmount);
-          
-          await recordPaymentTransactions(
-            session.user.id as string,
-            order.id,
-            orderAmount // This only includes found items value, not fees
-          );
-          transactionSuccess = true;
-        } catch (txError) {
-          console.error("Error recording transaction:", txError);
-          
-          // Check if it's an insufficient funds error
-          const errorMessage = txError instanceof Error ? txError.message : "Unknown error";
-          const isInsufficientFunds = errorMessage.toLowerCase().includes("insufficient");
-          
-          if (isInsufficientFunds) {
-            // Show error and stop the flow for insufficient funds
-            toaster.push(
-              <Notification type="error" header="Insufficient Funds" closable>
-                {errorMessage}
-              </Notification>,
-              { placement: "topEnd", duration: 8000 }
-            );
-            
-            // Close OTP modal and stop processing
-            setShowOtpModal(false);
-            setOtpVerifyLoading(false);
-            return;
-          } else {
-            // For other errors, show warning but continue
-            toaster.push(
-              <Notification type="warning" header="Transaction Warning" closable>
-                {errorMessage}
-              </Notification>,
-              { placement: "topEnd" }
-            );
-          }
-        }
-      }
-
       // Close OTP modal
       setShowOtpModal(false);
 
-      // Only proceed with status update if transaction was successful
-      if (transactionSuccess) {
-        // Only update order status if payment and transaction were successful
-        if (paymentSuccess) {
-          // Update order status directly without showing payment modal again
-          try {
-            setLoading(true);
-            await onUpdateStatus(order.id, "on_the_way");
+      // Only proceed with status update if payment was successful
+      if (paymentSuccess && walletUpdated) {
+        // Update order status directly without showing payment modal again
+        try {
+          setLoading(true);
+          await onUpdateStatus(order.id, "on_the_way");
 
-            // Update local state
-            setOrder({
-              ...order,
-              status: "on_the_way",
-            });
+          // Update local state
+          setOrder({
+            ...order,
+            status: "on_the_way",
+          });
 
-            // Update step
-            setCurrentStep(2);
+          // Update step
+          setCurrentStep(2);
 
-            // Clear payment info
-            setMomoCode("");
-            setPrivateKey("");
-            setOtp("");
-            setGeneratedOtp("");
+          // Clear payment info
+          setMomoCode("");
+          setPrivateKey("");
+          setOtp("");
+          setGeneratedOtp("");
 
-            // Show success notification
-            toaster.push(
-              <Notification type="success" header="Payment Processed" closable>
-                Payment has been processed successfully. Your reserved wallet
-                balance has been updated.
-              </Notification>,
-              { placement: "topEnd" }
-            );
-          } catch (updateError) {
-            console.error("Error updating order status:", updateError);
-            toaster.push(
-              <Notification type="error" header="Status Update Failed" closable>
-                {updateError instanceof Error
-                  ? updateError.message
-                  : "Failed to update order status. Please try again."}
-              </Notification>,
-              { placement: "topEnd" }
-            );
-          } finally {
-            setLoading(false);
-          }
+          // Show success notification
+          toaster.push(
+            <Notification type="success" header="Payment Processed" closable>
+              Payment has been processed successfully. Your reserved wallet
+              balance has been updated.
+            </Notification>,
+            { placement: "topEnd" }
+          );
+        } catch (updateError) {
+          console.error("Error updating order status:", updateError);
+          toaster.push(
+            <Notification type="error" header="Status Update Failed" closable>
+              {updateError instanceof Error
+                ? updateError.message
+                : "Failed to update order status. Please try again."}
+            </Notification>,
+            { placement: "topEnd" }
+          );
+        } finally {
+          setLoading(false);
         }
       }
     } catch (err) {
@@ -829,8 +802,8 @@ export default function BatchDetails({
         loading={otpVerifyLoading}
       />
 
-      {/* Invoice Modal */}
-      <InvoiceModal
+      {/* Delivery Confirmation Modal */}
+      <DeliveryConfirmationModal
         open={showInvoiceModal}
         onClose={() => setShowInvoiceModal(false)}
         invoiceData={invoiceData}
