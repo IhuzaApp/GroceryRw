@@ -136,193 +136,150 @@ export default async function handler(
   }
 
   try {
-    console.log("Invoice generate API called with body:", req.body);
-    
     // Get user session
     const session = await getServerSession(req, res, authOptions);
 
     if (!session || !session.user) {
-      return res.status(401).json({ 
-        error: "Unauthorized",
-        message: "User session is missing or invalid"
-      });
+      return res.status(401).json({ error: "Unauthorized" });
     }
 
     const { orderId } = req.body;
 
     // Validate required fields
     if (!orderId) {
-      return res.status(400).json({ 
-        error: "Missing required field: orderId",
-        message: "Order ID must be provided in the request body" 
-      });
+      return res.status(400).json({ error: "Missing required field: orderId" });
     }
-
-    console.log(`Generating invoice for order: ${orderId}, requested by user: ${session.user.id}`);
 
     // Check if hasuraClient is available (it should be on server side)
     if (!hasuraClient) {
-      return res.status(500).json({ 
-        error: "Database client not available",
-        message: "Hasura client initialization failed" 
-      });
+      return res.status(500).json({ error: "Database client not available" });
     }
 
-    try {
-      // Get order details for invoice
-      console.log("Fetching order details from database...");
-      const orderDetails = await hasuraClient.request<OrderDetails>(
-        GET_ORDER_DETAILS_FOR_INVOICE,
-        {
-          order_id: orderId,
-        }
-      );
-
-      if (!orderDetails.Orders_by_pk) {
-        console.log(`Order not found: ${orderId}`);
-        return res.status(404).json({ 
-          error: "Order not found",
-          message: `No order found with ID: ${orderId}` 
-        });
+    // Get order details for invoice
+    const orderDetails = await hasuraClient.request<OrderDetails>(
+      GET_ORDER_DETAILS_FOR_INVOICE,
+      {
+        order_id: orderId,
       }
+    );
 
-      const order = orderDetails.Orders_by_pk;
-      console.log(`Order found with status: ${order.status}`);
+    if (!orderDetails.Orders_by_pk) {
+      return res.status(404).json({ error: "Order not found" });
+    }
 
-      // Verify the user is authorized to access this order (either as customer or shopper)
-      if (
-        order.shopper_id !== session.user.id &&
-        order.userByUserId.id !== session.user.id
-      ) {
-        console.log(`User ${session.user.id} is not authorized to access order ${orderId}`);
-        return res.status(403).json({ 
-          error: "Not authorized to access this order",
-          message: "You must be either the customer or shopper for this order" 
-        });
-      }
+    const order = orderDetails.Orders_by_pk;
 
-      // Calculate totals
-      // Use the actual items from the order and calculate based on quantities
-      const items = order.Order_Items;
-      
-      // For the invoice, we want to show just the items that are in the order
-      // We'll calculate the total based on the quantities in the database
-      const itemsTotal = items.reduce((total, item) => {
-        // Use the item's price and quantity directly
-        return total + parseFloat(item.price) * item.quantity;
-      }, 0);
+    // Verify the user is authorized to access this order (either as customer or shopper)
+    if (
+      order.shopper_id !== session.user.id &&
+      order.userByUserId.id !== session.user.id
+    ) {
+      return res
+        .status(403)
+        .json({ error: "Not authorized to access this order" });
+    }
 
-      const serviceFee = parseFloat(order.service_fee) || 0;
-      const deliveryFee = parseFloat(order.delivery_fee) || 0;
+    // Calculate totals
+    // Use the actual items from the order and calculate based on quantities
+    const items = order.Order_Items;
+    // For the invoice, we want to show just the items that are in the order
+    // We'll calculate the total based on the quantities in the database
+    const itemsTotal = items.reduce((total, item) => {
+      // Use the item's price and quantity directly
+      return total + parseFloat(item.price) * item.quantity;
+    }, 0);
 
-      // Create a unique invoice number
-      const invoiceNumber = `INV-${order.OrderID || order.id.slice(-8)}-${new Date()
-        .getTime()
-        .toString()
-        .slice(-6)}`;
+    const serviceFee = parseFloat(order.service_fee);
+    const deliveryFee = parseFloat(order.delivery_fee);
 
-      // Prepare invoice items for storage in jsonb format
-      const invoiceItems = items.map((item) => ({
-        id: item.id,
+    // Create a unique invoice number
+    const invoiceNumber = `INV-${order.OrderID || order.id.slice(-8)}-${new Date()
+      .getTime()
+      .toString()
+      .slice(-6)}`;
+
+    // Prepare invoice items for storage in jsonb format
+    const invoiceItems = items.map((item) => ({
+      id: item.id,
+      name: item.Product.name,
+      quantity: item.quantity,
+      unit_price: parseFloat(item.price),
+      total: parseFloat(item.price) * item.quantity,
+      unit: item.Product.measurement_unit || "item",
+    }));
+
+    // Format values for database storage
+    const subtotalStr = itemsTotal.toFixed(2);
+    const serviceFeeStr = serviceFee.toFixed(2);
+    const deliveryFeeStr = deliveryFee.toFixed(2);
+    const discountStr = "0.00"; // Assuming no discount for now
+    const taxStr = "0.00"; // Assuming no tax for now
+    const totalAmount = (itemsTotal + serviceFee + deliveryFee).toFixed(2);
+
+    // Save invoice data to the database
+    const saveResult = await hasuraClient.request<AddInvoiceResult>(ADD_INVOICE, {
+      customer_id: order.userByUserId.id,
+      delivery_fee: deliveryFeeStr,
+      discount: discountStr,
+      invoice_items: invoiceItems,
+      invoice_number: invoiceNumber,
+      order_id: order.id,
+      service_fee: serviceFeeStr,
+      status: "completed",
+      subtotal: subtotalStr,
+      tax: taxStr,
+      total_amount: totalAmount
+    });
+
+    console.log("Invoice saved to database:", saveResult);
+
+    // Generate invoice data for the response
+    const invoiceData = {
+      id: saveResult.insert_Invoices.returning[0]?.id || `inv_${Date.now()}`,
+      invoiceNumber: invoiceNumber,
+      orderId: order.id,
+      orderNumber: order.OrderID || order.id.slice(-8),
+      customer: order.userByUserId.name,
+      customerEmail: order.userByUserId.email,
+      shop: order.Shop.name,
+      shopAddress: order.Shop.address,
+      dateCreated: new Date(order.created_at).toLocaleString(),
+      dateCompleted: new Date(order.updated_at).toLocaleString(),
+      status: order.status,
+      items: items.map((item) => ({
         name: item.Product.name,
         quantity: item.quantity,
-        unit_price: parseFloat(item.price),
+        unitPrice: parseFloat(item.price),
         total: parseFloat(item.price) * item.quantity,
         unit: item.Product.measurement_unit || "item",
-      }));
+      })),
+      subtotal: itemsTotal,
+      serviceFee,
+      deliveryFee,
+      // When in shopping mode, the displayed total should match the subtotal without fees
+      // For other modes, include the fees
+      total:
+        order.status === "shopping"
+          ? itemsTotal
+          : itemsTotal + serviceFee + deliveryFee,
+    };
 
-      // Format values for database storage
-      const subtotalStr = itemsTotal.toFixed(2);
-      const serviceFeeStr = serviceFee.toFixed(2);
-      const deliveryFeeStr = deliveryFee.toFixed(2);
-      const discountStr = "0.00"; // Assuming no discount for now
-      const taxStr = "0.00"; // Assuming no tax for now
-      const totalAmount = (itemsTotal + serviceFee + deliveryFee).toFixed(2);
+    console.log("Generated invoice data:", {
+      id: invoiceData.id,
+      invoiceNumber: invoiceData.invoiceNumber,
+      orderId: invoiceData.orderId
+    });
 
-      console.log("Saving invoice to database...");
-      
-      try {
-        // Save invoice data to the database
-        const saveResult = await hasuraClient.request<AddInvoiceResult>(ADD_INVOICE, {
-          customer_id: order.userByUserId.id,
-          delivery_fee: deliveryFeeStr,
-          discount: discountStr,
-          invoice_items: invoiceItems,
-          invoice_number: invoiceNumber,
-          order_id: order.id,
-          service_fee: serviceFeeStr,
-          status: "completed",
-          subtotal: subtotalStr,
-          tax: taxStr,
-          total_amount: totalAmount
-        });
-
-        console.log("Invoice saved to database:", JSON.stringify(saveResult, null, 2));
-
-        // Generate invoice data for the response
-        const invoiceData = {
-          id: saveResult.insert_Invoices.returning[0]?.id || `inv_${Date.now()}`,
-          invoiceNumber: invoiceNumber,
-          orderId: order.id,
-          orderNumber: order.OrderID || order.id.slice(-8),
-          customer: order.userByUserId.name,
-          customerEmail: order.userByUserId.email,
-          shop: order.Shop.name,
-          shopAddress: order.Shop.address,
-          dateCreated: new Date(order.created_at).toLocaleString(),
-          dateCompleted: new Date(order.updated_at).toLocaleString(),
-          status: order.status,
-          items: items.map((item) => ({
-            name: item.Product.name,
-            quantity: item.quantity,
-            unitPrice: parseFloat(item.price),
-            total: parseFloat(item.price) * item.quantity,
-            unit: item.Product.measurement_unit || "item",
-          })),
-          subtotal: itemsTotal,
-          serviceFee,
-          deliveryFee,
-          // When in shopping mode, the displayed total should match the subtotal without fees
-          // For other modes, include the fees
-          total:
-            order.status === "shopping"
-              ? itemsTotal
-              : itemsTotal + serviceFee + deliveryFee,
-        };
-
-        console.log("Generated invoice data:", {
-          id: invoiceData.id,
-          invoiceNumber: invoiceData.invoiceNumber,
-          orderId: invoiceData.orderId
-        });
-
-        return res.status(200).json({
-          success: true,
-          invoice: invoiceData,
-          dbRecord: saveResult.insert_Invoices.returning[0] || null
-        });
-      } catch (dbError) {
-        console.error("Database error while saving invoice:", dbError);
-        return res.status(500).json({
-          error: "Database error",
-          message: dbError instanceof Error ? dbError.message : "Failed to save invoice to database",
-          details: dbError
-        });
-      }
-    } catch (queryError) {
-      console.error("Error querying order details:", queryError);
-      return res.status(500).json({
-        error: "Database query error",
-        message: queryError instanceof Error ? queryError.message : "Failed to query order details",
-        details: queryError
-      });
-    }
+    return res.status(200).json({
+      success: true,
+      invoice: invoiceData,
+      dbRecord: saveResult.insert_Invoices.returning[0] || null
+    });
   } catch (error) {
-    console.error("Unexpected error generating invoice:", error);
+    console.error("Error generating invoice:", error);
     return res.status(500).json({
-      error: "Unexpected error",
-      message: error instanceof Error ? error.message : "An unexpected error occurred",
-      details: error
+      error:
+        error instanceof Error ? error.message : "An unexpected error occurred",
     });
   }
 }

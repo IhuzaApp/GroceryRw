@@ -209,8 +209,6 @@ export default function BatchDetails({
       });
       
       if (!invoiceResponse.ok) {
-        const errorText = await invoiceResponse.text();
-        console.error("Invoice API error response:", errorText);
         throw new Error(`Failed to generate invoice: ${invoiceResponse.statusText}`);
       }
       
@@ -218,12 +216,12 @@ export default function BatchDetails({
       console.log("Invoice generation response:", invoiceResult);
       
       if (invoiceResult.success && invoiceResult.invoice) {
-        console.log("Setting invoice data:", invoiceResult.invoice);
         setInvoiceData(invoiceResult.invoice);
         
         // Show the invoice modal
         setShowInvoiceModal(true);
-        console.log("Invoice modal should now be visible");
+        
+        // User will navigate to the invoice page by clicking the "Check Invoice Details" button in the modal
         
         return true;
       } else {
@@ -507,37 +505,16 @@ export default function BatchDetails({
             closeChat();
           }
           
-          console.log("Order marked as delivered, generating invoice...");
-          try {
-            // Generate invoice and show the delivery photo modal
-            const invoiceGenerated = await generateInvoiceAndRedirect(order.id);
-            console.log("Invoice generated:", invoiceGenerated);
-            
-            if (invoiceGenerated) {
-              // Explicitly ensure the modal is shown
-              console.log("Setting invoice modal to visible");
-              setTimeout(() => {
-                setShowInvoiceModal(true);
-              }, 500);
-            }
-            
-            // Show success notification when order is delivered
-            toaster.push(
-              <Notification type="success" header="Order Delivered" closable>
-                Order was successfully marked as delivered. Please upload a delivery confirmation photo.
-              </Notification>,
-              { placement: "topEnd" }
-            );
-          } catch (invoiceError) {
-            console.error("Error in delivery confirmation flow:", invoiceError);
-            // Show error notification
-            toaster.push(
-              <Notification type="error" header="Invoice Generation Failed" closable>
-                Order was marked as delivered, but there was an issue generating the invoice.
-              </Notification>,
-              { placement: "topEnd" }
-            );
-          }
+          // Generate invoice and show the delivery photo modal
+          const invoiceGenerated = await generateInvoiceAndRedirect(order.id);
+          
+          // Show success notification when order is delivered
+          toaster.push(
+            <Notification type="success" header="Order Delivered" closable>
+              Order was successfully marked as delivered. Please upload a delivery confirmation photo.
+            </Notification>,
+            { placement: "topEnd" }
+          );
           break;
       }
     } catch (err) {
