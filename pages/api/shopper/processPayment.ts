@@ -299,7 +299,7 @@ export default async function handler(
         type: "payment",
         status: "completed",
         related_order_id: orderId,
-        description: "Payment from reserved balance for found order items",
+        description: `Payment from reserved balance for found order items. MoMo Code: ${momoCode}`,
       },
     ];
 
