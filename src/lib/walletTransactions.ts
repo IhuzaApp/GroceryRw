@@ -87,7 +87,8 @@ const GET_ORDER_DETAILS_FOR_INVOICE = gql`
 export const recordPaymentTransactions = async (
   shopperId: string,
   orderId: string,
-  orderAmount: number
+  orderAmount: number,
+  originalOrderTotal?: number
 ) => {
   try {
     // On client-side, use the API route instead of direct Hasura access
@@ -106,6 +107,7 @@ export const recordPaymentTransactions = async (
           shopperId,
           orderId,
           orderAmount: formattedOrderAmount,
+          originalOrderTotal: originalOrderTotal
         }),
       });
 
@@ -154,10 +156,13 @@ export const recordPaymentTransactions = async (
       throw new Error(`Insufficient reserved balance. You have ${formattedReservedBalance} but need ${formattedOrderAmount}`);
     }
 
-    // Calculate the new reserved balance after deducting only the order amount
-    const newReserved = currentReserved - formattedOrderAmount;
+    // Calculate the new reserved balance 
+    // If originalOrderTotal is provided, deduct that amount from the reserved balance
+    // Otherwise just deduct the order amount (found items total)
+    const originalAmount = originalOrderTotal || formattedOrderAmount;
+    const newReserved = currentReserved - originalAmount;
     console.log(
-      `Updating reserved balance: ${currentReserved} - ${formattedOrderAmount} = ${newReserved}`
+      `Updating reserved balance: ${currentReserved} - ${originalAmount} = ${newReserved}`
     );
 
     // Update the wallet balances - only change the reserved balance
