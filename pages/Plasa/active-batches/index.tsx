@@ -72,15 +72,10 @@ export const getServerSideProps: GetServerSideProps<
       Orders(
         where: {
           shopper_id: { _eq: $shopperId }
-          status: {
-            _in: [
-              "accepted"
-              "picked"
-              "in_progress"
-              "at_customer"
-              "shopping"
-            ]
-          }
+          _and: [
+            { status: { _nin: ["null", "PENDING", "delivered"] } },
+            { status: { _is_null: false } }
+          ]
         }
         order_by: { created_at: desc }
       ) {

@@ -92,6 +92,11 @@ export const recordPaymentTransactions = async (
   try {
     // On client-side, use the API route instead of direct Hasura access
     if (isClient) {
+      // Format order amount to 2 decimal places to avoid precision issues
+      const formattedOrderAmount = parseFloat(orderAmount.toFixed(2));
+      
+      console.log(`Recording transaction for order ${orderId}, amount: ${formattedOrderAmount}`);
+      
       const response = await fetch("/api/shopper/recordTransaction", {
         method: "POST",
         headers: {
@@ -100,12 +105,13 @@ export const recordPaymentTransactions = async (
         body: JSON.stringify({
           shopperId,
           orderId,
-          orderAmount,
+          orderAmount: formattedOrderAmount,
         }),
       });
 
       if (!response.ok) {
         const errorData = await response.json();
+        console.error("Transaction error response:", errorData);
         throw new Error(errorData.error || "Failed to record transaction");
       }
 
@@ -116,6 +122,9 @@ export const recordPaymentTransactions = async (
     if (!hasuraClient) {
       throw new Error("Hasura client is not available on the client side");
     }
+
+    // Format order amount to 2 decimal places to avoid precision issues
+    const formattedOrderAmount = parseFloat(orderAmount.toFixed(2));
 
     // Get wallet information
     const walletResponse = await hasuraClient.request<{
@@ -137,17 +146,18 @@ export const recordPaymentTransactions = async (
 
     // Calculate new reserved balance
     const currentReserved = parseFloat(wallet.reserved_balance);
+    const formattedReservedBalance = parseFloat(currentReserved.toFixed(2));
 
     // The reserved balance should be sufficient for the order amount
-    if (currentReserved < orderAmount) {
-      throw new Error("Insufficient reserved balance");
+    if (formattedReservedBalance < formattedOrderAmount) {
+      console.error(`Insufficient reserved balance: ${formattedReservedBalance} < ${formattedOrderAmount}`);
+      throw new Error(`Insufficient reserved balance. You have ${formattedReservedBalance} but need ${formattedOrderAmount}`);
     }
 
     // Calculate the new reserved balance after deducting only the order amount
-    // (excluding service fee and delivery fee which were already added to available balance)
-    const newReserved = currentReserved - orderAmount;
+    const newReserved = currentReserved - formattedOrderAmount;
     console.log(
-      `Updating reserved balance: ${currentReserved} - ${orderAmount} = ${newReserved}`
+      `Updating reserved balance: ${currentReserved} - ${formattedOrderAmount} = ${newReserved}`
     );
 
     // Update the wallet balances - only change the reserved balance
@@ -160,7 +170,7 @@ export const recordPaymentTransactions = async (
     const transactions = [
       {
         wallet_id: walletId,
-        amount: orderAmount.toFixed(2),
+        amount: formattedOrderAmount.toFixed(2),
         type: "payment",
         status: "completed",
         related_order_id: orderId,
@@ -190,6 +200,7 @@ export const generateInvoice = async (orderId: string) => {
   try {
     // On client-side, use the API route instead of direct Hasura access
     if (isClient) {
+      console.log(`Generating invoice for order ${orderId}`);
       const response = await fetch("/api/invoices/generate", {
         method: "POST",
         headers: {
@@ -206,6 +217,30 @@ export const generateInvoice = async (orderId: string) => {
       }
 
       const data = await response.json();
+      
+      // Log the invoice data to help with debugging
+      console.log("Invoice response:", {
+        success: data.success,
+        hasInvoice: !!data.invoice,
+        invoiceNumber: data.invoice?.invoiceNumber
+      });
+      
+      if (!data.invoice) {
+        throw new Error("Missing invoice data in response");
+      }
+      
+      // Ensure the invoice has an ID field
+      if (!data.invoice.id) {
+        console.warn("Missing invoice ID in response, generating fallback:", data.invoice);
+        data.invoice.id = `inv_fallback_${Date.now()}`;
+      }
+      
+      if (!data.invoice.invoiceNumber) {
+        console.warn("Missing invoice number in response:", data.invoice);
+        // Add a fallback invoice number if needed
+        data.invoice.invoiceNumber = `INV-FALLBACK-${new Date().getTime().toString().slice(-8)}`;
+      }
+      
       return data.invoice;
     }
 
@@ -268,12 +303,13 @@ export const generateInvoice = async (orderId: string) => {
 
     // Generate invoice data that matches what's shown in the Order Summary
     const invoiceData = {
-      invoiceNumber: `INV-${order.OrderID}-${new Date()
+      id: `inv_${Date.now()}`, // Add a unique ID for the invoice
+      invoiceNumber: `INV-${order.OrderID || order.id.slice(-8)}-${new Date()
         .getTime()
         .toString()
         .slice(-6)}`,
       orderId: order.id,
-      orderNumber: order.OrderID,
+      orderNumber: order.OrderID || order.id.slice(-8),
       customer: order.userByUserId.name,
       customerEmail: order.userByUserId.email,
       shop: order.Shop.name,
@@ -301,6 +337,13 @@ export const generateInvoice = async (orderId: string) => {
           ? itemsTotal
           : itemsTotal + serviceFee + deliveryFee,
     };
+
+    // Log the invoice data for debugging
+    console.log("Server-side invoice generation:", {
+      id: invoiceData.id,
+      invoiceNumber: invoiceData.invoiceNumber,
+      orderId: invoiceData.orderId
+    });
 
     return invoiceData;
   } catch (error) {

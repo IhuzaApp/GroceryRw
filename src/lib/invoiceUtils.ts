@@ -1,8 +1,9 @@
 // This is a placeholder for PDF generation functionality
 // In a real application, you would use a library like jspdf or pdfmake
 // to generate actual PDF files
+import { formatCurrency } from './formatCurrency';
 
-interface InvoiceItem {
+export interface InvoiceItem {
   name: string;
   quantity: number;
   unitPrice: number;
@@ -10,8 +11,10 @@ interface InvoiceItem {
   unit: string;
 }
 
-interface InvoiceData {
+export interface InvoiceData {
+  id: string;
   invoiceNumber: string;
+  orderId: string;
   orderNumber: string;
   status: string;
   dateCreated: string;
@@ -92,18 +95,4 @@ The payment reflects only the value of found items.
   link.click();
   document.body.removeChild(link);
   URL.revokeObjectURL(url);
-};
-
-/**
- * Format a number as currency
- * @param amount The amount to format
- * @returns Formatted currency string
- */
-const formatCurrency = (amount: number): string => {
-  return new Intl.NumberFormat("en-RW", {
-    style: "currency",
-    currency: "RWF",
-    minimumFractionDigits: 0,
-    maximumFractionDigits: 0,
-  }).format(amount);
 };
