@@ -89,10 +89,8 @@ export default async function handler(
     const shopperLongitude = parseFloat(req.query.longitude as string) || 0;
     // Changed from 10 to 15 minutes max travel time
     const maxTravelTime = parseInt(req.query.maxTravelTime as string) || 15;
-
-    console.log(
-      `[availableOrders] Shopper location: ${shopperLatitude}, ${shopperLongitude}`
-    );
+    
+    console.log(`[availableOrders] Shopper location: ${shopperLatitude}, ${shopperLongitude}`);
     console.log(`[availableOrders] Max travel time: ${maxTravelTime} minutes`);
 
     if (!hasuraClient) {
@@ -150,7 +148,7 @@ export default async function handler(
       const customerLongitude = order.address?.longitude
         ? parseFloat(order.address.longitude)
         : 0;
-
+        
       // Calculate distance from shopper to shop in kilometers
       const distanceToShopKm = calculateDistanceKm(
         shopperLatitude,
@@ -158,7 +156,7 @@ export default async function handler(
         shopLatitude,
         shopLongitude
       );
-
+      
       // Calculate distance between shop and customer in kilometers
       const shopToCustomerDistanceKm = calculateDistanceKm(
         shopLatitude,
@@ -166,14 +164,13 @@ export default async function handler(
         customerLatitude,
         customerLongitude
       );
-
+      
       // Calculate travel time from shopper to shop
       const travelTimeMinutes = estimateTravelTimeMinutes(distanceToShopKm);
-
+      
       // Round distances to 1 decimal place
       const formattedDistanceToShop = Math.round(distanceToShopKm * 10) / 10;
-      const formattedShopToCustomerDistance =
-        Math.round(shopToCustomerDistanceKm * 10) / 10;
+      const formattedShopToCustomerDistance = Math.round(shopToCustomerDistanceKm * 10) / 10;
 
       // Calculate priority level (1-5) for UI highlighting
       // Orders over 24 hours old get highest priority as they're at risk of being cancelled
@@ -212,13 +209,13 @@ export default async function handler(
         // Add new fields for distance and travel time
         distance: formattedDistanceToShop,
         shopToCustomerDistance: formattedShopToCustomerDistance,
-        travelTimeMinutes: travelTimeMinutes,
+        travelTimeMinutes: travelTimeMinutes
       };
     });
-
+    
     // Filter orders by travel time - only show orders within 15 minutes travel time
     const filteredOrders = availableOrders.filter(
-      (order) => order.travelTimeMinutes <= maxTravelTime
+      order => order.travelTimeMinutes <= maxTravelTime
     );
 
     // Log the filtered orders
@@ -247,9 +244,11 @@ export default async function handler(
     res.status(200).json(filteredOrders);
   } catch (error: any) {
     console.error("[availableOrders] Error fetching available orders:", error);
-    res.status(500).json({
-      error: "Failed to fetch available orders",
-      details: error.toString(),
-    });
+    res
+      .status(500)
+      .json({
+        error: "Failed to fetch available orders",
+        details: error.toString(),
+      });
   }
 }

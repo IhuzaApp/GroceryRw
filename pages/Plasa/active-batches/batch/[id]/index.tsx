@@ -170,55 +170,6 @@ export default function BatchDetailsPage({
 
       const result = await response.json();
 
-      // If order is now delivered, generate invoice
-      if (newStatus === "delivered") {
-        try {
-          console.log("Generating invoice for order:", orderId);
-          const invoiceResponse = await fetch("/api/invoices/generate", {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-            },
-            body: JSON.stringify({
-              orderId,
-            }),
-          });
-
-          if (!invoiceResponse.ok) {
-            const invoiceErrorData = await invoiceResponse
-              .json()
-              .catch(() => ({ error: "Unknown error" }));
-            console.error("Error generating invoice:", invoiceErrorData.error);
-            // Don't throw error here, as we don't want to fail the order status update
-            // just because invoice generation failed
-          } else {
-            const invoiceData = await invoiceResponse.json();
-            console.log(
-              "Invoice generated successfully:",
-              invoiceData.invoice.invoice_number
-            );
-
-            // Navigate to the invoice page after a short delay
-            setTimeout(() => {
-              // Updated to match the new structure from the API
-              const invoiceId =
-                invoiceData.invoice.id ||
-                (invoiceData.invoice.returning &&
-                  invoiceData.invoice.returning[0]?.id);
-
-              if (invoiceId) {
-                router.push(`/Plasa/invoices/${invoiceId}`);
-              } else {
-                console.error("Missing invoice ID in response:", invoiceData);
-              }
-            }, 1500);
-          }
-        } catch (invoiceErr) {
-          console.error("Exception while generating invoice:", invoiceErr);
-          // Don't throw error, continue with status update
-        }
-      }
-
       return result;
     } catch (err) {
       console.error("Error updating order status:", err);

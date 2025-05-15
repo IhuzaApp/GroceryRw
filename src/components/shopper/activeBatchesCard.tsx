@@ -157,6 +157,15 @@ export default function ActiveBatches({
             </svg>
           </button>
         </div>
+        
+        {/* Description about what orders are shown */}
+        <div className="mb-4 rounded-md bg-blue-50 p-3 text-sm text-blue-700">
+          <p>
+            <span className="font-semibold">Note:</span> This page shows all your assigned orders
+            except those with status "PENDING", "null", or "delivered". You can track orders in
+            various states including accepted, shopping, on the way, and at customer location.
+          </p>
+        </div>
 
         {/* Display a warning when user doesn't have the shopper role */}
         {!isLoading && role !== "shopper" && (
@@ -224,20 +233,19 @@ export default function ActiveBatches({
                 strokeWidth="2"
                 className="h-8 w-8 text-gray-400"
               >
-                <circle cx="12" cy="12" r="10" />
-                <path d="M8 12h8" />
+                <path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
               </svg>
             </div>
-            <h3 className="mb-2 text-lg font-medium">No Active Batches</h3>
-            <p className="mb-4 text-gray-500">
+            <h3 className="mb-2 text-lg font-semibold">No Active Orders</h3>
+            <p className="mb-4 text-gray-600">
               {fetchAttempted || initialOrders !== undefined
-                ? "You don't have any active batches at the moment."
-                : "Unable to fetch your active batches. Please try again."}
+                ? "You don't have any active orders assigned to you at the moment. This includes orders in any state except 'PENDING', 'null', or 'delivered'."
+                : "Unable to fetch your active orders. Please try again."}
             </p>
             <div className="flex flex-col items-center justify-center gap-3 sm:flex-row">
               <Link href="/Plasa">
                 <button className="rounded-md bg-[#125C13] px-4 py-2 font-medium text-white transition-colors hover:bg-[#0A400B]">
-                  Find Orders
+                  Return to Dashboard
                 </button>
               </Link>
               {!fetchAttempted && !initialOrders.length && (

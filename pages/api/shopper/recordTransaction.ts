@@ -3,6 +3,7 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "../auth/[...nextauth]";
 import { gql } from "graphql-request";
 import { hasuraClient } from "../../../src/lib/hasuraClient";
+import { formatCurrency } from "../../../src/lib/formatCurrency";
 
 // GraphQL query to get wallet information
 const GET_WALLET_BY_SHOPPER_ID = gql`
@@ -115,9 +116,21 @@ export default async function handler(
     // Calculate new reserved balance
     const currentReserved = parseFloat(wallet.reserved_balance);
 
-    // The reserved balance should be sufficient for the order amount
-    if (currentReserved < orderAmount) {
-      return res.status(400).json({ error: "Insufficient reserved balance" });
+    // Format both values to 2 decimal places to avoid floating point issues
+    const formattedReservedBalance = parseFloat(currentReserved.toFixed(2));
+    const formattedOrderAmount = parseFloat(orderAmount.toFixed(2));
+
+    console.log(`Available balance: ${wallet.available_balance}`);
+    console.log(`Reserved balance: ${formattedReservedBalance} (raw: ${currentReserved})`);
+    console.log(`Order amount: ${formattedOrderAmount} (raw: ${orderAmount})`);
+    console.log(`Is reserved balance sufficient: ${formattedReservedBalance >= formattedOrderAmount}`);
+
+    // Check if the formatted reserved balance is less than the order amount
+    if (formattedReservedBalance < formattedOrderAmount) {
+      console.error(`Insufficient reserved balance: ${formattedReservedBalance} < ${formattedOrderAmount}`);
+      return res.status(400).json({ 
+        error: `Insufficient reserved balance. You have ${formatCurrency(formattedReservedBalance)} but the order requires ${formatCurrency(formattedOrderAmount)}.` 
+      });
     }
 
     // Calculate the new reserved balance after deducting only the order amount

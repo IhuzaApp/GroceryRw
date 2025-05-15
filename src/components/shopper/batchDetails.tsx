@@ -159,6 +159,92 @@ export default function BatchDetails({
     }
   };
 
+  // Function to generate and display invoice 
+  const generateAndShowInvoice = async (orderId: string): Promise<boolean> => {
+    if (!orderId) return false;
+    
+    try {
+      setInvoiceLoading(true);
+      const invoice = await generateInvoice(orderId);
+      
+      if (!invoice) {
+        throw new Error("No invoice data returned");
+      }
+      
+      console.log("Generated invoice:", invoice);
+      setInvoiceData(invoice);
+      setShowInvoiceModal(true);
+      return true;
+    } catch (invoiceError) {
+      console.error("Error generating invoice:", invoiceError);
+      toaster.push(
+        <Notification type="warning" header="Invoice Warning" closable>
+          {invoiceError instanceof Error
+            ? invoiceError.message
+            : "There was an issue generating the invoice."}
+        </Notification>,
+        { placement: "topEnd" }
+      );
+      return false;
+    } finally {
+      setInvoiceLoading(false);
+    }
+  };
+
+  // Function to generate invoice and save to database
+  const generateInvoiceAndRedirect = async (orderId: string) => {
+    try {
+      setInvoiceLoading(true);
+      console.log("Generating invoice after delivery confirmation for order:", orderId);
+      
+      // Make API request to generate invoice and save to database
+      const invoiceResponse = await fetch("/api/invoices/generate", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          orderId,
+        }),
+      });
+      
+      if (!invoiceResponse.ok) {
+        const errorText = await invoiceResponse.text();
+        console.error("Invoice API error response:", errorText);
+        throw new Error(`Failed to generate invoice: ${invoiceResponse.statusText}`);
+      }
+      
+      const invoiceResult = await invoiceResponse.json();
+      console.log("Invoice generation response:", invoiceResult);
+      
+      if (invoiceResult.success && invoiceResult.invoice) {
+        console.log("Setting invoice data:", invoiceResult.invoice);
+        setInvoiceData(invoiceResult.invoice);
+        
+        // Show the invoice modal
+        setShowInvoiceModal(true);
+        console.log("Invoice modal should now be visible");
+        
+        return true;
+      } else {
+        throw new Error("Invalid invoice data returned from API");
+      }
+    } catch (invoiceError) {
+      console.error("Error generating invoice:", invoiceError);
+      toaster.push(
+        <Notification type="warning" header="Invoice Warning" closable>
+          {invoiceError instanceof Error
+            ? invoiceError.message
+            : "There was an issue generating the invoice."}
+        </Notification>,
+        { placement: "topEnd" }
+      );
+      return false;
+    } finally {
+      setInvoiceLoading(false);
+    }
+  };
+
   // Handle payment submission
   const handlePaymentSubmit = async () => {
     if (!order?.id) return;
@@ -229,6 +315,10 @@ export default function BatchDetails({
         throw new Error("Invalid OTP. Please try again.");
       }
 
+      // Get the actual order amount being processed
+      const orderAmount = calculateFoundItemsTotal();
+      console.log("Calculated order amount for payment:", orderAmount);
+
       // Make API request to update wallet balance
       let paymentSuccess = false;
       try {
@@ -241,7 +331,7 @@ export default function BatchDetails({
             orderId: order.id,
             momoCode,
             privateKey,
-            orderAmount: calculateFoundItemsTotal(), // Only the value of found items (no fees)
+            orderAmount: orderAmount, // Only the value of found items (no fees)
           }),
         });
 
@@ -260,9 +350,10 @@ export default function BatchDetails({
               ? paymentError.message
               : "Payment processing failed. Please try again."}
           </Notification>,
-          { placement: "topEnd" }
+          { placement: "topEnd", duration: 5000 }
         );
         setOtpVerifyLoading(false);
+        setShowOtpModal(false); // Close OTP modal on error
         return;
       }
 
@@ -270,96 +361,95 @@ export default function BatchDetails({
       let transactionSuccess = false;
       if (session?.user?.id) {
         try {
+          // Log the calculated amount for transaction
+          console.log("Recording transaction with amount:", orderAmount);
+          
           await recordPaymentTransactions(
             session.user.id as string,
             order.id,
-            calculateFoundItemsTotal() // This only includes found items value, not fees
+            orderAmount // This only includes found items value, not fees
           );
           transactionSuccess = true;
         } catch (txError) {
           console.error("Error recording transaction:", txError);
-          // Show warning but continue
-          toaster.push(
-            <Notification type="warning" header="Transaction Warning" closable>
-              {txError instanceof Error
-                ? txError.message
-                : "There was an issue recording the transaction, but your payment was processed."}
-            </Notification>,
-            { placement: "topEnd" }
-          );
+          
+          // Check if it's an insufficient funds error
+          const errorMessage = txError instanceof Error ? txError.message : "Unknown error";
+          const isInsufficientFunds = errorMessage.toLowerCase().includes("insufficient");
+          
+          if (isInsufficientFunds) {
+            // Show error and stop the flow for insufficient funds
+            toaster.push(
+              <Notification type="error" header="Insufficient Funds" closable>
+                {errorMessage}
+              </Notification>,
+              { placement: "topEnd", duration: 8000 }
+            );
+            
+            // Close OTP modal and stop processing
+            setShowOtpModal(false);
+            setOtpVerifyLoading(false);
+            return;
+          } else {
+            // For other errors, show warning but continue
+            toaster.push(
+              <Notification type="warning" header="Transaction Warning" closable>
+                {errorMessage}
+              </Notification>,
+              { placement: "topEnd" }
+            );
+          }
         }
       }
 
       // Close OTP modal
       setShowOtpModal(false);
 
-      // Generate invoice (wrapped in try/catch to prevent blocking flow)
-      setInvoiceLoading(true);
-      let invoiceSuccess = false;
-      try {
-        const invoice = await generateInvoice(order.id);
-        if (invoice) {
-          setInvoiceData(invoice);
-          setShowInvoiceModal(true);
-          invoiceSuccess = true;
-        }
-      } catch (invoiceError) {
-        console.error("Error generating invoice:", invoiceError);
-        // Show warning but continue
-        toaster.push(
-          <Notification type="warning" header="Invoice Warning" closable>
-            {invoiceError instanceof Error
-              ? invoiceError.message
-              : "There was an issue generating the invoice, but your payment was processed."}
-          </Notification>,
-          { placement: "topEnd" }
-        );
-      } finally {
-        setInvoiceLoading(false);
-      }
+      // Only proceed with status update if transaction was successful
+      if (transactionSuccess) {
+        // Only update order status if payment and transaction were successful
+        if (paymentSuccess) {
+          // Update order status directly without showing payment modal again
+          try {
+            setLoading(true);
+            await onUpdateStatus(order.id, "on_the_way");
 
-      // Only update order status if payment was successful
-      if (paymentSuccess) {
-        // Update order status directly without showing payment modal again
-        try {
-          setLoading(true);
-          await onUpdateStatus(order.id, "on_the_way");
+            // Update local state
+            setOrder({
+              ...order,
+              status: "on_the_way",
+            });
 
-          // Update local state
-          setOrder({
-            ...order,
-            status: "on_the_way",
-          });
+            // Update step
+            setCurrentStep(2);
 
-          // Update step
-          setCurrentStep(2);
+            // Clear payment info
+            setMomoCode("");
+            setPrivateKey("");
+            setOtp("");
+            setGeneratedOtp("");
 
-          // Clear payment info
-          setMomoCode("");
-          setPrivateKey("");
-          setOtp("");
-          setGeneratedOtp("");
-
-          // Show success notification
-          toaster.push(
-            <Notification type="success" header="Payment Processed" closable>
-              Payment has been processed successfully. Your reserved wallet
-              balance has been updated.
-            </Notification>,
-            { placement: "topEnd" }
-          );
-        } catch (updateError) {
-          console.error("Error updating order status:", updateError);
-          toaster.push(
-            <Notification type="error" header="Status Update Failed" closable>
-              {updateError instanceof Error
-                ? updateError.message
-                : "Failed to update order status. Please try again."}
-            </Notification>,
-            { placement: "topEnd" }
-          );
-        } finally {
-          setLoading(false);
+            // Show success notification
+            toaster.push(
+              <Notification type="success" header="Payment Processed" closable>
+                Payment has been processed successfully. Your reserved wallet
+                balance has been updated.
+              </Notification>,
+              { placement: "topEnd" }
+            );
+          } catch (updateError) {
+            console.error("Error updating order status:", updateError);
+            toaster.push(
+              <Notification type="error" header="Status Update Failed" closable>
+                {updateError instanceof Error
+                  ? updateError.message
+                  : "Failed to update order status. Please try again."}
+              </Notification>,
+              { placement: "topEnd" }
+            );
+          } finally {
+            setLoading(false);
+          }
         }
       }
     } catch (err) {
@@ -416,14 +506,38 @@ export default function BatchDetails({
           if (isDrawerOpen && currentChatId === order.id) {
             closeChat();
           }
-          // Show success notification when order is delivered
-          toaster.push(
-            <Notification type="success" header="Order Delivered" closable>
-              Order was successfully marked as delivered. An invoice has been
-              generated and chat history has been cleared.
-            </Notification>,
-            { placement: "topEnd" }
-          );
+          
+          console.log("Order marked as delivered, generating invoice...");
+          try {
+            // Generate invoice and show the delivery photo modal
+            const invoiceGenerated = await generateInvoiceAndRedirect(order.id);
+            console.log("Invoice generated:", invoiceGenerated);
+            
+            if (invoiceGenerated) {
+              // Explicitly ensure the modal is shown
+              console.log("Setting invoice modal to visible");
+              setTimeout(() => {
+                setShowInvoiceModal(true);
+              }, 500);
+            }
+            
+            // Show success notification when order is delivered
+            toaster.push(
+              <Notification type="success" header="Order Delivered" closable>
+                Order was successfully marked as delivered. Please upload a delivery confirmation photo.
+              </Notification>,
+              { placement: "topEnd" }
+            );
+          } catch (invoiceError) {
+            console.error("Error in delivery confirmation flow:", invoiceError);
+            // Show error notification
+            toaster.push(
+              <Notification type="error" header="Invoice Generation Failed" closable>
+                Order was marked as delivered, but there was an issue generating the invoice.
+              </Notification>,
+              { placement: "topEnd" }
+            );
+          }
           break;
       }
     } catch (err) {
@@ -512,17 +626,27 @@ export default function BatchDetails({
   const calculateFoundTotal = () => {
     if (!order) return 0;
 
-    return order.Order_Items.filter((item) => item.found).reduce(
+    const total = order.Order_Items.filter((item) => item.found).reduce(
       (total, item) => {
         // Use foundQuantity if available, otherwise use full quantity
         const quantity =
           item.foundQuantity !== undefined ? item.foundQuantity : item.quantity;
-        const itemPrice = Number(item.price);
+        
+        // Convert to number and ensure price is properly parsed
+        const itemPrice = typeof item.price === 'string' 
+          ? parseFloat(item.price) 
+          : Number(item.price);
+        
+        // Calculate subtotal for this item
         const itemTotal = itemPrice * quantity;
+        
         return total + itemTotal;
       },
       0
     );
+    
+    // Round to 2 decimal places to avoid floating point issues
+    return parseFloat(total.toFixed(2));
   };
 
   // Calculate original subtotal (items only, no fees)
@@ -601,7 +725,7 @@ export default function BatchDetails({
             onClick={() => handleUpdateStatus("delivered")}
             loading={loading}
           >
-            Confirm Delivery
+            Confirm Delivery & Generate Invoice
           </Button>
         );
       case "delivered":
