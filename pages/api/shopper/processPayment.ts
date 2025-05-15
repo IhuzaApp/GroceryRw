@@ -148,7 +148,8 @@ export default async function handler(
     }
 
     // Get request data
-    const { orderId, momoCode, privateKey, orderAmount, originalOrderTotal } = req.body;
+    const { orderId, momoCode, privateKey, orderAmount, originalOrderTotal } =
+      req.body;
 
     // Validate required fields
     if (!orderId || !momoCode || !privateKey || orderAmount === undefined) {
@@ -157,13 +158,17 @@ export default async function handler(
 
     // Format order amount to ensure consistent handling
     const formattedOrderAmount = parseFloat(Number(orderAmount).toFixed(2));
-    
+
     console.log(`Processing payment for order ${orderId}`);
     console.log(`Order amount: ${formattedOrderAmount}`);
-    
+
     if (originalOrderTotal) {
       console.log(`Original order total: ${originalOrderTotal}`);
-      console.log(`Difference (potential refund): ${Number(originalOrderTotal) - formattedOrderAmount}`);
+      console.log(
+        `Difference (potential refund): ${
+          Number(originalOrderTotal) - formattedOrderAmount
+        }`
+      );
     }
 
     // In a real-world scenario, this would integrate with a payment processor
@@ -175,9 +180,12 @@ export default async function handler(
     }
 
     // Get order details
-    const orderResponse = await hasuraClient.request<OrderDetails>(GET_ORDER_DETAILS, {
-      order_id: orderId
-    });
+    const orderResponse = await hasuraClient.request<OrderDetails>(
+      GET_ORDER_DETAILS,
+      {
+        order_id: orderId,
+      }
+    );
 
     const orderData = orderResponse.Orders_by_pk;
     if (!orderData) {
@@ -186,12 +194,17 @@ export default async function handler(
 
     // Get shopper's wallet
     const shopperId = orderData.shopper_id;
-    const walletResponse = await hasuraClient.request<WalletData>(GET_SHOPPER_WALLET, {
-      shopper_id: shopperId
-    });
+    const walletResponse = await hasuraClient.request<WalletData>(
+      GET_SHOPPER_WALLET,
+      {
+        shopper_id: shopperId,
+      }
+    );
 
     if (!walletResponse.Wallets || walletResponse.Wallets.length === 0) {
-      return res.status(404).json({ error: "Wallet not found for this shopper" });
+      return res
+        .status(404)
+        .json({ error: "Wallet not found for this shopper" });
     }
 
     const wallet = walletResponse.Wallets[0];
@@ -203,7 +216,9 @@ export default async function handler(
 
     if (formattedReservedBalance < formattedOrderAmount) {
       return res.status(400).json({
-        error: `Insufficient reserved balance. You have ${formatCurrency(formattedReservedBalance)} but need ${formatCurrency(formattedOrderAmount)}`
+        error: `Insufficient reserved balance. You have ${formatCurrency(
+          formattedReservedBalance
+        )} but need ${formatCurrency(formattedOrderAmount)}`,
       });
     }
 
@@ -215,23 +230,25 @@ export default async function handler(
 
     // If originalOrderTotal is provided, use it; otherwise get from orderData
     const totalOrderValue = originalOrderTotal || parseFloat(orderData.total);
-    
+
     // Calculate if there's a difference between original total and found items total
     if (totalOrderValue > formattedOrderAmount) {
-      refundAmount = parseFloat((totalOrderValue - formattedOrderAmount).toFixed(2));
+      refundAmount = parseFloat(
+        (totalOrderValue - formattedOrderAmount).toFixed(2)
+      );
       refundNeeded = true;
-      
+
       // Get shop name
       const shopName = orderData.Shop?.name || "Unknown Shop";
-      
+
       // Create detailed reason for the refund
       refundReason = `Refund for items not found during shopping at ${shopName}. `;
-      
+
       // List all order items
-      const allItems = orderData.Order_Items.map(item => 
-        `${item.Product.name} (${item.quantity})`
+      const allItems = orderData.Order_Items.map(
+        (item) => `${item.Product.name} (${item.quantity})`
       ).join(", ");
-      
+
       refundReason += `Order items: ${allItems}. `;
       refundReason += `Original total: ${totalOrderValue}, found items total: ${formattedOrderAmount}, refund amount: ${refundAmount}.`;
     }
@@ -240,7 +257,7 @@ export default async function handler(
     if (refundNeeded && refundAmount > 0) {
       try {
         console.log(`Creating refund record for amount: ${refundAmount}`);
-        
+
         // Create refund record with all required fields
         const refundRecord = {
           order_id: orderId,
@@ -249,19 +266,27 @@ export default async function handler(
           reason: refundReason,
           user_id: orderData.user_id,
           generated_by: "System",
-          paid: false
+          paid: false,
         };
-        
-        console.log("Attempting to create refund with data:", JSON.stringify(refundRecord, null, 2));
-        
-        const refundResponse = await hasuraClient.request<RefundResponse>(CREATE_REFUND, {
-          refund: refundRecord,
-        });
-        
+
+        console.log(
+          "Attempting to create refund with data:",
+          JSON.stringify(refundRecord, null, 2)
+        );
+
+        const refundResponse = await hasuraClient.request<RefundResponse>(
+          CREATE_REFUND,
+          {
+            refund: refundRecord,
+          }
+        );
+
         if (!refundResponse || !refundResponse.insert_Refunds_one) {
-          throw new Error("Refund creation failed: Empty response from database");
+          throw new Error(
+            "Refund creation failed: Empty response from database"
+          );
         }
-        
+
         refundData = refundResponse.insert_Refunds_one;
         console.log("Refund record created:", refundData);
       } catch (refundError) {
@@ -272,18 +297,24 @@ export default async function handler(
           console.error("Error stack:", refundError.stack);
         }
         // Fail the entire transaction if refund creation fails
-        throw new Error(`Failed to create refund: ${refundError instanceof Error ? refundError.message : "Unknown error"}`);
+        throw new Error(
+          `Failed to create refund: ${
+            refundError instanceof Error ? refundError.message : "Unknown error"
+          }`
+        );
       }
     }
 
     // Only proceed with wallet updates if we've successfully created the refund (if needed)
     // or if no refund was needed
-    
+
     // Calculate the new reserved balance after deducting the full original amount
     const originalAmount = originalOrderTotal || formattedOrderAmount;
     const newReserved = currentReserved - originalAmount;
-    
-    console.log(`Updating reserved balance: ${currentReserved} - ${originalAmount} = ${newReserved}`);
+
+    console.log(
+      `Updating reserved balance: ${currentReserved} - ${originalAmount} = ${newReserved}`
+    );
 
     // Update the wallet balances
     await hasuraClient.request(UPDATE_WALLET_BALANCES, {
@@ -303,9 +334,12 @@ export default async function handler(
       },
     ];
 
-    const transactionResponse = await hasuraClient.request(CREATE_WALLET_TRANSACTIONS, {
-      transactions,
-    });
+    const transactionResponse = await hasuraClient.request(
+      CREATE_WALLET_TRANSACTIONS,
+      {
+        transactions,
+      }
+    );
 
     // Log the payment information
     console.log(`Payment processed for order: ${orderId}`);
@@ -325,10 +359,10 @@ export default async function handler(
       walletUpdate: {
         oldReservedBalance: currentReserved,
         newReservedBalance: newReserved,
-        deductedAmount: originalAmount
+        deductedAmount: originalAmount,
       },
       refund: refundData,
-      refundAmount: refundAmount
+      refundAmount: refundAmount,
     });
   } catch (error) {
     console.error("Error processing payment:", error);

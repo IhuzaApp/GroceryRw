@@ -11,7 +11,7 @@ const GET_ACTIVE_ORDERS = gql`
       where: {
         shopper_id: { _eq: $shopperId }
         _and: [
-          { status: { _nin: ["null", "PENDING", "delivered"] } },
+          { status: { _nin: ["null", "PENDING", "delivered"] } }
           { status: { _is_null: false } }
         ]
       }

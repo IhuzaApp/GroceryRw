@@ -131,7 +131,7 @@ export default function ViewOrderDetailsPage() {
           <div className="container mx-auto py-12 text-center">
             <h2 className="mb-4 text-2xl font-bold">Order Not Found</h2>
             <p className="mb-6">
-              We couldn't find the order you're looking for.
+              We couldn&apos;t find the order you&apos;re looking for.
             </p>
             <Link href="/CurrentPendingOrders" passHref>
               <Button appearance="primary">Return to Orders</Button>

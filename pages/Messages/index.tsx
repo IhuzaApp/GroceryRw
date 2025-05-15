@@ -338,7 +338,8 @@ export default function MessagesPage() {
                 No Active Conversations
               </h2>
               <p className="mb-6 text-gray-600">
-                You don't have any active orders with shoppers to chat with.
+                You don&apos;t have any active orders with shoppers to chat
+                with.
               </p>
               <Link href="/CurrentPendingOrders" passHref>
                 <Button appearance="primary" color="green">

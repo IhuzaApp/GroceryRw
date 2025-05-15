@@ -95,9 +95,11 @@ export const recordPaymentTransactions = async (
     if (isClient) {
       // Format order amount to 2 decimal places to avoid precision issues
       const formattedOrderAmount = parseFloat(orderAmount.toFixed(2));
-      
-      console.log(`Recording transaction for order ${orderId}, amount: ${formattedOrderAmount}`);
-      
+
+      console.log(
+        `Recording transaction for order ${orderId}, amount: ${formattedOrderAmount}`
+      );
+
       const response = await fetch("/api/shopper/recordTransaction", {
         method: "POST",
         headers: {
@@ -107,7 +109,7 @@ export const recordPaymentTransactions = async (
           shopperId,
           orderId,
           orderAmount: formattedOrderAmount,
-          originalOrderTotal: originalOrderTotal
+          originalOrderTotal: originalOrderTotal,
         }),
       });
 
@@ -152,11 +154,15 @@ export const recordPaymentTransactions = async (
 
     // The reserved balance should be sufficient for the order amount
     if (formattedReservedBalance < formattedOrderAmount) {
-      console.error(`Insufficient reserved balance: ${formattedReservedBalance} < ${formattedOrderAmount}`);
-      throw new Error(`Insufficient reserved balance. You have ${formattedReservedBalance} but need ${formattedOrderAmount}`);
+      console.error(
+        `Insufficient reserved balance: ${formattedReservedBalance} < ${formattedOrderAmount}`
+      );
+      throw new Error(
+        `Insufficient reserved balance. You have ${formattedReservedBalance} but need ${formattedOrderAmount}`
+      );
     }
 
-    // Calculate the new reserved balance 
+    // Calculate the new reserved balance
     // If originalOrderTotal is provided, deduct that amount from the reserved balance
     // Otherwise just deduct the order amount (found items total)
     const originalAmount = originalOrderTotal || formattedOrderAmount;
@@ -222,30 +228,36 @@ export const generateInvoice = async (orderId: string) => {
       }
 
       const data = await response.json();
-      
+
       // Log the invoice data to help with debugging
       console.log("Invoice response:", {
         success: data.success,
         hasInvoice: !!data.invoice,
-        invoiceNumber: data.invoice?.invoiceNumber
+        invoiceNumber: data.invoice?.invoiceNumber,
       });
-      
+
       if (!data.invoice) {
         throw new Error("Missing invoice data in response");
       }
-      
+
       // Ensure the invoice has an ID field
       if (!data.invoice.id) {
-        console.warn("Missing invoice ID in response, generating fallback:", data.invoice);
+        console.warn(
+          "Missing invoice ID in response, generating fallback:",
+          data.invoice
+        );
         data.invoice.id = `inv_fallback_${Date.now()}`;
       }
-      
+
       if (!data.invoice.invoiceNumber) {
         console.warn("Missing invoice number in response:", data.invoice);
         // Add a fallback invoice number if needed
-        data.invoice.invoiceNumber = `INV-FALLBACK-${new Date().getTime().toString().slice(-8)}`;
+        data.invoice.invoiceNumber = `INV-FALLBACK-${new Date()
+          .getTime()
+          .toString()
+          .slice(-8)}`;
       }
-      
+
       return data.invoice;
     }
 
@@ -347,7 +359,7 @@ export const generateInvoice = async (orderId: string) => {
     console.log("Server-side invoice generation:", {
       id: invoiceData.id,
       invoiceNumber: invoiceData.invoiceNumber,
-      orderId: invoiceData.orderId
+      orderId: invoiceData.orderId,
     });
 
     return invoiceData;

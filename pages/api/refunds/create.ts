@@ -112,57 +112,69 @@ export default async function handler(
 
     // Format refund amount to ensure consistent handling
     const formattedRefundAmount = parseFloat(Number(refundAmount).toFixed(2));
-    
+
     if (formattedRefundAmount <= 0) {
-      return res.status(400).json({ error: "Refund amount must be greater than 0" });
+      return res
+        .status(400)
+        .json({ error: "Refund amount must be greater than 0" });
     }
-    
-    console.log(`Creating refund record for order ${orderId}, amount: ${formattedRefundAmount}`);
+
+    console.log(
+      `Creating refund record for order ${orderId}, amount: ${formattedRefundAmount}`
+    );
 
     // If no custom reason is provided, get order details to generate a detailed reason
     let detailedReason = reason;
     let userId = null;
-    
+
     if (!detailedReason && hasuraClient) {
       // Get order details to create a detailed refund reason
-      const orderResponse = await hasuraClient.request<OrderDetailsResponse>(GET_ORDER_DETAILS, {
-        order_id: orderId,
-      });
-      
+      const orderResponse = await hasuraClient.request<OrderDetailsResponse>(
+        GET_ORDER_DETAILS,
+        {
+          order_id: orderId,
+        }
+      );
+
       const order = orderResponse.Orders_by_pk;
-      
+
       if (!order) {
         return res.status(404).json({ error: "Order not found" });
       }
-      
+
       userId = order.user_id;
-      
+
       // Get shop name
       const shopName = order.Shop?.name || "Unknown Shop";
-      
+
       // Get information about found and not found items
-      const foundItems = order.Order_Items.filter(item => item.found);
-      const notFoundItems = order.Order_Items.filter(item => !item.found);
-      
+      const foundItems = order.Order_Items.filter((item) => item.found);
+      const notFoundItems = order.Order_Items.filter((item) => !item.found);
+
       // Calculate original total
       const originalTotal = parseFloat(order.total);
-      
+
       // Create detailed reason with found/not found items
       detailedReason = `Refund for items not found during shopping at ${shopName}. `;
-      
+
       if (foundItems.length > 0) {
-        detailedReason += `Found items: ${foundItems.map(item => 
-          `${item.Product.name} (${item.foundQuantity || item.quantity})`
-        ).join(", ")}. `;
+        detailedReason += `Found items: ${foundItems
+          .map(
+            (item) =>
+              `${item.Product.name} (${item.foundQuantity || item.quantity})`
+          )
+          .join(", ")}. `;
       }
-      
+
       if (notFoundItems.length > 0) {
-        detailedReason += `Not found items: ${notFoundItems.map(item => 
-          `${item.Product.name} (${item.quantity})`
-        ).join(", ")}.`;
+        detailedReason += `Not found items: ${notFoundItems
+          .map((item) => `${item.Product.name} (${item.quantity})`)
+          .join(", ")}.`;
       }
-      
-      detailedReason += ` Original total: ${originalTotal}, found items total: ${originalTotal - formattedRefundAmount}.`;
+
+      detailedReason += ` Original total: ${originalTotal}, found items total: ${
+        originalTotal - formattedRefundAmount
+      }.`;
     }
 
     // Check if hasuraClient is available
@@ -178,7 +190,7 @@ export default async function handler(
       reason: detailedReason || "Refund for items not found during shopping",
       generated_by: "System",
       user_id: userId,
-      paid: false
+      paid: false,
     };
 
     const response = await hasuraClient.request<RefundResponse>(CREATE_REFUND, {
@@ -193,7 +205,8 @@ export default async function handler(
   } catch (error) {
     console.error("Error creating refund record:", error);
     return res.status(500).json({
-      error: error instanceof Error ? error.message : "An unexpected error occurred",
+      error:
+        error instanceof Error ? error.message : "An unexpected error occurred",
     });
   }
-} 
+}

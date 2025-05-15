@@ -115,20 +115,29 @@ export default async function handler(
     }
 
     // Get user session for authentication
-    const session = await getServerSession(req, res, authOptions as any) as UserSession | null;
-    
+    const session = (await getServerSession(
+      req,
+      res,
+      authOptions as any
+    )) as UserSession | null;
+
     if (!session || !session.user) {
       return res.status(401).json({ error: "Unauthorized" });
     }
 
     // Fetch order details from Hasura
     if (!hasuraClient) {
-      return res.status(500).json({ error: "Failed to initialize Hasura client" });
+      return res
+        .status(500)
+        .json({ error: "Failed to initialize Hasura client" });
     }
-    
-    const data = await hasuraClient.request<OrderDetailsResponse>(GET_ORDER_DETAILS, {
-      orderId: id,
-    });
+
+    const data = await hasuraClient.request<OrderDetailsResponse>(
+      GET_ORDER_DETAILS,
+      {
+        orderId: id,
+      }
+    );
 
     const orderData = data.Orders_by_pk;
 
@@ -149,11 +158,11 @@ export default async function handler(
       (sum: number, item: any) => sum + item.price * item.quantity,
       0
     );
-    
+
     const serviceFee = parseFloat(orderData.service_fee || "0");
     const deliveryFee = parseFloat(orderData.delivery_fee || "0");
     const totalEarnings = serviceFee + deliveryFee;
-    
+
     const formattedOrder = {
       id: orderData.id,
       createdAt: orderData.created_at,
@@ -191,10 +200,10 @@ export default async function handler(
     });
   } catch (error: any) {
     console.error("Error fetching order details:", error);
-    
+
     return res.status(500).json({
       success: false,
       error: error.message || "Failed to fetch order details",
     });
   }
-} 
+}

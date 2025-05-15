@@ -8,7 +8,7 @@ import { authOptions } from "../auth/[...nextauth]";
 const UPDATE_DELIVERY_PHOTO = gql`
   mutation UpdateDeliveryPhoto($orderId: uuid!, $photoUrl: String!) {
     update_Orders_by_pk(
-      pk_columns: { id: $orderId },
+      pk_columns: { id: $orderId }
       _set: { delivery_photo_url: $photoUrl }
     ) {
       id
@@ -100,8 +100,9 @@ export default async function handler(
     // Return detailed error message
     return res.status(500).json({
       success: false,
-      error: error instanceof Error ? error.message : "An unexpected error occurred",
+      error:
+        error instanceof Error ? error.message : "An unexpected error occurred",
       message: "Failed to update delivery photo",
     });
   }
-} 
+}

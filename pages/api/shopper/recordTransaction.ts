@@ -197,15 +197,25 @@ export default async function handler(
     const formattedOrderAmount = parseFloat(orderAmount.toFixed(2));
 
     console.log(`Available balance: ${wallet.available_balance}`);
-    console.log(`Reserved balance: ${formattedReservedBalance} (raw: ${currentReserved})`);
+    console.log(
+      `Reserved balance: ${formattedReservedBalance} (raw: ${currentReserved})`
+    );
     console.log(`Order amount: ${formattedOrderAmount} (raw: ${orderAmount})`);
-    console.log(`Is reserved balance sufficient: ${formattedReservedBalance >= formattedOrderAmount}`);
+    console.log(
+      `Is reserved balance sufficient: ${
+        formattedReservedBalance >= formattedOrderAmount
+      }`
+    );
 
     // Check if the formatted reserved balance is less than the order amount
     if (formattedReservedBalance < formattedOrderAmount) {
-      console.error(`Insufficient reserved balance: ${formattedReservedBalance} < ${formattedOrderAmount}`);
-      return res.status(400).json({ 
-        error: `Insufficient reserved balance. You have ${formatCurrency(formattedReservedBalance)} but the order requires ${formatCurrency(formattedOrderAmount)}.` 
+      console.error(
+        `Insufficient reserved balance: ${formattedReservedBalance} < ${formattedOrderAmount}`
+      );
+      return res.status(400).json({
+        error: `Insufficient reserved balance. You have ${formatCurrency(
+          formattedReservedBalance
+        )} but the order requires ${formatCurrency(formattedOrderAmount)}.`,
       });
     }
 
@@ -223,39 +233,49 @@ export default async function handler(
       );
 
       orderData = orderResponse.Orders_by_pk;
-      
+
       if (orderData) {
         // Check if refund is needed
         // If originalOrderTotal is provided, use it; otherwise get from orderData
-        const totalOrderValue = originalOrderTotal || parseFloat(orderData.total);
-        
+        const totalOrderValue =
+          originalOrderTotal || parseFloat(orderData.total);
+
         // Calculate if there's a difference between original total and found items total
         if (totalOrderValue > formattedOrderAmount) {
-          refundAmount = parseFloat((totalOrderValue - formattedOrderAmount).toFixed(2));
+          refundAmount = parseFloat(
+            (totalOrderValue - formattedOrderAmount).toFixed(2)
+          );
           refundNeeded = true;
-          
+
           // Get shop name
           const shopName = orderData.Shop?.name || "Unknown Shop";
-          
+
           // Get information about found and not found items
-          const foundItems = orderData.Order_Items.filter(item => item.found);
-          const notFoundItems = orderData.Order_Items.filter(item => !item.found);
-          
+          const foundItems = orderData.Order_Items.filter((item) => item.found);
+          const notFoundItems = orderData.Order_Items.filter(
+            (item) => !item.found
+          );
+
           // Create detailed reason with found/not found items
           refundReason = `Refund for items not found during shopping at ${shopName}. `;
-          
+
           if (foundItems.length > 0) {
-            refundReason += `Found items: ${foundItems.map(item => 
-              `${item.Product.name} (${item.foundQuantity || item.quantity})`
-            ).join(", ")}. `;
+            refundReason += `Found items: ${foundItems
+              .map(
+                (item) =>
+                  `${item.Product.name} (${
+                    item.foundQuantity || item.quantity
+                  })`
+              )
+              .join(", ")}. `;
           }
-          
+
           if (notFoundItems.length > 0) {
-            refundReason += `Not found items: ${notFoundItems.map(item => 
-              `${item.Product.name} (${item.quantity})`
-            ).join(", ")}.`;
+            refundReason += `Not found items: ${notFoundItems
+              .map((item) => `${item.Product.name} (${item.quantity})`)
+              .join(", ")}.`;
           }
-          
+
           refundReason += ` Original total: ${totalOrderValue}, found items total: ${formattedOrderAmount}.`;
         }
       }
@@ -266,9 +286,12 @@ export default async function handler(
 
     // Calculate the new reserved balance after deducting the FULL original amount
     // This is different from before - we deduct the full original amount, not just the found items amount
-    const newReserved = currentReserved - (originalOrderTotal || formattedOrderAmount);
+    const newReserved =
+      currentReserved - (originalOrderTotal || formattedOrderAmount);
     console.log(
-      `Updating reserved balance: ${currentReserved} - ${originalOrderTotal || formattedOrderAmount} = ${newReserved}`
+      `Updating reserved balance: ${currentReserved} - ${
+        originalOrderTotal || formattedOrderAmount
+      } = ${newReserved}`
     );
 
     // Update the wallet balances - only change the reserved balance
@@ -291,7 +314,9 @@ export default async function handler(
     ];
 
     console.log(
-      `Recording transaction for order ${orderId}, amount: ${formattedOrderAmount.toFixed(2)} (found items only)`
+      `Recording transaction for order ${orderId}, amount: ${formattedOrderAmount.toFixed(
+        2
+      )} (found items only)`
     );
     const response = await hasuraClient.request(CREATE_WALLET_TRANSACTIONS, {
       transactions,
@@ -302,7 +327,7 @@ export default async function handler(
     if (refundNeeded && refundAmount > 0 && orderData) {
       try {
         console.log(`Creating refund record for amount: ${refundAmount}`);
-        
+
         // Create refund record
         const refundRecord = {
           order_id: orderId,
@@ -311,13 +336,16 @@ export default async function handler(
           reason: refundReason,
           generated_by: "System",
           user_id: orderData.user_id,
-          paid: false
+          paid: false,
         };
-        
-        refundResponse = await hasuraClient.request<RefundResponse>(CREATE_REFUND, {
-          refund: refundRecord,
-        });
-        
+
+        refundResponse = await hasuraClient.request<RefundResponse>(
+          CREATE_REFUND,
+          {
+            refund: refundRecord,
+          }
+        );
+
         console.log("Refund record created:", refundResponse);
       } catch (refundError) {
         console.error("Error creating refund record:", refundError);
