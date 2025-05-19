@@ -1,5 +1,7 @@
 import { NextApiRequest, NextApiResponse } from "next";
 import { GraphQLClient, gql } from "graphql-request";
+import { getServerSession } from "next-auth/next";
+import { authOptions } from "../auth/[...nextauth]";
 
 const HASURA_URL = process.env.HASURA_GRAPHQL_URL!;
 const HASURA_SECRET = process.env.HASURA_GRAPHQL_ADMIN_SECRET!;
@@ -31,22 +33,30 @@ export default async function handler(
   req: NextApiRequest,
   res: NextApiResponse
 ) {
-  if (req.method !== "POST") {
+  if (req.method !== "GET") {
     return res.status(405).json({ error: "Method not allowed" });
   }
 
   try {
-    const { user_id } = req.body;
-
-    if (!user_id) {
-      return res.status(400).json({ error: "User ID is required" });
+    const session = await getServerSession(req, res, authOptions);
+    if (!session?.user?.id) {
+      return res.status(401).json({ error: "Unauthorized" });
     }
 
     const response = await hasuraClient.request<RefundResponse>(GET_REFUNDS, {
-      user_id,
+      user_id: session.user.id,
     });
 
-    return res.status(200).json({ refunds: response.Refunds || [] });
+    // Calculate total refund amount
+    const totalRefundAmount = response.Refunds.reduce(
+      (sum, refund) => sum + parseFloat(refund.amount),
+      0
+    );
+
+    return res.status(200).json({ 
+      refunds: response.Refunds,
+      totalAmount: totalRefundAmount.toString()
+    });
   } catch (error) {
     console.error("Error fetching refunds:", error);
     return res.status(500).json({
