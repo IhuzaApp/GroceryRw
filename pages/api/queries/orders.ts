@@ -1,10 +1,13 @@
 import { NextApiRequest, NextApiResponse } from "next";
 import { hasuraClient } from "../../../src/lib/hasuraClient";
 import { gql } from "graphql-request";
+import { getServerSession } from "next-auth/next";
+import { authOptions } from "../auth/[...nextauth]";
+import type { Session } from "next-auth";
 
 // Fetch orders including item aggregates, fees, and shopper assignment
 const GET_ORDERS = gql`
-  query GetOrders($user_id: uuid) {
+  query GetOrders($user_id: uuid!) {
     Orders(
       where: { user_id: { _eq: $user_id } }
       order_by: { created_at: desc }
@@ -77,36 +80,57 @@ export default async function handler(
       throw new Error("Hasura client is not initialized");
     }
 
-    // Extract user_id from query parameters or from session
-    let userId = req.query.user_id as string;
-
-    // If no user_id provided in query, try to get it from the session
-    if (!userId && req.headers.authorization) {
-      try {
-        const token = req.headers.authorization.split(" ")[1];
-        // This is a simplified example. In a real app, you would verify the token
-        // and extract the user ID from it using your authentication library
-        const payload = JSON.parse(
-          Buffer.from(token.split(".")[1], "base64").toString()
-        );
-        userId = payload.sub || payload.user_id;
-      } catch (error) {
-        console.error("Error extracting user ID from token:", error);
-      }
+    // Get the user ID from the session
+    const session = await getServerSession(req, res, authOptions as any) as Session | null;
+    if (!session?.user) {
+      return res.status(401).json({ error: "Unauthorized" });
     }
+
+    const userId = (session.user as any).id;
+    if (!userId) {
+      return res.status(400).json({ error: "Missing user ID in session" });
+    }
+
+    console.log(`Fetching orders for user: ${userId}`);
 
     // 1. Fetch orders
     const data = await hasuraClient.request<OrdersResponse>(GET_ORDERS, {
       user_id: userId,
     });
     const orders = data.Orders;
+    
+    console.log(`Found ${orders?.length || 0} orders for user ${userId}`);
+    
+    // If no orders found, return empty array
+    if (!orders || orders.length === 0) {
+      return res.status(200).json({ orders: [] });
+    }
+    
     // 2. Fetch shops for these orders
-    const shopIds = Array.from(new Set(orders.map((o) => o.shop_id)));
+    const shopIds = Array.from(new Set(orders.map((o) => o.shop_id))).filter(Boolean);
 
-    if (!hasuraClient) {
-      throw new Error("Hasura client is not initialized");
+    if (shopIds.length === 0) {
+      // If no shop IDs, return orders without shop data
+      const enriched = orders.map((o) => ({
+        id: o.id,
+        OrderID: o.OrderID,
+        user_id: o.user_id,
+        status: o.status,
+        created_at: o.created_at,
+        delivery_time: o.delivery_time,
+        total: parseFloat(o.total || "0") + 
+               parseFloat(o.service_fee || "0") + 
+               parseFloat(o.delivery_fee || "0"),
+        shop_id: o.shop_id,
+        shopper_id: o.shopper_id,
+        shop: null,
+        itemsCount: o.Order_Items_aggregate.aggregate?.count ?? 0,
+        unitsCount: o.Order_Items_aggregate.aggregate?.sum?.quantity ?? 0,
+      }));
+      return res.status(200).json({ orders: enriched });
     }
 
+    // Proceed with shop data fetching
     const shopsData = await hasuraClient.request<{
       Shops: Array<{
         id: string;

@@ -61,15 +61,30 @@ export default function UserProfile() {
 
   // Load user orders
   useEffect(() => {
+    if (!user?.id) return; // Only load orders if we have a user ID
+    
     setOrdersLoading(true);
     fetch("/api/queries/orders")
-      .then((res) => res.json())
-      .then((data) => {
-        setUserOrders(data.orders || []);
+      .then((res) => {
+        if (!res.ok) {
+          throw new Error(`Failed to fetch orders: ${res.status}`);
+        }
+        return res.json();
       })
-      .catch((err) => console.error("Error fetching orders:", err))
+      .then((data) => {
+        // Verify orders belong to the current user
+        const filteredOrders = (data.orders || []).filter(
+          (order: any) => order.user_id === user.id
+        );
+        setUserOrders(filteredOrders);
+      })
+      .catch((err) => {
+        console.error("Error fetching orders:", err);
+        // Set empty array on error to prevent undefined errors
+        setUserOrders([]);
+      })
       .finally(() => setOrdersLoading(false));
-  }, []);
+  }, [user?.id]); // Re-fetch when user ID changes
 
   // Load default address
   useEffect(() => {
@@ -94,13 +109,28 @@ export default function UserProfile() {
 
   // Function to refresh orders
   const refreshOrders = () => {
+    if (!user?.id) return; // Only refresh if we have a user ID
+    
     setOrdersLoading(true);
     fetch("/api/queries/orders")
-      .then((res) => res.json())
-      .then((data) => {
-        setUserOrders(data.orders || []);
+      .then((res) => {
+        if (!res.ok) {
+          throw new Error(`Failed to fetch orders: ${res.status}`);
+        }
+        return res.json();
       })
-      .catch((err) => console.error("Error refreshing orders:", err))
+      .then((data) => {
+        // Verify orders belong to the current user
+        const filteredOrders = (data.orders || []).filter(
+          (order: any) => order.user_id === user.id
+        );
+        setUserOrders(filteredOrders);
+      })
+      .catch((err) => {
+        console.error("Error refreshing orders:", err);
+        // Set empty array on error to prevent undefined errors
+        setUserOrders([]);
+      })
       .finally(() => setOrdersLoading(false));
   };
 
@@ -163,6 +193,16 @@ export default function UserProfile() {
                 >
                   Edit Profile
                 </Button>
+                
+                <Button
+                  appearance="ghost"
+                  color="blue"
+                  className="mt-3 w-full border-blue-500 text-blue-500 hover:bg-blue-50 sm:w-auto"
+                  href="/Myprofile/become-shopper"
+                >
+                  Become a Shopper
+                </Button>
+                
                 {/* Default address under profile */}
                 <div className="mt-4 w-full text-center">
                   <h3 className="font-medium">Default Address</h3>
