@@ -4,6 +4,13 @@ import Link from "next/link"; // Make sure you import Link if you use it
 import { formatCurrency } from "../../../lib/formatCurrency";
 import Cookies from "js-cookie";
 import { useRouter } from "next/router";
+import PaymentMethodSelector from './PaymentMethodSelector';
+
+interface PaymentMethod {
+  type: 'refund' | 'card' | 'momo';
+  id?: string;
+  number?: string;
+}
 
 interface CheckoutItemsProps {
   Total: number;
@@ -60,6 +67,33 @@ export default function CheckoutItems({
   const [appliedPromo, setAppliedPromo] = useState<string | null>(null);
   const [isCheckoutLoading, setIsCheckoutLoading] = useState(false);
   const [deliveryNotes, setDeliveryNotes] = useState<string>("");
+  const [selectedPaymentMethod, setSelectedPaymentMethod] = useState<PaymentMethod | null>(null);
+  const [loadingPayment, setLoadingPayment] = useState(true);
+
+  // Fetch default payment method on component mount
+  useEffect(() => {
+    const fetchDefaultPaymentMethod = async () => {
+      try {
+        const response = await fetch('/api/queries/payment-methods');
+        const data = await response.json();
+        const defaultMethod = data.paymentMethods?.find((m: any) => m.is_default);
+        
+        if (defaultMethod) {
+          setSelectedPaymentMethod({
+            type: defaultMethod.method.toLowerCase() === 'mtn momo' ? 'momo' : 'card',
+            id: defaultMethod.id,
+            number: defaultMethod.number
+          });
+        }
+      } catch (error) {
+        console.error('Error fetching default payment method:', error);
+      } finally {
+        setLoadingPayment(false);
+      }
+    };
+
+    fetchDefaultPaymentMethod();
+  }, []);
 
   // Service and Delivery Fee calculations
   const serviceFee = 2000; // flat service fee in RWF
@@ -249,6 +283,47 @@ export default function CheckoutItems({
     setIsExpanded(!isExpanded);
   };
 
+  // Update the payment method display section
+  const renderPaymentMethod = () => {
+    if (loadingPayment) {
+      return (
+        <div className="flex items-center">
+          <div className="mr-2 flex p-2 items-center justify-center rounded bg-gray-400 text-xs text-white">
+            LOADING
+          </div>
+          <span>Loading payment method...</span>
+        </div>
+      );
+    }
+
+    if (!selectedPaymentMethod) {
+      return (
+        <div className="flex items-center">
+          <div className="mr-2 flex p-2 items-center justify-center rounded bg-gray-400 text-xs text-white">
+            NONE
+          </div>
+          <span>No payment method selected</span>
+        </div>
+      );
+    }
+
+    return (
+      <div className="flex items-center">
+        <div className="mr-2 flex p-2 items-center justify-center rounded bg-blue-600 text-xs text-white">
+          {selectedPaymentMethod.type === 'refund' ? 'REFUND' : 
+           selectedPaymentMethod.type === 'momo' ? 'MOMO' : 'VISA'}
+        </div>
+        <span>
+          {selectedPaymentMethod.type === 'refund' 
+            ? 'Using Refund Balance'
+            : selectedPaymentMethod.type === 'momo'
+            ? `•••• ${selectedPaymentMethod.number?.slice(-3)}`
+            : `•••• ${selectedPaymentMethod.number?.slice(-4)}`}
+        </span>
+      </div>
+    );
+  };
+
   return (
     <>
       {/* Mobile View - Only visible on small devices */}
@@ -380,7 +455,7 @@ export default function CheckoutItems({
             </div>
             {/* Delivery Notes Input */}
             <div className="mt-2">
-              <h3 className="mb-1 font-medium">Add a Note</h3>
+              <h4 className="mb-1 font-medium">Add a Note</h4>
               <Input
                 as="textarea"
                 rows={2}
@@ -466,7 +541,7 @@ export default function CheckoutItems({
             </div>
 
             <div className="mt-6">
-              <h3 className="mb-2 font-medium">Delivery Time</h3>
+              <h4 className="mb-2 font-medium">Delivery Time</h4>
               <div className="flex items-center rounded-lg bg-gray-50 p-3">
                 <svg
                   viewBox="0 0 24 24"
@@ -485,22 +560,20 @@ export default function CheckoutItems({
             </div>
 
             <div className="mt-6">
-              <h3 className="mb-2 font-medium">Payment Method</h3>
+              <h4 className="mb-2 font-medium">Payment Method</h4>
               <div className="flex items-center justify-between rounded-lg bg-gray-50 p-3">
-                <div className="flex items-center">
-                  <div className="mr-2 flex h-6 w-10 items-center justify-center rounded bg-blue-600 text-xs text-white">
-                    VISA
-                  </div>
-                  <span>•••• 4242</span>
-                </div>
-                <Button color="green" appearance="link" size="sm">
-                  Change
-                </Button>
+                {renderPaymentMethod()}
+                <PaymentMethodSelector
+                  totalAmount={finalTotal}
+                  onSelect={(method) => {
+                    setSelectedPaymentMethod(method);
+                  }}
+                />
               </div>
             </div>
 
             <div className="mt-4">
-              <h3 className="mb-2 font-medium">Promo Code</h3>
+              <h4 className="mb-2 font-medium">Promo Code</h4>
               <div className="flex gap-2">
                 <Input
                   value={promoCode}
@@ -519,7 +592,7 @@ export default function CheckoutItems({
             </div>
 
             <div className="mt-4">
-              <h3 className="mb-2 font-medium">Add a Note</h3>
+              <h4 className="mb-2 font-medium">Add a Note</h4>
               <Input
                 as="textarea"
                 rows={3}
