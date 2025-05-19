@@ -8,8 +8,11 @@ import UserAccount from "./UseerAccount";
 import UserPayment from "./userPayment";
 import UserPreference from "./userPreference";
 import Cookies from "js-cookie";
+import toast from "react-hot-toast";
+import { useRouter } from "next/router";
 
 export default function UserProfile() {
+  const router = useRouter();
   const [activeTab, setActiveTab] = useState("account");
   // User data state
   const [user, setUser] = useState<{
@@ -33,6 +36,12 @@ export default function UserProfile() {
   // Address selection modal state
   const [addresses, setAddresses] = useState<any[]>([]);
   const [showAddrModal, setShowAddrModal] = useState<boolean>(false);
+  // Shopper status
+  const [shopperStatus, setShopperStatus] = useState<{
+    active: boolean;
+    status: string;
+  } | null>(null);
+  const [loadingShopper, setLoadingShopper] = useState<boolean>(true);
 
   // On mount, load any previously selected delivery address from cookie
   useEffect(() => {
@@ -58,6 +67,60 @@ export default function UserProfile() {
       .catch((err) => console.error("Failed to load user profile:", err))
       .finally(() => setLoading(false));
   }, []);
+
+  // Check if user is a shopper and get status
+  useEffect(() => {
+    if (!user?.id) return;
+    
+    setLoadingShopper(true);
+    fetch("/api/queries/check-shopper-status", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ user_id: user.id }),
+    })
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.shopper) {
+          setShopperStatus({
+            active: data.shopper.active,
+            status: data.shopper.status,
+          });
+        } else {
+          setShopperStatus(null);
+        }
+      })
+      .catch((err) => {
+        console.error("Failed to check shopper status:", err);
+        setShopperStatus(null);
+      })
+      .finally(() => setLoadingShopper(false));
+  }, [user?.id]);
+
+  // Handle click on "Become a Plasa" button
+  const handleBecomePlasa = (e: React.MouseEvent) => {
+    if (shopperStatus) {
+      e.preventDefault();
+      
+      // Show toast with current status
+      if (shopperStatus.active) {
+        toast.success("You are already an active Plasa!");
+      } else {
+        toast(`Your application is ${shopperStatus.status}`, {
+          icon: '⏳',
+          duration: 5000,
+        });
+        
+        toast("Your application is still under review. Please check back later.", {
+          duration: 5000,
+        });
+      }
+    } else {
+      // If not a shopper, proceed to the application page
+      router.push("/Myprofile/become-shopper");
+    }
+  };
 
   // Load user orders
   useEffect(() => {
@@ -184,23 +247,28 @@ export default function UserProfile() {
                   <Tag className="border-orange-200 bg-orange-100 text-orange-600">
                     {orderCount} Orders
                   </Tag>
+                  
+                  {/* Shopper status badge */}
+                  {loadingShopper ? (
+                    <div className="h-6 w-24 animate-pulse rounded bg-gray-200" />
+                  ) : shopperStatus?.active ? (
+                    <Tag className="border-green-200 bg-green-100 text-green-600">
+                      Active Plasa
+                    </Tag>
+                  ) : shopperStatus ? (
+                    <Tag className="border-yellow-200 bg-yellow-100 text-yellow-600">
+                      {shopperStatus.status === "pending" ? "Pending Plasa" : shopperStatus.status}
+                    </Tag>
+                  ) : null}
                 </div>
-
+                
                 <Button
                   appearance="primary"
                   color="green"
                   className="mt-5 w-full bg-green-500 text-white sm:w-auto"
+                  onClick={handleBecomePlasa}
                 >
-                  Edit Profile
-                </Button>
-                
-                <Button
-                  appearance="ghost"
-                  color="blue"
-                  className="mt-3 w-full border-blue-500 text-blue-500 hover:bg-blue-50 sm:w-auto"
-                  href="/Myprofile/become-shopper"
-                >
-                  Become a Shopper
+                  Become a Plasa
                 </Button>
                 
                 {/* Default address under profile */}
