@@ -105,11 +105,11 @@ export default function HeaderLayout() {
               </svg>
             </div>
             <div>
-              <h2 className="font-medium text-gray-900">
+              <h6 className="font-medium text-gray-900">
                 {defaultAddress
                   ? `${defaultAddress.street}, ${defaultAddress.city}`
                   : "No address set"}
-              </h2>
+              </h6>
               <p className="text-xs text-gray-500">
                 <button
                   className="text-green-500 hover:underline"
