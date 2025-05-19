@@ -215,12 +215,9 @@ export default async function handler(
         requestUserId: user_id,
         sessionUserId: session.user.id,
       });
-      return res
-        .status(403)
-        .json({
-          error:
-            "User ID mismatch. You can only register yourself as a shopper.",
-        });
+      return res.status(403).json({
+        error: "User ID mismatch. You can only register yourself as a shopper.",
+      });
     }
 
     // Check if the user is already registered as a shopper

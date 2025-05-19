@@ -53,14 +53,15 @@ export default async function handler(
       0
     );
 
-    return res.status(200).json({ 
+    return res.status(200).json({
       refunds: response.Refunds,
-      totalAmount: totalRefundAmount.toString()
+      totalAmount: totalRefundAmount.toString(),
     });
   } catch (error) {
     console.error("Error fetching refunds:", error);
     return res.status(500).json({
-      error: error instanceof Error ? error.message : "An unexpected error occurred",
+      error:
+        error instanceof Error ? error.message : "An unexpected error occurred",
     });
   }
-} 
+}

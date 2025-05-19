@@ -4,10 +4,10 @@ import Link from "next/link"; // Make sure you import Link if you use it
 import { formatCurrency } from "../../../lib/formatCurrency";
 import Cookies from "js-cookie";
 import { useRouter } from "next/router";
-import PaymentMethodSelector from './PaymentMethodSelector';
+import PaymentMethodSelector from "./PaymentMethodSelector";
 
 interface PaymentMethod {
-  type: 'refund' | 'card' | 'momo';
+  type: "refund" | "card" | "momo";
   id?: string;
   number?: string;
 }
@@ -67,26 +67,32 @@ export default function CheckoutItems({
   const [appliedPromo, setAppliedPromo] = useState<string | null>(null);
   const [isCheckoutLoading, setIsCheckoutLoading] = useState(false);
   const [deliveryNotes, setDeliveryNotes] = useState<string>("");
-  const [selectedPaymentMethod, setSelectedPaymentMethod] = useState<PaymentMethod | null>(null);
+  const [selectedPaymentMethod, setSelectedPaymentMethod] =
+    useState<PaymentMethod | null>(null);
   const [loadingPayment, setLoadingPayment] = useState(true);
 
   // Fetch default payment method on component mount
   useEffect(() => {
     const fetchDefaultPaymentMethod = async () => {
       try {
-        const response = await fetch('/api/queries/payment-methods');
+        const response = await fetch("/api/queries/payment-methods");
         const data = await response.json();
-        const defaultMethod = data.paymentMethods?.find((m: any) => m.is_default);
-        
+        const defaultMethod = data.paymentMethods?.find(
+          (m: any) => m.is_default
+        );
+
         if (defaultMethod) {
           setSelectedPaymentMethod({
-            type: defaultMethod.method.toLowerCase() === 'mtn momo' ? 'momo' : 'card',
+            type:
+              defaultMethod.method.toLowerCase() === "mtn momo"
+                ? "momo"
+                : "card",
             id: defaultMethod.id,
-            number: defaultMethod.number
+            number: defaultMethod.number,
           });
         }
       } catch (error) {
-        console.error('Error fetching default payment method:', error);
+        console.error("Error fetching default payment method:", error);
       } finally {
         setLoadingPayment(false);
       }
@@ -288,7 +294,7 @@ export default function CheckoutItems({
     if (loadingPayment) {
       return (
         <div className="flex items-center">
-          <div className="mr-2 flex p-2 items-center justify-center rounded bg-gray-400 text-xs text-white">
+          <div className="mr-2 flex items-center justify-center rounded bg-gray-400 p-2 text-xs text-white">
             LOADING
           </div>
           <span>Loading payment method...</span>
@@ -299,7 +305,7 @@ export default function CheckoutItems({
     if (!selectedPaymentMethod) {
       return (
         <div className="flex items-center">
-          <div className="mr-2 flex p-2 items-center justify-center rounded bg-gray-400 text-xs text-white">
+          <div className="mr-2 flex items-center justify-center rounded bg-gray-400 p-2 text-xs text-white">
             NONE
           </div>
           <span>No payment method selected</span>
@@ -309,14 +315,17 @@ export default function CheckoutItems({
 
     return (
       <div className="flex items-center">
-        <div className="mr-2 flex p-2 items-center justify-center rounded bg-blue-600 text-xs text-white">
-          {selectedPaymentMethod.type === 'refund' ? 'REFUND' : 
-           selectedPaymentMethod.type === 'momo' ? 'MOMO' : 'VISA'}
+        <div className="mr-2 flex items-center justify-center rounded bg-blue-600 p-2 text-xs text-white">
+          {selectedPaymentMethod.type === "refund"
+            ? "REFUND"
+            : selectedPaymentMethod.type === "momo"
+            ? "MOMO"
+            : "VISA"}
         </div>
         <span>
-          {selectedPaymentMethod.type === 'refund' 
-            ? 'Using Refund Balance'
-            : selectedPaymentMethod.type === 'momo'
+          {selectedPaymentMethod.type === "refund"
+            ? "Using Refund Balance"
+            : selectedPaymentMethod.type === "momo"
             ? `•••• ${selectedPaymentMethod.number?.slice(-3)}`
             : `•••• ${selectedPaymentMethod.number?.slice(-4)}`}
         </span>

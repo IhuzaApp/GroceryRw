@@ -39,7 +39,8 @@ export default async function handler(
   } catch (error) {
     console.error("Error fetching user balances:", error);
     return res.status(500).json({
-      error: error instanceof Error ? error.message : "An unexpected error occurred",
+      error:
+        error instanceof Error ? error.message : "An unexpected error occurred",
     });
   }
-} 
+}

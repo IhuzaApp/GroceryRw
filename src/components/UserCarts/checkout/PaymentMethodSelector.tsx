@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from 'react';
-import { Button, Modal, Radio } from 'rsuite';
-import { formatRWF } from '../../../utils/formatCurrency';
+import React, { useState, useEffect } from "react";
+import { Button, Modal, Radio } from "rsuite";
+import { formatRWF } from "../../../utils/formatCurrency";
 
 interface PaymentMethod {
   id: string;
@@ -12,13 +12,20 @@ interface PaymentMethod {
 
 interface PaymentMethodSelectorProps {
   totalAmount: number;
-  onSelect: (method: { type: 'refund' | 'card' | 'momo', id?: string, number?: string }) => void;
+  onSelect: (method: {
+    type: "refund" | "card" | "momo";
+    id?: string;
+    number?: string;
+  }) => void;
 }
 
-export default function PaymentMethodSelector({ totalAmount, onSelect }: PaymentMethodSelectorProps) {
+export default function PaymentMethodSelector({
+  totalAmount,
+  onSelect,
+}: PaymentMethodSelectorProps) {
   const [show, setShow] = useState(false);
   const [paymentMethods, setPaymentMethods] = useState<PaymentMethod[]>([]);
-  const [selectedMethod, setSelectedMethod] = useState<string>('');
+  const [selectedMethod, setSelectedMethod] = useState<string>("");
   const [loading, setLoading] = useState(false);
   const [refundBalance, setRefundBalance] = useState(0);
 
@@ -29,32 +36,35 @@ export default function PaymentMethodSelector({ totalAmount, onSelect }: Payment
 
   const fetchPaymentMethods = async () => {
     try {
-      const response = await fetch('/api/queries/payment-methods');
+      const response = await fetch("/api/queries/payment-methods");
       const data = await response.json();
       setPaymentMethods(data.paymentMethods || []);
-      
+
       // Find and select the default payment method
-      const defaultMethod = data.paymentMethods?.find((m: PaymentMethod) => m.is_default);
+      const defaultMethod = data.paymentMethods?.find(
+        (m: PaymentMethod) => m.is_default
+      );
       if (defaultMethod) {
         setSelectedMethod(defaultMethod.id);
         onSelect({
-          type: defaultMethod.method.toLowerCase() === 'mtn momo' ? 'momo' : 'card',
+          type:
+            defaultMethod.method.toLowerCase() === "mtn momo" ? "momo" : "card",
           id: defaultMethod.id,
-          number: defaultMethod.number
+          number: defaultMethod.number,
         });
       }
     } catch (error) {
-      console.error('Error fetching payment methods:', error);
+      console.error("Error fetching payment methods:", error);
     }
   };
 
   const fetchRefundBalance = async () => {
     try {
-      const response = await fetch('/api/queries/refunds');
+      const response = await fetch("/api/queries/refunds");
       const data = await response.json();
-      setRefundBalance(parseFloat(data.totalAmount || '0'));
+      setRefundBalance(parseFloat(data.totalAmount || "0"));
     } catch (error) {
-      console.error('Error fetching refund balance:', error);
+      console.error("Error fetching refund balance:", error);
     }
   };
 
@@ -64,15 +74,15 @@ export default function PaymentMethodSelector({ totalAmount, onSelect }: Payment
   const handleSelect = () => {
     if (!selectedMethod) return;
 
-    if (selectedMethod === 'refund') {
-      onSelect({ type: 'refund' });
+    if (selectedMethod === "refund") {
+      onSelect({ type: "refund" });
     } else {
-      const method = paymentMethods.find(m => m.id === selectedMethod);
+      const method = paymentMethods.find((m) => m.id === selectedMethod);
       if (method) {
-        onSelect({ 
-          type: method.method.toLowerCase() === 'mtn momo' ? 'momo' : 'card',
+        onSelect({
+          type: method.method.toLowerCase() === "mtn momo" ? "momo" : "card",
           id: method.id,
-          number: method.number
+          number: method.number,
         });
       }
     }
@@ -82,13 +92,13 @@ export default function PaymentMethodSelector({ totalAmount, onSelect }: Payment
   const canUseRefund = refundBalance >= totalAmount;
 
   const handleRadioChange = (value: any) => {
-    if (typeof value === 'string') {
+    if (typeof value === "string") {
       setSelectedMethod(value);
     }
   };
 
   const formatPaymentNumber = (method: string, number: string) => {
-    if (method.toLowerCase() === 'mtn momo') {
+    if (method.toLowerCase() === "mtn momo") {
       return `•••• ${number.slice(-3)}`;
     }
     return `•••• ${number.slice(-4)}`;
@@ -110,7 +120,7 @@ export default function PaymentMethodSelector({ totalAmount, onSelect }: Payment
             <div className="rounded-lg border p-4">
               <Radio
                 value="refund"
-                checked={selectedMethod === 'refund'}
+                checked={selectedMethod === "refund"}
                 onChange={handleRadioChange}
                 disabled={!canUseRefund}
               >
@@ -131,7 +141,9 @@ export default function PaymentMethodSelector({ totalAmount, onSelect }: Payment
             {/* Saved Payment Methods */}
             {paymentMethods.length > 0 && (
               <div className="space-y-2">
-                <div className="font-medium text-gray-700">Saved Payment Methods</div>
+                <div className="font-medium text-gray-700">
+                  Saved Payment Methods
+                </div>
                 {paymentMethods.map((method) => (
                   <div key={method.id} className="rounded-lg border p-4">
                     <Radio
@@ -162,8 +174,8 @@ export default function PaymentMethodSelector({ totalAmount, onSelect }: Payment
           <Button onClick={handleClose} appearance="subtle">
             Cancel
           </Button>
-          <Button 
-            onClick={handleSelect} 
+          <Button
+            onClick={handleSelect}
             appearance="primary"
             disabled={!selectedMethod}
           >
@@ -173,4 +185,4 @@ export default function PaymentMethodSelector({ totalAmount, onSelect }: Payment
       </Modal>
     </>
   );
-} 
+}
