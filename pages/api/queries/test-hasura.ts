@@ -15,37 +15,40 @@ export default async function handler(
   // Return environment info (without secrets)
   const envInfo = {
     hasuraUrl: process.env.HASURA_GRAPHQL_URL ? "Set" : "Not set",
-    hasuraAdminSecret: process.env.HASURA_GRAPHQL_ADMIN_SECRET ? "Set" : "Not set",
-    nextPublicHasuraUrl: process.env.NEXT_PUBLIC_HASURA_GRAPHQL_URL || "Not set",
-    nodeEnv: process.env.NODE_ENV || "Not set"
+    hasuraAdminSecret: process.env.HASURA_GRAPHQL_ADMIN_SECRET
+      ? "Set"
+      : "Not set",
+    nextPublicHasuraUrl:
+      process.env.NEXT_PUBLIC_HASURA_GRAPHQL_URL || "Not set",
+    nodeEnv: process.env.NODE_ENV || "Not set",
   };
 
   try {
     if (!hasuraClient) {
-      return res.status(500).json({ 
-        status: "error", 
+      return res.status(500).json({
+        status: "error",
         message: "Hasura client is not initialized",
-        env: envInfo
+        env: envInfo,
       });
     }
 
     // Attempt a simple query to test the connection
     const data = await hasuraClient.request(TEST_QUERY);
-    
-    return res.status(200).json({ 
-      status: "success", 
+
+    return res.status(200).json({
+      status: "success",
       message: "Hasura connection successful",
       data,
-      env: envInfo
+      env: envInfo,
     });
   } catch (error: any) {
     console.error("Error testing Hasura connection:", error);
-    
-    return res.status(500).json({ 
-      status: "error", 
+
+    return res.status(500).json({
+      status: "error",
       message: "Failed to connect to Hasura",
       error: error.message,
-      env: envInfo
+      env: envInfo,
     });
   }
 }

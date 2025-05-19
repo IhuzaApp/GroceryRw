@@ -6,7 +6,7 @@ import { authOptions } from "../../api/auth/[...nextauth]";
 
 const CHECK_SHOPPER_STATUS = gql`
   query CheckShopperStatus($user_id: uuid!) {
-    shoppers(where: {user_id: {_eq: $user_id}}) {
+    shoppers(where: { user_id: { _eq: $user_id } }) {
       id
       status
       active
@@ -50,15 +50,25 @@ export default async function handler(
 
   try {
     // Verify the user is authenticated
-    const session = await getServerSession(req, res, authOptions as any) as Session | null;
-    
+    const session = (await getServerSession(
+      req,
+      res,
+      authOptions as any
+    )) as Session | null;
+
     if (!session || !session.user) {
-      return res.status(401).json({ error: "You must be authenticated to check shopper status" });
+      return res
+        .status(401)
+        .json({ error: "You must be authenticated to check shopper status" });
     }
-    
+
     if (!hasuraClient) {
-      console.error("Hasura client is not initialized. Check environment variables.");
-      throw new Error("Hasura client is not initialized. Please check server configuration.");
+      console.error(
+        "Hasura client is not initialized. Check environment variables."
+      );
+      throw new Error(
+        "Hasura client is not initialized. Please check server configuration."
+      );
     }
 
     const { user_id } = req.body;
@@ -67,14 +77,19 @@ export default async function handler(
     if (!user_id) {
       return res.status(400).json({ error: "Missing user_id" });
     }
-    
+
     // Verify the user ID in the request matches the authenticated user
     if (user_id !== session.user.id) {
       console.error("User ID mismatch:", {
         requestUserId: user_id,
-        sessionUserId: session.user.id
+        sessionUserId: session.user.id,
       });
-      return res.status(403).json({ error: "User ID mismatch. You can only check your own shopper status." });
+      return res
+        .status(403)
+        .json({
+          error:
+            "User ID mismatch. You can only check your own shopper status.",
+        });
     }
 
     // Check if the user is a shopper
@@ -91,10 +106,10 @@ export default async function handler(
     }
   } catch (error: any) {
     console.error("Error checking shopper status:", error);
-    res.status(500).json({ 
-      error: "Failed to check shopper status", 
+    res.status(500).json({
+      error: "Failed to check shopper status",
       message: error.message,
-      details: error.response?.errors || "No additional details available"
+      details: error.response?.errors || "No additional details available",
     });
   }
-} 
+}

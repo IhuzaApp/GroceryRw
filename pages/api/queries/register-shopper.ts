@@ -52,7 +52,7 @@ const UPDATE_SHOPPER = gql`
     $profile_photo: String
   ) {
     update_shoppers_by_pk(
-      pk_columns: {id: $shopper_id}
+      pk_columns: { id: $shopper_id }
       _set: {
         full_name: $full_name
         address: $address
@@ -76,7 +76,7 @@ const UPDATE_SHOPPER = gql`
 // Check if shopper already exists
 const CHECK_SHOPPER_EXISTS = gql`
   query CheckShopperExists($user_id: uuid!) {
-    shoppers(where: {user_id: {_eq: $user_id}}) {
+    shoppers(where: { user_id: { _eq: $user_id } }) {
       id
       status
       full_name
@@ -160,16 +160,29 @@ export default async function handler(
 
   try {
     // Verify the user is authenticated
-    const session = await getServerSession(req, res, authOptions as any) as Session | null;
-    
+    const session = (await getServerSession(
+      req,
+      res,
+      authOptions as any
+    )) as Session | null;
+
     if (!session || !session.user) {
-      return res.status(401).json({ error: "You must be authenticated to register as a shopper" });
+      return res
+        .status(401)
+        .json({ error: "You must be authenticated to register as a shopper" });
     }
-    
+
     if (!hasuraClient) {
-      console.error("Hasura client is not initialized. Check environment variables.");
-      console.log("HASURA_GRAPHQL_URL:", process.env.HASURA_GRAPHQL_URL || "Not set");
-      throw new Error("Hasura client is not initialized. Please check server configuration.");
+      console.error(
+        "Hasura client is not initialized. Check environment variables."
+      );
+      console.log(
+        "HASURA_GRAPHQL_URL:",
+        process.env.HASURA_GRAPHQL_URL || "Not set"
+      );
+      throw new Error(
+        "Hasura client is not initialized. Please check server configuration."
+      );
     }
 
     const {
@@ -185,32 +198,46 @@ export default async function handler(
     } = req.body as RegisterShopperInput;
 
     // Validate required fields
-    if (!full_name || !address || !phone_number || !national_id || !transport_mode || !user_id) {
+    if (
+      !full_name ||
+      !address ||
+      !phone_number ||
+      !national_id ||
+      !transport_mode ||
+      !user_id
+    ) {
       return res.status(400).json({ error: "Missing required fields" });
     }
-    
+
     // Verify the user ID in the request matches the authenticated user
     if (user_id !== session.user.id) {
       console.error("User ID mismatch:", {
         requestUserId: user_id,
-        sessionUserId: session.user.id
+        sessionUserId: session.user.id,
       });
-      return res.status(403).json({ error: "User ID mismatch. You can only register yourself as a shopper." });
+      return res
+        .status(403)
+        .json({
+          error:
+            "User ID mismatch. You can only register yourself as a shopper.",
+        });
     }
 
     // Check if the user is already registered as a shopper
-    const existingShopperData = await hasuraClient.request<CheckShopperResponse>(
-      CHECK_SHOPPER_EXISTS,
-      { user_id }
-    );
+    const existingShopperData =
+      await hasuraClient.request<CheckShopperResponse>(CHECK_SHOPPER_EXISTS, {
+        user_id,
+      });
 
     if (existingShopperData.shoppers.length > 0) {
       const existingShopper = existingShopperData.shoppers[0];
-      
+
       // If force_update is true, update the existing shopper
       if (force_update) {
-        console.log(`Updating existing shopper record for user ${user_id} with ID ${existingShopper.id}`);
-        
+        console.log(
+          `Updating existing shopper record for user ${user_id} with ID ${existingShopper.id}`
+        );
+
         const updateData = await hasuraClient.request<UpdateShopperResponse>(
           UPDATE_SHOPPER,
           {
@@ -224,18 +251,18 @@ export default async function handler(
             profile_photo,
           }
         );
-        
-        return res.status(200).json({ 
+
+        return res.status(200).json({
           shopper: updateData.update_shoppers_by_pk,
-          updated: true
+          updated: true,
         });
       }
-      
+
       // Otherwise, return that they're already registered
-      return res.status(409).json({ 
-        error: "Already registered as a shopper", 
+      return res.status(409).json({
+        error: "Already registered as a shopper",
         message: `You are already registered as a shopper with status: ${existingShopper.status}`,
-        shopper: existingShopper
+        shopper: existingShopper,
       });
     }
 
@@ -262,15 +289,18 @@ export default async function handler(
       }
     );
 
-    console.log("Shopper registration successful:", data.insert_shoppers_one.id);
+    console.log(
+      "Shopper registration successful:",
+      data.insert_shoppers_one.id
+    );
     res.status(200).json({ shopper: data.insert_shoppers_one });
   } catch (error: any) {
     console.error("Error registering shopper:", error);
     // Return a more detailed error message
-    res.status(500).json({ 
-      error: "Failed to register shopper", 
+    res.status(500).json({
+      error: "Failed to register shopper",
       message: error.message,
-      details: error.response?.errors || "No additional details available"
+      details: error.response?.errors || "No additional details available",
     });
   }
-} 
+}

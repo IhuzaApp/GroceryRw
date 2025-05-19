@@ -71,7 +71,7 @@ export default function UserProfile() {
   // Check if user is a shopper and get status
   useEffect(() => {
     if (!user?.id) return;
-    
+
     setLoadingShopper(true);
     fetch("/api/queries/check-shopper-status", {
       method: "POST",
@@ -102,19 +102,22 @@ export default function UserProfile() {
   const handleBecomePlasa = (e: React.MouseEvent) => {
     if (shopperStatus) {
       e.preventDefault();
-      
+
       // Show toast with current status
       if (shopperStatus.active) {
         toast.success("You are already an active Plasa!");
       } else {
         toast(`Your application is ${shopperStatus.status}`, {
-          icon: '⏳',
+          icon: "⏳",
           duration: 5000,
         });
-        
-        toast("Your application is still under review. Please check back later.", {
-          duration: 5000,
-        });
+
+        toast(
+          "Your application is still under review. Please check back later.",
+          {
+            duration: 5000,
+          }
+        );
       }
     } else {
       // If not a shopper, proceed to the application page
@@ -125,7 +128,7 @@ export default function UserProfile() {
   // Load user orders
   useEffect(() => {
     if (!user?.id) return; // Only load orders if we have a user ID
-    
+
     setOrdersLoading(true);
     fetch("/api/queries/orders")
       .then((res) => {
@@ -173,7 +176,7 @@ export default function UserProfile() {
   // Function to refresh orders
   const refreshOrders = () => {
     if (!user?.id) return; // Only refresh if we have a user ID
-    
+
     setOrdersLoading(true);
     fetch("/api/queries/orders")
       .then((res) => {
@@ -247,7 +250,7 @@ export default function UserProfile() {
                   <Tag className="border-orange-200 bg-orange-100 text-orange-600">
                     {orderCount} Orders
                   </Tag>
-                  
+
                   {/* Shopper status badge */}
                   {loadingShopper ? (
                     <div className="h-6 w-24 animate-pulse rounded bg-gray-200" />
@@ -257,11 +260,13 @@ export default function UserProfile() {
                     </Tag>
                   ) : shopperStatus ? (
                     <Tag className="border-yellow-200 bg-yellow-100 text-yellow-600">
-                      {shopperStatus.status === "pending" ? "Pending Plasa" : shopperStatus.status}
+                      {shopperStatus.status === "pending"
+                        ? "Pending Plasa"
+                        : shopperStatus.status}
                     </Tag>
                   ) : null}
                 </div>
-                
+
                 <Button
                   appearance="primary"
                   color="green"
@@ -270,7 +275,7 @@ export default function UserProfile() {
                 >
                   Become a Plasa
                 </Button>
-                
+
                 {/* Default address under profile */}
                 <div className="mt-4 w-full text-center">
                   <h3 className="font-medium">Default Address</h3>

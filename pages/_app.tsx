@@ -47,7 +47,7 @@ function SessionRefreshHandler({ children }: { children: React.ReactNode }) {
   if (status === "loading") {
     return (
       <div className="flex h-screen w-screen items-center justify-center">
-        <div className="h-16 w-16 animate-spin rounded-full border-t-4 border-b-4 border-green-800"></div>
+        <div className="h-16 w-16 animate-spin rounded-full border-b-4 border-t-4 border-green-800"></div>
       </div>
     );
   }
