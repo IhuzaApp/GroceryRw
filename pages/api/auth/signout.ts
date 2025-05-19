@@ -15,7 +15,7 @@ export default async function handler(
 
   // Get the return URL from cookie or use home
   const returnTo = req.cookies.return_to || "/";
-  
+
   // Check if this is a role switch
   const isRoleSwitch = req.cookies.role_changed === "true";
 
@@ -28,8 +28,8 @@ export default async function handler(
 
   // Check if this request is already coming from NextAuth signout
   // to prevent redirection loops
-  const referer = req.headers.referer || '';
-  if (referer.includes('/api/auth/signout')) {
+  const referer = req.headers.referer || "";
+  if (referer.includes("/api/auth/signout")) {
     // If we're already in the signout process, redirect based on whether role switch completed
     return res.redirect(isRoleSwitch ? "/" : "/Auth/Login");
   }

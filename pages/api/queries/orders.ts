@@ -81,7 +81,11 @@ export default async function handler(
     }
 
     // Get the user ID from the session
-    const session = await getServerSession(req, res, authOptions as any) as Session | null;
+    const session = (await getServerSession(
+      req,
+      res,
+      authOptions as any
+    )) as Session | null;
     if (!session?.user) {
       return res.status(401).json({ error: "Unauthorized" });
     }
@@ -98,16 +102,18 @@ export default async function handler(
       user_id: userId,
     });
     const orders = data.Orders;
-    
+
     console.log(`Found ${orders?.length || 0} orders for user ${userId}`);
-    
+
     // If no orders found, return empty array
     if (!orders || orders.length === 0) {
       return res.status(200).json({ orders: [] });
     }
-    
+
     // 2. Fetch shops for these orders
-    const shopIds = Array.from(new Set(orders.map((o) => o.shop_id))).filter(Boolean);
+    const shopIds = Array.from(new Set(orders.map((o) => o.shop_id))).filter(
+      Boolean
+    );
 
     if (shopIds.length === 0) {
       // If no shop IDs, return orders without shop data
@@ -118,9 +124,10 @@ export default async function handler(
         status: o.status,
         created_at: o.created_at,
         delivery_time: o.delivery_time,
-        total: parseFloat(o.total || "0") + 
-               parseFloat(o.service_fee || "0") + 
-               parseFloat(o.delivery_fee || "0"),
+        total:
+          parseFloat(o.total || "0") +
+          parseFloat(o.service_fee || "0") +
+          parseFloat(o.delivery_fee || "0"),
         shop_id: o.shop_id,
         shopper_id: o.shopper_id,
         shop: null,
