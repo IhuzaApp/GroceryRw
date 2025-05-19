@@ -10,7 +10,7 @@ export default function BecomeShopperPage() {
   return (
     <RootLayout>
       <div className="p-4 md:ml-16">
-        <div className="container mx-auto max-w-4xl">
+        <div className="container mx-auto max-w-1xl">
           {/* Header */}
           <div className="mb-6 flex items-center">
             <Link href="/Myprofile" className="flex items-center text-gray-700">
