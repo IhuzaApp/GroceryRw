@@ -42,9 +42,12 @@ export default async function handler(
       return res.status(400).json({ error: "Shopper ID is required" });
     }
 
-    const response = await hasuraClient.request<WalletResponse>(GET_WALLET_BALANCE, {
-      shopper_id,
-    });
+    const response = await hasuraClient.request<WalletResponse>(
+      GET_WALLET_BALANCE,
+      {
+        shopper_id,
+      }
+    );
 
     const wallet = response.Wallets?.[0] || null;
 
@@ -52,7 +55,8 @@ export default async function handler(
   } catch (error) {
     console.error("Error fetching wallet balance:", error);
     return res.status(500).json({
-      error: error instanceof Error ? error.message : "An unexpected error occurred",
+      error:
+        error instanceof Error ? error.message : "An unexpected error occurred",
     });
   }
-} 
+}

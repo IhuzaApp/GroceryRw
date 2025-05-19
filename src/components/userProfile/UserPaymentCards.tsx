@@ -2,12 +2,12 @@ import React, { useEffect, useState } from "react";
 
 // Helper function to format RWF
 const formatRWF = (amount: string | number) => {
-  const numAmount = typeof amount === 'string' ? parseFloat(amount) : amount;
-  return new Intl.NumberFormat('en-RW', {
-    style: 'currency',
-    currency: 'RWF',
+  const numAmount = typeof amount === "string" ? parseFloat(amount) : amount;
+  return new Intl.NumberFormat("en-RW", {
+    style: "currency",
+    currency: "RWF",
     minimumFractionDigits: 0,
-    maximumFractionDigits: 0
+    maximumFractionDigits: 0,
   }).format(numAmount);
 };
 
@@ -20,7 +20,7 @@ export default function UserPaymentCards() {
     wallet: { available_balance: string; reserved_balance: string } | null;
   }>({
     refunds: [],
-    wallet: null
+    wallet: null,
   });
 
   // Get user ID from session
@@ -51,8 +51,8 @@ export default function UserPaymentCards() {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({ user_id: userId }),
-      }).then(res => res.json()),
-      
+      }).then((res) => res.json()),
+
       // Check if user is a shopper
       fetch("/api/queries/check-shopper-status", {
         method: "POST",
@@ -60,12 +60,12 @@ export default function UserPaymentCards() {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({ user_id: userId }),
-      }).then(res => res.json())
+      }).then((res) => res.json()),
     ])
       .then(([refundsData, shopperData]) => {
         const newBalances = {
           refunds: refundsData.refunds || [],
-          wallet: null
+          wallet: null,
         };
 
         // If user is a shopper, fetch their wallet balance
@@ -77,15 +77,15 @@ export default function UserPaymentCards() {
             },
             body: JSON.stringify({ shopper_id: userId }),
           })
-            .then(res => res.json())
-            .then(walletData => {
+            .then((res) => res.json())
+            .then((walletData) => {
               newBalances.wallet = walletData.wallet;
               return newBalances;
             });
         }
         return newBalances;
       })
-      .then(newBalances => {
+      .then((newBalances) => {
         setBalances(newBalances);
         setError(null);
       })
@@ -98,12 +98,13 @@ export default function UserPaymentCards() {
 
   // Calculate total refund amount
   const totalRefundAmount = balances.refunds.reduce(
-    (sum: number, refund: { amount: string }) => sum + parseFloat(refund.amount),
+    (sum: number, refund: { amount: string }) =>
+      sum + parseFloat(refund.amount),
     0
   );
 
   // Get wallet balance
-  const walletBalance = balances.wallet?.available_balance 
+  const walletBalance = balances.wallet?.available_balance
     ? parseFloat(balances.wallet.available_balance)
     : 0;
 
@@ -218,7 +219,9 @@ export default function UserPaymentCards() {
           <div className="flex items-center justify-between">
             <div>
               <p className="mb-1 text-xs opacity-80">Status</p>
-              <p className="font-medium">{balances.wallet ? "ACTIVE" : "NOT A SHOPPER"}</p>
+              <p className="font-medium">
+                {balances.wallet ? "ACTIVE" : "NOT A SHOPPER"}
+              </p>
             </div>
             <div>
               <p className="mb-1 text-xs opacity-80">Last Updated</p>
