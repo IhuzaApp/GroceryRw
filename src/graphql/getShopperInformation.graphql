@@ -15,5 +15,6 @@ query getShopperInformation {
     transport_mode
     updated_at
     user_id
+    active
   }
 }

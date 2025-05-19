@@ -24,6 +24,8 @@ import { CartProvider } from "../src/context/CartContext";
 import { ChatProvider } from "../src/context/ChatContext";
 import { Toaster } from "react-hot-toast";
 import { GoogleMapProvider } from "../src/context/GoogleMapProvider";
+import { ApolloProvider } from "@apollo/client";
+import apolloClient from "../src/lib/apolloClient";
 
 // Component to handle session refresh after role switching
 function SessionRefreshHandler({ children }: { children: React.ReactNode }) {
@@ -42,6 +44,14 @@ function SessionRefreshHandler({ children }: { children: React.ReactNode }) {
     }
   }, [status]);
 
+  if (status === "loading") {
+    return (
+      <div className="flex h-screen w-screen items-center justify-center">
+        <div className="h-16 w-16 animate-spin rounded-full border-t-4 border-b-4 border-green-800"></div>
+      </div>
+    );
+  }
+
   return <>{children}</>;
 }
 
@@ -52,18 +62,20 @@ export default function App({ Component, pageProps }: AppProps) {
       basePath="/api/auth"
       refetchInterval={0} // Disable automatic refetching
     >
-      <AuthProvider>
-        <CartProvider>
-          <ChatProvider>
-            <GoogleMapProvider>
-              <SessionRefreshHandler>
-                <Toaster position="top-right" />
-                <Component {...pageProps} />
-              </SessionRefreshHandler>
-            </GoogleMapProvider>
-          </ChatProvider>
-        </CartProvider>
-      </AuthProvider>
+      <ApolloProvider client={apolloClient}>
+        <AuthProvider>
+          <CartProvider>
+            <ChatProvider>
+              <GoogleMapProvider>
+                <SessionRefreshHandler>
+                  <Toaster position="top-right" />
+                  <Component {...pageProps} />
+                </SessionRefreshHandler>
+              </GoogleMapProvider>
+            </ChatProvider>
+          </CartProvider>
+        </AuthProvider>
+      </ApolloProvider>
     </SessionProvider>
   );
 }
