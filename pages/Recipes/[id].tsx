@@ -95,34 +95,39 @@ export default function RecipeDetailPage() {
           <div className="rounded-lg bg-red-50 p-4 text-red-800">
             <h3 className="mb-2 font-medium">Error</h3>
             <p>{error}</p>
-            <Button
-              appearance="primary"
-              color="red"
-              className="mt-4"
-              onClick={() => router.push("/Recipes")}
-            >
-              Back to Recipes
-            </Button>
+            <div className="mt-4">
+              <Link href="/Recipes" className="flex items-center text-gray-700 w-fit">
+                <svg
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth={2}
+                  className="mr-2 h-5 w-5"
+                >
+                  <path d="M19 12H5M12 19l-7-7 7-7" />
+                </svg>
+                <span className="hover:underline">Back to Recipes</span>
+              </Link>
+            </div>
           </div>
         ) : meal ? (
           <div>
             {/* Back button */}
-            <Button
-              appearance="subtle"
-              className="mb-4 flex items-center gap-2"
-              onClick={() => router.push("/Recipes")}
-            >
-              <svg
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                className="h-4 w-4"
-              >
-                <path d="M19 12H5M12 19l-7-7 7-7" />
-              </svg>
-              Back to Recipes
-            </Button>
+            <div className="mb-6 flex items-center">
+              <Link href="/Recipes" className="flex items-center text-gray-700">
+                <svg
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth={2}
+                  className="mr-2 h-5 w-5"
+                >
+                  <path d="M19 12H5M12 19l-7-7 7-7" />
+                </svg>
+                <span className="hover:underline">Back</span>
+              </Link>
+              <h1 className="ml-4 text-2xl font-bold">{meal.strMeal}</h1>
+            </div>
 
             {/* Recipe header */}
             <div className="mb-8 flex flex-col items-start gap-6 md:flex-row">
@@ -135,8 +140,6 @@ export default function RecipeDetailPage() {
               </div>
 
               <div className="flex-1">
-                <h1 className="mb-2 text-3xl font-bold text-gray-800">{meal.strMeal}</h1>
-
                 <div className="mb-4 flex flex-wrap gap-2">
                   <span className="rounded-full bg-green-100 px-3 py-1 text-sm text-green-800">
                     {meal.strCategory}
