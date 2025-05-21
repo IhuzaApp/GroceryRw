@@ -6,6 +6,13 @@ import Cookies from "js-cookie";
 import { useRouter } from "next/router";
 import PaymentMethodSelector from "./PaymentMethodSelector";
 
+// Cookie name for system configuration cache
+const SYSTEM_CONFIG_COOKIE = "system_configuration";
+// Cache expiration time (24 hours)
+const CACHE_EXPIRATION_HOURS = 24;
+// Maximum age of cache in milliseconds before refreshing in background (12 hours)
+const CACHE_REFRESH_MS = 12 * 60 * 60 * 1000;
+
 interface PaymentMethod {
   type: "refund" | "card" | "momo";
   id?: string;
@@ -72,24 +79,113 @@ export default function CheckoutItems({
   const [systemConfig, setSystemConfig] = useState<SystemConfiguration | null>(null);
   const [configLoading, setConfigLoading] = useState(true);
 
+  // Function to clear system configuration cache (useful for development)
+  const clearSystemConfigCache = () => {
+    Cookies.remove(SYSTEM_CONFIG_COOKIE);
+    console.log("System configuration cache cleared");
+  };
+
   // Fetch system configuration
   useEffect(() => {
     const fetchSystemConfig = async () => {
       try {
         setConfigLoading(true);
+        
+        // Check if we have cached configuration
+        const cachedConfig = Cookies.get(SYSTEM_CONFIG_COOKIE);
+        
+        if (cachedConfig) {
+          try {
+            // Parse the cached configuration
+            const parsedCache = JSON.parse(cachedConfig);
+            const { config, timestamp } = parsedCache;
+            
+            console.log("Found cached system configuration:", config);
+            setSystemConfig(config);
+            setConfigLoading(false);
+            
+            // Check if cache is stale and needs background refresh
+            const cacheAge = Date.now() - timestamp;
+            if (cacheAge > CACHE_REFRESH_MS) {
+              console.log("Cache is stale, refreshing in background");
+              refreshConfigInBackground();
+            }
+            return;
+          } catch (parseError) {
+            console.error("Error parsing cached configuration:", parseError);
+            // Continue to fetch from API if parsing fails
+          }
+        }
+        
+        // Fetch from API if no valid cache exists
+        await fetchConfigFromAPI();
+      } catch (error) {
+        console.error("Error in system configuration flow:", error);
+        setConfigLoading(false);
+      }
+    };
+    
+    // Function to fetch config from API and update cache
+    const fetchConfigFromAPI = async () => {
+      try {
         const response = await fetch("/api/queries/system-configuration");
         const data = await response.json();
         
         if (data.success && data.config) {
-          console.log("Fetched system configuration:", data.config);
+          console.log("Fetched system configuration from API:", data.config);
           setSystemConfig(data.config);
+          
+          // Store in cookie with expiration and timestamp
+          const cacheData = {
+            config: data.config,
+            timestamp: Date.now()
+          };
+          
+          Cookies.set(
+            SYSTEM_CONFIG_COOKIE, 
+            JSON.stringify(cacheData), 
+            { 
+              expires: CACHE_EXPIRATION_HOURS / 24, // Convert hours to days
+              sameSite: 'strict' 
+            }
+          );
         } else {
           console.error("Failed to fetch system configuration:", data);
         }
       } catch (error) {
-        console.error("Error fetching system configuration:", error);
+        console.error("Error fetching system configuration from API:", error);
       } finally {
         setConfigLoading(false);
+      }
+    };
+    
+    // Function to refresh config in background without blocking UI
+    const refreshConfigInBackground = async () => {
+      try {
+        const response = await fetch("/api/queries/system-configuration");
+        const data = await response.json();
+        
+        if (data.success && data.config) {
+          console.log("Background refresh of system configuration successful:", data.config);
+          setSystemConfig(data.config);
+          
+          // Update cache with new data and timestamp
+          const cacheData = {
+            config: data.config,
+            timestamp: Date.now()
+          };
+          
+          Cookies.set(
+            SYSTEM_CONFIG_COOKIE, 
+            JSON.stringify(cacheData), 
+            { 
+              expires: CACHE_EXPIRATION_HOURS / 24,
+              sameSite: 'strict' 
+            }
+          );
+        }
+      } catch (error) {
+        console.error("Background refresh of system configuration failed:", error);
       }
     };
 
@@ -143,12 +239,12 @@ export default function CheckoutItems({
   }, []);
 
   // Service and Delivery Fee calculations
-  const serviceFee = systemConfig ? parseInt(systemConfig.serviceFee) : 2000; // Use config value or fallback to 2000 RWF
-  const baseDeliveryFee = systemConfig ? parseInt(systemConfig.baseDeliveryFee) : 1000; // Use config value or fallback to 1000 RWF
+  const serviceFee = systemConfig ? parseInt(systemConfig.serviceFee) : 0;
+  const baseDeliveryFee = systemConfig ? parseInt(systemConfig.baseDeliveryFee) : 0;
   // Surcharge based on units beyond extraUnits threshold
-  const extraUnitsThreshold = systemConfig ? parseInt(systemConfig.extraUnits) : 10;
+  const extraUnitsThreshold = systemConfig ? parseInt(systemConfig.extraUnits) : 0;
   const extraUnits = Math.max(0, totalUnits - extraUnitsThreshold);
-  const unitsSurcharge = extraUnits * (systemConfig ? parseInt(systemConfig.unitsSurcharge) : 50);
+  const unitsSurcharge = extraUnits * (systemConfig ? parseInt(systemConfig.unitsSurcharge) : 0);
   // Surcharge based on distance beyond 3km
   let distanceKm = 0;
   let userAlt = 0;
@@ -170,16 +266,16 @@ export default function CheckoutItems({
     }
   }
   const extraDistance = Math.max(0, distanceKm - 3);
-  const distanceSurcharge = Math.ceil(extraDistance) * (systemConfig ? parseInt(systemConfig.distanceSurcharge) : 300);
+  const distanceSurcharge = Math.ceil(extraDistance) * (systemConfig ? parseInt(systemConfig.distanceSurcharge) : 0);
   // Cap the distance-based delivery fee (before units) at cappedDistanceFee
   const rawDistanceFee = baseDeliveryFee + distanceSurcharge;
-  const cappedDistanceFee = systemConfig ? parseInt(systemConfig.cappedDistanceFee) : 2500;
+  const cappedDistanceFee = systemConfig ? parseInt(systemConfig.cappedDistanceFee) : 0;
   const finalDistanceFee = rawDistanceFee > cappedDistanceFee ? cappedDistanceFee : rawDistanceFee;
   // Final delivery fee includes unit surcharge
   const deliveryFee = finalDistanceFee + unitsSurcharge;
 
   // Compute total delivery time: travel time in 3D plus shopping time
-  const shoppingTime = systemConfig ? parseInt(systemConfig.shoppingTime) : 40; // Use config value or fallback to 40 minutes
+  const shoppingTime = systemConfig ? parseInt(systemConfig.shoppingTime) : 0;
   const altKm = (shopAlt - userAlt) / 1000;
   const distance3D = Math.sqrt(distanceKm * distanceKm + altKm * altKm);
   const travelTime = Math.ceil(distance3D); // assume 1 km ≈ 1 minute travel
@@ -389,6 +485,7 @@ export default function CheckoutItems({
             <div className="flex h-48 flex-col items-center justify-center">
               <div className="mb-4 h-8 w-8 animate-spin rounded-full border-4 border-t-4 border-gray-200 border-t-purple-800"></div>
               <p className="text-lg font-medium">Loading checkout information...</p>
+              <p className="mt-2 text-sm text-gray-500">Fetching system configuration</p>
             </div>
           </Panel>
         </div>
