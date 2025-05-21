@@ -79,52 +79,8 @@ export default function CheckoutItems({
   const [systemConfig, setSystemConfig] = useState<SystemConfiguration | null>(null);
   const [configLoading, setConfigLoading] = useState(true);
 
-  // Function to clear system configuration cache (useful for development)
-  const clearSystemConfigCache = () => {
-    Cookies.remove(SYSTEM_CONFIG_COOKIE);
-    console.log("System configuration cache cleared");
-  };
-
   // Fetch system configuration
   useEffect(() => {
-    const fetchSystemConfig = async () => {
-      try {
-        setConfigLoading(true);
-        
-        // Check if we have cached configuration
-        const cachedConfig = Cookies.get(SYSTEM_CONFIG_COOKIE);
-        
-        if (cachedConfig) {
-          try {
-            // Parse the cached configuration
-            const parsedCache = JSON.parse(cachedConfig);
-            const { config, timestamp } = parsedCache;
-            
-            console.log("Found cached system configuration:", config);
-            setSystemConfig(config);
-            setConfigLoading(false);
-            
-            // Check if cache is stale and needs background refresh
-            const cacheAge = Date.now() - timestamp;
-            if (cacheAge > CACHE_REFRESH_MS) {
-              console.log("Cache is stale, refreshing in background");
-              refreshConfigInBackground();
-            }
-            return;
-          } catch (parseError) {
-            console.error("Error parsing cached configuration:", parseError);
-            // Continue to fetch from API if parsing fails
-          }
-        }
-        
-        // Fetch from API if no valid cache exists
-        await fetchConfigFromAPI();
-      } catch (error) {
-        console.error("Error in system configuration flow:", error);
-        setConfigLoading(false);
-      }
-    };
-    
     // Function to fetch config from API and update cache
     const fetchConfigFromAPI = async () => {
       try {
@@ -188,6 +144,65 @@ export default function CheckoutItems({
         console.error("Background refresh of system configuration failed:", error);
       }
     };
+    
+    const fetchSystemConfig = async () => {
+      try {
+        setConfigLoading(true);
+        
+        // Check if we have cached configuration
+        const cachedConfig = Cookies.get(SYSTEM_CONFIG_COOKIE);
+        
+        if (cachedConfig) {
+          try {
+            // Parse the cached configuration
+            const parsedCache = JSON.parse(cachedConfig);
+            
+            // Handle both old format (direct config object) and new format (with timestamp)
+            if (parsedCache.config && parsedCache.timestamp) {
+              // New format with timestamp
+              console.log("Found cached system configuration:", parsedCache.config);
+              setSystemConfig(parsedCache.config);
+              
+              // Check if cache is stale and needs background refresh
+              const cacheAge = Date.now() - parsedCache.timestamp;
+              if (cacheAge > CACHE_REFRESH_MS) {
+                console.log("Cache is stale, refreshing in background");
+                refreshConfigInBackground();
+              }
+            } else {
+              // Old format or unexpected structure - treat as config directly
+              console.log("Found cached system configuration (legacy format):", parsedCache);
+              setSystemConfig(parsedCache);
+              
+              // Always refresh old format in background to update to new format
+              console.log("Updating cache format in background");
+              refreshConfigInBackground();
+            }
+            
+            setConfigLoading(false);
+            return;
+          } catch (parseError) {
+            console.error("Error parsing cached configuration:", parseError);
+            // Continue to fetch from API if parsing fails
+          }
+        }
+        
+        // Fetch from API if no valid cache exists
+        await fetchConfigFromAPI();
+      } catch (error) {
+        console.error("Error in system configuration flow:", error);
+        setConfigLoading(false);
+      }
+    };
+    
+    // Add debug function to window object
+    if (typeof window !== 'undefined') {
+      (window as any).clearGrocerySystemConfigCache = () => {
+        Cookies.remove(SYSTEM_CONFIG_COOKIE);
+        console.log("System configuration cache cleared");
+        fetchConfigFromAPI();
+      };
+    }
 
     fetchSystemConfig();
   }, []);
@@ -304,7 +319,21 @@ export default function CheckoutItems({
     deliveryTime = `Will be delivered in ${mins} minutes`;
   }
 
+  // Check if discounts are enabled in system configuration
+  const discountsEnabled = systemConfig ? systemConfig.discounts : false;
+
   const handleApplyPromo = () => {
+    // If discounts are disabled, don't apply promo codes
+    if (!discountsEnabled) {
+      toaster.push(
+        <Notification type="warning" header="Discounts Disabled">
+          Discounts are currently disabled in the system.
+        </Notification>,
+        { placement: "topEnd" }
+      );
+      return;
+    }
+
     const PROMO_CODES: { [code: string]: number } = {
       SAVE10: 0.1,
       SAVE20: 0.2,
@@ -565,25 +594,27 @@ export default function CheckoutItems({
           className={`p-4 ${isExpanded ? "block" : "hidden"} overflow-y-auto`}
           style={{ maxHeight: "calc(90vh - 60px)" }}
         >
-          <div>
-            <p className="mb-2 text-gray-600">Do you have any promo code?</p>
-            <div className="flex flex-wrap gap-2">
-              <Input
-                value={promoCode}
-                onChange={setPromoCode}
-                placeholder="Enter promo code"
-                className="max-w-md"
-              />
-              <Button
-                appearance="primary"
-                color="green"
-                className="bg-green-100 font-medium text-green-600"
-                onClick={handleApplyPromo}
-              >
-                Apply
-              </Button>
+          {discountsEnabled && (
+            <div>
+              <p className="mb-2 text-gray-600">Do you have any promo code?</p>
+              <div className="flex flex-wrap gap-2">
+                <Input
+                  value={promoCode}
+                  onChange={setPromoCode}
+                  placeholder="Enter promo code"
+                  className="max-w-md"
+                />
+                <Button
+                  appearance="primary"
+                  color="green"
+                  className="bg-green-100 font-medium text-green-600"
+                  onClick={handleApplyPromo}
+                >
+                  Apply
+                </Button>
+              </div>
             </div>
-          </div>
+          )}
 
           <hr className="mt-4" />
 
@@ -741,24 +772,26 @@ export default function CheckoutItems({
               </div>
             </div>
 
-            <div className="mt-4">
-              <h4 className="mb-2 font-medium">Promo Code</h4>
-              <div className="flex gap-2">
-                <Input
-                  value={promoCode}
-                  onChange={setPromoCode}
-                  placeholder="Enter promo code"
-                />
-                <Button
-                  appearance="primary"
-                  color="green"
-                  className="bg-green-100 font-medium text-green-600"
-                  onClick={handleApplyPromo}
-                >
-                  Apply
-                </Button>
+            {discountsEnabled && (
+              <div className="mt-4">
+                <h4 className="mb-2 font-medium">Promo Code</h4>
+                <div className="flex gap-2">
+                  <Input
+                    value={promoCode}
+                    onChange={setPromoCode}
+                    placeholder="Enter promo code"
+                  />
+                  <Button
+                    appearance="primary"
+                    color="green"
+                    className="bg-green-100 font-medium text-green-600"
+                    onClick={handleApplyPromo}
+                  >
+                    Apply
+                  </Button>
+                </div>
               </div>
-            </div>
+            )}
 
             <div className="mt-4">
               <h4 className="mb-2 font-medium">Add a Note</h4>

@@ -492,6 +492,21 @@ export default function ChatPage() {
               {/* Order info */}
               <div className="flex shrink-0 items-center justify-between border-b border-gray-200 bg-gray-50 p-4">
                 <div className="flex items-center">
+                  <Button
+                    appearance="subtle"
+                    className="mr-2 flex h-10 w-10 items-center justify-center rounded-full p-0 text-gray-600 hover:bg-gray-200"
+                    onClick={() => router.push("/Messages")}
+                  >
+                    <svg
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      className="h-40 w-40"
+                    >
+                      <path d="M19 12H5M12 19l-7-7 7-7" />
+                    </svg>
+                  </Button>
                   <div className="mr-3 flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-gray-200 text-gray-600">
                     {order?.shop?.name?.substring(0, 2).toUpperCase() || "SH"}
                   </div>
