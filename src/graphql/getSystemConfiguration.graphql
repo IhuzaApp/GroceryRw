@@ -1,0 +1,11 @@
+query getSystemConfiguration {
+  System_configuratioins {
+    addonDeliveryFee
+    baseDeliveryFee
+    currency
+    discounts
+    id
+    serviceFee
+    shoppingTime
+  }
+}
