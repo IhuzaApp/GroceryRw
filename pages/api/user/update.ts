@@ -60,7 +60,7 @@ export default async function handler(
       name,
       phone: phone || null,
       gender: gender || null,
-      updated_at: new Date().toISOString()
+      updated_at: new Date().toISOString(),
     };
 
     // Execute update mutation
@@ -72,18 +72,18 @@ export default async function handler(
         phone: string | null;
         gender: string | null;
         updated_at: string;
-      }
+      };
     }>(UPDATE_USER, {
       id: user_id,
-      user: userData
+      user: userData,
     });
 
     return res.status(200).json({
       message: "Profile updated successfully",
-      user: result.update_Users_by_pk
+      user: result.update_Users_by_pk,
     });
   } catch (error) {
     console.error("Error updating user profile:", error);
     return res.status(500).json({ message: "Failed to update profile" });
   }
-} 
+}

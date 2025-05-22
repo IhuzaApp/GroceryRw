@@ -8,12 +8,12 @@ export default function UserAccount() {
     name: "",
     email: "",
     phone: "",
-    gender: ""
+    gender: "",
   });
-  
+
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  
+
   // Load user data on component mount
   useEffect(() => {
     setLoading(true);
@@ -25,7 +25,7 @@ export default function UserAccount() {
             name: data.user.name || "",
             email: data.user.email || "",
             phone: data.user.phone || "",
-            gender: data.user.gender || ""
+            gender: data.user.gender || "",
           });
         }
       })
@@ -35,36 +35,38 @@ export default function UserAccount() {
       })
       .finally(() => setLoading(false));
   }, []);
-  
+
   // Handle input changes
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+  const handleChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
+  ) => {
     const { name, value } = e.target;
     setUser((prev) => ({
       ...prev,
-      [name]: value
+      [name]: value,
     }));
   };
-  
+
   // Handle form submission
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setSaving(true);
-    
+
     try {
       const response = await fetch("/api/user/update", {
         method: "POST",
         headers: {
-          "Content-Type": "application/json"
+          "Content-Type": "application/json",
         },
         body: JSON.stringify({
           name: user.name,
           phone: user.phone,
-          gender: user.gender
-        })
+          gender: user.gender,
+        }),
       });
-      
+
       const data = await response.json();
-      
+
       if (response.ok) {
         toast.success("Profile updated successfully");
       } else {
@@ -77,39 +79,39 @@ export default function UserAccount() {
       setSaving(false);
     }
   };
-  
+
   // Handle password change
   const [passwords, setPasswords] = useState({
     currentPassword: "",
-    newPassword: ""
+    newPassword: "",
   });
-  
+
   const handlePasswordChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setPasswords((prev) => ({
       ...prev,
-      [name]: value
+      [name]: value,
     }));
   };
-  
+
   const handlePasswordSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setSaving(true);
-    
+
     try {
       const response = await fetch("/api/user/change-password", {
         method: "POST",
         headers: {
-          "Content-Type": "application/json"
+          "Content-Type": "application/json",
         },
         body: JSON.stringify({
           currentPassword: passwords.currentPassword,
-          newPassword: passwords.newPassword
-        })
+          newPassword: passwords.newPassword,
+        }),
       });
-      
+
       const data = await response.json();
-      
+
       if (response.ok) {
         toast.success("Password updated successfully");
         setPasswords({ currentPassword: "", newPassword: "" });
@@ -188,10 +190,10 @@ export default function UserAccount() {
               </select>
             </div>
           </div>
-          
+
           <div className="mt-6 flex justify-end">
-            <button 
-              type="submit" 
+            <button
+              type="submit"
               className="rounded border bg-green-700 px-3 py-2 text-sm text-white hover:bg-green-600 disabled:bg-gray-400"
               disabled={saving || loading}
             >
@@ -235,10 +237,15 @@ export default function UserAccount() {
         </div>
 
         <div className="mt-6 flex justify-end">
-          <button 
-            type="submit" 
+          <button
+            type="submit"
             className="rounded border bg-green-700 px-3 py-2 text-sm text-white hover:bg-green-600 disabled:bg-gray-400"
-            disabled={saving || loading || !passwords.currentPassword || !passwords.newPassword}
+            disabled={
+              saving ||
+              loading ||
+              !passwords.currentPassword ||
+              !passwords.newPassword
+            }
           >
             {saving ? "Updating..." : "Update Password"}
           </button>

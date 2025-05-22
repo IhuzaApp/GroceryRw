@@ -19,7 +19,10 @@ const GET_USER_PASSWORD = gql`
 // Mutation to update user password
 const UPDATE_USER_PASSWORD = gql`
   mutation UpdateUserPassword($id: uuid!, $password: String!) {
-    update_Users_by_pk(pk_columns: { id: $id }, _set: { password: $password, updated_at: "now()" }) {
+    update_Users_by_pk(
+      pk_columns: { id: $id }
+      _set: { password: $password, updated_at: "now()" }
+    ) {
       id
       updated_at
     }
@@ -53,12 +56,16 @@ export default async function handler(
 
   // Validate required fields
   if (!currentPassword || !newPassword) {
-    return res.status(400).json({ message: "Both current and new passwords are required" });
+    return res
+      .status(400)
+      .json({ message: "Both current and new passwords are required" });
   }
 
   // Validate new password strength
   if (newPassword.length < 8) {
-    return res.status(400).json({ message: "New password must be at least 8 characters long" });
+    return res
+      .status(400)
+      .json({ message: "New password must be at least 8 characters long" });
   }
 
   try {
@@ -73,7 +80,9 @@ export default async function handler(
     }>(GET_USER_PASSWORD, { id: user_id });
 
     if (!userData.Users_by_pk || !userData.Users_by_pk.password) {
-      return res.status(404).json({ message: "User not found or password not set" });
+      return res
+        .status(404)
+        .json({ message: "User not found or password not set" });
     }
 
     // Verify current password
@@ -95,14 +104,14 @@ export default async function handler(
       update_Users_by_pk: { id: string; updated_at: string };
     }>(UPDATE_USER_PASSWORD, {
       id: user_id,
-      password: hashedPassword
+      password: hashedPassword,
     });
 
     return res.status(200).json({
-      message: "Password updated successfully"
+      message: "Password updated successfully",
     });
   } catch (error) {
     console.error("Error updating password:", error);
     return res.status(500).json({ message: "Failed to update password" });
   }
-} 
+}

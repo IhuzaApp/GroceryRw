@@ -67,12 +67,14 @@ export default function UserProfile() {
     setLoading(true);
     fetch("/api/user")
       .then((res) => res.json())
-      .then((data: { user: any; orderCount: number; walletBalance?: number }) => {
-        setUser(data.user);
-        setOrderCount(data.orderCount);
-        // Set wallet balance if available, otherwise default to 0
-        setWalletBalance(data.walletBalance || 0);
-      })
+      .then(
+        (data: { user: any; orderCount: number; walletBalance?: number }) => {
+          setUser(data.user);
+          setOrderCount(data.orderCount);
+          // Set wallet balance if available, otherwise default to 0
+          setWalletBalance(data.walletBalance || 0);
+        }
+      )
       .catch((err) => console.error("Failed to load user profile:", err))
       .finally(() => setLoading(false));
   }, []);
@@ -288,12 +290,18 @@ export default function UserProfile() {
                       setIsSwitchingRole(true);
                       try {
                         // Use the utility function to handle role switching
-                        await initiateRoleSwitch(nextRole as "user" | "shopper");
-                        
+                        await initiateRoleSwitch(
+                          nextRole as "user" | "shopper"
+                        );
+
                         // Update local state after successful DB update
                         toggleRole();
-                        
-                        toast.success(`Switched to ${nextRole === "user" ? "User" : "Shopper"}`);
+
+                        toast.success(
+                          `Switched to ${
+                            nextRole === "user" ? "User" : "Shopper"
+                          }`
+                        );
                       } catch (error) {
                         console.error("Error updating role:", error);
                         toast.error("Failed to switch account");
@@ -303,7 +311,9 @@ export default function UserProfile() {
                     }}
                     disabled={isSwitchingRole}
                   >
-                    {isSwitchingRole ? "Switching..." : `Switch to ${role === "user" ? "Shopper" : "User"}`}
+                    {isSwitchingRole
+                      ? "Switching..."
+                      : `Switch to ${role === "user" ? "Shopper" : "User"}`}
                   </Button>
                 ) : (
                   <Button
@@ -376,7 +386,9 @@ export default function UserProfile() {
               </div>
               <div className="flex items-center justify-between">
                 <span className="text-gray-600">Wallet Balance</span>
-                <span className="font-bold">{formatCurrency(walletBalance)}</span>
+                <span className="font-bold">
+                  {formatCurrency(walletBalance)}
+                </span>
               </div>
             </div>
           )}
