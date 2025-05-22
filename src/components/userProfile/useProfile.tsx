@@ -28,6 +28,8 @@ export default function UserProfile() {
   } | null>(null);
   const [orderCount, setOrderCount] = useState<number>(0);
   const [loading, setLoading] = useState<boolean>(true);
+  // Wallet balance
+  const [walletBalance, setWalletBalance] = useState<number>(0);
   // User orders state
   const [userOrders, setUserOrders] = useState<any[]>([]);
   const [ordersLoading, setOrdersLoading] = useState<boolean>(true);
@@ -65,9 +67,11 @@ export default function UserProfile() {
     setLoading(true);
     fetch("/api/user")
       .then((res) => res.json())
-      .then((data: { user: any; orderCount: number }) => {
+      .then((data: { user: any; orderCount: number; walletBalance?: number }) => {
         setUser(data.user);
         setOrderCount(data.orderCount);
+        // Set wallet balance if available, otherwise default to 0
+        setWalletBalance(data.walletBalance || 0);
       })
       .catch((err) => console.error("Failed to load user profile:", err))
       .finally(() => setLoading(false));
@@ -371,16 +375,8 @@ export default function UserProfile() {
                 <span className="font-bold">{orderCount}</span>
               </div>
               <div className="flex items-center justify-between">
-                <span className="text-gray-600">Saved Items</span>
-                <span className="font-bold">18</span>
-              </div>
-              <div className="flex items-center justify-between">
-                <span className="text-gray-600">Reward Points</span>
-                <span className="font-bold text-green-600">2,450</span>
-              </div>
-              <div className="flex items-center justify-between">
                 <span className="text-gray-600">Wallet Balance</span>
-                <span className="font-bold">{formatCurrency(45)}</span>
+                <span className="font-bold">{formatCurrency(walletBalance)}</span>
               </div>
             </div>
           )}

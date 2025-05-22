@@ -43,8 +43,8 @@ export default async function handler(
   req: NextApiRequest,
   res: NextApiResponse
 ) {
-  // Only allow POST requests
-  if (req.method !== "POST") {
+  // Allow both GET and POST requests
+  if (req.method !== "POST" && req.method !== "GET") {
     return res.status(405).json({ error: "Method not allowed" });
   }
 
@@ -71,22 +71,30 @@ export default async function handler(
       );
     }
 
-    const { user_id } = req.body;
+    let user_id: string;
 
-    // Validate required fields
-    if (!user_id) {
-      return res.status(400).json({ error: "Missing user_id" });
-    }
+    if (req.method === "GET") {
+      // For GET requests, use the authenticated user's ID
+      user_id = session.user.id;
+    } else {
+      // For POST requests, use the user_id from the request body
+      user_id = req.body.user_id;
 
-    // Verify the user ID in the request matches the authenticated user
-    if (user_id !== session.user.id) {
-      console.error("User ID mismatch:", {
-        requestUserId: user_id,
-        sessionUserId: session.user.id,
-      });
-      return res.status(403).json({
-        error: "User ID mismatch. You can only check your own shopper status.",
-      });
+      // Validate required fields
+      if (!user_id) {
+        return res.status(400).json({ error: "Missing user_id" });
+      }
+
+      // Verify the user ID in the request matches the authenticated user
+      if (user_id !== session.user.id) {
+        console.error("User ID mismatch:", {
+          requestUserId: user_id,
+          sessionUserId: session.user.id,
+        });
+        return res.status(403).json({
+          error: "User ID mismatch. You can only check your own shopper status.",
+        });
+      }
     }
 
     // Check if the user is a shopper
