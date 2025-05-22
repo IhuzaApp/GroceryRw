@@ -1,6 +1,6 @@
 import { NextApiRequest, NextApiResponse } from "next";
-import { hasuraClient } from "../../../lib/hasuraClient";
-import { gql } from "@apollo/client";
+import { hasuraClient } from "../../../src/lib/hasuraClient";
+import { gql } from "graphql-request";
 
 // GraphQL query to get refunds and wallet balance
 const GET_USER_BALANCES = gql`
@@ -29,6 +29,10 @@ export default async function handler(
 
     if (!userId) {
       return res.status(400).json({ error: "User ID is required" });
+    }
+
+    if (!hasuraClient) {
+      return res.status(500).json({ error: "GraphQL client is not initialized" });
     }
 
     const response = await hasuraClient.request(GET_USER_BALANCES, {

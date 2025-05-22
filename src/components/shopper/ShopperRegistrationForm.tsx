@@ -473,7 +473,7 @@ export default function ShopperRegistrationForm() {
           </div>
           <h2 className="mb-2 text-2xl font-bold">Application Submitted!</h2>
           <p className="mb-6 text-gray-600">
-            Your application to become a shopper is being reviewed. You'll be
+            Your application to become a shopper is being reviewed. You&apos;ll be
             redirected to your profile page shortly.
           </p>
           <Button
@@ -665,8 +665,8 @@ export default function ShopperRegistrationForm() {
           <h3 className="text-lg font-semibold">What Happens Next?</h3>
           <ol className="ml-5 mt-2 list-decimal space-y-2 text-gray-600">
             <li>Our team will review your application</li>
-            <li>We'll conduct a background check</li>
-            <li>Once approved, you'll be notified via email</li>
+            <li>We&apos;ll conduct a background check</li>
+            <li>Once approved, you&apos;ll be notified via email</li>
             <li>You can then start accepting delivery orders</li>
           </ol>
         </div>
