@@ -1,4 +1,13 @@
 import React, { useEffect, useState } from "react";
+import { GetServerSideProps } from "next";
+
+// Types for our data
+type RefundType = { amount: string; status: string };
+type WalletType = { available_balance: string; reserved_balance: string } | null;
+type BalancesType = {
+  refunds: RefundType[];
+  wallet: WalletType;
+};
 
 // Helper function to format RWF
 const formatRWF = (amount: string | number) => {
@@ -11,36 +20,143 @@ const formatRWF = (amount: string | number) => {
   }).format(numAmount);
 };
 
-export default function UserPaymentCards() {
-  const [userId, setUserId] = useState<string | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [balances, setBalances] = useState<{
-    refunds: Array<{ amount: string; status: string }>;
-    wallet: { available_balance: string; reserved_balance: string } | null;
-  }>({
+// This function is used for server-side rendering
+// To use it, wrap the component with it in your page file
+export const getServerSideProps: GetServerSideProps = async (context) => {
+  try {
+    // Get user session from cookies
+    const { req } = context;
+    
+    // Fetch user data from API
+    const userRes = await fetch(`${process.env.NEXT_PUBLIC_API_URL || ""}/api/user`, {
+      headers: {
+        cookie: req.headers.cookie || "",
+      },
+    });
+    const userData = await userRes.json();
+    
+    if (!userData.user?.id) {
+      return {
+        props: {
+          initialData: {
+            userId: null,
+            balances: { refunds: [], wallet: null },
+          },
+        },
+      };
+    }
+    
+    // Fetch refunds
+    const refundsRes = await fetch(`${process.env.NEXT_PUBLIC_API_URL || ""}/api/queries/refunds`, {
+      headers: {
+        cookie: req.headers.cookie || "",
+      },
+    });
+    const refundsData = await refundsRes.json();
+    
+    // Check if user is a shopper
+    const shopperRes = await fetch(`${process.env.NEXT_PUBLIC_API_URL || ""}/api/queries/check-shopper-status`, {
+      headers: {
+        cookie: req.headers.cookie || "",
+      },
+    });
+    const shopperData = await shopperRes.json();
+    
+    let wallet = null;
+    
+    // If user is a shopper, fetch their wallet balance
+    if (shopperData.shopper?.active) {
+      const walletRes = await fetch(`${process.env.NEXT_PUBLIC_API_URL || ""}/api/queries/wallet-balance`, {
+        headers: {
+          cookie: req.headers.cookie || "",
+        },
+      });
+      const walletData = await walletRes.json();
+      wallet = walletData.wallet;
+    }
+    
+    return {
+      props: {
+        initialData: {
+          userId: userData.user.id,
+          balances: {
+            refunds: refundsData.refunds || [],
+            wallet,
+          },
+        },
+      },
+    };
+  } catch (error) {
+    console.error("Server-side fetch error:", error);
+    return {
+      props: {
+        initialData: {
+          userId: null,
+          balances: { refunds: [], wallet: null },
+          error: "Failed to load data",
+        },
+      },
+    };
+  }
+};
+
+type UserPaymentCardsProps = {
+  initialData?: {
+    userId: string | null;
+    balances: BalancesType;
+    error?: string;
+  };
+};
+
+export default function UserPaymentCards({ initialData }: UserPaymentCardsProps) {
+  const [userId, setUserId] = useState<string | null>(initialData?.userId || null);
+  const [loading, setLoading] = useState(initialData ? !initialData.userId : true);
+  const [error, setError] = useState<string | null>(initialData?.error || null);
+  const [balances, setBalances] = useState<BalancesType>(initialData?.balances || {
     refunds: [],
     wallet: null,
   });
 
-  // Get user ID from session
+  // Fetch user data if not provided by server-side props
   useEffect(() => {
-    fetch("/api/user")
-      .then((res) => res.json())
-      .then((data) => {
-        if (data.user?.id) {
-          setUserId(data.user.id);
-        }
-      })
-      .catch((err) => {
-        console.error("Failed to load user:", err);
-        setError("Failed to load user data");
-      });
-  }, []);
+    if (!initialData) {
+      fetch("/api/user")
+        .then((res) => res.json())
+        .then((data) => {
+          if (data.user?.id) {
+            setUserId(data.user.id);
+          }
+        })
+        .catch((err) => {
+          console.error("Failed to load user:", err);
+          setError("Failed to load user data");
+        });
+    }
+  }, [initialData]);
 
-  // Fetch balances when userId is available
+  // Fallback to client-side fetching if server-side fails
   useEffect(() => {
-    if (!userId) return;
+    if (!userId) {
+      fetch("/api/user")
+        .then((res) => res.json())
+        .then((data) => {
+          if (data.user?.id) {
+            setUserId(data.user.id);
+          }
+        })
+        .catch((err) => {
+          console.error("Failed to load user:", err);
+          setError("Failed to load user data");
+        });
+    }
+  }, [userId]);
+
+  // Fetch balances client-side when userId is available but balances aren't
+  useEffect(() => {
+    // Skip if we already have data from server-side props
+    if (initialData?.balances?.refunds && initialData.balances.refunds.length > 0 || initialData?.balances?.wallet) return;
+    
+    if (!userId || (balances.refunds.length > 0 || balances.wallet)) return;
 
     setLoading(true);
     Promise.all([
@@ -91,7 +207,7 @@ export default function UserPaymentCards() {
         setError("Failed to load balances");
       })
       .finally(() => setLoading(false));
-  }, [userId]);
+  }, [userId, balances.refunds.length, balances.wallet, initialData]);
 
   // Calculate total refund amount
   const totalRefundAmount = balances.refunds.reduce(
@@ -104,10 +220,7 @@ export default function UserPaymentCards() {
   const walletBalance = balances.wallet?.available_balance
     ? parseFloat(balances.wallet.available_balance)
     : 0;
-
-    console.log(balances);
     
-
   if (loading) {
     return (
       <>
