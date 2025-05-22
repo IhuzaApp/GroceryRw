@@ -7,8 +7,16 @@ import type { Session } from "next-auth";
 
 // Mutation to update user profile
 const UPDATE_USER = gql`
-  mutation UpdateUser($id: uuid!, $user: Users_set_input!) {
-    update_Users_by_pk(pk_columns: { id: $id }, _set: $user) {
+  mutation UpdateUser($id: uuid!, $name: String!, $phone: String, $gender: String) {
+    update_Users_by_pk(
+      pk_columns: { id: $id }, 
+      _set: { 
+        name: $name, 
+        phone: $phone, 
+        gender: $gender,
+        updated_at: "now()" 
+      }
+    ) {
       id
       name
       email
@@ -29,39 +37,34 @@ export default async function handler(
     return res.status(405).end(`Method ${req.method} Not Allowed`);
   }
 
-  // Get user session
-  const session = (await getServerSession(
-    req,
-    res,
-    authOptions as any
-  )) as Session | null;
-
-  // Check if user is authenticated
-  if (!session?.user?.id) {
-    return res.status(401).json({ error: "Unauthorized" });
-  }
-
-  const user_id = (session.user as any).id as string;
-  const { name, phone, gender } = req.body;
-
-  // Validate required fields
-  if (!name) {
-    return res.status(400).json({ message: "Username is required" });
-  }
-
   try {
+    // Get user session
+    const session = (await getServerSession(
+      req,
+      res,
+      authOptions as any
+    )) as Session | null;
+
+    // Check if user is authenticated
+    if (!session?.user?.id) {
+      return res.status(401).json({ error: "Unauthorized" });
+    }
+
+    const user_id = (session.user as any).id as string;
+    const { name, phone, gender } = req.body;
+
+    // Validate required fields
+    if (!name) {
+      return res.status(400).json({ message: "Username is required" });
+    }
+
+    // Debug log
+    console.log("Updating user profile:", { user_id, name, phone, gender });
+    
     // Initialize Hasura client
     if (!hasuraClient) {
       throw new Error("Hasura client is not initialized");
     }
-
-    // Prepare user data for update
-    const userData = {
-      name,
-      phone: phone || null,
-      gender: gender || null,
-      updated_at: new Date().toISOString(),
-    };
 
     // Execute update mutation
     const result = await hasuraClient.request<{
@@ -75,15 +78,28 @@ export default async function handler(
       };
     }>(UPDATE_USER, {
       id: user_id,
-      user: userData,
+      name,
+      phone: phone || null,
+      gender: gender || null
     });
+
+    console.log("Update successful:", result);
 
     return res.status(200).json({
       message: "Profile updated successfully",
       user: result.update_Users_by_pk,
     });
-  } catch (error) {
+  } catch (error: any) {
     console.error("Error updating user profile:", error);
-    return res.status(500).json({ message: "Failed to update profile" });
+    console.error("Error details:", error.message, error.stack);
+    
+    if (error.response?.errors) {
+      console.error("GraphQL errors:", JSON.stringify(error.response.errors));
+    }
+
+    return res.status(500).json({ 
+      message: "Failed to update profile",
+      error: error.message || "Unknown error"
+    });
   }
 }
