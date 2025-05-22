@@ -43,8 +43,10 @@ export default async function handler(
       return res.status(401).json({ error: "Unauthorized" });
     }
 
+    const userId = session.user.id;
+
     const response = await hasuraClient.request<RefundResponse>(GET_REFUNDS, {
-      user_id: session.user.id,
+      user_id: userId,
     });
 
     // Calculate total refund amount

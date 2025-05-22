@@ -46,20 +46,18 @@ export default function UserPaymentCards() {
     Promise.all([
       // Fetch refunds
       fetch("/api/queries/refunds", {
-        method: "POST",
+        method: "GET",
         headers: {
           "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ user_id: userId }),
+        }
       }).then((res) => res.json()),
 
       // Check if user is a shopper
       fetch("/api/queries/check-shopper-status", {
-        method: "POST",
+        method: "GET",
         headers: {
           "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ user_id: userId }),
+        }
       }).then((res) => res.json()),
     ])
       .then(([refundsData, shopperData]) => {
@@ -71,11 +69,10 @@ export default function UserPaymentCards() {
         // If user is a shopper, fetch their wallet balance
         if (shopperData.shopper?.active) {
           return fetch("/api/queries/wallet-balance", {
-            method: "POST",
+            method: "GET",
             headers: {
               "Content-Type": "application/json",
-            },
-            body: JSON.stringify({ shopper_id: userId }),
+            }
           })
             .then((res) => res.json())
             .then((walletData) => {
@@ -121,7 +118,7 @@ export default function UserPaymentCards() {
       <h3 className="mb-4 mt-3 text-lg font-bold">Your Payment Cards</h3>
       <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
         {/* Purple Refund Card */}
-        <div className="relative overflow-hidden rounded-xl bg-gradient-to-r from-purple-600 to-purple-800 p-5 text-white shadow-lg">
+        <div className="relative overflow-hidden rounded-xl bg-gradient-to-r from-gray-600 to-gray-800 p-5 text-white shadow-lg">
           <div className="absolute right-0 top-0 -mr-10 -mt-10 h-20 w-20 rounded-full bg-white opacity-5"></div>
           <div className="absolute bottom-0 left-0 -mb-8 -ml-8 h-16 w-16 rounded-full bg-white opacity-5"></div>
 
