@@ -336,8 +336,8 @@ export default function BottomBar() {
                   </g>
                 </svg>
               }
-              tooltip="Receipts"
-              href="/receipts"
+              tooltip="Recipes"
+              href="/Recipes"
               bgColor="bg-[#FFFAE6]  hover:bg-yellow-100"
             />
           </div>

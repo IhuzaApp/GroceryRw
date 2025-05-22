@@ -10,9 +10,12 @@ import UserPreference from "./userPreference";
 import Cookies from "js-cookie";
 import toast from "react-hot-toast";
 import { useRouter } from "next/router";
+import { useAuth } from "../../context/AuthContext";
+import { initiateRoleSwitch } from "../../lib/sessionRefresh";
 
 export default function UserProfile() {
   const router = useRouter();
+  const { role, toggleRole } = useAuth();
   const [activeTab, setActiveTab] = useState("account");
   // User data state
   const [user, setUser] = useState<{
@@ -42,6 +45,8 @@ export default function UserProfile() {
     status: string;
   } | null>(null);
   const [loadingShopper, setLoadingShopper] = useState<boolean>(true);
+  // Role switching state
+  const [isSwitchingRole, setIsSwitchingRole] = useState<boolean>(false);
 
   // On mount, load any previously selected delivery address from cookie
   useEffect(() => {
@@ -267,14 +272,45 @@ export default function UserProfile() {
                   ) : null}
                 </div>
 
-                <Button
-                  appearance="primary"
-                  color="green"
-                  className="mt-5 w-full bg-green-500 text-white sm:w-auto"
-                  onClick={handleBecomePlasa}
-                >
-                  Become a Plasa
-                </Button>
+                {/* Show either Become a Plasa button or Switch Profile button based on shopperStatus */}
+                {loadingShopper ? (
+                  <div className="mt-5 h-8 w-full animate-pulse rounded bg-gray-200" />
+                ) : shopperStatus?.active ? (
+                  <Button
+                    appearance="primary"
+                    className="mt-5 w-full bg-blue-500 text-white sm:w-auto"
+                    onClick={async () => {
+                      const nextRole = role === "user" ? "shopper" : "user";
+                      setIsSwitchingRole(true);
+                      try {
+                        // Use the utility function to handle role switching
+                        await initiateRoleSwitch(nextRole as "user" | "shopper");
+                        
+                        // Update local state after successful DB update
+                        toggleRole();
+                        
+                        toast.success(`Switched to ${nextRole === "user" ? "User" : "Shopper"}`);
+                      } catch (error) {
+                        console.error("Error updating role:", error);
+                        toast.error("Failed to switch account");
+                      } finally {
+                        setIsSwitchingRole(false);
+                      }
+                    }}
+                    disabled={isSwitchingRole}
+                  >
+                    {isSwitchingRole ? "Switching..." : `Switch to ${role === "user" ? "Shopper" : "User"}`}
+                  </Button>
+                ) : (
+                  <Button
+                    appearance="primary"
+                    color="green"
+                    className="mt-5 w-full bg-green-500 text-white sm:w-auto"
+                    onClick={handleBecomePlasa}
+                  >
+                    Become a Plasa
+                  </Button>
+                )}
 
                 {/* Default address under profile */}
                 <div className="mt-4 w-full text-center">
