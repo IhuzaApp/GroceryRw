@@ -3,7 +3,10 @@ import { GetServerSideProps } from "next";
 
 // Types for our data
 type RefundType = { amount: string; status: string };
-type WalletType = { available_balance: string; reserved_balance: string } | null;
+type WalletType = {
+  available_balance: string;
+  reserved_balance: string;
+} | null;
 type BalancesType = {
   refunds: RefundType[];
   wallet: WalletType;
@@ -26,15 +29,18 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
   try {
     // Get user session from cookies
     const { req } = context;
-    
+
     // Fetch user data from API
-    const userRes = await fetch(`${process.env.NEXT_PUBLIC_API_URL || ""}/api/user`, {
-      headers: {
-        cookie: req.headers.cookie || "",
-      },
-    });
+    const userRes = await fetch(
+      `${process.env.NEXT_PUBLIC_API_URL || ""}/api/user`,
+      {
+        headers: {
+          cookie: req.headers.cookie || "",
+        },
+      }
+    );
     const userData = await userRes.json();
-    
+
     if (!userData.user?.id) {
       return {
         props: {
@@ -45,36 +51,47 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
         },
       };
     }
-    
+
     // Fetch refunds
-    const refundsRes = await fetch(`${process.env.NEXT_PUBLIC_API_URL || ""}/api/queries/refunds`, {
-      headers: {
-        cookie: req.headers.cookie || "",
-      },
-    });
-    const refundsData = await refundsRes.json();
-    
-    // Check if user is a shopper
-    const shopperRes = await fetch(`${process.env.NEXT_PUBLIC_API_URL || ""}/api/queries/check-shopper-status`, {
-      headers: {
-        cookie: req.headers.cookie || "",
-      },
-    });
-    const shopperData = await shopperRes.json();
-    
-    let wallet = null;
-    
-    // If user is a shopper, fetch their wallet balance
-    if (shopperData.shopper?.active) {
-      const walletRes = await fetch(`${process.env.NEXT_PUBLIC_API_URL || ""}/api/queries/wallet-balance`, {
+    const refundsRes = await fetch(
+      `${process.env.NEXT_PUBLIC_API_URL || ""}/api/queries/refunds`,
+      {
         headers: {
           cookie: req.headers.cookie || "",
         },
-      });
+      }
+    );
+    const refundsData = await refundsRes.json();
+
+    // Check if user is a shopper
+    const shopperRes = await fetch(
+      `${
+        process.env.NEXT_PUBLIC_API_URL || ""
+      }/api/queries/check-shopper-status`,
+      {
+        headers: {
+          cookie: req.headers.cookie || "",
+        },
+      }
+    );
+    const shopperData = await shopperRes.json();
+
+    let wallet = null;
+
+    // If user is a shopper, fetch their wallet balance
+    if (shopperData.shopper?.active) {
+      const walletRes = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL || ""}/api/queries/wallet-balance`,
+        {
+          headers: {
+            cookie: req.headers.cookie || "",
+          },
+        }
+      );
       const walletData = await walletRes.json();
       wallet = walletData.wallet;
     }
-    
+
     return {
       props: {
         initialData: {
@@ -108,14 +125,22 @@ type UserPaymentCardsProps = {
   };
 };
 
-export default function UserPaymentCards({ initialData }: UserPaymentCardsProps) {
-  const [userId, setUserId] = useState<string | null>(initialData?.userId || null);
-  const [loading, setLoading] = useState(initialData ? !initialData.userId : true);
+export default function UserPaymentCards({
+  initialData,
+}: UserPaymentCardsProps) {
+  const [userId, setUserId] = useState<string | null>(
+    initialData?.userId || null
+  );
+  const [loading, setLoading] = useState(
+    initialData ? !initialData.userId : true
+  );
   const [error, setError] = useState<string | null>(initialData?.error || null);
-  const [balances, setBalances] = useState<BalancesType>(initialData?.balances || {
-    refunds: [],
-    wallet: null,
-  });
+  const [balances, setBalances] = useState<BalancesType>(
+    initialData?.balances || {
+      refunds: [],
+      wallet: null,
+    }
+  );
 
   // Fetch user data if not provided by server-side props
   useEffect(() => {
@@ -154,9 +179,14 @@ export default function UserPaymentCards({ initialData }: UserPaymentCardsProps)
   // Fetch balances client-side when userId is available but balances aren't
   useEffect(() => {
     // Skip if we already have data from server-side props
-    if (initialData?.balances?.refunds && initialData.balances.refunds.length > 0 || initialData?.balances?.wallet) return;
-    
-    if (!userId || (balances.refunds.length > 0 || balances.wallet)) return;
+    if (
+      (initialData?.balances?.refunds &&
+        initialData.balances.refunds.length > 0) ||
+      initialData?.balances?.wallet
+    )
+      return;
+
+    if (!userId || balances.refunds.length > 0 || balances.wallet) return;
 
     setLoading(true);
     Promise.all([
@@ -165,7 +195,7 @@ export default function UserPaymentCards({ initialData }: UserPaymentCardsProps)
         method: "GET",
         headers: {
           "Content-Type": "application/json",
-        }
+        },
       }).then((res) => res.json()),
 
       // Check if user is a shopper
@@ -173,7 +203,7 @@ export default function UserPaymentCards({ initialData }: UserPaymentCardsProps)
         method: "GET",
         headers: {
           "Content-Type": "application/json",
-        }
+        },
       }).then((res) => res.json()),
     ])
       .then(([refundsData, shopperData]) => {
@@ -188,7 +218,7 @@ export default function UserPaymentCards({ initialData }: UserPaymentCardsProps)
             method: "GET",
             headers: {
               "Content-Type": "application/json",
-            }
+            },
           })
             .then((res) => res.json())
             .then((walletData) => {
@@ -220,14 +250,14 @@ export default function UserPaymentCards({ initialData }: UserPaymentCardsProps)
   const walletBalance = balances.wallet?.available_balance
     ? parseFloat(balances.wallet.available_balance)
     : 0;
-    
+
   if (loading) {
     return (
       <>
         <h3 className="mb-4 mt-3 text-lg font-bold">Your Payment Cards</h3>
         <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
           {/* Refund Card Skeleton */}
-          <div className="relative overflow-hidden rounded-xl bg-gradient-to-r from-gray-200 to-gray-300 p-5 shadow-lg animate-pulse">
+          <div className="relative animate-pulse overflow-hidden rounded-xl bg-gradient-to-r from-gray-200 to-gray-300 p-5 shadow-lg">
             <div className="mb-8 flex items-start justify-between">
               <div className="w-1/2">
                 <div className="mb-1 h-3 w-20 rounded bg-gray-400"></div>
@@ -260,7 +290,7 @@ export default function UserPaymentCards({ initialData }: UserPaymentCardsProps)
           </div>
 
           {/* Wallet Card Skeleton */}
-          <div className="relative overflow-hidden rounded-xl bg-gradient-to-r from-green-100 to-green-200 p-5 shadow-lg animate-pulse">
+          <div className="relative animate-pulse overflow-hidden rounded-xl bg-gradient-to-r from-green-100 to-green-200 p-5 shadow-lg">
             <div className="mb-8 flex items-start justify-between">
               <div className="w-1/2">
                 <div className="mb-1 h-3 w-24 rounded bg-green-300"></div>
@@ -431,22 +461,24 @@ export default function UserPaymentCards({ initialData }: UserPaymentCardsProps)
         {!balances.wallet && (
           <div className="flex h-full items-center justify-center rounded-xl border-2 border-dashed border-gray-300 p-5 text-gray-500">
             <div className="text-center">
-              <svg 
-                xmlns="http://www.w3.org/2000/svg" 
-                className="mx-auto h-12 w-12 text-gray-400" 
-                fill="none" 
-                viewBox="0 0 24 24" 
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                className="mx-auto h-12 w-12 text-gray-400"
+                fill="none"
+                viewBox="0 0 24 24"
                 stroke="currentColor"
               >
-                <path 
-                  strokeLinecap="round" 
-                  strokeLinejoin="round" 
-                  strokeWidth={2} 
-                  d="M12 15v2m0 0v2m0-2h2m-2 0H9m4-9H9m12 0a9 9 0 11-18 0 9 9 0 0118 0z" 
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M12 15v2m0 0v2m0-2h2m-2 0H9m4-9H9m12 0a9 9 0 11-18 0 9 9 0 0118 0z"
                 />
               </svg>
               <h3 className="mt-2 text-sm font-medium">No Wallet Available</h3>
-              <p className="mt-1 text-sm">Wallet balance is only available for shoppers</p>
+              <p className="mt-1 text-sm">
+                Wallet balance is only available for shoppers
+              </p>
             </div>
           </div>
         )}

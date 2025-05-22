@@ -43,23 +43,25 @@ export default async function handler(
     if (!hasuraClient) {
       throw new Error("Hasura client is not initialized");
     }
-    
+
     // Fetch system configuration from Hasura
-    const data = await hasuraClient.request<SystemConfigurationResponse>(GET_SYSTEM_CONFIGURATION);
-    
+    const data = await hasuraClient.request<SystemConfigurationResponse>(
+      GET_SYSTEM_CONFIGURATION
+    );
+
     // Return the first configuration object (there should only be one)
     const config = data.System_configuratioins[0] || {};
-    
+
     // Return the configuration
-    res.status(200).json({ 
-      success: true, 
-      config 
+    res.status(200).json({
+      success: true,
+      config,
     });
   } catch (error) {
     console.error("Error fetching system configuration:", error);
-    res.status(500).json({ 
-      success: false, 
-      error: "Failed to fetch system configuration" 
+    res.status(500).json({
+      success: false,
+      error: "Failed to fetch system configuration",
     });
   }
-} 
+}

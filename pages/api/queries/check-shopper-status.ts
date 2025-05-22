@@ -92,7 +92,8 @@ export default async function handler(
           sessionUserId: session.user.id,
         });
         return res.status(403).json({
-          error: "User ID mismatch. You can only check your own shopper status.",
+          error:
+            "User ID mismatch. You can only check your own shopper status.",
         });
       }
     }

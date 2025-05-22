@@ -23,7 +23,9 @@ export default function RecipeDetailPage() {
   const [meal, setMeal] = useState<MealDetail | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [ingredients, setIngredients] = useState<{ name: string; measure: string }[]>([]);
+  const [ingredients, setIngredients] = useState<
+    { name: string; measure: string }[]
+  >([]);
 
   useEffect(() => {
     const fetchRecipeDetails = async () => {
@@ -72,16 +74,17 @@ export default function RecipeDetailPage() {
   const formatInstructions = (instructions: string) => {
     return instructions
       .split(/\r\n|\n|\r/)
-      .filter(step => step.trim() !== "")
-      .map(step => step.trim());
+      .filter((step) => step.trim() !== "")
+      .map((step) => step.trim());
   };
 
   // Extract YouTube video ID
   const getYoutubeVideoId = (url: string) => {
     if (!url) return null;
-    const regExp = /^.*((youtu.be\/)|(v\/)|(\/u\/\w\/)|(embed\/)|(watch\?))\??v?=?([^#&?]*).*/;
+    const regExp =
+      /^.*((youtu.be\/)|(v\/)|(\/u\/\w\/)|(embed\/)|(watch\?))\??v?=?([^#&?]*).*/;
     const match = url.match(regExp);
-    return (match && match[7].length === 11) ? match[7] : null;
+    return match && match[7].length === 11 ? match[7] : null;
   };
 
   return (
@@ -96,7 +99,10 @@ export default function RecipeDetailPage() {
             <h3 className="mb-2 font-medium">Error</h3>
             <p>{error}</p>
             <div className="mt-4">
-              <Link href="/Recipes" className="flex items-center text-gray-700 w-fit">
+              <Link
+                href="/Recipes"
+                className="flex w-fit items-center text-gray-700"
+              >
                 <svg
                   viewBox="0 0 24 24"
                   fill="none"
@@ -135,7 +141,7 @@ export default function RecipeDetailPage() {
                 <img
                   src={meal.strMealThumb}
                   alt={meal.strMeal}
-                  className="h-auto w-full rounded-lg object-cover shadow-lg hover:scale-105 transition-all duration-300"
+                  className="h-auto w-full rounded-lg object-cover shadow-lg transition-all duration-300 hover:scale-105"
                 />
               </div>
 
@@ -147,18 +153,21 @@ export default function RecipeDetailPage() {
                   <span className="rounded-full bg-blue-100 px-3 py-1 text-sm text-blue-800">
                     {meal.strArea}
                   </span>
-                  {meal.strTags && meal.strTags.split(',').map(tag => (
-                    <span
-                      key={tag}
-                      className="rounded-full bg-purple-100 px-3 py-1 text-sm text-purple-800"
-                    >
-                      {tag.trim()}
-                    </span>
-                  ))}
+                  {meal.strTags &&
+                    meal.strTags.split(",").map((tag) => (
+                      <span
+                        key={tag}
+                        className="rounded-full bg-purple-100 px-3 py-1 text-sm text-purple-800"
+                      >
+                        {tag.trim()}
+                      </span>
+                    ))}
                 </div>
 
                 <div className="mb-6">
-                  <h2 className="mb-2 text-xl font-semibold text-gray-800">Ingredients</h2>
+                  <h2 className="mb-2 text-xl font-semibold text-gray-800">
+                    Ingredients
+                  </h2>
                   <ul className="list-inside list-disc space-y-2 text-gray-700">
                     {ingredients.map((item, index) => (
                       <li key={index}>
@@ -173,7 +182,11 @@ export default function RecipeDetailPage() {
 
             {/* Instructions */}
             <Panel
-              header={<h2 className="text-xl font-semibold text-gray-800">Instructions</h2>}
+              header={
+                <h2 className="text-xl font-semibold text-gray-800">
+                  Instructions
+                </h2>
+              }
               bordered
               className="mb-8 shadow-lg"
             >
@@ -187,12 +200,16 @@ export default function RecipeDetailPage() {
             {/* YouTube video if available */}
             {meal.strYoutube && (
               <div className="mb-8">
-                <h2 className="mb-4 text-xl font-semibold text-gray-800">Watch Video Tutorial</h2>
+                <h2 className="mb-4 text-xl font-semibold text-gray-800">
+                  Watch Video Tutorial
+                </h2>
                 <div className="aspect-w-16 aspect-h-9 overflow-hidden rounded-lg shadow-lg">
                   <iframe
                     width="560"
                     height="315"
-                    src={`https://www.youtube.com/embed/${getYoutubeVideoId(meal.strYoutube)}`}
+                    src={`https://www.youtube.com/embed/${getYoutubeVideoId(
+                      meal.strYoutube
+                    )}`}
                     title="YouTube video player"
                     frameBorder="0"
                     allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"

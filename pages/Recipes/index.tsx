@@ -51,21 +51,22 @@ export default function RecipesPage() {
       try {
         // Fetch meals starting with different letters to get a variety
         const letters = ["a", "b", "c", "s", "t"];
-        const mealPromises = letters.map(letter =>
-          fetch(`https://www.themealdb.com/api/json/v1/1/search.php?f=${letter}`)
-            .then(res => res.json())
+        const mealPromises = letters.map((letter) =>
+          fetch(
+            `https://www.themealdb.com/api/json/v1/1/search.php?f=${letter}`
+          ).then((res) => res.json())
         );
 
         const results = await Promise.all(mealPromises);
-        
+
         // Combine and shuffle results to get a random selection
         let allMeals: Meal[] = [];
-        results.forEach(result => {
+        results.forEach((result) => {
           if (result.meals) {
             allMeals = [...allMeals, ...result.meals];
           }
         });
-        
+
         // Shuffle and take first 12 meals
         const shuffled = allMeals.sort(() => 0.5 - Math.random());
         setMeals(shuffled.slice(0, 12));
@@ -84,14 +85,14 @@ export default function RecipesPage() {
   // Handle search
   const handleSearch = async () => {
     if (!searchTerm.trim()) return;
-    
+
     setLoading(true);
     try {
       const response = await fetch(
         `https://www.themealdb.com/api/json/v1/1/search.php?s=${searchTerm}`
       );
       const data = await response.json();
-      
+
       if (data.meals) {
         setMeals(data.meals);
         setActiveCategory(null);
@@ -111,13 +112,13 @@ export default function RecipesPage() {
   const handleCategoryFilter = async (categoryName: string) => {
     setLoading(true);
     setActiveCategory(categoryName);
-    
+
     try {
       const response = await fetch(
         `https://www.themealdb.com/api/json/v1/1/filter.php?c=${categoryName}`
       );
       const data = await response.json();
-      
+
       if (data.meals) {
         setMeals(data.meals);
       } else {
@@ -143,8 +144,12 @@ export default function RecipesPage() {
     <RootLayout>
       <div className="container mx-auto px-4 py-8">
         <div className="mb-8">
-          <h1 className="text-4xl font-bold text-gray-800">Explore Delicious Recipes</h1>
-          <p className="text-lg text-gray-600">Discover recipes from all over the world</p>
+          <h1 className="text-4xl font-bold text-gray-800">
+            Explore Delicious Recipes
+          </h1>
+          <p className="text-lg text-gray-600">
+            Discover recipes from all over the world
+          </p>
         </div>
 
         {/* Search Bar */}
@@ -172,13 +177,19 @@ export default function RecipesPage() {
 
         {/* Categories */}
         <div className="mb-8">
-          <h2 className="text-2xl font-semibold text-gray-800 mb-4">Categories</h2>
+          <h2 className="mb-4 text-2xl font-semibold text-gray-800">
+            Categories
+          </h2>
           <div className="flex flex-wrap gap-2">
             {categories.map((category) => (
               <Button
                 key={category.idCategory}
-                appearance={activeCategory === category.strCategory ? "primary" : "ghost"}
-                color={activeCategory === category.strCategory ? "green" : undefined}
+                appearance={
+                  activeCategory === category.strCategory ? "primary" : "ghost"
+                }
+                color={
+                  activeCategory === category.strCategory ? "green" : undefined
+                }
                 onClick={() => handleCategoryFilter(category.strCategory)}
                 className="mb-2 text-lg"
               >
@@ -221,7 +232,9 @@ export default function RecipesPage() {
                     />
                   </div>
                   <div className="p-4">
-                    <h3 className="text-xl font-semibold mb-2 text-gray-800">{meal.strMeal}</h3>
+                    <h3 className="mb-2 text-xl font-semibold text-gray-800">
+                      {meal.strMeal}
+                    </h3>
                     <div className="flex flex-wrap gap-2">
                       {meal.strCategory && (
                         <span className="rounded-full bg-green-100 px-2 py-1 text-xs text-green-800">
@@ -254,7 +267,9 @@ export default function RecipesPage() {
               <path d="M13 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V9z"></path>
               <polyline points="13 2 13 9 20 9"></polyline>
             </svg>
-            <h3 className="text-2xl font-medium text-gray-600 mb-2">No recipes found</h3>
+            <h3 className="mb-2 text-2xl font-medium text-gray-600">
+              No recipes found
+            </h3>
             <p className="text-gray-500">Try searching for something else</p>
           </div>
         )}
