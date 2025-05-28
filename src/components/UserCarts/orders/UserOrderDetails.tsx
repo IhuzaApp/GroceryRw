@@ -111,7 +111,7 @@ export default function UserOrderDetails({ order }: UserOrderDetailsProps) {
       }
 
       // Close modal and update state
-      setFeedbackModal(false);
+    setFeedbackModal(false);
       setRating(0);
       setComment("");
       setHasExistingRating(true);
@@ -481,24 +481,24 @@ export default function UserOrderDetails({ order }: UserOrderDetailsProps) {
           setComment("");
           setSubmitError(null);
         }}
-        className="overflow-hidden"
+        className="mx-4 max-w-[95%] overflow-hidden md:mx-auto md:max-w-[500px]"
       >
         <Modal.Header>
           <Modal.Title>
-            <div className="flex items-center">
-              <div className="mr-3 flex h-10 w-10 items-center justify-center rounded-full bg-green-100">
+            <div className="flex flex-col items-start gap-2 sm:flex-row sm:items-center">
+              <div className="flex h-10 w-10 items-center justify-center rounded-full bg-green-100">
                 <svg className="h-6 w-6 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                 </svg>
               </div>
               <div>
-                <h3 className="text-xl font-bold text-gray-900">Rate Your Experience</h3>
+                <h3 className="text-lg font-bold text-gray-900 sm:text-xl">Rate Your Experience</h3>
                 <p className="mt-1 text-sm text-gray-500">Your feedback helps us improve our service</p>
               </div>
             </div>
           </Modal.Title>
         </Modal.Header>
-        <Modal.Body>
+        <Modal.Body className="px-4 py-5 sm:px-6">
           {submitError && (
             <div className="mb-6 rounded-md bg-red-50 p-4">
               <div className="flex">
@@ -516,15 +516,16 @@ export default function UserOrderDetails({ order }: UserOrderDetailsProps) {
           
           <div className="space-y-6">
             {/* Rating Section */}
-            <div className="rounded-lg bg-gray-50 p-6 text-center">
-              <h4 className="mb-4 text-lg font-medium text-gray-900">How was your experience?</h4>
-              <div className="flex justify-center">
-                <Rate
+            <div className="rounded-lg bg-gray-50 p-4 sm:p-6 text-center">
+              <h4 className="mb-4 text-base font-medium text-gray-900 sm:text-lg">How was your experience?</h4>
+            <div className="flex justify-center">
+              <Rate
                   defaultValue={0}
                   value={rating}
                   onChange={setRating}
-                  color="yellow"
-                  size="lg"
+                color="yellow"
+                size="lg"
+                  className="text-2xl sm:text-3xl"
                 />
               </div>
               <p className="mt-2 text-sm text-gray-500">
@@ -538,20 +539,20 @@ export default function UserOrderDetails({ order }: UserOrderDetailsProps) {
             </div>
 
             {/* Detailed Ratings */}
-            <div className="space-y-4 rounded-lg p-6">
-              <h4 className="mb-4 text-lg font-medium text-gray-900">Additional Feedback</h4>
+            <div className="space-y-4 rounded-lg border border-gray-200 p-4 sm:p-6">
+              <h4 className="text-base font-medium text-gray-900 sm:text-lg">Additional Feedback</h4>
               <div className="space-y-4">
                 <div>
                   <label className="mb-2 block text-sm font-medium text-gray-700">
                     Share your thoughts
-                  </label>
-                  <textarea
+            </label>
+            <textarea
                     className="w-full rounded-md border border-gray-300 p-3 text-sm focus:border-green-500 focus:outline-none focus:ring-1 focus:ring-green-500"
                     placeholder="Tell us what you liked or what we could improve..."
-                    rows={4}
+              rows={4}
                     value={comment}
                     onChange={(e) => setComment(e.target.value)}
-                  ></textarea>
+            ></textarea>
                 </div>
               </div>
             </div>
@@ -559,7 +560,7 @@ export default function UserOrderDetails({ order }: UserOrderDetailsProps) {
         </Modal.Body>
 
         <Modal.Footer>
-          <div className="flex w-full items-center justify-end gap-3 px-6 py-4">
+          <div className="flex w-full flex-col-reverse gap-3 border-t border-gray-200 px-4 py-4 sm:flex-row sm:justify-end sm:px-6">
             <button
               onClick={() => {
                 setFeedbackModal(false);
@@ -567,15 +568,15 @@ export default function UserOrderDetails({ order }: UserOrderDetailsProps) {
                 setComment("");
                 setSubmitError(null);
               }}
-              className="rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 transition hover:bg-gray-50"
+              className="rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 shadow-sm transition hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2"
               type="button"
             >
-              Cancel
+            Cancel
             </button>
             <button
-              onClick={handleFeedbackSubmit}
+            onClick={handleFeedbackSubmit}
               disabled={submitting}
-              className="flex items-center rounded-md bg-green-500 px-4 py-2 text-sm font-medium text-white transition hover:bg-green-600 disabled:opacity-50"
+              className="flex items-center justify-center rounded-md bg-green-500 px-4 py-2 text-sm font-medium text-white shadow-sm transition hover:bg-green-600 disabled:opacity-50 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2"
               type="submit"
             >
               {submitting ? (
@@ -613,7 +614,7 @@ export default function UserOrderDetails({ order }: UserOrderDetailsProps) {
           padding: 1.5rem !important;
         }
         .rs-modal-body {
-          padding: 0 1.5rem 1.5rem 1.5rem !important;
+          padding: 0 !important;
         }
         .rs-modal-footer {
           padding: 0 !important;
@@ -622,11 +623,19 @@ export default function UserOrderDetails({ order }: UserOrderDetailsProps) {
         .rs-rate-character-active {
           color: #eab308 !important;
         }
-        .rs-modal {
-          max-width: 500px !important;
-        }
         .rs-modal-content {
           border-radius: 0.75rem !important;
+        }
+        @media (max-width: 640px) {
+          .rs-modal {
+            margin: 1rem !important;
+          }
+          .rs-modal-header {
+            padding: 1rem !important;
+          }
+          .rs-rate {
+            font-size: 2rem !important;
+          }
         }
       `}</style>
     </>
