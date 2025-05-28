@@ -22,6 +22,26 @@ export default function UserOrderDetails({ order }: UserOrderDetailsProps) {
   const [isMobile, setIsMobile] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
+  const [hasExistingRating, setHasExistingRating] = useState(false);
+
+  // Check for existing rating
+  useEffect(() => {
+    const checkExistingRating = async () => {
+      try {
+        const response = await fetch(`/api/queries/checkRating?orderId=${order.id}`);
+        if (response.ok) {
+          const data = await response.json();
+          setHasExistingRating(data.Ratings && data.Ratings.length > 0);
+        }
+      } catch (error) {
+        console.error('Error checking existing rating:', error);
+      }
+    };
+
+    if (order?.id) {
+      checkExistingRating();
+    }
+  }, [order?.id]);
 
   // Update the isMobile state based on window size
   useEffect(() => {
@@ -77,11 +97,11 @@ export default function UserOrderDetails({ order }: UserOrderDetailsProps) {
         body: JSON.stringify({
           order_id: order.id,
           shopper_id: order.assignedTo.id,
-          rating: rating,
+          rating: rating.toString(),
           review: comment,
-          delivery_experience: rating,
-          packaging_quality: rating,
-          professionalism: rating,
+          delivery_experience: rating.toString(),
+          packaging_quality: rating.toString(),
+          professionalism: rating.toString(),
         }),
       });
 
@@ -90,11 +110,11 @@ export default function UserOrderDetails({ order }: UserOrderDetailsProps) {
         throw new Error(error.message || 'Failed to submit feedback');
       }
 
-      // Close modal and show success message
+      // Close modal and update state
       setFeedbackModal(false);
       setRating(0);
       setComment("");
-      // You might want to add a toast notification here for success
+      setHasExistingRating(true);
     } catch (error) {
       setSubmitError(error instanceof Error ? error.message : 'Failed to submit feedback');
     } finally {
@@ -167,12 +187,19 @@ export default function UserOrderDetails({ order }: UserOrderDetailsProps) {
           </div>
 
           {/* Action Buttons */}
-          {order.status === "delivered" ? (
+          {order.status === "delivered" && !hasExistingRating ? (
             <button
-              className="rounded-md bg-green-500 px-4 py-2 text-white transition hover:bg-green-600"
+              className="inline-flex items-center rounded-md bg-green-500 px-3 py-1.5 text-sm font-medium text-white shadow-sm transition hover:bg-green-600 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2"
               onClick={() => setFeedbackModal(true)}
             >
-              Provide Feedback
+              <svg
+                className="mr-1.5 h-4 w-4"
+                viewBox="0 0 20 20"
+                fill="currentColor"
+              >
+                <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+              </svg>
+              Feedback
             </button>
           ) : (
             <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row">
