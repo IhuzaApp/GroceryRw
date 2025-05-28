@@ -284,7 +284,7 @@ export default function UserProfile() {
                 ) : shopperStatus?.active ? (
                   <Button
                     appearance="primary"
-                    className="mt-5 w-full bg-blue-500 text-white sm:w-auto"
+                    className="mt-5 w-full bg-green-500 hover:bg-green-600 text-white sm:w-auto !bg-green-500 hover:!bg-green-600"
                     onClick={async () => {
                       const nextRole = role === "user" ? "shopper" : "user";
                       setIsSwitchingRole(true);
