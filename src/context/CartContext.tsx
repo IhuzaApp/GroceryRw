@@ -46,6 +46,8 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({
       throw new Error(data.error || "Add to cart failed");
     }
     setCount(data.count ?? 0);
+    // Notify other components that cart has changed
+    window.dispatchEvent(new Event("cartChanged"));
   };
 
   // On authentication, load existing cart item counts

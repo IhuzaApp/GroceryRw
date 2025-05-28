@@ -12,7 +12,7 @@ interface ProductCardProps {
   id: string;
   name: string;
   image: string;
-  price: string;
+  final_price: string;
   unit: string;
   sale?: boolean;
   originalPrice?: string;
@@ -99,7 +99,7 @@ export default function ItemsSection({
                   shopId={shop.id}
                   name={product.name}
                   image={product.image}
-                  price={product.price}
+                  final_price={product.final_price}
                   unit={product.unit}
                   sale={product.sale}
                   originalPrice={product.originalPrice}
@@ -118,7 +118,7 @@ function ProductCard({
   shopId,
   name,
   image,
-  price,
+  final_price,
   unit,
   sale,
   originalPrice,
@@ -143,6 +143,7 @@ function ProductCard({
           shopId,
           productId: id,
           quantity: 1,
+          price: final_price  // Add price to pending action
         })
       );
       router.push(`/auth/login?redirect=${encodeURIComponent(router.asPath)}`);
@@ -222,7 +223,7 @@ function ProductCard({
           <div className="flex items-center justify-between">
             <div>
               <span className="font-bold text-gray-900">
-                {formatCurrency(parseFloat(price))}
+                {formatCurrency(parseFloat(final_price || "0"))}
                 {measurement_unit ? ` / ${measurement_unit}` : ""}
               </span>
               {sale && originalPrice && (
