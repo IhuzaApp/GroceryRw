@@ -1,6 +1,6 @@
 import React, { useEffect } from "react";
 import Image from "next/image";
-import { Input, InputGroup, Button, Panel, Steps, Rate, Modal } from "rsuite";
+import { Input, InputGroup, Button, Panel, Steps, Rate, Modal, Message } from "rsuite";
 import Link from "next/link";
 import { useState } from "react";
 import { formatCurrency } from "../../../lib/formatCurrency";
@@ -20,6 +20,8 @@ export default function UserOrderDetails({ order }: UserOrderDetailsProps) {
   const [rating, setRating] = useState(0);
   const [comment, setComment] = useState("");
   const [isMobile, setIsMobile] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState<string | null>(null);
 
   // Update the isMobile state based on window size
   useEffect(() => {
@@ -57,11 +59,47 @@ export default function UserOrderDetails({ order }: UserOrderDetailsProps) {
     }
   };
 
-  const handleFeedbackSubmit = () => {
-    // In a real app, this would send the feedback to an API
-    console.log("Feedback submitted:", { rating, comment });
-    setFeedbackModal(false);
-    // Show success message or update UI
+  const handleFeedbackSubmit = async () => {
+    if (rating === 0) {
+      setSubmitError("Please provide a rating");
+      return;
+    }
+
+    setSubmitting(true);
+    setSubmitError(null);
+
+    try {
+      const response = await fetch('/api/ratings/create', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          order_id: order.id,
+          shopper_id: order.assignedTo.id,
+          rating: rating,
+          review: comment,
+          delivery_experience: rating,
+          packaging_quality: rating,
+          professionalism: rating,
+        }),
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.message || 'Failed to submit feedback');
+      }
+
+      // Close modal and show success message
+      setFeedbackModal(false);
+      setRating(0);
+      setComment("");
+      // You might want to add a toast notification here for success
+    } catch (error) {
+      setSubmitError(error instanceof Error ? error.message : 'Failed to submit feedback');
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   return (
@@ -130,13 +168,12 @@ export default function UserOrderDetails({ order }: UserOrderDetailsProps) {
 
           {/* Action Buttons */}
           {order.status === "delivered" ? (
-            <Button
-              appearance="primary"
-              className="bg-green-500 text-white transition hover:bg-green-600"
+            <button
+              className="rounded-md bg-green-500 px-4 py-2 text-white transition hover:bg-green-600"
               onClick={() => setFeedbackModal(true)}
             >
               Provide Feedback
-            </Button>
+            </button>
           ) : (
             <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row">
               <Button
@@ -409,45 +446,124 @@ export default function UserOrderDetails({ order }: UserOrderDetailsProps) {
       </div>
 
       {/* Feedback Modal */}
-      <Modal open={feedbackModal} onClose={() => setFeedbackModal(false)}>
+      <Modal 
+        open={feedbackModal} 
+        onClose={() => {
+          setFeedbackModal(false);
+          setRating(0);
+          setComment("");
+          setSubmitError(null);
+        }}
+        className="overflow-hidden"
+      >
         <Modal.Header>
-          <Modal.Title>Rate Your Experience</Modal.Title>
+          <Modal.Title>
+            <div className="flex items-center">
+              <div className="mr-3 flex h-10 w-10 items-center justify-center rounded-full bg-green-100">
+                <svg className="h-6 w-6 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                </svg>
+              </div>
+              <div>
+                <h3 className="text-xl font-bold text-gray-900">Rate Your Experience</h3>
+                <p className="mt-1 text-sm text-gray-500">Your feedback helps us improve our service</p>
+              </div>
+            </div>
+          </Modal.Title>
         </Modal.Header>
         <Modal.Body>
-          <div className="mb-6 text-center">
-            <p className="mb-4">How was your experience with this order?</p>
-            <div className="flex justify-center">
-              <Rate
-                color="yellow"
-                size="lg"
-                value={rating}
-                onChange={setRating}
-              />
+          {submitError && (
+            <div className="mb-6 rounded-md bg-red-50 p-4">
+              <div className="flex">
+                <div className="flex-shrink-0">
+                  <svg className="h-5 w-5 text-red-400" viewBox="0 0 20 20" fill="currentColor">
+                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+                  </svg>
+                </div>
+                <div className="ml-3">
+                  <p className="text-sm text-red-500">{submitError}</p>
+                </div>
+              </div>
+            </div>
+          )}
+          
+          <div className="space-y-6">
+            {/* Rating Section */}
+            <div className="rounded-lg bg-gray-50 p-6 text-center">
+              <h4 className="mb-4 text-lg font-medium text-gray-900">How was your experience?</h4>
+              <div className="flex justify-center">
+                <Rate
+                  defaultValue={0}
+                  value={rating}
+                  onChange={setRating}
+                  color="yellow"
+                  size="lg"
+                />
+              </div>
+              <p className="mt-2 text-sm text-gray-500">
+                {rating === 0 && "Select your rating"}
+                {rating === 1 && "Poor"}
+                {rating === 2 && "Fair"}
+                {rating === 3 && "Good"}
+                {rating === 4 && "Very Good"}
+                {rating === 5 && "Excellent"}
+              </p>
+            </div>
+
+            {/* Detailed Ratings */}
+            <div className="space-y-4 rounded-lg p-6">
+              <h4 className="mb-4 text-lg font-medium text-gray-900">Additional Feedback</h4>
+              <div className="space-y-4">
+                <div>
+                  <label className="mb-2 block text-sm font-medium text-gray-700">
+                    Share your thoughts
+                  </label>
+                  <textarea
+                    className="w-full rounded-md border border-gray-300 p-3 text-sm focus:border-green-500 focus:outline-none focus:ring-1 focus:ring-green-500"
+                    placeholder="Tell us what you liked or what we could improve..."
+                    rows={4}
+                    value={comment}
+                    onChange={(e) => setComment(e.target.value)}
+                  ></textarea>
+                </div>
+              </div>
             </div>
           </div>
-          <div className="mb-4">
-            <label className="mb-2 block rounded-md text-sm text-gray-600">
-              Additional Comments
-            </label>
-            <textarea
-              placeholder="Tell us more about your experience..."
-              name=""
-              id=""
-              rows={4}
-            ></textarea>
-          </div>
         </Modal.Body>
+
         <Modal.Footer>
-          <Button onClick={() => setFeedbackModal(false)} appearance="subtle">
-            Cancel
-          </Button>
-          <Button
-            onClick={handleFeedbackSubmit}
-            appearance="primary"
-            className="bg-green-500 text-white"
-          >
-            Submit Feedback
-          </Button>
+          <div className="flex w-full items-center justify-end gap-3 px-6 py-4">
+            <button
+              onClick={() => {
+                setFeedbackModal(false);
+                setRating(0);
+                setComment("");
+                setSubmitError(null);
+              }}
+              className="rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 transition hover:bg-gray-50"
+              type="button"
+            >
+              Cancel
+            </button>
+            <button
+              onClick={handleFeedbackSubmit}
+              disabled={submitting}
+              className="flex items-center rounded-md bg-green-500 px-4 py-2 text-sm font-medium text-white transition hover:bg-green-600 disabled:opacity-50"
+              type="submit"
+            >
+              {submitting ? (
+                <>
+                  <svg className="mr-2 h-4 w-4 animate-spin" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                  </svg>
+                  Submitting...
+                </>
+              ) : (
+                'Submit Feedback'
+              )}
+            </button>
+          </div>
         </Modal.Footer>
       </Modal>
 
@@ -464,6 +580,26 @@ export default function UserOrderDetails({ order }: UserOrderDetailsProps) {
         }
         .custom-steps .rs-steps-item-status-finish .rs-steps-item-tail {
           border-color: #22c55e !important;
+        }
+        .rs-modal-header {
+          border-bottom: none !important;
+          padding: 1.5rem !important;
+        }
+        .rs-modal-body {
+          padding: 0 1.5rem 1.5rem 1.5rem !important;
+        }
+        .rs-modal-footer {
+          padding: 0 !important;
+          border-top: none !important;
+        }
+        .rs-rate-character-active {
+          color: #eab308 !important;
+        }
+        .rs-modal {
+          max-width: 500px !important;
+        }
+        .rs-modal-content {
+          border-radius: 0.75rem !important;
         }
       `}</style>
     </>

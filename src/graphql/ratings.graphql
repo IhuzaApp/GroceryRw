@@ -1,0 +1,37 @@
+query getRatings {
+  Ratings {
+    created_at
+    customer_id
+    delivery_experience
+    id
+    order_id
+    packaging_quality
+    professionalism
+    rating
+    review
+    reviewed_at
+    shopper_id
+    updated_at
+    Order {
+      OrderID
+      combined_order_id
+      id
+      found
+      discount
+      delivery_time
+      delivery_photo_url
+      delivery_notes
+      delivery_fee
+      delivery_address_id
+      created_at
+      updated_at
+      total
+      status
+      shop_id
+      shopper_id
+      service_fee
+      voucher_code
+      user_id
+    }
+  }
+}
