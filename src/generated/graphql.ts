@@ -4946,7 +4946,7 @@ export type Revenue = {
   /** An object relationship */
   Order: Orders;
   amount: Scalars['String']['output'];
-  created_at: Scalars['String']['output'];
+  created_at: Scalars['timestamptz']['output'];
   id: Scalars['uuid']['output'];
   order_id: Scalars['uuid']['output'];
   type: Scalars['String']['output'];
@@ -5004,7 +5004,7 @@ export type Revenue_Bool_Exp = {
   _not?: InputMaybe<Revenue_Bool_Exp>;
   _or?: InputMaybe<Array<Revenue_Bool_Exp>>;
   amount?: InputMaybe<String_Comparison_Exp>;
-  created_at?: InputMaybe<String_Comparison_Exp>;
+  created_at?: InputMaybe<Timestamptz_Comparison_Exp>;
   id?: InputMaybe<Uuid_Comparison_Exp>;
   order_id?: InputMaybe<Uuid_Comparison_Exp>;
   type?: InputMaybe<String_Comparison_Exp>;
@@ -5019,7 +5019,7 @@ export type Revenue_Constraint =
 export type Revenue_Insert_Input = {
   Order?: InputMaybe<Orders_Obj_Rel_Insert_Input>;
   amount?: InputMaybe<Scalars['String']['input']>;
-  created_at?: InputMaybe<Scalars['String']['input']>;
+  created_at?: InputMaybe<Scalars['timestamptz']['input']>;
   id?: InputMaybe<Scalars['uuid']['input']>;
   order_id?: InputMaybe<Scalars['uuid']['input']>;
   type?: InputMaybe<Scalars['String']['input']>;
@@ -5028,7 +5028,7 @@ export type Revenue_Insert_Input = {
 /** aggregate max on columns */
 export type Revenue_Max_Fields = {
   amount?: Maybe<Scalars['String']['output']>;
-  created_at?: Maybe<Scalars['String']['output']>;
+  created_at?: Maybe<Scalars['timestamptz']['output']>;
   id?: Maybe<Scalars['uuid']['output']>;
   order_id?: Maybe<Scalars['uuid']['output']>;
   type?: Maybe<Scalars['String']['output']>;
@@ -5046,7 +5046,7 @@ export type Revenue_Max_Order_By = {
 /** aggregate min on columns */
 export type Revenue_Min_Fields = {
   amount?: Maybe<Scalars['String']['output']>;
-  created_at?: Maybe<Scalars['String']['output']>;
+  created_at?: Maybe<Scalars['timestamptz']['output']>;
   id?: Maybe<Scalars['uuid']['output']>;
   order_id?: Maybe<Scalars['uuid']['output']>;
   type?: Maybe<Scalars['String']['output']>;
@@ -5107,7 +5107,7 @@ export type Revenue_Select_Column =
 /** input type for updating data in table "Revenue" */
 export type Revenue_Set_Input = {
   amount?: InputMaybe<Scalars['String']['input']>;
-  created_at?: InputMaybe<Scalars['String']['input']>;
+  created_at?: InputMaybe<Scalars['timestamptz']['input']>;
   id?: InputMaybe<Scalars['uuid']['input']>;
   order_id?: InputMaybe<Scalars['uuid']['input']>;
   type?: InputMaybe<Scalars['String']['input']>;
@@ -5124,7 +5124,7 @@ export type Revenue_Stream_Cursor_Input = {
 /** Initial value of the column from where the streaming should start */
 export type Revenue_Stream_Cursor_Value_Input = {
   amount?: InputMaybe<Scalars['String']['input']>;
-  created_at?: InputMaybe<Scalars['String']['input']>;
+  created_at?: InputMaybe<Scalars['timestamptz']['input']>;
   id?: InputMaybe<Scalars['uuid']['input']>;
   order_id?: InputMaybe<Scalars['uuid']['input']>;
   type?: InputMaybe<Scalars['String']['input']>;
@@ -11683,6 +11683,11 @@ export type GetSystemConfigurationQueryVariables = Exact<{ [key: string]: never;
 
 export type GetSystemConfigurationQuery = { System_configuratioins: Array<{ baseDeliveryFee: string, currency: string, discounts: boolean, id: string, serviceFee: string, shoppingTime: string, unitsSurcharge: string, extraUnits: string, cappedDistanceFee: string }> };
 
+export type GetRatingsQueryVariables = Exact<{ [key: string]: never; }>;
+
+
+export type GetRatingsQuery = { Ratings: Array<{ created_at: string, customer_id: string, delivery_experience?: string | null, id: string, order_id: string, packaging_quality?: string | null, professionalism?: string | null, rating: number, review: string, reviewed_at?: string | null, shopper_id: string, updated_at?: string | null, Order: { OrderID: number, combined_order_id?: string | null, id: string, found: boolean, discount?: string | null, delivery_time?: string | null, delivery_photo_url?: string | null, delivery_notes?: string | null, delivery_fee: string, delivery_address_id: string, created_at: string, updated_at?: string | null, total: string, status: string, shop_id: string, shopper_id?: string | null, service_fee: string, voucher_code?: string | null, user_id: string } }> };
+
 export type GetAllREfundsQueryVariables = Exact<{ [key: string]: never; }>;
 
 
@@ -12276,6 +12281,45 @@ export const GetSystemConfigurationDocument = gql`
   }
 }
     `;
+export const GetRatingsDocument = gql`
+    query getRatings {
+  Ratings {
+    created_at
+    customer_id
+    delivery_experience
+    id
+    order_id
+    packaging_quality
+    professionalism
+    rating
+    review
+    reviewed_at
+    shopper_id
+    updated_at
+    Order {
+      OrderID
+      combined_order_id
+      id
+      found
+      discount
+      delivery_time
+      delivery_photo_url
+      delivery_notes
+      delivery_fee
+      delivery_address_id
+      created_at
+      updated_at
+      total
+      status
+      shop_id
+      shopper_id
+      service_fee
+      voucher_code
+      user_id
+    }
+  }
+}
+    `;
 export const GetAllREfundsDocument = gql`
     query getAllREfunds {
   Refunds {
@@ -12519,6 +12563,9 @@ export function getSdk(client: GraphQLClient, withWrapper: SdkFunctionWrapper = 
     },
     getSystemConfiguration(variables?: GetSystemConfigurationQueryVariables, requestHeaders?: GraphQLClientRequestHeaders): Promise<GetSystemConfigurationQuery> {
       return withWrapper((wrappedRequestHeaders) => client.request<GetSystemConfigurationQuery>(GetSystemConfigurationDocument, variables, {...requestHeaders, ...wrappedRequestHeaders}), 'getSystemConfiguration', 'query', variables);
+    },
+    getRatings(variables?: GetRatingsQueryVariables, requestHeaders?: GraphQLClientRequestHeaders): Promise<GetRatingsQuery> {
+      return withWrapper((wrappedRequestHeaders) => client.request<GetRatingsQuery>(GetRatingsDocument, variables, {...requestHeaders, ...wrappedRequestHeaders}), 'getRatings', 'query', variables);
     },
     getAllREfunds(variables?: GetAllREfundsQueryVariables, requestHeaders?: GraphQLClientRequestHeaders): Promise<GetAllREfundsQuery> {
       return withWrapper((wrappedRequestHeaders) => client.request<GetAllREfundsQuery>(GetAllREfundsDocument, variables, {...requestHeaders, ...wrappedRequestHeaders}), 'getAllREfunds', 'query', variables);
