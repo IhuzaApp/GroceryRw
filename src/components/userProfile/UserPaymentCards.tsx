@@ -137,10 +137,30 @@ export default function UserPaymentCards({
   const [error, setError] = useState<string | null>(initialData?.error || null);
   const [balances, setBalances] = useState<BalancesType>(
     initialData?.balances || {
-    refunds: [],
-    wallet: null,
+      refunds: [],
+      wallet: null,
     }
   );
+  const [showAddCardModal, setShowAddCardModal] = useState(false);
+  const [cardForm, setCardForm] = useState({
+    cardNumber: "",
+    cardHolder: "",
+    expiryDate: "",
+    cvv: "",
+  });
+
+  // Handle add card click
+  const handleAddCardClick = () => {
+    setShowAddCardModal(true);
+  };
+
+  // Handle card form submit
+  const handleCardSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    // TODO: Implement card validation and submission
+    console.log("Card details:", cardForm);
+    setShowAddCardModal(false);
+  };
 
   // Fetch user data if not provided by server-side props
   useEffect(() => {
@@ -212,9 +232,9 @@ export default function UserPaymentCards({
           wallet: null,
         };
 
-        // If user is a shopper, fetch their wallet balance
+        // If user is a shopper, fetch their wallet balance using their shopper ID
         if (shopperData.shopper?.active) {
-          return fetch("/api/queries/wallet-balance", {
+          return fetch(`/api/queries/wallet-balance?shopper_id=${shopperData.shopper.id}`, {
             method: "GET",
             headers: {
               "Content-Type": "application/json",
@@ -459,11 +479,14 @@ export default function UserPaymentCards({
 
         {/* Message when wallet is not available */}
         {!balances.wallet && (
-          <div className="flex h-full items-center justify-center rounded-xl border-2 border-dashed border-gray-300 p-5 text-gray-500">
+          <div 
+            onClick={handleAddCardClick}
+            className="flex h-full items-center justify-center rounded-xl border-2 border-dashed border-gray-300 p-5 text-gray-500 hover:border-green-300 hover:text-green-500 transition-colors duration-200 cursor-pointer"
+          >
             <div className="text-center">
               <svg
                 xmlns="http://www.w3.org/2000/svg"
-                className="mx-auto h-12 w-12 text-gray-400"
+                className="mx-auto h-12 w-12 text-gray-400 group-hover:text-green-400"
                 fill="none"
                 viewBox="0 0 24 24"
                 stroke="currentColor"
@@ -472,17 +495,143 @@ export default function UserPaymentCards({
                   strokeLinecap="round"
                   strokeLinejoin="round"
                   strokeWidth={2}
-                  d="M12 15v2m0 0v2m0-2h2m-2 0H9m4-9H9m12 0a9 9 0 11-18 0 9 9 0 0118 0z"
+                  d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"
                 />
               </svg>
-              <h3 className="mt-2 text-sm font-medium">No Wallet Available</h3>
+              <h3 className="mt-2 text-sm font-medium">Add Payment Card</h3>
               <p className="mt-1 text-sm">
-                Wallet balance is only available for shoppers
+                Add your card for contactless NFC payments
               </p>
+              <button 
+                className="mt-4 inline-flex items-center rounded-md bg-green-50 px-4 py-2 text-sm font-medium text-green-600 hover:bg-green-100"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleAddCardClick();
+                }}
+              >
+                <svg
+                  className="mr-2 h-4 w-4"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M12 4v16m8-8H4"
+                  />
+                </svg>
+                Add Card
+              </button>
             </div>
           </div>
         )}
       </div>
+
+      {/* Add Card Modal */}
+      {showAddCardModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
+          <div className="w-full max-w-md rounded-lg bg-white p-6 shadow-xl">
+            <div className="mb-4 flex items-center justify-between">
+              <h3 className="text-lg font-bold">Add Payment Card</h3>
+              <button
+                onClick={() => setShowAddCardModal(false)}
+                className="text-gray-500 hover:text-gray-700"
+              >
+                <svg
+                  className="h-6 w-6"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M6 18L18 6M6 6l12 12"
+                  />
+                </svg>
+              </button>
+            </div>
+            <form onSubmit={handleCardSubmit}>
+              <div className="mb-4">
+                <label className="mb-1 block text-sm font-medium text-gray-700">
+                  Card Number
+                </label>
+                <input
+                  type="text"
+                  value={cardForm.cardNumber}
+                  onChange={(e) =>
+                    setCardForm({ ...cardForm, cardNumber: e.target.value })
+                  }
+                  className="w-full rounded-md border border-gray-300 p-2 focus:border-green-500 focus:outline-none"
+                  placeholder="1234 5678 9012 3456"
+                />
+              </div>
+              <div className="mb-4">
+                <label className="mb-1 block text-sm font-medium text-gray-700">
+                  Card Holder Name
+                </label>
+                <input
+                  type="text"
+                  value={cardForm.cardHolder}
+                  onChange={(e) =>
+                    setCardForm({ ...cardForm, cardHolder: e.target.value })
+                  }
+                  className="w-full rounded-md border border-gray-300 p-2 focus:border-green-500 focus:outline-none"
+                  placeholder="John Doe"
+                />
+              </div>
+              <div className="mb-4 grid grid-cols-2 gap-4">
+                <div>
+                  <label className="mb-1 block text-sm font-medium text-gray-700">
+                    Expiry Date
+                  </label>
+                  <input
+                    type="text"
+                    value={cardForm.expiryDate}
+                    onChange={(e) =>
+                      setCardForm({ ...cardForm, expiryDate: e.target.value })
+                    }
+                    className="w-full rounded-md border border-gray-300 p-2 focus:border-green-500 focus:outline-none"
+                    placeholder="MM/YY"
+                  />
+                </div>
+                <div>
+                  <label className="mb-1 block text-sm font-medium text-gray-700">
+                    CVV
+                  </label>
+                  <input
+                    type="text"
+                    value={cardForm.cvv}
+                    onChange={(e) =>
+                      setCardForm({ ...cardForm, cvv: e.target.value })
+                    }
+                    className="w-full rounded-md border border-gray-300 p-2 focus:border-green-500 focus:outline-none"
+                    placeholder="123"
+                  />
+                </div>
+              </div>
+              <div className="flex justify-end gap-2">
+                <button
+                  type="button"
+                  onClick={() => setShowAddCardModal(false)}
+                  className="rounded-md border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="rounded-md bg-green-600 px-4 py-2 text-sm font-medium text-white hover:bg-green-700"
+                >
+                  Add Card
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </>
   );
 }
