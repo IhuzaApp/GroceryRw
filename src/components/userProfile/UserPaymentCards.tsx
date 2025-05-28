@@ -1,5 +1,10 @@
 import React, { useEffect, useState } from "react";
 import { GetServerSideProps } from "next";
+import AddPaymentCard from "./AddPaymentCard";
+import CryptoJS from 'crypto-js';
+
+// Encryption key - in production, this should be in environment variables
+const ENCRYPTION_KEY = process.env.NEXT_PUBLIC_ENCRYPTION_KEY || 'your-secret-key';
 
 // Types for our data
 type RefundType = { amount: string; status: string };
@@ -7,9 +12,18 @@ type WalletType = {
   available_balance: string;
   reserved_balance: string;
 } | null;
+type PaymentCardType = {
+  id: string;
+  number: string;
+  name: string;
+  expiry_date: string;
+  image: string | null;
+  created_at: string;
+};
 type BalancesType = {
   refunds: RefundType[];
   wallet: WalletType;
+  paymentCards: PaymentCardType[];
 };
 
 // Helper function to format RWF
@@ -21,6 +35,28 @@ const formatRWF = (amount: string | number) => {
     minimumFractionDigits: 0,
     maximumFractionDigits: 0,
   }).format(numAmount);
+};
+
+// Decrypt sensitive data
+const decryptData = (encryptedText: string) => {
+  try {
+    const bytes = CryptoJS.AES.decrypt(encryptedText, ENCRYPTION_KEY);
+    return bytes.toString(CryptoJS.enc.Utf8);
+  } catch (error) {
+    console.error('Decryption error:', error);
+    return '****';
+  }
+};
+
+// Format card number to show only last 4 digits
+const formatCardNumber = (encryptedNumber: string) => {
+  try {
+    const decrypted = decryptData(encryptedNumber);
+    const lastFour = decrypted.slice(-4);
+    return `**** **** **** ${lastFour}`;
+  } catch (error) {
+    return '**** **** **** ****';
+  }
 };
 
 // This function is used for server-side rendering
@@ -46,7 +82,7 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
         props: {
           initialData: {
             userId: null,
-            balances: { refunds: [], wallet: null },
+            balances: { refunds: [], wallet: null, paymentCards: [] },
           },
         },
       };
@@ -99,6 +135,7 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
           balances: {
             refunds: refundsData.refunds || [],
             wallet,
+            paymentCards: [],
           },
         },
       },
@@ -109,7 +146,7 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
       props: {
         initialData: {
           userId: null,
-          balances: { refunds: [], wallet: null },
+          balances: { refunds: [], wallet: null, paymentCards: [] },
           error: "Failed to load data",
         },
       },
@@ -139,28 +176,10 @@ export default function UserPaymentCards({
     initialData?.balances || {
       refunds: [],
       wallet: null,
+      paymentCards: [],
     }
   );
-  const [showAddCardModal, setShowAddCardModal] = useState(false);
-  const [cardForm, setCardForm] = useState({
-    cardNumber: "",
-    cardHolder: "",
-    expiryDate: "",
-    cvv: "",
-  });
-
-  // Handle add card click
-  const handleAddCardClick = () => {
-    setShowAddCardModal(true);
-  };
-
-  // Handle card form submit
-  const handleCardSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    // TODO: Implement card validation and submission
-    console.log("Card details:", cardForm);
-    setShowAddCardModal(false);
-  };
+  const [showAddCard, setShowAddCard] = useState(false);
 
   // Fetch user data if not provided by server-side props
   useEffect(() => {
@@ -230,11 +249,12 @@ export default function UserPaymentCards({
         const newBalances = {
           refunds: refundsData.refunds || [],
           wallet: null,
+          paymentCards: [],
         };
 
-        // If user is a shopper, fetch their wallet balance using their shopper ID
+        // If user is a shopper, fetch their wallet balance
         if (shopperData.shopper?.active) {
-          return fetch(`/api/queries/wallet-balance?shopper_id=${shopperData.shopper.id}`, {
+          return fetch("/api/queries/wallet-balance", {
             method: "GET",
             headers: {
               "Content-Type": "application/json",
@@ -270,6 +290,32 @@ export default function UserPaymentCards({
   const walletBalance = balances.wallet?.available_balance
     ? parseFloat(balances.wallet.available_balance)
     : 0;
+
+  // Fetch payment cards
+  const fetchPaymentCards = async () => {
+    try {
+      const response = await fetch('/api/queries/payment-cards');
+      const data = await response.json();
+      setBalances(prev => ({
+        ...prev,
+        paymentCards: data.paymentCards || [],
+      }));
+    } catch (err) {
+      console.error('Error fetching payment cards:', err);
+    }
+  };
+
+  // Handle add card success
+  const handleAddCardSuccess = () => {
+    fetchPaymentCards();
+    setShowAddCard(false);
+  };
+
+  useEffect(() => {
+    if (userId) {
+      fetchPaymentCards();
+    }
+  }, [userId]);
 
   if (loading) {
     return (
@@ -349,7 +395,30 @@ export default function UserPaymentCards({
 
   return (
     <>
-      <h3 className="mb-4 mt-3 text-lg font-bold">Your Payment Cards</h3>
+      <div className="mb-4 mt-3 flex items-center justify-between">
+        <h3 className="text-lg font-bold">Your Payment Cards</h3>
+        {balances.paymentCards.length > 0 && (
+          <button
+            onClick={() => setShowAddCard(true)}
+            className="inline-flex items-center rounded-md bg-green-50 px-4 py-2 text-sm font-medium text-green-600 hover:bg-green-100"
+          >
+            <svg
+              className="mr-2 h-4 w-4"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M12 4v16m8-8H4"
+              />
+            </svg>
+            Add New Card
+          </button>
+        )}
+      </div>
       <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
         {/* Purple Refund Card */}
         <div className="relative overflow-hidden rounded-xl bg-gradient-to-r from-gray-600 to-gray-800 p-5 text-white shadow-lg">
@@ -477,10 +546,104 @@ export default function UserPaymentCards({
         </div>
         )}
 
-        {/* Message when wallet is not available */}
-        {!balances.wallet && (
+        {/* Payment Cards */}
+        {balances.paymentCards.map((card) => (
+          <div
+            key={card.id}
+            className="relative overflow-hidden rounded-xl bg-gradient-to-r from-blue-500 to-blue-700 p-5 text-white shadow-lg hover:shadow-xl transition-shadow duration-200"
+          >
+            <div className="absolute right-0 top-0 -mr-10 -mt-10 h-20 w-20 rounded-full bg-white opacity-5"></div>
+            <div className="absolute bottom-0 left-0 -mb-8 -ml-8 h-16 w-16 rounded-full bg-white opacity-5"></div>
+
+            <div className="mb-8 flex items-start justify-between">
+              <div>
+                <p className="mb-1 text-xs opacity-80">Payment Card</p>
+                <h4 className="font-bold">{card.name}</h4>
+              </div>
+              {card.image ? (
+                <img
+                  src={card.image}
+                  alt="Card"
+                  className="h-10 w-10 rounded-full object-cover border-2 border-white"
+                />
+              ) : (
+                <div className="h-10 w-10 rounded-full bg-blue-400 flex items-center justify-center">
+                  <svg
+                    className="h-6 w-6 text-white"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"
+                    />
+                  </svg>
+                </div>
+              )}
+            </div>
+
+            <div className="mb-6">
+              <div className="mb-1 flex items-center">
+                <div className="mr-2">
+                  <img
+                    className="h-12 w-12"
+                    src="/assets/images/chip.png"
+                    alt="Chip"
+                  />
+                </div>
+                <p className="font-mono text-xl tracking-widest">
+                  {formatCardNumber(card.number)}
+                </p>
+              </div>
+            </div>
+
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="mb-1 text-xs opacity-80">Card Holder</p>
+                <p className="font-medium uppercase">{card.name}</p>
+              </div>
+              <div>
+                <p className="mb-1 text-xs opacity-80">Expires</p>
+                <p className="font-medium">{card.expiry_date}</p>
+              </div>
+              <div className="flex flex-col items-end">
+                <p className="mb-1 text-xs opacity-80">Type</p>
+                <div className="flex items-center space-x-1">
+                  {card.number.startsWith('4') ? (
+                    <img src="/assets/images/visa.png" alt="Visa" className="h-8" />
+                  ) : card.number.startsWith('5') ? (
+                    <img src="/assets/images/mastercard.png" alt="Mastercard" className="h-8" />
+                  ) : (
+                    <svg
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      className="h-8 w-8 opacity-80"
+                    >
+                      <rect x="2" y="5" width="20" height="14" rx="2" />
+                      <path d="M2 10h20" />
+                    </svg>
+                  )}
+                </div>
+              </div>
+            </div>
+
+            <div className="absolute bottom-3 right-3">
+              <p className="text-xs font-bold opacity-70">
+                {new Date(card.created_at).toLocaleDateString()}
+              </p>
+            </div>
+          </div>
+        ))}
+
+        {/* Show large Add Card button only when no cards exist */}
+        {balances.paymentCards.length === 0 && (
           <div 
-            onClick={handleAddCardClick}
+            onClick={() => setShowAddCard(true)}
             className="flex h-full items-center justify-center rounded-xl border-2 border-dashed border-gray-300 p-5 text-gray-500 hover:border-green-300 hover:text-green-500 transition-colors duration-200 cursor-pointer"
           >
             <div className="text-center">
@@ -506,7 +669,7 @@ export default function UserPaymentCards({
                 className="mt-4 inline-flex items-center rounded-md bg-green-50 px-4 py-2 text-sm font-medium text-green-600 hover:bg-green-100"
                 onClick={(e) => {
                   e.stopPropagation();
-                  handleAddCardClick();
+                  setShowAddCard(true);
                 }}
               >
                 <svg
@@ -530,107 +693,12 @@ export default function UserPaymentCards({
       </div>
 
       {/* Add Card Modal */}
-      {showAddCardModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
-          <div className="w-full max-w-md rounded-lg bg-white p-6 shadow-xl">
-            <div className="mb-4 flex items-center justify-between">
-              <h3 className="text-lg font-bold">Add Payment Card</h3>
-              <button
-                onClick={() => setShowAddCardModal(false)}
-                className="text-gray-500 hover:text-gray-700"
-              >
-                <svg
-                  className="h-6 w-6"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M6 18L18 6M6 6l12 12"
-                  />
-                </svg>
-              </button>
-            </div>
-            <form onSubmit={handleCardSubmit}>
-              <div className="mb-4">
-                <label className="mb-1 block text-sm font-medium text-gray-700">
-                  Card Number
-                </label>
-                <input
-                  type="text"
-                  value={cardForm.cardNumber}
-                  onChange={(e) =>
-                    setCardForm({ ...cardForm, cardNumber: e.target.value })
-                  }
-                  className="w-full rounded-md border border-gray-300 p-2 focus:border-green-500 focus:outline-none"
-                  placeholder="1234 5678 9012 3456"
-                />
-              </div>
-              <div className="mb-4">
-                <label className="mb-1 block text-sm font-medium text-gray-700">
-                  Card Holder Name
-                </label>
-                <input
-                  type="text"
-                  value={cardForm.cardHolder}
-                  onChange={(e) =>
-                    setCardForm({ ...cardForm, cardHolder: e.target.value })
-                  }
-                  className="w-full rounded-md border border-gray-300 p-2 focus:border-green-500 focus:outline-none"
-                  placeholder="John Doe"
-                />
-              </div>
-              <div className="mb-4 grid grid-cols-2 gap-4">
-                <div>
-                  <label className="mb-1 block text-sm font-medium text-gray-700">
-                    Expiry Date
-                  </label>
-                  <input
-                    type="text"
-                    value={cardForm.expiryDate}
-                    onChange={(e) =>
-                      setCardForm({ ...cardForm, expiryDate: e.target.value })
-                    }
-                    className="w-full rounded-md border border-gray-300 p-2 focus:border-green-500 focus:outline-none"
-                    placeholder="MM/YY"
-                  />
-                </div>
-                <div>
-                  <label className="mb-1 block text-sm font-medium text-gray-700">
-                    CVV
-                  </label>
-                  <input
-                    type="text"
-                    value={cardForm.cvv}
-                    onChange={(e) =>
-                      setCardForm({ ...cardForm, cvv: e.target.value })
-                    }
-                    className="w-full rounded-md border border-gray-300 p-2 focus:border-green-500 focus:outline-none"
-                    placeholder="123"
-                  />
-                </div>
-              </div>
-              <div className="flex justify-end gap-2">
-                <button
-                  type="button"
-                  onClick={() => setShowAddCardModal(false)}
-                  className="rounded-md border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  className="rounded-md bg-green-600 px-4 py-2 text-sm font-medium text-white hover:bg-green-700"
-                >
-                  Add Card
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
+      {showAddCard && userId && (
+        <AddPaymentCard
+          userId={userId}
+          onClose={() => setShowAddCard(false)}
+          onSuccess={handleAddCardSuccess}
+        />
       )}
     </>
   );
