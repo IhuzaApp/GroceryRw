@@ -3,6 +3,26 @@ import { getServerSession } from "next-auth/next";
 import { authOptions } from "./auth/[...nextauth]";
 import { hasuraClient } from "../../src/lib/hasuraClient";
 import { gql } from "graphql-request";
+import { RevenueCalculator } from "../../src/lib/revenueCalculator";
+
+interface CartItem {
+  product_id: string;
+  quantity: number;
+  price: string;
+  Product: {
+    price: string;
+    final_price: string;
+  };
+}
+
+interface Cart {
+  id: string;
+  Cart_Items: CartItem[];
+}
+
+interface CartResponse {
+  Carts: Cart[];
+}
 
 // Fetch active cart with its items
 const GET_CART_WITH_ITEMS = gql`
@@ -20,6 +40,10 @@ const GET_CART_WITH_ITEMS = gql`
         product_id
         quantity
         price
+        Product {
+          price
+          final_price
+        }
       }
     }
   }
@@ -110,6 +134,21 @@ const DELETE_CART = gql`
   }
 `;
 
+// Create revenue record
+const CREATE_REVENUE = gql`
+  mutation CreateRevenue($order_id: uuid!, $amount: String!) {
+    insert_Revenue_one(
+      object: {
+        order_id: $order_id
+        amount: $amount
+        type: "commission"
+      }
+    ) {
+      id
+    }
+  }
+`;
+
 export default async function handler(
   req: NextApiRequest,
   res: NextApiResponse
@@ -151,16 +190,7 @@ export default async function handler(
     if (!hasuraClient) {
       throw new Error("Hasura client is not initialized");
     }
-    const cartData = await hasuraClient.request<{
-      Carts: Array<{
-        id: string;
-        Cart_Items: Array<{
-          product_id: string;
-          quantity: number;
-          price: string;
-        }>;
-      }>;
-    }>(GET_CART_WITH_ITEMS, { user_id, shop_id });
+    const cartData = await hasuraClient.request<CartResponse>(GET_CART_WITH_ITEMS, { user_id, shop_id });
     const cart = cartData.Carts[0];
     if (!cart) {
       return res
@@ -195,10 +225,8 @@ export default async function handler(
       }
     }
 
-    // 3. Calculate order total
-    const totalValue = items
-      .reduce((sum, i) => sum + parseFloat(i.price) * i.quantity, 0)
-      .toFixed(2);
+    // Calculate revenue using the RevenueCalculator
+    const revenueData = RevenueCalculator.calculateRevenue(items);
 
     // 4. Create order record
     if (!hasuraClient) {
@@ -210,7 +238,7 @@ export default async function handler(
       user_id,
       shop_id,
       delivery_address_id,
-      total: totalValue,
+      total: revenueData.actualTotal,
       status: "PENDING",
       service_fee,
       delivery_fee,
@@ -226,12 +254,18 @@ export default async function handler(
       order_id: orderId,
       product_id: i.product_id,
       quantity: i.quantity,
-      price: i.price,
+      price: i.Product.final_price,
     }));
     if (!hasuraClient) {
       throw new Error("Hasura client is not initialized");
     }
     await hasuraClient.request(CREATE_ORDER_ITEMS, { objects: orderItems });
+
+    // Create revenue record
+    await hasuraClient.request(CREATE_REVENUE, {
+      order_id: orderId,
+      amount: revenueData.revenue
+    });
 
     // 6. Archive the cart (no longer needed, we'll delete it instead)
     if (!hasuraClient) {

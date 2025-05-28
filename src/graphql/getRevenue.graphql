@@ -1,0 +1,30 @@
+query getRevenue {
+  Revenue {
+    amount
+    created_at
+    id
+    order_id
+    type
+    Order {
+      OrderID
+      combined_order_id
+      created_at
+      delivery_address_id
+      delivery_fee
+      delivery_notes
+      delivery_photo_url
+      delivery_time
+      discount
+      found
+      total
+      updated_at
+      status
+      shopper_id
+      shop_id
+      service_fee
+      id
+      user_id
+      voucher_code
+    }
+  }
+}

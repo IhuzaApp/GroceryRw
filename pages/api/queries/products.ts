@@ -9,6 +9,7 @@ const GET_PRODUCTS = gql`
       name
       description
       price
+      final_price
       created_at
       category
       image
@@ -27,6 +28,7 @@ interface ProductsResponse {
     name: string;
     description: string;
     price: string;
+    final_price: string;
     created_at: string;
   }>;
 }

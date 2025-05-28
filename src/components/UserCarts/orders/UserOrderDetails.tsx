@@ -343,13 +343,18 @@ export default function UserOrderDetails({ order }: UserOrderDetailsProps) {
                   </span>
                 </div>
                 <p className="mt-1 text-sm text-gray-500">
-                  {order.assignedTo.orders} orders completed
+                  {order.assignedTo.orders.aggregate.count} orders completed
                 </p>
                 <div className="mt-6 w-full space-y-3">
                   <Button
                     appearance="primary"
                     block
-                    className="bg-green-500 text-white"
+                    className={`${
+                      order.status === "delivered"
+                        ? "cursor-not-allowed opacity-50"
+                        : "bg-green-500"
+                    } text-white`}
+                    disabled={order.status === "delivered"}
                   >
                     <svg
                       viewBox="0 0 24 24"
@@ -362,7 +367,12 @@ export default function UserOrderDetails({ order }: UserOrderDetailsProps) {
                     </svg>
                     Call
                   </Button>
-                  <Button appearance="ghost" block>
+                  <Button 
+                    appearance="ghost" 
+                    block
+                    disabled={order.status === "delivered"}
+                    className={order.status === "delivered" ? "cursor-not-allowed opacity-50" : ""}
+                  >
                     <svg
                       viewBox="0 0 24 24"
                       fill="none"

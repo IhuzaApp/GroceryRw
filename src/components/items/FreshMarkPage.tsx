@@ -11,11 +11,13 @@ interface Product {
   name: string;
   image: string;
   price: string;
+  final_price: string;
   unit?: string;
   category: string;
   sale?: boolean;
   originalPrice?: string;
   description?: string;
+  measurement_unit?: string;
 }
 
 interface Shop {

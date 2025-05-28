@@ -58,6 +58,7 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
         name
         description
         price
+        final_price
         quantity
         measurement_unit
         image

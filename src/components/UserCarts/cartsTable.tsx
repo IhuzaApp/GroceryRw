@@ -21,7 +21,7 @@ interface CartItemType {
   image: string;
   name: string;
   size: string;
-  price: number;
+  price: string;  // This will store the final_price from the product
   quantity: number;
 }
 
@@ -31,7 +31,7 @@ interface ApiCartItem {
   image: string;
   name: string;
   size: string;
-  price: number;
+  price: string;  // This stores the final_price from the product
   quantity: number;
 }
 
@@ -44,7 +44,7 @@ function CartItem({
   loading,
 }: CartItemProps) {
   const { checked, image, name, size, price, quantity } = item;
-  const subtotal = (price * quantity).toFixed(2);
+  const subtotal = (parseFloat(price || "0") * quantity).toFixed(2);
 
   return (
     <div className="border-b pb-6 md:grid md:grid-cols-12 md:items-center md:gap-4">
@@ -59,55 +59,50 @@ function CartItem({
             height={80}
             className="rounded-md"
           />
-          <div className="flex-1">
+          <div>
             <h3 className="font-medium text-gray-900">{name}</h3>
             <p className="text-sm text-gray-500">{size}</p>
+            <p className="mt-1 font-bold text-gray-900">
+              {formatCurrency(parseFloat(price || "0"))}
+            </p>
           </div>
         </div>
 
-        <div className="grid grid-cols-2 gap-2 text-sm">
-          <div className="text-gray-500">Price</div>
-          <div className="text-right font-bold">{formatCurrency(price)}</div>
-          <div className="text-gray-500">Quantity</div>
-          <div className="flex items-center justify-end gap-2">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
             <button
-              className={`flex h-6 w-6 items-center justify-center rounded p-0 hover:bg-gray-100 ${
-                loading ? "cursor-not-allowed opacity-50" : ""
-              }`}
               onClick={onDecrease}
-              disabled={loading}
+              disabled={quantity <= 1 || loading}
+              className="rounded-full bg-gray-100 p-1 text-gray-600 transition hover:bg-gray-200 disabled:cursor-not-allowed disabled:opacity-50"
             >
-              <svg
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-                strokeWidth="2"
-                className="h-4 w-4"
-              >
-                <line x1="5" y1="12" x2="19" y2="12" />
+              <svg className="h-4 w-4" viewBox="0 0 24 24">
+                <path
+                  fill="currentColor"
+                  d="M19 13H5v-2h14v2z"
+                />
               </svg>
             </button>
-            <span className="w-6 text-center">{quantity}</span>
+            <span className="w-8 text-center">{quantity}</span>
             <button
-              className={`flex h-6 w-6 items-center justify-center rounded p-0 hover:bg-gray-100 ${
-                loading ? "cursor-not-allowed opacity-50" : ""
-              }`}
               onClick={onIncrease}
               disabled={loading}
+              className="rounded-full bg-gray-100 p-1 text-gray-600 transition hover:bg-gray-200 disabled:cursor-not-allowed disabled:opacity-50"
             >
-              <svg
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-                strokeWidth="2"
-                className="h-4 w-4"
-              >
-                <line x1="12" y1="5" x2="12" y2="19" />
-                <line x1="5" y1="12" x2="19" y2="12" />
+              <svg className="h-4 w-4" viewBox="0 0 24 24">
+                <path
+                  fill="currentColor"
+                  d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"
+                />
               </svg>
             </button>
           </div>
-          <div className="text-gray-500">Subtotal</div>
-          <div className="text-right font-bold">
-            {formatCurrency(parseFloat(subtotal))}
+          <div className="text-right">
+            <div className="font-bold text-gray-900">
+              {formatCurrency(parseFloat(subtotal))}
+            </div>
+            <div className="text-sm text-gray-500">
+              {formatCurrency(parseFloat(price || "0"))} each
+            </div>
           </div>
         </div>
 
@@ -141,76 +136,42 @@ function CartItem({
         <p className="text-sm text-gray-500">{size}</p>
       </div>
       <div className="hidden font-bold md:col-span-2 md:flex md:justify-center">
-        {formatCurrency(price)}
+        {formatCurrency(parseFloat(price || "0"))}
       </div>
-      <div className="hidden md:col-span-2 md:flex md:items-center md:justify-center">
+      <div className="hidden md:col-span-2 md:flex md:items-center md:justify-center md:gap-2">
         <button
-          className={`flex h-6 w-6 items-center justify-center rounded p-0 hover:bg-gray-100 ${
-            loading ? "cursor-not-allowed opacity-50" : ""
-          }`}
           onClick={onDecrease}
-          disabled={loading}
+          disabled={quantity <= 1 || loading}
+          className="rounded-full bg-gray-100 p-1 text-gray-600 transition hover:bg-gray-200 disabled:cursor-not-allowed disabled:opacity-50"
         >
-          <svg
-            viewBox="0 0 24 24"
-            stroke="currentColor"
-            strokeWidth="2"
-            className="h-4 w-4"
-          >
-            <line x1="5" y1="12" x2="19" y2="12" />
+          <svg className="h-4 w-4" viewBox="0 0 24 24">
+            <path
+              fill="currentColor"
+              d="M19 13H5v-2h14v2z"
+            />
           </svg>
         </button>
-        <span className="mx-2 w-6 text-center">{quantity}</span>
+        <span className="w-8 text-center">{quantity}</span>
         <button
-          className={`flex h-6 w-6 items-center justify-center rounded p-0 hover:bg-gray-100 ${
-            loading ? "cursor-not-allowed opacity-50" : ""
-          }`}
           onClick={onIncrease}
           disabled={loading}
+          className="rounded-full bg-gray-100 p-1 text-gray-600 transition hover:bg-gray-200 disabled:cursor-not-allowed disabled:opacity-50"
         >
-          <svg
-            viewBox="0 0 24 24"
-            stroke="currentColor"
-            strokeWidth="2"
-            className="h-4 w-4"
-          >
-            <line x1="12" y1="5" x2="12" y2="19" />
-            <line x1="5" y1="12" x2="19" y2="12" />
+          <svg className="h-4 w-4" viewBox="0 0 24 24">
+            <path
+              fill="currentColor"
+              d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"
+            />
           </svg>
         </button>
       </div>
-      <div className="hidden font-bold md:col-span-2 md:flex md:justify-end">
-        {formatCurrency(parseFloat(subtotal))}
-      </div>
-      <div className="hidden md:col-span-1 md:flex md:justify-end">
-        <Button appearance="subtle" onClick={onRemove} loading={loading}>
-          <svg
-            width="20px"
-            height="20px"
-            viewBox="0 0 1024 1024"
-            className="icon"
-            version="1.1"
-            xmlns="http://www.w3.org/2000/svg"
-            fill="#000000"
-          >
-            <g id="SVGRepo_bgCarrier" strokeWidth="0"></g>
-            <g
-              id="SVGRepo_tracerCarrier"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            ></g>
-            <g id="SVGRepo_iconCarrier">
-              <path
-                d="M960 160h-291.2a160 160 0 0 0-313.6 0H64a32 32 0 0 0 0 64h896a32 32 0 0 0 0-64zM512 96a96 96 0 0 1 90.24 64h-180.48A96 96 0 0 1 512 96zM844.16 290.56a32 32 0 0 0-34.88 6.72A32 32 0 0 0 800 320a32 32 0 1 0 64 0 33.6 33.6 0 0 0-9.28-22.72 32 32 0 0 0-10.56-6.72zM832 416a32 32 0 0 0-32 32v96a32 32 0 0 0 64 0v-96a32 32 0 0 0-32-32zM832 640a32 32 0 0 0-32 32v224a32 32 0 0 1-32 32H256a32 32 0 0 1-32-32V320a32 32 0 0 0-64 0v576a96 96 0 0 0 96 96h512a96 96 0 0 0 96-96v-224a32 32 0 0 0-32-32z"
-                fill="#f03400"
-              ></path>
-              <path
-                d="M384 768V352a32 32 0 0 0-64 0v416a32 32 0 0 0 64 0zM544 768V352a32 32 0 0 0-64 0v416a32 32 0 0 0 64 0zM704 768V352a32 32 0 0 0-64 0v416a32 32 0 0 0 64 0z"
-                fill="#f03400"
-              ></path>
-            </g>
-          </svg>
-        </Button>
+      <div className="hidden md:col-span-2 md:block md:text-right">
+        <div className="font-bold text-gray-900">
+          {formatCurrency(parseFloat(subtotal))}
+        </div>
+        <div className="text-sm text-gray-500">
+          {formatCurrency(parseFloat(price || "0"))} each
+        </div>
       </div>
     </div>
   );
@@ -339,7 +300,11 @@ export default function ItemCartTable({
   };
 
   const total = cartItems
-    .reduce((sum, item) => sum + item?.price * item.quantity, 0)
+    .reduce(
+      (sum, item) => 
+        sum + parseFloat(item?.price || "0") * item.quantity,
+      0
+    )
     .toFixed(2);
 
   // Calculate numeric total and notify parent

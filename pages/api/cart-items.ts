@@ -47,6 +47,7 @@ const ADD_CART = gql`
 const GET_PRODUCT_PRICE = gql`
   query GetProductPrice($id: uuid!) {
     Products_by_pk(id: $id) {
+      final_price
       price
     }
   }
@@ -169,11 +170,11 @@ export default async function handler(
 
       // 2. Get product price
       const prodData = await hasuraClient.request<{
-        Products_by_pk?: { price: string };
+        Products_by_pk?: { price: string; final_price: string };
       }>(GET_PRODUCT_PRICE, {
         id: product_id,
       });
-      const price = prodData.Products_by_pk?.price || "0";
+      const price = prodData.Products_by_pk?.final_price || "0";
 
       // 3. Add item to cart
       await hasuraClient.request(ADD_ITEM, {
@@ -261,7 +262,7 @@ export default async function handler(
         const prod = productsMap[item.product_id];
         return {
           id: item.id,
-          price: parseFloat(item.price),
+          price: item.price,
           quantity: item.quantity,
           name: prod?.name || "",
           image: prod?.image || "",
@@ -271,7 +272,8 @@ export default async function handler(
       // Count distinct cart items (not sum of quantities)
       const count = items.length;
       const totalValue = items.reduce(
-        (sum, item) => sum + item.price * item.quantity,
+        (sum, item) => 
+          sum + parseFloat(item.price || "0") * item.quantity,
         0
       );
       return res

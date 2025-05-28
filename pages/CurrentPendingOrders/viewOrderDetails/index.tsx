@@ -18,7 +18,7 @@ export default function ViewOrderDetailsPage() {
       try {
         setLoading(true);
         setError(null);
-        const res = await fetch(`/api/queries/orderDetails?orderId=${orderId}`);
+        const res = await fetch(`/api/queries/orderDetails?id=${orderId}`);
 
         if (!res.ok) {
           const errorData = await res.json();
