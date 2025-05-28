@@ -35,4 +35,4 @@ export interface RevenueWithMetrics extends Revenue {
 
 export interface RevenueResponse {
   Revenue: Revenue[];
-} 
+}

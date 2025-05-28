@@ -37,7 +37,7 @@ query getRatings {
 }
 
 query CheckOrderRating($orderId: uuid!) {
-  Ratings(where: {order_id: {_eq: $orderId}}) {
+  Ratings(where: { order_id: { _eq: $orderId } }) {
     id
   }
 }

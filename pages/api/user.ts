@@ -92,9 +92,10 @@ export default async function handler(
     }>(GET_SHOPPER_AND_WALLET, { user_id });
 
     // Get wallet balance
-    const walletBalance = shopperData.Wallets.length > 0
-      ? parseFloat(shopperData.Wallets[0].available_balance)
-      : 0;
+    const walletBalance =
+      shopperData.Wallets.length > 0
+        ? parseFloat(shopperData.Wallets[0].available_balance)
+        : 0;
 
     return res.status(200).json({ user, orderCount, walletBalance });
   } catch (error) {

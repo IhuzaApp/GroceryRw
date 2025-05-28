@@ -1,6 +1,15 @@
 import React, { useEffect } from "react";
 import Image from "next/image";
-import { Input, InputGroup, Button, Panel, Steps, Rate, Modal, Message } from "rsuite";
+import {
+  Input,
+  InputGroup,
+  Button,
+  Panel,
+  Steps,
+  Rate,
+  Modal,
+  Message,
+} from "rsuite";
 import Link from "next/link";
 import { useState } from "react";
 import { formatCurrency } from "../../../lib/formatCurrency";
@@ -28,13 +37,15 @@ export default function UserOrderDetails({ order }: UserOrderDetailsProps) {
   useEffect(() => {
     const checkExistingRating = async () => {
       try {
-        const response = await fetch(`/api/queries/checkRating?orderId=${order.id}`);
+        const response = await fetch(
+          `/api/queries/checkRating?orderId=${order.id}`
+        );
         if (response.ok) {
           const data = await response.json();
           setHasExistingRating(data.Ratings && data.Ratings.length > 0);
         }
       } catch (error) {
-        console.error('Error checking existing rating:', error);
+        console.error("Error checking existing rating:", error);
       }
     };
 
@@ -89,10 +100,10 @@ export default function UserOrderDetails({ order }: UserOrderDetailsProps) {
     setSubmitError(null);
 
     try {
-      const response = await fetch('/api/ratings/create', {
-        method: 'POST',
+      const response = await fetch("/api/ratings/create", {
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
         body: JSON.stringify({
           order_id: order.id,
@@ -107,16 +118,18 @@ export default function UserOrderDetails({ order }: UserOrderDetailsProps) {
 
       if (!response.ok) {
         const error = await response.json();
-        throw new Error(error.message || 'Failed to submit feedback');
+        throw new Error(error.message || "Failed to submit feedback");
       }
 
       // Close modal and update state
-    setFeedbackModal(false);
+      setFeedbackModal(false);
       setRating(0);
       setComment("");
       setHasExistingRating(true);
     } catch (error) {
-      setSubmitError(error instanceof Error ? error.message : 'Failed to submit feedback');
+      setSubmitError(
+        error instanceof Error ? error.message : "Failed to submit feedback"
+      );
     } finally {
       setSubmitting(false);
     }
@@ -431,11 +444,15 @@ export default function UserOrderDetails({ order }: UserOrderDetailsProps) {
                     </svg>
                     Call
                   </Button>
-                  <Button 
-                    appearance="ghost" 
+                  <Button
+                    appearance="ghost"
                     block
                     disabled={order.status === "delivered"}
-                    className={order.status === "delivered" ? "cursor-not-allowed opacity-50" : ""}
+                    className={
+                      order.status === "delivered"
+                        ? "cursor-not-allowed opacity-50"
+                        : ""
+                    }
                   >
                     <svg
                       viewBox="0 0 24 24"
@@ -473,8 +490,8 @@ export default function UserOrderDetails({ order }: UserOrderDetailsProps) {
       </div>
 
       {/* Feedback Modal */}
-      <Modal 
-        open={feedbackModal} 
+      <Modal
+        open={feedbackModal}
         onClose={() => {
           setFeedbackModal(false);
           setRating(0);
@@ -487,13 +504,27 @@ export default function UserOrderDetails({ order }: UserOrderDetailsProps) {
           <Modal.Title>
             <div className="flex flex-col items-start gap-2 sm:flex-row sm:items-center">
               <div className="flex h-10 w-10 items-center justify-center rounded-full bg-green-100">
-                <svg className="h-6 w-6 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                <svg
+                  className="h-6 w-6 text-green-500"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M5 13l4 4L19 7"
+                  />
                 </svg>
               </div>
               <div>
-                <h3 className="text-lg font-bold text-gray-900 sm:text-xl">Rate Your Experience</h3>
-                <p className="mt-1 text-sm text-gray-500">Your feedback helps us improve our service</p>
+                <h3 className="text-lg font-bold text-gray-900 sm:text-xl">
+                  Rate Your Experience
+                </h3>
+                <p className="mt-1 text-sm text-gray-500">
+                  Your feedback helps us improve our service
+                </p>
               </div>
             </div>
           </Modal.Title>
@@ -503,8 +534,16 @@ export default function UserOrderDetails({ order }: UserOrderDetailsProps) {
             <div className="mb-6 rounded-md bg-red-50 p-4">
               <div className="flex">
                 <div className="flex-shrink-0">
-                  <svg className="h-5 w-5 text-red-400" viewBox="0 0 20 20" fill="currentColor">
-                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+                  <svg
+                    className="h-5 w-5 text-red-400"
+                    viewBox="0 0 20 20"
+                    fill="currentColor"
+                  >
+                    <path
+                      fillRule="evenodd"
+                      d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z"
+                      clipRule="evenodd"
+                    />
                   </svg>
                 </div>
                 <div className="ml-3">
@@ -513,18 +552,20 @@ export default function UserOrderDetails({ order }: UserOrderDetailsProps) {
               </div>
             </div>
           )}
-          
+
           <div className="space-y-6">
             {/* Rating Section */}
-            <div className="rounded-lg bg-gray-50 p-4 sm:p-6 text-center">
-              <h4 className="mb-4 text-base font-medium text-gray-900 sm:text-lg">How was your experience?</h4>
-            <div className="flex justify-center">
-              <Rate
+            <div className="rounded-lg bg-gray-50 p-4 text-center sm:p-6">
+              <h4 className="mb-4 text-base font-medium text-gray-900 sm:text-lg">
+                How was your experience?
+              </h4>
+              <div className="flex justify-center">
+                <Rate
                   defaultValue={0}
                   value={rating}
                   onChange={setRating}
-                color="yellow"
-                size="lg"
+                  color="yellow"
+                  size="lg"
                   className="text-2xl sm:text-3xl"
                 />
               </div>
@@ -540,19 +581,21 @@ export default function UserOrderDetails({ order }: UserOrderDetailsProps) {
 
             {/* Detailed Ratings */}
             <div className="space-y-4 rounded-lg border border-gray-200 p-4 sm:p-6">
-              <h4 className="text-base font-medium text-gray-900 sm:text-lg">Additional Feedback</h4>
+              <h4 className="text-base font-medium text-gray-900 sm:text-lg">
+                Additional Feedback
+              </h4>
               <div className="space-y-4">
                 <div>
                   <label className="mb-2 block text-sm font-medium text-gray-700">
                     Share your thoughts
-            </label>
-            <textarea
+                  </label>
+                  <textarea
                     className="w-full rounded-md border border-gray-300 p-3 text-sm focus:border-green-500 focus:outline-none focus:ring-1 focus:ring-green-500"
                     placeholder="Tell us what you liked or what we could improve..."
-              rows={4}
+                    rows={4}
                     value={comment}
                     onChange={(e) => setComment(e.target.value)}
-            ></textarea>
+                  ></textarea>
                 </div>
               </div>
             </div>
@@ -571,24 +614,39 @@ export default function UserOrderDetails({ order }: UserOrderDetailsProps) {
               className="rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 shadow-sm transition hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2"
               type="button"
             >
-            Cancel
+              Cancel
             </button>
             <button
-            onClick={handleFeedbackSubmit}
+              onClick={handleFeedbackSubmit}
               disabled={submitting}
-              className="flex items-center justify-center rounded-md bg-green-500 px-4 py-2 text-sm font-medium text-white shadow-sm transition hover:bg-green-600 disabled:opacity-50 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2"
+              className="flex items-center justify-center rounded-md bg-green-500 px-4 py-2 text-sm font-medium text-white shadow-sm transition hover:bg-green-600 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 disabled:opacity-50"
               type="submit"
             >
               {submitting ? (
                 <>
-                  <svg className="mr-2 h-4 w-4 animate-spin" viewBox="0 0 24 24">
-                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
-                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                  <svg
+                    className="mr-2 h-4 w-4 animate-spin"
+                    viewBox="0 0 24 24"
+                  >
+                    <circle
+                      className="opacity-25"
+                      cx="12"
+                      cy="12"
+                      r="10"
+                      stroke="currentColor"
+                      strokeWidth="4"
+                      fill="none"
+                    />
+                    <path
+                      className="opacity-75"
+                      fill="currentColor"
+                      d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                    />
                   </svg>
                   Submitting...
                 </>
               ) : (
-                'Submit Feedback'
+                "Submit Feedback"
               )}
             </button>
           </div>

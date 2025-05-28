@@ -36,7 +36,9 @@ export default function CurrentOrdersPage() {
         <div className="min-h-screen bg-gray-50 p-4 md:ml-16">
           <div className="container mx-auto flex min-h-[60vh] flex-col items-center justify-center py-12 text-center">
             <div className="rounded-lg bg-white p-8 shadow-lg">
-              <h1 className="mb-4 text-2xl font-bold text-gray-900">Please Sign In</h1>
+              <h1 className="mb-4 text-2xl font-bold text-gray-900">
+                Please Sign In
+              </h1>
               <p className="mb-6 text-gray-600">
                 You need to be logged in to view your orders.
               </p>
@@ -69,11 +71,14 @@ export default function CurrentOrdersPage() {
   return (
     <RootLayout>
       <div className="min-h-screen bg-gray-50 p-4 md:ml-16">
-        <div className="container mx-auto max-w-1xl">
+        <div className="max-w-1xl container mx-auto">
           {/* Profile Header */}
           <div className="mb-8 flex items-center justify-between rounded-lg bg-white p-4 shadow-sm">
             <div className="flex items-center">
-              <Link href="/" className="flex items-center text-gray-700 transition hover:text-green-600">
+              <Link
+                href="/"
+                className="flex items-center text-gray-700 transition hover:text-green-600"
+              >
                 <svg
                   viewBox="0 0 24 24"
                   fill="none"
@@ -84,7 +89,9 @@ export default function CurrentOrdersPage() {
                   <path d="M19 12H5M12 19l-7-7 7-7" />
                 </svg>
               </Link>
-              <h1 className="ml-4 text-2xl font-bold text-gray-900">Orders Track</h1>
+              <h1 className="ml-4 text-2xl font-bold text-gray-900">
+                Orders Track
+              </h1>
             </div>
             <div className="text-sm text-gray-500">
               Welcome back, {session.user?.name}

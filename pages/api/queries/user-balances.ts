@@ -32,7 +32,9 @@ export default async function handler(
     }
 
     if (!hasuraClient) {
-      return res.status(500).json({ error: "GraphQL client is not initialized" });
+      return res
+        .status(500)
+        .json({ error: "GraphQL client is not initialized" });
     }
 
     const response = await hasuraClient.request(GET_USER_BALANCES, {

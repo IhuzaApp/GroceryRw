@@ -4,7 +4,7 @@ import { gql } from "graphql-request";
 
 const CHECK_RATING = gql`
   query CheckOrderRating($orderId: uuid!) {
-    Ratings(where: {order_id: {_eq: $orderId}}) {
+    Ratings(where: { order_id: { _eq: $orderId } }) {
       id
     }
   }
@@ -39,4 +39,4 @@ export default async function handler(
     console.error("Error checking rating:", error);
     return res.status(500).json({ message: "Error checking rating" });
   }
-} 
+}

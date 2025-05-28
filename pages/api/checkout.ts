@@ -138,11 +138,7 @@ const DELETE_CART = gql`
 const CREATE_REVENUE = gql`
   mutation CreateRevenue($order_id: uuid!, $amount: String!) {
     insert_Revenue_one(
-      object: {
-        order_id: $order_id
-        amount: $amount
-        type: "commission"
-      }
+      object: { order_id: $order_id, amount: $amount, type: "commission" }
     ) {
       id
     }
@@ -190,7 +186,10 @@ export default async function handler(
     if (!hasuraClient) {
       throw new Error("Hasura client is not initialized");
     }
-    const cartData = await hasuraClient.request<CartResponse>(GET_CART_WITH_ITEMS, { user_id, shop_id });
+    const cartData = await hasuraClient.request<CartResponse>(
+      GET_CART_WITH_ITEMS,
+      { user_id, shop_id }
+    );
     const cart = cartData.Carts[0];
     if (!cart) {
       return res
@@ -264,7 +263,7 @@ export default async function handler(
     // Create revenue record
     await hasuraClient.request(CREATE_REVENUE, {
       order_id: orderId,
-      amount: revenueData.revenue
+      amount: revenueData.revenue,
     });
 
     // 6. Archive the cart (no longer needed, we'll delete it instead)

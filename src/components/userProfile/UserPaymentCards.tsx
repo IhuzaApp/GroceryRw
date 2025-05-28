@@ -1,10 +1,11 @@
 import React, { useEffect, useState } from "react";
 import { GetServerSideProps } from "next";
 import AddPaymentCard from "./AddPaymentCard";
-import CryptoJS from 'crypto-js';
+import CryptoJS from "crypto-js";
 
 // Encryption key - in production, this should be in environment variables
-const ENCRYPTION_KEY = process.env.NEXT_PUBLIC_ENCRYPTION_KEY || 'your-secret-key';
+const ENCRYPTION_KEY =
+  process.env.NEXT_PUBLIC_ENCRYPTION_KEY || "your-secret-key";
 
 // Types for our data
 type RefundType = { amount: string; status: string };
@@ -43,8 +44,8 @@ const decryptData = (encryptedText: string) => {
     const bytes = CryptoJS.AES.decrypt(encryptedText, ENCRYPTION_KEY);
     return bytes.toString(CryptoJS.enc.Utf8);
   } catch (error) {
-    console.error('Decryption error:', error);
-    return '****';
+    console.error("Decryption error:", error);
+    return "****";
   }
 };
 
@@ -55,7 +56,7 @@ const formatCardNumber = (encryptedNumber: string) => {
     const lastFour = decrypted.slice(-4);
     return `**** **** **** ${lastFour}`;
   } catch (error) {
-    return '**** **** **** ****';
+    return "**** **** **** ****";
   }
 };
 
@@ -201,17 +202,17 @@ export default function UserPaymentCards({
   // Fallback to client-side fetching if server-side fails
   useEffect(() => {
     if (!userId) {
-    fetch("/api/user")
-      .then((res) => res.json())
-      .then((data) => {
-        if (data.user?.id) {
-          setUserId(data.user.id);
-        }
-      })
-      .catch((err) => {
-        console.error("Failed to load user:", err);
-        setError("Failed to load user data");
-      });
+      fetch("/api/user")
+        .then((res) => res.json())
+        .then((data) => {
+          if (data.user?.id) {
+            setUserId(data.user.id);
+          }
+        })
+        .catch((err) => {
+          console.error("Failed to load user:", err);
+          setError("Failed to load user data");
+        });
     }
   }, [userId]);
 
@@ -294,14 +295,14 @@ export default function UserPaymentCards({
   // Fetch payment cards
   const fetchPaymentCards = async () => {
     try {
-      const response = await fetch('/api/queries/payment-cards');
+      const response = await fetch("/api/queries/payment-cards");
       const data = await response.json();
-      setBalances(prev => ({
+      setBalances((prev) => ({
         ...prev,
         paymentCards: data.paymentCards || [],
       }));
     } catch (err) {
-      console.error('Error fetching payment cards:', err);
+      console.error("Error fetching payment cards:", err);
     }
   };
 
@@ -481,76 +482,76 @@ export default function UserPaymentCards({
 
         {/* Green Wallet Card - Only show for shoppers */}
         {balances.wallet && (
-        <div className="relative overflow-hidden rounded-xl bg-gradient-to-r from-green-500 to-green-700 p-5 text-white shadow-lg">
-          <div className="absolute right-0 top-0 -mr-10 -mt-10 h-20 w-20 rounded-full bg-white opacity-5"></div>
-          <div className="absolute bottom-0 left-0 -mb-8 -ml-8 h-16 w-16 rounded-full bg-white opacity-5"></div>
+          <div className="relative overflow-hidden rounded-xl bg-gradient-to-r from-green-500 to-green-700 p-5 text-white shadow-lg">
+            <div className="absolute right-0 top-0 -mr-10 -mt-10 h-20 w-20 rounded-full bg-white opacity-5"></div>
+            <div className="absolute bottom-0 left-0 -mb-8 -ml-8 h-16 w-16 rounded-full bg-white opacity-5"></div>
 
-          <div className="mb-8 flex items-start justify-between">
-            <div>
-              <p className="mb-1 text-xs opacity-80">Available Balance</p>
-              <h4 className="font-bold">WALLET BALANCE</h4>
-            </div>
-            <div className="flex items-center">
-              <svg
-                viewBox="0 0 24 24"
-                fill="currentColor"
-                className="h-10 w-10 text-blue-600"
-              >
-                <path d="M10 13.802l-3.38-3.38-1.42 1.42 4.8 4.8 9.19-9.19-1.41-1.41z" />
-                <path d="M19.03 7.39l.97-.97c.29-.29.29-.77 0-1.06l-1.06-1.06c-.29-.29-.77-.29-1.06 0l-.97.97 2.12 2.12z" />
-              </svg>
-            </div>
-          </div>
-
-          <div className="mb-6">
-            <div className="mb-1 flex items-center">
-              <div className="mr-2 h-6 w-10 rounded-sm bg-opacity-30">
-                <img
-                  className="-mt-3 h-12 w-12"
-                  src="/assets/images/chip.png"
-                  alt=""
-                />
+            <div className="mb-8 flex items-start justify-between">
+              <div>
+                <p className="mb-1 text-xs opacity-80">Available Balance</p>
+                <h4 className="font-bold">WALLET BALANCE</h4>
               </div>
-              <p className="font-mono text-lg tracking-wider">
-                {formatRWF(walletBalance)}
-              </p>
+              <div className="flex items-center">
+                <svg
+                  viewBox="0 0 24 24"
+                  fill="currentColor"
+                  className="h-10 w-10 text-blue-600"
+                >
+                  <path d="M10 13.802l-3.38-3.38-1.42 1.42 4.8 4.8 9.19-9.19-1.41-1.41z" />
+                  <path d="M19.03 7.39l.97-.97c.29-.29.29-.77 0-1.06l-1.06-1.06c-.29-.29-.77-.29-1.06 0l-.97.97 2.12 2.12z" />
+                </svg>
+              </div>
             </div>
-          </div>
 
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="mb-1 text-xs opacity-80">Status</p>
+            <div className="mb-6">
+              <div className="mb-1 flex items-center">
+                <div className="mr-2 h-6 w-10 rounded-sm bg-opacity-30">
+                  <img
+                    className="-mt-3 h-12 w-12"
+                    src="/assets/images/chip.png"
+                    alt=""
+                  />
+                </div>
+                <p className="font-mono text-lg tracking-wider">
+                  {formatRWF(walletBalance)}
+                </p>
+              </div>
+            </div>
+
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="mb-1 text-xs opacity-80">Status</p>
                 <p className="font-medium">ACTIVE</p>
+              </div>
+              <div>
+                <p className="mb-1 text-xs opacity-80">Last Updated</p>
+                <p className="font-medium">Today</p>
+              </div>
+              <div className="text-right">
+                <svg
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  className="h-8 w-8 opacity-80"
+                >
+                  <rect x="2" y="5" width="20" height="14" rx="2" />
+                  <path d="M2 10h20" />
+                </svg>
+              </div>
             </div>
-            <div>
-              <p className="mb-1 text-xs opacity-80">Last Updated</p>
-              <p className="font-medium">Today</p>
-            </div>
-            <div className="text-right">
-              <svg
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                className="h-8 w-8 opacity-80"
-              >
-                <rect x="2" y="5" width="20" height="14" rx="2" />
-                <path d="M2 10h20" />
-              </svg>
-            </div>
-          </div>
 
-          <div className="absolute bottom-3 right-3">
-            <p className="text-xs font-bold opacity-70">AVAILABLE BALANCE</p>
+            <div className="absolute bottom-3 right-3">
+              <p className="text-xs font-bold opacity-70">AVAILABLE BALANCE</p>
+            </div>
           </div>
-        </div>
         )}
 
         {/* Payment Cards */}
         {balances.paymentCards.map((card) => (
           <div
             key={card.id}
-            className="relative overflow-hidden rounded-xl bg-gradient-to-r from-blue-500 to-blue-700 p-5 text-white shadow-lg hover:shadow-xl transition-shadow duration-200"
+            className="relative overflow-hidden rounded-xl bg-gradient-to-r from-blue-500 to-blue-700 p-5 text-white shadow-lg transition-shadow duration-200 hover:shadow-xl"
           >
             <div className="absolute right-0 top-0 -mr-10 -mt-10 h-20 w-20 rounded-full bg-white opacity-5"></div>
             <div className="absolute bottom-0 left-0 -mb-8 -ml-8 h-16 w-16 rounded-full bg-white opacity-5"></div>
@@ -564,10 +565,10 @@ export default function UserPaymentCards({
                 <img
                   src={card.image}
                   alt="Card"
-                  className="h-10 w-10 rounded-full object-cover border-2 border-white"
+                  className="h-10 w-10 rounded-full border-2 border-white object-cover"
                 />
               ) : (
-                <div className="h-10 w-10 rounded-full bg-blue-400 flex items-center justify-center">
+                <div className="flex h-10 w-10 items-center justify-center rounded-full bg-blue-400">
                   <svg
                     className="h-6 w-6 text-white"
                     fill="none"
@@ -612,10 +613,18 @@ export default function UserPaymentCards({
               <div className="flex flex-col items-end">
                 <p className="mb-1 text-xs opacity-80">Type</p>
                 <div className="flex items-center space-x-1">
-                  {card.number.startsWith('4') ? (
-                    <img src="/assets/images/visa.png" alt="Visa" className="h-8" />
-                  ) : card.number.startsWith('5') ? (
-                    <img src="/assets/images/mastercard.png" alt="Mastercard" className="h-8" />
+                  {card.number.startsWith("4") ? (
+                    <img
+                      src="/assets/images/visa.png"
+                      alt="Visa"
+                      className="h-8"
+                    />
+                  ) : card.number.startsWith("5") ? (
+                    <img
+                      src="/assets/images/mastercard.png"
+                      alt="Mastercard"
+                      className="h-8"
+                    />
                   ) : (
                     <svg
                       viewBox="0 0 24 24"
@@ -642,9 +651,9 @@ export default function UserPaymentCards({
 
         {/* Show large Add Card button only when no cards exist */}
         {balances.paymentCards.length === 0 && (
-          <div 
+          <div
             onClick={() => setShowAddCard(true)}
-            className="flex h-full items-center justify-center rounded-xl border-2 border-dashed border-gray-300 p-5 text-gray-500 hover:border-green-300 hover:text-green-500 transition-colors duration-200 cursor-pointer"
+            className="flex h-full cursor-pointer items-center justify-center rounded-xl border-2 border-dashed border-gray-300 p-5 text-gray-500 transition-colors duration-200 hover:border-green-300 hover:text-green-500"
           >
             <div className="text-center">
               <svg
@@ -665,7 +674,7 @@ export default function UserPaymentCards({
               <p className="mt-1 text-sm">
                 Add your card for contactless NFC payments
               </p>
-              <button 
+              <button
                 className="mt-4 inline-flex items-center rounded-md bg-green-50 px-4 py-2 text-sm font-medium text-green-600 hover:bg-green-100"
                 onClick={(e) => {
                   e.stopPropagation();
