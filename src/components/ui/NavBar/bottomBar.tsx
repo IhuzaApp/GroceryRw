@@ -598,7 +598,7 @@ export default function BottomBar() {
           label="Camera"
         />
         <NavItem
-          href="/MyProfile"
+          href="/Myprofile"
           icon={
             <svg
               width="30px"
