@@ -1,10 +1,11 @@
-import React, { useState, useCallback, useRef } from 'react';
-import Webcam from 'react-webcam';
-import CryptoJS from 'crypto-js';
-import { gql } from 'graphql-request';
+import React, { useState, useCallback, useRef } from "react";
+import Webcam from "react-webcam";
+import CryptoJS from "crypto-js";
+import { gql } from "graphql-request";
 
 // Encryption key - in production, this should be in environment variables
-const ENCRYPTION_KEY = process.env.NEXT_PUBLIC_ENCRYPTION_KEY || 'your-secret-key';
+const ENCRYPTION_KEY =
+  process.env.NEXT_PUBLIC_ENCRYPTION_KEY || "your-secret-key";
 
 // GraphQL mutation for adding a payment card
 const ADD_PAYMENT_CARD = gql`
@@ -37,12 +38,16 @@ interface AddPaymentCardProps {
   onSuccess: () => void;
 }
 
-const AddPaymentCard: React.FC<AddPaymentCardProps> = ({ userId, onClose, onSuccess }) => {
+const AddPaymentCard: React.FC<AddPaymentCardProps> = ({
+  userId,
+  onClose,
+  onSuccess,
+}) => {
   const [cardForm, setCardForm] = useState({
-    cardNumber: '',
-    cardHolder: '',
-    expiryDate: '',
-    cvv: '',
+    cardNumber: "",
+    cardHolder: "",
+    expiryDate: "",
+    cvv: "",
   });
   const [showCamera, setShowCamera] = useState(false);
   const [cardImage, setCardImage] = useState<string | null>(null);
@@ -66,16 +71,16 @@ const AddPaymentCard: React.FC<AddPaymentCardProps> = ({ userId, onClose, onSucc
 
   // Validate card details
   const validateForm = () => {
-    if (!/^\d{16}$/.test(cardForm.cardNumber.replace(/\s/g, ''))) {
-      setError('Invalid card number');
+    if (!/^\d{16}$/.test(cardForm.cardNumber.replace(/\s/g, ""))) {
+      setError("Invalid card number");
       return false;
     }
     if (!/^(0[1-9]|1[0-2])\/([0-9]{2})$/.test(cardForm.expiryDate)) {
-      setError('Invalid expiry date (MM/YY)');
+      setError("Invalid expiry date (MM/YY)");
       return false;
     }
     if (!/^\d{3,4}$/.test(cardForm.cvv)) {
-      setError('Invalid CVV');
+      setError("Invalid CVV");
       return false;
     }
     return true;
@@ -97,10 +102,10 @@ const AddPaymentCard: React.FC<AddPaymentCardProps> = ({ userId, onClose, onSucc
       const encryptedNumber = encryptData(cardForm.cardNumber);
       const encryptedCVV = encryptData(cardForm.cvv);
 
-      const response = await fetch('/api/mutations/add-payment-card', {
-        method: 'POST',
+      const response = await fetch("/api/mutations/add-payment-card", {
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
         body: JSON.stringify({
           variables: {
@@ -115,13 +120,13 @@ const AddPaymentCard: React.FC<AddPaymentCardProps> = ({ userId, onClose, onSucc
       });
 
       if (!response.ok) {
-        throw new Error('Failed to add payment card');
+        throw new Error("Failed to add payment card");
       }
 
       onSuccess();
       onClose();
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'An error occurred');
+      setError(err instanceof Error ? err.message : "An error occurred");
     } finally {
       setLoading(false);
     }
@@ -194,7 +199,10 @@ const AddPaymentCard: React.FC<AddPaymentCardProps> = ({ userId, onClose, onSucc
                 onChange={(e) =>
                   setCardForm({
                     ...cardForm,
-                    cardNumber: e.target.value.replace(/\D/g, '').replace(/(\d{4})/g, '$1 ').trim(),
+                    cardNumber: e.target.value
+                      .replace(/\D/g, "")
+                      .replace(/(\d{4})/g, "$1 ")
+                      .trim(),
                   })
                 }
                 className="w-full rounded-md border border-gray-300 p-2 focus:border-green-500 focus:outline-none"
@@ -227,13 +235,14 @@ const AddPaymentCard: React.FC<AddPaymentCardProps> = ({ userId, onClose, onSucc
                   type="text"
                   value={cardForm.expiryDate}
                   onChange={(e) => {
-                    const value = e.target.value.replace(/\D/g, '');
+                    const value = e.target.value.replace(/\D/g, "");
                     if (value.length <= 4) {
                       const month = value.slice(0, 2);
                       const year = value.slice(2);
                       setCardForm({
                         ...cardForm,
-                        expiryDate: value.length > 2 ? `${month}/${year}` : month,
+                        expiryDate:
+                          value.length > 2 ? `${month}/${year}` : month,
                       });
                     }
                   }}
@@ -252,7 +261,7 @@ const AddPaymentCard: React.FC<AddPaymentCardProps> = ({ userId, onClose, onSucc
                   onChange={(e) =>
                     setCardForm({
                       ...cardForm,
-                      cvv: e.target.value.replace(/\D/g, ''),
+                      cvv: e.target.value.replace(/\D/g, ""),
                     })
                   }
                   className="w-full rounded-md border border-gray-300 p-2 focus:border-green-500 focus:outline-none"
@@ -320,7 +329,7 @@ const AddPaymentCard: React.FC<AddPaymentCardProps> = ({ userId, onClose, onSucc
                 disabled={loading}
                 className="rounded-md bg-green-600 px-4 py-2 text-sm font-medium text-white hover:bg-green-700 disabled:opacity-50"
               >
-                {loading ? 'Adding...' : 'Add Card'}
+                {loading ? "Adding..." : "Add Card"}
               </button>
             </div>
           </form>
@@ -330,4 +339,4 @@ const AddPaymentCard: React.FC<AddPaymentCardProps> = ({ userId, onClose, onSucc
   );
 };
 
-export default AddPaymentCard; 
+export default AddPaymentCard;

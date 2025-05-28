@@ -143,7 +143,7 @@ function ProductCard({
           shopId,
           productId: id,
           quantity: 1,
-          price: final_price  // Add price to pending action
+          price: final_price, // Add price to pending action
         })
       );
       router.push(`/auth/login?redirect=${encodeURIComponent(router.asPath)}`);

@@ -116,7 +116,10 @@ export default async function handler(
       password_hash: hashedPassword,
     });
 
-    console.log("Password update successful:", Boolean(updateResult.update_Users_by_pk));
+    console.log(
+      "Password update successful:",
+      Boolean(updateResult.update_Users_by_pk)
+    );
 
     return res.status(200).json({
       message: "Password updated successfully",
@@ -124,15 +127,14 @@ export default async function handler(
   } catch (error: any) {
     console.error("Error updating password:", error);
     console.error("Error details:", error.message, error.stack);
-    
+
     if (error.response?.errors) {
       console.error("GraphQL errors:", JSON.stringify(error.response.errors));
     }
 
-    return res.status(500).json({ 
+    return res.status(500).json({
       message: "Failed to update password",
-      error: error.message || "Unknown error"
+      error: error.message || "Unknown error",
     });
   }
 }
- 

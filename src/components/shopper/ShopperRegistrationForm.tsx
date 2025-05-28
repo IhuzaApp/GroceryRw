@@ -473,8 +473,8 @@ export default function ShopperRegistrationForm() {
           </div>
           <h2 className="mb-2 text-2xl font-bold">Application Submitted!</h2>
           <p className="mb-6 text-gray-600">
-            Your application to become a shopper is being reviewed. You&apos;ll be
-            redirected to your profile page shortly.
+            Your application to become a shopper is being reviewed. You&apos;ll
+            be redirected to your profile page shortly.
           </p>
           <Button
             appearance="primary"

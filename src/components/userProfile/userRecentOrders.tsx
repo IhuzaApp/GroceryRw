@@ -268,9 +268,7 @@ export default function UserRecentOrders({
                 href={`/CurrentPendingOrders/viewOrderDetails?orderId=${order.id}`}
                 passHref
               >
-                <button
-                  className="inline-flex items-center rounded-md border-2 border-black px-3 py-1.5 text-sm font-medium text-black shadow-sm transition hover:bg-black hover:text-white focus:outline-none focus:ring-2 focus:ring-black focus:ring-offset-2"
-                >
+                <button className="inline-flex items-center rounded-md border-2 border-black px-3 py-1.5 text-sm font-medium text-black shadow-sm transition hover:bg-black hover:text-white focus:outline-none focus:ring-2 focus:ring-black focus:ring-offset-2">
                   <svg
                     className="mr-1.5 h-4 w-4"
                     fill="none"

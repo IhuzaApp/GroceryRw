@@ -1,5 +1,5 @@
 interface Product {
-  price: string;      // Actual/original price (e.g., 1233)
+  price: string; // Actual/original price (e.g., 1233)
   final_price: string; // Final price with markup (e.g., 4555)
 }
 
@@ -9,31 +9,34 @@ interface CartItem {
 }
 
 export class RevenueCalculator {
-  private static calculateTotal(items: CartItem[], priceType: 'price' | 'final_price'): number {
+  private static calculateTotal(
+    items: CartItem[],
+    priceType: "price" | "final_price"
+  ): number {
     return items.reduce((sum, item) => {
       const price = parseFloat(item.Product[priceType]);
-      return sum + (price * item.quantity);
+      return sum + price * item.quantity;
     }, 0);
   }
 
   public static calculateRevenue(items: CartItem[]): {
-    actualTotal: string;    // What we pay to shop
-    customerTotal: string;  // What customer pays
-    revenue: string;        // Our profit
+    actualTotal: string; // What we pay to shop
+    customerTotal: string; // What customer pays
+    revenue: string; // Our profit
   } {
     // Calculate what customer pays (using final_price)
-    const customerTotal = this.calculateTotal(items, 'final_price');
-    
+    const customerTotal = this.calculateTotal(items, "final_price");
+
     // Calculate what we pay to shop (using original price)
-    const actualTotal = this.calculateTotal(items, 'price');
-    
+    const actualTotal = this.calculateTotal(items, "price");
+
     // Our revenue is the difference
     const revenue = customerTotal - actualTotal;
 
     return {
       actualTotal: actualTotal.toFixed(2),
       customerTotal: customerTotal.toFixed(2),
-      revenue: revenue.toFixed(2)
+      revenue: revenue.toFixed(2),
     };
   }
 
@@ -50,7 +53,7 @@ export class RevenueCalculator {
   } {
     const orderTotal = parseFloat(order.total);
     const itemsTotal = order.Order_Items.reduce((sum, item) => {
-      return sum + (parseFloat(item.price) * item.quantity);
+      return sum + parseFloat(item.price) * item.quantity;
     }, 0);
 
     const revenue = orderTotal - itemsTotal;
@@ -58,7 +61,7 @@ export class RevenueCalculator {
     return {
       orderTotal: orderTotal.toFixed(2),
       itemsTotal: itemsTotal.toFixed(2),
-      revenue: revenue.toFixed(2)
+      revenue: revenue.toFixed(2),
     };
   }
-} 
+}

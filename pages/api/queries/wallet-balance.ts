@@ -58,7 +58,7 @@ export default async function handler(
     if (req.method === "GET") {
       // Check for shopper_id in query parameters
       const { shopper_id: query_shopper_id } = req.query;
-      
+
       if (query_shopper_id) {
         // If shopper_id is provided in query, use it
         shopper_id = query_shopper_id as string;

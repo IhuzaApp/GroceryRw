@@ -29,7 +29,11 @@ export default async function handler(
 
   try {
     // Get user session
-    const session = (await getServerSession(req, res, authOptions as any)) as any;
+    const session = (await getServerSession(
+      req,
+      res,
+      authOptions as any
+    )) as any;
     if (!session?.user?.id) {
       return res.status(401).json({ error: "Unauthorized" });
     }
@@ -70,11 +74,16 @@ export default async function handler(
       rating: ratingData,
     });
 
-    return res.status(201).json(data.insert_Ratings_one);
+    // Add type checking for the response data
+    if (data && typeof data === 'object' && 'insert_Ratings_one' in data) {
+      return res.status(201).json(data.insert_Ratings_one);
+    }
+
+    throw new Error('Invalid response data');
   } catch (error) {
     console.error("Error creating rating:", error);
     return res.status(500).json({
       error: error instanceof Error ? error.message : "Failed to create rating",
     });
   }
-} 
+}

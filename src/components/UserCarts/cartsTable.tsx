@@ -21,7 +21,7 @@ interface CartItemType {
   image: string;
   name: string;
   size: string;
-  price: string;  // This will store the final_price from the product
+  price: string; // This will store the final_price from the product
   quantity: number;
 }
 
@@ -31,7 +31,7 @@ interface ApiCartItem {
   image: string;
   name: string;
   size: string;
-  price: string;  // This stores the final_price from the product
+  price: string; // This stores the final_price from the product
   quantity: number;
 }
 
@@ -76,10 +76,7 @@ function CartItem({
               className="rounded-full bg-gray-100 p-1 text-gray-600 transition hover:bg-gray-200 disabled:cursor-not-allowed disabled:opacity-50"
             >
               <svg className="h-4 w-4" viewBox="0 0 24 24">
-                <path
-                  fill="currentColor"
-                  d="M19 13H5v-2h14v2z"
-                />
+                <path fill="currentColor" d="M19 13H5v-2h14v2z" />
               </svg>
             </button>
             <span className="w-8 text-center">{quantity}</span>
@@ -145,10 +142,7 @@ function CartItem({
           className="rounded-full bg-gray-100 p-1 text-gray-600 transition hover:bg-gray-200 disabled:cursor-not-allowed disabled:opacity-50"
         >
           <svg className="h-4 w-4" viewBox="0 0 24 24">
-            <path
-              fill="currentColor"
-              d="M19 13H5v-2h14v2z"
-            />
+            <path fill="currentColor" d="M19 13H5v-2h14v2z" />
           </svg>
         </button>
         <span className="w-8 text-center">{quantity}</span>
@@ -158,10 +152,7 @@ function CartItem({
           className="rounded-full bg-gray-100 p-1 text-gray-600 transition hover:bg-gray-200 disabled:cursor-not-allowed disabled:opacity-50"
         >
           <svg className="h-4 w-4" viewBox="0 0 24 24">
-            <path
-              fill="currentColor"
-              d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"
-            />
+            <path fill="currentColor" d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z" />
           </svg>
         </button>
       </div>
@@ -301,8 +292,7 @@ export default function ItemCartTable({
 
   const total = cartItems
     .reduce(
-      (sum, item) => 
-        sum + parseFloat(item?.price || "0") * item.quantity,
+      (sum, item) => sum + parseFloat(item?.price || "0") * item.quantity,
       0
     )
     .toFixed(2);

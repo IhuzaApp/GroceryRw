@@ -7,15 +7,15 @@ import type { Session } from "next-auth";
 
 // Mutation to update user profile
 const UPDATE_USER = gql`
-  mutation UpdateUser($id: uuid!, $name: String!, $phone: String, $gender: String) {
+  mutation UpdateUser(
+    $id: uuid!
+    $name: String!
+    $phone: String
+    $gender: String
+  ) {
     update_Users_by_pk(
-      pk_columns: { id: $id }, 
-      _set: { 
-        name: $name, 
-        phone: $phone, 
-        gender: $gender,
-        updated_at: "now()" 
-      }
+      pk_columns: { id: $id }
+      _set: { name: $name, phone: $phone, gender: $gender, updated_at: "now()" }
     ) {
       id
       name
@@ -60,7 +60,7 @@ export default async function handler(
 
     // Debug log
     console.log("Updating user profile:", { user_id, name, phone, gender });
-    
+
     // Initialize Hasura client
     if (!hasuraClient) {
       throw new Error("Hasura client is not initialized");
@@ -80,7 +80,7 @@ export default async function handler(
       id: user_id,
       name,
       phone: phone || null,
-      gender: gender || null
+      gender: gender || null,
     });
 
     console.log("Update successful:", result);
@@ -92,15 +92,14 @@ export default async function handler(
   } catch (error: any) {
     console.error("Error updating user profile:", error);
     console.error("Error details:", error.message, error.stack);
-    
+
     if (error.response?.errors) {
       console.error("GraphQL errors:", JSON.stringify(error.response.errors));
     }
 
-    return res.status(500).json({ 
+    return res.status(500).json({
       message: "Failed to update profile",
-      error: error.message || "Unknown error"
+      error: error.message || "Unknown error",
     });
   }
 }
- 

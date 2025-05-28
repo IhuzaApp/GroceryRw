@@ -272,8 +272,7 @@ export default async function handler(
       // Count distinct cart items (not sum of quantities)
       const count = items.length;
       const totalValue = items.reduce(
-        (sum, item) => 
-          sum + parseFloat(item.price || "0") * item.quantity,
+        (sum, item) => sum + parseFloat(item.price || "0") * item.quantity,
         0
       );
       return res

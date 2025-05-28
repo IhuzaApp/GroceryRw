@@ -63,12 +63,17 @@ export default async function handler(
     // Calculate additional metrics
     const revenueData: RevenueWithMetrics[] = data.Revenue.map((rev) => ({
       ...rev,
-      commission_percentage: ((parseFloat(rev.amount) / parseFloat(rev.Order.total)) * 100).toFixed(2)
+      commission_percentage: (
+        (parseFloat(rev.amount) / parseFloat(rev.Order.total)) *
+        100
+      ).toFixed(2),
     }));
 
     return res.status(200).json(revenueData);
   } catch (err: any) {
     console.error("Revenue fetch error:", err);
-    return res.status(500).json({ error: err.message || "Failed to fetch revenue data" });
+    return res
+      .status(500)
+      .json({ error: err.message || "Failed to fetch revenue data" });
   }
-} 
+}
