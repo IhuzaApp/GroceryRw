@@ -30,6 +30,20 @@ const GET_ORDER_COUNT = gql`
   }
 `;
 
+// Query to get shopper ID and wallet balance
+const GET_SHOPPER_AND_WALLET = gql`
+  query GetShopperAndWallet($user_id: uuid!) {
+    # First get the shopper ID for this user
+    shoppers(where: { user_id: { _eq: $user_id }, active: { _eq: true } }) {
+      id
+    }
+    # Get wallet for this user
+    Wallets(where: { shopper_id: { _eq: $user_id } }) {
+      available_balance
+    }
+  }
+`;
+
 export default async function handler(
   req: NextApiRequest,
   res: NextApiResponse
@@ -71,7 +85,18 @@ export default async function handler(
     }>(GET_ORDER_COUNT, { user_id });
     const orderCount = orderData.Orders_aggregate.aggregate.count;
 
-    return res.status(200).json({ user, orderCount });
+    // Fetch shopper and wallet data
+    const shopperData = await hasuraClient.request<{
+      shoppers: Array<{ id: string }>;
+      Wallets: Array<{ available_balance: string }>;
+    }>(GET_SHOPPER_AND_WALLET, { user_id });
+
+    // Get wallet balance
+    const walletBalance = shopperData.Wallets.length > 0
+      ? parseFloat(shopperData.Wallets[0].available_balance)
+      : 0;
+
+    return res.status(200).json({ user, orderCount, walletBalance });
   } catch (error) {
     console.error("Error fetching current user:", error);
     return res.status(500).json({ error: "Failed to fetch current user info" });

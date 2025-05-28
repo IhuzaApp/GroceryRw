@@ -56,25 +56,33 @@ export default async function handler(
     let shopper_id: string;
 
     if (req.method === "GET") {
-      // For GET, use the authenticated user from the session
-      const session = await getServerSession(req, res, authOptions);
-      if (!session?.user?.id) {
-        return res.status(401).json({ error: "Unauthorized" });
-      }
-
-      // First find the shopper ID for this user
-      const shopperData = await hasuraClient.request<ShopperResponse>(
-        GET_SHOPPER_BY_USER_ID,
-        {
-          user_id: session.user.id,
+      // Check for shopper_id in query parameters
+      const { shopper_id: query_shopper_id } = req.query;
+      
+      if (query_shopper_id) {
+        // If shopper_id is provided in query, use it
+        shopper_id = query_shopper_id as string;
+      } else {
+        // Otherwise, use the authenticated user from the session
+        const session = await getServerSession(req, res, authOptions);
+        if (!session?.user?.id) {
+          return res.status(401).json({ error: "Unauthorized" });
         }
-      );
 
-      if (shopperData.shoppers.length === 0) {
-        return res.status(200).json({ wallet: null, error: "Not a shopper" });
+        // Find the shopper ID for this user
+        const shopperData = await hasuraClient.request<ShopperResponse>(
+          GET_SHOPPER_BY_USER_ID,
+          {
+            user_id: session.user.id,
+          }
+        );
+
+        if (shopperData.shoppers.length === 0) {
+          return res.status(200).json({ wallet: null, error: "Not a shopper" });
+        }
+
+        shopper_id = shopperData.shoppers[0].id;
       }
-
-      shopper_id = shopperData.shoppers[0].id;
     } else {
       // For POST, use the shopper_id from request body
       const { shopper_id: id } = req.body;
