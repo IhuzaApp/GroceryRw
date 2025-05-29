@@ -15,7 +15,7 @@ export default function MyProfilePage() {
         <div className="container mx-auto">
           {/* Profile Header */}
           <div className="mb-6 flex items-center">
-            <Link href="/" className="flex items-center text-gray-700">
+            <Link href="/" className="flex items-center text-inherit transition-colors duration-200">
               <svg
                 viewBox="0 0 24 24"
                 fill="none"
@@ -27,7 +27,7 @@ export default function MyProfilePage() {
               </svg>
               <span className="hover:underline">Back</span>
             </Link>
-            <h1 className="ml-4 text-2xl font-bold">My Profile</h1>
+            <h1 className="ml-4 text-2xl font-bold text-inherit">My Profile</h1>
           </div>
 
           {/* Profile Content */}

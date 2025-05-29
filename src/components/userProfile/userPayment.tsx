@@ -230,106 +230,42 @@ export default function UserPayment() {
         <div className="mb-4 flex items-center justify-between">
           <h3 className="text-lg font-bold">Payment Cards</h3>
         </div>
-        <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
+        <div className="space-y-4">
           {paymentCards.map((card) => (
-            <div
-              key={card.id}
-              className="relative overflow-hidden rounded-xl bg-gradient-to-r from-green-500 to-green-700 p-5 text-white shadow-lg transition-shadow duration-200 hover:shadow-xl"
-            >
-              <div className="absolute right-0 top-0 -mr-10 -mt-10 h-20 w-20 rounded-full bg-white opacity-5"></div>
-              <div className="absolute bottom-0 left-0 -mb-8 -ml-8 h-16 w-16 rounded-full bg-white opacity-5"></div>
-
-              <div className="mb-8 flex items-start justify-between">
-                <div>
-                  <p className="mb-1 text-xs opacity-80">Payment Card</p>
-                  <h4 className="font-bold">{card.name}</h4>
+            <Panel bordered className="relative" key={card.id}>
+              <div className="flex items-center">
+                <div className={`mr-3 flex h-8 w-12 items-center justify-center rounded ${
+                  card.number.startsWith('4') ? 'bg-blue-600' : 
+                  card.number.startsWith('5') ? 'bg-orange-500' : 
+                  'bg-gray-500'
+                } text-white`}>
+                  {card.number.startsWith('4') ? 'VISA' : 
+                   card.number.startsWith('5') ? 'MC' : 
+                   'CARD'}
                 </div>
-                {card.image ? (
+                <div>
+                  <h4 className="font-bold">
+                    {`${card.name} - ${formatCardNumber(card.number)}`}
+                  </h4>
+                  <p className="text-sm text-gray-600">Expires {card.expiry_date}</p>
+                </div>
+                {card.image && (
                   <img
                     src={card.image}
                     alt="Card"
-                    className="h-10 w-10 rounded-full border-2 border-white object-cover"
+                    className="ml-auto h-10 w-10 rounded-full border border-gray-200 object-cover"
                   />
-                ) : (
-                  <div className="flex h-10 w-10 items-center justify-center rounded-full bg-green-400">
-                    <svg
-                      className="h-6 w-6 text-white"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"
-                      />
-                    </svg>
-                  </div>
                 )}
               </div>
-
-              <div className="mb-6">
-                <div className="mb-1 flex items-center">
-                  <div className="mr-2">
-                    <img
-                      className="h-12 w-12"
-                      src="/assets/images/chip.png"
-                      alt="Chip"
-                    />
-                  </div>
-                  <p className="font-mono text-xl tracking-widest">
-                    {formatCardNumber(card.number)}
-                  </p>
-                </div>
+              <div className="mt-4 flex gap-2">
+                <Button appearance="ghost" size="sm">
+                  Edit
+                </Button>
+                <Button appearance="ghost" color="red" size="sm">
+                  Delete
+                </Button>
               </div>
-
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="mb-1 text-xs opacity-80">Card Holder</p>
-                  <p className="font-medium uppercase">{card.name}</p>
-                </div>
-                <div>
-                  <p className="mb-1 text-xs opacity-80">Expires</p>
-                  <p className="font-medium">{card.expiry_date}</p>
-                </div>
-                <div className="flex flex-col items-end">
-                  <p className="mb-1 text-xs opacity-80">Type</p>
-                  <div className="flex items-center space-x-1">
-                    {card.number.startsWith("4") ? (
-                      <img
-                        src="/assets/images/visa.png"
-                        alt="Visa"
-                        className="h-8"
-                      />
-                    ) : card.number.startsWith("5") ? (
-                      <img
-                        src="/assets/images/mastercard.png"
-                        alt="Mastercard"
-                        className="h-8"
-                      />
-                    ) : (
-                      <svg
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="currentColor"
-                        strokeWidth="2"
-                        className="h-8 w-8 opacity-80"
-                      >
-                        <rect x="2" y="5" width="20" height="14" rx="2" />
-                        <path d="M2 10h20" />
-                      </svg>
-                    )}
-                  </div>
-                </div>
-              </div>
-
-              <div className="absolute bottom-3 right-3">
-                <p className="text-xs font-bold opacity-70">
-                  {new Date(card.created_at).toLocaleDateString()}
-                </p>
-              </div>
-            </div>
+            </Panel>
           ))}
         </div>
       </div>
