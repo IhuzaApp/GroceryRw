@@ -15,7 +15,10 @@ export default function MyProfilePage() {
         <div className="container mx-auto">
           {/* Profile Header */}
           <div className="mb-6 flex items-center">
-            <Link href="/" className="flex items-center text-inherit transition-colors duration-200">
+            <Link
+              href="/"
+              className="flex items-center text-inherit transition-colors duration-200"
+            >
               <svg
                 viewBox="0 0 24 24"
                 fill="none"

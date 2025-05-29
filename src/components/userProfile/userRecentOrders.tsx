@@ -143,7 +143,9 @@ export default function UserRecentOrders({
   return (
     <>
       <div className="mb-4 flex items-center justify-between">
-        <h3 className="text-lg font-bold text-gray-900 dark:text-white">Orders</h3>
+        <h3 className="text-lg font-bold text-gray-900 dark:text-white">
+          Orders
+        </h3>
         {onRefresh && (
           <Button
             appearance="link"
@@ -195,7 +197,9 @@ export default function UserRecentOrders({
                   <path d="M0.138 0.125 0.125 0.075H0.031a0.025 0.025 0 0 0 0 0.05h0.056L0.168 0.45H0.5v-0.05H0.207l-0.008 -0.034L0.525 0.304V0.125ZM0.475 0.263 0.186 0.318 0.15 0.175h0.325ZM0.175 0.475a0.038 0.038 0 1 0 0.038 0.038A0.038 0.038 0 0 0 0.175 0.475m0.3 0a0.038 0.038 0 1 0 0.038 0.038A0.038 0.038 0 0 0 0.475 0.475" />
                 </svg>
                 <div>
-                  <div className="font-semibold text-gray-900 dark:text-white">{order?.shop?.name}</div>
+                  <div className="font-semibold text-gray-900 dark:text-white">
+                    {order?.shop?.name}
+                  </div>
                   <div className="text-sm text-gray-500 dark:text-gray-400">
                     {order?.shop?.address}
                   </div>
@@ -271,8 +275,8 @@ export default function UserRecentOrders({
               </Link>
 
               {!isPendingOrdersPage && (
-                <Button 
-                  appearance="ghost" 
+                <Button
+                  appearance="ghost"
                   size="sm"
                   className="text-inherit hover:text-green-500 dark:hover:text-green-400"
                 >

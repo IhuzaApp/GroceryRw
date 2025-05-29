@@ -58,8 +58,13 @@ export default async function handler(
       }
     );
 
-    if (!verifyResponse.paymentCards_by_pk || verifyResponse.paymentCards_by_pk.user_id !== session.user.id) {
-      return res.status(403).json({ error: "Not authorized to update this card" });
+    if (
+      !verifyResponse.paymentCards_by_pk ||
+      verifyResponse.paymentCards_by_pk.user_id !== session.user.id
+    ) {
+      return res
+        .status(403)
+        .json({ error: "Not authorized to update this card" });
     }
 
     // Update the payment card
@@ -103,7 +108,8 @@ export default async function handler(
   } catch (error) {
     console.error("Error updating payment card:", error);
     return res.status(500).json({
-      error: error instanceof Error ? error.message : "An unexpected error occurred",
+      error:
+        error instanceof Error ? error.message : "An unexpected error occurred",
     });
   }
-} 
+}

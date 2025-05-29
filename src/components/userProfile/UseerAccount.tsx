@@ -168,7 +168,9 @@ export default function UserAccount() {
       <UserPaymentCards />
 
       <div className="hidden sm:block">
-        <h3 className="mb-4 mt-3 text-lg font-bold text-inherit">Account Information</h3>
+        <h3 className="mb-4 mt-3 text-lg font-bold text-inherit">
+          Account Information
+        </h3>
         {loading ? (
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <div className="h-20 animate-pulse rounded-lg bg-gray-200"></div>
@@ -248,7 +250,9 @@ export default function UserAccount() {
           </form>
         )}
 
-        <h3 className="mb-4 mt-8 text-lg font-bold text-inherit">Change Password</h3>
+        <h3 className="mb-4 mt-8 text-lg font-bold text-inherit">
+          Change Password
+        </h3>
         {loading ? (
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <div className="h-20 animate-pulse rounded-lg bg-gray-200"></div>

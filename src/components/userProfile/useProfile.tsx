@@ -289,7 +289,9 @@ export default function UserProfile() {
                       const nextRole = role === "user" ? "shopper" : "user";
                       setIsSwitchingRole(true);
                       try {
-                        await initiateRoleSwitch(nextRole as "user" | "shopper");
+                        await initiateRoleSwitch(
+                          nextRole as "user" | "shopper"
+                        );
                         toggleRole();
                         toast.success(
                           `Switched to ${
@@ -362,10 +364,10 @@ export default function UserProfile() {
           </div>
         </Panel>
 
-        <Panel 
-          header="Account Summary" 
-          shaded 
-          bordered 
+        <Panel
+          header="Account Summary"
+          shaded
+          bordered
           className="mt-4 bg-white transition-colors duration-200 dark:bg-gray-800"
         >
           {loading ? (
@@ -382,11 +384,15 @@ export default function UserProfile() {
           ) : (
             <div className="space-y-4">
               <div className="flex items-center justify-between">
-                <span className="text-gray-600 dark:text-gray-300">Total Orders</span>
+                <span className="text-gray-600 dark:text-gray-300">
+                  Total Orders
+                </span>
                 <span className="font-bold text-inherit">{orderCount}</span>
               </div>
               <div className="flex items-center justify-between">
-                <span className="text-gray-600 dark:text-gray-300">Wallet Balance</span>
+                <span className="text-gray-600 dark:text-gray-300">
+                  Wallet Balance
+                </span>
                 <span className="font-bold text-inherit">
                   {formatCurrency(walletBalance)}
                 </span>
@@ -428,13 +434,21 @@ export default function UserProfile() {
         </div>
 
         {activeTab === "account" && (
-          <Panel shaded bordered className="bg-white transition-colors duration-200 dark:bg-gray-800">
+          <Panel
+            shaded
+            bordered
+            className="bg-white transition-colors duration-200 dark:bg-gray-800"
+          >
             <UserAccount />
           </Panel>
         )}
 
         {activeTab === "orders" && (
-          <Panel shaded bordered className="bg-white transition-colors duration-200 dark:bg-gray-800">
+          <Panel
+            shaded
+            bordered
+            className="bg-white transition-colors duration-200 dark:bg-gray-800"
+          >
             <UserRecentOrders
               filter="all"
               orders={userOrders}
@@ -445,19 +459,31 @@ export default function UserProfile() {
         )}
 
         {activeTab === "addresses" && (
-          <Panel shaded bordered className="bg-white transition-colors duration-200 dark:bg-gray-800">
+          <Panel
+            shaded
+            bordered
+            className="bg-white transition-colors duration-200 dark:bg-gray-800"
+          >
             <UserAddress />
           </Panel>
         )}
 
         {activeTab === "payment" && (
-          <Panel shaded bordered className="bg-white transition-colors duration-200 dark:bg-gray-800">
+          <Panel
+            shaded
+            bordered
+            className="bg-white transition-colors duration-200 dark:bg-gray-800"
+          >
             <UserPayment />
           </Panel>
         )}
 
         {activeTab === "preferences" && (
-          <Panel shaded bordered className="bg-white transition-colors duration-200 dark:bg-gray-800">
+          <Panel
+            shaded
+            bordered
+            className="bg-white transition-colors duration-200 dark:bg-gray-800"
+          >
             <UserPreference />
           </Panel>
         )}
@@ -470,12 +496,18 @@ export default function UserProfile() {
           className="[&_.rs-modal-content]:dark:bg-gray-800"
         >
           <Modal.Header>
-            <Modal.Title className="text-inherit">Select an Address</Modal.Title>
+            <Modal.Title className="text-inherit">
+              Select an Address
+            </Modal.Title>
           </Modal.Header>
           <Modal.Body>
             {addresses.length ? (
               addresses.map((addr) => (
-                <Panel key={addr.id} bordered className="mb-2 bg-white transition-colors duration-200 dark:bg-gray-700">
+                <Panel
+                  key={addr.id}
+                  bordered
+                  className="mb-2 bg-white transition-colors duration-200 dark:bg-gray-700"
+                >
                   <h4 className="font-bold text-inherit">{addr.street}</h4>
                   <p className="text-sm text-gray-600 dark:text-gray-300">
                     {addr.city}, {addr.postal_code}
@@ -499,7 +531,7 @@ export default function UserProfile() {
             )}
           </Modal.Body>
           <Modal.Footer>
-            <Button 
+            <Button
               onClick={() => setShowAddrModal(false)}
               className="text-inherit hover:text-green-500 dark:hover:text-green-400"
             >
