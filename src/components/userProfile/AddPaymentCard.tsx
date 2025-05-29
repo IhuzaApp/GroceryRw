@@ -1,64 +1,58 @@
 import React, { useState, useCallback, useRef } from "react";
 import Webcam from "react-webcam";
 import CryptoJS from "crypto-js";
-import { gql } from "graphql-request";
+import { toast } from "react-hot-toast";
 
 // Encryption key - in production, this should be in environment variables
 const ENCRYPTION_KEY =
   process.env.NEXT_PUBLIC_ENCRYPTION_KEY || "your-secret-key";
 
-// GraphQL mutation for adding a payment card
-const ADD_PAYMENT_CARD = gql`
-  mutation AddPaymentCard(
-    $user_id: uuid!
-    $number: String!
-    $name: String!
-    $expiry_date: String!
-    $cvv: String!
-    $image: String
-  ) {
-    insert_paymentCards_one(
-      object: {
-        user_id: $user_id
-        number: $number
-        name: $name
-        expiry_date: $expiry_date
-        CVV: $cvv
-        image: $image
-      }
-    ) {
-      id
-    }
-  }
-`;
-
-interface AddPaymentCardProps {
+type AddPaymentCardProps = {
   userId: string;
   onClose: () => void;
   onSuccess: () => void;
-}
+  existingCard?: {
+    id: string;
+    name: string;
+    number: string;
+    expiry_date: string;
+    image: string | null;
+  };
+};
 
 const AddPaymentCard: React.FC<AddPaymentCardProps> = ({
   userId,
   onClose,
   onSuccess,
+  existingCard,
 }) => {
-  const [cardForm, setCardForm] = useState({
-    cardNumber: "",
-    cardHolder: "",
-    expiryDate: "",
-    cvv: "",
-  });
-  const [showCamera, setShowCamera] = useState(false);
-  const [cardImage, setCardImage] = useState<string | null>(null);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const webcamRef = useRef<Webcam | null>(null);
-
   // Encrypt sensitive data
   const encryptData = (text: string) => {
     return CryptoJS.AES.encrypt(text, ENCRYPTION_KEY).toString();
   };
+
+  // Decrypt sensitive data
+  const decryptData = (encryptedText: string) => {
+    try {
+      const bytes = CryptoJS.AES.decrypt(encryptedText, ENCRYPTION_KEY);
+      return bytes.toString(CryptoJS.enc.Utf8);
+    } catch (error) {
+      console.error("Decryption error:", error);
+      return "";
+    }
+  };
+
+  const [cardForm, setCardForm] = useState({
+    cardNumber: existingCard ? decryptData(existingCard.number) : "",
+    cardHolder: existingCard ? existingCard.name : "",
+    expiryDate: existingCard ? existingCard.expiry_date : "",
+    cvv: "",
+  });
+  const [showCamera, setShowCamera] = useState(false);
+  const [cardImage, setCardImage] = useState<string | null>(existingCard?.image || null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const webcamRef = useRef<Webcam | null>(null);
 
   // Handle card image capture
   const handleCapture = useCallback(() => {
@@ -96,13 +90,18 @@ const AddPaymentCard: React.FC<AddPaymentCardProps> = ({
     }
 
     setLoading(true);
+    const toastId = toast.loading(existingCard ? "Updating card..." : "Adding card...");
 
     try {
       // Encrypt sensitive data
       const encryptedNumber = encryptData(cardForm.cardNumber);
       const encryptedCVV = encryptData(cardForm.cvv);
 
-      const response = await fetch("/api/mutations/add-payment-card", {
+      const endpoint = existingCard 
+        ? "/api/mutations/update-payment-card"
+        : "/api/mutations/add-payment-card";
+
+      const response = await fetch(endpoint, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -110,6 +109,7 @@ const AddPaymentCard: React.FC<AddPaymentCardProps> = ({
         body: JSON.stringify({
           variables: {
             user_id: userId,
+            ...(existingCard && { card_id: existingCard.id }),
             number: encryptedNumber,
             name: cardForm.cardHolder,
             expiry_date: cardForm.expiryDate,
@@ -120,13 +120,18 @@ const AddPaymentCard: React.FC<AddPaymentCardProps> = ({
       });
 
       if (!response.ok) {
-        throw new Error("Failed to add payment card");
+        const errorData = await response.json();
+        throw new Error(errorData.error || "Failed to process card");
       }
 
+      toast.success(existingCard ? "Card updated successfully!" : "Card added successfully!", { id: toastId });
       onSuccess();
       onClose();
     } catch (err) {
-      setError(err instanceof Error ? err.message : "An error occurred");
+      const errorMessage = err instanceof Error ? err.message : "An error occurred";
+      console.error("Error processing card:", err);
+      setError(errorMessage);
+      toast.error(errorMessage, { id: toastId });
     } finally {
       setLoading(false);
     }
@@ -136,7 +141,9 @@ const AddPaymentCard: React.FC<AddPaymentCardProps> = ({
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
       <div className="w-full max-w-md rounded-lg bg-white p-6 shadow-xl">
         <div className="mb-4 flex items-center justify-between">
-          <h3 className="text-lg font-bold">Add Payment Card</h3>
+          <h3 className="text-lg font-bold">
+            {existingCard ? "Update Payment Card" : "Add Payment Card"}
+          </h3>
           <button
             onClick={onClose}
             className="text-gray-500 hover:text-gray-700"
@@ -329,7 +336,7 @@ const AddPaymentCard: React.FC<AddPaymentCardProps> = ({
                 disabled={loading}
                 className="rounded-md bg-green-600 px-4 py-2 text-sm font-medium text-white hover:bg-green-700 disabled:opacity-50"
               >
-                {loading ? "Adding..." : "Add Card"}
+                {loading ? (existingCard ? "Updating..." : "Adding...") : (existingCard ? "Update Card" : "Add Card")}
               </button>
             </div>
           </form>
