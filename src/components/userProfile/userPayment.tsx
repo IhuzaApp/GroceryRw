@@ -234,20 +234,28 @@ export default function UserPayment() {
           {paymentCards.map((card) => (
             <Panel bordered className="relative" key={card.id}>
               <div className="flex items-center">
-                <div className={`mr-3 flex h-8 w-12 items-center justify-center rounded ${
-                  card.number.startsWith('4') ? 'bg-blue-600' : 
-                  card.number.startsWith('5') ? 'bg-orange-500' : 
-                  'bg-gray-500'
-                } text-white`}>
-                  {card.number.startsWith('4') ? 'VISA' : 
-                   card.number.startsWith('5') ? 'MC' : 
-                   'CARD'}
+                <div
+                  className={`mr-3 flex h-8 w-12 items-center justify-center rounded ${
+                    card.number.startsWith("4")
+                      ? "bg-blue-600"
+                      : card.number.startsWith("5")
+                      ? "bg-orange-500"
+                      : "bg-gray-500"
+                  } text-white`}
+                >
+                  {card.number.startsWith("4")
+                    ? "VISA"
+                    : card.number.startsWith("5")
+                    ? "MC"
+                    : "CARD"}
                 </div>
                 <div>
                   <h4 className="font-bold">
                     {`${card.name} - ${formatCardNumber(card.number)}`}
                   </h4>
-                  <p className="text-sm text-gray-600">Expires {card.expiry_date}</p>
+                  <p className="text-sm text-gray-600">
+                    Expires {card.expiry_date}
+                  </p>
                 </div>
                 {card.image && (
                   <img

@@ -124,9 +124,9 @@ export default function HeaderLayout() {
           {/* Center search - Desktop only */}
           <div className="mx-2 hidden max-w-md flex-1 md:mx-4 md:block">
             <InputGroup inside style={{ width: "100%" }}>
-              <Input 
-                placeholder="Search" 
-                className="rounded-full bg-gray-50 text-inherit transition-colors duration-200 dark:bg-gray-700 dark:text-inherit dark:placeholder-gray-400" 
+              <Input
+                placeholder="Search"
+                className="rounded-full bg-gray-50 text-inherit transition-colors duration-200 dark:bg-gray-700 dark:text-inherit dark:placeholder-gray-400"
               />
               <InputGroup.Addon className="text-inherit">
                 <svg

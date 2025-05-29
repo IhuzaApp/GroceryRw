@@ -49,7 +49,9 @@ const AddPaymentCard: React.FC<AddPaymentCardProps> = ({
     cvv: "",
   });
   const [showCamera, setShowCamera] = useState(false);
-  const [cardImage, setCardImage] = useState<string | null>(existingCard?.image || null);
+  const [cardImage, setCardImage] = useState<string | null>(
+    existingCard?.image || null
+  );
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const webcamRef = useRef<Webcam | null>(null);
@@ -90,14 +92,16 @@ const AddPaymentCard: React.FC<AddPaymentCardProps> = ({
     }
 
     setLoading(true);
-    const toastId = toast.loading(existingCard ? "Updating card..." : "Adding card...");
+    const toastId = toast.loading(
+      existingCard ? "Updating card..." : "Adding card..."
+    );
 
     try {
       // Encrypt sensitive data
       const encryptedNumber = encryptData(cardForm.cardNumber);
       const encryptedCVV = encryptData(cardForm.cvv);
 
-      const endpoint = existingCard 
+      const endpoint = existingCard
         ? "/api/mutations/update-payment-card"
         : "/api/mutations/add-payment-card";
 
@@ -124,11 +128,17 @@ const AddPaymentCard: React.FC<AddPaymentCardProps> = ({
         throw new Error(errorData.error || "Failed to process card");
       }
 
-      toast.success(existingCard ? "Card updated successfully!" : "Card added successfully!", { id: toastId });
+      toast.success(
+        existingCard
+          ? "Card updated successfully!"
+          : "Card added successfully!",
+        { id: toastId }
+      );
       onSuccess();
       onClose();
     } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : "An error occurred";
+      const errorMessage =
+        err instanceof Error ? err.message : "An error occurred";
       console.error("Error processing card:", err);
       setError(errorMessage);
       toast.error(errorMessage, { id: toastId });
@@ -336,7 +346,13 @@ const AddPaymentCard: React.FC<AddPaymentCardProps> = ({
                 disabled={loading}
                 className="rounded-md bg-green-600 px-4 py-2 text-sm font-medium text-white hover:bg-green-700 disabled:opacity-50"
               >
-                {loading ? (existingCard ? "Updating..." : "Adding...") : (existingCard ? "Update Card" : "Add Card")}
+                {loading
+                  ? existingCard
+                    ? "Updating..."
+                    : "Adding..."
+                  : existingCard
+                  ? "Update Card"
+                  : "Add Card"}
               </button>
             </div>
           </form>

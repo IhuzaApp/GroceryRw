@@ -22,9 +22,7 @@ export default function RootLayout({
         {/* Main content */}
         <main className="px-4 pb-20 pt-6 text-gray-900 transition-colors duration-200 dark:text-white md:pb-0">
           <SideBar />
-          <div className="[&_*]:text-inherit">
-            {children}
-          </div>
+          <div className="[&_*]:text-inherit">{children}</div>
           <BottomBar />
         </main>
       </div>

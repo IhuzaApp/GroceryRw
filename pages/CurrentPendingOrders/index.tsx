@@ -110,7 +110,9 @@ export default function CurrentOrdersPage() {
             >
               <svg
                 className={`mr-2 h-5 w-5 ${
-                  filter === "pending" ? "text-white" : "text-gray-400 dark:text-gray-500"
+                  filter === "pending"
+                    ? "text-white"
+                    : "text-gray-400 dark:text-gray-500"
                 }`}
                 fill="none"
                 viewBox="0 0 24 24"
@@ -135,7 +137,9 @@ export default function CurrentOrdersPage() {
             >
               <svg
                 className={`mr-2 h-5 w-5 ${
-                  filter === "done" ? "text-white" : "text-gray-400 dark:text-gray-500"
+                  filter === "done"
+                    ? "text-white"
+                    : "text-gray-400 dark:text-gray-500"
                 }`}
                 fill="none"
                 viewBox="0 0 24 24"
