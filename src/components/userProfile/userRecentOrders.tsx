@@ -143,7 +143,7 @@ export default function UserRecentOrders({
   return (
     <>
       <div className="mb-4 flex items-center justify-between">
-        <h3 className="text-lg font-bold text-inherit">Orders</h3>
+        <h3 className="text-lg font-bold text-gray-900 dark:text-white">Orders</h3>
         {onRefresh && (
           <Button
             appearance="link"
@@ -171,7 +171,7 @@ export default function UserRecentOrders({
           ))}
         </div>
       ) : orders.length === 0 ? (
-        <p className="text-inherit">No orders found.</p>
+        <p className="text-gray-600 dark:text-gray-400">No orders found.</p>
       ) : (
         visibleOrders.map((order: Order) => (
           <div
@@ -195,7 +195,7 @@ export default function UserRecentOrders({
                   <path d="M0.138 0.125 0.125 0.075H0.031a0.025 0.025 0 0 0 0 0.05h0.056L0.168 0.45H0.5v-0.05H0.207l-0.008 -0.034L0.525 0.304V0.125ZM0.475 0.263 0.186 0.318 0.15 0.175h0.325ZM0.175 0.475a0.038 0.038 0 1 0 0.038 0.038A0.038 0.038 0 0 0 0.175 0.475m0.3 0a0.038 0.038 0 1 0 0.038 0.038A0.038 0.038 0 0 0 0.475 0.475" />
                 </svg>
                 <div>
-                  <div className="font-semibold text-inherit">{order?.shop?.name}</div>
+                  <div className="font-semibold text-gray-900 dark:text-white">{order?.shop?.name}</div>
                   <div className="text-sm text-gray-500 dark:text-gray-400">
                     {order?.shop?.address}
                   </div>
@@ -206,7 +206,7 @@ export default function UserRecentOrders({
             {/* Order Info */}
             <div className="mb-2 flex items-center justify-between">
               <div>
-                <span className="font-bold text-inherit">
+                <span className="font-bold text-gray-900 dark:text-white">
                   Order #{formatOrderID(order?.OrderID)}
                 </span>
                 <span className="ml-4 text-sm text-gray-500 dark:text-gray-400">
@@ -243,7 +243,7 @@ export default function UserRecentOrders({
               <span className="font-bold text-green-600 dark:text-green-400">
                 {order.itemsCount} items ({order.unitsCount} units)
               </span>
-              <span className="font-bold text-inherit">
+              <span className="font-bold text-gray-900 dark:text-white">
                 {formatCurrency(
                   order.total +
                     (order.service_fee ?? 0) +
@@ -264,31 +264,10 @@ export default function UserRecentOrders({
 
             <div className="flex gap-2">
               <Link
-                href={`/CurrentPendingOrders/viewOrderDetails?orderId=${order.id}`}
-                passHref
+                href={`/CurrentPendingOrders/viewOrderDetails/${order.id}`}
+                className="inline-flex items-center rounded-lg bg-green-500 px-4 py-2 text-sm font-medium text-white transition duration-150 hover:bg-green-600 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 dark:bg-green-600 dark:hover:bg-green-700 dark:focus:ring-offset-gray-900"
               >
-                <button className="inline-flex items-center rounded-md border-2 border-inherit px-3 py-1.5 text-sm font-medium text-inherit shadow-sm transition hover:bg-green-500 hover:text-white focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 dark:focus:ring-offset-gray-800">
-                  <svg
-                    className="mr-1.5 h-4 w-4"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth="2"
-                      d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
-                    />
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth="2"
-                      d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
-                    />
-                  </svg>
-                  View Details
-                </button>
+                View Details
               </Link>
 
               {!isPendingOrdersPage && (
@@ -308,7 +287,7 @@ export default function UserRecentOrders({
       {filteredOrders.length > visibleCount && (
         <div className="mt-4 text-center">
           <Button
-            appearance="link"
+            appearance="ghost"
             onClick={() => setVisibleCount((prev) => prev + 10)}
             className="text-green-500 hover:text-green-600 dark:text-green-400 dark:hover:text-green-500"
           >
