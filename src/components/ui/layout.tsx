@@ -3,6 +3,7 @@ import SideBar from "./sidebar";
 import HeaderLayout from "./NavBar/headerLayout";
 import BottomBar from "./NavBar/bottomBar";
 import { useSession } from "next-auth/react";
+import { ThemeProvider } from "@context/ThemeContext";
 
 export default function RootLayout({
   children,
@@ -15,14 +16,18 @@ export default function RootLayout({
   console.log(session);
 
   return (
-    <div className="bg-gray-80 min-h-screen pt-2">
-      <HeaderLayout />
-      {/* Main content */}
-      <main className="px-4 pb-20 pt-6 md:pb-0">
-        <SideBar />
-        {children}
-        <BottomBar />
-      </main>
-    </div>
+    <ThemeProvider>
+      <div className="min-h-screen bg-white text-gray-900 transition-colors duration-200 dark:bg-gray-900 dark:text-white">
+        <HeaderLayout />
+        {/* Main content */}
+        <main className="px-4 pb-20 pt-6 text-gray-900 transition-colors duration-200 dark:text-white md:pb-0">
+          <SideBar />
+          <div className="[&_*]:text-inherit">
+            {children}
+          </div>
+          <BottomBar />
+        </main>
+      </div>
+    </ThemeProvider>
   );
 }
