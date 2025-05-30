@@ -356,185 +356,118 @@ export default function MessagesPage() {
   // Render conversations with new UI
   return (
     <RootLayout>
-      <div className="p-4 md:ml-16">
-        <div className="max-w-1xl mx-auto">
+      <div className="min-h-screen bg-gray-50 p-4 transition-colors duration-200 dark:bg-gray-900 md:ml-16">
+        <div className="container mx-auto">
+          {/* Header */}
           <div className="mb-6 flex items-center justify-between">
-            <h2 className="text-xl font-semibold">Recent Messages</h2>
-            <div className="relative">
-              <span className="absolute left-3 top-1/2 -translate-y-1/2 transform text-gray-400">
+            <div className="flex items-center gap-3">
+              <Link
+                href="/"
+                className="flex items-center text-gray-700 transition hover:text-green-600 dark:text-gray-300 dark:hover:text-green-500"
+              >
                 <svg
-                  width="16"
-                  height="16"
                   viewBox="0 0 24 24"
                   fill="none"
                   stroke="currentColor"
                   strokeWidth="2"
+                  className="mr-2 h-5 w-5"
                 >
-                  <circle cx="11" cy="11" r="8"></circle>
-                  <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                  <path d="M19 12H5M12 19l-7-7 7-7" />
                 </svg>
-              </span>
-              <Input
-                type="text"
-                placeholder="Search messages..."
-                className="w-64 pl-10"
-                value={searchQuery}
-                onChange={(value) => setSearchQuery(value)}
-              />
+              </Link>
+              <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Messages</h1>
             </div>
           </div>
 
-          <div className="overflow-hidden rounded-lg border border-gray-200 bg-white shadow-sm">
-            <div className="flex justify-between border-b border-gray-200 p-4">
-              <div className="flex space-x-4">
+          {/* Filters */}
+          <div className="mb-6 flex flex-wrap items-center gap-4">
+            <Input
+              placeholder="Search conversations..."
+              value={searchQuery}
+              onChange={setSearchQuery}
+              className="max-w-sm rounded-lg border-gray-200 bg-white text-gray-900 transition-colors duration-200 dark:border-gray-700 dark:bg-gray-800 dark:text-white"
+            />
                 <Button
-                  appearance={!showUnreadOnly ? "primary" : "ghost"}
-                  color={!showUnreadOnly ? "green" : undefined}
-                  size="sm"
-                  onClick={() => setShowUnreadOnly(false)}
-                >
-                  All Messages
+              appearance={showUnreadOnly ? "primary" : "ghost"}
+              color="green"
+              onClick={() => setShowUnreadOnly(!showUnreadOnly)}
+              className="dark:text-gray-300"
+            >
+              Unread Only
                 </Button>
                 <Button
-                  appearance={showUnreadOnly ? "primary" : "ghost"}
-                  color={showUnreadOnly ? "green" : undefined}
-                  size="sm"
-                  onClick={() => setShowUnreadOnly(true)}
-                >
-                  Unread
+              appearance="ghost"
+              onClick={() =>
+                setSortOrder(sortOrder === "newest" ? "oldest" : "newest")
+              }
+              className="dark:text-gray-300"
+            >
+              Sort: {sortOrder === "newest" ? "Newest First" : "Oldest First"}
                 </Button>
               </div>
-              <div>
-                <select
-                  className="rounded border border-gray-300 px-2 py-1 text-sm"
-                  value={sortOrder}
-                  onChange={(e) =>
-                    setSortOrder(e.target.value as "newest" | "oldest")
-                  }
-                >
-                  <option value="newest">Sort by: Newest</option>
-                  <option value="oldest">Sort by: Oldest</option>
-                </select>
-              </div>
-            </div>
 
-            <div className="divide-y divide-gray-200">
-              {filteredConversations.length === 0 ? (
-                <div className="p-8 text-center text-gray-500">
-                  <p>No messages match your current filters</p>
+          {/* Conversations List */}
+          {loading ? (
+            <div className="space-y-4">
+              {[1, 2, 3].map((i) => (
+                <div
+                  key={i}
+                  className="animate-pulse rounded-lg bg-white p-4 shadow-md transition-colors duration-200 dark:bg-gray-800"
+                >
+                  <div className="mb-2 h-4 w-1/4 rounded bg-gray-200 dark:bg-gray-700"></div>
+                  <div className="h-3 w-3/4 rounded bg-gray-200 dark:bg-gray-700"></div>
+              </div>
+              ))}
+            </div>
+          ) : conversations.length === 0 ? (
+            <div className="rounded-lg bg-white p-8 text-center shadow-md transition-colors duration-200 dark:bg-gray-800">
+              <h3 className="mb-2 text-xl font-semibold text-gray-900 dark:text-white">No Messages</h3>
+              <p className="text-gray-600 dark:text-gray-400">You don't have any messages yet.</p>
                 </div>
               ) : (
-                filteredConversations.map((conversation) => {
-                  const order = orders[conversation.orderId];
-                  const hasUnread = conversation.unreadCount > 0;
-                  const hasError = order?.error;
-
+            <div className="space-y-4">
+              {filteredConversations.map((conversation) => {
+                const order = orders[conversation.orderId] || {};
                   return (
-                    <Link
+                  <div
                       key={conversation.id}
-                      href={`/Messages/${conversation.orderId}`}
-                      className="block p-4 hover:bg-gray-50"
-                    >
-                      <div className="flex items-start gap-4">
-                        <div
-                          className={`flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-full bg-gray-200 text-gray-600 ${
-                            hasError ? "opacity-70" : ""
+                    className={`cursor-pointer rounded-lg bg-white p-4 shadow-md transition-all duration-200 hover:shadow-lg dark:bg-gray-800 ${
+                      conversation.unreadCount > 0
+                        ? "border-l-4 border-green-500 dark:border-green-600"
+                        : ""
                           }`}
-                        >
-                          {order?.shop?.name?.substring(0, 2).toUpperCase() ||
-                            "SH"}
-                        </div>
-
-                        <div className="min-w-0 flex-1">
-                          <div className="mb-1 flex items-start justify-between">
-                            <h3 className="flex items-center font-medium">
-                              <span>
-                                {hasError
-                                  ? "Shop"
-                                  : order?.shop?.name || "Shop"}
-                              </span>
-                              {hasUnread && (
-                                <span className="ml-2 rounded-full bg-green-100 px-2 py-0.5 text-xs text-green-800">
-                                  New
+                    onClick={() => handleChatClick(conversation.orderId)}
+                  >
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <h3 className="mb-1 font-semibold text-gray-900 dark:text-white">
+                          Order #{formatOrderID(order?.OrderID || conversation.orderId)}
+                          {order?.shop?.name && (
+                            <span className="ml-2 text-gray-600 dark:text-gray-400">
+                              - {order.shop.name}
                                 </span>
                               )}
                             </h3>
-                            <span className="text-xs text-gray-500">
+                        <p className="text-sm text-gray-600 dark:text-gray-400">
+                          {conversation.lastMessage || "No messages yet"}
+                        </p>
+                      </div>
+                      <div className="text-right">
+                        <div className="text-sm text-gray-500 dark:text-gray-400">
                               {timeAgo(conversation.lastMessageTime)}
-                            </span>
+                        </div>
+                        {conversation.unreadCount > 0 && (
+                          <div className="mt-1 rounded-full bg-green-500 px-2 py-0.5 text-xs font-semibold text-white dark:bg-green-600">
+                            {conversation.unreadCount} new
                           </div>
-
-                          <p className="text-sm font-medium">
-                            {hasError ? (
-                              <span>
-                                Order {conversation.orderId.substring(0, 8)}...
-                              </span>
-                            ) : (
-                              <>
-                                Order #
-                                {formatOrderID(
-                                  order?.OrderID || conversation.orderId
-                                )}
-                              </>
-                            )}
-                          </p>
-
-                          <p className="truncate text-sm text-gray-600">
-                            {conversation.lastMessage || "No messages yet"}
-                          </p>
-
-                          <div className="mt-2 flex items-center text-xs text-gray-500">
-                            {order && !hasError && (
-                              <>
-                                <span
-                                  className={`
-                                  rounded-full px-2 py-0.5
-                                  ${
-                                    order.status === "shopping"
-                                      ? "bg-orange-100 text-orange-800"
-                                      : order.status === "on_the_way"
-                                      ? "bg-blue-100 text-blue-800"
-                                      : order.status === "delivered"
-                                      ? "bg-green-100 text-green-800"
-                                      : "bg-gray-100 text-gray-800"
-                                  }
-                                `}
-                                >
-                                  {order.status === "shopping"
-                                    ? "Shopping"
-                                    : order.status === "packing"
-                                    ? "Packing"
-                                    : order.status === "on_the_way"
-                                    ? "On the way"
-                                    : order.status.charAt(0).toUpperCase() +
-                                      order.status.slice(1)}
-                                </span>
-                                <span className="mx-2">•</span>
-                                <span>{formatCurrency(order.total || 0)}</span>
-                              </>
-                            )}
-                            {hasError && (
-                              <span className="rounded-full bg-gray-100 px-2 py-0.5 text-gray-800">
-                                Order details unavailable
-                              </span>
                             )}
                           </div>
                         </div>
                       </div>
-                    </Link>
                   );
-                })
-              )}
-            </div>
-
-            {filteredConversations.length > 10 && (
-              <div className="border-t border-gray-200 p-4 text-center">
-                <Button appearance="ghost" size="sm">
-                  Load More
-                </Button>
+              })}
               </div>
             )}
-          </div>
         </div>
       </div>
     </RootLayout>
