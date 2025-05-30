@@ -1,11 +1,67 @@
 "use client";
 
-import React from "react";
+import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/router";
+import { useSession } from "next-auth/react";
+import { collection, query, where, onSnapshot } from "firebase/firestore";
+import { db } from "../../lib/firebase";
 
 export default function SideBar() {
   const router = useRouter();
+  const { data: session } = useSession();
+  const [unreadCount, setUnreadCount] = useState(0);
+  const [pendingOrdersCount, setPendingOrdersCount] = useState(0);
+
+  // Listen for unread messages
+  useEffect(() => {
+    if (!session?.user?.id) return;
+
+    const conversationsRef = collection(db, "chat_conversations");
+    const q = query(
+      conversationsRef,
+      where("customerId", "==", session.user.id),
+      where("customerUnreadCount", ">", 0)
+    );
+
+    const unsubscribe = onSnapshot(q, (snapshot) => {
+      const totalUnread = snapshot.docs.reduce(
+        (total, doc) => total + (doc.data().customerUnreadCount || 0),
+        0
+      );
+      setUnreadCount(totalUnread);
+    });
+
+    return () => unsubscribe();
+  }, [session?.user?.id]);
+
+  // Fetch pending orders count
+  useEffect(() => {
+    if (!session?.user?.id) return;
+
+    const fetchPendingOrders = async () => {
+      try {
+        const response = await fetch('/api/queries/orders');
+        const data = await response.json();
+        
+        // Count orders that are not delivered
+        const pendingCount = data.orders.filter(
+          (order: any) => order.status !== "delivered" && order.status !== "cancelled"
+        ).length;
+        
+        setPendingOrdersCount(pendingCount);
+      } catch (error) {
+        console.error('Error fetching pending orders:', error);
+      }
+    };
+
+    fetchPendingOrders();
+    
+    // Set up an interval to refresh the count every minute
+    const interval = setInterval(fetchPendingOrders, 60000);
+    
+    return () => clearInterval(interval);
+  }, [session?.user?.id]);
 
   return (
     <>
@@ -89,7 +145,7 @@ export default function SideBar() {
 
           {/* Orders */}
           <Link
-            className="rounded-full p-2 text-inherit transition-colors duration-200 hover:bg-gray-200 dark:hover:bg-gray-700"
+            className="relative rounded-full p-2 text-inherit transition-colors duration-200 hover:bg-gray-200 dark:hover:bg-gray-700"
             href={"/CurrentPendingOrders"}
             passHref
           >
@@ -119,6 +175,11 @@ export default function SideBar() {
                 ></path>
               </g>
             </svg>
+            {pendingOrdersCount > 0 && (
+              <span className="absolute -right-1 -top-1 flex h-5 w-5 items-center justify-center rounded-full bg-purple-500 text-xs font-bold text-white dark:bg-purple-600">
+                {pendingOrdersCount}
+              </span>
+            )}
           </Link>
 
           {/* Recipes */}
@@ -147,7 +208,7 @@ export default function SideBar() {
 
           {/* Chat */}
           <Link
-            className="rounded-full p-2 text-inherit transition-colors duration-200 hover:bg-gray-200 dark:hover:bg-gray-700"
+            className="relative rounded-full p-2 text-inherit transition-colors duration-200 hover:bg-gray-200 dark:hover:bg-gray-700"
             href={"/Messages"}
             passHref
           >
@@ -178,6 +239,11 @@ export default function SideBar() {
                 strokeLinecap="round"
               />
             </svg>
+            {unreadCount > 0 && (
+              <span className="absolute -right-1 -top-1 flex h-5 w-5 items-center justify-center rounded-full bg-green-500 text-xs font-bold text-white dark:bg-green-600">
+                {unreadCount}
+              </span>
+            )}
           </Link>
         </div>
       </div>

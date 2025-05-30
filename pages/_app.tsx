@@ -7,6 +7,7 @@ import {
   isRoleSwitchInProgress,
   clearRoleSwitchFlag,
 } from "../src/lib/sessionRefresh";
+import { ThemeProvider } from "../src/context/ThemeContext";
 
 // Configure NProgress
 NProgress.configure({ showSpinner: false });
@@ -46,7 +47,7 @@ function SessionRefreshHandler({ children }: { children: React.ReactNode }) {
 
   if (status === "loading") {
     return (
-      <div className="flex h-screen w-screen items-center justify-center">
+      <div className="flex h-screen w-screen items-center justify-center bg-white transition-colors duration-200 dark:bg-gray-900">
         <div className="h-16 w-16 animate-spin rounded-full border-b-4 border-t-4 border-green-800"></div>
       </div>
     );
@@ -57,25 +58,27 @@ function SessionRefreshHandler({ children }: { children: React.ReactNode }) {
 
 export default function App({ Component, pageProps }: AppProps) {
   return (
-    <SessionProvider
-      session={(pageProps as any).session}
-      basePath="/api/auth"
-      refetchInterval={0} // Disable automatic refetching
-    >
-      <ApolloProvider client={apolloClient}>
-        <AuthProvider>
-          <CartProvider>
-            <ChatProvider>
-              <GoogleMapProvider>
-                <SessionRefreshHandler>
-                  <Toaster position="top-right" />
-                  <Component {...pageProps} />
-                </SessionRefreshHandler>
-              </GoogleMapProvider>
-            </ChatProvider>
-          </CartProvider>
-        </AuthProvider>
-      </ApolloProvider>
-    </SessionProvider>
+    <ThemeProvider>
+      <SessionProvider
+        session={(pageProps as any).session}
+        basePath="/api/auth"
+        refetchInterval={0} // Disable automatic refetching
+      >
+        <ApolloProvider client={apolloClient}>
+          <AuthProvider>
+            <CartProvider>
+              <ChatProvider>
+                <GoogleMapProvider>
+                  <SessionRefreshHandler>
+                    <Toaster position="top-right" />
+                    <Component {...pageProps} />
+                  </SessionRefreshHandler>
+                </GoogleMapProvider>
+              </ChatProvider>
+            </CartProvider>
+          </AuthProvider>
+        </ApolloProvider>
+      </SessionProvider>
+    </ThemeProvider>
   );
 }

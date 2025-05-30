@@ -3,6 +3,88 @@ import Link from "next/link";
 import { useRouter } from "next/router";
 import { useCart } from "../../../context/CartContext";
 
+interface NavItemProps {
+  icon: React.ReactNode;
+  label: string;
+  href: string;
+}
+
+function NavItem({ icon, label, href }: NavItemProps) {
+  return (
+    <Link href={href} passHref>
+      <div className="flex flex-col items-center text-xs text-gray-600 transition-colors duration-200 hover:text-green-500 dark:text-gray-300 dark:hover:text-green-400">
+        <span className="text-lg">{icon}</span>
+        {/* <span>{label}</span> */}
+      </div>
+    </Link>
+  );
+}
+
+interface ActionButtonProps {
+  icon: React.ReactNode;
+  label?: string;
+  href?: string;
+  onClick?: () => void;
+  isCircle?: boolean;
+  tooltip?: string;
+  bgColor?: string;
+}
+
+const ActionButton = ({
+  icon,
+  label,
+  href,
+  onClick,
+  isCircle = false,
+  tooltip,
+  bgColor = "bg-white",
+}: ActionButtonProps) => {
+  const classes = `flex items-center justify-center ${
+    isCircle ? "h-12 w-12 rounded-full" : "px-3 py-2 rounded-md"
+  } ${bgColor} text-white shadow-md cursor-pointer hover:opacity-90`;
+
+  const content = (
+    <button
+      onClick={onClick}
+      className="flex flex-col items-center text-xs text-gray-700 hover:text-green-600"
+    >
+      <span className="text-xl">{icon}</span>
+      <span>{label}</span>
+    </button>
+  );
+
+  return href ? <Link href={href}>{content}</Link> : content;
+};
+
+interface DesktopActionButtonProps {
+  icon: React.ReactNode;
+  tooltip?: string;
+  href?: string;
+  label?: string;
+  onClick?: () => void;
+  bgColor?: string;
+}
+
+const DesktopActionButton = ({
+  icon,
+  tooltip,
+  href,
+  onClick,
+  bgColor = "bg-blue-600 hover:bg-blue-700",
+}: DesktopActionButtonProps) => {
+  const button = (
+    <div
+      title={tooltip}
+      onClick={onClick}
+      className={`flex h-[64px] w-[64px] cursor-pointer items-center justify-center rounded-full text-white shadow-md ${bgColor}`}
+    >
+      {icon}
+    </div>
+  );
+
+  return href ? <Link href={href}>{button}</Link> : button;
+};
+
 export default function BottomBar() {
   const [open, setOpen] = useState(false);
   const router = useRouter();
@@ -381,7 +463,7 @@ export default function BottomBar() {
       </div>
 
       {/* Bottom Navigation Bar */}
-      <nav className="fixed bottom-0 left-0 z-40 flex w-full items-center justify-around border-t bg-white py-4 shadow md:hidden">
+      <nav className="fixed bottom-0 left-0 z-40 flex w-full items-center justify-around border-t border-gray-200 bg-white py-4 shadow transition-colors duration-200 dark:border-gray-700 dark:bg-gray-800 md:hidden">
         <NavItem
           href="/"
           icon={
@@ -391,6 +473,7 @@ export default function BottomBar() {
               viewBox="0 0 24 24"
               fill="none"
               xmlns="http://www.w3.org/2000/svg"
+              className="text-gray-600 transition-colors duration-200 dark:text-gray-300"
             >
               <g id="SVGRepo_bgCarrier" strokeWidth="0"></g>
               <g
@@ -637,61 +720,3 @@ export default function BottomBar() {
     </>
   );
 }
-
-function NavItem({ icon, label, href }: { icon: any; label: any; href: any }) {
-  return (
-    <Link href={href} passHref>
-      <div className="flex flex-col items-center text-xs text-gray-600 transition hover:text-green-500">
-        <span className="text-lg">{icon}</span>
-        {/* <span>{label}</span> */}
-      </div>
-    </Link>
-  );
-}
-
-const ActionButton = ({
-  icon,
-  label,
-  href,
-  onClick,
-  isCircle = false,
-  tooltip,
-  bgColor = "bg-white",
-}: any) => {
-  const classes = `flex items-center justify-center ${
-    isCircle ? "h-12 w-12 rounded-full" : "px-3 py-2 rounded-md"
-  } ${bgColor} text-white shadow-md cursor-pointer hover:opacity-90`;
-
-  const content = (
-    <button
-      onClick={onClick}
-      className="flex flex-col items-center text-xs text-gray-700 hover:text-green-600"
-    >
-      <span className="text-xl">{icon}</span>
-      <span>{label}</span>
-    </button>
-  );
-
-  return href ? <Link href={href}>{content}</Link> : content;
-};
-
-const DesktopActionButton = ({
-  icon,
-  tooltip,
-  href,
-  label,
-  onClick,
-  bgColor = "bg-blue-600 hover:bg-blue-700",
-}: any) => {
-  const button = (
-    <div
-      title={tooltip}
-      onClick={onClick}
-      className={`flex h-[64px] w-[64px] cursor-pointer items-center justify-center rounded-full text-white shadow-md ${bgColor}`}
-    >
-      {icon}
-    </div>
-  );
-
-  return href ? <Link href={href}>{button}</Link> : button;
-};
