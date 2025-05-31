@@ -140,13 +140,23 @@ export default function ActiveBatches({
   }, [role, initialOrders.length]);
 
   return (
-    <div className={`min-h-screen bg-gray-50 ${isMobile ? "pb-16" : ""}`}>
+    <div className={`min-h-screen ${
+      theme === 'dark' 
+        ? 'bg-gray-900 text-gray-100' 
+        : 'bg-gray-50 text-gray-900'
+    } ${isMobile ? "pb-16" : ""}`}>
       {/* Main Content */}
       <main className="max-w-1xl mx-auto p-4">
         {/* Page Title - Desktop Only */}
         <div className="mb-6 flex items-center justify-between">
-          <h1 className="text-2xl font-bold">Active Batches</h1>
-          <button className="rounded-full p-2 transition-colors hover:bg-gray-200">
+          <h1 className={`text-2xl font-bold ${
+            theme === 'dark' ? 'text-gray-100' : 'text-gray-900'
+          }`}>Active Batches</h1>
+          <button className={`rounded-full p-2 transition-colors ${
+            theme === 'dark' 
+              ? 'hover:bg-gray-800' 
+              : 'hover:bg-gray-200'
+          }`}>
             <svg
               viewBox="0 0 24 24"
               fill="none"
@@ -161,7 +171,11 @@ export default function ActiveBatches({
         </div>
 
         {/* Description about what orders are shown */}
-        <div className="mb-4 rounded-md bg-blue-50 p-3 text-sm text-blue-700">
+        <div className={`mb-4 rounded-md p-3 text-sm ${
+          theme === 'dark'
+            ? 'bg-blue-900/20 text-blue-300'
+            : 'bg-blue-50 text-blue-700'
+        }`}>
           <p>
             <span className="font-semibold">Note:</span> This page shows all
             your assigned orders except those with status &quot;PENDING&quot;,
@@ -173,18 +187,30 @@ export default function ActiveBatches({
 
         {/* Display a warning when user doesn't have the shopper role */}
         {!isLoading && role !== "shopper" && (
-          <div className="mb-6 rounded-lg border border-yellow-200 bg-yellow-50 p-4">
-            <h3 className="font-semibold text-yellow-800">
+          <div className={`mb-6 rounded-lg border p-4 ${
+            theme === 'dark'
+              ? 'border-yellow-500/20 bg-yellow-900/20'
+              : 'border-yellow-200 bg-yellow-50'
+          }`}>
+            <h3 className={`font-semibold ${
+              theme === 'dark' ? 'text-yellow-300' : 'text-yellow-800'
+            }`}>
               Shopper Access Required
             </h3>
-            <p className="mt-1 text-yellow-700">
+            <p className={`mt-1 ${
+              theme === 'dark' ? 'text-yellow-200' : 'text-yellow-700'
+            }`}>
               This page is only accessible to users with shopper privileges.
               Your current role is: <strong>{role}</strong>
             </p>
-            <p className="mt-2 text-yellow-700">
+            <p className={`mt-2 ${
+              theme === 'dark' ? 'text-yellow-200' : 'text-yellow-700'
+            }`}>
               If you believe you should have shopper access, please try:
             </p>
-            <ul className="mt-1 list-inside list-disc text-yellow-700">
+            <ul className={`mt-1 list-inside list-disc ${
+              theme === 'dark' ? 'text-yellow-200' : 'text-yellow-700'
+            }`}>
               <li>Logging out and logging back in</li>
               <li>
                 Checking with an administrator to verify your account type
@@ -194,12 +220,22 @@ export default function ActiveBatches({
         )}
 
         {error && (
-          <div className="mb-6 rounded-lg border border-red-200 bg-red-50 p-4">
-            <h3 className="font-semibold text-red-800">
+          <div className={`mb-6 rounded-lg border p-4 ${
+            theme === 'dark'
+              ? 'border-red-500/20 bg-red-900/20'
+              : 'border-red-200 bg-red-50'
+          }`}>
+            <h3 className={`font-semibold ${
+              theme === 'dark' ? 'text-red-300' : 'text-red-800'
+            }`}>
               There was a problem loading your batches
             </h3>
-            <p className="mt-1 text-red-600">{error}</p>
-            <div className="mt-3 text-sm text-red-700">
+            <p className={`mt-1 ${
+              theme === 'dark' ? 'text-red-200' : 'text-red-600'
+            }`}>{error}</p>
+            <div className={`mt-3 text-sm ${
+              theme === 'dark' ? 'text-red-200' : 'text-red-700'
+            }`}>
               <p>This might be because:</p>
               <ul className="mt-1 list-inside list-disc">
                 <li>You are not logged in as a shopper</li>
@@ -210,7 +246,11 @@ export default function ActiveBatches({
             </div>
             <button
               onClick={() => window.location.reload()}
-              className="mt-3 rounded bg-red-600 px-4 py-1.5 text-sm font-medium text-white hover:bg-red-700"
+              className={`mt-3 rounded px-4 py-1.5 text-sm font-medium ${
+                theme === 'dark'
+                  ? 'bg-red-500 text-white hover:bg-red-600'
+                  : 'bg-red-600 text-white hover:bg-red-700'
+              }`}
             >
               Try Again
             </button>
@@ -218,7 +258,9 @@ export default function ActiveBatches({
         )}
 
         {isLoading ? (
-          <div className="flex justify-center py-12">
+          <div className={`flex justify-center py-12 ${
+            theme === 'dark' ? 'text-gray-300' : 'text-gray-700'
+          }`}>
             <Loader content="Loading orders..." />
           </div>
         ) : activeOrders.length > 0 ? (
@@ -228,20 +270,32 @@ export default function ActiveBatches({
             ))}
           </div>
         ) : (
-          <div className="rounded-lg border bg-white p-8 text-center">
-            <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-gray-100">
+          <div className={`rounded-lg border p-8 text-center ${
+            theme === 'dark'
+              ? 'border-gray-700 bg-gray-800'
+              : 'border-gray-200 bg-white'
+          }`}>
+            <div className={`mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full ${
+              theme === 'dark' ? 'bg-gray-700' : 'bg-gray-100'
+            }`}>
               <svg
                 viewBox="0 0 24 24"
                 fill="none"
                 stroke="currentColor"
                 strokeWidth="2"
-                className="h-8 w-8 text-gray-400"
+                className={`h-8 w-8 ${
+                  theme === 'dark' ? 'text-gray-400' : 'text-gray-500'
+                }`}
               >
                 <path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
               </svg>
             </div>
-            <h3 className="mb-2 text-lg font-semibold">No Active Orders</h3>
-            <p className="mb-4 text-gray-600">
+            <h3 className={`mb-2 text-lg font-semibold ${
+              theme === 'dark' ? 'text-gray-100' : 'text-gray-900'
+            }`}>No Active Orders</h3>
+            <p className={`mb-4 ${
+              theme === 'dark' ? 'text-gray-400' : 'text-gray-600'
+            }`}>
               {fetchAttempted || initialOrders !== undefined
                 ? "You don&apos;t have any active orders assigned to you at the moment. This includes orders in any state except &apos;PENDING&apos;, &apos;null&apos;, or &apos;delivered&apos;."
                 : "Unable to fetch your active orders. Please try again."}
@@ -255,7 +309,11 @@ export default function ActiveBatches({
               {!fetchAttempted && !initialOrders.length && (
                 <button
                   onClick={() => window.location.reload()}
-                  className="rounded-md border border-gray-300 px-4 py-2 font-medium text-gray-700 transition-colors hover:bg-gray-100"
+                  className={`rounded-md border px-4 py-2 font-medium transition-colors ${
+                    theme === 'dark'
+                      ? 'border-gray-600 text-gray-300 hover:bg-gray-700'
+                      : 'border-gray-300 text-gray-700 hover:bg-gray-100'
+                  }`}
                 >
                   Retry Loading
                 </button>
