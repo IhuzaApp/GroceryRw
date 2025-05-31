@@ -19,17 +19,6 @@ export default function ShopperHeader() {
     window.addEventListener("resize", checkIfMobile);
     return () => window.removeEventListener("resize", checkIfMobile);
   }, []);
-
-  // Get page title based on pathname
-  const getPageTitle = () => {
-    // Don't show title on home/map page
-    if (pathname === '/' || pathname === '/map') return null;
-    if (pathname === '/Plasa/active-batches') return 'Active Batches';
-    if (pathname === '/Plasa/Earnings') return 'Earnings';
-    if (pathname === '/Plasa/settings') return 'Settings';
-    return '';
-  };
-
   if (isMobile) {
     return null;
   }
