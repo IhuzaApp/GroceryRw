@@ -102,9 +102,9 @@ export default function MapSection({
   const [isActivelyTracking, setIsActivelyTracking] = useState(false);
   const activeToastTypesRef = useRef<Set<string>>(new Set());
 
-  // Map style URLs using OpenStreetMap tiles with natural colors
+  // Map style URLs using better contrasted tiles
   const mapStyles = {
-    light: "https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png",
+    light: "https://tiles.stadiamaps.com/tiles/osm_bright/{z}/{x}/{y}{r}.png",
     dark: "https://tiles.stadiamaps.com/tiles/alidade_smooth_dark/{z}/{x}/{y}{r}.png"
   };
 
@@ -121,8 +121,21 @@ export default function MapSection({
         L.tileLayer(mapStyles[theme], {
           maxZoom: 19,
           minZoom: 3,
-          attribution: '' // Remove attribution
+          attribution: '', // Remove attribution
+          className: theme === 'dark' ? 'dark-map' : 'light-map'
         }).addTo(mapInstanceRef.current);
+
+        // Add custom styling for map tiles
+        const style = document.createElement('style');
+        style.textContent = `
+          .light-map {
+            filter: saturate(1.1) contrast(1.1) brightness(0.95) sepia(0.1);
+          }
+          .dark-map {
+            filter: brightness(0.9) contrast(1.2);
+          }
+        `;
+        document.head.appendChild(style);
       } catch (error) {
         console.error("Error updating map style:", error);
       }
@@ -735,8 +748,8 @@ export default function MapSection({
     return L.divIcon({
       html: `
         <div style="
-          background: ${theme === 'dark' ? '#065f46' : '#059669'};
-          border: 2px solid ${theme === 'dark' ? '#047857' : '#10b981'};
+          background: ${theme === 'dark' ? '#065f46' : '#10b981'};
+          border: 2px solid ${theme === 'dark' ? '#047857' : '#059669'};
           border-radius: 50%;
           width: 44px;
           height: 44px;
@@ -747,15 +760,49 @@ export default function MapSection({
           font-weight: 600;
           color: white;
           backdrop-filter: blur(8px);
-          box-shadow: 0 2px 4px ${theme === 'dark' ? 'rgba(0,0,0,0.3)' : 'rgba(0,0,0,0.1)'};
+          box-shadow: 0 2px 4px ${theme === 'dark' ? 'rgba(0,0,0,0.3)' : 'rgba(0,0,0,0.2)'};
           z-index: 1000;
         ">
           ${simplifiedEarnings}
         </div>`,
-      className: "",
+        className: "",
       iconSize: [44, 44],
       iconAnchor: [22, 22],
       popupAnchor: [0, -22],
+    });
+  };
+
+  // Helper function to create shop marker icon
+  const createShopMarkerIcon = (isActive: boolean) => {
+    return L.divIcon({
+      html: `
+        <div style="
+          background: ${theme === 'dark' ? 'rgba(31, 41, 55, 0.95)' : 'rgba(255, 255, 255, 0.95)'};
+          border: 2px solid ${theme === 'dark' ? '#374151' : '#d1d5db'};
+          border-radius: 50%;
+          width: 36px;
+          height: 36px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          box-shadow: 0 2px 4px ${theme === 'dark' ? 'rgba(0,0,0,0.3)' : 'rgba(0,0,0,0.2)'};
+          backdrop-filter: blur(8px);
+        ">
+          <img 
+            src="https://static-00.iconduck.com/assets.00/shop-icon-2048x1878-qov4lrv1.png" 
+            style="
+              width: 24px; 
+              height: 24px; 
+              filter: ${isActive ? 'none' : 'grayscale(100%)'};
+              opacity: ${isActive ? '1' : '0.6'};
+            "
+          />
+        </div>
+      `,
+      className: "",
+      iconSize: [36, 36],
+      iconAnchor: [18, 18],
+      popupAnchor: [0, -18],
     });
   };
 
@@ -847,7 +894,7 @@ export default function MapSection({
         margin-bottom: 8px;
       ">
         <div style="display: flex; align-items: center; gap: 6px; margin-bottom: 4px;">
-          <span style="font-size: 16px;">��</span>
+          <span style="font-size: 16px;">🆔</span>
           <strong style="color: ${theme === 'dark' ? '#60a5fa' : '#2563eb'};">${order.id}</strong>
         </div>
         <div style="display: flex; align-items: center; gap: 6px; margin-bottom: 4px;">
@@ -868,14 +915,6 @@ export default function MapSection({
         <div style="display: flex; align-items: center; gap: 6px;">
           <span style="font-size: 16px;">⏱️</span>
           <span style="flex: 1;">${order.createdAt}</span>
-        </div>
-        <div style="display: flex; align-items: center; gap: 6px;">
-          <span style="font-size: 16px;">��</span>
-          <span style="flex: 1;">Distance: ${order.distance}</span>
-        </div>
-        <div style="display: flex; align-items: center; gap: 6px;">
-          <span style="font-size: 16px;">🛒</span>
-          <span style="flex: 1;">Items: ${order.items}</span>
         </div>
         <div style="display: flex; align-items: center; gap: 6px;">
           <span style="font-size: 16px;">🚚</span>
@@ -1328,42 +1367,10 @@ export default function MapSection({
 
               // Create marker only if map is ready
               if (map && map.getContainer()) {
-                const shopIconHtml = `
-                  <div style="
-                    background: ${theme === 'dark' ? 'rgba(31, 41, 55, 0.95)' : 'rgba(255, 255, 255, 0.95)'};
-                    border-radius: 50%;
-                    width: 36px;
-                    height: 36px;
-                    display: flex;
-                    align-items: center;
-                    justify-content: center;
-                    box-shadow: 0 2px 4px ${theme === 'dark' ? 'rgba(0,0,0,0.3)' : 'rgba(0,0,0,0.1)'};
-                    backdrop-filter: blur(8px);
-                  ">
-                    <img 
-                      src="https://static-00.iconduck.com/assets.00/shop-icon-2048x1878-qov4lrv1.png" 
-                      style="
-                        width: 24px; 
-                        height: 24px; 
-                        filter: ${shop.is_active ? 'none' : 'grayscale(100%)'};
-                        opacity: ${shop.is_active ? '1' : '0.6'};
-                      "
-                    />
-                  </div>
-                `;
-
-                  const shopIcon = L.divIcon({
-                    html: shopIconHtml,
-                    className: "",
-                    iconSize: [36, 36],
-                    iconAnchor: [18, 18],
-                    popupAnchor: [0, -18],
-                  });
-
-                    const marker = L.marker([lat, lng], { 
-                      icon: shopIcon,
-                      zIndexOffset: 500 // Below order markers but above base layers
-                    });
+                const marker = L.marker([lat, lng], { 
+                  icon: createShopMarkerIcon(shop.is_active),
+                  zIndexOffset: 500 // Below order markers but above base layers
+                });
                 
                 // Use our enhanced safety function to add the marker
                 if (safeAddMarker(marker, map, `shop ${shop.name}`)) {
