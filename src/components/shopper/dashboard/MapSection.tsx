@@ -78,7 +78,7 @@ interface PendingOrder {
   addressCity: string;
 }
 
-// Add this function near the top with other utility functions
+// Update the getOrderTimeBadgeColor function to use green colors
 function getOrderTimeBadgeColor(createdAtStr: string): string {
   // Get age in minutes
   const created = new Date(createdAtStr);
@@ -86,18 +86,18 @@ function getOrderTimeBadgeColor(createdAtStr: string): string {
   const diffMins = Math.floor(diffMs / 60000);
 
   // Color coding:
-  // - Blue: Very recent orders (<10 min) - not normally visible in list view with 10 min filter
-  // - Green: Recent orders (10-60 min)
-  // - Orange: Older orders (1-24 hours)
-  // - Purple: Historical orders (>24 hours)
+  // - Very recent orders (<10 min) - bright green
+  // - Recent orders (10-60 min) - medium green
+  // - Older orders (1-24 hours) - darker green
+  // - Historical orders (>24 hours) - darkest green
   if (diffMins < 10) {
-    return "#3b82f6"; // blue
+    return '#10b981'; // bright green
   } else if (diffMins < 60) {
-    return "#10b981"; // green
+    return '#059669'; // medium green
   } else if (diffMins < 24 * 60) {
-    return "#f59e0b"; // orange
+    return '#047857'; // darker green
   } else {
-    return "#8b5cf6"; // purple
+    return '#065f46'; // darkest green
   }
 }
 
@@ -134,7 +134,7 @@ const groupMarkersByLocation = (orders: MapSectionProps['availableOrders']) => {
   return groups;
 };
 
-// Add helper function to format earnings amount
+// Update helper function to format earnings amount
 const formatEarningsDisplay = (amount: string) => {
   // Remove currency symbol and commas, then parse as number
   const value = parseFloat(amount.replace(/[^0-9.]/g, ''));
@@ -142,19 +142,19 @@ const formatEarningsDisplay = (amount: string) => {
   if (isNaN(value)) return amount;
   
   if (value >= 1000) {
-    // Format to one decimal place for thousands
+    // Format to one decimal place for thousands, no currency
     return `${(value / 1000).toFixed(1)}k`;
   }
   
-  // For hundreds, just return the number
+  // For hundreds, just return the number without currency
   return Math.round(value).toString();
 };
 
-// Update the marker clearing check to look for 'k' instead of 'RWF'
+// Update the marker clearing check to look for 'k' or numbers
 const isOrderMarker = (icon: L.DivIcon | L.Icon): boolean => {
   if (!(icon instanceof L.DivIcon)) return false;
   const html = (icon.options as L.DivIconOptions).html;
-  return typeof html === 'string' && (html.includes('k') || /\d{2,3}/.test(html));
+  return typeof html === 'string' && (/\d+k|\d+/.test(html));
 };
 
 export default function MapSection({
@@ -174,6 +174,8 @@ export default function MapSection({
   const [loadingEarnings, setLoadingEarnings] = useState(true);
   const mapInstanceRef = useRef<L.Map | null>(null);
   const userMarkerRef = useRef<L.Marker | null>(null);
+  const shopMarkersRef = useRef<L.Marker[]>([]);
+  const orderMarkersRef = useRef<L.Marker[]>([]);
   const locationErrorCountRef = useRef<number>(0);
   const [isRefreshingLocation, setIsRefreshingLocation] = useState(false);
   const [isActivelyTracking, setIsActivelyTracking] = useState(false);
@@ -1244,24 +1246,58 @@ export default function MapSection({
               // Create marker only if map is ready
               if (map && map.getContainer()) {
                 const shopIconHtml = `
-                  <img src="https://static-00.iconduck.com/assets.00/shop-icon-2048x1878-qov4lrv1.png" 
-                    style="width: 32px; height: 32px; filter: ${shop.is_active ? "none" : "grayscale(100%)"};" 
-                  />
+                  <div style="
+                    background: ${theme === 'dark' ? 'rgba(31, 41, 55, 0.95)' : 'rgba(255, 255, 255, 0.95)'};
+                    border-radius: 50%;
+                    width: 36px;
+                    height: 36px;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    box-shadow: 0 2px 4px ${theme === 'dark' ? 'rgba(0,0,0,0.3)' : 'rgba(0,0,0,0.1)'};
+                    backdrop-filter: blur(8px);
+                  ">
+                    <img 
+                      src="https://static-00.iconduck.com/assets.00/shop-icon-2048x1878-qov4lrv1.png" 
+                      style="
+                        width: 24px; 
+                        height: 24px; 
+                        filter: ${shop.is_active ? 'none' : 'grayscale(100%)'};
+                        opacity: ${shop.is_active ? '1' : '0.6'};
+                      "
+                    />
+                  </div>
                 `;
 
                   const shopIcon = L.divIcon({
                     html: shopIconHtml,
                     className: "",
-                    iconSize: [32, 32],
-                    iconAnchor: [16, 32],
-                    popupAnchor: [0, -32],
+                    iconSize: [36, 36],
+                    iconAnchor: [18, 18],
+                    popupAnchor: [0, -18],
                   });
 
-                    const marker = L.marker([lat, lng], { icon: shopIcon });
+                    const marker = L.marker([lat, lng], { 
+                      icon: shopIcon,
+                      zIndexOffset: 500 // Below order markers but above base layers
+                    });
                 
                 // Use our enhanced safety function to add the marker
                 if (safeAddMarker(marker, map, `shop ${shop.name}`)) {
-                  marker.bindPopup(`${shop.name}${shop.is_active ? "" : " (Disabled)"}`);
+                    marker.bindPopup(
+                    `<div style="
+                      background: ${theme === 'dark' ? '#1f2937' : '#fff'}; 
+                      color: ${theme === 'dark' ? '#e5e7eb' : '#111827'};
+                      padding: 8px;
+                      border-radius: 8px;
+                      min-width: 150px;
+                      text-align: center;
+                    ">
+                      <strong>${shop.name}</strong>
+                      ${!shop.is_active ? '<br><span style="color: #ef4444;">(Disabled)</span>' : ''}
+                    </div>`,
+                    { offset: [0, -10] }
+                  );
                 }
                 }
               } catch (error) {
@@ -1285,17 +1321,37 @@ export default function MapSection({
             availableOrders.forEach((order) => {
               if (order.shopLatitude && order.shopLongitude) {
                 const badgeColor = getOrderTimeBadgeColor(order.createdAt);
+                const simplifiedEarnings = formatEarningsDisplay(order.estimatedEarnings);
+
                 const orderIcon = L.divIcon({
-                  html: `<div style="background:${theme === 'dark' ? '#1f2937' : '#fff'};border:2px solid ${badgeColor};border-radius:12px;padding:4px 12px;font-size:12px;color:${theme === 'dark' ? badgeColor.replace(')', ', 0.9)').replace('rgb', 'rgba') : badgeColor};white-space:nowrap;z-index:1000;">${order.estimatedEarnings}</div>`,
+                  html: `
+                    <div style="
+                      background: ${theme === 'dark' ? '#065f46' : '#059669'};
+                      border: 2px solid ${badgeColor};
+                      border-radius: 50%;
+                      width: 44px;
+                      height: 44px;
+                      display: flex;
+                      align-items: center;
+                      justify-content: center;
+                      font-size: 13px;
+                      font-weight: 600;
+                      color: white;
+                      backdrop-filter: blur(8px);
+                      box-shadow: 0 2px 4px ${theme === 'dark' ? 'rgba(0,0,0,0.3)' : 'rgba(0,0,0,0.1)'};
+                      z-index: 1000;
+                    ">
+                      ${simplifiedEarnings}
+                    </div>`,
                   className: "",
-                  iconSize: [90, 30],
-                  iconAnchor: [60, 15],
-                  popupAnchor: [0, -15],
+                  iconSize: [44, 44],
+                  iconAnchor: [22, 22],
+                  popupAnchor: [0, -22],
                 });
 
                 const marker = L.marker(
                   [order.shopLatitude, order.shopLongitude],
-                  { icon: orderIcon, zIndexOffset: 2000 }
+                  { icon: orderIcon, zIndexOffset: 1000 }
                 );
 
                 // Use our enhanced safety function to add the marker
@@ -1379,20 +1435,28 @@ export default function MapSection({
     return () => clearInterval(interval);
   }, []);
 
+  // Helper function to clear order markers
+  const clearOrderMarkers = () => {
+    orderMarkersRef.current.forEach(marker => {
+      if (marker) marker.remove();
+    });
+    orderMarkersRef.current = [];
+  };
+
+  // Helper function to clear shop markers
+  const clearShopMarkers = () => {
+    shopMarkersRef.current.forEach(marker => {
+      if (marker) marker.remove();
+    });
+    shopMarkersRef.current = [];
+  };
+
   // Update the available orders rendering logic
   useEffect(() => {
     if (!mapInstanceRef.current || !mapLoaded || !availableOrders?.length) return;
 
-    // Clear existing order markers
-    mapInstanceRef.current.eachLayer((layer) => {
-      if (layer instanceof L.Marker) {
-        const icon = layer.getIcon();
-        // Check if it's an order marker using the helper function
-        if (icon instanceof L.DivIcon && isOrderMarker(icon)) {
-          layer.remove();
-        }
-      }
-    });
+    // Only clear order markers
+    clearOrderMarkers();
 
     // Group orders by location
     const groupedOrders = groupMarkersByLocation(availableOrders);
@@ -1403,47 +1467,47 @@ export default function MapSection({
       orders.forEach((order, index) => {
         if (!order.shopLatitude || !order.shopLongitude) return;
 
-        // Calculate offset for this marker
         const offset = calculateMarkerOffset(index, orders.length);
         const adjustedLat = baseLat + offset.lat;
         const adjustedLng = baseLng + offset.lng;
 
-        const badgeColor = getOrderTimeBadgeColor(order.createdAt);
-        
-        // Format the earnings amount
+            const badgeColor = getOrderTimeBadgeColor(order.createdAt);
         const simplifiedEarnings = formatEarningsDisplay(order.estimatedEarnings);
-        
-        // Enhanced marker icon with simplified earnings display
-        const orderIcon = L.divIcon({
-          html: `
-            <div style="
-              background: ${theme === 'dark' ? 'rgba(31, 41, 55, 0.95)' : 'rgba(255, 255, 255, 0.95)'};
-              border: 2px solid ${badgeColor};
-              border-radius: 12px;
-              padding: 4px 12px;
-              font-size: 13px;
-              font-weight: 600;
-              color: ${theme === 'dark' ? badgeColor.replace(')', ', 0.9)').replace('rgb', 'rgba') : badgeColor};
-              white-space: nowrap;
-              backdrop-filter: blur(8px);
-              box-shadow: 0 2px 4px ${theme === 'dark' ? 'rgba(0,0,0,0.3)' : 'rgba(0,0,0,0.1)'};
-              z-index: ${1000 + index};
-            ">
-              ${simplifiedEarnings}
-            </div>`,
-          className: "",
-          iconSize: [90, 30],
-          iconAnchor: [45, 15],
-          popupAnchor: [0, -15],
-        });
 
-        const marker = L.marker([adjustedLat, adjustedLng], {
-          icon: orderIcon,
-          zIndexOffset: 1000 + index,
-        });
+            const orderIcon = L.divIcon({
+              html: `
+                <div style="
+                  background: ${theme === 'dark' ? '#065f46' : '#059669'};
+                  border: 2px solid ${badgeColor};
+                  border-radius: 50%;
+                  width: 44px;
+                  height: 44px;
+                  display: flex;
+                  align-items: center;
+                  justify-content: center;
+                  font-size: 13px;
+                  font-weight: 600;
+                  color: white;
+                  backdrop-filter: blur(8px);
+                  box-shadow: 0 2px 4px ${theme === 'dark' ? 'rgba(0,0,0,0.3)' : 'rgba(0,0,0,0.1)'};
+                  z-index: 1000;
+                ">
+                  ${simplifiedEarnings}
+                </div>`,
+              className: "",
+              iconSize: [44, 44],
+              iconAnchor: [22, 22],
+              popupAnchor: [0, -22],
+            });
+
+            const marker = L.marker([adjustedLat, adjustedLng], {
+              icon: orderIcon,
+              zIndexOffset: 1000,
+            });
 
         if (safeAddMarker(marker, mapInstanceRef.current!, `order ${order.id}`)) {
-          const popupContent = `
+          orderMarkersRef.current.push(marker);
+            const popupContent = `
             <div style="font-size:14px; line-height:1.4; min-width:200px; background:${theme === 'dark' ? '#1f2937' : '#fff'}; color:${theme === 'dark' ? '#e5e7eb' : '#111827'};">
               <div style="display:flex;align-items:center;margin-bottom:4px;">
                 <span style="margin-right:6px;">🆔</span><strong>${order.id}</strong>
@@ -1461,26 +1525,37 @@ export default function MapSection({
                 <span style="margin-right:6px;">📏</span><span>Distance: ${order.distance}</span>
               </div>
               <div style="display:flex;align-items:center;margin-bottom:4px;">
-                <span style="margin-right:6px;">🛒</span><span>Items: ${order.items}</span>
+              <span style="margin-right:6px;">🛒</span><span>Items: ${order.items}</span>
               </div>
               <div style="display:flex;align-items:center;margin-bottom:4px;">
-                <span style="margin-right:6px;">🚚</span><span>Deliver to: ${order.customerAddress}</span>
+              <span style="margin-right:6px;">🚚</span><span>Deliver to: ${order.customerAddress}</span>
               </div>
               <div style="display:flex;align-items:center;">
                 <span style="margin-right:6px;">💰</span><span>Estimated Earnings: ${order.estimatedEarnings}</span>
               </div>
-              <button id="accept-batch-${order.id}" style="margin-top:8px;padding:6px 12px;background:${theme === 'dark' ? '#059669' : '#10b981'};color:#fff;border:none;border-radius:4px;cursor:pointer;width:100%;">
+              <button id="accept-batch-${order.id}" style="margin-top:8px;padding:6px 12px;background:${theme === 'dark' ? '#059669' : '#10b981'};color:#fff;border:none;border-radius:4px;cursor:pointer;">
                 Accept Batch
               </button>
             </div>
           `;
 
-          marker.bindPopup(popupContent, { maxWidth: 250 });
+            marker.bindPopup(popupContent, { maxWidth: 250 });
           attachAcceptHandler(marker, order.id, mapInstanceRef.current!);
         }
       });
     });
   }, [mapLoaded, availableOrders, theme]);
+
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => {
+      clearOrderMarkers();
+      clearShopMarkers();
+        if (userMarkerRef.current) {
+        userMarkerRef.current.remove();
+      }
+    };
+  }, []);
 
   // If the dashboard is initializing, show a simpler loading state
   if (isInitializing) {
