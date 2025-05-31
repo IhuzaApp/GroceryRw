@@ -5,6 +5,7 @@ import Link from "next/link";
 import { Button, Panel, Badge, Loader, toaster, Message } from "rsuite";
 import "rsuite/dist/rsuite.min.css";
 import { useAuth } from "../../context/AuthContext";
+import { useTheme } from "../../context/ThemeContext";
 
 // Define interfaces for order data
 interface Order {
@@ -40,6 +41,7 @@ export default function ActiveBatches({
   const [error, setError] = useState<string | null>(initialError);
   const [fetchAttempted, setFetchAttempted] = useState(false);
   const fetchedRef = useRef(false);
+  const { theme } = useTheme();
 
   useEffect(() => {
     const checkIfMobile = () => {
@@ -267,27 +269,35 @@ export default function ActiveBatches({
 }
 
 function ActiveOrderCard({ order }: { order: any }) {
+  const { theme } = useTheme();
+
   const getStatusBadge = (status: string) => {
     switch (status) {
       case "accepted":
         return (
           <Badge
             content="Accepted"
-            className="rounded bg-blue-100 px-2 py-1 text-xs font-medium text-blue-800"
+            className={`rounded bg-blue-100 px-2 py-1 text-xs font-medium ${
+              theme === 'dark' ? 'text-blue-800' : 'text-blue-800'
+            }`}
           />
         );
       case "picked":
         return (
           <Badge
             content="Picked Up"
-            className="rounded bg-orange-100 px-2 py-1 text-xs font-medium text-orange-800"
+            className={`rounded bg-orange-100 px-2 py-1 text-xs font-medium ${
+              theme === 'dark' ? 'text-orange-800' : 'text-orange-800'
+            }`}
           />
         );
       case "at_customer":
         return (
           <Badge
             content="At Customer"
-            className="rounded bg-purple-100 px-2 py-1 text-xs font-medium text-purple-800"
+            className={`rounded bg-purple-100 px-2 py-1 text-xs font-medium ${
+              theme === 'dark' ? 'text-purple-800' : 'text-purple-800'
+            }`}
           />
         );
       default:
@@ -297,122 +307,212 @@ function ActiveOrderCard({ order }: { order: any }) {
 
   const getNextActionButton = (status: string) => {
     switch (status) {
-      case "accepted":
+      case "ACCEPTED":
         return (
           <Link href={`/Plasa/active-batches/batch/${order.id}`}>
-            <button className="rounded-md bg-[#125C13] px-4 py-2 font-medium text-white transition-colors hover:bg-[#0A400B]">
+            <Button
+              appearance="primary"
+              className={`rounded-md px-4 py-2 font-medium ${
+                theme === 'dark'
+                  ? 'bg-green-600 text-white hover:bg-green-700'
+                  : 'bg-green-600 text-white hover:bg-green-700'
+              }`}
+            >
               Start Shopping
-            </button>
+            </Button>
           </Link>
         );
       case "picked":
       case "shopping":
         return (
           <Link href={`/Plasa/active-batches/batch/${order.id}`}>
-            <button className="rounded-md bg-[#125C13] px-4 py-2 font-medium text-white transition-colors hover:bg-[#0A400B]">
+            <Button
+              appearance="primary"
+              className={`rounded-md px-4 py-2 font-medium ${
+                theme === 'dark'
+                  ? 'bg-green-600 text-white hover:bg-green-700'
+                  : 'bg-green-600 text-white hover:bg-green-700'
+              }`}
+            >
               View Details
-            </button>
+            </Button>
           </Link>
         );
       case "at_customer":
       case "on_the_way":
         return (
           <Link href={`/Plasa/active-batches/batch/${order.id}`}>
-            <button className="rounded-md bg-[#125C13] px-4 py-2 font-medium text-white transition-colors hover:bg-[#0A400B]">
+            <Button
+              appearance="primary"
+              className={`rounded-md px-4 py-2 font-medium ${
+                theme === 'dark'
+                  ? 'bg-green-600 text-white hover:bg-green-700'
+                  : 'bg-green-600 text-white hover:bg-green-700'
+              }`}
+            >
               Confirm Delivery
-            </button>
+            </Button>
           </Link>
         );
       default:
         return (
           <Link href={`/Plasa/active-batches/batch/${order.id}`}>
-            <button className="rounded-md bg-[#125C13] px-4 py-2 font-medium text-white transition-colors hover:bg-[#0A400B]">
+            <Button
+              appearance="primary"
+              className={`rounded-md px-4 py-2 font-medium ${
+                theme === 'dark'
+                  ? 'bg-green-600 text-white hover:bg-green-700'
+                  : 'bg-green-600 text-white hover:bg-green-700'
+              }`}
+            >
               View Details
-            </button>
+            </Button>
           </Link>
         );
     }
   };
 
   return (
-    <Panel shaded bordered bodyFill className="overflow-hidden">
-      <div className="p-4">
-        <div className="mb-3 flex items-start justify-between">
-          <div>
-            <div className="flex items-center">
-              <h3 className="text-lg font-bold">{order.id}</h3>
-              {getStatusBadge(order.status)}
-            </div>
-            <p className="mt-1 text-sm text-gray-500">{order.createdAt}</p>
+    <div className={`mb-4 rounded-lg border p-4 shadow-sm transition-colors duration-200 ${
+      theme === 'dark' 
+        ? 'border-gray-700 bg-gray-800 text-gray-100' 
+        : 'border-gray-200 bg-white text-gray-900'
+    }`}>
+      <div className="flex items-center justify-between">
+        <div className="flex items-center space-x-3">
+          <div className={`rounded-full p-2 ${
+            theme === 'dark' ? 'bg-blue-900/20' : 'bg-blue-50'
+          }`}>
+            <svg
+              className={`h-6 w-6 ${
+                theme === 'dark' ? 'text-blue-400' : 'text-blue-500'
+              }`}
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"
+              />
+            </svg>
           </div>
-          <div className="text-right">
-            <p className="font-bold text-green-600">
-              {order.estimatedEarnings}
+          <div>
+            <h3 className={`font-medium ${
+              theme === 'dark' ? 'text-gray-100' : 'text-gray-900'
+            }`}>
+              Batch #{order.id}
+            </h3>
+            <p className={`text-sm ${
+              theme === 'dark' ? 'text-gray-400' : 'text-gray-500'
+            }`}>
+              {order.items} items • {order.estimatedEarnings}
             </p>
-            <p className="text-xs text-gray-500">{order.items} items</p>
           </div>
         </div>
-
-        <div className="mb-3 flex items-center">
-          <div className="mr-2 flex h-8 w-8 items-center justify-center rounded-full bg-green-100">
-            <svg
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              className="h-4 w-4 text-green-600"
-            >
-              <path d="M3 3h18v18H3zM16 8h.01M8 16h.01M16 16h.01" />
-            </svg>
-          </div>
-          <div>
-            <p className="font-medium">{order.shopName}</p>
-            <p className="text-xs text-gray-500">{order.shopAddress}</p>
-          </div>
-        </div>
-
-        <div className="mb-4 flex items-center">
-          <div className="mr-2 flex h-8 w-8 items-center justify-center rounded-full bg-blue-100">
-            <svg
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              className="h-4 w-4 text-blue-600"
-            >
-              <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z" />
-              <circle cx="12" cy="10" r="3" />
-            </svg>
-          </div>
-          <div>
-            <p className="font-medium">{order.customerName}</p>
-            <p className="text-xs text-gray-500">{order.customerAddress}</p>
-          </div>
-        </div>
-
-        <div className="flex items-center justify-between">
-          <a
-            href={`https://maps.google.com/?q=${order.customerLat},${order.customerLng}`}
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Button appearance="ghost" className="flex items-center">
-              <svg
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                className="mr-1 h-4 w-4"
-              >
-                <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z" />
-                <circle cx="12" cy="10" r="3" />
-              </svg>
-              Directions
-            </Button>
-          </a>
-          {getNextActionButton(order.status)}
+        <div className="text-right">
+          <p className={`text-lg font-semibold ${
+            theme === 'dark' ? 'text-green-400' : 'text-green-600'
+          }`}>
+            ${order.estimatedEarnings}
+          </p>
+          <p className={`text-sm ${
+            theme === 'dark' ? 'text-gray-400' : 'text-gray-500'
+          }`}>
+            Estimated earnings
+          </p>
         </div>
       </div>
-    </Panel>
+
+      <div className="mt-4 space-y-2">
+        <div className={`flex items-center justify-between rounded-lg p-3 ${
+          theme === 'dark' ? 'bg-gray-700/50' : 'bg-gray-50'
+        }`}>
+          <div className="flex items-center space-x-3">
+            <div className={`rounded-full p-2 ${
+              theme === 'dark' ? 'bg-gray-600' : 'bg-white'
+            }`}>
+              <svg
+                className={`h-5 w-5 ${
+                  theme === 'dark' ? 'text-gray-300' : 'text-gray-500'
+                }`}
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"
+                />
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"
+                />
+              </svg>
+            </div>
+            <div>
+              <p className={`text-sm font-medium ${
+                theme === 'dark' ? 'text-gray-100' : 'text-gray-900'
+              }`}>
+                Pickup Location
+              </p>
+              <p className={`text-sm ${
+                theme === 'dark' ? 'text-gray-400' : 'text-gray-500'
+              }`}>
+                {order.shopName}, {order.shopAddress}
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <div className={`flex items-center justify-between rounded-lg p-3 ${
+          theme === 'dark' ? 'bg-gray-700/50' : 'bg-gray-50'
+        }`}>
+          <div className="flex items-center space-x-3">
+            <div className={`rounded-full p-2 ${
+              theme === 'dark' ? 'bg-gray-600' : 'bg-white'
+            }`}>
+              <svg
+                className={`h-5 w-5 ${
+                  theme === 'dark' ? 'text-gray-300' : 'text-gray-500'
+                }`}
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"
+                />
+              </svg>
+            </div>
+            <div>
+              <p className={`text-sm font-medium ${
+                theme === 'dark' ? 'text-gray-100' : 'text-gray-900'
+              }`}>
+                Delivery Location
+              </p>
+              <p className={`text-sm ${
+                theme === 'dark' ? 'text-gray-400' : 'text-gray-500'
+              }`}>
+                {order.customerName}, {order.customerAddress}
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div className="mt-4 flex justify-end space-x-3">
+        {getNextActionButton(order.status)}
+      </div>
+    </div>
   );
 }

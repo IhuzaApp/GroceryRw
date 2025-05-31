@@ -1,8 +1,9 @@
 "use client";
-import React from "react";
+import React, { useState, useEffect } from "react";
 import ShopperHeader from "@components/shopper/ShopperHeader";
 import ShopperSidebar from "@components/shopper/ShopperSidebar";
 import { useSession } from "next-auth/react";
+import { useTheme } from "@context/ThemeContext";
 
 interface ShopperLayoutProps {
   children: React.ReactNode;
@@ -10,33 +11,29 @@ interface ShopperLayoutProps {
 
 export default function ShopperLayout({ children }: ShopperLayoutProps) {
   const { data: session, status } = useSession();
+  const { theme } = useTheme();
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    const checkIfMobile = () => setIsMobile(window.innerWidth < 768);
+    checkIfMobile();
+    window.addEventListener("resize", checkIfMobile);
+    return () => window.removeEventListener("resize", checkIfMobile);
+  }, []);
+
   // session contains user: { id, name, email, phone, gender, address }
   // status is 'authenticated' | 'loading' | 'unauthenticated'
   console.log(session);
   return (
-    <div className="flex h-screen flex-col bg-gray-50">
-      {/* Fixed header */}
-      <div className="fixed left-0 right-0 top-0 z-50">
-        <ShopperHeader />
-      </div>
-
-      {/* Main content wrapper */}
-      <div className="flex flex-1 overflow-hidden pt-[64px]">
-        {/* Sidebar - visible on desktop */}
-        <div className="hidden md:block">
-          <ShopperSidebar />
-        </div>
-
-        {/* Scrollable content area */}
-        <div className="flex-1 overflow-auto px-2 pb-20 sm:px-4 md:pb-0">
-          {children}
-        </div>
-      </div>
-
-      {/* Bottom nav (inside ShopperSidebar or create separate if needed) */}
-      <div className="fixed bottom-0 left-0 right-0 z-40 md:hidden">
-        {/* If ShopperSidebar includes mobile nav logic, remove this and handle there */}
+    <div className={`min-h-screen ${theme === 'dark' ? 'bg-gray-900' : 'bg-gray-50'}`}>
+      <ShopperHeader />
+      <div className="flex">
         <ShopperSidebar />
+        <main className={`flex-1 transition-colors duration-200 ${
+          theme === 'dark' ? 'bg-gray-900 text-gray-100' : 'bg-gray-50 text-gray-900'
+        } ${isMobile ? 'p-0' : 'p-4'}`}>
+          {children}
+        </main>
       </div>
     </div>
   );

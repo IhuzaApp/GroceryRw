@@ -517,7 +517,7 @@ export default function ShopperDashboard() {
           />
         </div>
 
-        {/* Desktop Title and Sort */}
+        {/* Desktop Title and Sort - Hidden on Mobile */}
         {!isMobile && (
           <div className="px-2 pb-2 md:block">
             <div className="flex items-center justify-between px-4 pt-4">
@@ -562,7 +562,12 @@ export default function ShopperDashboard() {
                 </button>
               </div>
             </div>
+          </div>
+        )}
 
+        {/* Orders List Section - Hidden on Mobile */}
+        {!isMobile && (
+          <div className="px-2">
             <div className="mb-4 mt-2 flex items-center px-4">
               <span className="mr-2 text-sm text-gray-500">Sort by:</span>
               <div className="flex space-x-2">

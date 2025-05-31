@@ -42,23 +42,27 @@ export default function OrderDetailsPage() {
   const fetchOrderDetails = async () => {
     setIsLoading(true);
     try {
-      // Fetch order details from API
-      const response = await fetch(`/api/shopper/orderDetails?id=${id}`);
-
-      if (!response.ok) {
-        throw new Error("Failed to fetch order details");
+      if (!id) {
+        throw new Error("Order ID is required");
       }
 
+      // Fetch order details from API
+      const response = await fetch(`/api/shopper/orderDetails?id=${id}`);
       const data = await response.json();
 
-      if (data.success) {
+      if (!response.ok) {
+        throw new Error(data.error || "Failed to fetch order details");
+      }
+
+      if (data.success && data.order) {
         setOrderDetails(data.order);
       } else {
-        toast.error(data.error || "Failed to load order details");
+        throw new Error(data.error || "Failed to load order details");
       }
     } catch (error) {
       console.error("Error fetching order details:", error);
-      toast.error("Failed to load order details");
+      toast.error(error instanceof Error ? error.message : "Failed to load order details");
+      setOrderDetails(null);
     } finally {
       setIsLoading(false);
     }
