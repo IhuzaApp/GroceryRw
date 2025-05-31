@@ -101,6 +101,62 @@ function getOrderTimeBadgeColor(createdAtStr: string): string {
   }
 }
 
+// Add helper function to calculate offset for clustered markers
+const calculateMarkerOffset = (index: number, total: number, baseRadius: number = 30) => {
+  if (total === 1) return { lat: 0, lng: 0 };
+  
+  // Calculate angle for even distribution in a circle
+  const angle = (2 * Math.PI * index) / total;
+  
+  // Calculate offset using trigonometry
+  return {
+    lat: (baseRadius / 111111) * Math.cos(angle), // Convert meters to degrees (roughly)
+    lng: (baseRadius / 111111) * Math.sin(angle)  // 111111 meters = 1 degree at equator
+  };
+};
+
+// Add function to group markers by location
+const groupMarkersByLocation = (orders: MapSectionProps['availableOrders']) => {
+  const groups = new Map<string, Array<typeof orders[0]>>();
+  
+  orders.forEach(order => {
+    if (!order.shopLatitude || !order.shopLongitude) return;
+    
+    // Create a key with reduced precision to group nearby points
+    const key = `${order.shopLatitude.toFixed(4)},${order.shopLongitude.toFixed(4)}`;
+    
+    if (!groups.has(key)) {
+      groups.set(key, []);
+    }
+    groups.get(key)?.push(order);
+  });
+  
+  return groups;
+};
+
+// Add helper function to format earnings amount
+const formatEarningsDisplay = (amount: string) => {
+  // Remove currency symbol and commas, then parse as number
+  const value = parseFloat(amount.replace(/[^0-9.]/g, ''));
+  
+  if (isNaN(value)) return amount;
+  
+  if (value >= 1000) {
+    // Format to one decimal place for thousands
+    return `${(value / 1000).toFixed(1)}k`;
+  }
+  
+  // For hundreds, just return the number
+  return Math.round(value).toString();
+};
+
+// Update the marker clearing check to look for 'k' instead of 'RWF'
+const isOrderMarker = (icon: L.DivIcon | L.Icon): boolean => {
+  if (!(icon instanceof L.DivIcon)) return false;
+  const html = (icon.options as L.DivIconOptions).html;
+  return typeof html === 'string' && (html.includes('k') || /\d{2,3}/.test(html));
+};
+
 export default function MapSection({
   mapLoaded,
   availableOrders,
@@ -1066,20 +1122,20 @@ export default function MapSection({
       try {
         // Cleanup existing map
         if (mapInstanceRef.current) {
-          mapInstanceRef.current.remove();
-          mapInstanceRef.current = null;
+        mapInstanceRef.current.remove();
+        mapInstanceRef.current = null;
         }
 
         // Create new map instance with type assertion and null check
         if (mapRef.current) {
           mapInstance = L.map(mapRef.current as HTMLElement, {
-            center: [-1.9706, 30.1044],
-            zoom: 14,
+          center: [-1.9706, 30.1044],
+          zoom: 14,
             minZoom: 3,
             maxZoom: 19,
             scrollWheelZoom: true,
-            attributionControl: false,
-          });
+          attributionControl: false,
+        });
 
           // Store map instance
           mapInstanceRef.current = mapInstance;
@@ -1094,20 +1150,20 @@ export default function MapSection({
 
         // Initialize user marker with improved dark theme styling
         const userIconHtml = `
-          <div style="
+      <div style="
             background: ${theme === 'dark' ? '#1f2937' : 'white'};
             border: 2px solid ${theme === 'dark' ? '#60a5fa' : '#3b82f6'};
-            border-radius: 50%;
-            width: 32px;
-            height: 32px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
+        border-radius: 50%;
+        width: 32px;
+        height: 32px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
             box-shadow: 0 2px 4px ${theme === 'dark' ? 'rgba(0,0,0,0.3)' : 'rgba(0,0,0,0.1)'};
-          ">
-            <span style="font-size: 16px;">👤</span>
-          </div>
-        `;
+      ">
+        <span style="font-size: 16px;">👤</span>
+      </div>
+    `;
 
         const userIcon = L.divIcon({
           html: userIconHtml,
@@ -1130,7 +1186,7 @@ export default function MapSection({
           if (!isNaN(lat) && !isNaN(lng)) {
             console.log("Setting initial position from cookies:", { lat, lng });
             if (userMarkerRef.current && mapInstance) {
-              userMarkerRef.current.setLatLng([lat, lng]);
+            userMarkerRef.current.setLatLng([lat, lng]);
               if (isOnline) {
                 userMarkerRef.current.addTo(mapInstance);
                 mapInstance.setView([lat, lng], 16);
@@ -1175,15 +1231,15 @@ export default function MapSection({
           // Ensure map is still valid before adding markers
           if (!map || !map.getContainer()) return;
 
-          data.forEach((shop) => {
-            try {
-              const lat = parseFloat(shop.latitude);
-              const lng = parseFloat(shop.longitude);
+            data.forEach((shop) => {
+              try {
+                const lat = parseFloat(shop.latitude);
+                const lng = parseFloat(shop.longitude);
 
-              if (isNaN(lat) || isNaN(lng)) {
+                if (isNaN(lat) || isNaN(lng)) {
                 console.warn(`Invalid coordinates for shop ${shop.name}`);
-                return;
-              }
+                  return;
+                }
 
               // Create marker only if map is ready
               if (map && map.getContainer()) {
@@ -1193,30 +1249,30 @@ export default function MapSection({
                   />
                 `;
 
-                const shopIcon = L.divIcon({
-                  html: shopIconHtml,
-                  className: "",
-                  iconSize: [32, 32],
-                  iconAnchor: [16, 32],
-                  popupAnchor: [0, -32],
-                });
+                  const shopIcon = L.divIcon({
+                    html: shopIconHtml,
+                    className: "",
+                    iconSize: [32, 32],
+                    iconAnchor: [16, 32],
+                    popupAnchor: [0, -32],
+                  });
 
-                const marker = L.marker([lat, lng], { icon: shopIcon });
+                    const marker = L.marker([lat, lng], { icon: shopIcon });
                 
                 // Use our enhanced safety function to add the marker
                 if (safeAddMarker(marker, map, `shop ${shop.name}`)) {
                   marker.bindPopup(`${shop.name}${shop.is_active ? "" : " (Disabled)"}`);
                 }
-              }
-            } catch (error) {
+                }
+              } catch (error) {
               console.error(`Error adding shop marker for ${shop.name}:`, error);
             }
           });
 
           // Load pending orders after shops are loaded
           if (isOnline && map && map.getContainer()) {
-            fetch("/api/shopper/pendingOrders")
-              .then((res) => res.json())
+      fetch("/api/shopper/pendingOrders")
+        .then((res) => res.json())
               .then((orders: PendingOrder[]) => {
                 setPendingOrders(orders);
                 orders.forEach((order) => renderPendingOrderMarker(order, map));
@@ -1308,7 +1364,7 @@ export default function MapSection({
           setDailyEarnings(0);
           setCompletedOrdersCount(0);
         }
-      } catch (error) {
+          } catch (error) {
         console.error("Error fetching daily earnings:", error);
         setDailyEarnings(0);
         setCompletedOrdersCount(0);
@@ -1322,6 +1378,109 @@ export default function MapSection({
     const interval = setInterval(fetchTodayCompletedEarnings, 5 * 60 * 1000);
     return () => clearInterval(interval);
   }, []);
+
+  // Update the available orders rendering logic
+  useEffect(() => {
+    if (!mapInstanceRef.current || !mapLoaded || !availableOrders?.length) return;
+
+    // Clear existing order markers
+    mapInstanceRef.current.eachLayer((layer) => {
+      if (layer instanceof L.Marker) {
+        const icon = layer.getIcon();
+        // Check if it's an order marker using the helper function
+        if (icon instanceof L.DivIcon && isOrderMarker(icon)) {
+          layer.remove();
+        }
+      }
+    });
+
+    // Group orders by location
+    const groupedOrders = groupMarkersByLocation(availableOrders);
+
+    groupedOrders.forEach((orders, locationKey) => {
+      const [baseLat, baseLng] = locationKey.split(',').map(Number);
+
+      orders.forEach((order, index) => {
+        if (!order.shopLatitude || !order.shopLongitude) return;
+
+        // Calculate offset for this marker
+        const offset = calculateMarkerOffset(index, orders.length);
+        const adjustedLat = baseLat + offset.lat;
+        const adjustedLng = baseLng + offset.lng;
+
+        const badgeColor = getOrderTimeBadgeColor(order.createdAt);
+        
+        // Format the earnings amount
+        const simplifiedEarnings = formatEarningsDisplay(order.estimatedEarnings);
+        
+        // Enhanced marker icon with simplified earnings display
+        const orderIcon = L.divIcon({
+          html: `
+            <div style="
+              background: ${theme === 'dark' ? 'rgba(31, 41, 55, 0.95)' : 'rgba(255, 255, 255, 0.95)'};
+              border: 2px solid ${badgeColor};
+              border-radius: 12px;
+              padding: 4px 12px;
+              font-size: 13px;
+              font-weight: 600;
+              color: ${theme === 'dark' ? badgeColor.replace(')', ', 0.9)').replace('rgb', 'rgba') : badgeColor};
+              white-space: nowrap;
+              backdrop-filter: blur(8px);
+              box-shadow: 0 2px 4px ${theme === 'dark' ? 'rgba(0,0,0,0.3)' : 'rgba(0,0,0,0.1)'};
+              z-index: ${1000 + index};
+            ">
+              ${simplifiedEarnings}
+            </div>`,
+          className: "",
+          iconSize: [90, 30],
+          iconAnchor: [45, 15],
+          popupAnchor: [0, -15],
+        });
+
+        const marker = L.marker([adjustedLat, adjustedLng], {
+          icon: orderIcon,
+          zIndexOffset: 1000 + index,
+        });
+
+        if (safeAddMarker(marker, mapInstanceRef.current!, `order ${order.id}`)) {
+          const popupContent = `
+            <div style="font-size:14px; line-height:1.4; min-width:200px; background:${theme === 'dark' ? '#1f2937' : '#fff'}; color:${theme === 'dark' ? '#e5e7eb' : '#111827'};">
+              <div style="display:flex;align-items:center;margin-bottom:4px;">
+                <span style="margin-right:6px;">🆔</span><strong>${order.id}</strong>
+              </div>
+              <div style="display:flex;align-items:center;margin-bottom:4px;">
+                <span style="margin-right:6px;">🏪</span><span>${order.shopName}</span>
+              </div>
+              <div style="display:flex;align-items:center;margin-bottom:4px;">
+                <span style="margin-right:6px;">📍</span><span>${order.shopAddress}</span>
+              </div>
+              <div style="display:flex;align-items:center;margin-bottom:4px;">
+                <span style="margin-right:6px;">⏱️</span><span>${order.createdAt}</span>
+              </div>
+              <div style="display:flex;align-items:center;margin-bottom:4px;">
+                <span style="margin-right:6px;">📏</span><span>Distance: ${order.distance}</span>
+              </div>
+              <div style="display:flex;align-items:center;margin-bottom:4px;">
+                <span style="margin-right:6px;">🛒</span><span>Items: ${order.items}</span>
+              </div>
+              <div style="display:flex;align-items:center;margin-bottom:4px;">
+                <span style="margin-right:6px;">🚚</span><span>Deliver to: ${order.customerAddress}</span>
+              </div>
+              <div style="display:flex;align-items:center;">
+                <span style="margin-right:6px;">💰</span><span>Estimated Earnings: ${order.estimatedEarnings}</span>
+              </div>
+              <button id="accept-batch-${order.id}" style="margin-top:8px;padding:6px 12px;background:${theme === 'dark' ? '#059669' : '#10b981'};color:#fff;border:none;border-radius:4px;cursor:pointer;width:100%;">
+                Accept Batch
+              </button>
+            </div>
+          `;
+
+          marker.bindPopup(popupContent, { maxWidth: 250 });
+          attachAcceptHandler(marker, order.id, mapInstanceRef.current!);
+        }
+      });
+    });
+  }, [mapLoaded, availableOrders, theme]);
 
   // If the dashboard is initializing, show a simpler loading state
   if (isInitializing) {
