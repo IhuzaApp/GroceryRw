@@ -444,15 +444,15 @@ export default function ChatPage() {
                   </div>
                 </div>
                 <Link href={`/Plasa/orders/${orderId}`}>
-                  <Button 
+                  <Button
                     appearance="ghost"
                     className={theme === 'dark' ? 'rs-btn-dark' : ''}
                   >
                     View Order
                   </Button>
                 </Link>
-              </div>
-            </div>
+                        </div>
+                      </div>
 
             {/* Messages Container */}
             <div className={`mb-4 h-[calc(100vh-300px)] overflow-y-auto rounded-lg p-4 shadow-sm ${
@@ -461,13 +461,13 @@ export default function ChatPage() {
                 : 'bg-white text-gray-900'
             }`}>
               {messages.map((msg, index) => (
-                <div
-                  key={msg.id}
+                          <div
+                            key={msg.id}
                   className={`mb-4 flex ${
                     msg.senderType === "shopper" ? "justify-end" : "justify-start"
-                  }`}
-                >
-                  <div
+                            }`}
+                          >
+                            <div
                     className={`max-w-[70%] rounded-lg p-3 ${
                       msg.senderType === "shopper"
                         ? theme === 'dark'
@@ -477,29 +477,29 @@ export default function ChatPage() {
                           ? "bg-gray-700 text-gray-100"
                           : "bg-gray-100 text-gray-900"
                     }`}
-                  >
-                    {msg.image && (
+                            >
+                              {msg.image && (
                       <img
                         src={msg.image}
                         alt="Message attachment"
                         className="mb-2 max-h-48 w-auto rounded-lg"
                       />
-                    )}
+                              )}
                     <p>{msg.text || msg.message}</p>
                     <p className={`mt-1 text-right text-xs ${
                       msg.senderType === "shopper"
                         ? "text-green-100"
                         : theme === 'dark'
                           ? "text-gray-400"
-                          : "text-gray-500"
+                                      : "text-gray-500"
                     }`}>
-                      {formatMessageTime(msg.timestamp)}
+                                {formatMessageTime(msg.timestamp)}
                     </p>
-                  </div>
+              </div>
                 </div>
               ))}
               <div ref={messagesEndRef} />
-            </div>
+              </div>
 
             {/* Message Input */}
             <div className={`rounded-lg p-4 shadow-sm ${
@@ -509,30 +509,30 @@ export default function ChatPage() {
             }`}>
               <div className="flex items-center space-x-2">
                 <button
-                  onClick={handleAttachmentClick}
+                    onClick={handleAttachmentClick}
                   className={`rounded-full p-2 transition-colors ${
                     theme === 'dark'
                       ? 'hover:bg-gray-700'
                       : 'hover:bg-gray-100'
                   }`}
-                >
-                  <svg
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="2"
+                  >
+                    <svg
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2"
                     className={`h-6 w-6 ${
                       theme === 'dark' ? 'text-gray-400' : 'text-gray-600'
                     }`}
-                  >
-                    <path d="M21.44 11.05l-9.19 9.19a6 6 0 01-8.49-8.49l9.19-9.19a4 4 0 015.66 5.66l-9.2 9.19a2 2 0 01-2.83-2.83l8.49-8.48" />
-                  </svg>
-                </button>
-                <input
-                  type="text"
-                  value={message}
-                  onChange={(e) => setMessage(e.target.value)}
-                  onKeyPress={handleKeyPress}
+                    >
+                      <path d="M21.44 11.05l-9.19 9.19a6 6 0 01-8.49-8.49l9.19-9.19a4 4 0 015.66 5.66l-9.2 9.19a2 2 0 01-2.83-2.83l8.49-8.48" />
+                    </svg>
+                        </button>
+                  <input
+                    type="text"
+                    value={message}
+                    onChange={(e) => setMessage(e.target.value)}
+                    onKeyPress={handleKeyPress}
                   placeholder="Type your message..."
                   className={`flex-1 rounded-lg border px-4 py-2 ${
                     theme === 'dark'
@@ -541,7 +541,7 @@ export default function ChatPage() {
                   }`}
                 />
                 <button
-                  onClick={handleSendMessage}
+                    onClick={handleSendMessage}
                   disabled={isSending || !message.trim()}
                   className={`rounded-lg px-6 py-2 font-medium ${
                     isSending || !message.trim()
@@ -557,10 +557,10 @@ export default function ChatPage() {
                     <div className="flex items-center">
                       <span className="mr-2 inline-block h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent"></span>
                       Sending...
-                    </div>
+                  </div>
                   ) : (
                     "Send"
-                  )}
+                )}
                 </button>
               </div>
               <input
