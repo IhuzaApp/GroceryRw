@@ -116,16 +116,11 @@ export default function MapSection({
   const [dailyEarnings, setDailyEarnings] = useState(0);
   const [completedOrdersCount, setCompletedOrdersCount] = useState(0);
   const [loadingEarnings, setLoadingEarnings] = useState(true);
-  // Refs for real-time map and marker
   const mapInstanceRef = useRef<L.Map | null>(null);
   const userMarkerRef = useRef<L.Marker | null>(null);
-  // Add a counter to track location failures
   const locationErrorCountRef = useRef<number>(0);
-  // Add loading state for location refresh
   const [isRefreshingLocation, setIsRefreshingLocation] = useState(false);
-  // Add tracking mode state
   const [isActivelyTracking, setIsActivelyTracking] = useState(false);
-  // Track active notification types to prevent duplicates
   const activeToastTypesRef = useRef<Set<string>>(new Set());
 
   // Map style URLs using OpenStreetMap tiles with natural colors
@@ -794,6 +789,56 @@ export default function MapSection({
     }
   };
 
+  // Add getCurrentPosition function
+  const getCurrentPosition = async () => {
+    setIsRefreshingLocation(true);
+    try {
+      const position = await getSingleLocation();
+      const { latitude, longitude } = position.coords;
+
+      // Save to cookies
+      saveLocationToCookies(latitude, longitude);
+
+      // Update marker position and recenter map
+      if (userMarkerRef.current && mapInstanceRef.current) {
+        userMarkerRef.current.setLatLng([latitude, longitude]);
+        userMarkerRef.current.addTo(mapInstanceRef.current);
+        mapInstanceRef.current.setView([latitude, longitude], 16);
+      }
+
+      setIsOnline(true);
+      locationErrorCountRef.current = 0;
+    } catch (error) {
+      console.error("Error getting current position:", error);
+      locationErrorCountRef.current += 1;
+
+      if (locationErrorCountRef.current >= 3) {
+        showLocationTroubleshootingGuide();
+      }
+
+      reduceToastDuplicates(
+        "location-error",
+        <Message 
+          showIcon 
+          type="error" 
+          header="Location Error"
+          className={theme === 'dark' ? 'rs-message-dark' : ''}
+        >
+          Could not get your location. Please check your settings.
+        </Message>,
+        { placement: "topEnd", duration: 5000 }
+      );
+    } finally {
+      setIsRefreshingLocation(false);
+    }
+  };
+
+  // Add refreshLocation function
+  const refreshLocation = async () => {
+    if (isRefreshingLocation) return;
+    await getCurrentPosition();
+  };
+
   const handleGoLive = () => {
     if (!isOnline) {
       // Going online - get current location from cookies or geolocation
@@ -828,10 +873,7 @@ export default function MapSection({
               className={theme === 'dark' ? 'rs-message-dark' : ''}
             >
               <div>
-                <p>
-                  Using your saved location. Would you like to enable active
-                  tracking?
-                </p>
+                <p>Using your saved location. Would you like to enable active tracking?</p>
                 <div className="mt-2 flex space-x-2">
                   <Button
                     appearance="primary"
@@ -857,8 +899,7 @@ export default function MapSection({
                           header="Static Location"
                           className={theme === 'dark' ? 'rs-message-dark' : ''}
                         >
-                          Using static location. Use the refresh button to
-                          update.
+                          Using static location. Use the refresh button to update.
                         </Message>,
                         { placement: "topEnd", duration: 3000 }
                       );
@@ -875,11 +916,11 @@ export default function MapSection({
         } catch (error) {
           console.error("Error setting position from cookies:", error);
           // Fall back to geolocation
-          getCurrentPosition();
+          void getCurrentPosition();
         }
       } else {
         // No cookies, get current position
-        getCurrentPosition();
+        void getCurrentPosition();
       }
     } else {
       // Going offline - clear watch and cookies
@@ -892,10 +933,8 @@ export default function MapSection({
       }
 
       // Clear user location cookies
-      document.cookie =
-        "user_latitude=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
-      document.cookie =
-        "user_longitude=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
+      document.cookie = "user_latitude=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
+      document.cookie = "user_longitude=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
 
       if (userMarkerRef.current) {
         userMarkerRef.current.remove();
@@ -1020,49 +1059,55 @@ export default function MapSection({
   useEffect(() => {
     if (!mapRef.current || !mapLoaded) return;
 
+    let mapInstance: L.Map | null = null;
+
+    // Wait for next frame to ensure DOM is ready
+    const timer = requestAnimationFrame(() => {
       try {
-      // Cleanup existing map
-      if (mapInstanceRef.current) {
-        mapInstanceRef.current.remove();
-        mapInstanceRef.current = null;
-      }
+        // Cleanup existing map
+        if (mapInstanceRef.current) {
+          mapInstanceRef.current.remove();
+          mapInstanceRef.current = null;
+        }
 
-      // Create new map instance
-        const map = L.map(mapRef.current, {
-          center: [-1.9706, 30.1044],
-          zoom: 14,
-        minZoom: 3,
-        maxZoom: 19,
-        scrollWheelZoom: true,
-        attributionControl: false, // Disable attribution control
-      });
+        // Create new map instance with type assertion and null check
+        if (mapRef.current) {
+          mapInstance = L.map(mapRef.current as HTMLElement, {
+            center: [-1.9706, 30.1044],
+            zoom: 14,
+            minZoom: 3,
+            maxZoom: 19,
+            scrollWheelZoom: true,
+            attributionControl: false,
+          });
 
-      // Store map instance
-        mapInstanceRef.current = map;
+          // Store map instance
+          mapInstanceRef.current = mapInstance;
 
-      // Add initial tile layer without attribution
-      L.tileLayer(mapStyles[theme], {
-        maxZoom: 19,
-        minZoom: 3,
-        attribution: '' // Remove attribution
-      }).addTo(map);
+          // Add initial tile layer without attribution
+          L.tileLayer(mapStyles[theme], {
+            maxZoom: 19,
+            minZoom: 3,
+            attribution: ''
+          }).addTo(mapInstance);
+        }
 
-      // Initialize user marker with improved dark theme styling
+        // Initialize user marker with improved dark theme styling
         const userIconHtml = `
-      <div style="
-          background: ${theme === 'dark' ? '#1f2937' : 'white'};
-          border: 2px solid ${theme === 'dark' ? '#60a5fa' : '#3b82f6'};
-        border-radius: 50%;
-        width: 32px;
-        height: 32px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-          box-shadow: 0 2px 4px ${theme === 'dark' ? 'rgba(0,0,0,0.3)' : 'rgba(0,0,0,0.1)'};
-      ">
-        <span style="font-size: 16px;">👤</span>
-      </div>
-    `;
+          <div style="
+            background: ${theme === 'dark' ? '#1f2937' : 'white'};
+            border: 2px solid ${theme === 'dark' ? '#60a5fa' : '#3b82f6'};
+            border-radius: 50%;
+            width: 32px;
+            height: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 2px 4px ${theme === 'dark' ? 'rgba(0,0,0,0.3)' : 'rgba(0,0,0,0.1)'};
+          ">
+            <span style="font-size: 16px;">👤</span>
+          </div>
+        `;
 
         const userIcon = L.divIcon({
           html: userIconHtml,
@@ -1076,372 +1121,50 @@ export default function MapSection({
           icon: userIcon,
         });
 
-      // Check for saved location in cookies
-      const cookieMap = getCookies();
-      if (cookieMap["user_latitude"] && cookieMap["user_longitude"]) {
-        const lat = parseFloat(cookieMap["user_latitude"]);
-        const lng = parseFloat(cookieMap["user_longitude"]);
+        // Check for saved location in cookies
+        const cookieMap = getCookies();
+        if (cookieMap["user_latitude"] && cookieMap["user_longitude"]) {
+          const lat = parseFloat(cookieMap["user_latitude"]);
+          const lng = parseFloat(cookieMap["user_longitude"]);
 
-        if (!isNaN(lat) && !isNaN(lng)) {
-          console.log("Setting initial position from cookies:", { lat, lng });
-          if (userMarkerRef.current) {
-            userMarkerRef.current.setLatLng([lat, lng]);
+          if (!isNaN(lat) && !isNaN(lng)) {
+            console.log("Setting initial position from cookies:", { lat, lng });
+            if (userMarkerRef.current && mapInstance) {
+              userMarkerRef.current.setLatLng([lat, lng]);
               if (isOnline) {
-                userMarkerRef.current.addTo(map);
-              map.setView([lat, lng], 16);
+                userMarkerRef.current.addTo(mapInstance);
+                mapInstance.setView([lat, lng], 16);
               }
             }
           }
         }
 
-      // Initialize map sequence
-      initMapSequence(map);
+        // Wait for next frame before initializing markers
+        requestAnimationFrame(() => {
+          if (mapInstance && mapInstance.getContainer()) {
+            initMapSequence(mapInstance);
+          }
+        });
 
       } catch (error) {
-      console.error("Error initializing map:", error);
-    }
-
-  }, [mapLoaded, theme]); // Remove availableOrders and isOnline from dependencies
-
-  // Get the user's current position once
-  const getCurrentPosition = () => {
-    if (!navigator.geolocation) {
-      reduceToastDuplicates(
-        "geolocation-not-supported",
-        <Message showIcon type="error" header="Geolocation Error">
-          Geolocation is not supported by your browser. Please use a different
-          browser.
-        </Message>,
-        { placement: "topEnd", duration: 5000 }
-      );
-      setIsRefreshingLocation(false);
-      return;
-    }
-
-    navigator.geolocation.getCurrentPosition(
-      // Success callback
-      (position) => {
-        const { latitude, longitude } = position.coords;
-
-        // Save to cookies
-        saveLocationToCookies(latitude, longitude);
-
-        // Update map marker with safety checks
-        if (userMarkerRef.current) {
-          try {
-            userMarkerRef.current.setLatLng([latitude, longitude]);
-
-            // Only add to map if map is ready
-            if (
-              mapInstanceRef.current &&
-              typeof mapInstanceRef.current.addLayer === "function" &&
-              (mapInstanceRef.current as any)._loaded
-            ) {
-              userMarkerRef.current.addTo(mapInstanceRef.current);
-            }
-          } catch (error) {
-            console.error("Error updating marker position:", error);
-          }
-        }
-
-        // Set map view with safety checks
-        if (
-          mapInstanceRef.current &&
-          typeof mapInstanceRef.current.setView === "function" &&
-          mapInstanceRef.current.getContainer() &&
-          (mapInstanceRef.current as any)._loaded
-        ) {
-          try {
-            mapInstanceRef.current.setView([latitude, longitude], 16);
-          } catch (error) {
-            console.error("Error setting map view:", error);
-          }
-        } else {
-          console.warn("Map not fully loaded, cannot set view");
-        }
-
-        setIsOnline(true);
-        setIsRefreshingLocation(false);
-
-        // Show success message
-        reduceToastDuplicates(
-          "location-updated",
-          <Message showIcon type="success" header="Location Updated">
-            Your current location has been detected. ✅
-          </Message>,
-          { placement: "topEnd", duration: 3000 }
-        );
-
-        // Ask user if they want to enable active tracking
-        setTimeout(() => {
-          reduceToastDuplicates(
-            "tracking-prompt",
-            <Message showIcon type="info" header="Location Tracking" closable>
-              <div>
-                <p>Would you like to enable active location tracking?</p>
-                <div className="mt-2 flex space-x-2">
-                  <Button
-                    appearance="primary"
-                    size="sm"
-                    onClick={() => {
-                      setIsActivelyTracking(true);
-                      startLocationTracking();
-                    }}
-                  >
-                    Enable Tracking
-                  </Button>
-                  <Button
-                    appearance="subtle"
-                    size="sm"
-                    onClick={() => {
-                      setIsActivelyTracking(false);
-                      reduceToastDuplicates(
-                        "static-location-info",
-                        <Message showIcon type="info">
-                          Using static location. Use the refresh button to
-                          update.
-                        </Message>,
-                        { placement: "topEnd", duration: 3000 }
-                      );
-                    }}
-                  >
-                    Stay Static
-                  </Button>
-                </div>
-              </div>
-            </Message>,
-            { placement: "topEnd", duration: 10000 }
-          );
-        }, 1000);
-      },
-      // Error callback
-      (error) => {
-        console.error("Geolocation error:", error);
-        setIsRefreshingLocation(false);
-
-        // Show error message based on error code
-        const errorKey = `location-error-${error.code}`;
-        const errorMessage =
-          error.code === 1
-            ? "Location permission denied. Please enable location access in your browser settings."
-            : error.code === 2
-            ? "Location unavailable. Please check your device settings."
-            : error.code === 3
-            ? "Location request timed out. Please try again."
-            : "Error getting your location. Please try again.";
-
-        reduceToastDuplicates(
-          errorKey,
-          <Message 
-            showIcon 
-            type="error" 
-            header="Location Error"
-            className={theme === 'dark' ? 'rs-message-dark' : ''}
-          >
-            {errorMessage}
-          </Message>,
-          { placement: "topEnd", duration: 5000 }
-        );
-
-        // Set up manual location mode
-        if (mapInstanceRef.current) {
-          reduceToastDuplicates(
-            "manual-mode-info",
-            <Message 
-              showIcon 
-              type="info" 
-              header="Manual Mode"
-              className={theme === 'dark' ? 'rs-message-dark' : ''}
-            >
-              Click anywhere on the map to set your location manually.
-            </Message>,
-            { placement: "topEnd", duration: 5000 }
-          );
-
-          try {
-            const mapInstance = mapInstanceRef.current;
-            const onMapClick = (e: L.LeafletMouseEvent) => {
-              const { lat, lng } = e.latlng;
-
-              // Save the position to cookies
-              saveLocationToCookies(lat, lng);
-
-              // Update marker
-              if (userMarkerRef.current) {
-                userMarkerRef.current.setLatLng([lat, lng]);
-                userMarkerRef.current.addTo(mapInstance);
-              }
-
-              reduceToastDuplicates(
-                "manual-location-set",
-                <Message 
-                  showIcon 
-                  type="success" 
-                  header="Location Set"
-                  className={theme === 'dark' ? 'rs-message-dark' : ''}
-                >
-                  Your position has been manually set.
-                </Message>,
-                { placement: "topEnd", duration: 3000 }
-              );
-
-              setIsOnline(true);
-
-              // Remove handler after first use
-              mapInstance.off("click", onMapClick);
-            };
-
-            mapInstance.on("click", onMapClick);
-          } catch (mapError) {
-            console.error("Error setting up manual mode:", mapError);
-          }
-        }
-      },
-      // Options
-      {
-        enableHighAccuracy: true,
-        timeout: 15000,
-        maximumAge: 0,
+        console.error("Error initializing map:", error);
       }
-    );
-  };
+    });
 
-  // Helper function to manually refresh location
-  const refreshLocation = () => {
-    if (!navigator.geolocation) {
-      reduceToastDuplicates(
-        "geolocation-not-supported",
-        <Message 
-          showIcon 
-          type="error" 
-          header="Not Supported"
-          className={theme === 'dark' ? 'rs-message-dark' : ''}
-        >
-          Geolocation is not supported by your browser.
-        </Message>,
-        { placement: "topEnd", duration: 3000 }
-      );
-      return;
-    }
-
-    setIsRefreshingLocation(true);
-
-    // Show loading toast
-    reduceToastDuplicates(
-      "location-updating",
-      <Message 
-        showIcon 
-        type="info" 
-        header="Updating Location"
-        className={theme === 'dark' ? 'rs-message-dark' : ''}
-      >
-        Getting your current location...
-      </Message>,
-      { placement: "topEnd", duration: 3000 }
-    );
-
-    navigator.geolocation.getCurrentPosition(
-      (position) => {
-        const { latitude, longitude } = position.coords;
-
-        // Save to cookies
-        saveLocationToCookies(latitude, longitude);
-
-        // Update marker and map view
-        if (userMarkerRef.current && mapInstanceRef.current) {
-          try {
-            userMarkerRef.current.setLatLng([latitude, longitude]);
-
-            // Only add to map if the map is ready
-            if (isMapReady(mapInstanceRef.current)) {
-              userMarkerRef.current.addTo(mapInstanceRef.current);
-              mapInstanceRef.current.setView([latitude, longitude], 16);
-
-              // Success message
-              reduceToastDuplicates(
-                "location-updated",
-                <Message 
-                  showIcon 
-                  type="success" 
-                  header="Location Updated"
-                  className={theme === 'dark' ? 'rs-message-dark' : ''}
-                >
-                  Your location has been successfully updated.
-                </Message>,
-                { placement: "topEnd", duration: 3000 }
-              );
-            } else {
-              console.warn("Map not fully ready when updating location");
-              // Still show success since we saved to cookies
-              reduceToastDuplicates(
-                "location-updated-cookies",
-                <Message 
-                  showIcon 
-                  type="info" 
-                  header="Location Saved"
-                  className={theme === 'dark' ? 'rs-message-dark' : ''}
-                >
-                  Your location was saved, but the map is still initializing.
-                </Message>,
-                { placement: "topEnd", duration: 3000 }
-              );
-            }
-          } catch (error) {
-            console.error("Error updating map on refresh:", error);
-            // Show error message
-            reduceToastDuplicates(
-              "location-update-error",
-              <Message 
-                showIcon 
-                type="error" 
-                header="Map Error"
-                className={theme === 'dark' ? 'rs-message-dark' : ''}
-              >
-                Your location was saved, but there was an error updating the
-                map.
-              </Message>,
-              { placement: "topEnd", duration: 3000 }
-            );
-          }
-        }
-
-        setIsRefreshingLocation(false);
-      },
-      (error) => {
-        console.error("Error refreshing location:", error);
-        setIsRefreshingLocation(false);
-
-        // Error message based on error type
-        let errorMessage = "Could not update your location.";
-        const errorKey = `location-error-${error.code}`;
-
-        if (error.code === 1) {
-          errorMessage = "Location permission denied. Please enable location access.";
-        } else if (error.code === 2) {
-          errorMessage = "Location unavailable. Using your saved location instead.";
-        } else if (error.code === 3) {
-          errorMessage = "Location request timed out. Using your saved location instead.";
-        }
-
-        reduceToastDuplicates(
-          errorKey,
-          <Message 
-            showIcon 
-            type="error" 
-            header="Location Error"
-            className={theme === 'dark' ? 'rs-message-dark' : ''}
-          >
-            {errorMessage}
-          </Message>,
-          { placement: "topEnd", duration: 5000 }
-        );
-      },
-      { enableHighAccuracy: true, maximumAge: 0, timeout: 15000 }
-    );
-  };
+    // Cleanup function
+    return () => {
+      cancelAnimationFrame(timer);
+      if (mapInstanceRef.current) {
+        mapInstanceRef.current.remove();
+        mapInstanceRef.current = null;
+      }
+    };
+  }, [mapLoaded, theme]);
 
   // Function to initialize map sequence
   const initMapSequence = (map: L.Map) => {
+    if (!map || !map.getContainer()) return;
+
     try {
       // Load shop markers
       fetch("/api/shopper/shops")
@@ -1449,6 +1172,9 @@ export default function MapSection({
         .then((data: Shop[]) => {
           setShops(data);
           
+          // Ensure map is still valid before adding markers
+          if (!map || !map.getContainer()) return;
+
           data.forEach((shop) => {
             try {
               const lat = parseFloat(shop.latitude);
@@ -1459,30 +1185,36 @@ export default function MapSection({
                 return;
               }
 
-              const shopIconHtml = `
-                <img src="https://static-00.iconduck.com/assets.00/shop-icon-2048x1878-qov4lrv1.png" 
-                  style="width: 32px; height: 32px; filter: ${shop.is_active ? "none" : "grayscale(100%)"};" 
-                />
-              `;
+              // Create marker only if map is ready
+              if (map && map.getContainer()) {
+                const shopIconHtml = `
+                  <img src="https://static-00.iconduck.com/assets.00/shop-icon-2048x1878-qov4lrv1.png" 
+                    style="width: 32px; height: 32px; filter: ${shop.is_active ? "none" : "grayscale(100%)"};" 
+                  />
+                `;
 
-              const shopIcon = L.divIcon({
-                html: shopIconHtml,
-                className: "",
-                iconSize: [32, 32],
-                iconAnchor: [16, 32],
-                popupAnchor: [0, -32],
-              });
+                const shopIcon = L.divIcon({
+                  html: shopIconHtml,
+                  className: "",
+                  iconSize: [32, 32],
+                  iconAnchor: [16, 32],
+                  popupAnchor: [0, -32],
+                });
 
-              const marker = L.marker([lat, lng], { icon: shopIcon });
-              marker.addTo(map);
-              marker.bindPopup(`${shop.name}${shop.is_active ? "" : " (Disabled)"}`);
+                const marker = L.marker([lat, lng], { icon: shopIcon });
+                
+                // Use our enhanced safety function to add the marker
+                if (safeAddMarker(marker, map, `shop ${shop.name}`)) {
+                  marker.bindPopup(`${shop.name}${shop.is_active ? "" : " (Disabled)"}`);
+                }
+              }
             } catch (error) {
               console.error(`Error adding shop marker for ${shop.name}:`, error);
             }
           });
 
           // Load pending orders after shops are loaded
-          if (isOnline) {
+          if (isOnline && map && map.getContainer()) {
             fetch("/api/shopper/pendingOrders")
               .then((res) => res.json())
               .then((orders: PendingOrder[]) => {
@@ -1493,9 +1225,8 @@ export default function MapSection({
           }
 
           // Load available orders
-          if (isOnline && availableOrders?.length > 0) {
+          if (isOnline && availableOrders?.length > 0 && map && map.getContainer()) {
             availableOrders.forEach((order) => {
-              // Check for both shop coordinates
               if (order.shopLatitude && order.shopLongitude) {
                 const badgeColor = getOrderTimeBadgeColor(order.createdAt);
                 const orderIcon = L.divIcon({
@@ -1511,46 +1242,43 @@ export default function MapSection({
                   { icon: orderIcon, zIndexOffset: 2000 }
                 );
 
-                // Ensure marker is added to map with proper z-index
-                if (map && typeof map.addLayer === 'function') {
-                  marker.addTo(map);
+                // Use our enhanced safety function to add the marker
+                if (safeAddMarker(marker, map, `order ${order.id}`)) {
+                  const popupContent = `
+                    <div style="font-size:14px; line-height:1.4; min-width:200px; background:${theme === 'dark' ? '#1f2937' : '#fff'}; color:${theme === 'dark' ? '#e5e7eb' : '#111827'};">
+                      <div style="display:flex;align-items:center;margin-bottom:4px;">
+                        <span style="margin-right:6px;">🆔</span><strong>${order.id}</strong>
+                      </div>
+                      <div style="display:flex;align-items:center;margin-bottom:4px;">
+                        <span style="margin-right:6px;">🏪</span><span>${order.shopName}</span>
+                      </div>
+                      <div style="display:flex;align-items:center;margin-bottom:4px;">
+                        <span style="margin-right:6px;">📍</span><span>${order.shopAddress}</span>
+                      </div>
+                      <div style="display:flex;align-items:center;margin-bottom:4px;">
+                        <span style="margin-right:6px;">⏱️</span><span>${order.createdAt}</span>
+                      </div>
+                      <div style="display:flex;align-items:center;margin-bottom:4px;">
+                        <span style="margin-right:6px;">📏</span><span>Distance: ${order.distance}</span>
+                      </div>
+                      <div style="display:flex;align-items:center;margin-bottom:4px;">
+                        <span style="margin-right:6px;">🛒</span><span>Items: ${order.items}</span>
+                      </div>
+                      <div style="display:flex;align-items:center;margin-bottom:4px;">
+                        <span style="margin-right:6px;">🚚</span><span>Deliver to: ${order.customerAddress}</span>
+                      </div>
+                      <div style="display:flex;align-items:center;">
+                        <span style="margin-right:6px;">💰</span><span>Estimated Earnings: ${order.estimatedEarnings}</span>
+                      </div>
+                      <button id="accept-batch-${order.id}" style="margin-top:8px;padding:6px 12px;background:${theme === 'dark' ? '#059669' : '#10b981'};color:#fff;border:none;border-radius:4px;cursor:pointer;">
+                        Accept Batch
+                      </button>
+                    </div>
+                  `;
+
+                  marker.bindPopup(popupContent, { maxWidth: 250 });
+                  attachAcceptHandler(marker, order.id, map);
                 }
-
-                const distanceStr = order.distance || "Unknown";
-                const popupContent = `
-                  <div style="font-size:14px; line-height:1.4; min-width:200px; background:${theme === 'dark' ? '#1f2937' : '#fff'}; color:${theme === 'dark' ? '#e5e7eb' : '#111827'};">
-                    <div style="display:flex;align-items:center;margin-bottom:4px;">
-                      <span style="margin-right:6px;">🆔</span><strong>${order.id}</strong>
-                    </div>
-                    <div style="display:flex;align-items:center;margin-bottom:4px;">
-                      <span style="margin-right:6px;">🏪</span><span>${order.shopName}</span>
-                    </div>
-                    <div style="display:flex;align-items:center;margin-bottom:4px;">
-                      <span style="margin-right:6px;">📍</span><span>${order.shopAddress}</span>
-                    </div>
-                    <div style="display:flex;align-items:center;margin-bottom:4px;">
-                      <span style="margin-right:6px;">⏱️</span><span>${order.createdAt}</span>
-                    </div>
-                    <div style="display:flex;align-items:center;margin-bottom:4px;">
-                      <span style="margin-right:6px;">📏</span><span>Distance: ${distanceStr}</span>
-                    </div>
-                    <div style="display:flex;align-items:center;margin-bottom:4px;">
-                      <span style="margin-right:6px;">🛒</span><span>Items: ${order.items}</span>
-                    </div>
-                    <div style="display:flex;align-items:center;margin-bottom:4px;">
-                      <span style="margin-right:6px;">🚚</span><span>Deliver to: ${order.customerAddress}</span>
-                    </div>
-                    <div style="display:flex;align-items:center;">
-                      <span style="margin-right:6px;">💰</span><span>Estimated Earnings: ${order.estimatedEarnings}</span>
-                    </div>
-                    <button id="accept-batch-${order.id}" style="margin-top:8px;padding:6px 12px;background:${theme === 'dark' ? '#059669' : '#10b981'};color:#fff;border:none;border-radius:4px;cursor:pointer;">
-                      Accept Batch
-                    </button>
-                  </div>
-                `;
-
-                marker.bindPopup(popupContent, { maxWidth: 250 });
-                attachAcceptHandler(marker, order.id, map);
               }
             });
           }
