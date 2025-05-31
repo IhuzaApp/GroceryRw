@@ -78,85 +78,6 @@ interface PendingOrder {
   addressCity: string;
 }
 
-// Update the getOrderTimeBadgeColor function to use green colors
-function getOrderTimeBadgeColor(createdAtStr: string): string {
-  // Get age in minutes
-  const created = new Date(createdAtStr);
-  const diffMs = Date.now() - created.getTime();
-  const diffMins = Math.floor(diffMs / 60000);
-
-  // Color coding:
-  // - Very recent orders (<10 min) - bright green
-  // - Recent orders (10-60 min) - medium green
-  // - Older orders (1-24 hours) - darker green
-  // - Historical orders (>24 hours) - darkest green
-  if (diffMins < 10) {
-    return '#10b981'; // bright green
-  } else if (diffMins < 60) {
-    return '#059669'; // medium green
-  } else if (diffMins < 24 * 60) {
-    return '#047857'; // darker green
-  } else {
-    return '#065f46'; // darkest green
-  }
-}
-
-// Add helper function to calculate offset for clustered markers
-const calculateMarkerOffset = (index: number, total: number, baseRadius: number = 30) => {
-  if (total === 1) return { lat: 0, lng: 0 };
-  
-  // Calculate angle for even distribution in a circle
-  const angle = (2 * Math.PI * index) / total;
-  
-  // Calculate offset using trigonometry
-  return {
-    lat: (baseRadius / 111111) * Math.cos(angle), // Convert meters to degrees (roughly)
-    lng: (baseRadius / 111111) * Math.sin(angle)  // 111111 meters = 1 degree at equator
-  };
-};
-
-// Add function to group markers by location
-const groupMarkersByLocation = (orders: MapSectionProps['availableOrders']) => {
-  const groups = new Map<string, Array<typeof orders[0]>>();
-  
-  orders.forEach(order => {
-    if (!order.shopLatitude || !order.shopLongitude) return;
-    
-    // Create a key with reduced precision to group nearby points
-    const key = `${order.shopLatitude.toFixed(4)},${order.shopLongitude.toFixed(4)}`;
-    
-    if (!groups.has(key)) {
-      groups.set(key, []);
-    }
-    groups.get(key)?.push(order);
-  });
-  
-  return groups;
-};
-
-// Update helper function to format earnings amount
-const formatEarningsDisplay = (amount: string) => {
-  // Remove currency symbol and commas, then parse as number
-  const value = parseFloat(amount.replace(/[^0-9.]/g, ''));
-  
-  if (isNaN(value)) return amount;
-  
-  if (value >= 1000) {
-    // Format to one decimal place for thousands, no currency
-    return `${(value / 1000).toFixed(1)}k`;
-  }
-  
-  // For hundreds, just return the number without currency
-  return Math.round(value).toString();
-};
-
-// Update the marker clearing check to look for 'k' or numbers
-const isOrderMarker = (icon: L.DivIcon | L.Icon): boolean => {
-  if (!(icon instanceof L.DivIcon)) return false;
-  const html = (icon.options as L.DivIconOptions).html;
-  return typeof html === 'string' && (/\d+k|\d+/.test(html));
-};
-
 export default function MapSection({
   mapLoaded,
   availableOrders,
@@ -759,91 +680,253 @@ export default function MapSection({
     });
   };
 
+  // Helper function to format earnings amount
+  const formatEarningsDisplay = (amount: string) => {
+    // Remove currency symbol and commas, then parse as number
+    const value = parseFloat(amount.replace(/[^0-9.]/g, ''));
+    
+    if (isNaN(value)) return amount;
+    
+    if (value >= 1000) {
+      // Format to one decimal place for thousands, no currency
+      return `${(value / 1000).toFixed(1)}k`;
+    }
+    
+    // For hundreds, just return the number without currency
+    return Math.round(value).toString();
+  };
+
+  // Helper function to calculate offset for clustered markers
+  const calculateMarkerOffset = (index: number, total: number, baseRadius: number = 30) => {
+    if (total === 1) return { lat: 0, lng: 0 };
+    
+    // Calculate angle for even distribution in a circle
+    const angle = (2 * Math.PI * index) / total;
+    
+    // Calculate offset using trigonometry
+    return {
+      lat: (baseRadius / 111111) * Math.cos(angle), // Convert meters to degrees (roughly)
+      lng: (baseRadius / 111111) * Math.sin(angle)  // 111111 meters = 1 degree at equator
+    };
+  };
+
+  // Helper function to group markers by location
+  const groupMarkersByLocation = (orders: MapSectionProps['availableOrders']) => {
+    const groups = new Map<string, Array<typeof orders[0]>>();
+    
+    orders.forEach(order => {
+      if (!order.shopLatitude || !order.shopLongitude) return;
+      
+      // Create a key with reduced precision to group nearby points
+      const key = `${order.shopLatitude.toFixed(4)},${order.shopLongitude.toFixed(4)}`;
+      
+      if (!groups.has(key)) {
+        groups.set(key, []);
+      }
+      groups.get(key)?.push(order);
+    });
+    
+    return groups;
+  };
+
+  // Helper function to create consistent marker icon
+  const createOrderMarkerIcon = (earnings: string) => {
+    const simplifiedEarnings = formatEarningsDisplay(earnings);
+    return L.divIcon({
+      html: `
+        <div style="
+          background: ${theme === 'dark' ? '#065f46' : '#059669'};
+          border: 2px solid ${theme === 'dark' ? '#047857' : '#10b981'};
+          border-radius: 50%;
+          width: 44px;
+          height: 44px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          font-size: 13px;
+          font-weight: 600;
+          color: white;
+          backdrop-filter: blur(8px);
+          box-shadow: 0 2px 4px ${theme === 'dark' ? 'rgba(0,0,0,0.3)' : 'rgba(0,0,0,0.1)'};
+          z-index: 1000;
+        ">
+          ${simplifiedEarnings}
+        </div>`,
+      className: "",
+      iconSize: [44, 44],
+      iconAnchor: [22, 22],
+      popupAnchor: [0, -22],
+    });
+  };
+
+  // First popup template for pending orders
+  const createPopupContent = (order: PendingOrder, theme: string) => `
+    <div class="${theme === 'dark' ? 'dark-theme-popup' : 'light-theme-popup'}" style="
+      font-size: 14px;
+      line-height: 1.6;
+      min-width: 240px;
+      background: ${theme === 'dark' ? '#1f2937' : '#ffffff'};
+      color: ${theme === 'dark' ? '#e5e7eb' : '#111827'};
+      border-radius: 8px;
+      padding: 12px;
+    ">
+      <div style="
+        border-bottom: 1px solid ${theme === 'dark' ? '#374151' : '#e5e7eb'};
+        padding-bottom: 8px;
+        margin-bottom: 8px;
+      ">
+        <div style="display: flex; align-items: center; gap: 6px; margin-bottom: 4px;">
+          <span style="font-size: 16px;">🆔</span>
+          <strong style="color: ${theme === 'dark' ? '#60a5fa' : '#2563eb'};">${order.id}</strong>
+        </div>
+        <div style="display: flex; align-items: center; gap: 6px; margin-bottom: 4px;">
+          <span style="font-size: 16px;">💰</span>
+          <strong style="color: ${theme === 'dark' ? '#34d399' : '#059669'};">${formatCurrency(order.earnings)}</strong>
+        </div>
+      </div>
+      
+      <div style="display: flex; flex-direction: column; gap: 6px;">
+        <div style="display: flex; align-items: center; gap: 6px;">
+          <span style="font-size: 16px;">🏪</span>
+          <span style="flex: 1;">${order.shopName}</span>
+        </div>
+        <div style="display: flex; align-items: center; gap: 6px;">
+          <span style="font-size: 16px;">📍</span>
+          <span style="flex: 1;">${order.shopAddress}</span>
+        </div>
+        <div style="display: flex; align-items: center; gap: 6px;">
+          <span style="font-size: 16px;">⏱️</span>
+          <span style="flex: 1;">${order.createdAt}</span>
+        </div>
+        <div style="display: flex; align-items: center; gap: 6px;">
+          <span style="font-size: 16px;">🛒</span>
+          <span style="flex: 1;">Items: ${order.itemsCount}</span>
+        </div>
+        <div style="display: flex; align-items: center; gap: 6px;">
+          <span style="font-size: 16px;">🚚</span>
+          <span style="flex: 1;">Deliver to: ${order.addressStreet}, ${order.addressCity}</span>
+        </div>
+      </div>
+
+      <button 
+        id="accept-batch-${order.id}" 
+        style="
+          width: 100%;
+          margin-top: 12px;
+          padding: 8px 16px;
+          background: ${theme === 'dark' ? '#059669' : '#10b981'};
+          color: white;
+          border: none;
+          border-radius: 6px;
+          font-weight: 600;
+          cursor: pointer;
+          transition: all 0.2s;
+        "
+        onmouseover="this.style.background='${theme === 'dark' ? '#047857' : '#059669'}'"
+        onmouseout="this.style.background='${theme === 'dark' ? '#059669' : '#10b981'}'"
+      >
+        Accept Batch
+      </button>
+    </div>
+  `;
+
+  // Second popup template for available orders
+  const createAvailableOrderPopupContent = (order: MapSectionProps['availableOrders'][0], theme: string) => `
+    <div class="${theme === 'dark' ? 'dark-theme-popup' : 'light-theme-popup'}" style="
+      font-size: 14px;
+      line-height: 1.6;
+      min-width: 240px;
+      background: ${theme === 'dark' ? '#1f2937' : '#ffffff'};
+      color: ${theme === 'dark' ? '#e5e7eb' : '#111827'};
+      border-radius: 8px;
+      padding: 12px;
+    ">
+      <div style="
+        border-bottom: 1px solid ${theme === 'dark' ? '#374151' : '#e5e7eb'};
+        padding-bottom: 8px;
+        margin-bottom: 8px;
+      ">
+        <div style="display: flex; align-items: center; gap: 6px; margin-bottom: 4px;">
+          <span style="font-size: 16px;">��</span>
+          <strong style="color: ${theme === 'dark' ? '#60a5fa' : '#2563eb'};">${order.id}</strong>
+        </div>
+        <div style="display: flex; align-items: center; gap: 6px; margin-bottom: 4px;">
+          <span style="font-size: 16px;">💰</span>
+          <strong style="color: ${theme === 'dark' ? '#34d399' : '#059669'};">${order.estimatedEarnings}</strong>
+        </div>
+      </div>
+      
+      <div style="display: flex; flex-direction: column; gap: 6px;">
+        <div style="display: flex; align-items: center; gap: 6px;">
+          <span style="font-size: 16px;">🏪</span>
+          <span style="flex: 1;">${order.shopName}</span>
+        </div>
+        <div style="display: flex; align-items: center; gap: 6px;">
+          <span style="font-size: 16px;">📍</span>
+          <span style="flex: 1;">${order.shopAddress}</span>
+        </div>
+        <div style="display: flex; align-items: center; gap: 6px;">
+          <span style="font-size: 16px;">⏱️</span>
+          <span style="flex: 1;">${order.createdAt}</span>
+        </div>
+        <div style="display: flex; align-items: center; gap: 6px;">
+          <span style="font-size: 16px;">��</span>
+          <span style="flex: 1;">Distance: ${order.distance}</span>
+        </div>
+        <div style="display: flex; align-items: center; gap: 6px;">
+          <span style="font-size: 16px;">🛒</span>
+          <span style="flex: 1;">Items: ${order.items}</span>
+        </div>
+        <div style="display: flex; align-items: center; gap: 6px;">
+          <span style="font-size: 16px;">🚚</span>
+          <span style="flex: 1;">Deliver to: ${order.customerAddress}</span>
+        </div>
+      </div>
+
+      <button 
+        id="accept-batch-${order.id}" 
+        style="
+          width: 100%;
+          margin-top: 12px;
+          padding: 8px 16px;
+          background: ${theme === 'dark' ? '#059669' : '#10b981'};
+          color: white;
+          border: none;
+          border-radius: 6px;
+          font-weight: 600;
+          cursor: pointer;
+          transition: all 0.2s;
+        "
+        onmouseover="this.style.background='${theme === 'dark' ? '#047857' : '#059669'}'"
+        onmouseout="this.style.background='${theme === 'dark' ? '#059669' : '#10b981'}'"
+      >
+        Accept Batch
+      </button>
+    </div>
+  `;
+
   // Helper function to render a pending order marker
   const renderPendingOrderMarker = (order: PendingOrder, map: L.Map) => {
     try {
-      // Use shop coordinates instead of delivery address
       const lat = order.shopLat;
       const lng = order.shopLng;
 
-      // time since creation
-      const created = new Date(order.createdAt);
-      const diffMs = Date.now() - created.getTime();
-      const diffMins = Math.floor(diffMs / 60000);
-      const timeStr =
-        diffMins >= 60
-          ? `${Math.floor(diffMins / 60)}h ${diffMins % 60}m ago`
-          : `${diffMins} mins ago`;
-
-      // distance between shop and delivery address
-      const distKm = getDistanceKm(
-        order.shopLat,
-        order.shopLng,
-        order.latitude,
-        order.longitude
-      );
-      const distanceStr = `${Math.round(distKm * 10) / 10} km`;
-      const earningsStr = formatCurrency(order.earnings);
-
-      // Use purple color for older pending orders
-      const pendingIcon = L.divIcon({
-        html: `<div style="background:${theme === 'dark' ? '#1f2937' : '#fff'};border:2px solid #8b5cf6;border-radius:12px;padding:4px 12px;font-size:12px;color:${theme === 'dark' ? '#c4b5fd' : '#8b5cf6'};white-space:nowrap;">${earningsStr}</div>`,
-        className: "",
-        iconSize: [90, 30],
-        iconAnchor: [60, 15],
-        popupAnchor: [0, -15],
-      });
-
-      // Safely create and add the marker
       const marker = L.marker([lat, lng], {
-        icon: pendingIcon,
+        icon: createOrderMarkerIcon(formatCurrency(order.earnings)),
         zIndexOffset: 1000,
       });
 
-      // Use our enhanced safety function to add the marker
       if (safeAddMarker(marker, map, `pending order ${order.id}`)) {
-        // Enhanced popup with icons and flex layout
-        const popupContent = `
-          <div style="font-size:14px; line-height:1.4; min-width:200px; background:${theme === 'dark' ? '#1f2937' : '#fff'}; color:${theme === 'dark' ? '#e5e7eb' : '#111827'};">
-            <div style="display:flex;align-items:center;margin-bottom:4px;">
-              <span style="margin-right:6px;">🆔</span><strong>${order.id}</strong>
-            </div>
-            <div style="display:flex;align-items:center;margin-bottom:4px;">
-              <span style="margin-right:6px;">🏪</span><span>${order.shopName}</span>
-            </div>
-            <div style="display:flex;align-items:center;margin-bottom:4px;">
-              <span style="margin-right:6px;">📍</span><span>${order.shopAddress}</span>
-            </div>
-            <div style="display:flex;align-items:center;margin-bottom:4px;">
-              <span style="margin-right:6px;">⏱️</span><span>${timeStr}</span>
-            </div>
-            <div style="display:flex;align-items:center;margin-bottom:4px;">
-              <span style="margin-right:6px;">📏</span><span>Distance: ${distanceStr}</span>
-            </div>
-            <div style="display:flex;align-items:center;margin-bottom:4px;">
-              <span style="margin-right:6px;">🛒</span><span>Items: ${order.itemsCount}</span>
-            </div>
-            <div style="display:flex;align-items:center;margin-bottom:4px;">
-              <span style="margin-right:6px;">🚚</span><span>Deliver to: ${order.addressStreet}, ${order.addressCity}</span>
-            </div>
-            <div style="display:flex;align-items:center;">
-              <span style="margin-right:6px;">💰</span><span>Estimated Earnings: ${earningsStr}</span>
-            </div>
-            <button id="accept-batch-${order.id}" style="margin-top:8px;padding:6px 12px;background:${theme === 'dark' ? '#059669' : '#10b981'};color:#fff;border:none;border-radius:4px;cursor:pointer;">
-              Accept Batch
-            </button>
-          </div>
-        `;
-
-        // Bind popup with max width
-        marker.bindPopup(popupContent, { maxWidth: 250 });
+        marker.bindPopup(createPopupContent(order, theme), {
+          maxWidth: 300,
+          className: `${theme === 'dark' ? 'dark-theme-popup' : 'light-theme-popup'}`,
+          closeButton: true,
+          closeOnClick: false,
+        });
         attachAcceptHandler(marker, order.id, map);
       }
     } catch (error) {
-      console.error(
-        `Error rendering pending order marker for ${order.id}:`,
-        error
-      );
+      console.error(`Error rendering pending order marker for ${order.id}:`, error);
     }
   };
 
@@ -1318,80 +1401,33 @@ export default function MapSection({
 
           // Load available orders
           if (isOnline && availableOrders?.length > 0 && map && map.getContainer()) {
-            availableOrders.forEach((order) => {
-              if (order.shopLatitude && order.shopLongitude) {
-                const badgeColor = getOrderTimeBadgeColor(order.createdAt);
-                const simplifiedEarnings = formatEarningsDisplay(order.estimatedEarnings);
+            const groupedOrders = groupMarkersByLocation(availableOrders);
 
-                const orderIcon = L.divIcon({
-                  html: `
-                    <div style="
-                      background: ${theme === 'dark' ? '#065f46' : '#059669'};
-                      border: 2px solid ${badgeColor};
-                      border-radius: 50%;
-                      width: 44px;
-                      height: 44px;
-                      display: flex;
-                      align-items: center;
-                      justify-content: center;
-                      font-size: 13px;
-                      font-weight: 600;
-                      color: white;
-                      backdrop-filter: blur(8px);
-                      box-shadow: 0 2px 4px ${theme === 'dark' ? 'rgba(0,0,0,0.3)' : 'rgba(0,0,0,0.1)'};
-                      z-index: 1000;
-                    ">
-                      ${simplifiedEarnings}
-                    </div>`,
-                  className: "",
-                  iconSize: [44, 44],
-                  iconAnchor: [22, 22],
-                  popupAnchor: [0, -22],
+            groupedOrders.forEach((orders, locationKey) => {
+              const [baseLat, baseLng] = locationKey.split(',').map(Number);
+
+              orders.forEach((order, index) => {
+                if (!order.shopLatitude || !order.shopLongitude) return;
+
+                const offset = calculateMarkerOffset(index, orders.length);
+                const adjustedLat = baseLat + offset.lat;
+                const adjustedLng = baseLng + offset.lng;
+
+                const marker = L.marker([adjustedLat, adjustedLng], {
+                  icon: createOrderMarkerIcon(order.estimatedEarnings),
+                  zIndexOffset: 1000,
                 });
 
-                const marker = L.marker(
-                  [order.shopLatitude, order.shopLongitude],
-                  { icon: orderIcon, zIndexOffset: 1000 }
-                );
-
-                // Use our enhanced safety function to add the marker
                 if (safeAddMarker(marker, map, `order ${order.id}`)) {
-                  const popupContent = `
-                    <div style="font-size:14px; line-height:1.4; min-width:200px; background:${theme === 'dark' ? '#1f2937' : '#fff'}; color:${theme === 'dark' ? '#e5e7eb' : '#111827'};">
-                      <div style="display:flex;align-items:center;margin-bottom:4px;">
-                        <span style="margin-right:6px;">🆔</span><strong>${order.id}</strong>
-                      </div>
-                      <div style="display:flex;align-items:center;margin-bottom:4px;">
-                        <span style="margin-right:6px;">🏪</span><span>${order.shopName}</span>
-                      </div>
-                      <div style="display:flex;align-items:center;margin-bottom:4px;">
-                        <span style="margin-right:6px;">📍</span><span>${order.shopAddress}</span>
-                      </div>
-                      <div style="display:flex;align-items:center;margin-bottom:4px;">
-                        <span style="margin-right:6px;">⏱️</span><span>${order.createdAt}</span>
-                      </div>
-                      <div style="display:flex;align-items:center;margin-bottom:4px;">
-                        <span style="margin-right:6px;">📏</span><span>Distance: ${order.distance}</span>
-                      </div>
-                      <div style="display:flex;align-items:center;margin-bottom:4px;">
-                        <span style="margin-right:6px;">🛒</span><span>Items: ${order.items}</span>
-                      </div>
-                      <div style="display:flex;align-items:center;margin-bottom:4px;">
-                        <span style="margin-right:6px;">🚚</span><span>Deliver to: ${order.customerAddress}</span>
-                      </div>
-                      <div style="display:flex;align-items:center;">
-                        <span style="margin-right:6px;">💰</span><span>Estimated Earnings: ${order.estimatedEarnings}</span>
-                      </div>
-                      <button id="accept-batch-${order.id}" style="margin-top:8px;padding:6px 12px;background:${theme === 'dark' ? '#059669' : '#10b981'};color:#fff;border:none;border-radius:4px;cursor:pointer;">
-                        Accept Batch
-                      </button>
-                    </div>
-                  `;
-
-                  marker.bindPopup(popupContent, { maxWidth: 250 });
+                  marker.bindPopup(createAvailableOrderPopupContent(order, theme), {
+                    maxWidth: 300,
+                    className: `${theme === 'dark' ? 'dark-theme-popup' : 'light-theme-popup'}`,
+                    closeButton: true,
+                    closeOnClick: false,
+                  });
                   attachAcceptHandler(marker, order.id, map);
                 }
-              }
+              });
             });
           }
         })
@@ -1450,101 +1486,6 @@ export default function MapSection({
     });
     shopMarkersRef.current = [];
   };
-
-  // Update the available orders rendering logic
-  useEffect(() => {
-    if (!mapInstanceRef.current || !mapLoaded || !availableOrders?.length) return;
-
-    // Only clear order markers
-    clearOrderMarkers();
-
-    // Group orders by location
-    const groupedOrders = groupMarkersByLocation(availableOrders);
-
-    groupedOrders.forEach((orders, locationKey) => {
-      const [baseLat, baseLng] = locationKey.split(',').map(Number);
-
-      orders.forEach((order, index) => {
-        if (!order.shopLatitude || !order.shopLongitude) return;
-
-        const offset = calculateMarkerOffset(index, orders.length);
-        const adjustedLat = baseLat + offset.lat;
-        const adjustedLng = baseLng + offset.lng;
-
-            const badgeColor = getOrderTimeBadgeColor(order.createdAt);
-        const simplifiedEarnings = formatEarningsDisplay(order.estimatedEarnings);
-
-            const orderIcon = L.divIcon({
-              html: `
-                <div style="
-                  background: ${theme === 'dark' ? '#065f46' : '#059669'};
-                  border: 2px solid ${badgeColor};
-                  border-radius: 50%;
-                  width: 44px;
-                  height: 44px;
-                  display: flex;
-                  align-items: center;
-                  justify-content: center;
-                  font-size: 13px;
-                  font-weight: 600;
-                  color: white;
-                  backdrop-filter: blur(8px);
-                  box-shadow: 0 2px 4px ${theme === 'dark' ? 'rgba(0,0,0,0.3)' : 'rgba(0,0,0,0.1)'};
-                  z-index: 1000;
-                ">
-                  ${simplifiedEarnings}
-                </div>`,
-              className: "",
-              iconSize: [44, 44],
-              iconAnchor: [22, 22],
-              popupAnchor: [0, -22],
-            });
-
-            const marker = L.marker([adjustedLat, adjustedLng], {
-              icon: orderIcon,
-              zIndexOffset: 1000,
-            });
-
-        if (safeAddMarker(marker, mapInstanceRef.current!, `order ${order.id}`)) {
-          orderMarkersRef.current.push(marker);
-            const popupContent = `
-            <div style="font-size:14px; line-height:1.4; min-width:200px; background:${theme === 'dark' ? '#1f2937' : '#fff'}; color:${theme === 'dark' ? '#e5e7eb' : '#111827'};">
-              <div style="display:flex;align-items:center;margin-bottom:4px;">
-                <span style="margin-right:6px;">🆔</span><strong>${order.id}</strong>
-              </div>
-              <div style="display:flex;align-items:center;margin-bottom:4px;">
-                <span style="margin-right:6px;">🏪</span><span>${order.shopName}</span>
-              </div>
-              <div style="display:flex;align-items:center;margin-bottom:4px;">
-                <span style="margin-right:6px;">📍</span><span>${order.shopAddress}</span>
-              </div>
-              <div style="display:flex;align-items:center;margin-bottom:4px;">
-                <span style="margin-right:6px;">⏱️</span><span>${order.createdAt}</span>
-              </div>
-              <div style="display:flex;align-items:center;margin-bottom:4px;">
-                <span style="margin-right:6px;">📏</span><span>Distance: ${order.distance}</span>
-              </div>
-              <div style="display:flex;align-items:center;margin-bottom:4px;">
-              <span style="margin-right:6px;">🛒</span><span>Items: ${order.items}</span>
-              </div>
-              <div style="display:flex;align-items:center;margin-bottom:4px;">
-              <span style="margin-right:6px;">🚚</span><span>Deliver to: ${order.customerAddress}</span>
-              </div>
-              <div style="display:flex;align-items:center;">
-                <span style="margin-right:6px;">💰</span><span>Estimated Earnings: ${order.estimatedEarnings}</span>
-              </div>
-              <button id="accept-batch-${order.id}" style="margin-top:8px;padding:6px 12px;background:${theme === 'dark' ? '#059669' : '#10b981'};color:#fff;border:none;border-radius:4px;cursor:pointer;">
-                Accept Batch
-              </button>
-            </div>
-          `;
-
-            marker.bindPopup(popupContent, { maxWidth: 250 });
-          attachAcceptHandler(marker, order.id, mapInstanceRef.current!);
-        }
-      });
-    });
-  }, [mapLoaded, availableOrders, theme]);
 
   // Cleanup on unmount
   useEffect(() => {
