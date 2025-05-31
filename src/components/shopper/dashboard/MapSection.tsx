@@ -1566,9 +1566,13 @@ export default function MapSection({
               )}
             </div>
             {loadingEarnings ? (
-              <div className="h-5 w-16 animate-pulse rounded bg-gray-200 dark:bg-gray-700"></div>
+              <div className={`h-6 w-20 animate-pulse rounded ${
+                theme === 'dark' ? 'bg-gray-700' : 'bg-gray-200'
+              }`} />
             ) : (
-              <span className="font-semibold">
+              <span className={`text-lg font-semibold ${
+                theme === 'dark' ? 'text-white' : 'text-gray-900'
+              }`}>
                 {new Intl.NumberFormat('en-RW', {
                   style: 'currency',
                   currency: 'RWF',
