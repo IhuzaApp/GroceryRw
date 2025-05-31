@@ -152,7 +152,9 @@ export default function ShopperSidebar() {
                     ? theme === 'dark'
                       ? 'text-white'
                       : 'text-gray-900'
-                    : ''
+                    : theme === 'dark'
+                      ? 'text-gray-400'
+                      : 'text-gray-500'
                 }`}
               >
                 <path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z" />
@@ -179,11 +181,13 @@ export default function ShopperSidebar() {
                 stroke="currentColor"
                 strokeWidth="2"
                 className={`mr-3 h-6 w-6 flex-shrink-0 transition-colors duration-200 ${
-                  isActive("/Plasa/active-batches") && theme === 'dark'
-                    ? 'text-white'
-                    : isActive("/Plasa/active-batches")
-                    ? 'text-gray-900'
-                    : ''
+                  isActive("/Plasa/active-batches")
+                    ? theme === 'dark'
+                      ? 'text-white'
+                      : 'text-gray-900'
+                    : theme === 'dark'
+                      ? 'text-gray-400'
+                      : 'text-gray-500'
                 }`}
               >
                 <path d="M9 17H5a2 2 0 01-2-2V5a2 2 0 012-2h14a2 2 0 012 2v10a2 2 0 01-2 2h-4" />
@@ -212,23 +216,34 @@ export default function ShopperSidebar() {
                   stroke="currentColor"
                   strokeWidth="2"
                   className={`mr-3 h-6 w-6 flex-shrink-0 transition-colors duration-200 ${
-                    isActive("/Plasa/Earnings") && theme === 'dark'
-                      ? 'text-white'
-                      : isActive("/Plasa/Earnings")
-                      ? 'text-gray-900'
-                      : ''
+                    isActive("/Plasa/Earnings")
+                      ? theme === 'dark'
+                        ? 'text-white'
+                        : 'text-gray-900'
+                      : theme === 'dark'
+                        ? 'text-gray-400'
+                        : 'text-gray-500'
                   }`}
                 >
                   <path d="M12 2v20M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6" />
                 </svg>
                 <span>Earnings</span>
               </div>
-              {/* Daily Earnings Badge */}
               <div className="flex items-center">
                 {loadingEarnings ? (
-                  <div className="h-5 w-12 animate-pulse rounded bg-gray-200 dark:bg-gray-700"></div>
+                  <div className={`h-4 w-12 animate-pulse rounded ${
+                    theme === 'dark' ? 'bg-gray-700' : 'bg-gray-200'
+                  }`} />
                 ) : (
-                  <span className="rounded-full bg-green-100 px-2 py-1 text-xs font-medium text-green-800 dark:bg-green-900/30 dark:text-green-300">
+                  <span className={`text-sm font-medium ${
+                    theme === 'dark'
+                      ? isActive("/Plasa/Earnings")
+                        ? 'text-white'
+                        : 'text-gray-400'
+                      : isActive("/Plasa/Earnings")
+                        ? 'text-gray-900'
+                        : 'text-gray-500'
+                  }`}>
                     {formatCompactCurrency(dailyEarnings)}
                   </span>
                 )}
@@ -253,59 +268,76 @@ export default function ShopperSidebar() {
                 stroke="currentColor"
                 strokeWidth="2"
                 className={`mr-3 h-6 w-6 flex-shrink-0 transition-colors duration-200 ${
-                  isActive("/Plasa/settings") && theme === 'dark'
-                    ? 'text-white'
-                    : isActive("/Plasa/settings")
-                    ? 'text-gray-900'
-                    : ''
+                  isActive("/Plasa/settings")
+                    ? theme === 'dark'
+                      ? 'text-white'
+                      : 'text-gray-900'
+                    : theme === 'dark'
+                      ? 'text-gray-400'
+                      : 'text-gray-500'
                 }`}
               >
-                <circle cx="12" cy="12" r="3" />
-                <path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-2 2 2 2 0 01-2-2v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83 0 2 2 0 010-2.83l.06-.06a1.65 1.65 0 00.33-1.82 1.65 1.65 0 00-1.51-1H3a2 2 0 01-2-2 2 2 0 012-2h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 010-2.83 2 2 0 012.83 0l.06.06a1.65 1.65 0 001.82.33H9a1.65 1.65 0 001-1.51V3a2 2 0 012-2 2 2 0 012 2v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 0 2 2 0 010 2.83l-.06.06a1.65 1.65 0 00-.33 1.82V9a1.65 1.65 0 001.51 1H21a2 2 0 012 2 2 2 0 01-2 2h-.09a1.65 1.65 0 00-1.51 1z" />
+                <path d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+                <path d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
               </svg>
               <span>Settings</span>
             </div>
           </Link>
+        </nav>
 
-          {/* Switch to Customer Mode Button */}
+        <div className={`border-t p-4 ${
+          theme === 'dark' ? 'border-gray-800' : 'border-gray-200'
+        }`}>
           <button
             onClick={handleSwitchToCustomer}
             disabled={isSwitchingRole}
-            className={`mt-4 flex w-full items-center justify-center rounded-lg px-4 py-3 text-gray-700 hover:bg-gray-200 ${
+            className={`flex w-full items-center justify-center rounded-lg px-4 py-2 text-sm font-medium transition-colors duration-200 ${
               theme === 'dark'
                 ? 'bg-gray-800 text-white hover:bg-gray-700'
-                : 'bg-gray-100 hover:bg-gray-200'
+                : 'bg-gray-100 text-gray-900 hover:bg-gray-200'
             }`}
           >
-            <svg
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              className="mr-2 h-5 w-5"
-            >
-              <path d="M16 21v-2a4 4 0 00-4-4H6a4 4 0 00-4 4v2" />
-              <circle cx="9" cy="7" r="4" />
-              <path d="M22 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75" />
-            </svg>
-            {isSwitchingRole ? "Switching..." : "Switch to Customer Mode"}
+            {isSwitchingRole ? (
+              <div className={`h-5 w-5 animate-spin rounded-full border-2 ${
+                theme === 'dark'
+                  ? 'border-gray-300 border-t-transparent'
+                  : 'border-gray-900 border-t-transparent'
+              }`} />
+            ) : (
+              <>
+                <svg
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  className="mr-2 h-5 w-5"
+                >
+                  <path d="M16 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2" />
+                  <circle cx="8.5" cy="7" r="4" />
+                  <path d="M20 8v6M23 11h-6" />
+                </svg>
+                Switch to Customer
+              </>
+            )}
           </button>
-        </nav>
+        </div>
       </aside>
 
       {/* Mobile bottom navigation */}
-      <nav className={`fixed bottom-0 left-0 right-0 z-[2000] border-t md:hidden ${
-        theme === 'dark' ? 'border-gray-800 bg-gray-900' : 'border-gray-200 bg-white'
+      <nav className={`fixed bottom-0 left-0 right-0 z-50 border-t md:hidden ${
+        theme === 'dark' 
+          ? 'border-gray-800 bg-gray-900' 
+          : 'border-gray-200 bg-white'
       }`}>
-        <div className="flex justify-around">
-          <Link href="/">
-            <div className={getNavLinkClasses("/", !isActive("/Plasa/active-batches"))}>
+        <div className="mx-auto flex max-w-md justify-around">
+          <Link href="/" passHref>
+            <div className={getNavLinkClasses("/", !isActive("/Plasa/active-batches") && !isActive("/Plasa/Earnings") && !isActive("/Plasa/settings"))}>
               <svg
                 viewBox="0 0 24 24"
                 fill="none"
                 stroke="currentColor"
                 strokeWidth="2"
-                className={getIconClasses("/", !isActive("/Plasa/active-batches"))}
+                className={getIconClasses("/", !isActive("/Plasa/active-batches") && !isActive("/Plasa/Earnings") && !isActive("/Plasa/settings"))}
               >
                 <path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z" />
                 <polyline points="9 22 9 12 15 12 15 22" />
@@ -313,8 +345,7 @@ export default function ShopperSidebar() {
               <span>Available</span>
             </div>
           </Link>
-
-          <Link href="/Plasa/active-batches">
+          <Link href="/Plasa/active-batches" passHref>
             <div className={getNavLinkClasses("/Plasa/active-batches")}>
               <svg
                 viewBox="0 0 24 24"
@@ -324,13 +355,13 @@ export default function ShopperSidebar() {
                 className={getIconClasses("/Plasa/active-batches")}
               >
                 <path d="M9 17H5a2 2 0 01-2-2V5a2 2 0 012-2h14a2 2 0 012 2v10a2 2 0 01-2 2h-4" />
+                <path d="M9 17l6-6" />
                 <path d="M15 17v-6h-6" />
               </svg>
               <span>Active</span>
             </div>
           </Link>
-
-          <Link href="/Plasa/Earnings">
+          <Link href="/Plasa/Earnings" passHref>
             <div className={getNavLinkClasses("/Plasa/Earnings")}>
               <svg
                 viewBox="0 0 24 24"
@@ -344,8 +375,7 @@ export default function ShopperSidebar() {
               <span>Earnings</span>
             </div>
           </Link>
-
-          <Link href="/Plasa/settings">
+          <Link href="/Plasa/settings" passHref>
             <div className={getNavLinkClasses("/Plasa/settings")}>
               <svg
                 viewBox="0 0 24 24"
@@ -354,8 +384,8 @@ export default function ShopperSidebar() {
                 strokeWidth="2"
                 className={getIconClasses("/Plasa/settings")}
               >
-                <circle cx="12" cy="12" r="3" />
-                <path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-2 2 2 2 0 01-2-2v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83 0 2 2 0 010-2.83l.06-.06a1.65 1.65 0 00.33-1.82 1.65 1.65 0 00-1.51-1H3a2 2 0 01-2-2 2 2 0 012-2h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 010-2.83 2 2 0 012.83 0l.06.06a1.65 1.65 0 001.82.33H9a1.65 1.65 0 001-1.51V3a2 2 0 012-2 2 2 0 012 2v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 0 2 2 0 010 2.83l-.06.06a1.65 1.65 0 00-.33 1.82V9a1.65 1.65 0 001.51 1H21a2 2 0 012 2 2 2 0 01-2 2h-.09a1.65 1.65 0 00-1.51 1z" />
+                <path d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+                <path d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
               </svg>
               <span>Settings</span>
             </div>

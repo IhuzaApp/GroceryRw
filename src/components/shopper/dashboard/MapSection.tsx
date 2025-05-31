@@ -270,8 +270,13 @@ export default function MapSection({
   const showLocationTroubleshootingGuide = () => {
     reduceToastDuplicates(
       "location-troubleshooting",
-      <Message showIcon type="info" header="Location Troubleshooting">
-        <div>
+      <Message 
+        showIcon 
+        type="info" 
+        header="Location Troubleshooting"
+        className={theme === 'dark' ? 'rs-message-dark' : ''}
+      >
+        <div className={theme === 'dark' ? 'text-gray-100' : 'text-gray-900'}>
           <p>Try the following steps to fix location issues:</p>
           <ol className="mt-1 list-decimal pl-4">
             <li>Make sure you&#39;re outdoors or near a window</li>
@@ -352,7 +357,12 @@ export default function MapSection({
             // Permission denied
             reduceToastDuplicates(
               "location-permission-denied",
-              <Message showIcon type="error" header="Location Permission">
+              <Message 
+                showIcon 
+                type="error" 
+                header="Location Permission"
+                className={theme === 'dark' ? 'rs-message-dark' : ''}
+              >
                 Location tracking was denied. Please enable location access.
               </Message>,
               { placement: "topEnd", duration: 5000 }
@@ -368,9 +378,13 @@ export default function MapSection({
             // Position unavailable
             reduceToastDuplicates(
               "location-unavailable",
-              <Message showIcon type="warning" header="Location Unavailable">
-                Your location is currently unavailable. Using your last saved
-                position.
+              <Message 
+                showIcon 
+                type="warning" 
+                header="Location Unavailable"
+                className={theme === 'dark' ? 'rs-message-dark' : ''}
+              >
+                Your location is currently unavailable. Using your last saved position.
               </Message>,
               { placement: "topEnd", duration: 5000 }
             );
@@ -383,7 +397,12 @@ export default function MapSection({
               if (locationErrorCountRef.current >= 5) {
                 reduceToastDuplicates(
                   "tracking-issues",
-                  <Message showIcon type="info" header="Active Tracking Issue">
+                  <Message 
+                    showIcon 
+                    type="info" 
+                    header="Active Tracking Issue"
+                    className={theme === 'dark' ? 'rs-message-dark' : ''}
+                  >
                     <div>
                       <p>
                         Automatic location tracking is not working well. Would
@@ -406,6 +425,7 @@ export default function MapSection({
                                 showIcon
                                 type="success"
                                 header="Tracking Disabled"
+                                className={theme === 'dark' ? 'rs-message-dark' : ''}
                               >
                                 Using static location. Use the refresh button to
                                 update manually.
@@ -413,7 +433,11 @@ export default function MapSection({
                               { placement: "topEnd", duration: 3000 }
                             );
                           }}
-                          className="rounded bg-blue-500 px-3 py-1 text-sm text-white hover:bg-blue-600"
+                          className={`rounded px-3 py-1 text-sm text-white ${
+                            theme === 'dark'
+                              ? 'bg-blue-600 hover:bg-blue-700'
+                              : 'bg-blue-500 hover:bg-blue-600'
+                          }`}
                         >
                           Disable Tracking
                         </button>
@@ -421,7 +445,11 @@ export default function MapSection({
                           onClick={() => {
                             // Just close the notification
                           }}
-                          className="rounded bg-gray-500 px-3 py-1 text-sm text-white hover:bg-gray-600"
+                          className={`rounded px-3 py-1 text-sm text-white ${
+                            theme === 'dark'
+                              ? 'bg-gray-600 hover:bg-gray-700'
+                              : 'bg-gray-500 hover:bg-gray-600'
+                          }`}
                         >
                           Keep Trying
                         </button>
@@ -436,7 +464,12 @@ export default function MapSection({
             // Timeout
             reduceToastDuplicates(
               "location-timeout",
-              <Message showIcon type="warning" header="Location Timeout">
+              <Message 
+                showIcon 
+                type="warning" 
+                header="Location Timeout"
+                className={theme === 'dark' ? 'rs-message-dark' : ''}
+              >
                 Location request timed out. Will retry automatically.
               </Message>,
               { placement: "topEnd", duration: 3000 }
@@ -699,7 +732,7 @@ export default function MapSection({
 
       // Use purple color for older pending orders
       const pendingIcon = L.divIcon({
-        html: `<div style="background:#fff;border:2px solid #8b5cf6;border-radius:12px;padding:4px 12px;font-size:12px;color:#8b5cf6;white-space:nowrap;">${earningsStr}</div>`,
+        html: `<div style="background:${theme === 'dark' ? '#1f2937' : '#fff'};border:2px solid #8b5cf6;border-radius:12px;padding:4px 12px;font-size:12px;color:${theme === 'dark' ? '#c4b5fd' : '#8b5cf6'};white-space:nowrap;">${earningsStr}</div>`,
         className: "",
         iconSize: [90, 30],
         iconAnchor: [60, 15],
@@ -716,7 +749,7 @@ export default function MapSection({
       if (safeAddMarker(marker, map, `pending order ${order.id}`)) {
         // Enhanced popup with icons and flex layout
         const popupContent = `
-          <div style="font-size:14px; line-height:1.4; min-width:200px;">
+          <div style="font-size:14px; line-height:1.4; min-width:200px; background:${theme === 'dark' ? '#1f2937' : '#fff'}; color:${theme === 'dark' ? '#e5e7eb' : '#111827'};">
             <div style="display:flex;align-items:center;margin-bottom:4px;">
               <span style="margin-right:6px;">🆔</span><strong>${order.id}</strong>
             </div>
@@ -741,7 +774,7 @@ export default function MapSection({
             <div style="display:flex;align-items:center;">
               <span style="margin-right:6px;">💰</span><span>Estimated Earnings: ${earningsStr}</span>
             </div>
-            <button id="accept-batch-${order.id}" style="margin-top:8px;padding:6px 12px;background:#10b981;color:#fff;border:none;border-radius:4px;cursor:pointer;">
+            <button id="accept-batch-${order.id}" style="margin-top:8px;padding:6px 12px;background:${theme === 'dark' ? '#059669' : '#10b981'};color:#fff;border:none;border-radius:4px;cursor:pointer;">
               Accept Batch
             </button>
           </div>
@@ -790,6 +823,7 @@ export default function MapSection({
               type="info"
               header="Using Saved Location"
               closable
+              className={theme === 'dark' ? 'rs-message-dark' : ''}
             >
               <div>
                 <p>
@@ -804,6 +838,7 @@ export default function MapSection({
                       setIsActivelyTracking(true);
                       startLocationTracking();
                     }}
+                    className={theme === 'dark' ? 'rs-btn-dark' : ''}
                   >
                     Enable Tracking
                   </Button>
@@ -814,13 +849,19 @@ export default function MapSection({
                       setIsActivelyTracking(false);
                       reduceToastDuplicates(
                         "static-location-info",
-                        <Message showIcon type="info">
+                        <Message
+                          showIcon
+                          type="info"
+                          header="Static Location"
+                          className={theme === 'dark' ? 'rs-message-dark' : ''}
+                        >
                           Using static location. Use the refresh button to
                           update.
                         </Message>,
                         { placement: "topEnd", duration: 3000 }
                       );
                     }}
+                    className={theme === 'dark' ? 'rs-btn-dark' : ''}
                   >
                     Stay Static
                   </Button>
@@ -1189,7 +1230,12 @@ export default function MapSection({
 
         reduceToastDuplicates(
           errorKey,
-          <Message showIcon type="error" header="Location Error">
+          <Message 
+            showIcon 
+            type="error" 
+            header="Location Error"
+            className={theme === 'dark' ? 'rs-message-dark' : ''}
+          >
             {errorMessage}
           </Message>,
           { placement: "topEnd", duration: 5000 }
@@ -1199,7 +1245,12 @@ export default function MapSection({
         if (mapInstanceRef.current) {
           reduceToastDuplicates(
             "manual-mode-info",
-            <Message showIcon type="info" header="Manual Mode">
+            <Message 
+              showIcon 
+              type="info" 
+              header="Manual Mode"
+              className={theme === 'dark' ? 'rs-message-dark' : ''}
+            >
               Click anywhere on the map to set your location manually.
             </Message>,
             { placement: "topEnd", duration: 5000 }
@@ -1221,7 +1272,12 @@ export default function MapSection({
 
               reduceToastDuplicates(
                 "manual-location-set",
-                <Message showIcon type="success" header="Location Set">
+                <Message 
+                  showIcon 
+                  type="success" 
+                  header="Location Set"
+                  className={theme === 'dark' ? 'rs-message-dark' : ''}
+                >
                   Your position has been manually set.
                 </Message>,
                 { placement: "topEnd", duration: 3000 }
@@ -1253,7 +1309,12 @@ export default function MapSection({
     if (!navigator.geolocation) {
       reduceToastDuplicates(
         "geolocation-not-supported",
-        <Message showIcon type="error" header="Not Supported">
+        <Message 
+          showIcon 
+          type="error" 
+          header="Not Supported"
+          className={theme === 'dark' ? 'rs-message-dark' : ''}
+        >
           Geolocation is not supported by your browser.
         </Message>,
         { placement: "topEnd", duration: 3000 }
@@ -1266,7 +1327,12 @@ export default function MapSection({
     // Show loading toast
     reduceToastDuplicates(
       "location-updating",
-      <Message showIcon type="info" header="Updating Location">
+      <Message 
+        showIcon 
+        type="info" 
+        header="Updating Location"
+        className={theme === 'dark' ? 'rs-message-dark' : ''}
+      >
         Getting your current location...
       </Message>,
       { placement: "topEnd", duration: 3000 }
@@ -1292,7 +1358,12 @@ export default function MapSection({
               // Success message
               reduceToastDuplicates(
                 "location-updated",
-                <Message showIcon type="success" header="Location Updated">
+                <Message 
+                  showIcon 
+                  type="success" 
+                  header="Location Updated"
+                  className={theme === 'dark' ? 'rs-message-dark' : ''}
+                >
                   Your location has been successfully updated.
                 </Message>,
                 { placement: "topEnd", duration: 3000 }
@@ -1302,7 +1373,12 @@ export default function MapSection({
               // Still show success since we saved to cookies
               reduceToastDuplicates(
                 "location-updated-cookies",
-                <Message showIcon type="info" header="Location Saved">
+                <Message 
+                  showIcon 
+                  type="info" 
+                  header="Location Saved"
+                  className={theme === 'dark' ? 'rs-message-dark' : ''}
+                >
                   Your location was saved, but the map is still initializing.
                 </Message>,
                 { placement: "topEnd", duration: 3000 }
@@ -1313,7 +1389,12 @@ export default function MapSection({
             // Show error message
             reduceToastDuplicates(
               "location-update-error",
-              <Message showIcon type="error" header="Map Error">
+              <Message 
+                showIcon 
+                type="error" 
+                header="Map Error"
+                className={theme === 'dark' ? 'rs-message-dark' : ''}
+              >
                 Your location was saved, but there was an error updating the
                 map.
               </Message>,
@@ -1333,19 +1414,21 @@ export default function MapSection({
         const errorKey = `location-error-${error.code}`;
 
         if (error.code === 1) {
-          errorMessage =
-            "Location permission denied. Please enable location access.";
+          errorMessage = "Location permission denied. Please enable location access.";
         } else if (error.code === 2) {
-          errorMessage =
-            "Location unavailable. Using your saved location instead.";
+          errorMessage = "Location unavailable. Using your saved location instead.";
         } else if (error.code === 3) {
-          errorMessage =
-            "Location request timed out. Using your saved location instead.";
+          errorMessage = "Location request timed out. Using your saved location instead.";
         }
 
         reduceToastDuplicates(
           errorKey,
-          <Message showIcon type="error" header="Location Error">
+          <Message 
+            showIcon 
+            type="error" 
+            header="Location Error"
+            className={theme === 'dark' ? 'rs-message-dark' : ''}
+          >
             {errorMessage}
           </Message>,
           { placement: "topEnd", duration: 5000 }
@@ -1414,7 +1497,7 @@ export default function MapSection({
               if (order.shopLatitude && order.shopLongitude) {
                 const badgeColor = getOrderTimeBadgeColor(order.createdAt);
                 const orderIcon = L.divIcon({
-                  html: `<div style="background:#fff;border:2px solid ${badgeColor};border-radius:12px;padding:4px 12px;font-size:12px;color:${badgeColor};white-space:nowrap;z-index:1000;">${order.estimatedEarnings}</div>`,
+                  html: `<div style="background:${theme === 'dark' ? '#1f2937' : '#fff'};border:2px solid ${badgeColor};border-radius:12px;padding:4px 12px;font-size:12px;color:${theme === 'dark' ? badgeColor.replace(')', ', 0.9)').replace('rgb', 'rgba') : badgeColor};white-space:nowrap;z-index:1000;">${order.estimatedEarnings}</div>`,
                   className: "",
                   iconSize: [90, 30],
                   iconAnchor: [60, 15],
@@ -1433,7 +1516,7 @@ export default function MapSection({
 
                 const distanceStr = order.distance || "Unknown";
                 const popupContent = `
-                  <div style="font-size:14px; line-height:1.4; min-width:200px;">
+                  <div style="font-size:14px; line-height:1.4; min-width:200px; background:${theme === 'dark' ? '#1f2937' : '#fff'}; color:${theme === 'dark' ? '#e5e7eb' : '#111827'};">
                     <div style="display:flex;align-items:center;margin-bottom:4px;">
                       <span style="margin-right:6px;">🆔</span><strong>${order.id}</strong>
                     </div>
@@ -1458,7 +1541,7 @@ export default function MapSection({
                     <div style="display:flex;align-items:center;">
                       <span style="margin-right:6px;">💰</span><span>Estimated Earnings: ${order.estimatedEarnings}</span>
                     </div>
-                    <button id="accept-batch-${order.id}" style="margin-top:8px;padding:6px 12px;background:#10b981;color:#fff;border:none;border-radius:4px;cursor:pointer;">
+                    <button id="accept-batch-${order.id}" style="margin-top:8px;padding:6px 12px;background:${theme === 'dark' ? '#059669' : '#10b981'};color:#fff;border:none;border-radius:4px;cursor:pointer;">
                       Accept Batch
                     </button>
                   </div>
@@ -1530,8 +1613,14 @@ export default function MapSection({
   // Show map loading state when map is not ready but dashboard is initialized
   if (!mapLoaded) {
     return (
-      <div className="flex h-[300px] w-full items-center justify-center bg-gray-100 md:h-[400px]">
-        <Loader size="lg" content="Loading map..." />
+      <div className={`flex h-[300px] w-full items-center justify-center md:h-[400px] ${
+        theme === 'dark' ? 'bg-gray-900' : 'bg-gray-100'
+      }`}>
+        <Loader 
+          size="lg" 
+          content="Loading map..." 
+          className={theme === 'dark' ? 'rs-loader-dark' : ''}
+        />
       </div>
     );
   }
@@ -1541,8 +1630,8 @@ export default function MapSection({
       {/* Daily Earnings Badge */}
       <div className={`absolute left-1/2 top-4 z-[1001] -translate-x-1/2 transform rounded-full px-4 py-2 shadow-lg ${
         theme === 'dark' 
-          ? 'bg-gray-800 text-white' 
-          : 'bg-white text-gray-900'
+          ? 'bg-gray-800 text-white backdrop-blur-lg bg-opacity-90' 
+          : 'bg-white text-gray-900 backdrop-blur-lg bg-opacity-90'
       }`}>
         <div className="flex items-center gap-2">
           <svg
@@ -1550,17 +1639,27 @@ export default function MapSection({
             fill="none"
             stroke="currentColor"
             strokeWidth="2"
-            className="h-5 w-5 text-green-500"
+            className={`h-5 w-5 ${
+              theme === 'dark' ? 'text-green-400' : 'text-green-500'
+            }`}
           >
             <path d="M12 2v20M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6" />
           </svg>
           <div className="flex flex-col">
             <div className="flex items-center gap-2">
-              <span className="text-xs opacity-75">Today's earnings</span>
+              <span className={`text-xs ${
+                theme === 'dark' ? 'text-gray-300' : 'text-gray-600'
+              }`}>Today's earnings</span>
               {loadingEarnings ? (
-                <div className="h-4 w-6 animate-pulse rounded bg-gray-200 dark:bg-gray-700"></div>
+                <div className={`h-4 w-6 animate-pulse rounded ${
+                  theme === 'dark' ? 'bg-gray-700' : 'bg-gray-200'
+                }`}></div>
               ) : (
-                <span className="rounded-full bg-green-100 px-2 py-0.5 text-xs font-medium text-green-800 dark:bg-green-900/30 dark:text-green-300">
+                <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${
+                  theme === 'dark'
+                    ? 'bg-green-900/30 text-green-300'
+                    : 'bg-green-100 text-green-800'
+                }`}>
                   {completedOrdersCount}
                 </span>
               )}
@@ -1592,9 +1691,13 @@ export default function MapSection({
       />
       {!mapLoaded && (
         <div className={`absolute inset-0 flex items-center justify-center ${
-          theme === 'dark' ? 'bg-gray-900' : 'bg-gray-100'
+          theme === 'dark' ? 'bg-gray-900/90' : 'bg-gray-100/90'
         }`}>
-          <Loader size="lg" content="Loading map..." />
+          <Loader 
+            size="lg" 
+            content="Loading map..." 
+            className={theme === 'dark' ? 'rs-loader-dark' : ''}
+          />
         </div>
       )}
 
@@ -1602,8 +1705,14 @@ export default function MapSection({
         <>
           <button
             onClick={handleGoLive}
-            className={`absolute bottom-5 left-1/2 z-[1000] hidden w-[90%] -translate-x-1/2 transform rounded-full py-2 font-bold shadow-lg md:block md:w-auto md:px-4 ${
-              isOnline ? "bg-red-500 text-white" : "bg-green-500 text-white"
+            className={`absolute bottom-5 left-1/2 z-[1000] hidden w-[90%] -translate-x-1/2 transform rounded-full py-2 font-bold shadow-lg backdrop-blur-lg md:block md:w-auto md:px-4 ${
+              isOnline 
+                ? theme === 'dark'
+                  ? 'bg-red-600/90 text-white hover:bg-red-700'
+                  : 'bg-red-500/90 text-white hover:bg-red-600'
+                : theme === 'dark'
+                  ? 'bg-green-600/90 text-white hover:bg-green-700'
+                  : 'bg-green-500/90 text-white hover:bg-green-600'
             }`}
           >
             {isOnline ? "Go Offline" : "Start Plas"}
@@ -1611,13 +1720,21 @@ export default function MapSection({
 
           {/* Add tracking mode indicator */}
           {isOnline && (
-            <div className="absolute bottom-20 left-1/2 z-[1000] -translate-x-1/2 transform rounded-full bg-white px-3 py-1 text-sm font-semibold shadow-md">
+            <div className={`absolute bottom-20 left-1/2 z-[1000] -translate-x-1/2 transform rounded-full px-3 py-1 text-sm font-semibold shadow-md backdrop-blur-lg ${
+              theme === 'dark'
+                ? 'bg-gray-800/90 text-gray-100'
+                : 'bg-white/90 text-gray-900'
+            }`}>
               <div className="flex items-center">
                 <span
                   className={`mr-2 inline-block h-3 w-3 rounded-full ${
                     isActivelyTracking
-                      ? "animate-pulse bg-green-500"
-                      : "bg-blue-500"
+                      ? theme === 'dark'
+                        ? "animate-pulse bg-green-400"
+                        : "animate-pulse bg-green-500"
+                      : theme === 'dark'
+                        ? 'bg-blue-400'
+                        : 'bg-blue-500'
                   }`}
                 ></span>
                 {isActivelyTracking ? "Live Tracking" : "Static Location"}
@@ -1637,6 +1754,7 @@ export default function MapSection({
                           showIcon
                           type="info"
                           header="Tracking Disabled"
+                          className={theme === 'dark' ? 'rs-message-dark' : ''}
                         >
                           Using static location. Use the refresh button to
                           update.
@@ -1652,6 +1770,7 @@ export default function MapSection({
                           showIcon
                           type="success"
                           header="Tracking Enabled"
+                          className={theme === 'dark' ? 'rs-message-dark' : ''}
                         >
                           Your location will update automatically as you move.
                         </Message>,
@@ -1659,7 +1778,11 @@ export default function MapSection({
                       );
                     }
                   }}
-                  className="ml-3 text-xs text-blue-600 hover:text-blue-800 hover:underline"
+                  className={`ml-3 text-xs ${
+                    theme === 'dark'
+                      ? 'text-blue-400 hover:text-blue-300 hover:underline'
+                      : 'text-blue-600 hover:text-blue-800 hover:underline'
+                  }`}
                 >
                   {isActivelyTracking ? "Disable" : "Enable"}
                 </button>
@@ -1672,11 +1795,23 @@ export default function MapSection({
             <button
               onClick={refreshLocation}
               disabled={isRefreshingLocation}
-              className="absolute bottom-24 right-5 z-[1001] h-12 w-12 rounded-full bg-blue-500 p-3 text-white shadow-lg hover:bg-blue-600 disabled:bg-blue-300 md:bottom-5 md:h-10 md:w-10 md:p-2"
+              className={`absolute bottom-24 right-5 z-[1001] h-12 w-12 rounded-full p-3 shadow-lg backdrop-blur-lg md:bottom-5 md:h-10 md:w-10 md:p-2 ${
+                theme === 'dark'
+                  ? isRefreshingLocation
+                    ? 'bg-blue-700/90 text-gray-300'
+                    : 'bg-blue-600/90 text-white hover:bg-blue-700'
+                  : isRefreshingLocation
+                    ? 'bg-blue-300/90 text-white'
+                    : 'bg-blue-500/90 text-white hover:bg-blue-600'
+              }`}
               title="Refresh location"
             >
               {isRefreshingLocation ? (
-                <span className="inline-block h-full w-full animate-spin rounded-full border-2 border-white border-t-transparent"></span>
+                <span className={`inline-block h-full w-full animate-spin rounded-full border-2 ${
+                  theme === 'dark'
+                    ? 'border-gray-300 border-t-transparent'
+                    : 'border-white border-t-transparent'
+                }`}></span>
               ) : (
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
