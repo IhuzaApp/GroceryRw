@@ -778,34 +778,34 @@ export default function MapSection({
         <div style="display: flex; align-items: center; gap: 6px; margin-bottom: 4px;">
           <span style="font-size: 16px;">🆔</span>
           <strong style="color: ${theme === 'dark' ? '#60a5fa' : '#2563eb'};">${order.id}</strong>
-        </div>
+            </div>
         <div style="display: flex; align-items: center; gap: 6px; margin-bottom: 4px;">
           <span style="font-size: 16px;">💰</span>
           <strong style="color: ${theme === 'dark' ? '#34d399' : '#059669'};">${formatCurrency(order.earnings)}</strong>
-        </div>
-      </div>
+            </div>
+            </div>
       
       <div style="display: flex; flex-direction: column; gap: 6px;">
         <div style="display: flex; align-items: center; gap: 6px;">
           <span style="font-size: 16px;">🏪</span>
           <span style="flex: 1;">${order.shopName}</span>
-        </div>
+            </div>
         <div style="display: flex; align-items: center; gap: 6px;">
           <span style="font-size: 16px;">📍</span>
           <span style="flex: 1;">${order.shopAddress}</span>
-        </div>
+            </div>
         <div style="display: flex; align-items: center; gap: 6px;">
           <span style="font-size: 16px;">⏱️</span>
           <span style="flex: 1;">${order.createdAt}</span>
-        </div>
+            </div>
         <div style="display: flex; align-items: center; gap: 6px;">
           <span style="font-size: 16px;">🛒</span>
           <span style="flex: 1;">Items: ${order.itemsCount}</span>
-        </div>
+            </div>
         <div style="display: flex; align-items: center; gap: 6px;">
           <span style="font-size: 16px;">🚚</span>
           <span style="flex: 1;">Deliver to: ${order.addressStreet}, ${order.addressCity}</span>
-        </div>
+            </div>
       </div>
 
       <button 
@@ -825,10 +825,10 @@ export default function MapSection({
         onmouseover="this.style.background='${theme === 'dark' ? '#047857' : '#059669'}'"
         onmouseout="this.style.background='${theme === 'dark' ? '#059669' : '#10b981'}'"
       >
-        Accept Batch
-      </button>
-    </div>
-  `;
+              Accept Batch
+            </button>
+          </div>
+        `;
 
   // Second popup template for available orders
   const createAvailableOrderPopupContent = (order: MapSectionProps['availableOrders'][0], theme: string) => `
@@ -1415,8 +1415,8 @@ export default function MapSection({
 
                 const marker = L.marker([adjustedLat, adjustedLng], {
                   icon: createOrderMarkerIcon(order.estimatedEarnings),
-                  zIndexOffset: 1000,
-                });
+                    zIndexOffset: 1000,
+                  });
 
                 if (safeAddMarker(marker, map, `order ${order.id}`)) {
                   marker.bindPopup(createAvailableOrderPopupContent(order, theme), {
@@ -1432,7 +1432,7 @@ export default function MapSection({
           }
         })
         .catch((err) => console.error("Error loading shops:", err));
-    } catch (error) {
+          } catch (error) {
       console.error("Error in map sequence:", error);
     }
   };
@@ -1455,7 +1455,7 @@ export default function MapSection({
           console.warn("Earnings data incomplete or invalid:", data);
           setDailyEarnings(0);
           setCompletedOrdersCount(0);
-        }
+            }
           } catch (error) {
         console.error("Error fetching daily earnings:", error);
         setDailyEarnings(0);
