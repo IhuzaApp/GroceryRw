@@ -516,6 +516,7 @@ export default function ShopperDashboard() {
             mapLoaded={mapLoaded}
             availableOrders={availableOrders}
             isInitializing={isInitializing}
+            isExpanded={isMobile && isExpanded}
           />
         </div>
 
