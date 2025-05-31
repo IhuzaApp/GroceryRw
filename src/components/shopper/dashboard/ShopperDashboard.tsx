@@ -797,7 +797,7 @@ export default function ShopperDashboard() {
                             : "bg-green-100 text-green-700"
                           : theme === 'dark'
                             ? "bg-gray-800 text-gray-300"
-                            : "bg-gray-100 text-gray-700"
+                          : "bg-gray-100 text-gray-700"
                       }`}
                     >
                       {isAutoRefreshing ? "A" : "M"}
@@ -811,7 +811,7 @@ export default function ShopperDashboard() {
                             : "bg-blue-100 text-blue-700"
                           : theme === 'dark'
                             ? "bg-gray-800 text-gray-300"
-                            : "bg-gray-100 text-gray-700"
+                          : "bg-gray-100 text-gray-700"
                       }`}
                     >
                       {showHistorical ? "All Pending" : "15+ min"}
@@ -837,11 +837,11 @@ export default function ShopperDashboard() {
                     className={`rounded px-3 py-1 text-xs ${
                       sortBy === "newest"
                         ? theme === 'dark'
-                          ? "bg-green-600 text-white"
+                        ? "bg-green-600 text-white"
                           : "bg-green-600 text-white"
                         : theme === 'dark'
                           ? "bg-gray-800 text-gray-300"
-                          : "bg-gray-200 text-gray-800"
+                        : "bg-gray-200 text-gray-800"
                     }`}
                     title="Orders less than 1 hour old"
                   >
@@ -852,11 +852,11 @@ export default function ShopperDashboard() {
                     className={`rounded px-3 py-1 text-xs ${
                       sortBy === "earnings"
                         ? theme === 'dark'
-                          ? "bg-green-600 text-white"
+                        ? "bg-green-600 text-white"
                           : "bg-green-600 text-white"
                         : theme === 'dark'
                           ? "bg-gray-800 text-gray-300"
-                          : "bg-gray-200 text-gray-800"
+                        : "bg-gray-200 text-gray-800"
                     }`}
                   >
                     Earnings
@@ -866,11 +866,11 @@ export default function ShopperDashboard() {
                     className={`rounded px-3 py-1 text-xs ${
                       sortBy === "distance"
                         ? theme === 'dark'
-                          ? "bg-green-600 text-white"
+                        ? "bg-green-600 text-white"
                           : "bg-green-600 text-white"
                         : theme === 'dark'
                           ? "bg-gray-800 text-gray-300"
-                          : "bg-gray-200 text-gray-800"
+                        : "bg-gray-200 text-gray-800"
                     }`}
                   >
                     Distance
@@ -880,11 +880,11 @@ export default function ShopperDashboard() {
                     className={`rounded px-3 py-1 text-xs ${
                       sortBy === "priority"
                         ? theme === 'dark'
-                          ? "bg-purple-600 text-white"
+                        ? "bg-purple-600 text-white"
                           : "bg-purple-600 text-white"
                         : theme === 'dark'
                           ? "bg-gray-800 text-gray-300"
-                          : "bg-gray-200 text-gray-800"
+                        : "bg-gray-200 text-gray-800"
                     }`}
                     title="All orders by priority level, including older orders"
                   >

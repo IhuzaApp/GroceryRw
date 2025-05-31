@@ -790,7 +790,7 @@ export default function BatchDetails({
         <div className={`rounded-lg p-4 ${
           theme === 'dark' ? 'bg-gray-700' : 'bg-gray-50'
         }`}>
-          <div className="flex items-center">
+            <div className="flex items-center">
             <div className={`mr-3 rounded-full p-2 ${
               theme === 'dark' ? 'bg-blue-900/20' : 'bg-blue-50'
             }`}>
@@ -798,14 +798,14 @@ export default function BatchDetails({
                 className={`h-6 w-6 ${
                   theme === 'dark' ? 'text-blue-400' : 'text-blue-500'
                 }`}
-                fill="none"
+                      fill="none"
                 viewBox="0 0 24 24"
-                stroke="currentColor"
-              >
+                      stroke="currentColor"
+                    >
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
-              </svg>
-            </div>
-            <div>
+                    </svg>
+              </div>
+              <div>
               <p className={`text-sm font-medium ${
                 theme === 'dark' ? 'text-gray-300' : 'text-gray-700'
               }`}>
@@ -816,14 +816,14 @@ export default function BatchDetails({
               }`}>
                 {order.status}
               </p>
+              </div>
             </div>
           </div>
-        </div>
 
         <div className={`rounded-lg p-4 ${
           theme === 'dark' ? 'bg-gray-700' : 'bg-gray-50'
         }`}>
-          <div className="flex items-center">
+              <div className="flex items-center">
             <div className={`mr-3 rounded-full p-2 ${
               theme === 'dark' ? 'bg-green-900/20' : 'bg-green-50'
             }`}>
@@ -831,14 +831,14 @@ export default function BatchDetails({
                 className={`h-6 w-6 ${
                   theme === 'dark' ? 'text-green-400' : 'text-green-500'
                 }`}
-                fill="none"
+                        fill="none"
                 viewBox="0 0 24 24"
-                stroke="currentColor"
-              >
+                        stroke="currentColor"
+                      >
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-              </svg>
-            </div>
-            <div>
+                      </svg>
+                </div>
+                <div>
               <p className={`text-sm font-medium ${
                 theme === 'dark' ? 'text-gray-300' : 'text-gray-700'
               }`}>
@@ -850,8 +850,8 @@ export default function BatchDetails({
                 ${order.earnings}
               </p>
             </div>
-          </div>
-        </div>
+                </div>
+              </div>
 
         <div className={`rounded-lg p-4 ${
           theme === 'dark' ? 'bg-gray-700' : 'bg-gray-50'
@@ -860,16 +860,16 @@ export default function BatchDetails({
             <div className={`mr-3 rounded-full p-2 ${
               theme === 'dark' ? 'bg-purple-900/20' : 'bg-purple-50'
             }`}>
-              <svg
+                  <svg
                 className={`h-6 w-6 ${
                   theme === 'dark' ? 'text-purple-400' : 'text-purple-500'
                 }`}
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-              >
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                  >
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
-              </svg>
+                  </svg>
             </div>
             <div>
               <p className={`text-sm font-medium ${
@@ -883,9 +883,9 @@ export default function BatchDetails({
                 {order.items.length} items
               </p>
             </div>
+            </div>
           </div>
         </div>
-      </div>
 
       <div className="mb-8">
         <h3 className={`mb-4 text-lg font-semibold ${
@@ -893,7 +893,7 @@ export default function BatchDetails({
         }`}>
           Locations
         </h3>
-        <div className="space-y-4">
+            <div className="space-y-4">
           <div className={`rounded-lg p-4 ${
             theme === 'dark' ? 'bg-gray-700' : 'bg-gray-50'
           }`}>
@@ -905,13 +905,13 @@ export default function BatchDetails({
                   className={`h-5 w-5 ${
                     theme === 'dark' ? 'text-gray-300' : 'text-gray-500'
                   }`}
-                  fill="none"
+                          fill="none"
                   viewBox="0 0 24 24"
-                  stroke="currentColor"
-                >
+                          stroke="currentColor"
+                        >
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
-                </svg>
-              </div>
+                        </svg>
+                      </div>
               <div>
                 <p className={`font-medium ${
                   theme === 'dark' ? 'text-gray-100' : 'text-gray-900'
@@ -922,10 +922,10 @@ export default function BatchDetails({
                   theme === 'dark' ? 'text-gray-400' : 'text-gray-500'
                 }`}>
                   {order.pickup_location}
-                </p>
-              </div>
-            </div>
-          </div>
+                        </p>
+                  </div>
+                    </div>
+                  </div>
 
           <div className={`rounded-lg p-4 ${
             theme === 'dark' ? 'bg-gray-700' : 'bg-gray-50'
@@ -941,10 +941,10 @@ export default function BatchDetails({
                   fill="none"
                   viewBox="0 0 24 24"
                   stroke="currentColor"
-                >
+                      >
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
-                </svg>
-              </div>
+                      </svg>
+                    </div>
               <div>
                 <p className={`font-medium ${
                   theme === 'dark' ? 'text-gray-100' : 'text-gray-900'
@@ -955,12 +955,12 @@ export default function BatchDetails({
                   theme === 'dark' ? 'text-gray-400' : 'text-gray-500'
                 }`}>
                   {order.delivery_location}
-                </p>
-              </div>
+                      </p>
+                    </div>
+                  </div>
+                </div>
             </div>
           </div>
-        </div>
-      </div>
 
       <div>
         <h3 className={`mb-4 text-lg font-semibold ${
@@ -978,7 +978,7 @@ export default function BatchDetails({
                   theme === 'dark' ? 'bg-gray-600' : 'bg-gray-200'
                 }`}>
                   {/* Item image placeholder */}
-                </div>
+              </div>
                 <div>
                   <p className={`font-medium ${
                     theme === 'dark' ? 'text-gray-100' : 'text-gray-900'
@@ -990,19 +990,19 @@ export default function BatchDetails({
                   }`}>
                     {item.quantity} × ${item.price}
                   </p>
-                </div>
-              </div>
+                  </div>
+                  </div>
               <p className={`font-semibold ${
                 theme === 'dark' ? 'text-gray-100' : 'text-gray-900'
               }`}>
                 ${(item.quantity * item.price).toFixed(2)}
-              </p>
-            </div>
+                  </p>
+                </div>
           ))}
-        </div>
-      </div>
+            </div>
+          </div>
 
-      <div className="mt-6">{getActionButton()}</div>
+        <div className="mt-6">{getActionButton()}</div>
     </div>
   );
 }

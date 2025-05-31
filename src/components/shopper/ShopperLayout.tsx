@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from "react";
 import ShopperHeader from "@components/shopper/ShopperHeader";
 import ShopperSidebar from "@components/shopper/ShopperSidebar";
-import { useSession } from "next-auth/react";
+import { useSession, signOut } from "next-auth/react";
 import { useTheme } from "@context/ThemeContext";
 
 interface ShopperLayoutProps {
@@ -31,7 +31,7 @@ export default function ShopperLayout({ children }: ShopperLayoutProps) {
         <ShopperSidebar />
         <main className={`flex-1 transition-colors duration-200 ${
           theme === 'dark' ? 'bg-gray-900 text-gray-100' : 'bg-gray-50 text-gray-900'
-        } ${isMobile ? 'p-0' : 'p-4'}`}>
+        } ${isMobile ? 'p-0' : 'pl-64 p-4'}`}>
           {children}
         </main>
       </div>
