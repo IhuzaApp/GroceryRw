@@ -6,6 +6,7 @@ import OrderCard from "./OrderCard";
 import dynamic from "next/dynamic";
 import { Button, Loader, Placeholder, Panel, Grid, Row, Col } from "rsuite";
 import "rsuite/dist/rsuite.min.css";
+import { useTheme } from "../../../context/ThemeContext";
 
 // Dynamically load MapSection only on client (disable SSR)
 const MapSection = dynamic(() => import("./MapSection"), {
@@ -72,6 +73,7 @@ interface FormattedOrder {
 }
 
 export default function ShopperDashboard() {
+  const { theme } = useTheme();
   const [isLoading, setIsLoading] = useState(true);
   const [isInitializing, setIsInitializing] = useState(true);
   const [availableOrders, setAvailableOrders] = useState<any[]>([]);
@@ -723,8 +725,12 @@ export default function ShopperDashboard() {
         {/* Mobile Bottom Sheet */}
         {isMobile && (
           <div
-            className={`fixed bottom-14 left-0 right-0 z-[1100] rounded-t-2xl border-t-2 bg-white transition-all duration-300 ease-in-out ${
-              isExpanded ? "h-[80%]" : "h-[80px]"
+            className={`fixed bottom-16 left-0 right-0 z-[1000] rounded-t-2xl border-t-2 transition-all duration-300 ease-in-out ${
+              isExpanded ? "h-[calc(100%-4rem)]" : "h-[80px]"
+            } ${
+              theme === 'dark'
+                ? 'border-gray-800 bg-gray-900 text-gray-100'
+                : 'border-gray-200 bg-white text-gray-900'
             }`}
           >
             {/* Handle to expand/collapse */}
@@ -733,7 +739,9 @@ export default function ShopperDashboard() {
                 className="flex cursor-pointer items-center justify-center p-2"
                 onClick={toggleExpanded}
               >
-                <div className="mx-auto h-1.5 w-10 rounded-full bg-gray-300" />
+                <div className={`mx-auto h-1.5 w-10 rounded-full ${
+                  theme === 'dark' ? 'bg-gray-700' : 'bg-gray-300'
+                }`} />
               </div>
               {/* Start/Stop in sheet header on mobile when collapsed */}
               {!isExpanded && (
@@ -753,8 +761,12 @@ export default function ShopperDashboard() {
                     }
                     className={`rounded px-3 py-1 font-bold shadow ${
                       isOnline
-                        ? "bg-red-500 text-white" // Red when online (action: Go Offline)
-                        : "bg-green-500 text-white" // Green when offline (action: Start Plas)
+                        ? theme === 'dark'
+                          ? "bg-red-600 text-white hover:bg-red-700"
+                          : "bg-red-500 text-white hover:bg-red-600"
+                        : theme === 'dark'
+                          ? "bg-green-600 text-white hover:bg-green-700"
+                          : "bg-green-500 text-white hover:bg-green-600"
                     }`}
                   >
                     {isOnline ? "Go Offline" : "Start Plas"}
@@ -764,19 +776,27 @@ export default function ShopperDashboard() {
             </div>
 
             {isExpanded ? (
-              <div className="h-full overflow-y-auto px-4">
+              <div className="h-full overflow-y-auto px-4 pb-4">
                 <div className="mb-4 flex items-center justify-between">
-                  <h2 className="text-lg font-semibold">Available Orders</h2>
+                  <h2 className={`text-lg font-semibold ${
+                    theme === 'dark' ? 'text-white' : 'text-gray-900'
+                  }`}>Available Orders</h2>
                   <div className="flex items-center space-x-2">
-                    <span className="text-xs text-gray-500">
+                    <span className={`text-xs ${
+                      theme === 'dark' ? 'text-gray-400' : 'text-gray-500'
+                    }`}>
                       {lastRefreshed && `${lastRefreshed.toLocaleTimeString()}`}
                     </span>
                     <button
                       onClick={toggleAutoRefresh}
                       className={`rounded-md px-2 py-1 text-xs font-medium ${
                         isAutoRefreshing
-                          ? "bg-green-100 text-green-700"
-                          : "bg-gray-100 text-gray-700"
+                          ? theme === 'dark'
+                            ? "bg-green-900/30 text-green-300"
+                            : "bg-green-100 text-green-700"
+                          : theme === 'dark'
+                            ? "bg-gray-800 text-gray-300"
+                            : "bg-gray-100 text-gray-700"
                       }`}
                     >
                       {isAutoRefreshing ? "A" : "M"}
@@ -785,15 +805,23 @@ export default function ShopperDashboard() {
                       onClick={toggleHistorical}
                       className={`rounded-md px-2 py-1 text-xs font-medium ${
                         showHistorical
-                          ? "bg-blue-100 text-blue-700"
-                          : "bg-gray-100 text-gray-700"
+                          ? theme === 'dark'
+                            ? "bg-blue-900/30 text-blue-300"
+                            : "bg-blue-100 text-blue-700"
+                          : theme === 'dark'
+                            ? "bg-gray-800 text-gray-300"
+                            : "bg-gray-100 text-gray-700"
                       }`}
                     >
                       {showHistorical ? "All Pending" : "15+ min"}
                     </button>
                     <Button
                       appearance="primary"
-                      className="bg-green-500 text-white"
+                      className={`${
+                        theme === 'dark'
+                          ? 'bg-green-600 text-white hover:bg-green-700'
+                          : 'bg-green-500 text-white hover:bg-green-600'
+                      }`}
                       onClick={loadOrders}
                       size="sm"
                     >
@@ -807,8 +835,12 @@ export default function ShopperDashboard() {
                     onClick={() => handleSortChange("newest")}
                     className={`rounded px-3 py-1 text-xs ${
                       sortBy === "newest"
-                        ? "bg-green-600 text-white"
-                        : "bg-gray-200 text-gray-800"
+                        ? theme === 'dark'
+                          ? "bg-green-600 text-white"
+                          : "bg-green-600 text-white"
+                        : theme === 'dark'
+                          ? "bg-gray-800 text-gray-300"
+                          : "bg-gray-200 text-gray-800"
                     }`}
                     title="Orders less than 1 hour old"
                   >
@@ -818,8 +850,12 @@ export default function ShopperDashboard() {
                     onClick={() => handleSortChange("earnings")}
                     className={`rounded px-3 py-1 text-xs ${
                       sortBy === "earnings"
-                        ? "bg-green-600 text-white"
-                        : "bg-gray-200 text-gray-800"
+                        ? theme === 'dark'
+                          ? "bg-green-600 text-white"
+                          : "bg-green-600 text-white"
+                        : theme === 'dark'
+                          ? "bg-gray-800 text-gray-300"
+                          : "bg-gray-200 text-gray-800"
                     }`}
                   >
                     Earnings
@@ -828,8 +864,12 @@ export default function ShopperDashboard() {
                     onClick={() => handleSortChange("distance")}
                     className={`rounded px-3 py-1 text-xs ${
                       sortBy === "distance"
-                        ? "bg-green-600 text-white"
-                        : "bg-gray-200 text-gray-800"
+                        ? theme === 'dark'
+                          ? "bg-green-600 text-white"
+                          : "bg-green-600 text-white"
+                        : theme === 'dark'
+                          ? "bg-gray-800 text-gray-300"
+                          : "bg-gray-200 text-gray-800"
                     }`}
                   >
                     Distance
@@ -838,8 +878,12 @@ export default function ShopperDashboard() {
                     onClick={() => handleSortChange("priority")}
                     className={`rounded px-3 py-1 text-xs ${
                       sortBy === "priority"
-                        ? "bg-purple-600 text-white"
-                        : "bg-gray-200 text-gray-800"
+                        ? theme === 'dark'
+                          ? "bg-purple-600 text-white"
+                          : "bg-purple-600 text-white"
+                        : theme === 'dark'
+                          ? "bg-gray-800 text-gray-300"
+                          : "bg-gray-200 text-gray-800"
                     }`}
                     title="All orders by priority level, including older orders"
                   >
@@ -849,7 +893,9 @@ export default function ShopperDashboard() {
 
                 {/* Filtering info message */}
                 <div className="mb-4 px-4 md:hidden">
-                  <p className="text-xs text-gray-500">
+                  <p className={`text-xs ${
+                    theme === 'dark' ? 'text-gray-400' : 'text-gray-500'
+                  }`}>
                     {!isOnline
                       ? "Go online to see available orders"
                       : sortBy === "newest"
@@ -863,14 +909,18 @@ export default function ShopperDashboard() {
 
                 {isLoading ? (
                   <div className="space-y-4 px-1">
-                    <Panel bordered className="h-[180px]">
+                    <Panel bordered className={`h-[180px] ${
+                      theme === 'dark' ? 'bg-gray-800 text-gray-100' : ''
+                    }`}>
                       <Placeholder.Paragraph rows={3} active />
                       <div className="mt-4 flex justify-between">
                         <Placeholder.Graph active width={70} height={24} />
                         <Placeholder.Graph active width={120} height={24} />
                       </div>
                     </Panel>
-                    <Panel bordered className="h-[180px]">
+                    <Panel bordered className={`h-[180px] ${
+                      theme === 'dark' ? 'bg-gray-800 text-gray-100' : ''
+                    }`}>
                       <Placeholder.Paragraph rows={3} active />
                       <div className="mt-4 flex justify-between">
                         <Placeholder.Graph active width={70} height={24} />
@@ -879,17 +929,25 @@ export default function ShopperDashboard() {
                     </Panel>
                   </div>
                 ) : !isOnline ? (
-                  <div className="py-8 text-center">
+                  <div className={`py-8 text-center ${
+                    theme === 'dark' ? 'text-gray-100' : ''
+                  }`}>
                     <h3 className="mb-2 text-base font-medium">
                       You&apos;re Currently Offline
                     </h3>
-                    <p className="mb-4 text-sm text-gray-500">
+                    <p className={`mb-4 ${
+                      theme === 'dark' ? 'text-gray-400' : 'text-gray-500'
+                    }`}>
                       To see available orders, please go online first by
                       enabling your location.
                     </p>
                     <Button
                       appearance="primary"
-                      className="bg-green-500 text-white"
+                      className={`${
+                        theme === 'dark'
+                          ? 'bg-green-600 text-white hover:bg-green-700'
+                          : 'bg-green-500 text-white'
+                      }`}
                       onClick={() =>
                         window.dispatchEvent(new Event("toggleGoLive"))
                       }
@@ -897,7 +955,9 @@ export default function ShopperDashboard() {
                     >
                       Go Online
                     </Button>
-                    <p className="mt-4 text-xs text-gray-400">
+                    <p className={`mt-4 text-xs ${
+                      theme === 'dark' ? 'text-gray-500' : 'text-gray-400'
+                    }`}>
                       You&apos;ll be asked to allow location access
                     </p>
                   </div>
@@ -912,8 +972,10 @@ export default function ShopperDashboard() {
                     ))}
                   </div>
                 ) : (
-                  <div className="py-8 text-center">
-                    <p className="text-gray-500">
+                  <div className={`py-8 text-center ${
+                    theme === 'dark' ? 'text-gray-100' : ''
+                  }`}>
+                    <p className={theme === 'dark' ? 'text-gray-400' : 'text-gray-500'}>
                       {showHistorical
                         ? "No pending orders available."
                         : "No orders pending for 15+ minutes."}
@@ -923,7 +985,9 @@ export default function ShopperDashboard() {
               </div>
             ) : (
               <div className="flex items-center justify-between px-4">
-                <p className="text-sm text-gray-500">
+                <p className={`text-sm ${
+                  theme === 'dark' ? 'text-gray-400' : 'text-gray-500'
+                }`}>
                   {!isOnline
                     ? "Go online to see available orders"
                     : `Available Orders: ${sortedOrders.length}`}
