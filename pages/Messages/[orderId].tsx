@@ -524,7 +524,7 @@ export default function ChatPage() {
               </Button>
             </form>
           </div>
-        </div>
+            </div>
 
         {/* Order Details Section - Only visible on desktop */}
         <div className="hidden border-l border-gray-200 dark:border-gray-700 lg:block lg:w-96">
@@ -533,7 +533,7 @@ export default function ChatPage() {
               <h2 className="mb-4 text-lg font-semibold text-gray-900 dark:text-white">Order Details</h2>
               
               <div className="space-y-4">
-                <div>
+                  <div>
                   <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400">Status</h3>
                   <p className="text-gray-900 dark:text-white">
                     {order.status.charAt(0).toUpperCase() + order.status.slice(1)}
@@ -543,12 +543,12 @@ export default function ChatPage() {
                 <div>
                   <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400">Total</h3>
                   <p className="text-gray-900 dark:text-white">{formatCurrency(order.total)}</p>
-                </div>
+              </div>
 
                 <div>
                   <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400">Delivery Address</h3>
                   <p className="text-gray-900 dark:text-white">{order.delivery_address}</p>
-                </div>
+              </div>
 
                 {shopper && (
                   <div>
@@ -567,7 +567,7 @@ export default function ChatPage() {
               </div>
             </div>
           )}
-        </div>
+          </div>
       </div>
     </div>
   );

@@ -6,6 +6,7 @@ import "leaflet/dist/leaflet.css";
 import { Loader, toaster, Message, Button } from "rsuite";
 import "rsuite/dist/rsuite.min.css";
 import { formatCurrency } from "../../../lib/formatCurrency";
+import { useTheme } from "../../../context/ThemeContext";
 
 interface MapSectionProps {
   mapLoaded: boolean;
@@ -104,6 +105,7 @@ export default function MapSection({
   availableOrders,
   isInitializing = false,
 }: MapSectionProps) {
+  const { theme } = useTheme();
   const mapRef = useRef<HTMLDivElement | null>(null);
   const [shops, setShops] = useState<Shop[]>([]);
   const [pendingOrders, setPendingOrders] = useState<PendingOrder[]>([]);
@@ -120,6 +122,40 @@ export default function MapSection({
   const [isActivelyTracking, setIsActivelyTracking] = useState(false);
   // Track active notification types to prevent duplicates
   const activeToastTypesRef = useRef<Set<string>>(new Set());
+
+  // Map style URLs using OpenStreetMap tiles with natural colors
+  const mapStyles = {
+    light: "https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png",
+    dark: "https://tiles.stadiamaps.com/tiles/alidade_smooth_dark/{z}/{x}/{y}{r}.png"
+  };
+
+  // Function to update map style based on theme
+  const updateMapStyle = () => {
+    if (mapInstanceRef.current) {
+      try {
+        mapInstanceRef.current.eachLayer((layer) => {
+          if (layer instanceof L.TileLayer) {
+            mapInstanceRef.current?.removeLayer(layer);
+          }
+        });
+        
+        L.tileLayer(mapStyles[theme], {
+          maxZoom: 19,
+          minZoom: 3,
+          attribution: '' // Remove attribution
+        }).addTo(mapInstanceRef.current);
+      } catch (error) {
+        console.error("Error updating map style:", error);
+      }
+    }
+  };
+
+  // Add theme effect
+  useEffect(() => {
+    if (mapInstanceRef.current && mapLoaded) {
+      updateMapStyle();
+    }
+  }, [theme, mapLoaded]);
 
   // Function to get cookies as an object
   const getCookies = () => {
@@ -934,66 +970,49 @@ export default function MapSection({
     return () => window.removeEventListener("toggleGoLive", onToggle);
   }, [handleGoLive]);
 
-  // Add the map initialization useEffect
+  // Main map initialization effect
   useEffect(() => {
     if (!mapRef.current || !mapLoaded) return;
 
-    // Clear any existing map instance first to prevent container reuse
-    if (mapInstanceRef.current) {
       try {
-        console.log("Cleaning up existing map instance...");
+      // Cleanup existing map
+      if (mapInstanceRef.current) {
         mapInstanceRef.current.remove();
         mapInstanceRef.current = null;
-      } catch (err) {
-        console.error("Error cleaning up map:", err);
       }
-    }
 
-    // We need to give the DOM time to fully clean up before creating a new map
-    // Using a small delay prevents container reuse errors
-    let initTimeout = setTimeout(() => {
-      try {
-        console.log("Creating new map instance...");
-        if (!mapRef.current) {
-          console.error("Map container is no longer available");
-          return;
-        }
-
-        // Create the base map
+      // Create new map instance
         const map = L.map(mapRef.current, {
           center: [-1.9706, 30.1044],
           zoom: 14,
-          minZoom: 10,
-          maxBounds: [
-            [-2.8, 28.8],
-            [-1.0, 31.5],
-          ],
-          scrollWheelZoom: false,
-          attributionControl: false,
-        });
+        minZoom: 3,
+        maxZoom: 19,
+        scrollWheelZoom: true,
+        attributionControl: false, // Disable attribution control
+      });
 
-        console.log("Map created, adding base layer...");
+      // Store map instance
         mapInstanceRef.current = map;
 
-        // Add base layer
-        L.tileLayer(
-          "https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png",
-          {
-            // attributionControl disabled, no attribution shown
-          }
-        ).addTo(map);
+      // Add initial tile layer without attribution
+      L.tileLayer(mapStyles[theme], {
+        maxZoom: 19,
+        minZoom: 3,
+        attribution: '' // Remove attribution
+      }).addTo(map);
 
-        // Initialize user marker but don't add it yet
+      // Initialize user marker with improved dark theme styling
         const userIconHtml = `
       <div style="
-        background: white;
-        border: 2px solid #3b82f6;
+          background: ${theme === 'dark' ? '#1f2937' : 'white'};
+          border: 2px solid ${theme === 'dark' ? '#60a5fa' : '#3b82f6'};
         border-radius: 50%;
         width: 32px;
         height: 32px;
         display: flex;
         align-items: center;
         justify-content: center;
+          box-shadow: 0 2px 4px ${theme === 'dark' ? 'rgba(0,0,0,0.3)' : 'rgba(0,0,0,0.1)'};
       ">
         <span style="font-size: 16px;">👤</span>
       </div>
@@ -1011,454 +1030,32 @@ export default function MapSection({
           icon: userIcon,
         });
 
-        // Sequence the operations with delays to ensure map is stable
-        initMapSequence(map);
-      } catch (error) {
-        console.error("Error initializing map:", error);
-      }
-    }, 300); // Significant delay to ensure DOM is ready
+      // Check for saved location in cookies
+      const cookieMap = getCookies();
+      if (cookieMap["user_latitude"] && cookieMap["user_longitude"]) {
+        const lat = parseFloat(cookieMap["user_latitude"]);
+        const lng = parseFloat(cookieMap["user_longitude"]);
 
-    // Sequenced initialization with timeouts between each step
-    const initMapSequence = (map: L.Map) => {
-      try {
-        // Step 1: Check for cookies and set user location
-        console.log("Setting up initial map position...");
-        const initCookies = getCookies();
-
-        if (initCookies["user_latitude"] && initCookies["user_longitude"]) {
-          const lat = parseFloat(initCookies["user_latitude"]);
-          const lng = parseFloat(initCookies["user_longitude"]);
-
+        if (!isNaN(lat) && !isNaN(lng)) {
+          console.log("Setting initial position from cookies:", { lat, lng });
           if (userMarkerRef.current) {
             userMarkerRef.current.setLatLng([lat, lng]);
-
-            try {
               if (isOnline) {
-                map.setView([lat, lng], 16);
                 userMarkerRef.current.addTo(map);
-              } else {
-                map.setView([-1.9706, 30.1044], 14);
+              map.setView([lat, lng], 16);
               }
-            } catch (viewError) {
-              console.error("Error setting initial view:", viewError);
             }
           }
         }
 
-        // Wait before loading shop markers
-        let shopTimeout = setTimeout(() => loadShopMarkers(map), 500);
+      // Initialize map sequence
+      initMapSequence(map);
 
-        // Clean up timeout
-        return () => {
-          clearTimeout(shopTimeout);
-        };
       } catch (error) {
-        console.error("Error in map sequence:", error);
-      }
-    };
+      console.error("Error initializing map:", error);
+    }
 
-    // Load shop markers with delay and safety checks
-    const loadShopMarkers = (map: L.Map) => {
-      console.log("Starting to load shop markers...");
-
-      // Safety check that the map is still valid
-      if (!map || !mapRef.current || !document.body.contains(mapRef.current)) {
-        console.warn("Map no longer valid, skipping shop markers");
-        return;
-      }
-
-      fetch("/api/shopper/shops")
-        .then((res) => res.json())
-        .then((data: Shop[]) => {
-          setShops(data);
-          console.log(`Loaded ${data.length} shops, adding markers...`);
-
-          // Safety check again before processing
-          if (
-            !map ||
-            !mapRef.current ||
-            !document.body.contains(mapRef.current)
-          ) {
-            console.warn("Map no longer valid before adding shop markers");
-            return;
-          }
-
-          try {
-            // First add all shop markers
-            data.forEach((shop) => {
-              try {
-                const lat = parseFloat(shop.latitude);
-                const lng = parseFloat(shop.longitude);
-
-                if (isNaN(lat) || isNaN(lng)) {
-                  console.warn(
-                    `Invalid coordinates for shop ${shop.name}, skipping marker`
-                  );
-                  return;
-                }
-
-                const shopIconHtml = `
-            <img src="https://static-00.iconduck.com/assets.00/shop-icon-2048x1878-qov4lrv1.png" style="
-              width: 32px;
-              height: 32px;
-              filter: ${shop.is_active ? "none" : "grayscale(100%)"};
-            " />
-          `;
-
-                // Create the marker but defer adding to the map
-                try {
-                  const shopIcon = L.divIcon({
-                    html: shopIconHtml,
-                    className: "",
-                    iconSize: [32, 32],
-                    iconAnchor: [16, 32],
-                    popupAnchor: [0, -32],
-                  });
-
-                  // Create marker and add directly - with safety check
-                  if (
-                    map &&
-                    map.getContainer() &&
-                    document.body.contains(map.getContainer())
-                  ) {
-                    const marker = L.marker([lat, lng], { icon: shopIcon });
-                    marker.addTo(map);
-                    marker.bindPopup(
-                      `${shop.name}${shop.is_active ? "" : " (Disabled)"}`
-                    );
-                  }
-                } catch (markerError) {
-                  console.error(
-                    `Error creating shop marker for ${shop.name}:`,
-                    markerError
-                  );
-                }
-              } catch (error) {
-                console.error(`Error processing shop ${shop.name}:`, error);
-              }
-            });
-
-            // Then after shop markers are done, load pending orders with delay
-            let pendingTimeout = setTimeout(() => loadPendingOrders(map), 300);
-
-            return () => {
-              clearTimeout(pendingTimeout);
-            };
-          } catch (error) {
-            console.error("Error processing shop markers:", error);
-          }
-        })
-        .catch((err) => console.error("Shop fetch error:", err));
-    };
-
-    // Load pending orders with delay and safety checks
-    const loadPendingOrders = (map: L.Map) => {
-      console.log("Starting to load pending orders...");
-
-      // Skip if offline or map is no longer valid
-      if (
-        !isOnline ||
-        !map ||
-        !mapRef.current ||
-        !document.body.contains(mapRef.current)
-      ) {
-        console.log("Map no longer valid or offline, skipping pending orders");
-        return;
-      }
-
-      fetch("/api/shopper/pendingOrders")
-        .then((res) => res.json())
-        .then((data: PendingOrder[]) => {
-          setPendingOrders(data);
-          console.log(
-            `Loaded ${data.length} pending orders, adding markers...`
-          );
-
-          // Check map is still valid
-          if (
-            !map ||
-            !mapRef.current ||
-            !document.body.contains(mapRef.current)
-          ) {
-            console.warn(
-              "Map no longer valid before adding pending order markers"
-            );
-            return;
-          }
-
-          try {
-            // Add pending order markers
-            data.forEach((order) => {
-              try {
-                // Use shop coordinates instead of delivery address
-                const lat = order.shopLat;
-                const lng = order.shopLng;
-
-                if (isNaN(lat) || isNaN(lng)) {
-                  console.warn(
-                    `Invalid coordinates for pending order ${order.id}, skipping marker`
-                  );
-                  return;
-                }
-
-                // time since creation
-                const created = new Date(order.createdAt);
-                const diffMs = Date.now() - created.getTime();
-                const diffMins = Math.floor(diffMs / 60000);
-                const timeStr =
-                  diffMins >= 60
-                    ? `${Math.floor(diffMins / 60)}h ${diffMins % 60}m ago`
-                    : `${diffMins} mins ago`;
-
-                // distance between shop and delivery address
-                const distKm = getDistanceKm(
-                  order.shopLat,
-                  order.shopLng,
-                  order.latitude,
-                  order.longitude
-                );
-                const distanceStr = `${Math.round(distKm * 10) / 10} km`;
-                const earningsStr = formatCurrency(order.earnings);
-
-                // Use purple color for older pending orders
-                const pendingIcon = L.divIcon({
-                  html: `<div style="background:#fff;border:2px solid #8b5cf6;border-radius:12px;padding:4px 12px;font-size:12px;color:#8b5cf6;white-space:nowrap;">${earningsStr}</div>`,
-                  className: "",
-                  iconSize: [90, 30],
-                  iconAnchor: [60, 15],
-                  popupAnchor: [0, -15],
-                });
-
-                // Safely add the marker with container check
-                if (
-                  map &&
-                  map.getContainer() &&
-                  document.body.contains(map.getContainer())
-                ) {
-                  const marker = L.marker([lat, lng], {
-                    icon: pendingIcon,
-                    zIndexOffset: 1000,
-                  });
-
-                  marker.addTo(map);
-
-                  // Enhanced popup with icons and flex layout
-                  const popupContent = `
-                    <div style="font-size:14px; line-height:1.4; min-width:200px;">
-                      <div style="display:flex;align-items:center;margin-bottom:4px;">
-                        <span style="margin-right:6px;">🆔</span><strong>${order.id}</strong>
-                      </div>
-                      <div style="display:flex;align-items:center;margin-bottom:4px;">
-                        <span style="margin-right:6px;">🏪</span><span>${order.shopName}</span>
-                      </div>
-                      <div style="display:flex;align-items:center;margin-bottom:4px;">
-                        <span style="margin-right:6px;">📍</span><span>${order.shopAddress}</span>
-                      </div>
-                      <div style="display:flex;align-items:center;margin-bottom:4px;">
-                        <span style="margin-right:6px;">⏱️</span><span>${timeStr}</span>
-                      </div>
-                      <div style="display:flex;align-items:center;margin-bottom:4px;">
-                        <span style="margin-right:6px;">📏</span><span>Distance: ${distanceStr}</span>
-                      </div>
-                      <div style="display:flex;align-items:center;margin-bottom:4px;">
-                        <span style="margin-right:6px;">🛒</span><span>Items: ${order.itemsCount}</span>
-                      </div>
-                      <div style="display:flex;align-items:center;margin-bottom:4px;">
-                        <span style="margin-right:6px;">🚚</span><span>Deliver to: ${order.addressStreet}, ${order.addressCity}</span>
-                      </div>
-                      <div style="display:flex;align-items:center;">
-                        <span style="margin-right:6px;">💰</span><span>Estimated Earnings: ${earningsStr}</span>
-                      </div>
-                      <button id="accept-batch-${order.id}" style="margin-top:8px;padding:6px 12px;background:#10b981;color:#fff;border:none;border-radius:4px;cursor:pointer;">
-                        Accept Batch
-                      </button>
-                    </div>
-                  `;
-
-                  // Bind popup with max width
-                  marker.bindPopup(popupContent, { maxWidth: 250 });
-                  attachAcceptHandler(marker, order.id, map);
-                }
-              } catch (error) {
-                console.error(
-                  `Error adding pending order marker for ${order.id}:`,
-                  error
-                );
-              }
-            });
-
-            // Finally load available orders
-            let availableTimeout = setTimeout(
-              () => loadAvailableOrders(map),
-              300
-            );
-
-            return () => {
-              clearTimeout(availableTimeout);
-            };
-          } catch (error) {
-            console.error("Error processing pending orders:", error);
-          }
-        })
-        .catch((err) => console.error("Pending orders fetch error:", err));
-    };
-
-    // Load available orders with delay and safety checks
-    const loadAvailableOrders = (map: L.Map) => {
-      console.log("Starting to load available orders...");
-
-      // Skip if offline or map is no longer valid
-      if (
-        !isOnline ||
-        !availableOrders ||
-        availableOrders.length === 0 ||
-        !map ||
-        !mapRef.current ||
-        !document.body.contains(mapRef.current)
-      ) {
-        console.log(
-          "Map no longer valid or no available orders, skipping available orders"
-        );
-        return;
-      }
-
-      console.log(`Processing ${availableOrders.length} available orders...`);
-
-      try {
-        // Add available order markers
-        availableOrders.forEach((order) => {
-          try {
-            // Skip if missing coordinates
-            if (
-              !order.shopLatitude ||
-              !order.shopLongitude ||
-              isNaN(order.shopLatitude) ||
-              isNaN(order.shopLongitude)
-            ) {
-              console.warn(
-                `Missing coordinates for available order ${order.id}, skipping marker`
-              );
-              return;
-            }
-
-            // Safety check before creating the marker
-            if (
-              !map ||
-              !map.getContainer() ||
-              !document.body.contains(map.getContainer())
-            ) {
-              console.warn(
-                "Map no longer valid before adding available order marker"
-              );
-              return;
-            }
-
-            const badgeColor = getOrderTimeBadgeColor(order.createdAt);
-            const earningsStr = order.estimatedEarnings;
-
-            // Earnings badge icon with color based on time
-            const orderIcon = L.divIcon({
-              html: `<div style="background:#fff;border:2px solid ${badgeColor};border-radius:12px;padding:4px 12px;font-size:12px;color:${badgeColor};white-space:nowrap;">${earningsStr}</div>`,
-              className: "",
-              iconSize: [90, 30],
-              iconAnchor: [60, 15],
-              popupAnchor: [0, -15],
-            });
-
-            // Create the marker with safe add
-            const marker = L.marker([order.shopLatitude, order.shopLongitude], {
-              icon: orderIcon,
-              zIndexOffset: 1000,
-            });
-
-            // Safely add to map
-            marker.addTo(map);
-
-            // Calculate time since creation based on createdAt
-            const timeStr = order.createdAt;
-
-            // Calculate distance between shop and delivery address
-            let distanceStr = "Unknown";
-            if (
-              order.shopLatitude &&
-              order.shopLongitude &&
-              order.customerLatitude &&
-              order.customerLongitude
-            ) {
-              const distKm = getDistanceKm(
-                order.shopLatitude,
-                order.shopLongitude,
-                order.customerLatitude,
-                order.customerLongitude
-              );
-              distanceStr = `${Math.round(distKm * 10) / 10} km`;
-            }
-
-            // Enhanced popup with icons and flex layout
-            const popupContent = `
-            <div style="font-size:14px; line-height:1.4; min-width:200px;">
-              <div style="display:flex;align-items:center;margin-bottom:4px;">
-                <span style="margin-right:6px;">🆔</span><strong>${order.id}</strong>
-              </div>
-              <div style="display:flex;align-items:center;margin-bottom:4px;">
-                <span style="margin-right:6px;">🏪</span><span>${order.shopName}</span>
-              </div>
-              <div style="display:flex;align-items:center;margin-bottom:4px;">
-                <span style="margin-right:6px;">📍</span><span>${order.shopAddress}</span>
-              </div>
-              <div style="display:flex;align-items:center;margin-bottom:4px;">
-                <span style="margin-right:6px;">⏱️</span><span>${timeStr}</span>
-              </div>
-              <div style="display:flex;align-items:center;margin-bottom:4px;">
-                <span style="margin-right:6px;">📏</span><span>Distance: ${distanceStr}</span>
-              </div>
-              <div style="display:flex;align-items:center;margin-bottom:4px;">
-              <span style="margin-right:6px;">🛒</span><span>Items: ${order.items}</span>
-              </div>
-              <div style="display:flex;align-items:center;margin-bottom:4px;">
-              <span style="margin-right:6px;">🚚</span><span>Deliver to: ${order.customerAddress}</span>
-              </div>
-              <div style="display:flex;align-items:center;">
-                <span style="margin-right:6px;">💰</span><span>Estimated Earnings: ${earningsStr}</span>
-              </div>
-              <button id="accept-batch-${order.id}" style="margin-top:8px;padding:6px 12px;background:#10b981;color:#fff;border:none;border-radius:4px;cursor:pointer;">
-                Accept Batch
-              </button>
-            </div>
-          `;
-
-            // Bind popup with max width
-            marker.bindPopup(popupContent, { maxWidth: 250 });
-            attachAcceptHandler(marker, order.id, map);
-          } catch (error) {
-            console.error(`Error adding available order marker:`, error);
-          }
-        });
-      } catch (error) {
-        console.error("Error processing available orders:", error);
-      }
-    };
-
-    // Cleanup on unmount or deps change
-    return () => {
-      clearTimeout(initTimeout);
-
-      if (watchIdRef.current !== null) {
-        navigator.geolocation.clearWatch(watchIdRef.current);
-        watchIdRef.current = null;
-      }
-
-      if (mapInstanceRef.current) {
-        try {
-          console.log("Cleaning up map on unmount");
-          mapInstanceRef.current.remove();
-          mapInstanceRef.current = null;
-        } catch (error) {
-          console.error("Error cleaning up map:", error);
-        }
-      }
-    };
-  }, [mapLoaded, availableOrders, isOnline]);
+  }, [mapLoaded, theme]); // Remove availableOrders and isOnline from dependencies
 
   // Get the user's current position once
   const getCurrentPosition = () => {
@@ -1755,11 +1352,140 @@ export default function MapSection({
     );
   };
 
+  // Function to initialize map sequence
+  const initMapSequence = (map: L.Map) => {
+    try {
+      // Load shop markers
+      fetch("/api/shopper/shops")
+        .then((res) => res.json())
+        .then((data: Shop[]) => {
+          setShops(data);
+          
+          data.forEach((shop) => {
+            try {
+              const lat = parseFloat(shop.latitude);
+              const lng = parseFloat(shop.longitude);
+
+              if (isNaN(lat) || isNaN(lng)) {
+                console.warn(`Invalid coordinates for shop ${shop.name}`);
+                return;
+              }
+
+              const shopIconHtml = `
+                <img src="https://static-00.iconduck.com/assets.00/shop-icon-2048x1878-qov4lrv1.png" 
+                  style="width: 32px; height: 32px; filter: ${shop.is_active ? "none" : "grayscale(100%)"};" 
+                />
+              `;
+
+              const shopIcon = L.divIcon({
+                html: shopIconHtml,
+                className: "",
+                iconSize: [32, 32],
+                iconAnchor: [16, 32],
+                popupAnchor: [0, -32],
+              });
+
+              const marker = L.marker([lat, lng], { icon: shopIcon });
+              marker.addTo(map);
+              marker.bindPopup(`${shop.name}${shop.is_active ? "" : " (Disabled)"}`);
+            } catch (error) {
+              console.error(`Error adding shop marker for ${shop.name}:`, error);
+            }
+          });
+
+          // Load pending orders after shops are loaded
+          if (isOnline) {
+            fetch("/api/shopper/pendingOrders")
+              .then((res) => res.json())
+              .then((orders: PendingOrder[]) => {
+                setPendingOrders(orders);
+                orders.forEach((order) => renderPendingOrderMarker(order, map));
+              })
+              .catch((err) => console.error("Error loading pending orders:", err));
+          }
+
+          // Load available orders
+          if (isOnline && availableOrders?.length > 0) {
+            availableOrders.forEach((order) => {
+              // Check for both shop coordinates
+              if (order.shopLatitude && order.shopLongitude) {
+                const badgeColor = getOrderTimeBadgeColor(order.createdAt);
+                const orderIcon = L.divIcon({
+                  html: `<div style="background:#fff;border:2px solid ${badgeColor};border-radius:12px;padding:4px 12px;font-size:12px;color:${badgeColor};white-space:nowrap;z-index:1000;">${order.estimatedEarnings}</div>`,
+                  className: "",
+                  iconSize: [90, 30],
+                  iconAnchor: [60, 15],
+                  popupAnchor: [0, -15],
+                });
+
+                const marker = L.marker(
+                  [order.shopLatitude, order.shopLongitude],
+                  { icon: orderIcon, zIndexOffset: 2000 }
+                );
+
+                // Ensure marker is added to map with proper z-index
+                if (map && typeof map.addLayer === 'function') {
+                  marker.addTo(map);
+                }
+
+                const distanceStr = order.distance || "Unknown";
+                const popupContent = `
+                  <div style="font-size:14px; line-height:1.4; min-width:200px;">
+                    <div style="display:flex;align-items:center;margin-bottom:4px;">
+                      <span style="margin-right:6px;">🆔</span><strong>${order.id}</strong>
+                    </div>
+                    <div style="display:flex;align-items:center;margin-bottom:4px;">
+                      <span style="margin-right:6px;">🏪</span><span>${order.shopName}</span>
+                    </div>
+                    <div style="display:flex;align-items:center;margin-bottom:4px;">
+                      <span style="margin-right:6px;">📍</span><span>${order.shopAddress}</span>
+                    </div>
+                    <div style="display:flex;align-items:center;margin-bottom:4px;">
+                      <span style="margin-right:6px;">⏱️</span><span>${order.createdAt}</span>
+                    </div>
+                    <div style="display:flex;align-items:center;margin-bottom:4px;">
+                      <span style="margin-right:6px;">📏</span><span>Distance: ${distanceStr}</span>
+                    </div>
+                    <div style="display:flex;align-items:center;margin-bottom:4px;">
+                      <span style="margin-right:6px;">🛒</span><span>Items: ${order.items}</span>
+                    </div>
+                    <div style="display:flex;align-items:center;margin-bottom:4px;">
+                      <span style="margin-right:6px;">🚚</span><span>Deliver to: ${order.customerAddress}</span>
+                    </div>
+                    <div style="display:flex;align-items:center;">
+                      <span style="margin-right:6px;">💰</span><span>Estimated Earnings: ${order.estimatedEarnings}</span>
+                    </div>
+                    <button id="accept-batch-${order.id}" style="margin-top:8px;padding:6px 12px;background:#10b981;color:#fff;border:none;border-radius:4px;cursor:pointer;">
+                      Accept Batch
+                    </button>
+                  </div>
+                `;
+
+                marker.bindPopup(popupContent, { maxWidth: 250 });
+                attachAcceptHandler(marker, order.id, map);
+              }
+            });
+          }
+        })
+        .catch((err) => console.error("Error loading shops:", err));
+    } catch (error) {
+      console.error("Error in map sequence:", error);
+    }
+  };
+
   // If the dashboard is initializing, show a simpler loading state
   if (isInitializing) {
     return (
-      <div className="h-[300px] w-full bg-gray-100 md:h-[400px]">
-        {/* Intentionally empty during initialization - parent handles loading UI */}
+      <div className="relative w-full">
+        <div
+          ref={mapRef}
+          className={`h-[calc(100vh-4rem-5.5rem)] md:h-[600px] overflow-hidden rounded-lg ${
+            theme === 'dark' ? 'bg-gray-900' : 'bg-gray-100'
+          }`}
+        />
+        <div className="absolute inset-0 flex items-center justify-center bg-gray-900/50">
+          <Loader size="lg" content="Initializing..." />
+        </div>
       </div>
     );
   }
@@ -1774,13 +1500,17 @@ export default function MapSection({
   }
 
   return (
-    <div className="relative">
+    <div className="relative w-full">
       <div
         ref={mapRef}
-        className="h-[calc(100vh-4rem-3.5rem)] overflow-hidden rounded-lg md:h-[600px]"
+        className={`h-[calc(100vh-4rem-5.5rem)] md:h-[600px] overflow-hidden rounded-lg ${
+          theme === 'dark' ? 'bg-gray-900' : 'bg-gray-100'
+        }`}
       />
       {!mapLoaded && (
-        <div className="absolute inset-0 flex items-center justify-center bg-gray-100">
+        <div className={`absolute inset-0 flex items-center justify-center ${
+          theme === 'dark' ? 'bg-gray-900' : 'bg-gray-100'
+        }`}>
           <Loader size="lg" content="Loading map..." />
         </div>
       )}

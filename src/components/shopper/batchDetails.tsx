@@ -36,6 +36,7 @@ import {
   generateInvoice,
 } from "../../lib/walletTransactions";
 import { useSession } from "next-auth/react";
+import { useTheme } from "../../context/ThemeContext";
 
 // Define interfaces for the order data
 interface BatchDetailsProps {
@@ -52,6 +53,7 @@ export default function BatchDetails({
   const router = useRouter();
   const { data: session } = useSession();
   const { openChat, isDrawerOpen, closeChat, currentChatId } = useChat();
+  const { theme } = useTheme();
 
   const [loading, setLoading] = useState(false);
   const [order, setOrder] = useState<OrderDetailsType | null>(orderData);
@@ -766,505 +768,241 @@ export default function BatchDetails({
   }
 
   return (
-    <div className="max-w-1xl mx-auto p-4">
-      {/* Product Image Modal */}
-      <ProductImageModal
-        open={showImageModal}
-        onClose={() => setShowImageModal(false)}
-        selectedImage={selectedImage}
-        selectedProductName={selectedProductName}
-        currentOrderItem={currentOrderItem}
-      />
-
-      {/* Quantity Confirmation Modal */}
-      <QuantityConfirmationModal
-        open={showQuantityModal}
-        onClose={() => setShowQuantityModal(false)}
-        currentItem={currentItem}
-        foundQuantity={foundQuantity}
-        setFoundQuantity={setFoundQuantity}
-        onConfirm={confirmFoundQuantity}
-      />
-
-      {/* MoMo Payment Modal */}
-      <PaymentModal
-        open={showPaymentModal}
-        onClose={() => setShowPaymentModal(false)}
-        onSubmit={handlePaymentSubmit}
-        momoCode={momoCode}
-        setMomoCode={setMomoCode}
-        privateKey={privateKey}
-        orderAmount={calculateFoundItemsTotal()}
-        serviceFee={parseFloat(order?.serviceFee || "0")}
-        deliveryFee={parseFloat(order?.deliveryFee || "0")}
-        paymentLoading={paymentLoading}
-      />
-
-      {/* OTP Verification Modal */}
-      <OtpVerificationModal
-        open={showOtpModal}
-        onClose={() => setShowOtpModal(false)}
-        onVerify={handleVerifyOtp}
-        otp={otp}
-        setOtp={setOtp}
-        loading={otpVerifyLoading}
-      />
-
-      {/* Delivery Confirmation Modal */}
-      <DeliveryConfirmationModal
-        open={showInvoiceModal}
-        onClose={() => setShowInvoiceModal(false)}
-        invoiceData={invoiceData}
-        loading={invoiceLoading}
-      />
-
-      {/* Chat Drawer - will only show on desktop when chat is open */}
-      {isDrawerOpen &&
-        currentChatId === order?.id &&
-        order.status !== "delivered" && (
-          <ChatDrawer
-            isOpen={isDrawerOpen}
-            onClose={closeChat}
-            orderId={order.id}
-            customerId={order.user.id}
-            customerName={order.user.name}
-            customerAvatar={order.user.profile_picture}
-          />
-        )}
-
-      <div className="mb-4 flex items-center justify-between">
-        <Button
-          appearance="link"
-          onClick={() => router.back()}
-          className="flex items-center text-gray-600"
-        >
-          <span className="mr-2">
-            <svg
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              className="h-4 w-4"
-            >
-              <path d="M19 12H5M12 19l-7-7 7-7" />
-            </svg>
-          </span>
-          Back
-        </Button>
-        <div>{getStatusTag(order.status)}</div>
+    <div className={`rounded-lg border p-6 shadow-sm transition-colors duration-200 ${
+      theme === 'dark' 
+        ? 'border-gray-700 bg-gray-800 text-gray-100' 
+        : 'border-gray-200 bg-white text-gray-900'
+    }`}>
+      <div className="mb-6">
+        <h2 className={`text-2xl font-bold ${
+          theme === 'dark' ? 'text-gray-100' : 'text-gray-900'
+        }`}>
+          Batch #{order.id}
+        </h2>
+        <p className={`mt-1 text-sm ${
+          theme === 'dark' ? 'text-gray-400' : 'text-gray-500'
+        }`}>
+          Created {order.createdAt}
+        </p>
       </div>
 
-      <Panel
-        bordered
-        header={`Order #${order.OrderID || order.id.slice(0, 8)}`}
-        shaded
-      >
-        <Steps current={currentStep} className="mb-8">
-          <Steps.Item title="Accepted" />
-          <Steps.Item title="Shopping" />
-          <Steps.Item title="On The Way" />
-          <Steps.Item title="Delivered" />
-        </Steps>
-
-        <div className="mb-6 grid grid-cols-1 gap-6 md:grid-cols-2">
-          {/* Shop Information */}
-          <div className="rounded-lg border bg-white p-4">
-            <h3 className="mb-2 text-lg font-bold">Shop Details</h3>
-            <div className="flex items-center">
-              <div className="mr-3 h-12 w-12 flex-shrink-0 overflow-hidden rounded-full bg-gray-100">
-                {order.shop.image ? (
-                  <Image
-                    src={order.shop.image}
-                    alt={order.shop.name}
-                    width={48}
-                    height={48}
-                    className="h-full w-full object-cover"
-                  />
-                ) : (
-                  <div className="flex h-full w-full items-center justify-center bg-gray-200 text-gray-400">
-                    <svg
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth="2"
-                      className="h-6 w-6"
-                    >
-                      <path d="M3 3h18v18H3zM16 8h.01M8 16h.01M16 16h.01" />
-                    </svg>
-                  </div>
-                )}
-              </div>
-              <div>
-                <h4 className="font-medium">{order.shop.name}</h4>
-                <p className="text-sm text-gray-500">{order.shop.address}</p>
-              </div>
-            </div>
-            <Link
-              href={`https://maps.google.com?q=${order.shop.address}`}
-              target="_blank"
-            >
-              <Button appearance="ghost" className="mt-3">
-                <span className="mr-1">
-                  <svg
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="2"
-                    className="h-4 w-4"
-                  >
-                    <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z" />
-                    <circle cx="12" cy="10" r="3" />
-                  </svg>
-                </span>
-                Directions
-              </Button>
-            </Link>
-          </div>
-
-          {/* Customer Information */}
-          <div className="rounded-lg border bg-white p-4">
-            <h3 className="mb-2 text-lg font-bold">Customer Details</h3>
-            <div className="flex items-center justify-between">
-              <div className="flex items-center">
-                <div className="mr-3 h-12 w-12 flex-shrink-0 overflow-hidden rounded-full bg-gray-100">
-                  {order.user.profile_picture ? (
-                    <Image
-                      src={order.user.profile_picture}
-                      alt={order.user.name}
-                      width={48}
-                      height={48}
-                      className="h-full w-full object-cover"
-                    />
-                  ) : (
-                    <div className="flex h-full w-full items-center justify-center bg-gray-200 text-gray-400">
-                      <svg
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="currentColor"
-                        strokeWidth="2"
-                        className="h-6 w-6"
-                      >
-                        <circle cx="12" cy="8" r="4" />
-                        <path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2" />
-                      </svg>
-                    </div>
-                  )}
-                </div>
-                <div>
-                  <h4 className="font-medium">{order.user.name}</h4>
-                  <p className="text-sm text-gray-500">{order.user.email}</p>
-                </div>
-              </div>
-
-              {/* Message Button - disabled if order is delivered */}
-              {order.status !== "delivered" ? (
-                <Button
-                  appearance="ghost"
-                  className="flex items-center text-blue-600"
-                  onClick={handleChatClick}
-                >
-                  <svg
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="2"
-                    className="mr-1 h-4 w-4"
-                  >
-                    <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
-                  </svg>
-                  Message
-                </Button>
-              ) : (
-                <Button
-                  appearance="ghost"
-                  className="flex cursor-not-allowed items-center text-gray-400"
-                  disabled
-                >
-                  <svg
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="2"
-                    className="mr-1 h-4 w-4"
-                  >
-                    <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
-                  </svg>
-                  Chat Closed
-                </Button>
-              )}
-            </div>
-
-            <div className="mt-3">
-              <h4 className="mb-1 text-sm font-medium">Delivery Address:</h4>
-              <p className="text-sm text-gray-600">
-                {order.address.street}, {order.address.city}
-                {order.address.postal_code
-                  ? `, ${order.address.postal_code}`
-                  : ""}
-              </p>
-              <Link
-                href={`https://maps.google.com?q=${order.address.street},${order.address.city}`}
-                target="_blank"
+      <div className="mb-8 grid gap-6 md:grid-cols-3">
+        <div className={`rounded-lg p-4 ${
+          theme === 'dark' ? 'bg-gray-700' : 'bg-gray-50'
+        }`}>
+          <div className="flex items-center">
+            <div className={`mr-3 rounded-full p-2 ${
+              theme === 'dark' ? 'bg-blue-900/20' : 'bg-blue-50'
+            }`}>
+              <svg
+                className={`h-6 w-6 ${
+                  theme === 'dark' ? 'text-blue-400' : 'text-blue-500'
+                }`}
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
               >
-                <Button appearance="ghost" className="mt-2">
-                  <span className="mr-1">
-                    <svg
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth="2"
-                      className="h-4 w-4"
-                    >
-                      <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z" />
-                      <circle cx="12" cy="10" r="3" />
-                    </svg>
-                  </span>
-                  Directions
-                </Button>
-              </Link>
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+              </svg>
+            </div>
+            <div>
+              <p className={`text-sm font-medium ${
+                theme === 'dark' ? 'text-gray-300' : 'text-gray-700'
+              }`}>
+                Status
+              </p>
+              <p className={`text-lg font-semibold ${
+                theme === 'dark' ? 'text-gray-100' : 'text-gray-900'
+              }`}>
+                {order.status}
+              </p>
             </div>
           </div>
         </div>
 
-        {/* Order Items */}
-        {shouldShowOrderDetails() && (
-          <div className="mb-6 rounded-lg border bg-white p-4">
-            <h3 className="mb-3 text-lg font-bold">Order Items</h3>
-            <div className="space-y-4">
-              {order.Order_Items.map((item) => (
-                <div key={item.id} className="flex items-center border-b pb-3">
-                  <div
-                    className="mr-3 h-12 w-12 flex-shrink-0 cursor-pointer overflow-hidden rounded-lg bg-gray-100"
-                    onClick={() => showProductImage(item)}
-                  >
-                    {item.product.image ? (
-                      <Image
-                        src={item.product.image}
-                        alt={item.product.name}
-                        width={48}
-                        height={48}
-                        className="h-full w-full object-cover"
-                      />
-                    ) : (
-                      <div className="flex h-full w-full items-center justify-center bg-gray-200 text-gray-400">
-                        <svg
-                          viewBox="0 0 24 24"
-                          fill="none"
-                          stroke="currentColor"
-                          strokeWidth="2"
-                          className="h-6 w-6"
-                        >
-                          <path d="M9 17h6M9 12h6M9 7h6" />
-                        </svg>
-                      </div>
-                    )}
-                  </div>
-                  <div className="flex-grow">
-                    <p className="font-medium">{item.product.name}</p>
-                    <p className="text-sm text-gray-500">
-                      {formatCurrency(item.price)} × {item.quantity}
-                    </p>
-                    {item.found &&
-                      item.foundQuantity &&
-                      item.foundQuantity < item.quantity && (
-                        <p className="text-xs text-orange-600">
-                          Found: {item.foundQuantity} of {item.quantity}
-                        </p>
-                      )}
-                  </div>
-                  <div className="flex flex-col items-end text-right">
-                    <div className="mb-2 font-bold">
-                      {formatCurrency(item.price * item.quantity)}
-                    </div>
-                    {order.status === "shopping" && (
-                      <Checkbox
-                        checked={item.found || false}
-                        onChange={(_, checked) =>
-                          toggleItemFound(item, checked)
-                        }
-                      >
-                        Found
-                      </Checkbox>
-                    )}
-                  </div>
-                </div>
-              ))}
+        <div className={`rounded-lg p-4 ${
+          theme === 'dark' ? 'bg-gray-700' : 'bg-gray-50'
+        }`}>
+          <div className="flex items-center">
+            <div className={`mr-3 rounded-full p-2 ${
+              theme === 'dark' ? 'bg-green-900/20' : 'bg-green-50'
+            }`}>
+              <svg
+                className={`h-6 w-6 ${
+                  theme === 'dark' ? 'text-green-400' : 'text-green-500'
+                }`}
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+            </div>
+            <div>
+              <p className={`text-sm font-medium ${
+                theme === 'dark' ? 'text-gray-300' : 'text-gray-700'
+              }`}>
+                Earnings
+              </p>
+              <p className={`text-lg font-semibold ${
+                theme === 'dark' ? 'text-green-400' : 'text-green-600'
+              }`}>
+                ${order.earnings}
+              </p>
             </div>
           </div>
-        )}
+        </div>
 
-        {/* Found Items Summary - only show when shopping */}
-        {order.status === "shopping" && (
-          <div className="mb-6 rounded-lg border bg-white p-4">
-            <h3 className="mb-3 text-lg font-bold">Item Status</h3>
-            <div className="space-y-2">
-              <div className="flex flex-wrap gap-2">
-                {order.Order_Items.map((item) => (
-                  <div
-                    key={item.id}
-                    className={`rounded-lg border p-2 ${
-                      item.found
-                        ? "border-green-200 bg-green-50"
-                        : "border-gray-200 bg-gray-50"
-                    }`}
-                  >
-                    <div className="font-medium">{item.product.name}</div>
-                    <div className="text-sm">
-                      {item.found ? (
-                        item.foundQuantity &&
-                        item.foundQuantity < item.quantity ? (
-                          <span className="text-orange-600">
-                            Found: {item.foundQuantity} of {item.quantity}
-                          </span>
-                        ) : (
-                          <span className="text-green-600">
-                            Found: {item.quantity}
-                          </span>
-                        )
-                      ) : (
-                        <span className="text-gray-500">Not found</span>
-                      )}
-                    </div>
-                  </div>
-                ))}
-              </div>
-
-              {!order.Order_Items.some((item) => item.found) && (
-                <div className="mt-4 rounded-md bg-yellow-50 p-3 text-sm text-yellow-700">
-                  <div className="flex">
-                    <div className="flex-shrink-0">
-                      <svg
-                        className="h-5 w-5 text-yellow-400"
-                        viewBox="0 0 20 20"
-                        fill="currentColor"
-                      >
-                        <path
-                          fillRule="evenodd"
-                          d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z"
-                          clipRule="evenodd"
-                        />
-                      </svg>
-                    </div>
-                    <div className="ml-3">
-                      <p>
-                        Please mark items as found to enable the Make Payment
-                        button.
-                      </p>
-                    </div>
-                  </div>
-                </div>
-              )}
+        <div className={`rounded-lg p-4 ${
+          theme === 'dark' ? 'bg-gray-700' : 'bg-gray-50'
+        }`}>
+          <div className="flex items-center">
+            <div className={`mr-3 rounded-full p-2 ${
+              theme === 'dark' ? 'bg-purple-900/20' : 'bg-purple-50'
+            }`}>
+              <svg
+                className={`h-6 w-6 ${
+                  theme === 'dark' ? 'text-purple-400' : 'text-purple-500'
+                }`}
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
+              </svg>
+            </div>
+            <div>
+              <p className={`text-sm font-medium ${
+                theme === 'dark' ? 'text-gray-300' : 'text-gray-700'
+              }`}>
+                Items
+              </p>
+              <p className={`text-lg font-semibold ${
+                theme === 'dark' ? 'text-gray-100' : 'text-gray-900'
+              }`}>
+                {order.items.length} items
+              </p>
             </div>
           </div>
-        )}
+        </div>
+      </div>
 
-        {/* Order Summary */}
-        {shouldShowOrderDetails() && (
-          <div className="mb-6 rounded-lg border bg-white p-4">
-            <h3 className="mb-3 text-lg font-bold">Order Summary</h3>
-            <div className="space-y-2">
-              <div className="flex justify-between">
-                <span>Subtotal</span>
-                <span>
-                  {order.status === "shopping"
-                    ? formatCurrency(calculateFoundTotal())
-                    : formatCurrency(calculateOriginalSubtotal())}
-                </span>
+      <div className="mb-8">
+        <h3 className={`mb-4 text-lg font-semibold ${
+          theme === 'dark' ? 'text-gray-100' : 'text-gray-900'
+        }`}>
+          Locations
+        </h3>
+        <div className="space-y-4">
+          <div className={`rounded-lg p-4 ${
+            theme === 'dark' ? 'bg-gray-700' : 'bg-gray-50'
+          }`}>
+            <div className="flex items-start">
+              <div className={`mr-3 mt-1 rounded-full p-2 ${
+                theme === 'dark' ? 'bg-gray-600' : 'bg-gray-100'
+              }`}>
+                <svg
+                  className={`h-5 w-5 ${
+                    theme === 'dark' ? 'text-gray-300' : 'text-gray-500'
+                  }`}
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                </svg>
               </div>
+              <div>
+                <p className={`font-medium ${
+                  theme === 'dark' ? 'text-gray-100' : 'text-gray-900'
+                }`}>
+                  Pickup Location
+                </p>
+                <p className={`mt-1 text-sm ${
+                  theme === 'dark' ? 'text-gray-400' : 'text-gray-500'
+                }`}>
+                  {order.pickup_location}
+                </p>
+              </div>
+            </div>
+          </div>
 
-              {order.status === "shopping" ? (
-                <>
-                  <div className="flex justify-between">
-                    <span>Items Found</span>
-                    <span>
-                      {order.Order_Items.filter((item) => item.found).length} of{" "}
-                      {order.Order_Items.length}
-                    </span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span>Units Found</span>
-                    <span>
-                      {order.Order_Items.reduce((total, item) => {
-                        if (item.found) {
-                          return total + (item.foundQuantity || item.quantity);
-                        }
-                        return total;
-                      }, 0)}{" "}
-                      of{" "}
-                      {order.Order_Items.reduce(
-                        (total, item) => total + item.quantity,
-                        0
-                      )}
-                    </span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span>Items Not Found</span>
-                    <span>
-                      {order.Order_Items.filter((item) => !item.found).length}
-                    </span>
-                  </div>
-                </>
-              ) : (
-                <>
-                  <div className="flex justify-between">
-                    <span>Delivery Fee</span>
-                    <span>
-                      {formatCurrency(parseFloat(order.deliveryFee || "0"))}
-                    </span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span>Service Fee</span>
-                    <span>
-                      {formatCurrency(parseFloat(order.serviceFee || "0"))}
-                    </span>
-                  </div>
-                </>
-              )}
+          <div className={`rounded-lg p-4 ${
+            theme === 'dark' ? 'bg-gray-700' : 'bg-gray-50'
+          }`}>
+            <div className="flex items-start">
+              <div className={`mr-3 mt-1 rounded-full p-2 ${
+                theme === 'dark' ? 'bg-gray-600' : 'bg-gray-100'
+              }`}>
+                <svg
+                  className={`h-5 w-5 ${
+                    theme === 'dark' ? 'text-gray-300' : 'text-gray-500'
+                  }`}
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
+                </svg>
+              </div>
+              <div>
+                <p className={`font-medium ${
+                  theme === 'dark' ? 'text-gray-100' : 'text-gray-900'
+                }`}>
+                  Delivery Location
+                </p>
+                <p className={`mt-1 text-sm ${
+                  theme === 'dark' ? 'text-gray-400' : 'text-gray-500'
+                }`}>
+                  {order.delivery_location}
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
 
-              {order.discount > 0 && (
-                <div className="flex justify-between text-green-600">
-                  <span>Discount</span>
-                  <span>-{formatCurrency(order.discount)}</span>
+      <div>
+        <h3 className={`mb-4 text-lg font-semibold ${
+          theme === 'dark' ? 'text-gray-100' : 'text-gray-900'
+        }`}>
+          Items
+        </h3>
+        <div className={`divide-y rounded-lg ${
+          theme === 'dark' ? 'divide-gray-700 bg-gray-700' : 'divide-gray-200 bg-gray-50'
+        }`}>
+          {order.items.map((item, index) => (
+            <div key={index} className="flex items-center justify-between p-4">
+              <div className="flex items-center">
+                <div className={`mr-4 h-12 w-12 rounded-lg ${
+                  theme === 'dark' ? 'bg-gray-600' : 'bg-gray-200'
+                }`}>
+                  {/* Item image placeholder */}
                 </div>
-              )}
-              <Divider />
-              <div className="flex justify-between text-lg font-bold">
-                <span>Total</span>
-                <span>
-                  {order.status === "shopping"
-                    ? formatCurrency(calculateFoundItemsTotal())
-                    : formatCurrency(calculateOriginalSubtotal())}
-                </span>
-              </div>
-
-              {order.status === "shopping" && (
-                <div className="mt-4 rounded-md bg-blue-50 p-3 text-sm text-blue-700">
-                  <p>
-                    <strong>Note:</strong> The total reflects only the value of
-                    found items. Service fee (
-                    {formatCurrency(parseFloat(order.serviceFee || "0"))}) and
-                    delivery fee (
-                    {formatCurrency(parseFloat(order.deliveryFee || "0"))}) were
-                    already added to your wallet as earnings when you started
-                    shopping.
+                <div>
+                  <p className={`font-medium ${
+                    theme === 'dark' ? 'text-gray-100' : 'text-gray-900'
+                  }`}>
+                    {item.name}
+                  </p>
+                  <p className={`text-sm ${
+                    theme === 'dark' ? 'text-gray-400' : 'text-gray-500'
+                  }`}>
+                    {item.quantity} × ${item.price}
                   </p>
                 </div>
-              )}
+              </div>
+              <p className={`font-semibold ${
+                theme === 'dark' ? 'text-gray-100' : 'text-gray-900'
+              }`}>
+                ${(item.quantity * item.price).toFixed(2)}
+              </p>
             </div>
-          </div>
-        )}
+          ))}
+        </div>
+      </div>
 
-        {/* Delivery Notes if any */}
-        {order.deliveryNotes && (
-          <div className="mb-6 rounded-lg border bg-white p-4">
-            <h3 className="mb-2 text-lg font-bold">Delivery Notes</h3>
-            <p className="text-gray-700">{order.deliveryNotes}</p>
-          </div>
-        )}
-
-        {/* Action Button */}
-        <div className="mt-6">{getActionButton()}</div>
-      </Panel>
+      <div className="mt-6">{getActionButton()}</div>
     </div>
   );
 }

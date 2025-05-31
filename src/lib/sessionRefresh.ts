@@ -79,9 +79,22 @@ export const initiateRoleSwitch = async (
       throw new Error("Failed to update role");
     }
 
-    // The server will set cookies and handle redirects
-    // Force reload to ensure middleware picks up the cookies
-    window.location.reload();
+    // Get the response data
+    const data = await response.json();
+    
+    if (data.success) {
+      // Refresh the session to get the new role
+      await refreshSession();
+      
+      // Clear the role switch flag
+      clearRoleSwitchFlag();
+      
+      // Redirect to the appropriate dashboard
+      const redirectPath = nextRole === "shopper" ? "/ShopperDashboard" : "/";
+      window.location.href = redirectPath;
+    } else {
+      throw new Error(data.error || "Failed to update role");
+    }
   } catch (error) {
     console.error("Error switching role:", error);
     clearRoleSwitchFlag();

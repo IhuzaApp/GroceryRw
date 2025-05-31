@@ -10,16 +10,22 @@ export default async function handler(
 ) {
   if (req.method !== "POST") {
     res.setHeader("Allow", ["POST"]);
-    return res.status(405).end(`Method ${req.method} Not Allowed`);
+    res.status(405).end(`Method ${req.method} Not Allowed`);
+    return;
   }
+
   const session = await getServerSession(req, res, authOptions);
   if (!session?.user?.id) {
-    return res.status(401).json({ error: "Not authenticated" });
+    res.status(401).json({ error: "Not authenticated" });
+    return;
   }
+
   const { role } = req.body;
   if (!role || (role !== "user" && role !== "shopper")) {
-    return res.status(400).json({ error: "Invalid role" });
+    res.status(400).json({ error: "Invalid role" });
+    return;
   }
+
   try {
     const mutation = gql`
       mutation UpdateUserRole($id: uuid!, $role: String!) {
@@ -40,23 +46,21 @@ export default async function handler(
       id: session.user.id,
       role,
     });
+    
     const updated = response.update_Users_by_pk;
 
-    // Set a cookie to indicate role has been changed
-    // This will be used by our middleware to force session refresh
+    // Set cookies for role change
     res.setHeader("Set-Cookie", [
       `role_changed=true; Path=/; HttpOnly; SameSite=Lax; Max-Age=60`,
       `new_role=${role}; Path=/; HttpOnly; SameSite=Lax; Max-Age=60`,
     ]);
 
-    return res.status(200).json({
+    res.status(200).json({
       role: updated.role,
       success: true,
-      message:
-        "Role updated successfully. Please sign out and sign in again to apply changes.",
     });
   } catch (error) {
     console.error("Error updating user role:", error);
-    return res.status(500).json({ error: "Failed to update user role" });
+    res.status(500).json({ error: "Failed to update user role" });
   }
 }
