@@ -31,17 +31,7 @@ export default function ShopperHeader() {
   };
 
   if (isMobile) {
-    const title = getPageTitle();
-    // Don't render header at all if there's no title
-    if (!title) return null;
-
-    return (
-      <header className={`sticky top-0 z-[1000] border-b ${
-        theme === 'dark' ? 'border-gray-700 bg-gray-800 text-white' : 'border-gray-200 bg-white text-gray-900'
-      }`}>
-        <h1 className="px-4 py-3 text-lg font-semibold">{title}</h1>
-      </header>
-    );
+    return null;
   }
 
   return (
