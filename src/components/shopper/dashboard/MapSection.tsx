@@ -111,6 +111,9 @@ export default function MapSection({
   const [pendingOrders, setPendingOrders] = useState<PendingOrder[]>([]);
   const watchIdRef = useRef<number | null>(null);
   const [isOnline, setIsOnline] = useState(false);
+  const [dailyEarnings, setDailyEarnings] = useState(0);
+  const [completedOrdersCount, setCompletedOrdersCount] = useState(0);
+  const [loadingEarnings, setLoadingEarnings] = useState(true);
   // Refs for real-time map and marker
   const mapInstanceRef = useRef<L.Map | null>(null);
   const userMarkerRef = useRef<L.Marker | null>(null);
@@ -1473,6 +1476,40 @@ export default function MapSection({
     }
   };
 
+  // Update useEffect to fetch today's completed earnings
+  useEffect(() => {
+    const fetchTodayCompletedEarnings = async () => {
+      setLoadingEarnings(true);
+      try {
+        const response = await fetch("/api/shopper/todayCompletedEarnings");
+        if (!response.ok) {
+          throw new Error("Failed to fetch earnings data");
+        }
+
+        const data = await response.json();
+        if (data && data.success && data.data) {
+          setDailyEarnings(data.data.totalEarnings);
+          setCompletedOrdersCount(data.data.orderCount);
+        } else {
+          console.warn("Earnings data incomplete or invalid:", data);
+          setDailyEarnings(0);
+          setCompletedOrdersCount(0);
+        }
+      } catch (error) {
+        console.error("Error fetching daily earnings:", error);
+        setDailyEarnings(0);
+        setCompletedOrdersCount(0);
+      } finally {
+        setLoadingEarnings(false);
+      }
+    };
+
+    fetchTodayCompletedEarnings();
+    // Refresh earnings every 5 minutes
+    const interval = setInterval(fetchTodayCompletedEarnings, 5 * 60 * 1000);
+    return () => clearInterval(interval);
+  }, []);
+
   // If the dashboard is initializing, show a simpler loading state
   if (isInitializing) {
     return (
@@ -1501,6 +1538,48 @@ export default function MapSection({
 
   return (
     <div className="relative w-full">
+      {/* Daily Earnings Badge */}
+      <div className={`absolute left-1/2 top-4 z-[1001] -translate-x-1/2 transform rounded-full px-4 py-2 shadow-lg ${
+        theme === 'dark' 
+          ? 'bg-gray-800 text-white' 
+          : 'bg-white text-gray-900'
+      }`}>
+        <div className="flex items-center gap-2">
+          <svg
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            className="h-5 w-5 text-green-500"
+          >
+            <path d="M12 2v20M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6" />
+          </svg>
+          <div className="flex flex-col">
+            <div className="flex items-center gap-2">
+              <span className="text-xs opacity-75">Today's earnings</span>
+              {loadingEarnings ? (
+                <div className="h-4 w-6 animate-pulse rounded bg-gray-200 dark:bg-gray-700"></div>
+              ) : (
+                <span className="rounded-full bg-green-100 px-2 py-0.5 text-xs font-medium text-green-800 dark:bg-green-900/30 dark:text-green-300">
+                  {completedOrdersCount}
+                </span>
+              )}
+            </div>
+            {loadingEarnings ? (
+              <div className="h-5 w-16 animate-pulse rounded bg-gray-200 dark:bg-gray-700"></div>
+            ) : (
+              <span className="font-semibold">
+                {new Intl.NumberFormat('en-RW', {
+                  style: 'currency',
+                  currency: 'RWF',
+                  maximumFractionDigits: 0
+                }).format(dailyEarnings)}
+              </span>
+            )}
+          </div>
+        </div>
+      </div>
+
       <div
         ref={mapRef}
         className={`h-[calc(100vh-4rem-5.5rem)] md:h-[600px] overflow-hidden rounded-lg ${
