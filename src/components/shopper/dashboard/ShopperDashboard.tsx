@@ -7,6 +7,7 @@ import dynamic from "next/dynamic";
 import { Button, Loader, Placeholder, Panel, Grid, Row, Col } from "rsuite";
 import "rsuite/dist/rsuite.min.css";
 import { useTheme } from "../../../context/ThemeContext";
+import NotificationSystem from "../NotificationSystem";
 
 // Dynamically load MapSection only on client (disable SSR)
 const MapSection = dynamic(() => import("./MapSection"), {
@@ -418,6 +419,17 @@ export default function ShopperDashboard() {
     }
   }, [sortBy, availableOrders]);
 
+  // Handle new order notification
+  const handleNewOrder = (order: any) => {
+    if (!order) return;
+    
+    // Refresh orders list
+    loadOrders();
+    
+    // Update last refreshed time
+    setLastRefreshed(new Date());
+  };
+
   // Initializing loading screen
   if (isInitializing) {
     return (
@@ -505,6 +517,12 @@ export default function ShopperDashboard() {
 
   return (
     <ShopperLayout>
+      {/* Add NotificationSystem with current location */}
+      <NotificationSystem 
+        currentLocation={isOnline ? currentLocation : null}
+        onNewOrder={loadOrders}
+      />
+      
       <div
         className={`${
           isMobile ? "relative h-full overflow-hidden" : "min-h-screen"
