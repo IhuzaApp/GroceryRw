@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from "react";
 import ShopperHeader from "@components/shopper/ShopperHeader";
 import ShopperSidebar from "@components/shopper/ShopperSidebar";
-import { useSession, signOut } from "next-auth/react";
+import { useSession } from "next-auth/react";
 import { useTheme } from "@context/ThemeContext";
 
 interface ShopperLayoutProps {
