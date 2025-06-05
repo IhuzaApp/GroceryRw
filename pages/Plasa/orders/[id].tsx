@@ -8,6 +8,7 @@ import { formatCurrency } from "../../../src/lib/formatCurrency";
 import Link from "next/link";
 import { toast } from "react-hot-toast";
 import { useTheme } from "../../../src/context/ThemeContext";
+import { logger } from '../../../src/utils/logger';
 
 // Define interface for order data
 interface OrderDetails {
@@ -62,7 +63,7 @@ export default function OrderDetailsPage() {
         throw new Error(data.error || "Failed to load order details");
       }
     } catch (error) {
-      console.error("Error fetching order details:", error);
+      logger.error("Error fetching order details", "OrderDetailsPage", error);
       toast.error(error instanceof Error ? error.message : "Failed to load order details");
       setOrderDetails(null);
     } finally {
@@ -84,10 +85,12 @@ export default function OrderDetailsPage() {
       const data = await response.json();
 
       if (data.success) {
+        logger.info("Order assigned successfully", "OrderDetailsPage", { orderId: id });
         toast.success("Order assigned successfully!");
         // Refresh order details
         fetchOrderDetails();
       } else if (data.error === "no_wallet") {
+        logger.warn("No wallet found for shopper", "OrderDetailsPage");
         toast.error("You need a wallet to accept batches");
 
         try {
@@ -100,6 +103,7 @@ export default function OrderDetailsPage() {
           const walletData = await walletResponse.json();
 
           if (walletData.success) {
+            logger.info("Wallet created successfully", "OrderDetailsPage");
             toast.success(
               "Wallet created. Trying to accept the batch again..."
             );
@@ -115,9 +119,11 @@ export default function OrderDetailsPage() {
               const retryData = await retryResponse.json();
 
               if (retryData.success) {
+                logger.info("Order assigned successfully after wallet creation", "OrderDetailsPage", { orderId: id });
                 toast.success("Order assigned successfully!");
                 fetchOrderDetails();
               } else {
+                logger.error("Failed to assign order after wallet creation", "OrderDetailsPage", { error: retryData.error });
                 toast.error(retryData.error || "Failed to assign order");
               }
 
@@ -126,17 +132,19 @@ export default function OrderDetailsPage() {
 
             return;
           } else {
+            logger.error("Failed to create wallet", "OrderDetailsPage", { error: walletData.error });
             toast.error("Failed to create wallet");
           }
         } catch (walletError) {
-          console.error("Error creating wallet:", walletError);
+          logger.error("Error creating wallet", "OrderDetailsPage", walletError);
           toast.error("Failed to create wallet");
         }
       } else {
+        logger.error("Failed to assign order", "OrderDetailsPage", { error: data.error });
         toast.error(data.error || "Failed to assign order");
       }
     } catch (error) {
-      console.error("Error accepting order:", error);
+      logger.error("Error accepting order", "OrderDetailsPage", error);
       toast.error("Failed to accept order");
     } finally {
       setIsAccepting(false);

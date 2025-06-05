@@ -3,6 +3,7 @@ import { hasuraClient } from "../../../src/lib/hasuraClient";
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "../../api/auth/[...nextauth]";
 import { gql } from "graphql-request";
+import { logger } from '../../../src/utils/logger';
 
 // Define response types
 interface ShopperAvailabilityItem {

@@ -3,6 +3,7 @@ import { hasuraClient } from "../../../src/lib/hasuraClient";
 import { gql } from "graphql-request";
 import { Client as GoogleMapsClient } from '@googlemaps/google-maps-services-js';
 import { startOrderNotifications, stopOrderNotifications } from '../../../src/utils/orderNotifier';
+import { serverLogger } from '../../../src/utils/serverLogger';
 
 const googleMapsClient = new GoogleMapsClient({});
 
@@ -150,10 +151,20 @@ export default async function handler(
     const shopperLongitude = parseFloat(req.query.longitude as string) || 0;
     const maxTravelTime = parseInt(req.query.maxTravelTime as string) || 15;
 
+    serverLogger.info('Checking for new orders', 'OrderChecker', {
+      shopperLatitude,
+      shopperLongitude,
+      maxTravelTime
+    });
+
     // If this is not the first check, ensure at least 3 minutes have passed
     if (lastCheckTime) {
       const timeSinceLastCheck = Date.now() - lastCheckTime.getTime();
       if (timeSinceLastCheck < 180000) { // 3 minutes in milliseconds
+        serverLogger.info('Skipping check - too soon', 'OrderChecker', {
+          timeSinceLastCheck,
+          lastCheckTime
+        });
         return res.status(200).json({
           success: true,
           message: "Skipping check - less than 3 minutes since last check",
@@ -173,6 +184,11 @@ export default async function handler(
         created_after: threeMinutesAgo,
       }
     );
+
+    serverLogger.info('Found new orders', 'OrderChecker', {
+      orderCount: newOrders.length,
+      checkTime: threeMinutesAgo
+    });
 
     if (newOrders.length === 0) {
       return res.status(200).json({
@@ -207,6 +223,12 @@ export default async function handler(
     const nearbyOrders = ordersWithDistance.filter(
       order => order.travelTimeMinutes <= maxTravelTime
     );
+
+    serverLogger.info('Filtered nearby orders', 'OrderChecker', {
+      totalOrders: ordersWithDistance.length,
+      nearbyOrders: nearbyOrders.length,
+      maxTravelTime
+    });
 
     if (nearbyOrders.length === 0) {
       return res.status(200).json({
@@ -249,11 +271,16 @@ export default async function handler(
           items: order.Order_Items_aggregate?.aggregate?.count || 0,
           total: order.total,
           distance: order.distance,
-          travelTime: order.travelTimeMinutes
+          travel_time: order.travelTimeMinutes
         })),
         timestamp: new Date().toISOString(),
         priority: totalOrders > 2 ? "high" : "normal"
       };
+    });
+
+    serverLogger.info('Created notifications', 'OrderChecker', {
+      notificationCount: notifications.length,
+      shopCount: Object.keys(ordersByShop).length
     });
 
     // Log the notifications being sent
@@ -278,7 +305,10 @@ export default async function handler(
     // Stop notifications when shopper logs out or becomes inactive
     stopOrderNotifications();
   } catch (error) {
-    console.error("Error checking new orders:", error);
-    res.status(500).json({ error: "Failed to check new orders" });
+    serverLogger.error('Error checking for new orders', 'OrderChecker', error);
+    res.status(500).json({
+      success: false,
+      error: "Failed to check for new orders"
+    });
   }
 } 

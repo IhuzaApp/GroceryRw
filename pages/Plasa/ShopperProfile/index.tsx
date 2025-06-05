@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect } from "react";
 import ShopperLayout from "@components/shopper/ShopperLayout";
 import Link from "next/link";
 import { GetServerSideProps } from "next";
@@ -6,6 +6,7 @@ import { getServerSession } from "next-auth/next";
 import { authOptions } from "../../api/auth/[...nextauth]";
 import ShopperProfileComponent from "@components/shopper/profile/ShopperProfileComponent";
 import { useTheme } from "@context/ThemeContext";
+import { logger } from '../../../src/utils/logger';
 
 // Define a type for the session user with role
 interface SessionUser {
@@ -24,6 +25,13 @@ interface Session {
 export default function ShopperProfilePage() {
   const { theme } = useTheme();
   
+  useEffect(() => {
+    logger.info('ShopperProfile component mounted', 'ShopperProfilePage');
+    return () => {
+      logger.info('ShopperProfile component unmounted', 'ShopperProfilePage');
+    };
+  }, []);
+
   return (
     <div className={`min-h-screen p-4 transition-colors duration-200 ${
       theme === 'dark' ? 'bg-gray-900 text-gray-100' : 'bg-gray-50 text-gray-900'

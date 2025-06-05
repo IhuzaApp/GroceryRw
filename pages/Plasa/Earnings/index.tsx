@@ -10,6 +10,7 @@ import ActivityHeatmap from "@components/shopper/earnings/ActivityHeatmap";
 import PerformanceMetrics from "@components/shopper/earnings/PerformanceMetrics";
 import EarningsGoals from "@components/shopper/earnings/EarningsGoals";
 import PaymentHistory from "@components/shopper/earnings/PaymentHistory";
+import { logger } from '../../../src/utils/logger';
 
 // Interface for earnings stats
 interface EarningsStats {
@@ -129,7 +130,7 @@ const EarningsPage: React.FC = () => {
           setEarningsStats(data.stats);
         }
       } catch (error) {
-        console.error("Error fetching earnings stats:", error);
+        logger.error("Error fetching earnings stats", "EarningsPage", error);
       } finally {
         setLoading(false);
       }
@@ -181,7 +182,7 @@ const EarningsPage: React.FC = () => {
         setTransactions([]);
       }
     } catch (error) {
-      console.error("Error fetching wallet data:", error);
+      logger.error("Error fetching wallet data", "EarningsPage", error);
       setWallet({ id: "", availableBalance: 0, reservedBalance: 0 });
       setTransactions([]);
     } finally {
@@ -202,7 +203,7 @@ const EarningsPage: React.FC = () => {
         setDeliveryStats(data.stats);
       }
     } catch (error) {
-      console.error("Error fetching delivery stats:", error);
+      logger.error("Error fetching delivery stats", "EarningsPage", error);
     } finally {
       setDeliveryStatsLoading(false);
     }
@@ -228,7 +229,7 @@ const EarningsPage: React.FC = () => {
         setTotalOrders(0);
       }
     } catch (error) {
-      console.error("Error fetching recent orders:", error);
+      logger.error("Error fetching recent orders", "EarningsPage", error);
       setRecentOrders([]);
       setTotalOrders(0);
     } finally {
@@ -248,13 +249,10 @@ const EarningsPage: React.FC = () => {
       }
       const data = await response.json();
       if (data.success) {
-        setDailyEarnings(data.data);
-      } else {
-        setDailyEarnings([]);
+        setDailyEarnings(data.earnings);
       }
     } catch (error) {
-      console.error("Error fetching daily earnings:", error);
-      setDailyEarnings([]);
+      logger.error("Error fetching daily earnings", "EarningsPage", error);
     } finally {
       setDailyEarningsLoading(false);
     }
