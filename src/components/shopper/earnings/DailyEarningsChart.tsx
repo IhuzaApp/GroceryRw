@@ -40,8 +40,11 @@ const DailyEarningsChart: React.FC<DailyEarningsChartProps> = ({
 
   // Calculate average earnings
   const calculateAverage = () => {
-    if (data.length === 0) return 0;
-    const total = data.reduce((sum, item) => sum + item.earnings, 0);
+    if (!data || !Array.isArray(data) || data.length === 0) return 0;
+    const total = data.reduce((sum, item) => {
+      const earnings = typeof item.earnings === 'number' ? item.earnings : 0;
+      return sum + earnings;
+    }, 0);
     return total / data.length;
   };
 

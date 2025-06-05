@@ -249,10 +249,13 @@ const EarningsPage: React.FC = () => {
       }
       const data = await response.json();
       if (data.success) {
-        setDailyEarnings(data.earnings);
+        setDailyEarnings(data.data || []);
+      } else {
+        setDailyEarnings([]);
       }
     } catch (error) {
       logger.error("Error fetching daily earnings", "EarningsPage", error);
+      setDailyEarnings([]);
     } finally {
       setDailyEarningsLoading(false);
     }

@@ -11,19 +11,31 @@ import { logger } from '../../utils/logger';
 // Define interfaces for order data
 interface Order {
   id: string;
+  OrderID: string;
   status: string;
-  createdAt: string;
-  shopName: string;
-  shopAddress: string;
-  shopLat: number;
-  shopLng: number;
-  customerName: string;
-  customerAddress: string;
-  customerLat: number;
-  customerLng: number;
-  items: number;
+  createdAt?: string;
+  created_at?: string;
+  shopName?: string;
+  shopAddress?: string;
+  shopLat?: number;
+  shopLng?: number;
+  customerName?: string;
+  customerAddress?: string;
+  customerLat?: number;
+  customerLng?: number;
+  items?: number;
   total: number;
-  estimatedEarnings: string;
+  estimatedEarnings?: string;
+  shop?: {
+    id: string;
+    name: string;
+    address: string;
+    image: string;
+  } | null;
+  itemsCount?: number;
+  unitsCount?: number;
+  service_fee?: string;
+  delivery_fee?: string;
 }
 
 interface ActiveBatchesProps {
@@ -320,7 +332,7 @@ export default function ActiveBatches({
   );
 }
 
-function ActiveOrderCard({ order }: { order: any }) {
+function ActiveOrderCard({ order }: { order: Order }) {
   const { theme } = useTheme();
 
   const getStatusBadge = (status: string) => {
@@ -330,7 +342,7 @@ function ActiveOrderCard({ order }: { order: any }) {
           <Badge
             content="Accepted"
             className={`rounded bg-blue-100 px-2 py-1 text-xs font-medium ${
-              theme === 'dark' ? 'text-blue-800' : 'text-blue-800'
+              theme === 'dark' ? 'text-blue-300 bg-blue-900/20' : 'text-blue-800'
             }`}
           />
         );
@@ -339,7 +351,25 @@ function ActiveOrderCard({ order }: { order: any }) {
           <Badge
             content="Picked Up"
             className={`rounded bg-orange-100 px-2 py-1 text-xs font-medium ${
-              theme === 'dark' ? 'text-orange-800' : 'text-orange-800'
+              theme === 'dark' ? 'text-orange-300 bg-orange-900/20' : 'text-orange-800'
+            }`}
+          />
+        );
+      case "shopping":
+        return (
+          <Badge
+            content="Shopping"
+            className={`rounded bg-yellow-100 px-2 py-1 text-xs font-medium ${
+              theme === 'dark' ? 'text-yellow-300 bg-yellow-900/20' : 'text-yellow-800'
+            }`}
+          />
+        );
+      case "on_the_way":
+        return (
+          <Badge
+            content="On The Way"
+            className={`rounded bg-purple-100 px-2 py-1 text-xs font-medium ${
+              theme === 'dark' ? 'text-purple-300 bg-purple-900/20' : 'text-purple-800'
             }`}
           />
         );
@@ -347,8 +377,8 @@ function ActiveOrderCard({ order }: { order: any }) {
         return (
           <Badge
             content="At Customer"
-            className={`rounded bg-purple-100 px-2 py-1 text-xs font-medium ${
-              theme === 'dark' ? 'text-purple-800' : 'text-purple-800'
+            className={`rounded bg-indigo-100 px-2 py-1 text-xs font-medium ${
+              theme === 'dark' ? 'text-indigo-300 bg-indigo-900/20' : 'text-indigo-800'
             }`}
           />
         );
@@ -362,63 +392,43 @@ function ActiveOrderCard({ order }: { order: any }) {
       case "ACCEPTED":
         return (
           <Link href={`/Plasa/active-batches/batch/${order.id}`}>
-            <Button
-              appearance="primary"
-              className={`rounded-md px-4 py-2 font-medium ${
-                theme === 'dark'
-                  ? 'bg-green-600 text-white hover:bg-green-700'
-                  : 'bg-green-600 text-white hover:bg-green-700'
-              }`}
+            <button
+              className="px-4 py-2 bg-[#125C13] text-white rounded-md font-medium hover:bg-[#0A400B] transition-colors"
             >
               Start Shopping
-            </Button>
+            </button>
           </Link>
         );
       case "picked":
       case "shopping":
         return (
           <Link href={`/Plasa/active-batches/batch/${order.id}`}>
-            <Button
-              appearance="primary"
-              className={`rounded-md px-4 py-2 font-medium ${
-                theme === 'dark'
-                  ? 'bg-green-600 text-white hover:bg-green-700'
-                  : 'bg-green-600 text-white hover:bg-green-700'
-              }`}
+            <button
+              className="px-4 py-2 bg-[#125C13] text-white rounded-md font-medium hover:bg-[#0A400B] transition-colors"
             >
               View Details
-            </Button>
+            </button>
           </Link>
         );
       case "at_customer":
       case "on_the_way":
         return (
           <Link href={`/Plasa/active-batches/batch/${order.id}`}>
-            <Button
-              appearance="primary"
-              className={`rounded-md px-4 py-2 font-medium ${
-                theme === 'dark'
-                  ? 'bg-green-600 text-white hover:bg-green-700'
-                  : 'bg-green-600 text-white hover:bg-green-700'
-              }`}
+            <button
+              className="px-4 py-2 bg-[#125C13] text-white rounded-md font-medium hover:bg-[#0A400B] transition-colors"
             >
               Confirm Delivery
-            </Button>
+            </button>
           </Link>
         );
       default:
         return (
           <Link href={`/Plasa/active-batches/batch/${order.id}`}>
-            <Button
-              appearance="primary"
-              className={`rounded-md px-4 py-2 font-medium ${
-                theme === 'dark'
-                  ? 'bg-green-600 text-white hover:bg-green-700'
-                  : 'bg-green-600 text-white hover:bg-green-700'
-              }`}
+            <button
+              className="px-4 py-2 bg-[#125C13] text-white rounded-md font-medium hover:bg-[#0A400B] transition-colors"
             >
               View Details
-            </Button>
+            </button>
           </Link>
         );
     }
@@ -455,12 +465,12 @@ function ActiveOrderCard({ order }: { order: any }) {
             <h3 className={`font-medium ${
               theme === 'dark' ? 'text-gray-100' : 'text-gray-900'
             }`}>
-              Batch #{order.id}
+              Batch #{order.id.slice(0, 6).toUpperCase()}
             </h3>
             <p className={`text-sm ${
               theme === 'dark' ? 'text-gray-400' : 'text-gray-500'
             }`}>
-              {order.items} items • {order.estimatedEarnings}
+              {order.items} items • ${order.estimatedEarnings}
             </p>
           </div>
         </div>
@@ -479,9 +489,7 @@ function ActiveOrderCard({ order }: { order: any }) {
       </div>
 
       <div className="mt-4 space-y-2">
-        <div className={`flex items-center justify-between rounded-lg p-3 ${
-          theme === 'dark' ? 'bg-gray-700/50' : 'bg-gray-50'
-        }`}>
+        <div className={`flex items-center justify-between rounded-lg p-3`}>
           <div className="flex items-center space-x-3">
             <div className={`rounded-full p-2 ${
               theme === 'dark' ? 'bg-gray-600' : 'bg-white'
@@ -498,13 +506,7 @@ function ActiveOrderCard({ order }: { order: any }) {
                   strokeLinecap="round"
                   strokeLinejoin="round"
                   strokeWidth={2}
-                  d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"
-                />
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"
+                  d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"
                 />
               </svg>
             </div>
@@ -523,9 +525,7 @@ function ActiveOrderCard({ order }: { order: any }) {
           </div>
         </div>
 
-        <div className={`flex items-center justify-between rounded-lg p-3 ${
-          theme === 'dark' ? 'bg-gray-700/50' : 'bg-gray-50'
-        }`}>
+        <div className={`flex items-center justify-between rounded-lg p-3`}>
           <div className="flex items-center space-x-3">
             <div className={`rounded-full p-2 ${
               theme === 'dark' ? 'bg-gray-600' : 'bg-white'
@@ -547,9 +547,7 @@ function ActiveOrderCard({ order }: { order: any }) {
               </svg>
             </div>
             <div>
-              <p className={`text-sm font-medium ${
-                theme === 'dark' ? 'text-gray-100' : 'text-gray-900'
-              }`}>
+              <p className={`text-sm `}>
                 Delivery Location
               </p>
               <p className={`text-sm ${
@@ -562,7 +560,25 @@ function ActiveOrderCard({ order }: { order: any }) {
         </div>
       </div>
 
-      <div className="mt-4 flex justify-end space-x-3">
+      <div className="flex items-center justify-between">
+        <a
+          href={`https://maps.google.com/?q=${order.customerLat},${order.customerLng}`}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="flex items-center text-blue-500 hover:text-blue-200 px-4 py-2"
+        >
+          <svg
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            className="mr-1 h-4 w-4"
+          >
+            <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z" />
+            <circle cx="12" cy="10" r="3" />
+          </svg>
+          Directions
+        </a>
         {getNextActionButton(order.status)}
       </div>
     </div>

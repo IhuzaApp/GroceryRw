@@ -7,7 +7,7 @@ import BatchDetails from "@components/shopper/batchDetails";
 import { GetServerSideProps } from "next";
 import { hasuraClient } from "../../../../../src/lib/hasuraClient";
 import { gql } from "graphql-request";
-import { getSession, useSession } from "next-auth/react";
+import { getSession } from "next-auth/react";
 import {
   collection,
   query,
@@ -17,8 +17,6 @@ import {
   updateDoc,
 } from "firebase/firestore";
 import { db } from "../../../../../src/lib/firebase";
-import { useTheme } from "../../../../../src/context/ThemeContext";
-import { Button, Panel, Loader } from "rsuite";
 
 // Define interfaces for the order data
 interface OrderItem {
@@ -88,86 +86,7 @@ export default function BatchDetailsPage({
   error,
 }: BatchDetailsPageProps) {
   const router = useRouter();
-  const { data: session } = useSession();
-  const { theme } = useTheme();
   const [loading, setLoading] = useState(false);
-  const [order, setOrder] = useState<OrderDetailsType | null>(orderData);
-  const [errorState, setErrorState] = useState<string | null>(error);
-
-  if (loading && !order) {
-    return (
-      <div className={`flex h-[calc(100vh-200px)] items-center justify-center ${
-        theme === 'dark' ? 'text-gray-300' : 'text-gray-700'
-      }`}>
-        <Loader content="Processing..." />
-      </div>
-    );
-  }
-
-  if (errorState) {
-    return (
-      <div className="p-4">
-        <Panel 
-          bordered 
-          header="Error" 
-          shaded
-          className={`${
-            theme === 'dark' 
-              ? 'bg-gray-800 text-gray-100' 
-              : 'bg-white text-gray-900'
-          }`}
-        >
-          <p className={theme === 'dark' ? 'text-red-400' : 'text-red-600'}>
-            {errorState}
-          </p>
-          <Button 
-            appearance="primary"
-            className={`mt-4 ${
-              theme === 'dark' 
-                ? 'bg-blue-500 hover:bg-blue-600' 
-                : 'bg-blue-600 hover:bg-blue-700'
-            }`}
-            onClick={() => router.back()}
-          >
-            Go Back
-          </Button>
-        </Panel>
-      </div>
-    );
-  }
-
-  if (!order) {
-    return (
-      <div className="p-4">
-        <Panel 
-          bordered 
-          header="Order Not Found" 
-          shaded
-          className={`${
-            theme === 'dark' 
-              ? 'bg-gray-800 text-gray-100' 
-              : 'bg-white text-gray-900'
-          }`}
-        >
-          <p className={theme === 'dark' ? 'text-gray-300' : 'text-gray-600'}>
-            The order you&#39;re looking for doesn&#39;t exist or you don&#39;t
-            have permission to view it.
-          </p>
-          <Button 
-            appearance="primary"
-            className={`mt-4 ${
-              theme === 'dark' 
-                ? 'bg-blue-500 hover:bg-blue-600' 
-                : 'bg-blue-600 hover:bg-blue-700'
-            }`}
-            onClick={() => router.push("/Plasa")}
-          >
-            Go to Dashboard
-          </Button>
-        </Panel>
-      </div>
-    );
-  }
 
   // Function to delete messages from Firebase for an order
   const deleteFirebaseMessages = async (orderId: string) => {
@@ -263,8 +182,8 @@ export default function BatchDetailsPage({
   return (
     <ShopperLayout>
       <BatchDetails
-        orderData={order}
-        error={errorState}
+        orderData={orderData}
+        error={error}
         onUpdateStatus={handleUpdateStatus}
       />
     </ShopperLayout>
