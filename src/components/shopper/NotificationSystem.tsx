@@ -1,21 +1,45 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { useSession } from 'next-auth/react';
 import { Message, toaster, Notification as ToastNotification, Button } from 'rsuite';
+import { logger } from '../../utils/logger';
 
 interface Order {
   id: string;
   shopName: string;
   distance: number;
   createdAt: string;
+  customerAddress: string;
   // Add other order properties as needed
+}
+
+interface BatchAssignment {
+  shopperId: string;
+  orderId: string;
+  assignedAt: number;
+}
+
+interface ShopperSchedule {
+  day_of_week: number;
+  start_time: string;
+  end_time: string;
+  is_available: boolean;
 }
 
 interface NotificationSystemProps {
   onNewOrder?: (order: any) => void;
   currentLocation?: { lat: number; lng: number } | null;
+  activeShoppers?: Array<{ id: string; name: string }>;
+  onAcceptBatch?: (orderId: string) => void;
+  onViewBatchDetails?: (orderId: string) => void;  // Add callback for viewing details
 }
 
-export default function NotificationSystem({ onNewOrder, currentLocation }: NotificationSystemProps) {
+export default function NotificationSystem({ 
+  onNewOrder, 
+  currentLocation, 
+  activeShoppers = [],
+  onAcceptBatch,
+  onViewBatchDetails
+}: NotificationSystemProps) {
   const { data: session } = useSession();
   const [isListening, setIsListening] = useState(false);
   const [notificationPermission, setNotificationPermission] = useState<NotificationPermission>('default');
@@ -23,60 +47,55 @@ export default function NotificationSystem({ onNewOrder, currentLocation }: Noti
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const checkInterval = useRef<NodeJS.Timeout | null>(null);
   const lastNotificationTime = useRef<number>(0);
+  const batchAssignments = useRef<BatchAssignment[]>([]);
   const lastOrderIds = useRef<Set<string>>(new Set());
 
   // Initialize audio immediately
   useEffect(() => {
     if (typeof window !== 'undefined') {
       try {
-        console.log('🔊 Initializing notification sound...');
+        logger.info('Initializing notification sound...', 'NotificationSystem');
         const audio = new Audio('/notifySound.mp3');
         
         // Set audio properties
         audio.preload = 'auto';
         audio.volume = 1.0;
-        audio.autoplay = false; // Prevent autoplay but keep it ready
+        audio.autoplay = false;
         
-        // Add event listeners for audio loading
         audio.addEventListener('loadeddata', () => {
-          console.log('✅ Notification sound loaded successfully');
+          logger.info('Notification sound loaded successfully', 'NotificationSystem');
           setAudioLoaded(true);
           
-          // Try to play and immediately pause to enable audio
           audio.play().then(() => {
             audio.pause();
             audio.currentTime = 0;
-            console.log('✅ Audio system enabled');
+            logger.info('Audio system enabled', 'NotificationSystem');
           }).catch(error => {
-            console.warn('⚠️ Initial audio enable failed:', error);
+            logger.warn('Initial audio enable failed', 'NotificationSystem', error);
           });
         });
 
         audio.addEventListener('error', (e) => {
-          console.error('❌ Error loading notification sound:', e);
+          logger.error('Error loading notification sound', 'NotificationSystem', e);
           setAudioLoaded(false);
         });
 
-        // Store the audio element
         audioRef.current = audio;
-        
-        // Try to load the audio
         audio.load();
 
-        // Verify the audio file exists
         fetch('/notifySound.mp3')
           .then(response => {
             if (!response.ok) {
               throw new Error(`HTTP error! status: ${response.status}`);
             }
-            console.log('✅ Notification sound file exists');
+            logger.info('Notification sound file exists', 'NotificationSystem');
           })
           .catch(error => {
-            console.error('❌ Could not find notification sound file:', error);
+            logger.error('Could not find notification sound file', 'NotificationSystem', error);
           });
 
       } catch (error) {
-        console.error('❌ Error initializing notification sound:', error);
+        logger.error('Error initializing notification sound', 'NotificationSystem', error);
       }
 
       return () => {
@@ -101,22 +120,62 @@ export default function NotificationSystem({ onNewOrder, currentLocation }: Noti
         const permission = await window.Notification.requestPermission();
         setNotificationPermission(permission);
         
+        // Create dummy order objects for permission notifications
+        const dummyOrder: Order = {
+          id: 'permission',
+          shopName: '',
+          distance: 0,
+          createdAt: new Date().toISOString(),
+          customerAddress: permission === 'granted' ? 'You will receive order alerts.' : 'You will still receive in-app notifications.'
+        };
+        
         if (permission === 'granted') {
-          showToast('✅ Notifications Enabled', 'You will receive order alerts.', 'success');
+          showToast(dummyOrder, 'success');
         } else if (permission === 'denied') {
-          showToast('❌ Browser Notifications Blocked', 'You will still receive in-app notifications.', 'info');
+          showToast(dummyOrder, 'info');
         }
       } catch (error) {
-        console.error('Error requesting notification permission:', error);
+        logger.error('Error requesting notification permission', 'NotificationSystem', error);
       }
     }
   };
 
-  const showToast = (title: string, message: string, type: 'info' | 'success' | 'warning' | 'error' = 'info') => {
+  // Helper to format order ID with date
+  const formatOrderId = (orderId: string, createdAt: string) => {
+    const date = new Date(createdAt);
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    return `${year}${month}${day}-${orderId}`;
+  };
+
+  const showToast = (order: Order, type: 'info' | 'success' | 'warning' | 'error' = 'info') => {
     toaster.push(
-      <ToastNotification type={type} header={title} closable duration={4500}>
-        <div className="whitespace-pre-line">
-          {message}
+      <ToastNotification type={type} header="New Batch!" closable duration={60000}>
+        <div className="flex flex-col gap-2 text-sm">
+          <div className="flex flex-col gap-1 text-gray-600">
+            <div>{order.customerAddress}</div>
+            <div>{order.shopName} ({order.distance}km)</div>
+          </div>
+          <div className="flex gap-2 mt-2">
+            <Button appearance="primary" size="sm" onClick={() => onAcceptBatch?.(order.id)}>
+              Accept Batch
+            </Button>
+            <Button 
+              appearance="subtle" 
+              size="sm" 
+              onClick={() => {
+                if (onViewBatchDetails) {
+                  onViewBatchDetails(order.id);
+                  logger.info('Opening batch details', 'NotificationSystem', { orderId: order.id });
+                } else {
+                  logger.warn('onViewBatchDetails callback not provided', 'NotificationSystem');
+                }
+              }}
+            >
+              View Details
+            </Button>
+          </div>
         </div>
       </ToastNotification>,
       { placement: 'topEnd' }
@@ -124,35 +183,33 @@ export default function NotificationSystem({ onNewOrder, currentLocation }: Noti
   };
 
   const playNotificationSound = async () => {
-    console.log('🔊 Attempting to play notification sound...', {
+    logger.info('Attempting to play notification sound...', 'NotificationSystem', {
       audioLoaded,
       audioExists: !!audioRef.current
     });
 
     try {
       if (!audioRef.current) {
-        console.error('❌ Cannot play sound - Audio not initialized');
+        logger.error('Cannot play sound - Audio not initialized', 'NotificationSystem');
         return;
       }
 
       if (!audioLoaded) {
-        console.warn('⚠️ Cannot play sound - Audio not loaded yet');
+        logger.warn('Cannot play sound - Audio not loaded yet', 'NotificationSystem');
         return;
       }
 
-      // Reset audio to start
       audioRef.current.currentTime = 0;
       audioRef.current.volume = 1.0;
 
-      console.log('▶️ Playing notification sound...');
+      logger.info('Playing notification sound...', 'NotificationSystem');
       
-      // Create multiple play attempts to ensure sound plays
       const attemptPlay = async (attempts = 3) => {
         try {
           await audioRef.current?.play();
-          console.log('✅ Notification sound played successfully');
+          logger.info('Notification sound played successfully', 'NotificationSystem');
         } catch (error) {
-          console.warn(`⚠️ Play attempt failed (${attempts} attempts left):`, error);
+          logger.warn(`Play attempt failed (${attempts} attempts left)`, 'NotificationSystem', error);
           if (attempts > 0) {
             setTimeout(() => attemptPlay(attempts - 1), 100);
           }
@@ -162,14 +219,14 @@ export default function NotificationSystem({ onNewOrder, currentLocation }: Noti
       attemptPlay();
 
     } catch (error) {
-      console.error('❌ Unexpected error playing sound:', error);
+      logger.error('Unexpected error playing sound', 'NotificationSystem', error);
     }
   };
 
-  const showDesktopNotification = (title: string, message: string) => {
+  const showDesktopNotification = (order: Order) => {
     if (window.Notification && window.Notification.permission === 'granted') {
       const options: NotificationOptions = {
-        body: message,
+        body: `${order.customerAddress}\n${order.shopName} (${order.distance}km)`,
         icon: '/app-icon.png',
         badge: '/app-icon.png',
         tag: 'grocery-notification',
@@ -177,90 +234,208 @@ export default function NotificationSystem({ onNewOrder, currentLocation }: Noti
         silent: true, // We'll handle the sound separately
       };
 
-      const notification = new window.Notification(title, options);
+      const notification = new window.Notification('New Batch!', options);
 
       notification.onclick = () => {
         window.focus();
+        if (onViewBatchDetails) {
+          onViewBatchDetails(order.id);
+          logger.info('Opening batch details from notification click', 'NotificationSystem', { orderId: order.id });
+        }
         notification.close();
       };
     }
   };
 
+  // Check if current time is within shopper's schedule
+  const isWithinSchedule = async (): Promise<boolean> => {
+    try {
+      const response = await fetch('/api/shopper/schedule');
+      const data = await response.json();
+      
+      if (!data.schedule || data.schedule.length === 0) {
+        logger.info('No schedule found for shopper', 'NotificationSystem');
+        return false;
+      }
+
+      const now = new Date();
+      const currentDay = now.getDay() === 0 ? 7 : now.getDay(); // Convert Sunday from 0 to 7
+      const currentTime = now.toLocaleTimeString('en-US', { hour12: false });
+
+      const todaySchedule = data.schedule.find((s: ShopperSchedule) => s.day_of_week === currentDay);
+      
+      if (!todaySchedule || !todaySchedule.is_available) {
+        logger.info('No schedule or not available for today', 'NotificationSystem');
+        return false;
+      }
+
+      const isTimeWithinRange = currentTime >= todaySchedule.start_time && 
+                               currentTime <= todaySchedule.end_time;
+
+      logger.info('Schedule check:', {
+        currentDay,
+        currentTime,
+        scheduleStart: todaySchedule.start_time,
+        scheduleEnd: todaySchedule.end_time,
+        isWithinRange: isTimeWithinRange
+      });
+
+      return isTimeWithinRange;
+    } catch (error) {
+      logger.error('Error checking schedule:', error);
+      return false;
+    }
+  };
+
+  // Check if shopper has any active orders
+  const hasActiveOrders = async (): Promise<boolean> => {
+    try {
+      const response = await fetch('/api/shopper/activeOrders');
+      const data = await response.json();
+      
+      const hasActive = data.orders && data.orders.length > 0;
+      logger.info('Active orders check:', { hasActive, count: data.orders?.length || 0 });
+      
+      return hasActive;
+    } catch (error) {
+      logger.error('Error checking active orders:', error);
+      return true; // Assume has active orders on error to prevent notifications
+    }
+  };
+
+  // Check if shopper status is active based on their availability schedule
+  const isShopperActive = async (): Promise<boolean> => {
+    try {
+      const response = await fetch('/api/shopper/schedule');
+      const data = await response.json();
+      
+      if (!data.schedule || data.schedule.length === 0) {
+        logger.info('No schedule found for shopper', 'NotificationSystem');
+        return false;
+      }
+
+      const now = new Date();
+      const currentDay = now.getDay() === 0 ? 7 : now.getDay(); // Convert Sunday from 0 to 7
+      const currentTime = now.toLocaleTimeString('en-US', { hour12: false });
+
+      const todaySchedule = data.schedule.find((s: ShopperSchedule) => s.day_of_week === currentDay);
+      
+      if (!todaySchedule) {
+        logger.info('No schedule for today', 'NotificationSystem');
+        return false;
+      }
+
+      if (!todaySchedule.is_available) {
+        logger.info('Shopper is not available today', 'NotificationSystem');
+        return false;
+      }
+
+      const isTimeWithinRange = currentTime >= todaySchedule.start_time && 
+                               currentTime <= todaySchedule.end_time;
+
+      logger.info('Schedule check result', 'NotificationSystem', {
+        currentDay,
+        currentTime,
+        scheduleStart: todaySchedule.start_time,
+        scheduleEnd: todaySchedule.end_time,
+        isWithinRange: isTimeWithinRange
+      });
+
+      return isTimeWithinRange;
+    } catch (error) {
+      logger.error('Error checking shopper availability', 'NotificationSystem', error);
+      return false;
+    }
+  };
+
   const checkForNewOrders = async () => {
-    if (!currentLocation) return;
+    if (!currentLocation || !session?.user?.id) return;
 
     const now = new Date();
-    console.log(`🕒 Checking for pending orders at ${now.toLocaleTimeString()}`, {
-      lastCheck: lastNotificationTime.current ? new Date(lastNotificationTime.current).toLocaleTimeString() : 'Never',
-      timeSinceLastCheck: lastNotificationTime.current ? `${Math.round((now.getTime() - lastNotificationTime.current) / 1000)}s` : 'N/A'
-    });
+    const currentTime = now.getTime();
+
+    if (currentTime - lastNotificationTime.current < 60000) {
+      logger.info(`Skipping notification check - ${Math.floor((60000 - (currentTime - lastNotificationTime.current)) / 1000)}s until next check`, 'NotificationSystem');
+      return;
+    }
+
+    const [withinSchedule, noActiveOrders, isActive] = await Promise.all([
+      isWithinSchedule(),
+      !(await hasActiveOrders()),
+      isShopperActive()
+    ]);
+
+    if (!withinSchedule) {
+      logger.info('Outside scheduled hours, skipping notification check', 'NotificationSystem');
+      return;
+    }
+
+    if (!noActiveOrders) {
+      logger.info('Shopper has active orders, skipping notification check', 'NotificationSystem');
+      return;
+    }
+
+    if (!isActive) {
+      logger.info('Shopper is not active, skipping notification check', 'NotificationSystem');
+      return;
+    }
+
+    logger.info('All conditions met, checking for pending orders', 'NotificationSystem');
 
     try {
       const response = await fetch(`/api/shopper/availableOrders?latitude=${currentLocation.lat}&longitude=${currentLocation.lng}&maxTravelTime=15`);
-      const orders = await response.json();
+      const orders: Order[] = await response.json();
 
-      // Always notify about pending orders
       if (orders.length > 0) {
-        // Group orders by shop with proper typing
-        const ordersByShop = orders.reduce((acc: { [key: string]: Order[] }, order: Order) => {
-          if (!acc[order.shopName]) {
-            acc[order.shopName] = [];
-          }
-          acc[order.shopName].push(order);
-          return acc;
-        }, {});
+        logger.info(`Found ${orders.length} pending orders`, 'NotificationSystem');
 
-        console.log(`📦 Found ${orders.length} pending orders in ${Object.keys(ordersByShop).length} shops`);
+        // Clean up expired assignments
+        batchAssignments.current = batchAssignments.current.filter(
+          assignment => currentTime - assignment.assignedAt < 60000
+        );
 
-        // Create notifications for each shop
-        const notifications = (Object.entries(ordersByShop) as [string, Order[]][]).map(([shopName, shopOrders]) => {
-          // Calculate how long orders have been pending
-          const oldestOrder = shopOrders.reduce((oldest, current) => {
-            const currentTime = new Date(current.createdAt).getTime();
-            return currentTime < oldest ? currentTime : oldest;
-          }, Date.now());
-          
-          const minutesPending = Math.floor((now.getTime() - oldestOrder) / 60000);
-          
-          return {
-            title: `🔔 Pending Orders at ${shopName}!`,
-            message: `${shopOrders.length} order${shopOrders.length > 1 ? 's' : ''} still pending - ${shopOrders[0].distance}km away${minutesPending > 0 ? ` (Waiting ${minutesPending}min)` : ''}`,
-            priority: minutesPending > 30 ? 'high' : 'normal',
-            orders: shopOrders
-          };
-        });
+        // Sort and filter orders
+        const sortedOrders = [...orders].sort(
+          (a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
+        );
 
-        // Only play sound and show notifications if enough time has passed
-        const timeSinceLastNotification = now.getTime() - lastNotificationTime.current;
-        if (timeSinceLastNotification >= 60000) { // Only notify every 60 seconds
-          console.log('🔔 Showing notifications for pending orders');
-          
-          // Play sound and show notifications
-          await playNotificationSound();
-          
-          notifications.forEach(notification => {
-            showToast(notification.title, notification.message, notification.priority === 'high' ? 'warning' : 'info');
+        const assignedOrderIds = new Set(batchAssignments.current.map(a => a.orderId));
+        const availableOrders = sortedOrders.filter(order => !assignedOrderIds.has(order.id));
+
+        if (availableOrders.length > 0) {
+          const currentUserAssignment = batchAssignments.current.find(
+            assignment => assignment.shopperId === session.user.id
+          );
+
+          if (!currentUserAssignment) {
+            const nextOrder = availableOrders[0];
             
-            if (window.Notification?.permission === 'granted') {
-              showDesktopNotification(notification.title, notification.message);
-            }
-          });
+            const newAssignment: BatchAssignment = {
+              shopperId: session.user.id,
+              orderId: nextOrder.id,
+              assignedAt: currentTime
+            };
+            batchAssignments.current.push(newAssignment);
 
-          // Update last notification time
-          lastNotificationTime.current = now.getTime();
-        } else {
-          console.log(`⏳ Skipping notifications - ${Math.floor((60000 - timeSinceLastNotification) / 1000)}s until next notification`);
+            await playNotificationSound();
+            showToast(nextOrder);
+            showDesktopNotification(nextOrder);
+
+            lastNotificationTime.current = currentTime;
+            logger.info(`Showing notification for batch from ${nextOrder.shopName}`, 'NotificationSystem', nextOrder);
+          } else {
+            logger.info('User already has an active batch assignment, skipping notification', 'NotificationSystem');
+          }
         }
 
-        // Call the callback if provided
         if (onNewOrder) {
           onNewOrder(orders);
         }
       } else {
-        console.log('✅ No pending orders found');
+        logger.info('No pending orders found', 'NotificationSystem');
       }
     } catch (error) {
-      console.error('Error checking for pending orders:', error);
+      logger.error('Error checking for pending orders', 'NotificationSystem', error);
     }
   };
 
@@ -275,8 +450,8 @@ export default function NotificationSystem({ onNewOrder, currentLocation }: Noti
     // Reset notification state
     lastNotificationTime.current = 0;
 
-    console.log('🔄 Starting notification system...');
-    console.log('⏰ Will check for pending orders every 60 seconds');
+    logger.info('🔄 Starting notification system...');
+    logger.info('⏰ Will check for pending orders every 60 seconds');
 
     // Initial check
     checkForNewOrders();
@@ -284,7 +459,7 @@ export default function NotificationSystem({ onNewOrder, currentLocation }: Noti
     // Set up interval for checking
     checkInterval.current = setInterval(() => {
       const now = new Date();
-      console.log(`⏰ Interval triggered at ${now.toLocaleTimeString()}`);
+      logger.info(`⏰ Interval triggered at ${now.toLocaleTimeString()}`);
       checkForNewOrders();
     }, 60000); // Check every 60 seconds
 
@@ -292,7 +467,7 @@ export default function NotificationSystem({ onNewOrder, currentLocation }: Noti
   };
 
   const stopNotificationSystem = () => {
-    console.log('🛑 Stopping notification system');
+    logger.info('🛑 Stopping notification system');
     if (checkInterval.current) {
       clearInterval(checkInterval.current);
       checkInterval.current = null;
@@ -303,19 +478,19 @@ export default function NotificationSystem({ onNewOrder, currentLocation }: Noti
 
   // Add a log when the component mounts/unmounts
   useEffect(() => {
-    console.log('📱 NotificationSystem component mounted');
+    logger.info('📱 NotificationSystem component mounted');
     return () => {
-      console.log('📱 NotificationSystem component unmounting');
+      logger.info('📱 NotificationSystem component unmounting');
     };
   }, []);
 
   // Add logging for session and location changes
   useEffect(() => {
     if (session?.user && currentLocation) {
-      console.log('🔑 User logged in and location available, starting notification system');
+      logger.info('🔑 User logged in and location available, starting notification system');
       startNotificationSystem();
     } else {
-      console.log('⚠️ Missing requirements for notification system:', {
+      logger.info('⚠️ Missing requirements for notification system:', {
         hasUser: !!session?.user,
         hasLocation: !!currentLocation
       });

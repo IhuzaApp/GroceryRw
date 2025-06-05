@@ -9,6 +9,7 @@ import { signOut } from "next-auth/react";
 import { useAuth } from "../../context/AuthContext";
 import { initiateRoleSwitch } from "../../lib/sessionRefresh";
 import { useTheme } from "../../context/ThemeContext";
+import { logger } from '../../utils/logger';
 
 // Define interface for earnings response
 interface EarningsResponse {
@@ -63,11 +64,11 @@ export default function ShopperSidebar() {
         ) {
           setDailyEarnings(data.earnings.total);
         } else {
-          console.warn("Earnings data incomplete or invalid:", data);
+          logger.warn("Earnings data incomplete or invalid", "ShopperSidebar", data);
           setDailyEarnings(0);
         }
       } catch (error) {
-        console.error("Error fetching daily earnings:", error);
+        logger.error("Error fetching daily earnings", "ShopperSidebar", error);
         setDailyEarnings(0);
       } finally {
         setLoadingEarnings(false);
@@ -91,7 +92,7 @@ export default function ShopperSidebar() {
       toggleRole();
       toast.success("Switched to customer mode");
     } catch (error) {
-      console.error("Error switching role:", error);
+      logger.error("Error switching role", "ShopperSidebar", error);
       toast.error("Failed to switch to customer mode");
       setIsSwitchingRole(false);
     }
@@ -101,7 +102,7 @@ export default function ShopperSidebar() {
     try {
       await signOut({ callbackUrl: '/auth/signin' });
     } catch (error) {
-      console.error('Error signing out:', error);
+      logger.error("Error signing out", "ShopperSidebar", error);
       toast.error('Failed to sign out');
     }
   };

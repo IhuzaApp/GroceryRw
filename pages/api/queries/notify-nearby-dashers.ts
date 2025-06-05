@@ -2,6 +2,7 @@ import { NextApiRequest, NextApiResponse } from "next";
 import { hasuraClient } from "../../../src/lib/hasuraClient";
 import { gql } from "graphql-request";
 import { Client as GoogleMapsClient } from '@googlemaps/google-maps-services-js';
+import { serverLogger } from '../../../src/utils/serverLogger';
 
 const googleMapsClient = new GoogleMapsClient({});
 
@@ -91,7 +92,7 @@ async function calculateDistance(
 
     return response.data.rows[0].elements[0].duration.value / 60; // Convert seconds to minutes
   } catch (error) {
-    console.error('Error calculating distance:', error);
+    serverLogger.error('Error calculating distance', 'DistanceCalculator', error);
     return Infinity;
   }
 }
@@ -114,9 +115,18 @@ export default async function handler(
       }
     );
 
+    serverLogger.info('Found available batches', 'BatchNotifier', {
+      batchCount: availableBatches.length,
+      checkTime: twentyMinutesAgo
+    });
+
     const { Shopper_Availability: availableDashers } = await hasuraClient.request<{ Shopper_Availability: Dasher[] }>(
       GET_AVAILABLE_DASHERS
     );
+
+    serverLogger.info('Found available dashers', 'BatchNotifier', {
+      dasherCount: availableDashers.length
+    });
 
     // Group batches by shop
     const batchesByShop = availableBatches.reduce((acc, batch) => {
@@ -126,6 +136,14 @@ export default async function handler(
       acc[batch.shop_id].push(batch);
       return acc;
     }, {} as Record<string, Batch[]>);
+
+    serverLogger.info('Grouped batches by shop', 'BatchNotifier', {
+      shopCount: Object.keys(batchesByShop).length,
+      batchesByShop: Object.entries(batchesByShop).map(([shopId, batches]) => ({
+        shopId,
+        batchCount: batches.length
+      }))
+    });
 
     // For each dasher, find nearby shops with available batches
     const notificationObjects: Array<{
@@ -163,6 +181,12 @@ export default async function handler(
           type: 'NEW_BATCHES',
           is_read: false
         });
+
+        serverLogger.info('Created notification for dasher', 'BatchNotifier', {
+          dasherId: dasher.user_id,
+          nearbyBatchCount: nearbyBatches.length,
+          uniqueShops
+        });
       }
     }));
 
@@ -174,6 +198,10 @@ export default async function handler(
           objects: notificationObjects
         }
       );
+
+      serverLogger.info('Inserted notifications', 'BatchNotifier', {
+        notificationCount: notificationObjects.length
+      });
     }
 
     res.status(200).json({ 
@@ -181,7 +209,7 @@ export default async function handler(
       message: `Notifications created for ${notificationObjects.length} dashers`
     });
   } catch (error) {
-    console.error("Error processing batch notifications:", error);
+    serverLogger.error('Error processing batch notifications', 'BatchNotifier', error);
     res.status(500).json({ error: "Failed to process batch notifications" });
   }
 } 
