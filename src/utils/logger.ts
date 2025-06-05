@@ -7,8 +7,18 @@ class BaseLogger {
       type: 'log' as LogLevel,
       message,
       component,
-      details: details ? JSON.stringify(details) : undefined
+      details: details ? (
+        typeof details === 'string' ? details : JSON.stringify(details)
+      ) : undefined
     };
+  }
+
+  protected formatConsoleMessage(component: string | undefined, message: string, details?: any): string {
+    const componentStr = component ? `[${component}]` : '';
+    const detailsStr = details ? (
+      typeof details === 'string' ? details : JSON.stringify(details, null, 2)
+    ) : '';
+    return `${componentStr} ${message} ${detailsStr}`.trim();
   }
 }
 
@@ -42,31 +52,31 @@ class ClientLogger extends BaseLogger {
   log(message: string, component?: string, details?: any): void {
     const entry = { ...this.formatMessage(message, component, details), type: 'log' as LogLevel };
     this.addLog(entry);
-    console.log(`[${component || 'App'}]`, message, details || '');
+    console.log(this.formatConsoleMessage(component || 'App', message, details));
   }
 
   error(message: string, component?: string, details?: any): void {
     const entry = { ...this.formatMessage(message, component, details), type: 'error' as LogLevel };
     this.addLog(entry);
-    console.error(`[${component || 'App'}]`, message, details || '');
+    console.error(this.formatConsoleMessage(component || 'App', message, details));
   }
 
   warn(message: string, component?: string, details?: any): void {
     const entry = { ...this.formatMessage(message, component, details), type: 'warn' as LogLevel };
     this.addLog(entry);
-    console.warn(`[${component || 'App'}]`, message, details || '');
+    console.warn(this.formatConsoleMessage(component || 'App', message, details));
   }
 
   info(message: string, component?: string, details?: any): void {
     const entry = { ...this.formatMessage(message, component, details), type: 'info' as LogLevel };
     this.addLog(entry);
-    console.info(`[${component || 'App'}]`, message, details || '');
+    console.info(this.formatConsoleMessage(component || 'App', message, details));
   }
 
   debug(message: string, component?: string, details?: any): void {
     const entry = { ...this.formatMessage(message, component, details), type: 'debug' as LogLevel };
     this.addLog(entry);
-    console.debug(`[${component || 'App'}]`, message, details || '');
+    console.debug(this.formatConsoleMessage(component || 'App', message, details));
   }
 
   async getLogs(): Promise<LogEntry[]> {
@@ -79,39 +89,27 @@ class ClientLogger extends BaseLogger {
 }
 
 class ServerLogger extends BaseLogger {
-  private readonly fs = require('fs');
-  private readonly path = require('path');
-  private readonly LOG_DIR = './logs';
   private readonly MAX_BUFFER_SIZE = 100;
   private logBuffer: LogEntry[] = [];
 
   constructor() {
     super();
-    this.ensureLogDirectory();
-  }
-
-  private ensureLogDirectory(): void {
-    if (!this.fs.existsSync(this.LOG_DIR)) {
-      this.fs.mkdirSync(this.LOG_DIR, { recursive: true });
-    }
-  }
-
-  private getLogFilePath(): string {
-    const date = new Date().toISOString().split('T')[0];
-    return this.path.join(this.LOG_DIR, `${date}.log`);
   }
 
   private async flushBuffer(): Promise<void> {
     if (this.logBuffer.length === 0) return;
 
-    const logFile = this.getLogFilePath();
-    const logString = this.logBuffer.map(entry => JSON.stringify(entry)).join('\n') + '\n';
-
     try {
-      await this.fs.promises.appendFile(logFile, logString);
+      await fetch('/api/logs/write', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ logs: this.logBuffer }),
+      });
       this.logBuffer = [];
     } catch (error) {
-      console.error('Failed to write to log file:', error);
+      console.error('Failed to write logs:', error);
     }
   }
 
@@ -125,56 +123,54 @@ class ServerLogger extends BaseLogger {
   async log(message: string, component?: string, details?: any): Promise<void> {
     const entry = { ...this.formatMessage(message, component, details), type: 'log' as LogLevel };
     await this.addLog(entry);
-    console.log(`[${component || 'Server'}]`, message, details || '');
+    console.log(this.formatConsoleMessage(component || 'Server', message, details));
   }
 
   async error(message: string, component?: string, details?: any): Promise<void> {
     const entry = { ...this.formatMessage(message, component, details), type: 'error' as LogLevel };
     await this.addLog(entry);
-    console.error(`[${component || 'Server'}]`, message, details || '');
+    console.error(this.formatConsoleMessage(component || 'Server', message, details));
   }
 
   async warn(message: string, component?: string, details?: any): Promise<void> {
     const entry = { ...this.formatMessage(message, component, details), type: 'warn' as LogLevel };
     await this.addLog(entry);
-    console.warn(`[${component || 'Server'}]`, message, details || '');
+    console.warn(this.formatConsoleMessage(component || 'Server', message, details));
   }
 
   async info(message: string, component?: string, details?: any): Promise<void> {
     const entry = { ...this.formatMessage(message, component, details), type: 'info' as LogLevel };
     await this.addLog(entry);
-    console.info(`[${component || 'Server'}]`, message, details || '');
+    console.info(this.formatConsoleMessage(component || 'Server', message, details));
   }
 
   async debug(message: string, component?: string, details?: any): Promise<void> {
     const entry = { ...this.formatMessage(message, component, details), type: 'debug' as LogLevel };
     await this.addLog(entry);
-    console.debug(`[${component || 'Server'}]`, message, details || '');
+    console.debug(this.formatConsoleMessage(component || 'Server', message, details));
   }
 
   async getLogs(): Promise<LogEntry[]> {
-    await this.flushBuffer();
-    const logFile = this.getLogFilePath();
-    
     try {
-      const content = await this.fs.promises.readFile(logFile, 'utf-8');
-      return content.split('\n')
-        .filter((line: string) => line.trim())
-        .map((line: string) => JSON.parse(line));
+      const response = await fetch('/api/logs/read');
+      const data = await response.json();
+      return (data.logs || []).map((log: LogEntry) => ({
+        ...log,
+        details: log.details ? (
+          typeof log.details === 'string' ? log.details : JSON.stringify(log.details)
+        ) : undefined
+      }));
     } catch (error) {
-      console.error('Failed to read log file:', error);
+      console.error('Failed to read logs:', error);
       return [];
     }
   }
 
   async clearLogs(): Promise<void> {
-    await this.flushBuffer();
-    const logFile = this.getLogFilePath();
-    
     try {
-      await this.fs.promises.unlink(logFile);
+      await fetch('/api/logs/clear', { method: 'POST' });
     } catch (error) {
-      console.error('Failed to delete log file:', error);
+      console.error('Failed to clear logs:', error);
     }
   }
 }

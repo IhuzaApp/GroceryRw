@@ -3,7 +3,7 @@ import { hasuraClient } from "../../../src/lib/hasuraClient";
 import { gql } from "graphql-request";
 import { Client as GoogleMapsClient } from '@googlemaps/google-maps-services-js';
 import { startOrderNotifications, stopOrderNotifications } from '../../../src/utils/orderNotifier';
-import { serverLogger } from '../../../src/utils/serverLogger';
+import { logger } from '../../../src/utils/logger';
 
 const googleMapsClient = new GoogleMapsClient({});
 
@@ -151,20 +151,10 @@ export default async function handler(
     const shopperLongitude = parseFloat(req.query.longitude as string) || 0;
     const maxTravelTime = parseInt(req.query.maxTravelTime as string) || 15;
 
-    serverLogger.info('Checking for new orders', 'OrderChecker', {
-      shopperLatitude,
-      shopperLongitude,
-      maxTravelTime
-    });
-
     // If this is not the first check, ensure at least 3 minutes have passed
     if (lastCheckTime) {
       const timeSinceLastCheck = Date.now() - lastCheckTime.getTime();
       if (timeSinceLastCheck < 180000) { // 3 minutes in milliseconds
-        serverLogger.info('Skipping check - too soon', 'OrderChecker', {
-          timeSinceLastCheck,
-          lastCheckTime
-        });
         return res.status(200).json({
           success: true,
           message: "Skipping check - less than 3 minutes since last check",
@@ -184,11 +174,6 @@ export default async function handler(
         created_after: threeMinutesAgo,
       }
     );
-
-    serverLogger.info('Found new orders', 'OrderChecker', {
-      orderCount: newOrders.length,
-      checkTime: threeMinutesAgo
-    });
 
     if (newOrders.length === 0) {
       return res.status(200).json({
@@ -223,12 +208,6 @@ export default async function handler(
     const nearbyOrders = ordersWithDistance.filter(
       order => order.travelTimeMinutes <= maxTravelTime
     );
-
-    serverLogger.info('Filtered nearby orders', 'OrderChecker', {
-      totalOrders: ordersWithDistance.length,
-      nearbyOrders: nearbyOrders.length,
-      maxTravelTime
-    });
 
     if (nearbyOrders.length === 0) {
       return res.status(200).json({
@@ -271,44 +250,42 @@ export default async function handler(
           items: order.Order_Items_aggregate?.aggregate?.count || 0,
           total: order.total,
           distance: order.distance,
-          travel_time: order.travelTimeMinutes
+          travelTime: order.travelTimeMinutes
         })),
         timestamp: new Date().toISOString(),
         priority: totalOrders > 2 ? "high" : "normal"
       };
     });
 
-    serverLogger.info('Created notifications', 'OrderChecker', {
-      notificationCount: notifications.length,
-      shopCount: Object.keys(ordersByShop).length
-    });
+    // Send notifications
+    if (notifications.length > 0) {
+      logger.info(`Sending ${notifications.length} notifications for nearby orders`, 'CheckNewOrdersAPI', {
+        notifications,
+        shopperLocation: { latitude: shopperLatitude, longitude: shopperLongitude },
+        maxDistance: maxTravelTime
+      });
 
-    // Log the notifications being sent
-    console.log(`[check-new-orders] Sending ${notifications.length} notifications for nearby orders:`, 
-      notifications.map(n => ({
-        shop: n.title,
-        message: n.message,
-        ordersCount: n.orders.length
-      }))
-    );
+      res.status(200).json({
+        success: true,
+        notifications,
+        should_play_sound: notifications.length > 0,
+        message: `Found ${notifications.length} new nearby order notifications`
+      });
 
-    res.status(200).json({
-      success: true,
-      notifications,
-      should_play_sound: notifications.length > 0,
-      message: `Found ${notifications.length} new nearby order notifications`
-    });
+      // Start notifications when shopper logs in or becomes active
+      startOrderNotifications();
 
-    // Start notifications when shopper logs in or becomes active
-    startOrderNotifications();
-
-    // Stop notifications when shopper logs out or becomes inactive
-    stopOrderNotifications();
+      // Stop notifications when shopper logs out or becomes inactive
+      stopOrderNotifications();
+    } else {
+      res.status(200).json({
+        success: true,
+        message: "No new nearby orders found",
+        notifications: []
+      });
+    }
   } catch (error) {
-    serverLogger.error('Error checking for new orders', 'OrderChecker', error);
-    res.status(500).json({
-      success: false,
-      error: "Failed to check for new orders"
-    });
+    logger.error("Error checking new orders", "CheckNewOrdersAPI", error);
+    res.status(500).json({ error: "Failed to check new orders" });
   }
 } 
