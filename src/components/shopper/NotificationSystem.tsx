@@ -167,7 +167,7 @@ export default function NotificationSystem({
               onClick={() => {
                 if (onViewBatchDetails) {
                   onViewBatchDetails(order.id);
-                  logger.info('Opening batch details', 'NotificationSystem', { orderId: order.id });
+                  logger.info('Opening batch details for:', order.id);
                 } else {
                   logger.warn('onViewBatchDetails callback not provided', 'NotificationSystem');
                 }
@@ -240,7 +240,7 @@ export default function NotificationSystem({
         window.focus();
         if (onViewBatchDetails) {
           onViewBatchDetails(order.id);
-          logger.info('Opening batch details from notification click', 'NotificationSystem', { orderId: order.id });
+          logger.info('Opening batch details from notification click:', order.id);
         }
         notification.close();
       };
@@ -294,7 +294,7 @@ export default function NotificationSystem({
       const data = await response.json();
       
       const hasActive = data.orders && data.orders.length > 0;
-      logger.info('Active orders check:', { hasActive, count: data.orders?.length || 0 });
+      logger.debug('Active orders check:', { hasActive, count: data.orders?.length || 0 });
       
       return hasActive;
     } catch (error) {
@@ -450,8 +450,8 @@ export default function NotificationSystem({
     // Reset notification state
     lastNotificationTime.current = 0;
 
-    logger.info('🔄 Starting notification system...');
-    logger.info('⏰ Will check for pending orders every 60 seconds');
+    logger.info('Starting notification system', 'NotificationSystem');
+    logger.info('Will check for pending orders every 60 seconds', 'NotificationSystem');
 
     // Initial check
     checkForNewOrders();
@@ -459,7 +459,7 @@ export default function NotificationSystem({
     // Set up interval for checking
     checkInterval.current = setInterval(() => {
       const now = new Date();
-      logger.info(`⏰ Interval triggered at ${now.toLocaleTimeString()}`);
+      logger.debug(`Interval triggered at ${now.toLocaleTimeString()}`, 'NotificationSystem');
       checkForNewOrders();
     }, 60000); // Check every 60 seconds
 
@@ -467,7 +467,7 @@ export default function NotificationSystem({
   };
 
   const stopNotificationSystem = () => {
-    logger.info('🛑 Stopping notification system');
+    logger.info('Stopping notification system', 'NotificationSystem');
     if (checkInterval.current) {
       clearInterval(checkInterval.current);
       checkInterval.current = null;
@@ -476,26 +476,25 @@ export default function NotificationSystem({
     lastOrderIds.current.clear();
   };
 
-  // Add a log when the component mounts/unmounts
   useEffect(() => {
-    logger.info('📱 NotificationSystem component mounted');
+    logger.info('NotificationSystem component mounted', 'NotificationSystem');
     return () => {
-      logger.info('📱 NotificationSystem component unmounting');
+      logger.info('NotificationSystem component unmounting', 'NotificationSystem');
+      stopNotificationSystem();
     };
   }, []);
 
-  // Add logging for session and location changes
   useEffect(() => {
-    if (session?.user && currentLocation) {
-      logger.info('🔑 User logged in and location available, starting notification system');
+    if (session && currentLocation) {
+      logger.info('User logged in and location available, starting notification system', 'NotificationSystem');
       startNotificationSystem();
     } else {
-      logger.info('⚠️ Missing requirements for notification system:', {
-        hasUser: !!session?.user,
+      logger.warn('Missing requirements for notification system', 'NotificationSystem', {
+        hasSession: !!session,
         hasLocation: !!currentLocation
       });
+      stopNotificationSystem();
     }
-    return () => stopNotificationSystem();
   }, [session, currentLocation]);
 
   // The component doesn't render anything visible

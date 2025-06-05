@@ -4,6 +4,7 @@ import ShopperHeader from "@components/shopper/ShopperHeader";
 import ShopperSidebar from "@components/shopper/ShopperSidebar";
 import { useSession } from "next-auth/react";
 import { useTheme } from "@context/ThemeContext";
+import { logger } from '../../utils/logger';
 
 interface ShopperLayoutProps {
   children: React.ReactNode;
@@ -20,6 +21,12 @@ export default function ShopperLayout({ children }: ShopperLayoutProps) {
     window.addEventListener("resize", checkIfMobile);
     return () => window.removeEventListener("resize", checkIfMobile);
   }, []);
+
+  useEffect(() => {
+    if (session) {
+      logger.debug("Session data", "ShopperLayout", session);
+    }
+  }, [session]);
 
   // session contains user: { id, name, email, phone, gender, address }
   // status is 'authenticated' | 'loading' | 'unauthenticated'

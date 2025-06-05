@@ -5,6 +5,7 @@ import { Input, Button, Checkbox } from "rsuite";
 import Image from "next/image";
 import CheckoutItems from "./checkout/checkoutCard";
 import { formatCurrency } from "../../lib/formatCurrency";
+import { logger } from '../../utils/logger';
 
 interface CartItemProps {
   item: CartItemType;
@@ -197,7 +198,7 @@ export default function ItemCartTable({
         );
       })
       .catch((err) => {
-        console.error("Failed to fetch cart items:", err);
+        logger.error("Failed to fetch cart items", "CartsTable", err);
         setCartItems([]);
       })
       .finally(() => {
@@ -231,7 +232,7 @@ export default function ItemCartTable({
         prev.map((i) => (i.id === id ? { ...i, quantity: newQty } : i))
       );
     } catch (err) {
-      console.error("Failed to increase quantity:", err);
+      logger.error("Failed to increase quantity", "CartsTable", err);
     } finally {
       setLoadingIds((prev) => {
         const s = new Set(prev);
@@ -256,7 +257,7 @@ export default function ItemCartTable({
         prev.map((i) => (i.id === id ? { ...i, quantity: newQty } : i))
       );
     } catch (err) {
-      console.error("Failed to decrease quantity:", err);
+      logger.error("Failed to decrease quantity", "CartsTable", err);
     } finally {
       setLoadingIds((prev) => {
         const s = new Set(prev);
@@ -267,7 +268,6 @@ export default function ItemCartTable({
   };
 
   const removeItem = async (id: string) => {
-    // add to loading set
     setLoadingIds((prev) => new Set(prev).add(id));
     try {
       await fetch("/api/cart-items", {
@@ -275,30 +275,28 @@ export default function ItemCartTable({
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ cart_item_id: id }),
       });
-      // remove locally
-      setCartItems((prev) => prev.filter((item) => item.id !== id));
-      // Notify cart count update
-      window.dispatchEvent(new Event("cartChanged"));
+      // update local state
+      setCartItems((prev) => prev.filter((i) => i.id !== id));
     } catch (err) {
-      console.error("Failed to delete cart item:", err);
+      logger.error("Failed to delete cart item", "CartsTable", err);
     } finally {
       setLoadingIds((prev) => {
-        const newSet = new Set(prev);
-        newSet.delete(id);
-        return newSet;
+        const s = new Set(prev);
+        s.delete(id);
+        return s;
       });
     }
   };
 
+  // Calculate total for checked items
   const total = cartItems
-    .reduce(
-      (sum, item) => sum + parseFloat(item?.price || "0") * item.quantity,
-      0
-    )
-    .toFixed(2);
+    .filter((item) => item.checked)
+    .reduce((sum, item) => sum + parseFloat(item.price || "0") * item.quantity, 0);
+
+  logger.info("Cart total updated", "CartsTable", { total });
 
   // Calculate numeric total and notify parent
-  const totalNumber = parseFloat(total);
+  const totalNumber = parseFloat(total.toFixed(2));
   // Calculate total units and notify parent
   const totalUnits = cartItems.reduce((sum, item) => sum + item.quantity, 0);
 
@@ -313,8 +311,6 @@ export default function ItemCartTable({
       onUnitsChange(totalUnits);
     }
   }, [totalUnits, onUnitsChange]);
-
-  console.log(total);
 
   return (
     <>

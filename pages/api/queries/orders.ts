@@ -4,6 +4,7 @@ import { gql } from "graphql-request";
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "../auth/[...nextauth]";
 import type { Session } from "next-auth";
+import { logger } from '../../../src/utils/logger';
 
 // Fetch orders including item aggregates, fees, and shopper assignment
 const GET_ORDERS = gql`
@@ -90,20 +91,21 @@ export default async function handler(
       return res.status(401).json({ error: "Unauthorized" });
     }
 
+    // Extract user ID from session
     const userId = (session.user as any).id;
     if (!userId) {
       return res.status(400).json({ error: "Missing user ID in session" });
     }
 
-    console.log(`Fetching orders for user: ${userId}`);
+    logger.info("Fetching orders for user", "OrdersAPI", { userId });
 
     // 1. Fetch orders
     const data = await hasuraClient.request<OrdersResponse>(GET_ORDERS, {
-      user_id: userId,
+      user_id: userId
     });
     const orders = data.Orders;
 
-    console.log(`Found ${orders?.length || 0} orders for user ${userId}`);
+    logger.info(`Found ${orders?.length || 0} orders`, "OrdersAPI");
 
     // If no orders found, return empty array
     if (!orders || orders.length === 0) {
@@ -174,7 +176,7 @@ export default async function handler(
     });
     res.status(200).json({ orders: enriched });
   } catch (error) {
-    console.error("Error fetching orders:", error);
+    logger.error("Error fetching orders", "OrdersAPI", error);
     res.status(500).json({ error: "Failed to fetch orders" });
   }
 }

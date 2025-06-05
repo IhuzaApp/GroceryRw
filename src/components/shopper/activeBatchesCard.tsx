@@ -6,6 +6,7 @@ import { Button, Panel, Badge, Loader, toaster, Message } from "rsuite";
 import "rsuite/dist/rsuite.min.css";
 import { useAuth } from "../../context/AuthContext";
 import { useTheme } from "../../context/ThemeContext";
+import { logger } from '../../utils/logger';
 
 // Define interfaces for order data
 interface Order {
@@ -89,26 +90,19 @@ export default function ActiveBatches({
 
         if (!response.ok) {
           const errorData = await response.json().catch(() => ({}));
-          console.error("API Error Response:", response.status, errorData);
-          throw new Error(
-            `Failed to fetch active batches (${response.status}): ${
-              errorData.error || response.statusText
-            }`
-          );
+          logger.error("API Error Response", "ActiveBatchesCard", { status: response.status, error: errorData });
+          throw new Error(errorData.error || "Failed to fetch active batches");
         }
 
         const data = await response.json();
 
-        // Handle the new response format
-        if (data.noOrdersFound) {
-          // This is not an error, just no batches found
+        if (!data.batches || data.batches.length === 0) {
+          logger.info("No active batches found", "ActiveBatchesCard", { message: data.message });
           setActiveOrders([]);
-          console.log("No active batches found:", data.message);
-        } else {
-          // Normal array of orders
-          setActiveOrders(Array.isArray(data) ? data : []);
+          return;
         }
 
+        setActiveOrders(data.batches);
         setFetchAttempted(true);
       } catch (err) {
         // Don't set error if it was canceled
@@ -116,7 +110,7 @@ export default function ActiveBatches({
           return;
         }
 
-        console.error("Error fetching active batches:", err);
+        logger.error("Error fetching active batches", "ActiveBatchesCard", err);
         const errorMessage =
           err instanceof Error ? err.message : "An unknown error occurred";
         setError(errorMessage);
