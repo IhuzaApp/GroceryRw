@@ -1,49 +1,58 @@
-import { Logger, LogEntry } from './types';
-import { clientLogger } from './clientLogger';
+import { LogEntry, LogLevel, Logger } from './types';
 
-// Only import serverLogger on the server side
-let serverLogger: Logger | null = null;
-if (typeof window === 'undefined') {
-  import('./serverLogger').then(module => {
-    serverLogger = module.serverLogger;
-  });
-}
+class LoggerImpl implements Logger {
+  private logs: LogEntry[] = [];
+  private maxLogs = 1000;
 
-class SystemLogger implements Logger {
-  private logger: Logger;
-
-  constructor() {
-    // Default to client logger, use server logger if available on server
-    this.logger = typeof window === 'undefined' && serverLogger ? serverLogger : clientLogger;
+  private createLogEntry(
+    type: LogLevel,
+    message: string,
+    component?: string,
+    details?: any
+  ): LogEntry {
+    return {
+      timestamp: new Date().toISOString(),
+      type,
+      component: component || 'unknown',
+      message,
+      details: details !== undefined ? details : undefined
+    };
   }
 
-  log(message: string, component?: string, details?: any): void {
-    this.logger.log(message, component, details);
+  private addLog(entry: LogEntry) {
+    this.logs.unshift(entry);
+    if (this.logs.length > this.maxLogs) {
+      this.logs.pop();
+    }
   }
 
-  error(message: string, component?: string, details?: any): void {
-    this.logger.error(message, component, details);
+  debug(message: string, component?: string, details?: any) {
+    const entry = this.createLogEntry('debug', message, component, details);
+    this.addLog(entry);
   }
 
-  warn(message: string, component?: string, details?: any): void {
-    this.logger.warn(message, component, details);
+  info(message: string, component?: string, details?: any) {
+    const entry = this.createLogEntry('info', message, component, details);
+    this.addLog(entry);
   }
 
-  info(message: string, component?: string, details?: any): void {
-    this.logger.info(message, component, details);
+  warn(message: string, component?: string, details?: any) {
+    const entry = this.createLogEntry('warn', message, component, details);
+    this.addLog(entry);
   }
 
-  debug(message: string, component?: string, details?: any): void {
-    this.logger.debug(message, component, details);
+  error(message: string, component?: string, details?: any) {
+    const entry = this.createLogEntry('error', message, component, details);
+    this.addLog(entry);
   }
 
   async getLogs(): Promise<LogEntry[]> {
-    return this.logger.getLogs();
+    return this.logs;
   }
 
   async clearLogs(): Promise<void> {
-    return this.logger.clearLogs();
+    this.logs = [];
   }
 }
 
-export const logger = new SystemLogger(); 
+export const logger = new LoggerImpl(); 

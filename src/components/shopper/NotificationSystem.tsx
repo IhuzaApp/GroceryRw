@@ -59,20 +59,12 @@ export default function NotificationSystem({
         
         // Set audio properties
         audio.preload = 'auto';
-        audio.volume = 1.0;
-        audio.autoplay = false;
+        audio.volume = 0.7; // Slightly reduce volume
         
-        audio.addEventListener('loadeddata', () => {
+        // Add event listeners
+        audio.addEventListener('canplaythrough', () => {
           logger.info('Notification sound loaded successfully', 'NotificationSystem');
           setAudioLoaded(true);
-          
-          audio.play().then(() => {
-            audio.pause();
-            audio.currentTime = 0;
-            logger.info('Audio system enabled', 'NotificationSystem');
-          }).catch(error => {
-            logger.warn('Initial audio enable failed', 'NotificationSystem', error);
-          });
         });
 
         audio.addEventListener('error', (e) => {
@@ -81,30 +73,19 @@ export default function NotificationSystem({
         });
 
         audioRef.current = audio;
-        audio.load();
-
-        fetch('/notifySound.mp3')
-          .then(response => {
-            if (!response.ok) {
-              throw new Error(`HTTP error! status: ${response.status}`);
-            }
-            logger.info('Notification sound file exists', 'NotificationSystem');
-          })
-          .catch(error => {
-            logger.error('Could not find notification sound file', 'NotificationSystem', error);
-          });
 
       } catch (error) {
         logger.error('Error initializing notification sound', 'NotificationSystem', error);
       }
-
-      return () => {
-        if (audioRef.current) {
-          audioRef.current.pause();
-          audioRef.current = null;
-        }
-      };
     }
+
+    return () => {
+      if (audioRef.current) {
+        audioRef.current.pause();
+        audioRef.current.src = '';
+        audioRef.current = null;
+      }
+    };
   }, []);
 
   useEffect(() => {
@@ -183,43 +164,38 @@ export default function NotificationSystem({
   };
 
   const playNotificationSound = async () => {
-    logger.info('Attempting to play notification sound...', 'NotificationSystem', {
-      audioLoaded,
-      audioExists: !!audioRef.current
-    });
-
     try {
       if (!audioRef.current) {
-        logger.error('Cannot play sound - Audio not initialized', 'NotificationSystem');
+        logger.warn('Cannot play sound - Audio not initialized', 'NotificationSystem');
         return;
       }
 
-      if (!audioLoaded) {
-        logger.warn('Cannot play sound - Audio not loaded yet', 'NotificationSystem');
-        return;
-      }
-
+      // Reset the audio to start
       audioRef.current.currentTime = 0;
-      audioRef.current.volume = 1.0;
-
-      logger.info('Playing notification sound...', 'NotificationSystem');
       
-      const attemptPlay = async (attempts = 3) => {
-        try {
-          await audioRef.current?.play();
-          logger.info('Notification sound played successfully', 'NotificationSystem');
-        } catch (error) {
-          logger.warn(`Play attempt failed (${attempts} attempts left)`, 'NotificationSystem', error);
-          if (attempts > 0) {
-            setTimeout(() => attemptPlay(attempts - 1), 100);
-          }
-        }
-      };
-
-      attemptPlay();
-
+      // Create and play a new instance for better reliability
+      const soundInstance = new Audio('/notifySound.mp3');
+      soundInstance.volume = 0.7;
+      
+      await soundInstance.play();
+      logger.info('Notification sound played successfully', 'NotificationSystem');
+      
+      // Clean up after playing
+      soundInstance.addEventListener('ended', () => {
+        soundInstance.src = '';
+      });
     } catch (error) {
-      logger.error('Unexpected error playing sound', 'NotificationSystem', error);
+      logger.error('Error playing notification sound', 'NotificationSystem', error);
+      
+      // Fallback attempt with the original audio element
+      try {
+        if (audioRef.current) {
+          await audioRef.current.play();
+          logger.info('Notification sound played successfully (fallback)', 'NotificationSystem');
+        }
+      } catch (fallbackError) {
+        logger.error('Fallback notification sound also failed', 'NotificationSystem', fallbackError);
+      }
     }
   };
 
@@ -260,7 +236,11 @@ export default function NotificationSystem({
 
       const now = new Date();
       const currentDay = now.getDay() === 0 ? 7 : now.getDay(); // Convert Sunday from 0 to 7
-      const currentTime = now.toLocaleTimeString('en-US', { hour12: false });
+      
+      // Get current time in minutes since midnight
+      const currentHours = now.getHours();
+      const currentMinutes = now.getMinutes();
+      const currentTimeInMinutes = currentHours * 60 + currentMinutes;
 
       const todaySchedule = data.schedule.find((s: ShopperSchedule) => s.day_of_week === currentDay);
       
@@ -269,20 +249,27 @@ export default function NotificationSystem({
         return false;
       }
 
-      const isTimeWithinRange = currentTime >= todaySchedule.start_time && 
-                               currentTime <= todaySchedule.end_time;
+      // Convert schedule times to minutes since midnight
+      const [startHours, startMinutes] = todaySchedule.start_time.split(':').map(Number);
+      const [endHours, endMinutes] = todaySchedule.end_time.split(':').map(Number);
+      
+      const startTimeInMinutes = startHours * 60 + startMinutes;
+      const endTimeInMinutes = endHours * 60 + endMinutes;
 
-      logger.info('Schedule check:', {
+      const isTimeWithinRange = currentTimeInMinutes >= startTimeInMinutes && 
+                               currentTimeInMinutes <= endTimeInMinutes;
+
+      logger.info('Schedule check:', 'NotificationSystem', {
         currentDay,
-        currentTime,
+        currentTime: `${currentHours}:${currentMinutes}`,
         scheduleStart: todaySchedule.start_time,
         scheduleEnd: todaySchedule.end_time,
-        isWithinRange: isTimeWithinRange
+        isTimeWithinRange
       });
 
       return isTimeWithinRange;
     } catch (error) {
-      logger.error('Error checking schedule:', error);
+      logger.error('Error checking schedule:', 'NotificationSystem', error);
       return false;
     }
   };
@@ -294,11 +281,14 @@ export default function NotificationSystem({
       const data = await response.json();
       
       const hasActive = data.orders && data.orders.length > 0;
-      logger.debug('Active orders check:', { hasActive, count: data.orders?.length || 0 });
+      logger.debug('Active orders check', 'NotificationSystem', { 
+        hasActive, 
+        count: data.orders?.length || 0 
+      });
       
       return hasActive;
     } catch (error) {
-      logger.error('Error checking active orders:', error);
+      logger.error('Error checking active orders', 'NotificationSystem', error);
       return true; // Assume has active orders on error to prevent notifications
     }
   };
@@ -355,7 +345,7 @@ export default function NotificationSystem({
     const currentTime = now.getTime();
 
     if (currentTime - lastNotificationTime.current < 60000) {
-      logger.info(`Skipping notification check - ${Math.floor((60000 - (currentTime - lastNotificationTime.current)) / 1000)}s until next check`, 'NotificationSystem');
+      logger.debug(`Skipping notification check - ${Math.floor((60000 - (currentTime - lastNotificationTime.current)) / 1000)}s until next check`, 'NotificationSystem');
       return;
     }
 
@@ -366,17 +356,17 @@ export default function NotificationSystem({
     ]);
 
     if (!withinSchedule) {
-      logger.info('Outside scheduled hours, skipping notification check', 'NotificationSystem');
+      logger.debug('Outside scheduled hours, skipping notification check', 'NotificationSystem');
       return;
     }
 
     if (!noActiveOrders) {
-      logger.info('Shopper has active orders, skipping notification check', 'NotificationSystem');
+      logger.debug('Shopper has active orders, skipping notification check', 'NotificationSystem');
       return;
     }
 
     if (!isActive) {
-      logger.info('Shopper is not active, skipping notification check', 'NotificationSystem');
+      logger.debug('Shopper is not active, skipping notification check', 'NotificationSystem');
       return;
     }
 
@@ -424,7 +414,7 @@ export default function NotificationSystem({
             lastNotificationTime.current = currentTime;
             logger.info(`Showing notification for batch from ${nextOrder.shopName}`, 'NotificationSystem', nextOrder);
           } else {
-            logger.info('User already has an active batch assignment, skipping notification', 'NotificationSystem');
+            logger.debug('User already has an active batch assignment, skipping notification', 'NotificationSystem');
           }
         }
 
@@ -432,7 +422,7 @@ export default function NotificationSystem({
           onNewOrder(orders);
         }
       } else {
-        logger.info('No pending orders found', 'NotificationSystem');
+        logger.debug('No pending orders found', 'NotificationSystem');
       }
     } catch (error) {
       logger.error('Error checking for pending orders', 'NotificationSystem', error);
