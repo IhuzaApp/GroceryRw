@@ -202,7 +202,8 @@ export default function ShopperDashboard() {
                 id: order.id,
                 shopName: order.shopName || "Unknown Shop",
                 shopAddress: order.shopAddress || "No address available",
-                customerAddress: order.customerAddress || "No address available",
+                customerAddress:
+                  order.customerAddress || "No address available",
                 distance: distanceStr,
                 items: order.itemsCount || 0,
                 total: `$${(order.earnings || 0).toFixed(2)}`,
@@ -231,7 +232,7 @@ export default function ShopperDashboard() {
           .filter(Boolean); // Remove any null entries from formatting errors
 
         console.log(`Formatted ${formattedOrders.length} orders for display`);
-        console.log('Sample formatted order:', formattedOrders[0]);
+        console.log("Sample formatted order:", formattedOrders[0]);
 
         // Set available orders
         setAvailableOrders(formattedOrders);
@@ -418,20 +419,20 @@ export default function ShopperDashboard() {
       // Load all data in parallel
       Promise.all([
         loadOrders(),
-        fetch('/api/shopper/todayCompletedEarnings')
-          .then(res => res.json())
-          .then(data => {
+        fetch("/api/shopper/todayCompletedEarnings")
+          .then((res) => res.json())
+          .then((data) => {
             if (data?.success && data?.data) {
               setDailyEarnings(data.data.totalEarnings);
               setCompletedOrdersCount(data.data.orderCount);
             }
           })
-          .catch(error => {
+          .catch((error) => {
             console.error("Error fetching daily earnings:", error);
             setDailyEarnings(0);
             setCompletedOrdersCount(0);
-          })
-      ]).catch(error => {
+          }),
+      ]).catch((error) => {
         console.error("Error loading initial data:", error);
       });
     }
@@ -447,10 +448,10 @@ export default function ShopperDashboard() {
   // Handle new order notification
   const handleNewOrder = (order: any) => {
     if (!order) return;
-    
+
     // Refresh orders list
     loadOrders();
-    
+
     // Update last refreshed time
     setLastRefreshed(new Date());
   };
@@ -543,11 +544,11 @@ export default function ShopperDashboard() {
   return (
     <ShopperLayout>
       {/* Add NotificationSystem with current location */}
-      <NotificationSystem 
+      <NotificationSystem
         currentLocation={isOnline ? currentLocation : null}
         onNewOrder={loadOrders}
       />
-      
+
       <div
         className={`${
           isMobile ? "relative h-full overflow-hidden" : "min-h-screen"
@@ -772,9 +773,9 @@ export default function ShopperDashboard() {
             className={`fixed bottom-16 left-0 right-0 z-[1000] rounded-t-2xl border-t-2 transition-all duration-300 ease-in-out ${
               isExpanded ? "h-[calc(100%-4rem)]" : "h-[80px]"
             } ${
-              theme === 'dark'
-                ? 'border-gray-800 bg-gray-900 text-gray-100'
-                : 'border-gray-200 bg-white text-gray-900'
+              theme === "dark"
+                ? "border-gray-800 bg-gray-900 text-gray-100"
+                : "border-gray-200 bg-white text-gray-900"
             }`}
           >
             {/* Handle to expand/collapse */}
@@ -783,9 +784,11 @@ export default function ShopperDashboard() {
                 className="flex cursor-pointer items-center justify-center p-2"
                 onClick={toggleExpanded}
               >
-                <div className={`mx-auto h-1.5 w-10 rounded-full ${
-                  theme === 'dark' ? 'bg-gray-700' : 'bg-gray-300'
-                }`} />
+                <div
+                  className={`mx-auto h-1.5 w-10 rounded-full ${
+                    theme === "dark" ? "bg-gray-700" : "bg-gray-300"
+                  }`}
+                />
               </div>
               {/* Start/Stop in sheet header on mobile when collapsed */}
               {!isExpanded && (
@@ -805,12 +808,12 @@ export default function ShopperDashboard() {
                     }
                     className={`rounded px-3 py-1 font-bold shadow ${
                       isOnline
-                        ? theme === 'dark'
+                        ? theme === "dark"
                           ? "bg-red-600 text-white hover:bg-red-700"
                           : "bg-red-500 text-white hover:bg-red-600"
-                        : theme === 'dark'
-                          ? "bg-green-600 text-white hover:bg-green-700"
-                          : "bg-green-500 text-white hover:bg-green-600"
+                        : theme === "dark"
+                        ? "bg-green-600 text-white hover:bg-green-700"
+                        : "bg-green-500 text-white hover:bg-green-600"
                     }`}
                   >
                     {isOnline ? "Go Offline" : "Start Plas"}
@@ -822,24 +825,30 @@ export default function ShopperDashboard() {
             {isExpanded ? (
               <div className="h-full overflow-y-auto px-4 pb-4">
                 <div className="mb-4 flex items-center justify-between">
-                  <h2 className={`text-lg font-semibold ${
-                    theme === 'dark' ? 'text-white' : 'text-gray-900'
-                  }`}>Available Orders</h2>
+                  <h2
+                    className={`text-lg font-semibold ${
+                      theme === "dark" ? "text-white" : "text-gray-900"
+                    }`}
+                  >
+                    Available Orders
+                  </h2>
                   <div className="flex items-center space-x-2">
-                    <span className={`text-xs ${
-                      theme === 'dark' ? 'text-gray-400' : 'text-gray-500'
-                    }`}>
+                    <span
+                      className={`text-xs ${
+                        theme === "dark" ? "text-gray-400" : "text-gray-500"
+                      }`}
+                    >
                       {lastRefreshed && `${lastRefreshed.toLocaleTimeString()}`}
                     </span>
                     <button
                       onClick={toggleAutoRefresh}
                       className={`rounded-md px-2 py-1 text-xs font-medium ${
                         isAutoRefreshing
-                          ? theme === 'dark'
+                          ? theme === "dark"
                             ? "bg-green-900/30 text-green-300"
                             : "bg-green-100 text-green-700"
-                          : theme === 'dark'
-                            ? "bg-gray-800 text-gray-300"
+                          : theme === "dark"
+                          ? "bg-gray-800 text-gray-300"
                           : "bg-gray-100 text-gray-700"
                       }`}
                     >
@@ -849,11 +858,11 @@ export default function ShopperDashboard() {
                       onClick={toggleHistorical}
                       className={`rounded-md px-2 py-1 text-xs font-medium ${
                         showHistorical
-                          ? theme === 'dark'
+                          ? theme === "dark"
                             ? "bg-blue-900/30 text-blue-300"
                             : "bg-blue-100 text-blue-700"
-                          : theme === 'dark'
-                            ? "bg-gray-800 text-gray-300"
+                          : theme === "dark"
+                          ? "bg-gray-800 text-gray-300"
                           : "bg-gray-100 text-gray-700"
                       }`}
                     >
@@ -862,9 +871,9 @@ export default function ShopperDashboard() {
                     <Button
                       appearance="primary"
                       className={`${
-                        theme === 'dark'
-                          ? 'bg-green-600 text-white hover:bg-green-700'
-                          : 'bg-green-500 text-white hover:bg-green-600'
+                        theme === "dark"
+                          ? "bg-green-600 text-white hover:bg-green-700"
+                          : "bg-green-500 text-white hover:bg-green-600"
                       }`}
                       onClick={loadOrders}
                       size="sm"
@@ -879,11 +888,11 @@ export default function ShopperDashboard() {
                     onClick={() => handleSortChange("newest")}
                     className={`rounded px-3 py-1 text-xs ${
                       sortBy === "newest"
-                        ? theme === 'dark'
-                        ? "bg-green-600 text-white"
+                        ? theme === "dark"
+                          ? "bg-green-600 text-white"
                           : "bg-green-600 text-white"
-                        : theme === 'dark'
-                          ? "bg-gray-800 text-gray-300"
+                        : theme === "dark"
+                        ? "bg-gray-800 text-gray-300"
                         : "bg-gray-200 text-gray-800"
                     }`}
                     title="Orders less than 1 hour old"
@@ -894,11 +903,11 @@ export default function ShopperDashboard() {
                     onClick={() => handleSortChange("earnings")}
                     className={`rounded px-3 py-1 text-xs ${
                       sortBy === "earnings"
-                        ? theme === 'dark'
-                        ? "bg-green-600 text-white"
+                        ? theme === "dark"
+                          ? "bg-green-600 text-white"
                           : "bg-green-600 text-white"
-                        : theme === 'dark'
-                          ? "bg-gray-800 text-gray-300"
+                        : theme === "dark"
+                        ? "bg-gray-800 text-gray-300"
                         : "bg-gray-200 text-gray-800"
                     }`}
                   >
@@ -908,11 +917,11 @@ export default function ShopperDashboard() {
                     onClick={() => handleSortChange("distance")}
                     className={`rounded px-3 py-1 text-xs ${
                       sortBy === "distance"
-                        ? theme === 'dark'
-                        ? "bg-green-600 text-white"
+                        ? theme === "dark"
+                          ? "bg-green-600 text-white"
                           : "bg-green-600 text-white"
-                        : theme === 'dark'
-                          ? "bg-gray-800 text-gray-300"
+                        : theme === "dark"
+                        ? "bg-gray-800 text-gray-300"
                         : "bg-gray-200 text-gray-800"
                     }`}
                   >
@@ -922,11 +931,11 @@ export default function ShopperDashboard() {
                     onClick={() => handleSortChange("priority")}
                     className={`rounded px-3 py-1 text-xs ${
                       sortBy === "priority"
-                        ? theme === 'dark'
-                        ? "bg-purple-600 text-white"
+                        ? theme === "dark"
+                          ? "bg-purple-600 text-white"
                           : "bg-purple-600 text-white"
-                        : theme === 'dark'
-                          ? "bg-gray-800 text-gray-300"
+                        : theme === "dark"
+                        ? "bg-gray-800 text-gray-300"
                         : "bg-gray-200 text-gray-800"
                     }`}
                     title="All orders by priority level, including older orders"
@@ -937,9 +946,11 @@ export default function ShopperDashboard() {
 
                 {/* Filtering info message */}
                 <div className="mb-4 px-4 md:hidden">
-                  <p className={`text-xs ${
-                    theme === 'dark' ? 'text-gray-400' : 'text-gray-500'
-                  }`}>
+                  <p
+                    className={`text-xs ${
+                      theme === "dark" ? "text-gray-400" : "text-gray-500"
+                    }`}
+                  >
                     {!isOnline
                       ? "Go online to see available orders"
                       : sortBy === "newest"
@@ -953,18 +964,24 @@ export default function ShopperDashboard() {
 
                 {isLoading ? (
                   <div className="space-y-4 px-1">
-                    <Panel bordered className={`h-[180px] ${
-                      theme === 'dark' ? 'bg-gray-800 text-gray-100' : ''
-                    }`}>
+                    <Panel
+                      bordered
+                      className={`h-[180px] ${
+                        theme === "dark" ? "bg-gray-800 text-gray-100" : ""
+                      }`}
+                    >
                       <Placeholder.Paragraph rows={3} active />
                       <div className="mt-4 flex justify-between">
                         <Placeholder.Graph active width={70} height={24} />
                         <Placeholder.Graph active width={120} height={24} />
                       </div>
                     </Panel>
-                    <Panel bordered className={`h-[180px] ${
-                      theme === 'dark' ? 'bg-gray-800 text-gray-100' : ''
-                    }`}>
+                    <Panel
+                      bordered
+                      className={`h-[180px] ${
+                        theme === "dark" ? "bg-gray-800 text-gray-100" : ""
+                      }`}
+                    >
                       <Placeholder.Paragraph rows={3} active />
                       <div className="mt-4 flex justify-between">
                         <Placeholder.Graph active width={70} height={24} />
@@ -973,24 +990,28 @@ export default function ShopperDashboard() {
                     </Panel>
                   </div>
                 ) : !isOnline ? (
-                  <div className={`py-8 text-center ${
-                    theme === 'dark' ? 'text-gray-100' : ''
-                  }`}>
+                  <div
+                    className={`py-8 text-center ${
+                      theme === "dark" ? "text-gray-100" : ""
+                    }`}
+                  >
                     <h3 className="mb-2 text-base font-medium">
                       You&apos;re Currently Offline
                     </h3>
-                    <p className={`mb-4 ${
-                      theme === 'dark' ? 'text-gray-400' : 'text-gray-500'
-                    }`}>
+                    <p
+                      className={`mb-4 ${
+                        theme === "dark" ? "text-gray-400" : "text-gray-500"
+                      }`}
+                    >
                       To see available orders, please go online first by
                       enabling your location.
                     </p>
                     <Button
                       appearance="primary"
                       className={`${
-                        theme === 'dark'
-                          ? 'bg-green-600 text-white hover:bg-green-700'
-                          : 'bg-green-500 text-white'
+                        theme === "dark"
+                          ? "bg-green-600 text-white hover:bg-green-700"
+                          : "bg-green-500 text-white"
                       }`}
                       onClick={() =>
                         window.dispatchEvent(new Event("toggleGoLive"))
@@ -999,9 +1020,11 @@ export default function ShopperDashboard() {
                     >
                       Go Online
                     </Button>
-                    <p className={`mt-4 text-xs ${
-                      theme === 'dark' ? 'text-gray-500' : 'text-gray-400'
-                    }`}>
+                    <p
+                      className={`mt-4 text-xs ${
+                        theme === "dark" ? "text-gray-500" : "text-gray-400"
+                      }`}
+                    >
                       You&apos;ll be asked to allow location access
                     </p>
                   </div>
@@ -1016,10 +1039,16 @@ export default function ShopperDashboard() {
                     ))}
                   </div>
                 ) : (
-                  <div className={`py-8 text-center ${
-                    theme === 'dark' ? 'text-gray-100' : ''
-                  }`}>
-                    <p className={theme === 'dark' ? 'text-gray-400' : 'text-gray-500'}>
+                  <div
+                    className={`py-8 text-center ${
+                      theme === "dark" ? "text-gray-100" : ""
+                    }`}
+                  >
+                    <p
+                      className={
+                        theme === "dark" ? "text-gray-400" : "text-gray-500"
+                      }
+                    >
                       {showHistorical
                         ? "No pending orders available."
                         : "No orders pending for 15+ minutes."}
@@ -1029,9 +1058,11 @@ export default function ShopperDashboard() {
               </div>
             ) : (
               <div className="flex items-center justify-between px-4">
-                <p className={`text-sm ${
-                  theme === 'dark' ? 'text-gray-400' : 'text-gray-500'
-                }`}>
+                <p
+                  className={`text-sm ${
+                    theme === "dark" ? "text-gray-400" : "text-gray-500"
+                  }`}
+                >
                   {!isOnline
                     ? "Go online to see available orders"
                     : `Available Orders: ${sortedOrders.length}`}

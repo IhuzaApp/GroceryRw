@@ -3,7 +3,15 @@ import { useRouter } from "next/router";
 import { useSession } from "next-auth/react";
 import Link from "next/link";
 import Image from "next/image";
-import { Avatar, Button, Input, Loader, Panel, Dropdown, IconButton } from "rsuite";
+import {
+  Avatar,
+  Button,
+  Input,
+  Loader,
+  Panel,
+  Dropdown,
+  IconButton,
+} from "rsuite";
 import {
   collection,
   query,
@@ -448,29 +456,51 @@ export default function ChatPage() {
       <div className="flex items-center justify-between border-b border-gray-200 bg-white px-4 py-3 dark:border-gray-700 dark:bg-gray-800">
         <div className="flex items-center gap-3">
           <Link href="/Messages" className="text-gray-600 dark:text-gray-400">
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <svg
+              width="24"
+              height="24"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+            >
               <path d="M19 12H5M12 19l-7-7 7-7" />
             </svg>
           </Link>
           {shopper && (
             <div className="flex items-center gap-2">
-              <Avatar src={shopper.avatar} alt={shopper.name} circle size="sm" />
+              <Avatar
+                src={shopper.avatar}
+                alt={shopper.name}
+                circle
+                size="sm"
+              />
               <div>
-                <h2 className="text-sm font-medium text-gray-900 dark:text-white">{shopper.name}</h2>
-                <p className="text-xs text-gray-500 dark:text-gray-400">Order #{formatOrderID(order?.OrderID)}</p>
+                <h2 className="text-sm font-medium text-gray-900 dark:text-white">
+                  {shopper.name}
+                </h2>
+                <p className="text-xs text-gray-500 dark:text-gray-400">
+                  Order #{formatOrderID(order?.OrderID)}
+                </p>
               </div>
             </div>
           )}
         </div>
-        
-        <Dropdown 
-          placement="bottomEnd" 
+
+        <Dropdown
+          placement="bottomEnd"
           renderToggle={(props, ref) => (
-            <IconButton 
-              {...props} 
+            <IconButton
+              {...props}
               ref={ref}
               icon={
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor" className="text-gray-600 dark:text-gray-400">
+                <svg
+                  width="24"
+                  height="24"
+                  viewBox="0 0 24 24"
+                  fill="currentColor"
+                  className="text-gray-600 dark:text-gray-400"
+                >
                   <path d="M12 8c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2zm0 2c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm0 6c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2z" />
                 </svg>
               }
@@ -480,7 +510,11 @@ export default function ChatPage() {
             />
           )}
         >
-          <Dropdown.Item onClick={() => router.push(`/CurrentPendingOrders/viewOrderDetails/${order?.id}`)}>
+          <Dropdown.Item
+            onClick={() =>
+              router.push(`/CurrentPendingOrders/viewOrderDetails/${order?.id}`)
+            }
+          >
             View Order Details
           </Dropdown.Item>
         </Dropdown>
@@ -490,7 +524,10 @@ export default function ChatPage() {
       <div className="flex flex-1 overflow-hidden">
         {/* Messages Section */}
         <div className="flex flex-1 flex-col">
-          <div className="flex-1 overflow-y-auto bg-gray-50 px-4 py-2 dark:bg-gray-900" ref={messagesEndRef}>
+          <div
+            className="flex-1 overflow-y-auto bg-gray-50 px-4 py-2 dark:bg-gray-900"
+            ref={messagesEndRef}
+          >
             {messages.map((message, index) => (
               <Message
                 key={message.id}
@@ -504,7 +541,7 @@ export default function ChatPage() {
               />
             ))}
           </div>
-          
+
           {/* Message Input */}
           <div className="border-t border-gray-200 bg-white px-4 py-3 dark:border-gray-700 dark:bg-gray-800">
             <form onSubmit={handleSendMessage} className="flex gap-2">
@@ -524,35 +561,50 @@ export default function ChatPage() {
               </Button>
             </form>
           </div>
-            </div>
+        </div>
 
         {/* Order Details Section - Only visible on desktop */}
         <div className="hidden border-l border-gray-200 dark:border-gray-700 lg:block lg:w-96">
           {order && (
             <div className="h-full overflow-y-auto bg-white px-4 py-3 dark:bg-gray-800">
-              <h2 className="mb-4 text-lg font-semibold text-gray-900 dark:text-white">Order Details</h2>
-              
+              <h2 className="mb-4 text-lg font-semibold text-gray-900 dark:text-white">
+                Order Details
+              </h2>
+
               <div className="space-y-4">
-                  <div>
-                  <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400">Status</h3>
+                <div>
+                  <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400">
+                    Status
+                  </h3>
                   <p className="text-gray-900 dark:text-white">
-                    {order.status.charAt(0).toUpperCase() + order.status.slice(1)}
+                    {order.status.charAt(0).toUpperCase() +
+                      order.status.slice(1)}
                   </p>
                 </div>
 
                 <div>
-                  <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400">Total</h3>
-                  <p className="text-gray-900 dark:text-white">{formatCurrency(order.total)}</p>
-              </div>
+                  <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400">
+                    Total
+                  </h3>
+                  <p className="text-gray-900 dark:text-white">
+                    {formatCurrency(order.total)}
+                  </p>
+                </div>
 
                 <div>
-                  <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400">Delivery Address</h3>
-                  <p className="text-gray-900 dark:text-white">{order.delivery_address}</p>
-              </div>
+                  <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400">
+                    Delivery Address
+                  </h3>
+                  <p className="text-gray-900 dark:text-white">
+                    {order.delivery_address}
+                  </p>
+                </div>
 
                 {shopper && (
                   <div>
-                    <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400">Shopper</h3>
+                    <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400">
+                      Shopper
+                    </h3>
                     <div className="mt-1 flex items-center gap-2">
                       <Avatar
                         src={shopper.avatar}
@@ -560,14 +612,16 @@ export default function ChatPage() {
                         circle
                         size="sm"
                       />
-                      <span className="text-gray-900 dark:text-white">{shopper.name}</span>
+                      <span className="text-gray-900 dark:text-white">
+                        {shopper.name}
+                      </span>
                     </div>
                   </div>
                 )}
               </div>
             </div>
           )}
-          </div>
+        </div>
       </div>
     </div>
   );

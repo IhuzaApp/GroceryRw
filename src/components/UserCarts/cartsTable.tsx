@@ -5,7 +5,7 @@ import { Input, Button, Checkbox } from "rsuite";
 import Image from "next/image";
 import CheckoutItems from "./checkout/checkoutCard";
 import { formatCurrency } from "../../lib/formatCurrency";
-import { logger } from '../../utils/logger';
+import { logger } from "../../utils/logger";
 
 interface CartItemProps {
   item: CartItemType;
@@ -291,7 +291,10 @@ export default function ItemCartTable({
   // Calculate total for checked items
   const total = cartItems
     .filter((item) => item.checked)
-    .reduce((sum, item) => sum + parseFloat(item.price || "0") * item.quantity, 0);
+    .reduce(
+      (sum, item) => sum + parseFloat(item.price || "0") * item.quantity,
+      0
+    );
 
   logger.info("Cart total updated", "CartsTable", { total });
 

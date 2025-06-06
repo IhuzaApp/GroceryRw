@@ -1,8 +1,8 @@
-import { NextApiRequest, NextApiResponse } from 'next';
-import { getSession } from 'next-auth/react';
-import { gql } from 'graphql-request';
-import { hasuraClient } from '../../../src/lib/hasuraClient';
-import { logger } from '../../../src/utils/logger';
+import { NextApiRequest, NextApiResponse } from "next";
+import { getSession } from "next-auth/react";
+import { gql } from "graphql-request";
+import { hasuraClient } from "../../../src/lib/hasuraClient";
+import { logger } from "../../../src/utils/logger";
 
 interface ScheduleResponse {
   Shopper_Availability: Array<{
@@ -25,7 +25,7 @@ export default async function handler(
     const userId = session?.user?.id;
 
     if (!userId) {
-      return res.status(401).json({ error: 'Unauthorized' });
+      return res.status(401).json({ error: "Unauthorized" });
     }
 
     const GET_SCHEDULE = gql`
@@ -49,23 +49,21 @@ export default async function handler(
       throw new Error("Hasura client is not initialized");
     }
 
-    const data = await hasuraClient.request<ScheduleResponse>(
-      GET_SCHEDULE,
-      { userId }
-    );
-
-    logger.info('Schedule query result:', 'ScheduleAPI', {
+    const data = await hasuraClient.request<ScheduleResponse>(GET_SCHEDULE, {
       userId,
-      scheduleCount: data.Shopper_Availability.length
+    });
+
+    logger.info("Schedule query result:", "ScheduleAPI", {
+      userId,
+      scheduleCount: data.Shopper_Availability.length,
     });
 
     return res.status(200).json({
       schedule: data.Shopper_Availability,
-      hasSchedule: data.Shopper_Availability.length > 0
+      hasSchedule: data.Shopper_Availability.length > 0,
     });
-
   } catch (error) {
-    logger.error('Error fetching schedule:', 'ScheduleAPI', error);
-    return res.status(500).json({ error: 'Failed to fetch schedule' });
+    logger.error("Error fetching schedule:", "ScheduleAPI", error);
+    return res.status(500).json({ error: "Failed to fetch schedule" });
   }
 }

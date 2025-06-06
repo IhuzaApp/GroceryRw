@@ -67,7 +67,9 @@ export default async function handler(
     }
 
     // Get a random shop
-    const { Shops } = await hasuraClient.request<ShopsResponse>(GET_NEARBY_SHOP);
+    const { Shops } = await hasuraClient.request<ShopsResponse>(
+      GET_NEARBY_SHOP
+    );
     if (!Shops?.length) {
       return res.status(404).json({ error: "No shops found" });
     }
@@ -79,19 +81,19 @@ export default async function handler(
         shop_id: Shops[0].id,
         user_id: "00000000-0000-0000-0000-000000000000", // Test user ID
         total_amount: Math.floor(Math.random() * 100) + 10, // Random amount between 10 and 110
-        status: "PENDING"
+        status: "PENDING",
       }
     );
 
     return res.status(200).json({
       success: true,
-      order: testOrder.insert_Orders_one
+      order: testOrder.insert_Orders_one,
     });
   } catch (error) {
     console.error("Error creating test order:", error);
     return res.status(500).json({
       error: "Failed to create test order",
-      details: error instanceof Error ? error.message : "Unknown error"
+      details: error instanceof Error ? error.message : "Unknown error",
     });
   }
-} 
+}

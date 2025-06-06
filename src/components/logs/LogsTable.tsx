@@ -1,10 +1,19 @@
-import React, { useEffect, useState } from 'react';
-import { Table, Loader, Button, SelectPicker, Panel, ButtonToolbar, IconButton, Modal } from 'rsuite';
-import { useTheme } from '../../context/ThemeContext';
-import { GetServerSideProps } from 'next';
-import ReloadIcon from '@rsuite/icons/Reload';
-import TrashIcon from '@rsuite/icons/Trash';
-import './LogsTable.css'; // We'll create this file next
+import React, { useEffect, useState } from "react";
+import {
+  Table,
+  Loader,
+  Button,
+  SelectPicker,
+  Panel,
+  ButtonToolbar,
+  IconButton,
+  Modal,
+} from "rsuite";
+import { useTheme } from "../../context/ThemeContext";
+import { GetServerSideProps } from "next";
+import ReloadIcon from "@rsuite/icons/Reload";
+import TrashIcon from "@rsuite/icons/Trash";
+import "./LogsTable.css"; // We'll create this file next
 
 const { Column, HeaderCell, Cell } = Table;
 
@@ -22,7 +31,7 @@ interface LogsResponse {
   total: number;
 }
 
-type LogType = 'error' | 'warn' | 'info' | 'debug' | null;
+type LogType = "error" | "warn" | "info" | "debug" | null;
 
 interface LogsTableProps {
   initialLogs: SystemLog[];
@@ -39,14 +48,16 @@ const LogsTable: React.FC<LogsTableProps> = ({ initialLogs, initialTotal }) => {
   const fetchLogs = async () => {
     try {
       setLoading(true);
-      const response = await fetch(`/api/logs/read${filter ? `?type=${filter}` : ''}`);
+      const response = await fetch(
+        `/api/logs/read${filter ? `?type=${filter}` : ""}`
+      );
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
-      const data = await response.json() as LogsResponse;
+      const data = (await response.json()) as LogsResponse;
       setLogs(data.logs);
     } catch (error) {
-      console.error('Error fetching logs:', error);
+      console.error("Error fetching logs:", error);
     } finally {
       setLoading(false);
     }
@@ -55,8 +66,8 @@ const LogsTable: React.FC<LogsTableProps> = ({ initialLogs, initialTotal }) => {
   const clearLogs = async () => {
     try {
       setLoading(true);
-      const response = await fetch('/api/logs/clear', {
-        method: 'POST',
+      const response = await fetch("/api/logs/clear", {
+        method: "POST",
       });
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
@@ -67,7 +78,7 @@ const LogsTable: React.FC<LogsTableProps> = ({ initialLogs, initialTotal }) => {
         setShowClearConfirm(false);
       }
     } catch (error) {
-      console.error('Error clearing logs:', error);
+      console.error("Error clearing logs:", error);
     } finally {
       setLoading(false);
     }
@@ -84,86 +95,103 @@ const LogsTable: React.FC<LogsTableProps> = ({ initialLogs, initialTotal }) => {
   };
 
   const formatDetails = (details: any) => {
-    if (!details) return '';
+    if (!details) return "";
     try {
-      return typeof details === 'string' ? details : JSON.stringify(details, null, 2);
+      return typeof details === "string"
+        ? details
+        : JSON.stringify(details, null, 2);
     } catch (e) {
       return String(details);
     }
   };
 
   const getTypeColor = (type: string) => {
-    if (theme === 'dark') {
+    if (theme === "dark") {
       switch (type.toLowerCase()) {
-        case 'error': return '#ff4d4f';
-        case 'warn': return '#faad14';
-        case 'info': return '#1890ff';
-        case 'debug': return '#52c41a';
-        default: return '#d9d9d9';
+        case "error":
+          return "#ff4d4f";
+        case "warn":
+          return "#faad14";
+        case "info":
+          return "#1890ff";
+        case "debug":
+          return "#52c41a";
+        default:
+          return "#d9d9d9";
       }
     } else {
       switch (type.toLowerCase()) {
-        case 'error': return '#cf1322';
-        case 'warn': return '#d48806';
-        case 'info': return '#096dd9';
-        case 'debug': return '#389e0d';
-        default: return '#8c8c8c';
+        case "error":
+          return "#cf1322";
+        case "warn":
+          return "#d48806";
+        case "info":
+          return "#096dd9";
+        case "debug":
+          return "#389e0d";
+        default:
+          return "#8c8c8c";
       }
     }
   };
 
   return (
     <>
-      <Panel 
+      <Panel
         style={{
-          backgroundColor: 'var(--bg-secondary)',
-          color: 'var(--text-primary)',
+          backgroundColor: "var(--bg-secondary)",
+          color: "var(--text-primary)",
         }}
         header={
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-xl font-bold" style={{ color: 'var(--text-primary)' }}>System Logs</h2>
-            <div className="flex gap-4 items-center">
+          <div className="mb-4 flex items-center justify-between">
+            <h2
+              className="text-xl font-bold"
+              style={{ color: "var(--text-primary)" }}
+            >
+              System Logs
+            </h2>
+            <div className="flex items-center gap-4">
               <SelectPicker
                 data={[
-                  { label: 'All', value: null },
-                  { label: 'Error', value: 'error' },
-                  { label: 'Warning', value: 'warn' },
-                  { label: 'Info', value: 'info' },
-                  { label: 'Debug', value: 'debug' }
+                  { label: "All", value: null },
+                  { label: "Error", value: "error" },
+                  { label: "Warning", value: "warn" },
+                  { label: "Info", value: "info" },
+                  { label: "Debug", value: "debug" },
                 ]}
                 value={filter}
-                onChange={value => {
+                onChange={(value) => {
                   setFilter(value as LogType);
                 }}
                 cleanable={false}
                 searchable={false}
                 placeholder="Filter by type"
                 style={{
-                  backgroundColor: 'var(--bg-primary)',
-                  color: 'var(--text-primary)',
+                  backgroundColor: "var(--bg-primary)",
+                  color: "var(--text-primary)",
                 }}
               />
               <ButtonToolbar>
-                <IconButton 
+                <IconButton
                   icon={<ReloadIcon />}
                   onClick={fetchLogs}
                   disabled={loading}
                   appearance="subtle"
                   style={{
-                    backgroundColor: 'var(--bg-primary)',
-                    color: 'var(--text-primary)',
+                    backgroundColor: "var(--bg-primary)",
+                    color: "var(--text-primary)",
                   }}
                 >
                   Refresh
                 </IconButton>
-                <IconButton 
+                <IconButton
                   icon={<TrashIcon />}
                   onClick={() => setShowClearConfirm(true)}
                   disabled={loading || logs.length === 0}
                   appearance="subtle"
                   color="red"
                   style={{
-                    backgroundColor: 'var(--bg-primary)',
+                    backgroundColor: "var(--bg-primary)",
                   }}
                 >
                   Clear
@@ -182,25 +210,21 @@ const LogsTable: React.FC<LogsTableProps> = ({ initialLogs, initialTotal }) => {
             height={600}
             data={logs}
             rowHeight={60}
-            className={`logs-table ${theme === 'dark' ? 'dark' : 'light'}`}
+            className={`logs-table ${theme === "dark" ? "dark" : "light"}`}
             style={{
-              backgroundColor: 'var(--bg-primary)',
+              backgroundColor: "var(--bg-primary)",
             }}
-            rowClassName={() => theme === 'dark' ? 'dark-row' : 'light-row'}
+            rowClassName={() => (theme === "dark" ? "dark-row" : "light-row")}
           >
             <Column width={150} align="left" fixed>
-              <HeaderCell className="header-cell">
-                Timestamp
-              </HeaderCell>
+              <HeaderCell className="header-cell">Timestamp</HeaderCell>
               <Cell className="table-cell">
                 {(rowData: SystemLog) => formatTimestamp(rowData.timestamp)}
               </Cell>
             </Column>
 
             <Column width={100}>
-              <HeaderCell className="header-cell">
-                Type
-              </HeaderCell>
+              <HeaderCell className="header-cell">Type</HeaderCell>
               <Cell className="table-cell">
                 {(rowData: SystemLog) => (
                   <span style={{ color: getTypeColor(rowData.type) }}>
@@ -211,27 +235,21 @@ const LogsTable: React.FC<LogsTableProps> = ({ initialLogs, initialTotal }) => {
             </Column>
 
             <Column width={150}>
-              <HeaderCell className="header-cell">
-                Component
-              </HeaderCell>
+              <HeaderCell className="header-cell">Component</HeaderCell>
               <Cell className="table-cell">
                 {(rowData: SystemLog) => rowData.component}
               </Cell>
             </Column>
 
             <Column width={300}>
-              <HeaderCell className="header-cell">
-                Message
-              </HeaderCell>
+              <HeaderCell className="header-cell">Message</HeaderCell>
               <Cell className="table-cell">
                 {(rowData: SystemLog) => rowData.message}
               </Cell>
             </Column>
 
             <Column flexGrow={1}>
-              <HeaderCell className="header-cell">
-                Details
-              </HeaderCell>
+              <HeaderCell className="header-cell">Details</HeaderCell>
               <Cell className="table-cell">
                 {(rowData: SystemLog) => (
                   <pre className="whitespace-pre-wrap text-sm">
@@ -244,37 +262,38 @@ const LogsTable: React.FC<LogsTableProps> = ({ initialLogs, initialTotal }) => {
         )}
       </Panel>
 
-      <Modal 
-        open={showClearConfirm} 
+      <Modal
+        open={showClearConfirm}
         onClose={() => setShowClearConfirm(false)}
         style={{
-          backgroundColor: 'var(--bg-primary)',
-          color: 'var(--text-primary)',
+          backgroundColor: "var(--bg-primary)",
+          color: "var(--text-primary)",
         }}
       >
         <Modal.Header>
           <Modal.Title>Clear All Logs</Modal.Title>
         </Modal.Header>
         <Modal.Body>
-          Are you sure you want to clear all system logs? This action cannot be undone.
+          Are you sure you want to clear all system logs? This action cannot be
+          undone.
         </Modal.Body>
         <Modal.Footer>
-          <Button 
-            onClick={() => setShowClearConfirm(false)} 
+          <Button
+            onClick={() => setShowClearConfirm(false)}
             appearance="subtle"
             style={{
-              backgroundColor: 'var(--bg-secondary)',
-              color: 'var(--text-primary)',
+              backgroundColor: "var(--bg-secondary)",
+              color: "var(--text-primary)",
             }}
           >
             Cancel
           </Button>
-          <Button 
-            onClick={clearLogs} 
-            appearance="primary" 
+          <Button
+            onClick={clearLogs}
+            appearance="primary"
             color="red"
             style={{
-              marginLeft: '8px',
+              marginLeft: "8px",
             }}
           >
             Clear All
@@ -290,12 +309,14 @@ export default LogsTable;
 // Add this to your page component that uses LogsTable
 export const getServerSideProps: GetServerSideProps = async () => {
   try {
-    const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/logs/read`);
+    const response = await fetch(
+      `${process.env.NEXT_PUBLIC_API_URL}/api/logs/read`
+    );
     if (!response.ok) {
       throw new Error(`HTTP error! status: ${response.status}`);
     }
     const data = await response.json();
-    
+
     return {
       props: {
         initialLogs: data.logs,
@@ -303,7 +324,7 @@ export const getServerSideProps: GetServerSideProps = async () => {
       },
     };
   } catch (error) {
-    console.error('Error fetching initial logs:', error);
+    console.error("Error fetching initial logs:", error);
     return {
       props: {
         initialLogs: [],
@@ -311,4 +332,4 @@ export const getServerSideProps: GetServerSideProps = async () => {
       },
     };
   }
-}; 
+};

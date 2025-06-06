@@ -1,7 +1,7 @@
-import { gql } from 'graphql-request';
-import { hasuraClient } from '../../lib/hasuraClient';
+import { gql } from "graphql-request";
+import { hasuraClient } from "../../lib/hasuraClient";
 
-type LogLevel = 'debug' | 'info' | 'warn' | 'error';
+type LogLevel = "debug" | "info" | "warn" | "error";
 
 interface LogEntry {
   type: LogLevel;
@@ -11,7 +11,7 @@ interface LogEntry {
   timestamp: number;
 }
 
-const STORAGE_KEY = 'system_logs_buffer';
+const STORAGE_KEY = "system_logs_buffer";
 
 class LoggerImpl {
   private isProcessing = false;
@@ -19,15 +19,15 @@ class LoggerImpl {
   private retryDelay = 5000; // 5 seconds
   private flushInterval: NodeJS.Timeout | null = null;
   private memoryBuffer: LogEntry[] = []; // Fallback for server-side
-  private isClient = typeof window !== 'undefined';
+  private isClient = typeof window !== "undefined";
 
   constructor() {
     if (this.isClient) {
       // Only start interval in browser environment
       this.startFlushInterval();
-      
+
       // Handle page unload
-      window.addEventListener('beforeunload', () => {
+      window.addEventListener("beforeunload", () => {
         this.flushBuffer().catch(console.error);
       });
     }
@@ -49,7 +49,7 @@ class LoggerImpl {
       const stored = sessionStorage.getItem(STORAGE_KEY);
       return stored ? JSON.parse(stored) : [];
     } catch (error) {
-      console.error('Error reading from session storage:', error);
+      console.error("Error reading from session storage:", error);
       return [];
     }
   }
@@ -63,9 +63,9 @@ class LoggerImpl {
     try {
       sessionStorage.setItem(STORAGE_KEY, JSON.stringify(buffer));
     } catch (error: any) {
-      console.error('Error writing to session storage:', error);
+      console.error("Error writing to session storage:", error);
       // If session storage is full, force a flush
-      if (error?.name === 'QuotaExceededError') {
+      if (error?.name === "QuotaExceededError") {
         void this.flushBuffer();
       }
     }
@@ -82,27 +82,27 @@ class LoggerImpl {
       message,
       component,
       details: details ? JSON.stringify(details) : undefined,
-      timestamp: Date.now()
+      timestamp: Date.now(),
     };
   }
 
   debug(message: string, component: string, details?: any) {
-    const entry = this.createLogEntry('debug', message, component, details);
+    const entry = this.createLogEntry("debug", message, component, details);
     this.addToBuffer(entry);
   }
 
   info(message: string, component: string, details?: any) {
-    const entry = this.createLogEntry('info', message, component, details);
+    const entry = this.createLogEntry("info", message, component, details);
     this.addToBuffer(entry);
   }
 
   warn(message: string, component: string, details?: any) {
-    const entry = this.createLogEntry('warn', message, component, details);
+    const entry = this.createLogEntry("warn", message, component, details);
     this.addToBuffer(entry);
   }
 
   error(message: string, component: string, details?: any) {
-    const entry = this.createLogEntry('error', message, component, details);
+    const entry = this.createLogEntry("error", message, component, details);
     this.addToBuffer(entry);
   }
 
@@ -130,7 +130,7 @@ class LoggerImpl {
       // Clear buffer only after successful send
       this.setBuffer([]);
     } catch (error) {
-      console.error('Error flushing logs:', error);
+      console.error("Error flushing logs:", error);
       await this.retryFlush();
     } finally {
       this.isProcessing = false;
@@ -139,12 +139,12 @@ class LoggerImpl {
 
   private async retryFlush(retryCount = 0) {
     if (retryCount >= this.maxRetries || !hasuraClient) {
-      console.error('Max retries reached for log flushing');
+      console.error("Max retries reached for log flushing");
       return;
     }
 
-    await new Promise(resolve => setTimeout(resolve, this.retryDelay));
-    
+    await new Promise((resolve) => setTimeout(resolve, this.retryDelay));
+
     try {
       await this.flushBuffer();
     } catch (error) {
@@ -164,12 +164,12 @@ class LoggerImpl {
       }
     `;
 
-    const objects = logs.map(log => ({
+    const objects = logs.map((log) => ({
       type: log.type,
       message: log.message,
       component: log.component,
       details: log.details,
-      time: new Date(log.timestamp).toISOString()
+      time: new Date(log.timestamp).toISOString(),
     }));
 
     await hasuraClient.request(mutation, { logs: objects });
@@ -188,4 +188,4 @@ class LoggerImpl {
 export const logger = new LoggerImpl();
 
 // Export types for use in other files
-export type { LogEntry, LogLevel }; 
+export type { LogEntry, LogLevel };

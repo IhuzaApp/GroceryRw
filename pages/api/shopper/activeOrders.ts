@@ -1,8 +1,8 @@
-import { NextApiRequest, NextApiResponse } from 'next';
-import { getSession } from 'next-auth/react';
-import { gql } from 'graphql-request';
-import { hasuraClient } from '../../../src/lib/hasuraClient';
-import { logger } from '../../../src/utils/logger';
+import { NextApiRequest, NextApiResponse } from "next";
+import { getSession } from "next-auth/react";
+import { gql } from "graphql-request";
+import { hasuraClient } from "../../../src/lib/hasuraClient";
+import { logger } from "../../../src/utils/logger";
 
 interface OrdersResponse {
   Orders: Array<{
@@ -20,7 +20,7 @@ export default async function handler(
     const userId = session?.user?.id;
 
     if (!userId) {
-      return res.status(401).json({ error: 'Unauthorized' });
+      return res.status(401).json({ error: "Unauthorized" });
     }
 
     const GET_ACTIVE_ORDERS = gql`
@@ -44,22 +44,20 @@ export default async function handler(
       throw new Error("Hasura client is not initialized");
     }
 
-    const data = await hasuraClient.request<OrdersResponse>(
-      GET_ACTIVE_ORDERS,
-      { shopperId: userId }
-    );
+    const data = await hasuraClient.request<OrdersResponse>(GET_ACTIVE_ORDERS, {
+      shopperId: userId,
+    });
 
-    logger.info('Active orders query result:', 'ActiveOrdersAPI', {
+    logger.info("Active orders query result:", "ActiveOrdersAPI", {
       userId,
-      orderCount: data.Orders.length
+      orderCount: data.Orders.length,
     });
 
     return res.status(200).json({
-      orders: data.Orders
+      orders: data.Orders,
     });
-
   } catch (error) {
-    logger.error('Error fetching active orders:', 'ActiveOrdersAPI', error);
-    return res.status(500).json({ error: 'Failed to fetch active orders' });
+    logger.error("Error fetching active orders:", "ActiveOrdersAPI", error);
+    return res.status(500).json({ error: "Failed to fetch active orders" });
   }
-} 
+}

@@ -186,8 +186,8 @@ export default function UserPaymentCards({
   const [error, setError] = useState<string | null>(initialData?.error || null);
   const [balances, setBalances] = useState<BalancesType>(
     initialData?.balances || {
-    refunds: [],
-    wallet: null,
+      refunds: [],
+      wallet: null,
       paymentCards: [],
     }
   );
@@ -213,17 +213,17 @@ export default function UserPaymentCards({
   // Fallback to client-side fetching if server-side fails
   useEffect(() => {
     if (!userId) {
-    fetch("/api/user")
-      .then((res) => res.json())
-      .then((data) => {
-        if (data.user?.id) {
-          setUserId(data.user.id);
-        }
-      })
-      .catch((err) => {
-        console.error("Failed to load user:", err);
-        setError("Failed to load user data");
-      });
+      fetch("/api/user")
+        .then((res) => res.json())
+        .then((data) => {
+          if (data.user?.id) {
+            setUserId(data.user.id);
+          }
+        })
+        .catch((err) => {
+          console.error("Failed to load user:", err);
+          setError("Failed to load user data");
+        });
     }
   }, [userId]);
 
@@ -501,69 +501,69 @@ export default function UserPaymentCards({
 
         {/* Green Wallet Card - Only show for shoppers */}
         {balances.wallet && (
-        <div className="relative overflow-hidden rounded-xl bg-gradient-to-r from-green-500 to-green-700 p-5 text-white shadow-lg">
-          <div className="absolute right-0 top-0 -mr-10 -mt-10 h-20 w-20 rounded-full bg-white opacity-5"></div>
-          <div className="absolute bottom-0 left-0 -mb-8 -ml-8 h-16 w-16 rounded-full bg-white opacity-5"></div>
+          <div className="relative overflow-hidden rounded-xl bg-gradient-to-r from-green-500 to-green-700 p-5 text-white shadow-lg">
+            <div className="absolute right-0 top-0 -mr-10 -mt-10 h-20 w-20 rounded-full bg-white opacity-5"></div>
+            <div className="absolute bottom-0 left-0 -mb-8 -ml-8 h-16 w-16 rounded-full bg-white opacity-5"></div>
 
-          <div className="mb-8 flex items-start justify-between">
-            <div>
-              <p className="mb-1 text-xs opacity-80">Available Balance</p>
-              <h4 className="font-bold">WALLET BALANCE</h4>
-            </div>
-            <div className="flex items-center">
-              <svg
-                viewBox="0 0 24 24"
-                fill="currentColor"
-                className="h-10 w-10 text-blue-600"
-              >
-                <path d="M10 13.802l-3.38-3.38-1.42 1.42 4.8 4.8 9.19-9.19-1.41-1.41z" />
-                <path d="M19.03 7.39l.97-.97c.29-.29.29-.77 0-1.06l-1.06-1.06c-.29-.29-.77-.29-1.06 0l-.97.97 2.12 2.12z" />
-              </svg>
-            </div>
-          </div>
-
-          <div className="mb-6">
-            <div className="mb-1 flex items-center">
-              <div className="mr-2 h-6 w-10 rounded-sm bg-opacity-30">
-                <img
-                  className="-mt-3 h-12 w-12"
-                  src="/assets/images/chip.png"
-                  alt=""
-                />
+            <div className="mb-8 flex items-start justify-between">
+              <div>
+                <p className="mb-1 text-xs opacity-80">Available Balance</p>
+                <h4 className="font-bold">WALLET BALANCE</h4>
               </div>
-              <p className="font-mono text-lg tracking-wider">
-                {formatRWF(walletBalance)}
-              </p>
+              <div className="flex items-center">
+                <svg
+                  viewBox="0 0 24 24"
+                  fill="currentColor"
+                  className="h-10 w-10 text-blue-600"
+                >
+                  <path d="M10 13.802l-3.38-3.38-1.42 1.42 4.8 4.8 9.19-9.19-1.41-1.41z" />
+                  <path d="M19.03 7.39l.97-.97c.29-.29.29-.77 0-1.06l-1.06-1.06c-.29-.29-.77-.29-1.06 0l-.97.97 2.12 2.12z" />
+                </svg>
+              </div>
             </div>
-          </div>
 
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="mb-1 text-xs opacity-80">Status</p>
+            <div className="mb-6">
+              <div className="mb-1 flex items-center">
+                <div className="mr-2 h-6 w-10 rounded-sm bg-opacity-30">
+                  <img
+                    className="-mt-3 h-12 w-12"
+                    src="/assets/images/chip.png"
+                    alt=""
+                  />
+                </div>
+                <p className="font-mono text-lg tracking-wider">
+                  {formatRWF(walletBalance)}
+                </p>
+              </div>
+            </div>
+
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="mb-1 text-xs opacity-80">Status</p>
                 <p className="font-medium">ACTIVE</p>
+              </div>
+              <div>
+                <p className="mb-1 text-xs opacity-80">Last Updated</p>
+                <p className="font-medium">Today</p>
+              </div>
+              <div className="text-right">
+                <svg
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  className="h-8 w-8 opacity-80"
+                >
+                  <rect x="2" y="5" width="20" height="14" rx="2" />
+                  <path d="M2 10h20" />
+                </svg>
+              </div>
             </div>
-            <div>
-              <p className="mb-1 text-xs opacity-80">Last Updated</p>
-              <p className="font-medium">Today</p>
-            </div>
-            <div className="text-right">
-              <svg
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                className="h-8 w-8 opacity-80"
-              >
-                <rect x="2" y="5" width="20" height="14" rx="2" />
-                <path d="M2 10h20" />
-              </svg>
-            </div>
-          </div>
 
-          <div className="absolute bottom-3 right-3">
-            <p className="text-xs font-bold opacity-70">AVAILABLE BALANCE</p>
+            <div className="absolute bottom-3 right-3">
+              <p className="text-xs font-bold opacity-70">AVAILABLE BALANCE</p>
+            </div>
           </div>
-        </div>
         )}
 
         {/* Payment Cards */}

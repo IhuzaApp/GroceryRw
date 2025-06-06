@@ -21,7 +21,11 @@ interface GraphQLResponse {
 
 // GraphQL query to fetch today's completed delivery earnings
 const GET_TODAY_COMPLETED_EARNINGS = gql`
-  query GetTodayCompletedEarnings($shopper_id: uuid!, $today_start: timestamptz!, $today_end: timestamptz!) {
+  query GetTodayCompletedEarnings(
+    $shopper_id: uuid!
+    $today_start: timestamptz!
+    $today_end: timestamptz!
+  ) {
     Orders(
       where: {
         shopper_id: { _eq: $shopper_id }
@@ -54,7 +58,9 @@ export default async function handler(
     const shopperId = (session as any)?.user?.id;
 
     if (!shopperId) {
-      return res.status(401).json({ error: "You must be logged in as a shopper" });
+      return res
+        .status(401)
+        .json({ error: "You must be logged in as a shopper" });
     }
 
     if (!hasuraClient) {
@@ -63,15 +69,32 @@ export default async function handler(
 
     // Calculate today's date range in the local timezone
     const now = new Date();
-    const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0);
-    const todayEnd = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59);
+    const todayStart = new Date(
+      now.getFullYear(),
+      now.getMonth(),
+      now.getDate(),
+      0,
+      0,
+      0
+    );
+    const todayEnd = new Date(
+      now.getFullYear(),
+      now.getMonth(),
+      now.getDate(),
+      23,
+      59,
+      59
+    );
 
     // Fetch orders for today
-    const data = await hasuraClient.request<GraphQLResponse>(GET_TODAY_COMPLETED_EARNINGS, {
-      shopper_id: shopperId,
-      today_start: todayStart.toISOString(),
-      today_end: todayEnd.toISOString(),
-    });
+    const data = await hasuraClient.request<GraphQLResponse>(
+      GET_TODAY_COMPLETED_EARNINGS,
+      {
+        shopper_id: shopperId,
+        today_start: todayStart.toISOString(),
+        today_end: todayEnd.toISOString(),
+      }
+    );
 
     // Calculate total earnings and get order details
     let totalEarnings = 0;
@@ -95,12 +118,15 @@ export default async function handler(
         totalEarnings,
         completedOrders,
         orderCount: completedOrders.length,
-      }
+      },
     });
   } catch (error) {
     console.error("Error fetching today's completed earnings:", error);
     return res.status(500).json({
-      error: error instanceof Error ? error.message : "Failed to fetch today's completed earnings"
+      error:
+        error instanceof Error
+          ? error.message
+          : "Failed to fetch today's completed earnings",
     });
   }
-} 
+}

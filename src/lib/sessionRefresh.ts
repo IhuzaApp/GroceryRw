@@ -77,14 +77,17 @@ export const initiateRoleSwitch = async (
     if (!response.ok) {
       // Handle specific error cases
       if (data.code === "NOT_ACTIVE_SHOPPER") {
-        throw new Error("You must be an active shopper to switch to shopper mode");
+        throw new Error(
+          "You must be an active shopper to switch to shopper mode"
+        );
       }
       throw new Error(data.error || "Failed to update role");
     }
 
     if (data.success) {
       // Redirect to the appropriate page
-      window.location.href = data.redirectTo || (nextRole === "shopper" ? "/ShopperDashboard" : "/");
+      window.location.href =
+        data.redirectTo || (nextRole === "shopper" ? "/ShopperDashboard" : "/");
     } else {
       throw new Error(data.error || "Failed to update role");
     }

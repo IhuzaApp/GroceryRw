@@ -122,7 +122,7 @@ export default function UserOrderDetails({ order }: UserOrderDetailsProps) {
       }
 
       // Close modal and update state
-    setFeedbackModal(false);
+      setFeedbackModal(false);
       setRating(0);
       setComment("");
       setHasExistingRating(true);
@@ -559,13 +559,13 @@ export default function UserOrderDetails({ order }: UserOrderDetailsProps) {
               <h4 className="mb-4 text-base font-medium text-gray-900 sm:text-lg">
                 How was your experience?
               </h4>
-            <div className="flex justify-center">
-              <Rate
+              <div className="flex justify-center">
+                <Rate
                   defaultValue={0}
                   value={rating}
                   onChange={setRating}
-                color="yellow"
-                size="lg"
+                  color="yellow"
+                  size="lg"
                   className="text-2xl sm:text-3xl"
                 />
               </div>
@@ -588,14 +588,14 @@ export default function UserOrderDetails({ order }: UserOrderDetailsProps) {
                 <div>
                   <label className="mb-2 block text-sm font-medium text-gray-700">
                     Share your thoughts
-            </label>
-            <textarea
+                  </label>
+                  <textarea
                     className="w-full rounded-md border border-gray-300 p-3 text-sm focus:border-green-500 focus:outline-none focus:ring-1 focus:ring-green-500"
                     placeholder="Tell us what you liked or what we could improve..."
-              rows={4}
+                    rows={4}
                     value={comment}
                     onChange={(e) => setComment(e.target.value)}
-            ></textarea>
+                  ></textarea>
                 </div>
               </div>
             </div>
@@ -614,10 +614,10 @@ export default function UserOrderDetails({ order }: UserOrderDetailsProps) {
               className="rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 shadow-sm transition hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2"
               type="button"
             >
-            Cancel
+              Cancel
             </button>
             <button
-            onClick={handleFeedbackSubmit}
+              onClick={handleFeedbackSubmit}
               disabled={submitting}
               className="flex items-center justify-center rounded-md bg-green-500 px-4 py-2 text-sm font-medium text-white shadow-sm transition hover:bg-green-600 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 disabled:opacity-50"
               type="submit"

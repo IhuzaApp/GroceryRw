@@ -22,10 +22,7 @@ const UPDATE_SHOPPER_LOCATION = gql`
   ) {
     update_Shopper_Availability(
       where: { user_id: { _eq: $user_id } }
-      _set: {
-        current_latitude: $latitude
-        current_longitude: $longitude
-      }
+      _set: { current_latitude: $latitude, current_longitude: $longitude }
     ) {
       returning {
         id
@@ -65,7 +62,7 @@ export default async function handler(
       {
         user_id: session.user.id,
         latitude: location.latitude,
-        longitude: location.longitude
+        longitude: location.longitude,
       }
     );
 
@@ -75,13 +72,13 @@ export default async function handler(
 
     return res.status(200).json({
       success: true,
-      location: response.update_Shopper_Availability.returning[0]
+      location: response.update_Shopper_Availability.returning[0],
     });
   } catch (error) {
     console.error("Error updating shopper location:", error);
     return res.status(500).json({
       error: "Failed to update shopper location",
-      details: error instanceof Error ? error.message : "Unknown error"
+      details: error instanceof Error ? error.message : "Unknown error",
     });
   }
-} 
+}

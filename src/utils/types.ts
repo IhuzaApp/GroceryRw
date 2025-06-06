@@ -1,4 +1,4 @@
-export type LogLevel = 'log' | 'error' | 'warn' | 'info' | 'debug';
+export type LogLevel = "log" | "error" | "warn" | "info" | "debug";
 
 export interface LogEntry {
   timestamp: string;
@@ -6,4 +6,4 @@ export interface LogEntry {
   message: string;
   component?: string;
   details?: string;
-} 
+}

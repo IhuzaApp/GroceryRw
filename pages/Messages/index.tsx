@@ -375,7 +375,9 @@ export default function MessagesPage() {
                   <path d="M19 12H5M12 19l-7-7 7-7" />
                 </svg>
               </Link>
-              <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Messages</h1>
+              <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
+                Messages
+              </h1>
             </div>
           </div>
 
@@ -387,15 +389,15 @@ export default function MessagesPage() {
               onChange={setSearchQuery}
               className="max-w-sm rounded-lg border-gray-200 bg-white text-gray-900 transition-colors duration-200 dark:border-gray-700 dark:bg-gray-800 dark:text-white"
             />
-                <Button
+            <Button
               appearance={showUnreadOnly ? "primary" : "ghost"}
               color="green"
               onClick={() => setShowUnreadOnly(!showUnreadOnly)}
               className="dark:text-gray-300"
             >
               Unread Only
-                </Button>
-                <Button
+            </Button>
+            <Button
               appearance="ghost"
               onClick={() =>
                 setSortOrder(sortOrder === "newest" ? "oldest" : "newest")
@@ -403,8 +405,8 @@ export default function MessagesPage() {
               className="dark:text-gray-300"
             >
               Sort: {sortOrder === "newest" ? "Newest First" : "Oldest First"}
-                </Button>
-              </div>
+            </Button>
+          </div>
 
           {/* Conversations List */}
           {loading ? (
@@ -416,58 +418,65 @@ export default function MessagesPage() {
                 >
                   <div className="mb-2 h-4 w-1/4 rounded bg-gray-200 dark:bg-gray-700"></div>
                   <div className="h-3 w-3/4 rounded bg-gray-200 dark:bg-gray-700"></div>
-              </div>
+                </div>
               ))}
             </div>
           ) : conversations.length === 0 ? (
             <div className="rounded-lg bg-white p-8 text-center shadow-md transition-colors duration-200 dark:bg-gray-800">
-              <h3 className="mb-2 text-xl font-semibold text-gray-900 dark:text-white">No Messages</h3>
-              <p className="text-gray-600 dark:text-gray-400">You don't have any messages yet.</p>
-                </div>
-              ) : (
+              <h3 className="mb-2 text-xl font-semibold text-gray-900 dark:text-white">
+                No Messages
+              </h3>
+              <p className="text-gray-600 dark:text-gray-400">
+                You don't have any messages yet.
+              </p>
+            </div>
+          ) : (
             <div className="space-y-4">
               {filteredConversations.map((conversation) => {
                 const order = orders[conversation.orderId] || {};
-                  return (
+                return (
                   <div
-                      key={conversation.id}
+                    key={conversation.id}
                     className={`cursor-pointer rounded-lg bg-white p-4 shadow-md transition-all duration-200 hover:shadow-lg dark:bg-gray-800 ${
                       conversation.unreadCount > 0
                         ? "border-l-4 border-green-500 dark:border-green-600"
                         : ""
-                          }`}
+                    }`}
                     onClick={() => handleChatClick(conversation.orderId)}
                   >
                     <div className="flex items-center justify-between">
                       <div>
                         <h3 className="mb-1 font-semibold text-gray-900 dark:text-white">
-                          Order #{formatOrderID(order?.OrderID || conversation.orderId)}
+                          Order #
+                          {formatOrderID(
+                            order?.OrderID || conversation.orderId
+                          )}
                           {order?.shop?.name && (
                             <span className="ml-2 text-gray-600 dark:text-gray-400">
                               - {order.shop.name}
-                                </span>
-                              )}
-                            </h3>
+                            </span>
+                          )}
+                        </h3>
                         <p className="text-sm text-gray-600 dark:text-gray-400">
                           {conversation.lastMessage || "No messages yet"}
                         </p>
                       </div>
                       <div className="text-right">
                         <div className="text-sm text-gray-500 dark:text-gray-400">
-                              {timeAgo(conversation.lastMessageTime)}
+                          {timeAgo(conversation.lastMessageTime)}
                         </div>
                         {conversation.unreadCount > 0 && (
                           <div className="mt-1 rounded-full bg-green-500 px-2 py-0.5 text-xs font-semibold text-white dark:bg-green-600">
                             {conversation.unreadCount} new
                           </div>
-                            )}
-                          </div>
-                        </div>
+                        )}
                       </div>
-                  );
+                    </div>
+                  </div>
+                );
               })}
-              </div>
-            )}
+            </div>
+          )}
         </div>
       </div>
     </RootLayout>
