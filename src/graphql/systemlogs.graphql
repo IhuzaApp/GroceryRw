@@ -28,3 +28,9 @@ mutation insertSystemLog($type: String!, $message: String!, $component: String!,
   }
 }
 
+mutation clearSystemLogs {
+  delete_System_Logs(where: {}) {
+    affected_rows
+  }
+}
+
