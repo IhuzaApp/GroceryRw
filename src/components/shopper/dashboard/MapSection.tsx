@@ -7,6 +7,7 @@ import { Loader, toaster, Message, Button } from "rsuite";
 import "rsuite/dist/rsuite.min.css";
 import { formatCurrency } from "../../../lib/formatCurrency";
 import { useTheme } from "../../../context/ThemeContext";
+import { logger } from '../../../utils/logger';
 
 interface MapSectionProps {
   mapLoaded: boolean;
@@ -65,6 +66,9 @@ interface Shop {
 // Pending order data type
 interface PendingOrder {
   id: string;
+  status: string;
+  shop_id: string;
+  customer_id: string;
   latitude: number;
   longitude: number;
   earnings: number;
@@ -160,10 +164,64 @@ export default function MapSection({
       }, {} as Record<string, string>);
   };
 
-  // Function to save location to cookies
+  // Add cookie monitoring function
+  const monitorCookies = () => {
+    const currentCookies = getCookies();
+    const cookieSnapshot = JSON.stringify(currentCookies);
+    
+    // Store initial snapshot
+    const prevSnapshot = useRef(cookieSnapshot);
+    
+    // Set up interval to check cookies
+    useEffect(() => {
+      const checkCookies = () => {
+        const newCookies = getCookies();
+        const newSnapshot = JSON.stringify(newCookies);
+        
+        // If cookies changed
+        if (newSnapshot !== prevSnapshot.current) {
+          // Log the change
+          logger.info("Cookie state changed", "MapSection", {
+            previous: JSON.parse(prevSnapshot.current),
+            current: newCookies,
+            timestamp: new Date().toISOString()
+          });
+          
+          // Update snapshot
+          prevSnapshot.current = newSnapshot;
+        }
+      };
+      
+      // Check every 2 minutes
+      const interval = setInterval(checkCookies, 120000);
+      
+      // Cleanup
+      return () => clearInterval(interval);
+    }, []);
+  };
+
+  // Call monitor cookies
+  monitorCookies();
+
+  // Modify saveLocationToCookies to include logging
   const saveLocationToCookies = (lat: number, lng: number) => {
+    const previousCookies = getCookies();
+    
     document.cookie = `user_latitude=${lat}; path=/; max-age=86400`; // 24 hours
     document.cookie = `user_longitude=${lng}; path=/; max-age=86400`;
+    
+    // Log the location update
+    logger.info("Location cookies updated", "MapSection", {
+      previous: {
+        latitude: previousCookies['user_latitude'],
+        longitude: previousCookies['user_longitude']
+      },
+      current: {
+        latitude: lat,
+        longitude: lng
+      },
+      timestamp: new Date().toISOString()
+    });
   };
 
   // Function that reduces duplicate toast notifications
@@ -1342,104 +1400,214 @@ export default function MapSection({
   }, [mapLoaded, theme]);
 
   // Function to initialize map sequence
-  const initMapSequence = (map: L.Map) => {
+  const initMapSequence = async (map: L.Map) => {
     if (!map || !map.getContainer()) return;
 
     try {
-      // Load shop markers
-      fetch("/api/shopper/shops")
-        .then((res) => res.json())
-        .then((data: Shop[]) => {
-          setShops(data);
+      // Load all data in parallel
+      const [shopsResponse, pendingOrdersResponse] = await Promise.all([
+        fetch("/api/shopper/shops"),
+        isOnline ? fetch("/api/shopper/pendingOrders") : Promise.resolve({ json: () => [] })
+      ]);
+
+      const [shops, pendingOrders] = await Promise.all([
+        shopsResponse.json() as Promise<Shop[]>,
+        pendingOrdersResponse.json() as Promise<PendingOrder[]>
+      ]);
+
+      // Process shops
+      setShops(shops);
+      if (map && map.getContainer()) {
+        shops.forEach((shop: Shop) => {
+          try {
+            const lat = parseFloat(shop.latitude);
+            const lng = parseFloat(shop.longitude);
+
+            if (isNaN(lat) || isNaN(lng)) {
+              console.warn(`Invalid coordinates for shop ${shop.name}`);
+              return;
+            }
+
+            if (map && map.getContainer()) {
+              const marker = L.marker([lat, lng], { 
+                icon: createShopMarkerIcon(shop.is_active),
+                zIndexOffset: 500
+              });
+              
+              if (safeAddMarker(marker, map, `shop ${shop.name}`)) {
+                marker.bindPopup(
+                  `<div style="
+                    background: ${theme === 'dark' ? '#1f2937' : '#fff'}; 
+                    color: ${theme === 'dark' ? '#e5e7eb' : '#111827'};
+                    padding: 8px;
+                    border-radius: 8px;
+                    min-width: 150px;
+                    text-align: center;
+                  ">
+                    <strong>${shop.name}</strong>
+                    ${!shop.is_active ? '<br><span style="color: #ef4444;">(Disabled)</span>' : ''}
+                  </div>`,
+                  { offset: [0, -10] }
+                );
+              }
+            }
+          } catch (error) {
+            console.error(`Error adding shop marker for ${shop.name}:`, error);
+          }
+        });
+      }
+
+      // Process pending orders with grouping
+      if (isOnline && map && map.getContainer()) {
+        console.log('Processing pending orders:', pendingOrders);
+        
+        // Group pending orders by location
+        const groupedPendingOrders = new Map<string, PendingOrder[]>();
+        pendingOrders.forEach(order => {
+          if (!order.shopLat || !order.shopLng) return;
+          const key = `${order.shopLat.toFixed(5)},${order.shopLng.toFixed(5)}`;
+          if (!groupedPendingOrders.has(key)) {
+            groupedPendingOrders.set(key, []);
+          }
+          groupedPendingOrders.get(key)?.push(order);
+        });
+
+        // Log grouped orders information
+        logger.info('Pending orders grouped by location', 'MapSection', {
+          totalOrders: pendingOrders.length,
+          groupCount: groupedPendingOrders.size,
+          groupSizes: Array.from(groupedPendingOrders.entries()).map(([key, orders]) => ({
+            location: key,
+            orderCount: orders.length,
+            orderIds: orders.map(o => o.id)
+          }))
+        });
+
+        // Process each group of orders
+        groupedPendingOrders.forEach((orders, locationKey) => {
+          const [baseLat, baseLng] = locationKey.split(',').map(Number);
           
-          // Ensure map is still valid before adding markers
-          if (!map || !map.getContainer()) return;
+          orders.forEach((order, index) => {
+            try {
+              // Calculate offset based on position in group
+              const offset = calculateMarkerOffset(index, orders.length);
+              const adjustedLat = baseLat + offset.lat;
+              const adjustedLng = baseLng + offset.lng;
 
-            data.forEach((shop) => {
-              try {
-                const lat = parseFloat(shop.latitude);
-                const lng = parseFloat(shop.longitude);
+              // Log marker placement
+              logger.debug('Placing pending order marker', 'MapSection', {
+                orderId: order.id,
+                originalLocation: { lat: order.shopLat, lng: order.shopLng },
+                adjustedLocation: { lat: adjustedLat, lng: adjustedLng },
+                offset,
+                groupSize: orders.length,
+                indexInGroup: index
+              });
 
-                if (isNaN(lat) || isNaN(lng)) {
-                console.warn(`Invalid coordinates for shop ${shop.name}`);
-                  return;
-                }
+              const marker = L.marker([adjustedLat, adjustedLng], {
+                icon: createOrderMarkerIcon(formatCurrency(order.earnings)),
+                zIndexOffset: 1000 + index, // Ensure proper stacking
+              });
 
-              // Create marker only if map is ready
-              if (map && map.getContainer()) {
-                const marker = L.marker([lat, lng], { 
-                  icon: createShopMarkerIcon(shop.is_active),
-                  zIndexOffset: 500 // Below order markers but above base layers
+              if (safeAddMarker(marker, map, `pending order ${order.id}`)) {
+                marker.bindPopup(createPopupContent(order, theme), {
+                  maxWidth: 300,
+                  className: `${theme === 'dark' ? 'dark-theme-popup' : 'light-theme-popup'}`,
+                  closeButton: true,
+                  closeOnClick: false,
                 });
-                
-                // Use our enhanced safety function to add the marker
-                if (safeAddMarker(marker, map, `shop ${shop.name}`)) {
-                    marker.bindPopup(
-                    `<div style="
-                      background: ${theme === 'dark' ? '#1f2937' : '#fff'}; 
-                      color: ${theme === 'dark' ? '#e5e7eb' : '#111827'};
-                      padding: 8px;
-                      border-radius: 8px;
-                      min-width: 150px;
-                      text-align: center;
-                    ">
-                      <strong>${shop.name}</strong>
-                      ${!shop.is_active ? '<br><span style="color: #ef4444;">(Disabled)</span>' : ''}
-                    </div>`,
-                    { offset: [0, -10] }
-                  );
-                }
-                }
-              } catch (error) {
-              console.error(`Error adding shop marker for ${shop.name}:`, error);
+                attachAcceptHandler(marker, order.id, map);
+              }
+            } catch (error) {
+              logger.error('Error rendering pending order marker', 'MapSection', {
+                orderId: order.id,
+                error: error instanceof Error ? error.message : 'Unknown error',
+                location: locationKey,
+                groupSize: orders.length,
+                indexInGroup: index
+              });
+              console.error(`Error rendering pending order ${order.id}:`, error);
             }
           });
+        });
+      }
 
-          // Load pending orders after shops are loaded
-          if (isOnline && map && map.getContainer()) {
-      fetch("/api/shopper/pendingOrders")
-        .then((res) => res.json())
-              .then((orders: PendingOrder[]) => {
-                setPendingOrders(orders);
-                orders.forEach((order) => renderPendingOrderMarker(order, map));
-              })
-              .catch((err) => console.error("Error loading pending orders:", err));
+      // Process available orders with grouping
+      if (isOnline && availableOrders?.length > 0 && map && map.getContainer()) {
+        console.log('Processing available orders:', availableOrders);
+        
+        // Group available orders by location
+        const groupedAvailableOrders = new Map<string, typeof availableOrders>();
+        availableOrders.forEach(order => {
+          if (!order.shopLatitude || !order.shopLongitude) return;
+          const key = `${order.shopLatitude.toFixed(5)},${order.shopLongitude.toFixed(5)}`;
+          if (!groupedAvailableOrders.has(key)) {
+            groupedAvailableOrders.set(key, []);
           }
+          groupedAvailableOrders.get(key)?.push(order);
+        });
 
-          // Load available orders
-          if (isOnline && availableOrders?.length > 0 && map && map.getContainer()) {
-            const groupedOrders = groupMarkersByLocation(availableOrders);
+        // Log grouped orders information
+        logger.info('Available orders grouped by location', 'MapSection', {
+          totalOrders: availableOrders.length,
+          groupCount: groupedAvailableOrders.size,
+          groupSizes: Array.from(groupedAvailableOrders.entries()).map(([key, orders]) => ({
+            location: key,
+            orderCount: orders.length,
+            orderIds: orders.map(o => o.id)
+          }))
+        });
 
-            groupedOrders.forEach((orders, locationKey) => {
-              const [baseLat, baseLng] = locationKey.split(',').map(Number);
+        // Process each group of orders
+        groupedAvailableOrders.forEach((orders, locationKey) => {
+          const [baseLat, baseLng] = locationKey.split(',').map(Number);
+          
+          orders.forEach((order, index) => {
+            try {
+              // Calculate offset based on position in group
+              const offset = calculateMarkerOffset(index, orders.length);
+              const adjustedLat = baseLat + offset.lat;
+              const adjustedLng = baseLng + offset.lng;
 
-              orders.forEach((order, index) => {
-                if (!order.shopLatitude || !order.shopLongitude) return;
-
-                const offset = calculateMarkerOffset(index, orders.length);
-                const adjustedLat = baseLat + offset.lat;
-                const adjustedLng = baseLng + offset.lng;
-
-                const marker = L.marker([adjustedLat, adjustedLng], {
-                  icon: createOrderMarkerIcon(order.estimatedEarnings),
-                    zIndexOffset: 1000,
-                  });
-
-                if (safeAddMarker(marker, map, `order ${order.id}`)) {
-                  marker.bindPopup(createAvailableOrderPopupContent(order, theme), {
-                    maxWidth: 300,
-                    className: `${theme === 'dark' ? 'dark-theme-popup' : 'light-theme-popup'}`,
-                    closeButton: true,
-                    closeOnClick: false,
-                  });
-                  attachAcceptHandler(marker, order.id, map);
-                }
+              // Log marker placement
+              logger.debug('Placing available order marker', 'MapSection', {
+                orderId: order.id,
+                originalLocation: { lat: order.shopLatitude, lng: order.shopLongitude },
+                adjustedLocation: { lat: adjustedLat, lng: adjustedLng },
+                offset,
+                groupSize: orders.length,
+                indexInGroup: index
               });
-            });
-          }
-        })
-        .catch((err) => console.error("Error loading shops:", err));
-          } catch (error) {
+
+              const marker = L.marker([adjustedLat, adjustedLng], {
+                icon: createOrderMarkerIcon(order.estimatedEarnings),
+                zIndexOffset: 1000 + index, // Ensure proper stacking
+              });
+
+              if (safeAddMarker(marker, map, `order ${order.id}`)) {
+                marker.bindPopup(createAvailableOrderPopupContent(order, theme), {
+                  maxWidth: 300,
+                  className: `${theme === 'dark' ? 'dark-theme-popup' : 'light-theme-popup'}`,
+                  closeButton: true,
+                  closeOnClick: false,
+                });
+                attachAcceptHandler(marker, order.id, map);
+                orderMarkersRef.current.push(marker);
+              }
+            } catch (error) {
+              logger.error('Error rendering available order marker', 'MapSection', {
+                orderId: order.id,
+                error: error instanceof Error ? error.message : 'Unknown error',
+                location: locationKey,
+                groupSize: orders.length,
+                indexInGroup: index
+              });
+              console.error(`Error adding marker for order ${order.id}:`, error);
+            }
+          });
+        });
+      }
+    } catch (error) {
       console.error("Error in map sequence:", error);
     }
   };

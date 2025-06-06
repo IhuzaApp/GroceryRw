@@ -5,10 +5,10 @@ import { gql } from "graphql-request";
 interface SystemLog {
   id: string;
   type: string;
-  message: string;
+  message: string | null;
   component: string;
-  details?: any;
-  timestamp: string;
+  details: string | null;
+  time: string;
 }
 
 interface InsertSystemLogResponse {
@@ -27,10 +27,9 @@ interface GetSystemLogsResponse {
 const INSERT_SYSTEM_LOG = gql`
   mutation InsertSystemLog(
     $type: String!
-    $message: String!
+    $message: String
     $component: String!
-    $details: jsonb
-    $timestamp: timestamptz!
+    $details: String
   ) {
     insert_System_Logs_one(
       object: {
@@ -38,7 +37,7 @@ const INSERT_SYSTEM_LOG = gql`
         message: $message
         component: $component
         details: $details
-        timestamp: $timestamp
+        time: "now()"
       }
     ) {
       id
@@ -46,7 +45,7 @@ const INSERT_SYSTEM_LOG = gql`
       message
       component
       details
-      timestamp
+      time
     }
   }
 `;
@@ -54,7 +53,7 @@ const INSERT_SYSTEM_LOG = gql`
 const GET_SYSTEM_LOGS = gql`
   query GetSystemLogs($limit: Int = 100, $offset: Int = 0, $type: String) {
     System_Logs(
-      order_by: { timestamp: desc }
+      order_by: { time: desc }
       limit: $limit
       offset: $offset
       where: { type: { _eq: $type } }
@@ -64,7 +63,7 @@ const GET_SYSTEM_LOGS = gql`
       message
       component
       details
-      timestamp
+      time
     }
     System_Logs_aggregate(where: { type: { _eq: $type } }) {
       aggregate {
@@ -76,23 +75,20 @@ const GET_SYSTEM_LOGS = gql`
 
 export async function insertSystemLog(
   type: string,
-  message: string,
+  message: string | null,
   component: string,
-  details?: any
+  details?: string | null
 ) {
   try {
     if (!hasuraClient) {
       throw new Error("Hasura client is not initialized");
     }
-
-    const timestamp = new Date().toISOString();
     
     const response = await hasuraClient.request<InsertSystemLogResponse>(INSERT_SYSTEM_LOG, {
       type,
       message,
       component,
-      details,
-      timestamp
+      details: details ? JSON.stringify(details) : null
     });
 
     return response.insert_System_Logs_one;
@@ -111,13 +107,18 @@ export default async function handler(
     try {
       const { type, message, component, details } = req.body;
 
-      if (!type || !message || !component) {
+      if (!type || !component) {
         return res.status(400).json({
-          error: "Missing required fields: type, message, component"
+          error: "Missing required fields: type, component"
         });
       }
 
-      const result = await insertSystemLog(type, message, component, details);
+      const result = await insertSystemLog(
+        type, 
+        message || null, 
+        component, 
+        details ? JSON.stringify(details) : null
+      );
       return res.status(200).json(result);
 
     } catch (error) {

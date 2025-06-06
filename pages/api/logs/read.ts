@@ -1,9 +1,32 @@
 import { NextApiRequest, NextApiResponse } from 'next';
-import fs from 'fs';
-import path from 'path';
-import { LogEntry } from '../../../src/utils/types';
+import { hasuraClient } from '../../../src/lib/hasuraClient';
+import { gql } from 'graphql-request';
 
-const LOG_DIR = path.join(process.cwd(), 'logs');
+interface SystemLog {
+  id: string;
+  type: string;
+  message: string;
+  component: string;
+  details: string;
+  time: string;
+}
+
+interface GetSystemLogsResponse {
+  System_Logs: SystemLog[];
+}
+
+const GET_SYSTEM_LOGS = gql`
+  query getSystemLogs {
+    System_Logs(order_by: { time: desc }) {
+      time
+      type
+      message
+      id
+      details
+      component
+    }
+  }
+`;
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== 'GET') {
@@ -11,34 +34,28 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   }
 
   try {
-    const date = new Date().toISOString().split('T')[0];
-    const logFile = path.join(LOG_DIR, `${date}.log`);
-
-    if (!fs.existsSync(logFile)) {
-      return res.status(200).json({ logs: [] });
+    if (!hasuraClient) {
+      throw new Error("Hasura client is not initialized");
     }
 
-    const content = await fs.promises.readFile(logFile, 'utf-8');
-    const logs = content
-      .split('\n')
-      .filter(line => line.trim())
-      .map(line => {
-        try {
-          const log = JSON.parse(line);
-          return {
-            ...log,
-            details: log.details ? (
-              typeof log.details === 'string' ? log.details : JSON.stringify(log.details)
-            ) : undefined
-          };
-        } catch (error) {
-          console.error('Error parsing log line:', error);
-          return null;
-        }
-      })
-      .filter((log): log is LogEntry => log !== null);
+    const data = await hasuraClient.request<GetSystemLogsResponse>(GET_SYSTEM_LOGS);
 
-    res.status(200).json({ logs });
+    // Transform the logs to match the expected format
+    const logs = data.System_Logs.map(log => ({
+      type: log.type || '',
+      message: log.message || '',
+      component: log.component || '',
+      details: log.details ? (
+        typeof log.details === 'string' ? log.details : JSON.stringify(log.details)
+      ) : undefined,
+      timestamp: new Date(log.time).getTime(),
+      id: log.id
+    }));
+
+    res.status(200).json({ 
+      logs,
+      total: logs.length 
+    });
   } catch (error) {
     console.error('Error reading logs:', error);
     res.status(500).json({ error: 'Failed to read logs' });

@@ -1,7 +1,7 @@
 query getSystemLogs {
-  System_Logs {
+System_Logs {
+    time
     type
-    timestamp
     message
     id
     details
@@ -10,19 +10,21 @@ query getSystemLogs {
   }
 }
 
-mutation insertSystemLog($type: String!, $message: String!, $component: String!, $details: jsonb) {
+
+mutation insertSystemLog($type: String!, $message: String!, $component: String!, $details: String! , $time :String!) {
   insert_System_Logs_one(object: {
     type: $type,
     message: $message,
     component: $component,
     details: $details,
-    timestamp: "now()"
+    time: $time
   }) {
     id
     type
     message
     component
     details
-    timestamp
+    time
   }
 }
+
