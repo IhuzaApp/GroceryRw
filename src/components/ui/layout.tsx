@@ -13,18 +13,20 @@ export default function RootLayout({
 }) {
   const { data: session, status } = useSession();
   const router = useRouter();
-  
+
   // Check if current page is the chat page
-  const isChatPage = router.pathname.startsWith('/Messages/[orderId]');
+  const isChatPage = router.pathname.startsWith("/Messages/[orderId]");
 
   return (
     <ThemeProvider>
       <div className="min-h-screen bg-white text-gray-900 transition-colors duration-200 dark:bg-gray-900 dark:text-white">
         {!isChatPage && <HeaderLayout />}
         {/* Main content */}
-        <main className={`text-gray-900 transition-colors duration-200 dark:text-white ${
-          isChatPage ? '' : 'px-4 pb-20 pt-6 md:pb-0'
-        }`}>
+        <main
+          className={`text-gray-900 transition-colors duration-200 dark:text-white ${
+            isChatPage ? "" : "px-4 pb-20 pt-6 md:pb-0"
+          }`}
+        >
           {!isChatPage && <SideBar />}
           <div className="[&_*]:text-inherit">{children}</div>
           {!isChatPage && <BottomBar />}

@@ -1,11 +1,11 @@
 "use client";
 
-import React, { useState, useEffect } from 'react';
-import { format } from 'date-fns';
-import { useTheme } from '../../../context/ThemeContext';
-import InvoiceList from '../../../components/shopper/invoice/InvoiceList';
-import InvoiceViewer from '../../../components/shopper/invoice/InvoiceViewer';
-import ShopperLayout from '../../../components/shopper/ShopperLayout';
+import React, { useState, useEffect } from "react";
+import { format } from "date-fns";
+import { useTheme } from "../../../context/ThemeContext";
+import InvoiceList from "../../../components/shopper/invoice/InvoiceList";
+import InvoiceViewer from "../../../components/shopper/invoice/InvoiceViewer";
+import ShopperLayout from "../../../components/shopper/ShopperLayout";
 
 interface Order {
   id: string;
@@ -32,14 +32,14 @@ export default function InvoicesPage() {
   useEffect(() => {
     const fetchOrders = async () => {
       try {
-        const response = await fetch('/api/shopper/completedOrders');
+        const response = await fetch("/api/shopper/completedOrders");
         if (!response.ok) {
-          throw new Error('Failed to fetch orders');
+          throw new Error("Failed to fetch orders");
         }
         const data = await response.json();
         setOrders(data.orders);
       } catch (err) {
-        setError(err instanceof Error ? err.message : 'Failed to fetch orders');
+        setError(err instanceof Error ? err.message : "Failed to fetch orders");
       } finally {
         setLoading(false);
       }
@@ -51,9 +51,11 @@ export default function InvoicesPage() {
   if (loading) {
     return (
       <ShopperLayout>
-        <div className={`flex h-full items-center justify-center p-8 ${
-          theme === 'dark' ? 'text-gray-200' : 'text-gray-800'
-        }`}>
+        <div
+          className={`flex h-full items-center justify-center p-8 ${
+            theme === "dark" ? "text-gray-200" : "text-gray-800"
+          }`}
+        >
           <div className="flex items-center space-x-2">
             <div className="h-5 w-5 animate-spin rounded-full border-b-2 border-t-2 border-blue-500"></div>
             <span>Loading invoices...</span>
@@ -66,17 +68,19 @@ export default function InvoicesPage() {
   if (error) {
     return (
       <ShopperLayout>
-        <div className={`flex h-full items-center justify-center p-8 ${
-          theme === 'dark' ? 'text-red-400' : 'text-red-600'
-        }`}>
+        <div
+          className={`flex h-full items-center justify-center p-8 ${
+            theme === "dark" ? "text-red-400" : "text-red-600"
+          }`}
+        >
           <div className="text-center">
             <p className="mb-2">Error: {error}</p>
             <button
               onClick={() => window.location.reload()}
               className={`rounded px-4 py-2 ${
-                theme === 'dark'
-                  ? 'bg-red-900/30 text-red-200 hover:bg-red-900/50'
-                  : 'bg-red-50 text-red-600 hover:bg-red-100'
+                theme === "dark"
+                  ? "bg-red-900/30 text-red-200 hover:bg-red-900/50"
+                  : "bg-red-50 text-red-600 hover:bg-red-100"
               }`}
             >
               Retry
@@ -89,23 +93,33 @@ export default function InvoicesPage() {
 
   return (
     <ShopperLayout>
-      <div className={`min-h-screen p-4 md:p-6 ${
-        theme === 'dark' ? 'bg-gray-900 text-gray-100' : 'bg-gray-50 text-gray-900'
-      }`}>
+      <div
+        className={`min-h-screen p-4 md:p-6 ${
+          theme === "dark"
+            ? "bg-gray-900 text-gray-100"
+            : "bg-gray-50 text-gray-900"
+        }`}
+      >
         <div className="mx-auto max-w-7xl">
-          <h1 className={`mb-6 text-2xl font-bold ${
-            theme === 'dark' ? 'text-gray-100' : 'text-gray-900'
-          }`}>
+          <h1
+            className={`mb-6 text-2xl font-bold ${
+              theme === "dark" ? "text-gray-100" : "text-gray-900"
+            }`}
+          >
             Invoices
           </h1>
 
           <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-            <div className={`rounded-lg p-4 ${
-              theme === 'dark' ? 'bg-gray-800' : 'bg-white'
-            } shadow-lg`}>
-              <h2 className={`mb-4 text-lg font-semibold ${
-                theme === 'dark' ? 'text-gray-100' : 'text-gray-900'
-              }`}>
+            <div
+              className={`rounded-lg p-4 ${
+                theme === "dark" ? "bg-gray-800" : "bg-white"
+              } shadow-lg`}
+            >
+              <h2
+                className={`mb-4 text-lg font-semibold ${
+                  theme === "dark" ? "text-gray-100" : "text-gray-900"
+                }`}
+              >
                 Order History
               </h2>
               <InvoiceList
@@ -115,12 +129,16 @@ export default function InvoicesPage() {
               />
             </div>
 
-            <div className={`rounded-lg p-4 ${
-              theme === 'dark' ? 'bg-gray-800' : 'bg-white'
-            } shadow-lg`}>
-              <h2 className={`mb-4 text-lg font-semibold ${
-                theme === 'dark' ? 'text-gray-100' : 'text-gray-900'
-              }`}>
+            <div
+              className={`rounded-lg p-4 ${
+                theme === "dark" ? "bg-gray-800" : "bg-white"
+              } shadow-lg`}
+            >
+              <h2
+                className={`mb-4 text-lg font-semibold ${
+                  theme === "dark" ? "text-gray-100" : "text-gray-900"
+                }`}
+              >
                 Invoice Preview
               </h2>
               <InvoiceViewer order={selectedOrder} />
@@ -130,4 +148,4 @@ export default function InvoicesPage() {
       </div>
     </ShopperLayout>
   );
-} 
+}

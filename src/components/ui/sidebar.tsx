@@ -41,25 +41,26 @@ export default function SideBar() {
 
     const fetchPendingOrders = async () => {
       try {
-        const response = await fetch('/api/queries/orders');
+        const response = await fetch("/api/queries/orders");
         const data = await response.json();
-        
+
         // Count orders that are not delivered
         const pendingCount = data.orders.filter(
-          (order: any) => order.status !== "delivered" && order.status !== "cancelled"
+          (order: any) =>
+            order.status !== "delivered" && order.status !== "cancelled"
         ).length;
-        
+
         setPendingOrdersCount(pendingCount);
       } catch (error) {
-        console.error('Error fetching pending orders:', error);
+        console.error("Error fetching pending orders:", error);
       }
     };
 
     fetchPendingOrders();
-    
+
     // Set up an interval to refresh the count every minute
     const interval = setInterval(fetchPendingOrders, 60000);
-    
+
     return () => clearInterval(interval);
   }, [session?.user?.id]);
 

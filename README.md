@@ -155,20 +155,24 @@ await hasuraClient.request(CREATE_REVENUE, {
 # Grocery Delivery Notification System
 
 ## Overview
+
 The notification system manages real-time order notifications for shoppers in the grocery delivery application. It implements a sophisticated batch distribution system with multiple checks to ensure appropriate and timely notifications.
 
 ## Core Features
 
 ### 1. Notification Conditions
+
 Before showing any notifications, the system checks:
 
 - **Shopper Schedule**
+
   - Verifies current time is within shopper's scheduled hours
   - Schedule is defined per day (e.g., Monday 9:00-18:00)
   - No notifications outside scheduled hours
   - Handles day of week conversion (Sunday = 7)
 
 - **Active Orders**
+
   - One batch per shopper at a time
   - No new notifications while shopper has an active order
   - Resumes notifications after order completion/delivery
@@ -181,6 +185,7 @@ Before showing any notifications, the system checks:
 ### 2. Batch Distribution Logic
 
 - **Order Processing**
+
   - Orders are sorted by creation time (oldest first)
   - Each order becomes a batch
   - System tracks batch assignments for 60 seconds
@@ -191,18 +196,19 @@ Before showing any notifications, the system checks:
   - 60-second acceptance window
   - Batch expires if not accepted within time limit
   - Shopper becomes eligible for new batches after:
-    * Current batch expires
-    * Active order is completed
-    * Previous batch is rejected
+    - Current batch expires
+    - Active order is completed
+    - Previous batch is rejected
 
 ### 3. Notification Types
 
 - **In-App Toast Notifications**
+
   ```
   New Batch!
   [Customer Address]
   [Store Name] (Distance in km)
-  
+
   [Accept Batch] [View Details]
   ```
 
@@ -215,6 +221,7 @@ Before showing any notifications, the system checks:
 ### 4. Time Management
 
 - **Schedule Checks**
+
   - Validates against shopper's defined schedule
   - Checks current day and time
   - Prevents notifications outside working hours
@@ -231,14 +238,17 @@ Before showing any notifications, the system checks:
 ### API Endpoints Required
 
 1. `/api/shopper/schedule`
+
    - Returns shopper's availability schedule
    - Format: `{ schedule: Array<{ day_of_week: number, start_time: string, end_time: string, is_available: boolean }> }`
 
 2. `/api/shopper/activeOrders`
+
    - Returns shopper's current active orders
    - Format: `{ orders: Array<Order> }`
 
 3. `/api/shopper/status`
+
    - Returns shopper's active status
    - Format: `{ isActive: boolean }`
 
@@ -283,25 +293,26 @@ interface ShopperSchedule {
 ## Usage Example
 
 1. **Shopper Setup**
+
    ```typescript
    // Set schedule
-   POST /api/shopper/schedule
+   POST / api / shopper / schedule;
    {
      schedule: [
        {
          day_of_week: 1,
          start_time: "09:00",
          end_time: "18:00",
-         is_available: true
-       }
+         is_available: true,
+       },
        // ... other days
-     ]
+     ];
    }
 
    // Enable active status
-   POST /api/shopper/status
+   POST / api / shopper / status;
    {
-     isActive: true
+     isActive: true;
    }
    ```
 
@@ -321,11 +332,13 @@ interface ShopperSchedule {
 ## Best Practices
 
 1. **Schedule Management**
+
    - Set realistic working hours
    - Update schedule regularly
    - Consider break times
 
 2. **Order Handling**
+
    - Complete current order before accepting new ones
    - Check batch details before accepting
    - Maintain active status during working hours
@@ -340,12 +353,14 @@ interface ShopperSchedule {
 Common issues and solutions:
 
 1. **No Notifications**
+
    - Check shopper status is active
    - Verify current time is within schedule
    - Ensure no active orders exist
    - Check browser notification permissions
 
 2. **Multiple Notifications**
+
    - Check batch assignment cleanup
    - Verify cooldown period
    - Review assignment tracking
@@ -358,12 +373,15 @@ Common issues and solutions:
 # Logging System
 
 ## Overview
+
 The logging system provides comprehensive logging capabilities for both client and server-side operations, with a web interface for real-time monitoring and filtering.
 
 ## Features
 
 ### 1. Dual Environment Support
+
 - **Client-side Logging**
+
   - Uses localStorage for temporary storage
   - Maintains last 1000 log entries
   - Automatic cleanup of old entries
@@ -376,10 +394,13 @@ The logging system provides comprehensive logging capabilities for both client a
   - File-based persistent storage
 
 ### 2. Log Levels
+
 ```typescript
-type LogLevel = 'log' | 'error' | 'warn' | 'info' | 'debug';
+type LogLevel = "log" | "error" | "warn" | "info" | "debug";
 ```
+
 Each level has distinct color coding:
+
 - Error: Red (#FF4D4F)
 - Warning: Orange (#FAAD14)
 - Info: Blue (#1890FF)
@@ -387,6 +408,7 @@ Each level has distinct color coding:
 - Log: Green (#52C41A)
 
 ### 3. Log Entry Structure
+
 ```typescript
 interface LogEntry {
   timestamp: string;
@@ -398,6 +420,7 @@ interface LogEntry {
 ```
 
 ### 4. Web Interface (/dev/logs)
+
 - Real-time log viewing
 - Type-based filtering
 - Component-based filtering
@@ -410,54 +433,60 @@ interface LogEntry {
 ## Usage Examples
 
 ### 1. Basic Logging
+
 ```typescript
-import { logger } from '@/utils/logger';
+import { logger } from "@/utils/logger";
 
 // Basic log
-logger.log('Order processed successfully');
+logger.log("Order processed successfully");
 
 // With component
-logger.info('Payment received', 'PaymentSystem');
+logger.info("Payment received", "PaymentSystem");
 
 // With details
-logger.debug('Order details', 'OrderSystem', {
-  orderId: '123',
+logger.debug("Order details", "OrderSystem", {
+  orderId: "123",
   total: 1500,
-  items: ['item1', 'item2']
+  items: ["item1", "item2"],
 });
 
 // Error logging
 try {
   // ... some operation
 } catch (error) {
-  logger.error('Failed to process order', 'OrderSystem', error);
+  logger.error("Failed to process order", "OrderSystem", error);
 }
 ```
 
 ### 2. Component Integration
+
 ```typescript
 function PaymentComponent() {
   useEffect(() => {
-    logger.info('Payment component mounted', 'PaymentSystem');
+    logger.info("Payment component mounted", "PaymentSystem");
     return () => {
-      logger.info('Payment component unmounted', 'PaymentSystem');
+      logger.info("Payment component unmounted", "PaymentSystem");
     };
   }, []);
 }
 ```
 
 ### 3. API Route Logging
+
 ```typescript
-export default async function handler(req: NextApiRequest, res: NextApiResponse) {
+export default async function handler(
+  req: NextApiRequest,
+  res: NextApiResponse
+) {
   try {
-    logger.info('Processing payment', 'PaymentAPI', { 
+    logger.info("Processing payment", "PaymentAPI", {
       method: req.method,
-      body: req.body 
+      body: req.body,
     });
     // ... handle request
   } catch (error) {
-    logger.error('Payment processing failed', 'PaymentAPI', error);
-    res.status(500).json({ error: 'Payment failed' });
+    logger.error("Payment processing failed", "PaymentAPI", error);
+    res.status(500).json({ error: "Payment failed" });
   }
 }
 ```
@@ -465,18 +494,21 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 ## Best Practices
 
 1. **Component Logging**
+
    - Always specify component name
    - Log lifecycle events
    - Include relevant context
    - Use appropriate log levels
 
 2. **Error Logging**
+
    - Include error stack traces
    - Log error context
    - Use error level appropriately
    - Add recovery attempts
 
 3. **Performance Considerations**
+
    - Use debug level for verbose logs
    - Include relevant details only
    - Consider log entry size
@@ -491,6 +523,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 ## Technical Implementation
 
 ### Logger Types
+
 ```typescript
 interface Logger {
   log(message: string, component?: string, details?: any): void;
@@ -504,11 +537,13 @@ interface Logger {
 ```
 
 ### Environment Detection
+
 ```typescript
-const logger = typeof window === 'undefined' ? serverLogger : clientLogger;
+const logger = typeof window === "undefined" ? serverLogger : clientLogger;
 ```
 
 ### Storage Management
+
 - Client: localStorage with entry limit
 - Server: Daily rotating log files
 - Automatic cleanup of old entries/files
@@ -519,12 +554,14 @@ const logger = typeof window === 'undefined' ? serverLogger : clientLogger;
 The `/dev/logs` page provides:
 
 1. **Filtering Options**
+
    - By log level (error, warn, info, debug, log)
    - By component name
    - By text content
    - Real-time updates
 
 2. **Visual Features**
+
    - Dark theme interface
    - Color-coded log levels
    - Formatted JSON details

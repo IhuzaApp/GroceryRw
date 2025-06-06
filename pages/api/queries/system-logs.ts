@@ -83,13 +83,16 @@ export async function insertSystemLog(
     if (!hasuraClient) {
       throw new Error("Hasura client is not initialized");
     }
-    
-    const response = await hasuraClient.request<InsertSystemLogResponse>(INSERT_SYSTEM_LOG, {
-      type,
-      message,
-      component,
-      details: details ? JSON.stringify(details) : null
-    });
+
+    const response = await hasuraClient.request<InsertSystemLogResponse>(
+      INSERT_SYSTEM_LOG,
+      {
+        type,
+        message,
+        component,
+        details: details ? JSON.stringify(details) : null,
+      }
+    );
 
     return response.insert_System_Logs_one;
   } catch (error) {
@@ -109,22 +112,21 @@ export default async function handler(
 
       if (!type || !component) {
         return res.status(400).json({
-          error: "Missing required fields: type, component"
+          error: "Missing required fields: type, component",
         });
       }
 
       const result = await insertSystemLog(
-        type, 
-        message || null, 
-        component, 
+        type,
+        message || null,
+        component,
         details ? JSON.stringify(details) : null
       );
       return res.status(200).json(result);
-
     } catch (error) {
       return res.status(500).json({
         error: "Failed to insert log",
-        details: error instanceof Error ? error.message : "Unknown error"
+        details: error instanceof Error ? error.message : "Unknown error",
       });
     }
   }
@@ -139,25 +141,27 @@ export default async function handler(
       const offset = parseInt(req.query.offset as string) || 0;
       const type = req.query.type as string;
 
-      const data = await hasuraClient.request<GetSystemLogsResponse>(GET_SYSTEM_LOGS, {
-        limit,
-        offset,
-        type: type || null
-      });
+      const data = await hasuraClient.request<GetSystemLogsResponse>(
+        GET_SYSTEM_LOGS,
+        {
+          limit,
+          offset,
+          type: type || null,
+        }
+      );
 
       return res.status(200).json({
         logs: data.System_Logs,
-        total: data.System_Logs_aggregate.aggregate.count
+        total: data.System_Logs_aggregate.aggregate.count,
       });
-
     } catch (error) {
       return res.status(500).json({
         error: "Failed to fetch logs",
-        details: error instanceof Error ? error.message : "Unknown error"
+        details: error instanceof Error ? error.message : "Unknown error",
       });
     }
   }
 
   res.setHeader("Allow", ["GET", "POST"]);
   return res.status(405).end(`Method ${req.method} Not Allowed`);
-} 
+}

@@ -3,26 +3,26 @@ import { useTheme } from "@context/ThemeContext";
 
 const LoadingOverlay: React.FC = () => {
   const { theme } = useTheme();
-  
+
   return (
-    <div 
+    <div
       className={`fixed inset-0 z-50 flex items-center justify-center ${
-        theme === 'dark' 
-          ? 'bg-gray-900/75 backdrop-blur-sm' 
-          : 'bg-white/75 backdrop-blur-sm'
+        theme === "dark"
+          ? "bg-gray-900/75 backdrop-blur-sm"
+          : "bg-white/75 backdrop-blur-sm"
       }`}
     >
       <div className="flex flex-col items-center gap-3">
-        <div 
+        <div
           className={`h-16 w-16 animate-spin rounded-full border-4 ${
-            theme === 'dark'
-              ? 'border-gray-700 border-t-green-400'
-              : 'border-gray-200 border-t-green-500'
+            theme === "dark"
+              ? "border-gray-700 border-t-green-400"
+              : "border-gray-200 border-t-green-500"
           }`}
         />
-        <span 
+        <span
           className={`text-sm font-medium ${
-            theme === 'dark' ? 'text-gray-300' : 'text-gray-600'
+            theme === "dark" ? "text-gray-300" : "text-gray-600"
           }`}
         >
           Loading...

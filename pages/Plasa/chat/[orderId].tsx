@@ -364,9 +364,11 @@ export default function ChatPage() {
   if (!customerData && isLoading) {
     return (
       <ShopperLayout>
-        <div className={`flex h-[calc(100vh-200px)] items-center justify-center ${
-          theme === 'dark' ? 'text-gray-300' : 'text-gray-700'
-        }`}>
+        <div
+          className={`flex h-[calc(100vh-200px)] items-center justify-center ${
+            theme === "dark" ? "text-gray-300" : "text-gray-700"
+          }`}
+        >
           <Loader content="Loading chat..." />
         </div>
       </ShopperLayout>
@@ -375,13 +377,17 @@ export default function ChatPage() {
 
   return (
     <ShopperLayout>
-      <div className={`min-h-screen ${
-        theme === 'dark' ? 'bg-gray-900' : 'bg-gray-50'
-      }`}>
+      <div
+        className={`min-h-screen ${
+          theme === "dark" ? "bg-gray-900" : "bg-gray-50"
+        }`}
+      >
         {isLoading ? (
-          <div className={`flex h-[calc(100vh-200px)] items-center justify-center ${
-            theme === 'dark' ? 'text-gray-300' : 'text-gray-700'
-          }`}>
+          <div
+            className={`flex h-[calc(100vh-200px)] items-center justify-center ${
+              theme === "dark" ? "text-gray-300" : "text-gray-700"
+            }`}
+          >
             <Loader content="Loading chat..." />
           </div>
         ) : !customerData ? (
@@ -418,27 +424,33 @@ export default function ChatPage() {
         ) : (
           <div className="mx-auto max-w-4xl p-4">
             {/* Chat Header */}
-            <div className={`mb-4 rounded-lg p-4 shadow-sm ${
-              theme === 'dark' 
-                ? 'bg-gray-800 text-gray-100' 
-                : 'bg-white text-gray-900'
-            }`}>
+            <div
+              className={`mb-4 rounded-lg p-4 shadow-sm ${
+                theme === "dark"
+                  ? "bg-gray-800 text-gray-100"
+                  : "bg-white text-gray-900"
+              }`}
+            >
               <div className="flex items-center justify-between">
                 <div className="flex items-center space-x-4">
-                  <Avatar 
-                    circle 
-                    src={customerData?.avatar || "/placeholder.svg"} 
-                    alt={customerData?.name || "Customer"} 
+                  <Avatar
+                    circle
+                    src={customerData?.avatar || "/placeholder.svg"}
+                    alt={customerData?.name || "Customer"}
                   />
                   <div>
-                    <h2 className={`text-lg font-semibold ${
-                      theme === 'dark' ? 'text-gray-100' : 'text-gray-900'
-                    }`}>
+                    <h2
+                      className={`text-lg font-semibold ${
+                        theme === "dark" ? "text-gray-100" : "text-gray-900"
+                      }`}
+                    >
                       {customerData?.name || "Customer"}
                     </h2>
-                    <p className={`text-sm ${
-                      theme === 'dark' ? 'text-gray-400' : 'text-gray-600'
-                    }`}>
+                    <p
+                      className={`text-sm ${
+                        theme === "dark" ? "text-gray-400" : "text-gray-600"
+                      }`}
+                    >
                       Order #{formatOrderID(orderId)}
                     </p>
                   </div>
@@ -446,121 +458,125 @@ export default function ChatPage() {
                 <Link href={`/Plasa/orders/${orderId}`}>
                   <Button
                     appearance="ghost"
-                    className={theme === 'dark' ? 'rs-btn-dark' : ''}
+                    className={theme === "dark" ? "rs-btn-dark" : ""}
                   >
                     View Order
                   </Button>
                 </Link>
-                        </div>
-                      </div>
+              </div>
+            </div>
 
             {/* Messages Container */}
-            <div className={`mb-4 h-[calc(100vh-300px)] overflow-y-auto rounded-lg p-4 shadow-sm ${
-              theme === 'dark' 
-                ? 'bg-gray-800 text-gray-100' 
-                : 'bg-white text-gray-900'
-            }`}>
+            <div
+              className={`mb-4 h-[calc(100vh-300px)] overflow-y-auto rounded-lg p-4 shadow-sm ${
+                theme === "dark"
+                  ? "bg-gray-800 text-gray-100"
+                  : "bg-white text-gray-900"
+              }`}
+            >
               {messages.map((msg, index) => (
-                          <div
-                            key={msg.id}
+                <div
+                  key={msg.id}
                   className={`mb-4 flex ${
-                    msg.senderType === "shopper" ? "justify-end" : "justify-start"
-                            }`}
-                          >
-                            <div
+                    msg.senderType === "shopper"
+                      ? "justify-end"
+                      : "justify-start"
+                  }`}
+                >
+                  <div
                     className={`max-w-[70%] rounded-lg p-3 ${
                       msg.senderType === "shopper"
-                        ? theme === 'dark'
+                        ? theme === "dark"
                           ? "bg-green-600 text-white"
                           : "bg-green-500 text-white"
-                        : theme === 'dark'
-                          ? "bg-gray-700 text-gray-100"
-                          : "bg-gray-100 text-gray-900"
+                        : theme === "dark"
+                        ? "bg-gray-700 text-gray-100"
+                        : "bg-gray-100 text-gray-900"
                     }`}
-                            >
-                              {msg.image && (
+                  >
+                    {msg.image && (
                       <img
                         src={msg.image}
                         alt="Message attachment"
                         className="mb-2 max-h-48 w-auto rounded-lg"
                       />
-                              )}
+                    )}
                     <p>{msg.text || msg.message}</p>
-                    <p className={`mt-1 text-right text-xs ${
-                      msg.senderType === "shopper"
-                        ? "text-green-100"
-                        : theme === 'dark'
+                    <p
+                      className={`mt-1 text-right text-xs ${
+                        msg.senderType === "shopper"
+                          ? "text-green-100"
+                          : theme === "dark"
                           ? "text-gray-400"
-                                      : "text-gray-500"
-                    }`}>
-                                {formatMessageTime(msg.timestamp)}
+                          : "text-gray-500"
+                      }`}
+                    >
+                      {formatMessageTime(msg.timestamp)}
                     </p>
-              </div>
+                  </div>
                 </div>
               ))}
               <div ref={messagesEndRef} />
-              </div>
+            </div>
 
             {/* Message Input */}
-            <div className={`rounded-lg p-4 shadow-sm ${
-              theme === 'dark' 
-                ? 'bg-gray-800' 
-                : 'bg-white'
-            }`}>
+            <div
+              className={`rounded-lg p-4 shadow-sm ${
+                theme === "dark" ? "bg-gray-800" : "bg-white"
+              }`}
+            >
               <div className="flex items-center space-x-2">
                 <button
-                    onClick={handleAttachmentClick}
+                  onClick={handleAttachmentClick}
                   className={`rounded-full p-2 transition-colors ${
-                    theme === 'dark'
-                      ? 'hover:bg-gray-700'
-                      : 'hover:bg-gray-100'
+                    theme === "dark" ? "hover:bg-gray-700" : "hover:bg-gray-100"
                   }`}
-                  >
-                    <svg
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth="2"
+                >
+                  <svg
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
                     className={`h-6 w-6 ${
-                      theme === 'dark' ? 'text-gray-400' : 'text-gray-600'
+                      theme === "dark" ? "text-gray-400" : "text-gray-600"
                     }`}
-                    >
-                      <path d="M21.44 11.05l-9.19 9.19a6 6 0 01-8.49-8.49l9.19-9.19a4 4 0 015.66 5.66l-9.2 9.19a2 2 0 01-2.83-2.83l8.49-8.48" />
-                    </svg>
-                        </button>
-                  <input
-                    type="text"
-                    value={message}
-                    onChange={(e) => setMessage(e.target.value)}
-                    onKeyPress={handleKeyPress}
+                  >
+                    <path d="M21.44 11.05l-9.19 9.19a6 6 0 01-8.49-8.49l9.19-9.19a4 4 0 015.66 5.66l-9.2 9.19a2 2 0 01-2.83-2.83l8.49-8.48" />
+                  </svg>
+                </button>
+                <input
+                  type="text"
+                  value={message}
+                  onChange={(e) => setMessage(e.target.value)}
+                  onKeyPress={handleKeyPress}
                   placeholder="Type your message..."
                   className={`flex-1 rounded-lg border px-4 py-2 ${
-                    theme === 'dark'
-                      ? 'border-gray-700 bg-gray-700 text-gray-100 placeholder-gray-400'
-                      : 'border-gray-200 bg-gray-50 text-gray-900 placeholder-gray-500'
+                    theme === "dark"
+                      ? "border-gray-700 bg-gray-700 text-gray-100 placeholder-gray-400"
+                      : "border-gray-200 bg-gray-50 text-gray-900 placeholder-gray-500"
                   }`}
                 />
                 <button
-                    onClick={handleSendMessage}
+                  onClick={handleSendMessage}
                   disabled={isSending || !message.trim()}
                   className={`rounded-lg px-6 py-2 font-medium ${
                     isSending || !message.trim()
-                      ? theme === 'dark'
-                        ? 'cursor-not-allowed bg-gray-700 text-gray-500'
-                        : 'cursor-not-allowed bg-gray-100 text-gray-400'
-                      : theme === 'dark'
-                        ? 'bg-green-600 text-white hover:bg-green-700'
-                        : 'bg-green-500 text-white hover:bg-green-600'
+                      ? theme === "dark"
+                        ? "cursor-not-allowed bg-gray-700 text-gray-500"
+                        : "cursor-not-allowed bg-gray-100 text-gray-400"
+                      : theme === "dark"
+                      ? "bg-green-600 text-white hover:bg-green-700"
+                      : "bg-green-500 text-white hover:bg-green-600"
                   }`}
                 >
                   {isSending ? (
                     <div className="flex items-center">
                       <span className="mr-2 inline-block h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent"></span>
                       Sending...
-                  </div>
+                    </div>
                   ) : (
                     "Send"
-                )}
+                  )}
                 </button>
               </div>
               <input

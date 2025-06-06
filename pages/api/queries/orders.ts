@@ -4,7 +4,7 @@ import { gql } from "graphql-request";
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "../auth/[...nextauth]";
 import type { Session } from "next-auth";
-import { logger } from '../../../src/utils/logger';
+import { logger } from "../../../src/utils/logger";
 
 // Fetch orders including item aggregates, fees, and shopper assignment
 const GET_ORDERS = gql`
@@ -101,7 +101,7 @@ export default async function handler(
 
     // 1. Fetch orders
     const data = await hasuraClient.request<OrdersResponse>(GET_ORDERS, {
-      user_id: userId
+      user_id: userId,
     });
     const orders = data.Orders;
 

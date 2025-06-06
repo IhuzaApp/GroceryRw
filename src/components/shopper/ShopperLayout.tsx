@@ -4,7 +4,7 @@ import ShopperHeader from "@components/shopper/ShopperHeader";
 import ShopperSidebar from "@components/shopper/ShopperSidebar";
 import { useSession } from "next-auth/react";
 import { useTheme } from "@context/ThemeContext";
-import { logger } from '../../utils/logger';
+import { logger } from "../../utils/logger";
 
 interface ShopperLayoutProps {
   children: React.ReactNode;
@@ -32,13 +32,21 @@ export default function ShopperLayout({ children }: ShopperLayoutProps) {
   // status is 'authenticated' | 'loading' | 'unauthenticated'
   console.log(session);
   return (
-    <div className={`min-h-screen ${theme === 'dark' ? 'bg-gray-900' : 'bg-gray-50'}`}>
+    <div
+      className={`min-h-screen ${
+        theme === "dark" ? "bg-gray-900" : "bg-gray-50"
+      }`}
+    >
       <ShopperHeader />
       <div className="flex">
         <ShopperSidebar />
-        <main className={`flex-1 transition-colors duration-200 ${
-          theme === 'dark' ? 'bg-gray-900 text-gray-100' : 'bg-gray-50 text-gray-900'
-        } ${isMobile ? 'p-0' : 'pl-64 p-4'}`}>
+        <main
+          className={`flex-1 transition-colors duration-200 ${
+            theme === "dark"
+              ? "bg-gray-900 text-gray-100"
+              : "bg-gray-50 text-gray-900"
+          } ${isMobile ? "p-0" : "p-4 pl-64"}`}
+        >
           {children}
         </main>
       </div>

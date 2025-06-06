@@ -8,7 +8,7 @@ import { formatCurrency } from "../../../src/lib/formatCurrency";
 import Link from "next/link";
 import { toast } from "react-hot-toast";
 import { useTheme } from "../../../src/context/ThemeContext";
-import { logger } from '../../../src/utils/logger';
+import { logger } from "../../../src/utils/logger";
 
 // Define interface for order data
 interface OrderDetails {
@@ -64,7 +64,9 @@ export default function OrderDetailsPage() {
       }
     } catch (error) {
       logger.error("Error fetching order details", "OrderDetailsPage", error);
-      toast.error(error instanceof Error ? error.message : "Failed to load order details");
+      toast.error(
+        error instanceof Error ? error.message : "Failed to load order details"
+      );
       setOrderDetails(null);
     } finally {
       setIsLoading(false);
@@ -85,7 +87,9 @@ export default function OrderDetailsPage() {
       const data = await response.json();
 
       if (data.success) {
-        logger.info("Order assigned successfully", "OrderDetailsPage", { orderId: id });
+        logger.info("Order assigned successfully", "OrderDetailsPage", {
+          orderId: id,
+        });
         toast.success("Order assigned successfully!");
         // Refresh order details
         fetchOrderDetails();
@@ -119,11 +123,19 @@ export default function OrderDetailsPage() {
               const retryData = await retryResponse.json();
 
               if (retryData.success) {
-                logger.info("Order assigned successfully after wallet creation", "OrderDetailsPage", { orderId: id });
+                logger.info(
+                  "Order assigned successfully after wallet creation",
+                  "OrderDetailsPage",
+                  { orderId: id }
+                );
                 toast.success("Order assigned successfully!");
                 fetchOrderDetails();
               } else {
-                logger.error("Failed to assign order after wallet creation", "OrderDetailsPage", { error: retryData.error });
+                logger.error(
+                  "Failed to assign order after wallet creation",
+                  "OrderDetailsPage",
+                  { error: retryData.error }
+                );
                 toast.error(retryData.error || "Failed to assign order");
               }
 
@@ -132,15 +144,23 @@ export default function OrderDetailsPage() {
 
             return;
           } else {
-            logger.error("Failed to create wallet", "OrderDetailsPage", { error: walletData.error });
+            logger.error("Failed to create wallet", "OrderDetailsPage", {
+              error: walletData.error,
+            });
             toast.error("Failed to create wallet");
           }
         } catch (walletError) {
-          logger.error("Error creating wallet", "OrderDetailsPage", walletError);
+          logger.error(
+            "Error creating wallet",
+            "OrderDetailsPage",
+            walletError
+          );
           toast.error("Failed to create wallet");
         }
       } else {
-        logger.error("Failed to assign order", "OrderDetailsPage", { error: data.error });
+        logger.error("Failed to assign order", "OrderDetailsPage", {
+          error: data.error,
+        });
         toast.error(data.error || "Failed to assign order");
       }
     } catch (error) {
@@ -174,14 +194,20 @@ export default function OrderDetailsPage() {
 
   return (
     <ShopperLayout>
-      <div className={`min-h-screen px-4 py-8 ${
-        theme === 'dark' ? 'bg-gray-900 text-gray-100' : 'bg-gray-50 text-gray-900'
-      }`}>
+      <div
+        className={`min-h-screen px-4 py-8 ${
+          theme === "dark"
+            ? "bg-gray-900 text-gray-100"
+            : "bg-gray-50 text-gray-900"
+        }`}
+      >
         <div className="mb-4 flex items-center">
           <Link href="/">
-            <Button 
+            <Button
               appearance="link"
-              className={theme === 'dark' ? 'text-gray-300 hover:text-gray-100' : ''}
+              className={
+                theme === "dark" ? "text-gray-300 hover:text-gray-100" : ""
+              }
             >
               <span className="flex items-center">
                 <span className="mr-1">←</span> Back to Available Batches
@@ -191,29 +217,35 @@ export default function OrderDetailsPage() {
         </div>
 
         {isLoading ? (
-          <div className={`flex h-64 items-center justify-center ${
-            theme === 'dark' ? 'text-gray-300' : 'text-gray-700'
-          }`}>
+          <div
+            className={`flex h-64 items-center justify-center ${
+              theme === "dark" ? "text-gray-300" : "text-gray-700"
+            }`}
+          >
             <Loader content="Loading order details..." />
           </div>
         ) : !orderDetails ? (
-          <Panel 
-            shaded 
-            bordered 
-            bodyFill 
+          <Panel
+            shaded
+            bordered
+            bodyFill
             className={`mx-auto max-w-3xl ${
-              theme === 'dark' ? 'bg-gray-800' : 'bg-white'
+              theme === "dark" ? "bg-gray-800" : "bg-white"
             }`}
           >
             <div className="p-8 text-center">
-              <h2 className={`mb-4 text-xl font-semibold ${
-                theme === 'dark' ? 'text-gray-100' : 'text-gray-900'
-              }`}>
+              <h2
+                className={`mb-4 text-xl font-semibold ${
+                  theme === "dark" ? "text-gray-100" : "text-gray-900"
+                }`}
+              >
                 Order Not Found
               </h2>
-              <p className={`mb-4 ${
-                theme === 'dark' ? 'text-gray-400' : 'text-gray-600'
-              }`}>
+              <p
+                className={`mb-4 ${
+                  theme === "dark" ? "text-gray-400" : "text-gray-600"
+                }`}
+              >
                 The order you&apos;re looking for could not be found or you
                 don&apos;t have permission to view it.
               </p>
@@ -226,25 +258,29 @@ export default function OrderDetailsPage() {
           </Panel>
         ) : (
           <div className="mx-auto max-w-3xl">
-            <Panel 
-              shaded 
-              bordered 
-              bodyFill 
+            <Panel
+              shaded
+              bordered
+              bodyFill
               className={`mb-4 ${
-                theme === 'dark' ? 'bg-gray-800' : 'bg-white'
+                theme === "dark" ? "bg-gray-800" : "bg-white"
               }`}
             >
               <div className="p-6">
                 <div className="mb-4 flex items-center justify-between">
                   <div>
-                    <h2 className={`text-2xl font-bold ${
-                      theme === 'dark' ? 'text-gray-100' : 'text-gray-900'
-                    }`}>
+                    <h2
+                      className={`text-2xl font-bold ${
+                        theme === "dark" ? "text-gray-100" : "text-gray-900"
+                      }`}
+                    >
                       Order #{orderDetails.id}
                     </h2>
-                    <p className={`mt-1 ${
-                      theme === 'dark' ? 'text-gray-400' : 'text-gray-600'
-                    }`}>
+                    <p
+                      className={`mt-1 ${
+                        theme === "dark" ? "text-gray-400" : "text-gray-600"
+                      }`}
+                    >
                       Created {orderDetails.createdAt}
                     </p>
                   </div>
@@ -253,34 +289,46 @@ export default function OrderDetailsPage() {
                   </Tag>
                 </div>
 
-                <Divider className={theme === 'dark' ? 'border-gray-700' : ''} />
+                <Divider
+                  className={theme === "dark" ? "border-gray-700" : ""}
+                />
 
-                <div className={`mb-6 rounded border p-4 ${
-                  theme === 'dark' 
-                    ? 'border-gray-700 bg-gray-700/50' 
-                    : 'border-gray-200 bg-gray-50'
-                }`}>
+                <div
+                  className={`mb-6 rounded border p-4 ${
+                    theme === "dark"
+                      ? "border-gray-700 bg-gray-700/50"
+                      : "border-gray-200 bg-gray-50"
+                  }`}
+                >
                   <div className="flex justify-between">
-                    <span className={`font-medium ${
-                      theme === 'dark' ? 'text-gray-300' : 'text-gray-700'
-                    }`}>
+                    <span
+                      className={`font-medium ${
+                        theme === "dark" ? "text-gray-300" : "text-gray-700"
+                      }`}
+                    >
                       Total Order Amount:
                     </span>
-                    <span className={`font-bold ${
-                      theme === 'dark' ? 'text-gray-100' : 'text-gray-900'
-                    }`}>
+                    <span
+                      className={`font-bold ${
+                        theme === "dark" ? "text-gray-100" : "text-gray-900"
+                      }`}
+                    >
                       {formatCurrency(orderDetails.total)}
                     </span>
                   </div>
                   <div className="mt-2 flex justify-between">
-                    <span className={`font-medium ${
-                      theme === 'dark' ? 'text-green-400' : 'text-green-600'
-                    }`}>
+                    <span
+                      className={`font-medium ${
+                        theme === "dark" ? "text-green-400" : "text-green-600"
+                      }`}
+                    >
                       Estimated Earnings:
                     </span>
-                    <span className={`font-bold ${
-                      theme === 'dark' ? 'text-green-400' : 'text-green-600'
-                    }`}>
+                    <span
+                      className={`font-bold ${
+                        theme === "dark" ? "text-green-400" : "text-green-600"
+                      }`}
+                    >
                       {formatCurrency(orderDetails.estimatedEarnings)}
                     </span>
                   </div>
@@ -294,7 +342,7 @@ export default function OrderDetailsPage() {
                       size="lg"
                       onClick={handleAcceptOrder}
                       disabled={isAccepting}
-                      className={theme === 'dark' ? 'rs-btn-dark' : ''}
+                      className={theme === "dark" ? "rs-btn-dark" : ""}
                     >
                       {isAccepting ? (
                         <div className="flex items-center">
@@ -310,17 +358,17 @@ export default function OrderDetailsPage() {
 
                 {orderDetails.status === "ASSIGNED" && (
                   <div className="flex justify-end space-x-4">
-                    <Button 
-                      appearance="ghost" 
+                    <Button
+                      appearance="ghost"
                       color="red"
-                      className={theme === 'dark' ? 'rs-btn-dark' : ''}
+                      className={theme === "dark" ? "rs-btn-dark" : ""}
                     >
                       Cancel Batch
                     </Button>
-                    <Button 
-                      appearance="primary" 
+                    <Button
+                      appearance="primary"
                       color="blue"
-                      className={theme === 'dark' ? 'rs-btn-dark' : ''}
+                      className={theme === "dark" ? "rs-btn-dark" : ""}
                     >
                       Start Shopping
                     </Button>

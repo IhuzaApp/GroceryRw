@@ -1,7 +1,7 @@
 import type { NextApiRequest, NextApiResponse } from "next";
 import { hasuraClient } from "../../../src/lib/hasuraClient";
 import { gql } from "graphql-request";
-import { logger } from '../../../src/utils/logger';
+import { logger } from "../../../src/utils/logger";
 
 // Modify the query to ensure we're only filtering by PENDING status, with no date filtering
 const GET_AVAILABLE_ORDERS = gql`
@@ -81,8 +81,8 @@ export default async function handler(
   }
 
   try {
-    logger.info('Request received', 'AvailableOrders', {
-      timestamp: new Date().toISOString()
+    logger.info("Request received", "AvailableOrders", {
+      timestamp: new Date().toISOString(),
     });
 
     // Get shopper's current location from query params
@@ -91,16 +91,16 @@ export default async function handler(
     // Changed from 10 to 15 minutes max travel time
     const maxTravelTime = parseInt(req.query.maxTravelTime as string) || 15;
 
-    logger.info('Processing request parameters', 'AvailableOrders', {
+    logger.info("Processing request parameters", "AvailableOrders", {
       shopperLocation: { lat: shopperLatitude, lng: shopperLongitude },
-      maxTravelTime: `${maxTravelTime} minutes`
+      maxTravelTime: `${maxTravelTime} minutes`,
     });
 
     if (!hasuraClient) {
       throw new Error("Hasura client is not initialized");
     }
 
-    logger.debug('Querying Hasura for all PENDING orders', 'AvailableOrders');
+    logger.debug("Querying Hasura for all PENDING orders", "AvailableOrders");
 
     // Modified to get all PENDING orders without date filtering
     const data = await hasuraClient.request<{
@@ -126,8 +126,8 @@ export default async function handler(
       }>;
     }>(GET_AVAILABLE_ORDERS);
 
-    logger.info('Retrieved orders from database', 'AvailableOrders', {
-      orderCount: data.Orders.length
+    logger.info("Retrieved orders from database", "AvailableOrders", {
+      orderCount: data.Orders.length,
     });
 
     // Transform data to make it easier to use on the client
@@ -223,14 +223,14 @@ export default async function handler(
     );
 
     // Log the filtered orders
-    logger.info('Filtered orders', 'AvailableOrders', {
+    logger.info("Filtered orders", "AvailableOrders", {
       filteredOrderCount: filteredOrders.length,
-      maxTravelTime: `${maxTravelTime} minutes`
+      maxTravelTime: `${maxTravelTime} minutes`,
     });
 
     // Detailed logging of filtered orders
     filteredOrders.forEach((order, index) => {
-      logger.debug(`Filtered Order ${index + 1} details`, 'AvailableOrders', {
+      logger.debug(`Filtered Order ${index + 1} details`, "AvailableOrders", {
         id: order.id,
         created: order.createdAt,
         status: order.status,
@@ -238,31 +238,31 @@ export default async function handler(
           name: order.shopName,
           coordinates: {
             lat: order.shopLatitude,
-            lng: order.shopLongitude
-          }
+            lng: order.shopLongitude,
+          },
         },
         metrics: {
           travelTimeToShop: `${order.travelTimeMinutes} min`,
           distanceToShop: `${order.distance} km`,
-          shopToCustomerDistance: `${order.shopToCustomerDistance} km`
+          shopToCustomerDistance: `${order.shopToCustomerDistance} km`,
         },
         customer: {
           address: order.customerAddress,
           coordinates: {
             lat: order.customerLatitude,
-            lng: order.customerLongitude
-          }
+            lng: order.customerLongitude,
+          },
         },
-        itemsCount: order.itemsCount
+        itemsCount: order.itemsCount,
       });
     });
 
     // Return the processed and filtered data
     res.status(200).json(filteredOrders);
   } catch (error: any) {
-    logger.error('Error fetching available orders', 'AvailableOrders', {
+    logger.error("Error fetching available orders", "AvailableOrders", {
       error: error.toString(),
-      stack: error.stack
+      stack: error.stack,
     });
     res.status(500).json({
       error: "Failed to fetch available orders",

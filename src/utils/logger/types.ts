@@ -1,4 +1,4 @@
-export type LogLevel = 'debug' | 'info' | 'warn' | 'error';
+export type LogLevel = "debug" | "info" | "warn" | "error";
 
 export interface LogEntry {
   timestamp: string;
@@ -15,4 +15,4 @@ export interface Logger {
   error(message: string, component?: string, details?: any): void;
   getLogs(): Promise<LogEntry[]>;
   clearLogs(): Promise<void>;
-} 
+}

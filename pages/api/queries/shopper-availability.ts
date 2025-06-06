@@ -1,8 +1,8 @@
 import { NextApiRequest, NextApiResponse } from "next";
 import { hasuraClient } from "../../../src/lib/hasuraClient";
 import { gql } from "graphql-request";
-import { getSession } from 'next-auth/react';
-import { logger } from '../../../src/utils/logger';
+import { getSession } from "next-auth/react";
+import { logger } from "../../../src/utils/logger";
 
 const GET_SHOPPER_AVAILABILITY = gql`
   query GetShopperAvailability($userId: uuid!) {
@@ -44,7 +44,7 @@ export default async function handler(
     const userId = session?.user?.id;
 
     if (!userId) {
-      return res.status(401).json({ error: 'Unauthorized' });
+      return res.status(401).json({ error: "Unauthorized" });
     }
 
     if (!hasuraClient) {
@@ -56,14 +56,22 @@ export default async function handler(
       { userId }
     );
 
-    logger.info('Shopper availability query result:', 'ShopperAvailabilityAPI', {
-      userId,
-      availabilityCount: data.Shopper_Availability.length
-    });
+    logger.info(
+      "Shopper availability query result:",
+      "ShopperAvailabilityAPI",
+      {
+        userId,
+        availabilityCount: data.Shopper_Availability.length,
+      }
+    );
 
     res.status(200).json({ shopper_availability: data.Shopper_Availability });
   } catch (error) {
-    logger.error("Error fetching shopper availability:", 'ShopperAvailabilityAPI', error);
+    logger.error(
+      "Error fetching shopper availability:",
+      "ShopperAvailabilityAPI",
+      error
+    );
     res.status(500).json({ error: "Failed to fetch shopper availability" });
   }
 }

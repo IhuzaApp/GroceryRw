@@ -74,7 +74,7 @@ export default async function handler(
       if (!shoppers?.length || !shoppers[0].active) {
         return res.status(403).json({
           error: "User is not an active shopper",
-          code: "NOT_ACTIVE_SHOPPER"
+          code: "NOT_ACTIVE_SHOPPER",
         });
       }
     }
@@ -95,22 +95,22 @@ export default async function handler(
     // Update the session user object with the new role
     const updatedUser = {
       ...session.user,
-      role: role as string
+      role: role as string,
     };
-    
+
     // Update the session
     Object.assign(session.user, updatedUser);
 
     return res.status(200).json({
       success: true,
       role: role,
-      redirectTo: role === "shopper" ? "/ShopperDashboard" : "/"
+      redirectTo: role === "shopper" ? "/ShopperDashboard" : "/",
     });
   } catch (error) {
     console.error("Error updating user role:", error);
     return res.status(500).json({
       error: "Failed to update user role",
-      details: error instanceof Error ? error.message : "Unknown error"
+      details: error instanceof Error ? error.message : "Unknown error",
     });
   }
 }

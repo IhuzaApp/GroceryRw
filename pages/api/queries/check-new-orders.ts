@@ -1,9 +1,12 @@
 import { NextApiRequest, NextApiResponse } from "next";
 import { hasuraClient } from "../../../src/lib/hasuraClient";
 import { gql } from "graphql-request";
-import { Client as GoogleMapsClient } from '@googlemaps/google-maps-services-js';
-import { startOrderNotifications, stopOrderNotifications } from '../../../src/utils/orderNotifier';
-import { logger } from '../../../src/utils/logger';
+import { Client as GoogleMapsClient } from "@googlemaps/google-maps-services-js";
+import {
+  startOrderNotifications,
+  stopOrderNotifications,
+} from "../../../src/utils/orderNotifier";
+import { logger } from "../../../src/utils/logger";
 
 const googleMapsClient = new GoogleMapsClient({});
 
@@ -37,8 +40,8 @@ const GET_NEW_ORDERS = gql`
   query GetNewOrders($created_after: timestamptz!) {
     Orders(
       where: {
-        created_at: { _gt: $created_after },
-        status: { _eq: "PENDING" },
+        created_at: { _gt: $created_after }
+        status: { _eq: "PENDING" }
         shopper_id: { _is_null: true }
       }
     ) {
@@ -77,10 +80,10 @@ const GET_ACTIVE_SHOPPERS = gql`
     Shopper_Availability(
       where: {
         _and: [
-          { is_available: { _eq: true } },
-          { status: { _eq: "ACTIVE" } },
-          { day_of_week: { _eq: $current_day } },
-          { start_time: { _lte: $current_time } },
+          { is_available: { _eq: true } }
+          { status: { _eq: "ACTIVE" } }
+          { day_of_week: { _eq: $current_day } }
+          { start_time: { _lte: $current_time } }
           { end_time: { _gte: $current_time } }
         ]
       }
@@ -154,11 +157,12 @@ export default async function handler(
     // If this is not the first check, ensure at least 3 minutes have passed
     if (lastCheckTime) {
       const timeSinceLastCheck = Date.now() - lastCheckTime.getTime();
-      if (timeSinceLastCheck < 180000) { // 3 minutes in milliseconds
+      if (timeSinceLastCheck < 180000) {
+        // 3 minutes in milliseconds
         return res.status(200).json({
           success: true,
           message: "Skipping check - less than 3 minutes since last check",
-          notifications: []
+          notifications: [],
         });
       }
     }
@@ -168,52 +172,51 @@ export default async function handler(
 
     // Get orders created in the last 3 minutes
     const threeMinutesAgo = new Date(Date.now() - 3 * 60 * 1000).toISOString();
-    const { Orders: newOrders } = await hasuraClient.request<{ Orders: Order[] }>(
-      GET_NEW_ORDERS,
-      {
-        created_after: threeMinutesAgo,
-      }
-    );
+    const { Orders: newOrders } = await hasuraClient.request<{
+      Orders: Order[];
+    }>(GET_NEW_ORDERS, {
+      created_after: threeMinutesAgo,
+    });
 
     if (newOrders.length === 0) {
       return res.status(200).json({
         success: true,
         message: "No new orders found",
-        notifications: []
+        notifications: [],
       });
     }
 
     // Calculate distance and travel time for each order
-    const ordersWithDistance = newOrders.map(order => {
+    const ordersWithDistance = newOrders.map((order) => {
       const shopLat = order.Shop.latitude;
       const shopLng = order.Shop.longitude;
-      
+
       const distanceKm = calculateDistanceKm(
         shopperLatitude,
         shopperLongitude,
         shopLat,
         shopLng
       );
-      
+
       const travelTimeMinutes = estimateTravelTimeMinutes(distanceKm);
-      
+
       return {
         ...order,
         distance: Math.round(distanceKm * 10) / 10,
-        travelTimeMinutes
+        travelTimeMinutes,
       };
     });
 
     // Filter orders by travel time
     const nearbyOrders = ordersWithDistance.filter(
-      order => order.travelTimeMinutes <= maxTravelTime
+      (order) => order.travelTimeMinutes <= maxTravelTime
     );
 
     if (nearbyOrders.length === 0) {
       return res.status(200).json({
         success: true,
         message: "No nearby orders found",
-        notifications: []
+        notifications: [],
       });
     }
 
@@ -227,49 +230,69 @@ export default async function handler(
     }, {} as Record<string, Order[]>);
 
     // Create notifications for nearby orders
-    const notifications = Object.entries(ordersByShop).map(([shopName, orders]) => {
-      const totalOrders = orders.length;
-      const totalItems = orders.reduce((sum, order) => 
-        sum + (order.Order_Items_aggregate?.aggregate?.count || 0), 0);
-      const totalEarnings = orders.reduce((sum, order) => 
-        sum + parseFloat(order.total || "0"), 0);
+    const notifications = Object.entries(ordersByShop).map(
+      ([shopName, orders]) => {
+        const totalOrders = orders.length;
+        const totalItems = orders.reduce(
+          (sum, order) =>
+            sum + (order.Order_Items_aggregate?.aggregate?.count || 0),
+          0
+        );
+        const totalEarnings = orders.reduce(
+          (sum, order) => sum + parseFloat(order.total || "0"),
+          0
+        );
 
-      // Get the closest order's distance
-      const closestOrder = orders.reduce((closest, current) => 
-        (current.distance || 0) < (closest.distance || Infinity) ? current : closest
-      );
+        // Get the closest order's distance
+        const closestOrder = orders.reduce((closest, current) =>
+          (current.distance || 0) < (closest.distance || Infinity)
+            ? current
+            : closest
+        );
 
-      return {
-        id: `${shopName}-${Date.now()}`,
-        type: "NEW_ORDERS",
-        title: `🔔 New Orders at ${shopName}!`,
-        message: `${totalOrders} new order${totalOrders > 1 ? 's' : ''} (${totalItems} items) - ${closestOrder.distance}km away. Potential earnings: RWF${totalEarnings.toFixed(0)}`,
-        orders: orders.map(order => ({
-          id: order.id,
-          shop_name: shopName,
-          items: order.Order_Items_aggregate?.aggregate?.count || 0,
-          total: order.total,
-          distance: order.distance,
-          travelTime: order.travelTimeMinutes
-        })),
-        timestamp: new Date().toISOString(),
-        priority: totalOrders > 2 ? "high" : "normal"
-      };
-    });
+        return {
+          id: `${shopName}-${Date.now()}`,
+          type: "NEW_ORDERS",
+          title: `🔔 New Orders at ${shopName}!`,
+          message: `${totalOrders} new order${
+            totalOrders > 1 ? "s" : ""
+          } (${totalItems} items) - ${
+            closestOrder.distance
+          }km away. Potential earnings: RWF${totalEarnings.toFixed(0)}`,
+          orders: orders.map((order) => ({
+            id: order.id,
+            shop_name: shopName,
+            items: order.Order_Items_aggregate?.aggregate?.count || 0,
+            total: order.total,
+            distance: order.distance,
+            travelTime: order.travelTimeMinutes,
+          })),
+          timestamp: new Date().toISOString(),
+          priority: totalOrders > 2 ? "high" : "normal",
+        };
+      }
+    );
 
     // Send notifications
     if (notifications.length > 0) {
-      logger.info(`Sending ${notifications.length} notifications for nearby orders`, 'CheckNewOrdersAPI', {
-        notifications,
-        shopperLocation: { latitude: shopperLatitude, longitude: shopperLongitude },
-        maxDistance: maxTravelTime
-      });
+      logger.info(
+        `Sending ${notifications.length} notifications for nearby orders`,
+        "CheckNewOrdersAPI",
+        {
+          notifications,
+          shopperLocation: {
+            latitude: shopperLatitude,
+            longitude: shopperLongitude,
+          },
+          maxDistance: maxTravelTime,
+        }
+      );
 
       res.status(200).json({
         success: true,
         notifications,
         should_play_sound: notifications.length > 0,
-        message: `Found ${notifications.length} new nearby order notifications`
+        message: `Found ${notifications.length} new nearby order notifications`,
       });
 
       // Start notifications when shopper logs in or becomes active
@@ -281,11 +304,11 @@ export default async function handler(
       res.status(200).json({
         success: true,
         message: "No new nearby orders found",
-        notifications: []
+        notifications: [],
       });
     }
   } catch (error) {
     logger.error("Error checking new orders", "CheckNewOrdersAPI", error);
     res.status(500).json({ error: "Failed to check new orders" });
   }
-} 
+}
