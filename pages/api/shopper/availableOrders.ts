@@ -1,6 +1,7 @@
 import type { NextApiRequest, NextApiResponse } from "next";
 import { hasuraClient } from "../../../src/lib/hasuraClient";
 import { gql } from "graphql-request";
+import { logger } from '../../../src/utils/logger';
 
 // Modify the query to ensure we're only filtering by PENDING status, with no date filtering
 const GET_AVAILABLE_ORDERS = gql`
@@ -80,9 +81,9 @@ export default async function handler(
   }
 
   try {
-    console.log(
-      `[availableOrders] Request received at ${new Date().toISOString()}`
-    );
+    logger.info('Request received', 'AvailableOrders', {
+      timestamp: new Date().toISOString()
+    });
 
     // Get shopper's current location from query params
     const shopperLatitude = parseFloat(req.query.latitude as string) || 0;
@@ -90,16 +91,16 @@ export default async function handler(
     // Changed from 10 to 15 minutes max travel time
     const maxTravelTime = parseInt(req.query.maxTravelTime as string) || 15;
 
-    console.log(
-      `[availableOrders] Shopper location: ${shopperLatitude}, ${shopperLongitude}`
-    );
-    console.log(`[availableOrders] Max travel time: ${maxTravelTime} minutes`);
+    logger.info('Processing request parameters', 'AvailableOrders', {
+      shopperLocation: { lat: shopperLatitude, lng: shopperLongitude },
+      maxTravelTime: `${maxTravelTime} minutes`
+    });
 
     if (!hasuraClient) {
       throw new Error("Hasura client is not initialized");
     }
 
-    console.log(`[availableOrders] Querying Hasura for all PENDING orders`);
+    logger.debug('Querying Hasura for all PENDING orders', 'AvailableOrders');
 
     // Modified to get all PENDING orders without date filtering
     const data = await hasuraClient.request<{
@@ -125,9 +126,9 @@ export default async function handler(
       }>;
     }>(GET_AVAILABLE_ORDERS);
 
-    console.log(
-      `[availableOrders] Retrieved ${data.Orders.length} PENDING orders from database`
-    );
+    logger.info('Retrieved orders from database', 'AvailableOrders', {
+      orderCount: data.Orders.length
+    });
 
     // Transform data to make it easier to use on the client
     const availableOrders = data.Orders.map((order) => {
@@ -222,31 +223,47 @@ export default async function handler(
     );
 
     // Log the filtered orders
-    console.log(
-      `[availableOrders] Filtered to ${filteredOrders.length} orders within ${maxTravelTime} minutes travel time`
-    );
+    logger.info('Filtered orders', 'AvailableOrders', {
+      filteredOrderCount: filteredOrders.length,
+      maxTravelTime: `${maxTravelTime} minutes`
+    });
 
     // Detailed logging of filtered orders
     filteredOrders.forEach((order, index) => {
-      console.log(`[availableOrders] Filtered Order ${index + 1}:
-        ID: ${order.id}
-        Created: ${order.createdAt}
-        Status: ${order.status}
-        Shop: ${order.shopName}
-        Shop Coords: ${order.shopLatitude}, ${order.shopLongitude}
-        Travel time to shop: ${order.travelTimeMinutes} min
-        Distance to shop: ${order.distance} km
-        Customer Address: ${order.customerAddress}
-        Customer Coords: ${order.customerLatitude}, ${order.customerLongitude}
-        Distance shop to customer: ${order.shopToCustomerDistance} km
-        Items Count: ${order.itemsCount}
-      `);
+      logger.debug(`Filtered Order ${index + 1} details`, 'AvailableOrders', {
+        id: order.id,
+        created: order.createdAt,
+        status: order.status,
+        shop: {
+          name: order.shopName,
+          coordinates: {
+            lat: order.shopLatitude,
+            lng: order.shopLongitude
+          }
+        },
+        metrics: {
+          travelTimeToShop: `${order.travelTimeMinutes} min`,
+          distanceToShop: `${order.distance} km`,
+          shopToCustomerDistance: `${order.shopToCustomerDistance} km`
+        },
+        customer: {
+          address: order.customerAddress,
+          coordinates: {
+            lat: order.customerLatitude,
+            lng: order.customerLongitude
+          }
+        },
+        itemsCount: order.itemsCount
+      });
     });
 
     // Return the processed and filtered data
     res.status(200).json(filteredOrders);
   } catch (error: any) {
-    console.error("[availableOrders] Error fetching available orders:", error);
+    logger.error('Error fetching available orders', 'AvailableOrders', {
+      error: error.toString(),
+      stack: error.stack
+    });
     res.status(500).json({
       error: "Failed to fetch available orders",
       details: error.toString(),
