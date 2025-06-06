@@ -1,8 +1,20 @@
 import { NextApiRequest, NextApiResponse } from 'next';
-import fs from 'fs';
-import path from 'path';
+import { hasuraClient } from '../../../src/lib/hasuraClient';
+import { gql } from 'graphql-request';
 
-const LOG_DIR = path.join(process.cwd(), 'logs');
+interface ClearSystemLogsResponse {
+  delete_System_Logs: {
+    affected_rows: number;
+  };
+}
+
+const CLEAR_SYSTEM_LOGS = gql`
+  mutation clearSystemLogs {
+    delete_System_Logs(where: {}) {
+      affected_rows
+    }
+  }
+`;
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== 'POST') {
@@ -10,14 +22,15 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   }
 
   try {
-    const date = new Date().toISOString().split('T')[0];
-    const logFile = path.join(LOG_DIR, `${date}.log`);
-
-    if (fs.existsSync(logFile)) {
-      await fs.promises.unlink(logFile);
+    if (!hasuraClient) {
+      throw new Error("Hasura client is not initialized");
     }
 
-    res.status(200).json({ success: true });
+    const data = await hasuraClient.request<ClearSystemLogsResponse>(CLEAR_SYSTEM_LOGS);
+    res.status(200).json({ 
+      success: true,
+      deletedRows: data.delete_System_Logs.affected_rows 
+    });
   } catch (error) {
     console.error('Error clearing logs:', error);
     res.status(500).json({ error: 'Failed to clear logs' });
