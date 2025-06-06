@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { Table, Loader, Button, SelectPicker, Panel } from 'rsuite';
-import { hasuraClient } from '../../lib/hasuraClient';
-import { gql } from 'graphql-request';
 import { useTheme } from '../../context/ThemeContext';
+import { GetServerSideProps } from 'next';
+import './LogsTable.css'; // We'll create this file next
 
 const { Column, HeaderCell, Cell } = Table;
 
@@ -15,30 +15,33 @@ interface SystemLog {
   timestamp: string;
 }
 
-const GET_LOGS = gql`
-  query getSystemLogs {
-    System_Logs(order_by: {timestamp: desc}) {
-      type
-      timestamp
-      message
-      id
-      details
-      component
-    }
-  }
-`;
+interface LogsResponse {
+  logs: SystemLog[];
+  total: number;
+}
 
-const LogsTable: React.FC = () => {
+type LogType = 'error' | 'warn' | 'info' | 'debug' | null;
+
+interface LogsTableProps {
+  initialLogs: SystemLog[];
+  initialTotal: number;
+}
+
+const LogsTable: React.FC<LogsTableProps> = ({ initialLogs, initialTotal }) => {
   const { theme } = useTheme();
-  const [logs, setLogs] = useState<SystemLog[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [filter, setFilter] = useState<string | null>(null);
+  const [logs, setLogs] = useState<SystemLog[]>(initialLogs);
+  const [loading, setLoading] = useState(false);
+  const [filter, setFilter] = useState<LogType>(null);
 
   const fetchLogs = async () => {
     try {
       setLoading(true);
-      const data = await hasuraClient.request(GET_LOGS);
-      setLogs(data.System_Logs);
+      const response = await fetch(`/api/logs/read${filter ? `?type=${filter}` : ''}`);
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      const data = await response.json() as LogsResponse;
+      setLogs(data.logs);
     } catch (error) {
       console.error('Error fetching logs:', error);
     } finally {
@@ -47,11 +50,10 @@ const LogsTable: React.FC = () => {
   };
 
   useEffect(() => {
-    fetchLogs();
     // Set up polling to refresh logs every 30 seconds
     const interval = setInterval(fetchLogs, 30000);
     return () => clearInterval(interval);
-  }, []);
+  }, [filter]); // Added filter as dependency
 
   const formatTimestamp = (timestamp: string) => {
     return new Date(timestamp).toLocaleString();
@@ -67,25 +69,34 @@ const LogsTable: React.FC = () => {
   };
 
   const getTypeColor = (type: string) => {
-    switch (type.toLowerCase()) {
-      case 'error': return 'red';
-      case 'warn': return 'orange';
-      case 'info': return 'blue';
-      case 'debug': return 'green';
-      default: return 'gray';
+    if (theme === 'dark') {
+      switch (type.toLowerCase()) {
+        case 'error': return '#ff4d4f';
+        case 'warn': return '#faad14';
+        case 'info': return '#1890ff';
+        case 'debug': return '#52c41a';
+        default: return '#d9d9d9';
+      }
+    } else {
+      switch (type.toLowerCase()) {
+        case 'error': return '#cf1322';
+        case 'warn': return '#d48806';
+        case 'info': return '#096dd9';
+        case 'debug': return '#389e0d';
+        default: return '#8c8c8c';
+      }
     }
   };
 
-  const filteredLogs = filter
-    ? logs.filter(log => log.type.toLowerCase() === filter.toLowerCase())
-    : logs;
-
   return (
     <Panel 
-      className={theme === 'dark' ? 'dark-theme' : ''} 
+      style={{
+        backgroundColor: 'var(--bg-secondary)',
+        color: 'var(--text-primary)',
+      }}
       header={
         <div className="flex items-center justify-between mb-4">
-          <h2 className="text-xl font-bold">System Logs</h2>
+          <h2 className="text-xl font-bold" style={{ color: 'var(--text-primary)' }}>System Logs</h2>
           <div className="flex gap-4">
             <SelectPicker
               data={[
@@ -96,12 +107,28 @@ const LogsTable: React.FC = () => {
                 { label: 'Debug', value: 'debug' }
               ]}
               value={filter}
-              onChange={setFilter}
+              onChange={value => {
+                setFilter(value as LogType);
+                fetchLogs();
+              }}
               cleanable={false}
               searchable={false}
               placeholder="Filter by type"
+              style={{
+                backgroundColor: 'var(--bg-primary)',
+                color: 'var(--text-primary)',
+              }}
             />
-            <Button onClick={fetchLogs}>Refresh</Button>
+            <Button 
+              onClick={fetchLogs}
+              style={{
+                backgroundColor: 'var(--bg-primary)',
+                color: 'var(--text-primary)',
+                border: '1px solid var(--text-secondary)',
+              }}
+            >
+              Refresh
+            </Button>
           </div>
         </div>
       }
@@ -113,20 +140,28 @@ const LogsTable: React.FC = () => {
       ) : (
         <Table
           height={600}
-          data={filteredLogs}
+          data={logs}
           rowHeight={60}
-          className={theme === 'dark' ? 'dark-theme' : ''}
+          className={`logs-table ${theme === 'dark' ? 'dark' : 'light'}`}
+          style={{
+            backgroundColor: 'var(--bg-primary)',
+          }}
+          rowClassName={() => theme === 'dark' ? 'dark-row' : 'light-row'}
         >
           <Column width={150} align="left" fixed>
-            <HeaderCell>Timestamp</HeaderCell>
-            <Cell dataKey="timestamp">
+            <HeaderCell className="header-cell">
+              Timestamp
+            </HeaderCell>
+            <Cell className="table-cell">
               {(rowData: SystemLog) => formatTimestamp(rowData.timestamp)}
             </Cell>
           </Column>
 
           <Column width={100}>
-            <HeaderCell>Type</HeaderCell>
-            <Cell dataKey="type">
+            <HeaderCell className="header-cell">
+              Type
+            </HeaderCell>
+            <Cell className="table-cell">
               {(rowData: SystemLog) => (
                 <span style={{ color: getTypeColor(rowData.type) }}>
                   {rowData.type}
@@ -136,18 +171,28 @@ const LogsTable: React.FC = () => {
           </Column>
 
           <Column width={150}>
-            <HeaderCell>Component</HeaderCell>
-            <Cell dataKey="component" />
+            <HeaderCell className="header-cell">
+              Component
+            </HeaderCell>
+            <Cell className="table-cell">
+              {(rowData: SystemLog) => rowData.component}
+            </Cell>
           </Column>
 
           <Column width={300}>
-            <HeaderCell>Message</HeaderCell>
-            <Cell dataKey="message" />
+            <HeaderCell className="header-cell">
+              Message
+            </HeaderCell>
+            <Cell className="table-cell">
+              {(rowData: SystemLog) => rowData.message}
+            </Cell>
           </Column>
 
           <Column flexGrow={1}>
-            <HeaderCell>Details</HeaderCell>
-            <Cell>
+            <HeaderCell className="header-cell">
+              Details
+            </HeaderCell>
+            <Cell className="table-cell">
               {(rowData: SystemLog) => (
                 <pre className="whitespace-pre-wrap text-sm">
                   {formatDetails(rowData.details)}
@@ -161,4 +206,30 @@ const LogsTable: React.FC = () => {
   );
 };
 
-export default LogsTable; 
+export default LogsTable;
+
+// Add this to your page component that uses LogsTable
+export const getServerSideProps: GetServerSideProps = async () => {
+  try {
+    const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/logs/read`);
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+    const data = await response.json();
+    
+    return {
+      props: {
+        initialLogs: data.logs,
+        initialTotal: data.total,
+      },
+    };
+  } catch (error) {
+    console.error('Error fetching initial logs:', error);
+    return {
+      props: {
+        initialLogs: [],
+        initialTotal: 0,
+      },
+    };
+  }
+}; 

@@ -1,0 +1,102 @@
+.logs-table {
+  border: 1px solid var(--text-secondary);
+}
+
+.logs-table.dark {
+  background-color: var(--bg-primary);
+}
+
+.logs-table.dark .rs-table-row {
+  background-color: var(--bg-primary);
+}
+
+.logs-table.dark .rs-table-row:hover {
+  background-color: var(--bg-secondary);
+}
+
+.logs-table.dark .rs-table-cell {
+  background-color: var(--bg-primary);
+  color: var(--text-primary);
+  border-bottom: 1px solid var(--text-secondary);
+}
+
+.logs-table.dark .rs-table-cell-group {
+  background-color: var(--bg-primary);
+}
+
+.logs-table.dark .rs-table-cell-header {
+  background-color: var(--bg-secondary);
+  color: var(--text-primary);
+  border-bottom: 1px solid var(--text-secondary);
+}
+
+.logs-table.dark .rs-table-scrollbar {
+  background-color: var(--bg-primary);
+}
+
+.logs-table.dark .rs-table-scrollbar-handle {
+  background-color: var(--text-secondary);
+}
+
+.logs-table.dark .rs-table-body-row-wrapper {
+  background-color: var(--bg-primary);
+}
+
+.logs-table.dark .rs-table-row-header {
+  background-color: var(--bg-secondary);
+}
+
+.header-cell {
+  background-color: var(--bg-secondary);
+  color: var(--text-primary);
+  font-weight: bold;
+  padding: 8px;
+}
+
+.table-cell {
+  color: var(--text-primary);
+  padding: 8px;
+}
+
+.dark-row {
+  background-color: var(--bg-primary);
+}
+
+.dark-row:hover {
+  background-color: var(--bg-secondary) !important;
+}
+
+/* Light theme overrides if needed */
+.logs-table.light .rs-table-row {
+  background-color: var(--bg-primary);
+}
+
+.logs-table.light .rs-table-cell {
+  background-color: var(--bg-primary);
+  color: var(--text-primary);
+  border-bottom: 1px solid var(--text-secondary);
+}
+
+.logs-table.light .rs-table-cell-header {
+  background-color: var(--bg-secondary);
+  color: var(--text-primary);
+}
+
+/* Scrollbar styles for Webkit browsers */
+.logs-table ::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+.logs-table ::-webkit-scrollbar-track {
+  background: var(--bg-primary);
+}
+
+.logs-table ::-webkit-scrollbar-thumb {
+  background: var(--text-secondary);
+  border-radius: 4px;
+}
+
+.logs-table ::-webkit-scrollbar-thumb:hover {
+  background: var(--text-primary);
+} 

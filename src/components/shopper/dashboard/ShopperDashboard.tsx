@@ -93,6 +93,8 @@ export default function ShopperDashboard() {
   const [sortedOrders, setSortedOrders] = useState<any[]>([]);
   const [lastRefreshed, setLastRefreshed] = useState<Date>(new Date());
   const [isAutoRefreshing, setIsAutoRefreshing] = useState<boolean>(true);
+  const [dailyEarnings, setDailyEarnings] = useState(0);
+  const [completedOrdersCount, setCompletedOrdersCount] = useState(0);
 
   const toggleExpanded = () => setIsExpanded((prev) => !prev);
 
@@ -117,7 +119,7 @@ export default function ShopperDashboard() {
     setIsOnline(Boolean(hasLocationCookies));
   };
 
-  // Enhanced loadOrders function with better debugging and handling for all PENDING orders
+  // Enhanced loadOrders function with better debugging
   const loadOrders = () => {
     if (!currentLocation) {
       console.log("Cannot load orders: No current location available");
@@ -200,8 +202,7 @@ export default function ShopperDashboard() {
                 id: order.id,
                 shopName: order.shopName || "Unknown Shop",
                 shopAddress: order.shopAddress || "No address available",
-                customerAddress:
-                  order.customerAddress || "No address available",
+                customerAddress: order.customerAddress || "No address available",
                 distance: distanceStr,
                 items: order.itemsCount || 0,
                 total: `$${(order.earnings || 0).toFixed(2)}`,
@@ -230,6 +231,7 @@ export default function ShopperDashboard() {
           .filter(Boolean); // Remove any null entries from formatting errors
 
         console.log(`Formatted ${formattedOrders.length} orders for display`);
+        console.log('Sample formatted order:', formattedOrders[0]);
 
         // Set available orders
         setAvailableOrders(formattedOrders);
@@ -404,13 +406,36 @@ export default function ShopperDashboard() {
 
   // Track initialization state
   useEffect(() => {
-    // Consider dashboard initialized when location is set and map is loaded
-    if (currentLocation && mapLoaded) {
-      // Add slight delay to ensure smooth transition
-      const timer = setTimeout(() => setIsInitializing(false), 500);
-      return () => clearTimeout(timer);
+    // Show content as soon as we have either location or map loaded
+    if (currentLocation || mapLoaded) {
+      setIsInitializing(false);
     }
   }, [currentLocation, mapLoaded]);
+
+  // Load initial data in parallel
+  useEffect(() => {
+    if (!isInitializing) {
+      // Load all data in parallel
+      Promise.all([
+        loadOrders(),
+        fetch('/api/shopper/todayCompletedEarnings')
+          .then(res => res.json())
+          .then(data => {
+            if (data?.success && data?.data) {
+              setDailyEarnings(data.data.totalEarnings);
+              setCompletedOrdersCount(data.data.orderCount);
+            }
+          })
+          .catch(error => {
+            console.error("Error fetching daily earnings:", error);
+            setDailyEarnings(0);
+            setCompletedOrdersCount(0);
+          })
+      ]).catch(error => {
+        console.error("Error loading initial data:", error);
+      });
+    }
+  }, [isInitializing]);
 
   // Add this useEffect to update sorting when sortBy changes
   useEffect(() => {

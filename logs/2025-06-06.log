@@ -1,0 +1,36 @@
+{"type":"info","message":"Initializing notification sound...","component":"NotificationSystem","timestamp":1749230731393}
+{"type":"info","message":"Starting notification system","component":"NotificationSystem","timestamp":1749230731396}
+{"type":"info","message":"Will check for pending orders every 60 seconds","component":"NotificationSystem","timestamp":1749230731399}
+{"type":"info","message":"NotificationSystem component mounted","component":"NotificationSystem","timestamp":1749230731403}
+{"type":"info","message":"User logged in and location available, starting notification system","component":"NotificationSystem","timestamp":1749230731407}
+{"type":"info","message":"Starting notification system","component":"NotificationSystem","timestamp":1749230731409}
+{"type":"info","message":"Will check for pending orders every 60 seconds","component":"NotificationSystem","timestamp":1749230731411}
+{"type":"debug","message":"Session data","component":"ShopperLayout","details":"{\"user\":{\"name\":\"teest test\",\"email\":\"test@test.com\",\"id\":\"36672ccc-5f44-465a-b2f6-7ff23f4f643f\",\"phone\":\"078484848484\",\"gender\":\"male\",\"role\":\"shopper\"},\"expires\":\"2025-07-06T17:24:54.199Z\"}","timestamp":1749230731419}
+{"type":"debug","message":"Active orders check","component":"NotificationSystem","details":"{\"hasActive\":false,\"count\":0}","timestamp":1749230733902}
+{"type":"info","message":"Schedule check:","component":"NotificationSystem","details":"{\"currentDay\":5,\"currentTime\":\"19:25\",\"scheduleStart\":\"04:00:00+00\",\"scheduleEnd\":\"18:00:00+00\",\"isTimeWithinRange\":false}","timestamp":1749230734032}
+{"type":"info","message":"Notification sound loaded successfully","component":"NotificationSystem","timestamp":1749230734693}
+{"type":"debug","message":"Active orders check","component":"NotificationSystem","details":"{\"hasActive\":false,\"count\":0}","timestamp":1749230735127}
+{"type":"info","message":"Schedule check:","component":"NotificationSystem","details":"{\"currentDay\":5,\"currentTime\":\"19:25\",\"scheduleStart\":\"04:00:00+00\",\"scheduleEnd\":\"18:00:00+00\",\"isTimeWithinRange\":false}","timestamp":1749230735572}
+{"type":"info","message":"Schedule check result","component":"NotificationSystem","details":"{\"currentDay\":5,\"currentTime\":\"19:25:36\",\"scheduleStart\":\"04:00:00+00\",\"scheduleEnd\":\"18:00:00+00\",\"isWithinRange\":false}","timestamp":1749230736548}
+{"type":"debug","message":"Outside scheduled hours, skipping notification check","component":"NotificationSystem","timestamp":1749230736550}
+{"type":"info","message":"Schedule check result","component":"NotificationSystem","details":"{\"currentDay\":5,\"currentTime\":\"19:25:37\",\"scheduleStart\":\"04:00:00+00\",\"scheduleEnd\":\"18:00:00+00\",\"isWithinRange\":false}","timestamp":1749230737501}
+{"type":"debug","message":"Outside scheduled hours, skipping notification check","component":"NotificationSystem","timestamp":1749230737503}
+{"type":"info","message":"Stopping notification system","component":"NotificationSystem","timestamp":1749230774617}
+{"type":"info","message":"Starting notification system","component":"NotificationSystem","timestamp":1749230774630}
+{"type":"info","message":"Will check for pending orders every 60 seconds","component":"NotificationSystem","timestamp":1749230774639}
+{"type":"info","message":"User logged in and location available, starting notification system","component":"NotificationSystem","timestamp":1749230774660}
+{"type":"info","message":"Starting notification system","component":"NotificationSystem","timestamp":1749230774725}
+{"type":"info","message":"Will check for pending orders every 60 seconds","component":"NotificationSystem","timestamp":1749230774738}
+{"type":"debug","message":"Session data","component":"ShopperLayout","details":"{\"user\":{\"name\":\"teest test\",\"email\":\"test@test.com\",\"id\":\"36672ccc-5f44-465a-b2f6-7ff23f4f643f\",\"phone\":\"078484848484\",\"gender\":\"male\",\"role\":\"shopper\"},\"expires\":\"2025-07-06T17:26:14.470Z\"}","timestamp":1749230774750}
+{"type":"debug","message":"Active orders check","component":"NotificationSystem","details":"{\"hasActive\":false,\"count\":0}","timestamp":1749230777533}
+{"type":"info","message":"Schedule check:","component":"NotificationSystem","details":"{\"currentDay\":5,\"currentTime\":\"19:26\",\"scheduleStart\":\"04:00:00+00\",\"scheduleEnd\":\"18:00:00+00\",\"isTimeWithinRange\":false}","timestamp":1749230778487}
+{"type":"debug","message":"Active orders check","component":"NotificationSystem","details":"{\"hasActive\":false,\"count\":0}","timestamp":1749230779018}
+{"type":"info","message":"Schedule check:","component":"NotificationSystem","details":"{\"currentDay\":5,\"currentTime\":\"19:26\",\"scheduleStart\":\"04:00:00+00\",\"scheduleEnd\":\"18:00:00+00\",\"isTimeWithinRange\":false}","timestamp":1749230780423}
+{"type":"info","message":"Schedule check result","component":"NotificationSystem","details":"{\"currentDay\":5,\"currentTime\":\"19:26:21\",\"scheduleStart\":\"04:00:00+00\",\"scheduleEnd\":\"18:00:00+00\",\"isWithinRange\":false}","timestamp":1749230781436}
+{"type":"debug","message":"Outside scheduled hours, skipping notification check","component":"NotificationSystem","timestamp":1749230781439}
+{"type":"info","message":"Schedule check result","component":"NotificationSystem","details":"{\"currentDay\":5,\"currentTime\":\"19:26:22\",\"scheduleStart\":\"04:00:00+00\",\"scheduleEnd\":\"18:00:00+00\",\"isWithinRange\":false}","timestamp":1749230782330}
+{"type":"debug","message":"Outside scheduled hours, skipping notification check","component":"NotificationSystem","timestamp":1749230782332}
+{"type":"info","message":"Stopping notification system","component":"NotificationSystem","timestamp":1749230832313}
+{"type":"info","message":"NotificationSystem component unmounting","component":"NotificationSystem","timestamp":1749230832316}
+{"type":"info","message":"Stopping notification system","component":"NotificationSystem","timestamp":1749230832320}
+{"type":"error","message":"Error loading notification sound","component":"NotificationSystem","details":"{\"isTrusted\":true}","timestamp":1749230832361}
