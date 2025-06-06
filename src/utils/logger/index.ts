@@ -1,20 +1,5 @@
 import { LogEntry, LogLevel, Logger } from './types';
-import { hasuraClient } from '../../lib/hasuraClient';
-import { gql } from 'graphql-request';
-
-const INSERT_LOG = gql`
-  mutation insertSystemLog($type: String!, $message: String!, $component: String!, $details: jsonb) {
-    insert_System_Logs_one(object: {
-      type: $type,
-      message: $message,
-      component: $component,
-      details: $details,
-      timestamp: "now()"
-    }) {
-      id
-    }
-  }
-`;
+import { insertSystemLog } from '../../../pages/api/queries/system-logs';
 
 class LoggerImpl implements Logger {
   private logs: LogEntry[] = [];
@@ -37,20 +22,21 @@ class LoggerImpl implements Logger {
 
   private async saveToDatabase(entry: LogEntry) {
     try {
-      if (!hasuraClient) return;
-
-      await hasuraClient.request(INSERT_LOG, {
-        type: entry.type,
-        message: entry.message,
-        component: entry.component,
-        details: entry.details || null
-      });
+      await insertSystemLog(
+        entry.type,
+        entry.message,
+        entry.component,
+        entry.details
+      );
     } catch (error) {
-      console.error('Failed to save log to database:', error);
+      // Avoid recursive logging here
+      process.env.NODE_ENV === 'development' && 
+        console.error('Failed to save log to database:', error);
     }
   }
 
   private addLog(entry: LogEntry) {
+    // Add to memory cache
     this.logs.unshift(entry);
     if (this.logs.length > this.maxLogs) {
       this.logs.pop();
