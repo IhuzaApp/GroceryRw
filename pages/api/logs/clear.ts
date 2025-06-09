@@ -40,4 +40,4 @@ export default async function handler(
     console.error("Error clearing logs:", error);
     res.status(500).json({ error: "Failed to clear logs" });
   }
-}
+} 
