@@ -6,13 +6,13 @@ import { logger } from "../../../src/utils/logger";
 
 interface ScheduleResponse {
   Shopper_Availability: Array<{
-    id: string;
-    day_of_week: number;
-    start_time: string;
-    end_time: string;
-    is_available: boolean;
-    created_at: string;
-    updated_at: string;
+  id: string;
+  day_of_week: number;
+  start_time: string;
+  end_time: string;
+  is_available: boolean;
+  created_at: string;
+  updated_at: string;
   }>;
 }
 
@@ -35,19 +35,19 @@ export default async function handler(
           order_by: { day_of_week: asc }
         ) {
           id
-          day_of_week
-          start_time
-          end_time
-          is_available
-          created_at
-          updated_at
-        }
-      }
-    `;
-
-    if (!hasuraClient) {
-      throw new Error("Hasura client is not initialized");
+      day_of_week
+      start_time
+      end_time
+      is_available
+      created_at
+      updated_at
     }
+  }
+`;
+
+        if (!hasuraClient) {
+          throw new Error("Hasura client is not initialized");
+        }
 
     const data = await hasuraClient.request<ScheduleResponse>(GET_SCHEDULE, {
       userId,
@@ -58,7 +58,7 @@ export default async function handler(
       scheduleCount: data.Shopper_Availability.length,
     });
 
-    return res.status(200).json({
+        return res.status(200).json({
       schedule: data.Shopper_Availability,
       hasSchedule: data.Shopper_Availability.length > 0,
     });
