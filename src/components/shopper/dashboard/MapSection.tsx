@@ -121,7 +121,7 @@ export default function MapSection({
             mapInstanceRef.current?.removeLayer(layer);
           }
         });
-
+        
         L.tileLayer(mapStyles[theme], {
           maxZoom: 19,
           minZoom: 3,
@@ -317,9 +317,9 @@ export default function MapSection({
   const showLocationTroubleshootingGuide = () => {
     reduceToastDuplicates(
       "location-troubleshooting",
-      <Message
-        showIcon
-        type="info"
+      <Message 
+        showIcon 
+        type="info" 
         header="Location Troubleshooting"
         className={theme === "dark" ? "rs-message-dark" : ""}
       >
@@ -404,9 +404,9 @@ export default function MapSection({
             // Permission denied
             reduceToastDuplicates(
               "location-permission-denied",
-              <Message
-                showIcon
-                type="error"
+              <Message 
+                showIcon 
+                type="error" 
                 header="Location Permission"
                 className={theme === "dark" ? "rs-message-dark" : ""}
               >
@@ -425,9 +425,9 @@ export default function MapSection({
             // Position unavailable
             reduceToastDuplicates(
               "location-unavailable",
-              <Message
-                showIcon
-                type="warning"
+              <Message 
+                showIcon 
+                type="warning" 
                 header="Location Unavailable"
                 className={theme === "dark" ? "rs-message-dark" : ""}
               >
@@ -445,9 +445,9 @@ export default function MapSection({
               if (locationErrorCountRef.current >= 5) {
                 reduceToastDuplicates(
                   "tracking-issues",
-                  <Message
-                    showIcon
-                    type="info"
+                  <Message 
+                    showIcon 
+                    type="info" 
                     header="Active Tracking Issue"
                     className={theme === "dark" ? "rs-message-dark" : ""}
                   >
@@ -514,9 +514,9 @@ export default function MapSection({
             // Timeout
             reduceToastDuplicates(
               "location-timeout",
-              <Message
-                showIcon
-                type="warning"
+              <Message 
+                showIcon 
+                type="warning" 
                 header="Location Timeout"
                 className={theme === "dark" ? "rs-message-dark" : ""}
               >
@@ -758,14 +758,14 @@ export default function MapSection({
   const formatEarningsDisplay = (amount: string) => {
     // Remove currency symbol and commas, then parse as number
     const value = parseFloat(amount.replace(/[^0-9.]/g, ""));
-
+    
     if (isNaN(value)) return amount;
-
+    
     if (value >= 1000) {
       // Format to one decimal place for thousands, no currency
       return `${(value / 1000).toFixed(1)}k`;
     }
-
+    
     // For hundreds, just return the number without currency
     return Math.round(value).toString();
   };
@@ -777,10 +777,10 @@ export default function MapSection({
     baseRadius: number = 30
   ) => {
     if (total === 1) return { lat: 0, lng: 0 };
-
+    
     // Calculate angle for even distribution in a circle
     const angle = (2 * Math.PI * index) / total;
-
+    
     // Calculate offset using trigonometry
     return {
       lat: (baseRadius / 111111) * Math.cos(angle), // Convert meters to degrees (roughly)
@@ -793,21 +793,21 @@ export default function MapSection({
     orders: MapSectionProps["availableOrders"]
   ) => {
     const groups = new Map<string, Array<typeof orders[0]>>();
-
+    
     orders.forEach((order) => {
       if (!order.shopLatitude || !order.shopLongitude) return;
-
+      
       // Create a key with reduced precision to group nearby points
       const key = `${order.shopLatitude.toFixed(
         4
       )},${order.shopLongitude.toFixed(4)}`;
-
+      
       if (!groups.has(key)) {
         groups.set(key, []);
       }
       groups.get(key)?.push(order);
     });
-
+    
     return groups;
   };
 
@@ -836,7 +836,7 @@ export default function MapSection({
         ">
           ${simplifiedEarnings}
         </div>`,
-      className: "",
+        className: "",
       iconSize: [44, 44],
       iconAnchor: [22, 22],
       popupAnchor: [0, -22],
@@ -1105,9 +1105,9 @@ export default function MapSection({
 
       reduceToastDuplicates(
         "location-error",
-        <Message
-          showIcon
-          type="error"
+        <Message 
+          showIcon 
+          type="error" 
           header="Location Error"
           className={theme === "dark" ? "rs-message-dark" : ""}
         >
@@ -1359,20 +1359,20 @@ export default function MapSection({
       try {
         // Cleanup existing map
         if (mapInstanceRef.current) {
-          mapInstanceRef.current.remove();
-          mapInstanceRef.current = null;
+        mapInstanceRef.current.remove();
+        mapInstanceRef.current = null;
         }
 
         // Create new map instance with type assertion and null check
         if (mapRef.current) {
           mapInstance = L.map(mapRef.current as HTMLElement, {
-            center: [-1.9706, 30.1044],
-            zoom: 14,
+          center: [-1.9706, 30.1044],
+          zoom: 14,
             minZoom: 3,
             maxZoom: 19,
             scrollWheelZoom: true,
-            attributionControl: false,
-          });
+          attributionControl: false,
+        });
 
           // Store map instance
           mapInstanceRef.current = mapInstance;
@@ -1425,7 +1425,7 @@ export default function MapSection({
           if (!isNaN(lat) && !isNaN(lng)) {
             console.log("Setting initial position from cookies:", { lat, lng });
             if (userMarkerRef.current && mapInstance) {
-              userMarkerRef.current.setLatLng([lat, lng]);
+            userMarkerRef.current.setLatLng([lat, lng]);
               if (isOnline) {
                 userMarkerRef.current.addTo(mapInstance);
                 mapInstance.setView([lat, lng], 16);
@@ -1477,50 +1477,50 @@ export default function MapSection({
       setShops(shops);
       if (map && map.getContainer()) {
         shops.forEach((shop: Shop) => {
-          try {
-            const lat = parseFloat(shop.latitude);
-            const lng = parseFloat(shop.longitude);
+              try {
+                const lat = parseFloat(shop.latitude);
+                const lng = parseFloat(shop.longitude);
 
-            if (isNaN(lat) || isNaN(lng)) {
-              console.warn(`Invalid coordinates for shop ${shop.name}`);
-              return;
-            }
+                if (isNaN(lat) || isNaN(lng)) {
+                console.warn(`Invalid coordinates for shop ${shop.name}`);
+                  return;
+                }
 
-            if (map && map.getContainer()) {
-              const marker = L.marker([lat, lng], {
-                icon: createShopMarkerIcon(shop.is_active),
+              if (map && map.getContainer()) {
+                const marker = L.marker([lat, lng], { 
+                  icon: createShopMarkerIcon(shop.is_active),
                 zIndexOffset: 500,
-              });
-
-              if (safeAddMarker(marker, map, `shop ${shop.name}`)) {
-                marker.bindPopup(
-                  `<div style="
+                });
+                
+                if (safeAddMarker(marker, map, `shop ${shop.name}`)) {
+                    marker.bindPopup(
+                    `<div style="
                     background: ${theme === "dark" ? "#1f2937" : "#fff"}; 
                     color: ${theme === "dark" ? "#e5e7eb" : "#111827"};
-                    padding: 8px;
-                    border-radius: 8px;
-                    min-width: 150px;
-                    text-align: center;
-                  ">
-                    <strong>${shop.name}</strong>
+                      padding: 8px;
+                      border-radius: 8px;
+                      min-width: 150px;
+                      text-align: center;
+                    ">
+                      <strong>${shop.name}</strong>
                     ${
                       !shop.is_active
                         ? '<br><span style="color: #ef4444;">(Disabled)</span>'
                         : ""
                     }
-                  </div>`,
-                  { offset: [0, -10] }
-                );
-              }
+                    </div>`,
+                    { offset: [0, -10] }
+                  );
+                }
+                }
+              } catch (error) {
+              console.error(`Error adding shop marker for ${shop.name}:`, error);
             }
-          } catch (error) {
-            console.error(`Error adding shop marker for ${shop.name}:`, error);
-          }
-        });
+          });
       }
 
       // Process pending orders with grouping
-      if (isOnline && map && map.getContainer()) {
+          if (isOnline && map && map.getContainer()) {
         console.log("Processing pending orders:", pendingOrders);
 
         // Group pending orders by location
@@ -1551,7 +1551,7 @@ export default function MapSection({
         groupedPendingOrders.forEach((orders, locationKey) => {
           const [baseLat, baseLng] = locationKey.split(",").map(Number);
 
-          orders.forEach((order, index) => {
+              orders.forEach((order, index) => {
             try {
               // Calculate offset based on position in group
               const offset = calculateMarkerOffset(index, orders.length);
@@ -1621,7 +1621,7 @@ export default function MapSection({
           typeof availableOrders
         >();
         availableOrders.forEach((order) => {
-          if (!order.shopLatitude || !order.shopLongitude) return;
+                if (!order.shopLatitude || !order.shopLongitude) return;
           const key = `${order.shopLatitude.toFixed(
             5
           )},${order.shopLongitude.toFixed(5)}`;
@@ -1651,9 +1651,9 @@ export default function MapSection({
           orders.forEach((order, index) => {
             try {
               // Calculate offset based on position in group
-              const offset = calculateMarkerOffset(index, orders.length);
-              const adjustedLat = baseLat + offset.lat;
-              const adjustedLng = baseLng + offset.lng;
+                const offset = calculateMarkerOffset(index, orders.length);
+                const adjustedLat = baseLat + offset.lat;
+                const adjustedLng = baseLng + offset.lng;
 
               // Log marker placement
               logger.debug("Placing available order marker", "MapSection", {
@@ -1668,12 +1668,12 @@ export default function MapSection({
                 indexInGroup: index,
               });
 
-              const marker = L.marker([adjustedLat, adjustedLng], {
-                icon: createOrderMarkerIcon(order.estimatedEarnings),
+                const marker = L.marker([adjustedLat, adjustedLng], {
+                  icon: createOrderMarkerIcon(order.estimatedEarnings),
                 zIndexOffset: 1000 + index, // Ensure proper stacking
-              });
+                  });
 
-              if (safeAddMarker(marker, map, `order ${order.id}`)) {
+                if (safeAddMarker(marker, map, `order ${order.id}`)) {
                 marker.bindPopup(
                   createAvailableOrderPopupContent(order, theme),
                   {
@@ -1687,7 +1687,7 @@ export default function MapSection({
                     closeOnClick: false,
                   }
                 );
-                attachAcceptHandler(marker, order.id, map);
+                  attachAcceptHandler(marker, order.id, map);
                 orderMarkersRef.current.push(marker);
               }
             } catch (error) {
@@ -1707,11 +1707,11 @@ export default function MapSection({
                 `Error adding marker for order ${order.id}:`,
                 error
               );
-            }
-          });
-        });
-      }
-    } catch (error) {
+                }
+              });
+            });
+          }
+          } catch (error) {
       console.error("Error in map sequence:", error);
     }
   };
@@ -1734,8 +1734,8 @@ export default function MapSection({
           console.warn("Earnings data incomplete or invalid:", data);
           setDailyEarnings(0);
           setCompletedOrdersCount(0);
-        }
-      } catch (error) {
+            }
+          } catch (error) {
         console.error("Error fetching daily earnings:", error);
         setDailyEarnings(0);
         setCompletedOrdersCount(0);
@@ -1771,7 +1771,7 @@ export default function MapSection({
     return () => {
       clearOrderMarkers();
       clearShopMarkers();
-      if (userMarkerRef.current) {
+        if (userMarkerRef.current) {
         userMarkerRef.current.remove();
       }
     };
@@ -1802,9 +1802,9 @@ export default function MapSection({
           theme === "dark" ? "bg-gray-900" : "bg-gray-100"
         }`}
       >
-        <Loader
-          size="lg"
-          content="Loading map..."
+        <Loader 
+          size="lg" 
+          content="Loading map..." 
           className={theme === "dark" ? "rs-loader-dark" : ""}
         />
       </div>
@@ -1897,9 +1897,9 @@ export default function MapSection({
             theme === "dark" ? "bg-gray-900/90" : "bg-gray-100/90"
           }`}
         >
-          <Loader
-            size="lg"
-            content="Loading map..."
+          <Loader 
+            size="lg" 
+            content="Loading map..." 
             className={theme === "dark" ? "rs-loader-dark" : ""}
           />
         </div>
@@ -1910,7 +1910,7 @@ export default function MapSection({
           <button
             onClick={handleGoLive}
             className={`absolute bottom-5 left-1/2 z-[1000] hidden w-[90%] -translate-x-1/2 transform rounded-full py-2 font-bold shadow-lg backdrop-blur-lg md:block md:w-auto md:px-4 ${
-              isOnline
+              isOnline 
                 ? theme === "dark"
                   ? "bg-red-600/90 text-white hover:bg-red-700"
                   : "bg-red-500/90 text-white hover:bg-red-600"

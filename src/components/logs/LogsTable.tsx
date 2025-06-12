@@ -8,6 +8,7 @@ import {
   ButtonToolbar,
   IconButton,
   Modal,
+  Pagination,
 } from "rsuite";
 import { useTheme } from "../../context/ThemeContext";
 import { GetServerSideProps } from "next";
@@ -29,6 +30,9 @@ interface SystemLog {
 interface LogsResponse {
   logs: SystemLog[];
   total: number;
+  page: number;
+  limit: number;
+  totalPages: number;
 }
 
 type LogType = "error" | "warn" | "info" | "debug" | null;
@@ -44,23 +48,49 @@ const LogsTable: React.FC<LogsTableProps> = ({ initialLogs, initialTotal }) => {
   const [loading, setLoading] = useState(false);
   const [filter, setFilter] = useState<LogType>(null);
   const [showClearConfirm, setShowClearConfirm] = useState(false);
+  const [page, setPage] = useState(1);
+  const [total, setTotal] = useState(initialTotal);
+  const [totalPages, setTotalPages] = useState(Math.ceil(initialTotal / 100));
+  const limit = 100;
 
-  const fetchLogs = async () => {
+  const fetchLogs = async (newPage?: number) => {
     try {
       setLoading(true);
+      const currentPage = newPage || page;
+      const queryParams = new URLSearchParams({
+        page: currentPage.toString(),
+        limit: limit.toString(),
+      });
+      
+      if (filter) {
+        queryParams.append('type', filter);
+      }
+
       const response = await fetch(
-        `/api/logs/read${filter ? `?type=${filter}` : ""}`
+        `/api/logs/read?${queryParams.toString()}`
       );
+      
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
+      
       const data = (await response.json()) as LogsResponse;
       setLogs(data.logs);
+      setTotal(data.total);
+      setTotalPages(data.totalPages);
+      
+      if (newPage) {
+        setPage(newPage);
+      }
     } catch (error) {
       console.error("Error fetching logs:", error);
     } finally {
       setLoading(false);
     }
+  };
+
+  const handlePageChange = (newPage: number) => {
+    fetchLogs(newPage);
   };
 
   const clearLogs = async () => {
@@ -85,10 +115,8 @@ const LogsTable: React.FC<LogsTableProps> = ({ initialLogs, initialTotal }) => {
   };
 
   useEffect(() => {
-    // Set up polling to refresh logs every 30 seconds
-    const interval = setInterval(fetchLogs, 30000);
-    return () => clearInterval(interval);
-  }, [filter]); // Added filter as dependency
+    fetchLogs(1); // Reset to first page when filter changes
+  }, [filter]);
 
   const formatTimestamp = (timestamp: string) => {
     return new Date(timestamp).toLocaleString();
@@ -174,7 +202,7 @@ const LogsTable: React.FC<LogsTableProps> = ({ initialLogs, initialTotal }) => {
               <ButtonToolbar>
                 <IconButton
                   icon={<ReloadIcon />}
-                  onClick={fetchLogs}
+                  onClick={() => fetchLogs()}
                   disabled={loading}
                   appearance="subtle"
                   style={{
@@ -209,10 +237,12 @@ const LogsTable: React.FC<LogsTableProps> = ({ initialLogs, initialTotal }) => {
           <Table
             height={600}
             data={logs}
+            loading={loading}
             rowHeight={60}
             className={`logs-table ${theme === "dark" ? "dark" : "light"}`}
             style={{
               backgroundColor: "var(--bg-primary)",
+              color: "var(--text-primary)",
             }}
             rowClassName={() => (theme === "dark" ? "dark-row" : "light-row")}
           >
@@ -260,43 +290,42 @@ const LogsTable: React.FC<LogsTableProps> = ({ initialLogs, initialTotal }) => {
             </Column>
           </Table>
         )}
+        
+        <div className="mt-4 flex justify-center">
+          <Pagination
+            prev
+            next
+            first
+            last
+            ellipsis
+            boundaryLinks
+            maxButtons={5}
+            size="md"
+            layout={["total", "-", "limit", "|", "pager", "skip"]}
+            total={total}
+            limit={limit}
+            activePage={page}
+            onChangePage={handlePageChange}
+            disabled={loading}
+          />
+        </div>
       </Panel>
 
       <Modal
         open={showClearConfirm}
         onClose={() => setShowClearConfirm(false)}
-        style={{
-          backgroundColor: "var(--bg-primary)",
-          color: "var(--text-primary)",
-        }}
+        size="xs"
       >
         <Modal.Header>
           <Modal.Title>Clear All Logs</Modal.Title>
         </Modal.Header>
-        <Modal.Body>
-          Are you sure you want to clear all system logs? This action cannot be
-          undone.
-        </Modal.Body>
+        <Modal.Body>Are you sure you want to clear all logs?</Modal.Body>
         <Modal.Footer>
-          <Button
-            onClick={() => setShowClearConfirm(false)}
-            appearance="subtle"
-            style={{
-              backgroundColor: "var(--bg-secondary)",
-              color: "var(--text-primary)",
-            }}
-          >
+          <Button onClick={() => setShowClearConfirm(false)} appearance="subtle">
             Cancel
           </Button>
-          <Button
-            onClick={clearLogs}
-            appearance="primary"
-            color="red"
-            style={{
-              marginLeft: "8px",
-            }}
-          >
-            Clear All
+          <Button onClick={clearLogs} appearance="primary" color="red">
+            Clear
           </Button>
         </Modal.Footer>
       </Modal>
