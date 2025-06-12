@@ -1,65 +1,91 @@
-import React, { useState } from "react";
-import ShopperLayout from "../../../src/components/shopper/ShopperLayout";
-import { useTheme } from "../../../src/context/ThemeContext";
-import { Panel, Nav } from "rsuite";
-import WorkScheduleTab from "../../../src/components/shopper/settings/WorkScheduleTab";
-import PaymentTab from "../../../src/components/shopper/settings/PaymentTab";
+"use client";
+
+import React, { useState, useCallback } from 'react';
+import { useRouter } from 'next/router';
+import ShopperLayout from '../../../src/components/shopper/ShopperLayout';
+import { useTheme } from '../../../src/context/ThemeContext';
+import { Panel, Nav } from 'rsuite';
+import WorkScheduleTab from '../../../src/components/shopper/settings/WorkScheduleTab';
+import PaymentTab from '../../../src/components/shopper/settings/PaymentTab';
 import { GetServerSideProps } from "next";
 import { getServerSession } from "next-auth/next";
-import { authOptions } from "../../../pages/api/auth/[...nextauth]";
+import { authOptions } from "../../api/auth/[...nextauth]";
+import { Session } from "next-auth";
 
-interface SessionUser {
-  id: string;
-  name: string | null;
-  email: string | null;
-  role: string | null;
-  image: string | null;
-}
-
-interface Session {
-  user: SessionUser;
-  expires: string;
-}
-
-interface SettingsPageProps {
-  sessionData: {
-    user: {
-      id: string;
-      name: string | null;
-      email: string | null;
-      role: string | null;
-      image: string | null;
-    };
-    expires: string;
+// Extend the Session type to include our custom fields
+interface CustomSession extends Session {
+  user: {
+    id: string;
+    name: string | null;
+    email: string | null;
+    role: string | null;
+    image: string | null;
   };
 }
 
+interface SettingsPageProps {
+  sessionData: CustomSession;
+}
+
 function SettingsPage({ sessionData }: SettingsPageProps) {
+  const router = useRouter();
   const { theme } = useTheme();
   const [activeTab, setActiveTab] = useState("schedule");
 
+  // Memoize the tab change handler
+  const handleTabChange = useCallback((newTab: string) => {
+    setActiveTab(newTab);
+    // Update URL without page reload
+    router.push(`/Plasa/Settings?tab=${newTab}`, undefined, { shallow: true });
+  }, [router]);
+
+  // Define tabs configuration
+  const tabs = [
+    { key: "schedule", label: "Work Schedule", component: <WorkScheduleTab initialSession={sessionData} /> },
+    { key: "payment", label: "Payment Info", component: <PaymentTab /> },
+    { key: "notifications", label: "Notifications", component: (
+      <div className="p-4">
+        <h3 className={`mb-4 text-lg font-semibold ${theme === "dark" ? "text-white" : "text-gray-900"}`}>
+          Notifications Settings
+        </h3>
+        <p className={theme === "dark" ? "text-gray-300" : "text-gray-600"}>
+          Notification settings coming soon...
+        </p>
+      </div>
+    )},
+    { key: "security", label: "Security", component: (
+      <div className="p-4">
+        <h3 className={`mb-4 text-lg font-semibold ${theme === "dark" ? "text-white" : "text-gray-900"}`}>
+          Security Settings
+        </h3>
+        <p className={theme === "dark" ? "text-gray-300" : "text-gray-600"}>
+          Security settings coming soon...
+        </p>
+      </div>
+    )}
+  ];
+
+  // Effect to sync URL with active tab
+  React.useEffect(() => {
+    const tab = router.query.tab as string;
+    if (tab && tabs.some(t => t.key === tab)) {
+      setActiveTab(tab);
+    }
+  }, [router.query.tab]);
+
   return (
     <ShopperLayout>
-      <div
-        className={`container mx-auto px-4 py-8 ${
-          theme === "dark" ? "text-gray-100" : "text-gray-900"
-        }`}
-      >
+      <div className={`container mx-auto px-4 py-8 ${theme === "dark" ? "text-gray-100" : "text-gray-900"}`}>
         <h1 className="mb-6 text-2xl font-bold">Settings</h1>
 
         <div className="scrollbar-hide mb-4 overflow-x-auto whitespace-nowrap">
           <Nav
             appearance="default"
             activeKey={activeTab}
-            onSelect={setActiveTab}
+            onSelect={handleTabChange}
             className="flex min-w-max gap-2"
           >
-            {[
-              { key: "schedule", label: "Work Schedule" },
-              { key: "payment", label: "Payment Info" },
-              { key: "notifications", label: "Notifications" },
-              { key: "security", label: "Security" },
-            ].map((tab) => (
+            {tabs.map((tab) => (
               <Nav.Item
                 key={tab.key}
                 eventKey={tab.key}
@@ -88,32 +114,7 @@ function SettingsPage({ sessionData }: SettingsPageProps) {
               : "border-gray-200 bg-white"
           }`}
         >
-          {activeTab === "schedule" && <WorkScheduleTab initialSession={sessionData} />}
-          {activeTab === "payment" && <PaymentTab />}
-          {activeTab === "notifications" && (
-            <div className="p-4">
-              <h3 className={`mb-4 text-lg font-semibold ${
-                theme === "dark" ? "text-white" : "text-gray-900"
-              }`}>
-                Notifications Settings
-              </h3>
-              <p className={theme === "dark" ? "text-gray-300" : "text-gray-600"}>
-                Notification settings coming soon...
-              </p>
-            </div>
-          )}
-          {activeTab === "security" && (
-            <div className="p-4">
-              <h3 className={`mb-4 text-lg font-semibold ${
-                theme === "dark" ? "text-white" : "text-gray-900"
-              }`}>
-                Security Settings
-              </h3>
-              <p className={theme === "dark" ? "text-gray-300" : "text-gray-600"}>
-                Security settings coming soon...
-              </p>
-            </div>
-          )}
+          {tabs.find(tab => tab.key === activeTab)?.component}
         </Panel>
       </div>
     </ShopperLayout>
@@ -123,11 +124,7 @@ function SettingsPage({ sessionData }: SettingsPageProps) {
 export default SettingsPage;
 
 export const getServerSideProps: GetServerSideProps = async (context) => {
-  const session = await getServerSession(
-    context.req,
-    context.res,
-    authOptions as any
-  );
+  const session = await getServerSession(context.req, context.res, authOptions);
 
   if (!session) {
     return {
@@ -138,33 +135,21 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
     };
   }
 
-  // Check if the user has the shopper role
-  const userRole = session.user?.role;
-
-  if (userRole !== "shopper") {
-    return {
-      redirect: {
-        destination: "/",
-        permanent: false,
-      },
-    };
-  }
-
   // Sanitize the session data to ensure all fields are JSON-serializable
-  const sanitizedSession = {
+  const sanitizedSession: CustomSession = {
     user: {
-      id: session.user.id,
-      name: session.user.name || null,
-      email: session.user.email || null,
-      role: session.user.role || null,
-      image: session.user.image || null,
+      id: session.user?.id || '',
+      name: session.user?.name || null,
+      email: session.user?.email || null,
+      role: (session.user as any)?.role || null,
+      image: session.user?.image || null
     },
-    expires: session.expires,
+    expires: session.expires
   };
 
-  return { 
+  return {
     props: {
       sessionData: sanitizedSession
-    }
+    },
   };
 }; 

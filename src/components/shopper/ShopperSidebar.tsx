@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
+import { useRouter } from "next/router";
 import { usePathname } from "next/navigation";
 import { formatCompactCurrency } from "../../lib/formatCurrency";
 import { toast } from "react-hot-toast";
@@ -27,6 +28,7 @@ interface EarningsResponse {
 }
 
 export default function ShopperSidebar() {
+  const router = useRouter();
   const [isMobile, setIsMobile] = useState(false);
   const [dailyEarnings, setDailyEarnings] = useState(0);
   const [loadingEarnings, setLoadingEarnings] = useState(true);
@@ -34,6 +36,12 @@ export default function ShopperSidebar() {
   const pathname = usePathname();
   const { toggleRole } = useAuth();
   const { theme } = useTheme();
+
+  // Handle navigation without full page reload
+  const handleNavigation = (path: string) => (e: React.MouseEvent) => {
+    e.preventDefault();
+    router.push(path, undefined, { shallow: true });
+  };
 
   useEffect(() => {
     const checkIfMobile = () => setIsMobile(window.innerWidth < 768);
@@ -47,7 +55,6 @@ export default function ShopperSidebar() {
     const fetchDailyEarnings = async () => {
       setLoadingEarnings(true);
       try {
-        // Fetch earnings using the new API endpoint
         const response = await fetch("/api/shopper/dailyEarnings");
         if (!response.ok) {
           throw new Error("Failed to fetch earnings data");
@@ -55,7 +62,6 @@ export default function ShopperSidebar() {
 
         const data: EarningsResponse = await response.json();
 
-        // Add proper null checks for data and data.earnings
         if (
           data &&
           data.success &&
@@ -80,9 +86,7 @@ export default function ShopperSidebar() {
     };
 
     fetchDailyEarnings();
-    // Set up an interval to refresh the earnings every 5 minutes
     const interval = setInterval(fetchDailyEarnings, 5 * 60 * 1000);
-
     return () => clearInterval(interval);
   }, []);
 
@@ -137,6 +141,61 @@ export default function ShopperSidebar() {
     }`;
   };
 
+  // Navigation items configuration
+  const navigationItems = [
+    {
+      path: "/",
+      label: "Available batches",
+      icon: (
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+          <path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z" />
+          <polyline points="9 22 9 12 15 12 15 22" />
+        </svg>
+      ),
+      condition: !isActive("/Plasa/active-batches") && !isActive("/Plasa/Earnings") && !isActive("/Plasa/settings")
+    },
+    {
+      path: "/Plasa/active-batches",
+      label: "Active batches",
+      icon: (
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+          <path d="M9 17H5a2 2 0 01-2-2V5a2 2 0 012-2h14a2 2 0 012 2v10a2 2 0 01-2 2h-4" />
+          <path d="M9 17l6-6" />
+          <path d="M15 17v-6h-6" />
+        </svg>
+      )
+    },
+    {
+      path: "/Plasa/Earnings",
+      label: "Earnings",
+      icon: (
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+          <path d="M12 2v20M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6" />
+        </svg>
+      )
+    },
+    {
+      path: "/Plasa/Settings",
+      label: "Settings",
+      icon: (
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+          <path d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+          <path d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+        </svg>
+      )
+    },
+    {
+      path: "/Plasa/ShopperProfile",
+      label: "Profile",
+      icon: (
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+          <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+          <circle cx="12" cy="7" r="4" />
+        </svg>
+      )
+    }
+  ];
+
   return (
     <>
       {/* Desktop sidebar */}
@@ -149,202 +208,39 @@ export default function ShopperSidebar() {
       >
         <div className="flex h-full flex-col justify-between overflow-y-auto">
           <nav className="flex-1 space-y-1 px-2 py-4">
-            <Link href="/" passHref>
-              <div
-                className={`group flex items-center rounded-lg px-3 py-2 text-sm font-medium transition-colors duration-200 ${
-                  isActive("/") &&
-                  !isActive("/Plasa/active-batches") &&
-                  !isActive("/Plasa/Earnings") &&
-                  !isActive("/Plasa/settings")
-                    ? theme === "dark"
-                      ? "bg-gray-800 text-white"
-                      : "bg-gray-100 text-gray-900"
-                    : theme === "dark"
-                    ? "text-gray-300 hover:bg-gray-800 hover:text-white"
-                    : "text-gray-700 hover:bg-gray-50"
-                }`}
+            {navigationItems.map((item) => (
+              <Link 
+                key={item.path} 
+                href={item.path} 
+                passHref
+                onClick={handleNavigation(item.path)}
               >
-                <svg
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  className={`mr-3 h-6 w-6 flex-shrink-0 transition-colors duration-200 ${
-                    isActive("/") &&
-                    !isActive("/Plasa/active-batches") &&
-                    !isActive("/Plasa/Earnings") &&
-                    !isActive("/Plasa/settings")
+                <div
+                  className={`group flex items-center rounded-lg px-3 py-2 text-sm font-medium transition-colors duration-200 ${
+                    isActive(item.path) && (item.condition !== undefined ? item.condition : true)
                       ? theme === "dark"
-                        ? "text-white"
-                        : "text-gray-900"
+                        ? "bg-gray-800 text-white"
+                        : "bg-gray-100 text-gray-900"
                       : theme === "dark"
-                      ? "text-gray-400"
-                      : "text-gray-500"
+                      ? "text-gray-300 hover:bg-gray-800 hover:text-white"
+                      : "text-gray-700 hover:bg-gray-50"
                   }`}
                 >
-                  <path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z" />
-                  <polyline points="9 22 9 12 15 12 15 22" />
-                </svg>
-                <span>Available batches</span>
-              </div>
-            </Link>
-            <Link href="/Plasa/active-batches" passHref>
-              <div
-                className={`group flex items-center rounded-lg px-3 py-2 text-sm font-medium transition-colors duration-200 ${
-                  isActive("/Plasa/active-batches")
-                    ? theme === "dark"
-                      ? "bg-gray-800 text-white"
-                      : "bg-gray-100 text-gray-900"
-                    : theme === "dark"
-                    ? "text-gray-300 hover:bg-gray-800 hover:text-white"
-                    : "text-gray-700 hover:bg-gray-50"
-                }`}
-              >
-                <svg
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  className={`mr-3 h-6 w-6 flex-shrink-0 transition-colors duration-200 ${
-                    isActive("/Plasa/active-batches")
-                      ? theme === "dark"
-                        ? "text-white"
-                        : "text-gray-900"
-                      : theme === "dark"
-                      ? "text-gray-400"
-                      : "text-gray-500"
-                  }`}
-                >
-                  <path d="M9 17H5a2 2 0 01-2-2V5a2 2 0 012-2h14a2 2 0 012 2v10a2 2 0 01-2 2h-4" />
-                  <path d="M9 17l6-6" />
-                  <path d="M15 17v-6h-6" />
-                </svg>
-                <span>Active batches</span>
-              </div>
-            </Link>
-            <Link href="/Plasa/Earnings" passHref>
-              <div
-                className={`group flex items-center justify-between rounded-lg px-4 py-3 ${
-                  isActive("/Plasa/Earnings")
-                    ? theme === "dark"
-                      ? "bg-gray-800 text-white"
-                      : "bg-gray-100 text-gray-900"
-                    : theme === "dark"
-                    ? "text-gray-300 hover:bg-gray-800 hover:text-white"
-                    : "text-gray-700 hover:bg-gray-50"
-                }`}
-              >
-                <div className="flex items-center">
-                  <svg
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="2"
-                    className={`mr-3 h-6 w-6 flex-shrink-0 transition-colors duration-200 ${
-                      isActive("/Plasa/Earnings")
+                  {React.cloneElement(item.icon, {
+                    className: `mr-3 h-6 w-6 flex-shrink-0 transition-colors duration-200 ${
+                      isActive(item.path) && (item.condition !== undefined ? item.condition : true)
                         ? theme === "dark"
                           ? "text-white"
                           : "text-gray-900"
                         : theme === "dark"
                         ? "text-gray-400"
                         : "text-gray-500"
-                    }`}
-                  >
-                    <path d="M12 2v20M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6" />
-                  </svg>
-                  <span>Earnings</span>
+                    }`
+                  })}
+                  <span>{item.label}</span>
                 </div>
-                <div className="flex items-center">
-                  {loadingEarnings ? (
-                    <div
-                      className={`h-4 w-12 animate-pulse rounded ${
-                        theme === "dark" ? "bg-gray-700" : "bg-gray-200"
-                      }`}
-                    />
-                  ) : (
-                    <span
-                      className={`text-sm font-medium ${
-                        theme === "dark"
-                          ? isActive("/Plasa/Earnings")
-                            ? "text-white"
-                            : "text-gray-400"
-                          : isActive("/Plasa/Earnings")
-                          ? "text-gray-900"
-                          : "text-gray-500"
-                      }`}
-                    >
-                      {formatCompactCurrency(dailyEarnings)}
-                    </span>
-                  )}
-                </div>
-              </div>
-            </Link>
-            <Link href="/Plasa/Settings" passHref>
-              <div
-                className={`group flex items-center rounded-lg px-3 py-2 text-sm font-medium transition-colors duration-200 ${
-                  isActive("/Plasa/Settings")
-                    ? theme === "dark"
-                      ? "bg-gray-800 text-white"
-                      : "bg-gray-100 text-gray-900"
-                    : theme === "dark"
-                    ? "text-gray-300 hover:bg-gray-800 hover:text-white"
-                    : "text-gray-700 hover:bg-gray-50"
-                }`}
-              >
-                <svg
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  className={`mr-3 h-6 w-6 flex-shrink-0 transition-colors duration-200 ${
-                    isActive("/Plasa/Settings")
-                      ? theme === "dark"
-                        ? "text-white"
-                        : "text-gray-900"
-                      : theme === "dark"
-                      ? "text-gray-400"
-                      : "text-gray-500"
-                  }`}
-                >
-                  <path d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
-                  <path d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                </svg>
-                <span>Settings</span>
-              </div>
-            </Link>
-            <Link href="/Plasa/ShopperProfile" passHref>
-              <div
-                className={`group flex items-center rounded-lg px-3 py-2 text-sm font-medium transition-colors duration-200 ${
-                  isActive("/Plasa/ShopperProfile")
-                    ? theme === "dark"
-                      ? "bg-gray-800 text-white"
-                      : "bg-gray-100 text-gray-900"
-                    : theme === "dark"
-                    ? "text-gray-300 hover:bg-gray-800 hover:text-white"
-                    : "text-gray-700 hover:bg-gray-50"
-                }`}
-              >
-                <svg
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  className={`mr-3 h-6 w-6 flex-shrink-0 transition-colors duration-200 ${
-                    isActive("/Plasa/ShopperProfile")
-                      ? theme === "dark"
-                        ? "text-white"
-                        : "text-gray-900"
-                      : theme === "dark"
-                      ? "text-gray-400"
-                      : "text-gray-500"
-                  }`}
-                >
-                  <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
-                  <circle cx="12" cy="7" r="4" />
-                </svg>
-                <span>Profile</span>
-              </div>
-            </Link>
+              </Link>
+            ))}
           </nav>
 
           <div
@@ -401,91 +297,21 @@ export default function ShopperSidebar() {
         }`}
       >
         <div className="mx-auto flex max-w-md justify-around">
-          <Link href="/" passHref>
-            <div
-              className={getNavLinkClasses(
-                "/",
-                !isActive("/Plasa/active-batches") &&
-                  !isActive("/Plasa/Earnings")
-              )}
+          {navigationItems.map((item) => (
+            <Link 
+              key={item.path} 
+              href={item.path} 
+              passHref
+              onClick={handleNavigation(item.path)}
             >
-              <svg
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                className={getIconClasses(
-                  "/",
-                  !isActive("/Plasa/active-batches") &&
-                    !isActive("/Plasa/Earnings")
-                )}
-              >
-                <path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z" />
-                <polyline points="9 22 9 12 15 12 15 22" />
-              </svg>
-              <span>Available</span>
-            </div>
-          </Link>
-          <Link href="/Plasa/active-batches" passHref>
-            <div className={getNavLinkClasses("/Plasa/active-batches")}>
-              <svg
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                className={getIconClasses("/Plasa/active-batches")}
-              >
-                <path d="M9 17H5a2 2 0 01-2-2V5a2 2 0 012-2h14a2 2 0 012 2v10a2 2 0 01-2 2h-4" />
-                <path d="M9 17l6-6" />
-                <path d="M15 17v-6h-6" />
-              </svg>
-              <span>Active</span>
-            </div>
-          </Link>
-          <Link href="/Plasa/Earnings" passHref>
-            <div className={getNavLinkClasses("/Plasa/Earnings")}>
-              <svg
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                className={getIconClasses("/Plasa/Earnings")}
-              >
-                <path d="M12 2v20M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6" />
-              </svg>
-              <span>Earnings</span>
-            </div>
-          </Link>
-          <Link href="/Plasa/Settings" passHref>
-            <div className={getNavLinkClasses("/Plasa/Settings")}>
-              <svg
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                className={getIconClasses("/Plasa/Settings")}
-              >
-                <path d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
-                <path d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-              </svg>
-              <span>Settings</span>
-            </div>
-          </Link>
-          <Link href="/Plasa/ShopperProfile" passHref>
-            <div className={getNavLinkClasses("/Plasa/ShopperProfile")}>
-              <svg
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                className={getIconClasses("/Plasa/ShopperProfile")}
-              >
-                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
-                <circle cx="12" cy="7" r="4" />
-              </svg>
-              <span>Profile</span>
-            </div>
-          </Link>
+              <div className={getNavLinkClasses(item.path, item.condition)}>
+                {React.cloneElement(item.icon, {
+                  className: getIconClasses(item.path, item.condition)
+                })}
+                <span>{item.label}</span>
+              </div>
+            </Link>
+          ))}
         </div>
       </nav>
     </>

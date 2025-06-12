@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback, useMemo } from "react";
 import ShopperLayout from "@components/shopper/ShopperLayout";
 import OrderCard from "./OrderCard";
 import dynamic from "next/dynamic";
@@ -8,6 +8,7 @@ import { Button, Loader, Placeholder, Panel, Grid, Row, Col } from "rsuite";
 import "rsuite/dist/rsuite.min.css";
 import { useTheme } from "../../../context/ThemeContext";
 import NotificationSystem from "../NotificationSystem";
+import { useRouter } from "next/router";
 
 // Dynamically load MapSection only on client (disable SSR)
 const MapSection = dynamic(() => import("./MapSection"), {
@@ -74,6 +75,7 @@ interface FormattedOrder {
 }
 
 export default function ShopperDashboard() {
+  const router = useRouter();
   const { theme } = useTheme();
   const [isLoading, setIsLoading] = useState(true);
   const [isInitializing, setIsInitializing] = useState(true);
@@ -98,8 +100,8 @@ export default function ShopperDashboard() {
 
   const toggleExpanded = () => setIsExpanded((prev) => !prev);
 
-  // Function to check if user has active location cookies
-  const checkLocationCookies = () => {
+  // Memoize the checkLocationCookies function
+  const checkLocationCookies = useCallback(() => {
     const cookies = document.cookie
       .split("; ")
       .reduce((acc: Record<string, string>, cur) => {
@@ -108,269 +110,206 @@ export default function ShopperDashboard() {
         return acc;
       }, {} as Record<string, string>);
 
-    const hasLocationCookies =
-      cookies["user_latitude"] && cookies["user_longitude"];
-    return hasLocationCookies;
-  };
+    return Boolean(cookies["user_latitude"] && cookies["user_longitude"]);
+  }, []);
 
-  // Check and update online status based on cookies
-  const updateOnlineStatus = () => {
+  // Memoize the updateOnlineStatus function
+  const updateOnlineStatus = useCallback(() => {
     const hasLocationCookies = checkLocationCookies();
-    setIsOnline(Boolean(hasLocationCookies));
-  };
+    setIsOnline(hasLocationCookies);
+  }, [checkLocationCookies]);
 
-  // Enhanced loadOrders function with better debugging
-  const loadOrders = () => {
-    if (!currentLocation) {
-      console.log("Cannot load orders: No current location available");
-      return;
-    }
-
-    if (!isOnline) {
-      console.log("Cannot load orders: User is offline");
+  // Memoize the loadOrders function
+  const loadOrders = useCallback(async () => {
+    if (!currentLocation || !isOnline) {
+      console.log(
+        `Cannot load orders: ${!currentLocation ? "No location" : "User offline"}`
+      );
       setAvailableOrders([]);
       setSortedOrders([]);
       return;
     }
 
     setIsLoading(true);
-    console.log("Fetching available orders...");
 
-    // Convert location strings to numbers if they're strings
-    const safeLocation = {
-      lat:
-        typeof currentLocation.lat === "string"
-          ? parseFloat(currentLocation.lat)
-          : currentLocation.lat,
-      lng:
-        typeof currentLocation.lng === "string"
-          ? parseFloat(currentLocation.lng)
-          : currentLocation.lng,
-    };
+    try {
+      const safeLocation = {
+        lat:
+          typeof currentLocation.lat === "string"
+            ? parseFloat(currentLocation.lat)
+            : currentLocation.lat,
+        lng:
+          typeof currentLocation.lng === "string"
+            ? parseFloat(currentLocation.lng)
+            : currentLocation.lng,
+      };
 
-    // Add timestamp to prevent caching
-    const timestamp = new Date().getTime();
-    // Include shopper's location and set max travel time to 15 minutes
-    const url = `/api/shopper/availableOrders?_=${timestamp}&latitude=${safeLocation.lat}&longitude=${safeLocation.lng}&maxTravelTime=15`;
+      const timestamp = new Date().getTime();
+      const url = `/api/shopper/availableOrders?_=${timestamp}&latitude=${safeLocation.lat}&longitude=${safeLocation.lng}&maxTravelTime=15`;
 
-    console.log(`Requesting orders with URL: ${url}`);
+      const response = await fetch(url);
+      if (!response.ok) {
+        throw new Error(`HTTP error! Status: ${response.status}`);
+      }
 
-    fetch(url)
-      .then((res) => {
-        if (!res.ok) {
-          throw new Error(`HTTP error! Status: ${res.status}`);
-        }
-        return res.json();
-      })
-      .then((data) => {
-        console.log(
-          `Received ${data.length} orders from API within 15 min travel time`
-        );
+      const data = await response.json();
+      
+      const formattedOrders = data
+        .map((order: any) => {
+          try {
+            const createdAtDate = new Date(order.createdAt);
+            const minutesAgo = Math.floor(
+              (Date.now() - createdAtDate.getTime()) / 60000
+            );
 
-        // Debug: Log all received orders first
-        data.forEach((order: any, idx: number) => {
-          console.log(`Order ${idx + 1}/${data.length}:`, {
-            id: order.id,
-            created: new Date(order.createdAt).toLocaleString(),
-            status: order.status || "PENDING",
-            shop: order.shopName,
-            shopCoords: `${order.shopLatitude}, ${order.shopLongitude}`,
-            customerCoords: `${order.customerLatitude}, ${order.customerLongitude}`,
-            items: order.itemsCount,
-            travelTime: `${order.travelTimeMinutes} min`,
-            distance: `${order.distance} km`,
-          });
-        });
+            return {
+              id: order.id,
+              shopName: order.shopName || "Unknown Shop",
+              shopAddress: order.shopAddress || "No address available",
+              customerAddress: order.customerAddress || "No address available",
+              distance: `${order.distance} km`,
+              items: order.itemsCount || 0,
+              total: `$${(order.earnings || 0).toFixed(2)}`,
+              estimatedEarnings: `$${(order.earnings || 0).toFixed(2)}`,
+              createdAt: relativeTime(order.createdAt),
+              status: order.status || "PENDING",
+              rawDistance: order.distance || 0,
+              rawEarnings: order.earnings || 0,
+              rawCreatedAt: createdAtDate.getTime(),
+              minutesAgo: minutesAgo,
+              priorityLevel: order.priorityLevel || 1,
+              shopLatitude: order.shopLatitude,
+              shopLongitude: order.shopLongitude,
+              customerLatitude: order.customerLatitude,
+              customerLongitude: order.customerLongitude,
+              travelTimeMinutes: order.travelTimeMinutes,
+            };
+          } catch (err) {
+            console.error(`Error formatting order ${order.id}:`, err);
+            return null;
+          }
+        })
+        .filter(Boolean);
 
-        // Format orders for the OrderCard component - use formatted data from API
-        const formattedOrders = data
-          .map((order: any) => {
-            try {
-              // Calculate createdAt as Date for sorting
-              const createdAtDate = new Date(order.createdAt);
-              const minutesAgo = Math.floor(
-                (Date.now() - createdAtDate.getTime()) / 60000
-              );
+      setAvailableOrders(formattedOrders);
+      const sorted = sortOrders(formattedOrders, sortBy);
+      setSortedOrders(sorted);
+      setLastRefreshed(new Date());
+    } catch (err) {
+      console.error("Error fetching available orders:", err);
+    } finally {
+      setIsLoading(false);
+    }
+  }, [currentLocation, isOnline, sortBy]);
 
-              // Format timestamps
-              const createdTimeFormatted = relativeTime(order.createdAt);
+  // Memoize the sortOrders function
+  const sortOrders = useCallback(
+    (
+      orders: FormattedOrder[],
+      criteria: "newest" | "earnings" | "distance" | "priority"
+    ) => {
+      let sorted = [...orders];
 
-              // Note - now using API-calculated distance in km
-              const distanceStr = `${order.distance} km`;
-
-              return {
-                id: order.id,
-                shopName: order.shopName || "Unknown Shop",
-                shopAddress: order.shopAddress || "No address available",
-                customerAddress:
-                  order.customerAddress || "No address available",
-                distance: distanceStr,
-                items: order.itemsCount || 0,
-                total: `$${(order.earnings || 0).toFixed(2)}`,
-                estimatedEarnings: `$${(order.earnings || 0).toFixed(2)}`,
-                createdAt: createdTimeFormatted,
-                status: order.status || "PENDING",
-                // Add additional properties for sorting and filtering
-                rawDistance: order.distance || 0,
-                rawEarnings: order.earnings || 0,
-                rawCreatedAt: createdAtDate.getTime(),
-                minutesAgo: minutesAgo,
-                priorityLevel: order.priorityLevel || 1,
-                // Keep original coordinates for map rendering
-                shopLatitude: order.shopLatitude,
-                shopLongitude: order.shopLongitude,
-                customerLatitude: order.customerLatitude,
-                customerLongitude: order.customerLongitude,
-                // Add travel time
-                travelTimeMinutes: order.travelTimeMinutes,
-              };
-            } catch (err) {
-              console.error(`Error formatting order ${order.id}:`, err);
-              return null; // Skip orders with formatting errors
+      switch (criteria) {
+        case "newest":
+          sorted.sort((a, b) => b.rawCreatedAt - a.rawCreatedAt);
+          break;
+        case "earnings":
+          sorted.sort((a, b) => b.rawEarnings - a.rawEarnings);
+          break;
+        case "distance":
+          sorted.sort((a, b) => a.rawDistance - b.rawDistance);
+          break;
+        case "priority":
+          sorted.sort((a, b) => {
+            if (a.priorityLevel !== b.priorityLevel) {
+              return b.priorityLevel - a.priorityLevel;
             }
-          })
-          .filter(Boolean); // Remove any null entries from formatting errors
+            return b.minutesAgo - a.minutesAgo;
+          });
+          break;
+      }
 
-        console.log(`Formatted ${formattedOrders.length} orders for display`);
-        console.log("Sample formatted order:", formattedOrders[0]);
+      if (!showHistorical) {
+        sorted = sorted.filter((order) => order.minutesAgo >= 15);
+      }
 
-        // Set available orders
-        setAvailableOrders(formattedOrders);
+      return sorted;
+    },
+    [showHistorical]
+  );
 
-        // Apply sort
-        const sorted = sortOrders(formattedOrders, sortBy);
-        setSortedOrders(sorted);
-
-        setLastRefreshed(new Date());
-        setIsLoading(false);
-      })
-      .catch((err) => {
-        console.error("Error fetching available orders:", err);
-        setIsLoading(false);
-      });
-  };
-
-  // Function to sort orders based on the selected criteria
-  const sortOrders = (
-    orders: FormattedOrder[],
-    criteria: "newest" | "earnings" | "distance" | "priority"
-  ) => {
-    let sorted = [...orders];
-
-    // Apply sorting based on criteria
-    if (criteria === "newest") {
-      sorted.sort((a, b) => b.rawCreatedAt - a.rawCreatedAt);
-    } else if (criteria === "earnings") {
-      sorted.sort((a, b) => b.rawEarnings - a.rawEarnings);
-    } else if (criteria === "distance") {
-      sorted.sort((a, b) => a.rawDistance - b.rawDistance);
-    } else if (criteria === "priority") {
-      // First by priority level (descending), then by age within each priority level
-      sorted.sort((a, b) => {
-        if (a.priorityLevel !== b.priorityLevel) {
-          return b.priorityLevel - a.priorityLevel; // Higher priority first
-        }
-        return b.minutesAgo - a.minutesAgo; // Older orders first within same priority
-      });
-    }
-
-    // Additionally, apply filtering - changed from 10 to 15 minutes
-    if (!showHistorical) {
-      // Show only orders pending for at least 15 minutes
-      sorted = sorted.filter((order) => order.minutesAgo >= 15);
-    }
-
-    return sorted;
-  };
-
-  // Handle sort change
-  const handleSortChange = (
-    newSortBy: "newest" | "earnings" | "distance" | "priority"
-  ) => {
-    setSortBy(newSortBy);
-    sortOrders(availableOrders, newSortBy);
-  };
+  // Handle sort change with useCallback
+  const handleSortChange = useCallback(
+    (newSortBy: "newest" | "earnings" | "distance" | "priority") => {
+      setSortBy(newSortBy);
+      const sorted = sortOrders(availableOrders, newSortBy);
+      setSortedOrders(sorted);
+    },
+    [availableOrders, sortOrders]
+  );
 
   // Handle toggle for historical vs. current batches
-  const toggleHistorical = () => {
-    setShowHistorical(!showHistorical);
-    // Reload orders when this changes to get the correct time window
-    loadOrders();
-  };
+  const toggleHistorical = useCallback(() => {
+    setShowHistorical((prev) => !prev);
+  }, []);
 
   // Add automatic refresh with polling
   useEffect(() => {
-    // Set up polling for automatic refresh if enabled
     let intervalId: NodeJS.Timeout | null = null;
 
     if (isAutoRefreshing && currentLocation && isOnline) {
-      console.log("Setting up auto-refresh for orders (30s interval)");
-      intervalId = setInterval(() => {
-        console.log("Auto-refreshing orders...");
-        loadOrders();
-      }, 30000); // Refresh every 30 seconds
+      intervalId = setInterval(loadOrders, 30000);
     }
 
-    // Cleanup function to clear interval when component unmounts
     return () => {
       if (intervalId) {
-        console.log("Clearing auto-refresh interval");
         clearInterval(intervalId);
       }
     };
-  }, [currentLocation, isAutoRefreshing, showHistorical, sortBy, isOnline]);
+  }, [currentLocation, isAutoRefreshing, isOnline, loadOrders]);
 
   // Add toggle for auto-refresh
-  const toggleAutoRefresh = () => {
+  const toggleAutoRefresh = useCallback(() => {
     setIsAutoRefreshing((prev) => !prev);
-  };
+  }, []);
 
+  // Effect to handle mobile detection
   useEffect(() => {
     const checkMobile = () => setIsMobile(window.innerWidth < 768);
     checkMobile();
     window.addEventListener("resize", checkMobile);
-
     return () => window.removeEventListener("resize", checkMobile);
   }, []);
 
-  // Simulate map loading
+  // Effect to handle map loading simulation
   useEffect(() => {
     const timer = setTimeout(() => setMapLoaded(true), 1500);
     return () => clearTimeout(timer);
   }, []);
 
-  // Listen for cookie changes and online status updates
+  // Effect to handle cookie changes and online status
   useEffect(() => {
-    // Initial check
     updateOnlineStatus();
-
-    // Create a custom event listener to detect when toggling online/offline
-    const handleCustomEvent = () => {
-      // Give the cookies time to be set or cleared
-      setTimeout(updateOnlineStatus, 300);
-    };
-
+    const handleCustomEvent = () => setTimeout(updateOnlineStatus, 300);
     window.addEventListener("toggleGoLive", handleCustomEvent);
-
-    // Also check periodically for any cookie changes
     const intervalId = setInterval(updateOnlineStatus, 5000);
 
     return () => {
       window.removeEventListener("toggleGoLive", handleCustomEvent);
       clearInterval(intervalId);
     };
-  }, []);
+  }, [updateOnlineStatus]);
 
   // Effect to clear orders when user goes offline
   useEffect(() => {
     if (!isOnline) {
-      console.log("User went offline, clearing order data");
       setAvailableOrders([]);
       setSortedOrders([]);
     }
   }, [isOnline]);
 
-  // Read last known location from cookies or get fresh position
+  // Effect to handle location
   useEffect(() => {
     const cookies = document.cookie
       .split("; ")
@@ -379,6 +318,7 @@ export default function ShopperDashboard() {
         acc[k] = v;
         return acc;
       }, {} as Record<string, string>);
+
     if (cookies["user_latitude"] && cookies["user_longitude"]) {
       setCurrentLocation({
         lat: parseFloat(cookies["user_latitude"]),
@@ -398,25 +338,9 @@ export default function ShopperDashboard() {
     }
   }, []);
 
-  // Fetch available orders based on location
-  useEffect(() => {
-    if (currentLocation && isOnline) {
-      loadOrders();
-    }
-  }, [currentLocation, showHistorical, isOnline]);
-
-  // Track initialization state
-  useEffect(() => {
-    // Show content as soon as we have either location or map loaded
-    if (currentLocation || mapLoaded) {
-      setIsInitializing(false);
-    }
-  }, [currentLocation, mapLoaded]);
-
-  // Load initial data in parallel
+  // Effect to handle initial data loading
   useEffect(() => {
     if (!isInitializing) {
-      // Load all data in parallel
       Promise.all([
         loadOrders(),
         fetch("/api/shopper/todayCompletedEarnings")
@@ -436,25 +360,20 @@ export default function ShopperDashboard() {
         console.error("Error loading initial data:", error);
       });
     }
-  }, [isInitializing]);
+  }, [isInitializing, loadOrders]);
 
-  // Add this useEffect to update sorting when sortBy changes
+  // Effect to handle initialization state
   useEffect(() => {
-    if (availableOrders.length > 0) {
-      sortOrders(availableOrders, sortBy);
+    if (currentLocation || mapLoaded) {
+      setIsInitializing(false);
     }
-  }, [sortBy, availableOrders]);
+  }, [currentLocation, mapLoaded]);
 
   // Handle new order notification
-  const handleNewOrder = (order: any) => {
-    if (!order) return;
-
-    // Refresh orders list
+  const handleNewOrder = useCallback(() => {
     loadOrders();
-
-    // Update last refreshed time
     setLastRefreshed(new Date());
-  };
+  }, [loadOrders]);
 
   // Initializing loading screen
   if (isInitializing) {
