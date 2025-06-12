@@ -1,7 +1,6 @@
 import React, { useState, useEffect, useCallback, useRef } from "react";
 import { useTheme } from "../../../context/ThemeContext";
 import { Toggle, SelectPicker, Button, Message, Loader } from "rsuite";
-import { logger } from "../../../utils/logger";
 
 interface TimeSlot {
   day: string;
@@ -35,14 +34,12 @@ export default function WorkScheduleTab({ initialSession }: WorkScheduleTabProps
     type: "success" | "error" | "info";
     text: string;
   } | null>(null);
-  
-  // Use a ref to track if the component is mounted
-  const isMounted = useRef(true);
-  // Use a ref to prevent multiple simultaneous loads
-  const isLoading = useRef(false);
 
-  // Days of the week
-  const days = [
+  // Ref to track if initial fetch has been done
+  const initialFetchDone = useRef(false);
+
+  // Days of the week - memoize to prevent recreating on each render
+  const days = useRef([
     "Monday",
     "Tuesday",
     "Wednesday",
@@ -50,140 +47,130 @@ export default function WorkScheduleTab({ initialSession }: WorkScheduleTabProps
     "Friday",
     "Saturday",
     "Sunday",
-  ];
+  ]).current;
 
-  // Time slots
-  const generateTimeSlots = useCallback(() => {
+  // Time slots - memoize the generation function
+  const timeSlots = useCallback(() => {
     const slots = [];
     for (let i = 0; i < 24; i++) {
       const hour = i < 10 ? `0${i}` : `${i}`;
-      slots.push({ label: `${hour}:00`, value: `${hour}:00:00` });
-      slots.push({ label: `${hour}:30`, value: `${hour}:30:00` });
+      slots.push({ label: `${hour}:00`, value: `${hour}:00:00+00` });
+      slots.push({ label: `${hour}:30`, value: `${hour}:30:00+00` });
     }
     return slots;
+  }, [])();
+
+  // Format time for display and comparison
+  const formatTimeForDisplay = useCallback((time: string) => {
+    // Remove timezone if present and keep only the time part
+    return time.split('+')[0];
   }, []);
 
-  const timeSlots = generateTimeSlots();
-
-  // Format time for display
-  const formatTimeForDisplay = useCallback((time: string | undefined): string => {
-    if (!time) return "09:00:00";
-    if (time.split(":").length === 3) return time;
-    if (time.split(":").length === 2) return `${time}:00`;
-    return "09:00:00";
+  // Format time for API
+  const formatTimeForAPI = useCallback((time: string) => {
+    // Add timezone if not present
+    return time.includes('+') ? time : `${time}+00`;
   }, []);
 
-  // Load schedule
-  const loadSchedule = useCallback(async () => {
-    if (!initialSession?.user?.id) {
-      logger.error("No user ID found in session", "WorkScheduleTab");
-      setLoadError("Session error. Please try refreshing the page.");
-      setScheduleLoading(false);
-      return;
-    }
-
-    if (isLoading.current) {
-      logger.info("Schedule load in progress", "WorkScheduleTab");
-      return;
-    }
-
-    try {
-      isLoading.current = true;
-      setScheduleLoading(true);
-      setLoadError(null);
-
-      const response = await fetch("/api/shopper/schedule", {
-        headers: {
-          "Content-Type": "application/json",
-        },
-        credentials: "include",
-      });
-
-      if (!response.ok) {
-        throw new Error(`HTTP error! Status: ${response.status}`);
-      }
-
-      const data = await response.json();
-      logger.info("Schedule data received", "WorkScheduleTab", {
-        hasSchedule: data.hasSchedule,
-        scheduleCount: data.schedule?.length ?? 0
-      });
-      
-      if (!isMounted.current) return;
-
-      // Initialize with default values for all days
-      const daysMap = new Map();
-      days.forEach((day) => {
-        daysMap.set(day, {
-          day,
-          startTime: "09:00:00",
-          endTime: "17:00:00",
-          available: day !== "Sunday",
-        });
-      });
-
-      if (data.schedule && Array.isArray(data.schedule) && data.schedule.length > 0) {
-        // Update with actual data from server
-        data.schedule.forEach((slot: {
-          day_of_week: number;
-          start_time: string;
-          end_time: string;
-          is_available: boolean;
-        }) => {
-          const day = days[slot.day_of_week - 1];
-          if (day) {
-            daysMap.set(day, {
-              day,
-              startTime: slot.start_time,
-              endTime: slot.end_time,
-              available: slot.is_available,
-            });
-          }
-        });
-      }
-
-      const fullSchedule = Array.from(daysMap.values());
-      logger.info("Schedule processed", "WorkScheduleTab", {
-        scheduleSize: fullSchedule.length,
-        firstDay: fullSchedule[0]?.day
-      });
-      
-      setSchedule(fullSchedule);
-      setHasSchedule(data.hasSchedule ?? data.schedule?.length > 0 ?? false);
-      setScheduleLoading(false);
-
-    } catch (err) {
-      if (!isMounted.current) return;
-      
-      logger.error(
-        "Schedule fetch error",
-        "WorkScheduleTab",
-        err instanceof Error ? err.message : "Unknown error"
-      );
-      setLoadError("Failed to load schedule. Please try again.");
-      
-      // Set default schedule on error
-      const defaultSchedule = days.map((day) => ({
-        day,
-        startTime: "09:00:00",
-        endTime: "17:00:00",
-        available: day !== "Sunday",
-      }));
-      setSchedule(defaultSchedule);
-      setHasSchedule(false);
-      setScheduleLoading(false);
-    } finally {
-      isLoading.current = false;
-    }
-  }, [days, initialSession?.user?.id]);
-
-  // Initial load
+  // Load schedule - only run once on mount
   useEffect(() => {
-    loadSchedule();
-    return () => {
-      isMounted.current = false;
+    const loadSchedule = async () => {
+      // Skip if we've already fetched or don't have a user ID
+      if (initialFetchDone.current || !initialSession?.user?.id) {
+        if (!initialSession?.user?.id) {
+          console.error("No user ID found in session");
+          setLoadError("Please log in to view your schedule.");
+          setScheduleLoading(false);
+        }
+        return;
+      }
+
+      try {
+        setScheduleLoading(true);
+        setLoadError(null);
+
+        const response = await fetch("/api/queries/shopper-availability", {
+          headers: {
+            "Content-Type": "application/json",
+          },
+          credentials: "include",
+        });
+
+        if (response.status === 401) {
+          setLoadError("Your session has expired. Please log in again.");
+          return;
+        }
+
+        if (!response.ok) {
+          throw new Error(`HTTP error! Status: ${response.status}`);
+        }
+
+        const data = await response.json();
+
+        if (data.error) {
+          throw new Error(data.error);
+        }
+
+        // Initialize with default values for all days
+        const daysMap = new Map();
+        days.forEach((day) => {
+          daysMap.set(day, {
+            day,
+            startTime: "09:00:00+00",
+            endTime: "17:00:00+00",
+            available: day !== "Sunday",
+          });
+        });
+
+        if (data.shopper_availability && Array.isArray(data.shopper_availability)) {
+          data.shopper_availability.forEach((slot: {
+            day_of_week: number;
+            start_time: string;
+            end_time: string;
+            is_available: boolean;
+          }) => {
+            const day = days[slot.day_of_week - 1];
+            if (day) {
+              daysMap.set(day, {
+                day,
+                startTime: formatTimeForAPI(slot.start_time),
+                endTime: formatTimeForAPI(slot.end_time),
+                available: slot.is_available,
+              });
+            }
+          });
+        }
+
+        const fullSchedule = Array.from(daysMap.values());
+        
+        setSchedule(fullSchedule);
+        setHasSchedule(Boolean(data.shopper_availability?.length));
+      } catch (err) {
+        console.error(
+          "Schedule fetch error:",
+          err instanceof Error ? err.message : "Unknown error"
+        );
+
+        const errorMessage = err instanceof Error ? err.message : "Failed to load schedule. Please try again.";
+        setLoadError(errorMessage);
+        
+        // Set default schedule on error
+        const defaultSchedule = days.map((day) => ({
+          day,
+          startTime: "09:00:00+00",
+          endTime: "17:00:00+00",
+          available: day !== "Sunday",
+        }));
+        setSchedule(defaultSchedule);
+        setHasSchedule(false);
+      } finally {
+        setScheduleLoading(false);
+        initialFetchDone.current = true;
+      }
     };
-  }, [loadSchedule]);
+
+    loadSchedule();
+  }, [days, initialSession?.user?.id, formatTimeForAPI]); // Added formatTimeForAPI to dependencies
 
   // Handle availability toggle
   const handleAvailabilityToggle = useCallback((day: string, available: boolean) => {
@@ -200,10 +187,10 @@ export default function WorkScheduleTab({ initialSession }: WorkScheduleTabProps
   ) => {
     setSchedule((prev) =>
       prev.map((slot) =>
-        slot.day === day ? { ...slot, [field]: value } : slot
+        slot.day === day ? { ...slot, [field]: formatTimeForAPI(value || "09:00:00")} : slot
       )
     );
-  }, []);
+  }, [formatTimeForAPI]);
 
   // Save schedule updates
   const saveScheduleUpdates = useCallback(async () => {
@@ -239,30 +226,15 @@ export default function WorkScheduleTab({ initialSession }: WorkScheduleTabProps
       }
 
       const result = await response.json();
-      logger.info("Schedule saved", "WorkScheduleTab", {
-        success: result.success,
-        affectedRows: result.affected_rows
-      });
 
       setSaveMessage({
         type: "success",
         text: "Schedule updated successfully!",
       });
       setHasSchedule(true);
-      
-      // Update local state directly
-      setSchedule(prev => 
-        prev.map((slot, index) => ({
-          ...slot,
-          startTime: formattedSchedule[index].start_time,
-          endTime: formattedSchedule[index].end_time,
-          available: formattedSchedule[index].is_available,
-        }))
-      );
     } catch (err) {
-      logger.error(
-        "Schedule save error",
-        "WorkScheduleTab",
+      console.error(
+        "Schedule save error:",
         err instanceof Error ? err.message : "Unknown error"
       );
       setSaveMessage({
@@ -276,9 +248,7 @@ export default function WorkScheduleTab({ initialSession }: WorkScheduleTabProps
   useEffect(() => {
     if (saveMessage) {
       const timer = setTimeout(() => {
-        if (isMounted.current) {
-          setSaveMessage(null);
-        }
+        setSaveMessage(null);
       }, 5000);
       return () => clearTimeout(timer);
     }
@@ -290,14 +260,14 @@ export default function WorkScheduleTab({ initialSession }: WorkScheduleTabProps
         <Message type="error" className="mb-4">
           {loadError}
         </Message>
-        <Button appearance="primary" onClick={() => loadSchedule()}>
+        <Button appearance="primary" onClick={() => window.location.reload()}>
           Retry Loading
         </Button>
       </div>
     );
   }
 
-  if (scheduleLoading) {
+  if (scheduleLoading && schedule.length === 0) {
     return (
       <div className="flex h-64 items-center justify-center">
         <Loader size="md" content="Loading schedule..." />
@@ -370,7 +340,7 @@ export default function WorkScheduleTab({ initialSession }: WorkScheduleTabProps
                   </span>
                   <SelectPicker
                     data={timeSlots}
-                    value={slot.startTime}
+                    value={formatTimeForDisplay(slot.startTime)}
                     onChange={(value) =>
                       handleTimeChange(slot.day, "startTime", value || "09:00:00")
                     }
@@ -389,7 +359,7 @@ export default function WorkScheduleTab({ initialSession }: WorkScheduleTabProps
                   </span>
                   <SelectPicker
                     data={timeSlots}
-                    value={slot.endTime}
+                    value={formatTimeForDisplay(slot.endTime)}
                     onChange={(value) =>
                       handleTimeChange(slot.day, "endTime", value || "17:00:00")
                     }
