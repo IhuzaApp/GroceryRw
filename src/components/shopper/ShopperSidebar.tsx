@@ -279,10 +279,10 @@ export default function ShopperSidebar() {
                 </div>
               </div>
             </Link>
-            <Link href="/Plasa/settings" passHref>
+            <Link href="/Plasa/Settings" passHref>
               <div
                 className={`group flex items-center rounded-lg px-3 py-2 text-sm font-medium transition-colors duration-200 ${
-                  isActive("/Plasa/settings")
+                  isActive("/Plasa/Settings")
                     ? theme === "dark"
                       ? "bg-gray-800 text-white"
                       : "bg-gray-100 text-gray-900"
@@ -297,7 +297,7 @@ export default function ShopperSidebar() {
                   stroke="currentColor"
                   strokeWidth="2"
                   className={`mr-3 h-6 w-6 flex-shrink-0 transition-colors duration-200 ${
-                    isActive("/Plasa/settings")
+                    isActive("/Plasa/Settings")
                       ? theme === "dark"
                         ? "text-white"
                         : "text-gray-900"
@@ -310,6 +310,39 @@ export default function ShopperSidebar() {
                   <path d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
                 </svg>
                 <span>Settings</span>
+              </div>
+            </Link>
+            <Link href="/Plasa/ShopperProfile" passHref>
+              <div
+                className={`group flex items-center rounded-lg px-3 py-2 text-sm font-medium transition-colors duration-200 ${
+                  isActive("/Plasa/ShopperProfile")
+                    ? theme === "dark"
+                      ? "bg-gray-800 text-white"
+                      : "bg-gray-100 text-gray-900"
+                    : theme === "dark"
+                    ? "text-gray-300 hover:bg-gray-800 hover:text-white"
+                    : "text-gray-700 hover:bg-gray-50"
+                }`}
+              >
+                <svg
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  className={`mr-3 h-6 w-6 flex-shrink-0 transition-colors duration-200 ${
+                    isActive("/Plasa/ShopperProfile")
+                      ? theme === "dark"
+                        ? "text-white"
+                        : "text-gray-900"
+                      : theme === "dark"
+                      ? "text-gray-400"
+                      : "text-gray-500"
+                  }`}
+                >
+                  <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+                  <circle cx="12" cy="7" r="4" />
+                </svg>
+                <span>Profile</span>
               </div>
             </Link>
           </nav>
@@ -423,19 +456,34 @@ export default function ShopperSidebar() {
               <span>Earnings</span>
             </div>
           </Link>
-          <Link href="/Plasa/settings" passHref>
-            <div className={getNavLinkClasses("/Plasa/settings")}>
+          <Link href="/Plasa/Settings" passHref>
+            <div className={getNavLinkClasses("/Plasa/Settings")}>
               <svg
                 viewBox="0 0 24 24"
                 fill="none"
                 stroke="currentColor"
                 strokeWidth="2"
-                className={getIconClasses("/Plasa/settings")}
+                className={getIconClasses("/Plasa/Settings")}
               >
                 <path d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
                 <path d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
               </svg>
               <span>Settings</span>
+            </div>
+          </Link>
+          <Link href="/Plasa/ShopperProfile" passHref>
+            <div className={getNavLinkClasses("/Plasa/ShopperProfile")}>
+              <svg
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                className={getIconClasses("/Plasa/ShopperProfile")}
+              >
+                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+                <circle cx="12" cy="7" r="4" />
+              </svg>
+              <span>Profile</span>
             </div>
           </Link>
         </div>

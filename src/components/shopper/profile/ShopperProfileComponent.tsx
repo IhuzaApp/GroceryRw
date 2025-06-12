@@ -14,6 +14,7 @@ import {
 } from "rsuite";
 import Cookies from "js-cookie";
 import { useSession } from "next-auth/react";
+import { useTheme } from "../../../context/ThemeContext";
 
 // Type definitions for schedules
 interface TimeSlot {
@@ -32,6 +33,7 @@ interface ShopperStats {
 
 export default function ShopperProfileComponent() {
   const { data: session } = useSession();
+  const { theme } = useTheme();
   const [activeTab, setActiveTab] = useState("account");
   // User data state
   const [user, setUser] = useState<{
@@ -526,10 +528,8 @@ export default function ShopperProfileComponent() {
           >
             {[
               { key: "account", label: "Account" },
-              { key: "schedule", label: "Work Schedule" },
               { key: "vehicles", label: "Vehicles" },
-              { key: "payment", label: "Payment Info" },
-              { key: "preferences", label: "Preferences" },
+              { key: "preferences", label: "Preferences" }
             ].map((tab) => (
               <Nav.Item
                 key={tab.key}
@@ -547,16 +547,22 @@ export default function ShopperProfileComponent() {
         </div>
 
         {activeTab === "account" && (
-          <Panel shaded bordered>
-            <h3 className="mb-4 text-lg font-semibold">Account Information</h3>
+          <Panel shaded bordered className={`${
+            theme === "dark" ? "border-gray-700 bg-gray-800" : "border-gray-200 bg-white"
+          }`}>
+            <h3 className={`mb-4 text-lg font-semibold ${
+              theme === "dark" ? "text-white" : "text-gray-900"
+            }`}>Account Information</h3>
             {loading ? (
               <div className="space-y-4">
                 {Array(4)
                   .fill(0)
                   .map((_, idx) => (
                     <div
-                      key={idx}
-                      className="h-4 animate-pulse rounded bg-gray-200"
+                      key={`skeleton-${idx}`}
+                      className={`h-4 animate-pulse rounded ${
+                        theme === "dark" ? "bg-gray-700" : "bg-gray-200"
+                      }`}
                     />
                   ))}
               </div>
@@ -588,160 +594,22 @@ export default function ShopperProfileComponent() {
           </Panel>
         )}
 
-        {activeTab === "schedule" && (
-          <Panel shaded bordered>
-            <h3 className="mb-4 text-lg font-semibold">Work Schedule</h3>
-            {scheduleLoading ? (
-              <Loader content="Loading schedule..." />
-            ) : (
-              <>
-                <p className="mb-4 text-gray-600">
-                  Set your availability for each day of the week. Orders will
-                  only be assigned to you during your available hours.
-                </p>
-
-                {saveMessage && (
-                  <Message
-                    type={saveMessage.type}
-                    className="mb-4"
-                    closable
-                    onClose={() => setSaveMessage(null)}
-                  >
-                    {saveMessage.text}
-                  </Message>
-                )}
-
-                {!hasSchedule ? (
-                  <div className="mb-4">
-                    <p className="mb-2 text-gray-700">
-                      You haven&apos;t configured your work schedule yet.
-                    </p>
-                    <Button
-                      appearance="primary"
-                      color="green"
-                      onClick={configureSchedule}
-                    >
-                      Configure Schedule
-                    </Button>
-                  </div>
-                ) : (
-                  <>
-                    {/* Weekly Schedule UI */}
-                    <div className="rounded-lg border">
-                      <div className="grid grid-cols-4 gap-4 bg-gray-50 p-4 md:grid-cols-7">
-                        <div className="font-medium">Day</div>
-                        <div className="font-medium">Available</div>
-                        <div className="font-medium">Start Time</div>
-                        <div className="font-medium">End Time</div>
-                      </div>
-
-                      <div className="divide-y">
-                        {schedule.map((slot) => (
-                          <div
-                            key={slot.day}
-                            className="grid grid-cols-4 gap-4 p-4 md:grid-cols-7"
-                          >
-                            <div className="flex items-center">{slot.day}</div>
-                            <div className="flex items-center">
-                              <Toggle
-                                checked={slot.available}
-                                onChange={(checked) =>
-                                  handleAvailabilityToggle(slot.day, checked)
-                                }
-                                checkedChildren="Yes"
-                                unCheckedChildren="No"
-                              />
-                            </div>
-                            <div>
-                              <SelectPicker
-                                value={slot.startTime}
-                                disabled={!slot.available}
-                                data={timeSlots}
-                                cleanable={false}
-                                block
-                                onChange={(value) =>
-                                  handleTimeChange(
-                                    slot.day,
-                                    "startTime",
-                                    value as string
-                                  )
-                                }
-                                renderValue={(value) => {
-                                  // console.log(`Rendering startTime for ${slot.day}:`, value);
-                                  return value
-                                    ? value.split(":").slice(0, 2).join(":")
-                                    : "";
-                                }}
-                              />
-                              <div className="mt-1 text-xs text-gray-500">
-                                Current:{" "}
-                                {slot.startTime
-                                  ? slot.startTime
-                                      .split(":")
-                                      .slice(0, 2)
-                                      .join(":")
-                                  : ""}
-                              </div>
-                            </div>
-                            <div>
-                              <SelectPicker
-                                value={slot.endTime}
-                                disabled={!slot.available}
-                                data={timeSlots}
-                                cleanable={false}
-                                block
-                                onChange={(value) =>
-                                  handleTimeChange(
-                                    slot.day,
-                                    "endTime",
-                                    value as string
-                                  )
-                                }
-                                renderValue={(value) => {
-                                  return value
-                                    ? value.split(":").slice(0, 2).join(":")
-                                    : "";
-                                }}
-                              />
-                              <div className="mt-1 text-xs text-gray-500">
-                                Current:{" "}
-                                {slot.endTime
-                                  ? slot.endTime
-                                      .split(":")
-                                      .slice(0, 2)
-                                      .join(":")
-                                  : ""}
-                              </div>
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-
-                    <div className="mt-4">
-                      <Button
-                        appearance="primary"
-                        color="green"
-                        onClick={saveScheduleUpdates}
-                      >
-                        Save Updates
-                      </Button>
-                    </div>
-                  </>
-                )}
-              </>
-            )}
-          </Panel>
-        )}
-
         {activeTab === "vehicles" && (
-          <Panel shaded bordered>
-            <h3 className="mb-4 text-lg font-semibold">Vehicle Information</h3>
-            <p className="mb-4 text-gray-600">
+          <Panel shaded bordered className={`${
+            theme === "dark" ? "border-gray-700 bg-gray-800" : "border-gray-200 bg-white"
+          }`}>
+            <h3 className={`mb-4 text-lg font-semibold ${
+              theme === "dark" ? "text-white" : "text-gray-900"
+            }`}>Vehicle Information</h3>
+            <p className={`mb-4 ${
+              theme === "dark" ? "text-gray-300" : "text-gray-600"
+            }`}>
               Add details about the vehicle(s) you use for deliveries.
             </p>
 
-            <div className="rounded-lg border p-4">
+            <div className={`rounded-lg border p-4 ${
+              theme === "dark" ? "border-gray-700" : "border-gray-200"
+            }`}>
               <h4 className="mb-2 font-medium">Primary Vehicle</h4>
               <div className="grid gap-4 md:grid-cols-2">
                 <div>
@@ -779,72 +647,27 @@ export default function ShopperProfileComponent() {
           </Panel>
         )}
 
-        {activeTab === "payment" && (
-          <Panel shaded bordered>
-            <h3 className="mb-4 text-lg font-semibold">Payment Information</h3>
-            <p className="mb-4 text-gray-600">
-              Manage your payment methods for receiving earnings.
-            </p>
-
-            <div className="rounded-lg border p-4">
-              <h4 className="mb-2 font-medium">Bank Account</h4>
-              <div className="grid gap-4 md:grid-cols-2">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700">
-                    Account Name
-                  </label>
-                  <input
-                    type="text"
-                    className="mt-1 block w-full rounded-md border border-gray-300 p-2 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700">
-                    Account Number
-                  </label>
-                  <input
-                    type="text"
-                    className="mt-1 block w-full rounded-md border border-gray-300 p-2 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700">
-                    Bank Name
-                  </label>
-                  <input
-                    type="text"
-                    className="mt-1 block w-full rounded-md border border-gray-300 p-2 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700">
-                    Routing Number
-                  </label>
-                  <input
-                    type="text"
-                    className="mt-1 block w-full rounded-md border border-gray-300 p-2 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
-                  />
-                </div>
-              </div>
-
-              <Button appearance="primary" color="blue" className="mt-4">
-                Save Payment Info
-              </Button>
-            </div>
-          </Panel>
-        )}
-
         {activeTab === "preferences" && (
-          <Panel shaded bordered>
-            <h3 className="mb-4 text-lg font-semibold">Shopper Preferences</h3>
-            <p className="mb-4 text-gray-600">
+          <Panel shaded bordered className={`${
+            theme === "dark" ? "border-gray-700 bg-gray-800" : "border-gray-200 bg-white"
+          }`}>
+            <h3 className={`mb-4 text-lg font-semibold ${
+              theme === "dark" ? "text-white" : "text-gray-900"
+            }`}>Shopper Preferences</h3>
+            <p className={`mb-4 ${
+              theme === "dark" ? "text-gray-300" : "text-gray-600"
+            }`}>
               Customize your delivery preferences and notification settings.
             </p>
 
             <div className="space-y-6">
               <div>
-                <h4 className="mb-2 font-medium">Order Preferences</h4>
-                <div className="flex items-center justify-between border-b pb-2">
+                <h4 className={`mb-2 font-medium ${
+                  theme === "dark" ? "text-white" : "text-gray-900"
+                }`}>Order Preferences</h4>
+                <div className={`flex items-center justify-between border-b pb-2 ${
+                  theme === "dark" ? "border-gray-700 text-gray-300" : "border-gray-200 text-gray-700"
+                }`}>
                   <span>Maximum order distance</span>
                   <SelectPicker
                     data={[
@@ -858,7 +681,9 @@ export default function ShopperProfileComponent() {
                     cleanable={false}
                   />
                 </div>
-                <div className="flex items-center justify-between border-b py-2">
+                <div className={`flex items-center justify-between border-b py-2 ${
+                  theme === "dark" ? "border-gray-700 text-gray-300" : "border-gray-200 text-gray-700"
+                }`}>
                   <span>Maximum order size</span>
                   <SelectPicker
                     data={[
@@ -871,7 +696,9 @@ export default function ShopperProfileComponent() {
                     cleanable={false}
                   />
                 </div>
-                <div className="flex items-center justify-between pt-2">
+                <div className={`flex items-center justify-between pt-2 ${
+                  theme === "dark" ? "border-gray-700 text-gray-300" : "border-gray-200 text-gray-700"
+                }`}>
                   <span>Preferred shop types</span>
                   <SelectPicker
                     data={[
@@ -887,17 +714,27 @@ export default function ShopperProfileComponent() {
               </div>
 
               <div>
-                <h4 className="mb-2 font-medium">Notification Preferences</h4>
-                <div className="space-y-2">
-                  <div className="flex items-center justify-between">
+                <h4 className={`mb-2 font-medium ${
+                  theme === "dark" ? "text-white" : "text-gray-900"
+                }`}>Notification Preferences</h4>
+                <div className={`space-y-2 ${
+                  theme === "dark" ? "text-gray-300" : "text-gray-700"
+                }`}>
+                  <div className={`flex items-center justify-between ${
+                    theme === "dark" ? "text-gray-300" : "text-gray-700"
+                  }`}>
                     <span>Email notifications</span>
                     <Toggle defaultChecked />
                   </div>
-                  <div className="flex items-center justify-between">
+                  <div className={`flex items-center justify-between ${
+                    theme === "dark" ? "text-gray-300" : "text-gray-700"
+                  }`}>
                     <span>SMS notifications</span>
                     <Toggle defaultChecked />
                   </div>
-                  <div className="flex items-center justify-between">
+                  <div className={`flex items-center justify-between ${
+                    theme === "dark" ? "text-gray-300" : "text-gray-700"
+                  }`}>
                     <span>Push notifications</span>
                     <Toggle defaultChecked />
                   </div>
