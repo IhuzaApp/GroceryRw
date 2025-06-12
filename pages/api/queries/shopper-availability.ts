@@ -1,7 +1,8 @@
 import { NextApiRequest, NextApiResponse } from "next";
 import { hasuraClient } from "../../../src/lib/hasuraClient";
 import { gql } from "graphql-request";
-import { getSession } from "next-auth/react";
+import { getServerSession } from "next-auth/next";
+import { authOptions } from "../auth/[...nextauth]";
 import { logger } from "../../../src/utils/logger";
 
 const GET_SHOPPER_AVAILABILITY = gql`
@@ -40,38 +41,58 @@ export default async function handler(
   res: NextApiResponse
 ) {
   try {
-    const session = await getSession({ req });
-    const userId = session?.user?.id;
+    logger.info("Shopper availability request received", "ShopperAvailabilityAPI", {
+      method: req.method,
+      hasAuthHeader: Boolean(req.headers.authorization)
+    });
 
-    if (!userId) {
-      return res.status(401).json({ error: "Unauthorized" });
+    const session = await getServerSession(req, res, authOptions);
+    
+    if (!session) {
+      logger.error("No session found", "ShopperAvailabilityAPI");
+      return res.status(401).json({ error: "Unauthorized - No session found" });
+    }
+    
+    if (!session.user?.id) {
+      logger.error("No user ID in session", "ShopperAvailabilityAPI");
+      return res.status(401).json({ error: "Unauthorized - No user ID found" });
     }
 
     if (!hasuraClient) {
+      logger.error("Hasura client not initialized", "ShopperAvailabilityAPI");
       throw new Error("Hasura client is not initialized");
     }
 
+    logger.info("Fetching availability from Hasura", "ShopperAvailabilityAPI", {
+      userId: session.user.id
+    });
+
     const data = await hasuraClient.request<ShopperAvailabilityResponse>(
       GET_SHOPPER_AVAILABILITY,
-      { userId }
+      { userId: session.user.id }
     );
 
     logger.info(
-      "Shopper availability query result:",
+      "Shopper availability query result",
       "ShopperAvailabilityAPI",
       {
-        userId,
+        userId: session.user.id,
         availabilityCount: data.Shopper_Availability.length,
+        hasData: Boolean(data.Shopper_Availability),
+        firstEntry: data.Shopper_Availability[0] ? {
+          day_of_week: data.Shopper_Availability[0].day_of_week,
+          is_available: data.Shopper_Availability[0].is_available
+        } : null
       }
     );
 
-    res.status(200).json({ shopper_availability: data.Shopper_Availability });
+    return res.status(200).json({ shopper_availability: data.Shopper_Availability });
   } catch (error) {
     logger.error(
-      "Error fetching shopper availability:",
+      "Error fetching shopper availability",
       "ShopperAvailabilityAPI",
-      error
+      error instanceof Error ? error.message : "Unknown error"
     );
-    res.status(500).json({ error: "Failed to fetch shopper availability" });
+    return res.status(500).json({ error: "Failed to fetch shopper availability" });
   }
 }
