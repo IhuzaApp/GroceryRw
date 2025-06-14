@@ -1,11 +1,12 @@
 import React, { useState, useEffect, useRef } from "react";
 import { useGoogleMap } from "../../../context/GoogleMapProvider";
 import { Button } from "rsuite";
+import { logger } from "../../../utils/logger";
 
 interface AddressSelectionPopupProps {
   isOpen: boolean;
   onClose: () => void;
-  onSave: (address: string, lat: number | null, lng: number | null) => void;
+  onSave: (address: string) => void;
   currentAddress?: string;
   loading?: boolean;
 }
@@ -19,17 +20,17 @@ export default function AddressSelectionPopup({
 }: AddressSelectionPopupProps) {
   const { isLoaded } = useGoogleMap();
   const autocompleteServiceRef = useRef<google.maps.places.AutocompleteService | null>(null);
-  const geocoderRef = useRef<google.maps.Geocoder | null>(null);
   const [address, setAddress] = useState(currentAddress);
   const [suggestions, setSuggestions] = useState<google.maps.places.AutocompletePrediction[]>([]);
   const [activeInput, setActiveInput] = useState(false);
-  const [lat, setLat] = useState<number | null>(null);
-  const [lng, setLng] = useState<number | null>(null);
 
   useEffect(() => {
     if (isLoaded && !autocompleteServiceRef.current) {
-      autocompleteServiceRef.current = new google.maps.places.AutocompleteService();
-      geocoderRef.current = new google.maps.Geocoder();
+      try {
+        autocompleteServiceRef.current = new google.maps.places.AutocompleteService();
+      } catch (error) {
+        logger.error("Error initializing Google Maps AutocompleteService:", error);
+      }
     }
   }, [isLoaded]);
 
@@ -40,17 +41,22 @@ export default function AddressSelectionPopup({
   const handleAddressChange = (val: string) => {
     setAddress(val);
     if (val && autocompleteServiceRef.current) {
-      autocompleteServiceRef.current.getPlacePredictions(
-        { input: val, componentRestrictions: { country: ["rw"] } },
-        (preds, status) => {
-          if (status === google.maps.places.PlacesServiceStatus.OK && preds) {
-            setSuggestions(preds);
-            setActiveInput(true);
-          } else {
-            setSuggestions([]);
+      try {
+        autocompleteServiceRef.current.getPlacePredictions(
+          { input: val, componentRestrictions: { country: ["rw"] } },
+          (preds, status) => {
+            if (status === google.maps.places.PlacesServiceStatus.OK && preds) {
+              setSuggestions(preds);
+              setActiveInput(true);
+            } else {
+              setSuggestions([]);
+            }
           }
-        }
-      );
+        );
+      } catch (error) {
+        logger.error("Error getting place predictions:", error);
+        setSuggestions([]);
+      }
     } else {
       setSuggestions([]);
       setActiveInput(false);
@@ -61,21 +67,10 @@ export default function AddressSelectionPopup({
     setAddress(sug.description);
     setSuggestions([]);
     setActiveInput(false);
-    if (geocoderRef.current) {
-      geocoderRef.current.geocode(
-        { address: sug.description },
-        (results, status) => {
-          if (status === "OK" && results && results[0]) {
-            setLat(results[0].geometry.location.lat());
-            setLng(results[0].geometry.location.lng());
-          }
-        }
-      );
-    }
   };
 
   const handleSave = () => {
-    onSave(address, lat, lng);
+    onSave(address);
   };
 
   if (!isOpen) return null;
@@ -117,7 +112,7 @@ export default function AddressSelectionPopup({
               <input
                 type="text"
                 id="address"
-                className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-green-500 focus:outline-none focus:ring-1 focus:ring-green-500"
                 placeholder="Enter your service area address"
                 value={address}
                 onChange={(e) => handleAddressChange(e.target.value)}
@@ -159,6 +154,7 @@ export default function AddressSelectionPopup({
               </Button>
               <Button
                 appearance="primary"
+                color="green"
                 onClick={handleSave}
                 loading={loading}
               >
