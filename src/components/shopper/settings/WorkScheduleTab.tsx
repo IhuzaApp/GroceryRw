@@ -256,7 +256,7 @@ export default function WorkScheduleTab({ initialSession }: WorkScheduleTabProps
 
   if (loadError) {
     return (
-      <div className="p-4">
+      <div className="p-2 sm:p-4">
         <Message type="error" className="mb-4">
           {loadError}
         </Message>
@@ -269,29 +269,29 @@ export default function WorkScheduleTab({ initialSession }: WorkScheduleTabProps
 
   if (scheduleLoading && schedule.length === 0) {
     return (
-      <div className="flex h-64 items-center justify-center">
+      <div className="flex h-48 sm:h-64 items-center justify-center">
         <Loader size="md" content="Loading schedule..." />
       </div>
     );
   }
 
   return (
-    <div className="p-4">
+    <div className="p-2 sm:p-4">
       <h3
-        className={`mb-4 text-lg font-semibold ${
+        className={`mb-2 sm:mb-4 text-base sm:text-lg font-semibold ${
           theme === "dark" ? "text-white" : "text-gray-900"
         }`}
       >
         Work Schedule
       </h3>
-      <p className={`mb-6 ${theme === "dark" ? "text-gray-300" : "text-gray-600"}`}>
+      <p className={`mb-4 sm:mb-6 text-sm sm:text-base ${theme === "dark" ? "text-gray-300" : "text-gray-600"}`}>
         Set your availability for each day of the week. Toggle availability and select your preferred working hours.
       </p>
 
       {saveMessage && (
         <Message
           type={saveMessage.type}
-          className="mb-4"
+          className="mb-4 text-sm sm:text-base"
           closable
           onClose={() => setSaveMessage(null)}
         >
@@ -299,11 +299,11 @@ export default function WorkScheduleTab({ initialSession }: WorkScheduleTabProps
         </Message>
       )}
 
-      <div className="space-y-4">
+      <div className="space-y-3 sm:space-y-4">
         {schedule.map((slot) => (
           <div
             key={slot.day}
-            className={`flex flex-col space-y-2 rounded-lg border p-4 ${
+            className={`flex flex-col space-y-2 rounded-lg border p-2 sm:p-4 ${
               theme === "dark"
                 ? "border-gray-700 bg-gray-800"
                 : "border-gray-200 bg-white"
@@ -311,7 +311,7 @@ export default function WorkScheduleTab({ initialSession }: WorkScheduleTabProps
           >
             <div className="flex items-center justify-between">
               <span
-                className={`font-medium ${
+                className={`text-sm sm:text-base font-medium ${
                   theme === "dark" ? "text-white" : "text-gray-900"
                 }`}
               >
@@ -324,15 +324,16 @@ export default function WorkScheduleTab({ initialSession }: WorkScheduleTabProps
                 }
                 size="md"
                 checkedChildren="Available"
-                unCheckedChildren="Unavailable"
+                unCheckedChildren="Off"
+                className="min-w-[70px] sm:min-w-[100px]"
               />
             </div>
 
             {slot.available && (
-              <div className="flex flex-wrap items-center gap-4">
-                <div className="flex items-center gap-2">
+              <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 sm:gap-4">
+                <div className="flex items-center gap-2 w-full sm:w-auto">
                   <span
-                    className={`text-sm ${
+                    className={`text-xs sm:text-sm whitespace-nowrap ${
                       theme === "dark" ? "text-gray-300" : "text-gray-600"
                     }`}
                   >
@@ -346,12 +347,13 @@ export default function WorkScheduleTab({ initialSession }: WorkScheduleTabProps
                     }
                     cleanable={false}
                     searchable={false}
-                    className="w-32"
+                    className="w-full sm:w-32"
+                    menuStyle={{ zIndex: 1060 }}
                   />
                 </div>
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2 w-full sm:w-auto">
                   <span
-                    className={`text-sm ${
+                    className={`text-xs sm:text-sm whitespace-nowrap ${
                       theme === "dark" ? "text-gray-300" : "text-gray-600"
                     }`}
                   >
@@ -365,7 +367,8 @@ export default function WorkScheduleTab({ initialSession }: WorkScheduleTabProps
                     }
                     cleanable={false}
                     searchable={false}
-                    className="w-32"
+                    className="w-full sm:w-32"
+                    menuStyle={{ zIndex: 1060 }}
                   />
                 </div>
               </div>
@@ -374,11 +377,12 @@ export default function WorkScheduleTab({ initialSession }: WorkScheduleTabProps
         ))}
       </div>
 
-      <div className="mt-6 flex justify-end">
+      <div className="mt-4 sm:mt-6 flex justify-end">
         <Button
           appearance="primary"
           onClick={saveScheduleUpdates}
           loading={scheduleLoading}
+          className="w-full sm:w-auto"
         >
           Save Schedule
         </Button>
