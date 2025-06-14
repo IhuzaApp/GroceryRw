@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, useRef } from "react";
 import Image from "next/image";
 import { formatCurrency } from "../../../lib/formatCurrency";
 import {
@@ -11,10 +11,17 @@ import {
   SelectPicker,
   Loader,
   Message,
+  Modal,
+  Form,
+  Input,
+  useToaster,
 } from "rsuite";
 import Cookies from "js-cookie";
 import { useSession } from "next-auth/react";
 import { useTheme } from "../../../context/ThemeContext";
+import { useRouter } from "next/router";
+import { useGoogleMap } from "../../../context/GoogleMapProvider";
+import AddressSelectionPopup from "./AddressSelectionDrawer";
 
 // Type definitions for schedules
 interface TimeSlot {
@@ -73,6 +80,13 @@ export default function ShopperProfileComponent() {
   // Address selection modal state
   const [addresses, setAddresses] = useState<any[]>([]);
   const [showAddrModal, setShowAddrModal] = useState<boolean>(false);
+
+  // Add state for address modal
+  const [showAddressPopup, setShowAddressPopup] = useState(false);
+  const [addressFormValue, setAddressFormValue] = useState<{ address: string }>({
+    address: "",
+  });
+  const [updatingAddress, setUpdatingAddress] = useState(false);
 
   // Days of the week
   const days = [
@@ -137,109 +151,96 @@ export default function ShopperProfileComponent() {
       })
       .then((res) => res.json())
       .then((data) => {
-        console.log("Received shopper stats:", data);
         setStats({
           totalDeliveries: data.totalDeliveries || 0,
           completionRate: data.completionRate || 0,
           averageRating: data.averageRating || 0,
           totalEarnings: data.totalEarnings || 0,
         });
+
+        // Fetch shopper profile data
+        return fetch("/api/queries/shopper-profile");
       })
-      .catch((err) => console.error("Failed to load shopper profile:", err))
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.shopper) {
+          setShopperData(data.shopper);
+        }
+      })
+      .catch((err) => {
+        // Handle error silently
+        setStats({
+          totalDeliveries: 0,
+          completionRate: 0,
+          averageRating: 0,
+          totalEarnings: 0,
+        });
+      })
       .finally(() => setLoading(false));
   }, []);
 
   // Load schedule using useCallback to memoize the function
   const loadSchedule = useCallback(() => {
     setScheduleLoading(true);
-    fetch("/api/shopper/schedule")
+    fetch("/api/queries/shopper-availability")
       .then((res) => res.json())
-      .then((data) => {
-        console.log("Loaded schedule data:", data);
-
+      .then((data: { shopper_availability: Array<{
+        day_of_week: number;
+        start_time: string;
+        end_time: string;
+        is_available: boolean;
+      }> }) => {
         // Use the hasSchedule flag from the API response if available
-        if (data.hasSchedule !== undefined) {
-          setHasSchedule(data.hasSchedule);
-        } else {
-          setHasSchedule(
-            data.schedule &&
-              Array.isArray(data.schedule) &&
-              data.schedule.length > 0
-          );
-        }
+        if (data.shopper_availability) {
+          setHasSchedule(data.shopper_availability.length > 0);
 
-        if (
-          data.schedule &&
-          Array.isArray(data.schedule) &&
-          data.schedule.length > 0
-        ) {
           // Map the received schedule to ensure all days are represented
-          const daysMap = new Map();
+          const daysMap = new Map<string, TimeSlot>();
 
           // First, initialize with default values for all days
           days.forEach((day) => {
             daysMap.set(day, {
               day,
-              startTime: "09:00",
-              endTime: "17:00",
+              startTime: "09:00:00+00",
+              endTime: "17:00:00+00",
               available: day !== "Sunday",
             });
           });
 
           // Then, override with actual data from the server
-          data.schedule.forEach(
-            (slot: {
-              day: string;
-              startTime?: string;
-              endTime?: string;
-              available?: boolean;
-            }) => {
-              console.log(`Slot for ${slot.day}:`, slot);
-              daysMap.set(slot.day, {
-                day: slot.day,
-                startTime: formatTimeForDisplay(slot.startTime),
-                endTime: formatTimeForDisplay(slot.endTime),
-                available:
-                  typeof slot.available === "boolean" ? slot.available : true,
+          data.shopper_availability.forEach((slot) => {
+            const day = days[slot.day_of_week - 1];
+            if (day) {
+              daysMap.set(day, {
+                day,
+                startTime: slot.start_time,
+                endTime: slot.end_time,
+                available: slot.is_available,
               });
             }
-          );
+          });
 
-          // Convert map back to array
-          const fullSchedule = Array.from(daysMap.values());
-          console.log("Processed schedule:", fullSchedule);
-
-          setSchedule(fullSchedule);
-        } else {
-          // Initialize default schedule if none exists
-          const defaultSchedule = days.map((day) => ({
-            day,
-            startTime: "09:00",
-            endTime: "17:00",
-            available: day !== "Sunday",
-          }));
-          setSchedule(defaultSchedule);
+          setSchedule(Array.from(daysMap.values()));
         }
       })
-      .catch((err) => {
-        console.error("Error fetching schedule:", err);
-        // Initialize default schedule on error
-        const defaultSchedule = days.map((day) => ({
+      .catch(() => {
+        // Handle error silently
+        setHasSchedule(false);
+        const defaultSchedule: TimeSlot[] = days.map(day => ({
           day,
-          startTime: "09:00",
-          endTime: "17:00",
+          startTime: "09:00:00+00",
+          endTime: "17:00:00+00",
           available: day !== "Sunday",
         }));
         setSchedule(defaultSchedule);
-        setHasSchedule(false);
       })
       .finally(() => setScheduleLoading(false));
-  }, [days, formatTimeForDisplay]); // Add only stable dependencies
+  }, [days]);
 
   // Load schedule on component mount
   useEffect(() => {
     loadSchedule();
-  }, []); // Keep empty dependency array, loadSchedule is stable with useCallback
+  }, [loadSchedule]);
 
   // Load default address
   useEffect(() => {
@@ -378,6 +379,144 @@ export default function ShopperProfileComponent() {
     }
   }, [saveMessage]);
 
+  // Add shopper data state
+  const [shopperData, setShopperData] = useState<{
+    id: string;
+    full_name: string;
+    address: string;
+    phone_number: string;
+    national_id: string;
+    driving_license?: string;
+    transport_mode: string;
+    profile_photo?: string;
+    status: string;
+    active: boolean;
+    background_check_completed: boolean;
+    onboarding_step: string;
+  } | null>(null);
+
+  const router = useRouter();
+  const toaster = useToaster();
+  const { isLoaded } = useGoogleMap();
+  const autocompleteServiceRef = useRef<google.maps.places.AutocompleteService | null>(null);
+  const geocoderRef = useRef<google.maps.Geocoder | null>(null);
+
+  // Add state for address selection
+  const [suggestions, setSuggestions] = useState<google.maps.places.AutocompletePrediction[]>([]);
+  const [activeInput, setActiveInput] = useState(false);
+  const [lat, setLat] = useState<number | null>(null);
+  const [lng, setLng] = useState<number | null>(null);
+
+  useEffect(() => {
+    if (isLoaded && !autocompleteServiceRef.current) {
+      autocompleteServiceRef.current = new google.maps.places.AutocompleteService();
+      geocoderRef.current = new google.maps.Geocoder();
+    }
+  }, [isLoaded]);
+
+  // Handle address input change for autocomplete
+  const handleAddressChange = (val: string) => {
+    setAddressFormValue({ address: val });
+    if (val && autocompleteServiceRef.current) {
+      autocompleteServiceRef.current.getPlacePredictions(
+        { input: val, componentRestrictions: { country: ["rw"] } },
+        (preds, status) => {
+          if (status === google.maps.places.PlacesServiceStatus.OK && preds) {
+            setSuggestions(preds);
+            setActiveInput(true);
+          } else {
+            setSuggestions([]);
+          }
+        }
+      );
+    } else {
+      setSuggestions([]);
+      setActiveInput(false);
+    }
+  };
+
+  // On selecting an autocomplete suggestion
+  const handleSelect = (sug: google.maps.places.AutocompletePrediction) => {
+    setAddressFormValue({ address: sug.description });
+    setSuggestions([]);
+    setActiveInput(false);
+    // Geocode to get lat/lng
+    if (geocoderRef.current) {
+      geocoderRef.current.geocode(
+        { address: sug.description },
+        (results, status) => {
+          if (status === "OK" && results && results[0]) {
+            setLat(results[0].geometry.location.lat());
+            setLng(results[0].geometry.location.lng());
+          }
+        }
+      );
+    }
+  };
+
+  // Function to handle address update
+  const handleAddressUpdate = async (address: string, lat: number | null, lng: number | null) => {
+    if (!shopperData?.id) return;
+
+    setUpdatingAddress(true);
+    try {
+      const response = await fetch("/api/queries/update-shopper-address", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          shopper_id: shopperData.id,
+          address,
+          latitude: lat,
+          longitude: lng,
+          // Only update address-related fields, preserve other fields
+          status: shopperData.status,
+          background_check_status: shopperData.background_check_status,
+          background_check_date: shopperData.background_check_date,
+          background_check_notes: shopperData.background_check_notes,
+          verification_status: shopperData.verification_status,
+          verification_date: shopperData.verification_date,
+          verification_notes: shopperData.verification_notes,
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to update address");
+      }
+
+      const data = await response.json();
+      if (data.shopper) {
+        // Preserve the existing status and background check data
+        setShopperData({
+          ...data.shopper,
+          status: shopperData.status,
+          background_check_status: shopperData.background_check_status,
+          background_check_date: shopperData.background_check_date,
+          background_check_notes: shopperData.background_check_notes,
+          verification_status: shopperData.verification_status,
+          verification_date: shopperData.verification_date,
+          verification_notes: shopperData.verification_notes,
+        });
+        toaster.push(
+          <Message type="success" closable>
+            Service area updated successfully
+          </Message>
+        );
+        setShowAddressPopup(false);
+      }
+    } catch (error) {
+      console.error("Error updating address:", error);
+      toaster.push(
+        <Message type="error" closable>
+          Failed to update service area
+        </Message>
+      );
+    } finally {
+      setUpdatingAddress(false);
+    }
+  };
+
   return (
     <div className="grid grid-cols-1 gap-6 md:grid-cols-12">
       {/* Left Column - User Info */}
@@ -441,34 +580,19 @@ export default function ShopperProfileComponent() {
                 {/* Default address under profile */}
                 <div className="mt-4 w-full text-center">
                   <h3 className="font-medium">Service Area</h3>
-                  {loadingAddr ? (
+                  {loading ? (
                     <div className="mx-auto h-4 w-32 animate-pulse rounded bg-gray-200" />
-                  ) : selectedAddr || defaultAddr ? (
-                    <div>
-                      <p className="text-sm text-gray-600">
-                        {(selectedAddr || defaultAddr).street},{" "}
-                        {(selectedAddr || defaultAddr).city}{" "}
-                        {(selectedAddr || defaultAddr).postal_code}
-                      </p>
-                      <Button
-                        size="sm"
-                        appearance="link"
-                        onClick={() => setShowAddrModal(true)}
-                      >
-                        Change Service Area
-                      </Button>
-                    </div>
                   ) : (
                     <div>
-                      <p className="text-sm text-gray-500">
-                        No service area selected
+                      <p className="text-sm text-gray-600">
+                        {shopperData?.address || "No service area selected"}
                       </p>
                       <Button
                         size="sm"
                         appearance="link"
-                        onClick={() => setShowAddrModal(true)}
+                        onClick={() => setShowAddressPopup(true)}
                       >
-                        Select Service Area
+                        Change Service Area
                       </Button>
                     </div>
                   )}
@@ -567,28 +691,131 @@ export default function ShopperProfileComponent() {
                   ))}
               </div>
             ) : (
-              <div className="space-y-4">
+              <div className="space-y-6">
+                {/* Personal Information */}
+                <div className={`rounded-lg border p-4 ${
+                  theme === "dark" ? "border-gray-700" : "border-gray-200"
+                }`}>
+                  <h4 className={`mb-4 font-medium ${
+                    theme === "dark" ? "text-white" : "text-gray-900"
+                  }`}>Personal Information</h4>
+                  <div className="grid gap-4 md:grid-cols-2">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700">
-                    Name
-                  </label>
-                  <p className="mt-1">{user?.name}</p>
+                      <label className={`block text-sm font-medium ${
+                        theme === "dark" ? "text-gray-300" : "text-gray-700"
+                      }`}>Full Name</label>
+                      <p className={`mt-1 ${
+                        theme === "dark" ? "text-gray-300" : "text-gray-900"
+                      }`}>{shopperData?.full_name || user?.name}</p>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700">
-                    Email
-                  </label>
-                  <p className="mt-1">{user?.email}</p>
+                      <label className={`block text-sm font-medium ${
+                        theme === "dark" ? "text-gray-300" : "text-gray-700"
+                      }`}>Email</label>
+                      <p className={`mt-1 ${
+                        theme === "dark" ? "text-gray-300" : "text-gray-900"
+                      }`}>{user?.email}</p>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700">
-                    Phone
-                  </label>
-                  <p className="mt-1">{user?.phone || "Not provided"}</p>
+                      <label className={`block text-sm font-medium ${
+                        theme === "dark" ? "text-gray-300" : "text-gray-700"
+                      }`}>Phone Number</label>
+                      <p className={`mt-1 ${
+                        theme === "dark" ? "text-gray-300" : "text-gray-900"
+                      }`}>{shopperData?.phone_number || user?.phone || "Not provided"}</p>
                 </div>
-                <Button appearance="primary" color="green">
-                  Update Information
-                </Button>
+                    <div>
+                      <label className={`block text-sm font-medium ${
+                        theme === "dark" ? "text-gray-300" : "text-gray-700"
+                      }`}>National ID</label>
+                      <p className={`mt-1 ${
+                        theme === "dark" ? "text-gray-300" : "text-gray-900"
+                      }`}>{shopperData?.national_id || "Not provided"}</p>
+              </div>
+                  </div>
+                      </div>
+
+                {/* Delivery Information */}
+                <div className={`rounded-lg border p-4 ${
+                  theme === "dark" ? "border-gray-700" : "border-gray-200"
+                }`}>
+                  <h4 className={`mb-4 font-medium ${
+                    theme === "dark" ? "text-white" : "text-gray-900"
+                  }`}>Delivery Information</h4>
+                  <div className="grid gap-4 md:grid-cols-2">
+                    <div>
+                      <label className={`block text-sm font-medium ${
+                        theme === "dark" ? "text-gray-300" : "text-gray-700"
+                      }`}>Transport Mode</label>
+                      <p className={`mt-1 ${
+                        theme === "dark" ? "text-gray-300" : "text-gray-900"
+                      }`}>{shopperData?.transport_mode ? shopperData.transport_mode.charAt(0).toUpperCase() + shopperData.transport_mode.slice(1).replace('_', ' ') : "Not set"}</p>
+                            </div>
+                            <div>
+                      <label className={`block text-sm font-medium ${
+                        theme === "dark" ? "text-gray-300" : "text-gray-700"
+                      }`}>Address</label>
+                      <p className={`mt-1 ${
+                        theme === "dark" ? "text-gray-300" : "text-gray-900"
+                      }`}>{shopperData?.address || "Not provided"}</p>
+                              </div>
+                            </div>
+                </div>
+
+                {/* Account Status */}
+                <div className={`rounded-lg border p-4 ${
+                  theme === "dark" ? "border-gray-700" : "border-gray-200"
+                }`}>
+                  <h4 className={`mb-4 font-medium ${
+                    theme === "dark" ? "text-white" : "text-gray-900"
+                  }`}>Account Status</h4>
+                  <div className="grid gap-4 md:grid-cols-2">
+                            <div>
+                      <label className={`block text-sm font-medium ${
+                        theme === "dark" ? "text-gray-300" : "text-gray-700"
+                      }`}>Status</label>
+                      <p className={`mt-1 ${
+                        theme === "dark" ? "text-gray-300" : "text-gray-900"
+                      }`}>
+                        <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${
+                          shopperData?.status === 'active' 
+                            ? 'bg-green-100 text-green-800' 
+                            : shopperData?.status === 'pending'
+                            ? 'bg-yellow-100 text-yellow-800'
+                            : 'bg-red-100 text-red-800'
+                        }`}>
+                          {shopperData?.status ? shopperData.status.charAt(0).toUpperCase() + shopperData.status.slice(1) : "Not registered"}
+                        </span>
+                      </p>
+                              </div>
+                    <div>
+                      <label className={`block text-sm font-medium ${
+                        theme === "dark" ? "text-gray-300" : "text-gray-700"
+                      }`}>Background Check</label>
+                      <p className={`mt-1 ${
+                        theme === "dark" ? "text-gray-300" : "text-gray-900"
+                      }`}>
+                        <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${
+                          shopperData?.background_check_completed 
+                            ? 'bg-green-100 text-green-800' 
+                            : 'bg-yellow-100 text-yellow-800'
+                        }`}>
+                          {shopperData?.background_check_completed ? "Completed" : "Pending"}
+                        </span>
+                      </p>
+                            </div>
+                      </div>
+                    </div>
+
+                <div className="flex justify-end space-x-4">
+                      <Button
+                        appearance="primary"
+                        color="green"
+                    onClick={() => router.push("/Myprofile/become-shopper")}
+                      >
+                    Update Information
+                      </Button>
+                    </div>
               </div>
             )}
           </Panel>
@@ -748,6 +975,15 @@ export default function ShopperProfileComponent() {
           </Panel>
         )}
       </div>
+
+      {/* Address Selection Popup */}
+      <AddressSelectionPopup
+        isOpen={showAddressPopup}
+        onClose={() => setShowAddressPopup(false)}
+        onSave={handleAddressUpdate}
+        currentAddress={shopperData?.address}
+        loading={updatingAddress}
+      />
     </div>
   );
 }
