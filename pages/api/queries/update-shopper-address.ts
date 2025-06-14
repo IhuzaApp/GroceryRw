@@ -3,6 +3,7 @@ import { hasuraClient } from "../../../src/lib/hasuraClient";
 import { gql } from "graphql-request";
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "../../api/auth/[...nextauth]";
+import { logger } from "../../../src/utils/logger";
 
 const UPDATE_SHOPPER_ADDRESS = gql`
   mutation UpdateShopperAddress($shopper_id: uuid!, $address: String!) {
@@ -40,12 +41,6 @@ export default async function handler(
   }
 
   try {
-    const session = await getServerSession(req, res, authOptions as any) as Session;
-
-    if (!session?.user?.id) {
-      return res.status(401).json({ message: "Unauthorized" });
-    }
-
     const { shopper_id, address } = req.body;
 
     if (!shopper_id || !address) {
@@ -70,7 +65,7 @@ export default async function handler(
       shopper,
     });
   } catch (error) {
-    console.error("Error updating shopper address:", error);
+    logger.error("Error updating shopper address:", error);
     return res.status(500).json({ message: "Internal server error" });
   }
 } 

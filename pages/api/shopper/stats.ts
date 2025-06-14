@@ -2,6 +2,7 @@ import type { NextApiRequest, NextApiResponse } from "next";
 import { getSession } from "next-auth/react";
 import { gql } from "graphql-request";
 import { hasuraClient } from "../../../src/lib/hasuraClient";
+import { logger } from "../../../src/utils/logger";
 
 interface ShopperStatsResponse {
   totalDeliveries: number;
@@ -45,7 +46,6 @@ const handler = async (req: NextApiRequest, res: NextApiResponse) => {
     }
 
     const userId = session.user.id;
-    console.log("Fetching stats for user:", userId);
 
     // GraphQL query to get shopper stats
     const query = gql`
@@ -93,7 +93,6 @@ const handler = async (req: NextApiRequest, res: NextApiResponse) => {
     const data = await hasuraClient.request<GraphQLResponse>(query, {
       shopperId: userId,
     });
-    console.log("Raw stats data:", JSON.stringify(data, null, 2));
 
     // Calculate total deliveries
     const totalDeliveries = data.Orders_aggregate.aggregate.count || 0;
@@ -116,21 +115,9 @@ const handler = async (req: NextApiRequest, res: NextApiResponse) => {
         const serviceFee = parseFloat(order.service_fee || "0");
         const deliveryFee = parseFloat(order.delivery_fee || "0");
         const orderTotal = serviceFee + deliveryFee;
-        console.log(
-          `Order ${order.id} (${order.status}): service_fee=${serviceFee}, delivery_fee=${deliveryFee}, total=${orderTotal}`
-        );
         return sum + orderTotal;
       }, 0);
     }
-
-    console.log("Calculated stats:", {
-      totalDeliveries,
-      completedDeliveries,
-      completionRate,
-      averageRating,
-      ratingCount,
-      totalEarnings,
-    });
 
     const response: ShopperStatsResponse = {
       totalDeliveries,
@@ -141,7 +128,7 @@ const handler = async (req: NextApiRequest, res: NextApiResponse) => {
 
     return res.status(200).json(response);
   } catch (error: any) {
-    console.error("Error fetching shopper stats:", error);
+    logger.error("Error fetching shopper stats:", error);
     return res
       .status(500)
       .json({ error: error.message || "Failed to fetch shopper stats" });

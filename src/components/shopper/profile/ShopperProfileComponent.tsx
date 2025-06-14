@@ -22,6 +22,7 @@ import { useTheme } from "../../../context/ThemeContext";
 import { useRouter } from "next/router";
 import { useGoogleMap } from "../../../context/GoogleMapProvider";
 import AddressSelectionPopup from "./AddressSelectionDrawer";
+import { logger } from "../../../utils/logger";
 
 // Type definitions for schedules
 interface TimeSlot {
@@ -257,7 +258,7 @@ export default function ShopperProfileComponent() {
         setAddresses(data.addresses || []);
       })
       .catch((err) => {
-        console.error("Error fetching addresses:", err);
+        logger.error("Error fetching addresses:", err);
         setDefaultAddr(null);
       })
       .finally(() => setLoadingAddr(false));
@@ -286,7 +287,7 @@ export default function ShopperProfileComponent() {
   // Configure schedule - add default schedule to database
   const configureSchedule = useCallback(() => {
     if (!session) {
-      console.error("No session available. Please log in.");
+      logger.error("No session available. Please log in.");
       setSaveMessage({
         type: "error",
         text: "Please log in to configure your schedule.",
@@ -354,14 +355,13 @@ export default function ShopperProfileComponent() {
         return res.json();
       })
       .then((data) => {
-        console.log("Schedule saved:", data);
         setSaveMessage({
           type: "success",
           text: "Schedule updated successfully!",
         });
       })
       .catch((err) => {
-        console.error("Error saving schedule:", err);
+        logger.error("Error saving schedule:", err);
         setSaveMessage({
           type: "error",
           text: "Failed to update schedule. Please try again.",
@@ -393,6 +393,8 @@ export default function ShopperProfileComponent() {
     active: boolean;
     background_check_completed: boolean;
     onboarding_step: string;
+    latitude: number | null;
+    longitude: number | null;
   } | null>(null);
 
   const router = useRouter();
@@ -404,13 +406,16 @@ export default function ShopperProfileComponent() {
   // Add state for address selection
   const [suggestions, setSuggestions] = useState<google.maps.places.AutocompletePrediction[]>([]);
   const [activeInput, setActiveInput] = useState(false);
-  const [lat, setLat] = useState<number | null>(null);
-  const [lng, setLng] = useState<number | null>(null);
 
   useEffect(() => {
     if (isLoaded && !autocompleteServiceRef.current) {
-      autocompleteServiceRef.current = new google.maps.places.AutocompleteService();
-      geocoderRef.current = new google.maps.Geocoder();
+      try {
+        // Keep using AutocompleteService for now as AutocompleteSuggestion is not fully ready
+        autocompleteServiceRef.current = new google.maps.places.AutocompleteService();
+        geocoderRef.current = new google.maps.Geocoder();
+      } catch (error) {
+        logger.error("Error initializing Google Maps services:", error);
+      }
     }
   }, [isLoaded]);
 
@@ -418,17 +423,22 @@ export default function ShopperProfileComponent() {
   const handleAddressChange = (val: string) => {
     setAddressFormValue({ address: val });
     if (val && autocompleteServiceRef.current) {
-      autocompleteServiceRef.current.getPlacePredictions(
-        { input: val, componentRestrictions: { country: ["rw"] } },
-        (preds, status) => {
-          if (status === google.maps.places.PlacesServiceStatus.OK && preds) {
-            setSuggestions(preds);
-            setActiveInput(true);
-          } else {
-            setSuggestions([]);
+      try {
+        autocompleteServiceRef.current.getPlacePredictions(
+          { input: val, componentRestrictions: { country: ["rw"] } },
+          (preds, status) => {
+            if (status === google.maps.places.PlacesServiceStatus.OK && preds) {
+              setSuggestions(preds);
+              setActiveInput(true);
+            } else {
+              setSuggestions([]);
+            }
           }
-        }
-      );
+        );
+      } catch (error) {
+        logger.error("Error getting place predictions:", error);
+        setSuggestions([]);
+      }
     } else {
       setSuggestions([]);
       setActiveInput(false);
@@ -440,22 +450,10 @@ export default function ShopperProfileComponent() {
     setAddressFormValue({ address: sug.description });
     setSuggestions([]);
     setActiveInput(false);
-    // Geocode to get lat/lng
-    if (geocoderRef.current) {
-      geocoderRef.current.geocode(
-        { address: sug.description },
-        (results, status) => {
-          if (status === "OK" && results && results[0]) {
-            setLat(results[0].geometry.location.lat());
-            setLng(results[0].geometry.location.lng());
-          }
-        }
-      );
-    }
   };
 
   // Function to handle address update
-  const handleAddressUpdate = async (address: string, lat: number | null, lng: number | null) => {
+  const handleAddressUpdate = async (address: string) => {
     if (!shopperData?.id) return;
 
     setUpdatingAddress(true);
@@ -468,16 +466,6 @@ export default function ShopperProfileComponent() {
         body: JSON.stringify({
           shopper_id: shopperData.id,
           address,
-          latitude: lat,
-          longitude: lng,
-          // Only update address-related fields, preserve other fields
-          status: shopperData.status,
-          background_check_status: shopperData.background_check_status,
-          background_check_date: shopperData.background_check_date,
-          background_check_notes: shopperData.background_check_notes,
-          verification_status: shopperData.verification_status,
-          verification_date: shopperData.verification_date,
-          verification_notes: shopperData.verification_notes,
         }),
       });
 
@@ -487,26 +475,19 @@ export default function ShopperProfileComponent() {
 
       const data = await response.json();
       if (data.shopper) {
-        // Preserve the existing status and background check data
-        setShopperData({
-          ...data.shopper,
-          status: shopperData.status,
-          background_check_status: shopperData.background_check_status,
-          background_check_date: shopperData.background_check_date,
-          background_check_notes: shopperData.background_check_notes,
-          verification_status: shopperData.verification_status,
-          verification_date: shopperData.verification_date,
-          verification_notes: shopperData.verification_notes,
-        });
+        setShopperData(prev => prev ? {
+          ...prev,
+          address: data.shopper.address,
+        } : null);
+        setShowAddressPopup(false);
         toaster.push(
           <Message type="success" closable>
             Service area updated successfully
           </Message>
         );
-        setShowAddressPopup(false);
       }
     } catch (error) {
-      console.error("Error updating address:", error);
+      logger.error("Error updating address:", error);
       toaster.push(
         <Message type="error" closable>
           Failed to update service area
@@ -568,14 +549,6 @@ export default function ShopperProfileComponent() {
                     {stats.averageRating.toFixed(1)} ★
                   </Tag>
                 </div>
-
-                <Button
-                  appearance="primary"
-                  color="green"
-                  className="mt-5 w-full bg-green-500 text-white sm:w-auto"
-                >
-                  Edit Profile
-                </Button>
 
                 {/* Default address under profile */}
                 <div className="mt-4 w-full text-center">
