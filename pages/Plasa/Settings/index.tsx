@@ -75,21 +75,21 @@ function SettingsPage({ sessionData }: SettingsPageProps) {
 
   return (
     <ShopperLayout>
-      <div className={`container mx-auto px-4 py-8 ${theme === "dark" ? "text-gray-100" : "text-gray-900"}`}>
-        <h1 className="mb-6 text-2xl font-bold">Settings</h1>
+      <div className={`container mx-auto px-2 sm:px-4 py-4 sm:py-8 ${theme === "dark" ? "text-gray-100" : "text-gray-900"}`}>
+        <h1 className="mb-4 sm:mb-6 text-xl sm:text-2xl font-bold">Settings</h1>
 
-        <div className="scrollbar-hide mb-4 overflow-x-auto whitespace-nowrap">
+        <div className="scrollbar-hide mb-3 sm:mb-4 overflow-x-auto whitespace-nowrap -mx-2 sm:mx-0 px-2 sm:px-0">
           <Nav
             appearance="default"
             activeKey={activeTab}
             onSelect={handleTabChange}
-            className="flex min-w-max gap-2"
+            className="flex min-w-max gap-1 sm:gap-2"
           >
             {tabs.map((tab) => (
               <Nav.Item
                 key={tab.key}
                 eventKey={tab.key}
-                className={`!bg-transparent !px-4 !py-2 !text-sm hover:!bg-transparent ${
+                className={`!bg-transparent !px-3 sm:!px-4 !py-1.5 sm:!py-2 !text-xs sm:!text-sm hover:!bg-transparent ${
                   activeTab === tab.key
                     ? theme === "dark"
                       ? "font-semibold !text-white"
@@ -108,7 +108,7 @@ function SettingsPage({ sessionData }: SettingsPageProps) {
         <Panel
           shaded
           bordered
-          className={`${
+          className={`overflow-hidden rounded-lg ${
             theme === "dark"
               ? "border-gray-700 bg-gray-800"
               : "border-gray-200 bg-white"

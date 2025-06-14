@@ -167,7 +167,22 @@ export default function ShopperSidebar() {
     },
     {
       path: "/Plasa/Earnings",
-      label: "Earnings",
+      label: (
+        <div className="flex items-center justify-between w-full">
+          <div className="flex items-center">
+            <span>Earnings</span>
+          </div>
+          <div className="flex items-center">
+            {loadingEarnings ? (
+              <div className="h-5 w-12 animate-pulse rounded bg-gray-200"></div>
+            ) : (
+              <span className="rounded-full bg-green-100 px-2 py-1 text-xs font-medium text-green-800">
+                {formatCompactCurrency(dailyEarnings)}
+              </span>
+            )}
+          </div>
+        </div>
+      ),
       icon: (
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
           <path d="M12 2v20M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6" />
@@ -220,6 +235,8 @@ export default function ShopperSidebar() {
                     isActive(item.path) && (item.condition !== undefined ? item.condition : true)
                       ? theme === "dark"
                         ? "bg-gray-800 text-white"
+                        : item.path === "/Plasa/Earnings"
+                        ? "bg-green-50 text-green-600"
                         : "bg-gray-100 text-gray-900"
                       : theme === "dark"
                       ? "text-gray-300 hover:bg-gray-800 hover:text-white"
@@ -231,13 +248,15 @@ export default function ShopperSidebar() {
                       isActive(item.path) && (item.condition !== undefined ? item.condition : true)
                         ? theme === "dark"
                           ? "text-white"
+                          : item.path === "/Plasa/Earnings"
+                          ? "text-green-600"
                           : "text-gray-900"
                         : theme === "dark"
                         ? "text-gray-400"
                         : "text-gray-500"
                     }`
                   })}
-                  <span>{item.label}</span>
+                  <span className="flex-1">{item.label}</span>
                 </div>
               </Link>
             ))}
@@ -308,7 +327,20 @@ export default function ShopperSidebar() {
                 {React.cloneElement(item.icon, {
                   className: getIconClasses(item.path, item.condition)
                 })}
-                <span>{item.label}</span>
+                {typeof item.label === 'string' ? (
+                  <span>{item.label}</span>
+                ) : (
+                  <div className="flex flex-col items-center">
+                    <span>Earnings</span>
+                    {loadingEarnings ? (
+                      <div className="h-3 w-12 animate-pulse rounded bg-gray-200"></div>
+                    ) : (
+                      <span className="text-xs font-semibold text-green-600">
+                        {formatCompactCurrency(dailyEarnings)}
+                      </span>
+                    )}
+                  </div>
+                )}
               </div>
             </Link>
           ))}
