@@ -71,7 +71,7 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
   // Check if the user has the plasa role
   const userRole = session.user?.role;
 
-  if (userRole !== "plasa") {
+  if (userRole !== "shopper") {
     return {
       redirect: {
         destination: "/",
