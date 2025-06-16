@@ -42,15 +42,13 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       return res.status(500).json({ error: 'Internal server error' });
     }
 
-    console.log('Fetching vehicles for user:', user_id);
     const response = await hasuraClient.request(GET_VEHICLES, {
       user_id,
     });
 
-    console.log('Hasura response:', response);
     return res.status(200).json(response);
   } catch (error) {
-    console.error('Error fetching vehicles:', error);
+    logger.error('Error fetching vehicles:', error);
     return res.status(500).json({ error: 'Internal server error' });
   }
 } 
