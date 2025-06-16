@@ -35,7 +35,8 @@ export default function ShopperSidebar() {
   const [isSwitchingRole, setIsSwitchingRole] = useState(false);
   const pathname = usePathname();
   const { toggleRole } = useAuth();
-  const { theme } = useTheme();
+  const { theme, setTheme } = useTheme();
+  const [showMoreMenu, setShowMoreMenu] = useState(false);
 
   const isActive = (path: string) =>
     pathname ? pathname === path || pathname.startsWith(`${path}/`) : false;
@@ -165,6 +166,31 @@ export default function ShopperSidebar() {
       )
     },
     {
+      path: "/Plasa/ShopperProfile",
+      label: "Profile",
+      icon: (
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+          <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+          <circle cx="12" cy="7" r="4" />
+        </svg>
+      )
+    },
+    {
+      path: "#",
+      label: "More",
+      icon: (
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+          <circle cx="12" cy="12" r="1" />
+          <circle cx="19" cy="12" r="1" />
+          <circle cx="5" cy="12" r="1" />
+        </svg>
+      ),
+      onClick: () => setShowMoreMenu(!showMoreMenu)
+    }
+  ];
+
+  const moreMenuItems = [
+    {
       path: "/Plasa/Earnings",
       label: (
         <div className="flex items-center justify-between w-full">
@@ -196,19 +222,52 @@ export default function ShopperSidebar() {
           <path d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
           <path d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
         </svg>
-      ),
-      condition: true
+      )
     },
     {
-      path: "/Plasa/ShopperProfile",
-      label: "Profile",
+      path: "/switch-to-customer",
+      label: "Switch to Customer",
       icon: (
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-          <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
-          <circle cx="12" cy="7" r="4" />
+          <path d="M16 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2" />
+          <circle cx="8.5" cy="7" r="4" />
+          <path d="M20 8v6M23 11h-6" />
         </svg>
       ),
-      condition: true
+      onClick: handleSwitchToCustomer
+    },
+    {
+      path: "/toggle-theme",
+      label: theme === "dark" ? "Light Mode" : "Dark Mode",
+      icon: theme === "dark" ? (
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+          <circle cx="12" cy="12" r="5" />
+          <path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42" />
+        </svg>
+      ) : (
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+          <path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z" />
+        </svg>
+      ),
+      onClick: () => {
+        setTheme(theme === "dark" ? "light" : "dark");
+        setShowMoreMenu(false);
+      }
+    },
+    {
+      path: "/logout",
+      label: "Logout",
+      icon: (
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+          <path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4" />
+          <polyline points="16 17 21 12 16 7" />
+          <line x1="21" y1="12" x2="9" y2="12" />
+        </svg>
+      ),
+      onClick: () => {
+        handleLogout();
+        setShowMoreMenu(false);
+      }
     }
   ];
 
@@ -323,39 +382,63 @@ export default function ShopperSidebar() {
               key={item.path} 
               href={item.path} 
               passHref
-              onClick={handleNavigation(item.path)}
+              onClick={item.onClick || handleNavigation(item.path)}
             >
               <div className={getNavLinkClasses(item.path, item.condition)}>
                 {React.cloneElement(item.icon, {
                   className: getIconClasses(item.path, item.condition)
                 })}
-                {typeof item.label === 'string' ? (
-                  item.path === "/Plasa/Earnings" ? (
-                    <div className="flex flex-col items-center">
-                      {loadingEarnings ? (
-                        <div className="h-3 w-12 animate-pulse rounded bg-gray-200"></div>
-                      ) : (
-                        <span className="text-xs font-semibold text-green-600">
-                          {formatCompactCurrency(dailyEarnings)}
-                        </span>
-                      )}
-                    </div>
-                  ) : null
-                ) : (
-                  <div className="flex flex-col items-center">
-                    {loadingEarnings ? (
-                      <div className="h-3 w-12 animate-pulse rounded bg-gray-200"></div>
-                    ) : (
-                      <span className="text-xs font-semibold text-green-600">
-                        {formatCompactCurrency(dailyEarnings)}
-                      </span>
-                    )}
-                  </div>
-                )}
               </div>
             </Link>
           ))}
         </div>
+
+        {/* More Menu */}
+        {showMoreMenu && (
+          <div className={`fixed bottom-16 left-0 right-0 z-50 border-t p-4 ${
+            theme === "dark"
+              ? "border-gray-800 bg-gray-900"
+              : "border-gray-200 bg-white"
+          }`}>
+            <div className="mx-auto max-w-md space-y-2">
+              {moreMenuItems.map((item) => (
+                <div 
+                  key={item.path} 
+                  onClick={(e) => {
+                    e.preventDefault();
+                    if (item.onClick) {
+                      item.onClick();
+                    } else {
+                      handleNavigation(item.path)(e);
+                    }
+                  }}
+                  className={`flex items-center rounded-lg px-3 py-2 text-sm font-medium transition-colors duration-200 cursor-pointer ${
+                    isActive(item.path)
+                      ? theme === "dark"
+                        ? "bg-gray-800 text-white"
+                        : "bg-gray-100 text-gray-900"
+                      : theme === "dark"
+                      ? "text-gray-300 hover:bg-gray-800 hover:text-white"
+                      : "text-gray-700 hover:bg-gray-50"
+                  }`}
+                >
+                  {React.cloneElement(item.icon, {
+                    className: `mr-3 h-6 w-6 flex-shrink-0 transition-colors duration-200 ${
+                      isActive(item.path)
+                        ? theme === "dark"
+                          ? "text-white"
+                          : "text-gray-900"
+                        : theme === "dark"
+                        ? "text-gray-400"
+                        : "text-gray-500"
+                    }`
+                  })}
+                  <span className="flex-1">{item.label}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
       </nav>
     </>
   );
