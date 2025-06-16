@@ -2,6 +2,7 @@
 import React, { useState, useEffect } from "react";
 import ShopperHeader from "@components/shopper/ShopperHeader";
 import ShopperSidebar from "@components/shopper/ShopperSidebar";
+import ShopperBottomBar from "./ShopperBottomBar";
 import { useSession } from "next-auth/react";
 import { useTheme } from "@context/ThemeContext";
 import { logger } from "../../utils/logger";
@@ -16,10 +17,10 @@ export default function ShopperLayout({ children }: ShopperLayoutProps) {
   const [isMobile, setIsMobile] = useState(false);
 
   useEffect(() => {
-    const checkIfMobile = () => setIsMobile(window.innerWidth < 768);
-    checkIfMobile();
-    window.addEventListener("resize", checkIfMobile);
-    return () => window.removeEventListener("resize", checkIfMobile);
+    const checkMobile = () => setIsMobile(window.innerWidth < 768);
+    checkMobile();
+    window.addEventListener("resize", checkMobile);
+    return () => window.removeEventListener("resize", checkMobile);
   }, []);
 
   useEffect(() => {
@@ -34,11 +35,7 @@ export default function ShopperLayout({ children }: ShopperLayoutProps) {
   // session contains user: { id, name, email, phone, gender, address }
   // status is 'authenticated' | 'loading' | 'unauthenticated'
   return (
-    <div
-      className={`min-h-screen ${
-        theme === "dark" ? "bg-gray-900" : "bg-gray-50"
-      }`}
-    >
+    <div className={`flex min-h-screen ${theme === "dark" ? "bg-gray-900" : "bg-gray-50"}`}>
       <ShopperHeader />
       <div className="flex">
         <ShopperSidebar />
@@ -54,6 +51,7 @@ export default function ShopperLayout({ children }: ShopperLayoutProps) {
           </div>
         </main>
       </div>
+      <ShopperBottomBar />
     </div>
   );
 }

@@ -144,7 +144,7 @@ export default function ShopperSidebar() {
   const navigationItems = [
     {
       path: "/",
-      label: "Available batches",
+      label: "Dashboard",
       icon: (
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
           <path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z" />
@@ -330,10 +330,19 @@ export default function ShopperSidebar() {
                   className: getIconClasses(item.path, item.condition)
                 })}
                 {typeof item.label === 'string' ? (
-                  <span>{item.label}</span>
+                  item.path === "/Plasa/Earnings" ? (
+                    <div className="flex flex-col items-center">
+                      {loadingEarnings ? (
+                        <div className="h-3 w-12 animate-pulse rounded bg-gray-200"></div>
+                      ) : (
+                        <span className="text-xs font-semibold text-green-600">
+                          {formatCompactCurrency(dailyEarnings)}
+                        </span>
+                      )}
+                    </div>
+                  ) : null
                 ) : (
                   <div className="flex flex-col items-center">
-                    <span>Earnings</span>
                     {loadingEarnings ? (
                       <div className="h-3 w-12 animate-pulse rounded bg-gray-200"></div>
                     ) : (
