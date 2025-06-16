@@ -21,7 +21,6 @@ function NavItem({ icon, label, href }: NavItemProps) {
     <Link href={href} passHref onClick={handleClick}>
       <div className="flex flex-col items-center text-xs text-gray-600 transition-colors duration-200 hover:text-green-500 dark:text-gray-300 dark:hover:text-green-400">
         <span className="text-lg">{icon}</span>
-        {/* <span>{label}</span> */}
       </div>
     </Link>
   );
@@ -503,7 +502,7 @@ export default function BottomBar() {
               </g>
             </svg>
           }
-          label="Home"
+          label="Dashboard"
         />
         <NavItem
           href="/CurrentPendingOrders"
