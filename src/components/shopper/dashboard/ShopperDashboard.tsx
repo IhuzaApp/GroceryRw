@@ -521,8 +521,8 @@ export default function ShopperDashboard() {
                     : "Showing Recent (15+ min)"}
                 </button>
                 <button
+                  className="rounded px-3 py-1.5 text-sm text-white bg-green-500 hover:bg-green-600"
                   onClick={loadOrders}
-                  className="rounded-md bg-green-600 px-3 py-1 text-sm font-medium text-white hover:bg-green-700"
                 >
                   Refresh
                 </button>
@@ -586,15 +586,15 @@ export default function ShopperDashboard() {
             <div className="mb-4 px-4">
               <p className="text-xs text-gray-500">
                 {!isOnline
-                  ? "Go online to see available orders"
+                  ? "Go online to see available batches"
                   : sortBy === "newest"
-                  ? "Showing recent orders less than 1 hour old"
+                  ? "Showing recent batches less than 1 hour old"
                   : sortBy === "priority"
-                  ? "Showing orders pending for 1+ hours by priority level"
+                  ? "Showing batches pending for 1+ hours by priority level"
                   : `Sorting by ${sortBy}`}
                 {isOnline &&
                   !showHistorical &&
-                  " • Only orders pending for 15+ minutes"}
+                  " • Only batches pending for 15+ minutes"}
               </p>
             </div>
 
@@ -638,7 +638,7 @@ export default function ShopperDashboard() {
                   You&apos;re Currently Offline
                 </h3>
                 <p className="mb-4 text-gray-500">
-                  To see available orders, please go online first by enabling
+                  To see available batches, please go online first by enabling
                   your location.
                 </p>
                 <div className="flex flex-col space-y-3 md:flex-row md:justify-center md:space-x-3 md:space-y-0">
@@ -668,18 +668,18 @@ export default function ShopperDashboard() {
               </div>
             ) : (
               <div className="rounded-lg border bg-white p-8 text-center">
-                <h3 className="mb-2 text-lg font-medium">No Orders Nearby</h3>
+                <h3 className="mb-2 text-lg font-medium">No Batches Nearby</h3>
                 <p className="mb-4 text-gray-500">
                   {showHistorical
-                    ? "There are no pending orders in your area."
-                    : "There are no orders pending for 15+ minutes in your area."}
+                    ? "There are no pending batches in your area."
+                    : "There are no batches pending for 15+ minutes in your area."}
                 </p>
                 <Button
                   appearance="primary"
                   className="bg-green-500 text-white"
                   onClick={loadOrders}
                 >
-                  Refresh Orders
+                  Refresh Batches
                 </Button>
               </div>
             )}
@@ -749,7 +749,7 @@ export default function ShopperDashboard() {
                       theme === "dark" ? "text-white" : "text-gray-900"
                     }`}
                   >
-                    Available Orders
+                    Available Batches
                   </h2>
                   <div className="flex items-center space-x-2">
                     <span
@@ -787,18 +787,12 @@ export default function ShopperDashboard() {
                     >
                       {showHistorical ? "All Pending" : "15+ min"}
                     </button>
-                    <Button
-                      appearance="primary"
-                      className={`${
-                        theme === "dark"
-                          ? "bg-green-600 text-white hover:bg-green-700"
-                          : "bg-green-500 text-white hover:bg-green-600"
-                      }`}
+                    <button
+                      className="rounded px-3 py-1.5 text-sm text-white bg-green-500 hover:bg-green-600"
                       onClick={loadOrders}
-                      size="sm"
                     >
                       Refresh
-                    </Button>
+                    </button>
                   </div>
                 </div>
 
@@ -814,7 +808,7 @@ export default function ShopperDashboard() {
                           ? "bg-gray-800 text-gray-300"
                         : "bg-gray-200 text-gray-800"
                     }`}
-                    title="Orders less than 1 hour old"
+                    title="Batches less than 1 hour old"
                   >
                     Recent (1h)
                   </button>
@@ -857,7 +851,7 @@ export default function ShopperDashboard() {
                           ? "bg-gray-800 text-gray-300"
                         : "bg-gray-200 text-gray-800"
                     }`}
-                    title="All orders by priority level, including older orders"
+                    title="All batches by priority level, including older batches"
                   >
                     Priority
                   </button>
@@ -871,11 +865,11 @@ export default function ShopperDashboard() {
                     }`}
                   >
                     {!isOnline
-                      ? "Go online to see available orders"
+                      ? "Go online to see available batches"
                       : sortBy === "newest"
-                      ? "Showing orders < 1 hour old"
+                      ? "Showing batches < 1 hour old"
                       : sortBy === "priority"
-                      ? "Orders pending 1+ hours by priority"
+                      ? "Batches pending 1+ hours by priority"
                       : `Sorting by ${sortBy}`}
                     {isOnline && !showHistorical && " • 15+ min pending"}
                   </p>
@@ -922,7 +916,7 @@ export default function ShopperDashboard() {
                         theme === "dark" ? "text-gray-400" : "text-gray-500"
                       }`}
                     >
-                      To see available orders, please go online first by
+                      To see available batches, please go online first by
                       enabling your location.
                     </p>
                     <Button
@@ -969,8 +963,8 @@ export default function ShopperDashboard() {
                       }
                     >
                       {showHistorical
-                        ? "No pending orders available."
-                        : "No orders pending for 15+ minutes."}
+                        ? "No pending batches available."
+                        : "No batches pending for 15+ minutes."}
                     </p>
                   </div>
                 )}
@@ -983,8 +977,8 @@ export default function ShopperDashboard() {
                   }`}
                 >
                   {!isOnline
-                    ? "Go online to see available orders"
-                    : `Available Orders: ${sortedOrders.length}`}
+                    ? "Go online to see available batches"
+                    : `Available Batches: ${sortedOrders.length}`}
                 </p>
               </div>
             )}
