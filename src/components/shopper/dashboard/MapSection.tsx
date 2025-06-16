@@ -1255,12 +1255,6 @@ export default function MapSection({
 
     if (cookieMap["user_latitude"] && cookieMap["user_longitude"]) {
       setIsOnline(true);
-
-      // Log found cookies for debugging
-      console.log("Found location cookies:", {
-        lat: cookieMap["user_latitude"],
-        lng: cookieMap["user_longitude"],
-      });
     }
   }, []);
 
@@ -1296,7 +1290,6 @@ export default function MapSection({
 
       // Only start tracking if actively tracking is enabled
       if (isActivelyTracking) {
-        console.log("Starting active location tracking");
         startLocationTracking();
       }
     } else {
@@ -1423,9 +1416,8 @@ export default function MapSection({
           const lng = parseFloat(cookieMap["user_longitude"]);
 
           if (!isNaN(lat) && !isNaN(lng)) {
-            console.log("Setting initial position from cookies:", { lat, lng });
             if (userMarkerRef.current && mapInstance) {
-            userMarkerRef.current.setLatLng([lat, lng]);
+              userMarkerRef.current.setLatLng([lat, lng]);
               if (isOnline) {
                 userMarkerRef.current.addTo(mapInstance);
                 mapInstance.setView([lat, lng], 16);
@@ -1520,9 +1512,7 @@ export default function MapSection({
       }
 
       // Process pending orders with grouping
-          if (isOnline && map && map.getContainer()) {
-        console.log("Processing pending orders:", pendingOrders);
-
+      if (isOnline && map && map.getContainer()) {
         // Group pending orders by location
         const groupedPendingOrders = new Map<string, PendingOrder[]>();
         pendingOrders.forEach((order) => {
@@ -1551,26 +1541,16 @@ export default function MapSection({
         groupedPendingOrders.forEach((orders, locationKey) => {
           const [baseLat, baseLng] = locationKey.split(",").map(Number);
 
-              orders.forEach((order, index) => {
+          orders.forEach((order, index) => {
             try {
               // Calculate offset based on position in group
               const offset = calculateMarkerOffset(index, orders.length);
               const adjustedLat = baseLat + offset.lat;
               const adjustedLng = baseLng + offset.lng;
 
-              // Log marker placement
-              logger.debug("Placing pending order marker", "MapSection", {
-                orderId: order.id,
-                originalLocation: { lat: order.shopLat, lng: order.shopLng },
-                adjustedLocation: { lat: adjustedLat, lng: adjustedLng },
-                offset,
-                groupSize: orders.length,
-                indexInGroup: index,
-              });
-
               const marker = L.marker([adjustedLat, adjustedLng], {
                 icon: createOrderMarkerIcon(formatCurrency(order.earnings)),
-                zIndexOffset: 1000 + index, // Ensure proper stacking
+                zIndexOffset: 1000 + index,
               });
 
               if (safeAddMarker(marker, map, `pending order ${order.id}`)) {
@@ -1590,16 +1570,11 @@ export default function MapSection({
                 "MapSection",
                 {
                   orderId: order.id,
-                  error:
-                    error instanceof Error ? error.message : "Unknown error",
+                  error: error instanceof Error ? error.message : "Unknown error",
                   location: locationKey,
                   groupSize: orders.length,
                   indexInGroup: index,
                 }
-              );
-              console.error(
-                `Error rendering pending order ${order.id}:`,
-                error
               );
             }
           });
@@ -1607,24 +1582,12 @@ export default function MapSection({
       }
 
       // Process available orders with grouping
-      if (
-        isOnline &&
-        availableOrders?.length > 0 &&
-        map &&
-        map.getContainer()
-      ) {
-        console.log("Processing available orders:", availableOrders);
-
+      if (isOnline && availableOrders?.length > 0 && map && map.getContainer()) {
         // Group available orders by location
-        const groupedAvailableOrders = new Map<
-          string,
-          typeof availableOrders
-        >();
+        const groupedAvailableOrders = new Map<string, typeof availableOrders>();
         availableOrders.forEach((order) => {
-                if (!order.shopLatitude || !order.shopLongitude) return;
-          const key = `${order.shopLatitude.toFixed(
-            5
-          )},${order.shopLongitude.toFixed(5)}`;
+          if (!order.shopLatitude || !order.shopLongitude) return;
+          const key = `${order.shopLatitude.toFixed(5)},${order.shopLongitude.toFixed(5)}`;
           if (!groupedAvailableOrders.has(key)) {
             groupedAvailableOrders.set(key, []);
           }
@@ -1651,43 +1614,25 @@ export default function MapSection({
           orders.forEach((order, index) => {
             try {
               // Calculate offset based on position in group
-                const offset = calculateMarkerOffset(index, orders.length);
-                const adjustedLat = baseLat + offset.lat;
-                const adjustedLng = baseLng + offset.lng;
+              const offset = calculateMarkerOffset(index, orders.length);
+              const adjustedLat = baseLat + offset.lat;
+              const adjustedLng = baseLng + offset.lng;
 
-              // Log marker placement
-              logger.debug("Placing available order marker", "MapSection", {
-                orderId: order.id,
-                originalLocation: {
-                  lat: order.shopLatitude,
-                  lng: order.shopLongitude,
-                },
-                adjustedLocation: { lat: adjustedLat, lng: adjustedLng },
-                offset,
-                groupSize: orders.length,
-                indexInGroup: index,
+              const marker = L.marker([adjustedLat, adjustedLng], {
+                icon: createOrderMarkerIcon(order.estimatedEarnings),
+                zIndexOffset: 1000 + index,
               });
 
-                const marker = L.marker([adjustedLat, adjustedLng], {
-                  icon: createOrderMarkerIcon(order.estimatedEarnings),
-                zIndexOffset: 1000 + index, // Ensure proper stacking
-                  });
-
-                if (safeAddMarker(marker, map, `order ${order.id}`)) {
-                marker.bindPopup(
-                  createAvailableOrderPopupContent(order, theme),
-                  {
-                    maxWidth: 300,
-                    className: `${
-                      theme === "dark"
-                        ? "dark-theme-popup"
-                        : "light-theme-popup"
-                    }`,
-                    closeButton: true,
-                    closeOnClick: false,
-                  }
-                );
-                  attachAcceptHandler(marker, order.id, map);
+              if (safeAddMarker(marker, map, `order ${order.id}`)) {
+                marker.bindPopup(createAvailableOrderPopupContent(order, theme), {
+                  maxWidth: 300,
+                  className: `${
+                    theme === "dark" ? "dark-theme-popup" : "light-theme-popup"
+                  }`,
+                  closeButton: true,
+                  closeOnClick: false,
+                });
+                attachAcceptHandler(marker, order.id, map);
                 orderMarkersRef.current.push(marker);
               }
             } catch (error) {
@@ -1696,22 +1641,17 @@ export default function MapSection({
                 "MapSection",
                 {
                   orderId: order.id,
-                  error:
-                    error instanceof Error ? error.message : "Unknown error",
+                  error: error instanceof Error ? error.message : "Unknown error",
                   location: locationKey,
                   groupSize: orders.length,
                   indexInGroup: index,
                 }
               );
-              console.error(
-                `Error adding marker for order ${order.id}:`,
-                error
-              );
-                }
-              });
-            });
-          }
-          } catch (error) {
+            }
+          });
+        });
+      }
+    } catch (error) {
       console.error("Error in map sequence:", error);
     }
   };

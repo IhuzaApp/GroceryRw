@@ -24,13 +24,15 @@ export default function ShopperLayout({ children }: ShopperLayoutProps) {
 
   useEffect(() => {
     if (session) {
-      logger.debug("Session data", "ShopperLayout", session);
+      logger.debug("Session data", "ShopperLayout", {
+        user: session.user,
+        expires: session.expires
+      });
     }
   }, [session]);
 
   // session contains user: { id, name, email, phone, gender, address }
   // status is 'authenticated' | 'loading' | 'unauthenticated'
-  console.log(session);
   return (
     <div
       className={`min-h-screen ${
