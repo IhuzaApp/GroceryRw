@@ -17,12 +17,14 @@ import {
   useToaster,
 } from "rsuite";
 import Cookies from "js-cookie";
-import { useSession } from "next-auth/react";
+import { useSession, signOut } from "next-auth/react";
 import { useTheme } from "../../../context/ThemeContext";
 import { useRouter } from "next/router";
 import { useGoogleMap } from "../../../context/GoogleMapProvider";
 import AddressSelectionPopup from "./AddressSelectionDrawer";
+import UpdateShopperDrawer from "./UpdateShopperDrawer";
 import { logger } from "../../../utils/logger";
+import { debounce } from "lodash";
 
 // Type definitions for schedules
 interface TimeSlot {
@@ -141,57 +143,84 @@ export default function ShopperProfileComponent() {
 
   // Load current user data and shopper stats
   useEffect(() => {
+    let isMounted = true;
+    const controller = new AbortController();
+
+    const loadData = async () => {
+      try {
     setLoading(true);
-    fetch("/api/user")
-      .then((res) => res.json())
-      .then((data: { user: any; orderCount: number }) => {
-        setUser(data.user);
+        
+        // Fetch user data
+        const userRes = await fetch("/api/user", { signal: controller.signal });
+        const userData = await userRes.json();
+        if (isMounted) setUser(userData.user);
 
-        // Now fetch shopper stats
-        return fetch("/api/shopper/stats");
-      })
-      .then((res) => res.json())
-      .then((data) => {
+        // Fetch shopper stats
+        const statsRes = await fetch("/api/shopper/stats", { signal: controller.signal });
+        const statsData = await statsRes.json();
+        if (isMounted) {
         setStats({
-          totalDeliveries: data.totalDeliveries || 0,
-          completionRate: data.completionRate || 0,
-          averageRating: data.averageRating || 0,
-          totalEarnings: data.totalEarnings || 0,
+            totalDeliveries: statsData.totalDeliveries || 0,
+            completionRate: statsData.completionRate || 0,
+            averageRating: statsData.averageRating || 0,
+            totalEarnings: statsData.totalEarnings || 0,
         });
-
-        // Fetch shopper profile data
-        return fetch("/api/queries/shopper-profile");
-      })
-      .then((res) => res.json())
-      .then((data) => {
-        if (data.shopper) {
-          setShopperData(data.shopper);
         }
-      })
-      .catch((err) => {
-        // Handle error silently
+
+        // Fetch shopper profile
+        const profileRes = await fetch("/api/queries/shopper-profile", { signal: controller.signal });
+        const profileData = await profileRes.json();
+        if (isMounted && profileData.shopper) {
+          setShopperData(profileData.shopper);
+        }
+      } catch (error) {
+        if (error.name === 'AbortError') return;
+        logger.error("Error loading shopper data:", error);
+        if (isMounted) {
         setStats({
           totalDeliveries: 0,
           completionRate: 0,
           averageRating: 0,
           totalEarnings: 0,
         });
-      })
-      .finally(() => setLoading(false));
+        }
+      } finally {
+        if (isMounted) setLoading(false);
+      }
+    };
+
+    loadData();
+
+    return () => {
+      isMounted = false;
+      controller.abort();
+    };
   }, []);
 
+  // Add a ref to track if we're already loading
+  const isLoadingRef = useRef(false);
+
   // Load schedule using useCallback to memoize the function
-  const loadSchedule = useCallback(() => {
+  const loadSchedule = useCallback(async () => {
+    // Prevent multiple concurrent loads
+    if (scheduleLoading) return;
+
+    const controller = new AbortController();
+    let isMounted = true;
+
+    try {
     setScheduleLoading(true);
-    fetch("/api/queries/shopper-availability")
-      .then((res) => res.json())
-      .then((data: { shopper_availability: Array<{
-        day_of_week: number;
-        start_time: string;
-        end_time: string;
-        is_available: boolean;
-      }> }) => {
-        // Use the hasSchedule flag from the API response if available
+      const res = await fetch("/api/queries/shopper-availability", { 
+        signal: controller.signal,
+        headers: {
+          'Cache-Control': 'no-cache',
+          'Pragma': 'no-cache'
+        }
+      });
+      const data = await res.json();
+
+      if (!isMounted) return;
+
         if (data.shopper_availability) {
           setHasSchedule(data.shopper_availability.length > 0);
 
@@ -223,9 +252,10 @@ export default function ShopperProfileComponent() {
 
           setSchedule(Array.from(daysMap.values()));
         }
-      })
-      .catch(() => {
-        // Handle error silently
+    } catch (error) {
+      if (error.name === 'AbortError') return;
+      logger.error("Error loading schedule:", error);
+      if (isMounted) {
         setHasSchedule(false);
         const defaultSchedule: TimeSlot[] = days.map(day => ({
           day,
@@ -234,14 +264,37 @@ export default function ShopperProfileComponent() {
           available: day !== "Sunday",
         }));
         setSchedule(defaultSchedule);
-      })
-      .finally(() => setScheduleLoading(false));
-  }, [days]);
+      }
+    } finally {
+      if (isMounted) setScheduleLoading(false);
+    }
 
-  // Load schedule on component mount
-  useEffect(() => {
+    return () => {
+      isMounted = false;
+      controller.abort();
+    };
+  }, [scheduleLoading]);
+
+  // Create a debounced version of loadSchedule
+  const debouncedLoadSchedule = useCallback(
+    debounce(() => {
     loadSchedule();
-  }, [loadSchedule]);
+    }, 1000),
+    [loadSchedule]
+  );
+
+  // Load schedule on component mount only
+  useEffect(() => {
+    let mounted = true;
+    const load = async () => {
+      const cleanup = await loadSchedule();
+      if (!mounted) cleanup?.();
+    };
+    load();
+    return () => {
+      mounted = false;
+    };
+  }, []);
 
   // Load default address
   useEffect(() => {
@@ -395,6 +448,8 @@ export default function ShopperProfileComponent() {
     onboarding_step: string;
     latitude: number | null;
     longitude: number | null;
+    national_id_image?: string;
+    driving_license_image?: string;
   } | null>(null);
 
   const router = useRouter();
@@ -486,8 +541,8 @@ export default function ShopperProfileComponent() {
           </Message>
         );
       }
-    } catch (error) {
-      logger.error("Error updating address:", error);
+    } catch (error: unknown) {
+      logger.error("Error updating address:", error instanceof Error ? error.message : String(error));
       toaster.push(
         <Message type="error" closable>
           Failed to update service area
@@ -495,6 +550,46 @@ export default function ShopperProfileComponent() {
       );
     } finally {
       setUpdatingAddress(false);
+    }
+  };
+
+  const [showUpdateDrawer, setShowUpdateDrawer] = useState(false);
+
+  // Update handler
+  const handleUpdateShopper = async (data: any) => {
+    if (!shopperData?.id) return;
+
+    try {
+      const response = await fetch("/api/queries/update-shopper", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          shopper_id: shopperData.id,
+          ...data,
+          status: "pending", // Set status to pending for review
+        }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || "Failed to update shopper information");
+      }
+
+      const result = await response.json();
+      console.log("Update successful:", result);
+
+      // Sign out without redirect
+      await signOut({ 
+        redirect: false
+      });
+      
+      // Manually redirect to login page
+      router.push("/Auth/Login");
+    } catch (error: unknown) {
+      logger.error("Error updating shopper information:", error instanceof Error ? error.message : String(error));
+      throw error;
     }
   };
 
@@ -784,7 +879,7 @@ export default function ShopperProfileComponent() {
                       <Button
                         appearance="primary"
                         color="green"
-                    onClick={() => router.push("/Myprofile/become-shopper")}
+                    onClick={() => setShowUpdateDrawer(true)}
                       >
                     Update Information
                       </Button>
@@ -957,6 +1052,26 @@ export default function ShopperProfileComponent() {
         currentAddress={shopperData?.address}
         loading={updatingAddress}
       />
+
+      {/* Add UpdateShopperDrawer */}
+      {showUpdateDrawer && (
+      <UpdateShopperDrawer
+        isOpen={showUpdateDrawer}
+        onClose={() => setShowUpdateDrawer(false)}
+        currentData={{
+            id: shopperData?.id || "",
+          full_name: shopperData?.full_name || "",
+          phone_number: shopperData?.phone_number || "",
+          national_id: shopperData?.national_id || "",
+          driving_license: shopperData?.driving_license || "",
+          transport_mode: shopperData?.transport_mode || "",
+            profile_photo: shopperData?.profile_photo || "",
+            national_id_image: shopperData?.national_id_image || "",
+            driving_license_image: shopperData?.driving_license_image || "",
+        }}
+        onUpdate={handleUpdateShopper}
+      />
+      )}
     </div>
   );
 }
