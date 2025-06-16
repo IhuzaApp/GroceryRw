@@ -13,6 +13,20 @@
   }
 }
 
+/* RSuite Input Styles */
+.rs-input,
+.rs-input-group,
+.rs-picker-toggle,
+.rs-picker-menu,
+.rs-picker-select-menu,
+.rs-picker-search-bar,
+.rs-picker-search-bar input,
+.rs-picker-select-menu-item,
+.rs-picker-select-menu-group,
+.rs-picker-select-menu-group-title {
+  border-radius: 0 !important;
+}
+
 .rs-panel {
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1) !important;
 }

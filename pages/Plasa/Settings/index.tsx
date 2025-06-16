@@ -75,7 +75,7 @@ function SettingsPage({ sessionData }: SettingsPageProps) {
 
   return (
     <ShopperLayout>
-      <div className={`container mx-auto px-2 sm:px-4 py-4 sm:py-8 ${theme === "dark" ? "text-gray-100" : "text-gray-900"}`}>
+      <div className={`container mx-auto px-2 sm:px-4 py-4 sm:py-8 pb-24 sm:pb-8 ${theme === "dark" ? "text-gray-100" : "text-gray-900"}`}>
         <h1 className="mb-4 sm:mb-6 text-xl sm:text-2xl font-bold">Settings</h1>
 
         <div className="scrollbar-hide mb-3 sm:mb-4 overflow-x-auto whitespace-nowrap -mx-2 sm:mx-0 px-2 sm:px-0">
