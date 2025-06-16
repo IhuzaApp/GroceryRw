@@ -15,6 +15,7 @@ import {
   Form,
   Input,
   useToaster,
+  List,
 } from "rsuite";
 import Cookies from "js-cookie";
 import { useSession, signOut } from "next-auth/react";
@@ -25,6 +26,7 @@ import AddressSelectionPopup from "./AddressSelectionDrawer";
 import UpdateShopperDrawer from "./UpdateShopperDrawer";
 import { logger } from "../../../utils/logger";
 import { debounce } from "lodash";
+import VehicleManagement from "./VehicleManagement";
 
 // Type definitions for schedules
 interface TimeSlot {
@@ -593,6 +595,62 @@ export default function ShopperProfileComponent() {
     }
   };
 
+  // Add a function to check if vehicle tab should be shown
+  const shouldShowVehicleTab = () => {
+    return shopperData?.transport_mode && 
+           shopperData.transport_mode.toLowerCase() !== 'foot' && 
+           shopperData.transport_mode.toLowerCase() !== 'on foot';
+  };
+
+  // Add state for vehicles
+  const [vehicles, setVehicles] = useState<any[]>([]);
+  const [loadingVehicles, setLoadingVehicles] = useState(false);
+
+  // Add state for showing vehicle form
+  const [showVehicleForm, setShowVehicleForm] = useState(true);
+
+  // Add function to load vehicles
+  const loadVehicles = useCallback(async () => {
+    if (!session?.user?.id) return;
+    
+    setLoadingVehicles(true);
+    try {
+      console.log('Loading vehicles for user:', session.user.id);
+      const response = await fetch(`/api/queries/get-shopper-vehicles?user_id=${session.user.id}`);
+      if (!response.ok) {
+        throw new Error('Failed to load vehicles');
+      }
+      const data = await response.json();
+      console.log('Vehicles data:', data);
+      
+      // Update vehicles state with the data from the response
+      setVehicles(data.data?.vehicles || []);
+      
+      // Hide form if vehicles exist
+      if (data.data?.vehicles && data.data.vehicles.length > 0) {
+        setShowVehicleForm(false);
+      }
+    } catch (error) {
+      console.error('Error loading vehicles:', error);
+      logger.error("Error loading vehicles:", error);
+      toaster.push(
+        <Message type="error" closable>
+          Failed to load vehicles
+        </Message>,
+        { placement: 'topEnd', duration: 5000 }
+      );
+    } finally {
+      setLoadingVehicles(false);
+    }
+  }, [session?.user?.id, toaster]);
+
+  // Load vehicles when component mounts or session changes
+  useEffect(() => {
+    if (session?.user?.id) {
+      loadVehicles();
+    }
+  }, [session?.user?.id, loadVehicles]);
+
   return (
     <div className="grid grid-cols-1 gap-6 md:grid-cols-12">
       {/* Left Column - User Info */}
@@ -720,8 +778,7 @@ export default function ShopperProfileComponent() {
           >
             {[
               { key: "account", label: "Account" },
-              { key: "vehicles", label: "Vehicles" },
-              { key: "preferences", label: "Preferences" }
+              ...(shouldShowVehicleTab() ? [{ key: "vehicles", label: "Vehicles" }] : []),
             ].map((tab) => (
               <Nav.Item
                 key={tab.key}
@@ -889,158 +946,87 @@ export default function ShopperProfileComponent() {
           </Panel>
         )}
 
-        {activeTab === "vehicles" && (
-          <Panel shaded bordered className={`${
-            theme === "dark" ? "border-gray-700 bg-gray-800" : "border-gray-200 bg-white"
-          }`}>
-            <h3 className={`mb-4 text-lg font-semibold ${
-              theme === "dark" ? "text-white" : "text-gray-900"
-            }`}>Vehicle Information</h3>
-            <p className={`mb-4 ${
-              theme === "dark" ? "text-gray-300" : "text-gray-600"
-            }`}>
-              Add details about the vehicle(s) you use for deliveries.
-            </p>
-
-            <div className={`rounded-lg border p-4 ${
-              theme === "dark" ? "border-gray-700" : "border-gray-200"
-            }`}>
-              <h4 className="mb-2 font-medium">Primary Vehicle</h4>
-              <div className="grid gap-4 md:grid-cols-2">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700">
-                    Type
-                  </label>
-                  <SelectPicker
-                    data={[
-                      { label: "Car", value: "car" },
-                      { label: "Motorcycle", value: "motorcycle" },
-                      { label: "Bicycle", value: "bicycle" },
-                      { label: "Scooter", value: "scooter" },
-                      { label: "On foot", value: "foot" },
-                    ]}
-                    block
-                    placeholder="Select vehicle type"
-                  />
+        {activeTab === "vehicles" && shouldShowVehicleTab() && (
+          <div className="space-y-6">
+            {vehicles.length > 0 ? (
+              <Panel shaded bordered className={`${
+                theme === "dark" ? "border-gray-700 bg-gray-800" : "border-gray-200 bg-white"
+              }`}>
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className={`text-lg font-semibold ${
+                    theme === "dark" ? "text-white" : "text-gray-900"
+                  }`}>Your Vehicles</h3>
+                  <Button
+                    appearance="primary"
+                    color="blue"
+                    onClick={() => {
+                      toaster.push(
+                        <Message type="info" closable>
+                          Please contact support to make changes to your vehicle information
+                        </Message>,
+                        { placement: 'topEnd', duration: 5000 }
+                      );
+                    }}
+                  >
+                    <i className="fas fa-ticket-alt mr-2" />
+                    Raise Ticket
+                  </Button>
                 </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700">
-                    Model (Optional)
-                  </label>
-                  <input
-                    type="text"
-                    className="mt-1 block w-full rounded-md border border-gray-300 p-2 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
-                    placeholder="e.g. Toyota Corolla"
-                  />
-                </div>
-              </div>
-
-              <Button appearance="primary" color="blue" className="mt-4">
-                Save Vehicle Info
-              </Button>
-            </div>
-          </Panel>
-        )}
-
-        {activeTab === "preferences" && (
-          <Panel shaded bordered className={`${
-            theme === "dark" ? "border-gray-700 bg-gray-800" : "border-gray-200 bg-white"
-          }`}>
-            <h3 className={`mb-4 text-lg font-semibold ${
-              theme === "dark" ? "text-white" : "text-gray-900"
-            }`}>Shopper Preferences</h3>
-            <p className={`mb-4 ${
-              theme === "dark" ? "text-gray-300" : "text-gray-600"
-            }`}>
-              Customize your delivery preferences and notification settings.
-            </p>
-
-            <div className="space-y-6">
-              <div>
-                <h4 className={`mb-2 font-medium ${
-                  theme === "dark" ? "text-white" : "text-gray-900"
-                }`}>Order Preferences</h4>
-                <div className={`flex items-center justify-between border-b pb-2 ${
-                  theme === "dark" ? "border-gray-700 text-gray-300" : "border-gray-200 text-gray-700"
-                }`}>
-                  <span>Maximum order distance</span>
-                  <SelectPicker
-                    data={[
-                      { label: "5 km", value: 5 },
-                      { label: "10 km", value: 10 },
-                      { label: "15 km", value: 15 },
-                      { label: "20 km", value: 20 },
-                      { label: "No limit", value: 0 },
-                    ]}
-                    defaultValue={10}
-                    cleanable={false}
-                  />
-                </div>
-                <div className={`flex items-center justify-between border-b py-2 ${
-                  theme === "dark" ? "border-gray-700 text-gray-300" : "border-gray-200 text-gray-700"
-                }`}>
-                  <span>Maximum order size</span>
-                  <SelectPicker
-                    data={[
-                      { label: "Small (1-10 items)", value: "small" },
-                      { label: "Medium (11-30 items)", value: "medium" },
-                      { label: "Large (31+ items)", value: "large" },
-                      { label: "No limit", value: "no_limit" },
-                    ]}
-                    defaultValue={"no_limit"}
-                    cleanable={false}
-                  />
-                </div>
-                <div className={`flex items-center justify-between pt-2 ${
-                  theme === "dark" ? "border-gray-700 text-gray-300" : "border-gray-200 text-gray-700"
-                }`}>
-                  <span>Preferred shop types</span>
-                  <SelectPicker
-                    data={[
-                      { label: "Grocery", value: "grocery" },
-                      { label: "Pharmacy", value: "pharmacy" },
-                      { label: "Convenience store", value: "convenience" },
-                      { label: "All types", value: "all" },
-                    ]}
-                    defaultValue={"all"}
-                    cleanable={false}
-                  />
-                </div>
-              </div>
-
-              <div>
-                <h4 className={`mb-2 font-medium ${
-                  theme === "dark" ? "text-white" : "text-gray-900"
-                }`}>Notification Preferences</h4>
-                <div className={`space-y-2 ${
-                  theme === "dark" ? "text-gray-300" : "text-gray-700"
-                }`}>
-                  <div className={`flex items-center justify-between ${
-                    theme === "dark" ? "text-gray-300" : "text-gray-700"
-                  }`}>
-                    <span>Email notifications</span>
-                    <Toggle defaultChecked />
+                
+                {loadingVehicles ? (
+                  <div className="flex justify-center p-4">
+                    <Loader size="md" />
                   </div>
-                  <div className={`flex items-center justify-between ${
-                    theme === "dark" ? "text-gray-300" : "text-gray-700"
-                  }`}>
-                    <span>SMS notifications</span>
-                    <Toggle defaultChecked />
-                  </div>
-                  <div className={`flex items-center justify-between ${
-                    theme === "dark" ? "text-gray-300" : "text-gray-700"
-                  }`}>
-                    <span>Push notifications</span>
-                    <Toggle defaultChecked />
-                  </div>
-                </div>
-              </div>
-
-              <Button appearance="primary" color="green">
-                Save Preferences
-              </Button>
-            </div>
-          </Panel>
+                ) : (
+                  <List>
+                    {vehicles.map((vehicle) => (
+                      <List.Item key={vehicle.id}>
+                        <div className="flex items-center space-x-4 p-4">
+                          <div className="h-20 w-20 overflow-hidden rounded-lg">
+                            <img
+                              src={vehicle.photo}
+                              alt={`${vehicle.type} photo`}
+                              className="h-full w-full object-cover"
+                            />
+                          </div>
+                          <div className="flex-1">
+                            <h4 className={`font-semibold ${
+                              theme === "dark" ? "text-white" : "text-gray-900"
+                            }`}>
+                              {vehicle.type.charAt(0).toUpperCase() + vehicle.type.slice(1)}
+                            </h4>
+                            <p className={`${
+                              theme === "dark" ? "text-gray-300" : "text-gray-600"
+                            }`}>
+                              Model: {vehicle.model}
+                            </p>
+                            <p className={`${
+                              theme === "dark" ? "text-gray-300" : "text-gray-600"
+                            }`}>
+                              Plate: {vehicle.plate_number}
+                            </p>
+                          </div>
+                        </div>
+                      </List.Item>
+                    ))}
+                  </List>
+                )}
+              </Panel>
+            ) : (
+              <VehicleManagement
+                userId={session?.user?.id || ""}
+                onVehicleAdded={() => {
+                  loadVehicles();
+                  toaster.push(
+                    <Message type="success" closable>
+                      Vehicle added successfully
+                    </Message>,
+                    { placement: 'topEnd', duration: 5000 }
+                  );
+                }}
+              />
+            )}
+          </div>
         )}
       </div>
 
