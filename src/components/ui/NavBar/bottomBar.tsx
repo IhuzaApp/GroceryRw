@@ -477,7 +477,7 @@ export default function BottomBar() {
               viewBox="0 0 24 24"
               fill="none"
               xmlns="http://www.w3.org/2000/svg"
-              className="text-gray-600 transition-colors duration-200 dark:text-gray-300"
+              className="text-gray-600 transition-colors duration-200 dark:text-white"
             >
               <g id="SVGRepo_bgCarrier" strokeWidth="0"></g>
               <g
@@ -489,13 +489,13 @@ export default function BottomBar() {
                 {" "}
                 <path
                   d="M22 12.2039V13.725C22 17.6258 22 19.5763 20.8284 20.7881C19.6569 22 17.7712 22 14 22H10C6.22876 22 4.34315 22 3.17157 20.7881C2 19.5763 2 17.6258 2 13.725V12.2039C2 9.91549 2 8.77128 2.5192 7.82274C3.0384 6.87421 3.98695 6.28551 5.88403 5.10813L7.88403 3.86687C9.88939 2.62229 10.8921 2 12 2C13.1079 2 14.1106 2.62229 16.116 3.86687L18.116 5.10812C20.0131 6.28551 20.9616 6.87421 21.4808 7.82274"
-                  stroke="#696969"
+                  stroke="currentColor"
                   strokeWidth="1.5"
                   strokeLinecap="round"
                 ></path>{" "}
                 <path
                   d="M15 18H9"
-                  stroke="#696969"
+                  stroke="currentColor"
                   strokeWidth="1.5"
                   strokeLinecap="round"
                 ></path>{" "}
@@ -513,6 +513,7 @@ export default function BottomBar() {
               viewBox="0 0 24 24"
               fill="none"
               xmlns="http://www.w3.org/2000/svg"
+              className="text-gray-600 transition-colors duration-200 dark:text-white"
             >
               <g id="SVGRepo_bgCarrier" strokeWidth="0"></g>
               <g
@@ -523,46 +524,46 @@ export default function BottomBar() {
               <g id="SVGRepo_iconCarrier">
                 <path
                   d="M9 12H15"
-                  stroke="#4d4d4d"
+                  stroke="currentColor"
                   strokeWidth="1.5"
                   strokeLinecap="round"
                 />
                 <path
                   d="M9 15H15"
-                  stroke="#4d4d4d"
+                  stroke="currentColor"
                   strokeWidth="1.5"
                   strokeLinecap="round"
                 />
                 <path
                   d="M5.5 8.5H7.5"
-                  stroke="#4d4d4d"
+                  stroke="currentColor"
                   strokeWidth="1.5"
                   strokeLinecap="round"
                 />
                 <path
                   d="M5.5 12H7.5"
-                  stroke="#4d4d4d"
+                  stroke="currentColor"
                   strokeWidth="1.5"
                   strokeLinecap="round"
                 />
                 <path
                   d="M5.5 15H7.5"
-                  stroke="#4d4d4d"
+                  stroke="currentColor"
                   strokeWidth="1.5"
                   strokeLinecap="round"
                 />
                 <path
                   d="M17.5 7.5C18.0523 7.5 18.5 7.05228 18.5 6.5C18.5 5.94772 18.0523 5.5 17.5 5.5C16.9477 5.5 16.5 5.94772 16.5 6.5C16.5 7.05228 16.9477 7.5 17.5 7.5Z"
-                  fill="#4d4d4d"
+                  fill="currentColor"
                 />
                 <path
                   d="M15.5 3.5H9.5C7.29086 3.5 5.5 5.29086 5.5 7.5V16.5C5.5 18.7091 7.29086 20.5 9.5 20.5H15.5C17.7091 20.5 19.5 18.7091 19.5 16.5V7.5C19.5 5.29086 17.7091 3.5 15.5 3.5Z"
-                  stroke="#4d4d4d"
+                  stroke="currentColor"
                   strokeWidth="1.5"
                 />
                 <path
                   d="M9 8.5H12"
-                  stroke="#4d4d4d"
+                  stroke="currentColor"
                   strokeWidth="1.5"
                   strokeLinecap="round"
                 />
@@ -575,7 +576,7 @@ export default function BottomBar() {
         {/* Central Flow Button (+) */}
         <div className="z-50 -mt-12">
           <button
-            className="flex h-16 w-16 flex-col items-center justify-center rounded-full border-2 border-green-500 bg-white text-2xl text-green-500 shadow-lg"
+            className="flex h-16 w-16 flex-col items-center justify-center rounded-full border-2 border-green-500 bg-white text-2xl text-green-500 shadow-lg dark:bg-gray-800"
             onClick={() => setOpen(!open)}
           >
             {open ? (
@@ -586,6 +587,7 @@ export default function BottomBar() {
                 version="1.1"
                 xmlns="http://www.w3.org/2000/svg"
                 fill="#000000"
+                className="dark:fill-white"
               >
                 <g id="SVGRepo_bgCarrier" strokeWidth="0"></g>
                 <g
@@ -606,7 +608,7 @@ export default function BottomBar() {
                     {" "}
                     <g
                       id="work-case"
-                      fill="#5ab148"
+                      fill="currentColor"
                       transform="translate(91.520000, 91.520000)"
                     >
                       {" "}
@@ -627,6 +629,7 @@ export default function BottomBar() {
                 viewBox="0 0 24 24"
                 fill="none"
                 xmlns="http://www.w3.org/2000/svg"
+                className="dark:stroke-white"
               >
                 <g id="SVGRepo_bgCarrier" strokeWidth="0"></g>
                 <g
@@ -638,7 +641,7 @@ export default function BottomBar() {
                   {" "}
                   <path
                     d="M4 12H20M12 4V20"
-                    stroke="#3ca716"
+                    stroke="currentColor"
                     strokeWidth="2"
                     strokeLinecap="round"
                     strokeLinejoin="round"
@@ -657,6 +660,7 @@ export default function BottomBar() {
               viewBox="0 0 24 24"
               fill="none"
               xmlns="http://www.w3.org/2000/svg"
+              className="text-gray-600 transition-colors duration-200 dark:text-white"
             >
               <g id="SVGRepo_bgCarrier" strokeWidth="0"></g>
               <g
@@ -670,12 +674,12 @@ export default function BottomBar() {
                   cx="12"
                   cy="12"
                   r="4"
-                  stroke="#4d4d4d"
+                  stroke="currentColor"
                   strokeWidth="1.5"
                 ></circle>{" "}
                 <path
                   d="M22 12C22 16.714 22 19.0711 20.5355 20.5355C19.0711 22 16.714 22 12 22C7.28595 22 4.92893 22 3.46447 20.5355C2 19.0711 2 16.714 2 12C2 7.28595 2 4.92893 3.46447 3.46447C4.92893 2 7.28595 2 12 2C16.714 2 19.0711 2 20.5355 3.46447C21.5093 4.43821 21.8356 5.80655 21.9449 8"
-                  stroke="#4d4d4d"
+                  stroke="currentColor"
                   strokeWidth="1.5"
                   strokeLinecap="round"
                 ></path>{" "}
@@ -693,6 +697,7 @@ export default function BottomBar() {
               viewBox="0 0 24 24"
               fill="none"
               xmlns="http://www.w3.org/2000/svg"
+              className="text-gray-600 transition-colors duration-200 dark:text-white"
             >
               <g id="SVGRepo_bgCarrier" strokeWidth="0"></g>
               <g
@@ -706,12 +711,12 @@ export default function BottomBar() {
                   cx="12"
                   cy="6"
                   r="4"
-                  stroke="#545454"
+                  stroke="currentColor"
                   strokeWidth="1.5"
                 ></circle>{" "}
                 <path
                   d="M19.9975 18C20 17.8358 20 17.669 20 17.5C20 15.0147 16.4183 13 12 13C7.58172 13 4 15.0147 4 17.5C4 19.9853 4 22 12 22C14.231 22 15.8398 21.8433 17 21.5634"
-                  stroke="#545454"
+                  stroke="currentColor"
                   strokeWidth="1.5"
                   strokeLinecap="round"
                 ></path>{" "}
