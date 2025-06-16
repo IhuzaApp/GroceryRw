@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
 import { useGoogleMap } from "../../../context/GoogleMapProvider";
-import { Button, AutoComplete, Modal, Form } from "rsuite";
+import { Button, AutoComplete, Modal, Form, useToaster, Message } from "rsuite";
 import { logger } from "../../../utils/logger";
 
 interface AddressSelectionPopupProps {
@@ -23,6 +23,7 @@ export default function AddressSelectionPopup({
   loading = false,
 }: AddressSelectionPopupProps) {
   const { isLoaded } = useGoogleMap();
+  const toaster = useToaster();
   const autocompleteServiceRef = useRef<google.maps.places.AutocompleteService | null>(null);
   const [address, setAddress] = useState<string>(currentAddress);
   const [suggestions, setSuggestions] = useState<string[]>([]);
@@ -35,9 +36,15 @@ export default function AddressSelectionPopup({
       } catch (error: unknown) {
         const errorMessage = error instanceof Error ? error.message : 'Unknown error';
         logger.error("Error initializing Google Maps AutocompleteService", errorMessage);
+        toaster.push(
+          <Message type="error" closable>
+            Failed to initialize address search. Please try again.
+          </Message>,
+          { placement: 'topEnd', duration: 5000 }
+        );
       }
     }
-  }, [isLoaded]);
+  }, [isLoaded, toaster]);
 
   useEffect(() => {
     setAddress(currentAddress);
@@ -75,6 +82,12 @@ export default function AddressSelectionPopup({
         const errorMessage = error instanceof Error ? error.message : 'Unknown error';
         logger.error("Error getting place predictions", errorMessage);
         setSuggestions([]);
+        toaster.push(
+          <Message type="error" closable>
+            Failed to fetch address suggestions. Please try again.
+          </Message>,
+          { placement: 'topEnd', duration: 5000 }
+        );
       }
     } else {
       setSuggestions([]);
@@ -89,7 +102,22 @@ export default function AddressSelectionPopup({
   };
 
   const handleSave = () => {
+    if (!address.trim()) {
+      toaster.push(
+        <Message type="warning" closable>
+          Please select an address
+        </Message>,
+        { placement: 'topEnd', duration: 5000 }
+      );
+      return;
+    }
     onSave(address);
+    toaster.push(
+      <Message type="success" closable>
+        Service area updated successfully
+      </Message>,
+      { placement: 'topEnd', duration: 5000 }
+    );
   };
 
   return (

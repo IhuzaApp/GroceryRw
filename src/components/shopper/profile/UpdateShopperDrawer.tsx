@@ -526,13 +526,11 @@ export default function UpdateShopperDrawer({
                         }}
                         placeholder="Enter your address"
                         style={{ width: '100%' }}
-                        menuStyle={{ 
-                          position: 'absolute',
-                          width: '100%',
-                          zIndex: 1000,
-                          backgroundColor: 'white',
-                          boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
-                        }}
+                        renderMenu={menu => (
+                          <div className="rs-dropdown-menu">
+                            {menu}
+                          </div>
+                        )}
                       />
                       {isLoading && (
                         <div className="absolute right-2 top-1/2 transform -translate-y-1/2">
