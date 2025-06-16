@@ -23,12 +23,12 @@ interface Session {
 export default function ShopperProfilePage() {
   return (
     <ShopperLayout>
-      <div className="container mx-auto px-4 py-8">
+      <div className="container mx-auto px-4 py-4 sm:py-8 pb-24 sm:pb-8">
         {/* Profile Header */}
-        <div className="mb-6 flex items-center">
+        <div className="mb-4 sm:mb-6 flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-0">
           <Link
             href="/Plasa/active-batches"
-            className="flex items-center text-gray-700"
+            className="flex items-center text-gray-700 hover:text-gray-900 transition-colors"
           >
             <svg
               viewBox="0 0 24 24"
@@ -41,11 +41,13 @@ export default function ShopperProfilePage() {
             </svg>
             <span className="hover:underline">Back to Dashboard</span>
           </Link>
-          <h1 className="ml-4 text-2xl font-bold">Plasa Profile</h1>
+          <h1 className="text-xl sm:text-2xl font-bold sm:ml-4">Plasa Profile</h1>
         </div>
 
         {/* Profile Content */}
-        <ShopperProfileComponent />
+        <div className="w-full overflow-x-hidden">
+          <ShopperProfileComponent />
+        </div>
       </div>
     </ShopperLayout>
   );
