@@ -11,6 +11,15 @@
     overflow-y: auto;
     scroll-behavior: smooth;
   }
+
+  /* Remove hover underline from all links */
+  a {
+    text-decoration: none;
+  }
+  
+  a:hover {
+    text-decoration: none;
+  }
 }
 
 /* RSuite Input Styles */
@@ -25,6 +34,25 @@
 .rs-picker-select-menu-group,
 .rs-picker-select-menu-group-title {
   border-radius: 0 !important;
+}
+
+/* Override RSuite link styles */
+.rs-nav-item a,
+.rs-nav-item a:hover,
+.rs-nav-item a:focus,
+.rs-nav-item a:active,
+.rs-nav-item a:visited {
+  text-decoration: none !important;
+}
+
+.rs-nav-item-content {
+  text-decoration: none !important;
+}
+
+.rs-nav-item-content:hover,
+.rs-nav-item-content:focus,
+.rs-nav-item-content:active {
+  text-decoration: none !important;
 }
 
 .rs-panel {
@@ -71,4 +99,27 @@ body {
 }
 #nprogress .spinner {
   display: none !important;
+}
+
+/* Remove underlines from all links */
+a {
+  text-decoration: none !important;
+}
+
+a:hover,
+a:focus,
+a:active,
+a:visited {
+  text-decoration: none !important;
+}
+
+/* Remove underlines from Next.js Link components */
+[data-nextjs-link] {
+  text-decoration: none !important;
+}
+
+[data-nextjs-link]:hover,
+[data-nextjs-link]:focus,
+[data-nextjs-link]:active {
+  text-decoration: none !important;
 }
