@@ -1,414 +1,191 @@
-import React, { useState, useEffect, useRef } from "react";
-import Image from "next/image";
-import Link from "next/link";
-import { Button, Avatar, Loader } from "rsuite";
-import { formatMessageDate, formatMessageTime } from "../../lib/formatters";
-import { useChat } from "../../context/ChatContext";
-import { getStorage, ref, uploadBytes, getDownloadURL } from "firebase/storage";
+import React, { useRef, useEffect, useState } from 'react';
+import { useRouter } from 'next/router';
+import { Button, Avatar, Input } from 'rsuite';
+import { formatMessageDate } from '../../lib/formatters';
+import { ChevronRight, Maximize2 } from 'lucide-react';
 
-interface ChatMessage {
+interface Message {
   id: string;
-  sender: "customer" | "shopper";
-  text?: string; // Customer message format
-  message?: string; // Shopper message format
-  timestamp: string;
-  status: "sent" | "delivered" | "read";
+  text?: string;
+  message?: string;
+  senderId: string;
+  senderType: "customer" | "shopper";
+  recipientId: string;
+  timestamp: any;
+  read: boolean;
   image?: string;
 }
 
 interface ChatDrawerProps {
   isOpen: boolean;
   onClose: () => void;
-  orderId: string;
-  customerId: string;
-  customerName: string;
-  customerAvatar?: string;
+  order: any;
+  shopper: any;
+  messages: Message[];
+  newMessage: string;
+  setNewMessage: (message: string) => void;
+  handleSendMessage: (e?: React.FormEvent) => void;
+  isSending: boolean;
+  currentUserId: string;
 }
+
+const Message: React.FC<{
+  message: Message;
+  isCurrentUser: boolean;
+  senderName: string;
+}> = ({ message, isCurrentUser, senderName }) => {
+  const messageContent = message.text || message.message || "";
+
+  return (
+    <div className={`mb-4 flex ${isCurrentUser ? "justify-end" : "justify-start"}`}>
+      {!isCurrentUser && <Avatar color="blue" circle size="xs" />}
+      <div
+        className={`max-w-[85%] ${
+          isCurrentUser
+            ? "bg-green-100 text-green-900 dark:bg-green-900 dark:text-green-100"
+            : "bg-blue-100 text-gray-900 dark:bg-blue-900 dark:text-blue-100"
+        } rounded-[20px] p-3`}
+      >
+        {!isCurrentUser && (
+          <div className="mb-1 flex gap-2 text-xs font-medium text-gray-600 dark:text-gray-300">
+            {senderName}{" "}
+            <span className="text-xs text-gray-500 dark:text-gray-400">
+              {formatMessageDate(message.timestamp)}
+            </span>
+          </div>
+        )}
+        <div className="whitespace-pre-wrap text-sm">{messageContent}</div>
+        {message.image && (
+          <div className="mt-2">
+            <Avatar color="blue" circle />
+          </div>
+        )}
+      </div>
+      {isCurrentUser && <Avatar color="green" circle size="xs" />}
+    </div>
+  );
+};
 
 export default function ChatDrawer({
   isOpen,
   onClose,
-  orderId,
-  customerId,
-  customerName,
-  customerAvatar = "/placeholder.svg?height=80&width=80",
+  order,
+  shopper,
+  messages,
+  newMessage,
+  setNewMessage,
+  handleSendMessage,
+  isSending,
+  currentUserId,
 }: ChatDrawerProps) {
-  const { sendMessage, getMessages, markMessagesAsRead } = useChat();
-  const [message, setMessage] = useState("");
-  const [isSending, setIsSending] = useState(false);
-  const [showAttachmentOptions, setShowAttachmentOptions] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
-  const fileInputRef = useRef<HTMLInputElement>(null);
-  const [uploadingImage, setUploadingImage] = useState(false);
+  const router = useRouter();
+  const [isLoading, setIsLoading] = useState(true);
 
-  // Get messages from context
-  const messages = getMessages(orderId);
-
-  // Mark messages as read when drawer opens and when new messages arrive
   useEffect(() => {
     if (isOpen) {
-      markMessagesAsRead(orderId);
+      setIsLoading(true);
+      // Simulate loading time for messages and data
+      const timer = setTimeout(() => {
+        setIsLoading(false);
+        messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+      }, 500);
+      return () => clearTimeout(timer);
     }
-  }, [isOpen, markMessagesAsRead, orderId, messages]);
+  }, [isOpen]);
 
-  // Scroll to bottom when messages change or drawer opens
-  useEffect(() => {
-    if (isOpen) {
-      setTimeout(() => {
-        scrollToBottom();
-      }, 100);
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!shopper?.id) {
+      console.error("Cannot send message: Shopper ID is missing");
+      return;
     }
-  }, [messages, isOpen]);
-
-  const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    handleSendMessage(e);
   };
-
-  const handleSendMessage = async () => {
-    if (message.trim() === "") return;
-
-    try {
-      setIsSending(true);
-      await sendMessage(orderId, message);
-      setMessage("");
-    } catch (error) {
-      console.error("Error sending message:", error);
-    } finally {
-      setIsSending(false);
-    }
-  };
-
-  const handleKeyPress = (e: React.KeyboardEvent) => {
-    if (e.key === "Enter" && !e.shiftKey) {
-      e.preventDefault();
-      handleSendMessage();
-    }
-  };
-
-  const handleAttachmentClick = () => {
-    setShowAttachmentOptions(!showAttachmentOptions);
-  };
-
-  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files[0]) {
-      try {
-        setUploadingImage(true);
-        const file = e.target.files[0];
-
-        // Upload image to Firebase Storage
-        const storage = getStorage();
-        const storageRef = ref(
-          storage,
-          `chat_images/${orderId}/${Date.now()}_${file.name}`
-        );
-
-        // Upload the file
-        const snapshot = await uploadBytes(storageRef, file);
-
-        // Get download URL
-        const downloadURL = await getDownloadURL(snapshot.ref);
-
-        // Send message with image
-        await sendMessage(orderId, "", downloadURL);
-
-        setShowAttachmentOptions(false);
-      } catch (error) {
-        console.error("Error uploading image:", error);
-      } finally {
-        setUploadingImage(false);
-      }
-    }
-  };
-
-  // Group messages by date for better display
-  const groupMessagesByDate = () => {
-    const groups: { date: string; messages: ChatMessage[] }[] = [];
-    let currentDate = "";
-    let currentGroup: ChatMessage[] = [];
-
-    messages.forEach((message) => {
-      const messageDate = formatMessageDate(message.timestamp);
-
-      if (messageDate !== currentDate) {
-        if (currentGroup.length > 0) {
-          groups.push({ date: currentDate, messages: currentGroup });
-        }
-        currentDate = messageDate;
-        currentGroup = [message];
-      } else {
-        currentGroup.push(message);
-      }
-    });
-
-    if (currentGroup.length > 0) {
-      groups.push({ date: currentDate, messages: currentGroup });
-    }
-
-    return groups;
-  };
-
-  const messageGroups = groupMessagesByDate();
 
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-y-0 right-0 z-50 flex w-[450px] flex-col bg-white shadow-lg">
+    <div className="fixed inset-y-0 right-0 z-50 hidden w-96 transform bg-white shadow-xl transition-transform duration-300 ease-in-out dark:bg-gray-800 md:block">
       {/* Header */}
-      <div className="flex shrink-0 items-center justify-between border-b border-gray-200 bg-gray-50 p-4">
-        <div className="flex items-center">
-          <div className="mr-3 flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-[20px] bg-gray-200 text-gray-600">
-            {customerName.substring(0, 2).toUpperCase()}
-          </div>
-          <div>
-            <h2 className="font-medium">{customerName}</h2>
-            <div className="flex items-center text-sm text-gray-500">
-              <span>Order #{orderId.substring(0, 8)}</span>
-            </div>
-          </div>
-        </div>
-        <div className="flex items-center">
+      <div className="flex h-16 items-center justify-between border-b border-gray-200 px-4 dark:border-gray-700">
+        <div className="flex items-center gap-3">
           <Button
-            appearance="subtle"
-            className="flex h-8 w-8 items-center justify-center p-0"
+            appearance="ghost"
+            color="gray"
             onClick={onClose}
+            className="p-2"
           >
-            <svg
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              className="h-5 w-5"
-            >
-              <path d="M18 6L6 18M6 6l12 12" />
-            </svg>
+            <ChevronRight className="h-5 w-5" />
           </Button>
+          <div>
+            <h3 className="font-medium text-gray-900 dark:text-white">
+              Order #{order?.id}
+            </h3>
+            <p className="text-sm text-gray-500 dark:text-gray-400">
+              {shopper?.name || "Shopper"}
+            </p>
+          </div>
         </div>
+        <Button
+          appearance="ghost"
+          color="gray"
+          onClick={() => router.push(`/Messages/${order?.id}`)}
+          className="p-2"
+        >
+          <Maximize2 className="h-5 w-5" />
+        </Button>
       </div>
 
       {/* Messages */}
-      <div className="flex-1 space-y-4 overflow-y-auto p-4">
-        {messages.length === 0 ? (
-          <div className="flex h-full flex-col items-center justify-center text-gray-500">
-            <svg
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              className="mb-3 h-12 w-12"
-            >
-              <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
-            </svg>
-            <p>No messages yet</p>
-            <p className="text-sm">
-              Start the conversation with {customerName}
-            </p>
+      <div className="flex h-[calc(100vh-8rem)] flex-col">
+        {isLoading ? (
+          <div className="flex h-full items-center justify-center">
+            <div className="flex flex-col items-center gap-2">
+              <div className="h-8 w-8 animate-spin rounded-full border-2 border-gray-300 border-t-green-500 dark:border-gray-600 dark:border-t-green-400"></div>
+              <p className="text-sm text-gray-500 dark:text-gray-400">Loading messages...</p>
+            </div>
           </div>
         ) : (
-          messageGroups.map((group, groupIndex) => (
-            <div key={groupIndex} className="space-y-4">
-              <div className="flex justify-center">
-                <div className="rounded-[20px] bg-gray-200 px-3 py-1 text-xs text-gray-600">
-                  {group.date}
-                </div>
-              </div>
-
-              {group.messages.map((msg) => {
-                const isShopperMessage = msg.sender === "shopper";
-                const messageText = msg.text || msg.message || "";
-
-                return (
-                  <div
-                    key={msg.id}
-                    className={`flex items-start gap-3 ${
-                      isShopperMessage ? "flex-row-reverse" : ""
-                    }`}
-                  >
-                    <div
-                      className={`
-                        flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-[20px]
-                        ${
-                          isShopperMessage
-                            ? "bg-green-500 text-white"
-                            : "bg-gray-200 text-gray-600"
-                        }
-                      `}
-                    >
-                      {isShopperMessage
-                        ? "SH"
-                        : customerName.substring(0, 2).toUpperCase()}
-                    </div>
-
-                    <div
-                      className={`
-                        max-w-[85%] rounded-lg p-3
-                        ${
-                          isShopperMessage
-                            ? "bg-green-500 text-white"
-                            : "bg-gray-100 text-gray-800"
-                        }
-                      `}
-                    >
-                      {messageText && <p className="text-sm">{messageText}</p>}
-                      {msg.image && (
-                        <div className="mt-2">
-                          <Avatar color="blue" circle size="xs" />
-                        </div>
-                      )}
-                      <span
-                        className={`
-                          mt-1 block text-xs
-                          ${
-                            isShopperMessage
-                              ? "text-green-200"
-                              : "text-gray-500"
-                          }
-                        `}
-                      >
-                        {formatMessageTime(msg.timestamp)}
-                      </span>
-                    </div>
-                  </div>
-                );
-              })}
+          <>
+            <div className="flex-1 overflow-y-auto p-4">
+              {messages.map((message) => (
+                <Message
+                  key={message.id}
+                  message={message}
+                  isCurrentUser={message.senderId === currentUserId}
+                  senderName={
+                    message.senderId === currentUserId
+                      ? "You"
+                      : shopper?.name || "Shopper"
+                  }
+                />
+              ))}
+              <div ref={messagesEndRef} />
             </div>
-          ))
+
+            {/* Input */}
+            <div className="border-t border-gray-200 bg-white p-4 dark:border-gray-700 dark:bg-gray-800">
+              <form onSubmit={handleSubmit} className="flex gap-2">
+                <Input
+                  value={newMessage}
+                  onChange={(value) => setNewMessage(value)}
+                  placeholder="Type a message..."
+                  className="flex-1"
+                />
+                <Button
+                  appearance="primary"
+                  color="green"
+                  type="submit"
+                  loading={isSending}
+                  disabled={!shopper?.id}
+                >
+                  Send
+                </Button>
+              </form>
+            </div>
+          </>
         )}
-        <div ref={messagesEndRef} />
-      </div>
-
-      {/* Quick Replies */}
-      <div className="shrink-0 overflow-x-auto whitespace-nowrap border-t bg-white p-2">
-        <div className="flex gap-2">
-          <Button
-            appearance="ghost"
-            size="sm"
-            className="whitespace-nowrap"
-            onClick={() => setMessage("I found it")}
-          >
-            I found it
-          </Button>
-          <Button
-            appearance="ghost"
-            size="sm"
-            className="whitespace-nowrap"
-            onClick={() => setMessage("They&#39;re out of stock")}
-          >
-            They&#39;re out of stock
-          </Button>
-          <Button
-            appearance="ghost"
-            size="sm"
-            className="whitespace-nowrap"
-            onClick={() => setMessage("Would you like an alternative?")}
-          >
-            Alternative?
-          </Button>
-        </div>
-      </div>
-
-      {/* Message Input */}
-      <div className="shrink-0 border-t border-gray-200 bg-white p-4">
-        <div className="flex items-center gap-2">
-          <Button
-            appearance="subtle"
-            className="flex h-10 w-10 items-center justify-center rounded-[20px] p-0"
-            onClick={handleAttachmentClick}
-            disabled={isSending || uploadingImage}
-          >
-            <svg
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              className="h-4 w-4"
-            >
-              <path d="M21.44 11.05l-9.19 9.19a6 6 0 01-8.49-8.49l9.19-9.19a4 4 0 015.66 5.66l-9.2 9.19a2 2 0 01-2.83-2.83l8.49-8.48" />
-            </svg>
-          </Button>
-
-          {/* Attachment Options Popup */}
-          {showAttachmentOptions && (
-            <div className="absolute bottom-16 left-4 z-10 rounded-lg bg-white p-2 shadow-lg">
-              <div className="flex flex-col gap-2">
-                <button
-                  className="flex items-center gap-2 rounded-md p-2 hover:bg-gray-100"
-                  onClick={() => fileInputRef.current?.click()}
-                >
-                  <svg
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="2"
-                    className="h-5 w-5 text-blue-500"
-                  >
-                    <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
-                    <circle cx="8.5" cy="8.5" r="1.5" />
-                    <polyline points="21 15 16 10 5 21" />
-                  </svg>
-                  <span>Gallery</span>
-                </button>
-                <button
-                  className="flex items-center gap-2 rounded-md p-2 hover:bg-gray-100"
-                  onClick={() => alert("Camera functionality would open here")}
-                >
-                  <svg
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="2"
-                    className="h-5 w-5 text-red-500"
-                  >
-                    <path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z" />
-                    <circle cx="12" cy="13" r="4" />
-                  </svg>
-                  <span>Camera</span>
-                </button>
-              </div>
-            </div>
-          )}
-
-          <input
-            type="file"
-            accept="image/*"
-            ref={fileInputRef}
-            className="hidden"
-            onChange={handleImageUpload}
-          />
-
-          <input
-            type="text"
-            placeholder="Type your message..."
-            className="flex-1 rounded-[20px] border border-gray-300 px-4 py-2 focus:border-transparent focus:outline-none focus:ring-2 focus:ring-green-500"
-            value={message}
-            onChange={(e) => setMessage(e.target.value)}
-            onKeyPress={handleKeyPress}
-            disabled={isSending || uploadingImage}
-          />
-
-          <Button
-            appearance={message.trim() ? "primary" : "subtle"}
-            className={`flex h-10 w-10 items-center justify-center rounded-[20px] p-0 ${
-              message.trim() ? "bg-green-500 text-white" : "text-gray-400"
-            }`}
-            onClick={handleSendMessage}
-            disabled={(!message.trim() && !uploadingImage) || isSending}
-          >
-            {isSending || uploadingImage ? (
-              <Loader size="sm" />
-            ) : (
-              <svg
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                className="h-4 w-4"
-              >
-                <path d="M22 2L11 13" />
-                <path d="M22 2l-7 20-4-9-9-4 20-7z" />
-              </svg>
-            )}
-          </Button>
-        </div>
       </div>
     </div>
   );

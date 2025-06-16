@@ -12,12 +12,17 @@ import {
   updateDoc,
   Timestamp,
   Unsubscribe,
+  addDoc,
+  serverTimestamp,
+  getDoc,
 } from "firebase/firestore";
 import { db } from "../../src/lib/firebase";
 import { useRouter } from "next/router";
 import Link from "next/link";
 import { Button, Loader, Panel, Placeholder, Avatar, Input } from "rsuite";
 import { formatCurrency } from "../../src/lib/formatCurrency";
+import ChatDrawer from '../../src/components/chat/ChatDrawer';
+import { isMobileDevice } from '../../src/lib/formatters';
 
 // Helper to display timestamps as relative time ago
 function timeAgo(timestamp: any) {
@@ -50,6 +55,19 @@ function formatOrderID(id?: string | number): string {
   return s.length >= 4 ? s : s.padStart(4, "0");
 }
 
+// Define message interface
+interface Message {
+  id: string;
+  text?: string;
+  message?: string;
+  senderId: string;
+  senderType: "customer" | "shopper";
+  recipientId: string;
+  timestamp: any;
+  read: boolean;
+  image?: string;
+}
+
 // Define conversation interface
 interface Conversation {
   id: string;
@@ -63,14 +81,20 @@ interface Conversation {
 }
 
 export default function MessagesPage() {
-  const { data: session, status } = useSession();
   const router = useRouter();
-  const [loading, setLoading] = useState(true);
+  const { data: session, status } = useSession();
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [orders, setOrders] = useState<Record<string, any>>({});
+  const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
   const [showUnreadOnly, setShowUnreadOnly] = useState(false);
   const [sortOrder, setSortOrder] = useState<"newest" | "oldest">("newest");
+  const [selectedOrder, setSelectedOrder] = useState<any>(null);
+  const [isDrawerOpen, setIsDrawerOpen] = useState(false);
+  const [messages, setMessages] = useState<any[]>([]);
+  const [newMessage, setNewMessage] = useState("");
+  const [isSending, setIsSending] = useState(false);
+  const [conversationId, setConversationId] = useState<string | null>(null);
 
   // Fetch conversations and their associated orders
   useEffect(() => {
@@ -275,9 +299,155 @@ export default function MessagesPage() {
       }
     });
 
-  // Redirect to chat page for a specific order
-  const handleChatClick = (orderId: string) => {
-    router.push(`/Messages/${orderId}`);
+  // Handle chat click
+  const handleChatClick = async (orderId: string) => {
+    if (isMobileDevice()) {
+      router.push(`/Messages/${orderId}`);
+    } else {
+      try {
+        // Get conversation ID and shopper data
+        const conversationsRef = collection(db, "chat_conversations");
+        const q = query(conversationsRef, where("orderId", "==", orderId));
+        const querySnapshot = await getDocs(q);
+
+        if (!querySnapshot.empty) {
+          const conversationDoc = querySnapshot.docs[0];
+          const conversationData = conversationDoc.data();
+          setConversationId(conversationDoc.id);
+
+          // Get shopper data
+          const shopperRef = doc(db, "users", conversationData.shopperId);
+          const shopperDoc = await getDoc(shopperRef);
+          const shopperData = shopperDoc.data();
+
+          // Set order with shopper data
+          const order = orders[orderId];
+          setSelectedOrder({
+            ...order,
+            shopper: {
+              id: conversationData.shopperId,
+              name: shopperData?.name || "Shopper",
+              avatar: shopperData?.avatar || null,
+            }
+          });
+          setIsDrawerOpen(true);
+        }
+      } catch (error) {
+        console.error("Error getting conversation:", error);
+      }
+    }
+  };
+
+  // Set up messages listener
+  useEffect(() => {
+    if (!conversationId || !session?.user?.id) return;
+
+    console.log("Setting up message listener for conversation:", conversationId);
+
+    // Set up listener for messages in this conversation
+    const messagesRef = collection(
+      db,
+      "chat_conversations",
+      conversationId,
+      "messages"
+    );
+    const q = query(messagesRef, orderBy("timestamp", "asc"));
+
+    const unsubscribe = onSnapshot(
+      q,
+      (snapshot) => {
+        console.log("Messages snapshot received, count:", snapshot.docs.length);
+
+        const messagesList = snapshot.docs.map((doc) => ({
+          id: doc.id,
+          ...doc.data(),
+          // Convert Firestore timestamp to regular Date if needed
+          timestamp:
+            doc.data().timestamp instanceof Timestamp
+              ? doc.data().timestamp.toDate()
+              : doc.data().timestamp,
+        })) as Message[];
+
+        console.log("Processed messages:", messagesList);
+        setMessages(messagesList);
+
+        // Mark messages as read if they were sent to the current user
+        messagesList.forEach(async (message) => {
+          if (message.senderType === "shopper" && !message.read) {
+            const messageRef = doc(
+              db,
+              "chat_conversations",
+              conversationId,
+              "messages",
+              message.id
+            );
+            await updateDoc(messageRef, { read: true });
+
+            // Update unread count in conversation
+            const convRef = doc(db, "chat_conversations", conversationId);
+            await updateDoc(convRef, {
+              unreadCount: 0,
+            });
+          }
+        });
+      },
+      (error) => {
+        console.error("Error in messages listener:", error);
+      }
+    );
+
+    return () => unsubscribe();
+  }, [conversationId, session?.user?.id]);
+
+  // Handle sending a new message
+  const handleSendMessage = async (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
+    if (!newMessage.trim() || !session?.user?.id || !conversationId || !selectedOrder?.shopper?.id) {
+      console.log("Cannot send message, missing data:", {
+        hasMessage: !!newMessage.trim(),
+        hasUser: !!session?.user?.id,
+        hasConversation: !!conversationId,
+        hasShopperId: !!selectedOrder?.shopper?.id,
+      });
+      return;
+    }
+
+    try {
+      setIsSending(true);
+
+      // Add new message to Firestore
+      const messagesRef = collection(
+        db,
+        "chat_conversations",
+        conversationId,
+        "messages"
+      );
+      await addDoc(messagesRef, {
+        text: newMessage.trim(),
+        message: newMessage.trim(), // Also include message field for compatibility
+        senderId: session.user.id,
+        senderName: session.user.name || "Customer",
+        senderType: "customer",
+        recipientId: selectedOrder.shopper.id,
+        timestamp: serverTimestamp(),
+        read: false,
+      });
+
+      // Update conversation with last message
+      const convRef = doc(db, "chat_conversations", conversationId);
+      await updateDoc(convRef, {
+        lastMessage: newMessage.trim(),
+        lastMessageTime: serverTimestamp(),
+        unreadCount: 1, // Increment unread count for shopper
+      });
+
+      // Clear input
+      setNewMessage("");
+    } catch (error) {
+      console.error("Error sending message:", error);
+    } finally {
+      setIsSending(false);
+    }
   };
 
   // Render loading state
@@ -479,6 +649,22 @@ export default function MessagesPage() {
           )}
         </div>
       </div>
+
+      {/* Chat Drawer for Desktop */}
+      {selectedOrder && (
+        <ChatDrawer
+          isOpen={isDrawerOpen}
+          onClose={() => setIsDrawerOpen(false)}
+          order={selectedOrder}
+          shopper={selectedOrder.shopper}
+          messages={messages}
+          newMessage={newMessage}
+          setNewMessage={setNewMessage}
+          handleSendMessage={handleSendMessage}
+          isSending={isSending}
+          currentUserId={session?.user?.id}
+        />
+      )}
     </RootLayout>
   );
 }
