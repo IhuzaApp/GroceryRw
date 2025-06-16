@@ -1269,3 +1269,146 @@ const memoizedValue = useMemo(() => {
    - Automated responses
    - Enhanced tracking
    - Integration with CRM
+
+# Grocery Store Application
+
+## Search Functionality
+
+### User Dashboard Search
+
+The application provides a comprehensive search system that allows users to find shops and products efficiently.
+
+#### Features
+
+1. **Category-based Search**
+   - Users can filter shops by categories:
+     - Super Market
+     - Public Markets
+     - Bakeries
+     - Butchers
+     - Delicatessen
+     - Organic Shops
+     - Specialty Foods
+   - Each category has a unique icon for easy identification
+   - Categories are displayed in a responsive grid on desktop
+   - Mobile users get a dropdown menu for category selection
+
+2. **Search Implementation**
+   ```typescript
+   const filteredShops = useMemo(() => {
+     if (!authReady || role === "shopper") return [];
+     
+     return selectedCategory
+       ? data.shops?.filter((shop) => shop.category_id === selectedCategory) || []
+       : data.shops || [];
+   }, [authReady, role, selectedCategory, data.shops]);
+   ```
+
+3. **Search Features**
+   - Real-time filtering
+   - Category-based filtering
+   - Responsive design for both mobile and desktop
+   - Clear filter option
+   - Loading states during search
+   - Error handling for failed searches
+
+4. **Mobile Experience**
+   - Dropdown menu for category selection
+   - Easy-to-use interface
+   - Clear visual feedback
+   - Smooth transitions
+
+5. **Desktop Experience**
+   - Grid layout for categories
+   - Visual indicators for selected category
+   - Hover effects for better interaction
+   - Clear filter button when category is selected
+
+### Usage
+
+1. **Selecting a Category**
+   - On desktop: Click on any category card in the grid
+   - On mobile: Use the dropdown menu to select a category
+   - The selected category will be highlighted
+   - Shops will be filtered automatically
+
+2. **Clearing Selection**
+   - On desktop: Click the "Clear Filter" button
+   - On mobile: Use the "Clear Selection" option in the dropdown
+   - All shops will be displayed again
+
+3. **Viewing Results**
+   - Filtered shops are displayed in a responsive grid
+   - Each shop card shows:
+     - Shop image
+     - Name
+     - Description
+     - Distance
+     - Estimated delivery time
+     - Open/Closed status
+
+### Technical Implementation
+
+1. **State Management**
+   ```typescript
+   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
+   const [isLoading, setIsLoading] = useState(false);
+   const [error, setError] = useState<string | null>(null);
+   ```
+
+2. **Error Handling**
+   ```typescript
+   try {
+     setSelectedCategory(categoryId);
+     setIsLoading(false);
+   } catch (err) {
+     setError("Failed to filter shops. Please try again.");
+     setIsLoading(false);
+   }
+   ```
+
+3. **Loading States**
+   - Skeleton loading for categories
+   - Skeleton loading for shop cards
+   - Smooth transitions between states
+
+### Best Practices
+
+1. **Performance**
+   - Using `useMemo` for filtered results
+   - Lazy loading of images
+   - Efficient state updates
+
+2. **Accessibility**
+   - Clear visual indicators
+   - Proper ARIA labels
+   - Keyboard navigation support
+
+3. **User Experience**
+   - Immediate feedback on actions
+   - Clear error messages
+   - Smooth transitions
+   - Responsive design
+
+### Future Improvements
+
+1. **Planned Features**
+   - Advanced search filters
+   - Search by shop name
+   - Search by product
+   - Price range filters
+   - Rating filters
+
+2. **Technical Enhancements**
+   - Search debouncing
+   - Caching of search results
+   - Improved error handling
+   - Better loading states
+
+## Contributing
+
+Please read [CONTRIBUTING.md](CONTRIBUTING.md) for details on our code of conduct and the process for submitting pull requests.
+
+## License
+
+This project is licensed under the MIT License - see the [LICENSE.md](LICENSE.md) file for details.
