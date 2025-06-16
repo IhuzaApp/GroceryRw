@@ -1,5 +1,5 @@
 import React, { useState, useRef } from "react";
-import { Button, Form, Panel, SelectPicker, useToaster, Message, Loader, Modal, List } from "rsuite";
+import { Button, Form, Panel, SelectPicker, useToaster, Message, Loader, Modal, List, Placeholder } from "rsuite";
 import { useTheme } from "../../../context/ThemeContext";
 import { logger } from "../../../utils/logger";
 
@@ -209,18 +209,7 @@ export default function VehicleManagement({ userId, onVehicleAdded }: VehicleMan
   };
 
   const handleSubmit = async () => {
-    console.log("Component: Starting form submission", {
-      formValue,
-      hasPhoto: !!capturedPhoto,
-      photoLength: capturedPhoto?.length
-    });
-
     if (!formValue.type || !formValue.plate_number || !formValue.model) {
-      console.log("Component: Missing required fields", {
-        hasType: !!formValue.type,
-        hasPlateNumber: !!formValue.plate_number,
-        hasModel: !!formValue.model
-      });
       toaster.push(
         <Message type="warning" closable>
           Please fill in all required fields
@@ -231,7 +220,6 @@ export default function VehicleManagement({ userId, onVehicleAdded }: VehicleMan
     }
 
     if (!capturedPhoto) {
-      console.log("Component: No photo captured");
       toaster.push(
         <Message type="warning" closable>
           Please take a vehicle photo
@@ -243,21 +231,8 @@ export default function VehicleManagement({ userId, onVehicleAdded }: VehicleMan
 
     setLoading(true);
     try {
-      console.log("Component: Compressing photo");
       // Compress the captured photo
       const compressedPhoto = await compressImage(capturedPhoto, 100); // Compress to ~100KB
-      console.log("Component: Photo compressed", {
-        originalLength: capturedPhoto.length,
-        compressedLength: compressedPhoto.length
-      });
-
-      console.log("Component: Sending request to API", {
-        userId,
-        type: formValue.type,
-        plate_number: formValue.plate_number,
-        model: formValue.model,
-        photoLength: compressedPhoto.length
-      });
 
       // Save the vehicle information with the compressed photo
       const response = await fetch('/api/queries/shopper-vehicles', {
@@ -274,16 +249,12 @@ export default function VehicleManagement({ userId, onVehicleAdded }: VehicleMan
         }),
       });
 
-      console.log("Component: API response status", response.status);
-
       if (!response.ok) {
         const errorData = await response.json();
-        console.error("Component: API error response", errorData);
         throw new Error(errorData.error || 'Failed to save vehicle information');
       }
 
       const data = await response.json();
-      console.log("Component: API success response", data);
 
       toaster.push(
         <Message type="success" closable>
@@ -305,11 +276,6 @@ export default function VehicleManagement({ userId, onVehicleAdded }: VehicleMan
       onVehicleAdded();
     } catch (error: unknown) {
       const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-      console.error("Component: Error details", {
-        error,
-        message: errorMessage,
-        stack: error instanceof Error ? error.stack : undefined
-      });
       logger.error("Error saving vehicle information:", errorMessage);
       toaster.push(
         <Message type="error" closable>
@@ -331,10 +297,9 @@ export default function VehicleManagement({ userId, onVehicleAdded }: VehicleMan
         throw new Error('Failed to load vehicles');
       }
       const data = await response.json();
-      console.log('Vehicles data:', data);
       setVehicles(data.vehicles || []);
     } catch (error) {
-      console.error('Error loading vehicles:', error);
+      logger.error("Error loading vehicles:", error);
       toaster.push(
         <Message type="error" closable>
           Failed to load vehicles
@@ -380,8 +345,21 @@ export default function VehicleManagement({ userId, onVehicleAdded }: VehicleMan
           </div>
           
           {loadingVehicles ? (
-            <div className="flex justify-center p-4">
-              <Loader size="md" />
+            <div className="space-y-4 p-4">
+              {[1, 2].map((index) => (
+                <div key={index} className="flex items-center space-x-4">
+                  <Placeholder.Graph
+                    active
+                    height={80}
+                    width={80}
+                    className="rounded-lg"
+                  />
+                  <div className="flex-1 space-y-2">
+                    <Placeholder.Paragraph rows={1} />
+                    <Placeholder.Paragraph rows={2} />
+                  </div>
+                </div>
+              ))}
             </div>
           ) : (
             <List>
@@ -427,87 +405,95 @@ export default function VehicleManagement({ userId, onVehicleAdded }: VehicleMan
             theme === "dark" ? "text-white" : "text-gray-900"
           }`}>Add Vehicle</h3>
 
-          <Form fluid>
-            <Form.Group>
-              <Form.ControlLabel>Vehicle Type</Form.ControlLabel>
-              <SelectPicker
-                data={[
-                  { label: "Car", value: "car" },
-                  { label: "Motorcycle", value: "motorcycle" },
-                  { label: "Bicycle", value: "bicycle" },
-                  { label: "Scooter", value: "scooter" },
-                ]}
-                value={formValue.type}
-                onChange={handleVehicleTypeChange}
-                block
-              />
-            </Form.Group>
+          {loadingVehicles ? (
+            <div className="space-y-4 p-4">
+              <Placeholder.Paragraph rows={3} />
+              <Placeholder.Graph height={200} />
+              <Placeholder.Paragraph rows={2} />
+            </div>
+          ) : (
+            <Form fluid>
+              <Form.Group>
+                <Form.ControlLabel>Vehicle Type</Form.ControlLabel>
+                <SelectPicker
+                  data={[
+                    { label: "Car", value: "car" },
+                    { label: "Motorcycle", value: "motorcycle" },
+                    { label: "Bicycle", value: "bicycle" },
+                    { label: "Scooter", value: "scooter" },
+                  ]}
+                  value={formValue.type}
+                  onChange={handleVehicleTypeChange}
+                  block
+                />
+              </Form.Group>
 
-            <Form.Group>
-              <Form.ControlLabel>Plate Number</Form.ControlLabel>
-              <Form.Control
-                name="plate_number"
-                value={formValue.plate_number}
-                onChange={(value) => setFormValue(prev => ({ ...prev, plate_number: value }))}
-              />
-            </Form.Group>
+              <Form.Group>
+                <Form.ControlLabel>Plate Number</Form.ControlLabel>
+                <Form.Control
+                  name="plate_number"
+                  value={formValue.plate_number}
+                  onChange={(value) => setFormValue(prev => ({ ...prev, plate_number: value }))}
+                />
+              </Form.Group>
 
-            <Form.Group>
-              <Form.ControlLabel>Model</Form.ControlLabel>
-              <SelectPicker
-                data={formValue.type ? vehicleModels[formValue.type as keyof typeof vehicleModels] : []}
-                value={formValue.model}
-                onChange={handleModelChange}
-                block
-                disabled={!formValue.type}
-              />
-            </Form.Group>
+              <Form.Group>
+                <Form.ControlLabel>Model</Form.ControlLabel>
+                <SelectPicker
+                  data={formValue.type ? vehicleModels[formValue.type as keyof typeof vehicleModels] : []}
+                  value={formValue.model}
+                  onChange={handleModelChange}
+                  block
+                  disabled={!formValue.type}
+                />
+              </Form.Group>
 
-            <Form.Group>
-              <Form.ControlLabel>Vehicle Photo</Form.ControlLabel>
-              <Form.HelpText>
-                Take a clear photo of your vehicle
-              </Form.HelpText>
+              <Form.Group>
+                <Form.ControlLabel>Vehicle Photo</Form.ControlLabel>
+                <Form.HelpText>
+                  Take a clear photo of your vehicle
+                </Form.HelpText>
 
-              <div className="mb-4 mt-2">
-                <div className="relative mx-auto h-64 w-64 overflow-hidden rounded-lg border border-gray-300">
-                  {capturedPhoto ? (
-                    <img
-                      src={capturedPhoto}
-                      alt="Vehicle photo"
-                      className="h-full w-full object-cover"
-                    />
-                  ) : (
-                    <div className="flex h-full items-center justify-center bg-gray-100">
-                      <span className="text-gray-400">No vehicle photo</span>
-                    </div>
-                  )}
+                <div className="mb-4 mt-2">
+                  <div className="relative mx-auto h-64 w-64 overflow-hidden rounded-lg border border-gray-300">
+                    {capturedPhoto ? (
+                      <img
+                        src={capturedPhoto}
+                        alt="Vehicle photo"
+                        className="h-full w-full object-cover"
+                      />
+                    ) : (
+                      <div className="flex h-full items-center justify-center bg-gray-100">
+                        <span className="text-gray-400">No vehicle photo</span>
+                      </div>
+                    )}
+                  </div>
+                  <div className="mt-3 flex justify-center space-x-3">
+                    <Button
+                      appearance="primary"
+                      onClick={startCamera}
+                      className="bg-blue-500 text-white"
+                    >
+                      <i className="fas fa-camera mr-2" />
+                      {capturedPhoto ? "Update Photo" : "Take Photo"}
+                    </Button>
+                  </div>
                 </div>
-                <div className="mt-3 flex justify-center space-x-3">
-                  <Button
-                    appearance="primary"
-                    onClick={startCamera}
-                    className="bg-blue-500 text-white"
-                  >
-                    <i className="fas fa-camera mr-2" />
-                    {capturedPhoto ? "Update Photo" : "Take Photo"}
-                  </Button>
-                </div>
-              </div>
-            </Form.Group>
+              </Form.Group>
 
-            <Form.Group>
-              <Button
-                appearance="primary"
-                color="green"
-                onClick={handleSubmit}
-                loading={loading}
-                block
-              >
-                Add Vehicle
-              </Button>
-            </Form.Group>
-          </Form>
+              <Form.Group>
+                <Button
+                  appearance="primary"
+                  color="green"
+                  onClick={handleSubmit}
+                  loading={loading}
+                  block
+                >
+                  Add Vehicle
+                </Button>
+              </Form.Group>
+            </Form>
+          )}
         </Panel>
       )}
 
