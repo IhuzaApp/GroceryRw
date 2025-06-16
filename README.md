@@ -1084,3 +1084,188 @@ const memoizedValue = useMemo(() => {
    - React optimization
    - API enhancements
    - Security upgrades
+
+# Navigation and Vehicle Management System
+
+## Navigation System
+
+### Core Components
+- Location: `src/components/shopper/ShopperSidebar.tsx` and `src/components/ui/NavBar/bottomBar.tsx`
+- Purpose: Handles navigation between different sections of the Plasa application
+
+### Navigation Features
+
+1. **Desktop Navigation**
+   - Sidebar-based navigation
+   - Persistent across pages
+   - Real-time active state tracking
+   - Smooth transitions between pages
+   - Cached page loading for better performance
+
+2. **Mobile Navigation**
+   - Bottom bar navigation
+   - Floating action buttons
+   - Quick access to key features
+   - Responsive design
+   - Touch-friendly interface
+
+3. **Navigation Items**
+   - Available Batches
+   - Active Batches
+   - Earnings (with real-time updates)
+   - Settings
+   - Profile Management
+
+4. **Performance Optimizations**
+   - Shallow routing for instant navigation
+   - Page caching to prevent rebuilds
+   - State preservation between routes
+   - Optimized re-renders
+
+## Vehicle Management System
+
+### Core Components
+- Location: `src/components/shopper/profile/VehicleManagement.tsx`
+- Purpose: Manages delivery vehicle information and documentation
+
+### Features
+
+1. **Vehicle Information**
+   - Vehicle Type Selection
+   - License Plate Number
+   - Vehicle Photos
+   - Documentation Upload
+   - Vehicle Status Tracking
+
+2. **Documentation Requirements**
+   - Vehicle Registration
+   - Insurance Documents
+   - License Information
+   - Vehicle Photos (multiple angles)
+   - Compliance Certificates
+
+3. **Status Management**
+   - Pending Review
+   - Approved
+   - Rejected
+   - Under Maintenance
+   - Active/Inactive
+
+4. **Ticket System**
+   - Raise Support Tickets
+   - Track Ticket Status
+   - Communication with Support
+   - Resolution Tracking
+   - History Management
+
+### Ticket Management
+
+1. **Ticket Creation**
+   - Subject Line
+   - Detailed Description
+   - Priority Level
+   - Category Selection
+   - Attachment Support
+
+2. **Ticket Categories**
+   - Vehicle Issues
+   - Documentation Problems
+   - Technical Support
+   - Account Issues
+   - General Inquiries
+
+3. **Priority Levels**
+   - High Priority
+   - Medium Priority
+   - Low Priority
+   - Urgent
+
+4. **Ticket Flow**
+   - Creation
+   - Assignment
+   - Response
+   - Resolution
+   - Feedback
+
+### Technical Implementation
+
+1. **State Management**
+   ```typescript
+   interface VehicleState {
+     type: string;
+     licensePlate: string;
+     photos: string[];
+     documents: Document[];
+     status: VehicleStatus;
+   }
+
+   interface TicketState {
+     subject: string;
+     description: string;
+     priority: Priority;
+     category: Category;
+     status: TicketStatus;
+   }
+   ```
+
+2. **API Integration**
+   - Vehicle CRUD operations
+   - Document upload handling
+   - Ticket management
+   - Status updates
+   - Notification system
+
+3. **UI Components**
+   - Vehicle form
+   - Document uploader
+   - Ticket creation drawer
+   - Status indicators
+   - Progress tracking
+
+### Best Practices
+
+1. **Vehicle Management**
+   - Regular document updates
+   - Photo quality verification
+   - Status monitoring
+   - Compliance checking
+
+2. **Ticket Handling**
+   - Clear communication
+   - Proper categorization
+   - Priority assessment
+   - Timely responses
+
+3. **Documentation**
+   - Complete information
+   - Valid documents
+   - Regular updates
+   - Compliance verification
+
+### Security Features
+
+1. **Document Security**
+   - Secure upload
+   - Access control
+   - Data encryption
+   - Privacy protection
+
+2. **Ticket Security**
+   - User authentication
+   - Data validation
+   - Access restrictions
+   - Audit logging
+
+### Future Enhancements
+
+1. **Vehicle Management**
+   - Real-time tracking
+   - Maintenance scheduling
+   - Performance analytics
+   - Automated compliance
+
+2. **Ticket System**
+   - AI-powered categorization
+   - Automated responses
+   - Enhanced tracking
+   - Integration with CRM

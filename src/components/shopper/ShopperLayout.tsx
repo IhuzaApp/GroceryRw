@@ -43,13 +43,15 @@ export default function ShopperLayout({ children }: ShopperLayoutProps) {
       <div className="flex">
         <ShopperSidebar />
         <main
-          className={`flex-1 transition-colors duration-200 ${
+          className={`flex-1 transition-colors duration-200 relative ${
             theme === "dark"
               ? "bg-gray-900 text-gray-100"
               : "bg-gray-50 text-gray-900"
-          } ${isMobile ? "p-0" : "p-4 pl-64"}`}
+          } ${isMobile ? "p-0 pb-24" : "p-4 pl-64"}`}
         >
-          {children}
+          <div className="relative z-0">
+            {children}
+          </div>
         </main>
       </div>
     </div>
