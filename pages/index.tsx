@@ -118,7 +118,7 @@ function getShopImageUrl(imageUrl: string | undefined): string {
   
   // List of valid image extensions
   const validExtensions = [".jpg", ".jpeg", ".png", ".webp", ".gif"];
-  
+
   // Check if the URL has a valid image extension
   const hasValidExtension = validExtensions.some((ext) =>
     imageUrl.toLowerCase().endsWith(ext)
@@ -267,7 +267,7 @@ export default function Home({ initialData }: { initialData: Data }) {
 
   return (
     <RootLayout>
-      <MainBanners />
+          <MainBanners />
       <UserDashboard initialData={initialData} />
     </RootLayout>
   );
