@@ -12,6 +12,7 @@ export default function SideBar() {
   const { data: session } = useSession();
   const [unreadCount, setUnreadCount] = useState(0);
   const [pendingOrdersCount, setPendingOrdersCount] = useState(0);
+  const [pendingOrders, setPendingOrders] = useState([]);
 
   // Listen for unread messages
   useEffect(() => {
@@ -40,18 +41,26 @@ export default function SideBar() {
 
     const fetchPendingOrders = async () => {
       try {
-        const response = await fetch("/api/queries/orders");
+        const response = await fetch('/api/queries/orders');
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
         const data = await response.json();
+        
+        // Check if data and data.orders exist before filtering
+        if (!data || !data.orders) {
+          console.warn('No orders data received from API');
+          return;
+        }
 
-        // Count orders that are not delivered
-        const pendingCount = data.orders.filter(
-          (order: any) =>
-            order.status !== "delivered" && order.status !== "cancelled"
-        ).length;
-
-        setPendingOrdersCount(pendingCount);
+        const pendingOrders = data.orders.filter(
+          (order: any) => order.status === 'pending'
+        );
+        setPendingOrders(pendingOrders);
       } catch (error) {
-        console.error("Error fetching pending orders:", error);
+        console.error('Error fetching pending orders:', error);
+        // Set empty array on error to prevent undefined errors
+        setPendingOrders([]);
       }
     };
 

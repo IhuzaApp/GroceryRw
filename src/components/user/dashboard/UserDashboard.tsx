@@ -278,8 +278,8 @@ export default function UserDashboard({ initialData }: { initialData: Data }) {
     <div className="p-4 md:ml-16">
       <div className="container mx-auto">
         {/* Shop Categories */}
-        <div className="mt-12">
-          <div className="mb-8 flex items-center justify-between">
+        <div className="mt-4">
+          <div className="mb-4 flex items-center justify-between">
             <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
               Shop by Category
             </h2>
@@ -294,7 +294,7 @@ export default function UserDashboard({ initialData }: { initialData: Data }) {
           </div>
 
           {error && (
-            <div className="mb-6 rounded-lg bg-red-100 p-4 text-red-700 dark:bg-red-900 dark:text-red-100">
+            <div className="mb-4 rounded-lg bg-red-100 p-4 text-red-700 dark:bg-red-900 dark:text-red-100">
               {error}
             </div>
           )}
@@ -354,8 +354,8 @@ export default function UserDashboard({ initialData }: { initialData: Data }) {
         </div>
 
         {/* Shops */}
-        <div className="mt-16">
-          <div className="mb-8 flex items-center justify-between">
+        <div className="mt-8">
+          <div className="mb-4 flex items-center justify-between">
             <h2 className="text-3xl font-bold text-gray-900 dark:text-white">
               {selectedCategory
                 ? data.categories?.find((c) => c.id === selectedCategory)?.name
