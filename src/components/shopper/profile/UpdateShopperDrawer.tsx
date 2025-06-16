@@ -1,9 +1,10 @@
 import React, { useState, useRef, useEffect } from "react";
-import { Drawer, Form, Button, Input, SelectPicker, Message, useToaster, Modal, Panel, Schema } from "rsuite";
+import { Drawer, Form, Button, Input, SelectPicker, Message, useToaster, Modal, Panel, Schema, AutoComplete } from "rsuite";
 import { logger } from "../../../utils/logger";
 import Image from "next/image";
 import { useSession, signOut } from "next-auth/react";
 import { useRouter } from "next/router";
+import { useGoogleMap } from "../../../context/GoogleMapProvider";
 
 interface ShopperProfile {
   id: string;
@@ -23,6 +24,7 @@ interface ShopperProfile {
 }
 
 interface FormValue {
+  id?: string;
   full_name: string;
   phone_number: string;
   national_id: string;
@@ -118,7 +120,13 @@ export default function UpdateShopperDrawer({
 }: UpdateShopperDrawerProps) {
   const { data: session } = useSession();
   const router = useRouter();
+  const { isLoaded } = useGoogleMap();
+  const [autocomplete, setAutocomplete] = useState<google.maps.places.Autocomplete | null>(null);
+  const [suggestions, setSuggestions] = useState<string[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const addressInputRef = useRef<HTMLInputElement>(null);
   const [formValue, setFormValue] = useState<FormValue>({
+    id: currentData.id,
     full_name: currentData.full_name,
     phone_number: currentData.phone_number,
     national_id: currentData.national_id,
@@ -162,10 +170,11 @@ export default function UpdateShopperDrawer({
             id: shopperProfile.id,
             full_name: shopperProfile.full_name,
             phone_number: shopperProfile.phone_number,
-            national_id: shopperProfile.national_id,
-            driving_license: shopperProfile.driving_license,
+            national_id: shopperProfile.national_id || "",
+            driving_license: shopperProfile.driving_license || "",
             transport_mode: shopperProfile.transport_mode,
-            profile_photo: shopperProfile.profile_photo,
+            profile_photo: shopperProfile.profile_photo || "",
+            address: shopperProfile.address || ""
           });
 
           // Update photos if they exist
@@ -379,6 +388,76 @@ export default function UpdateShopperDrawer({
 
   const showDrivingLicense = formValue.transport_mode !== "on_foot";
 
+  const onLoad = (autocompleteInstance: google.maps.places.Autocomplete) => {
+    setAutocomplete(autocompleteInstance);
+  };
+
+  const onPlaceChanged = () => {
+    if (autocomplete) {
+      const place = autocomplete.getPlace();
+      if (place.formatted_address) {
+        setFormValue((prev) => ({
+          ...prev,
+          address: place.formatted_address || "",
+        }));
+      }
+    }
+  };
+
+  const handleAddressChange = (value: string) => {
+    setFormValue((prev) => ({
+      ...prev,
+      address: value,
+    }));
+
+    if (value.length > 2) {
+      setIsLoading(true);
+      const service = new google.maps.places.PlacesService(document.createElement('div'));
+      const request = {
+        query: value,
+        location: new google.maps.LatLng(-1.9403, 29.8739), // Kigali coordinates
+        radius: 50000, // 50km radius
+        type: 'address' as const
+      };
+
+      service.textSearch(request, (results, status) => {
+        setIsLoading(false);
+        if (status === google.maps.places.PlacesServiceStatus.OK && results) {
+          // Create unique suggestions by adding index to duplicates
+          const addressMap = new Map<string, number>();
+          const newSuggestions = results
+            .map(result => result.formatted_address || '')
+            .filter(Boolean)
+            .map(address => {
+              if (addressMap.has(address)) {
+                const count = addressMap.get(address)! + 1;
+                addressMap.set(address, count);
+                return `${address} (${count})`;
+              }
+              addressMap.set(address, 1);
+              return address;
+            });
+          setSuggestions(newSuggestions);
+        } else {
+          setSuggestions([]);
+        }
+      });
+    } else {
+      setSuggestions([]);
+    }
+  };
+
+  useEffect(() => {
+    if (isLoaded && addressInputRef.current && !autocomplete) {
+      const autocompleteInstance = new google.maps.places.Autocomplete(addressInputRef.current, {
+        componentRestrictions: { country: "rw" },
+        fields: ["formatted_address", "geometry", "name"],
+        types: ["address"],
+      });
+      setAutocomplete(autocompleteInstance);
+    }
+  }, [isLoaded, autocomplete]);
+
   return (
     <Drawer
       open={isOpen}
@@ -430,7 +509,43 @@ export default function UpdateShopperDrawer({
 
                 <Form.Group>
                   <Form.ControlLabel>Address</Form.ControlLabel>
-                  <Form.Control name="address" errorPlacement="bottomStart" />
+                  {isLoaded ? (
+                    <div style={{ position: 'relative', zIndex: 1000 }}>
+                      <AutoComplete
+                        data={suggestions}
+                        value={formValue.address}
+                        onChange={handleAddressChange}
+                        onSelect={(value: string) => {
+                          // Remove the count suffix if it exists
+                          const cleanValue = value.replace(/\s\(\d+\)$/, '');
+                          setFormValue((prev) => ({
+                            ...prev,
+                            address: cleanValue,
+                          }));
+                          setSuggestions([]);
+                        }}
+                        placeholder="Enter your address"
+                        style={{ width: '100%' }}
+                        menuStyle={{ 
+                          position: 'absolute',
+                          width: '100%',
+                          zIndex: 1000,
+                          backgroundColor: 'white',
+                          boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
+                        }}
+                      />
+                      {isLoading && (
+                        <div className="absolute right-2 top-1/2 transform -translate-y-1/2">
+                          <div className="h-4 w-4 animate-spin rounded-full border-2 border-gray-300 border-t-blue-600"></div>
+                        </div>
+                      )}
+                    </div>
+                  ) : (
+                    <div className="flex items-center gap-2">
+                      <div className="h-4 w-4 animate-spin rounded-full border-2 border-gray-300 border-t-blue-600"></div>
+                      <span className="text-sm text-gray-500">Loading address input...</span>
+                    </div>
+                  )}
                   {formErrors.address && (
                     <div className="text-red-500 text-sm mt-1">{formErrors.address}</div>
                   )}
