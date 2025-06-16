@@ -101,7 +101,7 @@ export default function ShopperHeader() {
         <div className="flex items-center">
           <div className="h-8 w-8 overflow-hidden rounded-full">
             <Image
-              src="/placeholder.svg?height=32&width=32"
+              src="/placeholder.svg"
               alt="Profile"
               width={32}
               height={32}

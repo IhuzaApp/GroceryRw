@@ -99,12 +99,18 @@ export async function middleware(req: NextRequest) {
         !pathname.startsWith("/user/profile")
       ) {
         const url = req.nextUrl.clone();
-        url.pathname = "/Plasa";
+        url.pathname = "/";
+        return NextResponse.redirect(url);
+      }
+      // Redirect /ShopperDashboard to root
+      if (pathname === "/ShopperDashboard") {
+        const url = req.nextUrl.clone();
+        url.pathname = "/";
         return NextResponse.redirect(url);
       }
     } else if (token.role === "user") {
       // If user is a customer and trying to access shopper routes, redirect to home
-      if (pathname.startsWith("/Plasa")) {
+      if (pathname.startsWith("/Plasa") || pathname === "/ShopperDashboard") {
         const url = req.nextUrl.clone();
         url.pathname = "/";
         return NextResponse.redirect(url);

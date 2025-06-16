@@ -20,13 +20,12 @@ export default function SideBar() {
     const conversationsRef = collection(db, "chat_conversations");
     const q = query(
       conversationsRef,
-      where("customerId", "==", session.user.id),
-      where("customerUnreadCount", ">", 0)
+      where("customerId", "==", session.user.id)
     );
 
     const unsubscribe = onSnapshot(q, (snapshot) => {
       const totalUnread = snapshot.docs.reduce(
-        (total, doc) => total + (doc.data().customerUnreadCount || 0),
+        (total, doc) => total + (doc.data().unreadCount || 0),
         0
       );
       setUnreadCount(totalUnread);

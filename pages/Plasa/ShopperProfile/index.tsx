@@ -41,7 +41,7 @@ export default function ShopperProfilePage() {
             </svg>
             <span className="hover:underline">Back to Dashboard</span>
           </Link>
-          <h1 className="ml-4 text-2xl font-bold">Shopper Profile</h1>
+          <h1 className="ml-4 text-2xl font-bold">Plasa Profile</h1>
         </div>
 
         {/* Profile Content */}
@@ -68,10 +68,10 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
     };
   }
 
-  // Check if the user has the shopper role
+  // Check if the user has the plasa role
   const userRole = session.user?.role;
 
-  if (userRole !== "shopper") {
+  if (userRole !== "plasa") {
     return {
       redirect: {
         destination: "/",

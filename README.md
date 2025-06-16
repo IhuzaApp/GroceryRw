@@ -573,3 +573,514 @@ The `/dev/logs` page provides:
    - Auto-refresh toggle
    - Clear logs option
    - Export capability
+
+# Plasa Profile Management
+
+## Overview
+The Plasa profile management system allows users to update their delivery service provider information. This includes personal details, contact information, and required documentation.
+
+## Features
+
+### Profile Information
+- Full Name
+- Phone Number
+- Address
+- Transport Mode Selection
+  - Car
+  - Motorcycle
+  - Bicycle
+  - On Foot
+
+### Required Documentation
+1. Profile Photo
+   - Clear photo of the user
+   - Required for identification
+   - Compressed for optimal storage
+
+2. National ID
+   - Photo of valid national identification
+   - Required for verification
+   - Must be clearly visible
+
+### Transport Mode Specific Requirements
+- If transport mode is not "On Foot", additional documentation may be required
+- System automatically shows/hides relevant fields based on transport mode
+
+## Update Process
+
+1. **Information Update**
+   - Users can update their profile information through the Update Plasa Drawer
+   - All changes require review before activation
+   - Status changes to "pending" during review
+
+2. **Photo Capture**
+   - Built-in camera functionality for profile and ID photos
+   - Image compression for optimal storage
+   - Preview capability before submission
+   - Retake option available
+
+3. **Validation**
+   - Required fields validation
+   - Photo presence verification
+   - Transport mode specific validations
+
+4. **Submission Flow**
+   - All updates are sent for review
+   - User is logged out after submission
+   - Changes take effect after approval
+
+## Technical Details
+
+### Components
+- `UpdatePlasaDrawer.tsx`: Main component for profile updates
+- Camera integration for photo capture
+- Image compression utility
+- Form validation system
+
+### State Management
+- Form values
+- Photo states
+- Loading states
+- Validation states
+
+### API Integration
+- Profile update endpoint
+- Photo upload handling
+- Status management
+
+### Security
+- Session validation
+- Required authentication
+- Secure photo handling
+
+## UI/UX Features
+
+### Form Elements
+- Input validation
+- Error messaging
+- Loading states
+- Success notifications
+
+### Photo Management
+- Live camera preview
+- Photo capture
+- Image compression
+- Preview functionality
+
+### Responsive Design
+- Mobile-friendly interface
+- Adaptive layout
+- Touch-friendly controls
+
+## Status Management
+
+### Profile Statuses
+- Pending: Under review
+- Active: Approved and active
+- Inactive: Temporarily disabled
+
+### Update Process
+1. User submits updates
+2. Status changes to "pending"
+3. Admin review
+4. Status updates based on review
+5. User notified of changes
+
+## Error Handling
+- Form validation errors
+- Photo capture errors
+- API integration errors
+- Network issues
+- Session management
+
+## Best Practices
+1. Always verify photo quality
+2. Ensure all required fields are filled
+3. Keep information up to date
+4. Follow transport mode requirements
+5. Maintain valid documentation
+
+## Future Enhancements
+- Real-time status updates
+- Enhanced photo validation
+- Additional transport modes
+- Extended documentation options
+- Improved mobile experience
+
+# Complex System Logic Documentation
+
+## 1. Profile Management System
+
+### Core Components
+- Location: `src/components/shopper/profile/UpdateShopperDrawer.tsx`
+- Purpose: Handles Plasa profile updates and document management
+
+### Key Features
+1. **Document Management**
+   - Profile photo capture and validation
+   - National ID verification
+   - Image compression and optimization
+   - Real-time preview functionality
+
+2. **Form State Management**
+   - Multi-step form validation
+   - Real-time field validation
+   - Error state handling
+   - Loading state management
+
+3. **Data Flow**
+   - Client-side validation
+   - Server-side verification
+   - Status updates
+   - Error recovery
+
+## 2. Notification System
+
+### Core Components
+- Location: `src/components/shopper/NotificationSystem.tsx`
+- Purpose: Real-time order notification and management
+
+### Key Features
+1. **Schedule Management**
+   ```typescript
+   interface ShopperSchedule {
+     day_of_week: number;
+     start_time: string;
+     end_time: string;
+     is_available: boolean;
+   }
+   ```
+
+2. **Order Processing**
+   - Real-time order notifications
+   - Batch assignment system
+   - Location-based filtering
+   - Priority-based distribution
+
+3. **State Management**
+   - Active order tracking
+   - Schedule validation
+   - Location updates
+   - Notification preferences
+
+## 3. Order Management System
+
+### Core Components
+- Location: `src/components/shopper/batchDetails.tsx`
+- Purpose: Handles order lifecycle and payment processing
+
+### Key Features
+1. **Order Lifecycle**
+   - Status transitions
+   - Payment processing
+   - Invoice generation
+   - Delivery confirmation
+
+2. **Payment System**
+   - OTP verification
+   - Refund processing
+   - Wallet integration
+   - Transaction logging
+
+3. **Document Generation**
+   - Invoice creation
+   - Receipt generation
+   - Order history
+   - Payment records
+
+## 4. Dashboard and Map Integration
+
+### Core Components
+- Location: `src/components/shopper/dashboard/MapSection.tsx`
+- Purpose: Real-time location tracking and order visualization
+
+### Key Features
+1. **Location Services**
+   - Real-time tracking
+   - Geofencing
+   - Route optimization
+   - Distance calculations
+
+2. **Order Visualization**
+   - Map markers
+   - Order clustering
+   - Route display
+   - Status indicators
+
+3. **Integration Points**
+   - Google Maps API
+   - Location services
+   - Real-time updates
+   - State management
+
+## 5. Schedule Management
+
+### Core Components
+- Location: `src/components/shopper/profile/ShopperProfileComponent.tsx`
+- Purpose: Manages Plasa availability and working hours
+
+### Key Features
+1. **Schedule Configuration**
+   ```typescript
+   interface TimeSlot {
+     day: string;
+     startTime: string;
+     endTime: string;
+     available: boolean;
+   }
+   ```
+
+2. **Availability Management**
+   - Weekly schedule
+   - Time slot validation
+   - Break management
+   - Status updates
+
+3. **Integration**
+   - Calendar sync
+   - Notification system
+   - Order assignment
+   - Status updates
+
+## 6. Payment and Wallet System
+
+### Core Components
+- Multiple components across the application
+- Purpose: Handles financial transactions and wallet management
+
+### Key Features
+1. **Wallet Management**
+   - Balance tracking
+   - Transaction history
+   - Payment processing
+   - Refund handling
+
+2. **Payment Processing**
+   - OTP verification
+   - Transaction validation
+   - Error recovery
+   - Receipt generation
+
+3. **Security Features**
+   - Encryption
+   - Token management
+   - Session validation
+   - Error handling
+
+## 7. Logging and Monitoring System
+
+### Core Components
+- Location: `pages/api/logs/read.ts` and `pages/api/queries/system-logs.ts`
+- Purpose: System-wide logging and monitoring
+
+### Key Features
+1. **Log Management**
+   ```typescript
+   interface LogEntry {
+     type: LogLevel;
+     message: string;
+     component: string;
+     details?: any;
+     timestamp: string;
+   }
+   ```
+
+2. **Monitoring Features**
+   - Real-time logging
+   - Error tracking
+   - Performance monitoring
+   - System health checks
+
+3. **Integration Points**
+   - API endpoints
+   - Client-side logging
+   - Server-side logging
+   - Error reporting
+
+## 8. API Utilities and Error Handling
+
+### Core Components
+- Location: `src/lib/apiUtils.ts`
+- Purpose: Centralized API management and error handling
+
+### Key Features
+1. **API Management**
+   - Request handling
+   - Response validation
+   - Error recovery
+   - Retry logic
+
+2. **Error Handling**
+   - Error categorization
+   - Recovery strategies
+   - User feedback
+   - Logging integration
+
+3. **Security Features**
+   - Authentication
+   - Authorization
+   - Token management
+   - Session handling
+
+## 9. Order Sorting and Filtering
+
+### Core Components
+- Location: `src/components/shopper/dashboard/ShopperDashboard.tsx`
+- Purpose: Manages order display and prioritization
+
+### Key Features
+1. **Sorting Logic**
+   ```typescript
+   type SortCriteria = "newest" | "earnings" | "distance" | "priority";
+   ```
+
+2. **Filtering System**
+   - Multiple criteria
+   - Real-time updates
+   - Priority management
+   - Distance calculations
+
+3. **Performance Optimization**
+   - Memoization
+   - Caching
+   - Lazy loading
+   - State management
+
+## 10. Registration and Onboarding
+
+### Core Components
+- Location: `src/components/shopper/ShopperRegistrationForm.tsx`
+- Purpose: Handles Plasa registration and verification
+
+### Key Features
+1. **Registration Process**
+   - Multi-step form
+   - Document verification
+   - Status management
+   - Error handling
+
+2. **Verification System**
+   - Document validation
+   - Identity verification
+   - Status updates
+   - Notification system
+
+3. **Integration Points**
+   - API endpoints
+   - Document storage
+   - Status management
+   - User feedback
+
+## Technical Patterns
+
+### 1. State Management
+```typescript
+// Example of state management pattern
+const [state, setState] = useState<StateType>(initialState);
+const stateRef = useRef<StateType>(initialState);
+const memoizedValue = useMemo(() => computeExpensiveValue(a, b), [a, b]);
+const memoizedCallback = useCallback(() => {
+  doSomething(a, b);
+}, [a, b]);
+```
+
+### 2. Error Handling
+```typescript
+// Example of error handling pattern
+try {
+  // Operation
+} catch (error) {
+  logger.error("Operation failed", "ComponentName", error);
+  // Recovery logic
+} finally {
+  // Cleanup
+}
+```
+
+### 3. Real-time Updates
+```typescript
+// Example of real-time update pattern
+useEffect(() => {
+  const interval = setInterval(() => {
+    // Update logic
+  }, updateInterval);
+  return () => clearInterval(interval);
+}, [dependencies]);
+```
+
+### 4. Security
+```typescript
+// Example of security pattern
+const validateSession = async () => {
+  const session = await getSession();
+  if (!session) {
+    redirectToLogin();
+    return;
+  }
+  // Continue with protected operation
+};
+```
+
+### 5. Performance Optimization
+```typescript
+// Example of performance optimization pattern
+const memoizedComponent = React.memo(({ prop }) => {
+  // Component logic
+});
+
+const memoizedValue = useMemo(() => {
+  return expensiveComputation(prop);
+}, [prop]);
+```
+
+## Best Practices
+
+1. **Code Organization**
+   - Modular components
+   - Clear separation of concerns
+   - Consistent naming conventions
+   - Proper file structure
+
+2. **Error Handling**
+   - Comprehensive error catching
+   - User-friendly error messages
+   - Proper error logging
+   - Recovery strategies
+
+3. **Performance**
+   - Memoization where appropriate
+   - Lazy loading of components
+   - Efficient state management
+   - Optimized rendering
+
+4. **Security**
+   - Input validation
+   - Session management
+   - Secure API calls
+   - Data encryption
+
+5. **Testing**
+   - Unit tests
+   - Integration tests
+   - End-to-end tests
+   - Performance testing
+
+## Future Enhancements
+
+1. **System Improvements**
+   - Enhanced error recovery
+   - Improved performance
+   - Better state management
+   - Advanced caching
+
+2. **Feature Additions**
+   - Advanced analytics
+   - Enhanced reporting
+   - Additional payment methods
+   - Improved notification system
+
+3. **Technical Upgrades**
+   - TypeScript improvements
+   - React optimization
+   - API enhancements
+   - Security upgrades
