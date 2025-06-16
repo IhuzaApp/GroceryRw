@@ -102,8 +102,6 @@ export default function MessagesPage() {
     if (status === "authenticated" && session?.user?.id) {
       const userId = session.user.id;
 
-      console.log("Fetching conversations for user:", userId);
-
       const fetchConversationsAndOrders = async () => {
         try {
           setLoading(true);
@@ -122,11 +120,6 @@ export default function MessagesPage() {
           const unsubscribe = onSnapshot(
             q,
             async (snapshot) => {
-              console.log(
-                "Conversations snapshot received, count:",
-                snapshot.docs.length
-              );
-
               // Get conversations and sort them in memory instead
               let conversationList = snapshot.docs.map((doc) => ({
                 id: doc.id,
@@ -137,8 +130,6 @@ export default function MessagesPage() {
                     ? doc.data().lastMessageTime.toDate()
                     : doc.data().lastMessageTime,
               })) as Conversation[];
-
-              console.log("Conversations:", conversationList);
 
               // Sort conversations by lastMessageTime in memory
               conversationList.sort((a, b) => {
@@ -160,14 +151,10 @@ export default function MessagesPage() {
                   (id) => id && typeof id === "string" && id.trim() !== ""
                 );
 
-              console.log("Order IDs to fetch:", orderIds);
-
               // Only fetch orders that we don't already have
               const ordersToFetch = orderIds.filter((id) => !orders[id]);
 
               if (ordersToFetch.length > 0) {
-                console.log("Fetching orders:", ordersToFetch);
-
                 const orderDetailsPromises = ordersToFetch.map(
                   async (orderId) => {
                     try {
@@ -175,7 +162,6 @@ export default function MessagesPage() {
                       const uuidRegex =
                         /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
                       if (!uuidRegex.test(orderId)) {
-                        console.error(`Invalid order ID format: ${orderId}`);
                         return {
                           orderId,
                           order: { error: true, message: "Invalid ID format" },
@@ -188,9 +174,6 @@ export default function MessagesPage() {
 
                       // Check if response is ok before trying to parse JSON
                       if (!res.ok) {
-                        console.error(
-                          `Error fetching order ${orderId}: ${res.status} ${res.statusText}`
-                        );
                         return {
                           orderId,
                           order: { error: true, status: res.status },
@@ -198,17 +181,14 @@ export default function MessagesPage() {
                       }
 
                       const data = await res.json();
-                      console.log(`Order ${orderId} data:`, data.order);
                       return { orderId, order: data.order };
                     } catch (error) {
-                      console.error(`Error fetching order ${orderId}:`, error);
                       return { orderId, order: { error: true } };
                     }
                   }
                 );
 
                 const orderResults = await Promise.all(orderDetailsPromises);
-                console.log("Order results:", orderResults);
 
                 // Create a new orders object to avoid mutation
                 const newOrders = { ...orders };
@@ -231,15 +211,12 @@ export default function MessagesPage() {
               setLoading(false);
             },
             (error) => {
-              // Handle Firestore listener errors
-              console.error("Firestore listener error:", error);
               setLoading(false);
             }
           );
 
           return unsubscribe;
         } catch (error) {
-          console.error("Error fetching conversations:", error);
           setLoading(false);
           return undefined;
         }
@@ -254,7 +231,7 @@ export default function MessagesPage() {
         });
       };
     }
-  }, [session, status]);
+  }, [status, session?.user?.id, orders]);
 
   // Filter and sort conversations
   const filteredConversations = conversations
@@ -342,8 +319,6 @@ export default function MessagesPage() {
   useEffect(() => {
     if (!conversationId || !session?.user?.id) return;
 
-    console.log("Setting up message listener for conversation:", conversationId);
-
     // Set up listener for messages in this conversation
     const messagesRef = collection(
       db,
@@ -356,8 +331,6 @@ export default function MessagesPage() {
     const unsubscribe = onSnapshot(
       q,
       (snapshot) => {
-        console.log("Messages snapshot received, count:", snapshot.docs.length);
-
         const messagesList = snapshot.docs.map((doc) => ({
           id: doc.id,
           ...doc.data(),
@@ -368,7 +341,6 @@ export default function MessagesPage() {
               : doc.data().timestamp,
         })) as Message[];
 
-        console.log("Processed messages:", messagesList);
         setMessages(messagesList);
 
         // Mark messages as read if they were sent to the current user
@@ -392,6 +364,7 @@ export default function MessagesPage() {
         });
       },
       (error) => {
+        // Keep this error log for debugging purposes
         console.error("Error in messages listener:", error);
       }
     );
@@ -403,12 +376,6 @@ export default function MessagesPage() {
   const handleSendMessage = async (e?: React.FormEvent) => {
     if (e) e.preventDefault();
     if (!newMessage.trim() || !session?.user?.id || !conversationId || !selectedOrder?.shopper?.id) {
-      console.log("Cannot send message, missing data:", {
-        hasMessage: !!newMessage.trim(),
-        hasUser: !!session?.user?.id,
-        hasConversation: !!conversationId,
-        hasShopperId: !!selectedOrder?.shopper?.id,
-      });
       return;
     }
 
@@ -444,6 +411,7 @@ export default function MessagesPage() {
       // Clear input
       setNewMessage("");
     } catch (error) {
+      // Keep this error log for debugging purposes
       console.error("Error sending message:", error);
     } finally {
       setIsSending(false);
