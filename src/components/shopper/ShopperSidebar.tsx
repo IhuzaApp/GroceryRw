@@ -42,7 +42,7 @@ export default function ShopperSidebar() {
 
   const handleNavigation = (path: string) => (e: React.MouseEvent) => {
     e.preventDefault();
-    router.push(path);
+    router.push(path, undefined, { shallow: true });
   };
 
   useEffect(() => {
