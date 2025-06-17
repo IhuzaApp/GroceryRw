@@ -1,7 +1,9 @@
-import React, { useState } from "react";
+import React, { useState, useRef } from "react";
 import { Modal, Button, Loader } from "rsuite";
 import { useRouter } from "next/router";
 import { formatCurrency } from "../../lib/formatCurrency";
+import { useTheme } from "../../context/ThemeContext";
+import Image from "next/image";
 
 interface InvoiceItem {
   name: string;
@@ -44,10 +46,19 @@ const DeliveryConfirmationModal: React.FC<DeliveryConfirmationModalProps> = ({
   loading,
 }) => {
   const router = useRouter();
+  const { theme } = useTheme();
   const [photoUploading, setPhotoUploading] = useState(false);
   const [photoUploaded, setPhotoUploaded] = useState(false);
   const [uploadError, setUploadError] = useState<string | null>(null);
   const [selectedFileName, setSelectedFileName] = useState<string | null>(null);
+  const [capturedImage, setCapturedImage] = useState<string | null>(null);
+  const [showCamera, setShowCamera] = useState(false);
+  const [stream, setStream] = useState<MediaStream | null>(null);
+  const [showPreview, setShowPreview] = useState(false);
+
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   // For file selection management
   const acceptedFileTypes = [
@@ -73,35 +84,100 @@ const DeliveryConfirmationModal: React.FC<DeliveryConfirmationModalProps> = ({
     router.push("/Plasa/active-batches");
   };
 
-  const handleUpdateDatabase = async (fileName: string) => {
+  const startCamera = async () => {
+    try {
+      const mediaStream = await navigator.mediaDevices.getUserMedia({
+        video: { facingMode: 'environment' },
+        audio: false,
+      });
+
+      setStream(mediaStream);
+      setShowCamera(true);
+
+      // When the modal is shown, attach the stream to the video element
+      setTimeout(() => {
+        if (videoRef.current) {
+          videoRef.current.srcObject = mediaStream;
+        }
+      }, 100);
+    } catch (error) {
+      console.error("Error accessing camera:", error);
+      setUploadError("Could not access camera. Please check permissions.");
+    }
+  };
+
+  const stopCamera = () => {
+    if (stream) {
+      stream.getTracks().forEach(track => track.stop());
+      setStream(null);
+    }
+    setShowCamera(false);
+  };
+
+  const captureImage = () => {
+    if (videoRef.current && canvasRef.current) {
+      const video = videoRef.current;
+      const canvas = canvasRef.current;
+
+      // Set canvas dimensions to match video
+      canvas.width = video.videoWidth;
+      canvas.height = video.videoHeight;
+
+      // Draw the video frame to the canvas
+      const context = canvas.getContext('2d');
+      if (context) {
+        context.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+        // Get the image data as base64
+        const imageData = canvas.toDataURL('image/jpeg');
+        setCapturedImage(imageData);
+        setShowPreview(true);
+      }
+    }
+  };
+
+  const retakePhoto = () => {
+    setCapturedImage(null);
+    setShowPreview(false);
+  };
+
+  const confirmPhoto = async () => {
+    if (capturedImage) {
+      await handleUpdateDatabase(capturedImage);
+      stopCamera();
+    }
+  };
+
+  const handleUpdateDatabase = async (imageData: string) => {
     if (!invoiceData?.orderId) return;
 
     try {
-      // Temporary placeholder URL using the filename
-      const placeholderUrl = `placeholder_delivery_photo_${fileName}`;
-
-      // API call to update the order with the delivery photo placeholder
-      const response = await fetch("/api/shopper/updateDeliveryPhoto", {
+      setPhotoUploading(true);
+      
+      // Send the image data directly to the API
+      const response = await fetch("/api/shopper/uploadDeliveryPhoto", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
           orderId: invoiceData.orderId,
-          photoUrl: placeholderUrl,
+          file: imageData,
         }),
       });
 
       if (!response.ok) {
-        throw new Error("Failed to update order with delivery photo");
+        const errorData = await response.json();
+        throw new Error(errorData.message || "Failed to upload delivery photo");
       }
 
-      setSelectedFileName(fileName);
+      const data = await response.json();
+      setSelectedFileName(data.fileName);
       setPhotoUploaded(true);
       setUploadError(null);
     } catch (error) {
-      console.error("Error updating order with photo placeholder:", error);
-      setUploadError("Failed to update order record");
+      console.error("Error uploading delivery photo:", error);
+      setUploadError("Failed to upload photo. Please try again.");
     } finally {
       setPhotoUploading(false);
     }
@@ -131,12 +207,13 @@ const DeliveryConfirmationModal: React.FC<DeliveryConfirmationModalProps> = ({
     setUploadError(null);
 
     try {
-      // Extract filename and timestamp
-      const timestamp = new Date().getTime();
-      const fileName = `${timestamp}_${file.name.replace(/\s+/g, "_")}`;
-
-      // Instead of uploading to Firebase, just use the filename
-      await handleUpdateDatabase(fileName);
+      // Convert file to base64
+      const reader = new FileReader();
+      reader.onloadend = async () => {
+        const base64data = reader.result as string;
+        await handleUpdateDatabase(base64data);
+      };
+      reader.readAsDataURL(file);
     } catch (error) {
       console.error("Error handling file:", error);
       setUploadError("Failed to process photo. Please try again.");
@@ -146,11 +223,11 @@ const DeliveryConfirmationModal: React.FC<DeliveryConfirmationModalProps> = ({
 
   if (loading) {
     return (
-      <Modal open={open} onClose={onClose} size="md">
-        <Modal.Header>
+      <Modal open={open} onClose={onClose} size="md" className={theme === "dark" ? "bg-gray-900 text-gray-100" : ""}>
+        <Modal.Header className={theme === "dark" ? "bg-gray-800 text-gray-100" : ""}>
           <Modal.Title>Delivery Confirmation</Modal.Title>
         </Modal.Header>
-        <Modal.Body>
+        <Modal.Body className={theme === "dark" ? "bg-gray-900 text-gray-100" : ""}>
           <div className="flex flex-col items-center justify-center py-8">
             <Loader size="lg" content="Processing..." />
           </div>
@@ -161,16 +238,16 @@ const DeliveryConfirmationModal: React.FC<DeliveryConfirmationModalProps> = ({
 
   if (!invoiceData) {
     return (
-      <Modal open={open} onClose={onClose} size="md">
-        <Modal.Header>
+      <Modal open={open} onClose={onClose} size="md" className={theme === "dark" ? "bg-gray-900 text-gray-100" : ""}>
+        <Modal.Header className={theme === "dark" ? "bg-gray-800 text-gray-100" : ""}>
           <Modal.Title>Error</Modal.Title>
         </Modal.Header>
-        <Modal.Body>
-          <div className="py-4 text-center text-red-600">
+        <Modal.Body className={theme === "dark" ? "bg-gray-900 text-gray-100" : ""}>
+          <div className={`py-4 text-center ${theme === "dark" ? "text-red-400" : "text-red-600"}`}>
             Could not process delivery confirmation. Please try again later.
           </div>
         </Modal.Body>
-        <Modal.Footer>
+        <Modal.Footer className={theme === "dark" ? "bg-gray-800" : ""}>
           <Button onClick={onClose} appearance="primary">
             Close
           </Button>
@@ -180,18 +257,22 @@ const DeliveryConfirmationModal: React.FC<DeliveryConfirmationModalProps> = ({
   }
 
   return (
-    <Modal open={open} onClose={onClose} size="md">
-      <Modal.Header>
+    <Modal open={open} onClose={onClose} size="md" className={theme === "dark" ? "bg-gray-900 text-gray-100" : ""}>
+      <Modal.Header className={theme === "dark" ? "bg-gray-800 text-gray-100" : ""}>
         <Modal.Title>Delivery Confirmation</Modal.Title>
       </Modal.Header>
-      <Modal.Body>
+      <Modal.Body className={theme === "dark" ? "bg-gray-900 text-gray-100" : ""}>
         <div className="space-y-4 p-2">
           {/* Success message */}
-          <div className="rounded-md bg-green-50 p-4 text-center text-green-800">
+          <div className={`rounded-md p-4 text-center ${
+            theme === "dark" 
+              ? "bg-green-900/20 text-green-300" 
+              : "bg-green-50 text-green-800"
+          }`}>
             <div className="mb-2 flex justify-center">
               <svg
                 xmlns="http://www.w3.org/2000/svg"
-                className="h-12 w-12 text-green-500"
+                className={`h-12 w-12 ${theme === "dark" ? "text-green-400" : "text-green-500"}`}
                 fill="none"
                 viewBox="0 0 24 24"
                 stroke="currentColor"
@@ -213,7 +294,11 @@ const DeliveryConfirmationModal: React.FC<DeliveryConfirmationModalProps> = ({
           </div>
 
           {/* Order summary */}
-          <div className="rounded-lg border bg-gray-50 p-4">
+          <div className={`rounded-lg border p-4 ${
+            theme === "dark" 
+              ? "border-gray-700 bg-gray-800" 
+              : "bg-gray-50"
+          }`}>
             <h3 className="mb-2 text-lg font-semibold">Order Summary</h3>
             <div className="space-y-2">
               <div className="flex justify-between">
@@ -234,78 +319,149 @@ const DeliveryConfirmationModal: React.FC<DeliveryConfirmationModalProps> = ({
           </div>
 
           {/* Photo upload section */}
-          <div className="rounded-lg border bg-white p-4">
+          <div className={`rounded-lg border p-4 ${
+            theme === "dark" 
+              ? "border-gray-700 bg-gray-800" 
+              : "bg-white"
+          }`}>
             <h3 className="mb-3 text-lg font-semibold">
-              Upload Delivery Photo
+              Delivery Photo
             </h3>
-            <p className="mb-3 text-sm text-gray-600">
-              Please select a photo of the delivered package as proof of
-              delivery.
+            <p className={`mb-3 text-sm ${
+              theme === "dark" ? "text-gray-400" : "text-gray-600"
+            }`}>
+              Please take a photo of the delivered package as proof of delivery.
             </p>
 
             {photoUploaded ? (
               <div className="mt-4 text-center">
-                <div className="rounded-lg border bg-gray-50 p-4">
-                  <p className="font-medium">Selected file:</p>
-                  <p className="break-all text-gray-600">{selectedFileName}</p>
+                <div className={`rounded-lg border p-4 ${
+                  theme === "dark" 
+                    ? "border-gray-700 bg-gray-700" 
+                    : "bg-gray-50"
+                }`}>
+                  <p className="font-medium">Photo uploaded successfully!</p>
+                  {capturedImage && (
+                    <div className="relative mx-auto mt-2 h-48 w-64 overflow-hidden rounded-lg">
+                      <Image
+                        src={capturedImage}
+                        alt="Delivery proof"
+                        fill
+                        className="object-cover"
+                      />
+                    </div>
+                  )}
                 </div>
-                <p className="mt-3 text-green-600">
-                  Photo information saved successfully!
-                </p>
               </div>
             ) : (
-              <div className="mt-2">
-                <input
-                  type="file"
-                  accept="image/*"
-                  capture="environment"
-                  onChange={(e) => handleFileSelect(e.target.files)}
-                  className="mb-2 block w-full text-sm text-gray-500
-                    file:mr-4 file:rounded-md file:border-0
-                    file:bg-green-50 file:px-4 file:py-2
-                    file:text-sm file:font-semibold
-                    file:text-green-700 hover:file:bg-green-100"
-                />
-
-                {photoUploading && (
-                  <div className="mt-2">
-                    <Loader content="Processing..." />
-                  </div>
-                )}
-
+              <div className="mt-4 space-y-4">
+                <div className="flex justify-center space-x-4">
+                  <Button
+                    onClick={startCamera}
+                    appearance="primary"
+                    className="mr-2"
+                  >
+                    Take Photo
+                  </Button>
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept="image/*"
+                    onChange={(e) => handleFileSelect(e.target.files)}
+                    className="hidden"
+                  />
+                  <Button
+                    onClick={() => fileInputRef.current?.click()}
+                    appearance="subtle"
+                  >
+                    Upload Photo
+                  </Button>
+                </div>
                 {uploadError && (
-                  <div className="mt-2 text-sm text-red-600">{uploadError}</div>
+                  <p className={`mt-2 text-sm ${
+                    theme === "dark" ? "text-red-400" : "text-red-600"
+                  }`}>
+                    {uploadError}
+                  </p>
                 )}
               </div>
             )}
           </div>
-
-          {/* Instructions */}
-          <div className="rounded-md bg-blue-50 p-3 text-sm text-blue-800">
-            <p>
-              <strong>Note:</strong> You can view the invoice details or return
-              to available batches after selecting a delivery photo.
-            </p>
-          </div>
         </div>
       </Modal.Body>
-      <Modal.Footer>
+      <Modal.Footer className={theme === "dark" ? "bg-gray-800" : ""}>
         <Button
           onClick={handleViewInvoiceDetails}
           appearance="primary"
-          color="green"
-          disabled={!photoUploaded && !photoUploading}
+          className="mr-2"
+          disabled={!photoUploaded}
         >
           View Invoice Details
         </Button>
         <Button
           onClick={handleReturnToBatches}
-          appearance="default"
-          disabled={photoUploading}
+          appearance="subtle"
         >
           Return to Batches
         </Button>
       </Modal.Footer>
+
+      {/* Camera Modal */}
+      <Modal open={showCamera} onClose={stopCamera} size="md">
+        <Modal.Header>
+          <Modal.Title>Take Delivery Photo</Modal.Title>
+        </Modal.Header>
+        <Modal.Body>
+          <div className="flex flex-col items-center">
+            {!showPreview ? (
+              <>
+                <video
+                  ref={videoRef}
+                  autoPlay
+                  playsInline
+                  muted
+                  className="h-auto w-full rounded-lg"
+                />
+                <canvas ref={canvasRef} className="hidden" />
+                <Button
+                  appearance="primary"
+                  onClick={captureImage}
+                  className="mt-4"
+                >
+                  Capture Photo
+                </Button>
+              </>
+            ) : (
+              <>
+                <div className="relative h-64 w-64 overflow-hidden rounded-lg">
+                  <Image
+                    src={capturedImage || ''}
+                    alt="Captured delivery"
+                    fill
+                    className="object-cover"
+                  />
+                </div>
+                <div className="mt-4 flex space-x-4">
+                  <Button appearance="ghost" onClick={retakePhoto}>
+                    Retake
+                  </Button>
+                  <Button
+                    appearance="primary"
+                    onClick={confirmPhoto}
+                  >
+                    Use This Photo
+                  </Button>
+                </div>
+              </>
+            )}
+          </div>
+        </Modal.Body>
+        <Modal.Footer>
+          <Button onClick={stopCamera} appearance="subtle">
+            Cancel
+          </Button>
+        </Modal.Footer>
+      </Modal>
     </Modal>
   );
 };
