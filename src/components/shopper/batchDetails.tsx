@@ -52,7 +52,7 @@ export default function BatchDetails({
 }: BatchDetailsProps) {
   const router = useRouter();
   const { data: session } = useSession();
-  const { openChat, isDrawerOpen, closeChat, currentChatId } = useChat();
+  const { openChat, isDrawerOpen, closeChat, currentChatId, getMessages, sendMessage } = useChat();
   const { theme } = useTheme();
   const [currentLocation, setCurrentLocation] = useState<{
     lat: number;
@@ -86,6 +86,8 @@ export default function BatchDetails({
   const [invoiceLoading, setInvoiceLoading] = useState(false);
   const [walletData, setWalletData] = useState<any>(null);
   const [walletLoading, setWalletLoading] = useState(false);
+  const [newMessage, setNewMessage] = useState("");
+  const [isSending, setIsSending] = useState(false);
 
   const [currentStep, setCurrentStep] = useState(() => {
     if (!orderData) return 0;
@@ -749,6 +751,22 @@ export default function BatchDetails({
     }
   };
 
+  // Function to handle sending a message
+  const handleSendMessage = async (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
+    if (!newMessage.trim() || !order?.id) return;
+
+    try {
+      setIsSending(true);
+      await sendMessage(order.id, newMessage.trim());
+      setNewMessage("");
+    } catch (error) {
+      console.error("Error sending message:", error);
+    } finally {
+      setIsSending(false);
+    }
+  };
+
   // Helper function to get status tag with appropriate color
   const getStatusTag = (status: string) => {
     switch (status) {
@@ -869,10 +887,14 @@ export default function BatchDetails({
           <ChatDrawer
             isOpen={isDrawerOpen}
             onClose={closeChat}
-            orderId={order.id}
-            customerId={order.user.id}
-            customerName={order.user.name}
-            customerAvatar={order.user.profile_picture}
+            order={order}
+            shopper={session?.user}
+            messages={getMessages(order.id)}
+            newMessage={newMessage}
+            setNewMessage={setNewMessage}
+            handleSendMessage={handleSendMessage}
+            isSending={isSending}
+            currentUserId={session?.user?.id || ""}
           />
         )}
 
