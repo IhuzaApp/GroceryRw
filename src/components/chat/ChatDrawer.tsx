@@ -21,7 +21,7 @@ interface ChatDrawerProps {
   onClose: () => void;
   order: any;
   shopper: any;
-  messages: Message[];
+  messages?: Message[];
   newMessage: string;
   setNewMessage: (message: string) => void;
   handleSendMessage: (e?: React.FormEvent) => void;
@@ -71,7 +71,7 @@ export default function ChatDrawer({
   onClose,
   order,
   shopper,
-  messages,
+  messages = [],
   newMessage,
   setNewMessage,
   handleSendMessage,
@@ -106,22 +106,21 @@ export default function ChatDrawer({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-y-0 right-0 z-50 hidden w-96 transform bg-white shadow-xl transition-transform duration-300 ease-in-out dark:bg-gray-800 md:block">
+    <div className="fixed top-16 right-0 z-[1000] hidden h-[calc(100vh-4rem)] w-96 transform bg-white shadow-xl transition-transform duration-300 ease-in-out dark:bg-gray-800 md:block">
       {/* Header */}
       <div className="flex h-16 items-center justify-between border-b border-gray-200 px-4 dark:border-gray-700">
         <div className="flex items-center gap-3">
           <Button
             appearance="ghost"
-            color="gray"
             onClick={onClose}
             className="p-2"
           >
             <ChevronRight className="h-5 w-5" />
           </Button>
           <div>
-            <h3 className="font-medium text-gray-900 dark:text-white">
+            <h6 className="font-medium text-gray-900 dark:text-white">
               Order #{order?.id}
-            </h3>
+            </h6>
             <p className="text-sm text-gray-500 dark:text-gray-400">
               {shopper?.name || "Shopper"}
             </p>
@@ -129,7 +128,6 @@ export default function ChatDrawer({
         </div>
         <Button
           appearance="ghost"
-          color="gray"
           onClick={() => router.push(`/Messages/${order?.id}`)}
           className="p-2"
         >
@@ -149,7 +147,7 @@ export default function ChatDrawer({
         ) : (
           <>
             <div className="flex-1 overflow-y-auto p-4">
-              {messages.map((message) => (
+              {(messages || []).map((message) => (
                 <Message
                   key={message.id}
                   message={message}
@@ -169,16 +167,15 @@ export default function ChatDrawer({
               <form onSubmit={handleSubmit} className="flex gap-2">
                 <Input
                   value={newMessage}
-                  onChange={(value) => setNewMessage(value)}
+                  onChange={setNewMessage}
                   placeholder="Type a message..."
                   className="flex-1"
                 />
                 <Button
                   appearance="primary"
-                  color="green"
-                  type="submit"
-                  loading={isSending}
-                  disabled={!shopper?.id}
+                  onClick={handleSendMessage}
+                  disabled={!newMessage.trim()}
+                  className="ml-2"
                 >
                   Send
                 </Button>
