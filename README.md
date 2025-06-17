@@ -1412,3 +1412,159 @@ Please read [CONTRIBUTING.md](CONTRIBUTING.md) for details on our code of conduc
 ## License
 
 This project is licensed under the MIT License - see the [LICENSE.md](LICENSE.md) file for details.
+
+# Grocery Delivery App
+
+## Delivery Photo Upload Feature
+
+### Overview
+The delivery photo upload feature ensures that delivery confirmation photos are properly captured, uploaded, and stored in the database. The system includes safeguards to prevent data loss during the upload process.
+
+### Key Features
+
+#### 1. Photo Capture
+- Camera integration for direct photo capture
+- Support for file upload as an alternative
+- Real-time preview of captured photos
+- Image compression and validation
+
+#### 2. Upload Process
+- Automatic upload to server after capture
+- Progress tracking during upload
+- Error handling and retry capabilities
+- Validation of file types and sizes
+
+#### 3. Persistence
+- Upload state is preserved across page refreshes
+- Modal remains open until upload completes
+- Prevents accidental closure during upload
+- Automatic state recovery after page refresh
+
+### Technical Implementation
+
+#### State Management
+```typescript
+// Local storage keys
+const UPLOAD_STATE_KEY = `delivery_upload_${orderId}`;
+
+// States
+const [photoUploading, setPhotoUploading] = useState(false);
+const [photoUploaded, setPhotoUploaded] = useState(false);
+const [forceOpen, setForceOpen] = useState(false);
+```
+
+#### Upload Process
+1. Photo capture/selection
+2. State saved to localStorage
+3. Upload to server
+4. Database update
+5. State cleanup
+
+#### Error Handling
+- Network errors
+- Invalid file types
+- Size limitations
+- Server errors
+
+### API Endpoints
+
+#### Upload Delivery Photo
+```typescript
+POST /api/shopper/uploadDeliveryPhoto
+Content-Type: application/json
+
+{
+  "orderId": "uuid",
+  "file": "base64_image_data"
+}
+```
+
+### Database Schema
+
+#### Orders Table
+```sql
+ALTER TABLE orders
+ADD COLUMN delivery_photo TEXT;
+```
+
+### Usage
+
+1. Open Delivery Confirmation Modal
+2. Choose capture method:
+   - Take Photo (camera)
+   - Upload Photo (file)
+3. Preview and confirm photo
+4. Wait for upload completion
+5. View confirmation
+
+### Safety Features
+
+1. **Upload Protection**
+   - Modal cannot be closed during upload
+   - State persists across page refreshes
+   - Clear upload progress indicators
+
+2. **Data Validation**
+   - File type checking
+   - Size limitations
+   - Image compression
+
+3. **Error Recovery**
+   - Automatic retry on failure
+   - Clear error messages
+   - State preservation
+
+### Best Practices
+
+1. **Photo Capture**
+   - Use good lighting
+   - Ensure package is clearly visible
+   - Include delivery location context
+
+2. **Upload Process**
+   - Maintain stable internet connection
+   - Don't close browser during upload
+   - Wait for confirmation message
+
+3. **Troubleshooting**
+   - Check internet connection
+   - Verify file size and type
+   - Contact support if issues persist
+
+### Technical Requirements
+
+- Modern web browser with camera access
+- JavaScript enabled
+- Local storage support
+- Stable internet connection
+
+### Security Considerations
+
+1. **Data Protection**
+   - Secure API endpoints
+   - Authentication required
+   - Data validation
+
+2. **Privacy**
+   - Camera permission handling
+   - Secure storage
+   - Data cleanup
+
+### Future Improvements
+
+1. **Planned Features**
+   - Multiple photo upload
+   - Photo editing capabilities
+   - Offline support
+   - Automatic retry
+
+2. **Performance**
+   - Enhanced compression
+   - Faster upload speeds
+   - Better error handling
+
+### Support
+
+For technical issues or questions, please contact:
+- Technical Support: support@example.com
+- Bug Reports: bugs@example.com

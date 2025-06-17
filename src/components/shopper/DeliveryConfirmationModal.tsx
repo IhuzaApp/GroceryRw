@@ -1,4 +1,4 @@
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import { Modal, Button, Loader } from "rsuite";
 import { useRouter } from "next/router";
 import { formatCurrency } from "../../lib/formatCurrency";
@@ -55,6 +55,7 @@ const DeliveryConfirmationModal: React.FC<DeliveryConfirmationModalProps> = ({
   const [showCamera, setShowCamera] = useState(false);
   const [stream, setStream] = useState<MediaStream | null>(null);
   const [showPreview, setShowPreview] = useState(false);
+  const [forceOpen, setForceOpen] = useState(false);
 
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -68,6 +69,28 @@ const DeliveryConfirmationModal: React.FC<DeliveryConfirmationModalProps> = ({
     "image/heic",
   ];
   const maxFileSize = 5 * 1024 * 1024; // 5MB
+
+  // Check localStorage on mount
+  useEffect(() => {
+    if (invoiceData?.orderId) {
+      const uploadState = localStorage.getItem(`delivery_upload_${invoiceData.orderId}`);
+      if (uploadState === 'pending') {
+        setForceOpen(true);
+        setPhotoUploading(true);
+      }
+    }
+  }, [invoiceData?.orderId]);
+
+  // Save upload state to localStorage
+  useEffect(() => {
+    if (invoiceData?.orderId) {
+      if (photoUploading) {
+        localStorage.setItem(`delivery_upload_${invoiceData.orderId}`, 'pending');
+      } else if (photoUploaded) {
+        localStorage.removeItem(`delivery_upload_${invoiceData.orderId}`);
+      }
+    }
+  }, [photoUploading, photoUploaded, invoiceData?.orderId]);
 
   const handleViewInvoiceDetails = () => {
     if (!invoiceData?.id) {
@@ -148,11 +171,19 @@ const DeliveryConfirmationModal: React.FC<DeliveryConfirmationModalProps> = ({
     }
   };
 
+  const handleClose = () => {
+    if (photoUploading || forceOpen) {
+      return; // Prevent closing while uploading or if force open
+    }
+    onClose();
+  };
+
   const handleUpdateDatabase = async (imageData: string) => {
     if (!invoiceData?.orderId) return;
 
     try {
       setPhotoUploading(true);
+      setForceOpen(true);
       
       // Send the image data directly to the API
       const response = await fetch("/api/shopper/uploadDeliveryPhoto", {
@@ -175,6 +206,7 @@ const DeliveryConfirmationModal: React.FC<DeliveryConfirmationModalProps> = ({
       setSelectedFileName(data.fileName);
       setPhotoUploaded(true);
       setUploadError(null);
+      setForceOpen(false);
     } catch (error) {
       console.error("Error uploading delivery photo:", error);
       setUploadError("Failed to upload photo. Please try again.");
@@ -221,6 +253,9 @@ const DeliveryConfirmationModal: React.FC<DeliveryConfirmationModalProps> = ({
     }
   };
 
+  // Determine if modal should be open
+  const isModalOpen = open || forceOpen;
+
   if (loading) {
     return (
       <Modal open={open} onClose={onClose} size="md" className={theme === "dark" ? "bg-gray-900 text-gray-100" : ""}>
@@ -257,9 +292,17 @@ const DeliveryConfirmationModal: React.FC<DeliveryConfirmationModalProps> = ({
   }
 
   return (
-    <Modal open={open} onClose={onClose} size="md" className={theme === "dark" ? "bg-gray-900 text-gray-100" : ""}>
+    <Modal 
+      open={isModalOpen} 
+      onClose={handleClose} 
+      size="md" 
+      className={theme === "dark" ? "bg-gray-900 text-gray-100" : ""}
+      backdrop="static"
+    >
       <Modal.Header className={theme === "dark" ? "bg-gray-800 text-gray-100" : ""}>
-        <Modal.Title>Delivery Confirmation</Modal.Title>
+        <Modal.Title>
+          {photoUploading ? "Uploading Delivery Photo..." : "Delivery Confirmation"}
+        </Modal.Title>
       </Modal.Header>
       <Modal.Body className={theme === "dark" ? "bg-gray-900 text-gray-100" : ""}>
         <div className="space-y-4 p-2">
@@ -330,8 +373,19 @@ const DeliveryConfirmationModal: React.FC<DeliveryConfirmationModalProps> = ({
             <p className={`mb-3 text-sm ${
               theme === "dark" ? "text-gray-400" : "text-gray-600"
             }`}>
-              Please take a photo of the delivered package as proof of delivery.
+              {photoUploading 
+                ? "Please wait while we upload your photo..."
+                : "Please take a photo of the delivered package as proof of delivery."}
             </p>
+
+            {photoUploading && (
+              <div className="mb-4 text-center">
+                <Loader size="md" content="Uploading photo..." />
+                <p className="mt-2 text-sm text-gray-500">
+                  Please don't close this window until the upload is complete
+                </p>
+              </div>
+            )}
 
             {photoUploaded ? (
               <div className="mt-4 text-center">
@@ -360,6 +414,7 @@ const DeliveryConfirmationModal: React.FC<DeliveryConfirmationModalProps> = ({
                     onClick={startCamera}
                     appearance="primary"
                     className="mr-2"
+                    disabled={photoUploading}
                   >
                     Take Photo
                   </Button>
@@ -369,10 +424,12 @@ const DeliveryConfirmationModal: React.FC<DeliveryConfirmationModalProps> = ({
                     accept="image/*"
                     onChange={(e) => handleFileSelect(e.target.files)}
                     className="hidden"
+                    disabled={photoUploading}
                   />
                   <Button
                     onClick={() => fileInputRef.current?.click()}
                     appearance="subtle"
+                    disabled={photoUploading}
                   >
                     Upload Photo
                   </Button>
@@ -394,20 +451,26 @@ const DeliveryConfirmationModal: React.FC<DeliveryConfirmationModalProps> = ({
           onClick={handleViewInvoiceDetails}
           appearance="primary"
           className="mr-2"
-          disabled={!photoUploaded}
+          disabled={!photoUploaded || photoUploading}
         >
           View Invoice Details
         </Button>
         <Button
           onClick={handleReturnToBatches}
           appearance="subtle"
+          disabled={photoUploading}
         >
           Return to Batches
         </Button>
       </Modal.Footer>
 
       {/* Camera Modal */}
-      <Modal open={showCamera} onClose={stopCamera} size="md">
+      <Modal 
+        open={showCamera} 
+        onClose={photoUploading ? undefined : stopCamera} 
+        size="md"
+        backdrop="static"
+      >
         <Modal.Header>
           <Modal.Title>Take Delivery Photo</Modal.Title>
         </Modal.Header>
@@ -427,6 +490,7 @@ const DeliveryConfirmationModal: React.FC<DeliveryConfirmationModalProps> = ({
                   appearance="primary"
                   onClick={captureImage}
                   className="mt-4"
+                  disabled={photoUploading}
                 >
                   Capture Photo
                 </Button>
@@ -442,12 +506,17 @@ const DeliveryConfirmationModal: React.FC<DeliveryConfirmationModalProps> = ({
                   />
                 </div>
                 <div className="mt-4 flex space-x-4">
-                  <Button appearance="ghost" onClick={retakePhoto}>
+                  <Button 
+                    appearance="ghost" 
+                    onClick={retakePhoto}
+                    disabled={photoUploading}
+                  >
                     Retake
                   </Button>
                   <Button
                     appearance="primary"
                     onClick={confirmPhoto}
+                    disabled={photoUploading}
                   >
                     Use This Photo
                   </Button>
@@ -457,7 +526,11 @@ const DeliveryConfirmationModal: React.FC<DeliveryConfirmationModalProps> = ({
           </div>
         </Modal.Body>
         <Modal.Footer>
-          <Button onClick={stopCamera} appearance="subtle">
+          <Button 
+            onClick={stopCamera} 
+            appearance="subtle"
+            disabled={photoUploading}
+          >
             Cancel
           </Button>
         </Modal.Footer>
