@@ -203,6 +203,39 @@ const DeliveryConfirmationModal: React.FC<DeliveryConfirmationModalProps> = ({
       }
 
       const data = await response.json();
+      
+      // Update the order with the delivery photo URL
+      const updateResponse = await fetch("/api/graphql", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          query: `
+            mutation UpdateOrderDeliveryPhoto($order_id: uuid!, $delivery_photo_url: String!, $updated_at: timestamptz!) {
+              update_Orders(where: {id: {_eq: $order_id}}, _set: {delivery_photo_url: $delivery_photo_url, updated_at: $updated_at}) {
+                affected_rows
+              }
+            }
+          `,
+          variables: {
+            order_id: invoiceData.orderId,
+            delivery_photo_url: data.fileName,
+            updated_at: new Date().toISOString()
+          }
+        })
+      });
+
+      if (!updateResponse.ok) {
+        throw new Error("Failed to update order with delivery photo");
+      }
+
+      const updateData = await updateResponse.json();
+      
+      if (updateData.errors) {
+        throw new Error(updateData.errors[0].message);
+      }
+
       setSelectedFileName(data.fileName);
       setPhotoUploaded(true);
       setUploadError(null);
