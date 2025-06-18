@@ -329,16 +329,16 @@ const DeliveryConfirmationModal: React.FC<DeliveryConfirmationModalProps> = ({
       open={isModalOpen} 
       onClose={handleClose} 
       size="md" 
-      className={theme === "dark" ? "bg-gray-900 text-gray-100" : ""}
+      className={`${theme === "dark" ? "bg-gray-900 text-gray-100" : ""} w-full max-w-2xl mx-auto`}
       backdrop="static"
     >
-      <Modal.Header className={theme === "dark" ? "bg-gray-800 text-gray-100" : ""}>
-        <Modal.Title>
+      <Modal.Header className={`${theme === "dark" ? "bg-gray-800 text-gray-100" : ""} px-4 py-3 sm:px-6`}>
+        <Modal.Title className="text-lg sm:text-xl font-semibold">
           {photoUploading ? "Uploading Delivery Photo..." : "Delivery Confirmation"}
         </Modal.Title>
       </Modal.Header>
-      <Modal.Body className={theme === "dark" ? "bg-gray-900 text-gray-100" : ""}>
-        <div className="space-y-4 p-2">
+      <Modal.Body className={`${theme === "dark" ? "bg-gray-900 text-gray-100" : ""} p-4 sm:p-6`}>
+        <div className="space-y-4">
           {/* Success message */}
           <div className={`rounded-md p-4 text-center ${
             theme === "dark" 
@@ -348,7 +348,7 @@ const DeliveryConfirmationModal: React.FC<DeliveryConfirmationModalProps> = ({
             <div className="mb-2 flex justify-center">
               <svg
                 xmlns="http://www.w3.org/2000/svg"
-                className={`h-12 w-12 ${theme === "dark" ? "text-green-400" : "text-green-500"}`}
+                className={`h-8 w-8 sm:h-12 sm:w-12 ${theme === "dark" ? "text-green-400" : "text-green-500"}`}
                 fill="none"
                 viewBox="0 0 24 24"
                 stroke="currentColor"
@@ -361,10 +361,10 @@ const DeliveryConfirmationModal: React.FC<DeliveryConfirmationModalProps> = ({
                 />
               </svg>
             </div>
-            <h3 className="text-lg font-semibold">
+            <h3 className="text-base sm:text-lg font-semibold">
               Order Successfully Delivered!
             </h3>
-            <p className="mt-1">
+            <p className="mt-1 text-sm sm:text-base">
               Order #{invoiceData.orderNumber} has been marked as delivered.
             </p>
           </div>
@@ -375,8 +375,8 @@ const DeliveryConfirmationModal: React.FC<DeliveryConfirmationModalProps> = ({
               ? "border-gray-700 bg-gray-800" 
               : "bg-gray-50"
           }`}>
-            <h3 className="mb-2 text-lg font-semibold">Order Summary</h3>
-            <div className="space-y-2">
+            <h3 className="mb-2 text-base sm:text-lg font-semibold">Order Summary</h3>
+            <div className="space-y-2 text-sm sm:text-base">
               <div className="flex justify-between">
                 <span>Items:</span>
                 <span>{invoiceData.items.length}</span>
@@ -400,7 +400,7 @@ const DeliveryConfirmationModal: React.FC<DeliveryConfirmationModalProps> = ({
               ? "border-gray-700 bg-gray-800" 
               : "bg-white"
           }`}>
-            <h3 className="mb-3 text-lg font-semibold">
+            <h3 className="mb-3 text-base sm:text-lg font-semibold">
               Delivery Photo
             </h3>
             <p className={`mb-3 text-sm ${
@@ -429,7 +429,7 @@ const DeliveryConfirmationModal: React.FC<DeliveryConfirmationModalProps> = ({
                 }`}>
                   <p className="font-medium">Photo uploaded successfully!</p>
                   {capturedImage && (
-                    <div className="relative mx-auto mt-2 h-48 w-64 overflow-hidden rounded-lg">
+                    <div className="relative mx-auto mt-2 h-32 w-48 sm:h-48 sm:w-64 overflow-hidden rounded-lg">
                       <Image
                         src={capturedImage}
                         alt="Delivery proof"
@@ -442,11 +442,11 @@ const DeliveryConfirmationModal: React.FC<DeliveryConfirmationModalProps> = ({
               </div>
             ) : (
               <div className="mt-4 space-y-4">
-                <div className="flex justify-center space-x-4">
+                <div className="flex flex-col sm:flex-row justify-center space-y-2 sm:space-y-0 sm:space-x-4">
                   <Button
                     onClick={startCamera}
                     appearance="primary"
-                    className="mr-2"
+                    className="w-full sm:w-auto"
                     disabled={photoUploading}
                   >
                     Take Photo
@@ -462,13 +462,14 @@ const DeliveryConfirmationModal: React.FC<DeliveryConfirmationModalProps> = ({
                   <Button
                     onClick={() => fileInputRef.current?.click()}
                     appearance="subtle"
+                    className="w-full sm:w-auto"
                     disabled={photoUploading}
                   >
                     Upload Photo
                   </Button>
                 </div>
                 {uploadError && (
-                  <p className={`mt-2 text-sm ${
+                  <p className={`mt-2 text-sm text-center ${
                     theme === "dark" ? "text-red-400" : "text-red-600"
                   }`}>
                     {uploadError}
@@ -479,22 +480,25 @@ const DeliveryConfirmationModal: React.FC<DeliveryConfirmationModalProps> = ({
           </div>
         </div>
       </Modal.Body>
-      <Modal.Footer className={theme === "dark" ? "bg-gray-800" : ""}>
-        <Button
-          onClick={handleViewInvoiceDetails}
-          appearance="primary"
-          className="mr-2"
-          disabled={!photoUploaded || photoUploading}
-        >
-          View Invoice Details
-        </Button>
-        <Button
-          onClick={handleReturnToBatches}
-          appearance="subtle"
-          disabled={photoUploading}
-        >
-          Return to Batches
-        </Button>
+      <Modal.Footer className={`${theme === "dark" ? "bg-gray-800" : ""} px-4 py-3 sm:px-6`}>
+        <div className="flex flex-col sm:flex-row justify-end space-y-2 sm:space-y-0 sm:space-x-2">
+          <Button
+            onClick={handleViewInvoiceDetails}
+            appearance="primary"
+            className="w-full sm:w-auto"
+            disabled={!photoUploaded || photoUploading}
+          >
+            View Invoice Details
+          </Button>
+          <Button
+            onClick={handleReturnToBatches}
+            appearance="subtle"
+            className="w-full sm:w-auto"
+            disabled={photoUploading}
+          >
+            Return to Batches
+          </Button>
+        </div>
       </Modal.Footer>
 
       {/* Camera Modal */}
@@ -503,26 +507,29 @@ const DeliveryConfirmationModal: React.FC<DeliveryConfirmationModalProps> = ({
         onClose={photoUploading ? undefined : stopCamera} 
         size="md"
         backdrop="static"
+        className="w-full max-w-2xl mx-auto"
       >
-        <Modal.Header>
+        <Modal.Header className={theme === "dark" ? "bg-gray-800 text-gray-100" : ""}>
           <Modal.Title>Take Delivery Photo</Modal.Title>
         </Modal.Header>
-        <Modal.Body>
+        <Modal.Body className={theme === "dark" ? "bg-gray-900 text-gray-100" : ""}>
           <div className="flex flex-col items-center">
             {!showPreview ? (
               <>
-                <video
-                  ref={videoRef}
-                  autoPlay
-                  playsInline
-                  muted
-                  className="h-auto w-full rounded-lg"
-                />
+                <div className="w-full aspect-video relative rounded-lg overflow-hidden">
+                  <video
+                    ref={videoRef}
+                    autoPlay
+                    playsInline
+                    muted
+                    className="w-full h-full object-cover"
+                  />
+                </div>
                 <canvas ref={canvasRef} className="hidden" />
                 <Button
                   appearance="primary"
                   onClick={captureImage}
-                  className="mt-4"
+                  className="mt-4 w-full sm:w-auto"
                   disabled={photoUploading}
                 >
                   Capture Photo
@@ -530,7 +537,7 @@ const DeliveryConfirmationModal: React.FC<DeliveryConfirmationModalProps> = ({
               </>
             ) : (
               <>
-                <div className="relative h-64 w-64 overflow-hidden rounded-lg">
+                <div className="relative w-full aspect-video sm:w-96 overflow-hidden rounded-lg">
                   <Image
                     src={capturedImage || ''}
                     alt="Captured delivery"
@@ -538,10 +545,11 @@ const DeliveryConfirmationModal: React.FC<DeliveryConfirmationModalProps> = ({
                     className="object-cover"
                   />
                 </div>
-                <div className="mt-4 flex space-x-4">
+                <div className="mt-4 flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-4">
                   <Button 
                     appearance="ghost" 
                     onClick={retakePhoto}
+                    className="w-full sm:w-auto"
                     disabled={photoUploading}
                   >
                     Retake
@@ -549,6 +557,7 @@ const DeliveryConfirmationModal: React.FC<DeliveryConfirmationModalProps> = ({
                   <Button
                     appearance="primary"
                     onClick={confirmPhoto}
+                    className="w-full sm:w-auto"
                     disabled={photoUploading}
                   >
                     Use This Photo
@@ -558,10 +567,11 @@ const DeliveryConfirmationModal: React.FC<DeliveryConfirmationModalProps> = ({
             )}
           </div>
         </Modal.Body>
-        <Modal.Footer>
+        <Modal.Footer className={theme === "dark" ? "bg-gray-800" : ""}>
           <Button 
             onClick={stopCamera} 
             appearance="subtle"
+            className="w-full sm:w-auto"
             disabled={photoUploading}
           >
             Cancel

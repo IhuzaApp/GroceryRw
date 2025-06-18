@@ -823,11 +823,12 @@ export default function BatchDetails({
 
   return (
     <div
-      className={`max-w-1xl mx-auto p-4 ${
+      className={`w-full mx-auto px-1 py-2 sm:px-4 sm:py-4 ${
         theme === "dark"
           ? "bg-gray-900 text-gray-100"
           : "bg-gray-50 text-gray-900"
       }`}
+      style={{ maxWidth: '100vw' }}
     >
       {/* Product Image Modal */}
       <ProductImageModal
@@ -889,7 +890,7 @@ export default function BatchDetails({
             onClose={closeChat}
             order={order}
             shopper={session?.user}
-            messages={getMessages(order.id)}
+            messages={getMessages(order.id) as any}
             newMessage={newMessage}
             setNewMessage={setNewMessage}
             handleSendMessage={handleSendMessage}
@@ -898,13 +899,13 @@ export default function BatchDetails({
           />
         )}
 
-      <div className="mb-4 flex items-center justify-between">
+      <div className="mb-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 w-full">
         <Button
           appearance="link"
           onClick={() => router.back()}
-          className={`flex items-center ${
+          className={`flex items-center text-base sm:text-base ${
             theme === "dark" ? "text-gray-300" : "text-gray-600"
-          }`}
+          } px-0`}
         >
           <span className="mr-2">
             <svg
@@ -925,27 +926,30 @@ export default function BatchDetails({
       <Panel
         bordered
         header={`Order #${order.OrderID || order.id.slice(0, 8)}`}
-        className={theme === "dark" ? "bg-gray-800 text-gray-100" : ""}
+        className={`${theme === "dark" ? "bg-gray-800 text-gray-100" : ""} p-1 sm:p-6 w-full min-w-0`}
         shaded
       >
-        <Steps current={currentStep} className="mb-8">
-          <Steps.Item title="Accepted" />
-          <Steps.Item title="Shopping" />
-          <Steps.Item title="On The Way" />
-          <Steps.Item title="Delivered" />
-        </Steps>
+        <div className="overflow-x-auto w-full min-w-0">
+          <Steps current={currentStep} className="mb-8 w-full min-w-0">
+            <Steps.Item title="Accepted" />
+            <Steps.Item title="Shopping" />
+            <Steps.Item title="On The Way" />
+            <Steps.Item title="Delivered" />
+          </Steps>
+        </div>
 
-        <div className="mb-6 grid grid-cols-1 gap-6 md:grid-cols-2">
+        <div className="mb-6 grid grid-cols-1 gap-2 sm:gap-4 md:grid-cols-2 w-full min-w-0">
           {/* Shop Information */}
           <div
-            className={`rounded-lg border p-4 ${
+            className={`rounded-lg border p-4 min-w-0 ${
               theme === "dark"
                 ? "border-gray-700 bg-gray-800"
                 : "border-gray-200 bg-white"
             }`}
+            style={{ minWidth: 0 }}
           >
             <h3
-              className={`mb-2 text-lg font-bold ${
+              className={`mb-2 text-base sm:text-lg font-bold ${
                 theme === "dark" ? "text-gray-100" : "text-gray-900"
               }`}
             >
@@ -981,14 +985,14 @@ export default function BatchDetails({
               </div>
               <div>
                 <h4
-                  className={`font-medium ${
+                  className={`font-medium text-base sm:text-base ${
                     theme === "dark" ? "text-gray-100" : "text-gray-900"
                   }`}
                 >
                   {order.shop.name}
                 </h4>
                 <p
-                  className={`text-sm ${
+                  className={`text-xs sm:text-sm ${
                     theme === "dark" ? "text-gray-400" : "text-gray-500"
                   }`}
                 >
@@ -999,7 +1003,7 @@ export default function BatchDetails({
             <Link href={getDirectionsUrl(order.shop.address)} target="_blank">
               <Button
                 appearance="ghost"
-                className={`mt-3 ${
+                className={`mt-3 w-full sm:w-auto ${
                   theme === "dark" ? "text-blue-400 hover:text-blue-300" : ""
                 }`}
               >
@@ -1022,20 +1026,21 @@ export default function BatchDetails({
 
           {/* Customer Information */}
           <div
-            className={`rounded-lg border p-4 ${
+            className={`rounded-lg border p-4 min-w-0 ${
               theme === "dark"
                 ? "border-gray-700 bg-gray-800"
                 : "border-gray-200 bg-white"
             }`}
+            style={{ minWidth: 0 }}
           >
             <h3
-              className={`mb-2 text-lg font-bold ${
+              className={`mb-2 text-base sm:text-lg font-bold ${
                 theme === "dark" ? "text-gray-100" : "text-gray-900"
               }`}
             >
               Customer Details
             </h3>
-            <div className="flex items-center justify-between">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 w-full">
               <div className="flex items-center">
                 <div
                   className={`mr-3 h-12 w-12 flex-shrink-0 overflow-hidden rounded-full ${
@@ -1067,14 +1072,14 @@ export default function BatchDetails({
                 </div>
                 <div>
                   <h4
-                    className={`font-medium ${
+                    className={`font-medium text-base sm:text-base ${
                       theme === "dark" ? "text-gray-100" : "text-gray-900"
                     }`}
                   >
                     {order.user.name}
                   </h4>
                   <p
-                    className={`text-sm ${
+                    className={`text-xs sm:text-sm ${
                       theme === "dark" ? "text-gray-400" : "text-gray-500"
                     }`}
                   >
@@ -1087,7 +1092,7 @@ export default function BatchDetails({
               {order.status !== "delivered" ? (
                 <Button
                   appearance="ghost"
-                  className={`flex items-center ${
+                  className={`flex items-center w-full sm:w-auto ${
                     theme === "dark"
                       ? "text-blue-400 hover:text-blue-300"
                       : "text-blue-600"
@@ -1108,7 +1113,7 @@ export default function BatchDetails({
               ) : (
                 <Button
                   appearance="ghost"
-                  className={`flex cursor-not-allowed items-center ${
+                  className={`flex cursor-not-allowed items-center w-full sm:w-auto ${
                     theme === "dark" ? "text-gray-600" : "text-gray-400"
                   }`}
                   disabled
@@ -1128,9 +1133,9 @@ export default function BatchDetails({
             </div>
 
             <div className="mt-3">
-              <h4 className="mb-1 text-sm font-medium">Delivery Address:</h4>
+              <h4 className="mb-1 text-xs sm:text-sm font-medium">Delivery Address:</h4>
               <p
-                className={`text-sm ${
+                className={`text-xs sm:text-sm ${
                   theme === "dark" ? "text-gray-400" : "text-gray-500"
                 }`}
               >
@@ -1153,7 +1158,7 @@ export default function BatchDetails({
               >
                 <Button
                   appearance="ghost"
-                  className={`mt-2 ${
+                  className={`mt-2 w-full sm:w-auto ${
                     theme === "dark" ? "text-blue-400 hover:text-blue-300" : ""
                   }`}
                 >
