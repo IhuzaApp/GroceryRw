@@ -185,7 +185,7 @@ const DeliveryConfirmationModal: React.FC<DeliveryConfirmationModalProps> = ({
       setPhotoUploading(true);
       setForceOpen(true);
       
-      // Send the image data directly to the API
+      // Send the image data and updatedAt directly to the API
       const response = await fetch("/api/shopper/uploadDeliveryPhoto", {
         method: "POST",
         headers: {
@@ -194,6 +194,7 @@ const DeliveryConfirmationModal: React.FC<DeliveryConfirmationModalProps> = ({
         body: JSON.stringify({
           orderId: invoiceData.orderId,
           file: imageData,
+          updatedAt: new Date().toISOString(),
         }),
       });
 
@@ -204,38 +205,6 @@ const DeliveryConfirmationModal: React.FC<DeliveryConfirmationModalProps> = ({
 
       const data = await response.json();
       
-      // Update the order with the delivery photo URL
-      const updateResponse = await fetch("/api/graphql", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          query: `
-            mutation UpdateOrderDeliveryPhoto($order_id: uuid!, $delivery_photo_url: String!, $updated_at: timestamptz!) {
-              update_Orders(where: {id: {_eq: $order_id}}, _set: {delivery_photo_url: $delivery_photo_url, updated_at: $updated_at}) {
-                affected_rows
-              }
-            }
-          `,
-          variables: {
-            order_id: invoiceData.orderId,
-            delivery_photo_url: data.fileName,
-            updated_at: new Date().toISOString()
-          }
-        })
-      });
-
-      if (!updateResponse.ok) {
-        throw new Error("Failed to update order with delivery photo");
-      }
-
-      const updateData = await updateResponse.json();
-      
-      if (updateData.errors) {
-        throw new Error(updateData.errors[0].message);
-      }
-
       setSelectedFileName(data.fileName);
       setPhotoUploaded(true);
       setUploadError(null);
@@ -442,6 +411,17 @@ const DeliveryConfirmationModal: React.FC<DeliveryConfirmationModalProps> = ({
               </div>
             ) : (
               <div className="mt-4 space-y-4">
+                {(!photoUploaded && !photoUploading && !capturedImage) && (
+                  <div className="flex flex-col items-center justify-center mb-4">
+                    <div className="w-24 h-24 flex items-center justify-center rounded-lg bg-gray-100 dark:bg-gray-800 border-2 border-dashed border-gray-300 dark:border-gray-600">
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-12 w-12 text-gray-400 dark:text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 7h2l2-3h6l2 3h2a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9a2 2 0 012-2zm9 4a3 3 0 11-6 0 3 3 0 016 0z" />
+                      </svg>
+                    </div>
+                    <p className="mt-2 text-sm text-gray-500 dark:text-gray-400 font-medium">No photo added yet</p>
+                    <p className="text-xs text-red-500 mt-1">* Delivery photo is required</p>
+                  </div>
+                )}
                 <div className="flex flex-col sm:flex-row justify-center space-y-2 sm:space-y-0 sm:space-x-4">
                   <Button
                     onClick={startCamera}
