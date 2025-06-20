@@ -38,7 +38,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     }
 
     if (!hasuraClient) {
-      logger.error('Hasura client not initialized');
+      logger.error('Hasura client not initialized', 'get-shopper-vehicles');
       return res.status(500).json({ error: 'Internal server error' });
     }
 
@@ -48,7 +48,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     return res.status(200).json(response);
   } catch (error) {
-    logger.error('Error fetching vehicles:', error);
+    logger.error('Error fetching vehicles:', error instanceof Error ? error.message : String(error), 'get-shopper-vehicles');
     return res.status(500).json({ error: 'Internal server error' });
   }
 } 
