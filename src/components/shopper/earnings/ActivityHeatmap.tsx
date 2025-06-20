@@ -63,7 +63,13 @@ const ActivityHeatmap: React.FC<ActivityHeatmapProps> = ({ data }) => {
   if (loading) {
     return (
       <div className="mt-8">
-        <h3 className={`mb-4 font-medium ${theme === "dark" ? "text-white" : "text-gray-900"}`}>Busiest Times</h3>
+        <h3
+          className={`mb-4 font-medium ${
+            theme === "dark" ? "text-white" : "text-gray-900"
+          }`}
+        >
+          Busiest Times
+        </h3>
         <div className="flex items-center justify-center py-8">
           <Loader size="md" content="Loading activity data..." />
         </div>
@@ -74,7 +80,13 @@ const ActivityHeatmap: React.FC<ActivityHeatmapProps> = ({ data }) => {
   if (error) {
     return (
       <div className="mt-8">
-        <h3 className={`mb-4 font-medium ${theme === "dark" ? "text-white" : "text-gray-900"}`}>Busiest Times</h3>
+        <h3
+          className={`mb-4 font-medium ${
+            theme === "dark" ? "text-white" : "text-gray-900"
+          }`}
+        >
+          Busiest Times
+        </h3>
         <div className="py-4 text-center text-red-500">
           Error loading activity data
         </div>
@@ -90,17 +102,41 @@ const ActivityHeatmap: React.FC<ActivityHeatmapProps> = ({ data }) => {
 
   return (
     <div className="mt-8">
-      <h3 className={`mb-4 font-medium ${theme === "dark" ? "text-white" : "text-gray-900"}`}>Busiest Times</h3>
+      <h3
+        className={`mb-4 font-medium ${
+          theme === "dark" ? "text-white" : "text-gray-900"
+        }`}
+      >
+        Busiest Times
+      </h3>
 
       {/* Summary Stats */}
       {summary && (
         <div className="mb-4 grid grid-cols-2 gap-4">
-          <div className={`rounded-lg p-3 ${theme === "dark" ? "bg-gray-800" : "bg-green-50"}`}>
-            <div className={`text-sm ${theme === "dark" ? "text-gray-300" : "text-gray-600"}`}>Busiest Day</div>
-            <div className={`mt-1 text-lg font-semibold ${theme === "dark" ? "text-white" : "text-gray-900"}`}>
+          <div
+            className={`rounded-lg p-3 ${
+              theme === "dark" ? "bg-gray-800" : "bg-green-50"
+            }`}
+          >
+            <div
+              className={`text-sm ${
+                theme === "dark" ? "text-gray-300" : "text-gray-600"
+              }`}
+            >
+              Busiest Day
+            </div>
+            <div
+              className={`mt-1 text-lg font-semibold ${
+                theme === "dark" ? "text-white" : "text-gray-900"
+              }`}
+            >
               {summary.busiestDay}
             </div>
-            <div className={`text-xs ${theme === "dark" ? "text-gray-400" : "text-gray-500"}`}>
+            <div
+              className={`text-xs ${
+                theme === "dark" ? "text-gray-400" : "text-gray-500"
+              }`}
+            >
               {summary.busiestDayCount} orders (
               {Math.round(
                 (summary.busiestDayCount / summary.totalOrders) * 100
@@ -108,12 +144,30 @@ const ActivityHeatmap: React.FC<ActivityHeatmapProps> = ({ data }) => {
               % of total)
             </div>
           </div>
-          <div className={`rounded-lg p-3 ${theme === "dark" ? "bg-gray-800" : "bg-green-50"}`}>
-            <div className={`text-sm ${theme === "dark" ? "text-gray-300" : "text-gray-600"}`}>Busiest Hour</div>
-            <div className={`mt-1 text-lg font-semibold ${theme === "dark" ? "text-white" : "text-gray-900"}`}>
+          <div
+            className={`rounded-lg p-3 ${
+              theme === "dark" ? "bg-gray-800" : "bg-green-50"
+            }`}
+          >
+            <div
+              className={`text-sm ${
+                theme === "dark" ? "text-gray-300" : "text-gray-600"
+              }`}
+            >
+              Busiest Hour
+            </div>
+            <div
+              className={`mt-1 text-lg font-semibold ${
+                theme === "dark" ? "text-white" : "text-gray-900"
+              }`}
+            >
               {summary.busiestHour}
             </div>
-            <div className={`text-xs ${theme === "dark" ? "text-gray-400" : "text-gray-500"}`}>
+            <div
+              className={`text-xs ${
+                theme === "dark" ? "text-gray-400" : "text-gray-500"
+              }`}
+            >
               {summary.busiestHourCount} orders (
               {Math.round(
                 (summary.busiestHourCount / summary.totalOrders) * 100
@@ -129,7 +183,12 @@ const ActivityHeatmap: React.FC<ActivityHeatmapProps> = ({ data }) => {
         <div className="w-10 pr-2 text-right text-xs"></div>
         <div className="grid flex-1 grid-cols-7 gap-1">
           {days.map((day, i) => (
-            <div key={i} className={`text-center text-xs font-medium ${theme === "dark" ? "text-gray-300" : "text-gray-700"}`}>
+            <div
+              key={i}
+              className={`text-center text-xs font-medium ${
+                theme === "dark" ? "text-gray-300" : "text-gray-700"
+              }`}
+            >
               {day}
             </div>
           ))}
@@ -140,7 +199,13 @@ const ActivityHeatmap: React.FC<ActivityHeatmapProps> = ({ data }) => {
       {hours.map((hour, hourIndex) => (
         <div key={hourIndex} className="mb-1 flex items-center">
           {/* Hour label */}
-          <div className={`w-10 pr-2 text-right text-xs ${theme === "dark" ? "text-gray-400" : "text-gray-600"}`}>{hour}:00</div>
+          <div
+            className={`w-10 pr-2 text-right text-xs ${
+              theme === "dark" ? "text-gray-400" : "text-gray-600"
+            }`}
+          >
+            {hour}:00
+          </div>
 
           {/* Day cells for this hour */}
           <div className="grid flex-1 grid-cols-7 gap-1">
@@ -163,10 +228,18 @@ const ActivityHeatmap: React.FC<ActivityHeatmapProps> = ({ data }) => {
         </div>
       ))}
 
-      <div className={`mt-2 flex items-center justify-between ${theme === "dark" ? "text-gray-400" : "text-gray-600"}`}>
+      <div
+        className={`mt-2 flex items-center justify-between ${
+          theme === "dark" ? "text-gray-400" : "text-gray-600"
+        }`}
+      >
         <div className="text-xs">Less active</div>
         <div className="flex items-center gap-1">
-          <div className={`h-3 w-3 rounded-sm ${theme === "dark" ? "bg-gray-800" : "bg-gray-100"}`}></div>
+          <div
+            className={`h-3 w-3 rounded-sm ${
+              theme === "dark" ? "bg-gray-800" : "bg-gray-100"
+            }`}
+          ></div>
           <div className="h-3 w-3 rounded-sm bg-green-100"></div>
           <div className="h-3 w-3 rounded-sm bg-green-300"></div>
           <div className="h-3 w-3 rounded-sm bg-green-500"></div>
@@ -175,7 +248,11 @@ const ActivityHeatmap: React.FC<ActivityHeatmapProps> = ({ data }) => {
       </div>
 
       {summary && (
-        <div className={`mt-4 text-center text-xs ${theme === "dark" ? "text-gray-400" : "text-gray-500"}`}>
+        <div
+          className={`mt-4 text-center text-xs ${
+            theme === "dark" ? "text-gray-400" : "text-gray-500"
+          }`}
+        >
           Based on analysis of {summary.totalOrders} total orders
         </div>
       )}

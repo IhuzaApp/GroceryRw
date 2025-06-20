@@ -81,21 +81,41 @@ const PaymentHistory: React.FC<PaymentHistoryProps> = ({
   return (
     <div>
       <div className="mb-6">
-        <h3 className={`mb-2 font-medium ${theme === "dark" ? "text-white" : "text-gray-900"}`}>Next Payout</h3>
-        <div className={`rounded-lg border p-4 ${
-          theme === "dark" 
-            ? "border-green-700 bg-green-900/20" 
-            : "border-green-200 bg-green-50"
-        }`}>
+        <h3
+          className={`mb-2 font-medium ${
+            theme === "dark" ? "text-white" : "text-gray-900"
+          }`}
+        >
+          Next Payout
+        </h3>
+        <div
+          className={`rounded-lg border p-4 ${
+            theme === "dark"
+              ? "border-green-700 bg-green-900/20"
+              : "border-green-200 bg-green-50"
+          }`}
+        >
           <div className="flex items-center justify-between">
             <div>
-              <div className={`text-lg font-bold ${theme === "dark" ? "text-white" : "text-gray-900"}`}>
+              <div
+                className={`text-lg font-bold ${
+                  theme === "dark" ? "text-white" : "text-gray-900"
+                }`}
+              >
                 {formatCurrency(nextPayoutAmount)}
               </div>
-              <div className={`text-sm ${theme === "dark" ? "text-gray-300" : "text-gray-500"}`}>
+              <div
+                className={`text-sm ${
+                  theme === "dark" ? "text-gray-300" : "text-gray-500"
+                }`}
+              >
                 Available for withdrawal
               </div>
-              <div className={`mt-1 text-xs ${theme === "dark" ? "text-gray-400" : "text-gray-400"}`}>
+              <div
+                className={`mt-1 text-xs ${
+                  theme === "dark" ? "text-gray-400" : "text-gray-400"
+                }`}
+              >
                 Next automatic payout on {formattedNextPayoutDate}
               </div>
             </div>
@@ -104,18 +124,30 @@ const PaymentHistory: React.FC<PaymentHistoryProps> = ({
         </div>
       </div>
 
-      <h3 className={`mb-4 font-medium ${theme === "dark" ? "text-white" : "text-gray-900"}`}>Transaction History</h3>
+      <h3
+        className={`mb-4 font-medium ${
+          theme === "dark" ? "text-white" : "text-gray-900"
+        }`}
+      >
+        Transaction History
+      </h3>
       {isLoading ? (
         <div className="flex justify-center py-8">
-          <p className={theme === "dark" ? "text-gray-300" : "text-gray-600"}>Loading transaction history...</p>
+          <p className={theme === "dark" ? "text-gray-300" : "text-gray-600"}>
+            Loading transaction history...
+          </p>
         </div>
       ) : transactions.length === 0 ? (
-        <div className={`rounded-lg border p-6 text-center ${
-          theme === "dark" 
-            ? "border-gray-700 bg-gray-800" 
-            : "border-gray-200 bg-gray-50"
-        }`}>
-          <p className={theme === "dark" ? "text-gray-400" : "text-gray-500"}>No transaction history available yet</p>
+        <div
+          className={`rounded-lg border p-6 text-center ${
+            theme === "dark"
+              ? "border-gray-700 bg-gray-800"
+              : "border-gray-200 bg-gray-50"
+          }`}
+        >
+          <p className={theme === "dark" ? "text-gray-400" : "text-gray-500"}>
+            No transaction history available yet
+          </p>
         </div>
       ) : (
         <div className="space-y-4">
@@ -123,28 +155,46 @@ const PaymentHistory: React.FC<PaymentHistoryProps> = ({
             <div
               key={item.id}
               className={`flex items-center justify-between rounded-lg border p-4 ${
-                theme === "dark" 
-                  ? "border-gray-700 bg-gray-800" 
+                theme === "dark"
+                  ? "border-gray-700 bg-gray-800"
                   : "border-gray-200 bg-white"
               }`}
             >
               <div>
-                <div className={`font-medium ${theme === "dark" ? "text-white" : "text-gray-900"}`}>
+                <div
+                  className={`font-medium ${
+                    theme === "dark" ? "text-white" : "text-gray-900"
+                  }`}
+                >
                   {item.description ||
                     item.type.charAt(0).toUpperCase() + item.type.slice(1)}
                   <Tag color={getTagColor(item.type)} className="ml-2">
                     {item.type}
                   </Tag>
                 </div>
-                <div className={`text-sm ${theme === "dark" ? "text-gray-400" : "text-gray-500"}`}>{item.date}</div>
+                <div
+                  className={`text-sm ${
+                    theme === "dark" ? "text-gray-400" : "text-gray-500"
+                  }`}
+                >
+                  {item.date}
+                </div>
                 {item.orderId && (
-                  <div className={`text-xs ${theme === "dark" ? "text-gray-500" : "text-gray-400"}`}>
+                  <div
+                    className={`text-xs ${
+                      theme === "dark" ? "text-gray-500" : "text-gray-400"
+                    }`}
+                  >
                     Order: #{item.orderNumber || "Unknown"}
                   </div>
                 )}
               </div>
               <div className="text-right">
-                <div className={`font-medium ${theme === "dark" ? "text-white" : "text-gray-900"}`}>
+                <div
+                  className={`font-medium ${
+                    theme === "dark" ? "text-white" : "text-gray-900"
+                  }`}
+                >
                   {item.type.toLowerCase() === "withdrawal" ? "-" : "+"}
                   {formatCurrency(item.amount)}
                 </div>
@@ -156,7 +206,9 @@ const PaymentHistory: React.FC<PaymentHistoryProps> = ({
                       ? "text-orange-500"
                       : item.status.toLowerCase() === "failed"
                       ? "text-red-500"
-                      : theme === "dark" ? "text-gray-400" : "text-gray-500"
+                      : theme === "dark"
+                      ? "text-gray-400"
+                      : "text-gray-500"
                   }`}
                 >
                   {item.status.charAt(0).toUpperCase() + item.status.slice(1)}
@@ -170,8 +222,13 @@ const PaymentHistory: React.FC<PaymentHistoryProps> = ({
       {/* Pagination */}
       {!isLoading && transactions.length > pageSize && (
         <div className="mt-4 flex items-center justify-between">
-          <div className={`text-sm ${theme === "dark" ? "text-gray-400" : "text-gray-500"}`}>
-            Showing {startIndex + 1}-{Math.min(endIndex, transactions.length)} of {transactions.length} transactions
+          <div
+            className={`text-sm ${
+              theme === "dark" ? "text-gray-400" : "text-gray-500"
+            }`}
+          >
+            Showing {startIndex + 1}-{Math.min(endIndex, transactions.length)}{" "}
+            of {transactions.length} transactions
           </div>
           <Pagination
             size="sm"
