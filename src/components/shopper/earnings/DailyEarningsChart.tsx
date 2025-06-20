@@ -128,7 +128,10 @@ const DailyEarningsChart: React.FC<DailyEarningsChartProps> = ({
   ];
 
   return (
-    <div className="relative w-full" style={{ aspectRatio: '2/1', minHeight: '300px' }}>
+    <div
+      className="relative w-full"
+      style={{ aspectRatio: "2/1", minHeight: "300px" }}
+    >
       <ResponsiveContainer width="100%" height="100%">
         <BarChart
           data={data}
