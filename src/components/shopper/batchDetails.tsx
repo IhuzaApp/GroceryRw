@@ -736,7 +736,12 @@ export default function BatchDetails({
 
   // Function to handle chat button click
   const handleChatClick = () => {
-    if (!order?.user) return;
+    if (!order?.user || !order.user.id) {
+      if (typeof window !== 'undefined') {
+        alert("Cannot start chat: Customer ID is missing.");
+      }
+      return;
+    }
 
     openChat(
       order.id,
