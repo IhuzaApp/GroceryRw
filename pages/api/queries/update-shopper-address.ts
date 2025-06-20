@@ -65,7 +65,10 @@ export default async function handler(
       shopper,
     });
   } catch (error) {
-    logger.error("Error updating shopper address:", error instanceof Error ? error.message : String(error));
+    logger.error(
+      "Error updating shopper address:",
+      error instanceof Error ? error.message : String(error)
+    );
     return res.status(500).json({ message: "Internal server error" });
   }
-} 
+}

@@ -61,24 +61,22 @@ const LogsTable: React.FC<LogsTableProps> = ({ initialLogs, initialTotal }) => {
         page: currentPage.toString(),
         limit: limit.toString(),
       });
-      
+
       if (filter) {
-        queryParams.append('type', filter);
+        queryParams.append("type", filter);
       }
 
-      const response = await fetch(
-        `/api/logs/read?${queryParams.toString()}`
-      );
-      
+      const response = await fetch(`/api/logs/read?${queryParams.toString()}`);
+
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
-      
+
       const data = (await response.json()) as LogsResponse;
       setLogs(data.logs);
       setTotal(data.total);
       setTotalPages(data.totalPages);
-      
+
       if (newPage) {
         setPage(newPage);
       }
@@ -290,7 +288,7 @@ const LogsTable: React.FC<LogsTableProps> = ({ initialLogs, initialTotal }) => {
             </Column>
           </Table>
         )}
-        
+
         <div className="mt-4 flex justify-center">
           <Pagination
             prev
@@ -321,7 +319,10 @@ const LogsTable: React.FC<LogsTableProps> = ({ initialLogs, initialTotal }) => {
         </Modal.Header>
         <Modal.Body>Are you sure you want to clear all logs?</Modal.Body>
         <Modal.Footer>
-          <Button onClick={() => setShowClearConfirm(false)} appearance="subtle">
+          <Button
+            onClick={() => setShowClearConfirm(false)}
+            appearance="subtle"
+          >
             Cancel
           </Button>
           <Button onClick={clearLogs} appearance="primary" color="red">

@@ -42,9 +42,9 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
   };
 
   return (
-    <Modal 
-      open={open} 
-      onClose={onClose} 
+    <Modal
+      open={open}
+      onClose={onClose}
       size="sm"
       className={theme === "dark" ? "dark-theme" : ""}
     >
@@ -53,8 +53,15 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
           Process Payment
         </Modal.Title>
       </Modal.Header>
-      <Modal.Body className={theme === "dark" ? "bg-gray-800 text-gray-100" : ""}>
-        <Message type="info" className={`mb-4 ${theme === "dark" ? "bg-blue-900/20 text-blue-300" : ""}`}>
+      <Modal.Body
+        className={theme === "dark" ? "bg-gray-800 text-gray-100" : ""}
+      >
+        <Message
+          type="info"
+          className={`mb-4 ${
+            theme === "dark" ? "bg-blue-900/20 text-blue-300" : ""
+          }`}
+        >
           <p>
             <strong>IMPORTANT: This is a demo payment flow.</strong>
           </p>
@@ -66,7 +73,9 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
 
         <Form fluid>
           <Form.Group>
-            <Form.ControlLabel className={theme === "dark" ? "text-gray-300" : ""}>
+            <Form.ControlLabel
+              className={theme === "dark" ? "text-gray-300" : ""}
+            >
               MoMo Code
             </Form.ControlLabel>
             <Form.Control
@@ -74,19 +83,29 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
               value={momoCode}
               onChange={(value) => setMomoCode(value)}
               placeholder="Enter your MoMo code"
-              className={theme === "dark" ? "bg-gray-700 text-gray-100 border-gray-600" : ""}
+              className={
+                theme === "dark"
+                  ? "border-gray-600 bg-gray-700 text-gray-100"
+                  : ""
+              }
             />
           </Form.Group>
 
           <Form.Group>
-            <Form.ControlLabel className={theme === "dark" ? "text-gray-300" : ""}>
+            <Form.ControlLabel
+              className={theme === "dark" ? "text-gray-300" : ""}
+            >
               Private Key (Auto-generated)
             </Form.ControlLabel>
             <InputGroup>
-              <Input 
-                value={privateKey} 
-                disabled 
-                className={theme === "dark" ? "bg-gray-700 text-gray-100 border-gray-600" : ""}
+              <Input
+                value={privateKey}
+                disabled
+                className={
+                  theme === "dark"
+                    ? "border-gray-600 bg-gray-700 text-gray-100"
+                    : ""
+                }
               />
             </InputGroup>
             <Form.HelpText className={theme === "dark" ? "text-gray-400" : ""}>
@@ -98,29 +117,49 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
           <Divider className={theme === "dark" ? "border-gray-700" : ""} />
 
           <div className="mb-4">
-            <h4 className={`mb-2 font-medium ${theme === "dark" ? "text-gray-100" : ""}`}>
+            <h4
+              className={`mb-2 font-medium ${
+                theme === "dark" ? "text-gray-100" : ""
+              }`}
+            >
               Payment Summary
             </h4>
-            <div className={`flex justify-between ${theme === "dark" ? "text-gray-300" : ""}`}>
+            <div
+              className={`flex justify-between ${
+                theme === "dark" ? "text-gray-300" : ""
+              }`}
+            >
               <span>Value of Found Items:</span>
               <span className="font-medium">
                 {formattedCurrency(orderAmount)}
               </span>
             </div>
-            <div className={`flex justify-between ${theme === "dark" ? "text-green-400" : "text-green-600"}`}>
+            <div
+              className={`flex justify-between ${
+                theme === "dark" ? "text-green-400" : "text-green-600"
+              }`}
+            >
               <span>Service Fee (You Earn):</span>
               <span className="font-medium">
                 {formattedCurrency(serviceFee)}
               </span>
             </div>
-            <div className={`flex justify-between ${theme === "dark" ? "text-green-400" : "text-green-600"}`}>
+            <div
+              className={`flex justify-between ${
+                theme === "dark" ? "text-green-400" : "text-green-600"
+              }`}
+            >
               <span>Delivery Fee (You Earn):</span>
               <span className="font-medium">
                 {formattedCurrency(deliveryFee)}
               </span>
             </div>
             <Divider className={theme === "dark" ? "border-gray-700" : ""} />
-            <div className={`flex justify-between font-bold ${theme === "dark" ? "text-gray-100" : ""}`}>
+            <div
+              className={`flex justify-between font-bold ${
+                theme === "dark" ? "text-gray-100" : ""
+              }`}
+            >
               <span>Total Earnings:</span>
               <span className={theme === "dark" ? "text-green-400" : ""}>
                 {formattedCurrency(serviceFee + deliveryFee)}
@@ -128,14 +167,23 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
             </div>
           </div>
 
-          <Message type="warning" className={`mb-3 ${theme === "dark" ? "bg-yellow-900/20 text-yellow-300" : ""}`}>
+          <Message
+            type="warning"
+            className={`mb-3 ${
+              theme === "dark" ? "bg-yellow-900/20 text-yellow-300" : ""
+            }`}
+          >
             After clicking &quot;Proceed&quot;, you&apos;ll receive an OTP in a
             popup alert. You&apos;ll need to enter this OTP to complete the
             payment process.
           </Message>
         </Form>
       </Modal.Body>
-      <Modal.Footer className={theme === "dark" ? "bg-gray-800 border-t border-gray-700" : ""}>
+      <Modal.Footer
+        className={
+          theme === "dark" ? "border-t border-gray-700 bg-gray-800" : ""
+        }
+      >
         <Button
           appearance="primary"
           color="green"
@@ -146,8 +194,8 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
         >
           Proceed
         </Button>
-        <Button 
-          onClick={onClose} 
+        <Button
+          onClick={onClose}
           appearance="subtle"
           className={theme === "dark" ? "text-gray-300 hover:bg-gray-700" : ""}
         >

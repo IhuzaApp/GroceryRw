@@ -34,7 +34,9 @@ export default async function handler(
   }
 
   try {
-    const session = await getServerSession(req, res, authOptions as any) as { user?: { id?: string } } | null;
+    const session = (await getServerSession(req, res, authOptions as any)) as {
+      user?: { id?: string };
+    } | null;
 
     if (!session?.user?.id) {
       return res.status(401).json({ message: "Unauthorized" });
@@ -45,9 +47,12 @@ export default async function handler(
     }
 
     type ShopperProfileResponse = { shoppers: any[] };
-    const { shoppers } = await hasuraClient.request<ShopperProfileResponse>(GET_SHOPPER_PROFILE, {
-      user_id: session.user.id,
-    });
+    const { shoppers } = await hasuraClient.request<ShopperProfileResponse>(
+      GET_SHOPPER_PROFILE,
+      {
+        user_id: session.user.id,
+      }
+    );
 
     return res.status(200).json({
       shopper: shoppers[0] || null,
@@ -56,4 +61,4 @@ export default async function handler(
     console.error("Error fetching shopper profile:", error);
     return res.status(500).json({ message: "Internal server error" });
   }
-} 
+}

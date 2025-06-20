@@ -8,32 +8,32 @@ import { Data } from "../../../types";
 // Helper Components
 const CategoryIcon = ({ category }: { category: string }) => {
   const icons: { [key: string]: string } = {
-    'Super Market': '🛒',
-    'Public Markets': '🏪',
-    'Bakeries': '🥖',
-    'Butchers': '🥩',
-    'Delicatessen': '🥪',
-    'Organic Shops': '🌿',
-    'Specialty Foods': '🍱'
+    "Super Market": "🛒",
+    "Public Markets": "🏪",
+    Bakeries: "🥖",
+    Butchers: "🥩",
+    Delicatessen: "🥪",
+    "Organic Shops": "🌿",
+    "Specialty Foods": "🍱",
   };
 
   return (
     <div className="flex h-12 w-12 items-center justify-center rounded-full bg-green-50 text-2xl dark:bg-green-900">
-      {icons[category] || '🏪'}
+      {icons[category] || "🏪"}
     </div>
   );
 };
 
-const MobileCategoryDropdown = ({ 
-  categories, 
-  selectedCategory, 
-  onSelect, 
-  onClear 
-}: { 
-  categories: any[], 
-  selectedCategory: string | null, 
-  onSelect: (id: string) => void,
-  onClear: () => void 
+const MobileCategoryDropdown = ({
+  categories,
+  selectedCategory,
+  onSelect,
+  onClear,
+}: {
+  categories: any[];
+  selectedCategory: string | null;
+  onSelect: (id: string) => void;
+  onClear: () => void;
 }) => {
   const [isOpen, setIsOpen] = useState(false);
 
@@ -44,17 +44,24 @@ const MobileCategoryDropdown = ({
         className="flex w-full items-center justify-between rounded-lg border border-gray-200 bg-white px-4 py-3 text-left text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-200 dark:hover:bg-gray-700"
       >
         <span>
-          {selectedCategory 
-            ? categories.find(c => c.id === selectedCategory)?.name 
-            : 'Select Category'}
+          {selectedCategory
+            ? categories.find((c) => c.id === selectedCategory)?.name
+            : "Select Category"}
         </span>
         <svg
-          className={`h-5 w-5 transform transition-transform ${isOpen ? 'rotate-180' : ''}`}
+          className={`h-5 w-5 transform transition-transform ${
+            isOpen ? "rotate-180" : ""
+          }`}
           fill="none"
           stroke="currentColor"
           viewBox="0 0 24 24"
         >
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth={2}
+            d="M19 9l-7 7-7-7"
+          />
         </svg>
       </button>
 
@@ -80,8 +87,8 @@ const MobileCategoryDropdown = ({
               }}
               className={`flex w-full items-center space-x-3 px-4 py-3 text-left text-sm hover:bg-gray-50 dark:hover:bg-gray-700 ${
                 selectedCategory === category.id
-                  ? 'bg-green-50 text-green-700 dark:bg-green-900/20 dark:text-green-400'
-                  : 'text-gray-700 dark:text-gray-200'
+                  ? "bg-green-50 text-green-700 dark:bg-green-900/20 dark:text-green-400"
+                  : "text-gray-700 dark:text-gray-200"
               }`}
             >
               <CategoryIcon category={category.name} />
@@ -97,7 +104,7 @@ const MobileCategoryDropdown = ({
 // Helper Functions
 function getShopImageUrl(imageUrl: string | undefined): string {
   if (!imageUrl) return "/images/shop-placeholder.jpg";
-  
+
   const validExtensions = [".jpg", ".jpeg", ".png", ".webp", ".gif"];
   const hasValidExtension = validExtensions.some((ext) =>
     imageUrl.toLowerCase().endsWith(ext)
@@ -141,7 +148,10 @@ export default function UserDashboard({ initialData }: { initialData: Data }) {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [shopDynamics, setShopDynamics] = useState<
-    Record<string, { distance: string; time: string; fee: string; open: boolean }>
+    Record<
+      string,
+      { distance: string; time: string; fee: string; open: boolean }
+    >
   >({});
   const [dataLoaded, setDataLoaded] = useState(false);
 
@@ -153,9 +163,10 @@ export default function UserDashboard({ initialData }: { initialData: Data }) {
 
   const filteredShops = useMemo(() => {
     if (!authReady || role === "shopper") return [];
-    
+
     return selectedCategory
-      ? data.shops?.filter((shop) => shop.category_id === selectedCategory) || []
+      ? data.shops?.filter((shop) => shop.category_id === selectedCategory) ||
+          []
       : data.shops || [];
   }, [authReady, role, selectedCategory, data.shops]);
 
@@ -173,13 +184,21 @@ export default function UserDashboard({ initialData }: { initialData: Data }) {
         const userLat = parseFloat(userAddr.latitude);
         const userLng = parseFloat(userAddr.longitude);
         const userAlt = parseFloat(userAddr.altitude || "0");
-        const newDyn: Record<string, { distance: string; time: string; fee: string; open: boolean }> = {};
-        
+        const newDyn: Record<
+          string,
+          { distance: string; time: string; fee: string; open: boolean }
+        > = {};
+
         filteredShops.forEach((shop) => {
           if (shop.latitude && shop.longitude) {
             const shopLat = parseFloat(shop.latitude);
             const shopLng = parseFloat(shop.longitude);
-            const distKm = getDistanceFromLatLonInKm(userLat, userLng, shopLat, shopLng);
+            const distKm = getDistanceFromLatLonInKm(
+              userLat,
+              userLng,
+              shopLat,
+              shopLng
+            );
             const shopAlt = parseFloat((shop as any).altitude || "0");
             const altKm = (shopAlt - userAlt) / 1000;
             const dist3D = Math.sqrt(distKm * distKm + altKm * altKm);
@@ -192,16 +211,23 @@ export default function UserDashboard({ initialData }: { initialData: Data }) {
               const mins = totalTime % 60;
               time = `${hours}h ${mins}m`;
             }
-            const fee = distKm <= 3 ? "1000 frw" : `${1000 + Math.round((distKm - 3) * 300)} frw`;
-            
+            const fee =
+              distKm <= 3
+                ? "1000 frw"
+                : `${1000 + Math.round((distKm - 3) * 300)} frw`;
+
             let isOpen = false;
             const hoursObj = shop.operating_hours;
             if (hoursObj && typeof hoursObj === "object") {
               const now = new Date();
-              const dayKey = now.toLocaleDateString("en-US", { weekday: "long" }).toLowerCase();
+              const dayKey = now
+                .toLocaleDateString("en-US", { weekday: "long" })
+                .toLowerCase();
               const todaysHours = (hoursObj as any)[dayKey];
               if (todaysHours && todaysHours.toLowerCase() !== "closed") {
-                const parts = todaysHours.split("-").map((s: string) => s.trim());
+                const parts = todaysHours
+                  .split("-")
+                  .map((s: string) => s.trim());
                 if (parts.length === 2) {
                   const parseTime = (tp: string): number | null => {
                     const m = tp.match(/(\d{1,2})(?::(\d{2}))?\s*(am|pm)/i);
@@ -335,8 +361,8 @@ export default function UserDashboard({ initialData }: { initialData: Data }) {
                     onClick={() => handleCategoryClick(category.id)}
                     className={`group relative flex cursor-pointer flex-col items-center rounded-xl border p-4 transition-all duration-200 hover:-translate-y-1 hover:shadow-lg ${
                       selectedCategory === category.id
-                        ? 'border-green-500 bg-green-50 shadow-md dark:border-green-400 dark:bg-green-900/20'
-                        : 'border-gray-200 hover:border-green-200 dark:border-gray-700 dark:hover:border-green-700'
+                        ? "border-green-500 bg-green-50 shadow-md dark:border-green-400 dark:bg-green-900/20"
+                        : "border-gray-200 hover:border-green-200 dark:border-gray-700 dark:hover:border-green-700"
                     }`}
                   >
                     <CategoryIcon category={category.name} />
@@ -396,9 +422,9 @@ export default function UserDashboard({ initialData }: { initialData: Data }) {
                             alt={shop.name}
                             fill
                             sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-                            style={{ 
+                            style={{
                               objectFit: "cover",
-                              objectPosition: "center"
+                              objectPosition: "center",
                             }}
                             className="transition-transform duration-300 hover:scale-105"
                             priority={false}
@@ -541,4 +567,4 @@ function ShopSkeleton() {
       </div>
     </div>
   );
-} 
+}

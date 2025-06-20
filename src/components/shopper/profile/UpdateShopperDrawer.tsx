@@ -5,7 +5,19 @@ import { useGoogleMap } from "../../../context/GoogleMapProvider";
 import { useTheme } from "../../../context/ThemeContext";
 import { logger } from "../../../utils/logger";
 import Image from "next/image";
-import { Drawer, Form, Button, Input, SelectPicker, Message, useToaster, Modal, Panel, Schema, AutoComplete } from "rsuite";
+import {
+  Drawer,
+  Form,
+  Button,
+  Input,
+  SelectPicker,
+  Message,
+  useToaster,
+  Modal,
+  Panel,
+  Schema,
+  AutoComplete,
+} from "rsuite";
 
 interface ShopperProfile {
   id: string;
@@ -54,9 +66,13 @@ interface UpdateShopperDrawerProps {
 // Form validation schema
 const validationModel = Schema.Model({
   full_name: Schema.Types.StringType().isRequired("Full name is required"),
-  phone_number: Schema.Types.StringType().isRequired("Phone number is required"),
+  phone_number: Schema.Types.StringType().isRequired(
+    "Phone number is required"
+  ),
   address: Schema.Types.StringType().isRequired("Address is required"),
-  transport_mode: Schema.Types.StringType().isRequired("Transport mode is required"),
+  transport_mode: Schema.Types.StringType().isRequired(
+    "Transport mode is required"
+  ),
   profile_photo: Schema.Types.StringType(),
 });
 
@@ -123,7 +139,8 @@ export default function UpdateShopperDrawer({
   const router = useRouter();
   const { isLoaded } = useGoogleMap();
   const { theme } = useTheme();
-  const [autocomplete, setAutocomplete] = useState<google.maps.places.Autocomplete | null>(null);
+  const [autocomplete, setAutocomplete] =
+    useState<google.maps.places.Autocomplete | null>(null);
   const [suggestions, setSuggestions] = useState<string[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const addressInputRef = useRef<HTMLInputElement>(null);
@@ -141,9 +158,15 @@ export default function UpdateShopperDrawer({
   const [loading, setLoading] = useState(false);
   const [fetchingProfile, setFetchingProfile] = useState(false);
   const [stream, setStream] = useState<MediaStream | null>(null);
-  const [capturedPhoto, setCapturedPhoto] = useState<string>(currentData.profile_photo || "");
-  const [capturedNationalId, setCapturedNationalId] = useState<string>(currentData.national_id || "");
-  const [captureMode, setCaptureMode] = useState<"profile" | "national_id">("profile");
+  const [capturedPhoto, setCapturedPhoto] = useState<string>(
+    currentData.profile_photo || ""
+  );
+  const [capturedNationalId, setCapturedNationalId] = useState<string>(
+    currentData.national_id || ""
+  );
+  const [captureMode, setCaptureMode] = useState<"profile" | "national_id">(
+    "profile"
+  );
   const [showCamera, setShowCamera] = useState(false);
   const [showPreview, setShowPreview] = useState(false);
   const toaster = useToaster();
@@ -158,9 +181,9 @@ export default function UpdateShopperDrawer({
 
       setFetchingProfile(true);
       try {
-        const response = await fetch('/api/queries/shopper-profile');
+        const response = await fetch("/api/queries/shopper-profile");
         if (!response.ok) {
-          throw new Error('Failed to fetch shopper profile');
+          throw new Error("Failed to fetch shopper profile");
         }
 
         const data = await response.json();
@@ -176,7 +199,7 @@ export default function UpdateShopperDrawer({
             driving_license: shopperProfile.driving_license || "",
             transport_mode: shopperProfile.transport_mode,
             profile_photo: shopperProfile.profile_photo || "",
-            address: shopperProfile.address || ""
+            address: shopperProfile.address || "",
           });
 
           // Update photos if they exist
@@ -188,7 +211,10 @@ export default function UpdateShopperDrawer({
           }
         }
       } catch (error: unknown) {
-        logger.error("Error fetching shopper profile:", error instanceof Error ? error.message : String(error));
+        logger.error(
+          "Error fetching shopper profile:",
+          error instanceof Error ? error.message : String(error)
+        );
         toaster.push(
           <Message type="error" closable>
             Failed to load your profile information. Please try again.
@@ -254,41 +280,50 @@ export default function UpdateShopperDrawer({
         status: "pending",
         transport_mode: formValue.transport_mode,
         updated_at: new Date().toISOString(),
-        profile_photo: capturedPhoto
+        profile_photo: capturedPhoto,
       };
 
       console.log("Submitting shopper update with user ID:", session?.user?.id);
-      console.log("Profile photo changed:", capturedPhoto !== currentData.profile_photo);
-      console.log("National ID photo changed:", capturedNationalId !== currentData.national_id);
+      console.log(
+        "Profile photo changed:",
+        capturedPhoto !== currentData.profile_photo
+      );
+      console.log(
+        "National ID photo changed:",
+        capturedNationalId !== currentData.national_id
+      );
 
       const response = await onUpdate(updateData);
-      
+
       if (response.success) {
         toaster.push(
           <Message type="success" closable>
             {response.message}
           </Message>
         );
-        
+
         // Update the session with the new role
         await update({
           ...session,
           user: {
             ...session?.user,
-            role: "user"
-          }
+            role: "user",
+          },
         });
 
         // Close the drawer
         onClose();
-        
+
         // Redirect to home page
         router.push("/");
       } else {
         throw new Error(response.message || "Failed to update profile");
       }
     } catch (error: unknown) {
-      logger.error("Error updating shopper information:", error instanceof Error ? error.message : String(error));
+      logger.error(
+        "Error updating shopper information:",
+        error instanceof Error ? error.message : String(error)
+      );
       toaster.push(
         <Message type="error" closable>
           Failed to update information. Please try again.
@@ -329,7 +364,10 @@ export default function UpdateShopperDrawer({
         }
       }, 100);
     } catch (error: unknown) {
-      logger.error("Error accessing camera:", error instanceof Error ? error.message : String(error));
+      logger.error(
+        "Error accessing camera:",
+        error instanceof Error ? error.message : String(error)
+      );
       toaster.push(
         <Message type="error" closable>
           Could not access camera. Please check permissions.
@@ -418,12 +456,14 @@ export default function UpdateShopperDrawer({
 
     if (value.length > 2) {
       setIsLoading(true);
-      const service = new google.maps.places.PlacesService(document.createElement('div'));
+      const service = new google.maps.places.PlacesService(
+        document.createElement("div")
+      );
       const request = {
         query: value,
         location: new google.maps.LatLng(-1.9403, 29.8739), // Kigali coordinates
         radius: 50000, // 50km radius
-        type: 'address' as const
+        type: "address" as const,
       };
 
       service.textSearch(request, (results, status) => {
@@ -432,9 +472,9 @@ export default function UpdateShopperDrawer({
           // Create unique suggestions by adding index to duplicates
           const addressMap = new Map<string, number>();
           const newSuggestions = results
-            .map(result => result.formatted_address || '')
+            .map((result) => result.formatted_address || "")
             .filter(Boolean)
-            .map(address => {
+            .map((address) => {
               if (addressMap.has(address)) {
                 const count = addressMap.get(address)! + 1;
                 addressMap.set(address, count);
@@ -455,11 +495,14 @@ export default function UpdateShopperDrawer({
 
   useEffect(() => {
     if (isLoaded && addressInputRef.current && !autocomplete) {
-      const autocompleteInstance = new google.maps.places.Autocomplete(addressInputRef.current, {
-        componentRestrictions: { country: "rw" },
-        fields: ["formatted_address", "geometry", "name"],
-        types: ["address"],
-      });
+      const autocompleteInstance = new google.maps.places.Autocomplete(
+        addressInputRef.current,
+        {
+          componentRestrictions: { country: "rw" },
+          fields: ["formatted_address", "geometry", "name"],
+          types: ["address"],
+        }
+      );
       setAutocomplete(autocompleteInstance);
     }
   }, [isLoaded, autocomplete]);
@@ -469,46 +512,69 @@ export default function UpdateShopperDrawer({
   return (
     <div className="fixed inset-0 z-50 overflow-y-auto">
       <div className="flex min-h-screen items-center justify-center p-2 sm:p-4">
-        <div className="fixed inset-0 bg-black bg-opacity-50 transition-opacity" onClick={onClose} />
-        
-        <div className={`relative w-full max-w-2xl transform overflow-hidden rounded-lg shadow-xl transition-all ${
-          theme === "dark" ? "bg-gray-900" : "bg-white"
-        }`}>
-          <div className={`px-4 sm:px-6 py-3 sm:py-4 border-b ${
-            theme === "dark" ? "border-gray-800" : "border-gray-200"
-          }`}>
-            <h3 className={`text-base sm:text-lg font-medium ${
-              theme === "dark" ? "text-white" : "text-gray-900"
-            }`}>
+        <div
+          className="fixed inset-0 bg-black bg-opacity-50 transition-opacity"
+          onClick={onClose}
+        />
+
+        <div
+          className={`relative w-full max-w-2xl transform overflow-hidden rounded-lg shadow-xl transition-all ${
+            theme === "dark" ? "bg-gray-900" : "bg-white"
+          }`}
+        >
+          <div
+            className={`border-b px-4 py-3 sm:px-6 sm:py-4 ${
+              theme === "dark" ? "border-gray-800" : "border-gray-200"
+            }`}
+          >
+            <h3
+              className={`text-base font-medium sm:text-lg ${
+                theme === "dark" ? "text-white" : "text-gray-900"
+              }`}
+            >
               Update Plasa Information
             </h3>
           </div>
 
-          <div className="px-4 sm:px-6 py-3 sm:py-4">
-            <div className={`mb-4 sm:mb-6 ${
-              theme === "dark" ? "text-gray-300" : "text-gray-600"
-            }`}>
-              <h2 className="text-lg sm:text-xl font-semibold">Update Your Information</h2>
-              <p className="text-sm sm:text-base">Please update your information below. Your changes will be reviewed by our team.</p>
+          <div className="px-4 py-3 sm:px-6 sm:py-4">
+            <div
+              className={`mb-4 sm:mb-6 ${
+                theme === "dark" ? "text-gray-300" : "text-gray-600"
+              }`}
+            >
+              <h2 className="text-lg font-semibold sm:text-xl">
+                Update Your Information
+              </h2>
+              <p className="text-sm sm:text-base">
+                Please update your information below. Your changes will be
+                reviewed by our team.
+              </p>
             </div>
 
             {fetchingProfile ? (
-              <div className="flex justify-center items-center py-8">
-                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-green-500"></div>
+              <div className="flex items-center justify-center py-8">
+                <div className="h-8 w-8 animate-spin rounded-full border-b-2 border-green-500"></div>
               </div>
             ) : (
               <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-6">
                 <div className="grid grid-cols-1 gap-4 sm:gap-6 md:grid-cols-2">
                   <div>
-                    <label className={`block text-sm font-medium ${
-                      theme === "dark" ? "text-gray-300" : "text-gray-700"
-                    }`}>
+                    <label
+                      className={`block text-sm font-medium ${
+                        theme === "dark" ? "text-gray-300" : "text-gray-700"
+                      }`}
+                    >
                       Full Name
                     </label>
                     <input
                       type="text"
                       value={formValue.full_name}
-                      onChange={(e) => handleFormChange({ ...formValue, full_name: e.target.value })}
+                      onChange={(e) =>
+                        handleFormChange({
+                          ...formValue,
+                          full_name: e.target.value,
+                        })
+                      }
                       className={`mt-1 block w-full rounded-md border px-3 py-2 text-sm sm:text-base ${
                         theme === "dark"
                           ? "border-gray-700 bg-gray-800 text-white placeholder-gray-400"
@@ -516,20 +582,29 @@ export default function UpdateShopperDrawer({
                       } focus:border-green-500 focus:outline-none focus:ring-1 focus:ring-green-500`}
                     />
                     {formErrors.full_name && (
-                      <p className="mt-1 text-sm text-red-500">{formErrors.full_name}</p>
+                      <p className="mt-1 text-sm text-red-500">
+                        {formErrors.full_name}
+                      </p>
                     )}
                   </div>
 
                   <div>
-                    <label className={`block text-sm font-medium ${
-                      theme === "dark" ? "text-gray-300" : "text-gray-700"
-                    }`}>
+                    <label
+                      className={`block text-sm font-medium ${
+                        theme === "dark" ? "text-gray-300" : "text-gray-700"
+                      }`}
+                    >
                       Phone Number
                     </label>
                     <input
                       type="tel"
                       value={formValue.phone_number}
-                      onChange={(e) => handleFormChange({ ...formValue, phone_number: e.target.value })}
+                      onChange={(e) =>
+                        handleFormChange({
+                          ...formValue,
+                          phone_number: e.target.value,
+                        })
+                      }
                       className={`mt-1 block w-full rounded-md border px-3 py-2 text-sm sm:text-base ${
                         theme === "dark"
                           ? "border-gray-700 bg-gray-800 text-white placeholder-gray-400"
@@ -537,14 +612,18 @@ export default function UpdateShopperDrawer({
                       } focus:border-green-500 focus:outline-none focus:ring-1 focus:ring-green-500`}
                     />
                     {formErrors.phone_number && (
-                      <p className="mt-1 text-sm text-red-500">{formErrors.phone_number}</p>
+                      <p className="mt-1 text-sm text-red-500">
+                        {formErrors.phone_number}
+                      </p>
                     )}
                   </div>
 
                   <div>
-                    <label className={`block text-sm font-medium ${
-                      theme === "dark" ? "text-gray-300" : "text-gray-700"
-                    }`}>
+                    <label
+                      className={`block text-sm font-medium ${
+                        theme === "dark" ? "text-gray-300" : "text-gray-700"
+                      }`}
+                    >
                       Address
                     </label>
                     <div className="relative mt-1">
@@ -552,7 +631,12 @@ export default function UpdateShopperDrawer({
                         ref={addressInputRef}
                         type="text"
                         value={formValue.address}
-                        onChange={(e) => handleFormChange({ ...formValue, address: e.target.value })}
+                        onChange={(e) =>
+                          handleFormChange({
+                            ...formValue,
+                            address: e.target.value,
+                          })
+                        }
                         className={`block w-full rounded-md border px-3 py-2 text-sm sm:text-base ${
                           theme === "dark"
                             ? "border-gray-700 bg-gray-800 text-white placeholder-gray-400"
@@ -566,19 +650,28 @@ export default function UpdateShopperDrawer({
                       )}
                     </div>
                     {formErrors.address && (
-                      <p className="mt-1 text-sm text-red-500">{formErrors.address}</p>
+                      <p className="mt-1 text-sm text-red-500">
+                        {formErrors.address}
+                      </p>
                     )}
                   </div>
 
                   <div>
-                    <label className={`block text-sm font-medium ${
-                      theme === "dark" ? "text-gray-300" : "text-gray-700"
-                    }`}>
+                    <label
+                      className={`block text-sm font-medium ${
+                        theme === "dark" ? "text-gray-300" : "text-gray-700"
+                      }`}
+                    >
                       Transport Mode
                     </label>
                     <select
                       value={formValue.transport_mode}
-                      onChange={(e) => handleFormChange({ ...formValue, transport_mode: e.target.value })}
+                      onChange={(e) =>
+                        handleFormChange({
+                          ...formValue,
+                          transport_mode: e.target.value,
+                        })
+                      }
                       className={`mt-1 block w-full rounded-md border px-3 py-2 text-sm sm:text-base ${
                         theme === "dark"
                           ? "border-gray-700 bg-gray-800 text-white"
@@ -592,21 +685,30 @@ export default function UpdateShopperDrawer({
                       ))}
                     </select>
                     {formErrors.transport_mode && (
-                      <p className="mt-1 text-sm text-red-500">{formErrors.transport_mode}</p>
+                      <p className="mt-1 text-sm text-red-500">
+                        {formErrors.transport_mode}
+                      </p>
                     )}
                   </div>
 
                   {showDrivingLicense && (
                     <div>
-                      <label className={`block text-sm font-medium ${
-                        theme === "dark" ? "text-gray-300" : "text-gray-700"
-                      }`}>
+                      <label
+                        className={`block text-sm font-medium ${
+                          theme === "dark" ? "text-gray-300" : "text-gray-700"
+                        }`}
+                      >
                         Driving License Number
                       </label>
                       <input
                         type="text"
                         value={formValue.driving_license}
-                        onChange={(e) => handleFormChange({ ...formValue, driving_license: e.target.value })}
+                        onChange={(e) =>
+                          handleFormChange({
+                            ...formValue,
+                            driving_license: e.target.value,
+                          })
+                        }
                         className={`mt-1 block w-full rounded-md border px-3 py-2 text-sm sm:text-base ${
                           theme === "dark"
                             ? "border-gray-700 bg-gray-800 text-white placeholder-gray-400"
@@ -614,29 +716,39 @@ export default function UpdateShopperDrawer({
                         } focus:border-green-500 focus:outline-none focus:ring-1 focus:ring-green-500`}
                       />
                       {formErrors.driving_license && (
-                        <p className="mt-1 text-sm text-red-500">{formErrors.driving_license}</p>
+                        <p className="mt-1 text-sm text-red-500">
+                          {formErrors.driving_license}
+                        </p>
                       )}
                     </div>
                   )}
                 </div>
 
-                <div className="mt-4 sm:mt-6 space-y-4 sm:space-y-6">
+                <div className="mt-4 space-y-4 sm:mt-6 sm:space-y-6">
                   <div>
-                    <label className={`block text-sm font-medium ${
-                      theme === "dark" ? "text-gray-300" : "text-gray-700"
-                    }`}>
+                    <label
+                      className={`block text-sm font-medium ${
+                        theme === "dark" ? "text-gray-300" : "text-gray-700"
+                      }`}
+                    >
                       Profile Photo <span className="text-red-500">*</span>
                     </label>
-                    <p className={`mt-1 text-sm ${
-                      theme === "dark" ? "text-gray-400" : "text-gray-500"
-                    }`}>
+                    <p
+                      className={`mt-1 text-sm ${
+                        theme === "dark" ? "text-gray-400" : "text-gray-500"
+                      }`}
+                    >
                       Take a clear photo of yourself with your camera
                     </p>
 
                     <div className="mt-2">
-                      <div className={`relative mx-auto h-48 sm:h-64 w-48 sm:w-64 overflow-hidden rounded-lg border ${
-                        theme === "dark" ? "border-gray-700" : "border-gray-300"
-                      }`}>
+                      <div
+                        className={`relative mx-auto h-48 w-48 overflow-hidden rounded-lg border sm:h-64 sm:w-64 ${
+                          theme === "dark"
+                            ? "border-gray-700"
+                            : "border-gray-300"
+                        }`}
+                      >
                         {capturedPhoto ? (
                           <img
                             src={capturedPhoto}
@@ -644,10 +756,18 @@ export default function UpdateShopperDrawer({
                             className="h-full w-full object-cover"
                           />
                         ) : (
-                          <div className={`flex h-full items-center justify-center ${
-                            theme === "dark" ? "bg-gray-800" : "bg-gray-100"
-                          }`}>
-                            <span className={`text-sm ${theme === "dark" ? "text-gray-400" : "text-gray-500"}`}>
+                          <div
+                            className={`flex h-full items-center justify-center ${
+                              theme === "dark" ? "bg-gray-800" : "bg-gray-100"
+                            }`}
+                          >
+                            <span
+                              className={`text-sm ${
+                                theme === "dark"
+                                  ? "text-gray-400"
+                                  : "text-gray-500"
+                              }`}
+                            >
                               No profile photo
                             </span>
                           </div>
@@ -657,7 +777,7 @@ export default function UpdateShopperDrawer({
                         <button
                           type="button"
                           onClick={() => startCamera("profile")}
-                          className="rounded-md bg-green-500 px-4 py-2 text-sm sm:text-base text-white hover:bg-green-600 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2"
+                          className="rounded-md bg-green-500 px-4 py-2 text-sm text-white hover:bg-green-600 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 sm:text-base"
                         >
                           {capturedPhoto ? "Update Photo" : "Take Photo"}
                         </button>
@@ -666,21 +786,29 @@ export default function UpdateShopperDrawer({
                   </div>
 
                   <div>
-                    <label className={`block text-sm font-medium ${
-                      theme === "dark" ? "text-gray-300" : "text-gray-700"
-                    }`}>
+                    <label
+                      className={`block text-sm font-medium ${
+                        theme === "dark" ? "text-gray-300" : "text-gray-700"
+                      }`}
+                    >
                       National ID Photo <span className="text-red-500">*</span>
                     </label>
-                    <p className={`mt-1 text-sm ${
-                      theme === "dark" ? "text-gray-400" : "text-gray-500"
-                    }`}>
+                    <p
+                      className={`mt-1 text-sm ${
+                        theme === "dark" ? "text-gray-400" : "text-gray-500"
+                      }`}
+                    >
                       Take a photo of your national ID
                     </p>
 
                     <div className="mt-2">
-                      <div className={`relative mx-auto h-36 sm:h-48 w-48 sm:w-64 overflow-hidden rounded-lg border ${
-                        theme === "dark" ? "border-gray-700" : "border-gray-300"
-                      }`}>
+                      <div
+                        className={`relative mx-auto h-36 w-48 overflow-hidden rounded-lg border sm:h-48 sm:w-64 ${
+                          theme === "dark"
+                            ? "border-gray-700"
+                            : "border-gray-300"
+                        }`}
+                      >
                         {capturedNationalId ? (
                           <img
                             src={capturedNationalId}
@@ -688,10 +816,18 @@ export default function UpdateShopperDrawer({
                             className="h-full w-full object-cover"
                           />
                         ) : (
-                          <div className={`flex h-full items-center justify-center ${
-                            theme === "dark" ? "bg-gray-800" : "bg-gray-100"
-                          }`}>
-                            <span className={`text-sm ${theme === "dark" ? "text-gray-400" : "text-gray-500"}`}>
+                          <div
+                            className={`flex h-full items-center justify-center ${
+                              theme === "dark" ? "bg-gray-800" : "bg-gray-100"
+                            }`}
+                          >
+                            <span
+                              className={`text-sm ${
+                                theme === "dark"
+                                  ? "text-gray-400"
+                                  : "text-gray-500"
+                              }`}
+                            >
                               No national ID photo
                             </span>
                           </div>
@@ -701,7 +837,7 @@ export default function UpdateShopperDrawer({
                         <button
                           type="button"
                           onClick={() => startCamera("national_id")}
-                          className="rounded-md bg-green-500 px-4 py-2 text-sm sm:text-base text-white hover:bg-green-600 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2"
+                          className="rounded-md bg-green-500 px-4 py-2 text-sm text-white hover:bg-green-600 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 sm:text-base"
                         >
                           {capturedNationalId ? "Update Photo" : "Take Photo"}
                         </button>
@@ -714,7 +850,7 @@ export default function UpdateShopperDrawer({
                   <button
                     type="submit"
                     disabled={loading}
-                    className="w-full rounded-md bg-green-500 px-4 py-2 text-sm sm:text-base text-white hover:bg-green-600 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 disabled:opacity-50"
+                    className="w-full rounded-md bg-green-500 px-4 py-2 text-sm text-white hover:bg-green-600 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 disabled:opacity-50 sm:text-base"
                   >
                     {loading ? "Updating..." : "Update Information"}
                   </button>
@@ -722,17 +858,23 @@ export default function UpdateShopperDrawer({
               </form>
             )}
 
-            <div className={`mt-4 sm:mt-6 border-t pt-4 ${
-              theme === "dark" ? "border-gray-800" : "border-gray-200"
-            }`}>
-              <h3 className={`text-base sm:text-lg font-semibold ${
-                theme === "dark" ? "text-white" : "text-gray-900"
-              }`}>
+            <div
+              className={`mt-4 border-t pt-4 sm:mt-6 ${
+                theme === "dark" ? "border-gray-800" : "border-gray-200"
+              }`}
+            >
+              <h3
+                className={`text-base font-semibold sm:text-lg ${
+                  theme === "dark" ? "text-white" : "text-gray-900"
+                }`}
+              >
                 What Happens Next?
               </h3>
-              <ol className={`ml-5 mt-2 list-decimal space-y-1 sm:space-y-2 text-sm sm:text-base ${
-                theme === "dark" ? "text-gray-400" : "text-gray-600"
-              }`}>
+              <ol
+                className={`ml-5 mt-2 list-decimal space-y-1 text-sm sm:space-y-2 sm:text-base ${
+                  theme === "dark" ? "text-gray-400" : "text-gray-600"
+                }`}
+              >
                 <li>Our team will review your updated information</li>
                 <li>You will be logged out to apply the changes</li>
                 <li>Once approved, you can log back in</li>
@@ -747,22 +889,33 @@ export default function UpdateShopperDrawer({
       {showCamera && (
         <div className="fixed inset-0 z-[60] overflow-y-auto">
           <div className="flex min-h-screen items-center justify-center p-2 sm:p-4">
-            <div className="fixed inset-0 bg-black bg-opacity-75 transition-opacity" onClick={stopCamera} />
-            
-            <div className={`relative w-full max-w-md transform overflow-hidden rounded-lg shadow-xl transition-all ${
-              theme === "dark" ? "bg-gray-900" : "bg-white"
-            }`}>
-              <div className={`px-4 sm:px-6 py-3 sm:py-4 border-b ${
-                theme === "dark" ? "border-gray-800" : "border-gray-200"
-              }`}>
-                <h3 className={`text-base sm:text-lg font-medium ${
-                  theme === "dark" ? "text-white" : "text-gray-900"
-                }`}>
-                  {captureMode === "profile" ? "Take Profile Photo" : "Take National ID Photo"}
+            <div
+              className="fixed inset-0 bg-black bg-opacity-75 transition-opacity"
+              onClick={stopCamera}
+            />
+
+            <div
+              className={`relative w-full max-w-md transform overflow-hidden rounded-lg shadow-xl transition-all ${
+                theme === "dark" ? "bg-gray-900" : "bg-white"
+              }`}
+            >
+              <div
+                className={`border-b px-4 py-3 sm:px-6 sm:py-4 ${
+                  theme === "dark" ? "border-gray-800" : "border-gray-200"
+                }`}
+              >
+                <h3
+                  className={`text-base font-medium sm:text-lg ${
+                    theme === "dark" ? "text-white" : "text-gray-900"
+                  }`}
+                >
+                  {captureMode === "profile"
+                    ? "Take Profile Photo"
+                    : "Take National ID Photo"}
                 </h3>
               </div>
 
-              <div className="px-4 sm:px-6 py-3 sm:py-4">
+              <div className="px-4 py-3 sm:px-6 sm:py-4">
                 <div className="flex flex-col items-center">
                   {!showPreview ? (
                     <>
@@ -776,28 +929,38 @@ export default function UpdateShopperDrawer({
                       <canvas ref={canvasRef} className="hidden" />
                       <button
                         onClick={capturePhoto}
-                        className="mt-4 rounded-md bg-green-500 px-4 py-2 text-sm sm:text-base text-white hover:bg-green-600 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2"
+                        className="mt-4 rounded-md bg-green-500 px-4 py-2 text-sm text-white hover:bg-green-600 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 sm:text-base"
                       >
                         Capture Photo
                       </button>
                       {captureMode === "national_id" && (
-                        <p className={`mt-2 text-sm ${
-                          theme === "dark" ? "text-gray-400" : "text-gray-500"
-                        }`}>
+                        <p
+                          className={`mt-2 text-sm ${
+                            theme === "dark" ? "text-gray-400" : "text-gray-500"
+                          }`}
+                        >
                           Make sure all details on the ID are clearly visible
                         </p>
                       )}
                     </>
                   ) : (
                     <>
-                      <div className="relative h-48 sm:h-64 w-48 sm:w-64 overflow-hidden rounded-lg">
+                      <div className="relative h-48 w-48 overflow-hidden rounded-lg sm:h-64 sm:w-64">
                         <img
-                          src={captureMode === "profile" ? capturedPhoto : capturedNationalId}
-                          alt={captureMode === "profile" ? "Captured profile" : "Captured national ID"}
+                          src={
+                            captureMode === "profile"
+                              ? capturedPhoto
+                              : capturedNationalId
+                          }
+                          alt={
+                            captureMode === "profile"
+                              ? "Captured profile"
+                              : "Captured national ID"
+                          }
                           className="h-full w-full object-cover"
                         />
                       </div>
-                      <div className="mt-4 flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-4">
+                      <div className="mt-4 flex flex-col space-y-2 sm:flex-row sm:space-x-4 sm:space-y-0">
                         <button
                           onClick={retakePhoto}
                           className={`rounded-md px-4 py-2 text-sm sm:text-base ${
@@ -810,7 +973,7 @@ export default function UpdateShopperDrawer({
                         </button>
                         <button
                           onClick={stopCamera}
-                          className="rounded-md bg-green-500 px-4 py-2 text-sm sm:text-base text-white hover:bg-green-600 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2"
+                          className="rounded-md bg-green-500 px-4 py-2 text-sm text-white hover:bg-green-600 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 sm:text-base"
                         >
                           Use This Photo
                         </button>
@@ -820,9 +983,11 @@ export default function UpdateShopperDrawer({
                 </div>
               </div>
 
-              <div className={`px-4 sm:px-6 py-3 sm:py-4 border-t ${
-                theme === "dark" ? "border-gray-800" : "border-gray-200"
-              }`}>
+              <div
+                className={`border-t px-4 py-3 sm:px-6 sm:py-4 ${
+                  theme === "dark" ? "border-gray-800" : "border-gray-200"
+                }`}
+              >
                 <div className="flex justify-end">
                   <button
                     onClick={stopCamera}
@@ -842,4 +1007,4 @@ export default function UpdateShopperDrawer({
       )}
     </div>
   );
-} 
+}

@@ -24,7 +24,9 @@ interface WorkScheduleTabProps {
   initialSession: Session;
 }
 
-export default function WorkScheduleTab({ initialSession }: WorkScheduleTabProps) {
+export default function WorkScheduleTab({
+  initialSession,
+}: WorkScheduleTabProps) {
   const { theme } = useTheme();
   const [schedule, setSchedule] = useState<TimeSlot[]>([]);
   const [scheduleLoading, setScheduleLoading] = useState<boolean>(true);
@@ -63,13 +65,13 @@ export default function WorkScheduleTab({ initialSession }: WorkScheduleTabProps
   // Format time for display and comparison
   const formatTimeForDisplay = useCallback((time: string) => {
     // Remove timezone if present and keep only the time part
-    return time.split('+')[0];
+    return time.split("+")[0];
   }, []);
 
   // Format time for API
   const formatTimeForAPI = useCallback((time: string) => {
     // Add timezone if not present
-    return time.includes('+') ? time : `${time}+00`;
+    return time.includes("+") ? time : `${time}+00`;
   }, []);
 
   // Load schedule - only run once on mount
@@ -122,27 +124,32 @@ export default function WorkScheduleTab({ initialSession }: WorkScheduleTabProps
           });
         });
 
-        if (data.shopper_availability && Array.isArray(data.shopper_availability)) {
-          data.shopper_availability.forEach((slot: {
-            day_of_week: number;
-            start_time: string;
-            end_time: string;
-            is_available: boolean;
-          }) => {
-            const day = days[slot.day_of_week - 1];
-            if (day) {
-              daysMap.set(day, {
-                day,
-                startTime: formatTimeForAPI(slot.start_time),
-                endTime: formatTimeForAPI(slot.end_time),
-                available: slot.is_available,
-              });
+        if (
+          data.shopper_availability &&
+          Array.isArray(data.shopper_availability)
+        ) {
+          data.shopper_availability.forEach(
+            (slot: {
+              day_of_week: number;
+              start_time: string;
+              end_time: string;
+              is_available: boolean;
+            }) => {
+              const day = days[slot.day_of_week - 1];
+              if (day) {
+                daysMap.set(day, {
+                  day,
+                  startTime: formatTimeForAPI(slot.start_time),
+                  endTime: formatTimeForAPI(slot.end_time),
+                  available: slot.is_available,
+                });
+              }
             }
-          });
+          );
         }
 
         const fullSchedule = Array.from(daysMap.values());
-        
+
         setSchedule(fullSchedule);
         setHasSchedule(Boolean(data.shopper_availability?.length));
       } catch (err) {
@@ -151,9 +158,12 @@ export default function WorkScheduleTab({ initialSession }: WorkScheduleTabProps
           err instanceof Error ? err.message : "Unknown error"
         );
 
-        const errorMessage = err instanceof Error ? err.message : "Failed to load schedule. Please try again.";
+        const errorMessage =
+          err instanceof Error
+            ? err.message
+            : "Failed to load schedule. Please try again.";
         setLoadError(errorMessage);
-        
+
         // Set default schedule on error
         const defaultSchedule = days.map((day) => ({
           day,
@@ -173,24 +183,28 @@ export default function WorkScheduleTab({ initialSession }: WorkScheduleTabProps
   }, [days, initialSession?.user?.id, formatTimeForAPI]); // Added formatTimeForAPI to dependencies
 
   // Handle availability toggle
-  const handleAvailabilityToggle = useCallback((day: string, available: boolean) => {
-    setSchedule((prev) =>
-      prev.map((slot) => (slot.day === day ? { ...slot, available } : slot))
-    );
-  }, []);
+  const handleAvailabilityToggle = useCallback(
+    (day: string, available: boolean) => {
+      setSchedule((prev) =>
+        prev.map((slot) => (slot.day === day ? { ...slot, available } : slot))
+      );
+    },
+    []
+  );
 
   // Handle time change
-  const handleTimeChange = useCallback((
-    day: string,
-    field: "startTime" | "endTime",
-    value: string
-  ) => {
-    setSchedule((prev) =>
-      prev.map((slot) =>
-        slot.day === day ? { ...slot, [field]: formatTimeForAPI(value || "09:00:00")} : slot
-      )
-    );
-  }, [formatTimeForAPI]);
+  const handleTimeChange = useCallback(
+    (day: string, field: "startTime" | "endTime", value: string) => {
+      setSchedule((prev) =>
+        prev.map((slot) =>
+          slot.day === day
+            ? { ...slot, [field]: formatTimeForAPI(value || "09:00:00") }
+            : slot
+        )
+      );
+    },
+    [formatTimeForAPI]
+  );
 
   // Save schedule updates
   const saveScheduleUpdates = useCallback(async () => {
@@ -269,7 +283,7 @@ export default function WorkScheduleTab({ initialSession }: WorkScheduleTabProps
 
   if (scheduleLoading && schedule.length === 0) {
     return (
-      <div className="flex h-48 sm:h-64 items-center justify-center">
+      <div className="flex h-48 items-center justify-center sm:h-64">
         <Loader size="md" content="Loading schedule..." />
       </div>
     );
@@ -278,14 +292,19 @@ export default function WorkScheduleTab({ initialSession }: WorkScheduleTabProps
   return (
     <div className="p-2 sm:p-4">
       <h3
-        className={`mb-2 sm:mb-4 text-base sm:text-lg font-semibold ${
+        className={`mb-2 text-base font-semibold sm:mb-4 sm:text-lg ${
           theme === "dark" ? "text-white" : "text-gray-900"
         }`}
       >
         Work Schedule
       </h3>
-      <p className={`mb-4 sm:mb-6 text-sm sm:text-base ${theme === "dark" ? "text-gray-300" : "text-gray-600"}`}>
-        Set your availability for each day of the week. Toggle availability and select your preferred working hours.
+      <p
+        className={`mb-4 text-sm sm:mb-6 sm:text-base ${
+          theme === "dark" ? "text-gray-300" : "text-gray-600"
+        }`}
+      >
+        Set your availability for each day of the week. Toggle availability and
+        select your preferred working hours.
       </p>
 
       {saveMessage && (
@@ -311,7 +330,7 @@ export default function WorkScheduleTab({ initialSession }: WorkScheduleTabProps
           >
             <div className="flex items-center justify-between">
               <span
-                className={`text-sm sm:text-base font-medium ${
+                className={`text-sm font-medium sm:text-base ${
                   theme === "dark" ? "text-white" : "text-gray-900"
                 }`}
               >
@@ -330,10 +349,10 @@ export default function WorkScheduleTab({ initialSession }: WorkScheduleTabProps
             </div>
 
             {slot.available && (
-              <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 sm:gap-4">
-                <div className="flex items-center gap-2 w-full sm:w-auto">
+              <div className="flex flex-col items-start gap-2 sm:flex-row sm:items-center sm:gap-4">
+                <div className="flex w-full items-center gap-2 sm:w-auto">
                   <span
-                    className={`text-xs sm:text-sm whitespace-nowrap ${
+                    className={`whitespace-nowrap text-xs sm:text-sm ${
                       theme === "dark" ? "text-gray-300" : "text-gray-600"
                     }`}
                   >
@@ -343,7 +362,11 @@ export default function WorkScheduleTab({ initialSession }: WorkScheduleTabProps
                     data={timeSlots}
                     value={formatTimeForDisplay(slot.startTime)}
                     onChange={(value) =>
-                      handleTimeChange(slot.day, "startTime", value || "09:00:00")
+                      handleTimeChange(
+                        slot.day,
+                        "startTime",
+                        value || "09:00:00"
+                      )
                     }
                     cleanable={false}
                     searchable={false}
@@ -351,9 +374,9 @@ export default function WorkScheduleTab({ initialSession }: WorkScheduleTabProps
                     menuStyle={{ zIndex: 1060 }}
                   />
                 </div>
-                <div className="flex items-center gap-2 w-full sm:w-auto">
+                <div className="flex w-full items-center gap-2 sm:w-auto">
                   <span
-                    className={`text-xs sm:text-sm whitespace-nowrap ${
+                    className={`whitespace-nowrap text-xs sm:text-sm ${
                       theme === "dark" ? "text-gray-300" : "text-gray-600"
                     }`}
                   >
@@ -377,7 +400,7 @@ export default function WorkScheduleTab({ initialSession }: WorkScheduleTabProps
         ))}
       </div>
 
-      <div className="mt-4 sm:mt-6 flex justify-end">
+      <div className="mt-4 flex justify-end sm:mt-6">
         <Button
           appearance="primary"
           onClick={saveScheduleUpdates}
@@ -389,4 +412,4 @@ export default function WorkScheduleTab({ initialSession }: WorkScheduleTabProps
       </div>
     </div>
   );
-} 
+}

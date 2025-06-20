@@ -115,7 +115,7 @@ function CategorySkeleton() {
 // Update the getShopImageUrl function
 function getShopImageUrl(imageUrl: string | undefined): string {
   if (!imageUrl) return "/images/shop-placeholder.jpg";
-  
+
   // List of valid image extensions
   const validExtensions = [".jpg", ".jpeg", ".png", ".webp", ".gif"];
 
@@ -160,33 +160,33 @@ function getDistanceFromLatLonInKm(
 // Add this new component for category icons
 const CategoryIcon = ({ category }: { category: string }) => {
   const icons: { [key: string]: string } = {
-    'Super Market': '🛒',
-    'Public Markets': '🏪',
-    'Bakeries': '🥖',
-    'Butchers': '🥩',
-    'Delicatessen': '🥪',
-    'Organic Shops': '🌿',
-    'Specialty Foods': '🍱'
+    "Super Market": "🛒",
+    "Public Markets": "🏪",
+    Bakeries: "🥖",
+    Butchers: "🥩",
+    Delicatessen: "🥪",
+    "Organic Shops": "🌿",
+    "Specialty Foods": "🍱",
   };
 
   return (
     <div className="flex h-12 w-12 items-center justify-center rounded-full bg-green-50 text-2xl dark:bg-green-900">
-      {icons[category] || '🏪'}
+      {icons[category] || "🏪"}
     </div>
   );
 };
 
 // Add this new component for the mobile dropdown
-const MobileCategoryDropdown = ({ 
-  categories, 
-  selectedCategory, 
-  onSelect, 
-  onClear 
-}: { 
-  categories: any[], 
-  selectedCategory: string | null, 
-  onSelect: (id: string) => void,
-  onClear: () => void 
+const MobileCategoryDropdown = ({
+  categories,
+  selectedCategory,
+  onSelect,
+  onClear,
+}: {
+  categories: any[];
+  selectedCategory: string | null;
+  onSelect: (id: string) => void;
+  onClear: () => void;
 }) => {
   const [isOpen, setIsOpen] = useState(false);
 
@@ -197,17 +197,24 @@ const MobileCategoryDropdown = ({
         className="flex w-full items-center justify-between rounded-lg border border-gray-200 bg-white px-4 py-3 text-left text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-200 dark:hover:bg-gray-700"
       >
         <span>
-          {selectedCategory 
-            ? categories.find(c => c.id === selectedCategory)?.name 
-            : 'Select Category'}
+          {selectedCategory
+            ? categories.find((c) => c.id === selectedCategory)?.name
+            : "Select Category"}
         </span>
         <svg
-          className={`h-5 w-5 transform transition-transform ${isOpen ? 'rotate-180' : ''}`}
+          className={`h-5 w-5 transform transition-transform ${
+            isOpen ? "rotate-180" : ""
+          }`}
           fill="none"
           stroke="currentColor"
           viewBox="0 0 24 24"
         >
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth={2}
+            d="M19 9l-7 7-7-7"
+          />
         </svg>
       </button>
 
@@ -233,8 +240,8 @@ const MobileCategoryDropdown = ({
               }}
               className={`flex w-full items-center space-x-3 px-4 py-3 text-left text-sm hover:bg-gray-50 dark:hover:bg-gray-700 ${
                 selectedCategory === category.id
-                  ? 'bg-green-50 text-green-700 dark:bg-green-900/20 dark:text-green-400'
-                  : 'text-gray-700 dark:text-gray-200'
+                  ? "bg-green-50 text-green-700 dark:bg-green-900/20 dark:text-green-400"
+                  : "text-gray-700 dark:text-gray-200"
               }`}
             >
               <CategoryIcon category={category.name} />
@@ -267,7 +274,7 @@ export default function Home({ initialData }: { initialData: Data }) {
 
   return (
     <RootLayout>
-          <MainBanners />
+      <MainBanners />
       <UserDashboard initialData={initialData} />
     </RootLayout>
   );

@@ -265,7 +265,7 @@ export default function OrderCard({ order, onOrderAccepted }: OrderCardProps) {
               </button>
             </Link>
             <button
-              className="rounded px-3 py-1.5 text-sm text-white bg-green-500 hover:bg-green-600"
+              className="rounded bg-green-500 px-3 py-1.5 text-sm text-white hover:bg-green-600"
               onClick={handleAcceptOrder}
               disabled={isAccepting}
             >

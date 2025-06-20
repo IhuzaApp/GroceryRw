@@ -302,21 +302,21 @@ export default async function handler(
     // Calculate time-based earnings for goals
     const now = new Date();
     const currentDate = now.getTime();
-    
+
     // Weekly: This week (Sunday to Saturday) - matching dailyEarnings API logic
     const dayOfWeek = now.getDay(); // 0 = Sunday, 6 = Saturday
     const weekStart = new Date(now);
     weekStart.setDate(now.getDate() - dayOfWeek); // Go back to Sunday
     weekStart.setHours(0, 0, 0, 0);
-    
+
     const weekEnd = new Date(weekStart);
     weekEnd.setDate(weekStart.getDate() + 6); // Go forward to Saturday
     weekEnd.setHours(23, 59, 59, 999);
-    
+
     // Monthly: Current month (1st day to last day)
     const currentMonth = new Date(now.getFullYear(), now.getMonth(), 1);
     const nextMonth = new Date(now.getFullYear(), now.getMonth() + 1, 1);
-    
+
     // Quarterly: Current quarter (3-month period)
     const currentQuarter = Math.floor(now.getMonth() / 3);
     const quarterStart = new Date(now.getFullYear(), currentQuarter * 3, 1);

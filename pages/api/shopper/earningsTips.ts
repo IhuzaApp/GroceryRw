@@ -23,13 +23,10 @@ const GET_ORDER_PATTERNS = gql`
         name
       }
     }
-    
+
     # Get total orders count
     TotalOrders: Orders_aggregate(
-      where: { 
-        shopper_id: { _eq: $shopperId }, 
-        status: { _eq: "delivered" }
-      }
+      where: { shopper_id: { _eq: $shopperId }, status: { _eq: "delivered" } }
     ) {
       aggregate {
         count
@@ -131,28 +128,40 @@ export default async function handler(
             "Start accepting orders to see personalized tips based on your performance",
             "Focus on maintaining high customer ratings",
             "Consider working during weekends when demand is typically higher",
-            "Stay active during meal times (lunch 12-2pm, dinner 6-8pm)"
-          ]
-        }
+            "Stay active during meal times (lunch 12-2pm, dinner 6-8pm)",
+          ],
+        },
       });
     }
 
     // Analyze order patterns
     const timeSlots: TimeSlot[] = [];
     const storeMap = new Map<string, StorePerformance>();
-    const dayNames = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+    const dayNames = [
+      "Sunday",
+      "Monday",
+      "Tuesday",
+      "Wednesday",
+      "Thursday",
+      "Friday",
+      "Saturday",
+    ];
 
     // Process each order
     data.Orders.forEach((order) => {
       const orderDate = new Date(order.created_at);
       const day = dayNames[orderDate.getDay()];
       const hour = orderDate.getHours();
-      const earnings = parseFloat(order.service_fee || "0") + parseFloat(order.delivery_fee || "0");
+      const earnings =
+        parseFloat(order.service_fee || "0") +
+        parseFloat(order.delivery_fee || "0");
 
       // Track time slots
       const timeSlotKey = `${day}-${hour}`;
-      const existingSlot = timeSlots.find(slot => slot.day === day && slot.hour === hour);
-      
+      const existingSlot = timeSlots.find(
+        (slot) => slot.day === day && slot.hour === hour
+      );
+
       if (existingSlot) {
         existingSlot.count++;
         existingSlot.totalEarnings += earnings;
@@ -161,7 +170,7 @@ export default async function handler(
           day,
           hour,
           count: 1,
-          totalEarnings: earnings
+          totalEarnings: earnings,
         });
       }
 
@@ -177,7 +186,7 @@ export default async function handler(
           store: storeName,
           orderCount: 1,
           totalEarnings: earnings,
-          avgEarnings: earnings
+          avgEarnings: earnings,
         });
       }
     });
@@ -186,11 +195,11 @@ export default async function handler(
     const peakHours = timeSlots
       .sort((a, b) => b.count - a.count)
       .slice(0, 3)
-      .map(slot => ({
+      .map((slot) => ({
         day: slot.day,
         timeRange: `${slot.hour}:00 - ${slot.hour + 1}:00`,
         orderCount: slot.count,
-        avgEarnings: Math.round(slot.totalEarnings / slot.count)
+        avgEarnings: Math.round(slot.totalEarnings / slot.count),
       }));
 
     // Find top performing stores
@@ -208,26 +217,45 @@ export default async function handler(
     if (peakHours.length > 0) {
       const topPeak = peakHours[0];
       if (topPeak.orderCount >= 3) {
-        tips.push(`🔥 Peak time: ${topPeak.day} ${topPeak.timeRange} - ${topPeak.orderCount} orders, avg RWF ${topPeak.avgEarnings}`);
+        tips.push(
+          `🔥 Peak time: ${topPeak.day} ${topPeak.timeRange} - ${topPeak.orderCount} orders, avg RWF ${topPeak.avgEarnings}`
+        );
       } else {
-        tips.push(`Shop during peak hours: ${topPeak.day} ${topPeak.timeRange} (${topPeak.orderCount} orders, avg RWF ${topPeak.avgEarnings})`);
+        tips.push(
+          `Shop during peak hours: ${topPeak.day} ${topPeak.timeRange} (${topPeak.orderCount} orders, avg RWF ${topPeak.avgEarnings})`
+        );
       }
     } else {
-      tips.push("Shop during peak hours (Fri 4-8pm, Sat 10am-2pm, Sun 11am-3pm)");
+      tips.push(
+        "Shop during peak hours (Fri 4-8pm, Sat 10am-2pm, Sun 11am-3pm)"
+      );
     }
 
     // Tip 2: General batch order tip
-    tips.push("📦 Accept batch orders with multiple deliveries for higher earnings per trip");
+    tips.push(
+      "📦 Accept batch orders with multiple deliveries for higher earnings per trip"
+    );
 
     // Tip 3: Top stores with earnings data
     if (topStores.length > 0) {
       const topStore = topStores[0];
       const secondStore = topStores[1];
-      
+
       if (topStore.avgEarnings > 2000) {
-        tips.push(`🏪 Focus on ${topStore.store} - your highest earner (avg RWF ${Math.round(topStore.avgEarnings)})`);
-      } else if (secondStore && (topStore.avgEarnings - secondStore.avgEarnings) > 500) {
-        tips.push(`🏪 ${topStore.store} pays ${Math.round(topStore.avgEarnings - secondStore.avgEarnings)} RWF more than other stores`);
+        tips.push(
+          `🏪 Focus on ${
+            topStore.store
+          } - your highest earner (avg RWF ${Math.round(topStore.avgEarnings)})`
+        );
+      } else if (
+        secondStore &&
+        topStore.avgEarnings - secondStore.avgEarnings > 500
+      ) {
+        tips.push(
+          `🏪 ${topStore.store} pays ${Math.round(
+            topStore.avgEarnings - secondStore.avgEarnings
+          )} RWF more than other stores`
+        );
       } else {
         tips.push(`🏪 Focus on ${topStore.store} - your most consistent store`);
       }
@@ -237,25 +265,34 @@ export default async function handler(
 
     // Tip 4: Performance-based tip
     if (totalOrderCount < 5) {
-      tips.push("🚀 Complete more orders to unlock personalized performance insights");
+      tips.push(
+        "🚀 Complete more orders to unlock personalized performance insights"
+      );
     } else if (totalOrderCount < 20) {
-      tips.push("⭐ Maintain high ratings - you're building a great reputation!");
+      tips.push(
+        "⭐ Maintain high ratings - you're building a great reputation!"
+      );
     } else {
-      tips.push("⭐ Excellent order count! Keep maintaining high customer ratings for bonuses");
+      tips.push(
+        "⭐ Excellent order count! Keep maintaining high customer ratings for bonuses"
+      );
     }
 
     // Tip 5: Time-based tip
     const now = new Date();
     const currentHour = now.getHours();
     const currentDay = dayNames[now.getDay()];
-    
+
     // Check if current time is a peak time
-    const currentTimeSlot = timeSlots.find(slot => 
-      slot.day === currentDay && Math.abs(slot.hour - currentHour) <= 1
+    const currentTimeSlot = timeSlots.find(
+      (slot) =>
+        slot.day === currentDay && Math.abs(slot.hour - currentHour) <= 1
     );
-    
+
     if (currentTimeSlot && currentTimeSlot.count >= 2) {
-      tips.push(`⏰ Right now is a peak time! (${currentTimeSlot.count} orders in this hour)`);
+      tips.push(
+        `⏰ Right now is a peak time! (${currentTimeSlot.count} orders in this hour)`
+      );
     } else if (currentHour >= 11 && currentHour <= 14) {
       tips.push("🍽️ Lunch rush time (11am-2pm) - high demand for food orders");
     } else if (currentHour >= 17 && currentHour <= 20) {
@@ -269,10 +306,9 @@ export default async function handler(
         topStores,
         batchOrderPercentage: 0,
         totalOrders: totalOrderCount,
-        tips
-      }
+        tips,
+      },
     });
-
   } catch (error) {
     console.error("Error fetching earnings tips:", error);
     return res.status(500).json({
@@ -282,4 +318,4 @@ export default async function handler(
           : "Failed to fetch earnings tips",
     });
   }
-} 
+}

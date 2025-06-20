@@ -1,12 +1,12 @@
 "use client";
 
-import React, { useState, useCallback } from 'react';
-import { useRouter } from 'next/router';
-import ShopperLayout from '../../../src/components/shopper/ShopperLayout';
-import { useTheme } from '../../../src/context/ThemeContext';
-import { Panel, Nav } from 'rsuite';
-import WorkScheduleTab from '../../../src/components/shopper/settings/WorkScheduleTab';
-import PaymentTab from '../../../src/components/shopper/settings/PaymentTab';
+import React, { useState, useCallback } from "react";
+import { useRouter } from "next/router";
+import ShopperLayout from "../../../src/components/shopper/ShopperLayout";
+import { useTheme } from "../../../src/context/ThemeContext";
+import { Panel, Nav } from "rsuite";
+import WorkScheduleTab from "../../../src/components/shopper/settings/WorkScheduleTab";
+import PaymentTab from "../../../src/components/shopper/settings/PaymentTab";
 import { GetServerSideProps } from "next";
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "../../api/auth/[...nextauth]";
@@ -33,52 +33,81 @@ function SettingsPage({ sessionData }: SettingsPageProps) {
   const [activeTab, setActiveTab] = useState("schedule");
 
   // Memoize the tab change handler
-  const handleTabChange = useCallback((newTab: string) => {
-    setActiveTab(newTab);
-    // Update URL without page reload
-    router.push(`/Plasa/Settings?tab=${newTab}`, undefined, { shallow: true });
-  }, [router]);
+  const handleTabChange = useCallback(
+    (newTab: string) => {
+      setActiveTab(newTab);
+      // Update URL without page reload
+      router.push(`/Plasa/Settings?tab=${newTab}`, undefined, {
+        shallow: true,
+      });
+    },
+    [router]
+  );
 
   // Define tabs configuration
   const tabs = [
-    { key: "schedule", label: "Work Schedule", component: <WorkScheduleTab initialSession={sessionData} /> },
+    {
+      key: "schedule",
+      label: "Work Schedule",
+      component: <WorkScheduleTab initialSession={sessionData} />,
+    },
     { key: "payment", label: "Payment Info", component: <PaymentTab /> },
-    { key: "notifications", label: "Notifications", component: (
-      <div className="p-4">
-        <h3 className={`mb-4 text-lg font-semibold ${theme === "dark" ? "text-white" : "text-gray-900"}`}>
-          Notifications Settings
-        </h3>
-        <p className={theme === "dark" ? "text-gray-300" : "text-gray-600"}>
-          Notification settings coming soon...
-        </p>
-      </div>
-    )},
-    { key: "security", label: "Security", component: (
-      <div className="p-4">
-        <h3 className={`mb-4 text-lg font-semibold ${theme === "dark" ? "text-white" : "text-gray-900"}`}>
-          Security Settings
-        </h3>
-        <p className={theme === "dark" ? "text-gray-300" : "text-gray-600"}>
-          Security settings coming soon...
-        </p>
-      </div>
-    )}
+    {
+      key: "notifications",
+      label: "Notifications",
+      component: (
+        <div className="p-4">
+          <h3
+            className={`mb-4 text-lg font-semibold ${
+              theme === "dark" ? "text-white" : "text-gray-900"
+            }`}
+          >
+            Notifications Settings
+          </h3>
+          <p className={theme === "dark" ? "text-gray-300" : "text-gray-600"}>
+            Notification settings coming soon...
+          </p>
+        </div>
+      ),
+    },
+    {
+      key: "security",
+      label: "Security",
+      component: (
+        <div className="p-4">
+          <h3
+            className={`mb-4 text-lg font-semibold ${
+              theme === "dark" ? "text-white" : "text-gray-900"
+            }`}
+          >
+            Security Settings
+          </h3>
+          <p className={theme === "dark" ? "text-gray-300" : "text-gray-600"}>
+            Security settings coming soon...
+          </p>
+        </div>
+      ),
+    },
   ];
 
   // Effect to sync URL with active tab
   React.useEffect(() => {
     const tab = router.query.tab as string;
-    if (tab && tabs.some(t => t.key === tab)) {
+    if (tab && tabs.some((t) => t.key === tab)) {
       setActiveTab(tab);
     }
   }, [router.query.tab]);
 
   return (
     <ShopperLayout>
-      <div className={`container mx-auto px-2 sm:px-4 py-4 sm:py-8 pb-24 sm:pb-8 ${theme === "dark" ? "text-gray-100" : "text-gray-900"}`}>
-        <h1 className="mb-4 sm:mb-6 text-xl sm:text-2xl font-bold">Settings</h1>
+      <div
+        className={`container mx-auto px-2 py-4 pb-24 sm:px-4 sm:py-8 sm:pb-8 ${
+          theme === "dark" ? "text-gray-100" : "text-gray-900"
+        }`}
+      >
+        <h1 className="mb-4 text-xl font-bold sm:mb-6 sm:text-2xl">Settings</h1>
 
-        <div className="scrollbar-hide mb-3 sm:mb-4 overflow-x-auto whitespace-nowrap -mx-2 sm:mx-0 px-2 sm:px-0">
+        <div className="scrollbar-hide -mx-2 mb-3 overflow-x-auto whitespace-nowrap px-2 sm:mx-0 sm:mb-4 sm:px-0">
           <Nav
             appearance="default"
             activeKey={activeTab}
@@ -89,7 +118,7 @@ function SettingsPage({ sessionData }: SettingsPageProps) {
               <Nav.Item
                 key={tab.key}
                 eventKey={tab.key}
-                className={`!bg-transparent !px-3 sm:!px-4 !py-1.5 sm:!py-2 !text-xs sm:!text-sm hover:!bg-transparent ${
+                className={`!bg-transparent !px-3 !py-1.5 !text-xs hover:!bg-transparent sm:!px-4 sm:!py-2 sm:!text-sm ${
                   activeTab === tab.key
                     ? theme === "dark"
                       ? "font-semibold !text-white"
@@ -114,7 +143,7 @@ function SettingsPage({ sessionData }: SettingsPageProps) {
               : "border-gray-200 bg-white"
           }`}
         >
-          {tabs.find(tab => tab.key === activeTab)?.component}
+          {tabs.find((tab) => tab.key === activeTab)?.component}
         </Panel>
       </div>
     </ShopperLayout>
@@ -138,18 +167,18 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
   // Sanitize the session data to ensure all fields are JSON-serializable
   const sanitizedSession: CustomSession = {
     user: {
-      id: session.user?.id || '',
+      id: session.user?.id || "",
       name: session.user?.name || null,
       email: session.user?.email || null,
       role: (session.user as any)?.role || null,
-      image: session.user?.image || null
+      image: session.user?.image || null,
     },
-    expires: session.expires
+    expires: session.expires,
   };
 
   return {
     props: {
-      sessionData: sanitizedSession
+      sessionData: sanitizedSession,
     },
   };
-}; 
+};

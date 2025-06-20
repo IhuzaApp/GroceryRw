@@ -7,24 +7,36 @@ export default function PaymentTab() {
 
   return (
     <div className="p-4">
-      <h3 className={`mb-4 text-lg font-semibold ${theme === "dark" ? "text-white" : "text-gray-900"}`}>
+      <h3
+        className={`mb-4 text-lg font-semibold ${
+          theme === "dark" ? "text-white" : "text-gray-900"
+        }`}
+      >
         Payment Information
       </h3>
       <p className={theme === "dark" ? "text-gray-300" : "text-gray-600"}>
         Configure your payment information here...
       </p>
 
-      <div className={`rounded-lg border p-4 ${
-        theme === "dark" ? "border-gray-700" : "border-gray-200"
-      }`}>
-        <h4 className={`mb-2 font-medium ${theme === "dark" ? "text-white" : "text-gray-900"}`}>
+      <div
+        className={`rounded-lg border p-4 ${
+          theme === "dark" ? "border-gray-700" : "border-gray-200"
+        }`}
+      >
+        <h4
+          className={`mb-2 font-medium ${
+            theme === "dark" ? "text-white" : "text-gray-900"
+          }`}
+        >
           Bank Account
         </h4>
         <div className="grid gap-4 md:grid-cols-2">
           <div>
-            <label className={`block text-sm font-medium ${
-              theme === "dark" ? "text-gray-300" : "text-gray-700"
-            }`}>
+            <label
+              className={`block text-sm font-medium ${
+                theme === "dark" ? "text-gray-300" : "text-gray-700"
+              }`}
+            >
               Account Name
             </label>
             <input
@@ -37,9 +49,11 @@ export default function PaymentTab() {
             />
           </div>
           <div>
-            <label className={`block text-sm font-medium ${
-              theme === "dark" ? "text-gray-300" : "text-gray-700"
-            }`}>
+            <label
+              className={`block text-sm font-medium ${
+                theme === "dark" ? "text-gray-300" : "text-gray-700"
+              }`}
+            >
               Account Number
             </label>
             <input
@@ -52,9 +66,11 @@ export default function PaymentTab() {
             />
           </div>
           <div>
-            <label className={`block text-sm font-medium ${
-              theme === "dark" ? "text-gray-300" : "text-gray-700"
-            }`}>
+            <label
+              className={`block text-sm font-medium ${
+                theme === "dark" ? "text-gray-300" : "text-gray-700"
+              }`}
+            >
               Bank Name
             </label>
             <input
@@ -67,9 +83,11 @@ export default function PaymentTab() {
             />
           </div>
           <div>
-            <label className={`block text-sm font-medium ${
-              theme === "dark" ? "text-gray-300" : "text-gray-700"
-            }`}>
+            <label
+              className={`block text-sm font-medium ${
+                theme === "dark" ? "text-gray-300" : "text-gray-700"
+              }`}
+            >
               Routing Number
             </label>
             <input
@@ -89,4 +107,4 @@ export default function PaymentTab() {
       </div>
     </div>
   );
-} 
+}

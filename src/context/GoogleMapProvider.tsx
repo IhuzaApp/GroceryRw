@@ -7,7 +7,11 @@ interface GoogleMapContextType {
 }
 
 // Define libraries array outside component to prevent recreation
-const GOOGLE_MAP_LIBRARIES: ("places" | "drawing" | "geometry")[] = ["places", "drawing", "geometry"];
+const GOOGLE_MAP_LIBRARIES: ("places" | "drawing" | "geometry")[] = [
+  "places",
+  "drawing",
+  "geometry",
+];
 
 const GoogleMapContext = createContext<GoogleMapContextType | undefined>(
   undefined

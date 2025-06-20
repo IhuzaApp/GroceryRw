@@ -52,7 +52,14 @@ export default function BatchDetails({
 }: BatchDetailsProps) {
   const router = useRouter();
   const { data: session } = useSession();
-  const { openChat, isDrawerOpen, closeChat, currentChatId, getMessages, sendMessage } = useChat();
+  const {
+    openChat,
+    isDrawerOpen,
+    closeChat,
+    currentChatId,
+    getMessages,
+    sendMessage,
+  } = useChat();
   const { theme } = useTheme();
   const [currentLocation, setCurrentLocation] = useState<{
     lat: number;
@@ -737,7 +744,7 @@ export default function BatchDetails({
   // Function to handle chat button click
   const handleChatClick = () => {
     if (!order?.user || !order.user.id) {
-      if (typeof window !== 'undefined') {
+      if (typeof window !== "undefined") {
         alert("Cannot start chat: Customer ID is missing.");
       }
       return;
@@ -828,12 +835,12 @@ export default function BatchDetails({
 
   return (
     <div
-      className={`w-full mx-auto px-1 py-2 sm:px-4 sm:py-4 ${
+      className={`mx-auto w-full px-1 py-2 sm:px-4 sm:py-4 ${
         theme === "dark"
           ? "bg-gray-900 text-gray-100"
           : "bg-gray-50 text-gray-900"
       }`}
-      style={{ maxWidth: '100vw' }}
+      style={{ maxWidth: "100vw" }}
     >
       {/* Product Image Modal */}
       <ProductImageModal
@@ -904,7 +911,7 @@ export default function BatchDetails({
           />
         )}
 
-      <div className="mb-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 w-full">
+      <div className="mb-4 flex w-full flex-col items-start justify-between gap-2 sm:flex-row sm:items-center">
         <Button
           appearance="link"
           onClick={() => router.back()}
@@ -931,10 +938,12 @@ export default function BatchDetails({
       <Panel
         bordered
         header={`Order #${order.OrderID || order.id.slice(0, 8)}`}
-        className={`${theme === "dark" ? "bg-gray-800 text-gray-100" : ""} p-1 sm:p-6 w-full min-w-0`}
+        className={`${
+          theme === "dark" ? "bg-gray-800 text-gray-100" : ""
+        } w-full min-w-0 p-1 sm:p-6`}
         shaded
       >
-        <div className="overflow-x-auto w-full min-w-0">
+        <div className="w-full min-w-0 overflow-x-auto">
           <Steps current={currentStep} className="mb-8 w-full min-w-0">
             <Steps.Item title="Accepted" />
             <Steps.Item title="Shopping" />
@@ -943,10 +952,10 @@ export default function BatchDetails({
           </Steps>
         </div>
 
-        <div className="mb-6 grid grid-cols-1 gap-2 sm:gap-4 md:grid-cols-2 w-full min-w-0">
+        <div className="mb-6 grid w-full min-w-0 grid-cols-1 gap-2 sm:gap-4 md:grid-cols-2">
           {/* Shop Information */}
           <div
-            className={`rounded-lg border p-4 min-w-0 ${
+            className={`min-w-0 rounded-lg border p-4 ${
               theme === "dark"
                 ? "border-gray-700 bg-gray-800"
                 : "border-gray-200 bg-white"
@@ -954,7 +963,7 @@ export default function BatchDetails({
             style={{ minWidth: 0 }}
           >
             <h3
-              className={`mb-2 text-base sm:text-lg font-bold ${
+              className={`mb-2 text-base font-bold sm:text-lg ${
                 theme === "dark" ? "text-gray-100" : "text-gray-900"
               }`}
             >
@@ -990,7 +999,7 @@ export default function BatchDetails({
               </div>
               <div>
                 <h4
-                  className={`font-medium text-base sm:text-base ${
+                  className={`text-base font-medium sm:text-base ${
                     theme === "dark" ? "text-gray-100" : "text-gray-900"
                   }`}
                 >
@@ -1031,7 +1040,7 @@ export default function BatchDetails({
 
           {/* Customer Information */}
           <div
-            className={`rounded-lg border p-4 min-w-0 ${
+            className={`min-w-0 rounded-lg border p-4 ${
               theme === "dark"
                 ? "border-gray-700 bg-gray-800"
                 : "border-gray-200 bg-white"
@@ -1039,13 +1048,13 @@ export default function BatchDetails({
             style={{ minWidth: 0 }}
           >
             <h3
-              className={`mb-2 text-base sm:text-lg font-bold ${
+              className={`mb-2 text-base font-bold sm:text-lg ${
                 theme === "dark" ? "text-gray-100" : "text-gray-900"
               }`}
             >
               Customer Details
             </h3>
-            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 w-full">
+            <div className="flex w-full flex-col items-start justify-between gap-2 sm:flex-row sm:items-center">
               <div className="flex items-center">
                 <div
                   className={`mr-3 h-12 w-12 flex-shrink-0 overflow-hidden rounded-full ${
@@ -1077,7 +1086,7 @@ export default function BatchDetails({
                 </div>
                 <div>
                   <h4
-                    className={`font-medium text-base sm:text-base ${
+                    className={`text-base font-medium sm:text-base ${
                       theme === "dark" ? "text-gray-100" : "text-gray-900"
                     }`}
                   >
@@ -1097,7 +1106,7 @@ export default function BatchDetails({
               {order.status !== "delivered" ? (
                 <Button
                   appearance="ghost"
-                  className={`flex items-center w-full sm:w-auto ${
+                  className={`flex w-full items-center sm:w-auto ${
                     theme === "dark"
                       ? "text-blue-400 hover:text-blue-300"
                       : "text-blue-600"
@@ -1118,7 +1127,7 @@ export default function BatchDetails({
               ) : (
                 <Button
                   appearance="ghost"
-                  className={`flex cursor-not-allowed items-center w-full sm:w-auto ${
+                  className={`flex w-full cursor-not-allowed items-center sm:w-auto ${
                     theme === "dark" ? "text-gray-600" : "text-gray-400"
                   }`}
                   disabled
@@ -1138,7 +1147,9 @@ export default function BatchDetails({
             </div>
 
             <div className="mt-3">
-              <h4 className="mb-1 text-xs sm:text-sm font-medium">Delivery Address:</h4>
+              <h4 className="mb-1 text-xs font-medium sm:text-sm">
+                Delivery Address:
+              </h4>
               <p
                 className={`text-xs sm:text-sm ${
                   theme === "dark" ? "text-gray-400" : "text-gray-500"

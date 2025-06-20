@@ -577,11 +577,13 @@ The `/dev/logs` page provides:
 # Plasa Profile Management
 
 ## Overview
+
 The Plasa profile management system allows users to update their delivery service provider information. This includes personal details, contact information, and required documentation.
 
 ## Features
 
 ### Profile Information
+
 - Full Name
 - Phone Number
 - Address
@@ -592,7 +594,9 @@ The Plasa profile management system allows users to update their delivery servic
   - On Foot
 
 ### Required Documentation
+
 1. Profile Photo
+
    - Clear photo of the user
    - Required for identification
    - Compressed for optimal storage
@@ -603,23 +607,27 @@ The Plasa profile management system allows users to update their delivery servic
    - Must be clearly visible
 
 ### Transport Mode Specific Requirements
+
 - If transport mode is not "On Foot", additional documentation may be required
 - System automatically shows/hides relevant fields based on transport mode
 
 ## Update Process
 
 1. **Information Update**
+
    - Users can update their profile information through the Update Plasa Drawer
    - All changes require review before activation
    - Status changes to "pending" during review
 
 2. **Photo Capture**
+
    - Built-in camera functionality for profile and ID photos
    - Image compression for optimal storage
    - Preview capability before submission
    - Retake option available
 
 3. **Validation**
+
    - Required fields validation
    - Photo presence verification
    - Transport mode specific validations
@@ -632,23 +640,27 @@ The Plasa profile management system allows users to update their delivery servic
 ## Technical Details
 
 ### Components
+
 - `UpdatePlasaDrawer.tsx`: Main component for profile updates
 - Camera integration for photo capture
 - Image compression utility
 - Form validation system
 
 ### State Management
+
 - Form values
 - Photo states
 - Loading states
 - Validation states
 
 ### API Integration
+
 - Profile update endpoint
 - Photo upload handling
 - Status management
 
 ### Security
+
 - Session validation
 - Required authentication
 - Secure photo handling
@@ -656,18 +668,21 @@ The Plasa profile management system allows users to update their delivery servic
 ## UI/UX Features
 
 ### Form Elements
+
 - Input validation
 - Error messaging
 - Loading states
 - Success notifications
 
 ### Photo Management
+
 - Live camera preview
 - Photo capture
 - Image compression
 - Preview functionality
 
 ### Responsive Design
+
 - Mobile-friendly interface
 - Adaptive layout
 - Touch-friendly controls
@@ -675,11 +690,13 @@ The Plasa profile management system allows users to update their delivery servic
 ## Status Management
 
 ### Profile Statuses
+
 - Pending: Under review
 - Active: Approved and active
 - Inactive: Temporarily disabled
 
 ### Update Process
+
 1. User submits updates
 2. Status changes to "pending"
 3. Admin review
@@ -687,6 +704,7 @@ The Plasa profile management system allows users to update their delivery servic
 5. User notified of changes
 
 ## Error Handling
+
 - Form validation errors
 - Photo capture errors
 - API integration errors
@@ -694,6 +712,7 @@ The Plasa profile management system allows users to update their delivery servic
 - Session management
 
 ## Best Practices
+
 1. Always verify photo quality
 2. Ensure all required fields are filled
 3. Keep information up to date
@@ -701,6 +720,7 @@ The Plasa profile management system allows users to update their delivery servic
 5. Maintain valid documentation
 
 ## Future Enhancements
+
 - Real-time status updates
 - Enhanced photo validation
 - Additional transport modes
@@ -712,17 +732,21 @@ The Plasa profile management system allows users to update their delivery servic
 ## 1. Profile Management System
 
 ### Core Components
+
 - Location: `src/components/shopper/profile/UpdateShopperDrawer.tsx`
 - Purpose: Handles Plasa profile updates and document management
 
 ### Key Features
+
 1. **Document Management**
+
    - Profile photo capture and validation
    - National ID verification
    - Image compression and optimization
    - Real-time preview functionality
 
 2. **Form State Management**
+
    - Multi-step form validation
    - Real-time field validation
    - Error state handling
@@ -737,11 +761,14 @@ The Plasa profile management system allows users to update their delivery servic
 ## 2. Notification System
 
 ### Core Components
+
 - Location: `src/components/shopper/NotificationSystem.tsx`
 - Purpose: Real-time order notification and management
 
 ### Key Features
+
 1. **Schedule Management**
+
    ```typescript
    interface ShopperSchedule {
      day_of_week: number;
@@ -752,6 +779,7 @@ The Plasa profile management system allows users to update their delivery servic
    ```
 
 2. **Order Processing**
+
    - Real-time order notifications
    - Batch assignment system
    - Location-based filtering
@@ -766,17 +794,21 @@ The Plasa profile management system allows users to update their delivery servic
 ## 3. Order Management System
 
 ### Core Components
+
 - Location: `src/components/shopper/batchDetails.tsx`
 - Purpose: Handles order lifecycle and payment processing
 
 ### Key Features
+
 1. **Order Lifecycle**
+
    - Status transitions
    - Payment processing
    - Invoice generation
    - Delivery confirmation
 
 2. **Payment System**
+
    - OTP verification
    - Refund processing
    - Wallet integration
@@ -791,17 +823,21 @@ The Plasa profile management system allows users to update their delivery servic
 ## 4. Dashboard and Map Integration
 
 ### Core Components
+
 - Location: `src/components/shopper/dashboard/MapSection.tsx`
 - Purpose: Real-time location tracking and order visualization
 
 ### Key Features
+
 1. **Location Services**
+
    - Real-time tracking
    - Geofencing
    - Route optimization
    - Distance calculations
 
 2. **Order Visualization**
+
    - Map markers
    - Order clustering
    - Route display
@@ -816,11 +852,14 @@ The Plasa profile management system allows users to update their delivery servic
 ## 5. Schedule Management
 
 ### Core Components
+
 - Location: `src/components/shopper/profile/ShopperProfileComponent.tsx`
 - Purpose: Manages Plasa availability and working hours
 
 ### Key Features
+
 1. **Schedule Configuration**
+
    ```typescript
    interface TimeSlot {
      day: string;
@@ -831,6 +870,7 @@ The Plasa profile management system allows users to update their delivery servic
    ```
 
 2. **Availability Management**
+
    - Weekly schedule
    - Time slot validation
    - Break management
@@ -845,17 +885,21 @@ The Plasa profile management system allows users to update their delivery servic
 ## 6. Payment and Wallet System
 
 ### Core Components
+
 - Multiple components across the application
 - Purpose: Handles financial transactions and wallet management
 
 ### Key Features
+
 1. **Wallet Management**
+
    - Balance tracking
    - Transaction history
    - Payment processing
    - Refund handling
 
 2. **Payment Processing**
+
    - OTP verification
    - Transaction validation
    - Error recovery
@@ -870,11 +914,14 @@ The Plasa profile management system allows users to update their delivery servic
 ## 7. Logging and Monitoring System
 
 ### Core Components
+
 - Location: `pages/api/logs/read.ts` and `pages/api/queries/system-logs.ts`
 - Purpose: System-wide logging and monitoring
 
 ### Key Features
+
 1. **Log Management**
+
    ```typescript
    interface LogEntry {
      type: LogLevel;
@@ -886,6 +933,7 @@ The Plasa profile management system allows users to update their delivery servic
    ```
 
 2. **Monitoring Features**
+
    - Real-time logging
    - Error tracking
    - Performance monitoring
@@ -900,17 +948,21 @@ The Plasa profile management system allows users to update their delivery servic
 ## 8. API Utilities and Error Handling
 
 ### Core Components
+
 - Location: `src/lib/apiUtils.ts`
 - Purpose: Centralized API management and error handling
 
 ### Key Features
+
 1. **API Management**
+
    - Request handling
    - Response validation
    - Error recovery
    - Retry logic
 
 2. **Error Handling**
+
    - Error categorization
    - Recovery strategies
    - User feedback
@@ -925,16 +977,20 @@ The Plasa profile management system allows users to update their delivery servic
 ## 9. Order Sorting and Filtering
 
 ### Core Components
+
 - Location: `src/components/shopper/dashboard/ShopperDashboard.tsx`
 - Purpose: Manages order display and prioritization
 
 ### Key Features
+
 1. **Sorting Logic**
+
    ```typescript
    type SortCriteria = "newest" | "earnings" | "distance" | "priority";
    ```
 
 2. **Filtering System**
+
    - Multiple criteria
    - Real-time updates
    - Priority management
@@ -949,17 +1005,21 @@ The Plasa profile management system allows users to update their delivery servic
 ## 10. Registration and Onboarding
 
 ### Core Components
+
 - Location: `src/components/shopper/ShopperRegistrationForm.tsx`
 - Purpose: Handles Plasa registration and verification
 
 ### Key Features
+
 1. **Registration Process**
+
    - Multi-step form
    - Document verification
    - Status management
    - Error handling
 
 2. **Verification System**
+
    - Document validation
    - Identity verification
    - Status updates
@@ -974,6 +1034,7 @@ The Plasa profile management system allows users to update their delivery servic
 ## Technical Patterns
 
 ### 1. State Management
+
 ```typescript
 // Example of state management pattern
 const [state, setState] = useState<StateType>(initialState);
@@ -985,6 +1046,7 @@ const memoizedCallback = useCallback(() => {
 ```
 
 ### 2. Error Handling
+
 ```typescript
 // Example of error handling pattern
 try {
@@ -998,6 +1060,7 @@ try {
 ```
 
 ### 3. Real-time Updates
+
 ```typescript
 // Example of real-time update pattern
 useEffect(() => {
@@ -1009,6 +1072,7 @@ useEffect(() => {
 ```
 
 ### 4. Security
+
 ```typescript
 // Example of security pattern
 const validateSession = async () => {
@@ -1022,6 +1086,7 @@ const validateSession = async () => {
 ```
 
 ### 5. Performance Optimization
+
 ```typescript
 // Example of performance optimization pattern
 const memoizedComponent = React.memo(({ prop }) => {
@@ -1036,24 +1101,28 @@ const memoizedValue = useMemo(() => {
 ## Best Practices
 
 1. **Code Organization**
+
    - Modular components
    - Clear separation of concerns
    - Consistent naming conventions
    - Proper file structure
 
 2. **Error Handling**
+
    - Comprehensive error catching
    - User-friendly error messages
    - Proper error logging
    - Recovery strategies
 
 3. **Performance**
+
    - Memoization where appropriate
    - Lazy loading of components
    - Efficient state management
    - Optimized rendering
 
 4. **Security**
+
    - Input validation
    - Session management
    - Secure API calls
@@ -1068,12 +1137,14 @@ const memoizedValue = useMemo(() => {
 ## Future Enhancements
 
 1. **System Improvements**
+
    - Enhanced error recovery
    - Improved performance
    - Better state management
    - Advanced caching
 
 2. **Feature Additions**
+
    - Advanced analytics
    - Enhanced reporting
    - Additional payment methods
@@ -1090,12 +1161,14 @@ const memoizedValue = useMemo(() => {
 ## Navigation System
 
 ### Core Components
+
 - Location: `src/components/shopper/ShopperSidebar.tsx` and `src/components/ui/NavBar/bottomBar.tsx`
 - Purpose: Handles navigation between different sections of the Plasa application
 
 ### Navigation Features
 
 1. **Desktop Navigation**
+
    - Sidebar-based navigation
    - Persistent across pages
    - Real-time active state tracking
@@ -1103,6 +1176,7 @@ const memoizedValue = useMemo(() => {
    - Cached page loading for better performance
 
 2. **Mobile Navigation**
+
    - Bottom bar navigation
    - Floating action buttons
    - Quick access to key features
@@ -1110,6 +1184,7 @@ const memoizedValue = useMemo(() => {
    - Touch-friendly interface
 
 3. **Navigation Items**
+
    - Available Batches
    - Active Batches
    - Earnings (with real-time updates)
@@ -1125,12 +1200,14 @@ const memoizedValue = useMemo(() => {
 ## Vehicle Management System
 
 ### Core Components
+
 - Location: `src/components/shopper/profile/VehicleManagement.tsx`
 - Purpose: Manages delivery vehicle information and documentation
 
 ### Features
 
 1. **Vehicle Information**
+
    - Vehicle Type Selection
    - License Plate Number
    - Vehicle Photos
@@ -1138,6 +1215,7 @@ const memoizedValue = useMemo(() => {
    - Vehicle Status Tracking
 
 2. **Documentation Requirements**
+
    - Vehicle Registration
    - Insurance Documents
    - License Information
@@ -1145,6 +1223,7 @@ const memoizedValue = useMemo(() => {
    - Compliance Certificates
 
 3. **Status Management**
+
    - Pending Review
    - Approved
    - Rejected
@@ -1161,6 +1240,7 @@ const memoizedValue = useMemo(() => {
 ### Ticket Management
 
 1. **Ticket Creation**
+
    - Subject Line
    - Detailed Description
    - Priority Level
@@ -1168,6 +1248,7 @@ const memoizedValue = useMemo(() => {
    - Attachment Support
 
 2. **Ticket Categories**
+
    - Vehicle Issues
    - Documentation Problems
    - Technical Support
@@ -1175,6 +1256,7 @@ const memoizedValue = useMemo(() => {
    - General Inquiries
 
 3. **Priority Levels**
+
    - High Priority
    - Medium Priority
    - Low Priority
@@ -1190,6 +1272,7 @@ const memoizedValue = useMemo(() => {
 ### Technical Implementation
 
 1. **State Management**
+
    ```typescript
    interface VehicleState {
      type: string;
@@ -1209,6 +1292,7 @@ const memoizedValue = useMemo(() => {
    ```
 
 2. **API Integration**
+
    - Vehicle CRUD operations
    - Document upload handling
    - Ticket management
@@ -1225,12 +1309,14 @@ const memoizedValue = useMemo(() => {
 ### Best Practices
 
 1. **Vehicle Management**
+
    - Regular document updates
    - Photo quality verification
    - Status monitoring
    - Compliance checking
 
 2. **Ticket Handling**
+
    - Clear communication
    - Proper categorization
    - Priority assessment
@@ -1245,6 +1331,7 @@ const memoizedValue = useMemo(() => {
 ### Security Features
 
 1. **Document Security**
+
    - Secure upload
    - Access control
    - Data encryption
@@ -1259,6 +1346,7 @@ const memoizedValue = useMemo(() => {
 ### Future Enhancements
 
 1. **Vehicle Management**
+
    - Real-time tracking
    - Maintenance scheduling
    - Performance analytics
@@ -1281,6 +1369,7 @@ The application provides a comprehensive search system that allows users to find
 #### Features
 
 1. **Category-based Search**
+
    - Users can filter shops by categories:
      - Super Market
      - Public Markets
@@ -1294,17 +1383,20 @@ The application provides a comprehensive search system that allows users to find
    - Mobile users get a dropdown menu for category selection
 
 2. **Search Implementation**
+
    ```typescript
    const filteredShops = useMemo(() => {
      if (!authReady || role === "shopper") return [];
-     
+
      return selectedCategory
-       ? data.shops?.filter((shop) => shop.category_id === selectedCategory) || []
+       ? data.shops?.filter((shop) => shop.category_id === selectedCategory) ||
+           []
        : data.shops || [];
    }, [authReady, role, selectedCategory, data.shops]);
    ```
 
 3. **Search Features**
+
    - Real-time filtering
    - Category-based filtering
    - Responsive design for both mobile and desktop
@@ -1313,6 +1405,7 @@ The application provides a comprehensive search system that allows users to find
    - Error handling for failed searches
 
 4. **Mobile Experience**
+
    - Dropdown menu for category selection
    - Easy-to-use interface
    - Clear visual feedback
@@ -1327,12 +1420,14 @@ The application provides a comprehensive search system that allows users to find
 ### Usage
 
 1. **Selecting a Category**
+
    - On desktop: Click on any category card in the grid
    - On mobile: Use the dropdown menu to select a category
    - The selected category will be highlighted
    - Shops will be filtered automatically
 
 2. **Clearing Selection**
+
    - On desktop: Click the "Clear Filter" button
    - On mobile: Use the "Clear Selection" option in the dropdown
    - All shops will be displayed again
@@ -1350,13 +1445,17 @@ The application provides a comprehensive search system that allows users to find
 ### Technical Implementation
 
 1. **State Management**
+
    ```typescript
-   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
+   const [selectedCategory, setSelectedCategory] = useState<string | null>(
+     null
+   );
    const [isLoading, setIsLoading] = useState(false);
    const [error, setError] = useState<string | null>(null);
    ```
 
 2. **Error Handling**
+
    ```typescript
    try {
      setSelectedCategory(categoryId);
@@ -1375,11 +1474,13 @@ The application provides a comprehensive search system that allows users to find
 ### Best Practices
 
 1. **Performance**
+
    - Using `useMemo` for filtered results
    - Lazy loading of images
    - Efficient state updates
 
 2. **Accessibility**
+
    - Clear visual indicators
    - Proper ARIA labels
    - Keyboard navigation support
@@ -1393,6 +1494,7 @@ The application provides a comprehensive search system that allows users to find
 ### Future Improvements
 
 1. **Planned Features**
+
    - Advanced search filters
    - Search by shop name
    - Search by product
@@ -1418,23 +1520,27 @@ This project is licensed under the MIT License - see the [LICENSE.md](LICENSE.md
 ## Delivery Photo Upload Feature
 
 ### Overview
+
 The delivery photo upload feature ensures that delivery confirmation photos are properly captured, uploaded, and stored in the database. The system includes safeguards to prevent data loss during the upload process.
 
 ### Key Features
 
 #### 1. Photo Capture
+
 - Camera integration for direct photo capture
 - Support for file upload as an alternative
 - Real-time preview of captured photos
 - Image compression and validation
 
 #### 2. Upload Process
+
 - Automatic upload to server after capture
 - Progress tracking during upload
 - Error handling and retry capabilities
 - Validation of file types and sizes
 
 #### 3. Persistence
+
 - Upload state is preserved across page refreshes
 - Modal remains open until upload completes
 - Prevents accidental closure during upload
@@ -1443,6 +1549,7 @@ The delivery photo upload feature ensures that delivery confirmation photos are 
 ### Technical Implementation
 
 #### State Management
+
 ```typescript
 // Local storage keys
 const UPLOAD_STATE_KEY = `delivery_upload_${orderId}`;
@@ -1454,6 +1561,7 @@ const [forceOpen, setForceOpen] = useState(false);
 ```
 
 #### Upload Process
+
 1. Photo capture/selection
 2. State saved to localStorage
 3. Upload to server
@@ -1461,6 +1569,7 @@ const [forceOpen, setForceOpen] = useState(false);
 5. State cleanup
 
 #### Error Handling
+
 - Network errors
 - Invalid file types
 - Size limitations
@@ -1469,6 +1578,7 @@ const [forceOpen, setForceOpen] = useState(false);
 ### API Endpoints
 
 #### Upload Delivery Photo
+
 ```typescript
 POST /api/shopper/uploadDeliveryPhoto
 Content-Type: application/json
@@ -1482,6 +1592,7 @@ Content-Type: application/json
 ### Database Schema
 
 #### Orders Table
+
 ```sql
 ALTER TABLE orders
 ADD COLUMN delivery_photo TEXT;
@@ -1500,11 +1611,13 @@ ADD COLUMN delivery_photo TEXT;
 ### Safety Features
 
 1. **Upload Protection**
+
    - Modal cannot be closed during upload
    - State persists across page refreshes
    - Clear upload progress indicators
 
 2. **Data Validation**
+
    - File type checking
    - Size limitations
    - Image compression
@@ -1517,11 +1630,13 @@ ADD COLUMN delivery_photo TEXT;
 ### Best Practices
 
 1. **Photo Capture**
+
    - Use good lighting
    - Ensure package is clearly visible
    - Include delivery location context
 
 2. **Upload Process**
+
    - Maintain stable internet connection
    - Don't close browser during upload
    - Wait for confirmation message
@@ -1541,6 +1656,7 @@ ADD COLUMN delivery_photo TEXT;
 ### Security Considerations
 
 1. **Data Protection**
+
    - Secure API endpoints
    - Authentication required
    - Data validation
@@ -1553,6 +1669,7 @@ ADD COLUMN delivery_photo TEXT;
 ### Future Improvements
 
 1. **Planned Features**
+
    - Multiple photo upload
    - Photo editing capabilities
    - Offline support
@@ -1566,5 +1683,6 @@ ADD COLUMN delivery_photo TEXT;
 ### Support
 
 For technical issues or questions, please contact:
+
 - Technical Support: support@example.com
 - Bug Reports: bugs@example.com

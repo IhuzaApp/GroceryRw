@@ -23,11 +23,7 @@ interface GetSystemLogsResponse {
 // Query without type filter
 const GET_ALL_SYSTEM_LOGS = gql`
   query getSystemLogs($limit: Int!, $offset: Int!) {
-    System_Logs(
-      order_by: { time: desc }
-      limit: $limit
-      offset: $offset
-    ) {
+    System_Logs(order_by: { time: desc }, limit: $limit, offset: $offset) {
       time
       type
       message
@@ -121,4 +117,4 @@ export default async function handler(
     console.error("Error reading logs:", error);
     res.status(500).json({ error: "Failed to read logs" });
   }
-} 
+}

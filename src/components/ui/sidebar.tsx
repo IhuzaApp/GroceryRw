@@ -41,24 +41,24 @@ export default function SideBar() {
 
     const fetchPendingOrders = async () => {
       try {
-        const response = await fetch('/api/queries/orders');
+        const response = await fetch("/api/queries/orders");
         if (!response.ok) {
           throw new Error(`HTTP error! status: ${response.status}`);
         }
         const data = await response.json();
-        
+
         // Check if data and data.orders exist before filtering
         if (!data || !data.orders) {
-          console.warn('No orders data received from API');
+          console.warn("No orders data received from API");
           return;
         }
 
         const pendingOrders = data.orders.filter(
-          (order: any) => order.status === 'pending'
+          (order: any) => order.status === "pending"
         );
         setPendingOrders(pendingOrders);
       } catch (error) {
-        console.error('Error fetching pending orders:', error);
+        console.error("Error fetching pending orders:", error);
         // Set empty array on error to prevent undefined errors
         setPendingOrders([]);
       }

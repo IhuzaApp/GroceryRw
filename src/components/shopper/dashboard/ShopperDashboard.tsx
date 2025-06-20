@@ -122,7 +122,9 @@ export default function ShopperDashboard() {
   const loadOrders = useCallback(async () => {
     if (!currentLocation || !isOnline) {
       console.log(
-        `Cannot load orders: ${!currentLocation ? "No location" : "User offline"}`
+        `Cannot load orders: ${
+          !currentLocation ? "No location" : "User offline"
+        }`
       );
       setAvailableOrders([]);
       setSortedOrders([]);
@@ -132,19 +134,19 @@ export default function ShopperDashboard() {
     setIsLoading(true);
 
     try {
-    const safeLocation = {
-      lat:
-        typeof currentLocation.lat === "string"
-          ? parseFloat(currentLocation.lat)
-          : currentLocation.lat,
-      lng:
-        typeof currentLocation.lng === "string"
-          ? parseFloat(currentLocation.lng)
-          : currentLocation.lng,
-    };
+      const safeLocation = {
+        lat:
+          typeof currentLocation.lat === "string"
+            ? parseFloat(currentLocation.lat)
+            : currentLocation.lat,
+        lng:
+          typeof currentLocation.lng === "string"
+            ? parseFloat(currentLocation.lng)
+            : currentLocation.lng,
+      };
 
-    const timestamp = new Date().getTime();
-    const url = `/api/shopper/availableOrders?_=${timestamp}&latitude=${safeLocation.lat}&longitude=${safeLocation.lng}&maxTravelTime=15`;
+      const timestamp = new Date().getTime();
+      const url = `/api/shopper/availableOrders?_=${timestamp}&latitude=${safeLocation.lat}&longitude=${safeLocation.lng}&maxTravelTime=15`;
 
       const response = await fetch(url);
       if (!response.ok) {
@@ -152,88 +154,88 @@ export default function ShopperDashboard() {
       }
 
       const data = await response.json();
-      
-        const formattedOrders = data
-          .map((order: any) => {
-            try {
-              const createdAtDate = new Date(order.createdAt);
-              const minutesAgo = Math.floor(
-                (Date.now() - createdAtDate.getTime()) / 60000
-              );
 
-              return {
-                id: order.id,
-                shopName: order.shopName || "Unknown Shop",
-                shopAddress: order.shopAddress || "No address available",
+      const formattedOrders = data
+        .map((order: any) => {
+          try {
+            const createdAtDate = new Date(order.createdAt);
+            const minutesAgo = Math.floor(
+              (Date.now() - createdAtDate.getTime()) / 60000
+            );
+
+            return {
+              id: order.id,
+              shopName: order.shopName || "Unknown Shop",
+              shopAddress: order.shopAddress || "No address available",
               customerAddress: order.customerAddress || "No address available",
               distance: `${order.distance} km`,
-                items: order.itemsCount || 0,
-                total: `$${(order.earnings || 0).toFixed(2)}`,
-                estimatedEarnings: `$${(order.earnings || 0).toFixed(2)}`,
+              items: order.itemsCount || 0,
+              total: `$${(order.earnings || 0).toFixed(2)}`,
+              estimatedEarnings: `$${(order.earnings || 0).toFixed(2)}`,
               createdAt: relativeTime(order.createdAt),
-                status: order.status || "PENDING",
-                rawDistance: order.distance || 0,
-                rawEarnings: order.earnings || 0,
-                rawCreatedAt: createdAtDate.getTime(),
-                minutesAgo: minutesAgo,
-                priorityLevel: order.priorityLevel || 1,
-                shopLatitude: order.shopLatitude,
-                shopLongitude: order.shopLongitude,
-                customerLatitude: order.customerLatitude,
-                customerLongitude: order.customerLongitude,
-                travelTimeMinutes: order.travelTimeMinutes,
-              };
-            } catch (err) {
-              console.error(`Error formatting order ${order.id}:`, err);
+              status: order.status || "PENDING",
+              rawDistance: order.distance || 0,
+              rawEarnings: order.earnings || 0,
+              rawCreatedAt: createdAtDate.getTime(),
+              minutesAgo: minutesAgo,
+              priorityLevel: order.priorityLevel || 1,
+              shopLatitude: order.shopLatitude,
+              shopLongitude: order.shopLongitude,
+              customerLatitude: order.customerLatitude,
+              customerLongitude: order.customerLongitude,
+              travelTimeMinutes: order.travelTimeMinutes,
+            };
+          } catch (err) {
+            console.error(`Error formatting order ${order.id}:`, err);
             return null;
-            }
-          })
+          }
+        })
         .filter(Boolean);
 
-        setAvailableOrders(formattedOrders);
-        const sorted = sortOrders(formattedOrders, sortBy);
-        setSortedOrders(sorted);
-        setLastRefreshed(new Date());
+      setAvailableOrders(formattedOrders);
+      const sorted = sortOrders(formattedOrders, sortBy);
+      setSortedOrders(sorted);
+      setLastRefreshed(new Date());
     } catch (err) {
-        console.error("Error fetching available orders:", err);
+      console.error("Error fetching available orders:", err);
     } finally {
-        setIsLoading(false);
+      setIsLoading(false);
     }
   }, [currentLocation, isOnline, sortBy]);
 
   // Memoize the sortOrders function
   const sortOrders = useCallback(
     (
-    orders: FormattedOrder[],
-    criteria: "newest" | "earnings" | "distance" | "priority"
-  ) => {
-    let sorted = [...orders];
+      orders: FormattedOrder[],
+      criteria: "newest" | "earnings" | "distance" | "priority"
+    ) => {
+      let sorted = [...orders];
 
       switch (criteria) {
         case "newest":
-      sorted.sort((a, b) => b.rawCreatedAt - a.rawCreatedAt);
+          sorted.sort((a, b) => b.rawCreatedAt - a.rawCreatedAt);
           break;
         case "earnings":
-      sorted.sort((a, b) => b.rawEarnings - a.rawEarnings);
+          sorted.sort((a, b) => b.rawEarnings - a.rawEarnings);
           break;
         case "distance":
-      sorted.sort((a, b) => a.rawDistance - b.rawDistance);
+          sorted.sort((a, b) => a.rawDistance - b.rawDistance);
           break;
         case "priority":
-      sorted.sort((a, b) => {
-        if (a.priorityLevel !== b.priorityLevel) {
+          sorted.sort((a, b) => {
+            if (a.priorityLevel !== b.priorityLevel) {
               return b.priorityLevel - a.priorityLevel;
-        }
+            }
             return b.minutesAgo - a.minutesAgo;
-      });
+          });
           break;
-    }
+      }
 
-    if (!showHistorical) {
-      sorted = sorted.filter((order) => order.minutesAgo >= 15);
-    }
+      if (!showHistorical) {
+        sorted = sorted.filter((order) => order.minutesAgo >= 15);
+      }
 
-    return sorted;
+      return sorted;
     },
     [showHistorical]
   );
@@ -241,7 +243,7 @@ export default function ShopperDashboard() {
   // Handle sort change with useCallback
   const handleSortChange = useCallback(
     (newSortBy: "newest" | "earnings" | "distance" | "priority") => {
-    setSortBy(newSortBy);
+      setSortBy(newSortBy);
       const sorted = sortOrders(availableOrders, newSortBy);
       setSortedOrders(sorted);
     },
@@ -514,7 +516,7 @@ export default function ShopperDashboard() {
                     : "Showing Recent (15+ min)"}
                 </button>
                 <button
-                  className="rounded px-3 py-1.5 text-sm text-white bg-green-500 hover:bg-green-600"
+                  className="rounded bg-green-500 px-3 py-1.5 text-sm text-white hover:bg-green-600"
                   onClick={loadOrders}
                 >
                   Refresh
@@ -724,8 +726,8 @@ export default function ShopperDashboard() {
                           ? "bg-red-600 text-white hover:bg-red-700"
                           : "bg-red-500 text-white hover:bg-red-600"
                         : theme === "dark"
-                          ? "bg-green-600 text-white hover:bg-green-700"
-                          : "bg-green-500 text-white hover:bg-green-600"
+                        ? "bg-green-600 text-white hover:bg-green-700"
+                        : "bg-green-500 text-white hover:bg-green-600"
                     }`}
                   >
                     {isOnline ? "Go Offline" : "Start Plas"}
@@ -760,7 +762,7 @@ export default function ShopperDashboard() {
                             ? "bg-green-900/30 text-green-300"
                             : "bg-green-100 text-green-700"
                           : theme === "dark"
-                            ? "bg-gray-800 text-gray-300"
+                          ? "bg-gray-800 text-gray-300"
                           : "bg-gray-100 text-gray-700"
                       }`}
                     >
@@ -774,14 +776,14 @@ export default function ShopperDashboard() {
                             ? "bg-blue-900/30 text-blue-300"
                             : "bg-blue-100 text-blue-700"
                           : theme === "dark"
-                            ? "bg-gray-800 text-gray-300"
+                          ? "bg-gray-800 text-gray-300"
                           : "bg-gray-100 text-gray-700"
                       }`}
                     >
                       {showHistorical ? "All Pending" : "15+ min"}
                     </button>
                     <button
-                      className="rounded px-3 py-1.5 text-sm text-white bg-green-500 hover:bg-green-600"
+                      className="rounded bg-green-500 px-3 py-1.5 text-sm text-white hover:bg-green-600"
                       onClick={loadOrders}
                     >
                       Refresh
@@ -795,10 +797,10 @@ export default function ShopperDashboard() {
                     className={`rounded px-3 py-1 text-xs ${
                       sortBy === "newest"
                         ? theme === "dark"
-                        ? "bg-green-600 text-white"
+                          ? "bg-green-600 text-white"
                           : "bg-green-600 text-white"
                         : theme === "dark"
-                          ? "bg-gray-800 text-gray-300"
+                        ? "bg-gray-800 text-gray-300"
                         : "bg-gray-200 text-gray-800"
                     }`}
                     title="Batches less than 1 hour old"
@@ -810,10 +812,10 @@ export default function ShopperDashboard() {
                     className={`rounded px-3 py-1 text-xs ${
                       sortBy === "earnings"
                         ? theme === "dark"
-                        ? "bg-green-600 text-white"
+                          ? "bg-green-600 text-white"
                           : "bg-green-600 text-white"
                         : theme === "dark"
-                          ? "bg-gray-800 text-gray-300"
+                        ? "bg-gray-800 text-gray-300"
                         : "bg-gray-200 text-gray-800"
                     }`}
                   >
@@ -824,10 +826,10 @@ export default function ShopperDashboard() {
                     className={`rounded px-3 py-1 text-xs ${
                       sortBy === "distance"
                         ? theme === "dark"
-                        ? "bg-green-600 text-white"
+                          ? "bg-green-600 text-white"
                           : "bg-green-600 text-white"
                         : theme === "dark"
-                          ? "bg-gray-800 text-gray-300"
+                        ? "bg-gray-800 text-gray-300"
                         : "bg-gray-200 text-gray-800"
                     }`}
                   >
@@ -838,10 +840,10 @@ export default function ShopperDashboard() {
                     className={`rounded px-3 py-1 text-xs ${
                       sortBy === "priority"
                         ? theme === "dark"
-                        ? "bg-purple-600 text-white"
+                          ? "bg-purple-600 text-white"
                           : "bg-purple-600 text-white"
                         : theme === "dark"
-                          ? "bg-gray-800 text-gray-300"
+                        ? "bg-gray-800 text-gray-300"
                         : "bg-gray-200 text-gray-800"
                     }`}
                     title="All batches by priority level, including older batches"

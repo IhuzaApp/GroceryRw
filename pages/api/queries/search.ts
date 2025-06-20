@@ -1,10 +1,10 @@
-import { NextApiRequest, NextApiResponse } from 'next';
-import { hasuraClient } from '../../../src/lib/hasuraClient';
-import { gql } from 'graphql-request';
+import { NextApiRequest, NextApiResponse } from "next";
+import { hasuraClient } from "../../../src/lib/hasuraClient";
+import { gql } from "graphql-request";
 
 const SEARCH_ITEMS = gql`
   query SearchItems($searchTerm: String!) {
-    Products(where: {name: {_ilike: $searchTerm}}, limit: 10) {
+    Products(where: { name: { _ilike: $searchTerm } }, limit: 10) {
       id
       name
       description
@@ -22,7 +22,7 @@ const SEARCH_ITEMS = gql`
         is_active
       }
     }
-    Shops(where: {name: {_ilike: $searchTerm}}, limit: 10) {
+    Shops(where: { name: { _ilike: $searchTerm } }, limit: 10) {
       id
       name
       description
@@ -70,15 +70,15 @@ export default async function handler(
   req: NextApiRequest,
   res: NextApiResponse
 ) {
-  if (req.method !== 'GET') {
-    return res.status(405).json({ message: 'Method not allowed' });
+  if (req.method !== "GET") {
+    return res.status(405).json({ message: "Method not allowed" });
   }
 
   try {
     const searchTerm = req.query.term as string;
 
     if (!searchTerm) {
-      return res.status(400).json({ message: 'Search term is required' });
+      return res.status(400).json({ message: "Search term is required" });
     }
 
     if (!hasuraClient) {
@@ -86,14 +86,14 @@ export default async function handler(
     }
 
     const data = await hasuraClient.request<SearchResponse>(SEARCH_ITEMS, {
-      searchTerm: `%${searchTerm}%`
+      searchTerm: `%${searchTerm}%`,
     });
 
     // Transform products
-    const products = data.Products.map(product => ({
+    const products = data.Products.map((product) => ({
       id: product.id,
       name: product.name,
-      type: 'product' as const,
+      type: "product" as const,
       image: product.image,
       price: parseFloat(product.final_price),
       description: product.description,
@@ -103,20 +103,20 @@ export default async function handler(
       quantity: product.quantity,
       measurementUnit: product.measurement_unit,
       shopName: product.Shop?.name,
-      shopImage: product.Shop?.image
+      shopImage: product.Shop?.image,
     }));
 
     // Transform shops
-    const shops = data.Shops.map(shop => ({
+    const shops = data.Shops.map((shop) => ({
       id: shop.id,
       name: shop.name,
-      type: 'shop' as const,
+      type: "shop" as const,
       logo: shop.image,
       description: shop.description,
       isOpen: shop.is_active,
       address: shop.address,
       categoryId: shop.category_id,
-      operatingHours: shop.operating_hours
+      operatingHours: shop.operating_hours,
     }));
 
     // Combine and sort results by relevance
@@ -135,11 +135,10 @@ export default async function handler(
       results,
       total: results.length,
       productsCount: products.length,
-      shopsCount: shops.length
+      shopsCount: shops.length,
     });
-
   } catch (error) {
-    console.error('Search error:', error);
-    return res.status(500).json({ message: 'Internal server error' });
+    console.error("Search error:", error);
+    return res.status(500).json({ message: "Internal server error" });
   }
-} 
+}
