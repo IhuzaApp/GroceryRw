@@ -565,7 +565,7 @@ export default function MessagesPage() {
                 No Messages
               </h3>
               <p className="text-gray-600 dark:text-gray-400">
-                You don't have any messages yet.
+                You don&apos;t have any messages yet.
               </p>
             </div>
           ) : (

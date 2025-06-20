@@ -384,7 +384,7 @@ const DeliveryConfirmationModal: React.FC<DeliveryConfirmationModalProps> = ({
               <div className="mb-4 text-center">
                 <Loader size="md" content="Uploading photo..." />
                 <p className="mt-2 text-sm text-gray-500">
-                  Please don't close this window until the upload is complete
+                  Please don&apos;t close this window until the upload is complete
                 </p>
               </div>
             )}
