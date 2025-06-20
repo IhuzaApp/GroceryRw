@@ -140,9 +140,13 @@ export default function HeaderLayout() {
             <button
               onClick={handleThemeToggle}
               className="flex items-center gap-1 rounded-md p-1.5 transition-colors duration-200 hover:cursor-pointer hover:bg-green-50 dark:hover:bg-green-900"
-              aria-label={theme === "dark" ? "Switch to light mode" : "Switch to dark mode"}
+              aria-label={
+                theme === "dark"
+                  ? "Switch to light mode"
+                  : "Switch to dark mode"
+              }
             >
-              {theme === 'dark' ? (
+              {theme === "dark" ? (
                 <svg
                   width="24px"
                   height="24px"
@@ -292,9 +296,13 @@ export default function HeaderLayout() {
             <button
               onClick={handleThemeToggle}
               className="flex items-center gap-1 rounded-md p-1.5 transition-colors duration-200 hover:cursor-pointer hover:bg-green-50 dark:hover:bg-green-900"
-              aria-label={theme === "dark" ? "Switch to light mode" : "Switch to dark mode"}
+              aria-label={
+                theme === "dark"
+                  ? "Switch to light mode"
+                  : "Switch to dark mode"
+              }
             >
-              {theme === 'dark' ? (
+              {theme === "dark" ? (
                 <svg
                   width="24px"
                   height="24px"

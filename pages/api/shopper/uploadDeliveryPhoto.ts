@@ -6,8 +6,15 @@ import { authOptions } from "../auth/[...nextauth]";
 
 // GraphQL mutation to update order with delivery photo and updated_at
 const UPDATE_ORDER_DELIVERY_PHOTO = gql`
-  mutation UpdateOrderDeliveryPhoto($order_id: uuid!, $delivery_photo_url: String!, $updated_at: timestamptz!) {
-    update_Orders(where: {id: {_eq: $order_id}}, _set: {delivery_photo_url: $delivery_photo_url, updated_at: $updated_at}) {
+  mutation UpdateOrderDeliveryPhoto(
+    $order_id: uuid!
+    $delivery_photo_url: String!
+    $updated_at: timestamptz!
+  ) {
+    update_Orders(
+      where: { id: { _eq: $order_id } }
+      _set: { delivery_photo_url: $delivery_photo_url, updated_at: $updated_at }
+    ) {
       affected_rows
     }
   }
@@ -24,9 +31,13 @@ export default async function handler(
 
   try {
     // Verify the user is authenticated
-    const session = await getServerSession(req, res, authOptions as any) as { user?: any };
+    const session = (await getServerSession(req, res, authOptions as any)) as {
+      user?: any;
+    };
     if (!session || !session.user) {
-      return res.status(401).json({ error: "You must be authenticated to upload delivery photos" });
+      return res
+        .status(401)
+        .json({ error: "You must be authenticated to upload delivery photos" });
     }
 
     // Get the order ID, photo data, and updated_at from the request
@@ -37,7 +48,9 @@ export default async function handler(
     }
 
     // Convert base64 to a data URL if it's not already
-    const photoUrl = file.startsWith('data:') ? file : `data:image/jpeg;base64,${file}`;
+    const photoUrl = file.startsWith("data:")
+      ? file
+      : `data:image/jpeg;base64,${file}`;
 
     // Check hasuraClient is not null
     if (!hasuraClient) {
@@ -50,11 +63,14 @@ export default async function handler(
         affected_rows: number;
       };
     };
-    const data = await hasuraClient.request<UpdateOrderDeliveryPhotoResponse>(UPDATE_ORDER_DELIVERY_PHOTO, {
-      order_id: orderId,
-      delivery_photo_url: photoUrl,
-      updated_at: updatedAt,
-    });
+    const data = await hasuraClient.request<UpdateOrderDeliveryPhotoResponse>(
+      UPDATE_ORDER_DELIVERY_PHOTO,
+      {
+        order_id: orderId,
+        delivery_photo_url: photoUrl,
+        updated_at: updatedAt,
+      }
+    );
 
     if (!data.update_Orders || data.update_Orders.affected_rows === 0) {
       throw new Error("Failed to update order with delivery photo");
@@ -73,4 +89,4 @@ export default async function handler(
       details: error.response?.errors || "No additional details available",
     });
   }
-} 
+}

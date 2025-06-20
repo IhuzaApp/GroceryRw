@@ -1,8 +1,8 @@
-import React, { useRef, useEffect, useState } from 'react';
-import { useRouter } from 'next/router';
-import { Button, Avatar, Input } from 'rsuite';
-import { formatMessageDate } from '../../lib/formatters';
-import { ChevronRight, Maximize2 } from 'lucide-react';
+import React, { useRef, useEffect, useState } from "react";
+import { useRouter } from "next/router";
+import { Button, Avatar, Input } from "rsuite";
+import { formatMessageDate } from "../../lib/formatters";
+import { ChevronRight, Maximize2 } from "lucide-react";
 
 interface Message {
   id: string;
@@ -37,7 +37,9 @@ const Message: React.FC<{
   const messageContent = message.text || message.message || "";
 
   return (
-    <div className={`mb-4 flex ${isCurrentUser ? "justify-end" : "justify-start"}`}>
+    <div
+      className={`mb-4 flex ${isCurrentUser ? "justify-end" : "justify-start"}`}
+    >
       {!isCurrentUser && <Avatar color="blue" circle size="xs" />}
       <div
         className={`max-w-[85%] ${
@@ -106,15 +108,11 @@ export default function ChatDrawer({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed top-16 right-0 z-[1000] hidden h-[calc(100vh-4rem)] w-96 transform bg-white shadow-xl transition-transform duration-300 ease-in-out dark:bg-gray-800 md:block">
+    <div className="fixed right-0 top-16 z-[1000] hidden h-[calc(100vh-4rem)] w-96 transform bg-white shadow-xl transition-transform duration-300 ease-in-out dark:bg-gray-800 md:block">
       {/* Header */}
       <div className="flex h-16 items-center justify-between border-b border-gray-200 px-4 dark:border-gray-700">
         <div className="flex items-center gap-3">
-          <Button
-            appearance="ghost"
-            onClick={onClose}
-            className="p-2"
-          >
+          <Button appearance="ghost" onClick={onClose} className="p-2">
             <ChevronRight className="h-5 w-5" />
           </Button>
           <div>
@@ -141,7 +139,9 @@ export default function ChatDrawer({
           <div className="flex h-full items-center justify-center">
             <div className="flex flex-col items-center gap-2">
               <div className="h-8 w-8 animate-spin rounded-full border-2 border-gray-300 border-t-green-500 dark:border-gray-600 dark:border-t-green-400"></div>
-              <p className="text-sm text-gray-500 dark:text-gray-400">Loading messages...</p>
+              <p className="text-sm text-gray-500 dark:text-gray-400">
+                Loading messages...
+              </p>
             </div>
           </div>
         ) : (

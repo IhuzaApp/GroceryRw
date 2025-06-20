@@ -411,7 +411,7 @@ const EarningsPage: React.FC = () => {
 
   return (
     <ShopperLayout>
-      <div className="container mx-auto px-4 py-4 sm:py-8 pb-24 sm:pb-8">
+      <div className="container mx-auto px-4 py-4 pb-24 sm:py-8 sm:pb-8">
         <div className="mx-auto max-w-7xl">
           {/* Earnings Period Selector */}
           <div className="mb-6 flex items-center justify-between">

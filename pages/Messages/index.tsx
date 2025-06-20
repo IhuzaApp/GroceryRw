@@ -21,8 +21,8 @@ import { useRouter } from "next/router";
 import Link from "next/link";
 import { Button, Loader, Panel, Placeholder, Avatar, Input } from "rsuite";
 import { formatCurrency } from "../../src/lib/formatCurrency";
-import ChatDrawer from '../../src/components/chat/ChatDrawer';
-import { isMobileDevice } from '../../src/lib/formatters';
+import ChatDrawer from "../../src/components/chat/ChatDrawer";
+import { isMobileDevice } from "../../src/lib/formatters";
 
 // Helper to display timestamps as relative time ago
 function timeAgo(timestamp: any) {
@@ -305,7 +305,7 @@ export default function MessagesPage() {
               id: conversationData.shopperId,
               name: shopperData?.name || "Shopper",
               avatar: shopperData?.avatar || null,
-            }
+            },
           });
           setIsDrawerOpen(true);
         }
@@ -375,7 +375,12 @@ export default function MessagesPage() {
   // Handle sending a new message
   const handleSendMessage = async (e?: React.FormEvent) => {
     if (e) e.preventDefault();
-    if (!newMessage.trim() || !session?.user?.id || !conversationId || !selectedOrder?.shopper?.id) {
+    if (
+      !newMessage.trim() ||
+      !session?.user?.id ||
+      !conversationId ||
+      !selectedOrder?.shopper?.id
+    ) {
       return;
     }
 

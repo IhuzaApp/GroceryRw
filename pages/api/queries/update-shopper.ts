@@ -89,9 +89,13 @@ export default async function handler(
 
   try {
     console.log("=== Starting update-shopper request ===");
-    const session = await getServerSession(req, res, authOptions as any) as Session | null;
+    const session = (await getServerSession(
+      req,
+      res,
+      authOptions as any
+    )) as Session | null;
     console.log("Session:", session);
-    
+
     if (!session?.user?.id) {
       console.log("No session or user ID found");
       return res.status(401).json({ message: "Unauthorized" });
@@ -118,12 +122,12 @@ export default async function handler(
         full_name: !full_name,
         phone_number: !phone_number,
         national_id: !national_id,
-        transport_mode: !transport_mode
+        transport_mode: !transport_mode,
       };
       console.log("Missing required fields:", missingFields);
       return res.status(400).json({
         message: "Missing required fields",
-        details: missingFields
+        details: missingFields,
       });
     }
 
@@ -133,9 +137,12 @@ export default async function handler(
     }
 
     // Get current shopper data
-    const { shoppers } = await hasuraClient.request<GetShopperResult>(GET_SHOPPER, {
-      user_id: session.user.id
-    });
+    const { shoppers } = await hasuraClient.request<GetShopperResult>(
+      GET_SHOPPER,
+      {
+        user_id: session.user.id,
+      }
+    );
 
     if (!shoppers || shoppers.length === 0) {
       console.log("No shopper found for user:", session.user.id);
@@ -158,13 +165,16 @@ export default async function handler(
       status: status || "pending",
       transport_mode,
       updated_at: updated_at || new Date().toISOString(),
-      profile_photo: profile_photo || currentShopper.profile_photo || ""
+      profile_photo: profile_photo || currentShopper.profile_photo || "",
     };
 
     console.log("Mutation variables:", JSON.stringify(variables, null, 2));
 
     try {
-      const result = await hasuraClient.request<UpdateShopperResult>(UPDATE_SHOPPER, variables);
+      const result = await hasuraClient.request<UpdateShopperResult>(
+        UPDATE_SHOPPER,
+        variables
+      );
       console.log("Shopper update result:", JSON.stringify(result, null, 2));
 
       if (result.update_shoppers.affected_rows === 0) {
@@ -176,11 +186,17 @@ export default async function handler(
 
       // If shopper update was successful, update the user role
       try {
-        const roleResult = await hasuraClient.request<UpdateUserRoleResult>(UPDATE_USER_ROLE, {
-          user_id: session.user.id,
-          role: "user"
-        });
-        console.log("User role update result:", JSON.stringify(roleResult, null, 2));
+        const roleResult = await hasuraClient.request<UpdateUserRoleResult>(
+          UPDATE_USER_ROLE,
+          {
+            user_id: session.user.id,
+            role: "user",
+          }
+        );
+        console.log(
+          "User role update result:",
+          JSON.stringify(roleResult, null, 2)
+        );
       } catch (roleError) {
         console.error("Error updating user role:", roleError);
         // Continue with the response even if role update fails
@@ -196,14 +212,23 @@ export default async function handler(
     }
   } catch (error) {
     console.error("=== Error in update-shopper ===");
-    console.error("Error type:", error instanceof Error ? error.constructor.name : typeof error);
-    console.error("Error message:", error instanceof Error ? error.message : String(error));
-    console.error("Error stack:", error instanceof Error ? error.stack : "No stack trace");
+    console.error(
+      "Error type:",
+      error instanceof Error ? error.constructor.name : typeof error
+    );
+    console.error(
+      "Error message:",
+      error instanceof Error ? error.message : String(error)
+    );
+    console.error(
+      "Error stack:",
+      error instanceof Error ? error.stack : "No stack trace"
+    );
     console.error("=== End of error details ===");
-    
+
     return res.status(500).json({
       message: "Error updating shopper",
       error: error instanceof Error ? error.message : String(error),
     });
   }
-} 
+}

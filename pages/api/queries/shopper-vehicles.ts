@@ -58,10 +58,16 @@ export default async function handler(
 
   try {
     // Verify the user is authenticated using getServerSession
-    const session = (await getServerSession(req, res, authOptions as any)) as Session | null;
+    const session = (await getServerSession(
+      req,
+      res,
+      authOptions as any
+    )) as Session | null;
 
     if (!session || !session.user) {
-      return res.status(401).json({ error: "You must be authenticated to add a vehicle" });
+      return res
+        .status(401)
+        .json({ error: "You must be authenticated to add a vehicle" });
     }
 
     if (!hasuraClient) {
@@ -81,19 +87,20 @@ export default async function handler(
       type,
       plate_number,
       model,
-      photo
+      photo,
     });
 
     if (!data.insert_vehicles.affected_rows) {
-      throw new Error('Failed to add vehicle');
+      throw new Error("Failed to add vehicle");
     }
 
-    res.status(200).json({ 
-      message: "Vehicle added successfully"
+    res.status(200).json({
+      message: "Vehicle added successfully",
     });
   } catch (error: unknown) {
-    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+    const errorMessage =
+      error instanceof Error ? error.message : "Unknown error";
     logger.error("Error adding vehicle:", errorMessage);
     res.status(500).json({ error: errorMessage });
   }
-} 
+}

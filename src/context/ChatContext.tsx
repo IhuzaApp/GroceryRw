@@ -129,9 +129,13 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({
         return;
       }
       if (!customerId) {
-        console.error("customerId is undefined, cannot create chat conversation");
-        if (typeof window !== 'undefined') {
-          alert("Error: Unable to start chat. Customer ID is missing. Please try again after logging in.");
+        console.error(
+          "customerId is undefined, cannot create chat conversation"
+        );
+        if (typeof window !== "undefined") {
+          alert(
+            "Error: Unable to start chat. Customer ID is missing. Please try again after logging in."
+          );
         }
         return;
       }

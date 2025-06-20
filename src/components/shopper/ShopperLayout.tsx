@@ -91,7 +91,7 @@ export default function ShopperLayout({ children }: ShopperLayoutProps) {
     if (session) {
       logger.debug("Session data", "ShopperLayout", {
         user: session.user,
-        expires: session.expires
+        expires: session.expires,
       });
     }
   }, [session]);
@@ -100,18 +100,21 @@ export default function ShopperLayout({ children }: ShopperLayoutProps) {
   const handleNewOrder = () => {
     // If we're on the dashboard, we can trigger a refresh
     // For other pages, we could navigate to dashboard or show a notification
-    if (typeof window !== 'undefined') {
+    if (typeof window !== "undefined") {
       // Dispatch a custom event that pages can listen to
-      window.dispatchEvent(new CustomEvent('newOrderAvailable'));
-      
+      window.dispatchEvent(new CustomEvent("newOrderAvailable"));
+
       // Optionally navigate to dashboard if not already there
       const currentPath = window.location.pathname;
-      if (!currentPath.includes('/Plasa') || currentPath.includes('/active-batches')) {
+      if (
+        !currentPath.includes("/Plasa") ||
+        currentPath.includes("/active-batches")
+      ) {
         // Already on dashboard or active batches, just refresh
         window.location.reload();
       } else {
         // Navigate to dashboard to see new orders
-        window.location.href = '/Plasa/active-batches';
+        window.location.href = "/Plasa/active-batches";
       }
     }
   };
@@ -128,20 +131,18 @@ export default function ShopperLayout({ children }: ShopperLayoutProps) {
       <div className="flex">
         <ShopperSidebar />
         <main
-          className={`flex-1 transition-colors duration-200 relative ${
+          className={`relative flex-1 transition-colors duration-200 ${
             theme === "dark"
               ? "bg-gray-900 text-gray-100"
               : "bg-gray-50 text-gray-900"
           } ${isMobile ? "p-0 pb-24" : "p-4 pl-64"}`}
         >
-          <div className="relative z-0">
-            {children}
-          </div>
+          <div className="relative z-0">{children}</div>
         </main>
       </div>
-      
+
       {/* NotificationSystem works across all Plasa pages */}
-      <NotificationSystem 
+      <NotificationSystem
         currentLocation={isOnline ? currentLocation : null}
         onNewOrder={handleNewOrder}
       />

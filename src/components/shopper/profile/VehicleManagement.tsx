@@ -1,8 +1,21 @@
 import React, { useState, useRef, useCallback, useEffect } from "react";
-import { Button, Form, Panel, SelectPicker, useToaster, Message, Loader, Modal, List, Placeholder, Drawer, Input } from "rsuite";
+import {
+  Button,
+  Form,
+  Panel,
+  SelectPicker,
+  useToaster,
+  Message,
+  Loader,
+  Modal,
+  List,
+  Placeholder,
+  Drawer,
+  Input,
+} from "rsuite";
 import { useTheme } from "../../../context/ThemeContext";
 import { logger } from "../../../utils/logger";
-import { useSession } from 'next-auth/react';
+import { useSession } from "next-auth/react";
 
 interface VehicleManagementProps {
   userId: string;
@@ -71,7 +84,10 @@ const compressImage = (base64: string, maxSizeKB = 100): Promise<string> => {
   });
 };
 
-const VehicleManagement: React.FC<VehicleManagementProps> = ({ userId, onVehicleAdded }) => {
+const VehicleManagement: React.FC<VehicleManagementProps> = ({
+  userId,
+  onVehicleAdded,
+}) => {
   const { theme } = useTheme();
   const { data: session } = useSession();
   const toaster = useToaster();
@@ -80,15 +96,15 @@ const VehicleManagement: React.FC<VehicleManagementProps> = ({ userId, onVehicle
   const [loadingVehicles, setLoadingVehicles] = useState(false);
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [ticketForm, setTicketForm] = useState({
-    subject: '',
-    description: '',
-    priority: 'medium'
+    subject: "",
+    description: "",
+    priority: "medium",
   });
   const [formValue, setFormValue] = useState({
     type: "",
     plate_number: "",
     model: "",
-    photo: ""
+    photo: "",
   });
   const [stream, setStream] = useState<MediaStream | null>(null);
   const [capturedPhoto, setCapturedPhoto] = useState<string>("");
@@ -106,7 +122,7 @@ const VehicleManagement: React.FC<VehicleManagementProps> = ({ userId, onVehicle
       { label: "Suzuki", value: "suzuki" },
       { label: "Nissan", value: "nissan" },
       { label: "Mitsubishi", value: "mitsubishi" },
-      { label: "Other", value: "other_car" }
+      { label: "Other", value: "other_car" },
     ],
     motorcycle: [
       { label: "Honda", value: "honda" },
@@ -114,32 +130,38 @@ const VehicleManagement: React.FC<VehicleManagementProps> = ({ userId, onVehicle
       { label: "Suzuki", value: "suzuki" },
       { label: "Kawasaki", value: "kawasaki" },
       { label: "Bajaj", value: "bajaj" },
-      { label: "Other", value: "other_motorcycle" }
+      { label: "Other", value: "other_motorcycle" },
     ],
     bicycle: [
       { label: "Mountain Bike", value: "mountain" },
       { label: "Road Bike", value: "road" },
       { label: "Hybrid Bike", value: "hybrid" },
       { label: "Electric Bike", value: "electric" },
-      { label: "Other", value: "other_bicycle" }
+      { label: "Other", value: "other_bicycle" },
     ],
     scooter: [
       { label: "Honda", value: "honda" },
       { label: "Yamaha", value: "yamaha" },
       { label: "Suzuki", value: "suzuki" },
       { label: "Vespa", value: "vespa" },
-      { label: "Other", value: "other_scooter" }
-    ]
+      { label: "Other", value: "other_scooter" },
+    ],
   };
 
   // Reset model when vehicle type changes
-  const handleVehicleTypeChange = (value: string | null, event: React.SyntheticEvent) => {
-    setFormValue(prev => ({ ...prev, type: value || "", model: "" }));
+  const handleVehicleTypeChange = (
+    value: string | null,
+    event: React.SyntheticEvent
+  ) => {
+    setFormValue((prev) => ({ ...prev, type: value || "", model: "" }));
   };
 
   // Handle model change
-  const handleModelChange = (value: string | null, event: React.SyntheticEvent) => {
-    setFormValue(prev => ({ ...prev, model: value || "" }));
+  const handleModelChange = (
+    value: string | null,
+    event: React.SyntheticEvent
+  ) => {
+    setFormValue((prev) => ({ ...prev, model: value || "" }));
   };
 
   const startCamera = async () => {
@@ -159,13 +181,14 @@ const VehicleManagement: React.FC<VehicleManagementProps> = ({ userId, onVehicle
         }
       }, 100);
     } catch (error: unknown) {
-      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      const errorMessage =
+        error instanceof Error ? error.message : "Unknown error";
       logger.error("Error accessing camera:", errorMessage);
       toaster.push(
         <Message type="error" closable>
           Could not access camera. Please check permissions.
         </Message>,
-        { placement: 'topEnd', duration: 5000 }
+        { placement: "topEnd", duration: 5000 }
       );
     }
   };
@@ -194,7 +217,7 @@ const VehicleManagement: React.FC<VehicleManagementProps> = ({ userId, onVehicle
               <Message type="error" closable>
                 Failed to process image
               </Message>,
-              { placement: 'topEnd', duration: 5000 }
+              { placement: "topEnd", duration: 5000 }
             );
           });
       }
@@ -222,7 +245,7 @@ const VehicleManagement: React.FC<VehicleManagementProps> = ({ userId, onVehicle
         <Message type="warning" closable>
           Please fill in all required fields
         </Message>,
-        { placement: 'topEnd', duration: 5000 }
+        { placement: "topEnd", duration: 5000 }
       );
       return;
     }
@@ -232,7 +255,7 @@ const VehicleManagement: React.FC<VehicleManagementProps> = ({ userId, onVehicle
         <Message type="warning" closable>
           Please take a vehicle photo
         </Message>,
-        { placement: 'topEnd', duration: 5000 }
+        { placement: "topEnd", duration: 5000 }
       );
       return;
     }
@@ -243,23 +266,25 @@ const VehicleManagement: React.FC<VehicleManagementProps> = ({ userId, onVehicle
       const compressedPhoto = await compressImage(capturedPhoto, 100); // Compress to ~100KB
 
       // Save the vehicle information with the compressed photo
-      const response = await fetch('/api/queries/shopper-vehicles', {
-        method: 'POST',
+      const response = await fetch("/api/queries/shopper-vehicles", {
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
         body: JSON.stringify({
           user_id: userId,
           type: formValue.type,
           plate_number: formValue.plate_number,
           model: formValue.model,
-          photo: compressedPhoto
+          photo: compressedPhoto,
         }),
       });
 
       if (!response.ok) {
         const errorData = await response.json();
-        throw new Error(errorData.error || 'Failed to save vehicle information');
+        throw new Error(
+          errorData.error || "Failed to save vehicle information"
+        );
       }
 
       const data = await response.json();
@@ -268,7 +293,7 @@ const VehicleManagement: React.FC<VehicleManagementProps> = ({ userId, onVehicle
         <Message type="success" closable>
           Vehicle added successfully
         </Message>,
-        { placement: 'topEnd', duration: 5000 }
+        { placement: "topEnd", duration: 5000 }
       );
 
       // Reset form
@@ -276,20 +301,21 @@ const VehicleManagement: React.FC<VehicleManagementProps> = ({ userId, onVehicle
         type: "",
         plate_number: "",
         model: "",
-        photo: ""
+        photo: "",
       });
       setCapturedPhoto("");
-      
+
       // Call onVehicleAdded to trigger refetch
       onVehicleAdded();
     } catch (error: unknown) {
-      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      const errorMessage =
+        error instanceof Error ? error.message : "Unknown error";
       logger.error("Error saving vehicle information:", errorMessage);
       toaster.push(
         <Message type="error" closable>
           {errorMessage}
         </Message>,
-        { placement: 'topEnd', duration: 5000 }
+        { placement: "topEnd", duration: 5000 }
       );
     } finally {
       setLoading(false);
@@ -299,42 +325,43 @@ const VehicleManagement: React.FC<VehicleManagementProps> = ({ userId, onVehicle
   const handleTicketSubmit = async () => {
     try {
       setLoading(true);
-      const response = await fetch('/api/tickets/create', {
-        method: 'POST',
+      const response = await fetch("/api/tickets/create", {
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
         body: JSON.stringify({
           ...ticketForm,
-          type: 'vehicle_change',
-          user_id: userId
+          type: "vehicle_change",
+          user_id: userId,
         }),
       });
 
       if (!response.ok) {
-        throw new Error('Failed to create ticket');
+        throw new Error("Failed to create ticket");
       }
 
       toaster.push(
         <Message type="success" closable>
-          Your request has been submitted. Our support team will reach out to you shortly.
+          Your request has been submitted. Our support team will reach out to
+          you shortly.
         </Message>,
-        { placement: 'topEnd', duration: 5000 }
+        { placement: "topEnd", duration: 5000 }
       );
 
       setDrawerOpen(false);
       setTicketForm({
-        subject: '',
-        description: '',
-        priority: 'medium'
+        subject: "",
+        description: "",
+        priority: "medium",
       });
     } catch (error) {
-      logger.error('Error creating ticket:', error);
+      logger.error("Error creating ticket:", error);
       toaster.push(
         <Message type="error" closable>
           Failed to submit request. Please try again.
         </Message>,
-        { placement: 'topEnd', duration: 5000 }
+        { placement: "topEnd", duration: 5000 }
       );
     } finally {
       setLoading(false);
@@ -345,9 +372,11 @@ const VehicleManagement: React.FC<VehicleManagementProps> = ({ userId, onVehicle
   const loadVehicles = async () => {
     setLoadingVehicles(true);
     try {
-      const response = await fetch(`/api/queries/get-shopper-vehicles?user_id=${userId}`);
+      const response = await fetch(
+        `/api/queries/get-shopper-vehicles?user_id=${userId}`
+      );
       if (!response.ok) {
-        throw new Error('Failed to load vehicles');
+        throw new Error("Failed to load vehicles");
       }
       const data = await response.json();
       setVehicles(data.vehicles || []);
@@ -357,7 +386,7 @@ const VehicleManagement: React.FC<VehicleManagementProps> = ({ userId, onVehicle
         <Message type="error" closable>
           Failed to load vehicles
         </Message>,
-        { placement: 'topEnd', duration: 5000 }
+        { placement: "topEnd", duration: 5000 }
       );
     } finally {
       setLoadingVehicles(false);
@@ -370,12 +399,14 @@ const VehicleManagement: React.FC<VehicleManagementProps> = ({ userId, onVehicle
   }, [userId]);
 
   return (
-    <div className={`p-4 rounded-lg ${
-      theme === "dark" ? "bg-gray-800" : "bg-white"
-    } [&_.rs-input]:!rounded-none [&_.rs-picker-toggle]:!rounded-none [&_.rs-picker-menu]:!rounded-none`}>
+    <div
+      className={`rounded-lg p-4 ${
+        theme === "dark" ? "bg-gray-800" : "bg-white"
+      } [&_.rs-input]:!rounded-none [&_.rs-picker-menu]:!rounded-none [&_.rs-picker-toggle]:!rounded-none`}
+    >
       {loadingVehicles ? (
         <div className="space-y-4">
-          <div className="flex items-center justify-between mb-4">
+          <div className="mb-4 flex items-center justify-between">
             <Placeholder.Paragraph rows={1} width={200} />
             <Placeholder.Paragraph rows={1} width={150} />
           </div>
@@ -394,10 +425,14 @@ const VehicleManagement: React.FC<VehicleManagementProps> = ({ userId, onVehicle
         </div>
       ) : vehicles.length > 0 ? (
         <div>
-          <div className="flex items-center justify-between mb-4">
-            <h3 className={`text-lg font-semibold ${
-              theme === "dark" ? "text-white" : "text-gray-900"
-            }`}>Your Vehicles</h3>
+          <div className="mb-4 flex items-center justify-between">
+            <h3
+              className={`text-lg font-semibold ${
+                theme === "dark" ? "text-white" : "text-gray-900"
+              }`}
+            >
+              Your Vehicles
+            </h3>
             <Button
               appearance="primary"
               color="green"
@@ -415,19 +450,31 @@ const VehicleManagement: React.FC<VehicleManagementProps> = ({ userId, onVehicle
                     <img
                       src={vehicle.photo}
                       alt={`${vehicle.type} photo`}
-                      className="w-24 h-24 object-cover rounded-lg"
+                      className="h-24 w-24 rounded-lg object-cover"
                     />
                   )}
                   <div>
-                    <h4 className={`font-semibold ${
-                      theme === "dark" ? "text-white" : "text-gray-900"
-                    }`}>{vehicle.type}</h4>
-                    <p className={`${
-                      theme === "dark" ? "text-gray-300" : "text-gray-600"
-                    }`}>Model: {vehicle.model}</p>
-                    <p className={`${
-                      theme === "dark" ? "text-gray-300" : "text-gray-600"
-                    }`}>Plate: {vehicle.plate_number}</p>
+                    <h4
+                      className={`font-semibold ${
+                        theme === "dark" ? "text-white" : "text-gray-900"
+                      }`}
+                    >
+                      {vehicle.type}
+                    </h4>
+                    <p
+                      className={`${
+                        theme === "dark" ? "text-gray-300" : "text-gray-600"
+                      }`}
+                    >
+                      Model: {vehicle.model}
+                    </p>
+                    <p
+                      className={`${
+                        theme === "dark" ? "text-gray-300" : "text-gray-600"
+                      }`}
+                    >
+                      Plate: {vehicle.plate_number}
+                    </p>
                   </div>
                 </div>
               </List.Item>
@@ -436,9 +483,13 @@ const VehicleManagement: React.FC<VehicleManagementProps> = ({ userId, onVehicle
         </div>
       ) : (
         <div>
-          <h3 className={`text-lg font-semibold mb-4 ${
-            theme === "dark" ? "text-white" : "text-gray-900"
-          }`}>Add Vehicle</h3>
+          <h3
+            className={`mb-4 text-lg font-semibold ${
+              theme === "dark" ? "text-white" : "text-gray-900"
+            }`}
+          >
+            Add Vehicle
+          </h3>
           <Form fluid>
             <Form.Group>
               <Form.ControlLabel>Vehicle Type</Form.ControlLabel>
@@ -461,7 +512,9 @@ const VehicleManagement: React.FC<VehicleManagementProps> = ({ userId, onVehicle
               <Form.Control
                 name="plate_number"
                 value={formValue.plate_number}
-                onChange={(value) => setFormValue(prev => ({ ...prev, plate_number: value }))}
+                onChange={(value) =>
+                  setFormValue((prev) => ({ ...prev, plate_number: value }))
+                }
                 className="!rounded-none"
               />
             </Form.Group>
@@ -469,7 +522,13 @@ const VehicleManagement: React.FC<VehicleManagementProps> = ({ userId, onVehicle
             <Form.Group>
               <Form.ControlLabel>Model</Form.ControlLabel>
               <SelectPicker
-                data={formValue.type ? vehicleModels[formValue.type as keyof typeof vehicleModels] : []}
+                data={
+                  formValue.type
+                    ? vehicleModels[
+                        formValue.type as keyof typeof vehicleModels
+                      ]
+                    : []
+                }
                 value={formValue.model}
                 onChange={handleModelChange}
                 block
@@ -480,9 +539,7 @@ const VehicleManagement: React.FC<VehicleManagementProps> = ({ userId, onVehicle
 
             <Form.Group>
               <Form.ControlLabel>Vehicle Photo</Form.ControlLabel>
-              <Form.HelpText>
-                Take a clear photo of your vehicle
-              </Form.HelpText>
+              <Form.HelpText>Take a clear photo of your vehicle</Form.HelpText>
 
               <div className="mb-4 mt-2">
                 <div className="relative mx-auto h-64 w-64 overflow-hidden rounded-lg border border-gray-300">
@@ -531,7 +588,7 @@ const VehicleManagement: React.FC<VehicleManagementProps> = ({ userId, onVehicle
         onClose={() => setDrawerOpen(false)}
         size="sm"
         backdrop="static"
-        className="[&_.rs-input]:!rounded-none [&_.rs-picker-toggle]:!rounded-none [&_.rs-picker-menu]:!rounded-none"
+        className="[&_.rs-input]:!rounded-none [&_.rs-picker-menu]:!rounded-none [&_.rs-picker-toggle]:!rounded-none"
       >
         <Drawer.Header>
           <Drawer.Title>Request Vehicle Change</Drawer.Title>
@@ -542,7 +599,9 @@ const VehicleManagement: React.FC<VehicleManagementProps> = ({ userId, onVehicle
               <Form.ControlLabel>Subject</Form.ControlLabel>
               <Input
                 value={ticketForm.subject}
-                onChange={(value) => setTicketForm(prev => ({ ...prev, subject: value }))}
+                onChange={(value) =>
+                  setTicketForm((prev) => ({ ...prev, subject: value }))
+                }
                 placeholder="Brief description of your request"
               />
             </Form.Group>
@@ -553,7 +612,9 @@ const VehicleManagement: React.FC<VehicleManagementProps> = ({ userId, onVehicle
                 as="textarea"
                 rows={5}
                 value={ticketForm.description}
-                onChange={(value) => setTicketForm(prev => ({ ...prev, description: value }))}
+                onChange={(value) =>
+                  setTicketForm((prev) => ({ ...prev, description: value }))
+                }
                 placeholder="Please provide details about the changes you need"
               />
             </Form.Group>
@@ -562,13 +623,18 @@ const VehicleManagement: React.FC<VehicleManagementProps> = ({ userId, onVehicle
               <Form.ControlLabel>Priority</Form.ControlLabel>
               <SelectPicker
                 data={[
-                  { label: 'Low', value: 'low' },
-                  { label: 'Medium', value: 'medium' },
-                  { label: 'High', value: 'high' }
+                  { label: "Low", value: "low" },
+                  { label: "Medium", value: "medium" },
+                  { label: "High", value: "high" },
                 ]}
                 value={ticketForm.priority}
-                onChange={(value) => setTicketForm(prev => ({ ...prev, priority: value || 'medium' }))}
-                style={{ width: '100%' }}
+                onChange={(value) =>
+                  setTicketForm((prev) => ({
+                    ...prev,
+                    priority: value || "medium",
+                  }))
+                }
+                style={{ width: "100%" }}
               />
             </Form.Group>
           </Form>
@@ -595,4 +661,4 @@ const VehicleManagement: React.FC<VehicleManagementProps> = ({ userId, onVehicle
   );
 };
 
-export default VehicleManagement; 
+export default VehicleManagement;

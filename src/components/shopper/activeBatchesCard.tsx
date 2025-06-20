@@ -627,27 +627,27 @@ function ActiveOrderCard({ order }: { order: Order }) {
         </div>
       </div>
 
-        <div className="flex items-center justify-between">
-          <a
-            href={`https://maps.google.com/?q=${order.customerLat},${order.customerLng}`}
-            target="_blank"
-            rel="noopener noreferrer"
+      <div className="flex items-center justify-between">
+        <a
+          href={`https://maps.google.com/?q=${order.customerLat},${order.customerLng}`}
+          target="_blank"
+          rel="noopener noreferrer"
           className="flex items-center px-4 py-2 text-blue-500 hover:text-blue-200"
+        >
+          <svg
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            className="mr-1 h-4 w-4"
           >
-              <svg
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                className="mr-1 h-4 w-4"
-              >
-                <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z" />
-                <circle cx="12" cy="10" r="3" />
-              </svg>
-              Directions
-          </a>
-          {getNextActionButton(order.status)}
-        </div>
+            <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z" />
+            <circle cx="12" cy="10" r="3" />
+          </svg>
+          Directions
+        </a>
+        {getNextActionButton(order.status)}
       </div>
+    </div>
   );
 }

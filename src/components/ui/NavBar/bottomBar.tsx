@@ -11,7 +11,7 @@ interface NavItemProps {
 
 function NavItem({ icon, label, href }: NavItemProps) {
   const router = useRouter();
-  
+
   const handleClick = (e: React.MouseEvent) => {
     e.preventDefault();
     router.push(href, undefined, { shallow: true });

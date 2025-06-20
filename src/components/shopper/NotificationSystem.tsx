@@ -38,9 +38,9 @@ interface NotificationSystemProps {
   onViewBatchDetails?: (orderId: string) => void; // Add callback for viewing details
 }
 
-export default function NotificationSystem({ 
-  onNewOrder, 
-  currentLocation, 
+export default function NotificationSystem({
+  onNewOrder,
+  currentLocation,
   activeShoppers = [],
   onAcceptBatch,
   onViewBatchDetails,
@@ -62,7 +62,7 @@ export default function NotificationSystem({
       try {
         logger.info("Initializing notification sound...", "NotificationSystem");
         const audio = new Audio("/notifySound.mp3");
-        
+
         // Set audio properties
         audio.preload = "auto";
         audio.volume = 0.7; // Slightly reduce volume
@@ -93,15 +93,15 @@ export default function NotificationSystem({
           error
         );
       }
-      }
+    }
 
-      return () => {
-        if (audioRef.current) {
-          audioRef.current.pause();
+    return () => {
+      if (audioRef.current) {
+        audioRef.current.pause();
         audioRef.current.src = "";
-          audioRef.current = null;
-        }
-      };
+        audioRef.current = null;
+      }
+    };
   }, []);
 
   useEffect(() => {
@@ -116,7 +116,7 @@ export default function NotificationSystem({
       try {
         const permission = await window.Notification.requestPermission();
         setNotificationPermission(permission);
-        
+
         // Create dummy order objects for permission notifications
         const dummyOrder: Order = {
           id: "permission",
@@ -179,9 +179,9 @@ export default function NotificationSystem({
             >
               Accept Batch
             </Button>
-            <Button 
-              appearance="subtle" 
-              size="sm" 
+            <Button
+              appearance="subtle"
+              size="sm"
               onClick={() => {
                 if (onViewBatchDetails) {
                   onViewBatchDetails(order.id);
@@ -288,7 +288,7 @@ export default function NotificationSystem({
     try {
       const response = await fetch("/api/shopper/schedule");
       const data = await response.json();
-      
+
       if (!data.schedule || data.schedule.length === 0) {
         logger.info("No schedule found for shopper", "NotificationSystem");
         return false;
@@ -305,7 +305,7 @@ export default function NotificationSystem({
       const todaySchedule = data.schedule.find(
         (s: ShopperSchedule) => s.day_of_week === currentDay
       );
-      
+
       if (!todaySchedule || !todaySchedule.is_available) {
         logger.info(
           "No schedule or not available for today",
@@ -349,13 +349,13 @@ export default function NotificationSystem({
     try {
       const response = await fetch("/api/shopper/activeOrders");
       const data = await response.json();
-      
+
       const hasActive = data.orders && data.orders.length > 0;
       logger.debug("Active orders check", "NotificationSystem", {
         hasActive,
         count: data.orders?.length || 0,
       });
-      
+
       return hasActive;
     } catch (error) {
       logger.error("Error checking active orders", "NotificationSystem", error);
@@ -368,7 +368,7 @@ export default function NotificationSystem({
     try {
       const response = await fetch("/api/shopper/schedule");
       const data = await response.json();
-      
+
       if (!data.schedule || data.schedule.length === 0) {
         logger.info("No schedule found for shopper", "NotificationSystem");
         return false;
@@ -381,7 +381,7 @@ export default function NotificationSystem({
       const todaySchedule = data.schedule.find(
         (s: ShopperSchedule) => s.day_of_week === currentDay
       );
-      
+
       if (!todaySchedule) {
         logger.info("No schedule for today", "NotificationSystem");
         return false;
@@ -394,7 +394,7 @@ export default function NotificationSystem({
 
       const isTimeWithinRange =
         currentTime >= todaySchedule.start_time &&
-                               currentTime <= todaySchedule.end_time;
+        currentTime <= todaySchedule.end_time;
 
       logger.info("Schedule check result", "NotificationSystem", {
         currentDay,
@@ -503,7 +503,7 @@ export default function NotificationSystem({
 
           if (!currentUserAssignment) {
             const nextOrder = availableOrders[0];
-            
+
             const newAssignment: BatchAssignment = {
               shopperId: session.user.id,
               orderId: nextOrder.id,
@@ -610,7 +610,7 @@ export default function NotificationSystem({
         "Missing requirements for notification system",
         "NotificationSystem",
         {
-        hasSession: !!session,
+          hasSession: !!session,
           hasLocation: !!currentLocation,
         }
       );
@@ -620,4 +620,4 @@ export default function NotificationSystem({
 
   // The component doesn't render anything visible
   return null;
-} 
+}

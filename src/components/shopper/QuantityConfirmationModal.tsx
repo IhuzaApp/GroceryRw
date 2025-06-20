@@ -36,18 +36,26 @@ export default function QuantityConfirmationModal({
           Confirm Quantity Found
         </Modal.Title>
       </Modal.Header>
-      <Modal.Body className={theme === "dark" ? "bg-gray-900 text-gray-100" : ""}>
+      <Modal.Body
+        className={theme === "dark" ? "bg-gray-900 text-gray-100" : ""}
+      >
         <div className="mb-4">
           <p className={theme === "dark" ? "text-gray-300" : "text-gray-600"}>
             How many units of {currentItem.product.name} did you find?
           </p>
-          <p className={`text-sm ${theme === "dark" ? "text-gray-400" : "text-gray-500"}`}>
+          <p
+            className={`text-sm ${
+              theme === "dark" ? "text-gray-400" : "text-gray-500"
+            }`}
+          >
             Requested quantity: {currentItem.quantity}
           </p>
         </div>
         <Form>
           <Form.Group>
-            <Form.ControlLabel className={theme === "dark" ? "text-gray-300" : ""}>
+            <Form.ControlLabel
+              className={theme === "dark" ? "text-gray-300" : ""}
+            >
               Found Quantity
             </Form.ControlLabel>
             <InputNumber

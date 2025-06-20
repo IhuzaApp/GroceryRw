@@ -1,11 +1,11 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { useTheme } from '../../../context/ThemeContext';
-import { useRouter } from 'next/navigation';
+import React, { useState, useEffect, useRef } from "react";
+import { useTheme } from "../../../context/ThemeContext";
+import { useRouter } from "next/navigation";
 
 interface SearchResult {
   id: string;
   name: string;
-  type: 'product' | 'shop';
+  type: "product" | "shop";
   image?: string;
   logo?: string;
   price?: number;
@@ -20,7 +20,7 @@ interface SearchResult {
 export default function SearchBar() {
   const { theme } = useTheme();
   const router = useRouter();
-  const [searchTerm, setSearchTerm] = useState('');
+  const [searchTerm, setSearchTerm] = useState("");
   const [results, setResults] = useState<SearchResult[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [showResults, setShowResults] = useState(false);
@@ -30,13 +30,16 @@ export default function SearchBar() {
   // Close results when clicking outside
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
-      if (searchRef.current && !searchRef.current.contains(event.target as Node)) {
+      if (
+        searchRef.current &&
+        !searchRef.current.contains(event.target as Node)
+      ) {
         setShowResults(false);
       }
     }
 
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
   const searchItems = async (term: string) => {
@@ -47,14 +50,16 @@ export default function SearchBar() {
 
     setIsLoading(true);
     try {
-      const response = await fetch(`/api/queries/search?term=${encodeURIComponent(term)}`);
+      const response = await fetch(
+        `/api/queries/search?term=${encodeURIComponent(term)}`
+      );
       if (!response.ok) {
-        throw new Error('Search failed');
+        throw new Error("Search failed");
       }
       const data = await response.json();
       setResults(data.results);
     } catch (error) {
-      console.error('Error searching:', error);
+      console.error("Error searching:", error);
       setResults([]);
     } finally {
       setIsLoading(false);
@@ -79,8 +84,8 @@ export default function SearchBar() {
 
   const handleResultClick = (result: SearchResult) => {
     setShowResults(false);
-    setSearchTerm('');
-    if (result.type === 'product') {
+    setSearchTerm("");
+    if (result.type === "product") {
       router.push(`/product/${result.id}`);
     } else {
       router.push(`/shop/${result.id}`);
@@ -126,7 +131,7 @@ export default function SearchBar() {
             >
               <div className="h-8 w-8 overflow-hidden rounded-full">
                 <img
-                  src={result.type === 'product' ? result.image : result.logo}
+                  src={result.type === "product" ? result.image : result.logo}
                   alt={result.name}
                   className="h-full w-full object-cover"
                 />
@@ -137,7 +142,7 @@ export default function SearchBar() {
                 </div>
                 <div className="flex items-center gap-2">
                   <div className="text-xs text-gray-500 dark:text-gray-400">
-                    {result.type === 'product' ? 'Product' : 'Shop'}
+                    {result.type === "product" ? "Product" : "Shop"}
                   </div>
                   {result.rating && (
                     <div className="flex items-center gap-1 text-xs text-gray-500 dark:text-gray-400">
@@ -147,7 +152,7 @@ export default function SearchBar() {
                     </div>
                   )}
                 </div>
-                {result.type === 'product' && result.price && (
+                {result.type === "product" && result.price && (
                   <div className="text-xs font-medium text-green-600 dark:text-green-400">
                     ${result.price.toFixed(2)}
                   </div>
@@ -159,4 +164,4 @@ export default function SearchBar() {
       )}
     </div>
   );
-} 
+}

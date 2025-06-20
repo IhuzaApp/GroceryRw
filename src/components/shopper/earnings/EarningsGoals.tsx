@@ -124,7 +124,8 @@ const EarningsGoals: React.FC<EarningsGoalsProps> = ({
             Goals Data Unavailable
           </h4>
           <p className="text-gray-600">
-            Unable to load your earnings goals at the moment. Please try again in about 1 hour.
+            Unable to load your earnings goals at the moment. Please try again
+            in about 1 hour.
           </p>
         </div>
       </Panel>
@@ -212,25 +213,36 @@ const EarningsGoals: React.FC<EarningsGoalsProps> = ({
                   <div className="mt-0.5 flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-full bg-green-100 text-green-600">
                     1
                   </div>
-                  <span>Shop during peak hours (Fri 4-8pm, Sat 10am-2pm, Sun 11am-3pm)</span>
+                  <span>
+                    Shop during peak hours (Fri 4-8pm, Sat 10am-2pm, Sun
+                    11am-3pm)
+                  </span>
                 </li>
                 <li className="flex items-start gap-2">
                   <div className="mt-0.5 flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-full bg-green-100 text-green-600">
                     2
                   </div>
-                  <span>Accept batch orders with multiple deliveries for higher earnings</span>
+                  <span>
+                    Accept batch orders with multiple deliveries for higher
+                    earnings
+                  </span>
                 </li>
                 <li className="flex items-start gap-2">
                   <div className="mt-0.5 flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-full bg-green-100 text-green-600">
                     3
                   </div>
-                  <span>Focus on stores you&apos;re familiar with to shop faster</span>
+                  <span>
+                    Focus on stores you&apos;re familiar with to shop faster
+                  </span>
                 </li>
                 <li className="flex items-start gap-2">
                   <div className="mt-0.5 flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-full bg-green-100 text-green-600">
                     4
                   </div>
-                  <span>Maintain high customer ratings to qualify for bonus incentives</span>
+                  <span>
+                    Maintain high customer ratings to qualify for bonus
+                    incentives
+                  </span>
                 </li>
               </ul>
             )}
