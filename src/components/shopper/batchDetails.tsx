@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useRouter } from "next/router";
 import {
   Button,
@@ -36,6 +36,7 @@ import {
   generateInvoice,
 } from "../../lib/walletTransactions";
 import { useSession } from "next-auth/react";
+import { useTheme } from "../../context/ThemeContext";
 
 // Define interfaces for the order data
 interface BatchDetailsProps {
@@ -51,7 +52,19 @@ export default function BatchDetails({
 }: BatchDetailsProps) {
   const router = useRouter();
   const { data: session } = useSession();
-  const { openChat, isDrawerOpen, closeChat, currentChatId } = useChat();
+  const {
+    openChat,
+    isDrawerOpen,
+    closeChat,
+    currentChatId,
+    getMessages,
+    sendMessage,
+  } = useChat();
+  const { theme } = useTheme();
+  const [currentLocation, setCurrentLocation] = useState<{
+    lat: number;
+    lng: number;
+  } | null>(null);
 
   const [loading, setLoading] = useState(false);
   const [order, setOrder] = useState<OrderDetailsType | null>(orderData);
@@ -80,6 +93,8 @@ export default function BatchDetails({
   const [invoiceLoading, setInvoiceLoading] = useState(false);
   const [walletData, setWalletData] = useState<any>(null);
   const [walletLoading, setWalletLoading] = useState(false);
+  const [newMessage, setNewMessage] = useState("");
+  const [isSending, setIsSending] = useState(false);
 
   const [currentStep, setCurrentStep] = useState(() => {
     if (!orderData) return 0;
@@ -98,6 +113,38 @@ export default function BatchDetails({
         return 0;
     }
   });
+
+  // Add useEffect to get current location when component mounts
+  useEffect(() => {
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          setCurrentLocation({
+            lat: position.coords.latitude,
+            lng: position.coords.longitude,
+          });
+        },
+        (error) => {
+          console.error("Error getting location:", error);
+        }
+      );
+    }
+  }, []);
+
+  // Function to generate directions URL
+  const getDirectionsUrl = (destinationAddress: string) => {
+    if (currentLocation) {
+      return `https://www.google.com/maps/dir/?api=1&origin=${
+        currentLocation.lat
+      },${currentLocation.lng}&destination=${encodeURIComponent(
+        destinationAddress
+      )}`;
+    }
+    // Fallback to just the destination if no current location
+    return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(
+      destinationAddress
+    )}`;
+  };
 
   // Generate a 5-digit OTP
   const generateOtp = () => {
@@ -696,7 +743,12 @@ export default function BatchDetails({
 
   // Function to handle chat button click
   const handleChatClick = () => {
-    if (!order?.user) return;
+    if (!order?.user || !order.user.id) {
+      if (typeof window !== "undefined") {
+        alert("Cannot start chat: Customer ID is missing.");
+      }
+      return;
+    }
 
     openChat(
       order.id,
@@ -708,6 +760,22 @@ export default function BatchDetails({
     // If on mobile, navigate to chat page
     if (isMobileDevice()) {
       router.push(`/Plasa/chat/${order.id}`);
+    }
+  };
+
+  // Function to handle sending a message
+  const handleSendMessage = async (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
+    if (!newMessage.trim() || !order?.id) return;
+
+    try {
+      setIsSending(true);
+      await sendMessage(order.id, newMessage.trim());
+      setNewMessage("");
+    } catch (error) {
+      console.error("Error sending message:", error);
+    } finally {
+      setIsSending(false);
     }
   };
 
@@ -766,7 +834,14 @@ export default function BatchDetails({
   }
 
   return (
-    <div className="max-w-1xl mx-auto p-4">
+    <div
+      className={`mx-auto w-full px-1 py-2 sm:px-4 sm:py-4 ${
+        theme === "dark"
+          ? "bg-gray-900 text-gray-100"
+          : "bg-gray-50 text-gray-900"
+      }`}
+      style={{ maxWidth: "100vw" }}
+    >
       {/* Product Image Modal */}
       <ProductImageModal
         open={showImageModal}
@@ -825,18 +900,24 @@ export default function BatchDetails({
           <ChatDrawer
             isOpen={isDrawerOpen}
             onClose={closeChat}
-            orderId={order.id}
-            customerId={order.user.id}
-            customerName={order.user.name}
-            customerAvatar={order.user.profile_picture}
+            order={order}
+            shopper={session?.user}
+            messages={getMessages(order.id) as any}
+            newMessage={newMessage}
+            setNewMessage={setNewMessage}
+            handleSendMessage={handleSendMessage}
+            isSending={isSending}
+            currentUserId={session?.user?.id || ""}
           />
         )}
 
-      <div className="mb-4 flex items-center justify-between">
+      <div className="mb-4 flex w-full flex-col items-start justify-between gap-2 sm:flex-row sm:items-center">
         <Button
           appearance="link"
           onClick={() => router.back()}
-          className="flex items-center text-gray-600"
+          className={`flex items-center text-base sm:text-base ${
+            theme === "dark" ? "text-gray-300" : "text-gray-600"
+          } px-0`}
         >
           <span className="mr-2">
             <svg
@@ -857,21 +938,43 @@ export default function BatchDetails({
       <Panel
         bordered
         header={`Order #${order.OrderID || order.id.slice(0, 8)}`}
+        className={`${
+          theme === "dark" ? "bg-gray-800 text-gray-100" : ""
+        } w-full min-w-0 p-1 sm:p-6`}
         shaded
       >
-        <Steps current={currentStep} className="mb-8">
-          <Steps.Item title="Accepted" />
-          <Steps.Item title="Shopping" />
-          <Steps.Item title="On The Way" />
-          <Steps.Item title="Delivered" />
-        </Steps>
+        <div className="w-full min-w-0 overflow-x-auto">
+          <Steps current={currentStep} className="mb-8 w-full min-w-0">
+            <Steps.Item title="Accepted" />
+            <Steps.Item title="Shopping" />
+            <Steps.Item title="On The Way" />
+            <Steps.Item title="Delivered" />
+          </Steps>
+        </div>
 
-        <div className="mb-6 grid grid-cols-1 gap-6 md:grid-cols-2">
+        <div className="mb-6 grid w-full min-w-0 grid-cols-1 gap-2 sm:gap-4 md:grid-cols-2">
           {/* Shop Information */}
-          <div className="rounded-lg border bg-white p-4">
-            <h3 className="mb-2 text-lg font-bold">Shop Details</h3>
+          <div
+            className={`min-w-0 rounded-lg border p-4 ${
+              theme === "dark"
+                ? "border-gray-700 bg-gray-800"
+                : "border-gray-200 bg-white"
+            }`}
+            style={{ minWidth: 0 }}
+          >
+            <h3
+              className={`mb-2 text-base font-bold sm:text-lg ${
+                theme === "dark" ? "text-gray-100" : "text-gray-900"
+              }`}
+            >
+              Shop Details
+            </h3>
             <div className="flex items-center">
-              <div className="mr-3 h-12 w-12 flex-shrink-0 overflow-hidden rounded-full bg-gray-100">
+              <div
+                className={`mr-3 h-12 w-12 flex-shrink-0 overflow-hidden rounded-full ${
+                  theme === "dark" ? "bg-gray-700" : "bg-gray-100"
+                }`}
+              >
                 {order.shop.image ? (
                   <Image
                     src={order.shop.image}
@@ -895,15 +998,29 @@ export default function BatchDetails({
                 )}
               </div>
               <div>
-                <h4 className="font-medium">{order.shop.name}</h4>
-                <p className="text-sm text-gray-500">{order.shop.address}</p>
+                <h4
+                  className={`text-base font-medium sm:text-base ${
+                    theme === "dark" ? "text-gray-100" : "text-gray-900"
+                  }`}
+                >
+                  {order.shop.name}
+                </h4>
+                <p
+                  className={`text-xs sm:text-sm ${
+                    theme === "dark" ? "text-gray-400" : "text-gray-500"
+                  }`}
+                >
+                  {order.shop.address}
+                </p>
               </div>
             </div>
-            <Link
-              href={`https://maps.google.com?q=${order.shop.address}`}
-              target="_blank"
-            >
-              <Button appearance="ghost" className="mt-3">
+            <Link href={getDirectionsUrl(order.shop.address)} target="_blank">
+              <Button
+                appearance="ghost"
+                className={`mt-3 w-full sm:w-auto ${
+                  theme === "dark" ? "text-blue-400 hover:text-blue-300" : ""
+                }`}
+              >
                 <span className="mr-1">
                   <svg
                     viewBox="0 0 24 24"
@@ -916,17 +1033,34 @@ export default function BatchDetails({
                     <circle cx="12" cy="10" r="3" />
                   </svg>
                 </span>
-                Directions
+                {currentLocation ? "Navigate to Shop" : "Show Shop Location"}
               </Button>
             </Link>
           </div>
 
           {/* Customer Information */}
-          <div className="rounded-lg border bg-white p-4">
-            <h3 className="mb-2 text-lg font-bold">Customer Details</h3>
-            <div className="flex items-center justify-between">
+          <div
+            className={`min-w-0 rounded-lg border p-4 ${
+              theme === "dark"
+                ? "border-gray-700 bg-gray-800"
+                : "border-gray-200 bg-white"
+            }`}
+            style={{ minWidth: 0 }}
+          >
+            <h3
+              className={`mb-2 text-base font-bold sm:text-lg ${
+                theme === "dark" ? "text-gray-100" : "text-gray-900"
+              }`}
+            >
+              Customer Details
+            </h3>
+            <div className="flex w-full flex-col items-start justify-between gap-2 sm:flex-row sm:items-center">
               <div className="flex items-center">
-                <div className="mr-3 h-12 w-12 flex-shrink-0 overflow-hidden rounded-full bg-gray-100">
+                <div
+                  className={`mr-3 h-12 w-12 flex-shrink-0 overflow-hidden rounded-full ${
+                    theme === "dark" ? "bg-gray-700" : "bg-gray-100"
+                  }`}
+                >
                   {order.user.profile_picture ? (
                     <Image
                       src={order.user.profile_picture}
@@ -951,8 +1085,20 @@ export default function BatchDetails({
                   )}
                 </div>
                 <div>
-                  <h4 className="font-medium">{order.user.name}</h4>
-                  <p className="text-sm text-gray-500">{order.user.email}</p>
+                  <h4
+                    className={`text-base font-medium sm:text-base ${
+                      theme === "dark" ? "text-gray-100" : "text-gray-900"
+                    }`}
+                  >
+                    {order.user.name}
+                  </h4>
+                  <p
+                    className={`text-xs sm:text-sm ${
+                      theme === "dark" ? "text-gray-400" : "text-gray-500"
+                    }`}
+                  >
+                    {order.user.email}
+                  </p>
                 </div>
               </div>
 
@@ -960,7 +1106,11 @@ export default function BatchDetails({
               {order.status !== "delivered" ? (
                 <Button
                   appearance="ghost"
-                  className="flex items-center text-blue-600"
+                  className={`flex w-full items-center sm:w-auto ${
+                    theme === "dark"
+                      ? "text-blue-400 hover:text-blue-300"
+                      : "text-blue-600"
+                  }`}
                   onClick={handleChatClick}
                 >
                   <svg
@@ -977,7 +1127,9 @@ export default function BatchDetails({
               ) : (
                 <Button
                   appearance="ghost"
-                  className="flex cursor-not-allowed items-center text-gray-400"
+                  className={`flex w-full cursor-not-allowed items-center sm:w-auto ${
+                    theme === "dark" ? "text-gray-600" : "text-gray-400"
+                  }`}
                   disabled
                 >
                   <svg
@@ -995,18 +1147,37 @@ export default function BatchDetails({
             </div>
 
             <div className="mt-3">
-              <h4 className="mb-1 text-sm font-medium">Delivery Address:</h4>
-              <p className="text-sm text-gray-600">
+              <h4 className="mb-1 text-xs font-medium sm:text-sm">
+                Delivery Address:
+              </h4>
+              <p
+                className={`text-xs sm:text-sm ${
+                  theme === "dark" ? "text-gray-400" : "text-gray-500"
+                }`}
+              >
                 {order.address.street}, {order.address.city}
                 {order.address.postal_code
                   ? `, ${order.address.postal_code}`
                   : ""}
               </p>
               <Link
-                href={`https://maps.google.com?q=${order.address.street},${order.address.city}`}
+                href={`https://www.google.com/maps/dir/?api=1&origin=${encodeURIComponent(
+                  order.shop.address
+                )}&destination=${encodeURIComponent(
+                  `${order.address.street}, ${order.address.city}${
+                    order.address.postal_code
+                      ? `, ${order.address.postal_code}`
+                      : ""
+                  }`
+                )}`}
                 target="_blank"
               >
-                <Button appearance="ghost" className="mt-2">
+                <Button
+                  appearance="ghost"
+                  className={`mt-2 w-full sm:w-auto ${
+                    theme === "dark" ? "text-blue-400 hover:text-blue-300" : ""
+                  }`}
+                >
                   <span className="mr-1">
                     <svg
                       viewBox="0 0 24 24"
@@ -1019,7 +1190,7 @@ export default function BatchDetails({
                       <circle cx="12" cy="10" r="3" />
                     </svg>
                   </span>
-                  Directions
+                  Get Directions
                 </Button>
               </Link>
             </div>
@@ -1028,13 +1199,32 @@ export default function BatchDetails({
 
         {/* Order Items */}
         {shouldShowOrderDetails() && (
-          <div className="mb-6 rounded-lg border bg-white p-4">
-            <h3 className="mb-3 text-lg font-bold">Order Items</h3>
+          <div
+            className={`mb-6 rounded-lg border p-4 ${
+              theme === "dark"
+                ? "border-gray-700 bg-gray-800"
+                : "border-gray-200 bg-white"
+            }`}
+          >
+            <h3
+              className={`mb-3 text-lg font-bold ${
+                theme === "dark" ? "text-gray-100" : "text-gray-900"
+              }`}
+            >
+              Order Items
+            </h3>
             <div className="space-y-4">
               {order.Order_Items.map((item) => (
-                <div key={item.id} className="flex items-center border-b pb-3">
+                <div
+                  key={item.id}
+                  className={`flex items-center border-b pb-3 ${
+                    theme === "dark" ? "border-gray-700" : "border-gray-200"
+                  }`}
+                >
                   <div
-                    className="mr-3 h-12 w-12 flex-shrink-0 cursor-pointer overflow-hidden rounded-lg bg-gray-100"
+                    className={`mr-3 h-12 w-12 flex-shrink-0 cursor-pointer overflow-hidden rounded-lg ${
+                      theme === "dark" ? "bg-gray-700" : "bg-gray-100"
+                    }`}
                     onClick={() => showProductImage(item)}
                   >
                     {item.product.image ? (
@@ -1060,14 +1250,30 @@ export default function BatchDetails({
                     )}
                   </div>
                   <div className="flex-grow">
-                    <p className="font-medium">{item.product.name}</p>
-                    <p className="text-sm text-gray-500">
+                    <p
+                      className={`font-medium ${
+                        theme === "dark" ? "text-gray-100" : "text-gray-900"
+                      }`}
+                    >
+                      {item.product.name}
+                    </p>
+                    <p
+                      className={`text-sm ${
+                        theme === "dark" ? "text-gray-400" : "text-gray-500"
+                      }`}
+                    >
                       {formatCurrency(item.price)} × {item.quantity}
                     </p>
                     {item.found &&
                       item.foundQuantity &&
                       item.foundQuantity < item.quantity && (
-                        <p className="text-xs text-orange-600">
+                        <p
+                          className={`text-xs ${
+                            theme === "dark"
+                              ? "text-orange-400"
+                              : "text-orange-600"
+                          }`}
+                        >
                           Found: {item.foundQuantity} of {item.quantity}
                         </p>
                       )}
@@ -1095,8 +1301,20 @@ export default function BatchDetails({
 
         {/* Found Items Summary - only show when shopping */}
         {order.status === "shopping" && (
-          <div className="mb-6 rounded-lg border bg-white p-4">
-            <h3 className="mb-3 text-lg font-bold">Item Status</h3>
+          <div
+            className={`mb-6 rounded-lg border p-4 ${
+              theme === "dark"
+                ? "border-gray-700 bg-gray-800"
+                : "border-gray-200 bg-white"
+            }`}
+          >
+            <h3
+              className={`mb-3 text-lg font-bold ${
+                theme === "dark" ? "text-gray-100" : "text-gray-900"
+              }`}
+            >
+              Item Status
+            </h3>
             <div className="space-y-2">
               <div className="flex flex-wrap gap-2">
                 {order.Order_Items.map((item) => (
@@ -1104,8 +1322,12 @@ export default function BatchDetails({
                     key={item.id}
                     className={`rounded-lg border p-2 ${
                       item.found
-                        ? "border-green-200 bg-green-50"
-                        : "border-gray-200 bg-gray-50"
+                        ? `border-green-200 bg-green-50 ${
+                            theme === "dark" ? "bg-gray-700" : ""
+                          }`
+                        : `border-gray-200 bg-gray-50 ${
+                            theme === "dark" ? "bg-gray-700" : ""
+                          }`
                     }`}
                   >
                     <div className="font-medium">{item.product.name}</div>
@@ -1113,16 +1335,34 @@ export default function BatchDetails({
                       {item.found ? (
                         item.foundQuantity &&
                         item.foundQuantity < item.quantity ? (
-                          <span className="text-orange-600">
+                          <span
+                            className={`${
+                              theme === "dark"
+                                ? "text-orange-400"
+                                : "text-orange-600"
+                            }`}
+                          >
                             Found: {item.foundQuantity} of {item.quantity}
                           </span>
                         ) : (
-                          <span className="text-green-600">
+                          <span
+                            className={`${
+                              theme === "dark"
+                                ? "text-green-400"
+                                : "text-green-600"
+                            }`}
+                          >
                             Found: {item.quantity}
                           </span>
                         )
                       ) : (
-                        <span className="text-gray-500">Not found</span>
+                        <span
+                          className={`${
+                            theme === "dark" ? "text-gray-400" : "text-gray-500"
+                          }`}
+                        >
+                          Not found
+                        </span>
                       )}
                     </div>
                   </div>
@@ -1130,11 +1370,19 @@ export default function BatchDetails({
               </div>
 
               {!order.Order_Items.some((item) => item.found) && (
-                <div className="mt-4 rounded-md bg-yellow-50 p-3 text-sm text-yellow-700">
+                <div
+                  className={`mt-4 rounded-md p-3 text-sm ${
+                    theme === "dark" ? "bg-gray-700" : "bg-gray-200"
+                  }`}
+                >
                   <div className="flex">
                     <div className="flex-shrink-0">
                       <svg
-                        className="h-5 w-5 text-yellow-400"
+                        className={`h-5 w-5 ${
+                          theme === "dark"
+                            ? "text-yellow-400"
+                            : "text-yellow-400"
+                        }`}
                         viewBox="0 0 20 20"
                         fill="currentColor"
                       >
@@ -1160,8 +1408,20 @@ export default function BatchDetails({
 
         {/* Order Summary */}
         {shouldShowOrderDetails() && (
-          <div className="mb-6 rounded-lg border bg-white p-4">
-            <h3 className="mb-3 text-lg font-bold">Order Summary</h3>
+          <div
+            className={`mb-6 rounded-lg border p-4 ${
+              theme === "dark"
+                ? "border-gray-700 bg-gray-800"
+                : "border-gray-200 bg-white"
+            }`}
+          >
+            <h3
+              className={`mb-3 text-lg font-bold ${
+                theme === "dark" ? "text-gray-100" : "text-gray-900"
+              }`}
+            >
+              Order Summary
+            </h3>
             <div className="space-y-2">
               <div className="flex justify-between">
                 <span>Subtotal</span>
@@ -1238,7 +1498,11 @@ export default function BatchDetails({
               </div>
 
               {order.status === "shopping" && (
-                <div className="mt-4 rounded-md bg-blue-50 p-3 text-sm text-blue-700">
+                <div
+                  className={`mt-4 rounded-md p-3 text-sm ${
+                    theme === "dark" ? "bg-gray-700" : "bg-gray-200"
+                  }`}
+                >
                   <p>
                     <strong>Note:</strong> The total reflects only the value of
                     found items. Service fee (
@@ -1256,9 +1520,27 @@ export default function BatchDetails({
 
         {/* Delivery Notes if any */}
         {order.deliveryNotes && (
-          <div className="mb-6 rounded-lg border bg-white p-4">
-            <h3 className="mb-2 text-lg font-bold">Delivery Notes</h3>
-            <p className="text-gray-700">{order.deliveryNotes}</p>
+          <div
+            className={`mb-6 rounded-lg border p-4 ${
+              theme === "dark"
+                ? "border-gray-700 bg-gray-800"
+                : "border-gray-200 bg-white"
+            }`}
+          >
+            <h3
+              className={`mb-2 text-lg font-bold ${
+                theme === "dark" ? "text-gray-100" : "text-gray-900"
+              }`}
+            >
+              Delivery Notes
+            </h3>
+            <p
+              className={`text-gray-700 ${
+                theme === "dark" ? "text-gray-300" : ""
+              }`}
+            >
+              {order.deliveryNotes}
+            </p>
           </div>
         )}
 

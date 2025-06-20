@@ -23,12 +23,12 @@ interface Session {
 export default function ShopperProfilePage() {
   return (
     <ShopperLayout>
-      <div className="container mx-auto px-4 py-8">
+      <div className="container mx-auto px-4 py-4 pb-24 sm:py-8 sm:pb-8">
         {/* Profile Header */}
-        <div className="mb-6 flex items-center">
+        <div className="mb-4 flex flex-col gap-2 sm:mb-6 sm:flex-row sm:items-center sm:gap-0">
           <Link
             href="/Plasa/active-batches"
-            className="flex items-center text-gray-700"
+            className="flex items-center text-gray-700 transition-colors hover:text-gray-900"
           >
             <svg
               viewBox="0 0 24 24"
@@ -41,11 +41,15 @@ export default function ShopperProfilePage() {
             </svg>
             <span className="hover:underline">Back to Dashboard</span>
           </Link>
-          <h1 className="ml-4 text-2xl font-bold">Shopper Profile</h1>
+          <h1 className="text-xl font-bold sm:ml-4 sm:text-2xl">
+            Plasa Profile
+          </h1>
         </div>
 
         {/* Profile Content */}
-        <ShopperProfileComponent />
+        <div className="w-full overflow-x-hidden">
+          <ShopperProfileComponent />
+        </div>
       </div>
     </ShopperLayout>
   );
@@ -68,7 +72,7 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
     };
   }
 
-  // Check if the user has the shopper role
+  // Check if the user has the plasa role
   const userRole = session.user?.role;
 
   if (userRole !== "shopper") {

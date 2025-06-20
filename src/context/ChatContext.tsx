@@ -128,6 +128,17 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({
         console.error("User not authenticated");
         return;
       }
+      if (!customerId) {
+        console.error(
+          "customerId is undefined, cannot create chat conversation"
+        );
+        if (typeof window !== "undefined") {
+          alert(
+            "Error: Unable to start chat. Customer ID is missing. Please try again after logging in."
+          );
+        }
+        return;
+      }
 
       try {
         // Check if chat already exists in our state

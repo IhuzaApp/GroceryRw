@@ -212,14 +212,14 @@ export default function UserProfile() {
   };
 
   return (
-    <div className="grid  grid-cols-1 gap-6 md:grid-cols-12">
+    <div className="grid grid-cols-1 gap-6 md:grid-cols-12">
       {/* Left Column - User Info */}
       <div className="w-full md:col-span-3">
         <Panel
           shaded
           bordered
           bodyFill
-          className="mx-auto max-w-md overflow-hidden sm:max-w-full"
+          className="mx-auto max-w-md overflow-hidden bg-white transition-colors duration-200 dark:bg-gray-800 sm:max-w-full"
         >
           <div className="flex flex-col items-center px-4 py-6 sm:py-8">
             {loading ? (
@@ -241,10 +241,10 @@ export default function UserProfile() {
                   />
                 </div>
 
-                <h2 className="mt-3 text-center text-lg font-bold sm:text-xl">
+                <h2 className="mt-3 text-center text-lg font-bold text-inherit sm:text-xl">
                   {user?.name}
                 </h2>
-                <p className="text-center text-sm text-gray-500">
+                <p className="text-center text-sm text-gray-500 dark:text-gray-400">
                   Member since{" "}
                   {user
                     ? new Date(user.created_at).toLocaleString("default", {
@@ -255,10 +255,10 @@ export default function UserProfile() {
                 </p>
 
                 <div className="mt-3 flex flex-wrap justify-center gap-2">
-                  <Tag className="border-green-200 bg-green-100 text-green-600">
+                  <Tag className="border-green-200 bg-green-100 text-green-600 dark:border-green-800 dark:bg-green-900 dark:text-green-300">
                     Premium Member
                   </Tag>
-                  <Tag className="border-orange-200 bg-orange-100 text-orange-600">
+                  <Tag className="border-orange-200 bg-orange-100 text-orange-600 dark:border-orange-800 dark:bg-orange-900 dark:text-orange-300">
                     {orderCount} Orders
                   </Tag>
 
@@ -266,11 +266,11 @@ export default function UserProfile() {
                   {loadingShopper ? (
                     <div className="h-6 w-24 animate-pulse rounded bg-gray-200" />
                   ) : shopperStatus?.active ? (
-                    <Tag className="border-green-200 bg-green-100 text-green-600">
+                    <Tag className="border-green-200 bg-green-100 text-green-600 dark:border-green-800 dark:bg-green-900 dark:text-green-300">
                       Active Plasa
                     </Tag>
                   ) : shopperStatus ? (
-                    <Tag className="border-yellow-200 bg-yellow-100 text-yellow-600">
+                    <Tag className="border-yellow-200 bg-yellow-100 text-yellow-600 dark:border-yellow-800 dark:bg-yellow-900 dark:text-yellow-300">
                       {shopperStatus.status === "pending"
                         ? "Pending Plasa"
                         : shopperStatus.status}
@@ -284,19 +284,15 @@ export default function UserProfile() {
                 ) : shopperStatus?.active ? (
                   <Button
                     appearance="primary"
-                    className="mt-5 w-full !bg-green-500 bg-green-500 text-white hover:!bg-green-600 hover:bg-green-600 sm:w-auto"
+                    className="mt-5 w-full !bg-green-500 text-white hover:!bg-green-600 sm:w-auto"
                     onClick={async () => {
                       const nextRole = role === "user" ? "shopper" : "user";
                       setIsSwitchingRole(true);
                       try {
-                        // Use the utility function to handle role switching
                         await initiateRoleSwitch(
                           nextRole as "user" | "shopper"
                         );
-
-                        // Update local state after successful DB update
                         toggleRole();
-
                         toast.success(
                           `Switched to ${
                             nextRole === "user" ? "User" : "Shopper"
@@ -319,7 +315,7 @@ export default function UserProfile() {
                   <Button
                     appearance="primary"
                     color="green"
-                    className="mt-5 w-full bg-green-500 text-white sm:w-auto"
+                    className="mt-5 w-full !bg-green-500 text-white hover:!bg-green-600 sm:w-auto"
                     onClick={handleBecomePlasa}
                   >
                     Become a Plasa
@@ -328,12 +324,12 @@ export default function UserProfile() {
 
                 {/* Default address under profile */}
                 <div className="mt-4 w-full text-center">
-                  <h3 className="font-medium">Default Address</h3>
+                  <h3 className="font-medium text-inherit">Default Address</h3>
                   {loadingAddr ? (
                     <div className="mx-auto h-4 w-32 animate-pulse rounded bg-gray-200" />
                   ) : selectedAddr || defaultAddr ? (
                     <div>
-                      <p className="text-sm text-gray-600">
+                      <p className="text-sm text-gray-600 dark:text-gray-300">
                         {(selectedAddr || defaultAddr).street},{" "}
                         {(selectedAddr || defaultAddr).city}{" "}
                         {(selectedAddr || defaultAddr).postal_code}
@@ -341,6 +337,7 @@ export default function UserProfile() {
                       <Button
                         size="sm"
                         appearance="link"
+                        className="text-green-500 hover:text-green-600 dark:text-green-400 dark:hover:text-green-500"
                         onClick={() => setShowAddrModal(true)}
                       >
                         Change Address
@@ -348,12 +345,13 @@ export default function UserProfile() {
                     </div>
                   ) : (
                     <div>
-                      <p className="text-sm text-gray-500">
+                      <p className="text-sm text-gray-500 dark:text-gray-400">
                         No address selected
                       </p>
                       <Button
                         size="sm"
                         appearance="link"
+                        className="text-green-500 hover:text-green-600 dark:text-green-400 dark:hover:text-green-500"
                         onClick={() => setShowAddrModal(true)}
                       >
                         Select Address
@@ -366,7 +364,12 @@ export default function UserProfile() {
           </div>
         </Panel>
 
-        <Panel header="Account Summary" shaded bordered className="mt-4">
+        <Panel
+          header="Account Summary"
+          shaded
+          bordered
+          className="mt-4 bg-white transition-colors duration-200 dark:bg-gray-800"
+        >
           {loading ? (
             <div className="space-y-4">
               {Array(4)
@@ -381,12 +384,16 @@ export default function UserProfile() {
           ) : (
             <div className="space-y-4">
               <div className="flex items-center justify-between">
-                <span className="text-gray-600">Total Orders</span>
-                <span className="font-bold">{orderCount}</span>
+                <span className="text-gray-600 dark:text-gray-300">
+                  Total Orders
+                </span>
+                <span className="font-bold text-inherit">{orderCount}</span>
               </div>
               <div className="flex items-center justify-between">
-                <span className="text-gray-600">Wallet Balance</span>
-                <span className="font-bold">
+                <span className="text-gray-600 dark:text-gray-300">
+                  Wallet Balance
+                </span>
+                <span className="font-bold text-inherit">
                   {formatCurrency(walletBalance)}
                 </span>
               </div>
@@ -394,6 +401,7 @@ export default function UserProfile() {
           )}
         </Panel>
       </div>
+
       {/* Right Column - Tabs */}
       <div className="w-full md:col-span-9">
         <div className="scrollbar-hide mb-4 overflow-x-auto whitespace-nowrap">
@@ -415,8 +423,8 @@ export default function UserProfile() {
                 eventKey={tab.key}
                 className={`!bg-transparent !px-4 !py-2 !text-sm hover:!bg-transparent ${
                   activeTab === tab.key
-                    ? "font-semibold !text-green-600"
-                    : "!text-black hover:!text-green-600"
+                    ? "font-semibold !text-green-500 dark:!text-green-400"
+                    : "!text-inherit hover:!text-green-500 dark:hover:!text-green-400"
                 }`}
               >
                 {tab.label}
@@ -426,13 +434,21 @@ export default function UserProfile() {
         </div>
 
         {activeTab === "account" && (
-          <Panel shaded bordered>
+          <Panel
+            shaded
+            bordered
+            className="bg-white transition-colors duration-200 dark:bg-gray-800"
+          >
             <UserAccount />
           </Panel>
         )}
 
         {activeTab === "orders" && (
-          <Panel shaded bordered>
+          <Panel
+            shaded
+            bordered
+            className="bg-white transition-colors duration-200 dark:bg-gray-800"
+          >
             <UserRecentOrders
               filter="all"
               orders={userOrders}
@@ -443,43 +459,63 @@ export default function UserProfile() {
         )}
 
         {activeTab === "addresses" && (
-          <Panel shaded bordered>
+          <Panel
+            shaded
+            bordered
+            className="bg-white transition-colors duration-200 dark:bg-gray-800"
+          >
             <UserAddress />
           </Panel>
         )}
 
         {activeTab === "payment" && (
-          <Panel shaded bordered>
+          <Panel
+            shaded
+            bordered
+            className="bg-white transition-colors duration-200 dark:bg-gray-800"
+          >
             <UserPayment />
           </Panel>
         )}
 
         {activeTab === "preferences" && (
-          <Panel shaded bordered>
+          <Panel
+            shaded
+            bordered
+            className="bg-white transition-colors duration-200 dark:bg-gray-800"
+          >
             <UserPreference />
           </Panel>
         )}
+
         {/* Address selection modal */}
         <Modal
           open={showAddrModal}
           onClose={() => setShowAddrModal(false)}
           size="lg"
+          className="[&_.rs-modal-content]:dark:bg-gray-800"
         >
           <Modal.Header>
-            <Modal.Title>Select an Address</Modal.Title>
+            <Modal.Title className="text-inherit">
+              Select an Address
+            </Modal.Title>
           </Modal.Header>
           <Modal.Body>
             {addresses.length ? (
               addresses.map((addr) => (
-                <Panel key={addr.id} bordered className="mb-2">
-                  <h4 className="font-bold">{addr.street}</h4>
-                  <p className="text-sm text-gray-600">
+                <Panel
+                  key={addr.id}
+                  bordered
+                  className="mb-2 bg-white transition-colors duration-200 dark:bg-gray-700"
+                >
+                  <h4 className="font-bold text-inherit">{addr.street}</h4>
+                  <p className="text-sm text-gray-600 dark:text-gray-300">
                     {addr.city}, {addr.postal_code}
                   </p>
                   <Button
                     size="sm"
                     appearance="primary"
-                    className="mt-2"
+                    className="mt-2 !bg-green-500 text-white hover:!bg-green-600"
                     onClick={() => {
                       setSelectedAddr(addr);
                       Cookies.set("delivery_address", JSON.stringify(addr));
@@ -491,11 +527,16 @@ export default function UserProfile() {
                 </Panel>
               ))
             ) : (
-              <p>No addresses saved.</p>
+              <p className="text-inherit">No addresses saved.</p>
             )}
           </Modal.Body>
           <Modal.Footer>
-            <Button onClick={() => setShowAddrModal(false)}>Close</Button>
+            <Button
+              onClick={() => setShowAddrModal(false)}
+              className="text-inherit hover:text-green-500 dark:hover:text-green-400"
+            >
+              Close
+            </Button>
           </Modal.Footer>
         </Modal>
       </div>

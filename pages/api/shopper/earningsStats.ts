@@ -295,24 +295,61 @@ export default async function handler(
         : 0;
 
     // Default goals data
-    const weeklyTarget = 1500;
-    const monthlyTarget = 6000;
-    const quarterlyTarget = 15000;
+    const weeklyTarget = 50000;
+    const monthlyTarget = 100000;
+    const quarterlyTarget = 250000;
 
-    // Calculate current earnings based on the last periods
-    // These calculations are simplified and would be more accurate in a real application
-    const weeklyEarnings =
-      totalEarnings > 0
-        ? Math.min(totalEarnings * 0.3, weeklyTarget * 0.85)
-        : 1248.5;
-    const monthlyEarnings =
-      totalEarnings > 0
-        ? Math.min(totalEarnings, monthlyTarget * 0.65)
-        : 3820.75;
-    const quarterlyEarnings =
-      totalEarnings > 0
-        ? Math.min(totalEarnings * 3, quarterlyTarget * 0.6)
-        : 8500.0;
+    // Calculate time-based earnings for goals
+    const now = new Date();
+    const currentDate = now.getTime();
+
+    // Weekly: This week (Sunday to Saturday) - matching dailyEarnings API logic
+    const dayOfWeek = now.getDay(); // 0 = Sunday, 6 = Saturday
+    const weekStart = new Date(now);
+    weekStart.setDate(now.getDate() - dayOfWeek); // Go back to Sunday
+    weekStart.setHours(0, 0, 0, 0);
+
+    const weekEnd = new Date(weekStart);
+    weekEnd.setDate(weekStart.getDate() + 6); // Go forward to Saturday
+    weekEnd.setHours(23, 59, 59, 999);
+
+    // Monthly: Current month (1st day to last day)
+    const currentMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+    const nextMonth = new Date(now.getFullYear(), now.getMonth() + 1, 1);
+
+    // Quarterly: Current quarter (3-month period)
+    const currentQuarter = Math.floor(now.getMonth() / 3);
+    const quarterStart = new Date(now.getFullYear(), currentQuarter * 3, 1);
+    const quarterEnd = new Date(now.getFullYear(), (currentQuarter + 1) * 3, 1);
+
+    // Calculate earnings for each time period
+    let weeklyEarnings = 0;
+    let monthlyEarnings = 0;
+    let quarterlyEarnings = 0;
+
+    if (data.Orders && Array.isArray(data.Orders)) {
+      data.Orders.forEach((order) => {
+        const orderDate = new Date(order.updated_at);
+        const serviceFee = parseFloat(order.service_fee || "0");
+        const deliveryFee = parseFloat(order.delivery_fee || "0");
+        const orderTotal = serviceFee + deliveryFee;
+
+        // Weekly earnings (this week: Sunday to Saturday)
+        if (orderDate >= weekStart && orderDate <= weekEnd) {
+          weeklyEarnings += orderTotal;
+        }
+
+        // Monthly earnings (current month)
+        if (orderDate >= currentMonth && orderDate < nextMonth) {
+          monthlyEarnings += orderTotal;
+        }
+
+        // Quarterly earnings (current quarter)
+        if (orderDate >= quarterStart && orderDate < quarterEnd) {
+          quarterlyEarnings += orderTotal;
+        }
+      });
+    }
 
     return res.status(200).json({
       success: true,

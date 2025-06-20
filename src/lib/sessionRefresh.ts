@@ -63,9 +63,6 @@ export const initiateRoleSwitch = async (
   nextRole: "user" | "shopper"
 ): Promise<void> => {
   try {
-    // Set flag to indicate role switch is in progress
-    setRoleSwitchFlag();
-
     // Call the API to update the role
     const response = await fetch("/api/user/updateRole", {
       method: "POST",
@@ -75,16 +72,27 @@ export const initiateRoleSwitch = async (
       body: JSON.stringify({ role: nextRole }),
     });
 
+    const data = await response.json();
+
     if (!response.ok) {
-      throw new Error("Failed to update role");
+      // Handle specific error cases
+      if (data.code === "NOT_ACTIVE_SHOPPER") {
+        throw new Error(
+          "You must be an active shopper to switch to shopper mode"
+        );
+      }
+      throw new Error(data.error || "Failed to update role");
     }
 
-    // The server will set cookies and handle redirects
-    // Force reload to ensure middleware picks up the cookies
-    window.location.reload();
+    if (data.success) {
+      // Redirect to the appropriate page
+      window.location.href =
+        data.redirectTo || (nextRole === "shopper" ? "/ShopperDashboard" : "/");
+    } else {
+      throw new Error(data.error || "Failed to update role");
+    }
   } catch (error) {
     console.error("Error switching role:", error);
-    clearRoleSwitchFlag();
     throw error;
   }
 };

@@ -1,6 +1,7 @@
 import React from "react";
-import { Modal, Button } from "rsuite";
+import { Modal, Button, InputNumber, Form } from "rsuite";
 import { OrderItem } from "../../types/order";
+import { useTheme } from "../../context/ThemeContext";
 
 interface QuantityConfirmationModalProps {
   open: boolean;
@@ -19,90 +20,67 @@ export default function QuantityConfirmationModal({
   setFoundQuantity,
   onConfirm,
 }: QuantityConfirmationModalProps) {
+  const { theme } = useTheme();
+
   if (!currentItem) return null;
 
   return (
-    <Modal open={open} onClose={onClose} size="xs">
-      <Modal.Header className="border-b bg-gray-100">
-        <Modal.Title className="text-lg font-semibold text-gray-800">
+    <Modal
+      open={open}
+      onClose={onClose}
+      size="sm"
+      className={theme === "dark" ? "bg-gray-900" : ""}
+    >
+      <Modal.Header className={theme === "dark" ? "bg-gray-800" : ""}>
+        <Modal.Title className={theme === "dark" ? "text-gray-100" : ""}>
           Confirm Quantity Found
         </Modal.Title>
       </Modal.Header>
-      <Modal.Body>
-        <div className="space-y-4">
-          <div className="text-center">
-            <h3 className="text-md font-medium text-gray-800">
-              {currentItem.product.name}
-            </h3>
-            <p className="text-sm text-gray-600">
-              Customer requested: {currentItem.quantity}{" "}
-              {currentItem.product.measurement_unit || "items"}
-            </p>
-          </div>
-
-          <div className="mt-4">
-            <label className="mb-2 block text-sm font-medium text-gray-700">
-              How many did you find? (Max: {currentItem.quantity})
-            </label>
-            <div className="flex items-center justify-center">
-              <button
-                className="rounded-l-md border bg-gray-100 px-3 py-1 hover:bg-gray-200"
-                onClick={() => setFoundQuantity(Math.max(1, foundQuantity - 1))}
-                disabled={foundQuantity <= 1}
-              >
-                -
-              </button>
-              <input
-                type="number"
-                min="1"
-                max={currentItem.quantity}
-                value={foundQuantity}
-                onChange={(e) => {
-                  const newValue = parseInt(e.target.value) || 1;
-                  if (newValue > currentItem.quantity) {
-                    // Show visual feedback that this exceeds the maximum
-                    e.target.classList.add("bg-red-50");
-                    setTimeout(
-                      () => e.target.classList.remove("bg-red-50"),
-                      500
-                    );
-                  }
-                  setFoundQuantity(
-                    Math.min(currentItem.quantity, Math.max(1, newValue))
-                  );
-                }}
-                className="w-16 border-b border-t py-1 text-center"
-              />
-              <button
-                className="rounded-r-md border bg-gray-100 px-3 py-1 hover:bg-gray-200"
-                onClick={() =>
-                  setFoundQuantity(
-                    Math.min(currentItem.quantity, foundQuantity + 1)
-                  )
-                }
-                disabled={foundQuantity >= currentItem.quantity}
-              >
-                +
-              </button>
-            </div>
-            {foundQuantity === currentItem.quantity ? (
-              <p className="mt-2 text-center text-xs text-green-600">
-                All items will be marked as found
-              </p>
-            ) : (
-              <p className="mt-2 text-center text-xs text-orange-600">
-                {foundQuantity} of {currentItem.quantity} items will be marked
-                as found
-              </p>
-            )}
-          </div>
+      <Modal.Body
+        className={theme === "dark" ? "bg-gray-900 text-gray-100" : ""}
+      >
+        <div className="mb-4">
+          <p className={theme === "dark" ? "text-gray-300" : "text-gray-600"}>
+            How many units of {currentItem.product.name} did you find?
+          </p>
+          <p
+            className={`text-sm ${
+              theme === "dark" ? "text-gray-400" : "text-gray-500"
+            }`}
+          >
+            Requested quantity: {currentItem.quantity}
+          </p>
         </div>
+        <Form>
+          <Form.Group>
+            <Form.ControlLabel
+              className={theme === "dark" ? "text-gray-300" : ""}
+            >
+              Found Quantity
+            </Form.ControlLabel>
+            <InputNumber
+              value={foundQuantity}
+              onChange={(value) => setFoundQuantity(value || 0)}
+              min={0}
+              max={currentItem.quantity}
+              className={theme === "dark" ? "bg-gray-800 text-gray-100" : ""}
+            />
+          </Form.Group>
+        </Form>
       </Modal.Body>
-      <Modal.Footer>
-        <Button onClick={onClose} appearance="subtle">
+      <Modal.Footer className={theme === "dark" ? "bg-gray-800" : ""}>
+        <Button
+          appearance="subtle"
+          onClick={onClose}
+          className={theme === "dark" ? "text-gray-300" : ""}
+        >
           Cancel
         </Button>
-        <Button onClick={onConfirm} appearance="primary" color="green">
+        <Button
+          appearance="primary"
+          onClick={onConfirm}
+          disabled={foundQuantity === 0}
+        >
           Confirm
         </Button>
       </Modal.Footer>

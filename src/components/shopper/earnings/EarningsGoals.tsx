@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Panel, Button, InputNumber, Modal } from "rsuite";
 
 interface Goal {
@@ -9,16 +9,63 @@ interface Goal {
 }
 
 interface EarningsGoalsProps {
-  goals: Goal[];
+  goals: Goal[] | null;
+}
+
+interface EarningsTip {
+  peakHours: {
+    day: string;
+    timeRange: string;
+    orderCount: number;
+    avgEarnings: number;
+  }[];
+  topStores: {
+    store: string;
+    orderCount: number;
+    totalEarnings: number;
+    avgEarnings: number;
+  }[];
+  batchOrderPercentage: number;
+  totalOrders: number;
+  tips: string[];
 }
 
 const EarningsGoals: React.FC<EarningsGoalsProps> = ({
   goals: initialGoals,
 }) => {
-  const [goals, setGoals] = useState<Goal[]>(initialGoals);
+  const [goals, setGoals] = useState<Goal[] | null>(initialGoals);
   const [showEditModal, setShowEditModal] = useState(false);
   const [editingGoal, setEditingGoal] = useState<Goal | null>(null);
   const [newTarget, setNewTarget] = useState<number>(0);
+  const [earningsTips, setEarningsTips] = useState<EarningsTip | null>(null);
+  const [loadingTips, setLoadingTips] = useState(true);
+
+  // Update goals state when props change
+  useEffect(() => {
+    setGoals(initialGoals);
+  }, [initialGoals]);
+
+  // Fetch dynamic earnings tips
+  useEffect(() => {
+    const fetchEarningsTips = async () => {
+      try {
+        setLoadingTips(true);
+        const response = await fetch("/api/shopper/earningsTips");
+        if (response.ok) {
+          const data = await response.json();
+          if (data.success) {
+            setEarningsTips(data.tips);
+          }
+        }
+      } catch (error) {
+        console.error("Error fetching earnings tips:", error);
+      } finally {
+        setLoadingTips(false);
+      }
+    };
+
+    fetchEarningsTips();
+  }, []);
 
   // Format currency for display in RWF
   const formatCurrency = (amount: number) => {
@@ -38,7 +85,7 @@ const EarningsGoals: React.FC<EarningsGoalsProps> = ({
 
   // Handle saving the edited goal
   const handleSaveGoal = () => {
-    if (!editingGoal) return;
+    if (!editingGoal || !goals) return;
 
     const updatedGoals = goals.map((goal) => {
       if (goal.goal === editingGoal.goal) {
@@ -56,6 +103,34 @@ const EarningsGoals: React.FC<EarningsGoalsProps> = ({
     setShowEditModal(false);
     setEditingGoal(null);
   };
+
+  // Show error message if goals data is missing
+  if (!goals) {
+    return (
+      <Panel shaded bordered bodyFill className="p-4">
+        <h3 className="mb-4 text-lg font-semibold">Earnings Goals</h3>
+        <div className="flex flex-col items-center justify-center py-8 text-center">
+          <svg
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            className="mb-4 h-12 w-12 text-gray-400"
+          >
+            <path d="M9.172 16.172a4 4 0 015.656 0M9 12h6m-6-4h6m2 5.291A7.962 7.962 0 0112 15c-2.34 0-4.47-.881-6.08-2.33" />
+            <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2z" />
+          </svg>
+          <h4 className="mb-2 text-lg font-medium text-gray-900">
+            Goals Data Unavailable
+          </h4>
+          <p className="text-gray-600">
+            Unable to load your earnings goals at the moment. Please try again
+            in about 1 hour.
+          </p>
+        </div>
+      </Panel>
+    );
+  }
 
   return (
     <>
@@ -110,41 +185,67 @@ const EarningsGoals: React.FC<EarningsGoalsProps> = ({
 
           <div className="mt-6 border-t pt-4">
             <h3 className="mb-3 font-medium">Tips to Increase Earnings</h3>
-            <ul className="space-y-2 text-sm">
-              <li className="flex items-start gap-2">
-                <div className="mt-0.5 flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-full bg-green-100 text-green-600">
-                  1
-                </div>
-                <span>
-                  Shop during peak hours (Fri 4-8pm, Sat 10am-2pm, Sun 11am-3pm)
-                </span>
-              </li>
-              <li className="flex items-start gap-2">
-                <div className="mt-0.5 flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-full bg-green-100 text-green-600">
-                  2
-                </div>
-                <span>
-                  Accept batch orders with multiple deliveries for higher
-                  earnings
-                </span>
-              </li>
-              <li className="flex items-start gap-2">
-                <div className="mt-0.5 flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-full bg-green-100 text-green-600">
-                  3
-                </div>
-                <span>
-                  Focus on stores you&apos;re familiar with to shop faster
-                </span>
-              </li>
-              <li className="flex items-start gap-2">
-                <div className="mt-0.5 flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-full bg-green-100 text-green-600">
-                  4
-                </div>
-                <span>
-                  Maintain high customer ratings to qualify for bonus incentives
-                </span>
-              </li>
-            </ul>
+            {loadingTips ? (
+              <div className="space-y-2">
+                {[1, 2, 3, 4].map((i) => (
+                  <div key={i} className="flex items-start gap-2">
+                    <div className="mt-0.5 flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-full bg-gray-100 text-gray-400">
+                      {i}
+                    </div>
+                    <div className="h-4 w-48 animate-pulse rounded bg-gray-200"></div>
+                  </div>
+                ))}
+              </div>
+            ) : earningsTips ? (
+              <ul className="space-y-2 text-sm">
+                {earningsTips.tips.map((tip, index) => (
+                  <li key={index} className="flex items-start gap-2">
+                    <div className="mt-0.5 flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-full bg-green-100 text-green-600">
+                      {index + 1}
+                    </div>
+                    <span>{tip}</span>
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <ul className="space-y-2 text-sm">
+                <li className="flex items-start gap-2">
+                  <div className="mt-0.5 flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-full bg-green-100 text-green-600">
+                    1
+                  </div>
+                  <span>
+                    Shop during peak hours (Fri 4-8pm, Sat 10am-2pm, Sun
+                    11am-3pm)
+                  </span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <div className="mt-0.5 flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-full bg-green-100 text-green-600">
+                    2
+                  </div>
+                  <span>
+                    Accept batch orders with multiple deliveries for higher
+                    earnings
+                  </span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <div className="mt-0.5 flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-full bg-green-100 text-green-600">
+                    3
+                  </div>
+                  <span>
+                    Focus on stores you&apos;re familiar with to shop faster
+                  </span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <div className="mt-0.5 flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-full bg-green-100 text-green-600">
+                    4
+                  </div>
+                  <span>
+                    Maintain high customer ratings to qualify for bonus
+                    incentives
+                  </span>
+                </li>
+              </ul>
+            )}
           </div>
         </div>
       </Panel>

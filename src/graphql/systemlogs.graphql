@@ -1,0 +1,42 @@
+query getSystemLogs {
+  System_Logs {
+    time
+    type
+    message
+    id
+    details
+    create_at
+    component
+  }
+}
+
+mutation insertSystemLog(
+  $type: String!
+  $message: String!
+  $component: String!
+  $details: String!
+  $time: String!
+) {
+  insert_System_Logs_one(
+    object: {
+      type: $type
+      message: $message
+      component: $component
+      details: $details
+      time: $time
+    }
+  ) {
+    id
+    type
+    message
+    component
+    details
+    time
+  }
+}
+
+mutation clearSystemLogs {
+  delete_System_Logs(where: {}) {
+    affected_rows
+  }
+}

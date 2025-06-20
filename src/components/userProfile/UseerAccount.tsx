@@ -168,7 +168,9 @@ export default function UserAccount() {
       <UserPaymentCards />
 
       <div className="hidden sm:block">
-        <h3 className="mb-4 mt-3 text-lg font-bold">Account Information</h3>
+        <h3 className="mb-4 mt-3 text-lg font-bold text-inherit">
+          Account Information
+        </h3>
         {loading ? (
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <div className="h-20 animate-pulse rounded-lg bg-gray-200"></div>
@@ -180,11 +182,11 @@ export default function UserAccount() {
           <form onSubmit={handleSubmit}>
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
               <div>
-                <label className="mb-1 block text-sm text-gray-600">
+                <label className="mb-1 block text-sm text-gray-600 dark:text-gray-300">
                   Username
                 </label>
                 <input
-                  className="ease w-full rounded-[9px] border border-gray-200 bg-transparent px-3 py-2 text-sm text-slate-700 shadow-sm transition duration-300 placeholder:text-slate-400 hover:border-slate-300 focus:border-gray-100 focus:shadow focus:outline-none"
+                  className="ease w-full rounded-[9px] border border-gray-200 bg-transparent px-3 py-2 text-sm text-inherit shadow-sm transition duration-300 placeholder:text-slate-400 hover:border-slate-300 focus:border-gray-100 focus:shadow focus:outline-none dark:border-gray-700 dark:placeholder:text-gray-500"
                   placeholder="Username"
                   name="name"
                   value={user.name}
@@ -193,26 +195,25 @@ export default function UserAccount() {
                 />
               </div>
               <div>
-                <label className="mb-1 block text-sm text-gray-600">
-                  Email Address
+                <label className="mb-1 block text-sm text-gray-600 dark:text-gray-300">
+                  Email
                 </label>
                 <input
-                  className="ease w-full rounded-[9px] border border-gray-200 bg-transparent px-3 py-2 text-sm text-slate-700 shadow-sm transition duration-300 placeholder:text-slate-400 hover:border-slate-300 focus:border-gray-100 focus:shadow focus:outline-none"
-                  placeholder="Email Address"
+                  className="ease w-full rounded-[9px] border border-gray-200 bg-transparent px-3 py-2 text-sm text-inherit shadow-sm transition duration-300 placeholder:text-slate-400 hover:border-slate-300 focus:border-gray-100 focus:shadow focus:outline-none dark:border-gray-700 dark:placeholder:text-gray-500"
+                  placeholder="Email"
                   name="email"
                   value={user.email}
                   onChange={handleChange}
-                  disabled={true} // Email cannot be changed
-                  title="Email address cannot be changed"
+                  disabled={true}
                 />
               </div>
               <div>
-                <label className="mb-1 block text-sm text-gray-600">
-                  Phone Number
+                <label className="mb-1 block text-sm text-gray-600 dark:text-gray-300">
+                  Phone
                 </label>
                 <input
-                  className="ease w-full rounded-[9px] border border-gray-200 bg-transparent px-3 py-2 text-sm text-slate-700 shadow-sm transition duration-300 placeholder:text-slate-400 hover:border-slate-300 focus:border-gray-100 focus:shadow focus:outline-none"
-                  placeholder="Phone Number"
+                  className="ease w-full rounded-[9px] border border-gray-200 bg-transparent px-3 py-2 text-sm text-inherit shadow-sm transition duration-300 placeholder:text-slate-400 hover:border-slate-300 focus:border-gray-100 focus:shadow focus:outline-none dark:border-gray-700 dark:placeholder:text-gray-500"
+                  placeholder="Phone"
                   name="phone"
                   value={user.phone}
                   onChange={handleChange}
@@ -220,11 +221,11 @@ export default function UserAccount() {
                 />
               </div>
               <div>
-                <label className="mb-1 block text-sm text-gray-600">
+                <label className="mb-1 block text-sm text-gray-600 dark:text-gray-300">
                   Gender
                 </label>
                 <select
-                  className="ease w-full rounded-[9px] border border-gray-200 bg-transparent px-3 py-2 text-sm text-slate-700 shadow-sm transition duration-300 placeholder:text-slate-400 hover:border-slate-300 focus:border-gray-100 focus:shadow focus:outline-none"
+                  className="ease w-full rounded-[9px] border border-gray-200 bg-transparent px-3 py-2 text-sm text-inherit shadow-sm transition duration-300 placeholder:text-slate-400 hover:border-slate-300 focus:border-gray-100 focus:shadow focus:outline-none dark:border-gray-700 dark:placeholder:text-gray-500"
                   name="gender"
                   value={user.gender}
                   onChange={handleChange}
@@ -238,74 +239,69 @@ export default function UserAccount() {
               </div>
             </div>
 
-            <div className="mt-6 flex justify-end">
-              <button
-                type="submit"
-                className="rounded border bg-green-700 px-3 py-2 text-sm text-white hover:bg-green-600 disabled:bg-gray-400"
-                disabled={saving || loading}
-              >
-                {saving ? "Saving..." : "Save Changes"}
-              </button>
+            <Button
+              appearance="primary"
+              type="submit"
+              className="mt-4 !bg-green-500 text-white hover:!bg-green-600"
+              disabled={loading || saving}
+            >
+              {saving ? "Updating..." : "Update Profile"}
+            </Button>
+          </form>
+        )}
+
+        <h3 className="mb-4 mt-8 text-lg font-bold text-inherit">
+          Change Password
+        </h3>
+        {loading ? (
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+            <div className="h-20 animate-pulse rounded-lg bg-gray-200"></div>
+            <div className="h-20 animate-pulse rounded-lg bg-gray-200"></div>
+          </div>
+        ) : (
+          <form onSubmit={handlePasswordSubmit}>
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+              <div>
+                <label className="mb-1 block text-sm text-gray-600 dark:text-gray-300">
+                  Current Password
+                </label>
+                <input
+                  className="ease w-full rounded-[9px] border border-gray-200 bg-transparent px-3 py-2 text-sm text-inherit shadow-sm transition duration-300 placeholder:text-slate-400 hover:border-slate-300 focus:border-gray-100 focus:shadow focus:outline-none dark:border-gray-700 dark:placeholder:text-gray-500"
+                  type="password"
+                  placeholder="Current Password"
+                  name="currentPassword"
+                  value={passwords.currentPassword}
+                  onChange={handlePasswordChange}
+                  disabled={loading || saving}
+                />
+              </div>
+              <div>
+                <label className="mb-1 block text-sm text-gray-600 dark:text-gray-300">
+                  New Password
+                </label>
+                <input
+                  className="ease w-full rounded-[9px] border border-gray-200 bg-transparent px-3 py-2 text-sm text-inherit shadow-sm transition duration-300 placeholder:text-slate-400 hover:border-slate-300 focus:border-gray-100 focus:shadow focus:outline-none dark:border-gray-700 dark:placeholder:text-gray-500"
+                  type="password"
+                  placeholder="New Password"
+                  name="newPassword"
+                  value={passwords.newPassword}
+                  onChange={handlePasswordChange}
+                  disabled={loading || saving}
+                />
+              </div>
             </div>
+
+            <Button
+              appearance="primary"
+              type="submit"
+              className="mt-4 !bg-green-500 text-white hover:!bg-green-600"
+              disabled={loading || saving}
+            >
+              {saving ? "Updating Password..." : "Update Password"}
+            </Button>
           </form>
         )}
       </div>
-
-      <h3 className="mb-4 mt-6 text-lg font-bold">Password</h3>
-      {loading ? (
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-          <div className="h-20 animate-pulse rounded-lg bg-gray-200"></div>
-          <div className="h-20 animate-pulse rounded-lg bg-gray-200"></div>
-        </div>
-      ) : (
-        <form onSubmit={handlePasswordSubmit}>
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-            <div>
-              <label className="mb-1 block text-sm text-gray-600">
-                Current Password
-              </label>
-              <input
-                className="ease w-full rounded-[9px] border border-gray-200 bg-transparent px-3 py-2 text-sm text-slate-700 shadow-sm transition duration-300 placeholder:text-slate-400 hover:border-slate-300 focus:border-gray-100 focus:shadow focus:outline-none"
-                type="password"
-                placeholder="Current Password"
-                name="currentPassword"
-                value={passwords.currentPassword}
-                onChange={handlePasswordChange}
-                disabled={loading || saving}
-              />
-            </div>
-            <div>
-              <label className="mb-1 block text-sm text-gray-600">
-                New Password
-              </label>
-              <input
-                className="ease w-full rounded-[9px] border border-gray-200 bg-transparent px-3 py-2 text-sm text-slate-700 shadow-sm transition duration-300 placeholder:text-slate-400 hover:border-slate-300 focus:border-gray-100 focus:shadow focus:outline-none"
-                type="password"
-                placeholder="New Password"
-                name="newPassword"
-                value={passwords.newPassword}
-                onChange={handlePasswordChange}
-                disabled={loading || saving}
-              />
-            </div>
-          </div>
-
-          <div className="mt-6 flex justify-end">
-            <button
-              type="submit"
-              className="rounded border bg-green-700 px-3 py-2 text-sm text-white hover:bg-green-600 disabled:bg-gray-400"
-              disabled={
-                saving ||
-                loading ||
-                !passwords.currentPassword ||
-                !passwords.newPassword
-              }
-            >
-              {saving ? "Updating..." : "Update Password"}
-            </button>
-          </div>
-        </form>
-      )}
     </>
   );
 }

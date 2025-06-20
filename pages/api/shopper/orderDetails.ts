@@ -37,9 +37,6 @@ interface OrderDetailsResponse {
     Order_Items_aggregate: {
       aggregate: {
         count: number;
-        sum: {
-          price: number;
-        };
       };
     };
   } | null;
@@ -87,9 +84,6 @@ const GET_ORDER_DETAILS = gql`
       Order_Items_aggregate {
         aggregate {
           count
-          sum {
-            price
-          }
         }
       }
     }
@@ -103,7 +97,8 @@ export default async function handler(
   // Handle only GET requests
   if (req.method !== "GET") {
     res.setHeader("Allow", ["GET"]);
-    return res.status(405).json({ error: "Method not allowed" });
+    res.status(405).json({ error: "Method not allowed" });
+    return;
   }
 
   try {
@@ -111,7 +106,8 @@ export default async function handler(
     const { id } = req.query;
 
     if (!id || typeof id !== "string") {
-      return res.status(400).json({ error: "Missing or invalid order ID" });
+      res.status(400).json({ error: "Missing or invalid order ID" });
+      return;
     }
 
     // Get user session for authentication
@@ -122,14 +118,14 @@ export default async function handler(
     )) as UserSession | null;
 
     if (!session || !session.user) {
-      return res.status(401).json({ error: "Unauthorized" });
+      res.status(401).json({ error: "Unauthorized" });
+      return;
     }
 
     // Fetch order details from Hasura
     if (!hasuraClient) {
-      return res
-        .status(500)
-        .json({ error: "Failed to initialize Hasura client" });
+      res.status(500).json({ error: "Failed to initialize Hasura client" });
+      return;
     }
 
     const data = await hasuraClient.request<OrderDetailsResponse>(
@@ -142,7 +138,8 @@ export default async function handler(
     const orderData = data.Orders_by_pk;
 
     if (!orderData) {
-      return res.status(404).json({ error: "Order not found" });
+      res.status(404).json({ error: "Order not found" });
+      return;
     }
 
     // Format the order data for the frontend
@@ -194,16 +191,12 @@ export default async function handler(
       estimatedEarnings: totalEarnings,
     };
 
-    return res.status(200).json({
+    res.status(200).json({
       success: true,
       order: formattedOrder,
     });
-  } catch (error: any) {
+  } catch (error) {
     console.error("Error fetching order details:", error);
-
-    return res.status(500).json({
-      success: false,
-      error: error.message || "Failed to fetch order details",
-    });
+    res.status(500).json({ error: "Failed to fetch order details" });
   }
 }

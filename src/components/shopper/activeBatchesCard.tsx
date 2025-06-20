@@ -5,23 +5,37 @@ import Link from "next/link";
 import { Button, Panel, Badge, Loader, toaster, Message } from "rsuite";
 import "rsuite/dist/rsuite.min.css";
 import { useAuth } from "../../context/AuthContext";
+import { useTheme } from "../../context/ThemeContext";
+import { logger } from "../../utils/logger";
 
 // Define interfaces for order data
 interface Order {
   id: string;
+  OrderID: string;
   status: string;
-  createdAt: string;
-  shopName: string;
-  shopAddress: string;
-  shopLat: number;
-  shopLng: number;
-  customerName: string;
-  customerAddress: string;
-  customerLat: number;
-  customerLng: number;
-  items: number;
+  createdAt?: string;
+  created_at?: string;
+  shopName?: string;
+  shopAddress?: string;
+  shopLat?: number;
+  shopLng?: number;
+  customerName?: string;
+  customerAddress?: string;
+  customerLat?: number;
+  customerLng?: number;
+  items?: number;
   total: number;
-  estimatedEarnings: string;
+  estimatedEarnings?: string;
+  shop?: {
+    id: string;
+    name: string;
+    address: string;
+    image: string;
+  } | null;
+  itemsCount?: number;
+  unitsCount?: number;
+  service_fee?: string;
+  delivery_fee?: string;
 }
 
 interface ActiveBatchesProps {
@@ -40,6 +54,7 @@ export default function ActiveBatches({
   const [error, setError] = useState<string | null>(initialError);
   const [fetchAttempted, setFetchAttempted] = useState(false);
   const fetchedRef = useRef(false);
+  const { theme } = useTheme();
 
   useEffect(() => {
     const checkIfMobile = () => {
@@ -87,26 +102,24 @@ export default function ActiveBatches({
 
         if (!response.ok) {
           const errorData = await response.json().catch(() => ({}));
-          console.error("API Error Response:", response.status, errorData);
-          throw new Error(
-            `Failed to fetch active batches (${response.status}): ${
-              errorData.error || response.statusText
-            }`
-          );
+          logger.error("API Error Response", "ActiveBatchesCard", {
+            status: response.status,
+            error: errorData,
+          });
+          throw new Error(errorData.error || "Failed to fetch active batches");
         }
 
         const data = await response.json();
 
-        // Handle the new response format
-        if (data.noOrdersFound) {
-          // This is not an error, just no batches found
+        if (!data.batches || data.batches.length === 0) {
+          logger.info("No active batches found", "ActiveBatchesCard", {
+            message: data.message,
+          });
           setActiveOrders([]);
-          console.log("No active batches found:", data.message);
-        } else {
-          // Normal array of orders
-          setActiveOrders(Array.isArray(data) ? data : []);
+          return;
         }
 
+        setActiveOrders(data.batches);
         setFetchAttempted(true);
       } catch (err) {
         // Don't set error if it was canceled
@@ -114,7 +127,7 @@ export default function ActiveBatches({
           return;
         }
 
-        console.error("Error fetching active batches:", err);
+        logger.error("Error fetching active batches", "ActiveBatchesCard", err);
         const errorMessage =
           err instanceof Error ? err.message : "An unknown error occurred";
         setError(errorMessage);
@@ -138,13 +151,29 @@ export default function ActiveBatches({
   }, [role, initialOrders.length]);
 
   return (
-    <div className={`min-h-screen bg-gray-50 ${isMobile ? "pb-16" : ""}`}>
+    <div
+      className={`min-h-screen ${
+        theme === "dark"
+          ? "bg-gray-900 text-gray-100"
+          : "bg-gray-50 text-gray-900"
+      } ${isMobile ? "pb-16" : ""}`}
+    >
       {/* Main Content */}
       <main className="max-w-1xl mx-auto p-4">
         {/* Page Title - Desktop Only */}
         <div className="mb-6 flex items-center justify-between">
-          <h1 className="text-2xl font-bold">Active Batches</h1>
-          <button className="rounded-full p-2 transition-colors hover:bg-gray-200">
+          <h1
+            className={`text-2xl font-bold ${
+              theme === "dark" ? "text-gray-100" : "text-gray-900"
+            }`}
+          >
+            Active Batches
+          </h1>
+          <button
+            className={`rounded-full p-2 transition-colors ${
+              theme === "dark" ? "hover:bg-gray-800" : "hover:bg-gray-200"
+            }`}
+          >
             <svg
               viewBox="0 0 24 24"
               fill="none"
@@ -159,7 +188,13 @@ export default function ActiveBatches({
         </div>
 
         {/* Description about what orders are shown */}
-        <div className="mb-4 rounded-md bg-blue-50 p-3 text-sm text-blue-700">
+        <div
+          className={`mb-4 rounded-md p-3 text-sm ${
+            theme === "dark"
+              ? "bg-blue-900/20 text-blue-300"
+              : "bg-blue-50 text-blue-700"
+          }`}
+        >
           <p>
             <span className="font-semibold">Note:</span> This page shows all
             your assigned orders except those with status &quot;PENDING&quot;,
@@ -171,18 +206,40 @@ export default function ActiveBatches({
 
         {/* Display a warning when user doesn't have the shopper role */}
         {!isLoading && role !== "shopper" && (
-          <div className="mb-6 rounded-lg border border-yellow-200 bg-yellow-50 p-4">
-            <h3 className="font-semibold text-yellow-800">
+          <div
+            className={`mb-6 rounded-lg border p-4 ${
+              theme === "dark"
+                ? "border-yellow-500/20 bg-yellow-900/20"
+                : "border-yellow-200 bg-yellow-50"
+            }`}
+          >
+            <h3
+              className={`font-semibold ${
+                theme === "dark" ? "text-yellow-300" : "text-yellow-800"
+              }`}
+            >
               Shopper Access Required
             </h3>
-            <p className="mt-1 text-yellow-700">
+            <p
+              className={`mt-1 ${
+                theme === "dark" ? "text-yellow-200" : "text-yellow-700"
+              }`}
+            >
               This page is only accessible to users with shopper privileges.
               Your current role is: <strong>{role}</strong>
             </p>
-            <p className="mt-2 text-yellow-700">
+            <p
+              className={`mt-2 ${
+                theme === "dark" ? "text-yellow-200" : "text-yellow-700"
+              }`}
+            >
               If you believe you should have shopper access, please try:
             </p>
-            <ul className="mt-1 list-inside list-disc text-yellow-700">
+            <ul
+              className={`mt-1 list-inside list-disc ${
+                theme === "dark" ? "text-yellow-200" : "text-yellow-700"
+              }`}
+            >
               <li>Logging out and logging back in</li>
               <li>
                 Checking with an administrator to verify your account type
@@ -192,12 +249,32 @@ export default function ActiveBatches({
         )}
 
         {error && (
-          <div className="mb-6 rounded-lg border border-red-200 bg-red-50 p-4">
-            <h3 className="font-semibold text-red-800">
+          <div
+            className={`mb-6 rounded-lg border p-4 ${
+              theme === "dark"
+                ? "border-red-500/20 bg-red-900/20"
+                : "border-red-200 bg-red-50"
+            }`}
+          >
+            <h3
+              className={`font-semibold ${
+                theme === "dark" ? "text-red-300" : "text-red-800"
+              }`}
+            >
               There was a problem loading your batches
             </h3>
-            <p className="mt-1 text-red-600">{error}</p>
-            <div className="mt-3 text-sm text-red-700">
+            <p
+              className={`mt-1 ${
+                theme === "dark" ? "text-red-200" : "text-red-600"
+              }`}
+            >
+              {error}
+            </p>
+            <div
+              className={`mt-3 text-sm ${
+                theme === "dark" ? "text-red-200" : "text-red-700"
+              }`}
+            >
               <p>This might be because:</p>
               <ul className="mt-1 list-inside list-disc">
                 <li>You are not logged in as a shopper</li>
@@ -208,7 +285,11 @@ export default function ActiveBatches({
             </div>
             <button
               onClick={() => window.location.reload()}
-              className="mt-3 rounded bg-red-600 px-4 py-1.5 text-sm font-medium text-white hover:bg-red-700"
+              className={`mt-3 rounded px-4 py-1.5 text-sm font-medium ${
+                theme === "dark"
+                  ? "bg-red-500 text-white hover:bg-red-600"
+                  : "bg-red-600 text-white hover:bg-red-700"
+              }`}
             >
               Try Again
             </button>
@@ -216,7 +297,11 @@ export default function ActiveBatches({
         )}
 
         {isLoading ? (
-          <div className="flex justify-center py-12">
+          <div
+            className={`flex justify-center py-12 ${
+              theme === "dark" ? "text-gray-300" : "text-gray-700"
+            }`}
+          >
             <Loader content="Loading orders..." />
           </div>
         ) : activeOrders.length > 0 ? (
@@ -226,20 +311,42 @@ export default function ActiveBatches({
             ))}
           </div>
         ) : (
-          <div className="rounded-lg border bg-white p-8 text-center">
-            <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-gray-100">
+          <div
+            className={`rounded-lg border p-8 text-center ${
+              theme === "dark"
+                ? "border-gray-700 bg-gray-800"
+                : "border-gray-200 bg-white"
+            }`}
+          >
+            <div
+              className={`mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full ${
+                theme === "dark" ? "bg-gray-700" : "bg-gray-100"
+              }`}
+            >
               <svg
                 viewBox="0 0 24 24"
                 fill="none"
                 stroke="currentColor"
                 strokeWidth="2"
-                className="h-8 w-8 text-gray-400"
+                className={`h-8 w-8 ${
+                  theme === "dark" ? "text-gray-400" : "text-gray-500"
+                }`}
               >
                 <path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
               </svg>
             </div>
-            <h3 className="mb-2 text-lg font-semibold">No Active Orders</h3>
-            <p className="mb-4 text-gray-600">
+            <h3
+              className={`mb-2 text-lg font-semibold ${
+                theme === "dark" ? "text-gray-100" : "text-gray-900"
+              }`}
+            >
+              No Active Orders
+            </h3>
+            <p
+              className={`mb-4 ${
+                theme === "dark" ? "text-gray-400" : "text-gray-600"
+              }`}
+            >
               {fetchAttempted || initialOrders !== undefined
                 ? "You don&apos;t have any active orders assigned to you at the moment. This includes orders in any state except &apos;PENDING&apos;, &apos;null&apos;, or &apos;delivered&apos;."
                 : "Unable to fetch your active orders. Please try again."}
@@ -253,7 +360,11 @@ export default function ActiveBatches({
               {!fetchAttempted && !initialOrders.length && (
                 <button
                   onClick={() => window.location.reload()}
-                  className="rounded-md border border-gray-300 px-4 py-2 font-medium text-gray-700 transition-colors hover:bg-gray-100"
+                  className={`rounded-md border px-4 py-2 font-medium transition-colors ${
+                    theme === "dark"
+                      ? "border-gray-600 text-gray-300 hover:bg-gray-700"
+                      : "border-gray-300 text-gray-700 hover:bg-gray-100"
+                  }`}
                 >
                   Retry Loading
                 </button>
@@ -266,28 +377,64 @@ export default function ActiveBatches({
   );
 }
 
-function ActiveOrderCard({ order }: { order: any }) {
+function ActiveOrderCard({ order }: { order: Order }) {
+  const { theme } = useTheme();
+
   const getStatusBadge = (status: string) => {
     switch (status) {
       case "accepted":
         return (
           <Badge
             content="Accepted"
-            className="rounded bg-blue-100 px-2 py-1 text-xs font-medium text-blue-800"
+            className={`rounded bg-blue-100 px-2 py-1 text-xs font-medium ${
+              theme === "dark"
+                ? "bg-blue-900/20 text-blue-300"
+                : "text-blue-800"
+            }`}
           />
         );
       case "picked":
         return (
           <Badge
             content="Picked Up"
-            className="rounded bg-orange-100 px-2 py-1 text-xs font-medium text-orange-800"
+            className={`rounded bg-orange-100 px-2 py-1 text-xs font-medium ${
+              theme === "dark"
+                ? "bg-orange-900/20 text-orange-300"
+                : "text-orange-800"
+            }`}
+          />
+        );
+      case "shopping":
+        return (
+          <Badge
+            content="Shopping"
+            className={`rounded bg-yellow-100 px-2 py-1 text-xs font-medium ${
+              theme === "dark"
+                ? "bg-yellow-900/20 text-yellow-300"
+                : "text-yellow-800"
+            }`}
+          />
+        );
+      case "on_the_way":
+        return (
+          <Badge
+            content="On The Way"
+            className={`rounded bg-purple-100 px-2 py-1 text-xs font-medium ${
+              theme === "dark"
+                ? "bg-purple-900/20 text-purple-300"
+                : "text-purple-800"
+            }`}
           />
         );
       case "at_customer":
         return (
           <Badge
             content="At Customer"
-            className="rounded bg-purple-100 px-2 py-1 text-xs font-medium text-purple-800"
+            className={`rounded bg-indigo-100 px-2 py-1 text-xs font-medium ${
+              theme === "dark"
+                ? "bg-indigo-900/20 text-indigo-300"
+                : "text-indigo-800"
+            }`}
           />
         );
       default:
@@ -297,7 +444,7 @@ function ActiveOrderCard({ order }: { order: any }) {
 
   const getNextActionButton = (status: string) => {
     switch (status) {
-      case "accepted":
+      case "ACCEPTED":
         return (
           <Link href={`/Plasa/active-batches/batch/${order.id}`}>
             <button className="rounded-md bg-[#125C13] px-4 py-2 font-medium text-white transition-colors hover:bg-[#0A400B]">
@@ -335,84 +482,172 @@ function ActiveOrderCard({ order }: { order: any }) {
   };
 
   return (
-    <Panel shaded bordered bodyFill className="overflow-hidden">
-      <div className="p-4">
-        <div className="mb-3 flex items-start justify-between">
-          <div>
-            <div className="flex items-center">
-              <h3 className="text-lg font-bold">{order.id}</h3>
-              {getStatusBadge(order.status)}
-            </div>
-            <p className="mt-1 text-sm text-gray-500">{order.createdAt}</p>
-          </div>
-          <div className="text-right">
-            <p className="font-bold text-green-600">
-              {order.estimatedEarnings}
-            </p>
-            <p className="text-xs text-gray-500">{order.items} items</p>
-          </div>
-        </div>
-
-        <div className="mb-3 flex items-center">
-          <div className="mr-2 flex h-8 w-8 items-center justify-center rounded-full bg-green-100">
-            <svg
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              className="h-4 w-4 text-green-600"
-            >
-              <path d="M3 3h18v18H3zM16 8h.01M8 16h.01M16 16h.01" />
-            </svg>
-          </div>
-          <div>
-            <p className="font-medium">{order.shopName}</p>
-            <p className="text-xs text-gray-500">{order.shopAddress}</p>
-          </div>
-        </div>
-
-        <div className="mb-4 flex items-center">
-          <div className="mr-2 flex h-8 w-8 items-center justify-center rounded-full bg-blue-100">
-            <svg
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              className="h-4 w-4 text-blue-600"
-            >
-              <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z" />
-              <circle cx="12" cy="10" r="3" />
-            </svg>
-          </div>
-          <div>
-            <p className="font-medium">{order.customerName}</p>
-            <p className="text-xs text-gray-500">{order.customerAddress}</p>
-          </div>
-        </div>
-
-        <div className="flex items-center justify-between">
-          <a
-            href={`https://maps.google.com/?q=${order.customerLat},${order.customerLng}`}
-            target="_blank"
-            rel="noopener noreferrer"
+    <div
+      className={`mb-4 rounded-lg border p-4 shadow-sm transition-colors duration-200 ${
+        theme === "dark"
+          ? "border-gray-700 bg-gray-800 text-gray-100"
+          : "border-gray-200 bg-white text-gray-900"
+      }`}
+    >
+      <div className="flex items-center justify-between">
+        <div className="flex items-center space-x-3">
+          <div
+            className={`rounded-full p-2 ${
+              theme === "dark" ? "bg-blue-900/20" : "bg-blue-50"
+            }`}
           >
-            <Button appearance="ghost" className="flex items-center">
-              <svg
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                className="mr-1 h-4 w-4"
-              >
-                <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z" />
-                <circle cx="12" cy="10" r="3" />
-              </svg>
-              Directions
-            </Button>
-          </a>
-          {getNextActionButton(order.status)}
+            <svg
+              className={`h-6 w-6 ${
+                theme === "dark" ? "text-blue-400" : "text-blue-500"
+              }`}
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"
+              />
+            </svg>
+          </div>
+          <div>
+            <h3
+              className={`font-medium ${
+                theme === "dark" ? "text-gray-100" : "text-gray-900"
+              }`}
+            >
+              Batch #{order.id.slice(0, 6).toUpperCase()}
+            </h3>
+            <p
+              className={`text-sm ${
+                theme === "dark" ? "text-gray-400" : "text-gray-500"
+              }`}
+            >
+              {order.items} items • ${order.estimatedEarnings}
+            </p>
+          </div>
+        </div>
+        <div className="text-right">
+          <p
+            className={`text-lg font-semibold ${
+              theme === "dark" ? "text-green-400" : "text-green-600"
+            }`}
+          >
+            ${order.estimatedEarnings}
+          </p>
+          <p
+            className={`text-sm ${
+              theme === "dark" ? "text-gray-400" : "text-gray-500"
+            }`}
+          >
+            Estimated earnings
+          </p>
         </div>
       </div>
-    </Panel>
+
+      <div className="mt-4 space-y-2">
+        <div className={`flex items-center justify-between rounded-lg p-3`}>
+          <div className="flex items-center space-x-3">
+            <div
+              className={`rounded-full p-2 ${
+                theme === "dark" ? "bg-gray-600" : "bg-white"
+              }`}
+            >
+              <svg
+                className={`h-5 w-5 ${
+                  theme === "dark" ? "text-gray-300" : "text-gray-500"
+                }`}
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"
+                />
+              </svg>
+            </div>
+            <div>
+              <p
+                className={`text-sm font-medium ${
+                  theme === "dark" ? "text-gray-100" : "text-gray-900"
+                }`}
+              >
+                Pickup Location
+              </p>
+              <p
+                className={`text-sm ${
+                  theme === "dark" ? "text-gray-400" : "text-gray-500"
+                }`}
+              >
+                {order.shopName}, {order.shopAddress}
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <div className={`flex items-center justify-between rounded-lg p-3`}>
+          <div className="flex items-center space-x-3">
+            <div
+              className={`rounded-full p-2 ${
+                theme === "dark" ? "bg-gray-600" : "bg-white"
+              }`}
+            >
+              <svg
+                className={`h-5 w-5 ${
+                  theme === "dark" ? "text-gray-300" : "text-gray-500"
+                }`}
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"
+                />
+              </svg>
+            </div>
+            <div>
+              <p className={`text-sm `}>Delivery Location</p>
+              <p
+                className={`text-sm ${
+                  theme === "dark" ? "text-gray-400" : "text-gray-500"
+                }`}
+              >
+                {order.customerName}, {order.customerAddress}
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div className="flex items-center justify-between">
+        <a
+          href={`https://maps.google.com/?q=${order.customerLat},${order.customerLng}`}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="flex items-center px-4 py-2 text-blue-500 hover:text-blue-200"
+        >
+          <svg
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            className="mr-1 h-4 w-4"
+          >
+            <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z" />
+            <circle cx="12" cy="10" r="3" />
+          </svg>
+          Directions
+        </a>
+        {getNextActionButton(order.status)}
+      </div>
+    </div>
   );
 }

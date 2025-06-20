@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { Button, Loader, Pagination } from "rsuite";
+import { useTheme } from "../../../context/ThemeContext";
 
 interface Order {
   id: string;
@@ -33,6 +34,7 @@ const RecentOrdersList: React.FC<RecentOrdersListProps> = ({
   currentPage: externalCurrentPage,
   serverPagination = false,
 }) => {
+  const { theme } = useTheme();
   // Local pagination state (used when serverPagination is false)
   const [localCurrentPage, setLocalCurrentPage] = useState(1);
 
@@ -70,11 +72,25 @@ const RecentOrdersList: React.FC<RecentOrdersListProps> = ({
     : orders.slice((currentPage - 1) * pageSize, currentPage * pageSize);
 
   return (
-    <div className="mt-8 border-t pt-4">
+    <div
+      className={`mt-8 border-t pt-4 ${
+        theme === "dark" ? "border-gray-700" : "border-gray-200"
+      }`}
+    >
       <div className="mb-4 flex items-center justify-between">
-        <h3 className="font-medium">Recent Orders</h3>
+        <h3
+          className={`font-medium ${
+            theme === "dark" ? "text-white" : "text-gray-900"
+          }`}
+        >
+          Recent Orders
+        </h3>
         {!isLoading && orders.length > 0 && (
-          <span className="text-sm text-gray-500">
+          <span
+            className={`text-sm ${
+              theme === "dark" ? "text-gray-400" : "text-gray-500"
+            }`}
+          >
             {serverPagination
               ? `Showing ${(currentPage - 1) * pageSize + 1}-${Math.min(
                   currentPage * pageSize,
@@ -93,8 +109,14 @@ const RecentOrdersList: React.FC<RecentOrdersListProps> = ({
           <Loader size="md" content="Loading recent orders..." />
         </div>
       ) : orders.length === 0 ? (
-        <div className="rounded-lg bg-gray-50 p-6 text-center">
-          <p className="text-gray-500">No recent orders found</p>
+        <div
+          className={`rounded-lg p-6 text-center ${
+            theme === "dark" ? "bg-gray-800" : "bg-gray-50"
+          }`}
+        >
+          <p className={theme === "dark" ? "text-gray-400" : "text-gray-500"}>
+            No recent orders found
+          </p>
         </div>
       ) : (
         <div className="space-y-4">
@@ -112,16 +134,32 @@ const RecentOrdersList: React.FC<RecentOrdersListProps> = ({
             return (
               <div
                 key={item.id || index}
-                className="flex items-center justify-between rounded-lg bg-gray-50 p-3"
+                className={`flex items-center justify-between rounded-lg p-3 ${
+                  theme === "dark"
+                    ? "border border-gray-700 bg-gray-800"
+                    : "bg-gray-50"
+                }`}
               >
                 <div>
-                  <div className="font-medium">
+                  <div
+                    className={`font-medium ${
+                      theme === "dark" ? "text-white" : "text-gray-900"
+                    }`}
+                  >
                     {item.store} ({item.items} items)
                   </div>
-                  <div className="text-sm text-gray-500">
+                  <div
+                    className={`text-sm ${
+                      theme === "dark" ? "text-gray-400" : "text-gray-500"
+                    }`}
+                  >
                     {item.date}
                     {item.orderNumber && (
-                      <span className="ml-2 text-xs text-gray-400">
+                      <span
+                        className={`ml-2 text-xs ${
+                          theme === "dark" ? "text-gray-500" : "text-gray-400"
+                        }`}
+                      >
                         Order #{item.orderNumber}
                       </span>
                     )}
@@ -133,7 +171,11 @@ const RecentOrdersList: React.FC<RecentOrdersListProps> = ({
                   )}
                 </div>
                 <div className="text-right">
-                  <div className="font-medium">
+                  <div
+                    className={`font-medium ${
+                      theme === "dark" ? "text-white" : "text-gray-900"
+                    }`}
+                  >
                     {formatCurrency(serviceFee)}
                   </div>
                   <div className="text-sm text-blue-600">

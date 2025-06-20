@@ -129,6 +129,17 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
       wallet = walletData.wallet;
     }
 
+    // Fetch payment cards
+    const paymentCardsRes = await fetch(
+      `${process.env.NEXT_PUBLIC_API_URL || ""}/api/queries/payment-cards`,
+      {
+        headers: {
+          cookie: req.headers.cookie || "",
+        },
+      }
+    );
+    const paymentCardsData = await paymentCardsRes.json();
+
     return {
       props: {
         initialData: {
@@ -136,7 +147,7 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
           balances: {
             refunds: refundsData.refunds || [],
             wallet,
-            paymentCards: [],
+            paymentCards: paymentCardsData.paymentCards || [],
           },
         },
       },
@@ -245,12 +256,20 @@ export default function UserPaymentCards({
           "Content-Type": "application/json",
         },
       }).then((res) => res.json()),
+
+      // Fetch payment cards
+      fetch("/api/queries/payment-cards", {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+        },
+      }).then((res) => res.json()),
     ])
-      .then(([refundsData, shopperData]) => {
+      .then(([refundsData, shopperData, paymentCardsData]) => {
         const newBalances = {
           refunds: refundsData.refunds || [],
           wallet: null,
-          paymentCards: [],
+          paymentCards: paymentCardsData.paymentCards || [],
         };
 
         // If user is a shopper, fetch their wallet balance
@@ -413,10 +432,10 @@ export default function UserPaymentCards({
                 strokeLinecap="round"
                 strokeLinejoin="round"
                 strokeWidth={2}
-                d="M12 4v16m8-8H4"
+                d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"
               />
             </svg>
-            Add New Card
+            Update Card
           </button>
         )}
       </div>
@@ -551,7 +570,7 @@ export default function UserPaymentCards({
         {balances.paymentCards.map((card) => (
           <div
             key={card.id}
-            className="relative overflow-hidden rounded-xl bg-gradient-to-r from-blue-500 to-blue-700 p-5 text-white shadow-lg transition-shadow duration-200 hover:shadow-xl"
+            className="relative overflow-hidden rounded-xl bg-gradient-to-r from-green-500 to-green-700 p-5 text-white shadow-lg transition-shadow duration-200 hover:shadow-xl"
           >
             <div className="absolute right-0 top-0 -mr-10 -mt-10 h-20 w-20 rounded-full bg-white opacity-5"></div>
             <div className="absolute bottom-0 left-0 -mb-8 -ml-8 h-16 w-16 rounded-full bg-white opacity-5"></div>
@@ -568,7 +587,7 @@ export default function UserPaymentCards({
                   className="h-10 w-10 rounded-full border-2 border-white object-cover"
                 />
               ) : (
-                <div className="flex h-10 w-10 items-center justify-center rounded-full bg-blue-400">
+                <div className="flex h-10 w-10 items-center justify-center rounded-full bg-green-400">
                   <svg
                     className="h-6 w-6 text-white"
                     fill="none"
@@ -701,12 +720,13 @@ export default function UserPaymentCards({
         )}
       </div>
 
-      {/* Add Card Modal */}
+      {/* Add/Update Card Modal */}
       {showAddCard && userId && (
         <AddPaymentCard
           userId={userId}
           onClose={() => setShowAddCard(false)}
           onSuccess={handleAddCardSuccess}
+          existingCard={balances.paymentCards[0]}
         />
       )}
     </>

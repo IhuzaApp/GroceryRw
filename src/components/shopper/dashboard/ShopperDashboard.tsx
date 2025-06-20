@@ -1,11 +1,13 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback, useMemo } from "react";
 import ShopperLayout from "@components/shopper/ShopperLayout";
 import OrderCard from "./OrderCard";
 import dynamic from "next/dynamic";
 import { Button, Loader, Placeholder, Panel, Grid, Row, Col } from "rsuite";
 import "rsuite/dist/rsuite.min.css";
+import { useTheme } from "../../../context/ThemeContext";
+import { useRouter } from "next/router";
 
 // Dynamically load MapSection only on client (disable SSR)
 const MapSection = dynamic(() => import("./MapSection"), {
@@ -72,6 +74,8 @@ interface FormattedOrder {
 }
 
 export default function ShopperDashboard() {
+  const router = useRouter();
+  const { theme } = useTheme();
   const [isLoading, setIsLoading] = useState(true);
   const [isInitializing, setIsInitializing] = useState(true);
   const [availableOrders, setAvailableOrders] = useState<any[]>([]);
@@ -90,11 +94,13 @@ export default function ShopperDashboard() {
   const [sortedOrders, setSortedOrders] = useState<any[]>([]);
   const [lastRefreshed, setLastRefreshed] = useState<Date>(new Date());
   const [isAutoRefreshing, setIsAutoRefreshing] = useState<boolean>(true);
+  const [dailyEarnings, setDailyEarnings] = useState(0);
+  const [completedOrdersCount, setCompletedOrdersCount] = useState(0);
 
   const toggleExpanded = () => setIsExpanded((prev) => !prev);
 
-  // Function to check if user has active location cookies
-  const checkLocationCookies = () => {
+  // Memoize the checkLocationCookies function
+  const checkLocationCookies = useCallback(() => {
     const cookies = document.cookie
       .split("; ")
       .reduce((acc: Record<string, string>, cur) => {
@@ -103,268 +109,208 @@ export default function ShopperDashboard() {
         return acc;
       }, {} as Record<string, string>);
 
-    const hasLocationCookies =
-      cookies["user_latitude"] && cookies["user_longitude"];
-    return hasLocationCookies;
-  };
+    return Boolean(cookies["user_latitude"] && cookies["user_longitude"]);
+  }, []);
 
-  // Check and update online status based on cookies
-  const updateOnlineStatus = () => {
+  // Memoize the updateOnlineStatus function
+  const updateOnlineStatus = useCallback(() => {
     const hasLocationCookies = checkLocationCookies();
-    setIsOnline(Boolean(hasLocationCookies));
-  };
+    setIsOnline(hasLocationCookies);
+  }, [checkLocationCookies]);
 
-  // Enhanced loadOrders function with better debugging and handling for all PENDING orders
-  const loadOrders = () => {
-    if (!currentLocation) {
-      console.log("Cannot load orders: No current location available");
-      return;
-    }
-
-    if (!isOnline) {
-      console.log("Cannot load orders: User is offline");
+  // Memoize the loadOrders function
+  const loadOrders = useCallback(async () => {
+    if (!currentLocation || !isOnline) {
+      console.log(
+        `Cannot load orders: ${
+          !currentLocation ? "No location" : "User offline"
+        }`
+      );
       setAvailableOrders([]);
       setSortedOrders([]);
       return;
     }
 
     setIsLoading(true);
-    console.log("Fetching available orders...");
 
-    // Convert location strings to numbers if they're strings
-    const safeLocation = {
-      lat:
-        typeof currentLocation.lat === "string"
-          ? parseFloat(currentLocation.lat)
-          : currentLocation.lat,
-      lng:
-        typeof currentLocation.lng === "string"
-          ? parseFloat(currentLocation.lng)
-          : currentLocation.lng,
-    };
+    try {
+      const safeLocation = {
+        lat:
+          typeof currentLocation.lat === "string"
+            ? parseFloat(currentLocation.lat)
+            : currentLocation.lat,
+        lng:
+          typeof currentLocation.lng === "string"
+            ? parseFloat(currentLocation.lng)
+            : currentLocation.lng,
+      };
 
-    // Add timestamp to prevent caching
-    const timestamp = new Date().getTime();
-    // Include shopper's location and set max travel time to 15 minutes
-    const url = `/api/shopper/availableOrders?_=${timestamp}&latitude=${safeLocation.lat}&longitude=${safeLocation.lng}&maxTravelTime=15`;
+      const timestamp = new Date().getTime();
+      const url = `/api/shopper/availableOrders?_=${timestamp}&latitude=${safeLocation.lat}&longitude=${safeLocation.lng}&maxTravelTime=15`;
 
-    console.log(`Requesting orders with URL: ${url}`);
+      const response = await fetch(url);
+      if (!response.ok) {
+        throw new Error(`HTTP error! Status: ${response.status}`);
+      }
 
-    fetch(url)
-      .then((res) => {
-        if (!res.ok) {
-          throw new Error(`HTTP error! Status: ${res.status}`);
-        }
-        return res.json();
-      })
-      .then((data) => {
-        console.log(
-          `Received ${data.length} orders from API within 15 min travel time`
-        );
+      const data = await response.json();
 
-        // Debug: Log all received orders first
-        data.forEach((order: any, idx: number) => {
-          console.log(`Order ${idx + 1}/${data.length}:`, {
-            id: order.id,
-            created: new Date(order.createdAt).toLocaleString(),
-            status: order.status || "PENDING",
-            shop: order.shopName,
-            shopCoords: `${order.shopLatitude}, ${order.shopLongitude}`,
-            customerCoords: `${order.customerLatitude}, ${order.customerLongitude}`,
-            items: order.itemsCount,
-            travelTime: `${order.travelTimeMinutes} min`,
-            distance: `${order.distance} km`,
-          });
-        });
+      const formattedOrders = data
+        .map((order: any) => {
+          try {
+            const createdAtDate = new Date(order.createdAt);
+            const minutesAgo = Math.floor(
+              (Date.now() - createdAtDate.getTime()) / 60000
+            );
 
-        // Format orders for the OrderCard component - use formatted data from API
-        const formattedOrders = data
-          .map((order: any) => {
-            try {
-              // Calculate createdAt as Date for sorting
-              const createdAtDate = new Date(order.createdAt);
-              const minutesAgo = Math.floor(
-                (Date.now() - createdAtDate.getTime()) / 60000
-              );
+            return {
+              id: order.id,
+              shopName: order.shopName || "Unknown Shop",
+              shopAddress: order.shopAddress || "No address available",
+              customerAddress: order.customerAddress || "No address available",
+              distance: `${order.distance} km`,
+              items: order.itemsCount || 0,
+              total: `$${(order.earnings || 0).toFixed(2)}`,
+              estimatedEarnings: `$${(order.earnings || 0).toFixed(2)}`,
+              createdAt: relativeTime(order.createdAt),
+              status: order.status || "PENDING",
+              rawDistance: order.distance || 0,
+              rawEarnings: order.earnings || 0,
+              rawCreatedAt: createdAtDate.getTime(),
+              minutesAgo: minutesAgo,
+              priorityLevel: order.priorityLevel || 1,
+              shopLatitude: order.shopLatitude,
+              shopLongitude: order.shopLongitude,
+              customerLatitude: order.customerLatitude,
+              customerLongitude: order.customerLongitude,
+              travelTimeMinutes: order.travelTimeMinutes,
+            };
+          } catch (err) {
+            console.error(`Error formatting order ${order.id}:`, err);
+            return null;
+          }
+        })
+        .filter(Boolean);
 
-              // Format timestamps
-              const createdTimeFormatted = relativeTime(order.createdAt);
+      setAvailableOrders(formattedOrders);
+      const sorted = sortOrders(formattedOrders, sortBy);
+      setSortedOrders(sorted);
+      setLastRefreshed(new Date());
+    } catch (err) {
+      console.error("Error fetching available orders:", err);
+    } finally {
+      setIsLoading(false);
+    }
+  }, [currentLocation, isOnline, sortBy]);
 
-              // Note - now using API-calculated distance in km
-              const distanceStr = `${order.distance} km`;
+  // Memoize the sortOrders function
+  const sortOrders = useCallback(
+    (
+      orders: FormattedOrder[],
+      criteria: "newest" | "earnings" | "distance" | "priority"
+    ) => {
+      let sorted = [...orders];
 
-              return {
-                id: order.id,
-                shopName: order.shopName || "Unknown Shop",
-                shopAddress: order.shopAddress || "No address available",
-                customerAddress:
-                  order.customerAddress || "No address available",
-                distance: distanceStr,
-                items: order.itemsCount || 0,
-                total: `$${(order.earnings || 0).toFixed(2)}`,
-                estimatedEarnings: `$${(order.earnings || 0).toFixed(2)}`,
-                createdAt: createdTimeFormatted,
-                status: order.status || "PENDING",
-                // Add additional properties for sorting and filtering
-                rawDistance: order.distance || 0,
-                rawEarnings: order.earnings || 0,
-                rawCreatedAt: createdAtDate.getTime(),
-                minutesAgo: minutesAgo,
-                priorityLevel: order.priorityLevel || 1,
-                // Keep original coordinates for map rendering
-                shopLatitude: order.shopLatitude,
-                shopLongitude: order.shopLongitude,
-                customerLatitude: order.customerLatitude,
-                customerLongitude: order.customerLongitude,
-                // Add travel time
-                travelTimeMinutes: order.travelTimeMinutes,
-              };
-            } catch (err) {
-              console.error(`Error formatting order ${order.id}:`, err);
-              return null; // Skip orders with formatting errors
+      switch (criteria) {
+        case "newest":
+          sorted.sort((a, b) => b.rawCreatedAt - a.rawCreatedAt);
+          break;
+        case "earnings":
+          sorted.sort((a, b) => b.rawEarnings - a.rawEarnings);
+          break;
+        case "distance":
+          sorted.sort((a, b) => a.rawDistance - b.rawDistance);
+          break;
+        case "priority":
+          sorted.sort((a, b) => {
+            if (a.priorityLevel !== b.priorityLevel) {
+              return b.priorityLevel - a.priorityLevel;
             }
-          })
-          .filter(Boolean); // Remove any null entries from formatting errors
+            return b.minutesAgo - a.minutesAgo;
+          });
+          break;
+      }
 
-        console.log(`Formatted ${formattedOrders.length} orders for display`);
+      if (!showHistorical) {
+        sorted = sorted.filter((order) => order.minutesAgo >= 15);
+      }
 
-        // Set available orders
-        setAvailableOrders(formattedOrders);
+      return sorted;
+    },
+    [showHistorical]
+  );
 
-        // Apply sort
-        const sorted = sortOrders(formattedOrders, sortBy);
-        setSortedOrders(sorted);
-
-        setLastRefreshed(new Date());
-        setIsLoading(false);
-      })
-      .catch((err) => {
-        console.error("Error fetching available orders:", err);
-        setIsLoading(false);
-      });
-  };
-
-  // Function to sort orders based on the selected criteria
-  const sortOrders = (
-    orders: FormattedOrder[],
-    criteria: "newest" | "earnings" | "distance" | "priority"
-  ) => {
-    let sorted = [...orders];
-
-    // Apply sorting based on criteria
-    if (criteria === "newest") {
-      sorted.sort((a, b) => b.rawCreatedAt - a.rawCreatedAt);
-    } else if (criteria === "earnings") {
-      sorted.sort((a, b) => b.rawEarnings - a.rawEarnings);
-    } else if (criteria === "distance") {
-      sorted.sort((a, b) => a.rawDistance - b.rawDistance);
-    } else if (criteria === "priority") {
-      // First by priority level (descending), then by age within each priority level
-      sorted.sort((a, b) => {
-        if (a.priorityLevel !== b.priorityLevel) {
-          return b.priorityLevel - a.priorityLevel; // Higher priority first
-        }
-        return b.minutesAgo - a.minutesAgo; // Older orders first within same priority
-      });
-    }
-
-    // Additionally, apply filtering - changed from 10 to 15 minutes
-    if (!showHistorical) {
-      // Show only orders pending for at least 15 minutes
-      sorted = sorted.filter((order) => order.minutesAgo >= 15);
-    }
-
-    return sorted;
-  };
-
-  // Handle sort change
-  const handleSortChange = (
-    newSortBy: "newest" | "earnings" | "distance" | "priority"
-  ) => {
-    setSortBy(newSortBy);
-    sortOrders(availableOrders, newSortBy);
-  };
+  // Handle sort change with useCallback
+  const handleSortChange = useCallback(
+    (newSortBy: "newest" | "earnings" | "distance" | "priority") => {
+      setSortBy(newSortBy);
+      const sorted = sortOrders(availableOrders, newSortBy);
+      setSortedOrders(sorted);
+    },
+    [availableOrders, sortOrders]
+  );
 
   // Handle toggle for historical vs. current batches
-  const toggleHistorical = () => {
-    setShowHistorical(!showHistorical);
-    // Reload orders when this changes to get the correct time window
-    loadOrders();
-  };
+  const toggleHistorical = useCallback(() => {
+    setShowHistorical((prev) => !prev);
+  }, []);
 
   // Add automatic refresh with polling
   useEffect(() => {
-    // Set up polling for automatic refresh if enabled
     let intervalId: NodeJS.Timeout | null = null;
 
     if (isAutoRefreshing && currentLocation && isOnline) {
-      console.log("Setting up auto-refresh for orders (30s interval)");
-      intervalId = setInterval(() => {
-        console.log("Auto-refreshing orders...");
-        loadOrders();
-      }, 30000); // Refresh every 30 seconds
+      intervalId = setInterval(loadOrders, 30000);
     }
 
-    // Cleanup function to clear interval when component unmounts
     return () => {
       if (intervalId) {
-        console.log("Clearing auto-refresh interval");
         clearInterval(intervalId);
       }
     };
-  }, [currentLocation, isAutoRefreshing, showHistorical, sortBy, isOnline]);
+  }, [currentLocation, isAutoRefreshing, isOnline, loadOrders]);
 
   // Add toggle for auto-refresh
-  const toggleAutoRefresh = () => {
+  const toggleAutoRefresh = useCallback(() => {
     setIsAutoRefreshing((prev) => !prev);
-  };
+  }, []);
 
+  // Effect to handle mobile detection
   useEffect(() => {
     const checkMobile = () => setIsMobile(window.innerWidth < 768);
     checkMobile();
     window.addEventListener("resize", checkMobile);
-
     return () => window.removeEventListener("resize", checkMobile);
   }, []);
 
-  // Simulate map loading
+  // Effect to handle map loading simulation
   useEffect(() => {
     const timer = setTimeout(() => setMapLoaded(true), 1500);
     return () => clearTimeout(timer);
   }, []);
 
-  // Listen for cookie changes and online status updates
+  // Effect to handle cookie changes and online status
   useEffect(() => {
-    // Initial check
     updateOnlineStatus();
-
-    // Create a custom event listener to detect when toggling online/offline
-    const handleCustomEvent = () => {
-      // Give the cookies time to be set or cleared
-      setTimeout(updateOnlineStatus, 300);
-    };
-
+    const handleCustomEvent = () => setTimeout(updateOnlineStatus, 300);
     window.addEventListener("toggleGoLive", handleCustomEvent);
-
-    // Also check periodically for any cookie changes
     const intervalId = setInterval(updateOnlineStatus, 5000);
 
     return () => {
       window.removeEventListener("toggleGoLive", handleCustomEvent);
       clearInterval(intervalId);
     };
-  }, []);
+  }, [updateOnlineStatus]);
 
   // Effect to clear orders when user goes offline
   useEffect(() => {
     if (!isOnline) {
-      console.log("User went offline, clearing order data");
       setAvailableOrders([]);
       setSortedOrders([]);
     }
   }, [isOnline]);
 
-  // Read last known location from cookies or get fresh position
+  // Effect to handle location
   useEffect(() => {
     const cookies = document.cookie
       .split("; ")
@@ -373,6 +319,7 @@ export default function ShopperDashboard() {
         acc[k] = v;
         return acc;
       }, {} as Record<string, string>);
+
     if (cookies["user_latitude"] && cookies["user_longitude"]) {
       setCurrentLocation({
         lat: parseFloat(cookies["user_latitude"]),
@@ -392,29 +339,42 @@ export default function ShopperDashboard() {
     }
   }, []);
 
-  // Fetch available orders based on location
+  // Effect to handle initial data loading
   useEffect(() => {
-    if (currentLocation && isOnline) {
-      loadOrders();
+    if (!isInitializing) {
+      Promise.all([
+        loadOrders(),
+        fetch("/api/shopper/todayCompletedEarnings")
+          .then((res) => res.json())
+          .then((data) => {
+            if (data?.success && data?.data) {
+              setDailyEarnings(data.data.totalEarnings);
+              setCompletedOrdersCount(data.data.orderCount);
+            }
+          })
+          .catch((error) => {
+            console.error("Error fetching daily earnings:", error);
+            setDailyEarnings(0);
+            setCompletedOrdersCount(0);
+          }),
+      ]).catch((error) => {
+        console.error("Error loading initial data:", error);
+      });
     }
-  }, [currentLocation, showHistorical, isOnline]);
+  }, [isInitializing, loadOrders]);
 
-  // Track initialization state
+  // Effect to handle initialization state
   useEffect(() => {
-    // Consider dashboard initialized when location is set and map is loaded
-    if (currentLocation && mapLoaded) {
-      // Add slight delay to ensure smooth transition
-      const timer = setTimeout(() => setIsInitializing(false), 500);
-      return () => clearTimeout(timer);
+    if (currentLocation || mapLoaded) {
+      setIsInitializing(false);
     }
   }, [currentLocation, mapLoaded]);
 
-  // Add this useEffect to update sorting when sortBy changes
-  useEffect(() => {
-    if (availableOrders.length > 0) {
-      sortOrders(availableOrders, sortBy);
-    }
-  }, [sortBy, availableOrders]);
+  // Handle new order notification
+  const handleNewOrder = useCallback(() => {
+    loadOrders();
+    setLastRefreshed(new Date());
+  }, [loadOrders]);
 
   // Initializing loading screen
   if (isInitializing) {
@@ -514,10 +474,11 @@ export default function ShopperDashboard() {
             mapLoaded={mapLoaded}
             availableOrders={availableOrders}
             isInitializing={isInitializing}
+            isExpanded={isMobile && isExpanded}
           />
         </div>
 
-        {/* Desktop Title and Sort */}
+        {/* Desktop Title and Sort - Hidden on Mobile */}
         {!isMobile && (
           <div className="px-2 pb-2 md:block">
             <div className="flex items-center justify-between px-4 pt-4">
@@ -555,14 +516,19 @@ export default function ShopperDashboard() {
                     : "Showing Recent (15+ min)"}
                 </button>
                 <button
+                  className="rounded bg-green-500 px-3 py-1.5 text-sm text-white hover:bg-green-600"
                   onClick={loadOrders}
-                  className="rounded-md bg-green-600 px-3 py-1 text-sm font-medium text-white hover:bg-green-700"
                 >
                   Refresh
                 </button>
               </div>
             </div>
+          </div>
+        )}
 
+        {/* Orders List Section - Hidden on Mobile */}
+        {!isMobile && (
+          <div className="px-2">
             <div className="mb-4 mt-2 flex items-center px-4">
               <span className="mr-2 text-sm text-gray-500">Sort by:</span>
               <div className="flex space-x-2">
@@ -615,15 +581,15 @@ export default function ShopperDashboard() {
             <div className="mb-4 px-4">
               <p className="text-xs text-gray-500">
                 {!isOnline
-                  ? "Go online to see available orders"
+                  ? "Go online to see available batches"
                   : sortBy === "newest"
-                  ? "Showing recent orders less than 1 hour old"
+                  ? "Showing recent batches less than 1 hour old"
                   : sortBy === "priority"
-                  ? "Showing orders pending for 1+ hours by priority level"
+                  ? "Showing batches pending for 1+ hours by priority level"
                   : `Sorting by ${sortBy}`}
                 {isOnline &&
                   !showHistorical &&
-                  " • Only orders pending for 15+ minutes"}
+                  " • Only batches pending for 15+ minutes"}
               </p>
             </div>
 
@@ -667,7 +633,7 @@ export default function ShopperDashboard() {
                   You&apos;re Currently Offline
                 </h3>
                 <p className="mb-4 text-gray-500">
-                  To see available orders, please go online first by enabling
+                  To see available batches, please go online first by enabling
                   your location.
                 </p>
                 <div className="flex flex-col space-y-3 md:flex-row md:justify-center md:space-x-3 md:space-y-0">
@@ -697,18 +663,18 @@ export default function ShopperDashboard() {
               </div>
             ) : (
               <div className="rounded-lg border bg-white p-8 text-center">
-                <h3 className="mb-2 text-lg font-medium">No Orders Nearby</h3>
+                <h3 className="mb-2 text-lg font-medium">No Batches Nearby</h3>
                 <p className="mb-4 text-gray-500">
                   {showHistorical
-                    ? "There are no pending orders in your area."
-                    : "There are no orders pending for 15+ minutes in your area."}
+                    ? "There are no pending batches in your area."
+                    : "There are no batches pending for 15+ minutes in your area."}
                 </p>
                 <Button
                   appearance="primary"
                   className="bg-green-500 text-white"
                   onClick={loadOrders}
                 >
-                  Refresh Orders
+                  Refresh Batches
                 </Button>
               </div>
             )}
@@ -718,8 +684,12 @@ export default function ShopperDashboard() {
         {/* Mobile Bottom Sheet */}
         {isMobile && (
           <div
-            className={`fixed bottom-14 left-0 right-0 z-[1100] rounded-t-2xl border-t-2 bg-white transition-all duration-300 ease-in-out ${
-              isExpanded ? "h-[80%]" : "h-[80px]"
+            className={`fixed bottom-16 left-0 right-0 z-[1000] rounded-t-2xl border-t-2 transition-all duration-300 ease-in-out ${
+              isExpanded ? "h-[calc(100%-4rem)]" : "h-[80px]"
+            } ${
+              theme === "dark"
+                ? "border-gray-800 bg-gray-900 text-gray-100"
+                : "border-gray-200 bg-white text-gray-900"
             }`}
           >
             {/* Handle to expand/collapse */}
@@ -728,7 +698,11 @@ export default function ShopperDashboard() {
                 className="flex cursor-pointer items-center justify-center p-2"
                 onClick={toggleExpanded}
               >
-                <div className="mx-auto h-1.5 w-10 rounded-full bg-gray-300" />
+                <div
+                  className={`mx-auto h-1.5 w-10 rounded-full ${
+                    theme === "dark" ? "bg-gray-700" : "bg-gray-300"
+                  }`}
+                />
               </div>
               {/* Start/Stop in sheet header on mobile when collapsed */}
               {!isExpanded && (
@@ -748,8 +722,12 @@ export default function ShopperDashboard() {
                     }
                     className={`rounded px-3 py-1 font-bold shadow ${
                       isOnline
-                        ? "bg-red-500 text-white" // Red when online (action: Go Offline)
-                        : "bg-green-500 text-white" // Green when offline (action: Start Plas)
+                        ? theme === "dark"
+                          ? "bg-red-600 text-white hover:bg-red-700"
+                          : "bg-red-500 text-white hover:bg-red-600"
+                        : theme === "dark"
+                        ? "bg-green-600 text-white hover:bg-green-700"
+                        : "bg-green-500 text-white hover:bg-green-600"
                     }`}
                   >
                     {isOnline ? "Go Offline" : "Start Plas"}
@@ -759,18 +737,32 @@ export default function ShopperDashboard() {
             </div>
 
             {isExpanded ? (
-              <div className="h-full overflow-y-auto px-4">
+              <div className="h-full overflow-y-auto px-4 pb-4">
                 <div className="mb-4 flex items-center justify-between">
-                  <h2 className="text-lg font-semibold">Available Orders</h2>
+                  <h2
+                    className={`text-lg font-semibold ${
+                      theme === "dark" ? "text-white" : "text-gray-900"
+                    }`}
+                  >
+                    Available Batches
+                  </h2>
                   <div className="flex items-center space-x-2">
-                    <span className="text-xs text-gray-500">
+                    <span
+                      className={`text-xs ${
+                        theme === "dark" ? "text-gray-400" : "text-gray-500"
+                      }`}
+                    >
                       {lastRefreshed && `${lastRefreshed.toLocaleTimeString()}`}
                     </span>
                     <button
                       onClick={toggleAutoRefresh}
                       className={`rounded-md px-2 py-1 text-xs font-medium ${
                         isAutoRefreshing
-                          ? "bg-green-100 text-green-700"
+                          ? theme === "dark"
+                            ? "bg-green-900/30 text-green-300"
+                            : "bg-green-100 text-green-700"
+                          : theme === "dark"
+                          ? "bg-gray-800 text-gray-300"
                           : "bg-gray-100 text-gray-700"
                       }`}
                     >
@@ -780,20 +772,22 @@ export default function ShopperDashboard() {
                       onClick={toggleHistorical}
                       className={`rounded-md px-2 py-1 text-xs font-medium ${
                         showHistorical
-                          ? "bg-blue-100 text-blue-700"
+                          ? theme === "dark"
+                            ? "bg-blue-900/30 text-blue-300"
+                            : "bg-blue-100 text-blue-700"
+                          : theme === "dark"
+                          ? "bg-gray-800 text-gray-300"
                           : "bg-gray-100 text-gray-700"
                       }`}
                     >
                       {showHistorical ? "All Pending" : "15+ min"}
                     </button>
-                    <Button
-                      appearance="primary"
-                      className="bg-green-500 text-white"
+                    <button
+                      className="rounded bg-green-500 px-3 py-1.5 text-sm text-white hover:bg-green-600"
                       onClick={loadOrders}
-                      size="sm"
                     >
                       Refresh
-                    </Button>
+                    </button>
                   </div>
                 </div>
 
@@ -802,10 +796,14 @@ export default function ShopperDashboard() {
                     onClick={() => handleSortChange("newest")}
                     className={`rounded px-3 py-1 text-xs ${
                       sortBy === "newest"
-                        ? "bg-green-600 text-white"
+                        ? theme === "dark"
+                          ? "bg-green-600 text-white"
+                          : "bg-green-600 text-white"
+                        : theme === "dark"
+                        ? "bg-gray-800 text-gray-300"
                         : "bg-gray-200 text-gray-800"
                     }`}
-                    title="Orders less than 1 hour old"
+                    title="Batches less than 1 hour old"
                   >
                     Recent (1h)
                   </button>
@@ -813,7 +811,11 @@ export default function ShopperDashboard() {
                     onClick={() => handleSortChange("earnings")}
                     className={`rounded px-3 py-1 text-xs ${
                       sortBy === "earnings"
-                        ? "bg-green-600 text-white"
+                        ? theme === "dark"
+                          ? "bg-green-600 text-white"
+                          : "bg-green-600 text-white"
+                        : theme === "dark"
+                        ? "bg-gray-800 text-gray-300"
                         : "bg-gray-200 text-gray-800"
                     }`}
                   >
@@ -823,7 +825,11 @@ export default function ShopperDashboard() {
                     onClick={() => handleSortChange("distance")}
                     className={`rounded px-3 py-1 text-xs ${
                       sortBy === "distance"
-                        ? "bg-green-600 text-white"
+                        ? theme === "dark"
+                          ? "bg-green-600 text-white"
+                          : "bg-green-600 text-white"
+                        : theme === "dark"
+                        ? "bg-gray-800 text-gray-300"
                         : "bg-gray-200 text-gray-800"
                     }`}
                   >
@@ -833,10 +839,14 @@ export default function ShopperDashboard() {
                     onClick={() => handleSortChange("priority")}
                     className={`rounded px-3 py-1 text-xs ${
                       sortBy === "priority"
-                        ? "bg-purple-600 text-white"
+                        ? theme === "dark"
+                          ? "bg-purple-600 text-white"
+                          : "bg-purple-600 text-white"
+                        : theme === "dark"
+                        ? "bg-gray-800 text-gray-300"
                         : "bg-gray-200 text-gray-800"
                     }`}
-                    title="All orders by priority level, including older orders"
+                    title="All batches by priority level, including older batches"
                   >
                     Priority
                   </button>
@@ -844,13 +854,17 @@ export default function ShopperDashboard() {
 
                 {/* Filtering info message */}
                 <div className="mb-4 px-4 md:hidden">
-                  <p className="text-xs text-gray-500">
+                  <p
+                    className={`text-xs ${
+                      theme === "dark" ? "text-gray-400" : "text-gray-500"
+                    }`}
+                  >
                     {!isOnline
-                      ? "Go online to see available orders"
+                      ? "Go online to see available batches"
                       : sortBy === "newest"
-                      ? "Showing orders < 1 hour old"
+                      ? "Showing batches < 1 hour old"
                       : sortBy === "priority"
-                      ? "Orders pending 1+ hours by priority"
+                      ? "Batches pending 1+ hours by priority"
                       : `Sorting by ${sortBy}`}
                     {isOnline && !showHistorical && " • 15+ min pending"}
                   </p>
@@ -858,14 +872,24 @@ export default function ShopperDashboard() {
 
                 {isLoading ? (
                   <div className="space-y-4 px-1">
-                    <Panel bordered className="h-[180px]">
+                    <Panel
+                      bordered
+                      className={`h-[180px] ${
+                        theme === "dark" ? "bg-gray-800 text-gray-100" : ""
+                      }`}
+                    >
                       <Placeholder.Paragraph rows={3} active />
                       <div className="mt-4 flex justify-between">
                         <Placeholder.Graph active width={70} height={24} />
                         <Placeholder.Graph active width={120} height={24} />
                       </div>
                     </Panel>
-                    <Panel bordered className="h-[180px]">
+                    <Panel
+                      bordered
+                      className={`h-[180px] ${
+                        theme === "dark" ? "bg-gray-800 text-gray-100" : ""
+                      }`}
+                    >
                       <Placeholder.Paragraph rows={3} active />
                       <div className="mt-4 flex justify-between">
                         <Placeholder.Graph active width={70} height={24} />
@@ -874,17 +898,29 @@ export default function ShopperDashboard() {
                     </Panel>
                   </div>
                 ) : !isOnline ? (
-                  <div className="py-8 text-center">
+                  <div
+                    className={`py-8 text-center ${
+                      theme === "dark" ? "text-gray-100" : ""
+                    }`}
+                  >
                     <h3 className="mb-2 text-base font-medium">
                       You&apos;re Currently Offline
                     </h3>
-                    <p className="mb-4 text-sm text-gray-500">
-                      To see available orders, please go online first by
+                    <p
+                      className={`mb-4 ${
+                        theme === "dark" ? "text-gray-400" : "text-gray-500"
+                      }`}
+                    >
+                      To see available batches, please go online first by
                       enabling your location.
                     </p>
                     <Button
                       appearance="primary"
-                      className="bg-green-500 text-white"
+                      className={`${
+                        theme === "dark"
+                          ? "bg-green-600 text-white hover:bg-green-700"
+                          : "bg-green-500 text-white"
+                      }`}
                       onClick={() =>
                         window.dispatchEvent(new Event("toggleGoLive"))
                       }
@@ -892,7 +928,11 @@ export default function ShopperDashboard() {
                     >
                       Go Online
                     </Button>
-                    <p className="mt-4 text-xs text-gray-400">
+                    <p
+                      className={`mt-4 text-xs ${
+                        theme === "dark" ? "text-gray-500" : "text-gray-400"
+                      }`}
+                    >
                       You&apos;ll be asked to allow location access
                     </p>
                   </div>
@@ -907,21 +947,33 @@ export default function ShopperDashboard() {
                     ))}
                   </div>
                 ) : (
-                  <div className="py-8 text-center">
-                    <p className="text-gray-500">
+                  <div
+                    className={`py-8 text-center ${
+                      theme === "dark" ? "text-gray-100" : ""
+                    }`}
+                  >
+                    <p
+                      className={
+                        theme === "dark" ? "text-gray-400" : "text-gray-500"
+                      }
+                    >
                       {showHistorical
-                        ? "No pending orders available."
-                        : "No orders pending for 15+ minutes."}
+                        ? "No pending batches available."
+                        : "No batches pending for 15+ minutes."}
                     </p>
                   </div>
                 )}
               </div>
             ) : (
               <div className="flex items-center justify-between px-4">
-                <p className="text-sm text-gray-500">
+                <p
+                  className={`text-sm ${
+                    theme === "dark" ? "text-gray-400" : "text-gray-500"
+                  }`}
+                >
                   {!isOnline
-                    ? "Go online to see available orders"
-                    : `Available Orders: ${sortedOrders.length}`}
+                    ? "Go online to see available batches"
+                    : `Available Batches: ${sortedOrders.length}`}
                 </p>
               </div>
             )}

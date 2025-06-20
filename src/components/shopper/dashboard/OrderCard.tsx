@@ -260,17 +260,12 @@ export default function OrderCard({ order, onOrderAccepted }: OrderCardProps) {
           </div>
           <div className="flex gap-2">
             <Link href={`/Plasa/orders/${order.id}`}>
-              <Button appearance="ghost" className="text-gray-700">
+              <button className="rounded px-3 py-1.5 text-sm text-green-600 hover:bg-green-50">
                 View Details
-              </Button>
+              </button>
             </Link>
-            <Button
-              appearance="primary"
-              className={`${
-                order.priorityLevel && order.priorityLevel >= 4
-                  ? "bg-red-500"
-                  : "bg-green-500"
-              } text-white`}
+            <button
+              className="rounded bg-green-500 px-3 py-1.5 text-sm text-white hover:bg-green-600"
               onClick={handleAcceptOrder}
               disabled={isAccepting}
             >
@@ -280,9 +275,9 @@ export default function OrderCard({ order, onOrderAccepted }: OrderCardProps) {
                   Accepting...
                 </div>
               ) : (
-                "Accept Order"
+                "Accept Batch"
               )}
-            </Button>
+            </button>
           </div>
         </div>
       </div>

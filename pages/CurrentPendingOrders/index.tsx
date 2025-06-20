@@ -33,18 +33,18 @@ export default function CurrentOrdersPage() {
   if (!session) {
     return (
       <RootLayout>
-        <div className="min-h-screen bg-gray-50 p-4 md:ml-16">
+        <div className="min-h-screen bg-gray-50 p-4 transition-colors duration-200 dark:bg-gray-900 md:ml-16">
           <div className="container mx-auto flex min-h-[60vh] flex-col items-center justify-center py-12 text-center">
-            <div className="rounded-lg bg-white p-8 shadow-lg">
-              <h1 className="mb-4 text-2xl font-bold text-gray-900">
+            <div className="rounded-lg bg-white p-8 shadow-lg transition-colors duration-200 dark:bg-gray-800">
+              <h1 className="mb-4 text-2xl font-bold text-gray-900 dark:text-white">
                 Please Sign In
               </h1>
-              <p className="mb-6 text-gray-600">
+              <p className="mb-6 text-gray-600 dark:text-gray-300">
                 You need to be logged in to view your orders.
               </p>
               <Link
                 href="/login"
-                className="inline-flex items-center rounded-md bg-green-500 px-6 py-2.5 text-sm font-medium text-white transition duration-150 hover:bg-green-600 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2"
+                className="inline-flex items-center rounded-md bg-green-500 px-6 py-2.5 text-sm font-medium text-white transition duration-150 hover:bg-green-600 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 dark:bg-green-600 dark:hover:bg-green-700 dark:focus:ring-offset-gray-900"
               >
                 <svg
                   className="mr-2 h-5 w-5"
@@ -70,14 +70,14 @@ export default function CurrentOrdersPage() {
 
   return (
     <RootLayout>
-      <div className="min-h-screen bg-gray-50 p-4 md:ml-16">
+      <div className="min-h-screen bg-gray-50 p-4 transition-colors duration-200 dark:bg-gray-900 md:ml-16">
         <div className="max-w-1xl container mx-auto">
           {/* Profile Header */}
-          <div className="mb-8 flex items-center justify-between rounded-lg bg-white p-4 shadow-sm">
+          <div className="mb-8 flex items-center justify-between rounded-lg bg-white p-4 shadow-sm transition-colors duration-200 dark:bg-gray-800">
             <div className="flex items-center">
               <Link
                 href="/"
-                className="flex items-center text-gray-700 transition hover:text-green-600"
+                className="flex items-center text-gray-700 transition hover:text-green-600 dark:text-gray-300 dark:hover:text-green-500"
               >
                 <svg
                   viewBox="0 0 24 24"
@@ -89,11 +89,11 @@ export default function CurrentOrdersPage() {
                   <path d="M19 12H5M12 19l-7-7 7-7" />
                 </svg>
               </Link>
-              <h1 className="ml-4 text-2xl font-bold text-gray-900">
+              <h1 className="ml-4 text-2xl font-bold text-gray-900 dark:text-white">
                 Orders Track
               </h1>
             </div>
-            <div className="text-sm text-gray-500">
+            <div className="text-sm text-gray-500 dark:text-gray-400">
               Welcome back, {session.user?.name}
             </div>
           </div>
@@ -103,14 +103,16 @@ export default function CurrentOrdersPage() {
             <button
               className={`inline-flex items-center rounded-lg px-4 py-2.5 text-sm font-medium shadow-sm transition duration-150 ${
                 filter === "pending"
-                  ? "bg-green-500 text-white hover:bg-green-600"
-                  : "bg-white text-gray-700 hover:bg-gray-50"
+                  ? "bg-green-500 text-white hover:bg-green-600 dark:bg-green-600 dark:hover:bg-green-700"
+                  : "bg-white text-gray-700 hover:bg-gray-50 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700"
               }`}
               onClick={() => setFilter("pending")}
             >
               <svg
                 className={`mr-2 h-5 w-5 ${
-                  filter === "pending" ? "text-white" : "text-gray-400"
+                  filter === "pending"
+                    ? "text-white"
+                    : "text-gray-400 dark:text-gray-500"
                 }`}
                 fill="none"
                 viewBox="0 0 24 24"
@@ -128,14 +130,16 @@ export default function CurrentOrdersPage() {
             <button
               className={`inline-flex items-center rounded-lg px-4 py-2.5 text-sm font-medium shadow-sm transition duration-150 ${
                 filter === "done"
-                  ? "bg-green-500 text-white hover:bg-green-600"
-                  : "bg-white text-gray-700 hover:bg-gray-50"
+                  ? "bg-green-500 text-white hover:bg-green-600 dark:bg-green-600 dark:hover:bg-green-700"
+                  : "bg-white text-gray-700 hover:bg-gray-50 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700"
               }`}
               onClick={() => setFilter("done")}
             >
               <svg
                 className={`mr-2 h-5 w-5 ${
-                  filter === "done" ? "text-white" : "text-gray-400"
+                  filter === "done"
+                    ? "text-white"
+                    : "text-gray-400 dark:text-gray-500"
                 }`}
                 fill="none"
                 viewBox="0 0 24 24"
@@ -153,7 +157,7 @@ export default function CurrentOrdersPage() {
           </div>
 
           {/* Orders List */}
-          <div className="rounded-lg bg-white p-4 shadow-sm">
+          <div className="rounded-lg bg-white p-4 shadow-sm transition-colors duration-200 dark:bg-gray-800">
             <UserRecentOrders
               filter={filter}
               orders={orders}

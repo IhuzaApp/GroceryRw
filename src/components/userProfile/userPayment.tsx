@@ -9,6 +9,11 @@ import {
   SelectPicker,
 } from "rsuite";
 import toast from "react-hot-toast";
+import CryptoJS from "crypto-js";
+
+// Encryption key - in production, this should be in environment variables
+const ENCRYPTION_KEY =
+  process.env.NEXT_PUBLIC_ENCRYPTION_KEY || "your-secret-key";
 
 // Helper to map methods to background colors
 const getMethodBg = (method: string) => {
@@ -25,6 +30,18 @@ const getMethodBg = (method: string) => {
   }
 };
 
+// Format card number to show only last 4 digits
+const formatCardNumber = (encryptedNumber: string) => {
+  try {
+    const bytes = CryptoJS.AES.decrypt(encryptedNumber, ENCRYPTION_KEY);
+    const decrypted = bytes.toString(CryptoJS.enc.Utf8);
+    const lastFour = decrypted.slice(-4);
+    return `**** **** **** ${lastFour}`;
+  } catch (error) {
+    return "**** **** **** ****";
+  }
+};
+
 interface PaymentMethod {
   id: string;
   user_id: string;
@@ -36,8 +53,18 @@ interface PaymentMethod {
   is_default: boolean;
 }
 
+interface PaymentCard {
+  id: string;
+  number: string;
+  name: string;
+  expiry_date: string;
+  image: string | null;
+  created_at: string;
+}
+
 export default function UserPayment() {
   const [paymentMethods, setPaymentMethods] = useState<PaymentMethod[]>([]);
+  const [paymentCards, setPaymentCards] = useState<PaymentCard[]>([]);
   const [showModal, setShowModal] = useState(false);
   const [formValue, setFormValue] = useState<any>({
     method: "",
@@ -59,8 +86,19 @@ export default function UserPayment() {
     }
   };
 
+  const fetchPaymentCards = async () => {
+    try {
+      const res = await fetch("/api/queries/payment-cards");
+      const data = await res.json();
+      setPaymentCards(data.paymentCards || []);
+    } catch (err) {
+      console.error("Error loading payment cards:", err);
+    }
+  };
+
   useEffect(() => {
     fetchPaymentMethods();
+    fetchPaymentCards();
   }, []);
 
   const handleAdd = () => {
@@ -128,62 +166,119 @@ export default function UserPayment() {
 
   return (
     <>
-      <div className="mb-4 flex items-center justify-between">
-        <h3 className="text-lg font-bold">Payment Methods</h3>
-        <Button
-          appearance="primary"
-          color="green"
-          onClick={handleAdd}
-          size="sm"
-        >
-          Add Payment Method
-        </Button>
-      </div>
-      <div className="space-y-4">
-        {paymentMethods.map((pm) => (
-          <Panel bordered className="relative" key={pm.id}>
-            {pm.is_default && (
-              <Tag className="absolute right-2 top-2 border-green-200 bg-green-100 text-green-600">
-                Default
-              </Tag>
-            )}
-            <div className="flex items-center">
-              <div
-                className={`mr-3 flex h-8 w-12 items-center justify-center rounded ${getMethodBg(
-                  pm.method
-                )}`}
-              >
-                {pm.method}
-              </div>
-              <div>
-                <h4 className="font-bold">
-                  {`${pm.method} ending in ${pm.number.slice(-4)}`}
-                </h4>
-                <p className="text-sm text-gray-600">Expires {pm.validity}</p>
-              </div>
-            </div>
-            <div className="mt-4 flex gap-2">
-              <Button appearance="ghost" size="sm">
-                Edit
-              </Button>
-              <Button appearance="ghost" color="red" size="sm">
-                Delete
-              </Button>
-              {!pm.is_default && (
-                <Button
-                  appearance="ghost"
-                  color="green"
-                  size="sm"
-                  onClick={() => handleSetDefault(pm.id)}
-                >
-                  Set as Default
-                </Button>
+      {/* Payment Methods Section */}
+      <div className="mb-8">
+        <div className="mb-4 flex items-center justify-between">
+          <h3 className="text-lg font-bold">Payment Methods</h3>
+          <Button
+            appearance="primary"
+            color="green"
+            onClick={handleAdd}
+            size="sm"
+          >
+            Add Payment Method
+          </Button>
+        </div>
+        <div className="space-y-4">
+          {paymentMethods.map((pm) => (
+            <Panel bordered className="relative" key={pm.id}>
+              {pm.is_default && (
+                <Tag className="absolute right-2 top-2 border-green-200 bg-green-100 text-green-600">
+                  Default
+                </Tag>
               )}
-            </div>
-          </Panel>
-        ))}
+              <div className="flex items-center">
+                <div
+                  className={`mr-3 flex h-8 w-12 items-center justify-center rounded ${getMethodBg(
+                    pm.method
+                  )}`}
+                >
+                  {pm.method}
+                </div>
+                <div>
+                  <h4 className="font-bold">
+                    {`${pm.method} ending in ${pm.number.slice(-4)}`}
+                  </h4>
+                  <p className="text-sm text-gray-600">Expires {pm.validity}</p>
+                </div>
+              </div>
+              <div className="mt-4 flex gap-2">
+                <Button appearance="ghost" size="sm">
+                  Edit
+                </Button>
+                <Button appearance="ghost" color="red" size="sm">
+                  Delete
+                </Button>
+                {!pm.is_default && (
+                  <Button
+                    appearance="ghost"
+                    color="green"
+                    size="sm"
+                    onClick={() => handleSetDefault(pm.id)}
+                  >
+                    Set as Default
+                  </Button>
+                )}
+              </div>
+            </Panel>
+          ))}
+        </div>
       </div>
 
+      {/* Payment Cards Section */}
+      <div className="mb-8">
+        <div className="mb-4 flex items-center justify-between">
+          <h3 className="text-lg font-bold">Payment Cards</h3>
+        </div>
+        <div className="space-y-4">
+          {paymentCards.map((card) => (
+            <Panel bordered className="relative" key={card.id}>
+              <div className="flex items-center">
+                <div
+                  className={`mr-3 flex h-8 w-12 items-center justify-center rounded ${
+                    card.number.startsWith("4")
+                      ? "bg-blue-600"
+                      : card.number.startsWith("5")
+                      ? "bg-orange-500"
+                      : "bg-gray-500"
+                  } text-white`}
+                >
+                  {card.number.startsWith("4")
+                    ? "VISA"
+                    : card.number.startsWith("5")
+                    ? "MC"
+                    : "CARD"}
+                </div>
+                <div>
+                  <h4 className="font-bold">
+                    {`${card.name} - ${formatCardNumber(card.number)}`}
+                  </h4>
+                  <p className="text-sm text-gray-600">
+                    Expires {card.expiry_date}
+                  </p>
+                </div>
+                {card.image && (
+                  <img
+                    src={card.image}
+                    alt="Card"
+                    className="ml-auto h-10 w-10 rounded-full border border-gray-200 object-cover"
+                  />
+                )}
+              </div>
+              <div className="mt-4 flex gap-2">
+                <Button appearance="ghost" size="sm">
+                  Edit
+                </Button>
+                <Button appearance="ghost" color="red" size="sm">
+                  Delete
+                </Button>
+              </div>
+            </Panel>
+          ))}
+        </div>
+      </div>
+
+      {/* Add Payment Method Modal */}
       <Modal size="sm" open={showModal} onClose={() => setShowModal(false)}>
         <Modal.Header>
           <Modal.Title>Add Payment Method</Modal.Title>
@@ -237,11 +332,11 @@ export default function UserPayment() {
           </Form>
         </Modal.Body>
         <Modal.Footer>
-          <Button appearance="primary" color="green" onClick={handleSave}>
-            Save
-          </Button>
           <Button onClick={() => setShowModal(false)} appearance="subtle">
             Cancel
+          </Button>
+          <Button onClick={handleSave} appearance="primary" color="green">
+            Save
           </Button>
         </Modal.Footer>
       </Modal>

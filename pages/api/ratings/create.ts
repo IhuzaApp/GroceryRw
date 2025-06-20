@@ -75,11 +75,11 @@ export default async function handler(
     });
 
     // Add type checking for the response data
-    if (data && typeof data === 'object' && 'insert_Ratings_one' in data) {
+    if (data && typeof data === "object" && "insert_Ratings_one" in data) {
       return res.status(201).json(data.insert_Ratings_one);
     }
 
-    throw new Error('Invalid response data');
+    throw new Error("Invalid response data");
   } catch (error) {
     console.error("Error creating rating:", error);
     return res.status(500).json({

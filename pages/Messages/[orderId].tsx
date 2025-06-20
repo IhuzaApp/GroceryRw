@@ -1,10 +1,17 @@
 import React, { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/router";
 import { useSession } from "next-auth/react";
-import RootLayout from "@components/ui/layout";
 import Link from "next/link";
 import Image from "next/image";
-import { Avatar, Button, Input, Loader, Panel } from "rsuite";
+import {
+  Avatar,
+  Button,
+  Input,
+  Loader,
+  Panel,
+  Dropdown,
+  IconButton,
+} from "rsuite";
 import {
   collection,
   query,
@@ -86,7 +93,6 @@ const Message: React.FC<MessageProps> = ({
   isCurrentUser,
   senderName,
 }) => {
-  // Get message content from either text or message field
   const messageContent = message.text || message.message || "";
 
   return (
@@ -97,14 +103,14 @@ const Message: React.FC<MessageProps> = ({
       <div
         className={`max-w-[85%] ${
           isCurrentUser
-            ? "bg-green-100 text-green-900"
-            : "bg-blue-100 text-gray-900"
+            ? "bg-green-100 text-green-900 dark:bg-green-900 dark:text-green-100"
+            : "bg-blue-100 text-gray-900 dark:bg-blue-900 dark:text-blue-100"
         } rounded-[20px] p-3`}
       >
         {!isCurrentUser && (
-          <div className="mb-1 flex gap-2 text-xs font-medium text-gray-600">
+          <div className="mb-1 flex gap-2 text-xs font-medium text-gray-600 dark:text-gray-300">
             {senderName}{" "}
-            <span className="text-xs text-gray-500">
+            <span className="text-xs text-gray-500 dark:text-gray-400">
               {formatMessageDate(message.timestamp)}
             </span>
           </div>
@@ -444,309 +450,184 @@ export default function ChatPage() {
     }
   };
 
-  // Render the chat interface
   return (
-    <RootLayout>
-      <div className="h-[calc(100vh-80px)] p-4 md:ml-16">
-        {loading ? (
-          <div className="max-w-1xl mx-auto">
-            <div className="animate-pulse space-y-4">
-              <div className="h-8 w-1/3 rounded bg-gray-200"></div>
-              <div className="h-64 rounded bg-gray-200"></div>
+    <div className="fixed inset-0 flex flex-col overflow-hidden bg-gray-50 dark:bg-gray-900">
+      {/* Chat Header */}
+      <div className="flex items-center justify-between border-b border-gray-200 bg-white px-4 py-3 dark:border-gray-700 dark:bg-gray-800">
+        <div className="flex items-center gap-3">
+          <Link href="/Messages" className="text-gray-600 dark:text-gray-400">
+            <svg
+              width="24"
+              height="24"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+            >
+              <path d="M19 12H5M12 19l-7-7 7-7" />
+            </svg>
+          </Link>
+          {shopper && (
+            <div className="flex items-center gap-2">
+              <Avatar
+                src={shopper.avatar}
+                alt={shopper.name}
+                circle
+                size="sm"
+              />
+              <div>
+                <h2 className="text-sm font-medium text-gray-900 dark:text-white">
+                  {shopper.name}
+                </h2>
+                <p className="text-xs text-gray-500 dark:text-gray-400">
+                  Order #{formatOrderID(order?.OrderID)}
+                </p>
+              </div>
             </div>
+          )}
+        </div>
+
+        <Dropdown
+          placement="bottomEnd"
+          renderToggle={(props, ref) => (
+            <IconButton
+              {...props}
+              ref={ref}
+              icon={
+                <svg
+                  width="24"
+                  height="24"
+                  viewBox="0 0 24 24"
+                  fill="currentColor"
+                  className="text-gray-600 dark:text-gray-400"
+                >
+                  <path d="M12 8c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2zm0 2c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm0 6c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2z" />
+                </svg>
+              }
+              circle
+              size="sm"
+              appearance="subtle"
+            />
+          )}
+        >
+          <Dropdown.Item
+            onClick={() =>
+              router.push(`/CurrentPendingOrders/viewOrderDetails/${order?.id}`)
+            }
+          >
+            View Order Details
+          </Dropdown.Item>
+        </Dropdown>
+      </div>
+
+      {/* Main Chat Area */}
+      <div className="flex flex-1 overflow-hidden">
+        {/* Messages Section */}
+        <div className="flex flex-1 flex-col">
+          <div
+            className="flex-1 overflow-y-auto bg-gray-50 px-4 py-2 dark:bg-gray-900"
+            ref={messagesEndRef}
+          >
+            {messages.map((message, index) => (
+              <Message
+                key={message.id}
+                message={message}
+                isCurrentUser={message.senderId === session?.user?.id}
+                senderName={
+                  message.senderId === session?.user?.id
+                    ? "You"
+                    : shopper?.name || "Shopper"
+                }
+              />
+            ))}
           </div>
-        ) : error ? (
-          <div className="max-w-1xl mx-auto">
-            <div className="rounded-md bg-red-50 p-4">
-              <h3 className="font-medium text-red-800">Error</h3>
-              <p className="mt-2 text-red-700">{error}</p>
+
+          {/* Message Input */}
+          <div className="border-t border-gray-200 bg-white px-4 py-3 dark:border-gray-700 dark:bg-gray-800">
+            <form onSubmit={handleSendMessage} className="flex gap-2">
+              <Input
+                value={newMessage}
+                onChange={(value) => setNewMessage(value)}
+                placeholder="Type a message..."
+                className="flex-1"
+              />
               <Button
                 appearance="primary"
-                color="red"
-                className="mt-4"
-                onClick={() => router.push("/Messages")}
+                color="green"
+                type="submit"
+                loading={isSending}
               >
-                Back to Messages
+                Send
               </Button>
-            </div>
+            </form>
           </div>
-        ) : !session?.user ? (
-          <div className="max-w-1xl mx-auto">
-            <div className="rounded-lg bg-blue-50 p-6 text-center">
-              <h2 className="mb-4 text-xl font-semibold text-blue-700">
-                Sign in Required
+        </div>
+
+        {/* Order Details Section - Only visible on desktop */}
+        <div className="hidden border-l border-gray-200 dark:border-gray-700 lg:block lg:w-96">
+          {order && (
+            <div className="h-full overflow-y-auto bg-white px-4 py-3 dark:bg-gray-800">
+              <h2 className="mb-4 text-lg font-semibold text-gray-900 dark:text-white">
+                Order Details
               </h2>
-              <p className="mb-6 text-blue-600">
-                Please sign in to view your messages.
-              </p>
-              <Link href="/login" passHref>
-                <Button appearance="primary" color="blue">
-                  Sign In
-                </Button>
-              </Link>
-            </div>
-          </div>
-        ) : (
-          <div className="max-w-1xl mx-auto flex h-full w-full flex-col">
-            <div className="flex h-full flex-1 flex-col overflow-hidden rounded-lg border border-gray-200 bg-white shadow-sm">
-              {/* Order info */}
-              <div className="flex shrink-0 items-center justify-between border-b border-gray-200 bg-gray-50 p-4">
-                <div className="flex items-center">
-                  <Button
-                    appearance="subtle"
-                    className="mr-2 flex h-10 w-10 items-center justify-center rounded-full p-0 text-gray-600 hover:bg-gray-200"
-                    onClick={() => router.push("/Messages")}
-                  >
-                    <svg
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth="2"
-                      className="h-40 w-40"
-                    >
-                      <path d="M19 12H5M12 19l-7-7 7-7" />
-                    </svg>
-                  </Button>
-                  <div className="mr-3 flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-gray-200 text-gray-600">
-                    {order?.shop?.name?.substring(0, 2).toUpperCase() || "SH"}
-                  </div>
+
+              <div className="space-y-4">
+                <div>
+                  <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400">
+                    Status
+                  </h3>
+                  <p className="text-gray-900 dark:text-white">
+                    {order.status.charAt(0).toUpperCase() +
+                      order.status.slice(1)}
+                  </p>
+                </div>
+
+                <div>
+                  <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400">
+                    Total
+                  </h3>
+                  <p className="text-gray-900 dark:text-white">
+                    {formatCurrency(order.total)}
+                  </p>
+                </div>
+
+                <div>
+                  <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400">
+                    Delivery Address
+                  </h3>
+                  <p className="text-gray-900 dark:text-white">
+                    {order.delivery_address}
+                  </p>
+                </div>
+
+                {shopper && (
                   <div>
-                    <h2 className="font-medium">
-                      {order?.shop?.name || "Shop"} - Order #
-                      {formatOrderID(order?.OrderID || orderId)}
-                    </h2>
-                    <div className="flex items-center text-sm text-gray-500">
-                      <span
-                        className={`
-                        mr-2 rounded-full px-2 py-0.5 text-xs
-                        ${
-                          order?.status === "shopping"
-                            ? "bg-orange-100 text-orange-800"
-                            : order?.status === "on_the_way"
-                            ? "bg-blue-100 text-blue-800"
-                            : order?.status === "delivered"
-                            ? "bg-green-100 text-green-800"
-                            : "bg-gray-100 text-gray-800"
-                        }
-                      `}
-                      >
-                        {order?.status === "shopping"
-                          ? "Shopping"
-                          : order?.status === "packing"
-                          ? "Packing"
-                          : order?.status === "on_the_way"
-                          ? "On the way"
-                          : order?.status?.charAt(0).toUpperCase() +
-                              order?.status?.slice(1) || "Unknown"}
+                    <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400">
+                      Shopper
+                    </h3>
+                    <div className="mt-1 flex items-center gap-2">
+                      <Avatar
+                        src={shopper.avatar}
+                        alt={shopper.name}
+                        circle
+                        size="sm"
+                      />
+                      <span className="text-gray-900 dark:text-white">
+                        {shopper.name}
                       </span>
-                      <span>{formatCurrency(order?.total || 0)}</span>
                     </div>
-                  </div>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <Button
-                    appearance="ghost"
-                    className="flex h-8 w-8 items-center justify-center p-0"
-                    onClick={() =>
-                      router.push(
-                        `/CurrentPendingOrders/viewOrderDetails?orderId=${orderId}`
-                      )
-                    }
-                  >
-                    <svg
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth="2"
-                      className="h-4 w-4"
-                    >
-                      <path d="M4 6h16M4 12h16M4 18h7"></path>
-                    </svg>
-                  </Button>
-                </div>
-              </div>
-
-              {/* Messages - make this area scrollable */}
-              <div
-                className="flex-1 space-y-4 overflow-y-auto bg-gray-100 p-4"
-                ref={messagesEndRef}
-              >
-                {messages.length === 0 ? (
-                  <div className="flex h-full flex-col items-center justify-center py-20 text-gray-500">
-                    <svg
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth="2"
-                      className="mb-3 h-12 w-12"
-                    >
-                      <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
-                    </svg>
-                    <p>No messages yet</p>
-                    <p className="text-sm">
-                      Start the conversation with your shopper
-                    </p>
-                  </div>
-                ) : (
-                  messages.map((message) => (
-                    <Message
-                      key={message.id}
-                      message={message}
-                      isCurrentUser={message.senderType === "customer"}
-                      senderName={
-                        message.senderType === "shopper"
-                          ? shopper?.name || "Shopper"
-                          : "You"
-                      }
-                    />
-                  ))
-                )}
-              </div>
-
-              {/* Message input - fixed at bottom */}
-              <div className="shrink-0 border-t border-gray-200 bg-white p-4">
-                <div className="flex items-center gap-2">
-                  <Button
-                    appearance="subtle"
-                    className="flex h-10 w-10 items-center justify-center rounded-full p-0"
-                    onClick={handleAttachmentClick}
-                    disabled={
-                      isSending ||
-                      uploadingImage ||
-                      order?.status === "delivered"
-                    }
-                  >
-                    <svg
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth="2"
-                      className="h-4 w-4"
-                    >
-                      <path d="M21.44 11.05l-9.19 9.19a6 6 0 01-8.49-8.49l9.19-9.19a4 4 0 015.66 5.66l-9.2 9.19a2 2 0 01-2.83-2.83l8.49-8.48" />
-                    </svg>
-                  </Button>
-
-                  {/* Attachment Options Popup */}
-                  {showAttachmentOptions && (
-                    <div className="absolute bottom-16 left-4 z-10 rounded-lg bg-white p-2 shadow-lg">
-                      <div className="flex flex-col gap-2">
-                        <button
-                          className="flex items-center gap-2 rounded-md p-2 hover:bg-gray-100"
-                          onClick={() => fileInputRef.current?.click()}
-                        >
-                          <svg
-                            viewBox="0 0 24 24"
-                            fill="none"
-                            stroke="currentColor"
-                            strokeWidth="2"
-                            className="h-5 w-5 text-blue-500"
-                          >
-                            <rect
-                              x="3"
-                              y="3"
-                              width="18"
-                              height="18"
-                              rx="2"
-                              ry="2"
-                            />
-                            <circle cx="8.5" cy="8.5" r="1.5" />
-                            <polyline points="21 15 16 10 5 21" />
-                          </svg>
-                          <span>Gallery</span>
-                        </button>
-                        <button
-                          className="flex items-center gap-2 rounded-md p-2 hover:bg-gray-100"
-                          onClick={() =>
-                            alert("Camera functionality would open here")
-                          }
-                        >
-                          <svg
-                            viewBox="0 0 24 24"
-                            fill="none"
-                            stroke="currentColor"
-                            strokeWidth="2"
-                            className="h-5 w-5 text-red-500"
-                          >
-                            <path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z" />
-                            <circle cx="12" cy="13" r="4" />
-                          </svg>
-                          <span>Camera</span>
-                        </button>
-                      </div>
-                    </div>
-                  )}
-
-                  <input
-                    type="file"
-                    accept="image/*"
-                    ref={fileInputRef}
-                    className="hidden"
-                    onChange={handleImageUpload}
-                  />
-
-                  <input
-                    type="text"
-                    placeholder={
-                      order?.status === "delivered"
-                        ? "Chat is closed for delivered orders"
-                        : "Type your message..."
-                    }
-                    className="flex-1 rounded-full border border-gray-300 px-4 py-2 focus:border-transparent focus:outline-none focus:ring-2 focus:ring-green-500"
-                    value={newMessage}
-                    onChange={(e) => setNewMessage(e.target.value)}
-                    onKeyPress={handleKeyPress}
-                    disabled={
-                      isSending ||
-                      uploadingImage ||
-                      order?.status === "delivered"
-                    }
-                  />
-
-                  <Button
-                    appearance={
-                      newMessage.trim() && order?.status !== "delivered"
-                        ? "primary"
-                        : "subtle"
-                    }
-                    className={`flex h-10 w-10 items-center justify-center rounded-full p-0 ${
-                      newMessage.trim() && order?.status !== "delivered"
-                        ? "bg-green-500 text-white"
-                        : "text-gray-400"
-                    }`}
-                    onClick={handleSendMessage}
-                    disabled={
-                      (!newMessage.trim() && !uploadingImage) ||
-                      isSending ||
-                      order?.status === "delivered"
-                    }
-                  >
-                    {isSending || uploadingImage ? (
-                      <Loader size="sm" />
-                    ) : (
-                      <svg
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="currentColor"
-                        strokeWidth="2"
-                        className="h-4 w-4"
-                      >
-                        <path d="M22 2L11 13" />
-                        <path d="M22 2l-7 20-4-9-9-4 20-7z" />
-                      </svg>
-                    )}
-                  </Button>
-                </div>
-                {order?.status === "delivered" && (
-                  <div className="mt-2 text-center text-xs text-gray-500">
-                    This order has been delivered. The chat is now closed.
                   </div>
                 )}
               </div>
             </div>
-          </div>
-        )}
+          )}
+        </div>
       </div>
-    </RootLayout>
+    </div>
   );
 }
+
+// Add this to tell Next.js to use a custom layout
+ChatPage.getLayout = function getLayout(page: React.ReactElement) {
+  return page;
+};

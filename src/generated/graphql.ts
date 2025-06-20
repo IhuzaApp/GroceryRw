@@ -5950,6 +5950,190 @@ export type String_Comparison_Exp = {
   _similar?: InputMaybe<Scalars["String"]["input"]>;
 };
 
+/** columns and relationships of "System_Logs" */
+export type System_Logs = {
+  component: Scalars["String"]["output"];
+  create_at: Scalars["timestamptz"]["output"];
+  details?: Maybe<Scalars["String"]["output"]>;
+  id: Scalars["uuid"]["output"];
+  message?: Maybe<Scalars["String"]["output"]>;
+  time: Scalars["String"]["output"];
+  type: Scalars["String"]["output"];
+};
+
+/** aggregated selection of "System_Logs" */
+export type System_Logs_Aggregate = {
+  aggregate?: Maybe<System_Logs_Aggregate_Fields>;
+  nodes: Array<System_Logs>;
+};
+
+/** aggregate fields of "System_Logs" */
+export type System_Logs_Aggregate_Fields = {
+  count: Scalars["Int"]["output"];
+  max?: Maybe<System_Logs_Max_Fields>;
+  min?: Maybe<System_Logs_Min_Fields>;
+};
+
+/** aggregate fields of "System_Logs" */
+export type System_Logs_Aggregate_FieldsCountArgs = {
+  columns?: InputMaybe<Array<System_Logs_Select_Column>>;
+  distinct?: InputMaybe<Scalars["Boolean"]["input"]>;
+};
+
+/** Boolean expression to filter rows from the table "System_Logs". All fields are combined with a logical 'AND'. */
+export type System_Logs_Bool_Exp = {
+  _and?: InputMaybe<Array<System_Logs_Bool_Exp>>;
+  _not?: InputMaybe<System_Logs_Bool_Exp>;
+  _or?: InputMaybe<Array<System_Logs_Bool_Exp>>;
+  component?: InputMaybe<String_Comparison_Exp>;
+  create_at?: InputMaybe<Timestamptz_Comparison_Exp>;
+  details?: InputMaybe<String_Comparison_Exp>;
+  id?: InputMaybe<Uuid_Comparison_Exp>;
+  message?: InputMaybe<String_Comparison_Exp>;
+  time?: InputMaybe<String_Comparison_Exp>;
+  type?: InputMaybe<String_Comparison_Exp>;
+};
+
+/** unique or primary key constraints on table "System_Logs" */
+export type System_Logs_Constraint =
+  /** unique or primary key constraint on columns "id" */
+  "System_Logs_pkey";
+
+/** input type for inserting data into table "System_Logs" */
+export type System_Logs_Insert_Input = {
+  component?: InputMaybe<Scalars["String"]["input"]>;
+  create_at?: InputMaybe<Scalars["timestamptz"]["input"]>;
+  details?: InputMaybe<Scalars["String"]["input"]>;
+  id?: InputMaybe<Scalars["uuid"]["input"]>;
+  message?: InputMaybe<Scalars["String"]["input"]>;
+  time?: InputMaybe<Scalars["String"]["input"]>;
+  type?: InputMaybe<Scalars["String"]["input"]>;
+};
+
+/** aggregate max on columns */
+export type System_Logs_Max_Fields = {
+  component?: Maybe<Scalars["String"]["output"]>;
+  create_at?: Maybe<Scalars["timestamptz"]["output"]>;
+  details?: Maybe<Scalars["String"]["output"]>;
+  id?: Maybe<Scalars["uuid"]["output"]>;
+  message?: Maybe<Scalars["String"]["output"]>;
+  time?: Maybe<Scalars["String"]["output"]>;
+  type?: Maybe<Scalars["String"]["output"]>;
+};
+
+/** aggregate min on columns */
+export type System_Logs_Min_Fields = {
+  component?: Maybe<Scalars["String"]["output"]>;
+  create_at?: Maybe<Scalars["timestamptz"]["output"]>;
+  details?: Maybe<Scalars["String"]["output"]>;
+  id?: Maybe<Scalars["uuid"]["output"]>;
+  message?: Maybe<Scalars["String"]["output"]>;
+  time?: Maybe<Scalars["String"]["output"]>;
+  type?: Maybe<Scalars["String"]["output"]>;
+};
+
+/** response of any mutation on the table "System_Logs" */
+export type System_Logs_Mutation_Response = {
+  /** number of rows affected by the mutation */
+  affected_rows: Scalars["Int"]["output"];
+  /** data from the rows affected by the mutation */
+  returning: Array<System_Logs>;
+};
+
+/** on_conflict condition type for table "System_Logs" */
+export type System_Logs_On_Conflict = {
+  constraint: System_Logs_Constraint;
+  update_columns?: Array<System_Logs_Update_Column>;
+  where?: InputMaybe<System_Logs_Bool_Exp>;
+};
+
+/** Ordering options when selecting data from "System_Logs". */
+export type System_Logs_Order_By = {
+  component?: InputMaybe<Order_By>;
+  create_at?: InputMaybe<Order_By>;
+  details?: InputMaybe<Order_By>;
+  id?: InputMaybe<Order_By>;
+  message?: InputMaybe<Order_By>;
+  time?: InputMaybe<Order_By>;
+  type?: InputMaybe<Order_By>;
+};
+
+/** primary key columns input for table: System_Logs */
+export type System_Logs_Pk_Columns_Input = {
+  id: Scalars["uuid"]["input"];
+};
+
+/** select columns of table "System_Logs" */
+export type System_Logs_Select_Column =
+  /** column name */
+  | "component"
+  /** column name */
+  | "create_at"
+  /** column name */
+  | "details"
+  /** column name */
+  | "id"
+  /** column name */
+  | "message"
+  /** column name */
+  | "time"
+  /** column name */
+  | "type";
+
+/** input type for updating data in table "System_Logs" */
+export type System_Logs_Set_Input = {
+  component?: InputMaybe<Scalars["String"]["input"]>;
+  create_at?: InputMaybe<Scalars["timestamptz"]["input"]>;
+  details?: InputMaybe<Scalars["String"]["input"]>;
+  id?: InputMaybe<Scalars["uuid"]["input"]>;
+  message?: InputMaybe<Scalars["String"]["input"]>;
+  time?: InputMaybe<Scalars["String"]["input"]>;
+  type?: InputMaybe<Scalars["String"]["input"]>;
+};
+
+/** Streaming cursor of the table "System_Logs" */
+export type System_Logs_Stream_Cursor_Input = {
+  /** Stream column input with initial value */
+  initial_value: System_Logs_Stream_Cursor_Value_Input;
+  /** cursor ordering */
+  ordering?: InputMaybe<Cursor_Ordering>;
+};
+
+/** Initial value of the column from where the streaming should start */
+export type System_Logs_Stream_Cursor_Value_Input = {
+  component?: InputMaybe<Scalars["String"]["input"]>;
+  create_at?: InputMaybe<Scalars["timestamptz"]["input"]>;
+  details?: InputMaybe<Scalars["String"]["input"]>;
+  id?: InputMaybe<Scalars["uuid"]["input"]>;
+  message?: InputMaybe<Scalars["String"]["input"]>;
+  time?: InputMaybe<Scalars["String"]["input"]>;
+  type?: InputMaybe<Scalars["String"]["input"]>;
+};
+
+/** update columns of table "System_Logs" */
+export type System_Logs_Update_Column =
+  /** column name */
+  | "component"
+  /** column name */
+  | "create_at"
+  /** column name */
+  | "details"
+  /** column name */
+  | "id"
+  /** column name */
+  | "message"
+  /** column name */
+  | "time"
+  /** column name */
+  | "type";
+
+export type System_Logs_Updates = {
+  /** sets the columns of the filtered rows to the given values */
+  _set?: InputMaybe<System_Logs_Set_Input>;
+  /** filter the rows which have to be updated */
+  where: System_Logs_Bool_Exp;
+};
+
 /** columns and relationships of "System_configuratioins" */
 export type System_Configuratioins = {
   allowScheduledDeliveries: Scalars["Boolean"]["output"];
@@ -7474,6 +7658,10 @@ export type Mutation_Root = {
   delete_Shops?: Maybe<Shops_Mutation_Response>;
   /** delete single row from the table: "Shops" */
   delete_Shops_by_pk?: Maybe<Shops>;
+  /** delete data from the table: "System_Logs" */
+  delete_System_Logs?: Maybe<System_Logs_Mutation_Response>;
+  /** delete single row from the table: "System_Logs" */
+  delete_System_Logs_by_pk?: Maybe<System_Logs>;
   /** delete data from the table: "System_configuratioins" */
   delete_System_configuratioins?: Maybe<System_Configuratioins_Mutation_Response>;
   /** delete single row from the table: "System_configuratioins" */
@@ -7490,6 +7678,10 @@ export type Mutation_Root = {
   delete_Wallets?: Maybe<Wallets_Mutation_Response>;
   /** delete single row from the table: "Wallets" */
   delete_Wallets_by_pk?: Maybe<Wallets>;
+  /** delete data from the table: "paymentCards" */
+  delete_paymentCards?: Maybe<PaymentCards_Mutation_Response>;
+  /** delete single row from the table: "paymentCards" */
+  delete_paymentCards_by_pk?: Maybe<PaymentCards>;
   /** delete data from the table: "promotions" */
   delete_promotions?: Maybe<Promotions_Mutation_Response>;
   /** delete single row from the table: "promotions" */
@@ -7570,6 +7762,10 @@ export type Mutation_Root = {
   insert_Shops?: Maybe<Shops_Mutation_Response>;
   /** insert a single row into the table: "Shops" */
   insert_Shops_one?: Maybe<Shops>;
+  /** insert data into the table: "System_Logs" */
+  insert_System_Logs?: Maybe<System_Logs_Mutation_Response>;
+  /** insert a single row into the table: "System_Logs" */
+  insert_System_Logs_one?: Maybe<System_Logs>;
   /** insert data into the table: "System_configuratioins" */
   insert_System_configuratioins?: Maybe<System_Configuratioins_Mutation_Response>;
   /** insert a single row into the table: "System_configuratioins" */
@@ -7586,6 +7782,10 @@ export type Mutation_Root = {
   insert_Wallets?: Maybe<Wallets_Mutation_Response>;
   /** insert a single row into the table: "Wallets" */
   insert_Wallets_one?: Maybe<Wallets>;
+  /** insert data into the table: "paymentCards" */
+  insert_paymentCards?: Maybe<PaymentCards_Mutation_Response>;
+  /** insert a single row into the table: "paymentCards" */
+  insert_paymentCards_one?: Maybe<PaymentCards>;
   /** insert data into the table: "promotions" */
   insert_promotions?: Maybe<Promotions_Mutation_Response>;
   /** insert a single row into the table: "promotions" */
@@ -7710,6 +7910,12 @@ export type Mutation_Root = {
   update_Shops_by_pk?: Maybe<Shops>;
   /** update multiples rows of table: "Shops" */
   update_Shops_many?: Maybe<Array<Maybe<Shops_Mutation_Response>>>;
+  /** update data of the table: "System_Logs" */
+  update_System_Logs?: Maybe<System_Logs_Mutation_Response>;
+  /** update single row of the table: "System_Logs" */
+  update_System_Logs_by_pk?: Maybe<System_Logs>;
+  /** update multiples rows of table: "System_Logs" */
+  update_System_Logs_many?: Maybe<Array<Maybe<System_Logs_Mutation_Response>>>;
   /** update data of the table: "System_configuratioins" */
   update_System_configuratioins?: Maybe<System_Configuratioins_Mutation_Response>;
   /** update single row of the table: "System_configuratioins" */
@@ -7738,6 +7944,14 @@ export type Mutation_Root = {
   update_Wallets_by_pk?: Maybe<Wallets>;
   /** update multiples rows of table: "Wallets" */
   update_Wallets_many?: Maybe<Array<Maybe<Wallets_Mutation_Response>>>;
+  /** update data of the table: "paymentCards" */
+  update_paymentCards?: Maybe<PaymentCards_Mutation_Response>;
+  /** update single row of the table: "paymentCards" */
+  update_paymentCards_by_pk?: Maybe<PaymentCards>;
+  /** update multiples rows of table: "paymentCards" */
+  update_paymentCards_many?: Maybe<
+    Array<Maybe<PaymentCards_Mutation_Response>>
+  >;
   /** update data of the table: "promotions" */
   update_promotions?: Maybe<Promotions_Mutation_Response>;
   /** update single row of the table: "promotions" */
@@ -7929,6 +8143,16 @@ export type Mutation_RootDelete_Shops_By_PkArgs = {
 };
 
 /** mutation root */
+export type Mutation_RootDelete_System_LogsArgs = {
+  where: System_Logs_Bool_Exp;
+};
+
+/** mutation root */
+export type Mutation_RootDelete_System_Logs_By_PkArgs = {
+  id: Scalars["uuid"]["input"];
+};
+
+/** mutation root */
 export type Mutation_RootDelete_System_ConfiguratioinsArgs = {
   where: System_Configuratioins_Bool_Exp;
 };
@@ -7965,6 +8189,16 @@ export type Mutation_RootDelete_WalletsArgs = {
 
 /** mutation root */
 export type Mutation_RootDelete_Wallets_By_PkArgs = {
+  id: Scalars["uuid"]["input"];
+};
+
+/** mutation root */
+export type Mutation_RootDelete_PaymentCardsArgs = {
+  where: PaymentCards_Bool_Exp;
+};
+
+/** mutation root */
+export type Mutation_RootDelete_PaymentCards_By_PkArgs = {
   id: Scalars["uuid"]["input"];
 };
 
@@ -8203,6 +8437,18 @@ export type Mutation_RootInsert_Shops_OneArgs = {
 };
 
 /** mutation root */
+export type Mutation_RootInsert_System_LogsArgs = {
+  objects: Array<System_Logs_Insert_Input>;
+  on_conflict?: InputMaybe<System_Logs_On_Conflict>;
+};
+
+/** mutation root */
+export type Mutation_RootInsert_System_Logs_OneArgs = {
+  object: System_Logs_Insert_Input;
+  on_conflict?: InputMaybe<System_Logs_On_Conflict>;
+};
+
+/** mutation root */
 export type Mutation_RootInsert_System_ConfiguratioinsArgs = {
   objects: Array<System_Configuratioins_Insert_Input>;
   on_conflict?: InputMaybe<System_Configuratioins_On_Conflict>;
@@ -8248,6 +8494,18 @@ export type Mutation_RootInsert_WalletsArgs = {
 export type Mutation_RootInsert_Wallets_OneArgs = {
   object: Wallets_Insert_Input;
   on_conflict?: InputMaybe<Wallets_On_Conflict>;
+};
+
+/** mutation root */
+export type Mutation_RootInsert_PaymentCardsArgs = {
+  objects: Array<PaymentCards_Insert_Input>;
+  on_conflict?: InputMaybe<PaymentCards_On_Conflict>;
+};
+
+/** mutation root */
+export type Mutation_RootInsert_PaymentCards_OneArgs = {
+  object: PaymentCards_Insert_Input;
+  on_conflict?: InputMaybe<PaymentCards_On_Conflict>;
 };
 
 /** mutation root */
@@ -8598,6 +8856,23 @@ export type Mutation_RootUpdate_Shops_ManyArgs = {
 };
 
 /** mutation root */
+export type Mutation_RootUpdate_System_LogsArgs = {
+  _set?: InputMaybe<System_Logs_Set_Input>;
+  where: System_Logs_Bool_Exp;
+};
+
+/** mutation root */
+export type Mutation_RootUpdate_System_Logs_By_PkArgs = {
+  _set?: InputMaybe<System_Logs_Set_Input>;
+  pk_columns: System_Logs_Pk_Columns_Input;
+};
+
+/** mutation root */
+export type Mutation_RootUpdate_System_Logs_ManyArgs = {
+  updates: Array<System_Logs_Updates>;
+};
+
+/** mutation root */
 export type Mutation_RootUpdate_System_ConfiguratioinsArgs = {
   _set?: InputMaybe<System_Configuratioins_Set_Input>;
   where: System_Configuratioins_Bool_Exp;
@@ -8663,6 +8938,23 @@ export type Mutation_RootUpdate_Wallets_By_PkArgs = {
 /** mutation root */
 export type Mutation_RootUpdate_Wallets_ManyArgs = {
   updates: Array<Wallets_Updates>;
+};
+
+/** mutation root */
+export type Mutation_RootUpdate_PaymentCardsArgs = {
+  _set?: InputMaybe<PaymentCards_Set_Input>;
+  where: PaymentCards_Bool_Exp;
+};
+
+/** mutation root */
+export type Mutation_RootUpdate_PaymentCards_By_PkArgs = {
+  _set?: InputMaybe<PaymentCards_Set_Input>;
+  pk_columns: PaymentCards_Pk_Columns_Input;
+};
+
+/** mutation root */
+export type Mutation_RootUpdate_PaymentCards_ManyArgs = {
+  updates: Array<PaymentCards_Updates>;
 };
 
 /** mutation root */
@@ -8734,6 +9026,216 @@ export type Order_By =
   | "desc_nulls_first"
   /** in descending order, nulls last */
   | "desc_nulls_last";
+
+/** columns and relationships of "paymentCards" */
+export type PaymentCards = {
+  CVV: Scalars["String"]["output"];
+  created_at: Scalars["timestamptz"]["output"];
+  expiry_date: Scalars["String"]["output"];
+  id: Scalars["uuid"]["output"];
+  image: Scalars["String"]["output"];
+  name: Scalars["String"]["output"];
+  number: Scalars["String"]["output"];
+  update_on?: Maybe<Scalars["timestamptz"]["output"]>;
+  user_id: Scalars["uuid"]["output"];
+};
+
+/** aggregated selection of "paymentCards" */
+export type PaymentCards_Aggregate = {
+  aggregate?: Maybe<PaymentCards_Aggregate_Fields>;
+  nodes: Array<PaymentCards>;
+};
+
+/** aggregate fields of "paymentCards" */
+export type PaymentCards_Aggregate_Fields = {
+  count: Scalars["Int"]["output"];
+  max?: Maybe<PaymentCards_Max_Fields>;
+  min?: Maybe<PaymentCards_Min_Fields>;
+};
+
+/** aggregate fields of "paymentCards" */
+export type PaymentCards_Aggregate_FieldsCountArgs = {
+  columns?: InputMaybe<Array<PaymentCards_Select_Column>>;
+  distinct?: InputMaybe<Scalars["Boolean"]["input"]>;
+};
+
+/** Boolean expression to filter rows from the table "paymentCards". All fields are combined with a logical 'AND'. */
+export type PaymentCards_Bool_Exp = {
+  CVV?: InputMaybe<String_Comparison_Exp>;
+  _and?: InputMaybe<Array<PaymentCards_Bool_Exp>>;
+  _not?: InputMaybe<PaymentCards_Bool_Exp>;
+  _or?: InputMaybe<Array<PaymentCards_Bool_Exp>>;
+  created_at?: InputMaybe<Timestamptz_Comparison_Exp>;
+  expiry_date?: InputMaybe<String_Comparison_Exp>;
+  id?: InputMaybe<Uuid_Comparison_Exp>;
+  image?: InputMaybe<String_Comparison_Exp>;
+  name?: InputMaybe<String_Comparison_Exp>;
+  number?: InputMaybe<String_Comparison_Exp>;
+  update_on?: InputMaybe<Timestamptz_Comparison_Exp>;
+  user_id?: InputMaybe<Uuid_Comparison_Exp>;
+};
+
+/** unique or primary key constraints on table "paymentCards" */
+export type PaymentCards_Constraint =
+  /** unique or primary key constraint on columns "number" */
+  | "paymentCards_number_key"
+  /** unique or primary key constraint on columns "id" */
+  | "paymentCards_pkey";
+
+/** input type for inserting data into table "paymentCards" */
+export type PaymentCards_Insert_Input = {
+  CVV?: InputMaybe<Scalars["String"]["input"]>;
+  created_at?: InputMaybe<Scalars["timestamptz"]["input"]>;
+  expiry_date?: InputMaybe<Scalars["String"]["input"]>;
+  id?: InputMaybe<Scalars["uuid"]["input"]>;
+  image?: InputMaybe<Scalars["String"]["input"]>;
+  name?: InputMaybe<Scalars["String"]["input"]>;
+  number?: InputMaybe<Scalars["String"]["input"]>;
+  update_on?: InputMaybe<Scalars["timestamptz"]["input"]>;
+  user_id?: InputMaybe<Scalars["uuid"]["input"]>;
+};
+
+/** aggregate max on columns */
+export type PaymentCards_Max_Fields = {
+  CVV?: Maybe<Scalars["String"]["output"]>;
+  created_at?: Maybe<Scalars["timestamptz"]["output"]>;
+  expiry_date?: Maybe<Scalars["String"]["output"]>;
+  id?: Maybe<Scalars["uuid"]["output"]>;
+  image?: Maybe<Scalars["String"]["output"]>;
+  name?: Maybe<Scalars["String"]["output"]>;
+  number?: Maybe<Scalars["String"]["output"]>;
+  update_on?: Maybe<Scalars["timestamptz"]["output"]>;
+  user_id?: Maybe<Scalars["uuid"]["output"]>;
+};
+
+/** aggregate min on columns */
+export type PaymentCards_Min_Fields = {
+  CVV?: Maybe<Scalars["String"]["output"]>;
+  created_at?: Maybe<Scalars["timestamptz"]["output"]>;
+  expiry_date?: Maybe<Scalars["String"]["output"]>;
+  id?: Maybe<Scalars["uuid"]["output"]>;
+  image?: Maybe<Scalars["String"]["output"]>;
+  name?: Maybe<Scalars["String"]["output"]>;
+  number?: Maybe<Scalars["String"]["output"]>;
+  update_on?: Maybe<Scalars["timestamptz"]["output"]>;
+  user_id?: Maybe<Scalars["uuid"]["output"]>;
+};
+
+/** response of any mutation on the table "paymentCards" */
+export type PaymentCards_Mutation_Response = {
+  /** number of rows affected by the mutation */
+  affected_rows: Scalars["Int"]["output"];
+  /** data from the rows affected by the mutation */
+  returning: Array<PaymentCards>;
+};
+
+/** on_conflict condition type for table "paymentCards" */
+export type PaymentCards_On_Conflict = {
+  constraint: PaymentCards_Constraint;
+  update_columns?: Array<PaymentCards_Update_Column>;
+  where?: InputMaybe<PaymentCards_Bool_Exp>;
+};
+
+/** Ordering options when selecting data from "paymentCards". */
+export type PaymentCards_Order_By = {
+  CVV?: InputMaybe<Order_By>;
+  created_at?: InputMaybe<Order_By>;
+  expiry_date?: InputMaybe<Order_By>;
+  id?: InputMaybe<Order_By>;
+  image?: InputMaybe<Order_By>;
+  name?: InputMaybe<Order_By>;
+  number?: InputMaybe<Order_By>;
+  update_on?: InputMaybe<Order_By>;
+  user_id?: InputMaybe<Order_By>;
+};
+
+/** primary key columns input for table: paymentCards */
+export type PaymentCards_Pk_Columns_Input = {
+  id: Scalars["uuid"]["input"];
+};
+
+/** select columns of table "paymentCards" */
+export type PaymentCards_Select_Column =
+  /** column name */
+  | "CVV"
+  /** column name */
+  | "created_at"
+  /** column name */
+  | "expiry_date"
+  /** column name */
+  | "id"
+  /** column name */
+  | "image"
+  /** column name */
+  | "name"
+  /** column name */
+  | "number"
+  /** column name */
+  | "update_on"
+  /** column name */
+  | "user_id";
+
+/** input type for updating data in table "paymentCards" */
+export type PaymentCards_Set_Input = {
+  CVV?: InputMaybe<Scalars["String"]["input"]>;
+  created_at?: InputMaybe<Scalars["timestamptz"]["input"]>;
+  expiry_date?: InputMaybe<Scalars["String"]["input"]>;
+  id?: InputMaybe<Scalars["uuid"]["input"]>;
+  image?: InputMaybe<Scalars["String"]["input"]>;
+  name?: InputMaybe<Scalars["String"]["input"]>;
+  number?: InputMaybe<Scalars["String"]["input"]>;
+  update_on?: InputMaybe<Scalars["timestamptz"]["input"]>;
+  user_id?: InputMaybe<Scalars["uuid"]["input"]>;
+};
+
+/** Streaming cursor of the table "paymentCards" */
+export type PaymentCards_Stream_Cursor_Input = {
+  /** Stream column input with initial value */
+  initial_value: PaymentCards_Stream_Cursor_Value_Input;
+  /** cursor ordering */
+  ordering?: InputMaybe<Cursor_Ordering>;
+};
+
+/** Initial value of the column from where the streaming should start */
+export type PaymentCards_Stream_Cursor_Value_Input = {
+  CVV?: InputMaybe<Scalars["String"]["input"]>;
+  created_at?: InputMaybe<Scalars["timestamptz"]["input"]>;
+  expiry_date?: InputMaybe<Scalars["String"]["input"]>;
+  id?: InputMaybe<Scalars["uuid"]["input"]>;
+  image?: InputMaybe<Scalars["String"]["input"]>;
+  name?: InputMaybe<Scalars["String"]["input"]>;
+  number?: InputMaybe<Scalars["String"]["input"]>;
+  update_on?: InputMaybe<Scalars["timestamptz"]["input"]>;
+  user_id?: InputMaybe<Scalars["uuid"]["input"]>;
+};
+
+/** update columns of table "paymentCards" */
+export type PaymentCards_Update_Column =
+  /** column name */
+  | "CVV"
+  /** column name */
+  | "created_at"
+  /** column name */
+  | "expiry_date"
+  /** column name */
+  | "id"
+  /** column name */
+  | "image"
+  /** column name */
+  | "name"
+  /** column name */
+  | "number"
+  /** column name */
+  | "update_on"
+  /** column name */
+  | "user_id";
+
+export type PaymentCards_Updates = {
+  /** sets the columns of the filtered rows to the given values */
+  _set?: InputMaybe<PaymentCards_Set_Input>;
+  /** filter the rows which have to be updated */
+  where: PaymentCards_Bool_Exp;
+};
 
 /** columns and relationships of "promotions" */
 export type Promotions = {
@@ -9046,6 +9548,12 @@ export type Query_Root = {
   Shops_aggregate: Shops_Aggregate;
   /** fetch data from the table: "Shops" using primary key columns */
   Shops_by_pk?: Maybe<Shops>;
+  /** fetch data from the table: "System_Logs" */
+  System_Logs: Array<System_Logs>;
+  /** fetch aggregated fields from the table: "System_Logs" */
+  System_Logs_aggregate: System_Logs_Aggregate;
+  /** fetch data from the table: "System_Logs" using primary key columns */
+  System_Logs_by_pk?: Maybe<System_Logs>;
   /** fetch data from the table: "System_configuratioins" */
   System_configuratioins: Array<System_Configuratioins>;
   /** fetch aggregated fields from the table: "System_configuratioins" */
@@ -9070,6 +9578,12 @@ export type Query_Root = {
   Wallets_aggregate: Wallets_Aggregate;
   /** fetch data from the table: "Wallets" using primary key columns */
   Wallets_by_pk?: Maybe<Wallets>;
+  /** fetch data from the table: "paymentCards" */
+  paymentCards: Array<PaymentCards>;
+  /** fetch aggregated fields from the table: "paymentCards" */
+  paymentCards_aggregate: PaymentCards_Aggregate;
+  /** fetch data from the table: "paymentCards" using primary key columns */
+  paymentCards_by_pk?: Maybe<PaymentCards>;
   /** fetch data from the table: "promotions" */
   promotions: Array<Promotions>;
   /** fetch aggregated fields from the table: "promotions" */
@@ -9430,6 +9944,26 @@ export type Query_RootShops_By_PkArgs = {
   id: Scalars["uuid"]["input"];
 };
 
+export type Query_RootSystem_LogsArgs = {
+  distinct_on?: InputMaybe<Array<System_Logs_Select_Column>>;
+  limit?: InputMaybe<Scalars["Int"]["input"]>;
+  offset?: InputMaybe<Scalars["Int"]["input"]>;
+  order_by?: InputMaybe<Array<System_Logs_Order_By>>;
+  where?: InputMaybe<System_Logs_Bool_Exp>;
+};
+
+export type Query_RootSystem_Logs_AggregateArgs = {
+  distinct_on?: InputMaybe<Array<System_Logs_Select_Column>>;
+  limit?: InputMaybe<Scalars["Int"]["input"]>;
+  offset?: InputMaybe<Scalars["Int"]["input"]>;
+  order_by?: InputMaybe<Array<System_Logs_Order_By>>;
+  where?: InputMaybe<System_Logs_Bool_Exp>;
+};
+
+export type Query_RootSystem_Logs_By_PkArgs = {
+  id: Scalars["uuid"]["input"];
+};
+
 export type Query_RootSystem_ConfiguratioinsArgs = {
   distinct_on?: InputMaybe<Array<System_Configuratioins_Select_Column>>;
   limit?: InputMaybe<Scalars["Int"]["input"]>;
@@ -9507,6 +10041,26 @@ export type Query_RootWallets_AggregateArgs = {
 };
 
 export type Query_RootWallets_By_PkArgs = {
+  id: Scalars["uuid"]["input"];
+};
+
+export type Query_RootPaymentCardsArgs = {
+  distinct_on?: InputMaybe<Array<PaymentCards_Select_Column>>;
+  limit?: InputMaybe<Scalars["Int"]["input"]>;
+  offset?: InputMaybe<Scalars["Int"]["input"]>;
+  order_by?: InputMaybe<Array<PaymentCards_Order_By>>;
+  where?: InputMaybe<PaymentCards_Bool_Exp>;
+};
+
+export type Query_RootPaymentCards_AggregateArgs = {
+  distinct_on?: InputMaybe<Array<PaymentCards_Select_Column>>;
+  limit?: InputMaybe<Scalars["Int"]["input"]>;
+  offset?: InputMaybe<Scalars["Int"]["input"]>;
+  order_by?: InputMaybe<Array<PaymentCards_Order_By>>;
+  where?: InputMaybe<PaymentCards_Bool_Exp>;
+};
+
+export type Query_RootPaymentCards_By_PkArgs = {
   id: Scalars["uuid"]["input"];
 };
 
@@ -10070,6 +10624,14 @@ export type Subscription_Root = {
   Shops_by_pk?: Maybe<Shops>;
   /** fetch data from the table in a streaming manner: "Shops" */
   Shops_stream: Array<Shops>;
+  /** fetch data from the table: "System_Logs" */
+  System_Logs: Array<System_Logs>;
+  /** fetch aggregated fields from the table: "System_Logs" */
+  System_Logs_aggregate: System_Logs_Aggregate;
+  /** fetch data from the table: "System_Logs" using primary key columns */
+  System_Logs_by_pk?: Maybe<System_Logs>;
+  /** fetch data from the table in a streaming manner: "System_Logs" */
+  System_Logs_stream: Array<System_Logs>;
   /** fetch data from the table: "System_configuratioins" */
   System_configuratioins: Array<System_Configuratioins>;
   /** fetch aggregated fields from the table: "System_configuratioins" */
@@ -10102,6 +10664,14 @@ export type Subscription_Root = {
   Wallets_by_pk?: Maybe<Wallets>;
   /** fetch data from the table in a streaming manner: "Wallets" */
   Wallets_stream: Array<Wallets>;
+  /** fetch data from the table: "paymentCards" */
+  paymentCards: Array<PaymentCards>;
+  /** fetch aggregated fields from the table: "paymentCards" */
+  paymentCards_aggregate: PaymentCards_Aggregate;
+  /** fetch data from the table: "paymentCards" using primary key columns */
+  paymentCards_by_pk?: Maybe<PaymentCards>;
+  /** fetch data from the table in a streaming manner: "paymentCards" */
+  paymentCards_stream: Array<PaymentCards>;
   /** fetch data from the table: "promotions" */
   promotions: Array<Promotions>;
   /** fetch aggregated fields from the table: "promotions" */
@@ -10570,6 +11140,32 @@ export type Subscription_RootShops_StreamArgs = {
   where?: InputMaybe<Shops_Bool_Exp>;
 };
 
+export type Subscription_RootSystem_LogsArgs = {
+  distinct_on?: InputMaybe<Array<System_Logs_Select_Column>>;
+  limit?: InputMaybe<Scalars["Int"]["input"]>;
+  offset?: InputMaybe<Scalars["Int"]["input"]>;
+  order_by?: InputMaybe<Array<System_Logs_Order_By>>;
+  where?: InputMaybe<System_Logs_Bool_Exp>;
+};
+
+export type Subscription_RootSystem_Logs_AggregateArgs = {
+  distinct_on?: InputMaybe<Array<System_Logs_Select_Column>>;
+  limit?: InputMaybe<Scalars["Int"]["input"]>;
+  offset?: InputMaybe<Scalars["Int"]["input"]>;
+  order_by?: InputMaybe<Array<System_Logs_Order_By>>;
+  where?: InputMaybe<System_Logs_Bool_Exp>;
+};
+
+export type Subscription_RootSystem_Logs_By_PkArgs = {
+  id: Scalars["uuid"]["input"];
+};
+
+export type Subscription_RootSystem_Logs_StreamArgs = {
+  batch_size: Scalars["Int"]["input"];
+  cursor: Array<InputMaybe<System_Logs_Stream_Cursor_Input>>;
+  where?: InputMaybe<System_Logs_Bool_Exp>;
+};
+
 export type Subscription_RootSystem_ConfiguratioinsArgs = {
   distinct_on?: InputMaybe<Array<System_Configuratioins_Select_Column>>;
   limit?: InputMaybe<Scalars["Int"]["input"]>;
@@ -10672,6 +11268,32 @@ export type Subscription_RootWallets_StreamArgs = {
   batch_size: Scalars["Int"]["input"];
   cursor: Array<InputMaybe<Wallets_Stream_Cursor_Input>>;
   where?: InputMaybe<Wallets_Bool_Exp>;
+};
+
+export type Subscription_RootPaymentCardsArgs = {
+  distinct_on?: InputMaybe<Array<PaymentCards_Select_Column>>;
+  limit?: InputMaybe<Scalars["Int"]["input"]>;
+  offset?: InputMaybe<Scalars["Int"]["input"]>;
+  order_by?: InputMaybe<Array<PaymentCards_Order_By>>;
+  where?: InputMaybe<PaymentCards_Bool_Exp>;
+};
+
+export type Subscription_RootPaymentCards_AggregateArgs = {
+  distinct_on?: InputMaybe<Array<PaymentCards_Select_Column>>;
+  limit?: InputMaybe<Scalars["Int"]["input"]>;
+  offset?: InputMaybe<Scalars["Int"]["input"]>;
+  order_by?: InputMaybe<Array<PaymentCards_Order_By>>;
+  where?: InputMaybe<PaymentCards_Bool_Exp>;
+};
+
+export type Subscription_RootPaymentCards_By_PkArgs = {
+  id: Scalars["uuid"]["input"];
+};
+
+export type Subscription_RootPaymentCards_StreamArgs = {
+  batch_size: Scalars["Int"]["input"];
+  cursor: Array<InputMaybe<PaymentCards_Stream_Cursor_Input>>;
+  where?: InputMaybe<PaymentCards_Bool_Exp>;
 };
 
 export type Subscription_RootPromotionsArgs = {
@@ -11759,6 +12381,12 @@ export type GetRatingsQuery = {
   }>;
 };
 
+export type CheckOrderRatingQueryVariables = Exact<{
+  orderId: Scalars["uuid"]["input"];
+}>;
+
+export type CheckOrderRatingQuery = { Ratings: Array<{ id: string }> };
+
 export type GetAllREfundsQueryVariables = Exact<{ [key: string]: never }>;
 
 export type GetAllREfundsQuery = {
@@ -11793,6 +12421,39 @@ export type RegisterShopperMutation = {
     status: string;
     active: boolean;
     onboarding_step: string;
+  } | null;
+};
+
+export type GetSystemLogsQueryVariables = Exact<{ [key: string]: never }>;
+
+export type GetSystemLogsQuery = {
+  System_Logs: Array<{
+    time: string;
+    type: string;
+    message?: string | null;
+    id: string;
+    details?: string | null;
+    create_at: string;
+    component: string;
+  }>;
+};
+
+export type InsertSystemLogMutationVariables = Exact<{
+  type: Scalars["String"]["input"];
+  message: Scalars["String"]["input"];
+  component: Scalars["String"]["input"];
+  details: Scalars["String"]["input"];
+  time: Scalars["String"]["input"];
+}>;
+
+export type InsertSystemLogMutation = {
+  insert_System_Logs_one?: {
+    id: string;
+    type: string;
+    message?: string | null;
+    component: string;
+    details?: string | null;
+    time: string;
   } | null;
 };
 
@@ -12562,6 +13223,13 @@ export const GetRatingsDocument = gql`
     }
   }
 `;
+export const CheckOrderRatingDocument = gql`
+  query CheckOrderRating($orderId: uuid!) {
+    Ratings(where: { order_id: { _eq: $orderId } }) {
+      id
+    }
+  }
+`;
 export const GetAllREfundsDocument = gql`
   query getAllREfunds {
     Refunds {
@@ -12609,6 +13277,45 @@ export const RegisterShopperDocument = gql`
       status
       active
       onboarding_step
+    }
+  }
+`;
+export const GetSystemLogsDocument = gql`
+  query getSystemLogs {
+    System_Logs {
+      time
+      type
+      message
+      id
+      details
+      create_at
+      component
+    }
+  }
+`;
+export const InsertSystemLogDocument = gql`
+  mutation insertSystemLog(
+    $type: String!
+    $message: String!
+    $component: String!
+    $details: String!
+    $time: String!
+  ) {
+    insert_System_Logs_one(
+      object: {
+        type: $type
+        message: $message
+        component: $component
+        details: $details
+        time: $time
+      }
+    ) {
+      id
+      type
+      message
+      component
+      details
+      time
     }
   }
 `;
@@ -13156,6 +13863,22 @@ export function getSdk(
         variables
       );
     },
+    CheckOrderRating(
+      variables: CheckOrderRatingQueryVariables,
+      requestHeaders?: GraphQLClientRequestHeaders
+    ): Promise<CheckOrderRatingQuery> {
+      return withWrapper(
+        (wrappedRequestHeaders) =>
+          client.request<CheckOrderRatingQuery>(
+            CheckOrderRatingDocument,
+            variables,
+            { ...requestHeaders, ...wrappedRequestHeaders }
+          ),
+        "CheckOrderRating",
+        "query",
+        variables
+      );
+    },
     getAllREfunds(
       variables?: GetAllREfundsQueryVariables,
       requestHeaders?: GraphQLClientRequestHeaders
@@ -13183,6 +13906,37 @@ export function getSdk(
             { ...requestHeaders, ...wrappedRequestHeaders }
           ),
         "RegisterShopper",
+        "mutation",
+        variables
+      );
+    },
+    getSystemLogs(
+      variables?: GetSystemLogsQueryVariables,
+      requestHeaders?: GraphQLClientRequestHeaders
+    ): Promise<GetSystemLogsQuery> {
+      return withWrapper(
+        (wrappedRequestHeaders) =>
+          client.request<GetSystemLogsQuery>(GetSystemLogsDocument, variables, {
+            ...requestHeaders,
+            ...wrappedRequestHeaders,
+          }),
+        "getSystemLogs",
+        "query",
+        variables
+      );
+    },
+    insertSystemLog(
+      variables: InsertSystemLogMutationVariables,
+      requestHeaders?: GraphQLClientRequestHeaders
+    ): Promise<InsertSystemLogMutation> {
+      return withWrapper(
+        (wrappedRequestHeaders) =>
+          client.request<InsertSystemLogMutation>(
+            InsertSystemLogDocument,
+            variables,
+            { ...requestHeaders, ...wrappedRequestHeaders }
+          ),
+        "insertSystemLog",
         "mutation",
         variables
       );

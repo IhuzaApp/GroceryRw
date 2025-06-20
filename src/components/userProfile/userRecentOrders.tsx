@@ -143,13 +143,16 @@ export default function UserRecentOrders({
   return (
     <>
       <div className="mb-4 flex items-center justify-between">
-        <h3 className="text-lg font-bold">Orders</h3>
+        <h3 className="text-lg font-bold text-gray-900 dark:text-white">
+          Orders
+        </h3>
         {onRefresh && (
           <Button
             appearance="link"
             size="sm"
             onClick={onRefresh}
             disabled={loading}
+            className="text-green-500 hover:text-green-600 dark:text-green-400 dark:hover:text-green-500"
           >
             Refresh
           </Button>
@@ -160,41 +163,44 @@ export default function UserRecentOrders({
           {[1, 2, 3].map((i) => (
             <div
               key={i}
-              className="mb-4 animate-pulse rounded-xl border border-gray-200 bg-white p-4 shadow-md"
+              className="mb-4 animate-pulse rounded-xl border border-gray-200 bg-white p-4 shadow-md transition-colors duration-200 dark:border-gray-700 dark:bg-gray-800"
             >
-              <div className="mb-2 h-4 w-1/3 rounded bg-gray-200"></div>
-              <div className="mb-4 h-3 w-1/4 rounded bg-gray-200"></div>
-              <div className="mb-2 h-4 w-1/2 rounded bg-gray-200"></div>
-              <div className="h-4 w-1/6 rounded bg-gray-200"></div>
+              <div className="mb-2 h-4 w-1/3 rounded bg-gray-200 dark:bg-gray-700"></div>
+              <div className="mb-4 h-3 w-1/4 rounded bg-gray-200 dark:bg-gray-700"></div>
+              <div className="mb-2 h-4 w-1/2 rounded bg-gray-200 dark:bg-gray-700"></div>
+              <div className="h-4 w-1/6 rounded bg-gray-200 dark:bg-gray-700"></div>
             </div>
           ))}
         </div>
       ) : orders.length === 0 ? (
-        <p>No orders found.</p>
+        <p className="text-gray-600 dark:text-gray-400">No orders found.</p>
       ) : (
         visibleOrders.map((order: Order) => (
           <div
             key={order.id}
-            className="mb-4 rounded-xl border border-gray-200 bg-white p-4 shadow-md"
+            className="mb-4 rounded-xl border border-gray-200 bg-white p-4 shadow-md transition-colors duration-200 dark:border-gray-700 dark:bg-gray-800"
           >
             {/* Shop Profile */}
             {order.shop ? (
               <div className="mb-4 flex items-center gap-3">
                 <svg
-                  fill="#008000"
+                  className="text-green-500 dark:text-green-400"
                   width="20px"
                   height="20px"
                   viewBox="0 0 0.6 0.6"
                   data-name="Layer 1"
                   id="Layer_1"
                   xmlns="http://www.w3.org/2000/svg"
+                  fill="currentColor"
                 >
                   <title />
                   <path d="M0.138 0.125 0.125 0.075H0.031a0.025 0.025 0 0 0 0 0.05h0.056L0.168 0.45H0.5v-0.05H0.207l-0.008 -0.034L0.525 0.304V0.125ZM0.475 0.263 0.186 0.318 0.15 0.175h0.325ZM0.175 0.475a0.038 0.038 0 1 0 0.038 0.038A0.038 0.038 0 0 0 0.175 0.475m0.3 0a0.038 0.038 0 1 0 0.038 0.038A0.038 0.038 0 0 0 0.475 0.475" />
                 </svg>
                 <div>
-                  <div className="font-semibold">{order?.shop?.name}</div>
-                  <div className="text-sm text-gray-500">
+                  <div className="font-semibold text-gray-900 dark:text-white">
+                    {order?.shop?.name}
+                  </div>
+                  <div className="text-sm text-gray-500 dark:text-gray-400">
                     {order?.shop?.address}
                   </div>
                 </div>
@@ -204,10 +210,10 @@ export default function UserRecentOrders({
             {/* Order Info */}
             <div className="mb-2 flex items-center justify-between">
               <div>
-                <span className="font-bold">
+                <span className="font-bold text-gray-900 dark:text-white">
                   Order #{formatOrderID(order?.OrderID)}
                 </span>
-                <span className="ml-4 text-sm text-gray-500">
+                <span className="ml-4 text-sm text-gray-500 dark:text-gray-400">
                   {timeAgo(order?.created_at)}
                 </span>
               </div>
@@ -217,22 +223,19 @@ export default function UserRecentOrders({
                 const isAssigned = !!order?.shopper_id;
                 if (isDone) {
                   return (
-                    <Tag color="green" className="bg-green-100 text-green-600">
+                    <Tag className="border-green-200 bg-green-100 text-green-600 dark:border-green-800 dark:bg-green-900 dark:text-green-300">
                       Completed
                     </Tag>
                   );
                 } else if (!isAssigned) {
                   return (
-                    <Tag
-                      color="orange"
-                      className="bg-yellow-100 text-yellow-600"
-                    >
+                    <Tag className="border-yellow-200 bg-yellow-100 text-yellow-600 dark:border-yellow-800 dark:bg-yellow-900 dark:text-yellow-300">
                       Pending
                     </Tag>
                   );
                 } else {
                   return (
-                    <Tag color="blue" className="bg-blue-100 text-blue-600">
+                    <Tag className="border-blue-200 bg-blue-100 text-blue-600 dark:border-blue-800 dark:bg-blue-900 dark:text-blue-300">
                       Ongoing
                     </Tag>
                   );
@@ -240,11 +243,11 @@ export default function UserRecentOrders({
               })()}
             </div>
 
-            <div className="mb-3 flex justify-between text-sm text-gray-600">
-              <span className="font-bold text-green-600">
+            <div className="mb-3 flex justify-between text-sm">
+              <span className="font-bold text-green-600 dark:text-green-400">
                 {order.itemsCount} items ({order.unitsCount} units)
               </span>
-              <span className="font-bold">
+              <span className="font-bold text-gray-900 dark:text-white">
                 {formatCurrency(
                   order.total +
                     (order.service_fee ?? 0) +
@@ -265,35 +268,18 @@ export default function UserRecentOrders({
 
             <div className="flex gap-2">
               <Link
-                href={`/CurrentPendingOrders/viewOrderDetails?orderId=${order.id}`}
-                passHref
+                href={`/CurrentPendingOrders/viewOrderDetails/${order.id}`}
+                className="inline-flex items-center rounded-lg bg-green-500 px-4 py-2 text-sm font-medium text-white transition duration-150 hover:bg-green-600 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 dark:bg-green-600 dark:hover:bg-green-700 dark:focus:ring-offset-gray-900"
               >
-                <button className="inline-flex items-center rounded-md border-2 border-black px-3 py-1.5 text-sm font-medium text-black shadow-sm transition hover:bg-black hover:text-white focus:outline-none focus:ring-2 focus:ring-black focus:ring-offset-2">
-                  <svg
-                    className="mr-1.5 h-4 w-4"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth="2"
-                      d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
-                    />
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth="2"
-                      d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
-                    />
-                  </svg>
-                  View Details
-                </button>
+                View Details
               </Link>
 
               {!isPendingOrdersPage && (
-                <Button appearance="ghost" size="sm">
+                <Button
+                  appearance="ghost"
+                  size="sm"
+                  className="text-inherit hover:text-green-500 dark:hover:text-green-400"
+                >
                   Reorder
                 </Button>
               )}
@@ -305,8 +291,9 @@ export default function UserRecentOrders({
       {filteredOrders.length > visibleCount && (
         <div className="mt-4 text-center">
           <Button
-            appearance="link"
+            appearance="ghost"
             onClick={() => setVisibleCount((prev) => prev + 10)}
+            className="text-green-500 hover:text-green-600 dark:text-green-400 dark:hover:text-green-500"
           >
             Load More
           </Button>

@@ -3,6 +3,94 @@ import Link from "next/link";
 import { useRouter } from "next/router";
 import { useCart } from "../../../context/CartContext";
 
+interface NavItemProps {
+  icon: React.ReactNode;
+  label: string;
+  href: string;
+}
+
+function NavItem({ icon, label, href }: NavItemProps) {
+  const router = useRouter();
+
+  const handleClick = (e: React.MouseEvent) => {
+    e.preventDefault();
+    router.push(href, undefined, { shallow: true });
+  };
+
+  return (
+    <Link href={href} passHref onClick={handleClick}>
+      <div className="flex flex-col items-center text-xs text-gray-600 transition-colors duration-200 hover:text-green-500 dark:text-gray-300 dark:hover:text-green-400">
+        <span className="text-lg">{icon}</span>
+      </div>
+    </Link>
+  );
+}
+
+interface ActionButtonProps {
+  icon: React.ReactNode;
+  label?: string;
+  href?: string;
+  onClick?: () => void;
+  isCircle?: boolean;
+  tooltip?: string;
+  bgColor?: string;
+}
+
+const ActionButton = ({
+  icon,
+  label,
+  href,
+  onClick,
+  isCircle = false,
+  tooltip,
+  bgColor = "bg-white",
+}: ActionButtonProps) => {
+  const classes = `flex items-center justify-center ${
+    isCircle ? "h-12 w-12 rounded-full" : "px-3 py-2 rounded-md"
+  } ${bgColor} text-white shadow-md cursor-pointer hover:opacity-90`;
+
+  const content = (
+    <button
+      onClick={onClick}
+      className="flex flex-col items-center text-xs text-gray-700 hover:text-green-600"
+    >
+      <span className="text-xl">{icon}</span>
+      <span>{label}</span>
+    </button>
+  );
+
+  return href ? <Link href={href}>{content}</Link> : content;
+};
+
+interface DesktopActionButtonProps {
+  icon: React.ReactNode;
+  tooltip?: string;
+  href?: string;
+  label?: string;
+  onClick?: () => void;
+  bgColor?: string;
+}
+
+const DesktopActionButton = ({
+  icon,
+  tooltip,
+  href,
+  onClick,
+  bgColor = "bg-blue-600 hover:bg-blue-700",
+}: DesktopActionButtonProps) => {
+  const button = (
+    <div
+      title={tooltip}
+      onClick={onClick}
+      className={`flex h-[64px] w-[64px] cursor-pointer items-center justify-center rounded-full text-white shadow-md ${bgColor}`}
+    >
+      {icon}
+    </div>
+  );
+
+  return href ? <Link href={href}>{button}</Link> : button;
+};
+
 export default function BottomBar() {
   const [open, setOpen] = useState(false);
   const router = useRouter();
@@ -47,9 +135,7 @@ export default function BottomBar() {
                         transform="translate(42.666667, 42.666667)"
                       >
                         {" "}
-                        <path d="M379.734355,174.506667 C373.121022,106.666667 333.014355,-2.13162821e-14 209.067688,-2.13162821e-14 C85.1210217,-2.13162821e-14 45.014355,106.666667 38.4010217,174.506667 C15.2012632,183.311569 -0.101643453,205.585799 0.000508304259,230.4 L0.000508304259,260.266667 C0.000508304259,293.256475 26.7445463,320 59.734355,320 C92.7241638,320 119.467688,293.256475 119.467688,260.266667 L119.467688,230.4 C119.360431,206.121456 104.619564,184.304973 82.134355,175.146667 C86.4010217,135.893333 107.307688,42.6666667 209.067688,42.6666667 C310.827688,42.6666667 331.521022,135.893333 335.787688,175.146667 C313.347976,184.324806 298.68156,206.155851 298.667688,230.4 L298.667688,260.266667 C298.760356,283.199651 311.928618,304.070103 332.587688,314.026667 C323.627688,330.88 300.801022,353.706667 244.694355,360.533333 C233.478863,343.50282 211.780225,336.789048 192.906491,344.509658 C174.032757,352.230268 163.260418,372.226826 167.196286,392.235189 C171.132153,412.243552 188.675885,426.666667 209.067688,426.666667 C225.181549,426.577424 239.870491,417.417465 247.041022,402.986667 C338.561022,392.533333 367.787688,345.386667 376.961022,317.653333 C401.778455,309.61433 418.468885,286.351502 418.134355,260.266667 L418.134355,230.4 C418.23702,205.585799 402.934114,183.311569 379.734355,174.506667 Z M76.8010217,260.266667 C76.8010217,269.692326 69.1600148,277.333333 59.734355,277.333333 C50.3086953,277.333333 42.6676884,269.692326 42.6676884,260.266667 L42.6676884,230.4 C42.6676884,224.302667 45.9205765,218.668499 51.2010216,215.619833 C56.4814667,212.571166 62.9872434,212.571166 68.2676885,215.619833 C73.5481336,218.668499 76.8010217,224.302667 76.8010217,230.4 L76.8010217,260.266667 Z M341.334355,230.4 C341.334355,220.97434 348.975362,213.333333 358.401022,213.333333 C367.826681,213.333333 375.467688,220.97434 375.467688,230.4 L375.467688,260.266667 C375.467688,269.692326 367.826681,277.333333 358.401022,277.333333 C348.975362,277.333333 341.334355,269.692326 341.334355,260.266667 L341.334355,230.4 Z">
-                          {" "}
-                        </path>{" "}
+                        <path d="M379.73 174.51C373.12 106.67 333.01 0 209.07 0C85.12 0 45.01 106.67 38.4 174.51C15.2 183.31 0 205.59 0 230.4V260.27C0 293.26 26.74 320 59.73 320C92.72 320 119.47 293.26 119.47 260.27V230.4C119.36 206.12 104.62 184.3 82.13 175.15C86.4 135.89 107.31 42.67 209.07 42.67C310.83 42.67 331.52 135.89 335.79 175.15C313.35 184.32 298.68 206.16 298.67 230.4V260.27C298.76 283.2 311.93 304.07 332.59 314.03C323.63 330.88 300.8 353.71 244.69 360.53C233.48 343.5 211.78 336.79 192.91 344.51C174.03 352.23 163.26 372.23 167.2 392.24C171.13 412.24 188.68 426.67 209.07 426.67C225.18 426.58 239.87 417.42 247.04 402.99C338.56 392.53 367.79 345.39 376.96 317.65C401.78 309.61 418.47 286.35 418.13 260.27V230.4C418.24 205.59 402.93 183.31 379.73 174.51ZM76.8 260.27C76.8 269.69 69.16 277.33 59.73 277.33C50.31 277.33 42.67 269.69 42.67 260.27V230.4C42.67 224.3 45.92 218.67 51.2 215.62C56.48 212.57 62.99 212.57 68.27 215.62C73.55 218.67 76.8 224.3 76.8 230.4V260.27ZM341.33 230.4C341.33 220.97 348.98 213.33 358.4 213.33C367.83 213.33 375.47 220.97 375.47 230.4V260.27C375.47 269.69 367.83 277.33 358.4 277.33C348.98 277.33 341.33 269.69 341.33 260.27V230.4Z" />
                       </g>{" "}
                     </g>{" "}
                   </g>
@@ -381,7 +467,7 @@ export default function BottomBar() {
       </div>
 
       {/* Bottom Navigation Bar */}
-      <nav className="fixed bottom-0 left-0 z-40 flex w-full items-center justify-around border-t bg-white py-4 shadow md:hidden">
+      <nav className="fixed bottom-0 left-0 z-[9999] flex w-full items-center justify-around border-t border-gray-200 bg-white py-4 shadow-lg transition-colors duration-200 dark:border-gray-700 dark:bg-gray-800 md:hidden">
         <NavItem
           href="/"
           icon={
@@ -391,6 +477,7 @@ export default function BottomBar() {
               viewBox="0 0 24 24"
               fill="none"
               xmlns="http://www.w3.org/2000/svg"
+              className="text-gray-600 transition-colors duration-200 dark:text-white"
             >
               <g id="SVGRepo_bgCarrier" strokeWidth="0"></g>
               <g
@@ -402,20 +489,20 @@ export default function BottomBar() {
                 {" "}
                 <path
                   d="M22 12.2039V13.725C22 17.6258 22 19.5763 20.8284 20.7881C19.6569 22 17.7712 22 14 22H10C6.22876 22 4.34315 22 3.17157 20.7881C2 19.5763 2 17.6258 2 13.725V12.2039C2 9.91549 2 8.77128 2.5192 7.82274C3.0384 6.87421 3.98695 6.28551 5.88403 5.10813L7.88403 3.86687C9.88939 2.62229 10.8921 2 12 2C13.1079 2 14.1106 2.62229 16.116 3.86687L18.116 5.10812C20.0131 6.28551 20.9616 6.87421 21.4808 7.82274"
-                  stroke="#696969"
+                  stroke="currentColor"
                   strokeWidth="1.5"
                   strokeLinecap="round"
                 ></path>{" "}
                 <path
                   d="M15 18H9"
-                  stroke="#696969"
+                  stroke="currentColor"
                   strokeWidth="1.5"
                   strokeLinecap="round"
                 ></path>{" "}
               </g>
             </svg>
           }
-          label="Home"
+          label="Dashboard"
         />
         <NavItem
           href="/CurrentPendingOrders"
@@ -426,6 +513,7 @@ export default function BottomBar() {
               viewBox="0 0 24 24"
               fill="none"
               xmlns="http://www.w3.org/2000/svg"
+              className="text-gray-600 transition-colors duration-200 dark:text-white"
             >
               <g id="SVGRepo_bgCarrier" strokeWidth="0"></g>
               <g
@@ -436,46 +524,46 @@ export default function BottomBar() {
               <g id="SVGRepo_iconCarrier">
                 <path
                   d="M9 12H15"
-                  stroke="#4d4d4d"
+                  stroke="currentColor"
                   strokeWidth="1.5"
                   strokeLinecap="round"
                 />
                 <path
                   d="M9 15H15"
-                  stroke="#4d4d4d"
+                  stroke="currentColor"
                   strokeWidth="1.5"
                   strokeLinecap="round"
                 />
                 <path
                   d="M5.5 8.5H7.5"
-                  stroke="#4d4d4d"
+                  stroke="currentColor"
                   strokeWidth="1.5"
                   strokeLinecap="round"
                 />
                 <path
                   d="M5.5 12H7.5"
-                  stroke="#4d4d4d"
+                  stroke="currentColor"
                   strokeWidth="1.5"
                   strokeLinecap="round"
                 />
                 <path
                   d="M5.5 15H7.5"
-                  stroke="#4d4d4d"
+                  stroke="currentColor"
                   strokeWidth="1.5"
                   strokeLinecap="round"
                 />
                 <path
                   d="M17.5 7.5C18.0523 7.5 18.5 7.05228 18.5 6.5C18.5 5.94772 18.0523 5.5 17.5 5.5C16.9477 5.5 16.5 5.94772 16.5 6.5C16.5 7.05228 16.9477 7.5 17.5 7.5Z"
-                  fill="#4d4d4d"
+                  fill="currentColor"
                 />
                 <path
                   d="M15.5 3.5H9.5C7.29086 3.5 5.5 5.29086 5.5 7.5V16.5C5.5 18.7091 7.29086 20.5 9.5 20.5H15.5C17.7091 20.5 19.5 18.7091 19.5 16.5V7.5C19.5 5.29086 17.7091 3.5 15.5 3.5Z"
-                  stroke="#4d4d4d"
+                  stroke="currentColor"
                   strokeWidth="1.5"
                 />
                 <path
                   d="M9 8.5H12"
-                  stroke="#4d4d4d"
+                  stroke="currentColor"
                   strokeWidth="1.5"
                   strokeLinecap="round"
                 />
@@ -488,7 +576,7 @@ export default function BottomBar() {
         {/* Central Flow Button (+) */}
         <div className="z-50 -mt-12">
           <button
-            className="flex h-16 w-16 flex-col items-center justify-center rounded-full border-2 border-green-500 bg-white text-2xl text-green-500 shadow-lg"
+            className="flex h-16 w-16 flex-col items-center justify-center rounded-full border-2 border-green-500 bg-white text-2xl text-green-500 shadow-lg dark:bg-gray-800"
             onClick={() => setOpen(!open)}
           >
             {open ? (
@@ -499,6 +587,7 @@ export default function BottomBar() {
                 version="1.1"
                 xmlns="http://www.w3.org/2000/svg"
                 fill="#000000"
+                className="dark:fill-white"
               >
                 <g id="SVGRepo_bgCarrier" strokeWidth="0"></g>
                 <g
@@ -519,7 +608,7 @@ export default function BottomBar() {
                     {" "}
                     <g
                       id="work-case"
-                      fill="#5ab148"
+                      fill="currentColor"
                       transform="translate(91.520000, 91.520000)"
                     >
                       {" "}
@@ -540,6 +629,7 @@ export default function BottomBar() {
                 viewBox="0 0 24 24"
                 fill="none"
                 xmlns="http://www.w3.org/2000/svg"
+                className="dark:stroke-white"
               >
                 <g id="SVGRepo_bgCarrier" strokeWidth="0"></g>
                 <g
@@ -551,7 +641,7 @@ export default function BottomBar() {
                   {" "}
                   <path
                     d="M4 12H20M12 4V20"
-                    stroke="#3ca716"
+                    stroke="currentColor"
                     strokeWidth="2"
                     strokeLinecap="round"
                     strokeLinejoin="round"
@@ -570,6 +660,7 @@ export default function BottomBar() {
               viewBox="0 0 24 24"
               fill="none"
               xmlns="http://www.w3.org/2000/svg"
+              className="text-gray-600 transition-colors duration-200 dark:text-white"
             >
               <g id="SVGRepo_bgCarrier" strokeWidth="0"></g>
               <g
@@ -583,12 +674,12 @@ export default function BottomBar() {
                   cx="12"
                   cy="12"
                   r="4"
-                  stroke="#4d4d4d"
+                  stroke="currentColor"
                   strokeWidth="1.5"
                 ></circle>{" "}
                 <path
                   d="M22 12C22 16.714 22 19.0711 20.5355 20.5355C19.0711 22 16.714 22 12 22C7.28595 22 4.92893 22 3.46447 20.5355C2 19.0711 2 16.714 2 12C2 7.28595 2 4.92893 3.46447 3.46447C4.92893 2 7.28595 2 12 2C16.714 2 19.0711 2 20.5355 3.46447C21.5093 4.43821 21.8356 5.80655 21.9449 8"
-                  stroke="#4d4d4d"
+                  stroke="currentColor"
                   strokeWidth="1.5"
                   strokeLinecap="round"
                 ></path>{" "}
@@ -606,6 +697,7 @@ export default function BottomBar() {
               viewBox="0 0 24 24"
               fill="none"
               xmlns="http://www.w3.org/2000/svg"
+              className="text-gray-600 transition-colors duration-200 dark:text-white"
             >
               <g id="SVGRepo_bgCarrier" strokeWidth="0"></g>
               <g
@@ -619,12 +711,12 @@ export default function BottomBar() {
                   cx="12"
                   cy="6"
                   r="4"
-                  stroke="#545454"
+                  stroke="currentColor"
                   strokeWidth="1.5"
                 ></circle>{" "}
                 <path
                   d="M19.9975 18C20 17.8358 20 17.669 20 17.5C20 15.0147 16.4183 13 12 13C7.58172 13 4 15.0147 4 17.5C4 19.9853 4 22 12 22C14.231 22 15.8398 21.8433 17 21.5634"
-                  stroke="#545454"
+                  stroke="currentColor"
                   strokeWidth="1.5"
                   strokeLinecap="round"
                 ></path>{" "}
@@ -637,61 +729,3 @@ export default function BottomBar() {
     </>
   );
 }
-
-function NavItem({ icon, label, href }: { icon: any; label: any; href: any }) {
-  return (
-    <Link href={href} passHref>
-      <div className="flex flex-col items-center text-xs text-gray-600 transition hover:text-green-500">
-        <span className="text-lg">{icon}</span>
-        {/* <span>{label}</span> */}
-      </div>
-    </Link>
-  );
-}
-
-const ActionButton = ({
-  icon,
-  label,
-  href,
-  onClick,
-  isCircle = false,
-  tooltip,
-  bgColor = "bg-white",
-}: any) => {
-  const classes = `flex items-center justify-center ${
-    isCircle ? "h-12 w-12 rounded-full" : "px-3 py-2 rounded-md"
-  } ${bgColor} text-white shadow-md cursor-pointer hover:opacity-90`;
-
-  const content = (
-    <button
-      onClick={onClick}
-      className="flex flex-col items-center text-xs text-gray-700 hover:text-green-600"
-    >
-      <span className="text-xl">{icon}</span>
-      <span>{label}</span>
-    </button>
-  );
-
-  return href ? <Link href={href}>{content}</Link> : content;
-};
-
-const DesktopActionButton = ({
-  icon,
-  tooltip,
-  href,
-  label,
-  onClick,
-  bgColor = "bg-blue-600 hover:bg-blue-700",
-}: any) => {
-  const button = (
-    <div
-      title={tooltip}
-      onClick={onClick}
-      className={`flex h-[64px] w-[64px] cursor-pointer items-center justify-center rounded-full text-white shadow-md ${bgColor}`}
-    >
-      {icon}
-    </div>
-  );
-
-  return href ? <Link href={href}>{button}</Link> : button;
-};

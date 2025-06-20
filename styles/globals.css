@@ -2,12 +2,202 @@
 @tailwind components;
 @tailwind utilities;
 
-body {
-  margin: 0;
-  padding: 0;
-  overflow-x: hidden;
-  overflow-y: auto;
-  scroll-behavior: smooth;
+@layer base {
+  body {
+    @apply bg-white text-gray-900 transition-colors duration-200 dark:bg-gray-900 dark:text-white;
+    margin: 0;
+    padding: 0;
+    overflow-x: hidden;
+    overflow-y: auto;
+    scroll-behavior: smooth;
+  }
+
+  /* Remove hover underline from all links */
+  a {
+    text-decoration: none;
+  }
+
+  a:hover {
+    text-decoration: none;
+  }
+}
+
+/* RSuite Dark Theme Styles */
+.dark .rs-modal-wrapper .rs-modal {
+  background-color: #1f2937 !important;
+  color: #f3f4f6 !important;
+}
+
+.dark .rs-modal-header {
+  background-color: #1f2937 !important;
+  border-bottom-color: #374151 !important;
+}
+
+.dark .rs-modal-title {
+  color: #f3f4f6 !important;
+}
+
+.dark .rs-modal-body {
+  background-color: #1f2937 !important;
+  color: #f3f4f6 !important;
+}
+
+.dark .rs-modal-footer {
+  background-color: #1f2937 !important;
+  border-top-color: #374151 !important;
+}
+
+/* Modal Close Button */
+.dark .rs-modal-header-close {
+  color: #f3f4f6 !important;
+}
+
+.dark .rs-modal-header-close:hover {
+  background-color: #374151 !important;
+}
+
+.dark .rs-modal-header-close .rs-icon {
+  color: #f3f4f6 !important;
+}
+
+/* Modal Content */
+.dark .rs-modal-content {
+  background-color: #1f2937 !important;
+}
+
+/* Modal Backdrop */
+.dark .rs-modal-backdrop {
+  background-color: rgba(0, 0, 0, 0.5) !important;
+}
+
+.dark .rs-input,
+.dark .rs-input-group,
+.dark .rs-picker-toggle,
+.dark .rs-picker-menu,
+.dark .rs-picker-select-menu,
+.dark .rs-picker-search-bar,
+.dark .rs-picker-search-bar input,
+.dark .rs-picker-select-menu-item,
+.dark .rs-picker-select-menu-group,
+.dark .rs-picker-select-menu-group-title {
+  background-color: #374151 !important;
+  color: #f3f4f6 !important;
+  border-color: #4b5563 !important;
+}
+
+.dark .rs-input:focus,
+.dark .rs-input-group:focus,
+.dark .rs-picker-toggle:focus {
+  border-color: #60a5fa !important;
+  box-shadow: 0 0 0 2px rgba(96, 165, 250, 0.2) !important;
+}
+
+.dark .rs-input-group-addon {
+  background-color: #374151 !important;
+  color: #f3f4f6 !important;
+  border-color: #4b5563 !important;
+}
+
+.dark .rs-form-control-label {
+  color: #f3f4f6 !important;
+}
+
+.dark .rs-form-help-text {
+  color: #9ca3af !important;
+}
+
+.dark .rs-message {
+  background-color: #374151 !important;
+  color: #f3f4f6 !important;
+}
+
+.dark .rs-message.rs-message-info {
+  background-color: #1e40af !important;
+  color: #93c5fd !important;
+}
+
+.dark .rs-message.rs-message-warning {
+  background-color: #92400e !important;
+  color: #fcd34d !important;
+}
+
+.dark .rs-message.rs-message-error {
+  background-color: #991b1b !important;
+  color: #fca5a5 !important;
+}
+
+.dark .rs-message.rs-message-success {
+  background-color: #065f46 !important;
+  color: #6ee7b7 !important;
+}
+
+.dark .rs-divider {
+  border-color: #374151 !important;
+}
+
+.dark .rs-btn {
+  background-color: #374151 !important;
+  color: #f3f4f6 !important;
+  border-color: #4b5563 !important;
+}
+
+.dark .rs-btn:hover {
+  background-color: #4b5563 !important;
+}
+
+.dark .rs-btn-primary {
+  background-color: #10b981 !important; /* green-500 */
+  color: #ffffff !important;
+  border-color: #10b981 !important;
+}
+
+.dark .rs-btn-primary:hover {
+  background-color: #059669 !important; /* green-600 */
+  border-color: #059669 !important;
+}
+
+.dark .rs-btn-subtle {
+  background-color: transparent !important;
+  color: #a855f7 !important; /* purple-500 */
+  border-color: transparent !important;
+}
+
+.dark .rs-btn-subtle:hover {
+  color: #c084fc !important; /* purple-400 */
+  background-color: rgba(192, 132, 252, 0.1) !important;
+}
+
+/* RSuite Input Styles */
+.rs-input,
+.rs-input-group,
+.rs-picker-toggle,
+.rs-picker-menu,
+.rs-picker-select-menu,
+.rs-picker-search-bar,
+.rs-picker-search-bar input,
+.rs-picker-select-menu-item,
+.rs-picker-select-menu-group,
+.rs-picker-select-menu-group-title {
+  border-radius: 0 !important;
+}
+
+/* Override RSuite link styles */
+.rs-nav-item a,
+.rs-nav-item a:hover,
+.rs-nav-item a:focus,
+.rs-nav-item a:active,
+.rs-nav-item a:visited {
+  text-decoration: none !important;
+}
+
+.rs-nav-item-content {
+  text-decoration: none !important;
+}
+
+.rs-nav-item-content:hover,
+.rs-nav-item-content:focus,
+.rs-nav-item-content:active {
+  text-decoration: none !important;
 }
 
 .rs-panel {
@@ -54,4 +244,27 @@ body {
 }
 #nprogress .spinner {
   display: none !important;
+}
+
+/* Remove underlines from all links */
+a {
+  text-decoration: none !important;
+}
+
+a:hover,
+a:focus,
+a:active,
+a:visited {
+  text-decoration: none !important;
+}
+
+/* Remove underlines from Next.js Link components */
+[data-nextjs-link] {
+  text-decoration: none !important;
+}
+
+[data-nextjs-link]:hover,
+[data-nextjs-link]:focus,
+[data-nextjs-link]:active {
+  text-decoration: none !important;
 }

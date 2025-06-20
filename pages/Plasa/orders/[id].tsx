@@ -7,6 +7,8 @@ import { Panel, Loader, Button, Divider, Timeline, Tag } from "rsuite";
 import { formatCurrency } from "../../../src/lib/formatCurrency";
 import Link from "next/link";
 import { toast } from "react-hot-toast";
+import { useTheme } from "../../../src/context/ThemeContext";
+import { logger } from "../../../src/utils/logger";
 
 // Define interface for order data
 interface OrderDetails {
@@ -28,6 +30,7 @@ interface OrderDetails {
 export default function OrderDetailsPage() {
   const router = useRouter();
   const { id } = router.query;
+  const { theme } = useTheme();
   const [isLoading, setIsLoading] = useState(true);
   const [isAccepting, setIsAccepting] = useState(false);
   const [orderDetails, setOrderDetails] = useState<OrderDetails | null>(null);
@@ -42,23 +45,29 @@ export default function OrderDetailsPage() {
   const fetchOrderDetails = async () => {
     setIsLoading(true);
     try {
+      if (!id) {
+        throw new Error("Order ID is required");
+      }
+
       // Fetch order details from API
       const response = await fetch(`/api/shopper/orderDetails?id=${id}`);
-
-      if (!response.ok) {
-        throw new Error("Failed to fetch order details");
-      }
-
       const data = await response.json();
 
-      if (data.success) {
+      if (!response.ok) {
+        throw new Error(data.error || "Failed to fetch order details");
+      }
+
+      if (data.success && data.order) {
         setOrderDetails(data.order);
       } else {
-        toast.error(data.error || "Failed to load order details");
+        throw new Error(data.error || "Failed to load order details");
       }
     } catch (error) {
-      console.error("Error fetching order details:", error);
-      toast.error("Failed to load order details");
+      logger.error("Error fetching order details", "OrderDetailsPage", error);
+      toast.error(
+        error instanceof Error ? error.message : "Failed to load order details"
+      );
+      setOrderDetails(null);
     } finally {
       setIsLoading(false);
     }
@@ -78,10 +87,14 @@ export default function OrderDetailsPage() {
       const data = await response.json();
 
       if (data.success) {
+        logger.info("Order assigned successfully", "OrderDetailsPage", {
+          orderId: id,
+        });
         toast.success("Order assigned successfully!");
         // Refresh order details
         fetchOrderDetails();
       } else if (data.error === "no_wallet") {
+        logger.warn("No wallet found for shopper", "OrderDetailsPage");
         toast.error("You need a wallet to accept batches");
 
         try {
@@ -94,6 +107,7 @@ export default function OrderDetailsPage() {
           const walletData = await walletResponse.json();
 
           if (walletData.success) {
+            logger.info("Wallet created successfully", "OrderDetailsPage");
             toast.success(
               "Wallet created. Trying to accept the batch again..."
             );
@@ -109,9 +123,19 @@ export default function OrderDetailsPage() {
               const retryData = await retryResponse.json();
 
               if (retryData.success) {
+                logger.info(
+                  "Order assigned successfully after wallet creation",
+                  "OrderDetailsPage",
+                  { orderId: id }
+                );
                 toast.success("Order assigned successfully!");
                 fetchOrderDetails();
               } else {
+                logger.error(
+                  "Failed to assign order after wallet creation",
+                  "OrderDetailsPage",
+                  { error: retryData.error }
+                );
                 toast.error(retryData.error || "Failed to assign order");
               }
 
@@ -120,17 +144,27 @@ export default function OrderDetailsPage() {
 
             return;
           } else {
+            logger.error("Failed to create wallet", "OrderDetailsPage", {
+              error: walletData.error,
+            });
             toast.error("Failed to create wallet");
           }
         } catch (walletError) {
-          console.error("Error creating wallet:", walletError);
+          logger.error(
+            "Error creating wallet",
+            "OrderDetailsPage",
+            walletError
+          );
           toast.error("Failed to create wallet");
         }
       } else {
+        logger.error("Failed to assign order", "OrderDetailsPage", {
+          error: data.error,
+        });
         toast.error(data.error || "Failed to assign order");
       }
     } catch (error) {
-      console.error("Error accepting order:", error);
+      logger.error("Error accepting order", "OrderDetailsPage", error);
       toast.error("Failed to accept order");
     } finally {
       setIsAccepting(false);
@@ -160,10 +194,21 @@ export default function OrderDetailsPage() {
 
   return (
     <ShopperLayout>
-      <div className="min-h-screen bg-gray-50 px-4 py-8">
+      <div
+        className={`min-h-screen px-4 py-8 ${
+          theme === "dark"
+            ? "bg-gray-900 text-gray-100"
+            : "bg-gray-50 text-gray-900"
+        }`}
+      >
         <div className="mb-4 flex items-center">
           <Link href="/">
-            <Button appearance="link">
+            <Button
+              appearance="link"
+              className={
+                theme === "dark" ? "text-gray-300 hover:text-gray-100" : ""
+              }
+            >
               <span className="flex items-center">
                 <span className="mr-1">←</span> Back to Available Batches
               </span>
@@ -172,14 +217,35 @@ export default function OrderDetailsPage() {
         </div>
 
         {isLoading ? (
-          <div className="flex h-64 items-center justify-center">
+          <div
+            className={`flex h-64 items-center justify-center ${
+              theme === "dark" ? "text-gray-300" : "text-gray-700"
+            }`}
+          >
             <Loader content="Loading order details..." />
           </div>
         ) : !orderDetails ? (
-          <Panel shaded bordered bodyFill className="mx-auto max-w-3xl">
+          <Panel
+            shaded
+            bordered
+            bodyFill
+            className={`mx-auto max-w-3xl ${
+              theme === "dark" ? "bg-gray-800" : "bg-white"
+            }`}
+          >
             <div className="p-8 text-center">
-              <h2 className="mb-4 text-xl font-semibold">Order Not Found</h2>
-              <p className="mb-4 text-gray-600">
+              <h2
+                className={`mb-4 text-xl font-semibold ${
+                  theme === "dark" ? "text-gray-100" : "text-gray-900"
+                }`}
+              >
+                Order Not Found
+              </h2>
+              <p
+                className={`mb-4 ${
+                  theme === "dark" ? "text-gray-400" : "text-gray-600"
+                }`}
+              >
                 The order you&apos;re looking for could not be found or you
                 don&apos;t have permission to view it.
               </p>
@@ -192,85 +258,77 @@ export default function OrderDetailsPage() {
           </Panel>
         ) : (
           <div className="mx-auto max-w-3xl">
-            <Panel shaded bordered bodyFill className="mb-4">
+            <Panel
+              shaded
+              bordered
+              bodyFill
+              className={`mb-4 ${
+                theme === "dark" ? "bg-gray-800" : "bg-white"
+              }`}
+            >
               <div className="p-6">
                 <div className="mb-4 flex items-center justify-between">
-                  <h1 className="text-2xl font-bold">
-                    Order #{orderDetails.id.substring(0, 8)}
-                  </h1>
-                  <Tag color={getStatusColor(orderDetails.status)}>
+                  <div>
+                    <h2
+                      className={`text-2xl font-bold ${
+                        theme === "dark" ? "text-gray-100" : "text-gray-900"
+                      }`}
+                    >
+                      Order #{orderDetails.id}
+                    </h2>
+                    <p
+                      className={`mt-1 ${
+                        theme === "dark" ? "text-gray-400" : "text-gray-600"
+                      }`}
+                    >
+                      Created {orderDetails.createdAt}
+                    </p>
+                  </div>
+                  <Tag color={getStatusColor(orderDetails.status)} size="lg">
                     {orderDetails.status}
                   </Tag>
                 </div>
 
-                <Divider />
+                <Divider
+                  className={theme === "dark" ? "border-gray-700" : ""}
+                />
 
-                <div className="mb-6 grid grid-cols-1 gap-6 md:grid-cols-2">
-                  <div>
-                    <h3 className="mb-2 text-lg font-semibold">
-                      Shop Information
-                    </h3>
-                    <p className="font-medium">{orderDetails.shopName}</p>
-                    <p className="text-gray-600">{orderDetails.shopAddress}</p>
-                  </div>
-
-                  <div>
-                    <h3 className="mb-2 text-lg font-semibold">
-                      Customer Information
-                    </h3>
-                    <p className="text-gray-600">
-                      {orderDetails.customerAddress}
-                    </p>
-                  </div>
-                </div>
-
-                <div className="mb-6">
-                  <h3 className="mb-4 text-lg font-semibold">Order Items</h3>
-                  {orderDetails.items && orderDetails.items.length > 0 ? (
-                    <div className="rounded border">
-                      <table className="w-full text-left">
-                        <thead className="border-b bg-gray-50">
-                          <tr>
-                            <th className="px-4 py-2">Item</th>
-                            <th className="px-4 py-2">Quantity</th>
-                            <th className="px-4 py-2">Price</th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {orderDetails.items.map((item, index) => (
-                            <tr
-                              key={index}
-                              className={
-                                index % 2 === 0 ? "bg-white" : "bg-gray-50"
-                              }
-                            >
-                              <td className="px-4 py-3">{item.name}</td>
-                              <td className="px-4 py-3">{item.quantity}</td>
-                              <td className="px-4 py-3">
-                                {formatCurrency(item.price)}
-                              </td>
-                            </tr>
-                          ))}
-                        </tbody>
-                      </table>
-                    </div>
-                  ) : (
-                    <p className="text-gray-500">
-                      No items information available
-                    </p>
-                  )}
-                </div>
-
-                <div className="mb-6 rounded border bg-gray-50 p-4">
+                <div
+                  className={`mb-6 rounded border p-4 ${
+                    theme === "dark"
+                      ? "border-gray-700 bg-gray-700/50"
+                      : "border-gray-200 bg-gray-50"
+                  }`}
+                >
                   <div className="flex justify-between">
-                    <span className="font-medium">Total Order Amount:</span>
-                    <span className="font-bold">
+                    <span
+                      className={`font-medium ${
+                        theme === "dark" ? "text-gray-300" : "text-gray-700"
+                      }`}
+                    >
+                      Total Order Amount:
+                    </span>
+                    <span
+                      className={`font-bold ${
+                        theme === "dark" ? "text-gray-100" : "text-gray-900"
+                      }`}
+                    >
                       {formatCurrency(orderDetails.total)}
                     </span>
                   </div>
-                  <div className="mt-2 flex justify-between text-green-600">
-                    <span className="font-medium">Estimated Earnings:</span>
-                    <span className="font-bold">
+                  <div className="mt-2 flex justify-between">
+                    <span
+                      className={`font-medium ${
+                        theme === "dark" ? "text-green-400" : "text-green-600"
+                      }`}
+                    >
+                      Estimated Earnings:
+                    </span>
+                    <span
+                      className={`font-bold ${
+                        theme === "dark" ? "text-green-400" : "text-green-600"
+                      }`}
+                    >
                       {formatCurrency(orderDetails.estimatedEarnings)}
                     </span>
                   </div>
@@ -284,6 +342,7 @@ export default function OrderDetailsPage() {
                       size="lg"
                       onClick={handleAcceptOrder}
                       disabled={isAccepting}
+                      className={theme === "dark" ? "rs-btn-dark" : ""}
                     >
                       {isAccepting ? (
                         <div className="flex items-center">
@@ -299,10 +358,18 @@ export default function OrderDetailsPage() {
 
                 {orderDetails.status === "ASSIGNED" && (
                   <div className="flex justify-end space-x-4">
-                    <Button appearance="ghost" color="red">
+                    <Button
+                      appearance="ghost"
+                      color="red"
+                      className={theme === "dark" ? "rs-btn-dark" : ""}
+                    >
                       Cancel Batch
                     </Button>
-                    <Button appearance="primary" color="blue">
+                    <Button
+                      appearance="primary"
+                      color="blue"
+                      className={theme === "dark" ? "rs-btn-dark" : ""}
+                    >
                       Start Shopping
                     </Button>
                   </div>

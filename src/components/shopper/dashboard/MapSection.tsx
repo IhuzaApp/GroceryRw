@@ -6,6 +6,8 @@ import "leaflet/dist/leaflet.css";
 import { Loader, toaster, Message, Button } from "rsuite";
 import "rsuite/dist/rsuite.min.css";
 import { formatCurrency } from "../../../lib/formatCurrency";
+import { useTheme } from "../../../context/ThemeContext";
+import { logger } from "../../../utils/logger";
 
 interface MapSectionProps {
   mapLoaded: boolean;
@@ -29,6 +31,7 @@ interface MapSectionProps {
     status?: string;
   }>;
   isInitializing?: boolean;
+  isExpanded?: boolean;
 }
 
 // Haversine formula to compute distance in km
@@ -63,6 +66,9 @@ interface Shop {
 // Pending order data type
 interface PendingOrder {
   id: string;
+  status: string;
+  shop_id: string;
+  customer_id: string;
   latitude: number;
   longitude: number;
   earnings: number;
@@ -76,66 +82,157 @@ interface PendingOrder {
   addressCity: string;
 }
 
-// Add this function near the top with other utility functions
-function getOrderTimeBadgeColor(createdAtStr: string): string {
-  // Get age in minutes
-  const created = new Date(createdAtStr);
-  const diffMs = Date.now() - created.getTime();
-  const diffMins = Math.floor(diffMs / 60000);
-
-  // Color coding:
-  // - Blue: Very recent orders (<10 min) - not normally visible in list view with 10 min filter
-  // - Green: Recent orders (10-60 min)
-  // - Orange: Older orders (1-24 hours)
-  // - Purple: Historical orders (>24 hours)
-  if (diffMins < 10) {
-    return "#3b82f6"; // blue
-  } else if (diffMins < 60) {
-    return "#10b981"; // green
-  } else if (diffMins < 24 * 60) {
-    return "#f59e0b"; // orange
-  } else {
-    return "#8b5cf6"; // purple
-  }
-}
-
 export default function MapSection({
   mapLoaded,
   availableOrders,
   isInitializing = false,
+  isExpanded = false,
 }: MapSectionProps) {
+  const { theme } = useTheme();
   const mapRef = useRef<HTMLDivElement | null>(null);
   const [shops, setShops] = useState<Shop[]>([]);
   const [pendingOrders, setPendingOrders] = useState<PendingOrder[]>([]);
   const watchIdRef = useRef<number | null>(null);
   const [isOnline, setIsOnline] = useState(false);
-  // Refs for real-time map and marker
+  const [dailyEarnings, setDailyEarnings] = useState(0);
+  const [completedOrdersCount, setCompletedOrdersCount] = useState(0);
+  const [loadingEarnings, setLoadingEarnings] = useState(true);
   const mapInstanceRef = useRef<L.Map | null>(null);
   const userMarkerRef = useRef<L.Marker | null>(null);
-  // Add a counter to track location failures
+  const shopMarkersRef = useRef<L.Marker[]>([]);
+  const orderMarkersRef = useRef<L.Marker[]>([]);
   const locationErrorCountRef = useRef<number>(0);
-  // Add loading state for location refresh
   const [isRefreshingLocation, setIsRefreshingLocation] = useState(false);
-  // Add tracking mode state
   const [isActivelyTracking, setIsActivelyTracking] = useState(false);
-  // Track active notification types to prevent duplicates
   const activeToastTypesRef = useRef<Set<string>>(new Set());
+  const [mapStyle, setMapStyle] = useState("streets-v12");
+  const [currentLocation, setCurrentLocation] = useState<{
+    lat: number;
+    lng: number;
+  } | null>(null);
+  const [isLocationEnabled, setIsLocationEnabled] = useState(false);
+  const [locationError, setLocationError] = useState<string | null>(null);
+  const [showLocationGuide, setShowLocationGuide] = useState(false);
+  const [isLoadingOrders, setIsLoadingOrders] = useState(false);
+  const [orderMarkers, setOrderMarkers] = useState<L.Marker[]>([]);
+  const [shopMarkers, setShopMarkers] = useState<L.Marker[]>([]);
+  const [userMarker, setUserMarker] = useState<L.Marker | null>(null);
+  const [mapInstance, setMapInstance] = useState<L.Map | null>(null);
+  const [isMapInitialized, setIsMapInitialized] = useState(false);
+  const [locationErrorCount, setLocationErrorCount] = useState(0);
+  const [lastLocationUpdate, setLastLocationUpdate] = useState<Date | null>(
+    null
+  );
+  const [locationAccuracy, setLocationAccuracy] = useState<number | null>(null);
+  const [isLocationTracking, setIsLocationTracking] = useState(false);
+  const [locationHistory, setLocationHistory] = useState<
+    Array<{
+      lat: number;
+      lng: number;
+      timestamp: Date;
+      accuracy: number;
+    }>
+  >([]);
 
-  // Function to get cookies as an object
-  const getCookies = () => {
-    return document.cookie
-      .split("; ")
-      .reduce((acc: Record<string, string>, cur) => {
-        const [k, v] = cur.split("=");
-        acc[k] = v;
-        return acc;
-      }, {} as Record<string, string>);
+  // Refs
+  const mapInitializedRef = useRef(false);
+  const locationUpdateTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const locationRetryTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const lastLocationRef = useRef<{ lat: number; lng: number } | null>(null);
+  const locationUpdateCountRef = useRef(0);
+  const lastAccuracyRef = useRef<number | null>(null);
+  const locationHistoryRef = useRef<
+    Array<{
+      lat: number;
+      lng: number;
+      timestamp: Date;
+      accuracy: number;
+    }>
+  >([]);
+
+  // Cookie monitoring refs
+  const cookieSnapshotRef = useRef<string>("");
+
+  // Map style URLs using better contrasted tiles
+  const mapStyles = {
+    light: "https://tiles.stadiamaps.com/tiles/osm_bright/{z}/{x}/{y}{r}.png",
+    dark: "https://tiles.stadiamaps.com/tiles/alidade_smooth_dark/{z}/{x}/{y}{r}.png",
   };
 
-  // Function to save location to cookies
+  // Function to update map style based on theme
+  const updateMapStyle = () => {
+    setMapStyle(theme === "dark" ? "dark-v11" : "streets-v12");
+  };
+
+  // Get cookies helper function
+  const getCookies = () => {
+    const cookies: Record<string, string> = {};
+    document.cookie.split("; ").forEach((cookie) => {
+      const [name, value] = cookie.split("=");
+      if (name && value) {
+        cookies[name] = decodeURIComponent(value);
+      }
+    });
+    return cookies;
+  };
+
+  // Monitor cookies effect
+  useEffect(() => {
+    const currentCookies = getCookies();
+    const cookieSnapshot = JSON.stringify(currentCookies);
+    cookieSnapshotRef.current = cookieSnapshot;
+
+    const checkCookies = () => {
+      const newCookies = getCookies();
+      const newSnapshot = JSON.stringify(newCookies);
+
+      // If cookies changed
+      if (newSnapshot !== cookieSnapshotRef.current) {
+        // Log the change
+        logger.info("Cookie state changed", "MapSection", {
+          previous: JSON.parse(cookieSnapshotRef.current),
+          current: newCookies,
+          timestamp: new Date().toISOString(),
+        });
+
+        // Update snapshot
+        cookieSnapshotRef.current = newSnapshot;
+      }
+    };
+
+    // Check every 2 minutes
+    const interval = setInterval(checkCookies, 120000);
+
+    // Cleanup
+    return () => clearInterval(interval);
+  }, []);
+
+  // Add theme effect
+  useEffect(() => {
+    if (mapInstanceRef.current && mapLoaded) {
+      updateMapStyle();
+    }
+  }, [theme, mapLoaded]);
+
+  // Modify saveLocationToCookies to include logging
   const saveLocationToCookies = (lat: number, lng: number) => {
+    const previousCookies = getCookies();
+
     document.cookie = `user_latitude=${lat}; path=/; max-age=86400`; // 24 hours
     document.cookie = `user_longitude=${lng}; path=/; max-age=86400`;
+
+    // Log the location update
+    logger.info("Location cookies updated", "MapSection", {
+      previous: {
+        latitude: previousCookies["user_latitude"],
+        longitude: previousCookies["user_longitude"],
+      },
+      current: {
+        latitude: lat,
+        longitude: lng,
+      },
+      timestamp: new Date().toISOString(),
+    });
   };
 
   // Function that reduces duplicate toast notifications
@@ -231,8 +328,13 @@ export default function MapSection({
   const showLocationTroubleshootingGuide = () => {
     reduceToastDuplicates(
       "location-troubleshooting",
-      <Message showIcon type="info" header="Location Troubleshooting">
-        <div>
+      <Message
+        showIcon
+        type="info"
+        header="Location Troubleshooting"
+        className={theme === "dark" ? "rs-message-dark" : ""}
+      >
+        <div className={theme === "dark" ? "text-gray-100" : "text-gray-900"}>
           <p>Try the following steps to fix location issues:</p>
           <ol className="mt-1 list-decimal pl-4">
             <li>Make sure you&#39;re outdoors or near a window</li>
@@ -313,7 +415,12 @@ export default function MapSection({
             // Permission denied
             reduceToastDuplicates(
               "location-permission-denied",
-              <Message showIcon type="error" header="Location Permission">
+              <Message
+                showIcon
+                type="error"
+                header="Location Permission"
+                className={theme === "dark" ? "rs-message-dark" : ""}
+              >
                 Location tracking was denied. Please enable location access.
               </Message>,
               { placement: "topEnd", duration: 5000 }
@@ -329,7 +436,12 @@ export default function MapSection({
             // Position unavailable
             reduceToastDuplicates(
               "location-unavailable",
-              <Message showIcon type="warning" header="Location Unavailable">
+              <Message
+                showIcon
+                type="warning"
+                header="Location Unavailable"
+                className={theme === "dark" ? "rs-message-dark" : ""}
+              >
                 Your location is currently unavailable. Using your last saved
                 position.
               </Message>,
@@ -344,7 +456,12 @@ export default function MapSection({
               if (locationErrorCountRef.current >= 5) {
                 reduceToastDuplicates(
                   "tracking-issues",
-                  <Message showIcon type="info" header="Active Tracking Issue">
+                  <Message
+                    showIcon
+                    type="info"
+                    header="Active Tracking Issue"
+                    className={theme === "dark" ? "rs-message-dark" : ""}
+                  >
                     <div>
                       <p>
                         Automatic location tracking is not working well. Would
@@ -367,6 +484,9 @@ export default function MapSection({
                                 showIcon
                                 type="success"
                                 header="Tracking Disabled"
+                                className={
+                                  theme === "dark" ? "rs-message-dark" : ""
+                                }
                               >
                                 Using static location. Use the refresh button to
                                 update manually.
@@ -374,7 +494,11 @@ export default function MapSection({
                               { placement: "topEnd", duration: 3000 }
                             );
                           }}
-                          className="rounded bg-blue-500 px-3 py-1 text-sm text-white hover:bg-blue-600"
+                          className={`rounded px-3 py-1 text-sm text-white ${
+                            theme === "dark"
+                              ? "bg-blue-600 hover:bg-blue-700"
+                              : "bg-blue-500 hover:bg-blue-600"
+                          }`}
                         >
                           Disable Tracking
                         </button>
@@ -382,7 +506,11 @@ export default function MapSection({
                           onClick={() => {
                             // Just close the notification
                           }}
-                          className="rounded bg-gray-500 px-3 py-1 text-sm text-white hover:bg-gray-600"
+                          className={`rounded px-3 py-1 text-sm text-white ${
+                            theme === "dark"
+                              ? "bg-gray-600 hover:bg-gray-700"
+                              : "bg-gray-500 hover:bg-gray-600"
+                          }`}
                         >
                           Keep Trying
                         </button>
@@ -397,7 +525,12 @@ export default function MapSection({
             // Timeout
             reduceToastDuplicates(
               "location-timeout",
-              <Message showIcon type="warning" header="Location Timeout">
+              <Message
+                showIcon
+                type="warning"
+                header="Location Timeout"
+                className={theme === "dark" ? "rs-message-dark" : ""}
+              >
                 Location request timed out. Will retry automatically.
               </Message>,
               { placement: "topEnd", duration: 3000 }
@@ -632,84 +765,318 @@ export default function MapSection({
     });
   };
 
-  // Helper function to render a pending order marker
-  const renderPendingOrderMarker = (order: PendingOrder, map: L.Map) => {
-    try {
-      // Use shop coordinates instead of delivery address
-      const lat = order.shopLat;
-      const lng = order.shopLng;
+  // Helper function to format earnings amount
+  const formatEarningsDisplay = (amount: string) => {
+    // Remove currency symbol and commas, then parse as number
+    const value = parseFloat(amount.replace(/[^0-9.]/g, ""));
 
-      // time since creation
-      const created = new Date(order.createdAt);
-      const diffMs = Date.now() - created.getTime();
-      const diffMins = Math.floor(diffMs / 60000);
-      const timeStr =
-        diffMins >= 60
-          ? `${Math.floor(diffMins / 60)}h ${diffMins % 60}m ago`
-          : `${diffMins} mins ago`;
+    if (isNaN(value)) return amount;
 
-      // distance between shop and delivery address
-      const distKm = getDistanceKm(
-        order.shopLat,
-        order.shopLng,
-        order.latitude,
-        order.longitude
-      );
-      const distanceStr = `${Math.round(distKm * 10) / 10} km`;
-      const earningsStr = formatCurrency(order.earnings);
+    if (value >= 1000) {
+      // Format to one decimal place for thousands, no currency
+      return `${(value / 1000).toFixed(1)}k`;
+    }
 
-      // Use purple color for older pending orders
-      const pendingIcon = L.divIcon({
-        html: `<div style="background:#fff;border:2px solid #8b5cf6;border-radius:12px;padding:4px 12px;font-size:12px;color:#8b5cf6;white-space:nowrap;">${earningsStr}</div>`,
-        className: "",
-        iconSize: [90, 30],
-        iconAnchor: [60, 15],
-        popupAnchor: [0, -15],
-      });
+    // For hundreds, just return the number without currency
+    return Math.round(value).toString();
+  };
 
-      // Safely create and add the marker
-      const marker = L.marker([lat, lng], {
-        icon: pendingIcon,
-        zIndexOffset: 1000,
-      });
+  // Helper function to calculate offset for clustered markers
+  const calculateMarkerOffset = (
+    index: number,
+    total: number,
+    baseRadius: number = 30
+  ) => {
+    if (total === 1) return { lat: 0, lng: 0 };
 
-      // Use our enhanced safety function to add the marker
-      if (safeAddMarker(marker, map, `pending order ${order.id}`)) {
-        // Enhanced popup with icons and flex layout
-        const popupContent = `
-          <div style="font-size:14px; line-height:1.4; min-width:200px;">
-            <div style="display:flex;align-items:center;margin-bottom:4px;">
-              <span style="margin-right:6px;">🆔</span><strong>${order.id}</strong>
+    // Calculate angle for even distribution in a circle
+    const angle = (2 * Math.PI * index) / total;
+
+    // Calculate offset using trigonometry
+    return {
+      lat: (baseRadius / 111111) * Math.cos(angle), // Convert meters to degrees (roughly)
+      lng: (baseRadius / 111111) * Math.sin(angle), // 111111 meters = 1 degree at equator
+    };
+  };
+
+  // Helper function to group markers by location
+  const groupMarkersByLocation = (
+    orders: MapSectionProps["availableOrders"]
+  ) => {
+    const groups = new Map<string, Array<typeof orders[0]>>();
+
+    orders.forEach((order) => {
+      if (!order.shopLatitude || !order.shopLongitude) return;
+
+      // Create a key with reduced precision to group nearby points
+      const key = `${order.shopLatitude.toFixed(
+        4
+      )},${order.shopLongitude.toFixed(4)}`;
+
+      if (!groups.has(key)) {
+        groups.set(key, []);
+      }
+      groups.get(key)?.push(order);
+    });
+
+    return groups;
+  };
+
+  // Helper function to create consistent marker icon
+  const createOrderMarkerIcon = (earnings: string) => {
+    const simplifiedEarnings = formatEarningsDisplay(earnings);
+    return L.divIcon({
+      html: `
+        <div style="
+          background: ${theme === "dark" ? "#065f46" : "#10b981"};
+          border: 2px solid ${theme === "dark" ? "#047857" : "#059669"};
+          border-radius: 50%;
+          width: 44px;
+          height: 44px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          font-size: 13px;
+          font-weight: 600;
+          color: white;
+          backdrop-filter: blur(8px);
+          box-shadow: 0 2px 4px ${
+            theme === "dark" ? "rgba(0,0,0,0.3)" : "rgba(0,0,0,0.2)"
+          };
+          z-index: 1000;
+        ">
+          ${simplifiedEarnings}
+        </div>`,
+      className: "",
+      iconSize: [44, 44],
+      iconAnchor: [22, 22],
+      popupAnchor: [0, -22],
+    });
+  };
+
+  // Helper function to create shop marker icon
+  const createShopMarkerIcon = (isActive: boolean) => {
+    return L.divIcon({
+      html: `
+        <div style="
+          background: ${
+            theme === "dark"
+              ? "rgba(31, 41, 55, 0.95)"
+              : "rgba(255, 255, 255, 0.95)"
+          };
+          border: 2px solid ${theme === "dark" ? "#374151" : "#d1d5db"};
+          border-radius: 50%;
+          width: 36px;
+          height: 36px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          box-shadow: 0 2px 4px ${
+            theme === "dark" ? "rgba(0,0,0,0.3)" : "rgba(0,0,0,0.2)"
+          };
+          backdrop-filter: blur(8px);
+        ">
+          <img 
+            src="https://static-00.iconduck.com/assets.00/shop-icon-2048x1878-qov4lrv1.png" 
+            style="
+              width: 24px; 
+              height: 24px; 
+              filter: ${isActive ? "none" : "grayscale(100%)"};
+              opacity: ${isActive ? "1" : "0.6"};
+            "
+          />
+        </div>
+      `,
+      className: "",
+      iconSize: [36, 36],
+      iconAnchor: [18, 18],
+      popupAnchor: [0, -18],
+    });
+  };
+
+  // First popup template for pending orders
+  const createPopupContent = (order: PendingOrder, theme: string) => `
+    <div class="${
+      theme === "dark" ? "dark-theme-popup" : "light-theme-popup"
+    }" style="
+      font-size: 14px;
+      line-height: 1.6;
+      min-width: 240px;
+      background: ${theme === "dark" ? "#1f2937" : "#ffffff"};
+      color: ${theme === "dark" ? "#e5e7eb" : "#111827"};
+      border-radius: 8px;
+      padding: 12px;
+    ">
+      <div style="
+        border-bottom: 1px solid ${theme === "dark" ? "#374151" : "#e5e7eb"};
+        padding-bottom: 8px;
+        margin-bottom: 8px;
+      ">
+        <div style="display: flex; align-items: center; gap: 6px; margin-bottom: 4px;">
+          <span style="font-size: 16px;">🆔</span>
+          <strong style="color: ${theme === "dark" ? "#60a5fa" : "#2563eb"};">${
+    order.id
+  }</strong>
             </div>
-            <div style="display:flex;align-items:center;margin-bottom:4px;">
-              <span style="margin-right:6px;">🏪</span><span>${order.shopName}</span>
+        <div style="display: flex; align-items: center; gap: 6px; margin-bottom: 4px;">
+          <span style="font-size: 16px;">💰</span>
+          <strong style="color: ${
+            theme === "dark" ? "#34d399" : "#059669"
+          };">${formatCurrency(order.earnings)}</strong>
             </div>
-            <div style="display:flex;align-items:center;margin-bottom:4px;">
-              <span style="margin-right:6px;">📍</span><span>${order.shopAddress}</span>
             </div>
-            <div style="display:flex;align-items:center;margin-bottom:4px;">
-              <span style="margin-right:6px;">⏱️</span><span>${timeStr}</span>
+      
+      <div style="display: flex; flex-direction: column; gap: 6px;">
+        <div style="display: flex; align-items: center; gap: 6px;">
+          <span style="font-size: 16px;">🏪</span>
+          <span style="flex: 1;">${order.shopName}</span>
             </div>
-            <div style="display:flex;align-items:center;margin-bottom:4px;">
-              <span style="margin-right:6px;">📏</span><span>Distance: ${distanceStr}</span>
+        <div style="display: flex; align-items: center; gap: 6px;">
+          <span style="font-size: 16px;">📍</span>
+          <span style="flex: 1;">${order.shopAddress}</span>
             </div>
-            <div style="display:flex;align-items:center;margin-bottom:4px;">
-              <span style="margin-right:6px;">🛒</span><span>Items: ${order.itemsCount}</span>
+        <div style="display: flex; align-items: center; gap: 6px;">
+          <span style="font-size: 16px;">⏱️</span>
+          <span style="flex: 1;">${order.createdAt}</span>
             </div>
-            <div style="display:flex;align-items:center;margin-bottom:4px;">
-              <span style="margin-right:6px;">🚚</span><span>Deliver to: ${order.addressStreet}, ${order.addressCity}</span>
+        <div style="display: flex; align-items: center; gap: 6px;">
+          <span style="font-size: 16px;">🛒</span>
+          <span style="flex: 1;">Items: ${order.itemsCount}</span>
             </div>
-            <div style="display:flex;align-items:center;">
-              <span style="margin-right:6px;">💰</span><span>Estimated Earnings: ${earningsStr}</span>
+        <div style="display: flex; align-items: center; gap: 6px;">
+          <span style="font-size: 16px;">🚚</span>
+          <span style="flex: 1;">Deliver to: ${order.addressStreet}, ${
+    order.addressCity
+  }</span>
             </div>
-            <button id="accept-batch-${order.id}" style="margin-top:8px;padding:6px 12px;background:#10b981;color:#fff;border:none;border-radius:4px;cursor:pointer;">
+      </div>
+
+      <button 
+        id="accept-batch-${order.id}" 
+        style="
+          width: 100%;
+          margin-top: 12px;
+          padding: 8px 16px;
+          background: ${theme === "dark" ? "#059669" : "#10b981"};
+          color: white;
+          border: none;
+          border-radius: 6px;
+          font-weight: 600;
+          cursor: pointer;
+          transition: all 0.2s;
+        "
+        onmouseover="this.style.background='${
+          theme === "dark" ? "#047857" : "#059669"
+        }'"
+        onmouseout="this.style.background='${
+          theme === "dark" ? "#059669" : "#10b981"
+        }'"
+      >
               Accept Batch
             </button>
           </div>
         `;
 
-        // Bind popup with max width
-        marker.bindPopup(popupContent, { maxWidth: 250 });
+  // Second popup template for available orders
+  const createAvailableOrderPopupContent = (
+    order: MapSectionProps["availableOrders"][0],
+    theme: string
+  ) => `
+    <div class="${
+      theme === "dark" ? "dark-theme-popup" : "light-theme-popup"
+    }" style="
+      font-size: 14px;
+      line-height: 1.6;
+      min-width: 240px;
+      background: ${theme === "dark" ? "#1f2937" : "#ffffff"};
+      color: ${theme === "dark" ? "#e5e7eb" : "#111827"};
+      border-radius: 8px;
+      padding: 12px;
+    ">
+      <div style="
+        border-bottom: 1px solid ${theme === "dark" ? "#374151" : "#e5e7eb"};
+        padding-bottom: 8px;
+        margin-bottom: 8px;
+      ">
+        <div style="display: flex; align-items: center; gap: 6px; margin-bottom: 4px;">
+          <span style="font-size: 16px;">🆔</span>
+          <strong style="color: ${theme === "dark" ? "#60a5fa" : "#2563eb"};">${
+    order.id
+  }</strong>
+        </div>
+        <div style="display: flex; align-items: center; gap: 6px; margin-bottom: 4px;">
+          <span style="font-size: 16px;">💰</span>
+          <strong style="color: ${theme === "dark" ? "#34d399" : "#059669"};">${
+    order.estimatedEarnings
+  }</strong>
+        </div>
+      </div>
+      
+      <div style="display: flex; flex-direction: column; gap: 6px;">
+        <div style="display: flex; align-items: center; gap: 6px;">
+          <span style="font-size: 16px;">🏪</span>
+          <span style="flex: 1;">${order.shopName}</span>
+        </div>
+        <div style="display: flex; align-items: center; gap: 6px;">
+          <span style="font-size: 16px;">📍</span>
+          <span style="flex: 1;">${order.shopAddress}</span>
+        </div>
+        <div style="display: flex; align-items: center; gap: 6px;">
+          <span style="font-size: 16px;">⏱️</span>
+          <span style="flex: 1;">${order.createdAt}</span>
+        </div>
+        <div style="display: flex; align-items: center; gap: 6px;">
+          <span style="font-size: 16px;">🚚</span>
+          <span style="flex: 1;">Deliver to: ${order.customerAddress}</span>
+        </div>
+      </div>
+
+      <button 
+        id="accept-batch-${order.id}" 
+        style="
+          width: 100%;
+          margin-top: 12px;
+          padding: 8px 16px;
+          background: ${theme === "dark" ? "#059669" : "#10b981"};
+          color: white;
+          border: none;
+          border-radius: 6px;
+          font-weight: 600;
+          cursor: pointer;
+          transition: all 0.2s;
+        "
+        onmouseover="this.style.background='${
+          theme === "dark" ? "#047857" : "#059669"
+        }'"
+        onmouseout="this.style.background='${
+          theme === "dark" ? "#059669" : "#10b981"
+        }'"
+      >
+        Accept Batch
+      </button>
+    </div>
+  `;
+
+  // Helper function to render a pending order marker
+  const renderPendingOrderMarker = (order: PendingOrder, map: L.Map) => {
+    try {
+      const lat = order.shopLat;
+      const lng = order.shopLng;
+
+      const marker = L.marker([lat, lng], {
+        icon: createOrderMarkerIcon(formatCurrency(order.earnings)),
+        zIndexOffset: 1000,
+      });
+
+      if (safeAddMarker(marker, map, `pending order ${order.id}`)) {
+        marker.bindPopup(createPopupContent(order, theme), {
+          maxWidth: 300,
+          className: `${
+            theme === "dark" ? "dark-theme-popup" : "light-theme-popup"
+          }`,
+          closeButton: true,
+          closeOnClick: false,
+        });
         attachAcceptHandler(marker, order.id, map);
       }
     } catch (error) {
@@ -718,6 +1085,56 @@ export default function MapSection({
         error
       );
     }
+  };
+
+  // Add getCurrentPosition function
+  const getCurrentPosition = async () => {
+    setIsRefreshingLocation(true);
+    try {
+      const position = await getSingleLocation();
+      const { latitude, longitude } = position.coords;
+
+      // Save to cookies
+      saveLocationToCookies(latitude, longitude);
+
+      // Update marker position and recenter map
+      if (userMarkerRef.current && mapInstanceRef.current) {
+        userMarkerRef.current.setLatLng([latitude, longitude]);
+        userMarkerRef.current.addTo(mapInstanceRef.current);
+        mapInstanceRef.current.setView([latitude, longitude], 16);
+      }
+
+      setIsOnline(true);
+      locationErrorCountRef.current = 0;
+    } catch (error) {
+      console.error("Error getting current position:", error);
+      locationErrorCountRef.current += 1;
+
+      if (locationErrorCountRef.current >= 3) {
+        showLocationTroubleshootingGuide();
+      }
+
+      reduceToastDuplicates(
+        "location-error",
+        <Message
+          showIcon
+          type="error"
+          header="Location Error"
+          className={theme === "dark" ? "rs-message-dark" : ""}
+        >
+          Could not get your location. Please check your settings.
+        </Message>,
+        { placement: "topEnd", duration: 5000 }
+      );
+    } finally {
+      setIsRefreshingLocation(false);
+    }
+  };
+
+  // Add refreshLocation function
+  const refreshLocation = async () => {
+    if (isRefreshingLocation) return;
+    await getCurrentPosition();
   };
 
   const handleGoLive = () => {
@@ -751,6 +1168,7 @@ export default function MapSection({
               type="info"
               header="Using Saved Location"
               closable
+              className={theme === "dark" ? "rs-message-dark" : ""}
             >
               <div>
                 <p>
@@ -765,6 +1183,7 @@ export default function MapSection({
                       setIsActivelyTracking(true);
                       startLocationTracking();
                     }}
+                    className={theme === "dark" ? "rs-btn-dark" : ""}
                   >
                     Enable Tracking
                   </Button>
@@ -775,13 +1194,19 @@ export default function MapSection({
                       setIsActivelyTracking(false);
                       reduceToastDuplicates(
                         "static-location-info",
-                        <Message showIcon type="info">
+                        <Message
+                          showIcon
+                          type="info"
+                          header="Static Location"
+                          className={theme === "dark" ? "rs-message-dark" : ""}
+                        >
                           Using static location. Use the refresh button to
                           update.
                         </Message>,
                         { placement: "topEnd", duration: 3000 }
                       );
                     }}
+                    className={theme === "dark" ? "rs-btn-dark" : ""}
                   >
                     Stay Static
                   </Button>
@@ -793,11 +1218,11 @@ export default function MapSection({
         } catch (error) {
           console.error("Error setting position from cookies:", error);
           // Fall back to geolocation
-          getCurrentPosition();
+          void getCurrentPosition();
         }
       } else {
         // No cookies, get current position
-        getCurrentPosition();
+        void getCurrentPosition();
       }
     } else {
       // Going offline - clear watch and cookies
@@ -841,12 +1266,6 @@ export default function MapSection({
 
     if (cookieMap["user_latitude"] && cookieMap["user_longitude"]) {
       setIsOnline(true);
-
-      // Log found cookies for debugging
-      console.log("Found location cookies:", {
-        lat: cookieMap["user_latitude"],
-        lng: cookieMap["user_longitude"],
-      });
     }
   }, []);
 
@@ -882,7 +1301,6 @@ export default function MapSection({
 
       // Only start tracking if actively tracking is enabled
       if (isActivelyTracking) {
-        console.log("Starting active location tracking");
         startLocationTracking();
       }
     } else {
@@ -934,66 +1352,57 @@ export default function MapSection({
     return () => window.removeEventListener("toggleGoLive", onToggle);
   }, [handleGoLive]);
 
-  // Add the map initialization useEffect
+  // Main map initialization effect
   useEffect(() => {
     if (!mapRef.current || !mapLoaded) return;
 
-    // Clear any existing map instance first to prevent container reuse
-    if (mapInstanceRef.current) {
-      try {
-        console.log("Cleaning up existing map instance...");
-        mapInstanceRef.current.remove();
-        mapInstanceRef.current = null;
-      } catch (err) {
-        console.error("Error cleaning up map:", err);
-      }
-    }
+    let mapInstance: L.Map | null = null;
 
-    // We need to give the DOM time to fully clean up before creating a new map
-    // Using a small delay prevents container reuse errors
-    let initTimeout = setTimeout(() => {
+    // Wait for next frame to ensure DOM is ready
+    const timer = requestAnimationFrame(() => {
       try {
-        console.log("Creating new map instance...");
-        if (!mapRef.current) {
-          console.error("Map container is no longer available");
-          return;
+        // Cleanup existing map
+        if (mapInstanceRef.current) {
+          mapInstanceRef.current.remove();
+          mapInstanceRef.current = null;
         }
 
-        // Create the base map
-        const map = L.map(mapRef.current, {
-          center: [-1.9706, 30.1044],
-          zoom: 14,
-          minZoom: 10,
-          maxBounds: [
-            [-2.8, 28.8],
-            [-1.0, 31.5],
-          ],
-          scrollWheelZoom: false,
-          attributionControl: false,
-        });
+        // Create new map instance with type assertion and null check
+        if (mapRef.current) {
+          mapInstance = L.map(mapRef.current as HTMLElement, {
+            center: [-1.9706, 30.1044],
+            zoom: 14,
+            minZoom: 3,
+            maxZoom: 19,
+            scrollWheelZoom: true,
+            attributionControl: false,
+          });
 
-        console.log("Map created, adding base layer...");
-        mapInstanceRef.current = map;
+          // Store map instance
+          mapInstanceRef.current = mapInstance;
 
-        // Add base layer
-        L.tileLayer(
-          "https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png",
-          {
-            // attributionControl disabled, no attribution shown
-          }
-        ).addTo(map);
+          // Add initial tile layer without attribution
+          L.tileLayer(mapStyles[theme], {
+            maxZoom: 19,
+            minZoom: 3,
+            attribution: "",
+          }).addTo(mapInstance);
+        }
 
-        // Initialize user marker but don't add it yet
+        // Initialize user marker with improved dark theme styling
         const userIconHtml = `
       <div style="
-        background: white;
-        border: 2px solid #3b82f6;
+            background: ${theme === "dark" ? "#1f2937" : "white"};
+            border: 2px solid ${theme === "dark" ? "#60a5fa" : "#3b82f6"};
         border-radius: 50%;
         width: 32px;
         height: 32px;
         display: flex;
         align-items: center;
         justify-content: center;
+            box-shadow: 0 2px 4px ${
+              theme === "dark" ? "rgba(0,0,0,0.3)" : "rgba(0,0,0,0.1)"
+            };
       ">
         <span style="font-size: 16px;">👤</span>
       </div>
@@ -1011,755 +1420,344 @@ export default function MapSection({
           icon: userIcon,
         });
 
-        // Sequence the operations with delays to ensure map is stable
-        initMapSequence(map);
-      } catch (error) {
-        console.error("Error initializing map:", error);
-      }
-    }, 300); // Significant delay to ensure DOM is ready
+        // Check for saved location in cookies
+        const cookieMap = getCookies();
+        if (cookieMap["user_latitude"] && cookieMap["user_longitude"]) {
+          const lat = parseFloat(cookieMap["user_latitude"]);
+          const lng = parseFloat(cookieMap["user_longitude"]);
 
-    // Sequenced initialization with timeouts between each step
-    const initMapSequence = (map: L.Map) => {
-      try {
-        // Step 1: Check for cookies and set user location
-        console.log("Setting up initial map position...");
-        const initCookies = getCookies();
-
-        if (initCookies["user_latitude"] && initCookies["user_longitude"]) {
-          const lat = parseFloat(initCookies["user_latitude"]);
-          const lng = parseFloat(initCookies["user_longitude"]);
-
-          if (userMarkerRef.current) {
-            userMarkerRef.current.setLatLng([lat, lng]);
-
-            try {
+          if (!isNaN(lat) && !isNaN(lng)) {
+            if (userMarkerRef.current && mapInstance) {
+              userMarkerRef.current.setLatLng([lat, lng]);
               if (isOnline) {
-                map.setView([lat, lng], 16);
-                userMarkerRef.current.addTo(map);
-              } else {
-                map.setView([-1.9706, 30.1044], 14);
+                userMarkerRef.current.addTo(mapInstance);
+                mapInstance.setView([lat, lng], 16);
               }
-            } catch (viewError) {
-              console.error("Error setting initial view:", viewError);
             }
           }
         }
 
-        // Wait before loading shop markers
-        let shopTimeout = setTimeout(() => loadShopMarkers(map), 500);
-
-        // Clean up timeout
-        return () => {
-          clearTimeout(shopTimeout);
-        };
-      } catch (error) {
-        console.error("Error in map sequence:", error);
-      }
-    };
-
-    // Load shop markers with delay and safety checks
-    const loadShopMarkers = (map: L.Map) => {
-      console.log("Starting to load shop markers...");
-
-      // Safety check that the map is still valid
-      if (!map || !mapRef.current || !document.body.contains(mapRef.current)) {
-        console.warn("Map no longer valid, skipping shop markers");
-        return;
-      }
-
-      fetch("/api/shopper/shops")
-        .then((res) => res.json())
-        .then((data: Shop[]) => {
-          setShops(data);
-          console.log(`Loaded ${data.length} shops, adding markers...`);
-
-          // Safety check again before processing
-          if (
-            !map ||
-            !mapRef.current ||
-            !document.body.contains(mapRef.current)
-          ) {
-            console.warn("Map no longer valid before adding shop markers");
-            return;
-          }
-
-          try {
-            // First add all shop markers
-            data.forEach((shop) => {
-              try {
-                const lat = parseFloat(shop.latitude);
-                const lng = parseFloat(shop.longitude);
-
-                if (isNaN(lat) || isNaN(lng)) {
-                  console.warn(
-                    `Invalid coordinates for shop ${shop.name}, skipping marker`
-                  );
-                  return;
-                }
-
-                const shopIconHtml = `
-            <img src="https://static-00.iconduck.com/assets.00/shop-icon-2048x1878-qov4lrv1.png" style="
-              width: 32px;
-              height: 32px;
-              filter: ${shop.is_active ? "none" : "grayscale(100%)"};
-            " />
-          `;
-
-                // Create the marker but defer adding to the map
-                try {
-                  const shopIcon = L.divIcon({
-                    html: shopIconHtml,
-                    className: "",
-                    iconSize: [32, 32],
-                    iconAnchor: [16, 32],
-                    popupAnchor: [0, -32],
-                  });
-
-                  // Create marker and add directly - with safety check
-                  if (
-                    map &&
-                    map.getContainer() &&
-                    document.body.contains(map.getContainer())
-                  ) {
-                    const marker = L.marker([lat, lng], { icon: shopIcon });
-                    marker.addTo(map);
-                    marker.bindPopup(
-                      `${shop.name}${shop.is_active ? "" : " (Disabled)"}`
-                    );
-                  }
-                } catch (markerError) {
-                  console.error(
-                    `Error creating shop marker for ${shop.name}:`,
-                    markerError
-                  );
-                }
-              } catch (error) {
-                console.error(`Error processing shop ${shop.name}:`, error);
-              }
-            });
-
-            // Then after shop markers are done, load pending orders with delay
-            let pendingTimeout = setTimeout(() => loadPendingOrders(map), 300);
-
-            return () => {
-              clearTimeout(pendingTimeout);
-            };
-          } catch (error) {
-            console.error("Error processing shop markers:", error);
-          }
-        })
-        .catch((err) => console.error("Shop fetch error:", err));
-    };
-
-    // Load pending orders with delay and safety checks
-    const loadPendingOrders = (map: L.Map) => {
-      console.log("Starting to load pending orders...");
-
-      // Skip if offline or map is no longer valid
-      if (
-        !isOnline ||
-        !map ||
-        !mapRef.current ||
-        !document.body.contains(mapRef.current)
-      ) {
-        console.log("Map no longer valid or offline, skipping pending orders");
-        return;
-      }
-
-      fetch("/api/shopper/pendingOrders")
-        .then((res) => res.json())
-        .then((data: PendingOrder[]) => {
-          setPendingOrders(data);
-          console.log(
-            `Loaded ${data.length} pending orders, adding markers...`
-          );
-
-          // Check map is still valid
-          if (
-            !map ||
-            !mapRef.current ||
-            !document.body.contains(mapRef.current)
-          ) {
-            console.warn(
-              "Map no longer valid before adding pending order markers"
-            );
-            return;
-          }
-
-          try {
-            // Add pending order markers
-            data.forEach((order) => {
-              try {
-                // Use shop coordinates instead of delivery address
-                const lat = order.shopLat;
-                const lng = order.shopLng;
-
-                if (isNaN(lat) || isNaN(lng)) {
-                  console.warn(
-                    `Invalid coordinates for pending order ${order.id}, skipping marker`
-                  );
-                  return;
-                }
-
-                // time since creation
-                const created = new Date(order.createdAt);
-                const diffMs = Date.now() - created.getTime();
-                const diffMins = Math.floor(diffMs / 60000);
-                const timeStr =
-                  diffMins >= 60
-                    ? `${Math.floor(diffMins / 60)}h ${diffMins % 60}m ago`
-                    : `${diffMins} mins ago`;
-
-                // distance between shop and delivery address
-                const distKm = getDistanceKm(
-                  order.shopLat,
-                  order.shopLng,
-                  order.latitude,
-                  order.longitude
-                );
-                const distanceStr = `${Math.round(distKm * 10) / 10} km`;
-                const earningsStr = formatCurrency(order.earnings);
-
-                // Use purple color for older pending orders
-                const pendingIcon = L.divIcon({
-                  html: `<div style="background:#fff;border:2px solid #8b5cf6;border-radius:12px;padding:4px 12px;font-size:12px;color:#8b5cf6;white-space:nowrap;">${earningsStr}</div>`,
-                  className: "",
-                  iconSize: [90, 30],
-                  iconAnchor: [60, 15],
-                  popupAnchor: [0, -15],
-                });
-
-                // Safely add the marker with container check
-                if (
-                  map &&
-                  map.getContainer() &&
-                  document.body.contains(map.getContainer())
-                ) {
-                  const marker = L.marker([lat, lng], {
-                    icon: pendingIcon,
-                    zIndexOffset: 1000,
-                  });
-
-                  marker.addTo(map);
-
-                  // Enhanced popup with icons and flex layout
-                  const popupContent = `
-                    <div style="font-size:14px; line-height:1.4; min-width:200px;">
-                      <div style="display:flex;align-items:center;margin-bottom:4px;">
-                        <span style="margin-right:6px;">🆔</span><strong>${order.id}</strong>
-                      </div>
-                      <div style="display:flex;align-items:center;margin-bottom:4px;">
-                        <span style="margin-right:6px;">🏪</span><span>${order.shopName}</span>
-                      </div>
-                      <div style="display:flex;align-items:center;margin-bottom:4px;">
-                        <span style="margin-right:6px;">📍</span><span>${order.shopAddress}</span>
-                      </div>
-                      <div style="display:flex;align-items:center;margin-bottom:4px;">
-                        <span style="margin-right:6px;">⏱️</span><span>${timeStr}</span>
-                      </div>
-                      <div style="display:flex;align-items:center;margin-bottom:4px;">
-                        <span style="margin-right:6px;">📏</span><span>Distance: ${distanceStr}</span>
-                      </div>
-                      <div style="display:flex;align-items:center;margin-bottom:4px;">
-                        <span style="margin-right:6px;">🛒</span><span>Items: ${order.itemsCount}</span>
-                      </div>
-                      <div style="display:flex;align-items:center;margin-bottom:4px;">
-                        <span style="margin-right:6px;">🚚</span><span>Deliver to: ${order.addressStreet}, ${order.addressCity}</span>
-                      </div>
-                      <div style="display:flex;align-items:center;">
-                        <span style="margin-right:6px;">💰</span><span>Estimated Earnings: ${earningsStr}</span>
-                      </div>
-                      <button id="accept-batch-${order.id}" style="margin-top:8px;padding:6px 12px;background:#10b981;color:#fff;border:none;border-radius:4px;cursor:pointer;">
-                        Accept Batch
-                      </button>
-                    </div>
-                  `;
-
-                  // Bind popup with max width
-                  marker.bindPopup(popupContent, { maxWidth: 250 });
-                  attachAcceptHandler(marker, order.id, map);
-                }
-              } catch (error) {
-                console.error(
-                  `Error adding pending order marker for ${order.id}:`,
-                  error
-                );
-              }
-            });
-
-            // Finally load available orders
-            let availableTimeout = setTimeout(
-              () => loadAvailableOrders(map),
-              300
-            );
-
-            return () => {
-              clearTimeout(availableTimeout);
-            };
-          } catch (error) {
-            console.error("Error processing pending orders:", error);
-          }
-        })
-        .catch((err) => console.error("Pending orders fetch error:", err));
-    };
-
-    // Load available orders with delay and safety checks
-    const loadAvailableOrders = (map: L.Map) => {
-      console.log("Starting to load available orders...");
-
-      // Skip if offline or map is no longer valid
-      if (
-        !isOnline ||
-        !availableOrders ||
-        availableOrders.length === 0 ||
-        !map ||
-        !mapRef.current ||
-        !document.body.contains(mapRef.current)
-      ) {
-        console.log(
-          "Map no longer valid or no available orders, skipping available orders"
-        );
-        return;
-      }
-
-      console.log(`Processing ${availableOrders.length} available orders...`);
-
-      try {
-        // Add available order markers
-        availableOrders.forEach((order) => {
-          try {
-            // Skip if missing coordinates
-            if (
-              !order.shopLatitude ||
-              !order.shopLongitude ||
-              isNaN(order.shopLatitude) ||
-              isNaN(order.shopLongitude)
-            ) {
-              console.warn(
-                `Missing coordinates for available order ${order.id}, skipping marker`
-              );
-              return;
-            }
-
-            // Safety check before creating the marker
-            if (
-              !map ||
-              !map.getContainer() ||
-              !document.body.contains(map.getContainer())
-            ) {
-              console.warn(
-                "Map no longer valid before adding available order marker"
-              );
-              return;
-            }
-
-            const badgeColor = getOrderTimeBadgeColor(order.createdAt);
-            const earningsStr = order.estimatedEarnings;
-
-            // Earnings badge icon with color based on time
-            const orderIcon = L.divIcon({
-              html: `<div style="background:#fff;border:2px solid ${badgeColor};border-radius:12px;padding:4px 12px;font-size:12px;color:${badgeColor};white-space:nowrap;">${earningsStr}</div>`,
-              className: "",
-              iconSize: [90, 30],
-              iconAnchor: [60, 15],
-              popupAnchor: [0, -15],
-            });
-
-            // Create the marker with safe add
-            const marker = L.marker([order.shopLatitude, order.shopLongitude], {
-              icon: orderIcon,
-              zIndexOffset: 1000,
-            });
-
-            // Safely add to map
-            marker.addTo(map);
-
-            // Calculate time since creation based on createdAt
-            const timeStr = order.createdAt;
-
-            // Calculate distance between shop and delivery address
-            let distanceStr = "Unknown";
-            if (
-              order.shopLatitude &&
-              order.shopLongitude &&
-              order.customerLatitude &&
-              order.customerLongitude
-            ) {
-              const distKm = getDistanceKm(
-                order.shopLatitude,
-                order.shopLongitude,
-                order.customerLatitude,
-                order.customerLongitude
-              );
-              distanceStr = `${Math.round(distKm * 10) / 10} km`;
-            }
-
-            // Enhanced popup with icons and flex layout
-            const popupContent = `
-            <div style="font-size:14px; line-height:1.4; min-width:200px;">
-              <div style="display:flex;align-items:center;margin-bottom:4px;">
-                <span style="margin-right:6px;">🆔</span><strong>${order.id}</strong>
-              </div>
-              <div style="display:flex;align-items:center;margin-bottom:4px;">
-                <span style="margin-right:6px;">🏪</span><span>${order.shopName}</span>
-              </div>
-              <div style="display:flex;align-items:center;margin-bottom:4px;">
-                <span style="margin-right:6px;">📍</span><span>${order.shopAddress}</span>
-              </div>
-              <div style="display:flex;align-items:center;margin-bottom:4px;">
-                <span style="margin-right:6px;">⏱️</span><span>${timeStr}</span>
-              </div>
-              <div style="display:flex;align-items:center;margin-bottom:4px;">
-                <span style="margin-right:6px;">📏</span><span>Distance: ${distanceStr}</span>
-              </div>
-              <div style="display:flex;align-items:center;margin-bottom:4px;">
-              <span style="margin-right:6px;">🛒</span><span>Items: ${order.items}</span>
-              </div>
-              <div style="display:flex;align-items:center;margin-bottom:4px;">
-              <span style="margin-right:6px;">🚚</span><span>Deliver to: ${order.customerAddress}</span>
-              </div>
-              <div style="display:flex;align-items:center;">
-                <span style="margin-right:6px;">💰</span><span>Estimated Earnings: ${earningsStr}</span>
-              </div>
-              <button id="accept-batch-${order.id}" style="margin-top:8px;padding:6px 12px;background:#10b981;color:#fff;border:none;border-radius:4px;cursor:pointer;">
-                Accept Batch
-              </button>
-            </div>
-          `;
-
-            // Bind popup with max width
-            marker.bindPopup(popupContent, { maxWidth: 250 });
-            attachAcceptHandler(marker, order.id, map);
-          } catch (error) {
-            console.error(`Error adding available order marker:`, error);
+        // Wait for next frame before initializing markers
+        requestAnimationFrame(() => {
+          if (mapInstance && mapInstance.getContainer()) {
+            initMapSequence(mapInstance);
           }
         });
       } catch (error) {
-        console.error("Error processing available orders:", error);
+        console.error("Error initializing map:", error);
       }
-    };
+    });
 
-    // Cleanup on unmount or deps change
+    // Cleanup function
     return () => {
-      clearTimeout(initTimeout);
-
-      if (watchIdRef.current !== null) {
-        navigator.geolocation.clearWatch(watchIdRef.current);
-        watchIdRef.current = null;
-      }
-
+      cancelAnimationFrame(timer);
       if (mapInstanceRef.current) {
-        try {
-          console.log("Cleaning up map on unmount");
-          mapInstanceRef.current.remove();
-          mapInstanceRef.current = null;
-        } catch (error) {
-          console.error("Error cleaning up map:", error);
-        }
+        mapInstanceRef.current.remove();
+        mapInstanceRef.current = null;
       }
     };
-  }, [mapLoaded, availableOrders, isOnline]);
+  }, [mapLoaded, theme]);
 
-  // Get the user's current position once
-  const getCurrentPosition = () => {
-    if (!navigator.geolocation) {
-      reduceToastDuplicates(
-        "geolocation-not-supported",
-        <Message showIcon type="error" header="Geolocation Error">
-          Geolocation is not supported by your browser. Please use a different
-          browser.
-        </Message>,
-        { placement: "topEnd", duration: 5000 }
-      );
-      setIsRefreshingLocation(false);
-      return;
-    }
+  // Function to initialize map sequence
+  const initMapSequence = async (map: L.Map) => {
+    if (!map || !map.getContainer()) return;
 
-    navigator.geolocation.getCurrentPosition(
-      // Success callback
-      (position) => {
-        const { latitude, longitude } = position.coords;
+    try {
+      // Load all data in parallel
+      const [shopsResponse, pendingOrdersResponse] = await Promise.all([
+        fetch("/api/shopper/shops"),
+        isOnline
+          ? fetch("/api/shopper/pendingOrders")
+          : Promise.resolve({ json: () => [] }),
+      ]);
 
-        // Save to cookies
-        saveLocationToCookies(latitude, longitude);
+      const [shops, pendingOrders] = await Promise.all([
+        shopsResponse.json() as Promise<Shop[]>,
+        pendingOrdersResponse.json() as Promise<PendingOrder[]>,
+      ]);
 
-        // Update map marker with safety checks
-        if (userMarkerRef.current) {
+      // Process shops
+      setShops(shops);
+      if (map && map.getContainer()) {
+        shops.forEach((shop: Shop) => {
           try {
-            userMarkerRef.current.setLatLng([latitude, longitude]);
+            const lat = parseFloat(shop.latitude);
+            const lng = parseFloat(shop.longitude);
 
-            // Only add to map if map is ready
-            if (
-              mapInstanceRef.current &&
-              typeof mapInstanceRef.current.addLayer === "function" &&
-              (mapInstanceRef.current as any)._loaded
-            ) {
-              userMarkerRef.current.addTo(mapInstanceRef.current);
+            if (isNaN(lat) || isNaN(lng)) {
+              console.warn(`Invalid coordinates for shop ${shop.name}`);
+              return;
             }
-          } catch (error) {
-            console.error("Error updating marker position:", error);
-          }
-        }
 
-        // Set map view with safety checks
-        if (
-          mapInstanceRef.current &&
-          typeof mapInstanceRef.current.setView === "function" &&
-          mapInstanceRef.current.getContainer() &&
-          (mapInstanceRef.current as any)._loaded
-        ) {
-          try {
-            mapInstanceRef.current.setView([latitude, longitude], 16);
-          } catch (error) {
-            console.error("Error setting map view:", error);
-          }
-        } else {
-          console.warn("Map not fully loaded, cannot set view");
-        }
+            if (map && map.getContainer()) {
+              const marker = L.marker([lat, lng], {
+                icon: createShopMarkerIcon(shop.is_active),
+                zIndexOffset: 500,
+              });
 
-        setIsOnline(true);
-        setIsRefreshingLocation(false);
-
-        // Show success message
-        reduceToastDuplicates(
-          "location-updated",
-          <Message showIcon type="success" header="Location Updated">
-            Your current location has been detected. ✅
-          </Message>,
-          { placement: "topEnd", duration: 3000 }
-        );
-
-        // Ask user if they want to enable active tracking
-        setTimeout(() => {
-          reduceToastDuplicates(
-            "tracking-prompt",
-            <Message showIcon type="info" header="Location Tracking" closable>
-              <div>
-                <p>Would you like to enable active location tracking?</p>
-                <div className="mt-2 flex space-x-2">
-                  <Button
-                    appearance="primary"
-                    size="sm"
-                    onClick={() => {
-                      setIsActivelyTracking(true);
-                      startLocationTracking();
-                    }}
-                  >
-                    Enable Tracking
-                  </Button>
-                  <Button
-                    appearance="subtle"
-                    size="sm"
-                    onClick={() => {
-                      setIsActivelyTracking(false);
-                      reduceToastDuplicates(
-                        "static-location-info",
-                        <Message showIcon type="info">
-                          Using static location. Use the refresh button to
-                          update.
-                        </Message>,
-                        { placement: "topEnd", duration: 3000 }
-                      );
-                    }}
-                  >
-                    Stay Static
-                  </Button>
-                </div>
-              </div>
-            </Message>,
-            { placement: "topEnd", duration: 10000 }
-          );
-        }, 1000);
-      },
-      // Error callback
-      (error) => {
-        console.error("Geolocation error:", error);
-        setIsRefreshingLocation(false);
-
-        // Show error message based on error code
-        const errorKey = `location-error-${error.code}`;
-        const errorMessage =
-          error.code === 1
-            ? "Location permission denied. Please enable location access in your browser settings."
-            : error.code === 2
-            ? "Location unavailable. Please check your device settings."
-            : error.code === 3
-            ? "Location request timed out. Please try again."
-            : "Error getting your location. Please try again.";
-
-        reduceToastDuplicates(
-          errorKey,
-          <Message showIcon type="error" header="Location Error">
-            {errorMessage}
-          </Message>,
-          { placement: "topEnd", duration: 5000 }
-        );
-
-        // Set up manual location mode
-        if (mapInstanceRef.current) {
-          reduceToastDuplicates(
-            "manual-mode-info",
-            <Message showIcon type="info" header="Manual Mode">
-              Click anywhere on the map to set your location manually.
-            </Message>,
-            { placement: "topEnd", duration: 5000 }
-          );
-
-          try {
-            const mapInstance = mapInstanceRef.current;
-            const onMapClick = (e: L.LeafletMouseEvent) => {
-              const { lat, lng } = e.latlng;
-
-              // Save the position to cookies
-              saveLocationToCookies(lat, lng);
-
-              // Update marker
-              if (userMarkerRef.current) {
-                userMarkerRef.current.setLatLng([lat, lng]);
-                userMarkerRef.current.addTo(mapInstance);
+              if (safeAddMarker(marker, map, `shop ${shop.name}`)) {
+                marker.bindPopup(
+                  `<div style="
+                    background: ${theme === "dark" ? "#1f2937" : "#fff"}; 
+                    color: ${theme === "dark" ? "#e5e7eb" : "#111827"};
+                      padding: 8px;
+                      border-radius: 8px;
+                      min-width: 150px;
+                      text-align: center;
+                    ">
+                      <strong>${shop.name}</strong>
+                    ${
+                      !shop.is_active
+                        ? '<br><span style="color: #ef4444;">(Disabled)</span>'
+                        : ""
+                    }
+                    </div>`,
+                  { offset: [0, -10] }
+                );
               }
-
-              reduceToastDuplicates(
-                "manual-location-set",
-                <Message showIcon type="success" header="Location Set">
-                  Your position has been manually set.
-                </Message>,
-                { placement: "topEnd", duration: 3000 }
-              );
-
-              setIsOnline(true);
-
-              // Remove handler after first use
-              mapInstance.off("click", onMapClick);
-            };
-
-            mapInstance.on("click", onMapClick);
-          } catch (mapError) {
-            console.error("Error setting up manual mode:", mapError);
-          }
-        }
-      },
-      // Options
-      {
-        enableHighAccuracy: true,
-        timeout: 15000,
-        maximumAge: 0,
-      }
-    );
-  };
-
-  // Helper function to manually refresh location
-  const refreshLocation = () => {
-    if (!navigator.geolocation) {
-      reduceToastDuplicates(
-        "geolocation-not-supported",
-        <Message showIcon type="error" header="Not Supported">
-          Geolocation is not supported by your browser.
-        </Message>,
-        { placement: "topEnd", duration: 3000 }
-      );
-      return;
-    }
-
-    setIsRefreshingLocation(true);
-
-    // Show loading toast
-    reduceToastDuplicates(
-      "location-updating",
-      <Message showIcon type="info" header="Updating Location">
-        Getting your current location...
-      </Message>,
-      { placement: "topEnd", duration: 3000 }
-    );
-
-    navigator.geolocation.getCurrentPosition(
-      (position) => {
-        const { latitude, longitude } = position.coords;
-
-        // Save to cookies
-        saveLocationToCookies(latitude, longitude);
-
-        // Update marker and map view
-        if (userMarkerRef.current && mapInstanceRef.current) {
-          try {
-            userMarkerRef.current.setLatLng([latitude, longitude]);
-
-            // Only add to map if the map is ready
-            if (isMapReady(mapInstanceRef.current)) {
-              userMarkerRef.current.addTo(mapInstanceRef.current);
-              mapInstanceRef.current.setView([latitude, longitude], 16);
-
-              // Success message
-              reduceToastDuplicates(
-                "location-updated",
-                <Message showIcon type="success" header="Location Updated">
-                  Your location has been successfully updated.
-                </Message>,
-                { placement: "topEnd", duration: 3000 }
-              );
-            } else {
-              console.warn("Map not fully ready when updating location");
-              // Still show success since we saved to cookies
-              reduceToastDuplicates(
-                "location-updated-cookies",
-                <Message showIcon type="info" header="Location Saved">
-                  Your location was saved, but the map is still initializing.
-                </Message>,
-                { placement: "topEnd", duration: 3000 }
-              );
             }
           } catch (error) {
-            console.error("Error updating map on refresh:", error);
-            // Show error message
-            reduceToastDuplicates(
-              "location-update-error",
-              <Message showIcon type="error" header="Map Error">
-                Your location was saved, but there was an error updating the
-                map.
-              </Message>,
-              { placement: "topEnd", duration: 3000 }
-            );
+            console.error(`Error adding shop marker for ${shop.name}:`, error);
           }
-        }
+        });
+      }
 
-        setIsRefreshingLocation(false);
-      },
-      (error) => {
-        console.error("Error refreshing location:", error);
-        setIsRefreshingLocation(false);
+      // Process pending orders with grouping
+      if (isOnline && map && map.getContainer()) {
+        // Group pending orders by location
+        const groupedPendingOrders = new Map<string, PendingOrder[]>();
+        pendingOrders.forEach((order) => {
+          if (!order.shopLat || !order.shopLng) return;
+          const key = `${order.shopLat.toFixed(5)},${order.shopLng.toFixed(5)}`;
+          if (!groupedPendingOrders.has(key)) {
+            groupedPendingOrders.set(key, []);
+          }
+          groupedPendingOrders.get(key)?.push(order);
+        });
 
-        // Error message based on error type
-        let errorMessage = "Could not update your location.";
-        const errorKey = `location-error-${error.code}`;
+        // Log grouped orders information
+        logger.info("Pending orders grouped by location", "MapSection", {
+          totalOrders: pendingOrders.length,
+          groupCount: groupedPendingOrders.size,
+          groupSizes: Array.from(groupedPendingOrders.entries()).map(
+            ([key, orders]) => ({
+              location: key,
+              orderCount: orders.length,
+              orderIds: orders.map((o) => o.id),
+            })
+          ),
+        });
 
-        if (error.code === 1) {
-          errorMessage =
-            "Location permission denied. Please enable location access.";
-        } else if (error.code === 2) {
-          errorMessage =
-            "Location unavailable. Using your saved location instead.";
-        } else if (error.code === 3) {
-          errorMessage =
-            "Location request timed out. Using your saved location instead.";
-        }
+        // Process each group of orders
+        groupedPendingOrders.forEach((orders, locationKey) => {
+          const [baseLat, baseLng] = locationKey.split(",").map(Number);
 
-        reduceToastDuplicates(
-          errorKey,
-          <Message showIcon type="error" header="Location Error">
-            {errorMessage}
-          </Message>,
-          { placement: "topEnd", duration: 5000 }
-        );
-      },
-      { enableHighAccuracy: true, maximumAge: 0, timeout: 15000 }
-    );
+          orders.forEach((order, index) => {
+            try {
+              // Calculate offset based on position in group
+              const offset = calculateMarkerOffset(index, orders.length);
+              const adjustedLat = baseLat + offset.lat;
+              const adjustedLng = baseLng + offset.lng;
+
+              const marker = L.marker([adjustedLat, adjustedLng], {
+                icon: createOrderMarkerIcon(formatCurrency(order.earnings)),
+                zIndexOffset: 1000 + index,
+              });
+
+              if (safeAddMarker(marker, map, `pending order ${order.id}`)) {
+                marker.bindPopup(createPopupContent(order, theme), {
+                  maxWidth: 300,
+                  className: `${
+                    theme === "dark" ? "dark-theme-popup" : "light-theme-popup"
+                  }`,
+                  closeButton: true,
+                  closeOnClick: false,
+                });
+                attachAcceptHandler(marker, order.id, map);
+              }
+            } catch (error) {
+              logger.error(
+                "Error rendering pending order marker",
+                "MapSection",
+                {
+                  orderId: order.id,
+                  error:
+                    error instanceof Error ? error.message : "Unknown error",
+                  location: locationKey,
+                  groupSize: orders.length,
+                  indexInGroup: index,
+                }
+              );
+            }
+          });
+        });
+      }
+
+      // Process available orders with grouping
+      if (
+        isOnline &&
+        availableOrders?.length > 0 &&
+        map &&
+        map.getContainer()
+      ) {
+        // Group available orders by location
+        const groupedAvailableOrders = new Map<
+          string,
+          typeof availableOrders
+        >();
+        availableOrders.forEach((order) => {
+          if (!order.shopLatitude || !order.shopLongitude) return;
+          const key = `${order.shopLatitude.toFixed(
+            5
+          )},${order.shopLongitude.toFixed(5)}`;
+          if (!groupedAvailableOrders.has(key)) {
+            groupedAvailableOrders.set(key, []);
+          }
+          groupedAvailableOrders.get(key)?.push(order);
+        });
+
+        // Log grouped orders information
+        logger.info("Available orders grouped by location", "MapSection", {
+          totalOrders: availableOrders.length,
+          groupCount: groupedAvailableOrders.size,
+          groupSizes: Array.from(groupedAvailableOrders.entries()).map(
+            ([key, orders]) => ({
+              location: key,
+              orderCount: orders.length,
+              orderIds: orders.map((o) => o.id),
+            })
+          ),
+        });
+
+        // Process each group of orders
+        groupedAvailableOrders.forEach((orders, locationKey) => {
+          const [baseLat, baseLng] = locationKey.split(",").map(Number);
+
+          orders.forEach((order, index) => {
+            try {
+              // Calculate offset based on position in group
+              const offset = calculateMarkerOffset(index, orders.length);
+              const adjustedLat = baseLat + offset.lat;
+              const adjustedLng = baseLng + offset.lng;
+
+              const marker = L.marker([adjustedLat, adjustedLng], {
+                icon: createOrderMarkerIcon(order.estimatedEarnings),
+                zIndexOffset: 1000 + index,
+              });
+
+              if (safeAddMarker(marker, map, `order ${order.id}`)) {
+                marker.bindPopup(
+                  createAvailableOrderPopupContent(order, theme),
+                  {
+                    maxWidth: 300,
+                    className: `${
+                      theme === "dark"
+                        ? "dark-theme-popup"
+                        : "light-theme-popup"
+                    }`,
+                    closeButton: true,
+                    closeOnClick: false,
+                  }
+                );
+                attachAcceptHandler(marker, order.id, map);
+                orderMarkersRef.current.push(marker);
+              }
+            } catch (error) {
+              logger.error(
+                "Error rendering available order marker",
+                "MapSection",
+                {
+                  orderId: order.id,
+                  error:
+                    error instanceof Error ? error.message : "Unknown error",
+                  location: locationKey,
+                  groupSize: orders.length,
+                  indexInGroup: index,
+                }
+              );
+            }
+          });
+        });
+      }
+    } catch (error) {
+      console.error("Error in map sequence:", error);
+    }
   };
+
+  // Update useEffect to fetch today's completed earnings
+  useEffect(() => {
+    const fetchTodayCompletedEarnings = async () => {
+      setLoadingEarnings(true);
+      try {
+        const response = await fetch("/api/shopper/todayCompletedEarnings");
+        if (!response.ok) {
+          throw new Error("Failed to fetch earnings data");
+        }
+
+        const data = await response.json();
+        if (data && data.success && data.data) {
+          setDailyEarnings(data.data.totalEarnings);
+          setCompletedOrdersCount(data.data.orderCount);
+        } else {
+          console.warn("Earnings data incomplete or invalid:", data);
+          setDailyEarnings(0);
+          setCompletedOrdersCount(0);
+        }
+      } catch (error) {
+        console.error("Error fetching daily earnings:", error);
+        setDailyEarnings(0);
+        setCompletedOrdersCount(0);
+      } finally {
+        setLoadingEarnings(false);
+      }
+    };
+
+    fetchTodayCompletedEarnings();
+    // Refresh earnings every 5 minutes
+    const interval = setInterval(fetchTodayCompletedEarnings, 5 * 60 * 1000);
+    return () => clearInterval(interval);
+  }, []);
+
+  // Helper function to clear order markers
+  const clearOrderMarkers = () => {
+    orderMarkersRef.current.forEach((marker) => {
+      if (marker) marker.remove();
+    });
+    orderMarkersRef.current = [];
+  };
+
+  // Helper function to clear shop markers
+  const clearShopMarkers = () => {
+    shopMarkersRef.current.forEach((marker) => {
+      if (marker) marker.remove();
+    });
+    shopMarkersRef.current = [];
+  };
+
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => {
+      clearOrderMarkers();
+      clearShopMarkers();
+      if (userMarkerRef.current) {
+        userMarkerRef.current.remove();
+      }
+    };
+  }, []);
 
   // If the dashboard is initializing, show a simpler loading state
   if (isInitializing) {
     return (
-      <div className="h-[300px] w-full bg-gray-100 md:h-[400px]">
-        {/* Intentionally empty during initialization - parent handles loading UI */}
+      <div className="relative w-full">
+        <div
+          ref={mapRef}
+          className={`h-[calc(100vh-4rem-5.5rem)] overflow-hidden rounded-lg md:h-[600px] ${
+            theme === "dark" ? "bg-gray-900" : "bg-gray-100"
+          }`}
+        />
+        <div className="absolute inset-0 flex items-center justify-center bg-gray-900/50">
+          <Loader size="lg" content="Initializing..." />
+        </div>
       </div>
     );
   }
@@ -1767,21 +1765,111 @@ export default function MapSection({
   // Show map loading state when map is not ready but dashboard is initialized
   if (!mapLoaded) {
     return (
-      <div className="flex h-[300px] w-full items-center justify-center bg-gray-100 md:h-[400px]">
-        <Loader size="lg" content="Loading map..." />
+      <div
+        className={`flex h-[300px] w-full items-center justify-center md:h-[400px] ${
+          theme === "dark" ? "bg-gray-900" : "bg-gray-100"
+        }`}
+      >
+        <Loader
+          size="lg"
+          content="Loading map..."
+          className={theme === "dark" ? "rs-loader-dark" : ""}
+        />
       </div>
     );
   }
 
   return (
-    <div className="relative">
+    <div className="relative w-full">
+      {/* Daily Earnings Badge */}
+      {!isExpanded && (
+        <div
+          className={`absolute left-1/2 top-4 z-[1001] -translate-x-1/2 transform rounded-full px-4 py-2 shadow-lg ${
+            theme === "dark"
+              ? "bg-gray-800 bg-opacity-90 text-white backdrop-blur-lg"
+              : "bg-white bg-opacity-90 text-gray-900 backdrop-blur-lg"
+          }`}
+        >
+          <div className="flex items-center gap-2">
+            <svg
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              className={`h-5 w-5 ${
+                theme === "dark" ? "text-green-400" : "text-green-500"
+              }`}
+            >
+              <path d="M12 2v20M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6" />
+            </svg>
+            <div className="flex flex-col">
+              <div className="flex items-center gap-2">
+                <span
+                  className={`text-xs ${
+                    theme === "dark" ? "text-gray-300" : "text-gray-600"
+                  }`}
+                >
+                  Today&apos;s earnings
+                </span>
+                {loadingEarnings ? (
+                  <div
+                    className={`h-4 w-6 animate-pulse rounded ${
+                      theme === "dark" ? "bg-gray-700" : "bg-gray-200"
+                    }`}
+                  ></div>
+                ) : (
+                  <span
+                    className={`rounded-full px-2 py-0.5 text-xs font-medium ${
+                      theme === "dark"
+                        ? "bg-green-900/30 text-green-300"
+                        : "bg-green-100 text-green-800"
+                    }`}
+                  >
+                    {completedOrdersCount}
+                  </span>
+                )}
+              </div>
+              {loadingEarnings ? (
+                <div
+                  className={`h-6 w-20 animate-pulse rounded ${
+                    theme === "dark" ? "bg-gray-700" : "bg-gray-200"
+                  }`}
+                />
+              ) : (
+                <span
+                  className={`text-lg font-semibold ${
+                    theme === "dark" ? "text-white" : "text-gray-900"
+                  }`}
+                >
+                  {new Intl.NumberFormat("en-RW", {
+                    style: "currency",
+                    currency: "RWF",
+                    maximumFractionDigits: 0,
+                  }).format(dailyEarnings)}
+                </span>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
       <div
         ref={mapRef}
-        className="h-[calc(100vh-4rem-3.5rem)] overflow-hidden rounded-lg md:h-[600px]"
+        className={`h-[calc(100vh-4rem-5.5rem)] overflow-hidden rounded-lg md:h-[600px] ${
+          theme === "dark" ? "bg-gray-900" : "bg-gray-100"
+        }`}
       />
       {!mapLoaded && (
-        <div className="absolute inset-0 flex items-center justify-center bg-gray-100">
-          <Loader size="lg" content="Loading map..." />
+        <div
+          className={`absolute inset-0 flex items-center justify-center ${
+            theme === "dark" ? "bg-gray-900/90" : "bg-gray-100/90"
+          }`}
+        >
+          <Loader
+            size="lg"
+            content="Loading map..."
+            className={theme === "dark" ? "rs-loader-dark" : ""}
+          />
         </div>
       )}
 
@@ -1789,8 +1877,14 @@ export default function MapSection({
         <>
           <button
             onClick={handleGoLive}
-            className={`absolute bottom-5 left-1/2 z-[1000] hidden w-[90%] -translate-x-1/2 transform rounded-full py-2 font-bold shadow-lg md:block md:w-auto md:px-4 ${
-              isOnline ? "bg-red-500 text-white" : "bg-green-500 text-white"
+            className={`absolute bottom-5 left-1/2 z-[1000] hidden w-[90%] -translate-x-1/2 transform rounded-full py-2 font-bold shadow-lg backdrop-blur-lg md:block md:w-auto md:px-4 ${
+              isOnline
+                ? theme === "dark"
+                  ? "bg-red-600/90 text-white hover:bg-red-700"
+                  : "bg-red-500/90 text-white hover:bg-red-600"
+                : theme === "dark"
+                ? "bg-green-600/90 text-white hover:bg-green-700"
+                : "bg-green-500/90 text-white hover:bg-green-600"
             }`}
           >
             {isOnline ? "Go Offline" : "Start Plas"}
@@ -1798,12 +1892,22 @@ export default function MapSection({
 
           {/* Add tracking mode indicator */}
           {isOnline && (
-            <div className="absolute bottom-20 left-1/2 z-[1000] -translate-x-1/2 transform rounded-full bg-white px-3 py-1 text-sm font-semibold shadow-md">
+            <div
+              className={`absolute bottom-20 left-1/2 z-[1000] -translate-x-1/2 transform rounded-full px-3 py-1 text-sm font-semibold shadow-md backdrop-blur-lg ${
+                theme === "dark"
+                  ? "bg-gray-800/90 text-gray-100"
+                  : "bg-white/90 text-gray-900"
+              }`}
+            >
               <div className="flex items-center">
                 <span
                   className={`mr-2 inline-block h-3 w-3 rounded-full ${
                     isActivelyTracking
-                      ? "animate-pulse bg-green-500"
+                      ? theme === "dark"
+                        ? "animate-pulse bg-green-400"
+                        : "animate-pulse bg-green-500"
+                      : theme === "dark"
+                      ? "bg-blue-400"
                       : "bg-blue-500"
                   }`}
                 ></span>
@@ -1824,6 +1928,7 @@ export default function MapSection({
                           showIcon
                           type="info"
                           header="Tracking Disabled"
+                          className={theme === "dark" ? "rs-message-dark" : ""}
                         >
                           Using static location. Use the refresh button to
                           update.
@@ -1839,6 +1944,7 @@ export default function MapSection({
                           showIcon
                           type="success"
                           header="Tracking Enabled"
+                          className={theme === "dark" ? "rs-message-dark" : ""}
                         >
                           Your location will update automatically as you move.
                         </Message>,
@@ -1846,7 +1952,11 @@ export default function MapSection({
                       );
                     }
                   }}
-                  className="ml-3 text-xs text-blue-600 hover:text-blue-800 hover:underline"
+                  className={`ml-3 text-xs ${
+                    theme === "dark"
+                      ? "text-blue-400 hover:text-blue-300 hover:underline"
+                      : "text-blue-600 hover:text-blue-800 hover:underline"
+                  }`}
                 >
                   {isActivelyTracking ? "Disable" : "Enable"}
                 </button>
@@ -1855,15 +1965,29 @@ export default function MapSection({
           )}
 
           {/* Add refresh location button - visible on both mobile and desktop */}
-          {isOnline && (
+          {isOnline && !isExpanded && (
             <button
               onClick={refreshLocation}
               disabled={isRefreshingLocation}
-              className="absolute bottom-24 right-5 z-[1001] h-12 w-12 rounded-full bg-blue-500 p-3 text-white shadow-lg hover:bg-blue-600 disabled:bg-blue-300 md:bottom-5 md:h-10 md:w-10 md:p-2"
+              className={`absolute bottom-24 right-5 z-[1001] h-12 w-12 rounded-full p-3 shadow-lg backdrop-blur-lg md:bottom-5 md:h-10 md:w-10 md:p-2 ${
+                theme === "dark"
+                  ? isRefreshingLocation
+                    ? "bg-blue-700/90 text-gray-300"
+                    : "bg-blue-600/90 text-white hover:bg-blue-700"
+                  : isRefreshingLocation
+                  ? "bg-blue-300/90 text-white"
+                  : "bg-blue-500/90 text-white hover:bg-blue-600"
+              }`}
               title="Refresh location"
             >
               {isRefreshingLocation ? (
-                <span className="inline-block h-full w-full animate-spin rounded-full border-2 border-white border-t-transparent"></span>
+                <span
+                  className={`inline-block h-full w-full animate-spin rounded-full border-2 ${
+                    theme === "dark"
+                      ? "border-gray-300 border-t-transparent"
+                      : "border-white border-t-transparent"
+                  }`}
+                ></span>
               ) : (
                 <svg
                   xmlns="http://www.w3.org/2000/svg"

@@ -1,79 +1,123 @@
-import React from "react";
-import { Tag, Button } from "rsuite";
+import React, { useState } from "react";
+import { Button, SelectPicker, Toggle } from "rsuite";
+import toast from "react-hot-toast";
+import { useTheme } from "@context/ThemeContext";
 
 export default function UserPreference() {
+  const { theme, setTheme } = useTheme();
+  const [language, setLanguage] = useState("en");
+  const [hasChanges, setHasChanges] = useState(false);
+
+  const languages = [
+    { label: "English", value: "en" },
+    { label: "French", value: "fr" },
+    { label: "Spanish", value: "es" },
+    { label: "German", value: "de" },
+    { label: "Chinese", value: "zh" },
+    { label: "Arabic", value: "ar" },
+  ];
+
+  // Load language preference on mount
+  React.useEffect(() => {
+    try {
+      const savedLanguage = localStorage.getItem("language");
+      if (savedLanguage) {
+        setLanguage(savedLanguage);
+      }
+    } catch (error) {
+      console.error("Error loading language preference:", error);
+    }
+  }, []);
+
+  const handleThemeChange = (checked: boolean) => {
+    try {
+      const newTheme = checked ? "dark" : "light";
+      setTheme(newTheme);
+      setHasChanges(true);
+    } catch (error) {
+      toast.error("Failed to update theme");
+    }
+  };
+
+  const handleLanguageChange = (value: string | null) => {
+    if (value) {
+      try {
+        setLanguage(value);
+        localStorage.setItem("language", value);
+        setHasChanges(true);
+      } catch (error) {
+        toast.error("Failed to update language");
+      }
+    }
+  };
+
+  const savePreferences = async () => {
+    try {
+      // Here you would typically also save to backend
+      // await fetch('/api/user/preferences', {
+      //   method: 'PUT',
+      //   headers: { 'Content-Type': 'application/json' },
+      //   body: JSON.stringify({ theme, language })
+      // });
+
+      setHasChanges(false);
+      toast.success("Preferences saved successfully!");
+    } catch (error) {
+      toast.error("Failed to save preferences");
+    }
+  };
+
   return (
-    <>
-      <h3 className="mb-4 text-lg font-bold">Preferences</h3>
+    <div className="transition-colors duration-200">
+      <h3 className="mb-4 text-lg font-bold dark:text-white">
+        Display Settings
+      </h3>
 
-      <div className="space-y-6">
-        <div>
-          <h4 className="mb-2 font-bold">Notification Settings</h4>
-          <div className="space-y-2">
-            <div className="flex items-center justify-between">
-              <span>Order updates</span>
-              <input type="checkbox" defaultChecked className="h-4 w-4" />
+      <div className="rounded-lg border border-gray-200 bg-white p-4 shadow-sm transition-colors duration-200 dark:border-gray-700 dark:bg-gray-800">
+        <div className="space-y-4">
+          <div className="flex items-center justify-between">
+            <div>
+              <span className="font-medium dark:text-white">Dark Mode</span>
+              <p className="text-sm text-gray-500 dark:text-gray-400">
+                Switch between light and dark themes
+              </p>
             </div>
-            <div className="flex items-center justify-between">
-              <span>Promotions and deals</span>
-              <input type="checkbox" defaultChecked className="h-4 w-4" />
-            </div>
-            <div className="flex items-center justify-between">
-              <span>New product arrivals</span>
-              <input type="checkbox" className="h-4 w-4" />
-            </div>
-            <div className="flex items-center justify-between">
-              <span>Delivery reminders</span>
-              <input type="checkbox" defaultChecked className="h-4 w-4" />
-            </div>
+            <Toggle
+              checked={theme === "dark"}
+              onChange={handleThemeChange}
+              size="md"
+            />
           </div>
-        </div>
-
-        <div>
-          <h4 className="mb-2 font-bold">Dietary Preferences</h4>
-          <div className="flex flex-wrap gap-2">
-            <Tag className="border-gray-200 bg-gray-100 text-gray-600">
-              Vegetarian
-            </Tag>
-            <Tag className="border-gray-200 bg-gray-100 text-gray-600">
-              Gluten-Free
-            </Tag>
-            <Tag className="border-gray-200 bg-gray-100 text-gray-600">
-              Organic
-            </Tag>
-            <button className="rounded border border-green-700 px-3 py-1 text-sm text-green-700 hover:bg-green-100">
-              + Add More
-            </button>
-          </div>
-        </div>
-
-        <div>
-          <h4 className="mb-2 font-bold">Favorite Categories</h4>
-          <div className="flex flex-wrap gap-2">
-            <Tag className="border-gray-200 bg-gray-100 text-gray-600">
-              Fresh Produce
-            </Tag>
-            <Tag className="border-gray-200 bg-gray-100 text-gray-600">
-              Snacks
-            </Tag>
-            <Tag className="border-gray-200 bg-gray-100 text-gray-600">
-              Dairy
-            </Tag>
-            <Tag className="border-gray-200 bg-gray-100 text-gray-600">
-              Beverages
-            </Tag>
-            <button className="rounded border border-purple-700 px-3 py-1 text-sm text-purple-700 hover:bg-purple-100">
-              + Add More
-            </button>
+          <div className="flex items-center justify-between">
+            <div>
+              <span className="font-medium dark:text-white">Language</span>
+              <p className="text-sm text-gray-500 dark:text-gray-400">
+                Choose your preferred language
+              </p>
+            </div>
+            <SelectPicker
+              data={languages}
+              value={language}
+              onChange={handleLanguageChange}
+              cleanable={false}
+              searchable={false}
+              className="w-40 dark:bg-gray-700"
+            />
           </div>
         </div>
       </div>
 
       <div className="mt-6 flex justify-end">
-        <button className="text-White rounded bg-green-600 px-3 py-2 text-sm hover:bg-green-500">
-          <span className="text-white"> Save Preferences</span>
-        </button>
+        <Button
+          appearance="primary"
+          color="green"
+          onClick={savePreferences}
+          disabled={!hasChanges}
+          className="dark:bg-green-600 dark:text-white"
+        >
+          Save Changes
+        </Button>
       </div>
-    </>
+    </div>
   );
 }

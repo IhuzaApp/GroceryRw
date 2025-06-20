@@ -1,6 +1,7 @@
 import React, { useState, SyntheticEvent, useEffect } from "react";
 import ShopperLayout from "@components/shopper/ShopperLayout";
 import { Panel, Button, SelectPicker, Nav, Tabs, Loader } from "rsuite";
+import { useTheme } from "../../../src/context/ThemeContext";
 import EarningsSummaryCard from "@components/shopper/earnings/EarningsSummaryCard";
 import DailyEarningsChart from "@components/shopper/earnings/DailyEarningsChart";
 import RecentOrdersList from "@components/shopper/earnings/RecentOrdersList";
@@ -9,6 +10,7 @@ import ActivityHeatmap from "@components/shopper/earnings/ActivityHeatmap";
 import PerformanceMetrics from "@components/shopper/earnings/PerformanceMetrics";
 import EarningsGoals from "@components/shopper/earnings/EarningsGoals";
 import PaymentHistory from "@components/shopper/earnings/PaymentHistory";
+import { logger } from "../../../src/utils/logger";
 
 // Interface for earnings stats
 interface EarningsStats {
@@ -86,6 +88,7 @@ interface EarningsComponent {
 }
 
 const EarningsPage: React.FC = () => {
+  const { theme } = useTheme();
   const [period, setPeriod] = useState("this-week");
   const [activeTab, setActiveTab] = useState("earnings");
   const [loading, setLoading] = useState(true);
@@ -127,7 +130,7 @@ const EarningsPage: React.FC = () => {
           setEarningsStats(data.stats);
         }
       } catch (error) {
-        console.error("Error fetching earnings stats:", error);
+        logger.error("Error fetching earnings stats", "EarningsPage", error);
       } finally {
         setLoading(false);
       }
@@ -179,7 +182,7 @@ const EarningsPage: React.FC = () => {
         setTransactions([]);
       }
     } catch (error) {
-      console.error("Error fetching wallet data:", error);
+      logger.error("Error fetching wallet data", "EarningsPage", error);
       setWallet({ id: "", availableBalance: 0, reservedBalance: 0 });
       setTransactions([]);
     } finally {
@@ -200,7 +203,7 @@ const EarningsPage: React.FC = () => {
         setDeliveryStats(data.stats);
       }
     } catch (error) {
-      console.error("Error fetching delivery stats:", error);
+      logger.error("Error fetching delivery stats", "EarningsPage", error);
     } finally {
       setDeliveryStatsLoading(false);
     }
@@ -226,7 +229,7 @@ const EarningsPage: React.FC = () => {
         setTotalOrders(0);
       }
     } catch (error) {
-      console.error("Error fetching recent orders:", error);
+      logger.error("Error fetching recent orders", "EarningsPage", error);
       setRecentOrders([]);
       setTotalOrders(0);
     } finally {
@@ -246,12 +249,12 @@ const EarningsPage: React.FC = () => {
       }
       const data = await response.json();
       if (data.success) {
-        setDailyEarnings(data.data);
+        setDailyEarnings(data.data || []);
       } else {
         setDailyEarnings([]);
       }
     } catch (error) {
-      console.error("Error fetching daily earnings:", error);
+      logger.error("Error fetching daily earnings", "EarningsPage", error);
       setDailyEarnings([]);
     } finally {
       setDailyEarningsLoading(false);
@@ -261,13 +264,8 @@ const EarningsPage: React.FC = () => {
   // Create performance metrics using data from the API
   const getPerformanceMetrics = () => {
     if (!earningsStats.performance) {
-      // Fallback to default values if API doesn't provide performance data
-      return [
-        { metric: "Customer Rating", value: 4.92, max: 5, percentage: 98 },
-        { metric: "On-time Delivery", value: 97, max: 100, percentage: 97 },
-        { metric: "Order Accuracy", value: 99, max: 100, percentage: 99 },
-        { metric: "Acceptance Rate", value: 82, max: 100, percentage: 82 },
-      ];
+      // Return null instead of fallback values to show error state
+      return null;
     }
 
     return [
@@ -303,27 +301,7 @@ const EarningsPage: React.FC = () => {
   // Create earnings goals using data from the API
   const getEarningsGoals = () => {
     if (!earningsStats.goals) {
-      // Fallback to default values if API doesn't provide goals data
-      return [
-        {
-          goal: "Weekly Target",
-          current: 1248.5,
-          target: 1500,
-          percentage: 83,
-        },
-        {
-          goal: "Monthly Target",
-          current: 3820.75,
-          target: 6000,
-          percentage: 64,
-        },
-        {
-          goal: "Quarterly Bonus",
-          current: 8500,
-          target: 15000,
-          percentage: 57,
-        },
-      ];
+      return null;
     }
 
     return [
@@ -433,12 +411,18 @@ const EarningsPage: React.FC = () => {
 
   return (
     <ShopperLayout>
-      <div className="container mx-auto px-4 py-8">
+      <div className="container mx-auto px-4 py-4 pb-24 sm:py-8 sm:pb-8">
         <div className="mx-auto max-w-7xl">
           {/* Earnings Period Selector */}
           <div className="mb-6 flex items-center justify-between">
             <div className="flex items-center space-x-4">
-              <h2 className="text-2xl font-bold">Your Earnings</h2>
+              <h2
+                className={`text-2xl font-bold ${
+                  theme === "dark" ? "text-white" : "text-gray-800"
+                }`}
+              >
+                Your Earnings
+              </h2>
               <SelectPicker
                 data={[
                   { label: "Today", value: "today" },
@@ -452,9 +436,19 @@ const EarningsPage: React.FC = () => {
                 cleanable={false}
                 onChange={handlePeriodChange}
                 style={{ width: 180 }}
+                className={`${
+                  theme === "dark"
+                    ? "rs-picker-dark !text-white [&_.rs-picker-select-menu-item]:!text-white [&_.rs-picker-toggle-placeholder]:!text-white [&_.rs-picker-toggle-value]:!text-white [&_.rs-picker-toggle]:!text-white"
+                    : ""
+                }`}
               />
             </div>
-            <Button appearance="primary" className="flex items-center gap-2">
+            <Button
+              appearance="primary"
+              className={`flex items-center gap-2 ${
+                theme === "dark" ? "!text-white" : ""
+              }`}
+            >
               <svg viewBox="0 0 24 24" fill="currentColor" className="h-4 w-4">
                 <path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z" />
               </svg>
@@ -463,17 +457,24 @@ const EarningsPage: React.FC = () => {
           </div>
 
           {/* Earnings Summary Cards */}
-          <div className="mb-6 grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
+          <div
+            className={`mb-6 grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4 ${
+              theme === "dark" ? "!text-white" : "text-gray-800"
+            }`}
+          >
             {loading ? (
-              <div className="col-span-4 flex justify-center py-8">
+              <div
+                className={`col-span-4 flex justify-center py-8 ${
+                  theme === "dark" ? "!text-white" : ""
+                }`}
+              >
                 <Loader size="lg" content="Loading earnings data..." />
               </div>
             ) : (
               <>
                 <EarningsSummaryCard
                   title="Total Earnings"
-                  amount={earningsStats.totalEarnings}
-                  useCurrency={true}
+                  amount={formatCurrency(earningsStats.totalEarnings)}
                   icon={
                     <svg
                       viewBox="0 0 24 24"
@@ -487,7 +488,7 @@ const EarningsPage: React.FC = () => {
                 />
                 <EarningsSummaryCard
                   title="Completed Orders"
-                  amount={earningsStats.completedOrders.toString()}
+                  amount={formatNumber(earningsStats.completedOrders)}
                   icon={
                     <svg
                       viewBox="0 0 24 24"
@@ -501,7 +502,7 @@ const EarningsPage: React.FC = () => {
                 />
                 <EarningsSummaryCard
                   title="Active Hours"
-                  amount={earningsStats.activeHours.toString()}
+                  amount={formatNumber(earningsStats.activeHours)}
                   icon={
                     <svg
                       viewBox="0 0 24 24"
@@ -515,7 +516,7 @@ const EarningsPage: React.FC = () => {
                 />
                 <EarningsSummaryCard
                   title="Customer Rating"
-                  amount={earningsStats.rating.toString()}
+                  amount={earningsStats.rating.toFixed(1)}
                   icon={
                     <svg
                       viewBox="0 0 24 24"
@@ -533,15 +534,37 @@ const EarningsPage: React.FC = () => {
 
           {/* Earnings Tabs */}
           <Tabs
-            className="mb-6"
+            className={`mb-6 ${
+              theme === "dark"
+                ? "rs-tabs-dark !text-white [&_.rs-nav-item-active]:!text-white [&_.rs-nav-item-content]:!text-white [&_.rs-nav-item]:!text-white"
+                : ""
+            }`}
             activeKey={activeTab}
             onSelect={handleTabChange}
             appearance="subtle"
           >
             <Tabs.Tab eventKey="earnings" title="Earnings">
-              <Panel shaded bordered className="mt-4">
-                <h3 className="mb-2 text-lg font-bold">Daily Earnings</h3>
-                <p className="mb-4 text-sm text-gray-500">
+              <Panel
+                shaded
+                bordered
+                className={`mt-4 ${
+                  theme === "dark"
+                    ? "rs-panel-dark !text-white [&_*]:!text-white"
+                    : ""
+                }`}
+              >
+                <h3
+                  className={`mb-2 text-lg font-bold ${
+                    theme === "dark" ? "!text-white" : "text-gray-800"
+                  }`}
+                >
+                  Daily Earnings
+                </h3>
+                <p
+                  className={`mb-4 text-sm ${
+                    theme === "dark" ? "!text-white" : "text-gray-500"
+                  }`}
+                >
                   Your earnings for each day this week
                 </p>
 
@@ -550,6 +573,33 @@ const EarningsPage: React.FC = () => {
                   isLoading={dailyEarningsLoading}
                   period={period}
                 />
+              </Panel>
+            </Tabs.Tab>
+
+            <Tabs.Tab eventKey="recent-orders" title="Recent Orders">
+              <Panel
+                shaded
+                bordered
+                className={`mt-4 ${
+                  theme === "dark"
+                    ? "rs-panel-dark !text-white [&_*]:!text-white"
+                    : ""
+                }`}
+              >
+                <h3
+                  className={`mb-2 text-lg font-bold ${
+                    theme === "dark" ? "!text-white" : "text-gray-800"
+                  }`}
+                >
+                  Recent Orders
+                </h3>
+                <p
+                  className={`mb-4 text-sm ${
+                    theme === "dark" ? "!text-white" : "text-gray-500"
+                  }`}
+                >
+                  Your recently completed orders and earnings
+                </p>
 
                 <RecentOrdersList
                   orders={recentOrders}
@@ -564,19 +614,45 @@ const EarningsPage: React.FC = () => {
             </Tabs.Tab>
 
             <Tabs.Tab eventKey="breakdown" title="Breakdown">
-              <Panel shaded bordered className="mt-4 p-4">
-                <h3 className="mb-2 text-lg font-bold">Earnings Breakdown</h3>
-                <p className="mb-4 text-sm text-gray-500">
+              <Panel
+                shaded
+                bordered
+                className={`mt-4 p-4 ${
+                  theme === "dark"
+                    ? "rs-panel-dark !text-white [&_*]:!text-white"
+                    : ""
+                }`}
+              >
+                <h3
+                  className={`mb-2 text-lg font-bold ${
+                    theme === "dark" ? "!text-white" : "text-gray-800"
+                  }`}
+                >
+                  Earnings Breakdown
+                </h3>
+                <p
+                  className={`mb-4 text-sm ${
+                    theme === "dark" ? "!text-white" : "text-gray-500"
+                  }`}
+                >
                   How your earnings are distributed
                 </p>
 
                 {loading ? (
-                  <div className="flex justify-center py-8">
+                  <div
+                    className={`flex justify-center py-8 ${
+                      theme === "dark" ? "!text-white" : ""
+                    }`}
+                  >
                     <Loader size="md" content="Loading earnings data..." />
                   </div>
                 ) : !earningsStats.storeBreakdown ||
                   !earningsStats.earningsComponents ? (
-                  <div className="py-8 text-center">
+                  <div
+                    className={`py-8 text-center ${
+                      theme === "dark" ? "!text-white" : "text-gray-600"
+                    }`}
+                  >
                     <p>No earnings breakdown data available.</p>
                   </div>
                 ) : (
@@ -603,14 +679,36 @@ const EarningsPage: React.FC = () => {
             </Tabs.Tab>
 
             <Tabs.Tab eventKey="payouts" title="Payouts">
-              <Panel shaded bordered className="mt-4 p-4">
-                <h3 className="mb-2 text-lg font-bold">Payment History</h3>
-                <p className="mb-4 text-sm text-gray-500">
+              <Panel
+                shaded
+                bordered
+                className={`mt-4 p-4 ${
+                  theme === "dark"
+                    ? "rs-panel-dark !text-white [&_*]:!text-white"
+                    : ""
+                }`}
+              >
+                <h3
+                  className={`mb-2 text-lg font-bold ${
+                    theme === "dark" ? "!text-white" : "text-gray-800"
+                  }`}
+                >
+                  Payment History
+                </h3>
+                <p
+                  className={`mb-4 text-sm ${
+                    theme === "dark" ? "!text-white" : "text-gray-500"
+                  }`}
+                >
                   Your recent payouts and upcoming payments
                 </p>
 
                 {walletLoading ? (
-                  <div className="flex justify-center py-8">
+                  <div
+                    className={`flex justify-center py-8 ${
+                      theme === "dark" ? "!text-white" : ""
+                    }`}
+                  >
                     <Loader size="md" content="Loading wallet data..." />
                   </div>
                 ) : (
