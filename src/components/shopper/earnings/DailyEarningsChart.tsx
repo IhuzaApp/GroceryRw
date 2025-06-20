@@ -128,7 +128,7 @@ const DailyEarningsChart: React.FC<DailyEarningsChartProps> = ({
   ];
 
   return (
-    <div className="h-[300px] w-full">
+    <div className="w-full" style={{ height: '300px', minHeight: '300px' }}>
       <ResponsiveContainer width="100%" height="100%">
         <BarChart
           data={data}
