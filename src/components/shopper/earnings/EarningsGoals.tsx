@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Panel, Button, InputNumber, Modal } from "rsuite";
 
 interface Goal {
@@ -9,16 +9,21 @@ interface Goal {
 }
 
 interface EarningsGoalsProps {
-  goals: Goal[];
+  goals: Goal[] | null;
 }
 
 const EarningsGoals: React.FC<EarningsGoalsProps> = ({
   goals: initialGoals,
 }) => {
-  const [goals, setGoals] = useState<Goal[]>(initialGoals);
+  const [goals, setGoals] = useState<Goal[] | null>(initialGoals);
   const [showEditModal, setShowEditModal] = useState(false);
   const [editingGoal, setEditingGoal] = useState<Goal | null>(null);
   const [newTarget, setNewTarget] = useState<number>(0);
+
+  // Update goals state when props change
+  useEffect(() => {
+    setGoals(initialGoals);
+  }, [initialGoals]);
 
   // Format currency for display in RWF
   const formatCurrency = (amount: number) => {
@@ -38,7 +43,7 @@ const EarningsGoals: React.FC<EarningsGoalsProps> = ({
 
   // Handle saving the edited goal
   const handleSaveGoal = () => {
-    if (!editingGoal) return;
+    if (!editingGoal || !goals) return;
 
     const updatedGoals = goals.map((goal) => {
       if (goal.goal === editingGoal.goal) {
@@ -56,6 +61,33 @@ const EarningsGoals: React.FC<EarningsGoalsProps> = ({
     setShowEditModal(false);
     setEditingGoal(null);
   };
+
+  // Show error message if goals data is missing
+  if (!goals) {
+    return (
+      <Panel shaded bordered bodyFill className="p-4">
+        <h3 className="mb-4 text-lg font-semibold">Earnings Goals</h3>
+        <div className="flex flex-col items-center justify-center py-8 text-center">
+          <svg
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            className="mb-4 h-12 w-12 text-gray-400"
+          >
+            <path d="M9.172 16.172a4 4 0 015.656 0M9 12h6m-6-4h6m2 5.291A7.962 7.962 0 0112 15c-2.34 0-4.47-.881-6.08-2.33" />
+            <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2z" />
+          </svg>
+          <h4 className="mb-2 text-lg font-medium text-gray-900">
+            Goals Data Unavailable
+          </h4>
+          <p className="text-gray-600">
+            Unable to load your earnings goals at the moment. Please try again in about 1 hour.
+          </p>
+        </div>
+      </Panel>
+    );
+  }
 
   return (
     <>
