@@ -105,6 +105,47 @@ export default function MapSection({
   const [isRefreshingLocation, setIsRefreshingLocation] = useState(false);
   const [isActivelyTracking, setIsActivelyTracking] = useState(false);
   const activeToastTypesRef = useRef<Set<string>>(new Set());
+  const [mapStyle, setMapStyle] = useState("streets-v12");
+  const [currentLocation, setCurrentLocation] = useState<{
+    lat: number;
+    lng: number;
+  } | null>(null);
+  const [isLocationEnabled, setIsLocationEnabled] = useState(false);
+  const [locationError, setLocationError] = useState<string | null>(null);
+  const [showLocationGuide, setShowLocationGuide] = useState(false);
+  const [isLoadingOrders, setIsLoadingOrders] = useState(false);
+  const [orderMarkers, setOrderMarkers] = useState<L.Marker[]>([]);
+  const [shopMarkers, setShopMarkers] = useState<L.Marker[]>([]);
+  const [userMarker, setUserMarker] = useState<L.Marker | null>(null);
+  const [mapInstance, setMapInstance] = useState<L.Map | null>(null);
+  const [isMapInitialized, setIsMapInitialized] = useState(false);
+  const [locationErrorCount, setLocationErrorCount] = useState(0);
+  const [lastLocationUpdate, setLastLocationUpdate] = useState<Date | null>(null);
+  const [locationAccuracy, setLocationAccuracy] = useState<number | null>(null);
+  const [isLocationTracking, setIsLocationTracking] = useState(false);
+  const [locationHistory, setLocationHistory] = useState<Array<{
+    lat: number;
+    lng: number;
+    timestamp: Date;
+    accuracy: number;
+  }>>([]);
+
+  // Refs
+  const mapInitializedRef = useRef(false);
+  const locationUpdateTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const locationRetryTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const lastLocationRef = useRef<{ lat: number; lng: number } | null>(null);
+  const locationUpdateCountRef = useRef(0);
+  const lastAccuracyRef = useRef<number | null>(null);
+  const locationHistoryRef = useRef<Array<{
+    lat: number;
+    lng: number;
+    timestamp: Date;
+    accuracy: number;
+  }>>([]);
+
+  // Cookie monitoring refs
+  const cookieSnapshotRef = useRef<string>("");
 
   // Map style URLs using better contrasted tiles
   const mapStyles = {
@@ -114,37 +155,51 @@ export default function MapSection({
 
   // Function to update map style based on theme
   const updateMapStyle = () => {
-    if (mapInstanceRef.current) {
-      try {
-        mapInstanceRef.current.eachLayer((layer) => {
-          if (layer instanceof L.TileLayer) {
-            mapInstanceRef.current?.removeLayer(layer);
-          }
-        });
-        
-        L.tileLayer(mapStyles[theme], {
-          maxZoom: 19,
-          minZoom: 3,
-          attribution: "", // Remove attribution
-          className: theme === "dark" ? "dark-map" : "light-map",
-        }).addTo(mapInstanceRef.current);
-
-        // Add custom styling for map tiles
-        const style = document.createElement("style");
-        style.textContent = `
-          .light-map {
-            filter: saturate(1.1) contrast(1.1) brightness(0.95) sepia(0.1);
-          }
-          .dark-map {
-            filter: brightness(0.9) contrast(1.2);
-          }
-        `;
-        document.head.appendChild(style);
-      } catch (error) {
-        console.error("Error updating map style:", error);
-      }
-    }
+    setMapStyle(theme === "dark" ? "dark-v11" : "streets-v12");
   };
+
+  // Get cookies helper function
+  const getCookies = () => {
+    const cookies: Record<string, string> = {};
+    document.cookie.split("; ").forEach((cookie) => {
+      const [name, value] = cookie.split("=");
+      if (name && value) {
+        cookies[name] = decodeURIComponent(value);
+      }
+    });
+    return cookies;
+  };
+
+  // Monitor cookies effect
+  useEffect(() => {
+    const currentCookies = getCookies();
+    const cookieSnapshot = JSON.stringify(currentCookies);
+    cookieSnapshotRef.current = cookieSnapshot;
+
+    const checkCookies = () => {
+      const newCookies = getCookies();
+      const newSnapshot = JSON.stringify(newCookies);
+
+      // If cookies changed
+      if (newSnapshot !== cookieSnapshotRef.current) {
+        // Log the change
+        logger.info("Cookie state changed", "MapSection", {
+          previous: JSON.parse(cookieSnapshotRef.current),
+          current: newCookies,
+          timestamp: new Date().toISOString(),
+        });
+
+        // Update snapshot
+        cookieSnapshotRef.current = newSnapshot;
+      }
+    };
+
+    // Check every 2 minutes
+    const interval = setInterval(checkCookies, 120000);
+
+    // Cleanup
+    return () => clearInterval(interval);
+  }, []);
 
   // Add theme effect
   useEffect(() => {
@@ -152,56 +207,6 @@ export default function MapSection({
       updateMapStyle();
     }
   }, [theme, mapLoaded]);
-
-  // Function to get cookies as an object
-  const getCookies = () => {
-    return document.cookie
-      .split("; ")
-      .reduce((acc: Record<string, string>, cur) => {
-        const [k, v] = cur.split("=");
-        acc[k] = v;
-        return acc;
-      }, {} as Record<string, string>);
-  };
-
-  // Add cookie monitoring function
-  const monitorCookies = () => {
-    const currentCookies = getCookies();
-    const cookieSnapshot = JSON.stringify(currentCookies);
-
-    // Store initial snapshot
-    const prevSnapshot = useRef(cookieSnapshot);
-
-    // Set up interval to check cookies
-    useEffect(() => {
-      const checkCookies = () => {
-        const newCookies = getCookies();
-        const newSnapshot = JSON.stringify(newCookies);
-
-        // If cookies changed
-        if (newSnapshot !== prevSnapshot.current) {
-          // Log the change
-          logger.info("Cookie state changed", "MapSection", {
-            previous: JSON.parse(prevSnapshot.current),
-            current: newCookies,
-            timestamp: new Date().toISOString(),
-          });
-
-          // Update snapshot
-          prevSnapshot.current = newSnapshot;
-        }
-      };
-
-      // Check every 2 minutes
-      const interval = setInterval(checkCookies, 120000);
-
-      // Cleanup
-      return () => clearInterval(interval);
-    }, []);
-  };
-
-  // Call monitor cookies
-  monitorCookies();
 
   // Modify saveLocationToCookies to include logging
   const saveLocationToCookies = (lat: number, lng: number) => {
@@ -1781,7 +1786,7 @@ export default function MapSection({
                     theme === "dark" ? "text-gray-300" : "text-gray-600"
                   }`}
                 >
-                  Today's earnings
+                  Today&apos;s earnings
                 </span>
                 {loadingEarnings ? (
                   <div

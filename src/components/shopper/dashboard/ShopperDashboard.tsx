@@ -7,7 +7,6 @@ import dynamic from "next/dynamic";
 import { Button, Loader, Placeholder, Panel, Grid, Row, Col } from "rsuite";
 import "rsuite/dist/rsuite.min.css";
 import { useTheme } from "../../../context/ThemeContext";
-import NotificationSystem from "../NotificationSystem";
 import { useRouter } from "next/router";
 
 // Dynamically load MapSection only on client (disable SSR)
@@ -462,12 +461,6 @@ export default function ShopperDashboard() {
 
   return (
     <ShopperLayout>
-      {/* Add NotificationSystem with current location */}
-      <NotificationSystem 
-        currentLocation={isOnline ? currentLocation : null}
-        onNewOrder={loadOrders}
-      />
-      
       <div
         className={`${
           isMobile ? "relative h-full overflow-hidden" : "min-h-screen"
