@@ -34,13 +34,18 @@ export default async function handler(
   }
 
   try {
-    const session = await getServerSession(req, res, authOptions as any);
+    const session = await getServerSession(req, res, authOptions as any) as { user?: { id?: string } } | null;
 
     if (!session?.user?.id) {
       return res.status(401).json({ message: "Unauthorized" });
     }
 
-    const { shoppers } = await hasuraClient.request(GET_SHOPPER_PROFILE, {
+    if (!hasuraClient) {
+      return res.status(500).json({ message: "Internal server error" });
+    }
+
+    type ShopperProfileResponse = { shoppers: any[] };
+    const { shoppers } = await hasuraClient.request<ShopperProfileResponse>(GET_SHOPPER_PROFILE, {
       user_id: session.user.id,
     });
 
