@@ -264,13 +264,8 @@ const EarningsPage: React.FC = () => {
   // Create performance metrics using data from the API
   const getPerformanceMetrics = () => {
     if (!earningsStats.performance) {
-      // Fallback to default values if API doesn't provide performance data
-      return [
-        { metric: "Customer Rating", value: 4.92, max: 5, percentage: 98 },
-        { metric: "On-time Delivery", value: 97, max: 100, percentage: 97 },
-        { metric: "Order Accuracy", value: 99, max: 100, percentage: 99 },
-        { metric: "Acceptance Rate", value: 82, max: 100, percentage: 82 },
-      ];
+      // Return null instead of fallback values to show error state
+      return null;
     }
 
     return [
@@ -306,27 +301,7 @@ const EarningsPage: React.FC = () => {
   // Create earnings goals using data from the API
   const getEarningsGoals = () => {
     if (!earningsStats.goals) {
-      // Fallback to default values if API doesn't provide goals data
-      return [
-        {
-          goal: "Weekly Target",
-          current: 1248.5,
-          target: 1500,
-          percentage: 83,
-        },
-        {
-          goal: "Monthly Target",
-          current: 3820.75,
-          target: 6000,
-          percentage: 64,
-        },
-        {
-          goal: "Quarterly Bonus",
-          current: 8500,
-          target: 15000,
-          percentage: 57,
-        },
-      ];
+      return null;
     }
 
     return [
