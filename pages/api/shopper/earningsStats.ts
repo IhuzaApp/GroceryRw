@@ -303,8 +303,15 @@ export default async function handler(
     const now = new Date();
     const currentDate = now.getTime();
     
-    // Weekly: Last 7 days
-    const weekAgo = new Date(currentDate - 7 * 24 * 60 * 60 * 1000);
+    // Weekly: This week (Sunday to Saturday) - matching dailyEarnings API logic
+    const dayOfWeek = now.getDay(); // 0 = Sunday, 6 = Saturday
+    const weekStart = new Date(now);
+    weekStart.setDate(now.getDate() - dayOfWeek); // Go back to Sunday
+    weekStart.setHours(0, 0, 0, 0);
+    
+    const weekEnd = new Date(weekStart);
+    weekEnd.setDate(weekStart.getDate() + 6); // Go forward to Saturday
+    weekEnd.setHours(23, 59, 59, 999);
     
     // Monthly: Current month (1st day to last day)
     const currentMonth = new Date(now.getFullYear(), now.getMonth(), 1);
@@ -322,13 +329,13 @@ export default async function handler(
 
     if (data.Orders && Array.isArray(data.Orders)) {
       data.Orders.forEach((order) => {
-        const orderDate = new Date(order.created_at);
+        const orderDate = new Date(order.updated_at);
         const serviceFee = parseFloat(order.service_fee || "0");
         const deliveryFee = parseFloat(order.delivery_fee || "0");
         const orderTotal = serviceFee + deliveryFee;
 
-        // Weekly earnings (last 7 days)
-        if (orderDate >= weekAgo) {
+        // Weekly earnings (this week: Sunday to Saturday)
+        if (orderDate >= weekStart && orderDate <= weekEnd) {
           weeklyEarnings += orderTotal;
         }
 
