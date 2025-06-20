@@ -12,6 +12,24 @@ interface EarningsGoalsProps {
   goals: Goal[] | null;
 }
 
+interface EarningsTip {
+  peakHours: {
+    day: string;
+    timeRange: string;
+    orderCount: number;
+    avgEarnings: number;
+  }[];
+  topStores: {
+    store: string;
+    orderCount: number;
+    totalEarnings: number;
+    avgEarnings: number;
+  }[];
+  batchOrderPercentage: number;
+  totalOrders: number;
+  tips: string[];
+}
+
 const EarningsGoals: React.FC<EarningsGoalsProps> = ({
   goals: initialGoals,
 }) => {
@@ -19,11 +37,35 @@ const EarningsGoals: React.FC<EarningsGoalsProps> = ({
   const [showEditModal, setShowEditModal] = useState(false);
   const [editingGoal, setEditingGoal] = useState<Goal | null>(null);
   const [newTarget, setNewTarget] = useState<number>(0);
+  const [earningsTips, setEarningsTips] = useState<EarningsTip | null>(null);
+  const [loadingTips, setLoadingTips] = useState(true);
 
   // Update goals state when props change
   useEffect(() => {
     setGoals(initialGoals);
   }, [initialGoals]);
+
+  // Fetch dynamic earnings tips
+  useEffect(() => {
+    const fetchEarningsTips = async () => {
+      try {
+        setLoadingTips(true);
+        const response = await fetch("/api/shopper/earningsTips");
+        if (response.ok) {
+          const data = await response.json();
+          if (data.success) {
+            setEarningsTips(data.tips);
+          }
+        }
+      } catch (error) {
+        console.error("Error fetching earnings tips:", error);
+      } finally {
+        setLoadingTips(false);
+      }
+    };
+
+    fetchEarningsTips();
+  }, []);
 
   // Format currency for display in RWF
   const formatCurrency = (amount: number) => {
@@ -142,41 +184,56 @@ const EarningsGoals: React.FC<EarningsGoalsProps> = ({
 
           <div className="mt-6 border-t pt-4">
             <h3 className="mb-3 font-medium">Tips to Increase Earnings</h3>
-            <ul className="space-y-2 text-sm">
-              <li className="flex items-start gap-2">
-                <div className="mt-0.5 flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-full bg-green-100 text-green-600">
-                  1
-                </div>
-                <span>
-                  Shop during peak hours (Fri 4-8pm, Sat 10am-2pm, Sun 11am-3pm)
-                </span>
-              </li>
-              <li className="flex items-start gap-2">
-                <div className="mt-0.5 flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-full bg-green-100 text-green-600">
-                  2
-                </div>
-                <span>
-                  Accept batch orders with multiple deliveries for higher
-                  earnings
-                </span>
-              </li>
-              <li className="flex items-start gap-2">
-                <div className="mt-0.5 flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-full bg-green-100 text-green-600">
-                  3
-                </div>
-                <span>
-                  Focus on stores you&apos;re familiar with to shop faster
-                </span>
-              </li>
-              <li className="flex items-start gap-2">
-                <div className="mt-0.5 flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-full bg-green-100 text-green-600">
-                  4
-                </div>
-                <span>
-                  Maintain high customer ratings to qualify for bonus incentives
-                </span>
-              </li>
-            </ul>
+            {loadingTips ? (
+              <div className="space-y-2">
+                {[1, 2, 3, 4].map((i) => (
+                  <div key={i} className="flex items-start gap-2">
+                    <div className="mt-0.5 flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-full bg-gray-100 text-gray-400">
+                      {i}
+                    </div>
+                    <div className="h-4 w-48 animate-pulse rounded bg-gray-200"></div>
+                  </div>
+                ))}
+              </div>
+            ) : earningsTips ? (
+              <ul className="space-y-2 text-sm">
+                {earningsTips.tips.map((tip, index) => (
+                  <li key={index} className="flex items-start gap-2">
+                    <div className="mt-0.5 flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-full bg-green-100 text-green-600">
+                      {index + 1}
+                    </div>
+                    <span>{tip}</span>
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <ul className="space-y-2 text-sm">
+                <li className="flex items-start gap-2">
+                  <div className="mt-0.5 flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-full bg-green-100 text-green-600">
+                    1
+                  </div>
+                  <span>Shop during peak hours (Fri 4-8pm, Sat 10am-2pm, Sun 11am-3pm)</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <div className="mt-0.5 flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-full bg-green-100 text-green-600">
+                    2
+                  </div>
+                  <span>Accept batch orders with multiple deliveries for higher earnings</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <div className="mt-0.5 flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-full bg-green-100 text-green-600">
+                    3
+                  </div>
+                  <span>Focus on stores you&apos;re familiar with to shop faster</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <div className="mt-0.5 flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-full bg-green-100 text-green-600">
+                    4
+                  </div>
+                  <span>Maintain high customer ratings to qualify for bonus incentives</span>
+                </li>
+              </ul>
+            )}
           </div>
         </div>
       </Panel>
