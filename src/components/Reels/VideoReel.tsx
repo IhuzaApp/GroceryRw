@@ -250,7 +250,7 @@ export default function VideoReel({ post, isVisible, onLike, onComment, onShare 
             }
           } catch (error) {
             // Only log error if component is still mounted and it's not an AbortError
-            if (mountedRef.current && error.name !== 'AbortError') {
+            if (mountedRef.current && (error as Error).name !== 'AbortError') {
               console.error(`Error playing video for post ${post.id}:`, error)
               setVideoError(true)
             }
@@ -290,7 +290,7 @@ export default function VideoReel({ post, isVisible, onLike, onComment, onShare 
           if (!mountedRef.current || !videoRef.current) return
           await videoRef.current.play()
         } catch (error) {
-          if (mountedRef.current && error.name !== 'AbortError') {
+          if (mountedRef.current && (error as Error).name !== 'AbortError') {
             console.error(`Error playing video after canplay for post ${post.id}:`, error)
           }
         }
@@ -538,7 +538,7 @@ export default function VideoReel({ post, isVisible, onLike, onComment, onShare 
       </div>
 
       {/* Right Side Actions */}
-      <div style={{ position: "absolute", right: 16, bottom: 160, display: "flex", flexDirection: "column", gap: 24, zIndex: 10 }}>
+      <div style={{ position: "absolute", right: 16, bottom: 160, display: "flex", flexDirection: "column", gap: 24, zIndex: 20 }}>
         <div style={{ display: "flex", flexDirection: "column", alignItems: "center" }}>
           <Button
             appearance="ghost"
@@ -574,7 +574,10 @@ export default function VideoReel({ post, isVisible, onLike, onComment, onShare 
               border: "none",
               color: "#fff"
             }}
-            onClick={() => onComment(post.id)}
+            onClick={() => {
+              console.log('Comment button clicked for post:', post.id)
+              onComment(post.id)
+            }}
           >
             <MessageIcon />
           </Button>

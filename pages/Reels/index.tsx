@@ -468,11 +468,14 @@ export default function FoodReelsApp() {
   }
 
   const openComments = (postId: string) => {
+    console.log('Opening comments for post:', postId)
     setActivePostId(postId)
     setShowComments(true)
+    console.log('Comments state after opening:', { postId, showComments: true })
   }
 
   const closeComments = () => {
+    console.log('Closing comments')
     setShowComments(false)
     setActivePostId(null)
   }
