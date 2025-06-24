@@ -1709,5 +1709,6 @@ The API route at `pages/api/queries/notify-nearby-dashers.ts` is responsible for
    - All notifications are inserted into the database in a single batch.
 
 **Purpose:**
+
 - This endpoint is typically triggered by a scheduled job or backend process every few minutes to proactively alert dashers about new work opportunities close to them.
 - Dashers receive a notification if there are new batches at shops within a 10-minute travel distance, so they can act quickly to claim those orders.
