@@ -99,7 +99,6 @@ export default function BottomBar() {
   return (
     <>
       {/* Floating Buttons (Ask, Help) */}
- 
 
       {/* Floating Cart Button (Lifted) */}
       <div className="fixed bottom-24 right-4 z-50 md:hidden">

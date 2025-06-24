@@ -183,7 +183,10 @@ export default function ShopperProfileComponent() {
         }
       } catch (error) {
         if (error instanceof Error && error.name === "AbortError") return;
-        logger.error("Error loading shopper data:", error instanceof Error ? error.message : String(error));
+        logger.error(
+          "Error loading shopper data:",
+          error instanceof Error ? error.message : String(error)
+        );
         if (isMounted) {
           setStats({
             totalDeliveries: 0,
@@ -262,7 +265,10 @@ export default function ShopperProfileComponent() {
       }
     } catch (error) {
       if (error instanceof Error && error.name === "AbortError") return;
-      logger.error("Error loading schedule:", error instanceof Error ? error.message : String(error));
+      logger.error(
+        "Error loading schedule:",
+        error instanceof Error ? error.message : String(error)
+      );
       if (isMounted) {
         setHasSchedule(false);
         const defaultSchedule: TimeSlot[] = days.map((day) => ({
