@@ -59,6 +59,8 @@ export default function CommentsDrawer({
 }: CommentsDrawerProps) {
   const [newComment, setNewComment] = useState("")
 
+  console.log('CommentsDrawer render:', { open, commentCount, postId })
+
   const handleAddComment = () => {
     if (!newComment.trim()) return
     onAddComment(postId, newComment)
@@ -77,7 +79,11 @@ export default function CommentsDrawer({
       onClose={onClose}
       placement="bottom"
       size="80%"
-      style={{ borderRadius: "24px 24px 0 0" }}
+      backdrop={true}
+      style={{ 
+        borderRadius: "24px 24px 0 0",
+        zIndex: 9999
+      }}
     >
       <Drawer.Header>
         <Drawer.Title style={{ fontSize: "18px", fontWeight: 600 }}>
