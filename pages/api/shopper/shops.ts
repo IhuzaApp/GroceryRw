@@ -10,6 +10,7 @@ const GetShops = gql`
       latitude
       longitude
       is_active
+      logo
     }
   }
 `;
@@ -30,6 +31,7 @@ export default async function handler(
         latitude: string;
         longitude: string;
         is_active: boolean;
+        logo?: string | null;
       }>;
     }>(GetShops);
     res.status(200).json(data.Shops);

@@ -61,6 +61,7 @@ interface Shop {
   latitude: string;
   longitude: string;
   is_active: boolean;
+  logo?: string | null;
 }
 
 // Pending order data type
@@ -855,7 +856,8 @@ export default function MapSection({
   };
 
   // Helper function to create shop marker icon
-  const createShopMarkerIcon = (isActive: boolean) => {
+  const createShopMarkerIcon = (isActive: boolean, logoUrl?: string | null) => {
+    const iconUrl = logoUrl || "/assets/icons/shopIcon.png";
     return L.divIcon({
       html: `
         <div style="
@@ -877,20 +879,18 @@ export default function MapSection({
           backdrop-filter: blur(8px);
         ">
           <img 
-            src="https://static-00.iconduck.com/assets.00/shop-icon-2048x1878-qov4lrv1.png" 
+            src="${iconUrl}" 
             style="
-              width: 24px; 
-              height: 24px; 
+              width: 44px; 
+              height: 44px; 
               filter: ${isActive ? "none" : "grayscale(100%)"};
               opacity: ${isActive ? "1" : "0.6"};
+              object-fit: contain;
             "
           />
         </div>
       `,
       className: "",
-      iconSize: [36, 36],
-      iconAnchor: [18, 18],
-      popupAnchor: [0, -18],
     });
   };
 
@@ -1491,7 +1491,7 @@ export default function MapSection({
 
             if (map && map.getContainer()) {
               const marker = L.marker([lat, lng], {
-                icon: createShopMarkerIcon(shop.is_active),
+                icon: createShopMarkerIcon(shop.is_active, shop.logo),
                 zIndexOffset: 500,
               });
 

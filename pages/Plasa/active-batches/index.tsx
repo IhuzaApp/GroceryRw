@@ -5,9 +5,11 @@ import { GetServerSideProps } from "next";
 import { hasuraClient } from "../../../src/lib/hasuraClient";
 import { gql } from "graphql-request";
 import { getSession } from "next-auth/react";
+import { OrderDetailsType } from "../../../src/types/order";
 
 interface Order {
   id: string;
+  OrderID: string;
   status: string;
   createdAt: string;
   shopName: string;
@@ -163,6 +165,7 @@ export const getServerSideProps: GetServerSideProps<
 
     const activeOrders = data.Orders.map((o: OrderData) => ({
       id: o.id,
+      OrderID: o.id,
       status: o.status,
       createdAt: o.created_at,
       shopName: o.Shop.name,

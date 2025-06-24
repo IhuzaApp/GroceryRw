@@ -182,8 +182,8 @@ export default function ShopperProfileComponent() {
           setShopperData(profileData.shopper);
         }
       } catch (error) {
-        if (error.name === "AbortError") return;
-        logger.error("Error loading shopper data:", error);
+        if (error instanceof Error && error.name === "AbortError") return;
+        logger.error("Error loading shopper data:", error instanceof Error ? error.message : String(error));
         if (isMounted) {
           setStats({
             totalDeliveries: 0,
@@ -246,7 +246,7 @@ export default function ShopperProfileComponent() {
         });
 
         // Then, override with actual data from the server
-        data.shopper_availability.forEach((slot) => {
+        data.shopper_availability.forEach((slot: any) => {
           const day = days[slot.day_of_week - 1];
           if (day) {
             daysMap.set(day, {
@@ -261,8 +261,8 @@ export default function ShopperProfileComponent() {
         setSchedule(Array.from(daysMap.values()));
       }
     } catch (error) {
-      if (error.name === "AbortError") return;
-      logger.error("Error loading schedule:", error);
+      if (error instanceof Error && error.name === "AbortError") return;
+      logger.error("Error loading schedule:", error instanceof Error ? error.message : String(error));
       if (isMounted) {
         setHasSchedule(false);
         const defaultSchedule: TimeSlot[] = days.map((day) => ({
