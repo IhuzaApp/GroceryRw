@@ -215,6 +215,30 @@ export default function SideBar() {
             </svg>
           </Link>
 
+          {/* Reels */}
+          <Link
+            className="rounded-full p-2 text-inherit transition-colors duration-200 hover:bg-gray-200 dark:hover:bg-gray-700"
+            href={"/Reels"}
+            passHref
+          >
+            <svg
+              width="30px"
+              height="30px"
+              viewBox="0 0 24 24"
+              fill="none"
+              xmlns="http://www.w3.org/2000/svg"
+              className="text-inherit"
+            >
+              <path
+                d="M19 7V5H5v2m14 0v2H5V7m14 0H5m0 4v6a2 2 0 002 2h10a2 2 0 002-2v-6m-4 3h.01M12 14h.01M8 14h.01"
+                className="stroke-current"
+                strokeWidth="1.5"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+            </svg>
+          </Link>
+
           {/* Chat */}
           <Link
             className="relative rounded-full p-2 text-inherit transition-colors duration-200 hover:bg-gray-200 dark:hover:bg-gray-700"
