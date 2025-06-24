@@ -349,7 +349,19 @@ export default function FoodReelsApp() {
   const [showComments, setShowComments] = useState(false)
   const [activePostId, setActivePostId] = useState<string | null>(null)
   const [visiblePostIndex, setVisiblePostIndex] = useState(0)
+  const [isMobile, setIsMobile] = useState(false)
   const containerRef = useRef<HTMLDivElement>(null)
+
+  // Check if mobile on mount and resize
+  useEffect(() => {
+    const checkIfMobile = () => {
+      setIsMobile(window.innerWidth < 768)
+    }
+    
+    checkIfMobile()
+    window.addEventListener('resize', checkIfMobile)
+    return () => window.removeEventListener('resize', checkIfMobile)
+  }, [])
 
   // Intersection Observer to detect which post is visible
   useEffect(() => {
@@ -363,7 +375,7 @@ export default function FoodReelsApp() {
         })
       },
       {
-        threshold: 0.5, // Trigger when 50% of the post is visible
+        threshold: 0.5,
         rootMargin: '-10% 0px -10% 0px'
       }
     )
@@ -452,18 +464,57 @@ export default function FoodReelsApp() {
   }
 
   const handleShare = (postId: string) => {
-    // Implement share functionality
     console.log('Sharing post:', postId)
   }
 
   const activePost = posts.find((post) => post.id === activePostId)
 
-  return (
-    <RootLayout>
+  // Mobile layout - full screen without navbar/sidebar
+  if (isMobile) {
+    return (
       <div className={`h-screen bg-black transition-colors duration-200 ${theme === "dark" ? "bg-gray-900" : "bg-black"}`}>
         <div 
           ref={containerRef}
           style={{ height: "100vh", overflowY: "auto" }}
+        >
+          <div style={{ scrollSnapType: "y mandatory" }}>
+            {posts.map((post, index) => (
+              <div key={post.id} data-index={index}>
+                <VideoReel
+                  post={post}
+                  isVisible={visiblePostIndex === index}
+                  onLike={toggleLike}
+                  onComment={openComments}
+                  onShare={handleShare}
+                />
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Comments Drawer */}
+        {activePost && (
+          <CommentsDrawer
+            open={showComments}
+            onClose={closeComments}
+            comments={activePost.commentsList}
+            commentCount={activePost.stats.comments}
+            postId={activePost.id}
+            onToggleCommentLike={toggleCommentLike}
+            onAddComment={addComment}
+          />
+        )}
+      </div>
+    )
+  }
+
+  // Desktop layout - with normal page alignment
+  return (
+    <RootLayout>
+      <div className={`container mx-auto p-4 transition-colors duration-200 ${theme === "dark" ? "bg-gray-900 text-white" : "bg-white text-gray-900"}`}>
+        <div 
+          ref={containerRef}
+          style={{ height: "calc(100vh - 200px)", overflowY: "auto" }}
         >
           <div style={{ scrollSnapType: "y mandatory" }}>
             {posts.map((post, index) => (
