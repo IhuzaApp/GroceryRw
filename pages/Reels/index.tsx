@@ -2,6 +2,7 @@
 
 import React, { useState, useRef, useEffect } from "react"
 import RootLayout from "@components/ui/layout"
+import BottomBar from "@components/ui/NavBar/bottomBar"
 import { useTheme } from "../../src/context/ThemeContext"
 import VideoReel from "../../src/components/Reels/VideoReel"
 import CommentsDrawer from "../../src/components/Reels/CommentsDrawer"
@@ -479,13 +480,13 @@ export default function FoodReelsApp() {
 
   const activePost = posts.find((post) => post.id === activePostId)
 
-  // Mobile layout - full screen without navbar/sidebar
+  // Mobile layout - full screen without navbar/sidebar but with bottom bar
   if (isMobile) {
     return (
-      <div className={`h-screen bg-black transition-colors duration-200 ${theme === "dark" ? "bg-gray-900" : "bg-black"}`}>
+      <div className={`min-h-screen bg-black transition-colors duration-200 ${theme === "dark" ? "bg-gray-900" : "bg-black"}`}>
         <div 
           ref={containerRef}
-          style={{ height: "100vh", overflowY: "auto" }}
+          style={{ height: "calc(100vh - 80px)", overflowY: "auto" }} // Account for bottom bar height
         >
           <div style={{ scrollSnapType: "y mandatory" }}>
             {posts.map((post, index) => (
@@ -514,17 +515,21 @@ export default function FoodReelsApp() {
             onAddComment={addComment}
           />
         )}
+
+        {/* Mobile Bottom Navigation */}
+        <BottomBar />
       </div>
     )
   }
 
-  // Desktop layout - with normal page alignment
+  // Desktop layout - with normal page alignment matching main page
   return (
     <RootLayout>
-      <div className={`container mx-auto p-4 transition-colors duration-200 ${theme === "dark" ? "bg-gray-900 text-white" : "bg-white text-gray-900"}`}>
+      <div className={`container mx-auto transition-colors duration-200 ${theme === "dark" ? "bg-gray-900 text-white" : "bg-white text-gray-900"}`}>
         <div 
           ref={containerRef}
-          style={{ height: "calc(100vh - 200px)", overflowY: "auto" }}
+          className="h-screen"
+          style={{ overflowY: "auto" }}
         >
           <div style={{ scrollSnapType: "y mandatory" }}>
             {posts.map((post, index) => (
