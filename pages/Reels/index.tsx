@@ -352,50 +352,82 @@ export default function FoodReelsApp() {
   const [visiblePostIndex, setVisiblePostIndex] = useState(0)
   const [isMobile, setIsMobile] = useState(false)
   const containerRef = useRef<HTMLDivElement>(null)
+  const observerRef = useRef<IntersectionObserver | null>(null)
 
-  // Check if mobile on mount and resize
+  // Check if mobile on mount and resize with debouncing
   useEffect(() => {
     const checkIfMobile = () => {
-      setIsMobile(window.innerWidth < 768)
+      const newIsMobile = window.innerWidth < 768
+      if (newIsMobile !== isMobile) {
+        console.log(`Screen size changed: ${newIsMobile ? 'mobile' : 'desktop'}`)
+        setIsMobile(newIsMobile)
+        // Reset visible post index when switching layouts
+        setVisiblePostIndex(0)
+      }
     }
     
     checkIfMobile()
-    window.addEventListener('resize', checkIfMobile)
-    return () => window.removeEventListener('resize', checkIfMobile)
-  }, [])
+    
+    // Debounced resize handler
+    let resizeTimeout: NodeJS.Timeout
+    const handleResize = () => {
+      clearTimeout(resizeTimeout)
+      resizeTimeout = setTimeout(checkIfMobile, 100)
+    }
+    
+    window.addEventListener('resize', handleResize)
+    return () => {
+      window.removeEventListener('resize', handleResize)
+      clearTimeout(resizeTimeout)
+    }
+  }, [isMobile])
 
   // Intersection Observer to detect which post is visible
   useEffect(() => {
+    // Clean up previous observer
+    if (observerRef.current) {
+      observerRef.current.disconnect()
+      observerRef.current = null
+    }
+
     if (!containerRef.current) return
+
+    console.log(`Setting up observer for ${isMobile ? 'mobile' : 'desktop'} layout`)
 
     const observer = new IntersectionObserver(
       (entries) => {
         entries.forEach((entry) => {
           if (entry.isIntersecting) {
             const index = parseInt(entry.target.getAttribute('data-index') || '0')
-            console.log(`Post ${index} is now visible`)
+            console.log(`Post ${index} is now visible on ${isMobile ? 'mobile' : 'desktop'}`)
             setVisiblePostIndex(index)
           }
         })
       },
       {
-        threshold: 0.3, // Lower threshold for better mobile detection
-        rootMargin: '-5% 0px -5% 0px' // Smaller margin for mobile
+        threshold: isMobile ? 0.3 : 0.5, // Different thresholds for mobile vs desktop
+        rootMargin: isMobile ? '-10% 0px -10% 0px' : '-20% 0px -20% 0px'
       }
     )
 
+    observerRef.current = observer
+
     const posts = containerRef.current.querySelectorAll('[data-index]')
-    console.log(`Found ${posts.length} posts to observe`)
+    console.log(`Found ${posts.length} posts to observe on ${isMobile ? 'mobile' : 'desktop'}`)
+    
     posts.forEach((post, index) => {
-      console.log(`Observing post ${index}`)
+      console.log(`Observing post ${index} on ${isMobile ? 'mobile' : 'desktop'}`)
       observer.observe(post)
     })
 
     return () => {
-      console.log('Cleaning up intersection observer')
-      observer.disconnect()
+      console.log(`Cleaning up observer for ${isMobile ? 'mobile' : 'desktop'}`)
+      if (observerRef.current) {
+        observerRef.current.disconnect()
+        observerRef.current = null
+      }
     }
-  }, [posts.length]) // Re-run when posts change
+  }, [posts.length, isMobile]) // Re-run when posts change or mobile state changes
 
   const toggleLike = (postId: string) => {
     setPosts(
@@ -490,7 +522,7 @@ export default function FoodReelsApp() {
         >
           <div style={{ scrollSnapType: "y mandatory" }}>
             {posts.map((post, index) => (
-              <div key={post.id} data-index={index}>
+              <div key={`${post.id}-${isMobile ? 'mobile' : 'desktop'}`} data-index={index}>
                 <VideoReel
                   post={post}
                   isVisible={visiblePostIndex === index}
@@ -533,7 +565,7 @@ export default function FoodReelsApp() {
         >
           <div style={{ scrollSnapType: "y mandatory" }}>
             {posts.map((post, index) => (
-              <div key={post.id} data-index={index}>
+              <div key={`${post.id}-${isMobile ? 'mobile' : 'desktop'}`} data-index={index}>
                 <VideoReel
                   post={post}
                   isVisible={visiblePostIndex === index}
