@@ -194,34 +194,72 @@ export default function VideoReel({ post, isVisible, onLike, onComment, onShare 
   const [isPlaying, setIsPlaying] = useState(false)
   const [videoError, setVideoError] = useState(false)
   const [videoLoading, setVideoLoading] = useState(true)
+  const [isMobile, setIsMobile] = useState(false)
+
+  // Check if mobile on mount
+  useEffect(() => {
+    const checkIfMobile = () => {
+      setIsMobile(window.innerWidth < 768)
+    }
+    checkIfMobile()
+    
+    const handleResize = () => {
+      const newIsMobile = window.innerWidth < 768
+      if (newIsMobile !== isMobile) {
+        setIsMobile(newIsMobile)
+        // Force video to reload when switching layouts
+        if (videoRef.current) {
+          videoRef.current.load()
+        }
+      }
+    }
+    
+    window.addEventListener('resize', handleResize)
+    return () => window.removeEventListener('resize', handleResize)
+  }, [isMobile])
 
   useEffect(() => {
     if (videoRef.current) {
       if (isVisible) {
-        console.log(`Playing video for post ${post.id}`)
-        videoRef.current.play().catch((error) => {
-          console.error(`Error playing video for post ${post.id}:`, error)
-          setVideoError(true)
-        })
-        setIsPlaying(true)
+        console.log(`Playing video for post ${post.id} on ${isMobile ? 'mobile' : 'desktop'}`)
+        // Add a small delay to ensure the video is ready
+        const playVideo = async () => {
+          try {
+            await videoRef.current!.play()
+            setIsPlaying(true)
+          } catch (error) {
+            console.error(`Error playing video for post ${post.id}:`, error)
+            setVideoError(true)
+          }
+        }
+        playVideo()
       } else {
-        console.log(`Pausing video for post ${post.id}`)
+        console.log(`Pausing video for post ${post.id} on ${isMobile ? 'mobile' : 'desktop'}`)
         videoRef.current.pause()
         setIsPlaying(false)
       }
     }
-  }, [isVisible, post.id])
+  }, [isVisible, post.id, isMobile])
 
   const handleVideoLoad = () => {
-    console.log(`Video loaded for post ${post.id}`)
+    console.log(`Video loaded for post ${post.id} on ${isMobile ? 'mobile' : 'desktop'}`)
     setVideoLoading(false)
     setVideoError(false)
   }
 
   const handleVideoError = (error: any) => {
-    console.error(`Video error for post ${post.id}:`, error)
+    console.error(`Video error for post ${post.id} on ${isMobile ? 'mobile' : 'desktop'}:`, error)
     setVideoError(true)
     setVideoLoading(false)
+  }
+
+  const handleVideoCanPlay = () => {
+    console.log(`Video can play for post ${post.id} on ${isMobile ? 'mobile' : 'desktop'}`)
+    if (isVisible && videoRef.current) {
+      videoRef.current.play().catch((error) => {
+        console.error(`Error playing video after canplay for post ${post.id}:`, error)
+      })
+    }
   }
 
   const getPostTypeIcon = (type: PostType) => {
@@ -386,6 +424,7 @@ export default function VideoReel({ post, isVisible, onLike, onComment, onShare 
           onLoadedData={handleVideoLoad}
           onError={handleVideoError}
           onLoadStart={() => setVideoLoading(true)}
+          onCanPlay={handleVideoCanPlay}
         />
         
         {/* Loading overlay */}
