@@ -94,7 +94,7 @@ const PerformanceMetrics: React.FC<PerformanceMetricsProps> = ({
             Something went wrong
           </h4>
           <p className="mb-4 text-gray-600">
-            We couldn't load your performance metrics.
+            We couldn&apos;t load your performance metrics.
           </p>
           <p className="text-sm text-gray-500">
             Please try again after 1 hour or contact support if the issue
