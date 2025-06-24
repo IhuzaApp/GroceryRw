@@ -195,6 +195,15 @@ export default function VideoReel({ post, isVisible, onLike, onComment, onShare 
   const [videoError, setVideoError] = useState(false)
   const [videoLoading, setVideoLoading] = useState(true)
   const [isMobile, setIsMobile] = useState(false)
+  const mountedRef = useRef(true)
+
+  // Track component mount state
+  useEffect(() => {
+    mountedRef.current = true
+    return () => {
+      mountedRef.current = false
+    }
+  }, [])
 
   // Check if mobile on mount
   useEffect(() => {
@@ -208,7 +217,7 @@ export default function VideoReel({ post, isVisible, onLike, onComment, onShare 
       if (newIsMobile !== isMobile) {
         setIsMobile(newIsMobile)
         // Force video to reload when switching layouts
-        if (videoRef.current) {
+        if (videoRef.current && mountedRef.current) {
           videoRef.current.load()
         }
       }
@@ -219,46 +228,74 @@ export default function VideoReel({ post, isVisible, onLike, onComment, onShare 
   }, [isMobile])
 
   useEffect(() => {
+    if (!mountedRef.current) return
+
     if (videoRef.current) {
       if (isVisible) {
         console.log(`Playing video for post ${post.id} on ${isMobile ? 'mobile' : 'desktop'}`)
         // Add a small delay to ensure the video is ready
         const playVideo = async () => {
           try {
-            await videoRef.current!.play()
-            setIsPlaying(true)
+            // Check if component is still mounted and video exists
+            if (!mountedRef.current || !videoRef.current) {
+              console.log(`Component unmounted or video removed for post ${post.id}`)
+              return
+            }
+
+            await videoRef.current.play()
+            
+            // Check again if component is still mounted
+            if (mountedRef.current) {
+              setIsPlaying(true)
+            }
           } catch (error) {
-            console.error(`Error playing video for post ${post.id}:`, error)
-            setVideoError(true)
+            // Only log error if component is still mounted and it's not an AbortError
+            if (mountedRef.current && error.name !== 'AbortError') {
+              console.error(`Error playing video for post ${post.id}:`, error)
+              setVideoError(true)
+            }
           }
         }
         playVideo()
       } else {
         console.log(`Pausing video for post ${post.id} on ${isMobile ? 'mobile' : 'desktop'}`)
-        videoRef.current.pause()
-        setIsPlaying(false)
+        if (videoRef.current && mountedRef.current) {
+          videoRef.current.pause()
+          setIsPlaying(false)
+        }
       }
     }
   }, [isVisible, post.id, isMobile])
 
   const handleVideoLoad = () => {
+    if (!mountedRef.current) return
     console.log(`Video loaded for post ${post.id} on ${isMobile ? 'mobile' : 'desktop'}`)
     setVideoLoading(false)
     setVideoError(false)
   }
 
   const handleVideoError = (error: any) => {
+    if (!mountedRef.current) return
     console.error(`Video error for post ${post.id} on ${isMobile ? 'mobile' : 'desktop'}:`, error)
     setVideoError(true)
     setVideoLoading(false)
   }
 
   const handleVideoCanPlay = () => {
+    if (!mountedRef.current) return
     console.log(`Video can play for post ${post.id} on ${isMobile ? 'mobile' : 'desktop'}`)
-    if (isVisible && videoRef.current) {
-      videoRef.current.play().catch((error) => {
-        console.error(`Error playing video after canplay for post ${post.id}:`, error)
-      })
+    if (isVisible && videoRef.current && mountedRef.current) {
+      const playVideo = async () => {
+        try {
+          if (!mountedRef.current || !videoRef.current) return
+          await videoRef.current.play()
+        } catch (error) {
+          if (mountedRef.current && error.name !== 'AbortError') {
+            console.error(`Error playing video after canplay for post ${post.id}:`, error)
+          }
+        }
+      }
+      playVideo()
     }
   }
 
