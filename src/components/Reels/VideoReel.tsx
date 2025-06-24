@@ -192,18 +192,37 @@ export default function VideoReel({ post, isVisible, onLike, onComment, onShare 
   const { theme } = useTheme()
   const videoRef = useRef<HTMLVideoElement>(null)
   const [isPlaying, setIsPlaying] = useState(false)
+  const [videoError, setVideoError] = useState(false)
+  const [videoLoading, setVideoLoading] = useState(true)
 
   useEffect(() => {
     if (videoRef.current) {
       if (isVisible) {
-        videoRef.current.play().catch(console.error)
+        console.log(`Playing video for post ${post.id}`)
+        videoRef.current.play().catch((error) => {
+          console.error(`Error playing video for post ${post.id}:`, error)
+          setVideoError(true)
+        })
         setIsPlaying(true)
       } else {
+        console.log(`Pausing video for post ${post.id}`)
         videoRef.current.pause()
         setIsPlaying(false)
       }
     }
-  }, [isVisible])
+  }, [isVisible, post.id])
+
+  const handleVideoLoad = () => {
+    console.log(`Video loaded for post ${post.id}`)
+    setVideoLoading(false)
+    setVideoError(false)
+  }
+
+  const handleVideoError = (error: any) => {
+    console.error(`Video error for post ${post.id}:`, error)
+    setVideoError(true)
+    setVideoLoading(false)
+  }
 
   const getPostTypeIcon = (type: PostType) => {
     switch (type) {
@@ -345,6 +364,7 @@ export default function VideoReel({ post, isVisible, onLike, onComment, onShare 
         border: "none",
         borderRadius: 0,
         overflow: "hidden",
+        backgroundColor: "#000", // Fallback background
       }}
     >
       {/* Background Video */}
@@ -356,12 +376,58 @@ export default function VideoReel({ post, isVisible, onLike, onComment, onShare 
             width: "100%",
             height: "100%",
             objectFit: "cover",
+            backgroundColor: "#000",
           }}
           loop
           muted
           playsInline
+          preload="metadata"
           poster={post.creator.avatar || "/placeholder.svg"}
+          onLoadedData={handleVideoLoad}
+          onError={handleVideoError}
+          onLoadStart={() => setVideoLoading(true)}
         />
+        
+        {/* Loading overlay */}
+        {videoLoading && (
+          <div style={{
+            position: "absolute",
+            inset: 0,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            backgroundColor: "rgba(0,0,0,0.8)",
+            zIndex: 5
+          }}>
+            <div style={{
+              width: 40,
+              height: 40,
+              border: "4px solid rgba(255,255,255,0.3)",
+              borderTop: "4px solid #fff",
+              borderRadius: "50%",
+              animation: "spin 1s linear infinite"
+            }} />
+          </div>
+        )}
+
+        {/* Error overlay */}
+        {videoError && (
+          <div style={{
+            position: "absolute",
+            inset: 0,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            backgroundColor: "rgba(0,0,0,0.9)",
+            zIndex: 5
+          }}>
+            <div style={{ textAlign: "center", color: "#fff" }}>
+              <div style={{ fontSize: "16px", marginBottom: "8px" }}>Video unavailable</div>
+              <div style={{ fontSize: "14px", opacity: 0.7 }}>Please try again later</div>
+            </div>
+          </div>
+        )}
+
         <div style={{
           position: "absolute",
           inset: 0,
@@ -468,6 +534,14 @@ export default function VideoReel({ post, isVisible, onLike, onComment, onShare 
 
         {renderBottomActions(post)}
       </div>
+
+      {/* CSS for loading animation */}
+      <style jsx>{`
+        @keyframes spin {
+          0% { transform: rotate(0deg); }
+          100% { transform: rotate(360deg); }
+        }
+      `}</style>
     </div>
   )
 } 

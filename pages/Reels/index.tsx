@@ -365,26 +365,36 @@ export default function FoodReelsApp() {
 
   // Intersection Observer to detect which post is visible
   useEffect(() => {
+    if (!containerRef.current) return
+
     const observer = new IntersectionObserver(
       (entries) => {
         entries.forEach((entry) => {
           if (entry.isIntersecting) {
             const index = parseInt(entry.target.getAttribute('data-index') || '0')
+            console.log(`Post ${index} is now visible`)
             setVisiblePostIndex(index)
           }
         })
       },
       {
-        threshold: 0.5,
-        rootMargin: '-10% 0px -10% 0px'
+        threshold: 0.3, // Lower threshold for better mobile detection
+        rootMargin: '-5% 0px -5% 0px' // Smaller margin for mobile
       }
     )
 
-    const posts = containerRef.current?.querySelectorAll('[data-index]')
-    posts?.forEach((post) => observer.observe(post))
+    const posts = containerRef.current.querySelectorAll('[data-index]')
+    console.log(`Found ${posts.length} posts to observe`)
+    posts.forEach((post, index) => {
+      console.log(`Observing post ${index}`)
+      observer.observe(post)
+    })
 
-    return () => observer.disconnect()
-  }, [])
+    return () => {
+      console.log('Cleaning up intersection observer')
+      observer.disconnect()
+    }
+  }, [posts.length]) // Re-run when posts change
 
   const toggleLike = (postId: string) => {
     setPosts(
