@@ -1,0 +1,61 @@
+query GetAllReels {
+  Reels {
+    category
+    created_on
+    description
+    id
+    isLiked
+    likes
+    restaurant_id
+    title
+    type
+    user_id
+    video_url
+    User {
+      email
+      gender
+      id
+      is_active
+      name
+      created_at
+      role
+      phone
+      profile_picture
+    }
+    Restaurant {
+      created_at
+      email
+      id
+      lat
+      location
+      long
+      name
+      phone
+      profile
+      verified
+    }
+    Reels_comments {
+      user_id
+      text
+      reel_id
+      likes
+      isLiked
+      id
+      created_on
+      User {
+        gender
+        email
+        name
+        phone
+        role
+      }
+    }
+  }
+}
+
+mutation AddReels($category: String = "", $description: String = "", $likes: String = "", $restaurant_id: uuid = "", $title: String = "", $type: String = "", $video_url: String = "", $user_id: uuid = "") {
+  insert_Reels(objects: {category: $category, description: $description, isLiked: false, likes: $likes, restaurant_id: $restaurant_id, title: $title, type: $type, video_url: $video_url, user_id: $user_id}) {
+    affected_rows
+  }
+}
+
