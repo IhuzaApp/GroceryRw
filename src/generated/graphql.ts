@@ -4628,25 +4628,34 @@ export type Ratings_Variance_Order_By = {
 
 /** columns and relationships of "Reels" */
 export type Reels = {
+  Price: Scalars['String']['output'];
+  Product?: Maybe<Scalars['jsonb']['output']>;
   /** An array relationship */
   Reels_comments: Array<Reels_Comments>;
   /** An aggregate relationship */
   Reels_comments_aggregate: Reels_Comments_Aggregate;
   /** An object relationship */
-  Restaurant: Restaurants;
+  Restaurant?: Maybe<Restaurants>;
   /** An object relationship */
-  User: Users;
+  User?: Maybe<Users>;
   category: Scalars['String']['output'];
   created_on: Scalars['timestamptz']['output'];
+  delivery_time?: Maybe<Scalars['String']['output']>;
   description: Scalars['String']['output'];
   id: Scalars['uuid']['output'];
   isLiked: Scalars['Boolean']['output'];
-  likes: Scalars['String']['output'];
-  restaurant_id: Scalars['uuid']['output'];
+  likes?: Maybe<Scalars['String']['output']>;
+  restaurant_id?: Maybe<Scalars['uuid']['output']>;
   title: Scalars['String']['output'];
   type: Scalars['String']['output'];
-  user_id: Scalars['uuid']['output'];
+  user_id?: Maybe<Scalars['uuid']['output']>;
   video_url: Scalars['String']['output'];
+};
+
+
+/** columns and relationships of "Reels" */
+export type ReelsProductArgs = {
+  path?: InputMaybe<Scalars['String']['input']>;
 };
 
 
@@ -4723,6 +4732,11 @@ export type Reels_Aggregate_Order_By = {
   min?: InputMaybe<Reels_Min_Order_By>;
 };
 
+/** append existing jsonb value of filtered columns with new jsonb value */
+export type Reels_Append_Input = {
+  Product?: InputMaybe<Scalars['jsonb']['input']>;
+};
+
 /** input type for inserting array relation for remote table "Reels" */
 export type Reels_Arr_Rel_Insert_Input = {
   data: Array<Reels_Insert_Input>;
@@ -4732,6 +4746,8 @@ export type Reels_Arr_Rel_Insert_Input = {
 
 /** Boolean expression to filter rows from the table "Reels". All fields are combined with a logical 'AND'. */
 export type Reels_Bool_Exp = {
+  Price?: InputMaybe<String_Comparison_Exp>;
+  Product?: InputMaybe<Jsonb_Comparison_Exp>;
   Reels_comments?: InputMaybe<Reels_Comments_Bool_Exp>;
   Reels_comments_aggregate?: InputMaybe<Reels_Comments_Aggregate_Bool_Exp>;
   Restaurant?: InputMaybe<Restaurants_Bool_Exp>;
@@ -4741,6 +4757,7 @@ export type Reels_Bool_Exp = {
   _or?: InputMaybe<Array<Reels_Bool_Exp>>;
   category?: InputMaybe<String_Comparison_Exp>;
   created_on?: InputMaybe<Timestamptz_Comparison_Exp>;
+  delivery_time?: InputMaybe<String_Comparison_Exp>;
   description?: InputMaybe<String_Comparison_Exp>;
   id?: InputMaybe<Uuid_Comparison_Exp>;
   isLiked?: InputMaybe<Boolean_Comparison_Exp>;
@@ -5021,13 +5038,31 @@ export type Reels_Constraint =
   /** unique or primary key constraint on columns "id" */
   | 'Reels_pkey';
 
+/** delete the field or element with specified path (for JSON arrays, negative integers count from the end) */
+export type Reels_Delete_At_Path_Input = {
+  Product?: InputMaybe<Array<Scalars['String']['input']>>;
+};
+
+/** delete the array element with specified index (negative integers count from the end). throws an error if top level container is not an array */
+export type Reels_Delete_Elem_Input = {
+  Product?: InputMaybe<Scalars['Int']['input']>;
+};
+
+/** delete key/value pair or string element. key/value pairs are matched based on their key value */
+export type Reels_Delete_Key_Input = {
+  Product?: InputMaybe<Scalars['String']['input']>;
+};
+
 /** input type for inserting data into table "Reels" */
 export type Reels_Insert_Input = {
+  Price?: InputMaybe<Scalars['String']['input']>;
+  Product?: InputMaybe<Scalars['jsonb']['input']>;
   Reels_comments?: InputMaybe<Reels_Comments_Arr_Rel_Insert_Input>;
   Restaurant?: InputMaybe<Restaurants_Obj_Rel_Insert_Input>;
   User?: InputMaybe<Users_Obj_Rel_Insert_Input>;
   category?: InputMaybe<Scalars['String']['input']>;
   created_on?: InputMaybe<Scalars['timestamptz']['input']>;
+  delivery_time?: InputMaybe<Scalars['String']['input']>;
   description?: InputMaybe<Scalars['String']['input']>;
   id?: InputMaybe<Scalars['uuid']['input']>;
   isLiked?: InputMaybe<Scalars['Boolean']['input']>;
@@ -5041,8 +5076,10 @@ export type Reels_Insert_Input = {
 
 /** aggregate max on columns */
 export type Reels_Max_Fields = {
+  Price?: Maybe<Scalars['String']['output']>;
   category?: Maybe<Scalars['String']['output']>;
   created_on?: Maybe<Scalars['timestamptz']['output']>;
+  delivery_time?: Maybe<Scalars['String']['output']>;
   description?: Maybe<Scalars['String']['output']>;
   id?: Maybe<Scalars['uuid']['output']>;
   likes?: Maybe<Scalars['String']['output']>;
@@ -5055,8 +5092,10 @@ export type Reels_Max_Fields = {
 
 /** order by max() on columns of table "Reels" */
 export type Reels_Max_Order_By = {
+  Price?: InputMaybe<Order_By>;
   category?: InputMaybe<Order_By>;
   created_on?: InputMaybe<Order_By>;
+  delivery_time?: InputMaybe<Order_By>;
   description?: InputMaybe<Order_By>;
   id?: InputMaybe<Order_By>;
   likes?: InputMaybe<Order_By>;
@@ -5069,8 +5108,10 @@ export type Reels_Max_Order_By = {
 
 /** aggregate min on columns */
 export type Reels_Min_Fields = {
+  Price?: Maybe<Scalars['String']['output']>;
   category?: Maybe<Scalars['String']['output']>;
   created_on?: Maybe<Scalars['timestamptz']['output']>;
+  delivery_time?: Maybe<Scalars['String']['output']>;
   description?: Maybe<Scalars['String']['output']>;
   id?: Maybe<Scalars['uuid']['output']>;
   likes?: Maybe<Scalars['String']['output']>;
@@ -5083,8 +5124,10 @@ export type Reels_Min_Fields = {
 
 /** order by min() on columns of table "Reels" */
 export type Reels_Min_Order_By = {
+  Price?: InputMaybe<Order_By>;
   category?: InputMaybe<Order_By>;
   created_on?: InputMaybe<Order_By>;
+  delivery_time?: InputMaybe<Order_By>;
   description?: InputMaybe<Order_By>;
   id?: InputMaybe<Order_By>;
   likes?: InputMaybe<Order_By>;
@@ -5119,11 +5162,14 @@ export type Reels_On_Conflict = {
 
 /** Ordering options when selecting data from "Reels". */
 export type Reels_Order_By = {
+  Price?: InputMaybe<Order_By>;
+  Product?: InputMaybe<Order_By>;
   Reels_comments_aggregate?: InputMaybe<Reels_Comments_Aggregate_Order_By>;
   Restaurant?: InputMaybe<Restaurants_Order_By>;
   User?: InputMaybe<Users_Order_By>;
   category?: InputMaybe<Order_By>;
   created_on?: InputMaybe<Order_By>;
+  delivery_time?: InputMaybe<Order_By>;
   description?: InputMaybe<Order_By>;
   id?: InputMaybe<Order_By>;
   isLiked?: InputMaybe<Order_By>;
@@ -5140,12 +5186,23 @@ export type Reels_Pk_Columns_Input = {
   id: Scalars['uuid']['input'];
 };
 
+/** prepend existing jsonb value of filtered columns with new jsonb value */
+export type Reels_Prepend_Input = {
+  Product?: InputMaybe<Scalars['jsonb']['input']>;
+};
+
 /** select columns of table "Reels" */
 export type Reels_Select_Column =
+  /** column name */
+  | 'Price'
+  /** column name */
+  | 'Product'
   /** column name */
   | 'category'
   /** column name */
   | 'created_on'
+  /** column name */
+  | 'delivery_time'
   /** column name */
   | 'description'
   /** column name */
@@ -5177,8 +5234,11 @@ export type Reels_Select_Column_Reels_Aggregate_Bool_Exp_Bool_Or_Arguments_Colum
 
 /** input type for updating data in table "Reels" */
 export type Reels_Set_Input = {
+  Price?: InputMaybe<Scalars['String']['input']>;
+  Product?: InputMaybe<Scalars['jsonb']['input']>;
   category?: InputMaybe<Scalars['String']['input']>;
   created_on?: InputMaybe<Scalars['timestamptz']['input']>;
+  delivery_time?: InputMaybe<Scalars['String']['input']>;
   description?: InputMaybe<Scalars['String']['input']>;
   id?: InputMaybe<Scalars['uuid']['input']>;
   isLiked?: InputMaybe<Scalars['Boolean']['input']>;
@@ -5200,8 +5260,11 @@ export type Reels_Stream_Cursor_Input = {
 
 /** Initial value of the column from where the streaming should start */
 export type Reels_Stream_Cursor_Value_Input = {
+  Price?: InputMaybe<Scalars['String']['input']>;
+  Product?: InputMaybe<Scalars['jsonb']['input']>;
   category?: InputMaybe<Scalars['String']['input']>;
   created_on?: InputMaybe<Scalars['timestamptz']['input']>;
+  delivery_time?: InputMaybe<Scalars['String']['input']>;
   description?: InputMaybe<Scalars['String']['input']>;
   id?: InputMaybe<Scalars['uuid']['input']>;
   isLiked?: InputMaybe<Scalars['Boolean']['input']>;
@@ -5216,9 +5279,15 @@ export type Reels_Stream_Cursor_Value_Input = {
 /** update columns of table "Reels" */
 export type Reels_Update_Column =
   /** column name */
+  | 'Price'
+  /** column name */
+  | 'Product'
+  /** column name */
   | 'category'
   /** column name */
   | 'created_on'
+  /** column name */
+  | 'delivery_time'
   /** column name */
   | 'description'
   /** column name */
@@ -5239,6 +5308,16 @@ export type Reels_Update_Column =
   | 'video_url';
 
 export type Reels_Updates = {
+  /** append existing jsonb value of filtered columns with new jsonb value */
+  _append?: InputMaybe<Reels_Append_Input>;
+  /** delete the field or element with specified path (for JSON arrays, negative integers count from the end) */
+  _delete_at_path?: InputMaybe<Reels_Delete_At_Path_Input>;
+  /** delete the array element with specified index (negative integers count from the end). throws an error if top level container is not an array */
+  _delete_elem?: InputMaybe<Reels_Delete_Elem_Input>;
+  /** delete key/value pair or string element. key/value pairs are matched based on their key value */
+  _delete_key?: InputMaybe<Reels_Delete_Key_Input>;
+  /** prepend existing jsonb value of filtered columns with new jsonb value */
+  _prepend?: InputMaybe<Reels_Prepend_Input>;
   /** sets the columns of the filtered rows to the given values */
   _set?: InputMaybe<Reels_Set_Input>;
   /** filter the rows which have to be updated */
@@ -10121,6 +10200,11 @@ export type Mutation_RootUpdate_Ratings_ManyArgs = {
 
 /** mutation root */
 export type Mutation_RootUpdate_ReelsArgs = {
+  _append?: InputMaybe<Reels_Append_Input>;
+  _delete_at_path?: InputMaybe<Reels_Delete_At_Path_Input>;
+  _delete_elem?: InputMaybe<Reels_Delete_Elem_Input>;
+  _delete_key?: InputMaybe<Reels_Delete_Key_Input>;
+  _prepend?: InputMaybe<Reels_Prepend_Input>;
   _set?: InputMaybe<Reels_Set_Input>;
   where: Reels_Bool_Exp;
 };
@@ -10128,6 +10212,11 @@ export type Mutation_RootUpdate_ReelsArgs = {
 
 /** mutation root */
 export type Mutation_RootUpdate_Reels_By_PkArgs = {
+  _append?: InputMaybe<Reels_Append_Input>;
+  _delete_at_path?: InputMaybe<Reels_Delete_At_Path_Input>;
+  _delete_elem?: InputMaybe<Reels_Delete_Elem_Input>;
+  _delete_key?: InputMaybe<Reels_Delete_Key_Input>;
+  _prepend?: InputMaybe<Reels_Prepend_Input>;
   _set?: InputMaybe<Reels_Set_Input>;
   pk_columns: Reels_Pk_Columns_Input;
 };
@@ -14030,7 +14119,7 @@ export type GetProductsQuery = { Products: Array<{ id: string, name: string, des
 export type GetAllReelsQueryVariables = Exact<{ [key: string]: never; }>;
 
 
-export type GetAllReelsQuery = { Reels: Array<{ category: string, created_on: string, description: string, id: string, isLiked: boolean, likes: string, restaurant_id: string, title: string, type: string, user_id: string, video_url: string, User: { email: string, gender: string, id: string, is_active: boolean, name: string, created_at: string, role: string, phone: string, profile_picture?: string | null }, Restaurant: { created_at: string, email: string, id: string, lat: string, location: string, long: string, name: string, phone: string, profile: string, verified: boolean }, Reels_comments: Array<{ user_id: string, text: string, reel_id: string, likes: string, isLiked: boolean, id: string, created_on: string, User: { gender: string, email: string, name: string, phone: string, role: string } }> }> };
+export type GetAllReelsQuery = { Reels: Array<{ category: string, created_on: string, description: string, id: string, isLiked: boolean, likes?: string | null, restaurant_id?: string | null, title: string, type: string, user_id?: string | null, video_url: string, delivery_time?: string | null, Price: string, Product?: any | null, User?: { email: string, gender: string, id: string, is_active: boolean, name: string, created_at: string, role: string, phone: string, profile_picture?: string | null } | null, Restaurant?: { created_at: string, email: string, id: string, lat: string, location: string, long: string, name: string, phone: string, profile: string, verified: boolean } | null, Reels_comments: Array<{ user_id: string, text: string, reel_id: string, likes: string, isLiked: boolean, id: string, created_on: string, User: { gender: string, email: string, name: string, phone: string, role: string } }> }> };
 
 export type AddReelsMutationVariables = Exact<{
   category?: InputMaybe<Scalars['String']['input']>;
@@ -14040,6 +14129,9 @@ export type AddReelsMutationVariables = Exact<{
   title?: InputMaybe<Scalars['String']['input']>;
   type?: InputMaybe<Scalars['String']['input']>;
   video_url?: InputMaybe<Scalars['String']['input']>;
+  Product?: InputMaybe<Scalars['jsonb']['input']>;
+  delivery_time?: InputMaybe<Scalars['String']['input']>;
+  Price?: InputMaybe<Scalars['String']['input']>;
   user_id?: InputMaybe<Scalars['uuid']['input']>;
 }>;
 
@@ -14079,6 +14171,28 @@ export type AddItemsToCartMutationVariables = Exact<{
 
 
 export type AddItemsToCartMutation = { insert_Carts?: { affected_rows: number } | null };
+
+export type AddReelCommentMutationVariables = Exact<{
+  likes?: InputMaybe<Scalars['String']['input']>;
+  reel_id?: InputMaybe<Scalars['uuid']['input']>;
+  text?: InputMaybe<Scalars['String']['input']>;
+  user_id?: InputMaybe<Scalars['uuid']['input']>;
+}>;
+
+
+export type AddReelCommentMutation = { insert_Reels_comments?: { affected_rows: number } | null };
+
+export type GetCommentsQueryVariables = Exact<{ [key: string]: never; }>;
+
+
+export type GetCommentsQuery = { Reels_comments: Array<{ user_id: string, text: string, reel_id: string, likes: string, isLiked: boolean, id: string, created_on: string, User: { email: string, gender: string, name: string, phone: string, profile_picture?: string | null }, Reel: { category: string, isLiked: boolean, likes?: string | null, restaurant_id?: string | null, title: string, id: string } }> };
+
+export type GetCommentsWhereReelIdQueryVariables = Exact<{
+  reel_id?: InputMaybe<Scalars['uuid']['input']>;
+}>;
+
+
+export type GetCommentsWhereReelIdQuery = { Reels_comments: Array<{ user_id: string, text: string, reel_id: string, likes: string, isLiked: boolean, id: string, created_on: string, User: { email: string, gender: string, name: string, phone: string, profile_picture?: string | null }, Reel: { category: string, isLiked: boolean, likes?: string | null, restaurant_id?: string | null, title: string, id: string } }> };
 
 export type GetPaymentMethodQueryVariables = Exact<{ [key: string]: never; }>;
 
@@ -14615,13 +14729,16 @@ export const GetAllReelsDocument = gql`
         role
       }
     }
+    delivery_time
+    Price
+    Product
   }
 }
     `;
 export const AddReelsDocument = gql`
-    mutation AddReels($category: String = "", $description: String = "", $likes: String = "", $restaurant_id: uuid = "", $title: String = "", $type: String = "", $video_url: String = "", $user_id: uuid = "") {
+    mutation AddReels($category: String = "", $description: String = "", $likes: String = "", $restaurant_id: uuid = "", $title: String = "", $type: String = "", $video_url: String = "", $Product: jsonb = "", $delivery_time: String = "", $Price: String = "", $user_id: uuid = "") {
   insert_Reels(
-    objects: {category: $category, description: $description, isLiked: false, likes: $likes, restaurant_id: $restaurant_id, title: $title, type: $type, video_url: $video_url, user_id: $user_id}
+    objects: {category: $category, description: $description, isLiked: false, likes: $likes, restaurant_id: $restaurant_id, title: $title, type: $type, video_url: $video_url, Product: $Product, delivery_time: $delivery_time, Price: $Price, user_id: $user_id}
   ) {
     affected_rows
   }
@@ -14690,6 +14807,71 @@ export const AddItemsToCartDocument = gql`
     objects: {total: $total, is_active: $is_active, shop_id: $shop_id, user_id: $user_id}
   ) {
     affected_rows
+  }
+}
+    `;
+export const AddReelCommentDocument = gql`
+    mutation addReelComment($likes: String = "", $reel_id: uuid = "", $text: String = "", $user_id: uuid = "") {
+  insert_Reels_comments(
+    objects: {isLiked: false, likes: $likes, reel_id: $reel_id, text: $text, user_id: $user_id}
+  ) {
+    affected_rows
+  }
+}
+    `;
+export const GetCommentsDocument = gql`
+    query GetComments {
+  Reels_comments {
+    user_id
+    text
+    reel_id
+    likes
+    isLiked
+    id
+    created_on
+    User {
+      email
+      gender
+      name
+      phone
+      profile_picture
+    }
+    Reel {
+      category
+      isLiked
+      likes
+      restaurant_id
+      title
+      id
+    }
+  }
+}
+    `;
+export const GetCommentsWhereReelIdDocument = gql`
+    query GetCommentsWhereReelID($reel_id: uuid = "") {
+  Reels_comments(where: {reel_id: {_eq: $reel_id}}) {
+    user_id
+    text
+    reel_id
+    likes
+    isLiked
+    id
+    created_on
+    User {
+      email
+      gender
+      name
+      phone
+      profile_picture
+    }
+    Reel {
+      category
+      isLiked
+      likes
+      restaurant_id
+      title
+      id
+    }
   }
 }
     `;
@@ -15110,6 +15292,15 @@ export function getSdk(client: GraphQLClient, withWrapper: SdkFunctionWrapper = 
     },
     AddItemsToCart(variables?: AddItemsToCartMutationVariables, requestHeaders?: GraphQLClientRequestHeaders): Promise<AddItemsToCartMutation> {
       return withWrapper((wrappedRequestHeaders) => client.request<AddItemsToCartMutation>(AddItemsToCartDocument, variables, {...requestHeaders, ...wrappedRequestHeaders}), 'AddItemsToCart', 'mutation', variables);
+    },
+    addReelComment(variables?: AddReelCommentMutationVariables, requestHeaders?: GraphQLClientRequestHeaders): Promise<AddReelCommentMutation> {
+      return withWrapper((wrappedRequestHeaders) => client.request<AddReelCommentMutation>(AddReelCommentDocument, variables, {...requestHeaders, ...wrappedRequestHeaders}), 'addReelComment', 'mutation', variables);
+    },
+    GetComments(variables?: GetCommentsQueryVariables, requestHeaders?: GraphQLClientRequestHeaders): Promise<GetCommentsQuery> {
+      return withWrapper((wrappedRequestHeaders) => client.request<GetCommentsQuery>(GetCommentsDocument, variables, {...requestHeaders, ...wrappedRequestHeaders}), 'GetComments', 'query', variables);
+    },
+    GetCommentsWhereReelID(variables?: GetCommentsWhereReelIdQueryVariables, requestHeaders?: GraphQLClientRequestHeaders): Promise<GetCommentsWhereReelIdQuery> {
+      return withWrapper((wrappedRequestHeaders) => client.request<GetCommentsWhereReelIdQuery>(GetCommentsWhereReelIdDocument, variables, {...requestHeaders, ...wrappedRequestHeaders}), 'GetCommentsWhereReelID', 'query', variables);
     },
     getPaymentMethod(variables?: GetPaymentMethodQueryVariables, requestHeaders?: GraphQLClientRequestHeaders): Promise<GetPaymentMethodQuery> {
       return withWrapper((wrappedRequestHeaders) => client.request<GetPaymentMethodQuery>(GetPaymentMethodDocument, variables, {...requestHeaders, ...wrappedRequestHeaders}), 'getPaymentMethod', 'query', variables);
