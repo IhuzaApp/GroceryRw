@@ -14,7 +14,6 @@ import { useTheme } from "../../context/ThemeContext";
 import { GetServerSideProps } from "next";
 import ReloadIcon from "@rsuite/icons/Reload";
 import TrashIcon from "@rsuite/icons/Trash";
-import "./LogsTable.css"; // We'll create this file next
 
 const { Column, HeaderCell, Cell } = Table;
 

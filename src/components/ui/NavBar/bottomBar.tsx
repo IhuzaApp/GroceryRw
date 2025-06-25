@@ -99,110 +99,6 @@ export default function BottomBar() {
   return (
     <>
       {/* Floating Buttons (Ask, Help) */}
-      <div className="fixed bottom-20 left-0 z-50 flex w-full justify-center md:hidden">
-        {open && (
-          <div className="flex gap-4 rounded-lg bg-gray-50 p-2 shadow-lg">
-            <ActionButton
-              icon={
-                <svg
-                  width="30px"
-                  height="30px"
-                  viewBox="0 0 512 512"
-                  version="1.1"
-                  xmlns="http://www.w3.org/2000/svg"
-                  fill="#000000"
-                >
-                  <g id="SVGRepo_bgCarrier" strokeWidth="0"></g>
-                  <g
-                    id="SVGRepo_tracerCarrier"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  ></g>
-                  <g id="SVGRepo_iconCarrier">
-                    {" "}
-                    <title>support</title>{" "}
-                    <g
-                      id="Page-1"
-                      stroke="none"
-                      strokeWidth="1"
-                      fill="none"
-                      fillRule="evenodd"
-                    >
-                      {" "}
-                      <g
-                        id="support"
-                        fill="#7e018e"
-                        transform="translate(42.666667, 42.666667)"
-                      >
-                        {" "}
-                        <path d="M379.73 174.51C373.12 106.67 333.01 0 209.07 0C85.12 0 45.01 106.67 38.4 174.51C15.2 183.31 0 205.59 0 230.4V260.27C0 293.26 26.74 320 59.73 320C92.72 320 119.47 293.26 119.47 260.27V230.4C119.36 206.12 104.62 184.3 82.13 175.15C86.4 135.89 107.31 42.67 209.07 42.67C310.83 42.67 331.52 135.89 335.79 175.15C313.35 184.32 298.68 206.16 298.67 230.4V260.27C298.76 283.2 311.93 304.07 332.59 314.03C323.63 330.88 300.8 353.71 244.69 360.53C233.48 343.5 211.78 336.79 192.91 344.51C174.03 352.23 163.26 372.23 167.2 392.24C171.13 412.24 188.68 426.67 209.07 426.67C225.18 426.58 239.87 417.42 247.04 402.99C338.56 392.53 367.79 345.39 376.96 317.65C401.78 309.61 418.47 286.35 418.13 260.27V230.4C418.24 205.59 402.93 183.31 379.73 174.51ZM76.8 260.27C76.8 269.69 69.16 277.33 59.73 277.33C50.31 277.33 42.67 269.69 42.67 260.27V230.4C42.67 224.3 45.92 218.67 51.2 215.62C56.48 212.57 62.99 212.57 68.27 215.62C73.55 218.67 76.8 224.3 76.8 230.4V260.27ZM341.33 230.4C341.33 220.97 348.98 213.33 358.4 213.33C367.83 213.33 375.47 220.97 375.47 230.4V260.27C375.47 269.69 367.83 277.33 358.4 277.33C348.98 277.33 341.33 269.69 341.33 260.27V230.4Z" />
-                      </g>{" "}
-                    </g>{" "}
-                  </g>
-                </svg>
-              }
-              label="Ask Support"
-              onClick={() => {
-                router.push("/Support");
-              }}
-            />
-            <ActionButton
-              icon={
-                <svg
-                  width="30px"
-                  height="30px"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  xmlns="http://www.w3.org/2000/svg"
-                >
-                  <g id="SVGRepo_bgCarrier" strokeWidth="0"></g>
-                  <g
-                    id="SVGRepo_tracerCarrier"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  ></g>
-                  <g id="SVGRepo_iconCarrier">
-                    {" "}
-                    <path
-                      d="M4 8C4 5.17157 4 3.75736 4.87868 2.87868C5.75736 2 7.17157 2 10 2H14C16.8284 2 18.2426 2 19.1213 2.87868C20 3.75736 20 5.17157 20 8V16C20 18.8284 20 20.2426 19.1213 21.1213C18.2426 22 16.8284 22 14 22H10C7.17157 22 5.75736 22 4.87868 21.1213C4 20.2426 4 18.8284 4 16V8Z"
-                      stroke="#545454"
-                      strokeWidth="1.5"
-                    ></path>{" "}
-                    <path
-                      d="M19.8978 16H7.89778C6.96781 16 6.50282 16 6.12132 16.1022C5.08604 16.3796 4.2774 17.1883 4 18.2235"
-                      stroke="#545454"
-                      strokeWidth="1.5"
-                    ></path>{" "}
-                    <path
-                      opacity="0.5"
-                      d="M8 7H16"
-                      stroke="#545454"
-                      strokeWidth="1.5"
-                      strokeLinecap="round"
-                    ></path>{" "}
-                    <path
-                      opacity="0.5"
-                      d="M8 10.5H13"
-                      stroke="#545454"
-                      strokeWidth="1.5"
-                      strokeLinecap="round"
-                    ></path>{" "}
-                    <path
-                      opacity="0.5"
-                      d="M13 16V19.5309C13 19.8065 13 19.9443 12.9051 20C12.8103 20.0557 12.6806 19.9941 12.4211 19.8708L11.1789 19.2808C11.0911 19.2391 11.0472 19.2182 11 19.2182C10.9528 19.2182 10.9089 19.2391 10.8211 19.2808L9.57889 19.8708C9.31943 19.9941 9.18971 20.0557 9.09485 20C9 19.9443 9 19.8065 9 19.5309V16.45"
-                      stroke="#545454"
-                      strokeWidth="1.5"
-                      strokeLinecap="round"
-                    ></path>{" "}
-                  </g>
-                </svg>
-              }
-              label="Chief Recipe"
-              onClick={() => router.push("/Recipes")}
-            />
-          </div>
-        )}
-      </div>
 
       {/* Floating Cart Button (Lifted) */}
       <div className="fixed bottom-24 right-4 z-50 md:hidden">
@@ -602,7 +498,7 @@ export default function BottomBar() {
                     id="Page-1"
                     stroke="none"
                     strokeWidth="1"
-                    fill="none"
+                    fill="currentColor"
                     fillRule="evenodd"
                   >
                     {" "}
@@ -652,7 +548,7 @@ export default function BottomBar() {
           </button>
         </div>
         <NavItem
-          href="/Camera"
+          href="/Reels"
           icon={
             <svg
               width="30px"
@@ -669,24 +565,31 @@ export default function BottomBar() {
                 strokeLinejoin="round"
               ></g>
               <g id="SVGRepo_iconCarrier">
-                {" "}
-                <circle
-                  cx="12"
-                  cy="12"
-                  r="4"
-                  stroke="currentColor"
-                  strokeWidth="1.5"
-                ></circle>{" "}
                 <path
-                  d="M22 12C22 16.714 22 19.0711 20.5355 20.5355C19.0711 22 16.714 22 12 22C7.28595 22 4.92893 22 3.46447 20.5355C2 19.0711 2 16.714 2 12C2 7.28595 2 4.92893 3.46447 3.46447C4.92893 2 7.28595 2 12 2C16.714 2 19.0711 2 20.5355 3.46447C21.5093 4.43821 21.8356 5.80655 21.9449 8"
+                  d="M12 2L13.09 8.26L20 9L13.09 9.74L12 16L10.91 9.74L4 9L10.91 8.26L12 2Z"
                   stroke="currentColor"
                   strokeWidth="1.5"
                   strokeLinecap="round"
-                ></path>{" "}
+                  strokeLinejoin="round"
+                />
+                <path
+                  d="M19 15L19.5 16.5L21 17L19.5 17.5L19 19L18.5 17.5L17 17L18.5 16.5L19 15Z"
+                  stroke="currentColor"
+                  strokeWidth="1.5"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+                <path
+                  d="M5 15L5.5 16.5L7 17L5.5 17.5L5 19L4.5 17.5L3 17L4.5 16.5L5 15Z"
+                  stroke="currentColor"
+                  strokeWidth="1.5"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
               </g>
             </svg>
           }
-          label="Camera"
+          label="Reels"
         />
         <NavItem
           href="/Myprofile"

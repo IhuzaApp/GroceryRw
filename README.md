@@ -1686,3 +1686,29 @@ For technical issues or questions, please contact:
 
 - Technical Support: support@example.com
 - Bug Reports: bugs@example.com
+
+## Nearby Dasher Notification Logic
+
+The API route at `pages/api/queries/notify-nearby-dashers.ts` is responsible for notifying available dashers (shoppers) about new batches (orders) at nearby shops. This helps dashers quickly claim new work in their area.
+
+**How it works:**
+
+1. **Fetch Recent Batches:**
+   - Finds all orders with status `PENDING` created in the last 20 minutes.
+2. **Fetch Available Dashers:**
+   - Gets all dashers who are currently available, along with their last known location.
+3. **Group Batches by Shop:**
+   - Groups the available batches by their shop.
+4. **Calculate Distance:**
+   - For each dasher, calculates the travel time (in minutes) from their last known location to each shop with available batches, using the Google Maps Distance Matrix API.
+5. **Find Nearby Batches:**
+   - If a shop is within 10 minutes travel time of a dasher, all its batches are considered "nearby" for that dasher.
+6. **Create Notification:**
+   - If there are any nearby batches for a dasher, a notification is created for that dasher, summarizing how many new batches are available and at which shops.
+7. **Insert Notifications:**
+   - All notifications are inserted into the database in a single batch.
+
+**Purpose:**
+
+- This endpoint is typically triggered by a scheduled job or backend process every few minutes to proactively alert dashers about new work opportunities close to them.
+- Dashers receive a notification if there are new batches at shops within a 10-minute travel distance, so they can act quickly to claim those orders.
