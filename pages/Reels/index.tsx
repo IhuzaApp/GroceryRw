@@ -415,7 +415,7 @@ export default function FoodReelsApp() {
     // Convert comments
     const commentsList: Comment[] = dbReel.Reels_comments.map((comment) => ({
       id: comment.id,
-      user: {
+    user: {
         name: comment.User.name,
         avatar: comment.User.profile_picture || "/placeholder.svg?height=32&width=32",
         verified: comment.User.role === "admin" || comment.User.role === "verified",
@@ -430,18 +430,18 @@ export default function FoodReelsApp() {
     const basePost: BasePost = {
       id: dbReel.id,
       type: dbReel.type as PostType,
-      creator: {
+    creator: {
         name: dbReel.User.name,
         avatar: dbReel.User.profile_picture || "/placeholder.svg?height=40&width=40",
         verified: dbReel.User.role === "admin" || dbReel.User.role === "verified",
-      },
-      content: {
+    },
+    content: {
         title: dbReel.title,
         description: dbReel.description,
         video: dbReel.video_url,
         category: dbReel.category,
-      },
-      stats: {
+    },
+    stats: {
         likes: dbReel.reel_likes.length, // Use actual likes count from reel_likes
         comments: dbReel.Reels_comments.length,
       },
@@ -455,7 +455,7 @@ export default function FoodReelsApp() {
         return {
           ...basePost,
           type: "restaurant",
-          restaurant: {
+    restaurant: {
             rating: 4.5, // Default rating, could be fetched from restaurant data
             reviews: 100, // Default reviews
             location: dbReel.Restaurant?.location || "Location not available",
@@ -468,8 +468,8 @@ export default function FoodReelsApp() {
         const product = dbReel.Product || {};
         return {
           ...basePost,
-          type: "supermarket",
-          product: {
+    type: "supermarket",
+    product: {
             price: parseFloat(dbReel.Price || "0"),
             originalPrice: product.originalPrice || undefined,
             store: dbReel.Restaurant?.name || "Store not available",
@@ -482,8 +482,8 @@ export default function FoodReelsApp() {
         const recipe = dbReel.Product || {};
         return {
           ...basePost,
-          type: "chef",
-          recipe: {
+    type: "chef",
+    recipe: {
             difficulty: recipe.difficulty || "Medium",
             cookTime: recipe.cookTime || "1 hour",
             servings: recipe.servings || 4,
@@ -627,22 +627,22 @@ export default function FoodReelsApp() {
       const isCurrentlyLiked = currentPost.isLiked;
       
       // Immediately update UI for instant feedback
-      setPosts(
+    setPosts(
         posts.map((post: FoodPost) =>
-          post.id === postId
-            ? {
-                ...post,
+        post.id === postId
+          ? {
+              ...post,
                 isLiked: !isCurrentlyLiked,
-                stats: {
-                  ...post.stats,
+              stats: {
+                ...post.stats,
                   likes: isCurrentlyLiked 
                     ? Math.max(0, post.stats.likes - 1)
-                    : post.stats.likes + 1,
-                },
-              }
-            : post
-        )
-      );
+                  : post.stats.likes + 1,
+              },
+            }
+          : post
+      )
+    );
 
       // Process backend request in background
       const method = isCurrentlyLiked ? 'DELETE' : 'POST';
@@ -687,24 +687,24 @@ export default function FoodReelsApp() {
 
       if (response.ok) {
         const result = await response.json();
-        setPosts(
+    setPosts(
           posts.map((post: FoodPost) =>
-            post.id === postId
-              ? {
-                  ...post,
+        post.id === postId
+          ? {
+              ...post,
                   commentsList: post.commentsList.map((comment: Comment) =>
-                    comment.id === commentId
-                      ? {
-                          ...comment,
+                comment.id === commentId
+                  ? {
+                      ...comment,
                           isLiked: result.isLiked,
                           likes: parseInt(result.likes),
-                        }
-                      : comment
-                  ),
-                }
-              : post
-          )
-        );
+                    }
+                  : comment
+              ),
+            }
+          : post
+      )
+    );
       }
     } catch (error) {
       console.error('Error toggling comment like:', error);
@@ -716,16 +716,16 @@ export default function FoodReelsApp() {
       // Create optimistic comment for immediate UI update
       const optimisticComment: Comment = {
         id: `temp-${Date.now()}`,
-        user: {
+      user: {
           name: session?.user?.name || "You",
           avatar: session?.user?.image || "/placeholder.svg?height=32&width=32",
           verified: false,
-        },
-        text: commentText,
-        timestamp: "now",
-        likes: 0,
-        isLiked: false,
-      };
+      },
+      text: commentText,
+      timestamp: "now",
+      likes: 0,
+      isLiked: false,
+    };
 
       // Add to optimisticComments state
       setOptimisticComments((prev) => ({
@@ -734,19 +734,19 @@ export default function FoodReelsApp() {
       }));
 
       // Optimistic update - add comment immediately to UI
-      setPosts(
+    setPosts(
         posts.map((post: FoodPost) =>
-          post.id === postId
-            ? {
-                ...post,
-                stats: {
-                  ...post.stats,
-                  comments: post.stats.comments + 1,
-                },
-              }
-            : post
-        )
-      );
+        post.id === postId
+          ? {
+              ...post,
+              stats: {
+                ...post.stats,
+                comments: post.stats.comments + 1,
+              },
+            }
+          : post
+      )
+    );
 
       // Make API call to add comment
       const response = await fetch('/api/queries/reel-comments', {
