@@ -4645,6 +4645,10 @@ export type Reels = {
   id: Scalars['uuid']['output'];
   isLiked: Scalars['Boolean']['output'];
   likes?: Maybe<Scalars['String']['output']>;
+  /** An array relationship */
+  reel_likes: Array<Reel_Likes>;
+  /** An aggregate relationship */
+  reel_likes_aggregate: Reel_Likes_Aggregate;
   restaurant_id?: Maybe<Scalars['uuid']['output']>;
   title: Scalars['String']['output'];
   type: Scalars['String']['output'];
@@ -4676,6 +4680,26 @@ export type ReelsReels_Comments_AggregateArgs = {
   offset?: InputMaybe<Scalars['Int']['input']>;
   order_by?: InputMaybe<Array<Reels_Comments_Order_By>>;
   where?: InputMaybe<Reels_Comments_Bool_Exp>;
+};
+
+
+/** columns and relationships of "Reels" */
+export type ReelsReel_LikesArgs = {
+  distinct_on?: InputMaybe<Array<Reel_Likes_Select_Column>>;
+  limit?: InputMaybe<Scalars['Int']['input']>;
+  offset?: InputMaybe<Scalars['Int']['input']>;
+  order_by?: InputMaybe<Array<Reel_Likes_Order_By>>;
+  where?: InputMaybe<Reel_Likes_Bool_Exp>;
+};
+
+
+/** columns and relationships of "Reels" */
+export type ReelsReel_Likes_AggregateArgs = {
+  distinct_on?: InputMaybe<Array<Reel_Likes_Select_Column>>;
+  limit?: InputMaybe<Scalars['Int']['input']>;
+  offset?: InputMaybe<Scalars['Int']['input']>;
+  order_by?: InputMaybe<Array<Reel_Likes_Order_By>>;
+  where?: InputMaybe<Reel_Likes_Bool_Exp>;
 };
 
 /** aggregated selection of "Reels" */
@@ -4762,6 +4786,8 @@ export type Reels_Bool_Exp = {
   id?: InputMaybe<Uuid_Comparison_Exp>;
   isLiked?: InputMaybe<Boolean_Comparison_Exp>;
   likes?: InputMaybe<String_Comparison_Exp>;
+  reel_likes?: InputMaybe<Reel_Likes_Bool_Exp>;
+  reel_likes_aggregate?: InputMaybe<Reel_Likes_Aggregate_Bool_Exp>;
   restaurant_id?: InputMaybe<Uuid_Comparison_Exp>;
   title?: InputMaybe<String_Comparison_Exp>;
   type?: InputMaybe<String_Comparison_Exp>;
@@ -5067,6 +5093,7 @@ export type Reels_Insert_Input = {
   id?: InputMaybe<Scalars['uuid']['input']>;
   isLiked?: InputMaybe<Scalars['Boolean']['input']>;
   likes?: InputMaybe<Scalars['String']['input']>;
+  reel_likes?: InputMaybe<Reel_Likes_Arr_Rel_Insert_Input>;
   restaurant_id?: InputMaybe<Scalars['uuid']['input']>;
   title?: InputMaybe<Scalars['String']['input']>;
   type?: InputMaybe<Scalars['String']['input']>;
@@ -5174,6 +5201,7 @@ export type Reels_Order_By = {
   id?: InputMaybe<Order_By>;
   isLiked?: InputMaybe<Order_By>;
   likes?: InputMaybe<Order_By>;
+  reel_likes_aggregate?: InputMaybe<Reel_Likes_Aggregate_Order_By>;
   restaurant_id?: InputMaybe<Order_By>;
   title?: InputMaybe<Order_By>;
   type?: InputMaybe<Order_By>;
@@ -8823,6 +8851,10 @@ export type Mutation_Root = {
   delete_promotions?: Maybe<Promotions_Mutation_Response>;
   /** delete single row from the table: "promotions" */
   delete_promotions_by_pk?: Maybe<Promotions>;
+  /** delete data from the table: "reel_likes" */
+  delete_reel_likes?: Maybe<Reel_Likes_Mutation_Response>;
+  /** delete single row from the table: "reel_likes" */
+  delete_reel_likes_by_pk?: Maybe<Reel_Likes>;
   /** delete data from the table: "shoppers" */
   delete_shoppers?: Maybe<Shoppers_Mutation_Response>;
   /** delete single row from the table: "shoppers" */
@@ -8943,6 +8975,10 @@ export type Mutation_Root = {
   insert_promotions?: Maybe<Promotions_Mutation_Response>;
   /** insert a single row into the table: "promotions" */
   insert_promotions_one?: Maybe<Promotions>;
+  /** insert data into the table: "reel_likes" */
+  insert_reel_likes?: Maybe<Reel_Likes_Mutation_Response>;
+  /** insert a single row into the table: "reel_likes" */
+  insert_reel_likes_one?: Maybe<Reel_Likes>;
   /** insert data into the table: "shoppers" */
   insert_shoppers?: Maybe<Shoppers_Mutation_Response>;
   /** insert a single row into the table: "shoppers" */
@@ -9117,6 +9153,12 @@ export type Mutation_Root = {
   update_promotions_by_pk?: Maybe<Promotions>;
   /** update multiples rows of table: "promotions" */
   update_promotions_many?: Maybe<Array<Maybe<Promotions_Mutation_Response>>>;
+  /** update data of the table: "reel_likes" */
+  update_reel_likes?: Maybe<Reel_Likes_Mutation_Response>;
+  /** update single row of the table: "reel_likes" */
+  update_reel_likes_by_pk?: Maybe<Reel_Likes>;
+  /** update multiples rows of table: "reel_likes" */
+  update_reel_likes_many?: Maybe<Array<Maybe<Reel_Likes_Mutation_Response>>>;
   /** update data of the table: "shoppers" */
   update_shoppers?: Maybe<Shoppers_Mutation_Response>;
   /** update single row of the table: "shoppers" */
@@ -9458,6 +9500,18 @@ export type Mutation_RootDelete_PromotionsArgs = {
 
 /** mutation root */
 export type Mutation_RootDelete_Promotions_By_PkArgs = {
+  id: Scalars['uuid']['input'];
+};
+
+
+/** mutation root */
+export type Mutation_RootDelete_Reel_LikesArgs = {
+  where: Reel_Likes_Bool_Exp;
+};
+
+
+/** mutation root */
+export type Mutation_RootDelete_Reel_Likes_By_PkArgs = {
   id: Scalars['uuid']['input'];
 };
 
@@ -9873,6 +9927,20 @@ export type Mutation_RootInsert_PromotionsArgs = {
 export type Mutation_RootInsert_Promotions_OneArgs = {
   object: Promotions_Insert_Input;
   on_conflict?: InputMaybe<Promotions_On_Conflict>;
+};
+
+
+/** mutation root */
+export type Mutation_RootInsert_Reel_LikesArgs = {
+  objects: Array<Reel_Likes_Insert_Input>;
+  on_conflict?: InputMaybe<Reel_Likes_On_Conflict>;
+};
+
+
+/** mutation root */
+export type Mutation_RootInsert_Reel_Likes_OneArgs = {
+  object: Reel_Likes_Insert_Input;
+  on_conflict?: InputMaybe<Reel_Likes_On_Conflict>;
 };
 
 
@@ -10487,6 +10555,26 @@ export type Mutation_RootUpdate_Promotions_By_PkArgs = {
 /** mutation root */
 export type Mutation_RootUpdate_Promotions_ManyArgs = {
   updates: Array<Promotions_Updates>;
+};
+
+
+/** mutation root */
+export type Mutation_RootUpdate_Reel_LikesArgs = {
+  _set?: InputMaybe<Reel_Likes_Set_Input>;
+  where: Reel_Likes_Bool_Exp;
+};
+
+
+/** mutation root */
+export type Mutation_RootUpdate_Reel_Likes_By_PkArgs = {
+  _set?: InputMaybe<Reel_Likes_Set_Input>;
+  pk_columns: Reel_Likes_Pk_Columns_Input;
+};
+
+
+/** mutation root */
+export type Mutation_RootUpdate_Reel_Likes_ManyArgs = {
+  updates: Array<Reel_Likes_Updates>;
 };
 
 
@@ -11207,6 +11295,12 @@ export type Query_Root = {
   promotions_aggregate: Promotions_Aggregate;
   /** fetch data from the table: "promotions" using primary key columns */
   promotions_by_pk?: Maybe<Promotions>;
+  /** An array relationship */
+  reel_likes: Array<Reel_Likes>;
+  /** An aggregate relationship */
+  reel_likes_aggregate: Reel_Likes_Aggregate;
+  /** fetch data from the table: "reel_likes" using primary key columns */
+  reel_likes_by_pk?: Maybe<Reel_Likes>;
   /** fetch data from the table: "shoppers" */
   shoppers: Array<Shoppers>;
   /** fetch aggregated fields from the table: "shoppers" */
@@ -11849,6 +11943,29 @@ export type Query_RootPromotions_By_PkArgs = {
 };
 
 
+export type Query_RootReel_LikesArgs = {
+  distinct_on?: InputMaybe<Array<Reel_Likes_Select_Column>>;
+  limit?: InputMaybe<Scalars['Int']['input']>;
+  offset?: InputMaybe<Scalars['Int']['input']>;
+  order_by?: InputMaybe<Array<Reel_Likes_Order_By>>;
+  where?: InputMaybe<Reel_Likes_Bool_Exp>;
+};
+
+
+export type Query_RootReel_Likes_AggregateArgs = {
+  distinct_on?: InputMaybe<Array<Reel_Likes_Select_Column>>;
+  limit?: InputMaybe<Scalars['Int']['input']>;
+  offset?: InputMaybe<Scalars['Int']['input']>;
+  order_by?: InputMaybe<Array<Reel_Likes_Order_By>>;
+  where?: InputMaybe<Reel_Likes_Bool_Exp>;
+};
+
+
+export type Query_RootReel_Likes_By_PkArgs = {
+  id: Scalars['uuid']['input'];
+};
+
+
 export type Query_RootShoppersArgs = {
   distinct_on?: InputMaybe<Array<Shoppers_Select_Column>>;
   limit?: InputMaybe<Scalars['Int']['input']>;
@@ -11915,6 +12032,196 @@ export type Query_RootVehicles_AggregateArgs = {
 
 export type Query_RootVehicles_By_PkArgs = {
   id: Scalars['uuid']['input'];
+};
+
+/** columns and relationships of "reel_likes" */
+export type Reel_Likes = {
+  created_at: Scalars['timestamptz']['output'];
+  id: Scalars['uuid']['output'];
+  reel_id: Scalars['uuid']['output'];
+  user_id: Scalars['uuid']['output'];
+};
+
+/** aggregated selection of "reel_likes" */
+export type Reel_Likes_Aggregate = {
+  aggregate?: Maybe<Reel_Likes_Aggregate_Fields>;
+  nodes: Array<Reel_Likes>;
+};
+
+export type Reel_Likes_Aggregate_Bool_Exp = {
+  count?: InputMaybe<Reel_Likes_Aggregate_Bool_Exp_Count>;
+};
+
+export type Reel_Likes_Aggregate_Bool_Exp_Count = {
+  arguments?: InputMaybe<Array<Reel_Likes_Select_Column>>;
+  distinct?: InputMaybe<Scalars['Boolean']['input']>;
+  filter?: InputMaybe<Reel_Likes_Bool_Exp>;
+  predicate: Int_Comparison_Exp;
+};
+
+/** aggregate fields of "reel_likes" */
+export type Reel_Likes_Aggregate_Fields = {
+  count: Scalars['Int']['output'];
+  max?: Maybe<Reel_Likes_Max_Fields>;
+  min?: Maybe<Reel_Likes_Min_Fields>;
+};
+
+
+/** aggregate fields of "reel_likes" */
+export type Reel_Likes_Aggregate_FieldsCountArgs = {
+  columns?: InputMaybe<Array<Reel_Likes_Select_Column>>;
+  distinct?: InputMaybe<Scalars['Boolean']['input']>;
+};
+
+/** order by aggregate values of table "reel_likes" */
+export type Reel_Likes_Aggregate_Order_By = {
+  count?: InputMaybe<Order_By>;
+  max?: InputMaybe<Reel_Likes_Max_Order_By>;
+  min?: InputMaybe<Reel_Likes_Min_Order_By>;
+};
+
+/** input type for inserting array relation for remote table "reel_likes" */
+export type Reel_Likes_Arr_Rel_Insert_Input = {
+  data: Array<Reel_Likes_Insert_Input>;
+  /** upsert condition */
+  on_conflict?: InputMaybe<Reel_Likes_On_Conflict>;
+};
+
+/** Boolean expression to filter rows from the table "reel_likes". All fields are combined with a logical 'AND'. */
+export type Reel_Likes_Bool_Exp = {
+  _and?: InputMaybe<Array<Reel_Likes_Bool_Exp>>;
+  _not?: InputMaybe<Reel_Likes_Bool_Exp>;
+  _or?: InputMaybe<Array<Reel_Likes_Bool_Exp>>;
+  created_at?: InputMaybe<Timestamptz_Comparison_Exp>;
+  id?: InputMaybe<Uuid_Comparison_Exp>;
+  reel_id?: InputMaybe<Uuid_Comparison_Exp>;
+  user_id?: InputMaybe<Uuid_Comparison_Exp>;
+};
+
+/** unique or primary key constraints on table "reel_likes" */
+export type Reel_Likes_Constraint =
+  /** unique or primary key constraint on columns "id" */
+  | 'reel_likes_pkey';
+
+/** input type for inserting data into table "reel_likes" */
+export type Reel_Likes_Insert_Input = {
+  created_at?: InputMaybe<Scalars['timestamptz']['input']>;
+  id?: InputMaybe<Scalars['uuid']['input']>;
+  reel_id?: InputMaybe<Scalars['uuid']['input']>;
+  user_id?: InputMaybe<Scalars['uuid']['input']>;
+};
+
+/** aggregate max on columns */
+export type Reel_Likes_Max_Fields = {
+  created_at?: Maybe<Scalars['timestamptz']['output']>;
+  id?: Maybe<Scalars['uuid']['output']>;
+  reel_id?: Maybe<Scalars['uuid']['output']>;
+  user_id?: Maybe<Scalars['uuid']['output']>;
+};
+
+/** order by max() on columns of table "reel_likes" */
+export type Reel_Likes_Max_Order_By = {
+  created_at?: InputMaybe<Order_By>;
+  id?: InputMaybe<Order_By>;
+  reel_id?: InputMaybe<Order_By>;
+  user_id?: InputMaybe<Order_By>;
+};
+
+/** aggregate min on columns */
+export type Reel_Likes_Min_Fields = {
+  created_at?: Maybe<Scalars['timestamptz']['output']>;
+  id?: Maybe<Scalars['uuid']['output']>;
+  reel_id?: Maybe<Scalars['uuid']['output']>;
+  user_id?: Maybe<Scalars['uuid']['output']>;
+};
+
+/** order by min() on columns of table "reel_likes" */
+export type Reel_Likes_Min_Order_By = {
+  created_at?: InputMaybe<Order_By>;
+  id?: InputMaybe<Order_By>;
+  reel_id?: InputMaybe<Order_By>;
+  user_id?: InputMaybe<Order_By>;
+};
+
+/** response of any mutation on the table "reel_likes" */
+export type Reel_Likes_Mutation_Response = {
+  /** number of rows affected by the mutation */
+  affected_rows: Scalars['Int']['output'];
+  /** data from the rows affected by the mutation */
+  returning: Array<Reel_Likes>;
+};
+
+/** on_conflict condition type for table "reel_likes" */
+export type Reel_Likes_On_Conflict = {
+  constraint: Reel_Likes_Constraint;
+  update_columns?: Array<Reel_Likes_Update_Column>;
+  where?: InputMaybe<Reel_Likes_Bool_Exp>;
+};
+
+/** Ordering options when selecting data from "reel_likes". */
+export type Reel_Likes_Order_By = {
+  created_at?: InputMaybe<Order_By>;
+  id?: InputMaybe<Order_By>;
+  reel_id?: InputMaybe<Order_By>;
+  user_id?: InputMaybe<Order_By>;
+};
+
+/** primary key columns input for table: reel_likes */
+export type Reel_Likes_Pk_Columns_Input = {
+  id: Scalars['uuid']['input'];
+};
+
+/** select columns of table "reel_likes" */
+export type Reel_Likes_Select_Column =
+  /** column name */
+  | 'created_at'
+  /** column name */
+  | 'id'
+  /** column name */
+  | 'reel_id'
+  /** column name */
+  | 'user_id';
+
+/** input type for updating data in table "reel_likes" */
+export type Reel_Likes_Set_Input = {
+  created_at?: InputMaybe<Scalars['timestamptz']['input']>;
+  id?: InputMaybe<Scalars['uuid']['input']>;
+  reel_id?: InputMaybe<Scalars['uuid']['input']>;
+  user_id?: InputMaybe<Scalars['uuid']['input']>;
+};
+
+/** Streaming cursor of the table "reel_likes" */
+export type Reel_Likes_Stream_Cursor_Input = {
+  /** Stream column input with initial value */
+  initial_value: Reel_Likes_Stream_Cursor_Value_Input;
+  /** cursor ordering */
+  ordering?: InputMaybe<Cursor_Ordering>;
+};
+
+/** Initial value of the column from where the streaming should start */
+export type Reel_Likes_Stream_Cursor_Value_Input = {
+  created_at?: InputMaybe<Scalars['timestamptz']['input']>;
+  id?: InputMaybe<Scalars['uuid']['input']>;
+  reel_id?: InputMaybe<Scalars['uuid']['input']>;
+  user_id?: InputMaybe<Scalars['uuid']['input']>;
+};
+
+/** update columns of table "reel_likes" */
+export type Reel_Likes_Update_Column =
+  /** column name */
+  | 'created_at'
+  /** column name */
+  | 'id'
+  /** column name */
+  | 'reel_id'
+  /** column name */
+  | 'user_id';
+
+export type Reel_Likes_Updates = {
+  /** sets the columns of the filtered rows to the given values */
+  _set?: InputMaybe<Reel_Likes_Set_Input>;
+  /** filter the rows which have to be updated */
+  where: Reel_Likes_Bool_Exp;
 };
 
 /** columns and relationships of "shoppers" */
@@ -12496,6 +12803,14 @@ export type Subscription_Root = {
   promotions_by_pk?: Maybe<Promotions>;
   /** fetch data from the table in a streaming manner: "promotions" */
   promotions_stream: Array<Promotions>;
+  /** An array relationship */
+  reel_likes: Array<Reel_Likes>;
+  /** An aggregate relationship */
+  reel_likes_aggregate: Reel_Likes_Aggregate;
+  /** fetch data from the table: "reel_likes" using primary key columns */
+  reel_likes_by_pk?: Maybe<Reel_Likes>;
+  /** fetch data from the table in a streaming manner: "reel_likes" */
+  reel_likes_stream: Array<Reel_Likes>;
   /** fetch data from the table: "shoppers" */
   shoppers: Array<Shoppers>;
   /** fetch aggregated fields from the table: "shoppers" */
@@ -13333,6 +13648,36 @@ export type Subscription_RootPromotions_StreamArgs = {
 };
 
 
+export type Subscription_RootReel_LikesArgs = {
+  distinct_on?: InputMaybe<Array<Reel_Likes_Select_Column>>;
+  limit?: InputMaybe<Scalars['Int']['input']>;
+  offset?: InputMaybe<Scalars['Int']['input']>;
+  order_by?: InputMaybe<Array<Reel_Likes_Order_By>>;
+  where?: InputMaybe<Reel_Likes_Bool_Exp>;
+};
+
+
+export type Subscription_RootReel_Likes_AggregateArgs = {
+  distinct_on?: InputMaybe<Array<Reel_Likes_Select_Column>>;
+  limit?: InputMaybe<Scalars['Int']['input']>;
+  offset?: InputMaybe<Scalars['Int']['input']>;
+  order_by?: InputMaybe<Array<Reel_Likes_Order_By>>;
+  where?: InputMaybe<Reel_Likes_Bool_Exp>;
+};
+
+
+export type Subscription_RootReel_Likes_By_PkArgs = {
+  id: Scalars['uuid']['input'];
+};
+
+
+export type Subscription_RootReel_Likes_StreamArgs = {
+  batch_size: Scalars['Int']['input'];
+  cursor: Array<InputMaybe<Reel_Likes_Stream_Cursor_Input>>;
+  where?: InputMaybe<Reel_Likes_Bool_Exp>;
+};
+
+
 export type Subscription_RootShoppersArgs = {
   distinct_on?: InputMaybe<Array<Shoppers_Select_Column>>;
   limit?: InputMaybe<Scalars['Int']['input']>;
@@ -14119,7 +14464,7 @@ export type GetProductsQuery = { Products: Array<{ id: string, name: string, des
 export type GetAllReelsQueryVariables = Exact<{ [key: string]: never; }>;
 
 
-export type GetAllReelsQuery = { Reels: Array<{ category: string, created_on: string, description: string, id: string, isLiked: boolean, likes?: string | null, restaurant_id?: string | null, title: string, type: string, user_id?: string | null, video_url: string, delivery_time?: string | null, Price: string, Product?: any | null, User?: { email: string, gender: string, id: string, is_active: boolean, name: string, created_at: string, role: string, phone: string, profile_picture?: string | null } | null, Restaurant?: { created_at: string, email: string, id: string, lat: string, location: string, long: string, name: string, phone: string, profile: string, verified: boolean } | null, Reels_comments: Array<{ user_id: string, text: string, reel_id: string, likes: string, isLiked: boolean, id: string, created_on: string, User: { gender: string, email: string, name: string, phone: string, role: string } }> }> };
+export type GetAllReelsQuery = { Reels: Array<{ category: string, created_on: string, description: string, id: string, isLiked: boolean, likes?: string | null, restaurant_id?: string | null, title: string, type: string, user_id?: string | null, video_url: string, delivery_time?: string | null, Price: string, Product?: any | null, User?: { email: string, gender: string, id: string, is_active: boolean, name: string, created_at: string, role: string, phone: string, profile_picture?: string | null } | null, Restaurant?: { created_at: string, email: string, id: string, lat: string, location: string, long: string, name: string, phone: string, profile: string, verified: boolean } | null, Reels_comments: Array<{ user_id: string, text: string, reel_id: string, likes: string, isLiked: boolean, id: string, created_on: string, User: { gender: string, email: string, name: string, phone: string, role: string } }>, reel_likes: Array<{ created_at: string, id: string, reel_id: string, user_id: string }> }> };
 
 export type AddReelsMutationVariables = Exact<{
   category?: InputMaybe<Scalars['String']['input']>;
@@ -14230,6 +14575,13 @@ export type CheckOrderRatingQueryVariables = Exact<{
 
 
 export type CheckOrderRatingQuery = { Ratings: Array<{ id: string }> };
+
+export type GetReelsLikesQueryVariables = Exact<{
+  reel_id?: InputMaybe<Scalars['uuid']['input']>;
+}>;
+
+
+export type GetReelsLikesQuery = { reel_likes: Array<{ created_at: string, id: string, reel_id: string, user_id: string }> };
 
 export type GetAllREfundsQueryVariables = Exact<{ [key: string]: never; }>;
 
@@ -14732,6 +15084,12 @@ export const GetAllReelsDocument = gql`
     delivery_time
     Price
     Product
+    reel_likes {
+      created_at
+      id
+      reel_id
+      user_id
+    }
   }
 }
     `;
@@ -15021,6 +15379,16 @@ export const CheckOrderRatingDocument = gql`
     query CheckOrderRating($orderId: uuid!) {
   Ratings(where: {order_id: {_eq: $orderId}}) {
     id
+  }
+}
+    `;
+export const GetReelsLikesDocument = gql`
+    query GetReelsLikes($reel_id: uuid = "") {
+  reel_likes(where: {reel_id: {_eq: $reel_id}}) {
+    created_at
+    id
+    reel_id
+    user_id
   }
 }
     `;
@@ -15322,6 +15690,9 @@ export function getSdk(client: GraphQLClient, withWrapper: SdkFunctionWrapper = 
     },
     CheckOrderRating(variables: CheckOrderRatingQueryVariables, requestHeaders?: GraphQLClientRequestHeaders): Promise<CheckOrderRatingQuery> {
       return withWrapper((wrappedRequestHeaders) => client.request<CheckOrderRatingQuery>(CheckOrderRatingDocument, variables, {...requestHeaders, ...wrappedRequestHeaders}), 'CheckOrderRating', 'query', variables);
+    },
+    GetReelsLikes(variables?: GetReelsLikesQueryVariables, requestHeaders?: GraphQLClientRequestHeaders): Promise<GetReelsLikesQuery> {
+      return withWrapper((wrappedRequestHeaders) => client.request<GetReelsLikesQuery>(GetReelsLikesDocument, variables, {...requestHeaders, ...wrappedRequestHeaders}), 'GetReelsLikes', 'query', variables);
     },
     getAllREfunds(variables?: GetAllREfundsQueryVariables, requestHeaders?: GraphQLClientRequestHeaders): Promise<GetAllREfundsQuery> {
       return withWrapper((wrappedRequestHeaders) => client.request<GetAllREfundsQuery>(GetAllREfundsDocument, variables, {...requestHeaders, ...wrappedRequestHeaders}), 'getAllREfunds', 'query', variables);
