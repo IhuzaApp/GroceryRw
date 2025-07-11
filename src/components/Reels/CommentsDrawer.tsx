@@ -305,7 +305,7 @@ export default function CommentsDrawer({
           style={{
             display: "flex",
             alignItems: "center",
-            justifyContent: "space-between",
+            justifyContent: "center",
             padding: isMobile ? "12px 16px" : "16px 20px",
             borderBottom: `1px solid ${borderColor}`,
             backgroundColor: bgColor,
@@ -336,14 +336,6 @@ export default function CommentsDrawer({
               />
             )}
           </div>
-          <Button
-            appearance="ghost"
-            size="sm"
-            onClick={onClose}
-            style={{ color: textColor }}
-          >
-            <XIcon />
-          </Button>
         </div>
 
         {/* Body */}
