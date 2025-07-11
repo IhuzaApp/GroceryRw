@@ -37,6 +37,10 @@ export type Addresses = {
   latitude: Scalars['String']['output'];
   longitude: Scalars['String']['output'];
   postal_code?: Maybe<Scalars['String']['output']>;
+  /** An array relationship */
+  reel_orders: Array<Reel_Orders>;
+  /** An aggregate relationship */
+  reel_orders_aggregate: Reel_Orders_Aggregate;
   street: Scalars['String']['output'];
   updated_at?: Maybe<Scalars['String']['output']>;
   user_id: Scalars['uuid']['output'];
@@ -60,6 +64,26 @@ export type AddressesOrders_AggregateArgs = {
   offset?: InputMaybe<Scalars['Int']['input']>;
   order_by?: InputMaybe<Array<Orders_Order_By>>;
   where?: InputMaybe<Orders_Bool_Exp>;
+};
+
+
+/** Addresses */
+export type AddressesReel_OrdersArgs = {
+  distinct_on?: InputMaybe<Array<Reel_Orders_Select_Column>>;
+  limit?: InputMaybe<Scalars['Int']['input']>;
+  offset?: InputMaybe<Scalars['Int']['input']>;
+  order_by?: InputMaybe<Array<Reel_Orders_Order_By>>;
+  where?: InputMaybe<Reel_Orders_Bool_Exp>;
+};
+
+
+/** Addresses */
+export type AddressesReel_Orders_AggregateArgs = {
+  distinct_on?: InputMaybe<Array<Reel_Orders_Select_Column>>;
+  limit?: InputMaybe<Scalars['Int']['input']>;
+  offset?: InputMaybe<Scalars['Int']['input']>;
+  order_by?: InputMaybe<Array<Reel_Orders_Order_By>>;
+  where?: InputMaybe<Reel_Orders_Bool_Exp>;
 };
 
 /** aggregated selection of "Addresses" */
@@ -138,6 +162,8 @@ export type Addresses_Bool_Exp = {
   latitude?: InputMaybe<String_Comparison_Exp>;
   longitude?: InputMaybe<String_Comparison_Exp>;
   postal_code?: InputMaybe<String_Comparison_Exp>;
+  reel_orders?: InputMaybe<Reel_Orders_Bool_Exp>;
+  reel_orders_aggregate?: InputMaybe<Reel_Orders_Aggregate_Bool_Exp>;
   street?: InputMaybe<String_Comparison_Exp>;
   updated_at?: InputMaybe<String_Comparison_Exp>;
   user_id?: InputMaybe<Uuid_Comparison_Exp>;
@@ -159,6 +185,7 @@ export type Addresses_Insert_Input = {
   latitude?: InputMaybe<Scalars['String']['input']>;
   longitude?: InputMaybe<Scalars['String']['input']>;
   postal_code?: InputMaybe<Scalars['String']['input']>;
+  reel_orders?: InputMaybe<Reel_Orders_Arr_Rel_Insert_Input>;
   street?: InputMaybe<Scalars['String']['input']>;
   updated_at?: InputMaybe<Scalars['String']['input']>;
   user_id?: InputMaybe<Scalars['uuid']['input']>;
@@ -249,6 +276,7 @@ export type Addresses_Order_By = {
   latitude?: InputMaybe<Order_By>;
   longitude?: InputMaybe<Order_By>;
   postal_code?: InputMaybe<Order_By>;
+  reel_orders_aggregate?: InputMaybe<Reel_Orders_Aggregate_Order_By>;
   street?: InputMaybe<Order_By>;
   updated_at?: InputMaybe<Order_By>;
   user_id?: InputMaybe<Order_By>;
@@ -4649,6 +4677,10 @@ export type Reels = {
   reel_likes: Array<Reel_Likes>;
   /** An aggregate relationship */
   reel_likes_aggregate: Reel_Likes_Aggregate;
+  /** An array relationship */
+  reel_orders: Array<Reel_Orders>;
+  /** An aggregate relationship */
+  reel_orders_aggregate: Reel_Orders_Aggregate;
   restaurant_id?: Maybe<Scalars['uuid']['output']>;
   title: Scalars['String']['output'];
   type: Scalars['String']['output'];
@@ -4700,6 +4732,26 @@ export type ReelsReel_Likes_AggregateArgs = {
   offset?: InputMaybe<Scalars['Int']['input']>;
   order_by?: InputMaybe<Array<Reel_Likes_Order_By>>;
   where?: InputMaybe<Reel_Likes_Bool_Exp>;
+};
+
+
+/** columns and relationships of "Reels" */
+export type ReelsReel_OrdersArgs = {
+  distinct_on?: InputMaybe<Array<Reel_Orders_Select_Column>>;
+  limit?: InputMaybe<Scalars['Int']['input']>;
+  offset?: InputMaybe<Scalars['Int']['input']>;
+  order_by?: InputMaybe<Array<Reel_Orders_Order_By>>;
+  where?: InputMaybe<Reel_Orders_Bool_Exp>;
+};
+
+
+/** columns and relationships of "Reels" */
+export type ReelsReel_Orders_AggregateArgs = {
+  distinct_on?: InputMaybe<Array<Reel_Orders_Select_Column>>;
+  limit?: InputMaybe<Scalars['Int']['input']>;
+  offset?: InputMaybe<Scalars['Int']['input']>;
+  order_by?: InputMaybe<Array<Reel_Orders_Order_By>>;
+  where?: InputMaybe<Reel_Orders_Bool_Exp>;
 };
 
 /** aggregated selection of "Reels" */
@@ -4788,6 +4840,8 @@ export type Reels_Bool_Exp = {
   likes?: InputMaybe<String_Comparison_Exp>;
   reel_likes?: InputMaybe<Reel_Likes_Bool_Exp>;
   reel_likes_aggregate?: InputMaybe<Reel_Likes_Aggregate_Bool_Exp>;
+  reel_orders?: InputMaybe<Reel_Orders_Bool_Exp>;
+  reel_orders_aggregate?: InputMaybe<Reel_Orders_Aggregate_Bool_Exp>;
   restaurant_id?: InputMaybe<Uuid_Comparison_Exp>;
   title?: InputMaybe<String_Comparison_Exp>;
   type?: InputMaybe<String_Comparison_Exp>;
@@ -5094,6 +5148,7 @@ export type Reels_Insert_Input = {
   isLiked?: InputMaybe<Scalars['Boolean']['input']>;
   likes?: InputMaybe<Scalars['String']['input']>;
   reel_likes?: InputMaybe<Reel_Likes_Arr_Rel_Insert_Input>;
+  reel_orders?: InputMaybe<Reel_Orders_Arr_Rel_Insert_Input>;
   restaurant_id?: InputMaybe<Scalars['uuid']['input']>;
   title?: InputMaybe<Scalars['String']['input']>;
   type?: InputMaybe<Scalars['String']['input']>;
@@ -5202,6 +5257,7 @@ export type Reels_Order_By = {
   isLiked?: InputMaybe<Order_By>;
   likes?: InputMaybe<Order_By>;
   reel_likes_aggregate?: InputMaybe<Reel_Likes_Aggregate_Order_By>;
+  reel_orders_aggregate?: InputMaybe<Reel_Orders_Aggregate_Order_By>;
   restaurant_id?: InputMaybe<Order_By>;
   title?: InputMaybe<Order_By>;
   type?: InputMaybe<Order_By>;
@@ -7540,6 +7596,14 @@ export type Users = {
   ratingsByShopperId: Array<Ratings>;
   /** An aggregate relationship */
   ratingsByShopperId_aggregate: Ratings_Aggregate;
+  /** An array relationship */
+  reel_likes: Array<Reel_Likes>;
+  /** An aggregate relationship */
+  reel_likes_aggregate: Reel_Likes_Aggregate;
+  /** An array relationship */
+  reel_orders: Array<Reel_Orders>;
+  /** An aggregate relationship */
+  reel_orders_aggregate: Reel_Orders_Aggregate;
   role: Scalars['String']['output'];
   /** An object relationship */
   shopper?: Maybe<Shoppers>;
@@ -7874,6 +7938,46 @@ export type UsersRatingsByShopperId_AggregateArgs = {
 
 
 /** Users */
+export type UsersReel_LikesArgs = {
+  distinct_on?: InputMaybe<Array<Reel_Likes_Select_Column>>;
+  limit?: InputMaybe<Scalars['Int']['input']>;
+  offset?: InputMaybe<Scalars['Int']['input']>;
+  order_by?: InputMaybe<Array<Reel_Likes_Order_By>>;
+  where?: InputMaybe<Reel_Likes_Bool_Exp>;
+};
+
+
+/** Users */
+export type UsersReel_Likes_AggregateArgs = {
+  distinct_on?: InputMaybe<Array<Reel_Likes_Select_Column>>;
+  limit?: InputMaybe<Scalars['Int']['input']>;
+  offset?: InputMaybe<Scalars['Int']['input']>;
+  order_by?: InputMaybe<Array<Reel_Likes_Order_By>>;
+  where?: InputMaybe<Reel_Likes_Bool_Exp>;
+};
+
+
+/** Users */
+export type UsersReel_OrdersArgs = {
+  distinct_on?: InputMaybe<Array<Reel_Orders_Select_Column>>;
+  limit?: InputMaybe<Scalars['Int']['input']>;
+  offset?: InputMaybe<Scalars['Int']['input']>;
+  order_by?: InputMaybe<Array<Reel_Orders_Order_By>>;
+  where?: InputMaybe<Reel_Orders_Bool_Exp>;
+};
+
+
+/** Users */
+export type UsersReel_Orders_AggregateArgs = {
+  distinct_on?: InputMaybe<Array<Reel_Orders_Select_Column>>;
+  limit?: InputMaybe<Scalars['Int']['input']>;
+  offset?: InputMaybe<Scalars['Int']['input']>;
+  order_by?: InputMaybe<Array<Reel_Orders_Order_By>>;
+  where?: InputMaybe<Reel_Orders_Bool_Exp>;
+};
+
+
+/** Users */
 export type UsersTicketsArgs = {
   distinct_on?: InputMaybe<Array<Tickets_Select_Column>>;
   limit?: InputMaybe<Scalars['Int']['input']>;
@@ -7958,6 +8062,10 @@ export type Users_Bool_Exp = {
   profile_picture?: InputMaybe<String_Comparison_Exp>;
   ratingsByShopperId?: InputMaybe<Ratings_Bool_Exp>;
   ratingsByShopperId_aggregate?: InputMaybe<Ratings_Aggregate_Bool_Exp>;
+  reel_likes?: InputMaybe<Reel_Likes_Bool_Exp>;
+  reel_likes_aggregate?: InputMaybe<Reel_Likes_Aggregate_Bool_Exp>;
+  reel_orders?: InputMaybe<Reel_Orders_Bool_Exp>;
+  reel_orders_aggregate?: InputMaybe<Reel_Orders_Aggregate_Bool_Exp>;
   role?: InputMaybe<String_Comparison_Exp>;
   shopper?: InputMaybe<Shoppers_Bool_Exp>;
   tickets?: InputMaybe<Tickets_Bool_Exp>;
@@ -8002,6 +8110,8 @@ export type Users_Insert_Input = {
   phone?: InputMaybe<Scalars['String']['input']>;
   profile_picture?: InputMaybe<Scalars['String']['input']>;
   ratingsByShopperId?: InputMaybe<Ratings_Arr_Rel_Insert_Input>;
+  reel_likes?: InputMaybe<Reel_Likes_Arr_Rel_Insert_Input>;
+  reel_orders?: InputMaybe<Reel_Orders_Arr_Rel_Insert_Input>;
   role?: InputMaybe<Scalars['String']['input']>;
   shopper?: InputMaybe<Shoppers_Obj_Rel_Insert_Input>;
   tickets?: InputMaybe<Tickets_Arr_Rel_Insert_Input>;
@@ -8086,6 +8196,8 @@ export type Users_Order_By = {
   phone?: InputMaybe<Order_By>;
   profile_picture?: InputMaybe<Order_By>;
   ratingsByShopperId_aggregate?: InputMaybe<Ratings_Aggregate_Order_By>;
+  reel_likes_aggregate?: InputMaybe<Reel_Likes_Aggregate_Order_By>;
+  reel_orders_aggregate?: InputMaybe<Reel_Orders_Aggregate_Order_By>;
   role?: InputMaybe<Order_By>;
   shopper?: InputMaybe<Shoppers_Order_By>;
   tickets_aggregate?: InputMaybe<Tickets_Aggregate_Order_By>;
@@ -8855,6 +8967,10 @@ export type Mutation_Root = {
   delete_reel_likes?: Maybe<Reel_Likes_Mutation_Response>;
   /** delete single row from the table: "reel_likes" */
   delete_reel_likes_by_pk?: Maybe<Reel_Likes>;
+  /** delete data from the table: "reel_orders" */
+  delete_reel_orders?: Maybe<Reel_Orders_Mutation_Response>;
+  /** delete single row from the table: "reel_orders" */
+  delete_reel_orders_by_pk?: Maybe<Reel_Orders>;
   /** delete data from the table: "shoppers" */
   delete_shoppers?: Maybe<Shoppers_Mutation_Response>;
   /** delete single row from the table: "shoppers" */
@@ -8979,6 +9095,10 @@ export type Mutation_Root = {
   insert_reel_likes?: Maybe<Reel_Likes_Mutation_Response>;
   /** insert a single row into the table: "reel_likes" */
   insert_reel_likes_one?: Maybe<Reel_Likes>;
+  /** insert data into the table: "reel_orders" */
+  insert_reel_orders?: Maybe<Reel_Orders_Mutation_Response>;
+  /** insert a single row into the table: "reel_orders" */
+  insert_reel_orders_one?: Maybe<Reel_Orders>;
   /** insert data into the table: "shoppers" */
   insert_shoppers?: Maybe<Shoppers_Mutation_Response>;
   /** insert a single row into the table: "shoppers" */
@@ -9159,6 +9279,12 @@ export type Mutation_Root = {
   update_reel_likes_by_pk?: Maybe<Reel_Likes>;
   /** update multiples rows of table: "reel_likes" */
   update_reel_likes_many?: Maybe<Array<Maybe<Reel_Likes_Mutation_Response>>>;
+  /** update data of the table: "reel_orders" */
+  update_reel_orders?: Maybe<Reel_Orders_Mutation_Response>;
+  /** update single row of the table: "reel_orders" */
+  update_reel_orders_by_pk?: Maybe<Reel_Orders>;
+  /** update multiples rows of table: "reel_orders" */
+  update_reel_orders_many?: Maybe<Array<Maybe<Reel_Orders_Mutation_Response>>>;
   /** update data of the table: "shoppers" */
   update_shoppers?: Maybe<Shoppers_Mutation_Response>;
   /** update single row of the table: "shoppers" */
@@ -9512,6 +9638,18 @@ export type Mutation_RootDelete_Reel_LikesArgs = {
 
 /** mutation root */
 export type Mutation_RootDelete_Reel_Likes_By_PkArgs = {
+  id: Scalars['uuid']['input'];
+};
+
+
+/** mutation root */
+export type Mutation_RootDelete_Reel_OrdersArgs = {
+  where: Reel_Orders_Bool_Exp;
+};
+
+
+/** mutation root */
+export type Mutation_RootDelete_Reel_Orders_By_PkArgs = {
   id: Scalars['uuid']['input'];
 };
 
@@ -9941,6 +10079,20 @@ export type Mutation_RootInsert_Reel_LikesArgs = {
 export type Mutation_RootInsert_Reel_Likes_OneArgs = {
   object: Reel_Likes_Insert_Input;
   on_conflict?: InputMaybe<Reel_Likes_On_Conflict>;
+};
+
+
+/** mutation root */
+export type Mutation_RootInsert_Reel_OrdersArgs = {
+  objects: Array<Reel_Orders_Insert_Input>;
+  on_conflict?: InputMaybe<Reel_Orders_On_Conflict>;
+};
+
+
+/** mutation root */
+export type Mutation_RootInsert_Reel_Orders_OneArgs = {
+  object: Reel_Orders_Insert_Input;
+  on_conflict?: InputMaybe<Reel_Orders_On_Conflict>;
 };
 
 
@@ -10575,6 +10727,28 @@ export type Mutation_RootUpdate_Reel_Likes_By_PkArgs = {
 /** mutation root */
 export type Mutation_RootUpdate_Reel_Likes_ManyArgs = {
   updates: Array<Reel_Likes_Updates>;
+};
+
+
+/** mutation root */
+export type Mutation_RootUpdate_Reel_OrdersArgs = {
+  _inc?: InputMaybe<Reel_Orders_Inc_Input>;
+  _set?: InputMaybe<Reel_Orders_Set_Input>;
+  where: Reel_Orders_Bool_Exp;
+};
+
+
+/** mutation root */
+export type Mutation_RootUpdate_Reel_Orders_By_PkArgs = {
+  _inc?: InputMaybe<Reel_Orders_Inc_Input>;
+  _set?: InputMaybe<Reel_Orders_Set_Input>;
+  pk_columns: Reel_Orders_Pk_Columns_Input;
+};
+
+
+/** mutation root */
+export type Mutation_RootUpdate_Reel_Orders_ManyArgs = {
+  updates: Array<Reel_Orders_Updates>;
 };
 
 
@@ -11301,6 +11475,12 @@ export type Query_Root = {
   reel_likes_aggregate: Reel_Likes_Aggregate;
   /** fetch data from the table: "reel_likes" using primary key columns */
   reel_likes_by_pk?: Maybe<Reel_Likes>;
+  /** An array relationship */
+  reel_orders: Array<Reel_Orders>;
+  /** An aggregate relationship */
+  reel_orders_aggregate: Reel_Orders_Aggregate;
+  /** fetch data from the table: "reel_orders" using primary key columns */
+  reel_orders_by_pk?: Maybe<Reel_Orders>;
   /** fetch data from the table: "shoppers" */
   shoppers: Array<Shoppers>;
   /** fetch aggregated fields from the table: "shoppers" */
@@ -11966,6 +12146,29 @@ export type Query_RootReel_Likes_By_PkArgs = {
 };
 
 
+export type Query_RootReel_OrdersArgs = {
+  distinct_on?: InputMaybe<Array<Reel_Orders_Select_Column>>;
+  limit?: InputMaybe<Scalars['Int']['input']>;
+  offset?: InputMaybe<Scalars['Int']['input']>;
+  order_by?: InputMaybe<Array<Reel_Orders_Order_By>>;
+  where?: InputMaybe<Reel_Orders_Bool_Exp>;
+};
+
+
+export type Query_RootReel_Orders_AggregateArgs = {
+  distinct_on?: InputMaybe<Array<Reel_Orders_Select_Column>>;
+  limit?: InputMaybe<Scalars['Int']['input']>;
+  offset?: InputMaybe<Scalars['Int']['input']>;
+  order_by?: InputMaybe<Array<Reel_Orders_Order_By>>;
+  where?: InputMaybe<Reel_Orders_Bool_Exp>;
+};
+
+
+export type Query_RootReel_Orders_By_PkArgs = {
+  id: Scalars['uuid']['input'];
+};
+
+
 export type Query_RootShoppersArgs = {
   distinct_on?: InputMaybe<Array<Shoppers_Select_Column>>;
   limit?: InputMaybe<Scalars['Int']['input']>;
@@ -12036,6 +12239,10 @@ export type Query_RootVehicles_By_PkArgs = {
 
 /** columns and relationships of "reel_likes" */
 export type Reel_Likes = {
+  /** An object relationship */
+  Reel: Reels;
+  /** An object relationship */
+  User: Users;
   created_at: Scalars['timestamptz']['output'];
   id: Scalars['uuid']['output'];
   reel_id: Scalars['uuid']['output'];
@@ -12089,6 +12296,8 @@ export type Reel_Likes_Arr_Rel_Insert_Input = {
 
 /** Boolean expression to filter rows from the table "reel_likes". All fields are combined with a logical 'AND'. */
 export type Reel_Likes_Bool_Exp = {
+  Reel?: InputMaybe<Reels_Bool_Exp>;
+  User?: InputMaybe<Users_Bool_Exp>;
   _and?: InputMaybe<Array<Reel_Likes_Bool_Exp>>;
   _not?: InputMaybe<Reel_Likes_Bool_Exp>;
   _or?: InputMaybe<Array<Reel_Likes_Bool_Exp>>;
@@ -12105,6 +12314,8 @@ export type Reel_Likes_Constraint =
 
 /** input type for inserting data into table "reel_likes" */
 export type Reel_Likes_Insert_Input = {
+  Reel?: InputMaybe<Reels_Obj_Rel_Insert_Input>;
+  User?: InputMaybe<Users_Obj_Rel_Insert_Input>;
   created_at?: InputMaybe<Scalars['timestamptz']['input']>;
   id?: InputMaybe<Scalars['uuid']['input']>;
   reel_id?: InputMaybe<Scalars['uuid']['input']>;
@@ -12160,6 +12371,8 @@ export type Reel_Likes_On_Conflict = {
 
 /** Ordering options when selecting data from "reel_likes". */
 export type Reel_Likes_Order_By = {
+  Reel?: InputMaybe<Reels_Order_By>;
+  User?: InputMaybe<Users_Order_By>;
   created_at?: InputMaybe<Order_By>;
   id?: InputMaybe<Order_By>;
   reel_id?: InputMaybe<Order_By>;
@@ -12224,6 +12437,551 @@ export type Reel_Likes_Updates = {
   where: Reel_Likes_Bool_Exp;
 };
 
+/** columns and relationships of "reel_orders" */
+export type Reel_Orders = {
+  /** An object relationship */
+  Address: Addresses;
+  OrderID: Scalars['Int']['output'];
+  /** An object relationship */
+  Reel: Reels;
+  /** An object relationship */
+  User: Users;
+  combined_order_id?: Maybe<Scalars['uuid']['output']>;
+  created_at: Scalars['timestamptz']['output'];
+  delivery_address_id: Scalars['uuid']['output'];
+  delivery_fee: Scalars['String']['output'];
+  delivery_note: Scalars['String']['output'];
+  delivery_photo_url: Scalars['String']['output'];
+  delivery_time: Scalars['String']['output'];
+  discount: Scalars['String']['output'];
+  found: Scalars['Boolean']['output'];
+  id: Scalars['uuid']['output'];
+  reel_id: Scalars['uuid']['output'];
+  service_fee: Scalars['String']['output'];
+  /** An object relationship */
+  shopper: Shoppers;
+  shopper_id: Scalars['uuid']['output'];
+  status: Scalars['String']['output'];
+  total: Scalars['String']['output'];
+  updated_at?: Maybe<Scalars['timestamptz']['output']>;
+  user_id: Scalars['uuid']['output'];
+  voucher_code: Scalars['String']['output'];
+};
+
+/** aggregated selection of "reel_orders" */
+export type Reel_Orders_Aggregate = {
+  aggregate?: Maybe<Reel_Orders_Aggregate_Fields>;
+  nodes: Array<Reel_Orders>;
+};
+
+export type Reel_Orders_Aggregate_Bool_Exp = {
+  bool_and?: InputMaybe<Reel_Orders_Aggregate_Bool_Exp_Bool_And>;
+  bool_or?: InputMaybe<Reel_Orders_Aggregate_Bool_Exp_Bool_Or>;
+  count?: InputMaybe<Reel_Orders_Aggregate_Bool_Exp_Count>;
+};
+
+export type Reel_Orders_Aggregate_Bool_Exp_Bool_And = {
+  arguments: Reel_Orders_Select_Column_Reel_Orders_Aggregate_Bool_Exp_Bool_And_Arguments_Columns;
+  distinct?: InputMaybe<Scalars['Boolean']['input']>;
+  filter?: InputMaybe<Reel_Orders_Bool_Exp>;
+  predicate: Boolean_Comparison_Exp;
+};
+
+export type Reel_Orders_Aggregate_Bool_Exp_Bool_Or = {
+  arguments: Reel_Orders_Select_Column_Reel_Orders_Aggregate_Bool_Exp_Bool_Or_Arguments_Columns;
+  distinct?: InputMaybe<Scalars['Boolean']['input']>;
+  filter?: InputMaybe<Reel_Orders_Bool_Exp>;
+  predicate: Boolean_Comparison_Exp;
+};
+
+export type Reel_Orders_Aggregate_Bool_Exp_Count = {
+  arguments?: InputMaybe<Array<Reel_Orders_Select_Column>>;
+  distinct?: InputMaybe<Scalars['Boolean']['input']>;
+  filter?: InputMaybe<Reel_Orders_Bool_Exp>;
+  predicate: Int_Comparison_Exp;
+};
+
+/** aggregate fields of "reel_orders" */
+export type Reel_Orders_Aggregate_Fields = {
+  avg?: Maybe<Reel_Orders_Avg_Fields>;
+  count: Scalars['Int']['output'];
+  max?: Maybe<Reel_Orders_Max_Fields>;
+  min?: Maybe<Reel_Orders_Min_Fields>;
+  stddev?: Maybe<Reel_Orders_Stddev_Fields>;
+  stddev_pop?: Maybe<Reel_Orders_Stddev_Pop_Fields>;
+  stddev_samp?: Maybe<Reel_Orders_Stddev_Samp_Fields>;
+  sum?: Maybe<Reel_Orders_Sum_Fields>;
+  var_pop?: Maybe<Reel_Orders_Var_Pop_Fields>;
+  var_samp?: Maybe<Reel_Orders_Var_Samp_Fields>;
+  variance?: Maybe<Reel_Orders_Variance_Fields>;
+};
+
+
+/** aggregate fields of "reel_orders" */
+export type Reel_Orders_Aggregate_FieldsCountArgs = {
+  columns?: InputMaybe<Array<Reel_Orders_Select_Column>>;
+  distinct?: InputMaybe<Scalars['Boolean']['input']>;
+};
+
+/** order by aggregate values of table "reel_orders" */
+export type Reel_Orders_Aggregate_Order_By = {
+  avg?: InputMaybe<Reel_Orders_Avg_Order_By>;
+  count?: InputMaybe<Order_By>;
+  max?: InputMaybe<Reel_Orders_Max_Order_By>;
+  min?: InputMaybe<Reel_Orders_Min_Order_By>;
+  stddev?: InputMaybe<Reel_Orders_Stddev_Order_By>;
+  stddev_pop?: InputMaybe<Reel_Orders_Stddev_Pop_Order_By>;
+  stddev_samp?: InputMaybe<Reel_Orders_Stddev_Samp_Order_By>;
+  sum?: InputMaybe<Reel_Orders_Sum_Order_By>;
+  var_pop?: InputMaybe<Reel_Orders_Var_Pop_Order_By>;
+  var_samp?: InputMaybe<Reel_Orders_Var_Samp_Order_By>;
+  variance?: InputMaybe<Reel_Orders_Variance_Order_By>;
+};
+
+/** input type for inserting array relation for remote table "reel_orders" */
+export type Reel_Orders_Arr_Rel_Insert_Input = {
+  data: Array<Reel_Orders_Insert_Input>;
+  /** upsert condition */
+  on_conflict?: InputMaybe<Reel_Orders_On_Conflict>;
+};
+
+/** aggregate avg on columns */
+export type Reel_Orders_Avg_Fields = {
+  OrderID?: Maybe<Scalars['Float']['output']>;
+};
+
+/** order by avg() on columns of table "reel_orders" */
+export type Reel_Orders_Avg_Order_By = {
+  OrderID?: InputMaybe<Order_By>;
+};
+
+/** Boolean expression to filter rows from the table "reel_orders". All fields are combined with a logical 'AND'. */
+export type Reel_Orders_Bool_Exp = {
+  Address?: InputMaybe<Addresses_Bool_Exp>;
+  OrderID?: InputMaybe<Int_Comparison_Exp>;
+  Reel?: InputMaybe<Reels_Bool_Exp>;
+  User?: InputMaybe<Users_Bool_Exp>;
+  _and?: InputMaybe<Array<Reel_Orders_Bool_Exp>>;
+  _not?: InputMaybe<Reel_Orders_Bool_Exp>;
+  _or?: InputMaybe<Array<Reel_Orders_Bool_Exp>>;
+  combined_order_id?: InputMaybe<Uuid_Comparison_Exp>;
+  created_at?: InputMaybe<Timestamptz_Comparison_Exp>;
+  delivery_address_id?: InputMaybe<Uuid_Comparison_Exp>;
+  delivery_fee?: InputMaybe<String_Comparison_Exp>;
+  delivery_note?: InputMaybe<String_Comparison_Exp>;
+  delivery_photo_url?: InputMaybe<String_Comparison_Exp>;
+  delivery_time?: InputMaybe<String_Comparison_Exp>;
+  discount?: InputMaybe<String_Comparison_Exp>;
+  found?: InputMaybe<Boolean_Comparison_Exp>;
+  id?: InputMaybe<Uuid_Comparison_Exp>;
+  reel_id?: InputMaybe<Uuid_Comparison_Exp>;
+  service_fee?: InputMaybe<String_Comparison_Exp>;
+  shopper?: InputMaybe<Shoppers_Bool_Exp>;
+  shopper_id?: InputMaybe<Uuid_Comparison_Exp>;
+  status?: InputMaybe<String_Comparison_Exp>;
+  total?: InputMaybe<String_Comparison_Exp>;
+  updated_at?: InputMaybe<Timestamptz_Comparison_Exp>;
+  user_id?: InputMaybe<Uuid_Comparison_Exp>;
+  voucher_code?: InputMaybe<String_Comparison_Exp>;
+};
+
+/** unique or primary key constraints on table "reel_orders" */
+export type Reel_Orders_Constraint =
+  /** unique or primary key constraint on columns "id" */
+  | 'reel_orders_pkey';
+
+/** input type for incrementing numeric columns in table "reel_orders" */
+export type Reel_Orders_Inc_Input = {
+  OrderID?: InputMaybe<Scalars['Int']['input']>;
+};
+
+/** input type for inserting data into table "reel_orders" */
+export type Reel_Orders_Insert_Input = {
+  Address?: InputMaybe<Addresses_Obj_Rel_Insert_Input>;
+  OrderID?: InputMaybe<Scalars['Int']['input']>;
+  Reel?: InputMaybe<Reels_Obj_Rel_Insert_Input>;
+  User?: InputMaybe<Users_Obj_Rel_Insert_Input>;
+  combined_order_id?: InputMaybe<Scalars['uuid']['input']>;
+  created_at?: InputMaybe<Scalars['timestamptz']['input']>;
+  delivery_address_id?: InputMaybe<Scalars['uuid']['input']>;
+  delivery_fee?: InputMaybe<Scalars['String']['input']>;
+  delivery_note?: InputMaybe<Scalars['String']['input']>;
+  delivery_photo_url?: InputMaybe<Scalars['String']['input']>;
+  delivery_time?: InputMaybe<Scalars['String']['input']>;
+  discount?: InputMaybe<Scalars['String']['input']>;
+  found?: InputMaybe<Scalars['Boolean']['input']>;
+  id?: InputMaybe<Scalars['uuid']['input']>;
+  reel_id?: InputMaybe<Scalars['uuid']['input']>;
+  service_fee?: InputMaybe<Scalars['String']['input']>;
+  shopper?: InputMaybe<Shoppers_Obj_Rel_Insert_Input>;
+  shopper_id?: InputMaybe<Scalars['uuid']['input']>;
+  status?: InputMaybe<Scalars['String']['input']>;
+  total?: InputMaybe<Scalars['String']['input']>;
+  updated_at?: InputMaybe<Scalars['timestamptz']['input']>;
+  user_id?: InputMaybe<Scalars['uuid']['input']>;
+  voucher_code?: InputMaybe<Scalars['String']['input']>;
+};
+
+/** aggregate max on columns */
+export type Reel_Orders_Max_Fields = {
+  OrderID?: Maybe<Scalars['Int']['output']>;
+  combined_order_id?: Maybe<Scalars['uuid']['output']>;
+  created_at?: Maybe<Scalars['timestamptz']['output']>;
+  delivery_address_id?: Maybe<Scalars['uuid']['output']>;
+  delivery_fee?: Maybe<Scalars['String']['output']>;
+  delivery_note?: Maybe<Scalars['String']['output']>;
+  delivery_photo_url?: Maybe<Scalars['String']['output']>;
+  delivery_time?: Maybe<Scalars['String']['output']>;
+  discount?: Maybe<Scalars['String']['output']>;
+  id?: Maybe<Scalars['uuid']['output']>;
+  reel_id?: Maybe<Scalars['uuid']['output']>;
+  service_fee?: Maybe<Scalars['String']['output']>;
+  shopper_id?: Maybe<Scalars['uuid']['output']>;
+  status?: Maybe<Scalars['String']['output']>;
+  total?: Maybe<Scalars['String']['output']>;
+  updated_at?: Maybe<Scalars['timestamptz']['output']>;
+  user_id?: Maybe<Scalars['uuid']['output']>;
+  voucher_code?: Maybe<Scalars['String']['output']>;
+};
+
+/** order by max() on columns of table "reel_orders" */
+export type Reel_Orders_Max_Order_By = {
+  OrderID?: InputMaybe<Order_By>;
+  combined_order_id?: InputMaybe<Order_By>;
+  created_at?: InputMaybe<Order_By>;
+  delivery_address_id?: InputMaybe<Order_By>;
+  delivery_fee?: InputMaybe<Order_By>;
+  delivery_note?: InputMaybe<Order_By>;
+  delivery_photo_url?: InputMaybe<Order_By>;
+  delivery_time?: InputMaybe<Order_By>;
+  discount?: InputMaybe<Order_By>;
+  id?: InputMaybe<Order_By>;
+  reel_id?: InputMaybe<Order_By>;
+  service_fee?: InputMaybe<Order_By>;
+  shopper_id?: InputMaybe<Order_By>;
+  status?: InputMaybe<Order_By>;
+  total?: InputMaybe<Order_By>;
+  updated_at?: InputMaybe<Order_By>;
+  user_id?: InputMaybe<Order_By>;
+  voucher_code?: InputMaybe<Order_By>;
+};
+
+/** aggregate min on columns */
+export type Reel_Orders_Min_Fields = {
+  OrderID?: Maybe<Scalars['Int']['output']>;
+  combined_order_id?: Maybe<Scalars['uuid']['output']>;
+  created_at?: Maybe<Scalars['timestamptz']['output']>;
+  delivery_address_id?: Maybe<Scalars['uuid']['output']>;
+  delivery_fee?: Maybe<Scalars['String']['output']>;
+  delivery_note?: Maybe<Scalars['String']['output']>;
+  delivery_photo_url?: Maybe<Scalars['String']['output']>;
+  delivery_time?: Maybe<Scalars['String']['output']>;
+  discount?: Maybe<Scalars['String']['output']>;
+  id?: Maybe<Scalars['uuid']['output']>;
+  reel_id?: Maybe<Scalars['uuid']['output']>;
+  service_fee?: Maybe<Scalars['String']['output']>;
+  shopper_id?: Maybe<Scalars['uuid']['output']>;
+  status?: Maybe<Scalars['String']['output']>;
+  total?: Maybe<Scalars['String']['output']>;
+  updated_at?: Maybe<Scalars['timestamptz']['output']>;
+  user_id?: Maybe<Scalars['uuid']['output']>;
+  voucher_code?: Maybe<Scalars['String']['output']>;
+};
+
+/** order by min() on columns of table "reel_orders" */
+export type Reel_Orders_Min_Order_By = {
+  OrderID?: InputMaybe<Order_By>;
+  combined_order_id?: InputMaybe<Order_By>;
+  created_at?: InputMaybe<Order_By>;
+  delivery_address_id?: InputMaybe<Order_By>;
+  delivery_fee?: InputMaybe<Order_By>;
+  delivery_note?: InputMaybe<Order_By>;
+  delivery_photo_url?: InputMaybe<Order_By>;
+  delivery_time?: InputMaybe<Order_By>;
+  discount?: InputMaybe<Order_By>;
+  id?: InputMaybe<Order_By>;
+  reel_id?: InputMaybe<Order_By>;
+  service_fee?: InputMaybe<Order_By>;
+  shopper_id?: InputMaybe<Order_By>;
+  status?: InputMaybe<Order_By>;
+  total?: InputMaybe<Order_By>;
+  updated_at?: InputMaybe<Order_By>;
+  user_id?: InputMaybe<Order_By>;
+  voucher_code?: InputMaybe<Order_By>;
+};
+
+/** response of any mutation on the table "reel_orders" */
+export type Reel_Orders_Mutation_Response = {
+  /** number of rows affected by the mutation */
+  affected_rows: Scalars['Int']['output'];
+  /** data from the rows affected by the mutation */
+  returning: Array<Reel_Orders>;
+};
+
+/** on_conflict condition type for table "reel_orders" */
+export type Reel_Orders_On_Conflict = {
+  constraint: Reel_Orders_Constraint;
+  update_columns?: Array<Reel_Orders_Update_Column>;
+  where?: InputMaybe<Reel_Orders_Bool_Exp>;
+};
+
+/** Ordering options when selecting data from "reel_orders". */
+export type Reel_Orders_Order_By = {
+  Address?: InputMaybe<Addresses_Order_By>;
+  OrderID?: InputMaybe<Order_By>;
+  Reel?: InputMaybe<Reels_Order_By>;
+  User?: InputMaybe<Users_Order_By>;
+  combined_order_id?: InputMaybe<Order_By>;
+  created_at?: InputMaybe<Order_By>;
+  delivery_address_id?: InputMaybe<Order_By>;
+  delivery_fee?: InputMaybe<Order_By>;
+  delivery_note?: InputMaybe<Order_By>;
+  delivery_photo_url?: InputMaybe<Order_By>;
+  delivery_time?: InputMaybe<Order_By>;
+  discount?: InputMaybe<Order_By>;
+  found?: InputMaybe<Order_By>;
+  id?: InputMaybe<Order_By>;
+  reel_id?: InputMaybe<Order_By>;
+  service_fee?: InputMaybe<Order_By>;
+  shopper?: InputMaybe<Shoppers_Order_By>;
+  shopper_id?: InputMaybe<Order_By>;
+  status?: InputMaybe<Order_By>;
+  total?: InputMaybe<Order_By>;
+  updated_at?: InputMaybe<Order_By>;
+  user_id?: InputMaybe<Order_By>;
+  voucher_code?: InputMaybe<Order_By>;
+};
+
+/** primary key columns input for table: reel_orders */
+export type Reel_Orders_Pk_Columns_Input = {
+  id: Scalars['uuid']['input'];
+};
+
+/** select columns of table "reel_orders" */
+export type Reel_Orders_Select_Column =
+  /** column name */
+  | 'OrderID'
+  /** column name */
+  | 'combined_order_id'
+  /** column name */
+  | 'created_at'
+  /** column name */
+  | 'delivery_address_id'
+  /** column name */
+  | 'delivery_fee'
+  /** column name */
+  | 'delivery_note'
+  /** column name */
+  | 'delivery_photo_url'
+  /** column name */
+  | 'delivery_time'
+  /** column name */
+  | 'discount'
+  /** column name */
+  | 'found'
+  /** column name */
+  | 'id'
+  /** column name */
+  | 'reel_id'
+  /** column name */
+  | 'service_fee'
+  /** column name */
+  | 'shopper_id'
+  /** column name */
+  | 'status'
+  /** column name */
+  | 'total'
+  /** column name */
+  | 'updated_at'
+  /** column name */
+  | 'user_id'
+  /** column name */
+  | 'voucher_code';
+
+/** select "reel_orders_aggregate_bool_exp_bool_and_arguments_columns" columns of table "reel_orders" */
+export type Reel_Orders_Select_Column_Reel_Orders_Aggregate_Bool_Exp_Bool_And_Arguments_Columns =
+  /** column name */
+  | 'found';
+
+/** select "reel_orders_aggregate_bool_exp_bool_or_arguments_columns" columns of table "reel_orders" */
+export type Reel_Orders_Select_Column_Reel_Orders_Aggregate_Bool_Exp_Bool_Or_Arguments_Columns =
+  /** column name */
+  | 'found';
+
+/** input type for updating data in table "reel_orders" */
+export type Reel_Orders_Set_Input = {
+  OrderID?: InputMaybe<Scalars['Int']['input']>;
+  combined_order_id?: InputMaybe<Scalars['uuid']['input']>;
+  created_at?: InputMaybe<Scalars['timestamptz']['input']>;
+  delivery_address_id?: InputMaybe<Scalars['uuid']['input']>;
+  delivery_fee?: InputMaybe<Scalars['String']['input']>;
+  delivery_note?: InputMaybe<Scalars['String']['input']>;
+  delivery_photo_url?: InputMaybe<Scalars['String']['input']>;
+  delivery_time?: InputMaybe<Scalars['String']['input']>;
+  discount?: InputMaybe<Scalars['String']['input']>;
+  found?: InputMaybe<Scalars['Boolean']['input']>;
+  id?: InputMaybe<Scalars['uuid']['input']>;
+  reel_id?: InputMaybe<Scalars['uuid']['input']>;
+  service_fee?: InputMaybe<Scalars['String']['input']>;
+  shopper_id?: InputMaybe<Scalars['uuid']['input']>;
+  status?: InputMaybe<Scalars['String']['input']>;
+  total?: InputMaybe<Scalars['String']['input']>;
+  updated_at?: InputMaybe<Scalars['timestamptz']['input']>;
+  user_id?: InputMaybe<Scalars['uuid']['input']>;
+  voucher_code?: InputMaybe<Scalars['String']['input']>;
+};
+
+/** aggregate stddev on columns */
+export type Reel_Orders_Stddev_Fields = {
+  OrderID?: Maybe<Scalars['Float']['output']>;
+};
+
+/** order by stddev() on columns of table "reel_orders" */
+export type Reel_Orders_Stddev_Order_By = {
+  OrderID?: InputMaybe<Order_By>;
+};
+
+/** aggregate stddev_pop on columns */
+export type Reel_Orders_Stddev_Pop_Fields = {
+  OrderID?: Maybe<Scalars['Float']['output']>;
+};
+
+/** order by stddev_pop() on columns of table "reel_orders" */
+export type Reel_Orders_Stddev_Pop_Order_By = {
+  OrderID?: InputMaybe<Order_By>;
+};
+
+/** aggregate stddev_samp on columns */
+export type Reel_Orders_Stddev_Samp_Fields = {
+  OrderID?: Maybe<Scalars['Float']['output']>;
+};
+
+/** order by stddev_samp() on columns of table "reel_orders" */
+export type Reel_Orders_Stddev_Samp_Order_By = {
+  OrderID?: InputMaybe<Order_By>;
+};
+
+/** Streaming cursor of the table "reel_orders" */
+export type Reel_Orders_Stream_Cursor_Input = {
+  /** Stream column input with initial value */
+  initial_value: Reel_Orders_Stream_Cursor_Value_Input;
+  /** cursor ordering */
+  ordering?: InputMaybe<Cursor_Ordering>;
+};
+
+/** Initial value of the column from where the streaming should start */
+export type Reel_Orders_Stream_Cursor_Value_Input = {
+  OrderID?: InputMaybe<Scalars['Int']['input']>;
+  combined_order_id?: InputMaybe<Scalars['uuid']['input']>;
+  created_at?: InputMaybe<Scalars['timestamptz']['input']>;
+  delivery_address_id?: InputMaybe<Scalars['uuid']['input']>;
+  delivery_fee?: InputMaybe<Scalars['String']['input']>;
+  delivery_note?: InputMaybe<Scalars['String']['input']>;
+  delivery_photo_url?: InputMaybe<Scalars['String']['input']>;
+  delivery_time?: InputMaybe<Scalars['String']['input']>;
+  discount?: InputMaybe<Scalars['String']['input']>;
+  found?: InputMaybe<Scalars['Boolean']['input']>;
+  id?: InputMaybe<Scalars['uuid']['input']>;
+  reel_id?: InputMaybe<Scalars['uuid']['input']>;
+  service_fee?: InputMaybe<Scalars['String']['input']>;
+  shopper_id?: InputMaybe<Scalars['uuid']['input']>;
+  status?: InputMaybe<Scalars['String']['input']>;
+  total?: InputMaybe<Scalars['String']['input']>;
+  updated_at?: InputMaybe<Scalars['timestamptz']['input']>;
+  user_id?: InputMaybe<Scalars['uuid']['input']>;
+  voucher_code?: InputMaybe<Scalars['String']['input']>;
+};
+
+/** aggregate sum on columns */
+export type Reel_Orders_Sum_Fields = {
+  OrderID?: Maybe<Scalars['Int']['output']>;
+};
+
+/** order by sum() on columns of table "reel_orders" */
+export type Reel_Orders_Sum_Order_By = {
+  OrderID?: InputMaybe<Order_By>;
+};
+
+/** update columns of table "reel_orders" */
+export type Reel_Orders_Update_Column =
+  /** column name */
+  | 'OrderID'
+  /** column name */
+  | 'combined_order_id'
+  /** column name */
+  | 'created_at'
+  /** column name */
+  | 'delivery_address_id'
+  /** column name */
+  | 'delivery_fee'
+  /** column name */
+  | 'delivery_note'
+  /** column name */
+  | 'delivery_photo_url'
+  /** column name */
+  | 'delivery_time'
+  /** column name */
+  | 'discount'
+  /** column name */
+  | 'found'
+  /** column name */
+  | 'id'
+  /** column name */
+  | 'reel_id'
+  /** column name */
+  | 'service_fee'
+  /** column name */
+  | 'shopper_id'
+  /** column name */
+  | 'status'
+  /** column name */
+  | 'total'
+  /** column name */
+  | 'updated_at'
+  /** column name */
+  | 'user_id'
+  /** column name */
+  | 'voucher_code';
+
+export type Reel_Orders_Updates = {
+  /** increments the numeric columns with given value of the filtered values */
+  _inc?: InputMaybe<Reel_Orders_Inc_Input>;
+  /** sets the columns of the filtered rows to the given values */
+  _set?: InputMaybe<Reel_Orders_Set_Input>;
+  /** filter the rows which have to be updated */
+  where: Reel_Orders_Bool_Exp;
+};
+
+/** aggregate var_pop on columns */
+export type Reel_Orders_Var_Pop_Fields = {
+  OrderID?: Maybe<Scalars['Float']['output']>;
+};
+
+/** order by var_pop() on columns of table "reel_orders" */
+export type Reel_Orders_Var_Pop_Order_By = {
+  OrderID?: InputMaybe<Order_By>;
+};
+
+/** aggregate var_samp on columns */
+export type Reel_Orders_Var_Samp_Fields = {
+  OrderID?: Maybe<Scalars['Float']['output']>;
+};
+
+/** order by var_samp() on columns of table "reel_orders" */
+export type Reel_Orders_Var_Samp_Order_By = {
+  OrderID?: InputMaybe<Order_By>;
+};
+
+/** aggregate variance on columns */
+export type Reel_Orders_Variance_Fields = {
+  OrderID?: Maybe<Scalars['Float']['output']>;
+};
+
+/** order by variance() on columns of table "reel_orders" */
+export type Reel_Orders_Variance_Order_By = {
+  OrderID?: InputMaybe<Order_By>;
+};
+
 /** columns and relationships of "shoppers" */
 export type Shoppers = {
   Employment_id: Scalars['Int']['output'];
@@ -12240,10 +12998,34 @@ export type Shoppers = {
   onboarding_step: Scalars['String']['output'];
   phone_number: Scalars['String']['output'];
   profile_photo: Scalars['String']['output'];
+  /** An array relationship */
+  reel_orders: Array<Reel_Orders>;
+  /** An aggregate relationship */
+  reel_orders_aggregate: Reel_Orders_Aggregate;
   status: Scalars['String']['output'];
   transport_mode: Scalars['String']['output'];
   updated_at?: Maybe<Scalars['timestamptz']['output']>;
   user_id: Scalars['uuid']['output'];
+};
+
+
+/** columns and relationships of "shoppers" */
+export type ShoppersReel_OrdersArgs = {
+  distinct_on?: InputMaybe<Array<Reel_Orders_Select_Column>>;
+  limit?: InputMaybe<Scalars['Int']['input']>;
+  offset?: InputMaybe<Scalars['Int']['input']>;
+  order_by?: InputMaybe<Array<Reel_Orders_Order_By>>;
+  where?: InputMaybe<Reel_Orders_Bool_Exp>;
+};
+
+
+/** columns and relationships of "shoppers" */
+export type ShoppersReel_Orders_AggregateArgs = {
+  distinct_on?: InputMaybe<Array<Reel_Orders_Select_Column>>;
+  limit?: InputMaybe<Scalars['Int']['input']>;
+  offset?: InputMaybe<Scalars['Int']['input']>;
+  order_by?: InputMaybe<Array<Reel_Orders_Order_By>>;
+  where?: InputMaybe<Reel_Orders_Bool_Exp>;
 };
 
 /** aggregated selection of "shoppers" */
@@ -12297,6 +13079,8 @@ export type Shoppers_Bool_Exp = {
   onboarding_step?: InputMaybe<String_Comparison_Exp>;
   phone_number?: InputMaybe<String_Comparison_Exp>;
   profile_photo?: InputMaybe<String_Comparison_Exp>;
+  reel_orders?: InputMaybe<Reel_Orders_Bool_Exp>;
+  reel_orders_aggregate?: InputMaybe<Reel_Orders_Aggregate_Bool_Exp>;
   status?: InputMaybe<String_Comparison_Exp>;
   transport_mode?: InputMaybe<String_Comparison_Exp>;
   updated_at?: InputMaybe<Timestamptz_Comparison_Exp>;
@@ -12334,6 +13118,7 @@ export type Shoppers_Insert_Input = {
   onboarding_step?: InputMaybe<Scalars['String']['input']>;
   phone_number?: InputMaybe<Scalars['String']['input']>;
   profile_photo?: InputMaybe<Scalars['String']['input']>;
+  reel_orders?: InputMaybe<Reel_Orders_Arr_Rel_Insert_Input>;
   status?: InputMaybe<Scalars['String']['input']>;
   transport_mode?: InputMaybe<Scalars['String']['input']>;
   updated_at?: InputMaybe<Scalars['timestamptz']['input']>;
@@ -12413,6 +13198,7 @@ export type Shoppers_Order_By = {
   onboarding_step?: InputMaybe<Order_By>;
   phone_number?: InputMaybe<Order_By>;
   profile_photo?: InputMaybe<Order_By>;
+  reel_orders_aggregate?: InputMaybe<Reel_Orders_Aggregate_Order_By>;
   status?: InputMaybe<Order_By>;
   transport_mode?: InputMaybe<Order_By>;
   updated_at?: InputMaybe<Order_By>;
@@ -12811,6 +13597,14 @@ export type Subscription_Root = {
   reel_likes_by_pk?: Maybe<Reel_Likes>;
   /** fetch data from the table in a streaming manner: "reel_likes" */
   reel_likes_stream: Array<Reel_Likes>;
+  /** An array relationship */
+  reel_orders: Array<Reel_Orders>;
+  /** An aggregate relationship */
+  reel_orders_aggregate: Reel_Orders_Aggregate;
+  /** fetch data from the table: "reel_orders" using primary key columns */
+  reel_orders_by_pk?: Maybe<Reel_Orders>;
+  /** fetch data from the table in a streaming manner: "reel_orders" */
+  reel_orders_stream: Array<Reel_Orders>;
   /** fetch data from the table: "shoppers" */
   shoppers: Array<Shoppers>;
   /** fetch aggregated fields from the table: "shoppers" */
@@ -13675,6 +14469,36 @@ export type Subscription_RootReel_Likes_StreamArgs = {
   batch_size: Scalars['Int']['input'];
   cursor: Array<InputMaybe<Reel_Likes_Stream_Cursor_Input>>;
   where?: InputMaybe<Reel_Likes_Bool_Exp>;
+};
+
+
+export type Subscription_RootReel_OrdersArgs = {
+  distinct_on?: InputMaybe<Array<Reel_Orders_Select_Column>>;
+  limit?: InputMaybe<Scalars['Int']['input']>;
+  offset?: InputMaybe<Scalars['Int']['input']>;
+  order_by?: InputMaybe<Array<Reel_Orders_Order_By>>;
+  where?: InputMaybe<Reel_Orders_Bool_Exp>;
+};
+
+
+export type Subscription_RootReel_Orders_AggregateArgs = {
+  distinct_on?: InputMaybe<Array<Reel_Orders_Select_Column>>;
+  limit?: InputMaybe<Scalars['Int']['input']>;
+  offset?: InputMaybe<Scalars['Int']['input']>;
+  order_by?: InputMaybe<Array<Reel_Orders_Order_By>>;
+  where?: InputMaybe<Reel_Orders_Bool_Exp>;
+};
+
+
+export type Subscription_RootReel_Orders_By_PkArgs = {
+  id: Scalars['uuid']['input'];
+};
+
+
+export type Subscription_RootReel_Orders_StreamArgs = {
+  batch_size: Scalars['Int']['input'];
+  cursor: Array<InputMaybe<Reel_Orders_Stream_Cursor_Input>>;
+  where?: InputMaybe<Reel_Orders_Bool_Exp>;
 };
 
 
@@ -14583,6 +15407,11 @@ export type GetReelsLikesQueryVariables = Exact<{
 
 export type GetReelsLikesQuery = { reel_likes: Array<{ created_at: string, id: string, reel_id: string, user_id: string }> };
 
+export type GetReelOrdersQueryVariables = Exact<{ [key: string]: never; }>;
+
+
+export type GetReelOrdersQuery = { reel_orders: Array<{ OrderID: number, combined_order_id?: string | null, created_at: string, delivery_address_id: string, delivery_fee: string, delivery_note: string, delivery_photo_url: string, delivery_time: string, discount: string, found: boolean, id: string, reel_id: string, service_fee: string, shopper_id: string, status: string, total: string, updated_at?: string | null, user_id: string, voucher_code: string, shopper: { Employment_id: number, active: boolean, full_name: string, driving_license?: string | null, created_at: string, background_check_completed: boolean, address: string, onboarding_step: string, phone_number: string, national_id: string, id: string, profile_photo: string, status: string, transport_mode: string, updated_at?: string | null, user_id: string, User: { created_at: string, email: string, gender: string, id: string, is_active: boolean, name: string, password_hash: string, phone: string, profile_picture?: string | null, role: string, updated_at?: string | null } }, Reel: { Price: string, Product?: any | null, category: string, created_on: string, delivery_time?: string | null, description: string, id: string, isLiked: boolean, likes?: string | null, restaurant_id?: string | null, title: string, type: string, user_id?: string | null, video_url: string } }> };
+
 export type GetAllREfundsQueryVariables = Exact<{ [key: string]: never; }>;
 
 
@@ -15392,6 +16221,78 @@ export const GetReelsLikesDocument = gql`
   }
 }
     `;
+export const GetReelOrdersDocument = gql`
+    query getReelOrders {
+  reel_orders {
+    OrderID
+    combined_order_id
+    created_at
+    delivery_address_id
+    delivery_fee
+    delivery_note
+    delivery_photo_url
+    delivery_time
+    discount
+    found
+    id
+    reel_id
+    service_fee
+    shopper_id
+    status
+    total
+    updated_at
+    user_id
+    voucher_code
+    shopper {
+      Employment_id
+      active
+      full_name
+      driving_license
+      created_at
+      background_check_completed
+      address
+      onboarding_step
+      phone_number
+      national_id
+      id
+      profile_photo
+      status
+      transport_mode
+      updated_at
+      user_id
+      User {
+        created_at
+        email
+        gender
+        id
+        is_active
+        name
+        password_hash
+        phone
+        profile_picture
+        role
+        updated_at
+      }
+    }
+    Reel {
+      Price
+      Product
+      category
+      created_on
+      delivery_time
+      description
+      id
+      isLiked
+      likes
+      restaurant_id
+      title
+      type
+      user_id
+      video_url
+    }
+  }
+}
+    `;
 export const GetAllREfundsDocument = gql`
     query getAllREfunds {
   Refunds {
@@ -15693,6 +16594,9 @@ export function getSdk(client: GraphQLClient, withWrapper: SdkFunctionWrapper = 
     },
     GetReelsLikes(variables?: GetReelsLikesQueryVariables, requestHeaders?: GraphQLClientRequestHeaders): Promise<GetReelsLikesQuery> {
       return withWrapper((wrappedRequestHeaders) => client.request<GetReelsLikesQuery>(GetReelsLikesDocument, variables, {...requestHeaders, ...wrappedRequestHeaders}), 'GetReelsLikes', 'query', variables);
+    },
+    getReelOrders(variables?: GetReelOrdersQueryVariables, requestHeaders?: GraphQLClientRequestHeaders): Promise<GetReelOrdersQuery> {
+      return withWrapper((wrappedRequestHeaders) => client.request<GetReelOrdersQuery>(GetReelOrdersDocument, variables, {...requestHeaders, ...wrappedRequestHeaders}), 'getReelOrders', 'query', variables);
     },
     getAllREfunds(variables?: GetAllREfundsQueryVariables, requestHeaders?: GraphQLClientRequestHeaders): Promise<GetAllREfundsQuery> {
       return withWrapper((wrappedRequestHeaders) => client.request<GetAllREfundsQuery>(GetAllREfundsDocument, variables, {...requestHeaders, ...wrappedRequestHeaders}), 'getAllREfunds', 'query', variables);
