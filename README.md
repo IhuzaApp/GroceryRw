@@ -23,9 +23,625 @@ The `pages/api` directory is mapped to `/api/*`. Files in this directory are tre
 To learn more about Next.js, take a look at the following resources:
 
 - [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+  - [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
 
 You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js/) - your feedback and contributions are welcome!
+
+# Reel Orders System
+
+## Overview
+
+The Reel Orders system allows users to place direct orders from reel content without going through the traditional cart system. This creates a seamless shopping experience where users can order items they see in video content immediately.
+
+## Key Features
+
+### 1. Direct Order Placement
+- **No Cart Required**: Orders are placed directly from reel content
+- **Instant Purchase**: One-click ordering from video content
+- **Real-time Pricing**: Dynamic pricing based on quantity and delivery location
+- **Promo Code Support**: Apply discount codes during checkout
+
+### 2. Order Management
+- **Unified Order Tracking**: Reel orders appear alongside regular orders
+- **Status Tracking**: Same delivery status system as regular orders
+- **Shopper Assignment**: Automatic shopper assignment when available
+- **Delivery Tracking**: Real-time delivery updates
+
+### 3. User Experience
+- **Modal Checkout**: Clean, focused checkout experience
+- **Quantity Selection**: Adjust quantity with real-time price updates
+- **Special Instructions**: Add delivery notes and special requests
+- **Payment Integration**: Seamless payment processing
+
+## Technical Architecture
+
+### Database Schema
+
+#### Reel Orders Table
+```sql
+reel_orders {
+  id: uuid (primary key)
+  OrderID: string (unique order number)
+  user_id: uuid (foreign key to Users)
+  reel_id: uuid (foreign key to Reels)
+  quantity: string
+  total: string
+  service_fee: string
+  delivery_fee: string
+  discount: string (nullable)
+  voucher_code: string (nullable)
+  delivery_time: string
+  delivery_note: string
+  status: "PENDING" | "shopping" | "packing" | "on_the_way" | "delivered"
+  found: boolean
+  shopper_id: uuid (nullable, foreign key to Shoppers)
+  created_at: timestamp
+  updated_at: timestamp
+}
+```
+
+### API Endpoints
+
+#### 1. Reel Orders API (`/api/reel-orders`)
+
+**POST** - Create new reel order
+```typescript
+POST /api/reel-orders
+{
+  reel_id: uuid,
+  quantity: number,
+  total: string,
+  service_fee: string,
+  delivery_fee: string,
+  discount?: string,
+  voucher_code?: string,
+  delivery_time: string,
+  delivery_note?: string,
+  delivery_address_id: uuid
+}
+
+// Response
+{
+  success: true,
+  order_id: uuid,
+  order_number: string,
+  message: "Reel order placed successfully"
+}
+```
+
+#### 2. All Orders API (`/api/queries/all-orders`)
+
+**GET** - Fetch both regular and reel orders
+```typescript
+GET /api/queries/all-orders
+
+// Response
+{
+  orders: [
+    {
+      id: uuid,
+      OrderID: string,
+      status: string,
+      created_at: string,
+      total: number,
+      orderType: "regular" | "reel",
+      // Regular order fields
+      shop?: object,
+      itemsCount?: number,
+      unitsCount?: number,
+      // Reel order fields
+      reel?: object,
+      quantity?: number,
+      delivery_note?: string
+    }
+  ]
+}
+```
+
+#### 3. Reel Order Details API (`/api/queries/reel-order-details`)
+
+**GET** - Fetch detailed reel order information
+```typescript
+GET /api/queries/reel-order-details?id=uuid
+
+// Response
+{
+  order: {
+    id: uuid,
+    OrderID: string,
+    status: string,
+    created_at: string,
+    total: number,
+    service_fee: number,
+    delivery_fee: number,
+    discount: number,
+    quantity: number,
+    delivery_note: string,
+    orderType: "reel",
+    reel: {
+      id: uuid,
+      title: string,
+      description: string,
+      Price: string,
+      Product: string,
+      type: string,
+      video_url: string
+    },
+    assignedTo?: {
+      id: uuid,
+      name: string,
+      phone: string,
+      profile_photo: string,
+      transport_mode: string
+    }
+  }
+}
+```
+
+## Frontend Components
+
+### 1. Order Modal (`src/components/Reels/OrderModal.tsx`)
+
+**Features:**
+- Quantity selection with real-time price updates
+- Promo code application
+- Special instructions input
+- Payment method display
+- Order summary with breakdown
+- Loading states with placeholders
+
+**Key Functions:**
+```typescript
+// Calculate order totals
+const basePrice = post?.restaurant?.price || post?.product?.price || 0;
+const subtotal = basePrice * quantity;
+const finalTotal = subtotal - discount + serviceFee + deliveryFee;
+
+// Handle promo code application
+const handleApplyPromo = () => {
+  const PROMO_CODES = { SAVE10: 0.1, SAVE20: 0.2 };
+  const code = promoCode.trim().toUpperCase();
+  if (PROMO_CODES[code]) {
+    setDiscount(subtotal * PROMO_CODES[code]);
+    setAppliedPromo(code);
+  }
+};
+
+// Place order
+const handlePlaceOrder = async () => {
+  const payload = {
+    reel_id: post.id,
+    quantity: quantity,
+    total: finalTotal.toString(),
+    service_fee: serviceFee.toString(),
+    delivery_fee: deliveryFee.toString(),
+    discount: discount > 0 ? discount.toString() : null,
+    voucher_code: appliedPromo,
+    delivery_time: deliveryTimestamp,
+    delivery_note: comments || "",
+    delivery_address_id: deliveryAddressId,
+  };
+  
+  const res = await fetch("/api/reel-orders", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload),
+  });
+};
+```
+
+### 2. Video Reel Component (`src/components/Reels/VideoReel.tsx`)
+
+**Features:**
+- "Order Now" button integration
+- Modal trigger functionality
+- Reel information display
+- Price and delivery information
+
+**Order Button Integration:**
+```typescript
+// Order button with modal trigger
+<button
+  onClick={() => setShowOrderModal(true)}
+  className="bg-purple-500 hover:bg-purple-600 text-white px-4 py-2 rounded-lg"
+>
+  Order Now
+</button>
+
+// Order modal
+{showOrderModal && (
+  <OrderModal
+    open={showOrderModal}
+    onClose={() => setShowOrderModal(false)}
+    post={post}
+    shopLat={shopLat}
+    shopLng={shopLng}
+    shopAlt={shopAlt}
+    shopId={shopId}
+  />
+)}
+```
+
+### 3. Order Details Components
+
+#### Regular Order Details (`src/components/UserCarts/orders/UserOrderDetails.tsx`)
+- Displays regular shop orders
+- Shows shop information and item details
+- Green theme styling
+
+#### Reel Order Details (`src/components/UserCarts/orders/UserReelOrderDetails.tsx`)
+- Displays reel-specific order information
+- Shows reel video thumbnail and details
+- Purple theme styling
+- Comprehensive shopper information
+
+**Key Differences:**
+```typescript
+// Regular orders show shop information
+{order.shop && (
+  <div className="shop-info">
+    <h3>{order.shop.name}</h3>
+    <p>{order.shop.address}</p>
+  </div>
+)}
+
+// Reel orders show reel information
+{order.reel && (
+  <div className="reel-info">
+    <video src={order.reel.video_url} />
+    <h3>{order.reel.title}</h3>
+    <p>{order.reel.description}</p>
+  </div>
+)}
+```
+
+## Order Management System
+
+### 1. Unified Order Display (`src/components/userProfile/userRecentOrders.tsx`)
+
+**Features:**
+- Displays both regular and reel orders
+- Visual distinction between order types
+- Consistent filtering and pagination
+- Dark theme support
+
+**Order Type Detection:**
+```typescript
+// Visual distinction
+const buttonClass = order.orderType === "reel" 
+  ? "bg-purple-500 hover:bg-purple-600" 
+  : "bg-green-500 hover:bg-green-600";
+
+// Content display
+{order.orderType === "reel" ? (
+  <div className="reel-order-info">
+    <span>{order.quantity} quantity</span>
+    <span>{order.reel?.title}</span>
+  </div>
+) : (
+  <div className="regular-order-info">
+    <span>{order.itemsCount} items ({order.unitsCount} units)</span>
+    <span>{order.shop?.name}</span>
+  </div>
+)}
+```
+
+### 2. Order Details Pages
+
+#### Unified Order Details (`pages/CurrentPendingOrders/viewOrderDetails/[orderId].tsx`)
+
+**Smart Order Detection:**
+```typescript
+// Try regular order first
+let res = await fetch(`/api/queries/orderDetails?id=${orderId}`);
+if (res.ok) {
+  const data = await res.json();
+  if (data.order) {
+    setOrder(data.order);
+    setOrderType("regular");
+    return;
+  }
+}
+
+// Try reel order if regular not found
+res = await fetch(`/api/queries/reel-order-details?id=${orderId}`);
+if (res.ok) {
+  const data = await res.json();
+  setOrder(data.order);
+  setOrderType("reel");
+}
+
+// Render appropriate component
+{orderType === "reel" ? (
+  <UserReelOrderDetails order={order} />
+) : (
+  <UserOrderDetails order={order} />
+)}
+```
+
+## User Experience Flow
+
+### 1. Discovery and Ordering
+
+1. **Browse Reels**: User scrolls through video content
+2. **View Details**: Tap on reel to see product information
+3. **Order Now**: Click "Order Now" button
+4. **Configure Order**: Select quantity, add notes, apply promo codes
+5. **Place Order**: Complete checkout process
+6. **Confirmation**: Receive order confirmation
+
+### 2. Order Tracking
+
+1. **Order Placed**: Order appears in order history
+2. **Shopper Assignment**: Automatic assignment when available
+3. **Status Updates**: Real-time status changes
+4. **Delivery**: Track delivery progress
+5. **Completion**: Order delivered and marked complete
+
+### 3. Order Management
+
+1. **View Orders**: Access order history from main menu
+2. **Filter Orders**: Filter by status (pending/completed)
+3. **Order Details**: View comprehensive order information
+4. **Contact Shopper**: Call or message assigned shopper
+5. **Feedback**: Rate and review completed orders
+
+## Examples
+
+### Example 1: Restaurant Reel Order
+
+**Scenario**: User sees a delicious pizza reel from "Pizza Palace"
+
+1. **Reel Content**: Video shows fresh pizza being made
+2. **Product Info**: Title: "Margherita Pizza", Price: $15.99
+3. **Order Process**:
+   ```typescript
+   // User clicks "Order Now"
+   setShowOrderModal(true);
+   
+   // User selects quantity
+   setQuantity(2);
+   
+   // User adds special instructions
+   setComments("Extra cheese, well done");
+   
+   // User applies promo code
+   handleApplyPromo("SAVE10"); // 10% discount
+   
+   // Order is placed
+   const order = {
+     reel_id: "pizza-reel-123",
+     quantity: 2,
+     total: "28.78", // $15.99 * 2 - 10% discount + fees
+     delivery_note: "Extra cheese, well done",
+     voucher_code: "SAVE10"
+   };
+   ```
+
+### Example 2: Supermarket Reel Order
+
+**Scenario**: User sees a fresh produce showcase from "Fresh Market"
+
+1. **Reel Content**: Video shows fresh vegetables and fruits
+2. **Product Info**: Title: "Organic Vegetable Basket", Price: $25.00
+3. **Order Process**:
+   ```typescript
+   // User selects quantity
+   setQuantity(1);
+   
+   // System calculates delivery fee based on distance
+   const deliveryFee = calculateDeliveryFee(userLocation, shopLocation);
+   
+   // Order summary
+   const orderSummary = {
+     subtotal: 25.00,
+     service_fee: 2.00,
+     delivery_fee: 3.50,
+     total: 30.50
+   };
+   ```
+
+### Example 3: Chef Recipe Reel Order
+
+**Scenario**: User sees a cooking tutorial for "Homemade Pasta"
+
+1. **Reel Content**: Video shows chef making pasta from scratch
+2. **Product Info**: Title: "Fresh Homemade Pasta Kit", Price: $35.00
+3. **Order Process**:
+   ```typescript
+   // User adds special dietary requirements
+   setComments("Gluten-free pasta, no dairy");
+   
+   // User applies multiple promo codes
+   handleApplyPromo("SAVE20"); // 20% discount
+   
+   // Final order
+   const order = {
+     reel_id: "pasta-kit-456",
+     quantity: 1,
+     total: "30.00", // $35.00 - 20% discount + fees
+     delivery_note: "Gluten-free pasta, no dairy",
+     voucher_code: "SAVE20"
+   };
+   ```
+
+## Technical Implementation Details
+
+### 1. Database Relationships
+
+```sql
+-- Reel orders reference reels
+ALTER TABLE reel_orders 
+ADD CONSTRAINT fk_reel_orders_reel 
+FOREIGN KEY (reel_id) REFERENCES reels(id);
+
+-- Reel orders reference users
+ALTER TABLE reel_orders 
+ADD CONSTRAINT fk_reel_orders_user 
+FOREIGN KEY (user_id) REFERENCES users(id);
+
+-- Reel orders can reference shoppers
+ALTER TABLE reel_orders 
+ADD CONSTRAINT fk_reel_orders_shopper 
+FOREIGN KEY (shopper_id) REFERENCES shoppers(id);
+```
+
+### 2. API Error Handling
+
+```typescript
+// Comprehensive error handling
+try {
+  const response = await fetch("/api/reel-orders", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload),
+  });
+
+  if (!response.ok) {
+    const errorData = await response.json();
+    throw new Error(errorData.error || "Order placement failed");
+  }
+
+  const data = await response.json();
+  // Handle success
+} catch (error) {
+  // Handle specific error types
+  if (error.message.includes("delivery_address")) {
+    showError("Please select a delivery address");
+  } else if (error.message.includes("promo")) {
+    showError("Invalid promo code");
+  } else {
+    showError("Order placement failed. Please try again.");
+  }
+}
+```
+
+### 3. Real-time Updates
+
+```typescript
+// Optimistic UI updates
+const handlePlaceOrder = async () => {
+  // Immediately show loading state
+  setIsOrderLoading(true);
+  
+  try {
+    // Place order
+    const response = await placeOrder(payload);
+    
+    // Show success message
+    showSuccess("Order placed successfully!");
+    
+    // Close modal after delay
+    setTimeout(() => {
+      onClose();
+    }, 1500);
+  } catch (error) {
+    // Handle error
+    showError(error.message);
+  } finally {
+    setIsOrderLoading(false);
+  }
+};
+```
+
+## Best Practices
+
+### 1. For Developers
+
+1. **Error Handling**: Always handle API errors gracefully
+2. **Loading States**: Show appropriate loading indicators
+3. **Validation**: Validate all user inputs before submission
+4. **Optimistic Updates**: Update UI immediately, sync with backend
+5. **Type Safety**: Use TypeScript interfaces for all data structures
+
+### 2. For Users
+
+1. **Order Placement**: Review order details before confirming
+2. **Promo Codes**: Check promo code validity before applying
+3. **Delivery Address**: Ensure delivery address is correct
+4. **Special Instructions**: Be specific with delivery notes
+5. **Order Tracking**: Monitor order status for updates
+
+### 3. For Content Creators
+
+1. **Clear Product Information**: Provide accurate titles and descriptions
+2. **Quality Videos**: Ensure good video quality and lighting
+3. **Pricing**: Set competitive and accurate prices
+4. **Availability**: Keep product availability up to date
+5. **Engagement**: Respond to comments and questions
+
+## Troubleshooting
+
+### Common Issues
+
+1. **Order Not Placed**
+   - Check internet connection
+   - Verify delivery address is selected
+   - Ensure all required fields are filled
+
+2. **Promo Code Not Working**
+   - Verify promo code is valid
+   - Check if discounts are enabled
+   - Ensure minimum order requirements are met
+
+3. **Order Not Appearing**
+   - Refresh the orders page
+   - Check order status filter
+   - Contact support if issue persists
+
+4. **Video Not Loading**
+   - Check internet connection
+   - Try refreshing the page
+   - Clear browser cache
+
+### Support
+
+For technical issues or questions about the Reels and Reel Orders system:
+
+- **Technical Support**: support@example.com
+- **Bug Reports**: bugs@example.com
+- **Feature Requests**: features@example.com
+
+## Future Enhancements
+
+### Planned Features
+
+1. **Advanced Ordering**
+   - Multiple item selection from single reel
+   - Customization options (size, toppings, etc.)
+   - Scheduled delivery times
+
+2. **Enhanced Tracking**
+   - Real-time shopper location
+   - Estimated arrival times
+   - Delivery notifications
+
+3. **Social Features**
+   - Share orders with friends
+   - Group ordering
+   - Order recommendations
+
+4. **Analytics**
+   - Order conversion tracking
+   - Popular reel analysis
+   - Revenue reporting
+
+### Performance Improvements
+
+1. **Caching**
+   - Reel content caching
+   - Order history caching
+   - API response caching
+
+2. **Optimization**
+   - Image and video compression
+   - Lazy loading
+   - Bundle size optimization
+
+3. **Scalability**
+   - Database query optimization
+   - API rate limiting
+   - Load balancing
 
 ## Deploy on Vercel
 
@@ -34,6 +650,13 @@ The easiest way to deploy your Next.js app is to use the [Vercel Platform](https
 Check out our [Next.js deployment documentation](https://nextjs.org/docs/deployment) for more details.
 
 # Grocery Delivery Application
+
+## Table of Contents
+
+1. [Reels Feature](#reels-feature-documentation)
+2. [Reel Orders System](#reel-orders-system)
+3. [Delivery Photo Upload Feature](#delivery-photo-upload-feature)
+4. [Nearby Dasher Notification Logic](#nearby-dasher-notification-logic)
 
 # Reels Feature Documentation
 
