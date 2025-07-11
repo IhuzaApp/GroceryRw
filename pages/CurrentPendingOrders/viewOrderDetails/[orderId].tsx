@@ -2,6 +2,7 @@ import RootLayout from "@components/ui/layout";
 import React, { useState, useEffect } from "react";
 import { useRouter } from "next/router";
 import UserOrderDetails from "@components/UserCarts/orders/UserOrderDetails";
+import UserReelOrderDetails from "@components/UserCarts/orders/UserReelOrderDetails";
 import { Button } from "rsuite";
 import Link from "next/link";
 
@@ -11,6 +12,7 @@ export default function ViewOrderDetailsPage() {
   const [order, setOrder] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [orderType, setOrderType] = useState<"regular" | "reel" | null>(null);
 
   useEffect(() => {
     if (!orderId) return;
@@ -18,9 +20,29 @@ export default function ViewOrderDetailsPage() {
       try {
         setLoading(true);
         setError(null);
-        const res = await fetch(`/api/queries/orderDetails?id=${orderId}`);
-
+        
+        // Try to fetch as regular order first
+        let res = await fetch(`/api/queries/orderDetails?id=${orderId}`);
+        
+        if (res.ok) {
+          const data = await res.json();
+          if (data.order) {
+            setOrder(data.order);
+            setOrderType("regular");
+            return;
+          }
+        } else if (res.status === 404) {
+          // Silently handle 404 for regular orders - this is expected for reel orders
+          console.log("Order not found in regular orders, trying reel orders...");
+        }
+        
+        // If not found as regular order, try as reel order
+        res = await fetch(`/api/queries/reel-order-details?id=${orderId}`);
+        
         if (!res.ok) {
+          if (res.status === 404) {
+            throw new Error("Order not found. Please check the order ID and try again.");
+          }
           const errorData = await res.json();
           throw new Error(errorData.error || "Failed to fetch order details");
         }
@@ -32,13 +54,8 @@ export default function ViewOrderDetailsPage() {
           throw new Error("Order data is missing");
         }
 
-        // Ensure estimatedDelivery exists
-        if (!data.order.estimatedDelivery) {
-          console.warn("Order is missing estimated delivery time");
-          // We'll still set the order but the component will handle the missing time
-        }
-
         setOrder(data.order);
+        setOrderType("reel");
       } catch (err) {
         console.error("Error fetching order details:", err);
         setError(
@@ -146,7 +163,11 @@ export default function ViewOrderDetailsPage() {
     <RootLayout>
       <div className="p-4 md:ml-16">
         <div className="container mx-auto">
-          <UserOrderDetails order={order} />
+          {orderType === "reel" ? (
+            <UserReelOrderDetails order={order} />
+          ) : (
+            <UserOrderDetails order={order} />
+          )}
         </div>
       </div>
     </RootLayout>
