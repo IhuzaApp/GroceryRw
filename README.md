@@ -35,6 +35,388 @@ Check out our [Next.js deployment documentation](https://nextjs.org/docs/deploym
 
 # Grocery Delivery Application
 
+# Reels Feature Documentation
+
+## Overview
+
+The Reels feature is a TikTok-style video feed system that allows users to create, view, and interact with food-related video content. It supports three types of content: restaurant posts, supermarket posts, and chef/recipe posts.
+
+## Core Features
+
+### 1. Video Types
+
+- **Restaurant Posts**: Food delivery and dining experiences
+- **Supermarket Posts**: Product showcases and shopping content  
+- **Chef Posts**: Recipe tutorials and cooking content
+
+### 2. User Interactions
+
+- **Like/Unlike**: Real-time like functionality with optimistic updates
+- **Comments**: Add and interact with comments on reels
+- **Share**: Share reels with other users
+- **Scroll Navigation**: Smooth vertical scrolling between reels
+
+### 3. Responsive Design
+
+- **Mobile**: Full-screen experience with bottom navigation
+- **Desktop**: Integrated layout with sidebar and navigation
+- **Auto-play**: Videos play when visible, pause when not
+
+## Technical Architecture
+
+### Database Schema
+
+#### Reels Table
+```sql
+Reels {
+  id: uuid (primary key)
+  title: string
+  description: string
+  video_url: string
+  category: string
+  type: "restaurant" | "supermarket" | "chef"
+  user_id: uuid (foreign key to Users)
+  restaurant_id: uuid (optional, foreign key to Restaurants)
+  created_on: timestamp
+  isLiked: boolean
+  likes: string
+  delivery_time: string
+  Price: string
+  Product: jsonb
+}
+```
+
+#### Reel Likes Table
+```sql
+reel_likes {
+  id: uuid (primary key)
+  reel_id: uuid (foreign key to Reels)
+  user_id: uuid (foreign key to Users)
+  created_at: timestamp
+}
+```
+
+#### Reel Comments Table
+```sql
+Reels_comments {
+  id: uuid (primary key)
+  reel_id: uuid (foreign key to Reels)
+  user_id: uuid (foreign key to Users)
+  text: string
+  created_on: timestamp
+  likes: string
+  isLiked: boolean
+}
+```
+
+### API Endpoints
+
+#### 1. Reels API (`/api/queries/reels`)
+
+**GET** - Fetch reels
+```typescript
+// Get all reels
+GET /api/queries/reels
+
+// Get reels by user
+GET /api/queries/reels?user_id=uuid
+
+// Get reels by restaurant
+GET /api/queries/reels?restaurant_id=uuid
+
+// Filter by type
+GET /api/queries/reels?type=restaurant
+```
+
+**POST** - Create new reel
+```typescript
+POST /api/queries/reels
+{
+  title: string,
+  description: string,
+  video_url: string,
+  category: string,
+  type: "restaurant" | "supermarket" | "chef",
+  restaurant_id?: uuid,
+  Product?: object,
+  delivery_time?: string,
+  Price?: string
+}
+```
+
+#### 2. Reel Likes API (`/api/queries/reel-likes`)
+
+**GET** - Get likes for a reel
+```typescript
+GET /api/queries/reel-likes?reel_id=uuid
+```
+
+**POST** - Add like to reel
+```typescript
+POST /api/queries/reel-likes
+{
+  reel_id: uuid
+}
+```
+
+**DELETE** - Remove like from reel
+```typescript
+DELETE /api/queries/reel-likes
+{
+  reel_id: uuid
+}
+```
+
+#### 3. Reel Comments API (`/api/queries/reel-comments`)
+
+**GET** - Get comments for a reel
+```typescript
+GET /api/queries/reel-comments?reel_id=uuid
+```
+
+**POST** - Add comment to reel
+```typescript
+POST /api/queries/reel-comments
+{
+  reel_id: uuid,
+  text: string
+}
+```
+
+**PUT** - Toggle comment like
+```typescript
+PUT /api/queries/reel-comments
+{
+  comment_id: uuid,
+  action: "toggle_like"
+}
+```
+
+**DELETE** - Delete comment
+```typescript
+DELETE /api/queries/reel-comments
+{
+  comment_id: uuid
+}
+```
+
+## Frontend Components
+
+### 1. Main Reels Component (`pages/Reels/index.tsx`)
+
+**Features:**
+- Fetches reels from database
+- Handles responsive layout (mobile/desktop)
+- Manages like/unlike functionality
+- Optimistic UI updates
+- Loading states with placeholder content
+
+**Key Functions:**
+```typescript
+// Fetch reels from database
+const fetchReels = async () => {
+  const response = await fetch('/api/queries/reels');
+  const data = await response.json();
+  const convertedPosts = data.reels.map(convertDatabaseReelToFoodPost);
+  setPosts(convertedPosts);
+};
+
+// Optimistic like updates
+const toggleLike = async (postId: string) => {
+  // Immediately update UI
+  setPosts(posts.map(post => 
+    post.id === postId 
+      ? { ...post, isLiked: !post.isLiked, stats: { ...post.stats, likes: post.isLiked ? post.stats.likes - 1 : post.stats.likes + 1 } }
+      : post
+  ));
+  
+  // Process backend request in background
+  fetch('/api/queries/reel-likes', { method: isLiked ? 'DELETE' : 'POST', body: JSON.stringify({ reel_id: postId }) });
+};
+```
+
+### 2. Video Reel Component (`src/components/Reels/VideoReel.tsx`)
+
+**Features:**
+- Video player with auto-play/pause
+- Like button with visual feedback
+- Comment and share buttons
+- Type and category badges
+- Responsive design
+
+**Visual Elements:**
+```typescript
+// Type badges with colors
+const getPostTypeColor = (type: PostType) => {
+  switch (type) {
+    case "restaurant": return "#ff6b35"; // Orange
+    case "supermarket": return "#4ade80"; // Green
+    case "chef": return "#3b82f6"; // Blue
+  }
+};
+
+// Category badges
+const getCategoryColor = (category: string) => {
+  switch (category.toLowerCase()) {
+    case "shopping": return "#8b5cf6"; // Purple
+    case "organic": return "#10b981"; // Emerald
+    case "tutorial": return "#f59e0b"; // Amber
+    // ... more categories
+  }
+};
+```
+
+### 3. Comments Drawer (`src/components/Reels/CommentsDrawer.tsx`)
+
+**Features:**
+- Slide-up drawer for mobile
+- Side panel for desktop
+- Real-time comment addition
+- Like/unlike comments
+- Responsive design
+
+## User Experience Features
+
+### 1. Optimistic Updates
+
+- **Instant Feedback**: Like button turns red immediately
+- **Background Processing**: API calls don't block UI
+- **Smooth Scrolling**: No loading interruptions
+- **Error Handling**: Backend errors logged but UI stays updated
+
+### 2. Loading States
+
+- **Placeholder Content**: Shows 3 placeholder reels while loading
+- **Smooth Transitions**: Seamless switch from placeholders to real content
+- **Error States**: Clear error messages with retry options
+
+### 3. Responsive Design
+
+**Mobile Layout:**
+- Full-screen video experience
+- Bottom navigation bar
+- Slide-up comments drawer
+- Touch-optimized interactions
+
+**Desktop Layout:**
+- Integrated with main app layout
+- Side panel comments
+- Keyboard shortcuts support
+- Larger video player
+
+### 4. Video Management
+
+- **Auto-play**: Videos play when visible in viewport
+- **Auto-pause**: Videos pause when scrolled away
+- **Intersection Observer**: Efficient visibility detection
+- **Loading States**: Video loading indicators
+- **Error Handling**: Fallback for failed video loads
+
+## Data Flow
+
+### 1. Reel Creation
+```
+User Upload → API Validation → Database Storage → UI Update
+```
+
+### 2. Like Interaction
+```
+User Click → Optimistic UI Update → Background API Call → Database Update
+```
+
+### 3. Comment System
+```
+User Comment → API Call → Database Storage → Real-time UI Update
+```
+
+### 4. Data Fetching
+```
+Component Mount → API Call → Database Query → Data Conversion → UI Render
+```
+
+## Security & Authentication
+
+### 1. User Authentication
+- All write operations require valid session
+- User ID extracted from NextAuth session
+- Unauthorized requests return 401 status
+
+### 2. Authorization
+- Users can only delete their own comments
+- Admin users can delete any comment
+- Like operations tied to authenticated user
+
+### 3. Input Validation
+- Required fields validation
+- Video URL validation
+- Comment text sanitization
+- Type and category validation
+
+## Performance Optimizations
+
+### 1. Video Optimization
+- Preload metadata only
+- Lazy loading for off-screen videos
+- Efficient video format support
+- Background loading
+
+### 2. State Management
+- Optimistic updates for better UX
+- Efficient re-rendering with React
+- Proper cleanup of event listeners
+- Memory leak prevention
+
+### 3. API Optimization
+- Efficient database queries
+- Proper indexing on foreign keys
+- Caching strategies
+- Error handling and logging
+
+## Configuration
+
+### Environment Variables
+```env
+# Database
+HASURA_GRAPHQL_ENDPOINT=your_hasura_endpoint
+HASURA_GRAPHQL_ADMIN_SECRET=your_admin_secret
+
+# Authentication
+NEXTAUTH_SECRET=your_nextauth_secret
+NEXTAUTH_URL=http://localhost:3000
+
+# File Storage (for video uploads)
+CLOUDINARY_CLOUD_NAME=your_cloudinary_name
+CLOUDINARY_API_KEY=your_api_key
+CLOUDINARY_API_SECRET=your_api_secret
+```
+
+### GraphQL Schema
+The reels feature uses the following GraphQL operations:
+- `GetAllReels` - Fetch all reels with user and restaurant data
+- `AddReels` - Create new reel
+- `GetReelsLikes` - Get likes for specific reel
+- `AddReelLike` - Add like to reel
+- `RemoveReelLike` - Remove like from reel
+- `GetComments` - Get comments for reel
+- `AddReelComment` - Add comment to reel
+
+## Future Enhancements
+
+### Planned Features
+- Video upload functionality
+- Advanced filtering and search
+- User profiles and following
+- Push notifications for new content
+- Analytics and insights
+- Content moderation tools
+
+### Technical Improvements
+- Video compression and optimization
+- CDN integration for faster loading
+- Real-time notifications
+- Advanced caching strategies
+- Performance monitoring
+
 ## Revenue and Checkout System
 
 ### Revenue Calculation Logic
