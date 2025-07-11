@@ -9,7 +9,7 @@ const CREATE_REEL_ORDER = gql`
   mutation CreateReelOrder(
     $user_id: uuid!
     $reel_id: uuid!
-    $quantity: Int!
+    $quantity: String!
     $total: String!
     $service_fee: String!
     $delivery_fee: String!
@@ -32,6 +32,7 @@ const CREATE_REEL_ORDER = gql`
         delivery_time: $delivery_time
         delivery_note: $delivery_note
         delivery_address_id: $delivery_address_id
+        shopper_id: null
         status: "PENDING"
         found: false
       }
@@ -97,7 +98,7 @@ export default async function handler(
     }>(CREATE_REEL_ORDER, {
       user_id,
       reel_id,
-      quantity,
+      quantity: quantity.toString(),
       total,
       service_fee,
       delivery_fee,
