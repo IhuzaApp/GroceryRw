@@ -295,10 +295,9 @@ export default function OrderModal({
         { placement: "topEnd" }
       );
 
-      // Close modal and redirect
+      // Close modal only
       setTimeout(() => {
         onClose();
-        router.push("/CurrentPendingOrders");
       }, 1500);
     } catch (err: any) {
       console.error("Order placement error:", err);
