@@ -619,34 +619,52 @@ export default function FoodReelsApp() {
 
   const toggleLike = async (postId: string) => {
     try {
-      const response = await fetch('/api/queries/reels', {
-        method: 'PUT',
+      const currentPost = posts.find((post: FoodPost) => post.id === postId);
+      if (!currentPost) return;
+
+      const isCurrentlyLiked = currentPost.isLiked;
+      
+      // Immediately update UI for instant feedback
+      setPosts(
+        posts.map((post: FoodPost) =>
+          post.id === postId
+            ? {
+                ...post,
+                isLiked: !isCurrentlyLiked,
+                stats: {
+                  ...post.stats,
+                  likes: isCurrentlyLiked 
+                    ? Math.max(0, post.stats.likes - 1)
+                    : post.stats.likes + 1,
+                },
+              }
+            : post
+        )
+      );
+
+      // Process backend request in background
+      const method = isCurrentlyLiked ? 'DELETE' : 'POST';
+      
+      fetch('/api/queries/reel-likes', {
+        method,
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          id: postId,
-          action: 'toggle_like'
+          reel_id: postId
         }),
+      }).then(response => {
+        if (!response.ok) {
+          console.error('Error toggling like:', response.status);
+          // Optionally revert UI if backend fails
+          // For now, we'll keep the optimistic update
+        }
+      }).catch(error => {
+        console.error('Error toggling like:', error);
+        // Optionally revert UI if backend fails
+        // For now, we'll keep the optimistic update
       });
-
-      if (response.ok) {
-        const result = await response.json();
-        setPosts(
-          posts.map((post: FoodPost) =>
-            post.id === postId
-              ? {
-                  ...post,
-                  isLiked: result.isLiked,
-                  stats: {
-                    ...post.stats,
-                    likes: parseInt(result.likes),
-                  },
-                }
-              : post
-          )
-        );
-      }
+      
     } catch (error) {
       console.error('Error toggling like:', error);
     }
@@ -761,17 +779,162 @@ export default function FoodReelsApp() {
 
   const activePost = posts.find((post: FoodPost) => post.id === activePostId);
 
-  // Loading state
+  // Loading state - show placeholder reels
   if (loading) {
-    return (
-      <div className={`min-h-screen flex items-center justify-center ${
-        theme === "dark" ? "bg-gray-900 text-white" : "bg-white text-gray-900"
-      }`}>
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto mb-4"></div>
-          <p>Loading reels...</p>
+    const placeholderPosts: FoodPost[] = [
+      {
+        id: "placeholder-1",
+        type: "restaurant",
+        creator: {
+          name: "Loading...",
+          avatar: "/placeholder.svg?height=40&width=40",
+          verified: false,
+        },
+        content: {
+          title: "Loading content...",
+          description: "Please wait while we load the latest reels for you.",
+          video: "/assets/Videos/coverr-shopping-for-fresh-fruits-1080p.mp4",
+          category: "Loading",
+        },
+        stats: {
+          likes: 0,
+          comments: 0,
+        },
+        restaurant: {
+          rating: 0,
+          reviews: 0,
+          location: "Loading...",
+          deliveryTime: "Loading...",
+          price: 0,
+        },
+        isLiked: false,
+        commentsList: [],
+      },
+      {
+        id: "placeholder-2",
+        type: "supermarket",
+        creator: {
+          name: "Loading...",
+          avatar: "/placeholder.svg?height=40&width=40",
+          verified: false,
+        },
+        content: {
+          title: "Loading content...",
+          description: "Please wait while we load the latest reels for you.",
+          video: "/assets/Videos/coverr-shopping-for-fresh-fruits-1080p.mp4",
+          category: "Loading",
+        },
+        stats: {
+          likes: 0,
+          comments: 0,
+        },
+        product: {
+          price: 0,
+          store: "Loading...",
+          inStock: false,
+        },
+        isLiked: false,
+        commentsList: [],
+      },
+      {
+        id: "placeholder-3",
+        type: "chef",
+        creator: {
+          name: "Loading...",
+          avatar: "/placeholder.svg?height=40&width=40",
+          verified: false,
+        },
+        content: {
+          title: "Loading content...",
+          description: "Please wait while we load the latest reels for you.",
+          video: "/assets/Videos/coverr-shopping-for-fresh-fruits-1080p.mp4",
+          category: "Loading",
+        },
+        stats: {
+          likes: 0,
+          comments: 0,
+        },
+        recipe: {
+          difficulty: "Easy",
+          cookTime: "Loading...",
+          servings: 0,
+          youtubeChannel: "Loading...",
+          subscribers: "Loading...",
+        },
+        isLiked: false,
+        commentsList: [],
+      },
+    ];
+
+    // Use placeholder posts for loading state
+    const loadingPosts = placeholderPosts;
+
+    // Mobile layout with placeholder posts
+    if (isMobile) {
+      return (
+        <div
+          className={`min-h-screen bg-black transition-colors duration-200 ${
+            theme === "dark" ? "bg-gray-900" : "bg-black"
+          }`}
+        >
+          <div
+            ref={containerRef}
+            style={{ height: "calc(100vh - 80px)", overflowY: "auto" }}
+          >
+            <div style={{ scrollSnapType: "y mandatory" }}>
+              {loadingPosts.map((post, index) => (
+                <div
+                  key={`${post.id}-${isMobile ? "mobile" : "desktop"}`}
+                  data-index={index}
+                >
+                  <VideoReel
+                    post={post}
+                    isVisible={visiblePostIndex === index}
+                    onLike={toggleLike}
+                    onComment={openComments}
+                    onShare={handleShare}
+                  />
+                </div>
+              ))}
+            </div>
+          </div>
+          <BottomBar />
         </div>
-      </div>
+      );
+    }
+
+    // Desktop layout with placeholder posts
+    return (
+      <RootLayout>
+        <div
+          className={`container mx-auto transition-colors duration-200 ${
+            theme === "dark" ? "bg-gray-900 text-white" : "bg-white text-gray-900"
+          }`}
+        >
+          <div
+            ref={containerRef}
+            className="h-screen"
+            style={{ overflowY: "auto" }}
+          >
+            <div style={{ scrollSnapType: "y mandatory" }}>
+              {loadingPosts.map((post, index) => (
+                <div
+                  key={`${post.id}-${isMobile ? "mobile" : "desktop"}`}
+                  data-index={index}
+                >
+                  <VideoReel
+                    post={post}
+                    isVisible={visiblePostIndex === index}
+                    onLike={toggleLike}
+                    onComment={openComments}
+                    onShare={handleShare}
+                  />
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </RootLayout>
     );
   }
 

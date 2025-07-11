@@ -437,11 +437,37 @@ export default function VideoReel({
   const getPostTypeColor = (type: PostType) => {
     switch (type) {
       case "restaurant":
-        return "orange";
+        return "#ff6b35"; // Vibrant orange
       case "supermarket":
-        return "green";
+        return "#4ade80"; // Bright green
       case "chef":
-        return "blue";
+        return "#3b82f6"; // Blue
+      default:
+        return "#6b7280"; // Gray fallback
+    }
+  };
+
+  const getCategoryColor = (category: string) => {
+    const categoryLower = category.toLowerCase();
+    switch (categoryLower) {
+      case "shopping":
+        return "#8b5cf6"; // Purple
+      case "organic":
+        return "#10b981"; // Emerald
+      case "tutorial":
+        return "#f59e0b"; // Amber
+      case "recipe":
+        return "#ef4444"; // Red
+      case "food":
+        return "#f97316"; // Orange
+      case "cooking":
+        return "#dc2626"; // Red
+      case "delivery":
+        return "#06b6d4"; // Cyan
+      case "loading":
+        return "#6b7280"; // Gray
+      default:
+        return "#6b7280"; // Gray fallback
     }
   };
 
@@ -845,19 +871,31 @@ export default function VideoReel({
         </div>
         <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
           <Badge
-            color={getPostTypeColor(post.type)}
-            style={{ border: "1px solid", opacity: 0.3 }}
+            style={{ 
+              border: "1px solid rgba(255,255,255,0.3)",
+              backgroundColor: `${getPostTypeColor(post.type)}20`,
+              color: "#fff",
+              fontWeight: "600",
+              fontSize: "12px",
+              padding: "4px 8px",
+              borderRadius: "12px",
+              backdropFilter: "blur(8px)",
+            }}
           >
-            {getPostTypeIcon(post.type)}
-            <span style={{ marginLeft: 4, textTransform: "capitalize" }}>
+            <span style={{ textTransform: "capitalize" }}>
               {post.type}
             </span>
           </Badge>
           <Badge
             style={{
-              backgroundColor: "rgba(255,255,255,0.2)",
+              backgroundColor: `${getCategoryColor(post.content.category)}20`,
               color: "#fff",
-              border: "none",
+              border: "1px solid rgba(255,255,255,0.3)",
+              fontWeight: "500",
+              fontSize: "12px",
+              padding: "4px 8px",
+              borderRadius: "12px",
+              backdropFilter: "blur(8px)",
             }}
           >
             {post.content.category}
@@ -895,8 +933,9 @@ export default function VideoReel({
                 ? "#ef4444"
                 : "rgba(255,255,255,0.2)",
               backdropFilter: "blur(4px)",
-              border: "none",
+              border: post.isLiked ? "2px solid #ef4444" : "none",
               color: "#fff",
+              transition: "all 0.2s ease",
             }}
             onClick={() => onLike(post.id)}
           >
