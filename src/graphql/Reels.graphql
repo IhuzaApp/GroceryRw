@@ -53,6 +53,12 @@ query GetAllReels {
     delivery_time
     Price
     Product
+    reel_likes {
+      created_at
+      id
+      reel_id
+      user_id
+    }
   }
 }
 
