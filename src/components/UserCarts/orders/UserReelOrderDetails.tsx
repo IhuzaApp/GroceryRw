@@ -160,96 +160,7 @@ export default function UserReelOrderDetails({ order }: UserReelOrderDetailsProp
         <span className="ml-2 text-gray-500">Placed on {order.placedAt}</span>
       </div>
 
-      {/* Reel Information */}
-      <Panel shaded bordered className="mb-6">
-        <div className="mb-4">
-          <h2 className="mb-4 text-xl font-bold text-purple-600">Reel Details</h2>
-          <div className="flex items-start gap-4">
-            {/* Reel Video Thumbnail */}
-            <div className="relative h-24 w-24 flex-shrink-0 overflow-hidden rounded-lg bg-gray-200">
-              {order.reel?.video_url ? (
-                <video
-                  src={order.reel.video_url}
-                  className="h-full w-full object-cover"
-                  muted
-                  preload="metadata"
-                />
-              ) : (
-                <div className="flex h-full w-full items-center justify-center bg-gray-300">
-                  <svg className="h-8 w-8 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14.828 14.828a4 4 0 01-5.656 0M9 10h1m4 0h1m-6 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                  </svg>
-                </div>
-              )}
-            </div>
-            
-            {/* Reel Info */}
-            <div className="flex-1">
-              <h3 className="text-lg font-semibold text-gray-900">{order.reel?.title}</h3>
-              <p className="text-sm text-gray-600">{order.reel?.description}</p>
-              <div className="mt-2 flex items-center gap-4 text-sm text-gray-500">
-                <span>Type: {order.reel?.type}</span>
-                <span>Category: {order.reel?.category}</span>
-              </div>
-            </div>
-          </div>
-        </div>
 
-        {/* Order Details */}
-        <div className="border-t pt-4">
-          <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-            <div>
-              <h4 className="font-semibold text-gray-900">Order Information</h4>
-              <div className="mt-2 space-y-1 text-sm">
-                <div className="flex justify-between">
-                  <span className="text-gray-600">Quantity:</span>
-                  <span className="font-medium">{order.quantity}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-gray-600">Base Price:</span>
-                  <span className="font-medium">{formatCurrency(parseFloat(order.reel?.Price || "0"))}</span>
-                </div>
-                {order.delivery_note && (
-                  <div className="flex justify-between">
-                    <span className="text-gray-600">Special Instructions:</span>
-                    <span className="font-medium">{order.delivery_note}</span>
-                  </div>
-                )}
-              </div>
-            </div>
-            
-            <div>
-              <h4 className="font-semibold text-gray-900">Pricing Breakdown</h4>
-              <div className="mt-2 space-y-1 text-sm">
-                <div className="flex justify-between">
-                  <span className="text-gray-600">Subtotal:</span>
-                  <span className="font-medium">{formatCurrency(parseFloat(order.reel?.Price || "0") * order.quantity)}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-gray-600">Service Fee:</span>
-                  <span className="font-medium">{formatCurrency(order.service_fee)}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-gray-600">Delivery Fee:</span>
-                  <span className="font-medium">{formatCurrency(order.delivery_fee)}</span>
-                </div>
-                {order.discount > 0 && (
-                  <div className="flex justify-between text-green-600">
-                    <span>Discount:</span>
-                    <span className="font-medium">-{formatCurrency(order.discount)}</span>
-                  </div>
-                )}
-                <div className="border-t pt-1">
-                  <div className="flex justify-between font-semibold">
-                    <span>Total:</span>
-                    <span>{formatCurrency(order.total)}</span>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </Panel>
 
       {/* Order Status */}
       <Panel shaded bordered className="mb-6">
@@ -329,36 +240,184 @@ export default function UserReelOrderDetails({ order }: UserReelOrderDetailsProp
         </div>
       </Panel>
 
-      {/* Shopper Information */}
-      {order.assignedTo && (
-        <Panel shaded bordered className="mb-6">
-          <h2 className="mb-4 text-xl font-bold">Your Shopper</h2>
-          <div className="flex items-center gap-4">
-            <div className="h-12 w-12 overflow-hidden rounded-full bg-gray-200">
-              {order.assignedTo.profile_photo ? (
-                <Image
-                  src={order.assignedTo.profile_photo}
-                  alt={order.assignedTo.name}
-                  width={48}
-                  height={48}
-                  className="h-full w-full object-cover"
-                />
-              ) : (
-                <div className="flex h-full w-full items-center justify-center bg-gray-300">
-                  <svg className="h-6 w-6 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                  </svg>
+      {/* Order Content */}
+      <div className="flex flex-col gap-6 md:flex-row">
+        {/* Left Column - Order Details */}
+        <div className="w-full md:w-2/3">
+          <Panel shaded bordered className="mb-6">
+            <h2 className="mb-4 text-xl font-bold">Reel Details</h2>
+            <div className="space-y-4">
+              <div className="flex items-start gap-4">
+                {/* Reel Video Thumbnail */}
+                <div className="relative h-24 w-24 flex-shrink-0 overflow-hidden rounded-lg bg-gray-200">
+                  {order.reel?.video_url ? (
+                    <video
+                      src={order.reel.video_url}
+                      className="h-full w-full object-cover"
+                      muted
+                      preload="metadata"
+                    />
+                  ) : (
+                    <div className="flex h-full w-full items-center justify-center bg-gray-300">
+                      <svg className="h-8 w-8 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14.828 14.828a4 4 0 01-5.656 0M9 10h1m4 0h1m-6 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                      </svg>
+                    </div>
+                  )}
+                </div>
+                
+                {/* Reel Info */}
+                <div className="flex-1">
+                  <h3 className="text-lg font-semibold text-gray-900 dark:text-white">{order.reel?.title}</h3>
+                  <p className="text-sm text-gray-600 dark:text-gray-400">{order.reel?.description}</p>
+                  <div className="mt-2 flex items-center gap-4 text-sm text-gray-500 dark:text-gray-400">
+                    <span>Type: {order.reel?.type}</span>
+                    <span>Category: {order.reel?.category}</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div className="mt-6 border-t pt-4">
+              <div className="mb-2 flex justify-between">
+                <span className="text-gray-600 dark:text-gray-400">Quantity</span>
+                <span className="font-medium">{order.quantity}</span>
+              </div>
+              <div className="mb-2 flex justify-between">
+                <span className="text-gray-600 dark:text-gray-400">Base Price</span>
+                <span className="font-medium">{formatCurrency(parseFloat(order.reel?.Price || "0"))}</span>
+              </div>
+              <div className="mb-2 flex justify-between">
+                <span className="text-gray-600 dark:text-gray-400">Service Fee</span>
+                <span className="font-medium">{formatCurrency(order.service_fee)}</span>
+              </div>
+              <div className="mb-2 flex justify-between">
+                <span className="text-gray-600 dark:text-gray-400">Delivery Fee</span>
+                <span className="font-medium">{formatCurrency(order.delivery_fee)}</span>
+              </div>
+              {order.discount > 0 && (
+                <div className="mb-2 flex justify-between text-green-600 dark:text-green-400">
+                  <span>Discount</span>
+                  <span className="font-medium">-{formatCurrency(order.discount)}</span>
                 </div>
               )}
+              <div className="mt-4 flex justify-between text-lg font-bold">
+                <span>Total</span>
+                <span>{formatCurrency(order.total)}</span>
+              </div>
             </div>
-            <div className="flex-1">
-              <h3 className="font-semibold text-gray-900">{order.assignedTo.name}</h3>
-              <p className="text-sm text-gray-600">{order.assignedTo.transport_mode}</p>
-              <p className="text-sm text-gray-500">{order.assignedTo.phone}</p>
+          </Panel>
+
+          <Panel shaded bordered>
+            <h2 className="mb-4 text-xl font-bold">Delivery Information</h2>
+
+            {/* Delivery Time */}
+            <div className="mb-6">
+              <h3 className="mb-2 font-semibold">Estimated Delivery Time</h3>
+              <EstimatedDeliveryTime
+                estimatedDelivery={order.estimatedDelivery}
+                status={order.status}
+              />
             </div>
-          </div>
-        </Panel>
-      )}
+
+            {/* Delivery Notes if any */}
+            {order.delivery_note && (
+              <div className="mt-6">
+                <h3 className="mb-2 font-semibold">Delivery Notes</h3>
+                <div className="rounded-lg bg-gray-50 p-3 text-gray-700 dark:bg-gray-800 dark:text-gray-300">
+                  <p>{order.delivery_note}</p>
+                </div>
+              </div>
+            )}
+          </Panel>
+        </div>
+
+        {/* Right Column - Assigned Person */}
+        <div className="w-full md:w-1/3">
+          <Panel shaded bordered>
+            <h2 className="mb-4 text-xl font-bold">
+              {order.status === "shopping" || order.status === "packing"
+                ? "Your Shopper"
+                : "Your Delivery Person"}
+            </h2>
+            {order.assignedTo ? (
+              <div className="flex flex-col items-center text-center">
+                <div className="mb-3 h-24 w-24 overflow-hidden rounded-full">
+                  {order.assignedTo.profile_photo ? (
+                    <Image
+                      src={order.assignedTo.profile_photo}
+                      alt={order.assignedTo.name}
+                      width={96}
+                      height={96}
+                      className="h-full w-full object-cover"
+                    />
+                  ) : (
+                    <Image
+                      src={"/assets/images/profile.jpg"}
+                      alt={order.assignedTo.name}
+                      width={96}
+                      height={96}
+                      className="h-full w-full object-cover"
+                    />
+                  )}
+                </div>
+                <h3 className="text-lg font-bold text-gray-900 dark:text-white">{order.assignedTo.name}</h3>
+                <p className="mt-1 text-sm text-gray-600 dark:text-gray-400">{order.assignedTo.transport_mode}</p>
+                <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">{order.assignedTo.phone}</p>
+                <div className="mt-6 w-full space-y-3">
+                  <Button
+                    appearance="primary"
+                    block
+                    className={`${
+                      order.status === "delivered"
+                        ? "cursor-not-allowed opacity-50"
+                        : "bg-purple-500"
+                    } text-white`}
+                    disabled={order.status === "delivered"}
+                  >
+                    <svg
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      className="mr-2 h-4 w-4"
+                    >
+                      <path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07 19.5 19.5 0 01-6-6 19.79 19.79 0 01-3.07-8.67A2 2 0 014.11 2h3a2 2 0 012 1.72 12.84 12.84 0 00.7 2.81 2 2 0 01-.45 2.11L8.09 9.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45 12.84 12.84 0 002.81.7A2 2 0 0122 16.92z"></path>
+                    </svg>
+                    Call
+                  </Button>
+                  <Button
+                    appearance="ghost"
+                    block
+                    className="text-purple-600 hover:text-purple-700 dark:text-purple-400 dark:hover:text-purple-300"
+                  >
+                    <svg
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      className="mr-2 h-4 w-4"
+                    >
+                      <path d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"></path>
+                    </svg>
+                    Message
+                  </Button>
+                </div>
+              </div>
+            ) : (
+              <div className="text-center">
+                <div className="mb-4 flex justify-center">
+                  <div className="h-24 w-24 rounded-full bg-gray-200 dark:bg-gray-700"></div>
+                </div>
+                <h3 className="text-lg font-bold text-gray-900 dark:text-white">No Shopper Assigned</h3>
+                <p className="mt-2 text-sm text-gray-600 dark:text-gray-400">
+                  We're looking for a shopper to handle your order. You'll be notified once someone is assigned.
+                </p>
+              </div>
+            )}
+          </Panel>
+        </div>
+      </div>
 
       {/* Feedback Modal */}
       <Modal open={feedbackModal} onClose={() => setFeedbackModal(false)} size="sm">
