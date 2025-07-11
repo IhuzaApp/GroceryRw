@@ -278,7 +278,7 @@ export default function UserOrderDetails({ order }: UserOrderDetailsProps) {
                   </div>
                   <div className="flex-grow">
                     <h3 className="font-medium">{item.product.name}</h3>
-                    <div className="mt-1 flex justify-between text-sm text-gray-600">
+                    <div className="mt-1 flex justify-between text-sm text-gray-600 dark:text-gray-400">
                       <span>
                         {item.quantity} × {formatCurrency(item.price)}
                       </span>
@@ -293,19 +293,19 @@ export default function UserOrderDetails({ order }: UserOrderDetailsProps) {
 
             <div className="mt-6 border-t pt-4">
               <div className="mb-2 flex justify-between">
-                <span className="text-gray-600">Subtotal</span>
+                <span className="text-gray-600 dark:text-gray-400">Subtotal</span>
                 <span className="font-medium">
                   {formatCurrency(order.total)}
                 </span>
               </div>
               <div className="mb-2 flex justify-between">
-                <span className="text-gray-600">Service Fee</span>
+                <span className="text-gray-600 dark:text-gray-400">Service Fee</span>
                 <span className="font-medium">
                   {formatCurrency(order.serviceFee)}
                 </span>
               </div>
               <div className="mb-2 flex justify-between">
-                <span className="text-gray-600">Delivery Fee</span>
+                <span className="text-gray-600 dark:text-gray-400">Delivery Fee</span>
                 <span className="font-medium">
                   {formatCurrency(order.deliveryFee)}
                 </span>
@@ -353,7 +353,7 @@ export default function UserOrderDetails({ order }: UserOrderDetailsProps) {
                 </div>
                 <div>
                   <p className="font-medium">{order.address?.street}</p>
-                  <p className="text-gray-600">
+                  <p className="text-gray-600 dark:text-gray-400">
                     {order.address?.city}, {order.address?.postal_code}
                   </p>
                 </div>
@@ -364,7 +364,7 @@ export default function UserOrderDetails({ order }: UserOrderDetailsProps) {
             {order.deliveryNotes && (
               <div className="mt-6">
                 <h3 className="mb-2 font-semibold">Delivery Notes</h3>
-                <div className="rounded-lg bg-gray-50 p-3 text-gray-700">
+                <div className="rounded-lg bg-gray-50 p-3 text-gray-700 dark:bg-gray-800 dark:text-gray-300">
                   <p>{order.deliveryNotes}</p>
                 </div>
               </div>
@@ -415,11 +415,11 @@ export default function UserOrderDetails({ order }: UserOrderDetailsProps) {
                       </svg>
                     ))}
                   </div>
-                  <span className="ml-1 text-sm text-gray-600">
+                  <span className="ml-1 text-sm text-gray-600 dark:text-gray-400">
                     {order.assignedTo.rating}
                   </span>
                 </div>
-                <p className="mt-1 text-sm text-gray-500">
+                <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
                   {order.assignedTo.orders.aggregate.count} orders completed
                 </p>
                 <div className="mt-6 w-full space-y-3">
