@@ -4,6 +4,7 @@ import React, { useRef, useEffect, useState } from "react";
 import { useTheme } from "../../context/ThemeContext";
 import { Button, Avatar, Badge } from "rsuite";
 import Image from "next/image";
+import OrderModal from "./OrderModal";
 
 // Inline SVGs for icons
 const HeartIcon = ({ filled = false }: { filled?: boolean }) => (
@@ -299,6 +300,7 @@ export default function VideoReel({
   const [videoError, setVideoError] = useState(false);
   const [videoLoading, setVideoLoading] = useState(true);
   const [isMobile, setIsMobile] = useState(false);
+  const [showOrderModal, setShowOrderModal] = useState(false);
   const mountedRef = useRef(true);
 
   // Track component mount state
@@ -529,15 +531,17 @@ export default function VideoReel({
             </div>
             <Button
               appearance="primary"
-              color="orange"
+              color="green"
               style={{
                 width: "100%",
                 padding: "12px",
                 borderRadius: "25px",
                 fontWeight: "bold",
+                fontSize: "16px",
               }}
+              onClick={() => setShowOrderModal(true)}
             >
-              <ShoppingCartIcon />
+              <UtensilsIcon />
               <span style={{ marginLeft: 8 }}>Order Now</span>
             </Button>
           </div>
@@ -551,38 +555,42 @@ export default function VideoReel({
               style={{
                 display: "flex",
                 alignItems: "center",
-                gap: 16,
+                justifyContent: "space-between",
                 marginBottom: 12,
               }}
             >
-              <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
+                <DollarSignIcon />
                 <span
                   style={{
                     color: "#fff",
                     fontWeight: "bold",
-                    fontSize: "20px",
+                    fontSize: "18px",
                   }}
                 >
                   ${supermarketPost.product.price}
                 </span>
                 {supermarketPost.product.originalPrice && (
-                  <>
-                    <span
-                      style={{
-                        color: "#fff",
-                        opacity: 0.6,
-                        textDecoration: "line-through",
-                        fontSize: "14px",
-                      }}
-                    >
-                      ${supermarketPost.product.originalPrice}
-                    </span>
-                    <Badge color="red" style={{ fontSize: "12px" }}>
-                      {supermarketPost.product.discount}% OFF
-                    </Badge>
-                  </>
+                  <span
+                    style={{
+                      color: "#fff",
+                      opacity: 0.7,
+                      textDecoration: "line-through",
+                      fontSize: "14px",
+                    }}
+                  >
+                    ${supermarketPost.product.originalPrice}
+                  </span>
                 )}
               </div>
+              {supermarketPost.product.discount && (
+                <Badge
+                  color="red"
+                  style={{ fontSize: "12px", fontWeight: "bold" }}
+                >
+                  -{supermarketPost.product.discount}%
+                </Badge>
+              )}
             </div>
             <div
               style={{
@@ -627,9 +635,11 @@ export default function VideoReel({
                   borderRadius: "25px",
                   fontWeight: "bold",
                 }}
+                onClick={() => setShowOrderModal(true)}
+                disabled={!supermarketPost.product.inStock}
               >
                 <ShoppingCartIcon />
-                <span style={{ marginLeft: 8 }}>Add to Cart</span>
+                <span style={{ marginLeft: 8 }}>Order Now</span>
               </Button>
             </div>
           </div>
@@ -646,26 +656,22 @@ export default function VideoReel({
                 gap: 16,
                 marginBottom: 12,
                 color: "#fff",
-                opacity: 0.9,
+                opacity: 0.8,
                 fontSize: "14px",
               }}
             >
+              <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
+                <BookOpenIcon />
+                <span>{chefPost.recipe.difficulty}</span>
+              </div>
               <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
                 <ClockIcon />
                 <span>{chefPost.recipe.cookTime}</span>
               </div>
               <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
-                <span>👥 {chefPost.recipe.servings} servings</span>
+                <ChefHatIcon />
+                <span>{chefPost.recipe.servings} servings</span>
               </div>
-              <Badge
-                style={{
-                  color: "#fff",
-                  border: "1px solid #fff",
-                  opacity: 0.3,
-                }}
-              >
-                {chefPost.recipe.difficulty}
-              </Badge>
             </div>
             <div
               style={{
@@ -680,20 +686,10 @@ export default function VideoReel({
             >
               <YoutubeIcon />
               <span>{chefPost.recipe.youtubeChannel}</span>
-              <span>• {chefPost.recipe.subscribers} subscribers</span>
+              <span style={{ opacity: 0.6 }}>
+                ({chefPost.recipe.subscribers})
+              </span>
             </div>
-            {chefPost.stats.views && (
-              <div
-                style={{
-                  color: "#fff",
-                  opacity: 0.7,
-                  fontSize: "14px",
-                  marginBottom: 12,
-                }}
-              >
-                {chefPost.stats.views.toLocaleString()} views
-              </div>
-            )}
             <div style={{ display: "flex", gap: 8 }}>
               <Button
                 appearance="primary"
@@ -728,348 +724,355 @@ export default function VideoReel({
   };
 
   return (
-    <div
-      style={{
-        position: "relative",
-        height: "100vh",
-        width: "100%",
-        scrollSnapAlign: "start",
-        border: "none",
-        borderRadius: 0,
-        overflow: "hidden",
-        backgroundColor: "#000", // Fallback background
-      }}
-    >
-      {/* Background Video */}
-      <div style={{ position: "absolute", inset: 0 }}>
-        <video
-          ref={videoRef}
-          src={post.content.video}
-          style={{
-            width: "100%",
-            height: "100%",
-            objectFit: "cover",
-            backgroundColor: "#000",
-          }}
-          loop
-          muted
-          playsInline
-          preload="metadata"
-          poster={post.creator.avatar || "/placeholder.svg"}
-          onLoadedData={handleVideoLoad}
-          onError={handleVideoError}
-          onLoadStart={() => setVideoLoading(true)}
-          onCanPlay={handleVideoCanPlay}
-        />
-
-        {/* Loading overlay */}
-        {videoLoading && (
-          <div
+    <>
+      <div
+        className={`relative h-screen w-full overflow-hidden ${
+          theme === "dark" ? "bg-gray-900" : "bg-black"
+        }`}
+        style={{ scrollSnapAlign: "start" }}
+      >
+        {/* Background Video */}
+        <div style={{ position: "absolute", inset: 0 }}>
+          <video
+            ref={videoRef}
+            src={post.content.video}
             style={{
-              position: "absolute",
-              inset: 0,
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              backgroundColor: "rgba(0,0,0,0.8)",
-              zIndex: 5,
+              width: "100%",
+              height: "100%",
+              objectFit: "cover",
+              backgroundColor: "#000",
             }}
-          >
+            loop
+            muted
+            playsInline
+            preload="metadata"
+            poster={post.creator.avatar || "/placeholder.svg"}
+            onLoadedData={handleVideoLoad}
+            onError={handleVideoError}
+            onLoadStart={() => setVideoLoading(true)}
+            onCanPlay={handleVideoCanPlay}
+          />
+
+          {/* Loading overlay */}
+          {videoLoading && (
             <div
               style={{
-                width: 40,
-                height: 40,
-                border: "4px solid rgba(255,255,255,0.3)",
-                borderTop: "4px solid #fff",
-                borderRadius: "50%",
-                animation: "spin 1s linear infinite",
+                position: "absolute",
+                inset: 0,
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                backgroundColor: "rgba(0,0,0,0.8)",
+                zIndex: 5,
               }}
-            />
-          </div>
-        )}
+            >
+              <div
+                style={{
+                  width: 40,
+                  height: 40,
+                  border: "4px solid rgba(255,255,255,0.3)",
+                  borderTop: "4px solid #fff",
+                  borderRadius: "50%",
+                  animation: "spin 1s linear infinite",
+                }}
+              />
+            </div>
+          )}
 
-        {/* Error overlay */}
-        {videoError && (
+          {/* Error overlay */}
+          {videoError && (
+            <div
+              style={{
+                position: "absolute",
+                inset: 0,
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                backgroundColor: "rgba(0,0,0,0.9)",
+                zIndex: 5,
+              }}
+            >
+              <div style={{ textAlign: "center", color: "#fff" }}>
+                <div style={{ fontSize: "16px", marginBottom: "8px" }}>
+                  Video unavailable
+                </div>
+                <div style={{ fontSize: "14px", opacity: 0.7 }}>
+                  Please try again later
+                </div>
+              </div>
+            </div>
+          )}
+
           <div
             style={{
               position: "absolute",
               inset: 0,
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              backgroundColor: "rgba(0,0,0,0.9)",
-              zIndex: 5,
+              background:
+                "linear-gradient(to top, rgba(0,0,0,0.9), transparent, rgba(0,0,0,0.3))",
             }}
-          >
-            <div style={{ textAlign: "center", color: "#fff" }}>
-              <div style={{ fontSize: "16px", marginBottom: "8px" }}>
-                Video unavailable
-              </div>
-              <div style={{ fontSize: "14px", opacity: 0.7 }}>
-                Please try again later
-              </div>
-            </div>
-          </div>
-        )}
+          />
+        </div>
 
+        {/* Top Header */}
         <div
           style={{
             position: "absolute",
-            inset: 0,
-            background:
-              "linear-gradient(to top, rgba(0,0,0,0.9), transparent, rgba(0,0,0,0.3))",
+            top: 0,
+            left: 0,
+            right: 0,
+            padding: 16,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+            zIndex: 10,
           }}
-        />
-      </div>
-
-      {/* Top Header */}
-      <div
-        style={{
-          position: "absolute",
-          top: 0,
-          left: 0,
-          right: 0,
-          padding: 16,
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "space-between",
-          zIndex: 10,
-        }}
-      >
-        <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-          <Avatar
-            circle
-            size="md"
-            src={post.creator.avatar || "/placeholder.svg"}
-            alt={post.creator.name}
-            style={{ border: "2px solid white" }}
-          />
-          <div>
-            <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
-              <span
-                style={{ color: "#fff", fontWeight: 600, fontSize: "14px" }}
-              >
-                {post.creator.name}
-              </span>
-              {post.creator.verified && (
-                <div
-                  style={{
-                    width: 16,
-                    height: 16,
-                    backgroundColor: "#3b82f6",
-                    borderRadius: "50%",
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                  }}
+        >
+          <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+            <Avatar
+              circle
+              size="md"
+              src={post.creator.avatar || "/placeholder.svg"}
+              alt={post.creator.name}
+              style={{ border: "2px solid white" }}
+            />
+            <div>
+              <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
+                <span
+                  style={{ color: "#fff", fontWeight: 600, fontSize: "14px" }}
                 >
-                  <span style={{ color: "#fff", fontSize: "12px" }}>✓</span>
-                </div>
-              )}
+                  {post.creator.name}
+                </span>
+                {post.creator.verified && (
+                  <div
+                    style={{
+                      width: 16,
+                      height: 16,
+                      backgroundColor: "#3b82f6",
+                      borderRadius: "50%",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                    }}
+                  >
+                    <span style={{ color: "#fff", fontSize: "12px" }}>✓</span>
+                  </div>
+                )}
+              </div>
             </div>
           </div>
+          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+            <Badge
+              style={{ 
+                border: "1px solid rgba(255,255,255,0.3)",
+                backgroundColor: `${getPostTypeColor(post.type)}20`,
+                color: "#fff",
+                fontWeight: "600",
+                fontSize: "12px",
+                padding: "4px 8px",
+                borderRadius: "12px",
+                backdropFilter: "blur(8px)",
+              }}
+            >
+              <span style={{ textTransform: "capitalize" }}>
+                {post.type}
+              </span>
+            </Badge>
+            <Badge
+              style={{
+                backgroundColor: `${getCategoryColor(post.content.category)}20`,
+                color: "#fff",
+                border: "1px solid rgba(255,255,255,0.3)",
+                fontWeight: "500",
+                fontSize: "12px",
+                padding: "4px 8px",
+                borderRadius: "12px",
+                backdropFilter: "blur(8px)",
+              }}
+            >
+              {post.content.category}
+            </Badge>
+          </div>
         </div>
-        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-          <Badge
-            style={{ 
-              border: "1px solid rgba(255,255,255,0.3)",
-              backgroundColor: `${getPostTypeColor(post.type)}20`,
-              color: "#fff",
-              fontWeight: "600",
-              fontSize: "12px",
-              padding: "4px 8px",
-              borderRadius: "12px",
-              backdropFilter: "blur(8px)",
+
+        {/* Right Side Actions */}
+        <div
+          style={{
+            position: "absolute",
+            right: 16,
+            bottom: 160,
+            display: "flex",
+            flexDirection: "column",
+            gap: 24,
+            zIndex: 20,
+          }}
+        >
+          <div
+            style={{
+              display: "flex",
+              flexDirection: "column",
+              alignItems: "center",
             }}
           >
-            <span style={{ textTransform: "capitalize" }}>
-              {post.type}
+            <Button
+              appearance="ghost"
+              size="lg"
+              style={{
+                width: 48,
+                height: 48,
+                borderRadius: "50%",
+                backgroundColor: post.isLiked
+                  ? "#ef4444"
+                  : "rgba(255,255,255,0.2)",
+                backdropFilter: "blur(4px)",
+                border: post.isLiked ? "2px solid #ef4444" : "none",
+                color: "#fff",
+                transition: "all 0.2s ease",
+              }}
+              onClick={() => onLike(post.id)}
+            >
+              <HeartIcon filled={post.isLiked} />
+            </Button>
+            <span
+              style={{
+                color: "#fff",
+                fontSize: "12px",
+                marginTop: 4,
+                fontWeight: 500,
+              }}
+            >
+              {post.stats.likes > 999
+                ? `${(post.stats.likes / 1000).toFixed(1)}k`
+                : post.stats.likes}
             </span>
-          </Badge>
-          <Badge
+          </div>
+
+          <div
             style={{
-              backgroundColor: `${getCategoryColor(post.content.category)}20`,
-              color: "#fff",
-              border: "1px solid rgba(255,255,255,0.3)",
-              fontWeight: "500",
-              fontSize: "12px",
-              padding: "4px 8px",
-              borderRadius: "12px",
-              backdropFilter: "blur(8px)",
+              display: "flex",
+              flexDirection: "column",
+              alignItems: "center",
             }}
           >
-            {post.content.category}
-          </Badge>
-        </div>
-      </div>
+            <Button
+              appearance="ghost"
+              size="lg"
+              style={{
+                width: 48,
+                height: 48,
+                borderRadius: "50%",
+                backgroundColor: "rgba(255,255,255,0.2)",
+                backdropFilter: "blur(4px)",
+                border: "none",
+                color: "#fff",
+              }}
+              onClick={() => {
+                console.log("Comment button clicked for post:", post.id);
+                onComment(post.id);
+              }}
+            >
+              <MessageIcon />
+            </Button>
+            <span
+              style={{
+                color: "#fff",
+                fontSize: "12px",
+                marginTop: 4,
+                fontWeight: 500,
+              }}
+            >
+              {post.stats.comments}
+            </span>
+          </div>
 
-      {/* Right Side Actions */}
-      <div
-        style={{
-          position: "absolute",
-          right: 16,
-          bottom: 160,
-          display: "flex",
-          flexDirection: "column",
-          gap: 24,
-          zIndex: 20,
-        }}
-      >
+          <div
+            style={{
+              display: "flex",
+              flexDirection: "column",
+              alignItems: "center",
+            }}
+          >
+            <Button
+              appearance="ghost"
+              size="lg"
+              style={{
+                width: 48,
+                height: 48,
+                borderRadius: "50%",
+                backgroundColor: "rgba(255,255,255,0.2)",
+                backdropFilter: "blur(4px)",
+                border: "none",
+                color: "#fff",
+              }}
+              onClick={() => onShare(post.id)}
+            >
+              <ShareIcon />
+            </Button>
+          </div>
+        </div>
+
+        {/* Bottom Content */}
         <div
           style={{
-            display: "flex",
-            flexDirection: "column",
-            alignItems: "center",
+            position: "absolute",
+            bottom: 0,
+            left: 0,
+            right: 0,
+            padding: 16,
+            zIndex: 10,
           }}
         >
-          <Button
-            appearance="ghost"
-            size="lg"
-            style={{
-              width: 48,
-              height: 48,
-              borderRadius: "50%",
-              backgroundColor: post.isLiked
-                ? "#ef4444"
-                : "rgba(255,255,255,0.2)",
-              backdropFilter: "blur(4px)",
-              border: post.isLiked ? "2px solid #ef4444" : "none",
-              color: "#fff",
-              transition: "all 0.2s ease",
-            }}
-            onClick={() => onLike(post.id)}
-          >
-            <HeartIcon filled={post.isLiked} />
-          </Button>
-          <span
-            style={{
-              color: "#fff",
-              fontSize: "12px",
-              marginTop: 4,
-              fontWeight: 500,
-            }}
-          >
-            {post.stats.likes > 999
-              ? `${(post.stats.likes / 1000).toFixed(1)}k`
-              : post.stats.likes}
-          </span>
+          <div style={{ marginBottom: 16 }}>
+            <h2
+              style={{
+                color: "#fff",
+                fontSize: "20px",
+                fontWeight: "bold",
+                marginBottom: 8,
+              }}
+            >
+              {post.content.title}
+            </h2>
+            <p
+              style={{
+                color: "rgba(255,255,255,0.9)",
+                fontSize: "14px",
+                marginBottom: 16,
+                display: "-webkit-box",
+                WebkitLineClamp: 2,
+                WebkitBoxOrient: "vertical",
+                overflow: "hidden",
+              }}
+            >
+              {post.content.description}
+            </p>
+          </div>
+
+          {renderBottomActions(post)}
         </div>
 
-        <div
-          style={{
-            display: "flex",
-            flexDirection: "column",
-            alignItems: "center",
-          }}
-        >
-          <Button
-            appearance="ghost"
-            size="lg"
-            style={{
-              width: 48,
-              height: 48,
-              borderRadius: "50%",
-              backgroundColor: "rgba(255,255,255,0.2)",
-              backdropFilter: "blur(4px)",
-              border: "none",
-              color: "#fff",
-            }}
-            onClick={() => {
-              console.log("Comment button clicked for post:", post.id);
-              onComment(post.id);
-            }}
-          >
-            <MessageIcon />
-          </Button>
-          <span
-            style={{
-              color: "#fff",
-              fontSize: "12px",
-              marginTop: 4,
-              fontWeight: 500,
-            }}
-          >
-            {post.stats.comments}
-          </span>
-        </div>
-
-        <div
-          style={{
-            display: "flex",
-            flexDirection: "column",
-            alignItems: "center",
-          }}
-        >
-          <Button
-            appearance="ghost"
-            size="lg"
-            style={{
-              width: 48,
-              height: 48,
-              borderRadius: "50%",
-              backgroundColor: "rgba(255,255,255,0.2)",
-              backdropFilter: "blur(4px)",
-              border: "none",
-              color: "#fff",
-            }}
-            onClick={() => onShare(post.id)}
-          >
-            <ShareIcon />
-          </Button>
-        </div>
-      </div>
-
-      {/* Bottom Content */}
-      <div
-        style={{
-          position: "absolute",
-          bottom: 0,
-          left: 0,
-          right: 0,
-          padding: 16,
-          zIndex: 10,
-        }}
-      >
-        <div style={{ marginBottom: 16 }}>
-          <h2
-            style={{
-              color: "#fff",
-              fontSize: "20px",
-              fontWeight: "bold",
-              marginBottom: 8,
-            }}
-          >
-            {post.content.title}
-          </h2>
-          <p
-            style={{
-              color: "rgba(255,255,255,0.9)",
-              fontSize: "14px",
-              marginBottom: 16,
-              display: "-webkit-box",
-              WebkitLineClamp: 2,
-              WebkitBoxOrient: "vertical",
-              overflow: "hidden",
-            }}
-          >
-            {post.content.description}
-          </p>
-        </div>
-
-        {renderBottomActions(post)}
-      </div>
-
-      {/* CSS for loading animation */}
-      <style jsx>{`
-        @keyframes spin {
-          0% {
-            transform: rotate(0deg);
+        {/* CSS for loading animation */}
+        <style jsx>{`
+          @keyframes spin {
+            0% {
+              transform: rotate(0deg);
+            }
+            100% {
+              transform: rotate(360deg);
+            }
           }
-          100% {
-            transform: rotate(360deg);
-          }
-        }
-      `}</style>
-    </div>
+        `}</style>
+      </div>
+
+      {/* Order Modal */}
+      <OrderModal
+        open={showOrderModal}
+        onClose={() => setShowOrderModal(false)}
+        post={post}
+        shopLat={post.type === "restaurant" ? 0 : 0} // You'll need to pass actual coordinates
+        shopLng={post.type === "restaurant" ? 0 : 0}
+        shopAlt={post.type === "restaurant" ? 0 : 0}
+        shopId={post.id}
+      />
+    </>
   );
 }

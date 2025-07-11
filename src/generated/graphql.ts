@@ -12456,6 +12456,7 @@ export type Reel_Orders = {
   discount: Scalars['String']['output'];
   found: Scalars['Boolean']['output'];
   id: Scalars['uuid']['output'];
+  quantity: Scalars['String']['output'];
   reel_id: Scalars['uuid']['output'];
   service_fee: Scalars['String']['output'];
   /** An object relationship */
@@ -12574,6 +12575,7 @@ export type Reel_Orders_Bool_Exp = {
   discount?: InputMaybe<String_Comparison_Exp>;
   found?: InputMaybe<Boolean_Comparison_Exp>;
   id?: InputMaybe<Uuid_Comparison_Exp>;
+  quantity?: InputMaybe<String_Comparison_Exp>;
   reel_id?: InputMaybe<Uuid_Comparison_Exp>;
   service_fee?: InputMaybe<String_Comparison_Exp>;
   shopper?: InputMaybe<Shoppers_Bool_Exp>;
@@ -12611,6 +12613,7 @@ export type Reel_Orders_Insert_Input = {
   discount?: InputMaybe<Scalars['String']['input']>;
   found?: InputMaybe<Scalars['Boolean']['input']>;
   id?: InputMaybe<Scalars['uuid']['input']>;
+  quantity?: InputMaybe<Scalars['String']['input']>;
   reel_id?: InputMaybe<Scalars['uuid']['input']>;
   service_fee?: InputMaybe<Scalars['String']['input']>;
   shopper?: InputMaybe<Shoppers_Obj_Rel_Insert_Input>;
@@ -12634,6 +12637,7 @@ export type Reel_Orders_Max_Fields = {
   delivery_time?: Maybe<Scalars['String']['output']>;
   discount?: Maybe<Scalars['String']['output']>;
   id?: Maybe<Scalars['uuid']['output']>;
+  quantity?: Maybe<Scalars['String']['output']>;
   reel_id?: Maybe<Scalars['uuid']['output']>;
   service_fee?: Maybe<Scalars['String']['output']>;
   shopper_id?: Maybe<Scalars['uuid']['output']>;
@@ -12656,6 +12660,7 @@ export type Reel_Orders_Max_Order_By = {
   delivery_time?: InputMaybe<Order_By>;
   discount?: InputMaybe<Order_By>;
   id?: InputMaybe<Order_By>;
+  quantity?: InputMaybe<Order_By>;
   reel_id?: InputMaybe<Order_By>;
   service_fee?: InputMaybe<Order_By>;
   shopper_id?: InputMaybe<Order_By>;
@@ -12678,6 +12683,7 @@ export type Reel_Orders_Min_Fields = {
   delivery_time?: Maybe<Scalars['String']['output']>;
   discount?: Maybe<Scalars['String']['output']>;
   id?: Maybe<Scalars['uuid']['output']>;
+  quantity?: Maybe<Scalars['String']['output']>;
   reel_id?: Maybe<Scalars['uuid']['output']>;
   service_fee?: Maybe<Scalars['String']['output']>;
   shopper_id?: Maybe<Scalars['uuid']['output']>;
@@ -12700,6 +12706,7 @@ export type Reel_Orders_Min_Order_By = {
   delivery_time?: InputMaybe<Order_By>;
   discount?: InputMaybe<Order_By>;
   id?: InputMaybe<Order_By>;
+  quantity?: InputMaybe<Order_By>;
   reel_id?: InputMaybe<Order_By>;
   service_fee?: InputMaybe<Order_By>;
   shopper_id?: InputMaybe<Order_By>;
@@ -12741,6 +12748,7 @@ export type Reel_Orders_Order_By = {
   discount?: InputMaybe<Order_By>;
   found?: InputMaybe<Order_By>;
   id?: InputMaybe<Order_By>;
+  quantity?: InputMaybe<Order_By>;
   reel_id?: InputMaybe<Order_By>;
   service_fee?: InputMaybe<Order_By>;
   shopper?: InputMaybe<Shoppers_Order_By>;
@@ -12782,6 +12790,8 @@ export type Reel_Orders_Select_Column =
   /** column name */
   | 'id'
   /** column name */
+  | 'quantity'
+  /** column name */
   | 'reel_id'
   /** column name */
   | 'service_fee'
@@ -12821,6 +12831,7 @@ export type Reel_Orders_Set_Input = {
   discount?: InputMaybe<Scalars['String']['input']>;
   found?: InputMaybe<Scalars['Boolean']['input']>;
   id?: InputMaybe<Scalars['uuid']['input']>;
+  quantity?: InputMaybe<Scalars['String']['input']>;
   reel_id?: InputMaybe<Scalars['uuid']['input']>;
   service_fee?: InputMaybe<Scalars['String']['input']>;
   shopper_id?: InputMaybe<Scalars['uuid']['input']>;
@@ -12882,6 +12893,7 @@ export type Reel_Orders_Stream_Cursor_Value_Input = {
   discount?: InputMaybe<Scalars['String']['input']>;
   found?: InputMaybe<Scalars['Boolean']['input']>;
   id?: InputMaybe<Scalars['uuid']['input']>;
+  quantity?: InputMaybe<Scalars['String']['input']>;
   reel_id?: InputMaybe<Scalars['uuid']['input']>;
   service_fee?: InputMaybe<Scalars['String']['input']>;
   shopper_id?: InputMaybe<Scalars['uuid']['input']>;
@@ -12926,6 +12938,8 @@ export type Reel_Orders_Update_Column =
   | 'found'
   /** column name */
   | 'id'
+  /** column name */
+  | 'quantity'
   /** column name */
   | 'reel_id'
   /** column name */

@@ -6,6 +6,7 @@ query getReelOrders {
     delivery_address_id
     delivery_fee
     delivery_note
+    quantity
     delivery_photo_url
     delivery_time
     discount
