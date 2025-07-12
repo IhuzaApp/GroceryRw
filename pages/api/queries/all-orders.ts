@@ -32,6 +32,12 @@ const GET_ORDERS = gql`
           }
         }
       }
+      Order_Items {
+        quantity
+        product: Product {
+          final_price
+        }
+      }
     }
   }
 `;
@@ -102,6 +108,12 @@ interface OrdersResponse {
         } | null;
       } | null;
     };
+    Order_Items: Array<{
+      quantity: number;
+      product: {
+        final_price: string;
+      };
+    }>;
   }>;
 }
 
@@ -196,11 +208,17 @@ export default async function handler(
       const agg = o.Order_Items_aggregate.aggregate;
       const itemsCount = agg?.count ?? 0;
       const unitsCount = agg?.sum?.quantity ?? 0;
+      
+      // Calculate subtotal based on final prices (what customer pays)
+      const finalPriceSubtotal = o.Order_Items?.reduce((sum: number, item: any) => {
+        return sum + (parseFloat(item.product.final_price || "0") * item.quantity);
+      }, 0) || 0;
+      
       // Compute grand total including fees
-      const baseTotal = parseFloat(o.total || "0");
       const serviceFee = parseFloat(o.service_fee || "0");
       const deliveryFee = parseFloat(o.delivery_fee || "0");
-      const grandTotal = baseTotal + serviceFee + deliveryFee;
+      const grandTotal = finalPriceSubtotal + serviceFee + deliveryFee;
+      
       return {
         id: o.id,
         OrderID: o.OrderID,

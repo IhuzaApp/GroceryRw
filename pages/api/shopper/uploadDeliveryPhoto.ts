@@ -36,6 +36,26 @@ const UPDATE_REEL_ORDER_DELIVERY_PHOTO = gql`
   }
 `;
 
+// GraphQL query to check if order is delivered
+const CHECK_ORDER_STATUS = gql`
+  query CheckOrderStatus($orderId: uuid!) {
+    Orders_by_pk(id: $orderId) {
+      id
+      status
+    }
+  }
+`;
+
+// GraphQL query to check if reel order is delivered
+const CHECK_REEL_ORDER_STATUS = gql`
+  query CheckReelOrderStatus($orderId: uuid!) {
+    reel_orders_by_pk(id: $orderId) {
+      id
+      status
+    }
+  }
+`;
+
 export default async function handler(
   req: NextApiRequest,
   res: NextApiResponse
@@ -93,10 +113,6 @@ export default async function handler(
           updated_at: updatedAt,
         }
       );
-
-      if (!data.update_reel_orders || data.update_reel_orders.affected_rows === 0) {
-        throw new Error("Failed to update reel order with delivery photo");
-      }
     } else {
       // Update regular order
       type UpdateOrderDeliveryPhotoResponse = {
@@ -112,24 +128,39 @@ export default async function handler(
           updated_at: updatedAt,
         }
       );
-
-      if (!data.update_Orders || data.update_Orders.affected_rows === 0) {
-        throw new Error("Failed to update order with delivery photo");
-      }
     }
 
-    res.status(200).json({
+    // Check if the update was successful
+    const affectedRows = isReelOrder 
+      ? data.update_reel_orders.affected_rows 
+      : data.update_Orders.affected_rows;
+
+    if (affectedRows === 0) {
+      return res.status(404).json({
+        error: "Order not found or update failed",
+      });
+    }
+
+    // Note: Revenue calculation is now handled separately in updateOrderStatus.ts
+    // - Commission revenue is added when status = "shopping"
+    // - Plasa fee revenue is added when status = "delivered"
+    // No revenue calculation needed here for photo upload
+
+    // Return success response
+    return res.status(200).json({
       success: true,
-      fileName: `delivery_photo_${orderId}`,
-      photoUrl: photoUrl,
-      orderType: orderType,
+      message: "Delivery photo uploaded successfully",
+      data: {
+        orderId,
+        photoUrl,
+        updatedAt,
+        orderType,
+      },
     });
-  } catch (error: any) {
+  } catch (error) {
     console.error("Error uploading delivery photo:", error);
-    res.status(500).json({
+    return res.status(500).json({
       error: "Failed to upload delivery photo",
-      message: error.message,
-      details: error.response?.errors || "No additional details available",
     });
   }
 }

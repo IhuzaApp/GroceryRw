@@ -82,7 +82,7 @@ export default function ProductImageModal({
                 <div className="col-span-2">
                   <h4 className="text-sm font-medium text-gray-600">Price</h4>
                   <p className="font-bold text-green-600">
-                    {formatCurrency(currentOrderItem.product.price)}
+                    {formatCurrency(parseFloat(currentOrderItem.product.final_price))}
                   </p>
                 </div>
               </div>
