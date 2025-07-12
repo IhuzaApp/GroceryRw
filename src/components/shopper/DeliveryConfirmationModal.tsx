@@ -37,6 +37,7 @@ interface DeliveryConfirmationModalProps {
   onClose: () => void;
   invoiceData: InvoiceData | null;
   loading: boolean;
+  orderType?: "regular" | "reel";
 }
 
 const DeliveryConfirmationModal: React.FC<DeliveryConfirmationModalProps> = ({
@@ -44,6 +45,7 @@ const DeliveryConfirmationModal: React.FC<DeliveryConfirmationModalProps> = ({
   onClose,
   invoiceData,
   loading,
+  orderType = "regular",
 }) => {
   const router = useRouter();
   const { theme } = useTheme();
@@ -200,6 +202,7 @@ const DeliveryConfirmationModal: React.FC<DeliveryConfirmationModalProps> = ({
           orderId: invoiceData.orderId,
           file: imageData,
           updatedAt: new Date().toISOString(),
+          orderType: orderType, // Pass order type to API
         }),
       });
 
