@@ -46,7 +46,7 @@ interface OrderItem {
     id: string;
     name: string;
     image: string;
-    price: number;
+    final_price: string;
   };
   found?: boolean;
   foundQuantity?: number;

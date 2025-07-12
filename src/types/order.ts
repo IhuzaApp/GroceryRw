@@ -6,7 +6,7 @@ export interface OrderItem {
     id: string;
     name: string;
     image: string;
-    price: number;
+    final_price: string;
     description?: string;
     measurement_unit?: string;
     category?: string;

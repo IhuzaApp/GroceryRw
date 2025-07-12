@@ -41,6 +41,7 @@ const GET_ORDER_DETAILS = gql`
           name
           image
           price
+          final_price
           description
           measurement_unit
           category

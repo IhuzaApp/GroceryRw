@@ -145,6 +145,7 @@ export default async function handler(
     "on_the_way",
     "at_customer",
     "delivered",
+    "cancelled",
   ];
   if (!validStatuses.includes(status)) {
     return res.status(400).json({ error: "Invalid status value" });
@@ -214,7 +215,7 @@ export default async function handler(
       }
     }
 
-    // Special handling for "shopping" status - update wallet balances
+    // Special handling for "shopping" status - update wallet balances and add commission revenue
     if (status === "shopping") {
       try {
         // Get order details with fees
@@ -286,30 +287,23 @@ export default async function handler(
         const currentAvailableBalance = parseFloat(wallet.available_balance);
         const currentReservedBalance = parseFloat(wallet.reserved_balance);
 
-        // Add service fee and delivery fee to available balance
-        const newAvailableBalance = (
-          currentAvailableBalance +
-          serviceFee +
-          deliveryFee
-        ).toFixed(2);
-
-        // Add order total to reserved balance
+        // Only add order total to reserved balance (no change to available balance)
         const newReservedBalance = (
           currentReservedBalance + orderTotal
         ).toFixed(2);
 
-        // Update wallet balances
+        // Update wallet balances (only reserved balance changes)
         if (!hasuraClient) {
           throw new Error("Hasura client is not initialized");
         }
 
         await hasuraClient.request(UPDATE_WALLET_BALANCES, {
           wallet_id: wallet.id,
-          available_balance: newAvailableBalance,
+          available_balance: wallet.available_balance, // No change to available balance
           reserved_balance: newReservedBalance,
         });
 
-        // Create wallet transactions
+        // Create wallet transactions (only reserved balance transaction)
         // Note: Wallet_Transactions table is designed for regular orders only
         // For reel orders, we skip transaction creation to avoid foreign key constraint issues
         if (!isReelOrder) {
@@ -320,13 +314,7 @@ export default async function handler(
               type: "reserve",
               status: "completed",
               related_order_id: orderId,
-            },
-            {
-              wallet_id: wallet.id,
-              amount: (serviceFee + deliveryFee).toFixed(2),
-              type: "earnings",
-              status: "completed",
-              related_order_id: orderId,
+              description: "Reserved balance for order goods",
             },
           ];
 
@@ -340,6 +328,33 @@ export default async function handler(
         }
 
         console.log("Wallet balances updated for shopping status");
+
+        // Add commission revenue (product profits) when shopping starts
+        if (!isReelOrder) {
+          try {
+            console.log("Adding commission revenue for shopping order:", orderId);
+            
+            // Call the commission revenue calculation API
+            const commissionResponse = await fetch(`${req.headers.host ? `http://${req.headers.host}` : 'http://localhost:3000'}/api/shopper/calculateCommissionRevenue`, {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+                "Cookie": req.headers.cookie || "",
+              },
+              body: JSON.stringify({ orderId }),
+            });
+
+            if (commissionResponse.ok) {
+              const commissionData = await commissionResponse.json();
+              console.log("Commission revenue added successfully:", commissionData);
+            } else {
+              console.error("Failed to add commission revenue:", await commissionResponse.text());
+            }
+          } catch (commissionError) {
+            console.error("Error adding commission revenue:", commissionError);
+            // Don't fail the order status update if commission revenue calculation fails
+          }
+        }
       } catch (walletError) {
         console.error("Error updating wallet balances:", walletError);
         return res.status(500).json({
@@ -394,6 +409,294 @@ export default async function handler(
       "Order status updated successfully:",
       updatedOrder
     );
+
+    // Special handling for "cancelled" status - process refunds
+    if (status === "cancelled") {
+      try {
+        console.log("Processing cancelled order refunds:", orderId);
+        
+        // Get order details
+        if (!hasuraClient) {
+          throw new Error("Hasura client is not initialized");
+        }
+
+        let orderDetails: any;
+        if (isReelOrder) {
+          orderDetails = await hasuraClient.request<{
+            reel_orders_by_pk: {
+              id: string;
+              total: string;
+              user_id: string;
+            };
+          }>(GET_REEL_ORDER_DETAILS, {
+            orderId,
+          });
+        } else {
+          orderDetails = await hasuraClient.request<{
+            Orders_by_pk: {
+              id: string;
+              total: string;
+              user_id: string;
+            };
+          }>(GET_ORDER_DETAILS, {
+            orderId,
+          });
+        }
+
+        const order = isReelOrder 
+          ? orderDetails.reel_orders_by_pk 
+          : orderDetails.Orders_by_pk;
+
+        if (!order) {
+          return res.status(404).json({ error: "Order not found" });
+        }
+
+        // Get shopper wallet
+        const walletData = await hasuraClient.request<{
+          Wallets: Array<{
+            id: string;
+            available_balance: string;
+            reserved_balance: string;
+          }>;
+        }>(GET_SHOPPER_WALLET, {
+          shopper_id: userId,
+        });
+
+        if (!walletData.Wallets || walletData.Wallets.length === 0) {
+          return res.status(400).json({ error: "Shopper wallet not found" });
+        }
+
+        const wallet = walletData.Wallets[0];
+        const orderTotal = parseFloat(order.total);
+        const currentReservedBalance = parseFloat(wallet.reserved_balance);
+
+        // Decrease reserved balance by order total (refund the reserved amount)
+        const newReservedBalance = (
+          currentReservedBalance - orderTotal
+        ).toFixed(2);
+
+        // Update wallet balances
+        await hasuraClient.request(UPDATE_WALLET_BALANCES, {
+          wallet_id: wallet.id,
+          available_balance: wallet.available_balance, // No change to available balance
+          reserved_balance: newReservedBalance,
+        });
+
+        // Create refund record (not back to available balance, but to refund table)
+        const refundRecord = {
+          order_id: orderId,
+          amount: orderTotal.toString(),
+          status: "pending",
+          reason: "Order cancelled by shopper",
+          user_id: order.user_id,
+          generated_by: "System",
+          paid: false,
+        };
+
+        await hasuraClient.request(gql`
+          mutation CreateRefund($refund: Refunds_insert_input!) {
+            insert_Refunds_one(object: $refund) {
+              id
+              amount
+              status
+              reason
+            }
+          }
+        `, {
+          refund: refundRecord,
+        });
+
+        // Create wallet transaction for refund
+        if (!isReelOrder) {
+          const transactions = [
+            {
+              wallet_id: wallet.id,
+              amount: orderTotal.toFixed(2),
+              type: "refund",
+              status: "completed",
+              related_order_id: orderId,
+              description: "Refund for cancelled order",
+            },
+          ];
+
+          await hasuraClient.request(CREATE_WALLET_TRANSACTIONS, {
+            transactions,
+          });
+        }
+
+        console.log("Refund processed for cancelled order");
+        console.log(`Reserved balance decreased by: ${orderTotal.toFixed(2)}`);
+        console.log(`Refund amount: ${orderTotal.toFixed(2)}`);
+      } catch (cancellationError) {
+        console.error("Error processing cancelled order:", cancellationError);
+        return res.status(500).json({
+          error: cancellationError instanceof Error ? cancellationError.message : "Unknown error",
+        });
+      }
+    }
+
+    // Special handling for "delivered" status - update wallet balances and calculate revenue
+    if (status === "delivered") {
+      try {
+        console.log("Processing delivered order wallet updates:", orderId);
+        
+        // Get order details with fees
+        if (!hasuraClient) {
+          throw new Error("Hasura client is not initialized");
+        }
+
+        let orderDetails: any;
+        if (isReelOrder) {
+          orderDetails = await hasuraClient.request<{
+            reel_orders_by_pk: {
+              id: string;
+              total: string;
+              service_fee: string;
+              delivery_fee: string;
+              shopper_id: string;
+            };
+          }>(GET_REEL_ORDER_DETAILS, {
+            orderId,
+          });
+        } else {
+          orderDetails = await hasuraClient.request<{
+            Orders_by_pk: {
+              id: string;
+              total: string;
+              service_fee: string;
+              delivery_fee: string;
+              shopper_id: string;
+            };
+          }>(GET_ORDER_DETAILS, {
+            orderId,
+          });
+        }
+
+        const order = isReelOrder 
+          ? orderDetails.reel_orders_by_pk 
+          : orderDetails.Orders_by_pk;
+
+        if (!order) {
+          return res.status(404).json({ error: "Order not found" });
+        }
+
+        // Get system configuration for platform fee calculation
+        const systemConfigResponse = await hasuraClient.request<{
+          System_configuratioins: Array<{
+            deliveryCommissionPercentage: string;
+          }>;
+        }>(gql`
+          query GetSystemConfiguration {
+            System_configuratioins {
+              deliveryCommissionPercentage
+            }
+          }
+        `);
+
+        const deliveryCommissionPercentage = parseFloat(
+          systemConfigResponse.System_configuratioins[0]?.deliveryCommissionPercentage || "20"
+        );
+
+        // Get shopper wallet
+        const walletData = await hasuraClient.request<{
+          Wallets: Array<{
+            id: string;
+            available_balance: string;
+            reserved_balance: string;
+          }>;
+        }>(GET_SHOPPER_WALLET, {
+          shopper_id: userId,
+        });
+
+        if (!walletData.Wallets || walletData.Wallets.length === 0) {
+          return res.status(400).json({ error: "Shopper wallet not found" });
+        }
+
+        const wallet = walletData.Wallets[0];
+
+        // Calculate fees and earnings
+        const orderTotal = parseFloat(order.total);
+        const serviceFee = parseFloat(order.service_fee || "0");
+        const deliveryFee = parseFloat(order.delivery_fee || "0");
+        const totalEarnings = serviceFee + deliveryFee;
+
+        // Calculate platform fee (commission)
+        const platformFee = (totalEarnings * deliveryCommissionPercentage) / 100;
+        const remainingEarnings = totalEarnings - platformFee;
+
+        const currentAvailableBalance = parseFloat(wallet.available_balance);
+        const currentReservedBalance = parseFloat(wallet.reserved_balance);
+
+        // Update wallet balances according to specifications:
+        // 1. Add remaining earnings to available balance (platform fee is already deducted from total earnings)
+        // 2. Reserved balance was already used to pay for goods (no change needed)
+        const newAvailableBalance = (
+          currentAvailableBalance + remainingEarnings
+        ).toFixed(2);
+
+        // Update wallet balances (only available balance changes)
+        await hasuraClient.request(UPDATE_WALLET_BALANCES, {
+          wallet_id: wallet.id,
+          available_balance: newAvailableBalance,
+          reserved_balance: wallet.reserved_balance, // No change to reserved balance
+        });
+
+        // Create wallet transactions for delivered order (only earnings transaction)
+        if (!isReelOrder) {
+          const transactions = [
+            {
+              wallet_id: wallet.id,
+              amount: remainingEarnings.toFixed(2),
+              type: "earnings",
+              status: "completed",
+              related_order_id: orderId,
+              description: "Earnings after platform fee deduction",
+            },
+          ];
+
+          await hasuraClient.request(CREATE_WALLET_TRANSACTIONS, {
+            transactions,
+          });
+        }
+
+        console.log("Wallet balances updated for delivered order");
+        console.log(`Platform fee deducted: ${platformFee.toFixed(2)}`);
+        console.log(`Remaining earnings added: ${remainingEarnings.toFixed(2)}`);
+        console.log(`Reserved balance decreased by: ${orderTotal.toFixed(2)}`);
+
+        // Add plasa fee revenue (platform earnings) when order is delivered
+        if (!isReelOrder) {
+          try {
+            console.log("Adding plasa fee revenue for delivered order:", orderId);
+            
+            // Call the plasa fee revenue calculation API
+            const plasaFeeResponse = await fetch(`${req.headers.host ? `http://${req.headers.host}` : 'http://localhost:3000'}/api/shopper/calculatePlasaFeeRevenue`, {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+                "Cookie": req.headers.cookie || "",
+              },
+              body: JSON.stringify({ orderId }),
+            });
+
+            if (plasaFeeResponse.ok) {
+              const plasaFeeData = await plasaFeeResponse.json();
+              console.log("Plasa fee revenue added successfully:", plasaFeeData);
+            } else {
+              console.error("Failed to add plasa fee revenue:", await plasaFeeResponse.text());
+            }
+          } catch (plasaFeeError) {
+            console.error("Error adding plasa fee revenue:", plasaFeeError);
+            // Don't fail the order status update if plasa fee revenue calculation fails
+          }
+        }
+      } catch (walletError) {
+        console.error("Error updating wallet balances for delivered order:", walletError);
+        return res.status(500).json({
+          error: walletError instanceof Error ? walletError.message : "Unknown error",
+        });
+      }
+    }
 
     return res.status(200).json({
       success: true,

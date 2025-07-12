@@ -19,37 +19,37 @@ query getReelOrders {
     updated_at
     user_id
     voucher_code
-    shopper {
-      Employment_id
-      active
-      full_name
-      driving_license
-      created_at
-      background_check_completed
-      address
-      onboarding_step
-      phone_number
-      national_id
-      id
-      profile_photo
-      status
-      transport_mode
-      updated_at
-      user_id
-      User {
-        created_at
-        email
-        gender
-        id
-        is_active
-        name
-        password_hash
-        phone
-        profile_picture
-        role
-        updated_at
-      }
-    }
+    # shopper {
+    #   Employment_id
+    #   active
+    #   full_name
+    #   driving_license
+    #   created_at
+    #   background_check_completed
+    #   address
+    #   onboarding_step
+    #   phone_number
+    #   national_id
+    #   id
+    #   profile_photo
+    #   status
+    #   transport_mode
+    #   updated_at
+    #   user_id
+    #   User {
+    #     created_at
+    #     email
+    #     gender
+    #     id
+    #     is_active
+    #     name
+    #     password_hash
+    #     phone
+    #     profile_picture
+    #     role
+    #     updated_at
+    #   }
+    # }
     Reel {
       Price
       Product

@@ -9,5 +9,8 @@ query getSystemConfiguration {
     unitsSurcharge
     extraUnits
     cappedDistanceFee
+    distanceSurcharge
+    deliveryCommissionPercentage
+    productCommissionPercentage
   }
 }

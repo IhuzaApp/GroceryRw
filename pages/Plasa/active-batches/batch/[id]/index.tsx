@@ -27,7 +27,7 @@ interface OrderItem {
     id: string;
     name: string;
     image: string;
-    price: number;
+    final_price: string;
   };
 }
 
@@ -258,7 +258,7 @@ export const getServerSideProps: GetServerSideProps<
             measurement_unit
             category
             quantity
-            price
+            final_price
           }
           order_id
         }

@@ -40,6 +40,8 @@ interface SystemConfiguration {
   currency: string;
   discounts: boolean;
   id: string;
+  deliveryCommissionPercentage: string;
+  productCommissionPercentage: string;
 }
 
 // Add helper to compute distance between two coordinates

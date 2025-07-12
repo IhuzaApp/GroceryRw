@@ -1044,7 +1044,7 @@ The reels feature uses the following GraphQL operations:
 
 ### Revenue Calculation Logic
 
-The system uses a two-price model for revenue generation:
+The system uses a two-price model for revenue generation with a **trigger-based approach**:
 
 1. **Price Structure**:
 
@@ -1085,19 +1085,67 @@ Total Revenue: 19,932 RWF (27,330 - 7,398)
 2. **Order Creation**:
 
    - Creates order record with actual total (what we pay to shop)
-   - Stores order items with final_price
-   - Creates revenue record with commission amount
+   - Stores order items with base price (for shopper calculations)
+   - **No revenue records created yet** (trigger-based approach)
 
-3. **Revenue Record**:
+3. **Revenue Calculation Trigger**:
 
-   - Stores the difference between customer payment and shop payment
-   - Links to the original order
-   - Tracks commission as revenue
+   Revenue is calculated and recorded **only when the order is completed**:
+
+   - **When order status becomes "delivered"**
+   - **When delivery photo is uploaded** (if order is already delivered)
 
 4. **Payment Flow**:
    - Customer pays the total with final_price + fees
    - Shop receives their original price amount (stored in Orders table)
-   - System keeps the difference as revenue
+   - System calculates and records revenue when order is completed
+
+### Revenue Calculation Triggers
+
+#### 1. Order Status Update Trigger
+When a shopper updates order status to "delivered":
+
+```typescript
+// In pages/api/shopper/updateOrderStatus.ts
+if (status === "delivered" && !isReelOrder) {
+  // Trigger revenue calculation
+  await fetch('/api/shopper/calculateRevenue', {
+    method: 'POST',
+    body: JSON.stringify({ orderId })
+  });
+}
+```
+
+#### 2. Delivery Photo Upload Trigger
+When a delivery photo is uploaded for a delivered order:
+
+```typescript
+// In pages/api/shopper/uploadDeliveryPhoto.ts
+if (orderStatus === "delivered") {
+  // Trigger revenue calculation
+  await fetch('/api/shopper/calculateRevenue', {
+    method: 'POST',
+    body: JSON.stringify({ orderId })
+  });
+}
+```
+
+### Revenue Calculation Process
+
+When triggered, the system:
+
+1. **Retrieves all products from the order**
+2. **Calculates profit for commission-based revenue**:
+   ```typescript
+   Profit = (final_price - price) × quantity
+   ```
+3. **Calculates plasa fee**:
+   ```typescript
+   Plasa Fee = (Service Fee + Delivery Fee) × (deliveryCommissionPercentage)
+   ```
+4. **Creates revenue records**:
+   - Commission revenue (product profits)
+   - Plasa fee revenue (service + delivery fees)
 
 ### Technical Implementation
 
@@ -1120,33 +1168,100 @@ export class RevenueCalculator {
       revenue: revenue.toFixed(2),
     };
   }
+
+  public static calculatePlasaFee(
+    serviceFee: number,
+    deliveryFee: number,
+    deliveryCommissionPercentage: number
+  ): number {
+    return (serviceFee + deliveryFee) * (deliveryCommissionPercentage / 100);
+  }
 }
 ```
 
-2. **Checkout Process** (`pages/api/checkout.ts`):
+2. **Revenue Calculation API** (`pages/api/shopper/calculateRevenue.ts`):
 
 ```typescript
-// Calculate revenue
-const revenueData = RevenueCalculator.calculateRevenue(items);
+// Triggered when order is completed
+export default async function handler(req, res) {
+  // 1. Get order details with items
+  const orderData = await hasuraClient.request(GET_ORDER_WITH_ITEMS, { orderId });
+  
+  // 2. Calculate revenue using RevenueCalculator
+  const revenueData = RevenueCalculator.calculateRevenue(cartItems);
+  const productProfits = RevenueCalculator.calculateProductProfits(cartItems);
+  
+  // 3. Calculate plasa fee
+  const plasaFee = RevenueCalculator.calculatePlasaFee(
+    serviceFee, 
+    deliveryFee, 
+    deliveryCommissionPercentage
+  );
+  
+  // 4. Create revenue records
+  await hasuraClient.request(CREATE_REVENUE, {
+    type: "commission",
+    order_id: orderId,
+    amount: revenueData.revenue,
+    products: JSON.stringify(productProfits),
+  });
+  
+  await hasuraClient.request(CREATE_REVENUE, {
+    type: "plasa_fee",
+    amount: plasaFee.toFixed(2),
+    commission_percentage: deliveryCommissionPercentage.toString(),
+  });
+}
+```
 
-// Create order
+3. **Checkout Process** (`pages/api/checkout.ts`):
+
+```typescript
+// Create order (no revenue yet)
 const orderRes = await hasuraClient.request(CREATE_ORDER, {
-  total: revenueData.actualTotal, // Store what we pay to shop
+  total: actualTotal.toFixed(2), // Store what we pay to shop
   // ... other order details
 });
 
-// Create revenue record
-await hasuraClient.request(CREATE_REVENUE, {
-  order_id: orderId,
-  amount: revenueData.revenue, // Our profit
-  type: "commission",
-});
+// Note: Revenue records will be created when the order is completed (delivered)
+// This matches the described trigger-based approach
 ```
 
-3. **Database Tables**:
-   - `Orders`: Stores order details with actual total (what we pay to shop)
-   - `Order_Items`: Stores items with final_price (what customer paid)
-   - `Revenue`: Stores commission amount and links to order
+### Revenue Types
+
+1. **Commission Revenue**:
+   - Type: `"commission"`
+   - Amount: Product profit (final_price - price) × quantity
+   - Linked to specific order
+   - Includes product-level details in JSONB format
+
+2. **Plasa Fee Revenue**:
+   - Type: `"plasa_fee"`
+   - Amount: (Service Fee + Delivery Fee) × deliveryCommissionPercentage
+   - Not tied to specific order
+   - Includes commission percentage used
+
+### System Configuration
+
+Revenue calculations use settings from `System_configuratioins` table:
+- `deliveryCommissionPercentage`: Used for plasa fee calculation
+- `productCommissionPercentage`: Available for future use
+
+### Revenue Table Structure
+
+```typescript
+interface Revenue {
+  id: string;
+  amount: string;
+  type: "commission" | "plasa_fee";
+  created_at: string;
+  order_id: string | null;
+  shop_id: string;
+  shopper_id: string | null;
+  products: any; // JSONB for product details
+  commission_percentage: string | null;
+}
+```
 
 ### Important Notes
 
@@ -1156,6 +1271,7 @@ await hasuraClient.request(CREATE_REVENUE, {
 - All monetary values are stored in RWF (Rwandan Francs)
 - The system uses fixed-point arithmetic with 2 decimal places for all calculations
 - All monetary values are stored as strings to preserve precision
+- Product-level profit tracking enables detailed revenue analytics
 
 # Grocery Delivery Notification System
 

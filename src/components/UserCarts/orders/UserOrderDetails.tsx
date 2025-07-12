@@ -280,10 +280,10 @@ export default function UserOrderDetails({ order }: UserOrderDetailsProps) {
                     <h3 className="font-medium">{item.product.name}</h3>
                     <div className="mt-1 flex justify-between text-sm text-gray-600 dark:text-gray-400">
                       <span>
-                        {item.quantity} × {formatCurrency(item.price)}
+                        {item.quantity} × {formatCurrency(parseFloat(item.product.final_price))}
                       </span>
                       <span className="font-bold">
-                        {formatCurrency(item.price * item.quantity)}
+                        {formatCurrency(parseFloat(item.product.final_price) * item.quantity)}
                       </span>
                     </div>
                   </div>
@@ -295,7 +295,11 @@ export default function UserOrderDetails({ order }: UserOrderDetailsProps) {
               <div className="mb-2 flex justify-between">
                 <span className="text-gray-600 dark:text-gray-400">Subtotal</span>
                 <span className="font-medium">
-                  {formatCurrency(order.total)}
+                  {formatCurrency(
+                    order.Order_Items?.reduce((sum: number, item: any) => {
+                      return sum + (parseFloat(item.product.final_price) * item.quantity);
+                    }, 0) || 0
+                  )}
                 </span>
               </div>
               <div className="mb-2 flex justify-between">
@@ -314,7 +318,9 @@ export default function UserOrderDetails({ order }: UserOrderDetailsProps) {
                 <span>Total</span>
                 <span>
                   {formatCurrency(
-                    (Number(order.total) || 0) +
+                    (order.Order_Items?.reduce((sum: number, item: any) => {
+                      return sum + (parseFloat(item.product.final_price) * item.quantity);
+                    }, 0) || 0) +
                       (Number(order.serviceFee) || 0) +
                       (Number(order.deliveryFee) || 0)
                   )}
