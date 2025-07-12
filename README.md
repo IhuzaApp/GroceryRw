@@ -27,6 +27,500 @@ To learn more about Next.js, take a look at the following resources:
 
 You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js/) - your feedback and contributions are welcome!
 
+# Grocery Delivery System
+
+## Overview
+
+A comprehensive grocery delivery platform with advanced revenue tracking, wallet management, and order processing systems. The system supports both regular orders and reel-based orders with sophisticated payment and revenue management.
+
+## Key Systems
+
+### 1. Revenue Management System
+### 2. Wallet Balance System  
+### 3. Order Processing System
+### 4. Payment Management System
+### 5. Reel Orders System
+
+---
+
+# Revenue Management System
+
+## Overview
+
+The revenue system uses a **trigger-based approach** with a two-price model for revenue generation. Revenue is calculated and recorded at specific order status changes, not during checkout.
+
+## Revenue Types
+
+### 1. Commission Revenue (Product Profits)
+- **Trigger**: Order status changes to "shopping"
+- **Calculation**: `(final_price - price) × quantity` for each product
+- **Purpose**: Track profit margins from product markups
+- **API**: `/api/shopper/calculateCommissionRevenue`
+
+### 2. Plasa Fee Revenue (Platform Earnings)
+- **Trigger**: Order status changes to "delivered"
+- **Calculation**: `(service_fee + delivery_fee) × (deliveryCommissionPercentage / 100)`
+- **Purpose**: Track platform earnings from service fees
+- **API**: `/api/shopper/calculatePlasaFeeRevenue`
+
+## Revenue Calculation Flow
+
+```
+Order Created → Shopper Accepts → Shopping → Picked → On the Way → Delivered
+                                    ↑                    ↑
+                              COMMISSION           PLASA FEE
+                              REVENUE             REVENUE
+                              (Product Profits)   (Platform Earnings)
+```
+
+## Example Calculations
+
+### Commission Revenue Example
+```typescript
+Product: {
+  price: 1233,        // Original price
+  final_price: 4555,  // Customer price
+  quantity: 3         // Units ordered
+}
+
+// Calculations
+Customer Pays: 4555 × 3 = 13,665 RWF
+Shop Gets: 1233 × 3 = 3,699 RWF
+Our Revenue: 13,665 - 3,699 = 9,966 RWF
+```
+
+### Plasa Fee Revenue Example
+```typescript
+Service Fee = 2000
+Delivery Fee = 2400
+Total Fees = 4400
+deliveryCommissionPercentage = 10 (10%)
+
+Platform Fee = 4400 × (10/100) = 440
+Remaining Earnings = 4400 - 440 = 3960
+
+Revenue Table: 440 (platform earnings)
+Shopper Wallet: 3960 (remaining earnings)
+```
+
+## API Endpoints
+
+### 1. Commission Revenue API (`/api/shopper/calculateCommissionRevenue`)
+**POST** - Calculate and record commission revenue
+```typescript
+POST /api/shopper/calculateCommissionRevenue
+{
+  orderId: uuid
+}
+
+// Response
+{
+  success: true,
+  message: "Commission revenue calculated and recorded successfully",
+  data: {
+    commission_revenue: "9966.00",
+    product_profits: [...]
+  }
+}
+```
+
+### 2. Plasa Fee Revenue API (`/api/shopper/calculatePlasaFeeRevenue`)
+**POST** - Calculate and record plasa fee revenue
+```typescript
+POST /api/shopper/calculatePlasaFeeRevenue
+{
+  orderId: uuid
+}
+
+// Response
+{
+  success: true,
+  message: "Plasa fee revenue calculated and recorded successfully",
+  data: {
+    plasa_fee: "440.00",
+    commission_percentage: 10
+  }
+}
+```
+
+### 3. Revenue Records API (`/api/revenue`)
+**GET** - Fetch all revenue records
+```typescript
+GET /api/revenue
+
+// Response
+{
+  Revenue: [
+    {
+      id: uuid,
+      type: "commission" | "plasa_fee",
+      amount: string,
+      order_id: uuid,
+      shop_id: uuid,
+      shopper_id: uuid,
+      products: jsonb,
+      commission_percentage: string,
+      created_at: string
+    }
+  ]
+}
+```
+
+## Database Schema
+
+### Revenue Table
+```sql
+Revenue {
+  id: uuid (primary key)
+  type: string ("commission" | "plasa_fee")
+  amount: string
+  order_id: uuid (nullable, for commission revenue)
+  shop_id: uuid (foreign key)
+  shopper_id: uuid (foreign key to shoppers table)
+  products: jsonb (nullable, for commission revenue)
+  commission_percentage: string (nullable)
+  created_at: timestamp
+}
+```
+
+---
+
+# Wallet Balance System
+
+## Overview
+
+The wallet system manages shopper earnings with two balance types: **Available Balance** (earnings) and **Reserved Balance** (pending orders). The system follows a specific flow for balance updates based on order status changes.
+
+## Balance Types
+
+### 1. Available Balance
+**Purpose**: Funds that the shopper has earned and can withdraw
+**Increases**: When order is delivered (remaining earnings after platform fee)
+**Decreases**: When platform fee is deducted
+
+### 2. Reserved Balance
+**Purpose**: Funds set aside for pending orders (locked until completion)
+**Increases**: When order is accepted (order total)
+**Decreases**: When order is delivered (used to pay for goods)
+
+## Wallet Balance Flow
+
+### Order Acceptance ("shopping" status)
+```typescript
+// Reserved Balance increases by order total
+newReservedBalance = currentReservedBalance + orderTotal
+
+// Available Balance: No change (shopper hasn't earned fees yet)
+// Commission Revenue: Added to revenue table
+```
+
+### Order Delivery ("delivered" status)
+```typescript
+// Calculate platform fee and remaining earnings
+totalEarnings = serviceFee + deliveryFee
+platformFee = totalEarnings × (deliveryCommissionPercentage / 100)
+remainingEarnings = totalEarnings - platformFee
+
+// Available Balance: Add remaining earnings
+newAvailableBalance = currentAvailableBalance + remainingEarnings
+
+// Reserved Balance: No change (already used for goods)
+// Plasa Fee Revenue: Added to revenue table
+```
+
+### Order Cancellation ("cancelled" status)
+```typescript
+// Reserved Balance decreases by order total
+newReservedBalance = currentReservedBalance - orderTotal
+
+// Available Balance: No change
+// Refund: Created in Refunds table (not back to available balance)
+```
+
+## Example Flow
+
+```
+Order Total: $9000
+Service Fee: $2000
+Delivery Fee: $2400
+Platform Commission: 10%
+
+Shopping Status:
+- Reserved Balance: +$9000 (set aside for goods)
+- Available Balance: No change
+- Commission Revenue: Added (product profits)
+
+Delivered Status:
+- Reserved Balance: No change (already used for goods)
+- Available Balance: +$3960 (remaining earnings after platform fee)
+- Plasa Fee Revenue: Added (platform earnings)
+```
+
+## API Endpoints
+
+### 1. Wallet Balance API (`/api/queries/wallet-balance`)
+**GET/POST** - Get shopper wallet balance
+```typescript
+GET /api/queries/wallet-balance?shopper_id=uuid
+
+// Response
+{
+  wallet: {
+    id: uuid,
+    available_balance: "3960.00",
+    reserved_balance: "15000.00",
+    last_updated: string
+  }
+}
+```
+
+### 2. Wallet History API (`/api/shopper/walletHistory`)
+**GET** - Get wallet transaction history
+```typescript
+GET /api/shopper/walletHistory
+
+// Response
+{
+  wallet: {
+    availableBalance: 3960,
+    reservedBalance: 15000
+  },
+  transactions: [
+    {
+      id: uuid,
+      amount: number,
+      type: "reserve" | "earnings" | "payment" | "platform_fee" | "refund",
+      status: "completed",
+      description: string,
+      date: string,
+      time: string
+    }
+  ]
+}
+```
+
+### 3. Create Wallet API (`/api/queries/createWallet`)
+**POST** - Create new wallet for shopper
+```typescript
+POST /api/queries/createWallet
+{
+  shopper_id: uuid
+}
+
+// Response
+{
+  success: true,
+  wallet: {
+    id: uuid,
+    shopper_id: uuid,
+    available_balance: "0",
+    reserved_balance: "0"
+  }
+}
+```
+
+## Database Schema
+
+### Wallets Table
+```sql
+Wallets {
+  id: uuid (primary key)
+  shopper_id: uuid (foreign key to shoppers table)
+  available_balance: string
+  reserved_balance: string
+  last_updated: timestamp
+}
+```
+
+### Wallet_Transactions Table
+```sql
+Wallet_Transactions {
+  id: uuid (primary key)
+  wallet_id: uuid (foreign key to Wallets)
+  amount: string
+  type: string ("reserve" | "earnings" | "payment" | "platform_fee" | "refund")
+  status: string ("completed" | "pending")
+  description: string
+  related_order_id: uuid (nullable)
+  created_at: timestamp
+}
+```
+
+---
+
+# Order Processing System
+
+## Overview
+
+The order processing system handles order status updates with integrated wallet balance management and revenue calculation triggers.
+
+## Order Status Flow
+
+### 1. "shopping" Status
+**Triggers**:
+- Reserved balance increases by order total
+- Commission revenue is calculated and recorded
+- Wallet transaction created for reserved balance
+
+### 2. "delivered" Status  
+**Triggers**:
+- Available balance updated with remaining earnings
+- Plasa fee revenue is calculated and recorded
+- Wallet transactions created for earnings
+- Revenue calculation APIs called
+
+### 3. "cancelled" Status
+**Triggers**:
+- Reserved balance decreases by order total
+- Refund record created in Refunds table
+- Wallet transaction created for refund
+
+## API Endpoints
+
+### 1. Update Order Status API (`/api/shopper/updateOrderStatus`)
+**POST** - Update order status with wallet balance management
+```typescript
+POST /api/shopper/updateOrderStatus
+{
+  orderId: uuid,
+  status: "shopping" | "delivered" | "cancelled"
+}
+
+// Response
+{
+  success: true,
+  order: {
+    id: uuid,
+    status: string,
+    updated_at: string
+  }
+}
+```
+
+## Database Schema
+
+### Orders Table
+```sql
+Orders {
+  id: uuid (primary key)
+  OrderID: string
+  user_id: uuid (foreign key to Users)
+  shopper_id: uuid (foreign key to Users)
+  shop_id: uuid (foreign key to Shops)
+  total: string
+  service_fee: string
+  delivery_fee: string
+  status: string
+  delivery_photo_url: string (nullable)
+  created_at: timestamp
+  updated_at: timestamp
+}
+```
+
+### Order_Items Table
+```sql
+Order_Items {
+  id: uuid (primary key)
+  order_id: uuid (foreign key to Orders)
+  product_id: uuid (foreign key to Products)
+  quantity: number
+  price: string (base price for shopper calculations)
+  found: boolean
+  foundQuantity: number
+}
+```
+
+---
+
+# Payment Management System
+
+## Overview
+
+The payment system handles order payments using reserved balance funds with refund capabilities for missing items.
+
+## Payment Flow
+
+### 1. Payment Processing
+- Shopper uses reserved balance to pay for found items
+- System calculates refund for missing items
+- Refund record created if needed
+- Reserved balance updated
+
+### 2. Refund Management
+- Missing items trigger refund creation
+- Refunds go to Refunds table (not back to available balance)
+- Refund status tracking
+
+## API Endpoints
+
+### 1. Process Payment API (`/api/shopper/processPayment`)
+**POST** - Process order payment from reserved balance
+```typescript
+POST /api/shopper/processPayment
+{
+  orderId: uuid,
+  orderAmount: number,
+  originalOrderTotal?: number,
+  momoCode: string,
+  privateKey: string
+}
+
+// Response
+{
+  success: true,
+  message: "Payment processed successfully",
+  data: {
+    paymentAmount: number,
+    refundAmount: number,
+    newReservedBalance: number
+  }
+}
+```
+
+### 2. Record Transaction API (`/api/shopper/recordTransaction`)
+**POST** - Record wallet transaction for payment
+```typescript
+POST /api/shopper/recordTransaction
+{
+  shopperId: uuid,
+  orderId: uuid,
+  orderAmount: number,
+  originalOrderTotal?: number
+}
+
+// Response
+{
+  success: true,
+  message: "Transaction recorded successfully",
+  data: {
+    transactionResponse: object,
+    refund: object,
+    newBalance: {
+      reserved: number
+    }
+  }
+}
+```
+
+## Database Schema
+
+### Refunds Table
+```sql
+Refunds {
+  id: uuid (primary key)
+  order_id: uuid (foreign key to Orders)
+  amount: string
+  status: string ("pending" | "paid")
+  reason: string
+  user_id: uuid (foreign key to Users)
+  generated_by: string
+  paid: boolean
+  created_at: timestamp
+}
+```
+
+---
+
 # Reel Orders System
 
 ## Overview
