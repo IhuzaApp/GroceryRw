@@ -4,7 +4,7 @@ import { gql } from "graphql-request";
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "../auth/[...nextauth]";
 
-// GraphQL mutation to update order status
+// GraphQL mutation to update regular order status
 const UPDATE_ORDER_STATUS = gql`
   mutation UpdateOrderStatus(
     $id: uuid!
@@ -22,10 +22,41 @@ const UPDATE_ORDER_STATUS = gql`
   }
 `;
 
-// GraphQL query to get order details with fees
+// GraphQL mutation to update reel order status
+const UPDATE_REEL_ORDER_STATUS = gql`
+  mutation UpdateReelOrderStatus(
+    $id: uuid!
+    $status: String!
+    $updated_at: timestamptz!
+  ) {
+    update_reel_orders_by_pk(
+      pk_columns: { id: $id }
+      _set: { status: $status, updated_at: $updated_at }
+    ) {
+      id
+      status
+      updated_at
+    }
+  }
+`;
+
+// GraphQL query to get regular order details with fees
 const GET_ORDER_DETAILS = gql`
   query GetOrderDetails($orderId: uuid!) {
     Orders_by_pk(id: $orderId) {
+      id
+      total
+      service_fee
+      delivery_fee
+      shopper_id
+    }
+  }
+`;
+
+// GraphQL query to get reel order details with fees
+const GET_REEL_ORDER_DETAILS = gql`
+  query GetReelOrderDetails($orderId: uuid!) {
+    reel_orders_by_pk(id: $orderId) {
       id
       total
       service_fee
@@ -120,10 +151,21 @@ export default async function handler(
   }
 
   try {
-    // First verify this shopper is assigned to this order
-    const CHECK_ASSIGNMENT = gql`
-      query CheckOrderAssignment($orderId: uuid!, $shopperId: uuid!) {
+    // First check if this is a regular order or reel order
+    const CHECK_REGULAR_ORDER = gql`
+      query CheckRegularOrder($orderId: uuid!, $shopperId: uuid!) {
         Orders(
+          where: { id: { _eq: $orderId }, shopper_id: { _eq: $shopperId } }
+        ) {
+          id
+          status
+        }
+      }
+    `;
+
+    const CHECK_REEL_ORDER = gql`
+      query CheckReelOrder($orderId: uuid!, $shopperId: uuid!) {
+        reel_orders(
           where: { id: { _eq: $orderId }, shopper_id: { _eq: $shopperId } }
         ) {
           id
@@ -138,20 +180,38 @@ export default async function handler(
       throw new Error("Hasura client is not initialized");
     }
 
-    const assignmentCheck = await hasuraClient.request<{
+    // Check regular orders first
+    const regularOrderCheck = await hasuraClient.request<{
       Orders: Array<{ id: string; status: string }>;
-    }>(CHECK_ASSIGNMENT, {
+    }>(CHECK_REGULAR_ORDER, {
       orderId,
       shopperId: userId,
     });
 
-    console.log("Assignment check result:", JSON.stringify(assignmentCheck));
+    let isReelOrder = false;
+    let orderType = "regular";
 
-    if (!assignmentCheck.Orders || assignmentCheck.Orders.length === 0) {
+    if (regularOrderCheck.Orders && regularOrderCheck.Orders.length > 0) {
+      console.log("Found regular order assignment");
+    } else {
+      // Check reel orders
+      const reelOrderCheck = await hasuraClient.request<{
+        reel_orders: Array<{ id: string; status: string }>;
+      }>(CHECK_REEL_ORDER, {
+        orderId,
+        shopperId: userId,
+      });
+
+      if (reelOrderCheck.reel_orders && reelOrderCheck.reel_orders.length > 0) {
+        console.log("Found reel order assignment");
+        isReelOrder = true;
+        orderType = "reel";
+      } else {
       console.error("Authorization failed: Shopper not assigned to this order");
       return res
         .status(403)
         .json({ error: "You are not assigned to this order" });
+      }
     }
 
     // Special handling for "shopping" status - update wallet balances
@@ -162,7 +222,21 @@ export default async function handler(
           throw new Error("Hasura client is not initialized");
         }
 
-        const orderDetails = await hasuraClient.request<{
+        let orderDetails: any;
+        if (isReelOrder) {
+          orderDetails = await hasuraClient.request<{
+            reel_orders_by_pk: {
+              id: string;
+              total: string;
+              service_fee: string;
+              delivery_fee: string;
+              shopper_id: string;
+            };
+          }>(GET_REEL_ORDER_DETAILS, {
+            orderId,
+          });
+        } else {
+          orderDetails = await hasuraClient.request<{
           Orders_by_pk: {
             id: string;
             total: string;
@@ -173,12 +247,15 @@ export default async function handler(
         }>(GET_ORDER_DETAILS, {
           orderId,
         });
-
-        if (!orderDetails.Orders_by_pk) {
-          return res.status(404).json({ error: "Order not found" });
         }
 
-        const order = orderDetails.Orders_by_pk;
+        const order = isReelOrder 
+          ? orderDetails.reel_orders_by_pk 
+          : orderDetails.Orders_by_pk;
+
+        if (!order) {
+          return res.status(404).json({ error: "Order not found" });
+        }
 
         // Get shopper wallet
         if (!hasuraClient) {
@@ -233,30 +310,34 @@ export default async function handler(
         });
 
         // Create wallet transactions
-        const transactions = [
-          {
-            wallet_id: wallet.id,
-            amount: orderTotal.toFixed(2),
-            type: "reserve",
-            status: "completed",
-            related_order_id: orderId,
-          },
-          {
-            wallet_id: wallet.id,
-            amount: (serviceFee + deliveryFee).toFixed(2),
-            type: "earnings",
-            status: "completed",
-            related_order_id: orderId,
-          },
-        ];
+        // Note: Wallet_Transactions table is designed for regular orders only
+        // For reel orders, we skip transaction creation to avoid foreign key constraint issues
+        if (!isReelOrder) {
+          const transactions = [
+            {
+              wallet_id: wallet.id,
+              amount: orderTotal.toFixed(2),
+              type: "reserve",
+              status: "completed",
+              related_order_id: orderId,
+            },
+            {
+              wallet_id: wallet.id,
+              amount: (serviceFee + deliveryFee).toFixed(2),
+              type: "earnings",
+              status: "completed",
+              related_order_id: orderId,
+            },
+          ];
 
-        if (!hasuraClient) {
-          throw new Error("Hasura client is not initialized");
+          if (!hasuraClient) {
+            throw new Error("Hasura client is not initialized");
+          }
+
+          await hasuraClient.request(CREATE_WALLET_TRANSACTIONS, {
+            transactions,
+          });
         }
-
-        await hasuraClient.request(CREATE_WALLET_TRANSACTIONS, {
-          transactions,
-        });
 
         console.log("Wallet balances updated for shopping status");
       } catch (walletError) {
@@ -273,12 +354,26 @@ export default async function handler(
     // Get current timestamp for updated_at
     const currentTimestamp = new Date().toISOString();
 
-    // Update the order status
+    // Update the order status based on order type
     if (!hasuraClient) {
       throw new Error("Hasura client is not initialized");
     }
 
-    const updateResult = await hasuraClient.request<{
+    let updateResult: any;
+    if (isReelOrder) {
+      updateResult = await hasuraClient.request<{
+        update_reel_orders_by_pk: {
+          id: string;
+          status: string;
+          updated_at: string;
+        };
+      }>(UPDATE_REEL_ORDER_STATUS, {
+        id: orderId,
+        status,
+        updated_at: currentTimestamp,
+      });
+    } else {
+      updateResult = await hasuraClient.request<{
       update_Orders_by_pk: {
         id: string;
         status: string;
@@ -289,15 +384,21 @@ export default async function handler(
       status,
       updated_at: currentTimestamp,
     });
+    }
+
+    const updatedOrder = isReelOrder 
+      ? updateResult.update_reel_orders_by_pk 
+      : updateResult.update_Orders_by_pk;
 
     console.log(
       "Order status updated successfully:",
-      updateResult.update_Orders_by_pk
+      updatedOrder
     );
 
     return res.status(200).json({
       success: true,
-      order: updateResult.update_Orders_by_pk,
+      order: updatedOrder,
+      orderType,
     });
   } catch (error) {
     console.error("Error updating order status:", error);

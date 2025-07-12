@@ -30,7 +30,6 @@ import DeliveryConfirmationModal from "./DeliveryConfirmationModal";
 import { useChat } from "../../context/ChatContext";
 import { isMobileDevice } from "../../lib/formatters";
 import ChatDrawer from "../chat/ChatDrawer";
-import { OrderItem, OrderDetailsType } from "../../types/order";
 import {
   recordPaymentTransactions,
   generateInvoice,
@@ -39,6 +38,85 @@ import { useSession } from "next-auth/react";
 import { useTheme } from "../../context/ThemeContext";
 
 // Define interfaces for the order data
+interface OrderItem {
+  id: string;
+  quantity: number;
+  price: number;
+  product: {
+    id: string;
+    name: string;
+    image: string;
+    price: number;
+  };
+  found?: boolean;
+  foundQuantity?: number;
+}
+
+interface OrderDetailsType {
+  id: string;
+  OrderID: string;
+  placedAt: string;
+  estimatedDelivery: string;
+  deliveryNotes: string;
+  total: number;
+  serviceFee: string;
+  deliveryFee: string;
+  status: string;
+  deliveryPhotoUrl: string;
+  discount: number;
+  user: {
+    id: string;
+    name: string;
+    email: string;
+    profile_picture: string;
+  };
+  shop?: {
+    id: string;
+    name: string;
+    address: string;
+    image: string;
+  };
+  Order_Items?: OrderItem[];
+  address: {
+    id: string;
+    street: string;
+    city: string;
+    postal_code: string;
+    latitude: string;
+    longitude: string;
+  };
+  assignedTo: {
+    id: string;
+    name: string;
+    profile_picture: string;
+    orders: {
+      aggregate: {
+        count: number;
+      };
+    };
+  };
+  // Add order type and reel-specific fields
+  orderType?: "regular" | "reel";
+  reel?: {
+    id: string;
+    title: string;
+    description: string;
+    Price: string;
+    Product: string;
+    type: string;
+    video_url: string;
+    Restaurant?: {
+      id: string;
+      name: string;
+      location: string;
+      lat: number;
+      long: number;
+    };
+  };
+  quantity?: number;
+  deliveryNote?: string;
+}
+
 interface BatchDetailsProps {
   orderData: OrderDetailsType | null;
   error: string | null;
@@ -255,6 +333,7 @@ export default function BatchDetails({
         },
         body: JSON.stringify({
           orderId,
+          orderType: orderData?.orderType || "regular", // Pass order type to API
         }),
       });
 
@@ -388,6 +467,7 @@ export default function BatchDetails({
             privateKey,
             orderAmount: orderAmount, // Only the value of found items (no fees)
             originalOrderTotal: originalOrderTotal, // Original subtotal for refund calculation
+            orderType: order.orderType || "regular", // Pass order type to API
           }),
         });
 
@@ -598,7 +678,7 @@ export default function BatchDetails({
   ) => {
     if (!order) return;
 
-    const updatedItems = order.Order_Items.map((item) =>
+    const updatedItems = order.Order_Items?.map((item) =>
       item.id === itemId
         ? {
             ...item,
@@ -630,6 +710,14 @@ export default function BatchDetails({
   const calculateFoundTotal = () => {
     if (!order) return 0;
 
+    // For reel orders, return the total since there's only one item
+    if (order.orderType === "reel") {
+      return order.total;
+    }
+
+    // For regular orders, calculate based on found items
+    if (!order.Order_Items) return 0;
+
     const total = order.Order_Items.filter((item) => item.found).reduce(
       (total, item) => {
         // Use foundQuantity if available, otherwise use full quantity
@@ -658,6 +746,16 @@ export default function BatchDetails({
   const calculateOriginalSubtotal = () => {
     if (!order) return 0;
 
+    // For reel orders, calculate based on reel price and quantity
+    if (order.orderType === "reel") {
+      const basePrice = parseFloat(order.reel?.Price || "0");
+      const quantity = order.quantity || 1;
+      return basePrice * quantity;
+    }
+
+    // For regular orders, calculate based on order items
+    if (!order.Order_Items) return 0;
+
     return order.Order_Items.reduce(
       (total, item) => total + item.price * item.quantity,
       0
@@ -675,8 +773,12 @@ export default function BatchDetails({
 
   // Calculate the true total based on found items (for shopping mode)
   const calculateFoundItemsTotal = () => {
-    // Return the found items total - this is what's shown as the subtotal in Order Summary
-    // and what should be deducted from the reserved wallet balance
+    // For reel orders, return the total since there's only one item
+    if (order?.orderType === "reel") {
+      return order.total;
+    }
+
+    // For regular orders, return the found items total
     const foundTotal = calculateFoundTotal();
     return foundTotal;
   };
@@ -684,6 +786,9 @@ export default function BatchDetails({
   // Determine if we should show order items and summary
   const shouldShowOrderDetails = () => {
     if (!order) return false;
+    // For reel orders, always show details
+    if (order.orderType === "reel") return true;
+    // For regular orders, show only during accepted or shopping status
     return order.status === "accepted" || order.status === "shopping";
   };
 
@@ -705,8 +810,23 @@ export default function BatchDetails({
           </Button>
         );
       case "shopping":
-        // Check if any items are marked as found
-        const hasFoundItems = order.Order_Items.some((item) => item.found);
+        // For reel orders, no need to check found items since there's only one item
+        if (order.orderType === "reel") {
+          return (
+            <Button
+              appearance="primary"
+              color="green"
+              block
+              onClick={() => handleUpdateStatus("on_the_way")}
+              loading={loading}
+            >
+              Make Payment
+            </Button>
+          );
+        }
+        
+        // For regular orders, check if any items are marked as found
+        const hasFoundItems = order.Order_Items?.some((item) => item.found) || false;
 
         return (
           <Button
@@ -781,18 +901,20 @@ export default function BatchDetails({
 
   // Helper function to get status tag with appropriate color
   const getStatusTag = (status: string) => {
+    const isReelOrder = order?.orderType === "reel";
+    
     switch (status) {
       case "accepted":
-        return <Tag color="blue">Accepted</Tag>;
+        return <Tag color={isReelOrder ? "violet" : "blue"}>Accepted</Tag>;
       case "shopping":
-        return <Tag color="orange">Shopping</Tag>;
+        return <Tag color={isReelOrder ? "violet" : "orange"}>Shopping</Tag>;
       case "on_the_way":
       case "at_customer":
-        return <Tag color="violet">On The Way</Tag>;
+        return <Tag color={isReelOrder ? "violet" : "violet"}>On The Way</Tag>;
       case "delivered":
-        return <Tag color="green">Delivered</Tag>;
+        return <Tag color={isReelOrder ? "violet" : "green"}>Delivered</Tag>;
       default:
-        return <Tag color="cyan">{status}</Tag>;
+        return <Tag color={isReelOrder ? "violet" : "cyan"}>{status}</Tag>;
     }
   };
 
@@ -937,7 +1059,7 @@ export default function BatchDetails({
 
       <Panel
         bordered
-        header={`Order #${order.OrderID || order.id.slice(0, 8)}`}
+        header={`${order.orderType === "reel" ? "Reel " : ""}Order #${order.OrderID || order.id.slice(0, 8)}`}
         className={`${
           theme === "dark" ? "bg-gray-800 text-gray-100" : ""
         } w-full min-w-0 p-1 sm:p-6`}
@@ -953,7 +1075,7 @@ export default function BatchDetails({
         </div>
 
         <div className="mb-6 grid w-full min-w-0 grid-cols-1 gap-2 sm:gap-4 md:grid-cols-2">
-          {/* Shop Information */}
+          {/* Shop/Reel Information */}
           <div
             className={`min-w-0 rounded-lg border p-4 ${
               theme === "dark"
@@ -967,54 +1089,100 @@ export default function BatchDetails({
                 theme === "dark" ? "text-gray-100" : "text-gray-900"
               }`}
             >
-              Shop Details
+              {order.orderType === "reel" ? "Reel Details" : "Shop Details"}
             </h3>
-            <div className="flex items-center">
-              <div
-                className={`mr-3 h-12 w-12 flex-shrink-0 overflow-hidden rounded-full ${
-                  theme === "dark" ? "bg-gray-700" : "bg-gray-100"
-                }`}
-              >
-                {order.shop.image ? (
-                  <Image
-                    src={order.shop.image}
-                    alt={order.shop.name}
-                    width={48}
-                    height={48}
-                    className="h-full w-full object-cover"
-                  />
-                ) : (
-                  <div className="flex h-full w-full items-center justify-center bg-gray-200 text-gray-400">
-                    <svg
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth="2"
-                      className="h-6 w-6"
-                    >
-                      <path d="M3 3h18v18H3zM16 8h.01M8 16h.01M16 16h.01" />
-                    </svg>
+            {order.orderType === "reel" ? (
+              // Reel order details
+              <div className="space-y-4">
+                <div className="flex items-start gap-4">
+                  {/* Reel Video Thumbnail */}
+                  <div className="relative h-24 w-24 flex-shrink-0 overflow-hidden rounded-lg bg-gray-200">
+                    {order.reel?.video_url ? (
+                      <video
+                        src={order.reel.video_url}
+                        className="h-full w-full object-cover"
+                        muted
+                        preload="metadata"
+                      />
+                    ) : (
+                      <div className="flex h-full w-full items-center justify-center bg-gray-300">
+                        <svg className="h-8 w-8 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14.828 14.828a4 4 0 01-5.656 0M9 10h1m4 0h1m-6 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                      </div>
+                    )}
                   </div>
-                )}
+                  
+                  {/* Reel Info */}
+                  <div className="flex-1">
+                    <h4 className="text-lg font-semibold text-gray-900 dark:text-white">{order.reel?.title}</h4>
+                    <p className="text-sm text-gray-600 dark:text-gray-400">{order.reel?.description}</p>
+                    <div className="mt-2 flex items-center gap-4 text-sm text-gray-500 dark:text-gray-400">
+                      <span>Type: {order.reel?.type}</span>
+                      <span>Quantity: {order.quantity}</span>
+                    </div>
+                    <div className="mt-2 text-sm">
+                      <span className="font-medium">Price: {formatCurrency(parseFloat(order.reel?.Price || "0"))}</span>
+                    </div>
+                    {order.reel?.Restaurant && (
+                      <div className="mt-2 text-sm text-gray-500 dark:text-gray-400">
+                        <span>Restaurant: {order.reel.Restaurant.name}</span>
+                        <br />
+                        <span>Location: {order.reel.Restaurant.location}</span>
+                      </div>
+                    )}
+                  </div>
+                </div>
               </div>
-              <div>
-                <h4
-                  className={`text-base font-medium sm:text-base ${
-                    theme === "dark" ? "text-gray-100" : "text-gray-900"
+            ) : (
+              // Regular order shop details
+              <div className="flex items-center">
+                <div
+                  className={`mr-3 h-12 w-12 flex-shrink-0 overflow-hidden rounded-full ${
+                    theme === "dark" ? "bg-gray-700" : "bg-gray-100"
                   }`}
                 >
-                  {order.shop.name}
-                </h4>
-                <p
-                  className={`text-xs sm:text-sm ${
-                    theme === "dark" ? "text-gray-400" : "text-gray-500"
-                  }`}
-                >
-                  {order.shop.address}
-                </p>
+                  {order.shop?.image ? (
+                    <Image
+                      src={order.shop.image}
+                      alt={order.shop.name}
+                      width={48}
+                      height={48}
+                      className="h-full w-full object-cover"
+                    />
+                  ) : (
+                    <div className="flex h-full w-full items-center justify-center bg-gray-200 text-gray-400">
+                      <svg
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                        className="h-6 w-6"
+                      >
+                        <path d="M3 3h18v18H3zM16 8h.01M8 16h.01M16 16h.01" />
+                      </svg>
+                    </div>
+                  )}
+                </div>
+                <div>
+                  <h4
+                    className={`text-base font-medium sm:text-base ${
+                      theme === "dark" ? "text-gray-100" : "text-gray-900"
+                    }`}
+                  >
+                    {order.shop?.name}
+                  </h4>
+                  <p
+                    className={`text-xs sm:text-sm ${
+                      theme === "dark" ? "text-gray-400" : "text-gray-500"
+                    }`}
+                  >
+                    {order.shop?.address}
+                  </p>
+                </div>
               </div>
-            </div>
-            <Link href={getDirectionsUrl(order.shop.address)} target="_blank">
+            )}
+            <Link href={getDirectionsUrl(order.orderType === "reel" ? order.reel?.Restaurant?.location || order.address.street : order.shop?.address || order.address.street)} target="_blank">
               <Button
                 appearance="ghost"
                 className={`mt-3 w-full sm:w-auto ${
@@ -1033,7 +1201,7 @@ export default function BatchDetails({
                     <circle cx="12" cy="10" r="3" />
                   </svg>
                 </span>
-                {currentLocation ? "Navigate to Shop" : "Show Shop Location"}
+                {order.orderType === "reel" ? "Navigate to Customer" : "Navigate to Shop"}
               </Button>
             </Link>
           </div>
@@ -1162,7 +1330,7 @@ export default function BatchDetails({
               </p>
               <Link
                 href={`https://www.google.com/maps/dir/?api=1&origin=${encodeURIComponent(
-                  order.shop.address
+                  order.shop?.address || order.address.street
                 )}&destination=${encodeURIComponent(
                   `${order.address.street}, ${order.address.city}${
                     order.address.postal_code
@@ -1211,96 +1379,135 @@ export default function BatchDetails({
                 theme === "dark" ? "text-gray-100" : "text-gray-900"
               }`}
             >
-              Order Items
+              {order.orderType === "reel" ? "Reel Details" : "Order Items"}
             </h3>
-            <div className="space-y-4">
-              {order.Order_Items.map((item) => (
-                <div
-                  key={item.id}
-                  className={`flex items-center border-b pb-3 ${
-                    theme === "dark" ? "border-gray-700" : "border-gray-200"
-                  }`}
-                >
-                  <div
-                    className={`mr-3 h-12 w-12 flex-shrink-0 cursor-pointer overflow-hidden rounded-lg ${
-                      theme === "dark" ? "bg-gray-700" : "bg-gray-100"
-                    }`}
-                    onClick={() => showProductImage(item)}
-                  >
-                    {item.product.image ? (
-                      <Image
-                        src={item.product.image}
-                        alt={item.product.name}
-                        width={48}
-                        height={48}
+            {order.orderType === "reel" ? (
+              // Reel order details
+              <div className="space-y-4">
+                <div className="flex items-start gap-4">
+                  {/* Reel Video Thumbnail */}
+                  <div className="relative h-24 w-24 flex-shrink-0 overflow-hidden rounded-lg bg-gray-200">
+                    {order.reel?.video_url ? (
+                      <video
+                        src={order.reel.video_url}
                         className="h-full w-full object-cover"
+                        muted
+                        preload="metadata"
                       />
                     ) : (
-                      <div className="flex h-full w-full items-center justify-center bg-gray-200 text-gray-400">
-                        <svg
-                          viewBox="0 0 24 24"
-                          fill="none"
-                          stroke="currentColor"
-                          strokeWidth="2"
-                          className="h-6 w-6"
-                        >
-                          <path d="M9 17h6M9 12h6M9 7h6" />
+                      <div className="flex h-full w-full items-center justify-center bg-gray-300">
+                        <svg className="h-8 w-8 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14.828 14.828a4 4 0 01-5.656 0M9 10h1m4 0h1m-6 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                         </svg>
                       </div>
                     )}
                   </div>
-                  <div className="flex-grow">
-                    <p
-                      className={`font-medium ${
-                        theme === "dark" ? "text-gray-100" : "text-gray-900"
-                      }`}
-                    >
-                      {item.product.name}
-                    </p>
-                    <p
-                      className={`text-sm ${
-                        theme === "dark" ? "text-gray-400" : "text-gray-500"
-                      }`}
-                    >
-                      {formatCurrency(item.price)} × {item.quantity}
-                    </p>
-                    {item.found &&
-                      item.foundQuantity &&
-                      item.foundQuantity < item.quantity && (
-                        <p
-                          className={`text-xs ${
-                            theme === "dark"
-                              ? "text-orange-400"
-                              : "text-orange-600"
-                          }`}
-                        >
-                          Found: {item.foundQuantity} of {item.quantity}
-                        </p>
-                      )}
-                  </div>
-                  <div className="flex flex-col items-end text-right">
-                    <div className="mb-2 font-bold">
-                      {formatCurrency(item.price * item.quantity)}
+                  
+                  {/* Reel Info */}
+                  <div className="flex-1">
+                    <h4 className="text-lg font-semibold text-gray-900 dark:text-white">{order.reel?.title}</h4>
+                    <p className="text-sm text-gray-600 dark:text-gray-400">{order.reel?.description}</p>
+                    <div className="mt-2 flex items-center gap-4 text-sm text-gray-500 dark:text-gray-400">
+                      <span>Type: {order.reel?.type}</span>
+                      <span>Quantity: {order.quantity}</span>
                     </div>
-                    {order.status === "shopping" && (
-                      <Checkbox
-                        checked={item.found || false}
-                        onChange={(_, checked) =>
-                          toggleItemFound(item, checked)
-                        }
-                      >
-                        Found
-                      </Checkbox>
-                    )}
+                    <div className="mt-2 text-sm">
+                      <span className="font-medium">Price: {formatCurrency(parseFloat(order.reel?.Price || "0"))}</span>
+                    </div>
                   </div>
                 </div>
-              ))}
-            </div>
+              </div>
+            ) : (
+              // Regular order items
+              <div className="space-y-4">
+                {order.Order_Items?.map((item) => (
+                  <div
+                    key={item.id}
+                    className={`flex items-center border-b pb-3 ${
+                      theme === "dark" ? "border-gray-700" : "border-gray-200"
+                    }`}
+                  >
+                    <div
+                      className={`mr-3 h-12 w-12 flex-shrink-0 cursor-pointer overflow-hidden rounded-lg ${
+                        theme === "dark" ? "bg-gray-700" : "bg-gray-100"
+                      }`}
+                      onClick={() => showProductImage(item)}
+                    >
+                      {item.product.image ? (
+                        <Image
+                          src={item.product.image}
+                          alt={item.product.name}
+                          width={48}
+                          height={48}
+                          className="h-full w-full object-cover"
+                        />
+                      ) : (
+                        <div className="flex h-full w-full items-center justify-center bg-gray-200 text-gray-400">
+                          <svg
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            strokeWidth="2"
+                            className="h-6 w-6"
+                          >
+                            <path d="M9 17h6M9 12h6M9 7h6" />
+                          </svg>
+                        </div>
+                      )}
+                    </div>
+                    <div className="flex-grow">
+                      <p
+                        className={`font-medium ${
+                          theme === "dark" ? "text-gray-100" : "text-gray-900"
+                        }`}
+                      >
+                        {item.product.name}
+                      </p>
+                      <p
+                        className={`text-sm ${
+                          theme === "dark" ? "text-gray-400" : "text-gray-500"
+                        }`}
+                      >
+                        {formatCurrency(item.price)} × {item.quantity}
+                      </p>
+                      {item.found &&
+                        item.foundQuantity &&
+                        item.foundQuantity < item.quantity && (
+                          <p
+                            className={`text-xs ${
+                              theme === "dark"
+                                ? "text-orange-400"
+                                : "text-orange-600"
+                            }`}
+                          >
+                            Found: {item.foundQuantity} of {item.quantity}
+                          </p>
+                        )}
+                    </div>
+                    <div className="flex flex-col items-end text-right">
+                      <div className="mb-2 font-bold">
+                        {formatCurrency(item.price * item.quantity)}
+                      </div>
+                      {order.status === "shopping" && (
+                        <Checkbox
+                          checked={item.found || false}
+                          onChange={(_, checked) =>
+                            toggleItemFound(item, checked)
+                          }
+                        >
+                          Found
+                        </Checkbox>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
         )}
 
-        {/* Found Items Summary - only show when shopping */}
-        {order.status === "shopping" && (
+        {/* Found Items Summary - only show when shopping for regular orders */}
+        {order.status === "shopping" && order.orderType !== "reel" && (
           <div
             className={`mb-6 rounded-lg border p-4 ${
               theme === "dark"
@@ -1317,7 +1524,7 @@ export default function BatchDetails({
             </h3>
             <div className="space-y-2">
               <div className="flex flex-wrap gap-2">
-                {order.Order_Items.map((item) => (
+                {order.Order_Items?.map((item) => (
                   <div
                     key={item.id}
                     className={`rounded-lg border p-2 ${
@@ -1369,7 +1576,7 @@ export default function BatchDetails({
                 ))}
               </div>
 
-              {!order.Order_Items.some((item) => item.found) && (
+              {!order.Order_Items?.some((item) => item.found) && (
                 <div
                   className={`mt-4 rounded-md p-3 text-sm ${
                     theme === "dark" ? "bg-gray-700" : "bg-gray-200"
@@ -1423,103 +1630,143 @@ export default function BatchDetails({
               Order Summary
             </h3>
             <div className="space-y-2">
-              <div className="flex justify-between">
-                <span>Subtotal</span>
-                <span>
-                  {order.status === "shopping"
-                    ? formatCurrency(calculateFoundTotal())
-                    : formatCurrency(calculateOriginalSubtotal())}
-                </span>
-              </div>
-
-              {order.status === "shopping" ? (
+              {order.orderType === "reel" ? (
+                // Reel order summary
                 <>
                   <div className="flex justify-between">
-                    <span>Items Found</span>
-                    <span>
-                      {order.Order_Items.filter((item) => item.found).length} of{" "}
-                      {order.Order_Items.length}
-                    </span>
+                    <span>Base Price</span>
+                    <span>{formatCurrency(parseFloat(order.reel?.Price || "0"))}</span>
                   </div>
                   <div className="flex justify-between">
-                    <span>Units Found</span>
-                    <span>
-                      {order.Order_Items.reduce((total, item) => {
-                        if (item.found) {
-                          return total + (item.foundQuantity || item.quantity);
-                        }
-                        return total;
-                      }, 0)}{" "}
-                      of{" "}
-                      {order.Order_Items.reduce(
-                        (total, item) => total + item.quantity,
-                        0
-                      )}
-                    </span>
+                    <span>Quantity</span>
+                    <span>{order.quantity}</span>
                   </div>
                   <div className="flex justify-between">
-                    <span>Items Not Found</span>
-                    <span>
-                      {order.Order_Items.filter((item) => !item.found).length}
-                    </span>
-                  </div>
-                </>
-              ) : (
-                <>
-                  <div className="flex justify-between">
-                    <span>Delivery Fee</span>
-                    <span>
-                      {formatCurrency(parseFloat(order.deliveryFee || "0"))}
-                    </span>
+                    <span>Subtotal</span>
+                    <span>{formatCurrency(parseFloat(order.reel?.Price || "0") * (order.quantity || 1))}</span>
                   </div>
                   <div className="flex justify-between">
                     <span>Service Fee</span>
-                    <span>
-                      {formatCurrency(parseFloat(order.serviceFee || "0"))}
-                    </span>
+                    <span>{formatCurrency(parseFloat(order.serviceFee || "0"))}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span>Delivery Fee</span>
+                    <span>{formatCurrency(parseFloat(order.deliveryFee || "0"))}</span>
+                  </div>
+                  {order.discount > 0 && (
+                    <div className="flex justify-between text-green-600">
+                      <span>Discount</span>
+                      <span>-{formatCurrency(order.discount)}</span>
+                    </div>
+                  )}
+                  <Divider />
+                  <div className="flex justify-between text-lg font-bold">
+                    <span>Total</span>
+                    <span>{formatCurrency(order.total)}</span>
                   </div>
                 </>
-              )}
+              ) : (
+                // Regular order summary
+                <>
+                  <div className="flex justify-between">
+                    <span>Subtotal</span>
+                    <span>
+                      {order.status === "shopping"
+                        ? formatCurrency(calculateFoundTotal())
+                        : formatCurrency(calculateOriginalSubtotal())}
+                    </span>
+                  </div>
 
-              {order.discount > 0 && (
-                <div className="flex justify-between text-green-600">
-                  <span>Discount</span>
-                  <span>-{formatCurrency(order.discount)}</span>
-                </div>
-              )}
-              <Divider />
-              <div className="flex justify-between text-lg font-bold">
-                <span>Total</span>
-                <span>
-                  {order.status === "shopping"
-                    ? formatCurrency(calculateFoundItemsTotal())
-                    : formatCurrency(calculateOriginalSubtotal())}
-                </span>
-              </div>
+                  {order.status === "shopping" ? (
+                    <>
+                      <div className="flex justify-between">
+                        <span>Items Found</span>
+                        <span>
+                          {order.Order_Items?.filter((item) => item.found).length || 0} of{" "}
+                          {order.Order_Items?.length || 0}
+                        </span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span>Units Found</span>
+                        <span>
+                          {order.Order_Items?.reduce((total, item) => {
+                            if (item.found) {
+                              return total + (item.foundQuantity || item.quantity);
+                            }
+                            return total;
+                          }, 0) || 0}{" "}
+                          of{" "}
+                          {order.Order_Items?.reduce(
+                            (total, item) => total + item.quantity,
+                            0
+                          ) || 0}
+                        </span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span>Items Not Found</span>
+                        <span>
+                          {order.Order_Items?.filter((item) => !item.found).length || 0}
+                        </span>
+                      </div>
+                    </>
+                  ) : (
+                    <>
+                      <div className="flex justify-between">
+                        <span>Delivery Fee</span>
+                        <span>
+                          {formatCurrency(parseFloat(order.deliveryFee || "0"))}
+                        </span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span>Service Fee</span>
+                        <span>
+                          {formatCurrency(parseFloat(order.serviceFee || "0"))}
+                        </span>
+                      </div>
+                    </>
+                  )}
 
-              {order.status === "shopping" && (
-                <div
-                  className={`mt-4 rounded-md p-3 text-sm ${
-                    theme === "dark" ? "bg-gray-700" : "bg-gray-200"
-                  }`}
-                >
-                  <p>
-                    <strong>Note:</strong> The total reflects only the value of
-                    found items. Service fee (
-                    {formatCurrency(parseFloat(order.serviceFee || "0"))}) and
-                    delivery fee (
-                    {formatCurrency(parseFloat(order.deliveryFee || "0"))}) were
-                    already added to your wallet as earnings when you started
-                    shopping.
-                  </p>
-                </div>
+                  {order.discount > 0 && (
+                    <div className="flex justify-between text-green-600">
+                      <span>Discount</span>
+                      <span>-{formatCurrency(order.discount)}</span>
+                    </div>
+                  )}
+                  <Divider />
+                  <div className="flex justify-between text-lg font-bold">
+                    <span>Total</span>
+                    <span>
+                      {order.status === "shopping"
+                        ? formatCurrency(calculateFoundItemsTotal())
+                        : formatCurrency(calculateOriginalSubtotal())}
+                    </span>
+                  </div>
+
+                  {order.status === "shopping" && (
+                    <div
+                      className={`mt-4 rounded-md p-3 text-sm ${
+                        theme === "dark" ? "bg-gray-700" : "bg-gray-200"
+                      }`}
+                    >
+                      <p>
+                        <strong>Note:</strong> The total reflects only the value of
+                        found items. Service fee (
+                        {formatCurrency(parseFloat(order.serviceFee || "0"))}) and
+                        delivery fee (
+                        {formatCurrency(parseFloat(order.deliveryFee || "0"))}) were
+                        already added to your wallet as earnings when you started
+                        shopping.
+                      </p>
+                    </div>
+                  )}
+                </>
               )}
             </div>
           </div>
         )}
 
         {/* Delivery Notes if any */}
-        {order.deliveryNotes && (
+        {(order.deliveryNotes || order.deliveryNote) && (
           <div
             className={`mb-6 rounded-lg border p-4 ${
               theme === "dark"
@@ -1539,7 +1786,7 @@ export default function BatchDetails({
                 theme === "dark" ? "text-gray-300" : ""
               }`}
             >
-              {order.deliveryNotes}
+              {order.deliveryNotes || order.deliveryNote}
             </p>
           </div>
         )}

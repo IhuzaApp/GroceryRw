@@ -36,6 +36,46 @@ const GET_AVAILABLE_ORDERS = gql`
   }
 `;
 
+// Add query for available reel orders
+const GET_AVAILABLE_REEL_ORDERS = gql`
+  query GetAvailableReelOrders {
+    reel_orders(
+      where: { shopper_id: { _is_null: true }, status: { _eq: "PENDING" } }
+      order_by: { created_at: desc }
+    ) {
+      id
+      created_at
+      service_fee
+      delivery_fee
+      total
+      quantity
+      delivery_note
+      status
+      Reel {
+        id
+        title
+        description
+        Price
+        Product
+        type
+        video_url
+        user_id
+      }
+      user: User {
+        id
+        name
+        phone
+      }
+      address: Address {
+        latitude
+        longitude
+        street
+        city
+      }
+    }
+  }
+`;
+
 // Haversine formula to calculate distance in kilometers between two coordinates
 function calculateDistanceKm(
   lat1: number,
@@ -57,10 +97,11 @@ function calculateDistanceKm(
 }
 
 // Estimate travel time in minutes based on distance
-// Average car speed in city is around 30 km/h (0.5 km per minute)
 function estimateTravelTimeMinutes(distanceKm: number): number {
-  const avgSpeedKmPerMinute = 0.5; // 30 km/h = 0.5 km per minute
-  return Math.round(distanceKm / avgSpeedKmPerMinute);
+  // Assume average speed of 30 km/h in urban areas
+  const averageSpeedKmh = 30;
+  const travelTimeHours = distanceKm / averageSpeedKmh;
+  return Math.round(travelTimeHours * 60);
 }
 
 export default async function handler(
@@ -102,8 +143,9 @@ export default async function handler(
 
     logger.debug("Querying Hasura for all PENDING orders", "AvailableOrders");
 
-    // Modified to get all PENDING orders without date filtering
-    const data = await hasuraClient.request<{
+    // Fetch both regular orders and reel orders in parallel
+    const [regularOrdersData, reelOrdersData] = await Promise.all([
+      hasuraClient.request<{
       Orders: Array<{
         id: string;
         created_at: string;
@@ -124,14 +166,52 @@ export default async function handler(
         };
         Order_Items_aggregate: { aggregate: { count: number | null } | null };
       }>;
-    }>(GET_AVAILABLE_ORDERS);
+      }>(GET_AVAILABLE_ORDERS),
+      hasuraClient.request<{
+        reel_orders: Array<{
+          id: string;
+          created_at: string;
+          service_fee: string | null;
+          delivery_fee: string | null;
+          total: string;
+          quantity: string;
+          delivery_note: string | null;
+          status: string;
+          Reel: {
+            id: string;
+            title: string;
+            description: string;
+            Price: string;
+            Product: string;
+            type: string;
+            video_url: string;
+            user_id: string;
+          };
+          user: {
+            id: string;
+            name: string;
+            phone: string;
+          };
+          address: {
+            latitude: string;
+            longitude: string;
+            street: string;
+            city: string;
+          };
+        }>;
+      }>(GET_AVAILABLE_REEL_ORDERS)
+    ]);
+
+    const regularOrders = regularOrdersData.Orders;
+    const reelOrders = reelOrdersData.reel_orders;
 
     logger.info("Retrieved orders from database", "AvailableOrders", {
-      orderCount: data.Orders.length,
+      regularOrderCount: regularOrders.length,
+      reelOrderCount: reelOrders.length,
     });
 
-    // Transform data to make it easier to use on the client
-    const availableOrders = data.Orders.map((order) => {
+    // Transform regular orders to make it easier to use on the client
+    const availableRegularOrders = regularOrders.map((order) => {
       // Calculate metrics for sorting and filtering
       const createdAt = new Date(order.created_at);
       const pendingMinutes = Math.floor(
@@ -178,7 +258,7 @@ export default async function handler(
 
       // Calculate priority level (1-5) for UI highlighting
       // Orders over 24 hours old get highest priority as they're at risk of being cancelled
-      let priorityLevel = 1; // Default - lowest priority (fresh orders)
+      let priorityLevel = 1;
       if (pendingMinutes >= 24 * 60) {
         priorityLevel = 5; // Critical - pending for 24+ hours
       } else if (pendingMinutes >= 4 * 60) {
@@ -214,59 +294,108 @@ export default async function handler(
         distance: formattedDistanceToShop,
         shopToCustomerDistance: formattedShopToCustomerDistance,
         travelTimeMinutes: travelTimeMinutes,
+        orderType: "regular" as const,
       };
     });
 
+    // Transform reel orders
+    const availableReelOrders = reelOrders.map((order) => {
+      // Calculate metrics for sorting and filtering
+      const createdAt = new Date(order.created_at);
+      const pendingMinutes = Math.floor(
+        (Date.now() - createdAt.getTime()) / 60000
+      );
+
+      // For reel orders, we need to get the location from the reel creator
+      // Since reel orders don't have shops, we'll use a default location or the customer's location
+      const customerLatitude = order.address?.latitude
+        ? parseFloat(order.address.latitude)
+        : 0;
+      const customerLongitude = order.address?.longitude
+        ? parseFloat(order.address.longitude)
+        : 0;
+
+      // For reel orders, we'll use the customer location as the pickup point
+      // since the item comes from the reel creator's location
+      const distanceToPickupKm = calculateDistanceKm(
+        shopperLatitude,
+        shopperLongitude,
+        customerLatitude,
+        customerLongitude
+      );
+
+      // Calculate travel time from shopper to pickup location
+      const travelTimeMinutes = estimateTravelTimeMinutes(distanceToPickupKm);
+
+      // Round distances to 1 decimal place
+      const formattedDistanceToPickup = Math.round(distanceToPickupKm * 10) / 10;
+
+      // Calculate priority level (1-5) for UI highlighting
+      let priorityLevel = 1;
+      if (pendingMinutes >= 24 * 60) {
+        priorityLevel = 5; // Critical - pending for 24+ hours
+      } else if (pendingMinutes >= 4 * 60) {
+        priorityLevel = 4; // High - pending for 4+ hours
+      } else if (pendingMinutes >= 60) {
+        priorityLevel = 3; // Medium - pending for 1+ hour
+      } else if (pendingMinutes >= 30) {
+        priorityLevel = 2; // Low - pending for 30+ minutes
+      }
+
+      return {
+        id: order.id,
+        createdAt: order.created_at,
+        shopName: "Reel Order", // Reel orders don't have shops
+        shopAddress: "From Reel Creator", // Reel orders come from reel creators
+        shopLatitude: customerLatitude, // Use customer location as pickup point
+        shopLongitude: customerLongitude,
+        customerLatitude,
+        customerLongitude,
+        customerAddress: order.address
+          ? `${order.address.street || ""}, ${order.address.city || ""}`
+          : "No Address",
+        itemsCount: 1, // Reel orders have 1 item
+        serviceFee: parseFloat(order.service_fee || "0"),
+        deliveryFee: parseFloat(order.delivery_fee || "0"),
+        earnings:
+          parseFloat(order.service_fee || "0") +
+          parseFloat(order.delivery_fee || "0"),
+        pendingMinutes,
+        priorityLevel,
+        status: order.status,
+        // Add new fields for distance and travel time
+        distance: formattedDistanceToPickup,
+        shopToCustomerDistance: 0, // No shop for reel orders
+        travelTimeMinutes: travelTimeMinutes,
+        orderType: "reel" as const,
+        // Add reel-specific fields
+        reel: order.Reel,
+        quantity: parseInt(order.quantity) || 1,
+        deliveryNote: order.delivery_note,
+        customerName: order.user?.name || "Unknown Customer",
+        customerPhone: order.user?.phone || "",
+      };
+    });
+
+    // Combine both types of orders
+    const allAvailableOrders = [...availableRegularOrders, ...availableReelOrders];
+
     // Filter orders by travel time - only show orders within 15 minutes travel time
-    const filteredOrders = availableOrders.filter(
+    const filteredOrders = allAvailableOrders.filter(
       (order) => order.travelTimeMinutes <= maxTravelTime
     );
 
     // Log the filtered orders
     logger.info("Filtered orders", "AvailableOrders", {
       filteredOrderCount: filteredOrders.length,
+      regularOrderCount: filteredOrders.filter(o => o.orderType === "regular").length,
+      reelOrderCount: filteredOrders.filter(o => o.orderType === "reel").length,
       maxTravelTime: `${maxTravelTime} minutes`,
     });
 
-    // Detailed logging of filtered orders
-    filteredOrders.forEach((order, index) => {
-      logger.debug(`Filtered Order ${index + 1} details`, "AvailableOrders", {
-        id: order.id,
-        created: order.createdAt,
-        status: order.status,
-        shop: {
-          name: order.shopName,
-          coordinates: {
-            lat: order.shopLatitude,
-            lng: order.shopLongitude,
-          },
-        },
-        metrics: {
-          travelTimeToShop: `${order.travelTimeMinutes} min`,
-          distanceToShop: `${order.distance} km`,
-          shopToCustomerDistance: `${order.shopToCustomerDistance} km`,
-        },
-        customer: {
-          address: order.customerAddress,
-          coordinates: {
-            lat: order.customerLatitude,
-            lng: order.customerLongitude,
-          },
-        },
-        itemsCount: order.itemsCount,
-      });
-    });
-
-    // Return the processed and filtered data
     res.status(200).json(filteredOrders);
-  } catch (error: any) {
-    logger.error("Error fetching available orders", "AvailableOrders", {
-      error: error.toString(),
-      stack: error.stack,
-    });
-    res.status(500).json({
-      error: "Failed to fetch available orders",
-      details: error.toString(),
-    });
+  } catch (error) {
+    logger.error("Error fetching available orders:", "AvailableOrders", error);
+    res.status(500).json({ error: "Failed to fetch available orders" });
   }
 }

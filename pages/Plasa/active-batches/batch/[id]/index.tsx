@@ -74,6 +74,19 @@ interface OrderDetailsType {
       };
     };
   };
+  // Add order type and reel-specific fields
+  orderType?: "regular" | "reel";
+  reel?: {
+    id: string;
+    title: string;
+    description: string;
+    Price: string;
+    Product: string;
+    type: string;
+    video_url: string;
+  };
+  quantity?: number;
+  deliveryNote?: string;
 }
 
 interface BatchDetailsPageProps {
@@ -205,7 +218,7 @@ export const getServerSideProps: GetServerSideProps<
     };
   }
 
-  // GraphQL query to fetch a single order with nested details
+  // GraphQL query to fetch a single regular order with nested details
   const GET_ORDER_DETAILS = gql`
     query GetOrderDetails($id: uuid!) {
       Orders(where: { id: { _eq: $id } }, limit: 1) {
@@ -271,17 +284,91 @@ export const getServerSideProps: GetServerSideProps<
     }
   `;
 
+  // GraphQL query to fetch a single reel order with nested details
+  const GET_REEL_ORDER_DETAILS = gql`
+    query GetReelOrderDetails($id: uuid!) {
+      reel_orders(where: { id: { _eq: $id } }, limit: 1) {
+        id
+        OrderID
+        placedAt: created_at
+        estimatedDelivery: delivery_time
+        deliveryNotes: delivery_note
+        total
+        serviceFee: service_fee
+        deliveryFee: delivery_fee
+        status
+        deliveryPhotoUrl: delivery_photo_url
+        discount
+        quantity
+        user: User {
+          id
+          name
+          email
+          profile_picture
+        }
+        reel: Reel {
+          id
+          title
+          description
+          Price
+          Product
+          type
+          video_url
+          Restaurant {
+            id
+            name
+            location
+            lat
+            long
+          }
+        }
+        address: Address {
+          id
+          street
+          city
+          postal_code
+          latitude
+          longitude
+        }
+        assignedTo: User {
+          id
+          name
+          profile_picture
+          orders: Orders_aggregate {
+            aggregate {
+              count
+            }
+          }
+        }
+      }
+    }
+  `;
+
   try {
     if (!hasuraClient) {
       throw new Error("Hasura client is not initialized");
     }
 
-    const data = await hasuraClient.request<{ Orders: any[] }>(
+    // First try to fetch as a regular order
+    let data = await hasuraClient.request<{ Orders: any[] }>(
       GET_ORDER_DETAILS,
       { id }
     );
 
-    const order = data.Orders[0];
+    let order = data.Orders[0];
+    let orderType = "regular";
+
+    // If no regular order found, try as a reel order
+    if (!order) {
+      const reelData = await hasuraClient.request<{ reel_orders: any[] }>(
+        GET_REEL_ORDER_DETAILS,
+        { id }
+      );
+      
+      order = reelData.reel_orders[0];
+      orderType = "reel";
+    }
+
     if (!order) {
       return {
         props: {
@@ -294,6 +381,7 @@ export const getServerSideProps: GetServerSideProps<
     // Format timestamps to human-readable strings
     const formattedOrder = {
       ...order,
+      orderType,
       placedAt: new Date(order.placedAt).toLocaleString("en-US", {
         dateStyle: "medium",
         timeStyle: "short",
