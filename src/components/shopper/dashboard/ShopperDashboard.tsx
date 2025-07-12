@@ -71,6 +71,21 @@ interface FormattedOrder {
   shopLongitude?: number;
   customerLatitude?: number;
   customerLongitude?: number;
+  // Add order type and reel-specific fields
+  orderType: "regular" | "reel";
+  reel?: {
+    id: string;
+    title: string;
+    description: string;
+    Price: string;
+    Product: string;
+    type: string;
+    video_url: string;
+  };
+  quantity?: number;
+  deliveryNote?: string;
+  customerName?: string;
+  customerPhone?: string;
 }
 
 export default function ShopperDashboard() {
@@ -163,6 +178,9 @@ export default function ShopperDashboard() {
               (Date.now() - createdAtDate.getTime()) / 60000
             );
 
+            // Handle both regular and reel orders
+            const isReelOrder = order.orderType === "reel";
+            
             return {
               id: order.id,
               shopName: order.shopName || "Unknown Shop",
@@ -184,6 +202,13 @@ export default function ShopperDashboard() {
               customerLatitude: order.customerLatitude,
               customerLongitude: order.customerLongitude,
               travelTimeMinutes: order.travelTimeMinutes,
+              orderType: order.orderType || "regular",
+              // Reel-specific fields
+              reel: order.reel,
+              quantity: order.quantity,
+              deliveryNote: order.deliveryNote,
+              customerName: order.customerName,
+              customerPhone: order.customerPhone,
             };
           } catch (err) {
             console.error(`Error formatting order ${order.id}:`, err);

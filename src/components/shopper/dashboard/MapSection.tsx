@@ -29,6 +29,21 @@ interface MapSectionProps {
     priorityLevel?: number;
     minutesAgo?: number;
     status?: string;
+    // Add order type and reel-specific fields
+    orderType?: "regular" | "reel";
+    reel?: {
+      id: string;
+      title: string;
+      description: string;
+      Price: string;
+      Product: string;
+      type: string;
+      video_url: string;
+    };
+    quantity?: number;
+    deliveryNote?: string;
+    customerName?: string;
+    customerPhone?: string;
   }>;
   isInitializing?: boolean;
   isExpanded?: boolean;
@@ -562,7 +577,8 @@ export default function MapSection({
   const attachAcceptHandler = (
     marker: L.Marker,
     orderId: string,
-    map: L.Map
+    map: L.Map,
+    orderType: "regular" | "reel" = "regular"
   ) => {
     marker.on("popupopen", () => {
       const btn = document.getElementById(
@@ -574,7 +590,7 @@ export default function MapSection({
           // Show loading state on button
           btn.disabled = true;
           // Change button to green and show spinner
-          btn.style.background = "#10b981";
+          btn.style.background = orderType === "reel" ? "#8b5cf6" : "#10b981";
           btn.innerHTML =
             '<span class="animate-spin mr-2 inline-block w-4 h-4 border-2 border-white border-t-transparent rounded-full"></span>Assigning...';
           // Toast assigning
@@ -589,7 +605,10 @@ export default function MapSection({
           fetch("/api/shopper/assignOrder", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ orderId: orderId }),
+            body: JSON.stringify({ 
+              orderId: orderId,
+              orderType: orderType
+            }),
           })
             .then((res) => res.json())
             .then((data) => {
@@ -636,6 +655,7 @@ export default function MapSection({
                                       },
                                       body: JSON.stringify({
                                         orderId: orderId,
+                                        orderType: orderType,
                                       }),
                                     })
                                       .then((res) => res.json())
@@ -673,7 +693,7 @@ export default function MapSection({
                                             { placement: "topEnd" }
                                           );
                                           btn.disabled = false;
-                                          btn.style.background = "#3b82f6";
+                                          btn.style.background = orderType === "reel" ? "#8b5cf6" : "#3b82f6";
                                           btn.innerHTML = "Accept Batch";
                                         }
                                       })
@@ -691,7 +711,7 @@ export default function MapSection({
                                           { placement: "topEnd" }
                                         );
                                         btn.disabled = false;
-                                        btn.style.background = "#3b82f6";
+                                        btn.style.background = orderType === "reel" ? "#8b5cf6" : "#3b82f6";
                                         btn.innerHTML = "Accept Batch";
                                       });
                                   }, 1000); // Small delay to let the wallet creation complete
@@ -731,7 +751,7 @@ export default function MapSection({
 
                 // Reset button
                 btn.disabled = false;
-                btn.style.background = "#3b82f6";
+                btn.style.background = orderType === "reel" ? "#8b5cf6" : "#3b82f6";
                 btn.innerHTML = "Accept Batch";
                 return;
               }
@@ -758,7 +778,7 @@ export default function MapSection({
                 { placement: "topEnd" }
               );
               btn.disabled = false;
-              btn.style.background = "#3b82f6";
+              btn.style.background = orderType === "reel" ? "#8b5cf6" : "#3b82f6";
               btn.innerHTML = "Accept Batch";
             });
         });
@@ -824,13 +844,20 @@ export default function MapSection({
   };
 
   // Helper function to create consistent marker icon
-  const createOrderMarkerIcon = (earnings: string) => {
+  const createOrderMarkerIcon = (earnings: string, orderType: "regular" | "reel" = "regular") => {
     const simplifiedEarnings = formatEarningsDisplay(earnings);
+    const bgColor = orderType === "reel" 
+      ? (theme === "dark" ? "#7c3aed" : "#8b5cf6") 
+      : (theme === "dark" ? "#065f46" : "#10b981");
+    const borderColor = orderType === "reel" 
+      ? (theme === "dark" ? "#6d28d9" : "#7c3aed") 
+      : (theme === "dark" ? "#047857" : "#059669");
+    
     return L.divIcon({
       html: `
         <div style="
-          background: ${theme === "dark" ? "#065f46" : "#10b981"};
-          border: 2px solid ${theme === "dark" ? "#047857" : "#059669"};
+          background: ${bgColor};
+          border: 2px solid ${borderColor};
           border-radius: 50%;
           width: 44px;
           height: 44px;
@@ -981,7 +1008,10 @@ export default function MapSection({
   const createAvailableOrderPopupContent = (
     order: MapSectionProps["availableOrders"][0],
     theme: string
-  ) => `
+  ) => {
+    const isReelOrder = order.orderType === "reel";
+    
+    return `
     <div class="${
       theme === "dark" ? "dark-theme-popup" : "light-theme-popup"
     }" style="
@@ -1010,16 +1040,17 @@ export default function MapSection({
     order.estimatedEarnings
   }</strong>
         </div>
+        ${isReelOrder ? '<div style="display: flex; align-items: center; gap: 6px; margin-bottom: 4px;"><span style="font-size: 16px;">🎬</span><strong style="color: #8b5cf6;">REEL ORDER</strong></div>' : ''}
       </div>
       
       <div style="display: flex; flex-direction: column; gap: 6px;">
         <div style="display: flex; align-items: center; gap: 6px;">
-          <span style="font-size: 16px;">🏪</span>
-          <span style="flex: 1;">${order.shopName}</span>
+          <span style="font-size: 16px;">${isReelOrder ? '🎬' : '🏪'}</span>
+          <span style="flex: 1;">${isReelOrder ? (order.reel?.title || "Reel Order") : order.shopName}</span>
         </div>
         <div style="display: flex; align-items: center; gap: 6px;">
           <span style="font-size: 16px;">📍</span>
-          <span style="flex: 1;">${order.shopAddress}</span>
+          <span style="flex: 1;">${isReelOrder ? `From: ${order.customerName || "Reel Creator"}` : order.shopAddress}</span>
         </div>
         <div style="display: flex; align-items: center; gap: 6px;">
           <span style="font-size: 16px;">⏱️</span>
@@ -1029,6 +1060,7 @@ export default function MapSection({
           <span style="font-size: 16px;">🚚</span>
           <span style="flex: 1;">Deliver to: ${order.customerAddress}</span>
         </div>
+        ${isReelOrder && order.deliveryNote ? `<div style="display: flex; align-items: center; gap: 6px;"><span style="font-size: 16px;">📝</span><span style="flex: 1;">Note: ${order.deliveryNote}</span></div>` : ''}
       </div>
 
       <button 
@@ -1037,7 +1069,7 @@ export default function MapSection({
           width: 100%;
           margin-top: 12px;
           padding: 8px 16px;
-          background: ${theme === "dark" ? "#059669" : "#10b981"};
+          background: ${isReelOrder ? (theme === "dark" ? "#7c3aed" : "#8b5cf6") : (theme === "dark" ? "#059669" : "#10b981")};
           color: white;
           border: none;
           border-radius: 6px;
@@ -1046,16 +1078,17 @@ export default function MapSection({
           transition: all 0.2s;
         "
         onmouseover="this.style.background='${
-          theme === "dark" ? "#047857" : "#059669"
+          isReelOrder ? (theme === "dark" ? "#6d28d9" : "#7c3aed") : (theme === "dark" ? "#047857" : "#059669")
         }'"
         onmouseout="this.style.background='${
-          theme === "dark" ? "#059669" : "#10b981"
+          isReelOrder ? (theme === "dark" ? "#7c3aed" : "#8b5cf6") : (theme === "dark" ? "#059669" : "#10b981")
         }'"
       >
         Accept Batch
       </button>
     </div>
   `;
+  };
 
   // Helper function to render a pending order marker
   const renderPendingOrderMarker = (order: PendingOrder, map: L.Map) => {
@@ -1077,7 +1110,7 @@ export default function MapSection({
           closeButton: true,
           closeOnClick: false,
         });
-        attachAcceptHandler(marker, order.id, map);
+        attachAcceptHandler(marker, order.id, map, "regular"); // Pass "regular" for pending orders
       }
     } catch (error) {
       console.error(
@@ -1573,7 +1606,7 @@ export default function MapSection({
                   closeButton: true,
                   closeOnClick: false,
                 });
-                attachAcceptHandler(marker, order.id, map);
+                attachAcceptHandler(marker, order.id, map, "regular"); // Pass "regular" for pending orders
               }
             } catch (error) {
               logger.error(
@@ -1641,7 +1674,7 @@ export default function MapSection({
               const adjustedLng = baseLng + offset.lng;
 
               const marker = L.marker([adjustedLat, adjustedLng], {
-                icon: createOrderMarkerIcon(order.estimatedEarnings),
+                icon: createOrderMarkerIcon(order.estimatedEarnings, order.orderType),
                 zIndexOffset: 1000 + index,
               });
 
@@ -1659,7 +1692,7 @@ export default function MapSection({
                     closeOnClick: false,
                   }
                 );
-                attachAcceptHandler(marker, order.id, map);
+                attachAcceptHandler(marker, order.id, map, order.orderType); // Pass orderType for available orders
                 orderMarkersRef.current.push(marker);
               }
             } catch (error) {

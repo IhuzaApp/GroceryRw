@@ -5,7 +5,7 @@ import { hasuraClient } from "../../../src/lib/hasuraClient";
 import { gql } from "graphql-request";
 import { formatCurrency } from "../../../src/lib/formatCurrency";
 
-// GraphQL query to get order details
+// GraphQL query to get regular order details
 const GET_ORDER_DETAILS = gql`
   query GetOrderDetails($order_id: uuid!) {
     Orders_by_pk(id: $order_id) {
@@ -27,6 +27,34 @@ const GET_ORDER_DETAILS = gql`
         price
         Product {
           name
+        }
+      }
+    }
+  }
+`;
+
+// GraphQL query to get reel order details
+const GET_REEL_ORDER_DETAILS = gql`
+  query GetReelOrderDetails($order_id: uuid!) {
+    reel_orders_by_pk(id: $order_id) {
+      id
+      OrderID
+      user_id
+      total
+      shopper_id
+      status
+      Reel {
+        id
+        title
+        description
+        Price
+        Product
+        type
+        video_url
+        Restaurant {
+          id
+          name
+          location
         }
       }
     }
@@ -111,6 +139,31 @@ interface OrderDetails {
   } | null;
 }
 
+interface ReelOrderDetails {
+  reel_orders_by_pk: {
+    id: string;
+    OrderID: string;
+    user_id: string;
+    total: string;
+    shopper_id: string;
+    status: string;
+    Reel: {
+      id: string;
+      title: string;
+      description: string;
+      Price: string;
+      Product: string;
+      type: string;
+      video_url: string;
+      Restaurant: {
+        id: string;
+        name: string;
+        location: string;
+      };
+    };
+  } | null;
+}
+
 interface WalletData {
   Wallets: Array<{
     id: string;
@@ -148,7 +201,7 @@ export default async function handler(
     }
 
     // Get request data
-    const { orderId, momoCode, privateKey, orderAmount, originalOrderTotal } =
+    const { orderId, momoCode, privateKey, orderAmount, originalOrderTotal, orderType } =
       req.body;
 
     // Validate required fields
@@ -160,6 +213,7 @@ export default async function handler(
     const formattedOrderAmount = parseFloat(Number(orderAmount).toFixed(2));
 
     console.log(`Processing payment for order ${orderId}`);
+    console.log(`Order type: ${orderType || 'regular'}`);
     console.log(`Order amount: ${formattedOrderAmount}`);
 
     if (originalOrderTotal) {
@@ -179,17 +233,34 @@ export default async function handler(
       return res.status(500).json({ error: "Database client not available" });
     }
 
-    // Get order details
-    const orderResponse = await hasuraClient.request<OrderDetails>(
-      GET_ORDER_DETAILS,
-      {
-        order_id: orderId,
-      }
-    );
+    let orderData: any = null;
+    let isReelOrder = orderType === 'reel';
 
-    const orderData = orderResponse.Orders_by_pk;
-    if (!orderData) {
-      return res.status(404).json({ error: "Order not found" });
+    // Get order details based on order type
+    if (isReelOrder) {
+      const reelOrderResponse = await hasuraClient.request<ReelOrderDetails>(
+        GET_REEL_ORDER_DETAILS,
+        {
+          order_id: orderId,
+        }
+      );
+
+      orderData = reelOrderResponse.reel_orders_by_pk;
+      if (!orderData) {
+        return res.status(404).json({ error: "Reel order not found" });
+      }
+    } else {
+      const orderResponse = await hasuraClient.request<OrderDetails>(
+        GET_ORDER_DETAILS,
+        {
+          order_id: orderId,
+        }
+      );
+
+      orderData = orderResponse.Orders_by_pk;
+      if (!orderData) {
+        return res.status(404).json({ error: "Order not found" });
+      }
     }
 
     // Get shopper's wallet
@@ -229,7 +300,7 @@ export default async function handler(
     let refundData = null;
 
     // If originalOrderTotal is provided, use it; otherwise get from orderData
-    const totalOrderValue = originalOrderTotal || parseFloat(orderData.total);
+    const totalOrderValue = originalOrderTotal || parseFloat(isReelOrder ? orderData.total : orderData.total);
 
     // Calculate if there's a difference between original total and found items total
     if (totalOrderValue > formattedOrderAmount) {
@@ -238,18 +309,25 @@ export default async function handler(
       );
       refundNeeded = true;
 
-      // Get shop name
-      const shopName = orderData.Shop?.name || "Unknown Shop";
+      // Get shop/restaurant name
+      const shopName = isReelOrder 
+        ? (orderData.Reel?.Restaurant?.name || "Unknown Restaurant")
+        : (orderData.Shop?.name || "Unknown Shop");
 
       // Create detailed reason for the refund
       refundReason = `Refund for items not found during shopping at ${shopName}. `;
 
-      // List all order items
-      const allItems = orderData.Order_Items.map(
-        (item) => `${item.Product.name} (${item.quantity})`
-      ).join(", ");
+      if (isReelOrder) {
+        // For reel orders, we don't have individual items, so just use the product name
+        refundReason += `Reel order: ${orderData.Reel?.Restaurant?.name || 'Unknown Restaurant'}. `;
+      } else {
+        // List all order items for regular orders
+        const allItems = orderData.Order_Items.map(
+          (item: any) => `${item.Product.name} (${item.quantity})`
+        ).join(", ");
+        refundReason += `Order items: ${allItems}. `;
+      }
 
-      refundReason += `Order items: ${allItems}. `;
       refundReason += `Original total: ${totalOrderValue}, found items total: ${formattedOrderAmount}, refund amount: ${refundAmount}.`;
     }
 
@@ -323,26 +401,32 @@ export default async function handler(
     });
 
     // Create wallet transaction records for the payment
-    const transactions = [
-      {
-        wallet_id: walletId,
-        amount: formattedOrderAmount.toFixed(2),
-        type: "payment",
-        status: "completed",
-        related_order_id: orderId,
-        description: `Payment from reserved balance for found order items. MoMo Code: ${momoCode}`,
-      },
-    ];
+    // Note: Wallet_Transactions table is designed for regular orders only
+    // For reel orders, we skip creating wallet transactions to avoid foreign key constraint issues
+    if (!isReelOrder) {
+      const transactions = [
+        {
+          wallet_id: walletId,
+          amount: formattedOrderAmount.toFixed(2),
+          type: "payment",
+          status: "completed",
+          related_order_id: orderId,
+          description: `Payment from reserved balance for found order items. MoMo Code: ${momoCode}`,
+        },
+      ];
 
-    const transactionResponse = await hasuraClient.request(
-      CREATE_WALLET_TRANSACTIONS,
-      {
-        transactions,
-      }
-    );
+      const transactionResponse = await hasuraClient.request(
+        CREATE_WALLET_TRANSACTIONS,
+        {
+          transactions,
+        }
+      );
+    } else {
+      console.log(`Skipping wallet transaction creation for reel order ${orderId} to avoid foreign key constraint issues`);
+    }
 
     // Log the payment information
-    console.log(`Payment processed for order: ${orderId}`);
+    console.log(`Payment processed for ${isReelOrder ? 'reel ' : ''}order: ${orderId}`);
     console.log(`Amount: ${formattedOrderAmount}`);
     console.log(`MoMo Code: ${momoCode}`);
     console.log(`Private Key: ${privateKey.substring(0, 3)}***`); // Log only first few chars for security

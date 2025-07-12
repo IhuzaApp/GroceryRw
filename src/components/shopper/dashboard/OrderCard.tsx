@@ -20,6 +20,21 @@ interface Order {
   minutesAgo?: number;
   priorityLevel?: number;
   travelTimeMinutes?: number;
+  // Add order type and reel-specific fields
+  orderType?: "regular" | "reel";
+  reel?: {
+    id: string;
+    title: string;
+    description: string;
+    Price: string;
+    Product: string;
+    type: string;
+    video_url: string;
+  };
+  quantity?: number;
+  deliveryNote?: string;
+  customerName?: string;
+  customerPhone?: string;
 }
 
 interface OrderCardProps {
@@ -76,6 +91,7 @@ export default function OrderCard({ order, onOrderAccepted }: OrderCardProps) {
   const badgeColorClass = getBadgeColor(order);
   const priorityInfo = getPriorityLabel(order.priorityLevel || 0);
   const [isAccepting, setIsAccepting] = useState(false);
+  const isReelOrder = order.orderType === "reel";
 
   const handleAcceptOrder = async () => {
     setIsAccepting(true);
@@ -84,7 +100,10 @@ export default function OrderCard({ order, onOrderAccepted }: OrderCardProps) {
       const response = await fetch("/api/shopper/assignOrder", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ orderId: order.id }),
+        body: JSON.stringify({ 
+          orderId: order.id,
+          orderType: order.orderType || "regular" // Pass order type to API
+        }),
       });
 
       const data = await response.json();
@@ -119,7 +138,10 @@ export default function OrderCard({ order, onOrderAccepted }: OrderCardProps) {
               const retryResponse = await fetch("/api/shopper/assignOrder", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ orderId: order.id }),
+                body: JSON.stringify({ 
+                  orderId: order.id,
+                  orderType: order.orderType || "regular"
+                }),
               });
 
               const retryData = await retryResponse.json();
@@ -168,6 +190,8 @@ export default function OrderCard({ order, onOrderAccepted }: OrderCardProps) {
       className={`overflow-hidden ${
         order.priorityLevel && order.priorityLevel >= 4
           ? "border-2 border-red-500"
+          : isReelOrder
+          ? "border-2 border-purple-500"
           : ""
       }`}
     >
@@ -178,11 +202,31 @@ export default function OrderCard({ order, onOrderAccepted }: OrderCardProps) {
           {priorityInfo.text}
         </div>
       )}
+      
+      {/* Reel order indicator */}
+      {isReelOrder && (
+        <div className="py-1 text-center text-xs font-bold bg-purple-100 text-purple-800">
+          🎬 REEL ORDER
+        </div>
+      )}
+      
       <div className="p-4">
         <div className="mb-3 flex items-start justify-between">
           <div>
-            <h3 className="text-lg font-bold">{order.shopName}</h3>
-            <p className="text-sm text-gray-500">{order.shopAddress}</p>
+            <h3 className="text-lg font-bold">
+              {isReelOrder ? order.reel?.title || "Reel Order" : order.shopName}
+            </h3>
+            <p className="text-sm text-gray-500">
+              {isReelOrder 
+                ? `From: ${order.customerName || "Reel Creator"}` 
+                : order.shopAddress
+              }
+            </p>
+            {isReelOrder && order.reel?.description && (
+              <p className="text-xs text-gray-400 mt-1">
+                {order.reel.description}
+              </p>
+            )}
           </div>
           <Badge
             content={order.createdAt}
@@ -232,7 +276,12 @@ export default function OrderCard({ order, onOrderAccepted }: OrderCardProps) {
             <line x1="3" y1="6" x2="21" y2="6" />
             <path d="M16 10a4 4 0 01-8 0" />
           </svg>
-          <span>Items: {order.items}</span>
+          <span>
+            {isReelOrder 
+              ? `Quantity: ${order.quantity || 1}` 
+              : `Items: ${order.items}`
+            }
+          </span>
         </div>
 
         <div className="mb-4 flex items-center">
@@ -251,21 +300,34 @@ export default function OrderCard({ order, onOrderAccepted }: OrderCardProps) {
           </span>
         </div>
 
+        {/* Show delivery note for reel orders */}
+        {isReelOrder && order.deliveryNote && (
+          <div className="mb-4 p-2 bg-yellow-50 border border-yellow-200 rounded">
+            <p className="text-xs text-yellow-800">
+              <strong>Note:</strong> {order.deliveryNote}
+            </p>
+          </div>
+        )}
+
         <div className="flex items-center justify-between">
           <div>
             <p className="text-sm text-gray-500">Estimated Earnings</p>
-            <p className="text-lg font-bold text-green-600">
+            <p className={`text-lg font-bold ${isReelOrder ? 'text-purple-600' : 'text-green-600'}`}>
               {order.estimatedEarnings}
             </p>
           </div>
           <div className="flex gap-2">
             <Link href={`/Plasa/orders/${order.id}`}>
-              <button className="rounded px-3 py-1.5 text-sm text-green-600 hover:bg-green-50">
+              <button className={`rounded px-3 py-1.5 text-sm hover:bg-green-50 ${
+                isReelOrder ? 'text-purple-600' : 'text-green-600'
+              }`}>
                 View Details
               </button>
             </Link>
             <button
-              className="rounded bg-green-500 px-3 py-1.5 text-sm text-white hover:bg-green-600"
+              className={`rounded px-3 py-1.5 text-sm text-white hover:bg-green-600 ${
+                isReelOrder ? 'bg-purple-500 hover:bg-purple-600' : 'bg-green-500'
+              }`}
               onClick={handleAcceptOrder}
               disabled={isAccepting}
             >

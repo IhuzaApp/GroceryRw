@@ -25,6 +25,34 @@ const GET_AVAILABLE_BATCHES = gql`
   }
 `;
 
+// Add query for available reel orders
+const GET_AVAILABLE_REEL_BATCHES = gql`
+  query GetAvailableReelBatches($created_after: timestamptz!) {
+    reel_orders(
+      where: { created_at: { _gt: $created_after }, status: { _eq: "PENDING" } }
+    ) {
+      id
+      created_at
+      Reel {
+        id
+        title
+        type
+        user_id
+      }
+      user: User {
+        id
+        name
+      }
+      address: Address {
+        latitude
+        longitude
+        street
+        city
+      }
+    }
+  }
+`;
+
 const GET_AVAILABLE_DASHERS = gql`
   query GetAvailableDashers {
     Shopper_Availability(where: { is_available: { _eq: true } }) {
@@ -60,6 +88,27 @@ interface Batch {
     address: string;
     latitude: number;
     longitude: number;
+  };
+}
+
+interface ReelBatch {
+  id: string;
+  created_at: string;
+  Reel: {
+    id: string;
+    title: string;
+    type: string;
+    user_id: string;
+  };
+  user: {
+    id: string;
+    name: string;
+  };
+  address: {
+    latitude: number;
+    longitude: number;
+    street: string;
+    city: string;
   };
 }
 
@@ -102,18 +151,30 @@ export default async function handler(
     const twentyMinutesAgo = new Date(
       Date.now() - 20 * 60 * 1000
     ).toISOString();
-    const { Orders: availableBatches } = await hasuraClient.request<{
-      Orders: Batch[];
-    }>(GET_AVAILABLE_BATCHES, {
-      created_after: twentyMinutesAgo,
-    });
+
+    // Fetch both regular orders and reel orders in parallel
+    const [regularBatchesData, reelBatchesData] = await Promise.all([
+      hasuraClient.request<{
+        Orders: Batch[];
+      }>(GET_AVAILABLE_BATCHES, {
+        created_after: twentyMinutesAgo,
+      }),
+      hasuraClient.request<{
+        reel_orders: ReelBatch[];
+      }>(GET_AVAILABLE_REEL_BATCHES, {
+        created_after: twentyMinutesAgo,
+      })
+    ]);
+
+    const availableBatches = regularBatchesData.Orders;
+    const availableReelBatches = reelBatchesData.reel_orders;
 
     const { Shopper_Availability: availableDashers } =
       await hasuraClient.request<{ Shopper_Availability: Dasher[] }>(
         GET_AVAILABLE_DASHERS
       );
 
-    // Group batches by shop
+    // Group regular batches by shop
     const batchesByShop = availableBatches.reduce((acc, batch) => {
       if (!acc[batch.shop_id]) {
         acc[batch.shop_id] = [];
@@ -121,6 +182,16 @@ export default async function handler(
       acc[batch.shop_id].push(batch);
       return acc;
     }, {} as Record<string, Batch[]>);
+
+    // Group reel batches by creator location (using customer address as pickup point)
+    const reelBatchesByLocation = availableReelBatches.reduce((acc, batch) => {
+      const locationKey = `${batch.address.latitude.toFixed(4)},${batch.address.longitude.toFixed(4)}`;
+      if (!acc[locationKey]) {
+        acc[locationKey] = [];
+      }
+      acc[locationKey].push(batch);
+      return acc;
+    }, {} as Record<string, ReelBatch[]>);
 
     // For each dasher, find nearby shops with available batches
     const notificationObjects: Array<{
@@ -133,8 +204,9 @@ export default async function handler(
     await Promise.all(
       availableDashers.map(async (dasher) => {
         const nearbyBatches: Batch[] = [];
+        const nearbyReelBatches: ReelBatch[] = [];
 
-        // Check each shop's distance from the dasher
+        // Check each shop's distance from the dasher for regular orders
         for (const shopBatches of Object.values(batchesByShop)) {
           const shop = shopBatches[0].Shops;
           const distanceInMinutes = await calculateDistance(
@@ -151,15 +223,53 @@ export default async function handler(
           }
         }
 
-        // If there are nearby batches, create a notification object
-        if (nearbyBatches.length > 0) {
+        // Check each reel creator's location for reel orders
+        for (const reelBatches of Object.values(reelBatchesByLocation)) {
+          const firstBatch = reelBatches[0];
+          const distanceInMinutes = await calculateDistance(
+            {
+              lat: dasher.last_known_latitude,
+              lng: dasher.last_known_longitude,
+            },
+            { lat: firstBatch.address.latitude, lng: firstBatch.address.longitude }
+          );
+
+          // If reel creator is within 10 minutes, add its batches to nearbyReelBatches
+          if (distanceInMinutes <= 10) {
+            nearbyReelBatches.push(...reelBatches);
+          }
+        }
+
+        // Create notification message combining both types of orders
+        let notificationMessage = "";
+        let hasRegularBatches = nearbyBatches.length > 0;
+        let hasReelBatches = nearbyReelBatches.length > 0;
+
+        if (hasRegularBatches && hasReelBatches) {
+          // Both types of orders available
           const uniqueShops = Array.from(
             new Set(nearbyBatches.map((batch) => batch.Shops.name))
           );
-          const notificationMessage = `${
-            nearbyBatches.length
-          } new batch(es) available at ${uniqueShops.join(", ")}`;
+          const uniqueReelCreators = Array.from(
+            new Set(nearbyReelBatches.map((batch) => batch.user.name))
+          );
+          notificationMessage = `${nearbyBatches.length} regular batch(es) at ${uniqueShops.join(", ")} and ${nearbyReelBatches.length} reel order(s) from ${uniqueReelCreators.join(", ")}`;
+        } else if (hasRegularBatches) {
+          // Only regular orders
+          const uniqueShops = Array.from(
+            new Set(nearbyBatches.map((batch) => batch.Shops.name))
+          );
+          notificationMessage = `${nearbyBatches.length} new batch(es) available at ${uniqueShops.join(", ")}`;
+        } else if (hasReelBatches) {
+          // Only reel orders
+          const uniqueReelCreators = Array.from(
+            new Set(nearbyReelBatches.map((batch) => batch.user.name))
+          );
+          notificationMessage = `${nearbyReelBatches.length} new reel order(s) available from ${uniqueReelCreators.join(", ")}`;
+        }
 
+        // If there are any nearby batches (regular or reel), create a notification object
+        if (notificationMessage) {
           notificationObjects.push({
             user_id: dasher.user_id,
             message: notificationMessage,
@@ -180,6 +290,8 @@ export default async function handler(
     res.status(200).json({
       success: true,
       message: `Notifications created for ${notificationObjects.length} dashers`,
+      regularBatchesCount: availableBatches.length,
+      reelBatchesCount: availableReelBatches.length,
     });
   } catch (error) {
     console.error("Error processing batch notifications:", error);

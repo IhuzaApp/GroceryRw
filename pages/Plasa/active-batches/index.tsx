@@ -5,7 +5,6 @@ import { GetServerSideProps } from "next";
 import { hasuraClient } from "../../../src/lib/hasuraClient";
 import { gql } from "graphql-request";
 import { getSession } from "next-auth/react";
-import { OrderDetailsType } from "../../../src/types/order";
 
 interface Order {
   id: string;
@@ -23,6 +22,20 @@ interface Order {
   items: number;
   total: number;
   estimatedEarnings: string;
+  // Add order type and reel-specific fields
+  orderType: "regular" | "reel";
+  reel?: {
+    id: string;
+    title: string;
+    description: string;
+    Price: string;
+    Product: string;
+    type: string;
+    video_url: string;
+  };
+  quantity?: number;
+  deliveryNote?: string | null;
+  customerPhone?: string;
 }
 
 interface ActiveBatchesPageProps {
@@ -68,7 +81,7 @@ export const getServerSideProps: GetServerSideProps<
     };
   }
 
-  // Define GraphQL query to fetch active orders directly
+  // Define GraphQL query to fetch active regular orders
   const GET_ACTIVE_ORDERS = gql`
     query GetActiveOrders($shopperId: uuid!) {
       Orders(
@@ -112,58 +125,130 @@ export const getServerSideProps: GetServerSideProps<
     }
   `;
 
+  // Define GraphQL query to fetch active reel orders
+  const GET_ACTIVE_REEL_ORDERS = gql`
+    query GetActiveReelOrders($shopperId: uuid!) {
+      reel_orders(
+        where: {
+          shopper_id: { _eq: $shopperId }
+          _and: [
+            { status: { _nin: ["null", "PENDING", "delivered"] } }
+            { status: { _is_null: false } }
+          ]
+        }
+        order_by: { created_at: desc }
+      ) {
+        id
+        created_at
+        status
+        service_fee
+        delivery_fee
+        total
+        quantity
+        delivery_note
+        Reel {
+          id
+          title
+          description
+          Price
+          Product
+          type
+          video_url
+        }
+        user: User {
+          id
+          name
+          phone
+        }
+        Address {
+          latitude
+          longitude
+          street
+          city
+        }
+      }
+    }
+  `;
+
   try {
     if (!hasuraClient) {
       throw new Error("Hasura client is not initialized");
     }
 
-    const data = await hasuraClient.request<{
-      Orders: Array<{
-        id: string;
-        created_at: string;
-        status: string;
-        service_fee: string | null;
-        delivery_fee: string | null;
-        total: number | null;
-        Shop: {
-          name: string;
-          address: string;
-          latitude: string;
-          longitude: string;
-        };
-        User: { id: string; name: string };
-        Address: {
-          latitude: string;
-          longitude: string;
-          street: string;
-          city: string;
-        };
-        Order_Items_aggregate: {
-          aggregate: {
-            count: number | null;
-          } | null;
-        };
-      }>;
-    }>(GET_ACTIVE_ORDERS, { shopperId: userId });
+    // Fetch both regular and reel orders in parallel
+    const [regularOrdersData, reelOrdersData] = await Promise.all([
+      hasuraClient.request<{
+        Orders: Array<{
+          id: string;
+          created_at: string;
+          status: string;
+          service_fee: string | null;
+          delivery_fee: string | null;
+          total: number | null;
+          Shop: {
+            name: string;
+            address: string;
+            latitude: string;
+            longitude: string;
+          };
+          User: { id: string; name: string };
+          Address: {
+            latitude: string;
+            longitude: string;
+            street: string;
+            city: string;
+          };
+          Order_Items_aggregate: {
+            aggregate: {
+              count: number | null;
+            } | null;
+          };
+        }>;
+      }>(GET_ACTIVE_ORDERS, { shopperId: userId }),
+      hasuraClient.request<{
+        reel_orders: Array<{
+          id: string;
+          created_at: string;
+          status: string;
+          service_fee: string | null;
+          delivery_fee: string | null;
+          total: string;
+          quantity: string;
+          delivery_note: string | null;
+          Reel: {
+            id: string;
+            title: string;
+            description: string;
+            Price: string;
+            Product: string;
+            type: string;
+            video_url: string;
+          };
+          user: {
+            id: string;
+            name: string;
+            phone: string;
+          };
+          Address: {
+            latitude: string;
+            longitude: string;
+            street: string;
+            city: string;
+          };
+        }>;
+      }>(GET_ACTIVE_REEL_ORDERS, { shopperId: userId })
+    ]);
 
-    type OrderData = typeof data.Orders[number];
+    const regularOrders = regularOrdersData.Orders;
+    const reelOrders = reelOrdersData.reel_orders;
 
     // Log the number of orders found
     console.log(
-      `Found ${data.Orders.length} active orders for shopper ${userId} on server-side`
+      `Found ${regularOrders.length} active regular orders and ${reelOrders.length} active reel orders for shopper ${userId} on server-side`
     );
 
-    // If no orders were found, return an empty array but no error
-    if (data.Orders.length === 0) {
-      return {
-        props: {
-          activeOrders: [],
-          error: null, // No error, just no orders found
-        },
-      };
-    }
-
-    const activeOrders = data.Orders.map((o: OrderData) => ({
+    // Transform regular orders
+    const transformedRegularOrders = regularOrders.map((o) => ({
       id: o.id,
       OrderID: o.id,
       status: o.status,
@@ -181,11 +266,51 @@ export const getServerSideProps: GetServerSideProps<
       estimatedEarnings: (
         parseFloat(o.service_fee || "0") + parseFloat(o.delivery_fee || "0")
       ).toFixed(2),
+      orderType: "regular" as const,
     }));
+
+    // Transform reel orders
+    const transformedReelOrders = reelOrders.map((o) => ({
+      id: o.id,
+      OrderID: o.id,
+      status: o.status,
+      createdAt: o.created_at,
+      shopName: "Reel Order", // Reel orders don't have shops
+      shopAddress: "From Reel Creator", // Reel orders come from reel creators
+      shopLat: parseFloat(o.Address.latitude), // Use customer location as pickup point
+      shopLng: parseFloat(o.Address.longitude),
+      customerName: o.user.name,
+      customerAddress: `${o.Address.street}, ${o.Address.city}`,
+      customerLat: parseFloat(o.Address.latitude),
+      customerLng: parseFloat(o.Address.longitude),
+      items: 1, // Reel orders have 1 item
+      total: parseFloat(o.total || "0"),
+      estimatedEarnings: (
+        parseFloat(o.service_fee || "0") + parseFloat(o.delivery_fee || "0")
+      ).toFixed(2),
+      orderType: "reel" as const,
+      reel: o.Reel,
+      quantity: parseInt(o.quantity) || 1,
+      deliveryNote: o.delivery_note,
+      customerPhone: o.user.phone,
+    }));
+
+    // Combine both types of orders
+    const allActiveOrders = [...transformedRegularOrders, ...transformedReelOrders];
+
+    // If no orders were found, return an empty array but no error
+    if (allActiveOrders.length === 0) {
+      return {
+        props: {
+          activeOrders: [],
+          error: null, // No error, just no orders found
+        },
+      };
+    }
 
     return {
       props: {
-        activeOrders,
+        activeOrders: allActiveOrders,
         error: null,
       },
     };

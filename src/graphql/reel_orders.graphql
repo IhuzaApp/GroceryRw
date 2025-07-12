@@ -6,7 +6,6 @@ query getReelOrders {
     delivery_address_id
     delivery_fee
     delivery_note
-    quantity
     delivery_photo_url
     delivery_time
     discount
@@ -66,6 +65,18 @@ query getReelOrders {
       type
       user_id
       video_url
+      Restaurant {
+        created_at
+        email
+        id
+        lat
+        location
+        long
+        name
+        phone
+        profile
+        verified
+      }
     }
   }
 }

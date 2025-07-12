@@ -36,6 +36,20 @@ interface Order {
   unitsCount?: number;
   service_fee?: string;
   delivery_fee?: string;
+  // Add order type and reel-specific fields
+  orderType?: "regular" | "reel";
+  reel?: {
+    id: string;
+    title: string;
+    description: string;
+    Price: string;
+    Product: string;
+    type: string;
+    video_url: string;
+  };
+  quantity?: number;
+  deliveryNote?: string | null;
+  customerPhone?: string;
 }
 
 interface ActiveBatchesProps {
@@ -379,6 +393,7 @@ export default function ActiveBatches({
 
 function ActiveOrderCard({ order }: { order: Order }) {
   const { theme } = useTheme();
+  const isReelOrder = order.orderType === "reel";
 
   const getStatusBadge = (status: string) => {
     switch (status) {
@@ -443,11 +458,15 @@ function ActiveOrderCard({ order }: { order: Order }) {
   };
 
   const getNextActionButton = (status: string) => {
+    const buttonClass = isReelOrder 
+      ? "rounded-md bg-purple-600 px-4 py-2 font-medium text-white transition-colors hover:bg-purple-700"
+      : "rounded-md bg-[#125C13] px-4 py-2 font-medium text-white transition-colors hover:bg-[#0A400B]";
+
     switch (status) {
       case "ACCEPTED":
         return (
           <Link href={`/Plasa/active-batches/batch/${order.id}`}>
-            <button className="rounded-md bg-[#125C13] px-4 py-2 font-medium text-white transition-colors hover:bg-[#0A400B]">
+            <button className={buttonClass}>
               Start Shopping
             </button>
           </Link>
@@ -456,7 +475,7 @@ function ActiveOrderCard({ order }: { order: Order }) {
       case "shopping":
         return (
           <Link href={`/Plasa/active-batches/batch/${order.id}`}>
-            <button className="rounded-md bg-[#125C13] px-4 py-2 font-medium text-white transition-colors hover:bg-[#0A400B]">
+            <button className={buttonClass}>
               View Details
             </button>
           </Link>
@@ -465,7 +484,7 @@ function ActiveOrderCard({ order }: { order: Order }) {
       case "on_the_way":
         return (
           <Link href={`/Plasa/active-batches/batch/${order.id}`}>
-            <button className="rounded-md bg-[#125C13] px-4 py-2 font-medium text-white transition-colors hover:bg-[#0A400B]">
+            <button className={buttonClass}>
               Confirm Delivery
             </button>
           </Link>
@@ -473,7 +492,7 @@ function ActiveOrderCard({ order }: { order: Order }) {
       default:
         return (
           <Link href={`/Plasa/active-batches/batch/${order.id}`}>
-            <button className="rounded-md bg-[#125C13] px-4 py-2 font-medium text-white transition-colors hover:bg-[#0A400B]">
+            <button className={buttonClass}>
               View Details
             </button>
           </Link>
@@ -487,29 +506,51 @@ function ActiveOrderCard({ order }: { order: Order }) {
         theme === "dark"
           ? "border-gray-700 bg-gray-800 text-gray-100"
           : "border-gray-200 bg-white text-gray-900"
-      }`}
+      } ${isReelOrder ? "border-purple-500" : ""}`}
     >
+      {/* Reel order indicator */}
+      {isReelOrder && (
+        <div className="mb-3 rounded-md bg-purple-100 px-3 py-2 text-center text-sm font-medium text-purple-800 dark:bg-purple-900/20 dark:text-purple-300">
+          🎬 REEL ORDER
+        </div>
+      )}
+
       <div className="flex items-center justify-between">
         <div className="flex items-center space-x-3">
           <div
             className={`rounded-full p-2 ${
-              theme === "dark" ? "bg-blue-900/20" : "bg-blue-50"
+              isReelOrder
+                ? theme === "dark" ? "bg-purple-900/20" : "bg-purple-50"
+                : theme === "dark" ? "bg-blue-900/20" : "bg-blue-50"
             }`}
           >
             <svg
               className={`h-6 w-6 ${
-                theme === "dark" ? "text-blue-400" : "text-blue-500"
+                isReelOrder
+                  ? theme === "dark" ? "text-purple-400" : "text-purple-500"
+                  : theme === "dark" ? "text-blue-400" : "text-blue-500"
               }`}
               fill="none"
               viewBox="0 0 24 24"
               stroke="currentColor"
             >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"
-              />
+              {isReelOrder ? (
+                // Video icon for reel orders
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"
+                />
+              ) : (
+                // Clipboard icon for regular orders
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"
+                />
+              )}
             </svg>
           </div>
           <div>
@@ -518,21 +559,31 @@ function ActiveOrderCard({ order }: { order: Order }) {
                 theme === "dark" ? "text-gray-100" : "text-gray-900"
               }`}
             >
-              Batch #{order.id.slice(0, 6).toUpperCase()}
+              {isReelOrder ? "Reel Order" : "Batch"} #{order.id.slice(0, 6).toUpperCase()}
             </h3>
             <p
               className={`text-sm ${
                 theme === "dark" ? "text-gray-400" : "text-gray-500"
               }`}
             >
-              {order.items} items • ${order.estimatedEarnings}
+              {isReelOrder 
+                ? `${order.quantity || 1} quantity • ${order.reel?.title || "Reel Order"}`
+                : `${order.items} items`
+              } • ${order.estimatedEarnings}
             </p>
+            {isReelOrder && order.reel?.description && (
+              <p className="text-xs text-gray-500 mt-1">
+                {order.reel.description}
+              </p>
+            )}
           </div>
         </div>
         <div className="text-right">
           <p
             className={`text-lg font-semibold ${
-              theme === "dark" ? "text-green-400" : "text-green-600"
+              isReelOrder
+                ? theme === "dark" ? "text-purple-400" : "text-purple-600"
+                : theme === "dark" ? "text-green-400" : "text-green-600"
             }`}
           >
             ${order.estimatedEarnings}
@@ -577,14 +628,17 @@ function ActiveOrderCard({ order }: { order: Order }) {
                   theme === "dark" ? "text-gray-100" : "text-gray-900"
                 }`}
               >
-                Pickup Location
+                {isReelOrder ? "Pickup Location" : "Pickup Location"}
               </p>
               <p
                 className={`text-sm ${
                   theme === "dark" ? "text-gray-400" : "text-gray-500"
                 }`}
               >
-                {order.shopName}, {order.shopAddress}
+                {isReelOrder 
+                  ? `From: ${order.customerName || "Reel Creator"}`
+                  : `${order.shopName}, ${order.shopAddress}`
+                }
               </p>
             </div>
           </div>
@@ -625,6 +679,49 @@ function ActiveOrderCard({ order }: { order: Order }) {
             </div>
           </div>
         </div>
+
+        {/* Show delivery note for reel orders */}
+        {isReelOrder && order.deliveryNote && (
+          <div className={`flex items-center justify-between rounded-lg p-3 ${
+            theme === "dark" ? "bg-yellow-900/20" : "bg-yellow-50"
+          }`}>
+            <div className="flex items-center space-x-3">
+              <div
+                className={`rounded-full p-2 ${
+                  theme === "dark" ? "bg-yellow-600" : "bg-yellow-100"
+                }`}
+              >
+                <svg
+                  className={`h-5 w-5 ${
+                    theme === "dark" ? "text-yellow-300" : "text-yellow-600"
+                  }`}
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                  />
+                </svg>
+              </div>
+              <div>
+                <p className={`text-sm font-medium ${
+                  theme === "dark" ? "text-yellow-300" : "text-yellow-800"
+                }`}>
+                  Delivery Note
+                </p>
+                <p className={`text-sm ${
+                  theme === "dark" ? "text-yellow-200" : "text-yellow-700"
+                }`}>
+                  {order.deliveryNote}
+                </p>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
 
       <div className="flex items-center justify-between">
