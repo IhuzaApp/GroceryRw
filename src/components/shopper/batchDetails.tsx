@@ -232,8 +232,7 @@ export default function BatchDetails({
     if (typeof window !== "undefined") {
       sessionStorage.setItem("payment_otp", randomOtp);
     }
-    // Log to console for testing purposes (in production, this would be sent via SMS/email)
-    console.log("Generated OTP:", randomOtp);
+
     // Show as alert for demo purposes
     setTimeout(() => {
       alert(`For testing purposes, your OTP is: ${randomOtp}`);
@@ -249,7 +248,7 @@ export default function BatchDetails({
     if (typeof window !== "undefined") {
       sessionStorage.setItem("payment_private_key", randomKey);
     }
-    console.log("Generated Private Key:", randomKey);
+
     return randomKey;
   };
 
@@ -296,7 +295,7 @@ export default function BatchDetails({
         throw new Error("No invoice data returned");
       }
 
-      console.log("Generated invoice:", invoice);
+
       setInvoiceData(invoice);
       setShowInvoiceModal(true);
       return true;
@@ -320,10 +319,7 @@ export default function BatchDetails({
   const generateInvoiceAndRedirect = async (orderId: string) => {
     try {
       setInvoiceLoading(true);
-      console.log(
-        "Generating invoice after delivery confirmation for order:",
-        orderId
-      );
+
 
       // Make API request to generate invoice and save to database
       const invoiceResponse = await fetch("/api/invoices/generate", {
@@ -344,7 +340,7 @@ export default function BatchDetails({
       }
 
       const invoiceResult = await invoiceResponse.json();
-      console.log("Invoice generation response:", invoiceResult);
+
 
       if (invoiceResult.success && invoiceResult.invoice) {
         setInvoiceData(invoiceResult.invoice);
@@ -449,8 +445,7 @@ export default function BatchDetails({
       // Get the original order total for refund calculation
       const originalOrderTotal = calculateOriginalSubtotal();
 
-      console.log("Calculated order amount for payment:", orderAmount);
-      console.log("Original order total:", originalOrderTotal);
+
 
       // Make API request to update wallet balance and process payment
       let paymentSuccess = false;
@@ -477,11 +472,9 @@ export default function BatchDetails({
         }
 
         const paymentData = await response.json();
-        console.log("Payment process response:", paymentData);
 
         // Check if a refund was created
         if (paymentData.refund) {
-          console.log("Refund created:", paymentData.refund);
           toaster.push(
             <Notification type="info" header="Refund Scheduled" closable>
               A refund of {formatCurrency(paymentData.refundAmount)} has been

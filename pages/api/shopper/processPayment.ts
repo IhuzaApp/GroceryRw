@@ -212,18 +212,7 @@ export default async function handler(
     // Format order amount to ensure consistent handling
     const formattedOrderAmount = parseFloat(Number(orderAmount).toFixed(2));
 
-    console.log(`Processing payment for order ${orderId}`);
-    console.log(`Order type: ${orderType || 'regular'}`);
-    console.log(`Order amount: ${formattedOrderAmount}`);
 
-    if (originalOrderTotal) {
-      console.log(`Original order total: ${originalOrderTotal}`);
-      console.log(
-        `Difference (potential refund): ${
-          Number(originalOrderTotal) - formattedOrderAmount
-        }`
-      );
-    }
 
     // In a real-world scenario, this would integrate with a payment processor
     // For now, we'll skip that and just update the database directly
@@ -334,7 +323,7 @@ export default async function handler(
     // Handle refund creation first if needed
     if (refundNeeded && refundAmount > 0) {
       try {
-        console.log(`Creating refund record for amount: ${refundAmount}`);
+
 
         // Create refund record with all required fields
         const refundRecord = {
@@ -347,10 +336,7 @@ export default async function handler(
           paid: false,
         };
 
-        console.log(
-          "Attempting to create refund with data:",
-          JSON.stringify(refundRecord, null, 2)
-        );
+
 
         const refundResponse = await hasuraClient.request<RefundResponse>(
           CREATE_REFUND,
@@ -366,7 +352,7 @@ export default async function handler(
         }
 
         refundData = refundResponse.insert_Refunds_one;
-        console.log("Refund record created:", refundData);
+
       } catch (refundError) {
         console.error("Error creating refund record:", refundError);
         // Add more detailed error logging to help diagnose the issue
@@ -390,9 +376,7 @@ export default async function handler(
     const originalAmount = originalOrderTotal || formattedOrderAmount;
     const newReserved = currentReserved - originalAmount;
 
-    console.log(
-      `Updating reserved balance: ${currentReserved} - ${originalAmount} = ${newReserved}`
-    );
+
 
     // Update the wallet balances
     await hasuraClient.request(UPDATE_WALLET_BALANCES, {
@@ -422,14 +406,8 @@ export default async function handler(
         }
       );
     } else {
-      console.log(`Skipping wallet transaction creation for reel order ${orderId} to avoid foreign key constraint issues`);
+      // Skipping wallet transaction creation for reel order to avoid foreign key constraint issues
     }
-
-    // Log the payment information
-    console.log(`Payment processed for ${isReelOrder ? 'reel ' : ''}order: ${orderId}`);
-    console.log(`Amount: ${formattedOrderAmount}`);
-    console.log(`MoMo Code: ${momoCode}`);
-    console.log(`Private Key: ${privateKey.substring(0, 3)}***`); // Log only first few chars for security
 
     return res.status(200).json({
       success: true,

@@ -175,7 +175,7 @@ export default async function handler(
       }
     `;
 
-    console.log("Checking assignment for shopper:", userId, "order:", orderId);
+
 
     if (!hasuraClient) {
       throw new Error("Hasura client is not initialized");
@@ -193,7 +193,7 @@ export default async function handler(
     let orderType = "regular";
 
     if (regularOrderCheck.Orders && regularOrderCheck.Orders.length > 0) {
-      console.log("Found regular order assignment");
+      // Found regular order assignment
     } else {
       // Check reel orders
       const reelOrderCheck = await hasuraClient.request<{
@@ -204,7 +204,7 @@ export default async function handler(
       });
 
       if (reelOrderCheck.reel_orders && reelOrderCheck.reel_orders.length > 0) {
-        console.log("Found reel order assignment");
+        // Found reel order assignment
         isReelOrder = true;
         orderType = "reel";
       } else {
@@ -327,12 +327,12 @@ export default async function handler(
           });
         }
 
-        console.log("Wallet balances updated for shopping status");
+
 
         // Add commission revenue (product profits) when shopping starts
         if (!isReelOrder) {
           try {
-            console.log("Adding commission revenue for shopping order:", orderId);
+
             
             // Call the commission revenue calculation API
             const commissionResponse = await fetch(`${req.headers.host ? `http://${req.headers.host}` : 'http://localhost:3000'}/api/shopper/calculateCommissionRevenue`, {
@@ -346,7 +346,7 @@ export default async function handler(
 
             if (commissionResponse.ok) {
               const commissionData = await commissionResponse.json();
-              console.log("Commission revenue added successfully:", commissionData);
+
             } else {
               console.error("Failed to add commission revenue:", await commissionResponse.text());
             }
@@ -405,15 +405,12 @@ export default async function handler(
       ? updateResult.update_reel_orders_by_pk 
       : updateResult.update_Orders_by_pk;
 
-    console.log(
-      "Order status updated successfully:",
-      updatedOrder
-    );
+
 
     // Special handling for "cancelled" status - process refunds
     if (status === "cancelled") {
       try {
-        console.log("Processing cancelled order refunds:", orderId);
+
         
         // Get order details
         if (!hasuraClient) {
@@ -524,9 +521,7 @@ export default async function handler(
           });
         }
 
-        console.log("Refund processed for cancelled order");
-        console.log(`Reserved balance decreased by: ${orderTotal.toFixed(2)}`);
-        console.log(`Refund amount: ${orderTotal.toFixed(2)}`);
+
       } catch (cancellationError) {
         console.error("Error processing cancelled order:", cancellationError);
         return res.status(500).json({
@@ -538,7 +533,7 @@ export default async function handler(
     // Special handling for "delivered" status - update wallet balances and calculate revenue
     if (status === "delivered") {
       try {
-        console.log("Processing delivered order wallet updates:", orderId);
+
         
         // Get order details with fees
         if (!hasuraClient) {
@@ -659,15 +654,12 @@ export default async function handler(
           });
         }
 
-        console.log("Wallet balances updated for delivered order");
-        console.log(`Platform fee deducted: ${platformFee.toFixed(2)}`);
-        console.log(`Remaining earnings added: ${remainingEarnings.toFixed(2)}`);
-        console.log(`Reserved balance decreased by: ${orderTotal.toFixed(2)}`);
+
 
         // Add plasa fee revenue (platform earnings) when order is delivered
         if (!isReelOrder) {
           try {
-            console.log("Adding plasa fee revenue for delivered order:", orderId);
+
             
             // Call the plasa fee revenue calculation API
             const plasaFeeResponse = await fetch(`${req.headers.host ? `http://${req.headers.host}` : 'http://localhost:3000'}/api/shopper/calculatePlasaFeeRevenue`, {
@@ -681,7 +673,7 @@ export default async function handler(
 
             if (plasaFeeResponse.ok) {
               const plasaFeeData = await plasaFeeResponse.json();
-              console.log("Plasa fee revenue added successfully:", plasaFeeData);
+
             } else {
               console.error("Failed to add plasa fee revenue:", await plasaFeeResponse.text());
             }

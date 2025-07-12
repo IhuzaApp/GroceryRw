@@ -338,11 +338,7 @@ export default function VideoReel({
 
     if (videoRef.current) {
       if (isVisible) {
-        console.log(
-          `Playing video for post ${post.id} on ${
-            isMobile ? "mobile" : "desktop"
-          }`
-        );
+
         // Add a small delay to ensure the video is ready
         const playVideo = async () => {
           try {

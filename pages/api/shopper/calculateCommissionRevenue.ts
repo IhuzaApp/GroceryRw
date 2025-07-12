@@ -106,7 +106,6 @@ export default async function handler(
     }>(CHECK_EXISTING_COMMISSION_REVENUE, { order_id: orderId });
 
     if (existingRevenue.Revenue && existingRevenue.Revenue.length > 0) {
-      console.log(`Commission revenue already exists for order ${orderId}, skipping calculation`);
       return res.status(200).json({
         success: true,
         message: "Commission revenue already calculated for this order",
