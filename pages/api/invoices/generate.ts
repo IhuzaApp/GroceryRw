@@ -53,7 +53,7 @@ const GET_REEL_ORDER_DETAILS_FOR_INVOICE = gql`
       delivery_fee
       created_at
       updated_at
-      userByUserId {
+      User {
         id
         name
         email
@@ -164,7 +164,7 @@ interface ReelOrderDetails {
     delivery_fee: string;
     created_at: string;
     updated_at: string;
-    userByUserId: {
+    User: {
       id: string;
       name: string;
       email: string;
@@ -258,7 +258,7 @@ export default async function handler(
     // Verify the user is authorized to access this order (either as customer or shopper)
     if (
       order.shopper_id !== session.user.id &&
-      order.userByUserId.id !== session.user.id
+      (isReelOrder ? order.User.id : order.userByUserId.id) !== session.user.id
     ) {
       return res
         .status(403)
@@ -330,7 +330,7 @@ export default async function handler(
     const saveResult = await hasuraClient.request<AddInvoiceResult>(
       ADD_INVOICE,
       {
-        customer_id: order.userByUserId.id,
+        customer_id: isReelOrder ? order.User.id : order.userByUserId.id,
         delivery_fee: deliveryFeeStr,
         discount: discountStr,
         invoice_items: invoiceItems,
@@ -353,8 +353,8 @@ export default async function handler(
       invoiceNumber: invoiceNumber,
       orderId: order.id,
       orderNumber: order.OrderID || order.id.slice(-8),
-      customer: order.userByUserId.name,
-      customerEmail: order.userByUserId.email,
+      customer: isReelOrder ? order.User.name : order.userByUserId.name,
+      customerEmail: isReelOrder ? order.User.email : order.userByUserId.email,
       shop: shopName,
       shopAddress: shopAddress,
       dateCreated: new Date(order.created_at).toLocaleString(),

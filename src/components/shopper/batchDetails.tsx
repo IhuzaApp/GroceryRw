@@ -1013,6 +1013,7 @@ export default function BatchDetails({
         onClose={() => setShowInvoiceModal(false)}
         invoiceData={invoiceData}
         loading={invoiceLoading}
+        orderType={order?.orderType || "regular"}
       />
 
       {/* Chat Drawer - will only show on desktop when chat is open */}

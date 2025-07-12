@@ -4,7 +4,7 @@ import { gql } from "graphql-request";
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "../auth/[...nextauth]";
 
-// GraphQL mutation to update order with delivery photo and updated_at
+// GraphQL mutation to update regular order with delivery photo and updated_at
 const UPDATE_ORDER_DELIVERY_PHOTO = gql`
   mutation UpdateOrderDeliveryPhoto(
     $order_id: uuid!
@@ -12,6 +12,22 @@ const UPDATE_ORDER_DELIVERY_PHOTO = gql`
     $updated_at: timestamptz!
   ) {
     update_Orders(
+      where: { id: { _eq: $order_id } }
+      _set: { delivery_photo_url: $delivery_photo_url, updated_at: $updated_at }
+    ) {
+      affected_rows
+    }
+  }
+`;
+
+// GraphQL mutation to update reel order with delivery photo and updated_at
+const UPDATE_REEL_ORDER_DELIVERY_PHOTO = gql`
+  mutation UpdateReelOrderDeliveryPhoto(
+    $order_id: uuid!
+    $delivery_photo_url: String!
+    $updated_at: timestamptz!
+  ) {
+    update_reel_orders(
       where: { id: { _eq: $order_id } }
       _set: { delivery_photo_url: $delivery_photo_url, updated_at: $updated_at }
     ) {
@@ -40,8 +56,8 @@ export default async function handler(
         .json({ error: "You must be authenticated to upload delivery photos" });
     }
 
-    // Get the order ID, photo data, and updated_at from the request
-    const { orderId, file, updatedAt } = req.body;
+    // Get the order ID, photo data, updated_at, and order type from the request
+    const { orderId, file, updatedAt, orderType = "regular" } = req.body;
 
     if (!orderId || !file || !updatedAt) {
       return res.status(400).json({ error: "Missing required fields" });
@@ -57,29 +73,56 @@ export default async function handler(
       throw new Error("Hasura client is not initialized");
     }
 
-    // Update the order with the delivery photo and updated_at
-    type UpdateOrderDeliveryPhotoResponse = {
-      update_Orders: {
-        affected_rows: number;
-      };
-    };
-    const data = await hasuraClient.request<UpdateOrderDeliveryPhotoResponse>(
-      UPDATE_ORDER_DELIVERY_PHOTO,
-      {
-        order_id: orderId,
-        delivery_photo_url: photoUrl,
-        updated_at: updatedAt,
-      }
-    );
+    const isReelOrder = orderType === "reel";
 
-    if (!data.update_Orders || data.update_Orders.affected_rows === 0) {
-      throw new Error("Failed to update order with delivery photo");
+    // Update the order with the delivery photo and updated_at based on order type
+    let data: any;
+    
+    if (isReelOrder) {
+      // Update reel order
+      type UpdateReelOrderDeliveryPhotoResponse = {
+        update_reel_orders: {
+          affected_rows: number;
+        };
+      };
+      data = await hasuraClient.request<UpdateReelOrderDeliveryPhotoResponse>(
+        UPDATE_REEL_ORDER_DELIVERY_PHOTO,
+        {
+          order_id: orderId,
+          delivery_photo_url: photoUrl,
+          updated_at: updatedAt,
+        }
+      );
+
+      if (!data.update_reel_orders || data.update_reel_orders.affected_rows === 0) {
+        throw new Error("Failed to update reel order with delivery photo");
+      }
+    } else {
+      // Update regular order
+      type UpdateOrderDeliveryPhotoResponse = {
+        update_Orders: {
+          affected_rows: number;
+        };
+      };
+      data = await hasuraClient.request<UpdateOrderDeliveryPhotoResponse>(
+        UPDATE_ORDER_DELIVERY_PHOTO,
+        {
+          order_id: orderId,
+          delivery_photo_url: photoUrl,
+          updated_at: updatedAt,
+        }
+      );
+
+      if (!data.update_Orders || data.update_Orders.affected_rows === 0) {
+        throw new Error("Failed to update order with delivery photo");
+      }
     }
 
     res.status(200).json({
       success: true,
       fileName: `delivery_photo_${orderId}`,
       photoUrl: photoUrl,
+      orderType: orderType,
     });
   } catch (error: any) {
     console.error("Error uploading delivery photo:", error);

@@ -253,28 +253,10 @@ export default async function handler(
           reserved_balance: newReservedBalance,
         });
 
-        // Create wallet transactions for reel orders
-        // Note: We skip the foreign key for reel orders to avoid constraint issues
-        const transactions = [
-          {
-            wallet_id: wallet.id,
-            amount: orderTotal.toFixed(2),
-            type: "reserve",
-            status: "completed",
-            description: "Reserved balance for reel order assignment",
-          },
-          {
-            wallet_id: wallet.id,
-            amount: (serviceFee + deliveryFee).toFixed(2),
-            type: "earnings",
-            status: "completed",
-            description: "Earnings for reel order assignment",
-          },
-        ];
-
-        await hasuraClient.request(CREATE_WALLET_TRANSACTIONS, {
-          transactions,
-        });
+        // Note: Wallet_Transactions table is designed for regular orders only
+        // For reel orders, we skip transaction creation to avoid foreign key constraint issues
+        // The wallet balances are still updated correctly above
+        console.log("Wallet balances updated for reel order assignment (no transactions created)");
 
         console.log("Wallet balances updated for reel order assignment");
       } catch (walletError) {

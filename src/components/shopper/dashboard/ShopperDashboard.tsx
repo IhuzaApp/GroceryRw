@@ -257,7 +257,7 @@ export default function ShopperDashboard() {
       }
 
       if (!showHistorical) {
-        sorted = sorted.filter((order) => order.minutesAgo >= 15);
+        sorted = sorted.filter((order) => order.minutesAgo >= 10);
       }
 
       return sorted;
@@ -530,15 +530,15 @@ export default function ShopperDashboard() {
                 </button>
                 <button
                   onClick={toggleHistorical}
-                  className={`rounded-md px-3 py-1 text-sm font-medium ${
-                    showHistorical
-                      ? "bg-blue-100 text-blue-700"
-                      : "bg-gray-100 text-gray-700"
-                  }`}
-                >
-                  {showHistorical
-                    ? "Showing All Pending"
-                    : "Showing Recent (15+ min)"}
+                                      className={`rounded-md px-3 py-1 text-sm font-medium ${
+                      showHistorical
+                        ? "bg-blue-100 text-blue-700"
+                        : "bg-gray-100 text-gray-700"
+                    }`}
+                  >
+                    {showHistorical
+                      ? "Showing All Pending"
+                      : "Showing Recent (10+ min)"}
                 </button>
                 <button
                   className="rounded bg-green-500 px-3 py-1.5 text-sm text-white hover:bg-green-600"
@@ -614,7 +614,7 @@ export default function ShopperDashboard() {
                   : `Sorting by ${sortBy}`}
                 {isOnline &&
                   !showHistorical &&
-                  " • Only batches pending for 15+ minutes"}
+                  " • Only batches pending for 10+ minutes"}
               </p>
             </div>
 
@@ -692,7 +692,7 @@ export default function ShopperDashboard() {
                 <p className="mb-4 text-gray-500">
                   {showHistorical
                     ? "There are no pending batches in your area."
-                    : "There are no batches pending for 15+ minutes in your area."}
+                    : "There are no batches pending for 10+ minutes in your area."}
                 </p>
                 <Button
                   appearance="primary"
@@ -805,7 +805,7 @@ export default function ShopperDashboard() {
                           : "bg-gray-100 text-gray-700"
                       }`}
                     >
-                      {showHistorical ? "All Pending" : "15+ min"}
+                      {showHistorical ? "All Pending" : "10+ min"}
                     </button>
                     <button
                       className="rounded bg-green-500 px-3 py-1.5 text-sm text-white hover:bg-green-600"
@@ -891,7 +891,7 @@ export default function ShopperDashboard() {
                       : sortBy === "priority"
                       ? "Batches pending 1+ hours by priority"
                       : `Sorting by ${sortBy}`}
-                    {isOnline && !showHistorical && " • 15+ min pending"}
+                    {isOnline && !showHistorical && " • 10+ min pending"}
                   </p>
                 </div>
 
@@ -984,7 +984,7 @@ export default function ShopperDashboard() {
                     >
                       {showHistorical
                         ? "No pending batches available."
-                        : "No batches pending for 15+ minutes."}
+                        : "No batches pending for 10+ minutes."}
                     </p>
                   </div>
                 )}
