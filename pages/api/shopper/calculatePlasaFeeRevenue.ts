@@ -104,7 +104,6 @@ export default async function handler(
     }>(CHECK_EXISTING_PLASA_FEE_REVENUE, { order_id: orderId });
 
     if (existingRevenue.Revenue && existingRevenue.Revenue.length > 0) {
-      console.log(`Plasa fee revenue already exists for order ${orderId}, skipping calculation`);
       return res.status(200).json({
         success: true,
         message: "Plasa fee revenue already calculated for this order",

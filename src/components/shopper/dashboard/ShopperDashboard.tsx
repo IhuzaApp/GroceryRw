@@ -136,11 +136,7 @@ export default function ShopperDashboard() {
   // Memoize the loadOrders function
   const loadOrders = useCallback(async () => {
     if (!currentLocation || !isOnline) {
-      console.log(
-        `Cannot load orders: ${
-          !currentLocation ? "No location" : "User offline"
-        }`
-      );
+      // Cannot load orders: no location or user offline
       setAvailableOrders([]);
       setSortedOrders([]);
       return;

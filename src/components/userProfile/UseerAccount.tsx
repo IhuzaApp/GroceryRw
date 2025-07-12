@@ -53,7 +53,7 @@ export default function UserAccount() {
     setSaving(true);
 
     try {
-      console.log("Updating profile with data:", user);
+
 
       const response = await fetch("/api/user/update", {
         method: "POST",
@@ -67,9 +67,8 @@ export default function UserAccount() {
         }),
       });
 
-      // Log the full response for debugging
+      // Get the full response for debugging
       const responseText = await response.text();
-      console.log(`Response status: ${response.status}`, responseText);
 
       let data;
       try {
@@ -116,7 +115,7 @@ export default function UserAccount() {
     setSaving(true);
 
     try {
-      console.log("Updating password...");
+
 
       const response = await fetch("/api/user/change-password", {
         method: "POST",
@@ -129,12 +128,8 @@ export default function UserAccount() {
         }),
       });
 
-      // Log the full response for debugging
+      // Get the full response for debugging
       const responseText = await response.text();
-      console.log(
-        `Password change response status: ${response.status}`,
-        responseText
-      );
 
       let data;
       try {
