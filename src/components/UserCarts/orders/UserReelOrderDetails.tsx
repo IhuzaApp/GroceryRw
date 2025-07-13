@@ -446,7 +446,7 @@ export default function UserReelOrderDetails({
                   No Shopper Assigned
                 </h3>
                 <p className="mt-2 text-sm text-gray-600 dark:text-gray-400">
-                  We're looking for a shopper to handle your order. You'll be
+                  We&apos;re looking for a shopper to handle your order. You&apos;ll be
                   notified once someone is assigned.
                 </p>
               </div>
