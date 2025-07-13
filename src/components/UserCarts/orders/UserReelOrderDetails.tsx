@@ -458,57 +458,161 @@ export default function UserReelOrderDetails({
       {/* Feedback Modal */}
       <Modal
         open={feedbackModal}
-        onClose={() => setFeedbackModal(false)}
-        size="sm"
+        onClose={() => {
+          setFeedbackModal(false);
+          setRating(0);
+          setComment("");
+          setSubmitError(null);
+        }}
+        className="mx-4 max-w-[95%] overflow-hidden md:mx-auto md:max-w-[500px]"
       >
         <Modal.Header>
-          <Modal.Title>Rate Your Experience</Modal.Title>
+          <Modal.Title>
+            <div className="flex flex-col items-start gap-2 sm:flex-row sm:items-center">
+              <div className="flex h-10 w-10 items-center justify-center rounded-full bg-purple-100">
+                <svg
+                  className="h-6 w-6 text-purple-500"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth="2"
+                    d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
+                  />
+                </svg>
+              </div>
+              <span className="text-lg font-semibold text-gray-900">Rate Your Experience</span>
+            </div>
+          </Modal.Title>
         </Modal.Header>
         <Modal.Body>
-          <div className="space-y-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700">
-                Rating
-              </label>
-              <Rate
-                value={rating}
-                onChange={setRating}
-                size="lg"
-                className="mt-1"
-              />
+          {submitError && (
+            <div className="mb-6 rounded-md bg-red-50 p-4">
+              <div className="flex">
+                <div className="flex-shrink-0">
+                  <svg
+                    className="h-5 w-5 text-red-400"
+                    viewBox="0 0 20 20"
+                    fill="currentColor"
+                  >
+                    <path
+                      fillRule="evenodd"
+                      d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z"
+                      clipRule="evenodd"
+                    />
+                  </svg>
+                </div>
+                <div className="ml-3">
+                  <p className="text-sm text-red-500">{submitError}</p>
+                </div>
+              </div>
             </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700">
-                Comments
-              </label>
-              <Input
-                as="textarea"
-                rows={3}
-                value={comment}
-                onChange={setComment}
-                placeholder="Share your experience..."
-                className="mt-1"
-              />
+          )}
+          <div className="space-y-6">
+            {/* Rating Section */}
+            <div className="rounded-lg bg-gray-50 p-6 text-center">
+              <h4 className="mb-4 text-lg font-medium text-gray-900">How was your experience?</h4>
+              <div className="flex justify-center">
+                <Rate
+                  defaultValue={0}
+                  value={rating}
+                  onChange={setRating}
+                  color={rating > 0 ? "yellow" : undefined}
+                  size="lg"
+                  className="text-3xl"
+                />
+              </div>
+              <p className="mt-2 text-sm text-gray-500">
+                {rating === 0 && "Select your rating"}
+                {rating === 1 && "Poor"}
+                {rating === 2 && "Fair"}
+                {rating === 3 && "Good"}
+                {rating === 4 && "Very Good"}
+                {rating === 5 && "Excellent"}
+              </p>
             </div>
-            {submitError && (
-              <Message type="error" className="mt-2">
-                {submitError}
-              </Message>
-            )}
+            {/* Details Section */}
+            <div className="space-y-4 rounded-lg border border-gray-200 bg-white p-6">
+              <h4 className="text-lg font-medium text-gray-900">Additional Feedback</h4>
+              <div>
+                <label className="mb-2 block text-sm font-medium text-gray-700">
+                  Share your thoughts
+                </label>
+                <textarea
+                  className="w-full rounded-md border border-gray-300 p-3 text-sm focus:border-purple-500 focus:outline-none focus:ring-1 focus:ring-purple-500"
+                  placeholder="Tell us what you liked or what we could improve..."
+                  rows={4}
+                  value={comment}
+                  onChange={(e) => setComment(e.target.value)}
+                ></textarea>
+              </div>
+            </div>
           </div>
         </Modal.Body>
         <Modal.Footer>
-          <Button onClick={() => setFeedbackModal(false)} appearance="subtle">
-            Cancel
-          </Button>
-          <Button
-            onClick={handleFeedbackSubmit}
-            appearance="primary"
-            loading={submitting}
-            className="bg-purple-500 hover:bg-purple-600"
-          >
-            Submit Feedback
-          </Button>
+          <div className="flex w-full flex-col-reverse gap-3 border-t border-gray-200 px-4 py-4 sm:flex-row sm:justify-end sm:px-6">
+            <button
+              onClick={() => {
+                setFeedbackModal(false);
+                setRating(0);
+                setComment("");
+                setSubmitError(null);
+              }}
+              className="rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 shadow-sm transition hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2"
+              type="button"
+            >
+              Cancel
+            </button>
+            <button
+              onClick={handleFeedbackSubmit}
+              disabled={submitting}
+              className="flex items-center justify-center rounded-md bg-purple-500 px-4 py-2 text-sm font-medium text-white shadow-sm transition hover:bg-purple-600 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2 disabled:opacity-50"
+              type="submit"
+            >
+              {submitting ? (
+                <>
+                  <svg
+                    className="mr-2 h-4 w-4 animate-spin"
+                    viewBox="0 0 24 24"
+                  >
+                    <circle
+                      className="opacity-25"
+                      cx="12"
+                      cy="12"
+                      r="10"
+                      stroke="currentColor"
+                      strokeWidth="4"
+                      fill="none"
+                    />
+                    <path
+                      className="opacity-75"
+                      fill="currentColor"
+                      d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                    />
+                  </svg>
+                  Submitting...
+                </>
+              ) : (
+                <>
+                  <svg
+                    className="mr-2 h-4 w-4"
+                    viewBox="0 0 20 20"
+                    fill="currentColor"
+                  >
+                    <path
+                      fillRule="evenodd"
+                      d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z"
+                      clipRule="evenodd"
+                    />
+                  </svg>
+                  Submit Feedback
+                </>
+              )}
+            </button>
+          </div>
         </Modal.Footer>
       </Modal>
     </>
