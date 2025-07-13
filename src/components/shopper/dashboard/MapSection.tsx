@@ -5,7 +5,7 @@ import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 import { Loader, toaster, Message, Button } from "rsuite";
 import "rsuite/dist/rsuite.min.css";
-import { formatCurrency } from "../../../lib/formatCurrency";
+import { formatCurrencySync, getCurrencySymbol } from "../../../utils/formatCurrency";
 import { useTheme } from "../../../context/ThemeContext";
 import { logger } from "../../../utils/logger";
 
@@ -970,7 +970,7 @@ export default function MapSection({
           <span style="font-size: 16px;">💰</span>
           <strong style="color: ${
             theme === "dark" ? "#34d399" : "#059669"
-          };">${formatCurrency(order.earnings)}</strong>
+          };">${formatCurrencySync(order.earnings)}</strong>
             </div>
             </div>
       
@@ -1152,7 +1152,7 @@ export default function MapSection({
       const lng = order.shopLng;
 
       const marker = L.marker([lat, lng], {
-        icon: createOrderMarkerIcon(formatCurrency(order.earnings)),
+        icon: createOrderMarkerIcon(formatCurrencySync(order.earnings)),
         zIndexOffset: 1000,
       });
 
@@ -1648,7 +1648,7 @@ export default function MapSection({
               const adjustedLng = baseLng + offset.lng;
 
               const marker = L.marker([adjustedLat, adjustedLng], {
-                icon: createOrderMarkerIcon(formatCurrency(order.earnings)),
+                icon: createOrderMarkerIcon(formatCurrencySync(order.earnings)),
                 zIndexOffset: 1000 + index,
               });
 
@@ -1934,7 +1934,7 @@ export default function MapSection({
                 >
                   {new Intl.NumberFormat("en-RW", {
                     style: "currency",
-                    currency: "RWF",
+                    currency: getCurrencySymbol(),
                     maximumFractionDigits: 0,
                   }).format(dailyEarnings)}
                 </span>

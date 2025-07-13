@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { Button, Modal, Radio } from "rsuite";
-import { formatRWF } from "../../../utils/formatCurrency";
+import { formatCurrencySync } from "../../../utils/formatCurrency";
 
 interface PaymentMethod {
   id: string;
@@ -127,7 +127,7 @@ export default function PaymentMethodSelector({
                 <div className="ml-2">
                   <div className="font-medium">Use Refund Balance</div>
                   <div className="text-sm text-gray-600">
-                    Available: {formatRWF(refundBalance)}
+                    Available: {formatCurrencySync(refundBalance)}
                     {!canUseRefund && (
                       <span className="ml-2 text-red-500">
                         (Insufficient balance)

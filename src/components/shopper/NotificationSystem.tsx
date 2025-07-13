@@ -3,6 +3,7 @@ import { useSession } from "next-auth/react";
 import { Message, Button } from "rsuite";
 import toast from "react-hot-toast";
 import { logger } from "../../utils/logger";
+import { formatCurrencySync } from "../../utils/formatCurrency";
 
 interface Order {
   id: string;
@@ -12,6 +13,7 @@ interface Order {
   customerAddress: string;
   itemsCount?: number;
   estimatedEarnings?: number;
+  orderType?: "regular" | "reel";
   // Add other order properties as needed
 }
 
@@ -262,7 +264,7 @@ export default function NotificationSystem({
               {order.shopName} ({order.distance}km)
             </div>
                   <div className="mt-1 font-medium text-green-600">
-                    📦 {order.itemsCount || 0} items • 💰 RWF{order.estimatedEarnings || 0}
+                    📦 {order.itemsCount || 0} items • 💰 {formatCurrencySync(order.estimatedEarnings || 0)}
                   </div>
           </div>
                 <div className="mt-3 flex gap-2">
@@ -479,7 +481,7 @@ export default function NotificationSystem({
                     {order.shopName} ({order.distance}km)
                   </div>
                   <div className="mt-1 font-medium text-green-600">
-                    📦 {order.itemsCount || 0} items • 💰 RWF{order.estimatedEarnings || 0}
+                    📦 {order.itemsCount || 0} items • 💰 {formatCurrencySync(order.estimatedEarnings || 0)}
                   </div>
                   <div className="mt-1 font-medium text-orange-600">
                     ⚠️ This batch will be reassigned in 20 seconds!
@@ -790,8 +792,12 @@ export default function NotificationSystem({
               distance: nextNotification.distance,
               createdAt: nextNotification.createdAt,
               customerAddress: nextNotification.customerAddress,
-              itemsCount: nextNotification.itemsCount || nextNotification.totalItems || 0,
-              estimatedEarnings: nextNotification.estimatedEarnings || nextNotification.totalEarnings || 0,
+              itemsCount: nextNotification.itemCount || nextNotification.itemsCount || nextNotification.totalItems || nextNotification.quantity || 0,
+              estimatedEarnings: nextNotification.estimatedEarnings || nextNotification.totalEarnings || 
+                (nextNotification.serviceFee && nextNotification.deliveryFee ? 
+                  parseFloat(nextNotification.serviceFee) + parseFloat(nextNotification.deliveryFee) : 0) ||
+                (nextNotification.total ? parseFloat(nextNotification.total) : 0),
+              orderType: nextNotification.type === "batch" ? "reel" : "regular", // "batch" = reel order, "order" = regular order
             };
 
             await playNotificationSound(data.settings?.sound_settings);

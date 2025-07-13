@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { Panel, Button, Tag, Pagination } from "rsuite";
 import { useTheme } from "../../../context/ThemeContext";
+import { formatCurrencySync } from "../../utils/formatCurrency";
 
 interface Wallet {
   id: string;
@@ -61,11 +62,7 @@ const PaymentHistory: React.FC<PaymentHistoryProps> = ({
 
   // Format currency
   const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat("en-RW", {
-      style: "currency",
-      currency: "RWF",
-      maximumFractionDigits: 0,
-    }).format(amount);
+    return formatCurrencySync(amount);
   };
 
   // Next payout is the available balance
