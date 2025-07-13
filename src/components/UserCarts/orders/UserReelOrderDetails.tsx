@@ -41,7 +41,7 @@ export default function UserReelOrderDetails({
     const checkExistingRating = async () => {
       try {
         const response = await fetch(
-          `/api/queries/checkRating?orderId=${order.id}`
+          `/api/queries/checkRating?reelOrderId=${order.id}`
         );
         if (response.ok) {
           const data = await response.json();
@@ -109,7 +109,7 @@ export default function UserReelOrderDetails({
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          order_id: order.id,
+          reel_order_id: order.id,
           shopper_id: order.assignedTo.id,
           rating: rating.toString(),
           review: comment,

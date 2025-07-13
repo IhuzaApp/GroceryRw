@@ -40,19 +40,17 @@ const GET_REEL_ORDER_DETAILS = gql`
         category
         delivery_time
         restaurant_id
-      }
-      shopper {
-        id
-        full_name
-        phone_number
-        profile_photo
-        transport_mode
-        User {
+        Restaurant {
           id
           name
-          email
-          phone
+          location
         }
+      }
+      User {
+        id
+        name
+        email
+        phone
       }
     }
   }
@@ -119,20 +117,18 @@ export default async function handler(
           category: string;
           delivery_time: string;
           restaurant_id: string;
-        };
-        shopper: {
-          id: string;
-          full_name: string;
-          phone_number: string;
-          profile_photo: string;
-          transport_mode: string;
-          User: {
+          Restaurant: {
             id: string;
             name: string;
-            email: string;
-            phone: string;
+            location: string;
           };
-        } | null;
+        };
+        User: {
+          id: string;
+          name: string;
+          email: string;
+          phone: string;
+        };
       } | null;
     }>(GET_REEL_ORDER_DETAILS, { order_id: id });
 
@@ -166,14 +162,12 @@ export default async function handler(
       found: orderData.found,
       orderType: "reel" as const,
       reel: orderData.Reel,
-      assignedTo: orderData.shopper
+      assignedTo: orderData.User
         ? {
-            id: orderData.shopper.id,
-            name: orderData.shopper.full_name,
-            phone: orderData.shopper.phone_number,
-            profile_photo: orderData.shopper.profile_photo,
-            transport_mode: orderData.shopper.transport_mode,
-            user: orderData.shopper.User,
+            id: orderData.User.id,
+            name: orderData.User.name,
+            phone: orderData.User.phone,
+            email: orderData.User.email,
           }
         : null,
     };
