@@ -13,6 +13,7 @@ const GET_SHOPPER_NOTIFICATION_SETTINGS = `
       custom_locations
       max_distance
       notification_types
+      sound_settings
       created_at
       updated_at
     }
@@ -58,6 +59,10 @@ export default async function handler(
         earnings: true,
         system: true,
       },
+      sound_settings: {
+        enabled: true,
+        volume: 0.8,
+      },
     };
 
     // Test the notification check API
@@ -75,13 +80,16 @@ export default async function handler(
 
     const testData = await testResponse.json();
 
+    // Log detailed test results
     logger.info("Notification settings integration test completed", "NotificationSettingsIntegration", {
       user_id,
       settings,
       test_result: {
         success: testData.success,
         notifications_count: testData.notifications?.length || 0,
-        message: testData.message
+        message: testData.message,
+        status_code: testResponse.status,
+        error_details: testData.error || testData.details
       }
     });
 
@@ -92,7 +100,12 @@ export default async function handler(
         user_id,
         current_settings: settings,
         test_result: testData,
-        integration_status: testData.success ? "working" : "failed"
+        integration_status: testData.success ? "working" : "failed",
+        test_details: {
+          status_code: testResponse.status,
+          error_message: testData.message,
+          error_details: testData.error || testData.details
+        }
       }
     });
 

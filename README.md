@@ -1781,7 +1781,9 @@ Shoppers can configure their notification preferences through the Settings page:
 
 - **Live Location (Default)**: Receive notifications based on current GPS location
 - **Custom Locations**: Choose up to 2 specific locations for notifications
-- **Maximum Distance**: Set distance limit (5-30 km) for order notifications
+- **Location Toggle**: When custom locations are enabled, live location is automatically disabled
+- **Sequential Notifications**: Notifications are shown one by one per location, not simultaneously
+- **Maximum Distance**: Set distance limit (5-30 km) for order notifications per location
 - **Notification Types**: Configure which notifications to receive:
   - New Orders
   - Batch Orders  
@@ -1853,13 +1855,20 @@ interface SoundSettings {
 
 1. **Settings Configuration**: Shopper configures preferences in Settings → Notifications
 2. **Settings Storage**: Preferences saved to `shopper_notification_settings` table
-3. **Notification Check**: `NotificationSystem` calls `/api/shopper/check-notifications-with-settings`
-4. **Age Filtering**: Only NEW orders/batches (created within last 10 minutes) are shown
-5. **Location Filtering**: API checks orders against configured locations
-6. **Distance Filtering**: Only orders within `max_distance` are considered
-7. **Type Filtering**: Only enabled notification types are processed
-8. **Sound Settings**: Sound notifications respect user preferences (enabled/disabled, volume)
-9. **Notification Display**: Filtered notifications shown to shopper
+3. **Location Management**: 
+   - When custom locations are added, live location is automatically disabled
+   - When live location is enabled, custom locations are cleared
+   - Maximum 2 custom locations allowed
+4. **Notification Check**: `NotificationSystem` calls `/api/shopper/check-notifications-with-settings`
+5. **Age Filtering**: Only NEW orders/batches (created within last 10 minutes) are shown
+6. **Sequential Location Processing**: 
+   - Each location is checked one by one
+   - First location with matching orders gets notifications
+   - Other locations are skipped to avoid duplicate notifications
+7. **Distance Filtering**: Only orders within `max_distance` from each location are considered
+8. **Type Filtering**: Only enabled notification types are processed
+9. **Sound Settings**: Sound notifications respect user preferences (enabled/disabled, volume)
+10. **Notification Display**: Filtered notifications shown to shopper
 
 ### Existing APIs Updated
 
@@ -1876,15 +1885,26 @@ interface SoundSettings {
   - Added scheduler integration (checks shopper availability)
   - Added sound settings respect
   - **Fixed**: Now uses `max_distance` from notification settings instead of hardcoded values
+  - **Enhanced**: Added sequential location processing - checks each location one by one
+  - **Enhanced**: Added support for custom locations vs live location toggle
 
 - **`/api/shopper/check-notifications-with-settings`**: 
   - Already includes age filtering and sound settings
   - Added `sound_settings` field to response
   - **Enhanced**: Now includes scheduler checks, shopper status, and active order checks
   - **Optimized**: Moved all logic to backend to reduce frontend complexity
+  - **Enhanced**: Added sequential location processing for both regular and reel orders
 
 - **`/api/queries/shopper-notification-settings`**: 
   - Added `sound_settings` field to query response
+
+### Frontend Components Updated
+
+- **`NotificationTab.tsx`**: 
+  - **Enhanced**: Added automatic live location toggle when custom locations are added
+  - **Enhanced**: Added automatic custom location clearing when live location is enabled
+  - **Enhanced**: Added validation for maximum 2 custom locations
+  - **Enhanced**: Added Google Maps autocomplete for address selection
 
 ### API Response Format
 
@@ -2023,6 +2043,12 @@ Before showing any notifications, the system checks:
    - Settings-aware notification API with age filtering
    - Respects user notification preferences and sound settings
    - Usage: `GET /api/shopper/check-notifications-with-settings?user_id=<uuid>`
+
+4. `/api/test/notification-settings-integration`
+
+   - Test endpoint to verify notification settings integration
+   - Tests settings retrieval and notification API integration
+   - Usage: `GET /api/test/notification-settings-integration`
    - Format: `{ schedule: Array<{ day_of_week: number, start_time: string, end_time: string, is_available: boolean }> }`
 
 2. `/api/shopper/activeOrders`
