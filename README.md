@@ -1773,6 +1773,52 @@ interface Revenue {
 
 The notification system manages real-time order notifications for shoppers in the grocery delivery application. It implements a sophisticated batch distribution system with multiple checks to ensure appropriate and timely notifications.
 
+## Notification Settings
+
+### Location Preferences
+
+Shoppers can configure their notification preferences through the Settings page:
+
+- **Live Location (Default)**: Receive notifications based on current GPS location
+- **Custom Locations**: Choose up to 2 specific locations for notifications
+- **Maximum Distance**: Set distance limit (5-30 km) for order notifications
+- **Notification Types**: Configure which notifications to receive:
+  - New Orders
+  - Batch Orders  
+  - Earnings Updates
+  - System Notifications
+
+### Settings Management
+
+- **API Endpoints**:
+  - `GET /api/queries/shopper-notification-settings` - Fetch current settings
+  - `POST /api/mutations/shopper-notification-settings` - Save settings
+
+- **Database Schema**:
+  ```sql
+  shopper_notification_settings {
+    id: uuid (primary key)
+    user_id: uuid (foreign key to Users)
+    use_live_location: boolean (default: true)
+    custom_locations: jsonb (array of location objects)
+    max_distance: string (default: "10")
+    notification_types: jsonb (object with boolean flags)
+    created_at: timestamp
+    updated_at: timestamp
+  }
+  ```
+
+- **Location Object Structure**:
+  ```typescript
+  interface Location {
+    id: string;
+    name: string;
+    latitude: number;
+    longitude: number;
+    address: string;
+  }
+  ```
+
 ## Core Features
 
 ### 1. Notification Conditions
