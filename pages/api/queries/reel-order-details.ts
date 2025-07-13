@@ -41,16 +41,16 @@ const GET_REEL_ORDER_DETAILS = gql`
         delivery_time
         restaurant_id
         Restaurant {
-          id
+        id
           name
           location
         }
       }
-      User {
-        id
-        name
-        email
-        phone
+        User {
+          id
+          name
+          email
+          phone
       }
     }
   }
@@ -118,17 +118,17 @@ export default async function handler(
           delivery_time: string;
           restaurant_id: string;
           Restaurant: {
-            id: string;
+          id: string;
             name: string;
             location: string;
           };
         };
-        User: {
-          id: string;
-          name: string;
-          email: string;
-          phone: string;
-        };
+          User: {
+            id: string;
+            name: string;
+            email: string;
+            phone: string;
+          };
       } | null;
     }>(GET_REEL_ORDER_DETAILS, { order_id: id });
 

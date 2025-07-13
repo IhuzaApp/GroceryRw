@@ -324,19 +324,19 @@ export default async function handler(
 
         // Check each location sequentially for regular orders
         for (const location of locationsToCheck) {
-          for (const shopBatches of Object.values(batchesByShop)) {
-            const shop = shopBatches[0].Shops;
-            const distanceInMinutes = await calculateDistance(
-              {
+        for (const shopBatches of Object.values(batchesByShop)) {
+          const shop = shopBatches[0].Shops;
+          const distanceInMinutes = await calculateDistance(
+            {
                 lat: location.latitude,
                 lng: location.longitude,
-              },
-              { lat: shop.latitude, lng: shop.longitude }
-            );
+            },
+            { lat: shop.latitude, lng: shop.longitude }
+          );
 
             // If shop is within dasher's max distance from this location, add its batches
             if (distanceInMinutes <= maxDistanceMinutes) {
-              nearbyBatches.push(...shopBatches);
+            nearbyBatches.push(...shopBatches);
             }
           }
 
@@ -348,22 +348,22 @@ export default async function handler(
 
         // Check each location sequentially for reel orders
         for (const location of locationsToCheck) {
-          for (const reelBatches of Object.values(reelBatchesByLocation)) {
-            const firstBatch = reelBatches[0];
-            const distanceInMinutes = await calculateDistance(
-              {
+        for (const reelBatches of Object.values(reelBatchesByLocation)) {
+          const firstBatch = reelBatches[0];
+          const distanceInMinutes = await calculateDistance(
+            {
                 lat: location.latitude,
                 lng: location.longitude,
-              },
+            },
               {
                 lat: firstBatch.address.latitude,
                 lng: firstBatch.address.longitude,
               }
-            );
+          );
 
             // If reel creator is within dasher's max distance from this location, add its batches
             if (distanceInMinutes <= maxDistanceMinutes) {
-              nearbyReelBatches.push(...reelBatches);
+            nearbyReelBatches.push(...reelBatches);
             }
           }
 

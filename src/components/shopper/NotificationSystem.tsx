@@ -257,14 +257,14 @@ export default function NotificationSystem({
               <div className="ml-3 flex-1">
                 <p className="text-sm font-medium text-gray-900">New Batch!</p>
                 <div className="mt-1 text-sm text-gray-500">
-                  <div>{order.customerAddress}</div>
-                  <div>
-                    {order.shopName} ({order.distance}km)
-                  </div>
+            <div>{order.customerAddress}</div>
+            <div>
+              {order.shopName} ({order.distance}km)
+            </div>
                   <div className="mt-1 font-medium text-green-600">
                     📦 {order.itemsCount || 0} items • 💰 RWF{order.estimatedEarnings || 0}
                   </div>
-                </div>
+          </div>
                 <div className="mt-3 flex gap-2">
                   <button
                     onClick={() => {
@@ -273,8 +273,8 @@ export default function NotificationSystem({
                       toast.dismiss(t.id);
                     }}
                     className="rounded bg-blue-600 px-3 py-1 text-sm text-white hover:bg-blue-700"
-                  >
-                    Accept Batch
+            >
+              Accept Batch
                   </button>
                   <button
                     onClick={() => {
@@ -404,8 +404,8 @@ export default function NotificationSystem({
           requireInteraction: false,
         });
 
-        notification.onclick = () => {
-          window.focus();
+      notification.onclick = () => {
+        window.focus();
           notification.close();
         };
 
@@ -564,8 +564,8 @@ export default function NotificationSystem({
 
         notification.onclick = () => {
           window.focus();
-          notification.close();
-        };
+        notification.close();
+      };
 
         // Auto-close after 20 seconds
         setTimeout(() => {
