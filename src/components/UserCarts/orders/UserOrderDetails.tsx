@@ -534,23 +534,16 @@ export default function UserOrderDetails({ order }: UserOrderDetailsProps) {
                   <path
                     strokeLinecap="round"
                     strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M5 13l4 4L19 7"
+                    strokeWidth="2"
+                    d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
                   />
                 </svg>
               </div>
-              <div>
-                <h3 className="text-lg font-bold text-gray-900 sm:text-xl">
-                  Rate Your Experience
-                </h3>
-                <p className="mt-1 text-sm text-gray-500">
-                  Your feedback helps us improve our service
-                </p>
-              </div>
+              <span className="text-lg font-semibold text-gray-900">Rate Your Experience</span>
             </div>
           </Modal.Title>
         </Modal.Header>
-        <Modal.Body className="px-4 py-5 sm:px-6">
+        <Modal.Body>
           {submitError && (
             <div className="mb-6 rounded-md bg-red-50 p-4">
               <div className="flex">
@@ -573,21 +566,18 @@ export default function UserOrderDetails({ order }: UserOrderDetailsProps) {
               </div>
             </div>
           )}
-
           <div className="space-y-6">
             {/* Rating Section */}
-            <div className="rounded-lg bg-gray-50 p-4 text-center sm:p-6">
-              <h4 className="mb-4 text-base font-medium text-gray-900 sm:text-lg">
-                How was your experience?
-              </h4>
+            <div className="rounded-lg bg-gray-50 p-6 text-center">
+              <h4 className="mb-4 text-lg font-medium text-gray-900">How was your experience?</h4>
               <div className="flex justify-center">
                 <Rate
                   defaultValue={0}
                   value={rating}
                   onChange={setRating}
-                  color="yellow"
+                  color={rating > 3 ? "green" : rating > 0 ? "yellow" : "gray"}
                   size="lg"
-                  className="text-2xl sm:text-3xl"
+                  className="text-3xl"
                 />
               </div>
               <p className="mt-2 text-sm text-gray-500">
@@ -599,30 +589,24 @@ export default function UserOrderDetails({ order }: UserOrderDetailsProps) {
                 {rating === 5 && "Excellent"}
               </p>
             </div>
-
-            {/* Detailed Ratings */}
-            <div className="space-y-4 rounded-lg border border-gray-200 p-4 sm:p-6">
-              <h4 className="text-base font-medium text-gray-900 sm:text-lg">
-                Additional Feedback
-              </h4>
-              <div className="space-y-4">
-                <div>
-                  <label className="mb-2 block text-sm font-medium text-gray-700">
-                    Share your thoughts
-                  </label>
-                  <textarea
-                    className="w-full rounded-md border border-gray-300 p-3 text-sm focus:border-green-500 focus:outline-none focus:ring-1 focus:ring-green-500"
-                    placeholder="Tell us what you liked or what we could improve..."
-                    rows={4}
-                    value={comment}
-                    onChange={(e) => setComment(e.target.value)}
-                  ></textarea>
-                </div>
+            {/* Details Section */}
+            <div className="space-y-4 rounded-lg border border-gray-200 bg-white p-6">
+              <h4 className="text-lg font-medium text-gray-900">Additional Feedback</h4>
+              <div>
+                <label className="mb-2 block text-sm font-medium text-gray-700">
+                  Share your thoughts
+                </label>
+                <textarea
+                  className="w-full rounded-md border border-gray-300 p-3 text-sm focus:border-green-500 focus:outline-none focus:ring-1 focus:ring-green-500"
+                  placeholder="Tell us what you liked or what we could improve..."
+                  rows={4}
+                  value={comment}
+                  onChange={(e) => setComment(e.target.value)}
+                ></textarea>
               </div>
             </div>
           </div>
         </Modal.Body>
-
         <Modal.Footer>
           <div className="flex w-full flex-col-reverse gap-3 border-t border-gray-200 px-4 py-4 sm:flex-row sm:justify-end sm:px-6">
             <button
@@ -667,7 +651,20 @@ export default function UserOrderDetails({ order }: UserOrderDetailsProps) {
                   Submitting...
                 </>
               ) : (
-                "Submit Feedback"
+                <>
+                  <svg
+                    className="mr-2 h-4 w-4"
+                    viewBox="0 0 20 20"
+                    fill="currentColor"
+                  >
+                    <path
+                      fillRule="evenodd"
+                      d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z"
+                      clipRule="evenodd"
+                    />
+                  </svg>
+                  Submit Feedback
+                </>
               )}
             </button>
           </div>
