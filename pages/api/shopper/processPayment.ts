@@ -201,8 +201,14 @@ export default async function handler(
     }
 
     // Get request data
-    const { orderId, momoCode, privateKey, orderAmount, originalOrderTotal, orderType } =
-      req.body;
+    const {
+      orderId,
+      momoCode,
+      privateKey,
+      orderAmount,
+      originalOrderTotal,
+      orderType,
+    } = req.body;
 
     // Validate required fields
     if (!orderId || !momoCode || !privateKey || orderAmount === undefined) {
@@ -211,8 +217,6 @@ export default async function handler(
 
     // Format order amount to ensure consistent handling
     const formattedOrderAmount = parseFloat(Number(orderAmount).toFixed(2));
-
-
 
     // In a real-world scenario, this would integrate with a payment processor
     // For now, we'll skip that and just update the database directly
@@ -223,7 +227,7 @@ export default async function handler(
     }
 
     let orderData: any = null;
-    let isReelOrder = orderType === 'reel';
+    let isReelOrder = orderType === "reel";
 
     // Get order details based on order type
     if (isReelOrder) {
@@ -289,7 +293,9 @@ export default async function handler(
     let refundData = null;
 
     // If originalOrderTotal is provided, use it; otherwise get from orderData
-    const totalOrderValue = originalOrderTotal || parseFloat(isReelOrder ? orderData.total : orderData.total);
+    const totalOrderValue =
+      originalOrderTotal ||
+      parseFloat(isReelOrder ? orderData.total : orderData.total);
 
     // Calculate if there's a difference between original total and found items total
     if (totalOrderValue > formattedOrderAmount) {
@@ -299,16 +305,18 @@ export default async function handler(
       refundNeeded = true;
 
       // Get shop/restaurant name
-      const shopName = isReelOrder 
-        ? (orderData.Reel?.Restaurant?.name || "Unknown Restaurant")
-        : (orderData.Shop?.name || "Unknown Shop");
+      const shopName = isReelOrder
+        ? orderData.Reel?.Restaurant?.name || "Unknown Restaurant"
+        : orderData.Shop?.name || "Unknown Shop";
 
       // Create detailed reason for the refund
       refundReason = `Refund for items not found during shopping at ${shopName}. `;
 
       if (isReelOrder) {
         // For reel orders, we don't have individual items, so just use the product name
-        refundReason += `Reel order: ${orderData.Reel?.Restaurant?.name || 'Unknown Restaurant'}. `;
+        refundReason += `Reel order: ${
+          orderData.Reel?.Restaurant?.name || "Unknown Restaurant"
+        }. `;
       } else {
         // List all order items for regular orders
         const allItems = orderData.Order_Items.map(
@@ -323,8 +331,6 @@ export default async function handler(
     // Handle refund creation first if needed
     if (refundNeeded && refundAmount > 0) {
       try {
-
-
         // Create refund record with all required fields
         const refundRecord = {
           order_id: orderId,
@@ -335,8 +341,6 @@ export default async function handler(
           generated_by: "System",
           paid: false,
         };
-
-
 
         const refundResponse = await hasuraClient.request<RefundResponse>(
           CREATE_REFUND,
@@ -352,7 +356,6 @@ export default async function handler(
         }
 
         refundData = refundResponse.insert_Refunds_one;
-
       } catch (refundError) {
         console.error("Error creating refund record:", refundError);
         // Add more detailed error logging to help diagnose the issue
@@ -375,8 +378,6 @@ export default async function handler(
     // Calculate the new reserved balance after deducting the full original amount
     const originalAmount = originalOrderTotal || formattedOrderAmount;
     const newReserved = currentReserved - originalAmount;
-
-
 
     // Update the wallet balances
     await hasuraClient.request(UPDATE_WALLET_BALANCES, {

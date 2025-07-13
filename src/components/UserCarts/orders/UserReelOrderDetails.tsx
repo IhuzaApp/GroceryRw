@@ -25,7 +25,9 @@ interface UserReelOrderDetailsProps {
   order: any;
 }
 
-export default function UserReelOrderDetails({ order }: UserReelOrderDetailsProps) {
+export default function UserReelOrderDetails({
+  order,
+}: UserReelOrderDetailsProps) {
   const [feedbackModal, setFeedbackModal] = useState(false);
   const [rating, setRating] = useState(0);
   const [comment, setComment] = useState("");
@@ -160,8 +162,6 @@ export default function UserReelOrderDetails({ order }: UserReelOrderDetailsProp
         <span className="ml-2 text-gray-500">Placed on {order.placedAt}</span>
       </div>
 
-
-
       {/* Order Status */}
       <Panel shaded bordered className="mb-6">
         <div className="mb-6">
@@ -185,10 +185,7 @@ export default function UserReelOrderDetails({ order }: UserReelOrderDetailsProp
                 title="On the way"
                 description="Heading to your location"
               />
-              <Steps.Item
-                title="Delivered"
-                description="Enjoy your order!"
-              />
+              <Steps.Item title="Delivered" description="Enjoy your order!" />
             </Steps>
           </div>
         </div>
@@ -259,17 +256,31 @@ export default function UserReelOrderDetails({ order }: UserReelOrderDetailsProp
                     />
                   ) : (
                     <div className="flex h-full w-full items-center justify-center bg-gray-300">
-                      <svg className="h-8 w-8 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14.828 14.828a4 4 0 01-5.656 0M9 10h1m4 0h1m-6 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                      <svg
+                        className="h-8 w-8 text-gray-500"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M14.828 14.828a4 4 0 01-5.656 0M9 10h1m4 0h1m-6 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                        />
                       </svg>
                     </div>
                   )}
                 </div>
-                
+
                 {/* Reel Info */}
                 <div className="flex-1">
-                  <h3 className="text-lg font-semibold text-gray-900 dark:text-white">{order.reel?.title}</h3>
-                  <p className="text-sm text-gray-600 dark:text-gray-400">{order.reel?.description}</p>
+                  <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+                    {order.reel?.title}
+                  </h3>
+                  <p className="text-sm text-gray-600 dark:text-gray-400">
+                    {order.reel?.description}
+                  </p>
                   <div className="mt-2 flex items-center gap-4 text-sm text-gray-500 dark:text-gray-400">
                     <span>Type: {order.reel?.type}</span>
                     <span>Category: {order.reel?.category}</span>
@@ -280,25 +291,41 @@ export default function UserReelOrderDetails({ order }: UserReelOrderDetailsProp
 
             <div className="mt-6 border-t pt-4">
               <div className="mb-2 flex justify-between">
-                <span className="text-gray-600 dark:text-gray-400">Quantity</span>
+                <span className="text-gray-600 dark:text-gray-400">
+                  Quantity
+                </span>
                 <span className="font-medium">{order.quantity}</span>
               </div>
               <div className="mb-2 flex justify-between">
-                <span className="text-gray-600 dark:text-gray-400">Base Price</span>
-                <span className="font-medium">{formatCurrency(parseFloat(order.reel?.Price || "0"))}</span>
+                <span className="text-gray-600 dark:text-gray-400">
+                  Base Price
+                </span>
+                <span className="font-medium">
+                  {formatCurrency(parseFloat(order.reel?.Price || "0"))}
+                </span>
               </div>
               <div className="mb-2 flex justify-between">
-                <span className="text-gray-600 dark:text-gray-400">Service Fee</span>
-                <span className="font-medium">{formatCurrency(order.service_fee)}</span>
+                <span className="text-gray-600 dark:text-gray-400">
+                  Service Fee
+                </span>
+                <span className="font-medium">
+                  {formatCurrency(order.service_fee)}
+                </span>
               </div>
               <div className="mb-2 flex justify-between">
-                <span className="text-gray-600 dark:text-gray-400">Delivery Fee</span>
-                <span className="font-medium">{formatCurrency(order.delivery_fee)}</span>
+                <span className="text-gray-600 dark:text-gray-400">
+                  Delivery Fee
+                </span>
+                <span className="font-medium">
+                  {formatCurrency(order.delivery_fee)}
+                </span>
               </div>
               {order.discount > 0 && (
                 <div className="mb-2 flex justify-between text-green-600 dark:text-green-400">
                   <span>Discount</span>
-                  <span className="font-medium">-{formatCurrency(order.discount)}</span>
+                  <span className="font-medium">
+                    -{formatCurrency(order.discount)}
+                  </span>
                 </div>
               )}
               <div className="mt-4 flex justify-between text-lg font-bold">
@@ -361,9 +388,15 @@ export default function UserReelOrderDetails({ order }: UserReelOrderDetailsProp
                     />
                   )}
                 </div>
-                <h3 className="text-lg font-bold text-gray-900 dark:text-white">{order.assignedTo.name}</h3>
-                <p className="mt-1 text-sm text-gray-600 dark:text-gray-400">{order.assignedTo.transport_mode}</p>
-                <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">{order.assignedTo.phone}</p>
+                <h3 className="text-lg font-bold text-gray-900 dark:text-white">
+                  {order.assignedTo.name}
+                </h3>
+                <p className="mt-1 text-sm text-gray-600 dark:text-gray-400">
+                  {order.assignedTo.transport_mode}
+                </p>
+                <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
+                  {order.assignedTo.phone}
+                </p>
                 <div className="mt-6 w-full space-y-3">
                   <Button
                     appearance="primary"
@@ -409,9 +442,12 @@ export default function UserReelOrderDetails({ order }: UserReelOrderDetailsProp
                 <div className="mb-4 flex justify-center">
                   <div className="h-24 w-24 rounded-full bg-gray-200 dark:bg-gray-700"></div>
                 </div>
-                <h3 className="text-lg font-bold text-gray-900 dark:text-white">No Shopper Assigned</h3>
+                <h3 className="text-lg font-bold text-gray-900 dark:text-white">
+                  No Shopper Assigned
+                </h3>
                 <p className="mt-2 text-sm text-gray-600 dark:text-gray-400">
-                  We're looking for a shopper to handle your order. You'll be notified once someone is assigned.
+                  We're looking for a shopper to handle your order. You'll be
+                  notified once someone is assigned.
                 </p>
               </div>
             )}
@@ -420,7 +456,11 @@ export default function UserReelOrderDetails({ order }: UserReelOrderDetailsProp
       </div>
 
       {/* Feedback Modal */}
-      <Modal open={feedbackModal} onClose={() => setFeedbackModal(false)} size="sm">
+      <Modal
+        open={feedbackModal}
+        onClose={() => setFeedbackModal(false)}
+        size="sm"
+      >
         <Modal.Header>
           <Modal.Title>Rate Your Experience</Modal.Title>
         </Modal.Header>
@@ -473,4 +513,4 @@ export default function UserReelOrderDetails({ order }: UserReelOrderDetailsProp
       </Modal>
     </>
   );
-} 
+}

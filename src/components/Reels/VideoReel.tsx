@@ -338,7 +338,6 @@ export default function VideoReel({
 
     if (videoRef.current) {
       if (isVisible) {
-
         // Add a small delay to ensure the video is ready
         const playVideo = async () => {
           try {
@@ -858,7 +857,7 @@ export default function VideoReel({
           </div>
           <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
             <Badge
-              style={{ 
+              style={{
                 border: "1px solid rgba(255,255,255,0.3)",
                 backgroundColor: `${getPostTypeColor(post.type)}20`,
                 color: "#fff",
@@ -869,9 +868,7 @@ export default function VideoReel({
                 backdropFilter: "blur(8px)",
               }}
             >
-              <span style={{ textTransform: "capitalize" }}>
-                {post.type}
-              </span>
+              <span style={{ textTransform: "capitalize" }}>{post.type}</span>
             </Badge>
             <Badge
               style={{

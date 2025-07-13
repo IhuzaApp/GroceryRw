@@ -175,8 +175,6 @@ export default async function handler(
       }
     `;
 
-
-
     if (!hasuraClient) {
       throw new Error("Hasura client is not initialized");
     }
@@ -208,10 +206,12 @@ export default async function handler(
         isReelOrder = true;
         orderType = "reel";
       } else {
-      console.error("Authorization failed: Shopper not assigned to this order");
-      return res
-        .status(403)
-        .json({ error: "You are not assigned to this order" });
+        console.error(
+          "Authorization failed: Shopper not assigned to this order"
+        );
+        return res
+          .status(403)
+          .json({ error: "You are not assigned to this order" });
       }
     }
 
@@ -238,20 +238,20 @@ export default async function handler(
           });
         } else {
           orderDetails = await hasuraClient.request<{
-          Orders_by_pk: {
-            id: string;
-            total: string;
-            service_fee: string;
-            delivery_fee: string;
-            shopper_id: string;
-          };
-        }>(GET_ORDER_DETAILS, {
-          orderId,
-        });
+            Orders_by_pk: {
+              id: string;
+              total: string;
+              service_fee: string;
+              delivery_fee: string;
+              shopper_id: string;
+            };
+          }>(GET_ORDER_DETAILS, {
+            orderId,
+          });
         }
 
-        const order = isReelOrder 
-          ? orderDetails.reel_orders_by_pk 
+        const order = isReelOrder
+          ? orderDetails.reel_orders_by_pk
           : orderDetails.Orders_by_pk;
 
         if (!order) {
@@ -327,28 +327,33 @@ export default async function handler(
           });
         }
 
-
-
         // Add commission revenue (product profits) when shopping starts
         if (!isReelOrder) {
           try {
-
-            
             // Call the commission revenue calculation API
-            const commissionResponse = await fetch(`${req.headers.host ? `http://${req.headers.host}` : 'http://localhost:3000'}/api/shopper/calculateCommissionRevenue`, {
-              method: "POST",
-              headers: {
-                "Content-Type": "application/json",
-                "Cookie": req.headers.cookie || "",
-              },
-              body: JSON.stringify({ orderId }),
-            });
+            const commissionResponse = await fetch(
+              `${
+                req.headers.host
+                  ? `http://${req.headers.host}`
+                  : "http://localhost:3000"
+              }/api/shopper/calculateCommissionRevenue`,
+              {
+                method: "POST",
+                headers: {
+                  "Content-Type": "application/json",
+                  Cookie: req.headers.cookie || "",
+                },
+                body: JSON.stringify({ orderId }),
+              }
+            );
 
             if (commissionResponse.ok) {
               const commissionData = await commissionResponse.json();
-
             } else {
-              console.error("Failed to add commission revenue:", await commissionResponse.text());
+              console.error(
+                "Failed to add commission revenue:",
+                await commissionResponse.text()
+              );
             }
           } catch (commissionError) {
             console.error("Error adding commission revenue:", commissionError);
@@ -389,29 +394,25 @@ export default async function handler(
       });
     } else {
       updateResult = await hasuraClient.request<{
-      update_Orders_by_pk: {
-        id: string;
-        status: string;
-        updated_at: string;
-      };
-    }>(UPDATE_ORDER_STATUS, {
-      id: orderId,
-      status,
-      updated_at: currentTimestamp,
-    });
+        update_Orders_by_pk: {
+          id: string;
+          status: string;
+          updated_at: string;
+        };
+      }>(UPDATE_ORDER_STATUS, {
+        id: orderId,
+        status,
+        updated_at: currentTimestamp,
+      });
     }
 
-    const updatedOrder = isReelOrder 
-      ? updateResult.update_reel_orders_by_pk 
+    const updatedOrder = isReelOrder
+      ? updateResult.update_reel_orders_by_pk
       : updateResult.update_Orders_by_pk;
-
-
 
     // Special handling for "cancelled" status - process refunds
     if (status === "cancelled") {
       try {
-
-        
         // Get order details
         if (!hasuraClient) {
           throw new Error("Hasura client is not initialized");
@@ -440,8 +441,8 @@ export default async function handler(
           });
         }
 
-        const order = isReelOrder 
-          ? orderDetails.reel_orders_by_pk 
+        const order = isReelOrder
+          ? orderDetails.reel_orders_by_pk
           : orderDetails.Orders_by_pk;
 
         if (!order) {
@@ -490,18 +491,21 @@ export default async function handler(
           paid: false,
         };
 
-        await hasuraClient.request(gql`
-          mutation CreateRefund($refund: Refunds_insert_input!) {
-            insert_Refunds_one(object: $refund) {
-              id
-              amount
-              status
-              reason
+        await hasuraClient.request(
+          gql`
+            mutation CreateRefund($refund: Refunds_insert_input!) {
+              insert_Refunds_one(object: $refund) {
+                id
+                amount
+                status
+                reason
+              }
             }
+          `,
+          {
+            refund: refundRecord,
           }
-        `, {
-          refund: refundRecord,
-        });
+        );
 
         // Create wallet transaction for refund
         if (!isReelOrder) {
@@ -520,12 +524,13 @@ export default async function handler(
             transactions,
           });
         }
-
-
       } catch (cancellationError) {
         console.error("Error processing cancelled order:", cancellationError);
         return res.status(500).json({
-          error: cancellationError instanceof Error ? cancellationError.message : "Unknown error",
+          error:
+            cancellationError instanceof Error
+              ? cancellationError.message
+              : "Unknown error",
         });
       }
     }
@@ -533,8 +538,6 @@ export default async function handler(
     // Special handling for "delivered" status - update wallet balances and calculate revenue
     if (status === "delivered") {
       try {
-
-        
         // Get order details with fees
         if (!hasuraClient) {
           throw new Error("Hasura client is not initialized");
@@ -567,8 +570,8 @@ export default async function handler(
           });
         }
 
-        const order = isReelOrder 
-          ? orderDetails.reel_orders_by_pk 
+        const order = isReelOrder
+          ? orderDetails.reel_orders_by_pk
           : orderDetails.Orders_by_pk;
 
         if (!order) {
@@ -589,7 +592,8 @@ export default async function handler(
         `);
 
         const deliveryCommissionPercentage = parseFloat(
-          systemConfigResponse.System_configuratioins[0]?.deliveryCommissionPercentage || "20"
+          systemConfigResponse.System_configuratioins[0]
+            ?.deliveryCommissionPercentage || "20"
         );
 
         // Get shopper wallet
@@ -616,7 +620,8 @@ export default async function handler(
         const totalEarnings = serviceFee + deliveryFee;
 
         // Calculate platform fee (commission)
-        const platformFee = (totalEarnings * deliveryCommissionPercentage) / 100;
+        const platformFee =
+          (totalEarnings * deliveryCommissionPercentage) / 100;
         const remainingEarnings = totalEarnings - platformFee;
 
         const currentAvailableBalance = parseFloat(wallet.available_balance);
@@ -654,28 +659,33 @@ export default async function handler(
           });
         }
 
-
-
         // Add plasa fee revenue (platform earnings) when order is delivered
         if (!isReelOrder) {
           try {
-
-            
             // Call the plasa fee revenue calculation API
-            const plasaFeeResponse = await fetch(`${req.headers.host ? `http://${req.headers.host}` : 'http://localhost:3000'}/api/shopper/calculatePlasaFeeRevenue`, {
-              method: "POST",
-              headers: {
-                "Content-Type": "application/json",
-                "Cookie": req.headers.cookie || "",
-              },
-              body: JSON.stringify({ orderId }),
-            });
+            const plasaFeeResponse = await fetch(
+              `${
+                req.headers.host
+                  ? `http://${req.headers.host}`
+                  : "http://localhost:3000"
+              }/api/shopper/calculatePlasaFeeRevenue`,
+              {
+                method: "POST",
+                headers: {
+                  "Content-Type": "application/json",
+                  Cookie: req.headers.cookie || "",
+                },
+                body: JSON.stringify({ orderId }),
+              }
+            );
 
             if (plasaFeeResponse.ok) {
               const plasaFeeData = await plasaFeeResponse.json();
-
             } else {
-              console.error("Failed to add plasa fee revenue:", await plasaFeeResponse.text());
+              console.error(
+                "Failed to add plasa fee revenue:",
+                await plasaFeeResponse.text()
+              );
             }
           } catch (plasaFeeError) {
             console.error("Error adding plasa fee revenue:", plasaFeeError);
@@ -683,9 +693,15 @@ export default async function handler(
           }
         }
       } catch (walletError) {
-        console.error("Error updating wallet balances for delivered order:", walletError);
+        console.error(
+          "Error updating wallet balances for delivered order:",
+          walletError
+        );
         return res.status(500).json({
-          error: walletError instanceof Error ? walletError.message : "Unknown error",
+          error:
+            walletError instanceof Error
+              ? walletError.message
+              : "Unknown error",
         });
       }
     }

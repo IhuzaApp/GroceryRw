@@ -100,9 +100,9 @@ export default function OrderCard({ order, onOrderAccepted }: OrderCardProps) {
       const response = await fetch("/api/shopper/assignOrder", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ 
+        body: JSON.stringify({
           orderId: order.id,
-          orderType: order.orderType || "regular" // Pass order type to API
+          orderType: order.orderType || "regular", // Pass order type to API
         }),
       });
 
@@ -138,9 +138,9 @@ export default function OrderCard({ order, onOrderAccepted }: OrderCardProps) {
               const retryResponse = await fetch("/api/shopper/assignOrder", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ 
+                body: JSON.stringify({
                   orderId: order.id,
-                  orderType: order.orderType || "regular"
+                  orderType: order.orderType || "regular",
                 }),
               });
 
@@ -202,14 +202,14 @@ export default function OrderCard({ order, onOrderAccepted }: OrderCardProps) {
           {priorityInfo.text}
         </div>
       )}
-      
+
       {/* Reel order indicator */}
       {isReelOrder && (
-        <div className="py-1 text-center text-xs font-bold bg-purple-100 text-purple-800">
+        <div className="bg-purple-100 py-1 text-center text-xs font-bold text-purple-800">
           🎬 REEL ORDER
         </div>
       )}
-      
+
       <div className="p-4">
         <div className="mb-3 flex items-start justify-between">
           <div>
@@ -217,13 +217,12 @@ export default function OrderCard({ order, onOrderAccepted }: OrderCardProps) {
               {isReelOrder ? order.reel?.title || "Reel Order" : order.shopName}
             </h3>
             <p className="text-sm text-gray-500">
-              {isReelOrder 
-                ? `From: ${order.customerName || "Reel Creator"}` 
-                : order.shopAddress
-              }
+              {isReelOrder
+                ? `From: ${order.customerName || "Reel Creator"}`
+                : order.shopAddress}
             </p>
             {isReelOrder && order.reel?.description && (
-              <p className="text-xs text-gray-400 mt-1">
+              <p className="mt-1 text-xs text-gray-400">
                 {order.reel.description}
               </p>
             )}
@@ -277,10 +276,9 @@ export default function OrderCard({ order, onOrderAccepted }: OrderCardProps) {
             <path d="M16 10a4 4 0 01-8 0" />
           </svg>
           <span>
-            {isReelOrder 
-              ? `Quantity: ${order.quantity || 1}` 
-              : `Items: ${order.items}`
-            }
+            {isReelOrder
+              ? `Quantity: ${order.quantity || 1}`
+              : `Items: ${order.items}`}
           </span>
         </div>
 
@@ -302,7 +300,7 @@ export default function OrderCard({ order, onOrderAccepted }: OrderCardProps) {
 
         {/* Show delivery note for reel orders */}
         {isReelOrder && order.deliveryNote && (
-          <div className="mb-4 p-2 bg-yellow-50 border border-yellow-200 rounded">
+          <div className="mb-4 rounded border border-yellow-200 bg-yellow-50 p-2">
             <p className="text-xs text-yellow-800">
               <strong>Note:</strong> {order.deliveryNote}
             </p>
@@ -312,21 +310,29 @@ export default function OrderCard({ order, onOrderAccepted }: OrderCardProps) {
         <div className="flex items-center justify-between">
           <div>
             <p className="text-sm text-gray-500">Estimated Earnings</p>
-            <p className={`text-lg font-bold ${isReelOrder ? 'text-purple-600' : 'text-green-600'}`}>
+            <p
+              className={`text-lg font-bold ${
+                isReelOrder ? "text-purple-600" : "text-green-600"
+              }`}
+            >
               {order.estimatedEarnings}
             </p>
           </div>
           <div className="flex gap-2">
             <Link href={`/Plasa/orders/${order.id}`}>
-              <button className={`rounded px-3 py-1.5 text-sm hover:bg-green-50 ${
-                isReelOrder ? 'text-purple-600' : 'text-green-600'
-              }`}>
+              <button
+                className={`rounded px-3 py-1.5 text-sm hover:bg-green-50 ${
+                  isReelOrder ? "text-purple-600" : "text-green-600"
+                }`}
+              >
                 View Details
               </button>
             </Link>
             <button
               className={`rounded px-3 py-1.5 text-sm text-white hover:bg-green-600 ${
-                isReelOrder ? 'bg-purple-500 hover:bg-purple-600' : 'bg-green-500'
+                isReelOrder
+                  ? "bg-purple-500 hover:bg-purple-600"
+                  : "bg-green-500"
               }`}
               onClick={handleAcceptOrder}
               disabled={isAccepting}

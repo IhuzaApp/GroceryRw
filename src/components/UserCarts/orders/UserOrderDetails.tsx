@@ -280,10 +280,13 @@ export default function UserOrderDetails({ order }: UserOrderDetailsProps) {
                     <h3 className="font-medium">{item.product.name}</h3>
                     <div className="mt-1 flex justify-between text-sm text-gray-600 dark:text-gray-400">
                       <span>
-                        {item.quantity} × {formatCurrency(parseFloat(item.product.final_price))}
+                        {item.quantity} ×{" "}
+                        {formatCurrency(parseFloat(item.product.final_price))}
                       </span>
                       <span className="font-bold">
-                        {formatCurrency(parseFloat(item.product.final_price) * item.quantity)}
+                        {formatCurrency(
+                          parseFloat(item.product.final_price) * item.quantity
+                        )}
                       </span>
                     </div>
                   </div>
@@ -293,23 +296,32 @@ export default function UserOrderDetails({ order }: UserOrderDetailsProps) {
 
             <div className="mt-6 border-t pt-4">
               <div className="mb-2 flex justify-between">
-                <span className="text-gray-600 dark:text-gray-400">Subtotal</span>
+                <span className="text-gray-600 dark:text-gray-400">
+                  Subtotal
+                </span>
                 <span className="font-medium">
                   {formatCurrency(
                     order.Order_Items?.reduce((sum: number, item: any) => {
-                      return sum + (parseFloat(item.product.final_price) * item.quantity);
+                      return (
+                        sum +
+                        parseFloat(item.product.final_price) * item.quantity
+                      );
                     }, 0) || 0
                   )}
                 </span>
               </div>
               <div className="mb-2 flex justify-between">
-                <span className="text-gray-600 dark:text-gray-400">Service Fee</span>
+                <span className="text-gray-600 dark:text-gray-400">
+                  Service Fee
+                </span>
                 <span className="font-medium">
                   {formatCurrency(order.serviceFee)}
                 </span>
               </div>
               <div className="mb-2 flex justify-between">
-                <span className="text-gray-600 dark:text-gray-400">Delivery Fee</span>
+                <span className="text-gray-600 dark:text-gray-400">
+                  Delivery Fee
+                </span>
                 <span className="font-medium">
                   {formatCurrency(order.deliveryFee)}
                 </span>
@@ -319,7 +331,10 @@ export default function UserOrderDetails({ order }: UserOrderDetailsProps) {
                 <span>
                   {formatCurrency(
                     (order.Order_Items?.reduce((sum: number, item: any) => {
-                      return sum + (parseFloat(item.product.final_price) * item.quantity);
+                      return (
+                        sum +
+                        parseFloat(item.product.final_price) * item.quantity
+                      );
                     }, 0) || 0) +
                       (Number(order.serviceFee) || 0) +
                       (Number(order.deliveryFee) || 0)

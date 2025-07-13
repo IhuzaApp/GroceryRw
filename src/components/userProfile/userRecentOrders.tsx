@@ -287,10 +287,9 @@ export default function UserRecentOrders({
 
             <div className="mb-3 flex justify-between text-sm">
               <span className="font-bold text-green-600 dark:text-green-400">
-                {order.orderType === "reel" 
-                  ? `${order.quantity || 1} quantity` 
-                  : `${order.itemsCount} items (${order.unitsCount} units)`
-                }
+                {order.orderType === "reel"
+                  ? `${order.quantity || 1} quantity`
+                  : `${order.itemsCount} items (${order.unitsCount} units)`}
               </span>
               <span className="font-bold text-gray-900 dark:text-white">
                 {formatCurrency(order.total)}
@@ -311,8 +310,8 @@ export default function UserRecentOrders({
               <Link
                 href={`/CurrentPendingOrders/viewOrderDetails/${order.id}`}
                 className={`inline-flex items-center rounded-lg px-4 py-2 text-sm font-medium text-white transition duration-150 focus:outline-none focus:ring-2 focus:ring-offset-2 dark:focus:ring-offset-gray-900 ${
-                  order.orderType === "reel" 
-                    ? "bg-purple-500 hover:bg-purple-600 focus:ring-purple-500 dark:bg-purple-600 dark:hover:bg-purple-700" 
+                  order.orderType === "reel"
+                    ? "bg-purple-500 hover:bg-purple-600 focus:ring-purple-500 dark:bg-purple-600 dark:hover:bg-purple-700"
                     : "bg-green-500 hover:bg-green-600 focus:ring-green-500 dark:bg-green-600 dark:hover:bg-green-700"
                 }`}
               >

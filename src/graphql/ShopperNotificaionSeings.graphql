@@ -1,11 +1,27 @@
-mutation addShopperNotificationSetings($custom_locations: jsonb = "", $max_distance: String = "", $notification_types: jsonb = "", $use_live_location: Boolean = true, $sound_settings: jsonb = "", $user_id: uuid = "") {
-  insert_shopper_notification_settings(objects: {custom_locations: $custom_locations, max_distance: $max_distance, notification_types: $notification_types, use_live_location: $use_live_location, sound_settings: $sound_settings, user_id: $user_id}) {
+mutation addShopperNotificationSetings(
+  $custom_locations: jsonb = ""
+  $max_distance: String = ""
+  $notification_types: jsonb = ""
+  $use_live_location: Boolean = true
+  $sound_settings: jsonb = ""
+  $user_id: uuid = ""
+) {
+  insert_shopper_notification_settings(
+    objects: {
+      custom_locations: $custom_locations
+      max_distance: $max_distance
+      notification_types: $notification_types
+      use_live_location: $use_live_location
+      sound_settings: $sound_settings
+      user_id: $user_id
+    }
+  ) {
     affected_rows
   }
 }
 
 query GetShopperNotifiicaionSetings($user_id: uuid = "") {
-  shopper_notification_settings(where: {user_id: {_eq: $user_id}}) {
+  shopper_notification_settings(where: { user_id: { _eq: $user_id } }) {
     created_at
     custom_locations
     id

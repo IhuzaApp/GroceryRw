@@ -42,7 +42,9 @@ const GET_SHOPPER_ID = gql`
 // Check if commission revenue already exists for this order
 const CHECK_EXISTING_COMMISSION_REVENUE = gql`
   query CheckExistingCommissionRevenue($order_id: uuid!) {
-    Revenue(where: { order_id: { _eq: $order_id }, type: { _eq: "commission" } }) {
+    Revenue(
+      where: { order_id: { _eq: $order_id }, type: { _eq: "commission" } }
+    ) {
       id
       type
     }
@@ -145,7 +147,7 @@ export default async function handler(
     }
 
     // Convert order items to cart items format for revenue calculation
-    const cartItems = order.Order_Items.map(item => ({
+    const cartItems = order.Order_Items.map((item) => ({
       quantity: item.quantity,
       Product: {
         price: item.Product.price,
@@ -164,7 +166,7 @@ export default async function handler(
       const shopperData = await hasuraClient.request<{
         shoppers: Array<{ id: string }>;
       }>(GET_SHOPPER_ID, { user_id: order.shopper_id });
-      
+
       if (shopperData.shoppers && shopperData.shoppers.length > 0) {
         shopperId = shopperData.shoppers[0].id;
       }
@@ -190,7 +192,10 @@ export default async function handler(
   } catch (error) {
     console.error("Error calculating commission revenue:", error);
     return res.status(500).json({
-      error: error instanceof Error ? error.message : "Failed to calculate commission revenue",
+      error:
+        error instanceof Error
+          ? error.message
+          : "Failed to calculate commission revenue",
     });
   }
-} 
+}

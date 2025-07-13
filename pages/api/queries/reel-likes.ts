@@ -9,7 +9,7 @@ import { logger } from "../../../src/utils/logger";
 // Get likes for a specific reel
 const GET_REEL_LIKES = gql`
   query GetReelsLikes($reel_id: uuid = "") {
-    reel_likes(where: {reel_id: {_eq: $reel_id}}) {
+    reel_likes(where: { reel_id: { _eq: $reel_id } }) {
       created_at
       id
       reel_id
@@ -21,7 +21,7 @@ const GET_REEL_LIKES = gql`
 // Add like to reel
 const ADD_REEL_LIKE = gql`
   mutation AddReelLike($reel_id: uuid!, $user_id: uuid!) {
-    insert_reel_likes(objects: {reel_id: $reel_id, user_id: $user_id}) {
+    insert_reel_likes(objects: { reel_id: $reel_id, user_id: $user_id }) {
       affected_rows
       returning {
         id
@@ -36,7 +36,9 @@ const ADD_REEL_LIKE = gql`
 // Remove like from reel
 const REMOVE_REEL_LIKE = gql`
   mutation RemoveReelLike($reel_id: uuid!, $user_id: uuid!) {
-    delete_reel_likes(where: {reel_id: {_eq: $reel_id}, user_id: {_eq: $user_id}}) {
+    delete_reel_likes(
+      where: { reel_id: { _eq: $reel_id }, user_id: { _eq: $user_id } }
+    ) {
       affected_rows
     }
   }
@@ -45,7 +47,9 @@ const REMOVE_REEL_LIKE = gql`
 // Check if user has liked a reel
 const CHECK_USER_LIKE = gql`
   query CheckUserLike($reel_id: uuid!, $user_id: uuid!) {
-    reel_likes(where: {reel_id: {_eq: $reel_id}, user_id: {_eq: $user_id}}) {
+    reel_likes(
+      where: { reel_id: { _eq: $reel_id }, user_id: { _eq: $user_id } }
+    ) {
       id
       user_id
       reel_id
@@ -123,9 +127,9 @@ async function handleGetLikes(req: NextApiRequest, res: NextApiResponse) {
       reel_id: reel_id as string,
     });
 
-    res.status(200).json({ 
+    res.status(200).json({
       likes: data.reel_likes,
-      count: data.reel_likes.length 
+      count: data.reel_likes.length,
     });
   } catch (error) {
     logger.error("Error fetching reel likes", "ReelLikesAPI", error);
@@ -140,7 +144,7 @@ async function handleAddLike(req: NextApiRequest, res: NextApiResponse) {
       res,
       authOptions as any
     )) as Session | null;
-    
+
     if (!session?.user) {
       return res.status(401).json({ error: "Unauthorized" });
     }
@@ -169,9 +173,9 @@ async function handleAddLike(req: NextApiRequest, res: NextApiResponse) {
     });
 
     logger.info("Added reel like", "ReelLikesAPI", { reel_id, userId });
-    res.status(201).json({ 
-      success: true, 
-      like: result.insert_reel_likes.returning[0] 
+    res.status(201).json({
+      success: true,
+      like: result.insert_reel_likes.returning[0],
     });
   } catch (error) {
     logger.error("Error adding reel like", "ReelLikesAPI", error);
@@ -186,7 +190,7 @@ async function handleRemoveLike(req: NextApiRequest, res: NextApiResponse) {
       res,
       authOptions as any
     )) as Session | null;
-    
+
     if (!session?.user) {
       return res.status(401).json({ error: "Unauthorized" });
     }
@@ -199,10 +203,13 @@ async function handleRemoveLike(req: NextApiRequest, res: NextApiResponse) {
     }
 
     // Remove the like
-    const result = await hasuraClient.request<RemoveLikeResponse>(REMOVE_REEL_LIKE, {
-      reel_id,
-      user_id: userId,
-    });
+    const result = await hasuraClient.request<RemoveLikeResponse>(
+      REMOVE_REEL_LIKE,
+      {
+        reel_id,
+        user_id: userId,
+      }
+    );
 
     if (result.delete_reel_likes.affected_rows === 0) {
       return res.status(404).json({ error: "Like not found" });
@@ -214,4 +221,4 @@ async function handleRemoveLike(req: NextApiRequest, res: NextApiResponse) {
     logger.error("Error removing reel like", "ReelLikesAPI", error);
     res.status(500).json({ error: "Failed to remove like" });
   }
-} 
+}

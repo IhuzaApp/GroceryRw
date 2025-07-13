@@ -6,7 +6,7 @@ import { logger } from "../../../src/utils/logger";
 // Query to get shopper notification settings
 const GET_SHOPPER_NOTIFICATION_SETTINGS = gql`
   query GetShopperNotificationSettings($user_id: uuid!) {
-    shopper_notification_settings(where: {user_id: {_eq: $user_id}}) {
+    shopper_notification_settings(where: { user_id: { _eq: $user_id } }) {
       id
       user_id
       use_live_location
@@ -24,9 +24,9 @@ const GET_SHOPPER_NOTIFICATION_SETTINGS = gql`
 const GET_AVAILABLE_ORDERS = gql`
   query GetAvailableOrders($created_after: timestamptz!) {
     Orders(
-      where: { 
-        shopper_id: { _is_null: true }, 
-        status: { _eq: "PENDING" },
+      where: {
+        shopper_id: { _is_null: true }
+        status: { _eq: "PENDING" }
         created_at: { _gt: $created_after }
       }
       order_by: { created_at: desc }
@@ -61,9 +61,9 @@ const GET_AVAILABLE_ORDERS = gql`
 const GET_AVAILABLE_REEL_ORDERS = gql`
   query GetAvailableReelOrders($created_after: timestamptz!) {
     reel_orders(
-      where: { 
-        shopper_id: { _is_null: true }, 
-        status: { _eq: "PENDING" },
+      where: {
+        shopper_id: { _is_null: true }
+        status: { _eq: "PENDING" }
         created_at: { _gt: $created_after }
       }
       order_by: { created_at: desc }
@@ -163,11 +163,15 @@ export default async function handler(
     }
 
     // Get shopper notification settings
-    const settingsResponse = await hasuraClient.request(GET_SHOPPER_NOTIFICATION_SETTINGS, {
-      user_id
-    }) as any;
+    const settingsResponse = (await hasuraClient.request(
+      GET_SHOPPER_NOTIFICATION_SETTINGS,
+      {
+        user_id,
+      }
+    )) as any;
 
-    const settings: NotificationSettings = settingsResponse.shopper_notification_settings?.[0] || {
+    const settings: NotificationSettings = settingsResponse
+      .shopper_notification_settings?.[0] || {
       use_live_location: true,
       custom_locations: [],
       max_distance: "10",
@@ -184,31 +188,34 @@ export default async function handler(
     };
 
     // Check if notifications are enabled for orders/batches
-    if (!settings.notification_types.orders && !settings.notification_types.batches) {
+    if (
+      !settings.notification_types.orders &&
+      !settings.notification_types.batches
+    ) {
       return res.status(200).json({
         success: true,
         notifications: [],
-        message: "Notifications disabled for orders and batches"
+        message: "Notifications disabled for orders and batches",
       });
     }
 
     // Determine locations to check
     const locationsToCheck = [];
-    
+
     if (settings.use_live_location && current_location) {
       locationsToCheck.push({
         name: "Live Location",
         latitude: current_location.lat,
-        longitude: current_location.lng
+        longitude: current_location.lng,
       });
     }
 
     if (!settings.use_live_location && settings.custom_locations.length > 0) {
-      settings.custom_locations.forEach(location => {
+      settings.custom_locations.forEach((location) => {
         locationsToCheck.push({
           name: location.name,
           latitude: location.latitude,
-          longitude: location.longitude
+          longitude: location.longitude,
         });
       });
     }
@@ -217,18 +224,22 @@ export default async function handler(
       return res.status(200).json({
         success: true,
         notifications: [],
-        message: "No locations configured for notifications"
+        message: "No locations configured for notifications",
       });
     }
 
     // Check shopper schedule and status
     const now = new Date();
-    const currentTime = now.toTimeString().split(' ')[0] + '+00:00'; // HH:MM:SS+00:00 format with timezone
+    const currentTime = now.toTimeString().split(" ")[0] + "+00:00"; // HH:MM:SS+00:00 format with timezone
     const currentDay = now.getDay() === 0 ? 7 : now.getDay(); // Sunday = 7
 
     // Check if shopper is available and within schedule
     const GET_SHOPPER_AVAILABILITY = gql`
-      query GetShopperAvailability($user_id: uuid!, $current_time: timetz!, $current_day: Int!) {
+      query GetShopperAvailability(
+        $user_id: uuid!
+        $current_time: timetz!
+        $current_day: Int!
+      ) {
         Shopper_Availability(
           where: {
             _and: [
@@ -249,67 +260,106 @@ export default async function handler(
       }
     `;
 
-    logger.info("Checking shopper availability", "CheckNotificationsWithSettings", {
-      user_id,
-      current_time: currentTime,
-      current_day: currentDay
-    });
+    logger.info(
+      "Checking shopper availability",
+      "CheckNotificationsWithSettings",
+      {
+        user_id,
+        current_time: currentTime,
+        current_day: currentDay,
+      }
+    );
 
-    const availabilityResponse = await hasuraClient.request(GET_SHOPPER_AVAILABILITY, {
-      user_id,
-      current_time: currentTime,
-      current_day: currentDay,
-    }) as any;
+    const availabilityResponse = (await hasuraClient.request(
+      GET_SHOPPER_AVAILABILITY,
+      {
+        user_id,
+        current_time: currentTime,
+        current_day: currentDay,
+      }
+    )) as any;
 
     const isAvailable = availabilityResponse.Shopper_Availability.length > 0;
 
-    logger.info("Shopper availability check result", "CheckNotificationsWithSettings", {
-      user_id,
-      isAvailable,
-      availability_count: availabilityResponse.Shopper_Availability.length,
-      availability_data: availabilityResponse.Shopper_Availability
-    });
+    logger.info(
+      "Shopper availability check result",
+      "CheckNotificationsWithSettings",
+      {
+        user_id,
+        isAvailable,
+        availability_count: availabilityResponse.Shopper_Availability.length,
+        availability_data: availabilityResponse.Shopper_Availability,
+      }
+    );
 
     if (!isAvailable) {
-      logger.info(`Shopper ${user_id} is not available or outside schedule`, "CheckNotificationsWithSettings");
+      logger.info(
+        `Shopper ${user_id} is not available or outside schedule`,
+        "CheckNotificationsWithSettings"
+      );
       return res.status(200).json({
         success: true,
         notifications: [],
-        message: "Shopper is not available or outside schedule"
+        message: "Shopper is not available or outside schedule",
       });
     }
 
     // Check if shopper has active orders
     const GET_ACTIVE_ORDERS = gql`
       query GetActiveOrders($user_id: uuid!) {
-        Orders(where: { shopper_id: { _eq: $user_id }, status: { _in: ["shopping", "delivering"] } }) {
+        Orders(
+          where: {
+            shopper_id: { _eq: $user_id }
+            status: { _in: ["shopping", "delivering"] }
+          }
+        ) {
           id
           status
         }
-        reel_orders(where: { shopper_id: { _eq: $user_id }, status: { _in: ["shopping", "delivering"] } }) {
+        reel_orders(
+          where: {
+            shopper_id: { _eq: $user_id }
+            status: { _in: ["shopping", "delivering"] }
+          }
+        ) {
           id
           status
         }
       }
     `;
 
-    const activeOrdersResponse = await hasuraClient.request(GET_ACTIVE_ORDERS, { user_id }) as any;
-    const hasActiveOrders = (activeOrdersResponse.Orders?.length || 0) + (activeOrdersResponse.reel_orders?.length || 0) > 0;
+    const activeOrdersResponse = (await hasuraClient.request(
+      GET_ACTIVE_ORDERS,
+      { user_id }
+    )) as any;
+    const hasActiveOrders =
+      (activeOrdersResponse.Orders?.length || 0) +
+        (activeOrdersResponse.reel_orders?.length || 0) >
+      0;
 
     if (hasActiveOrders) {
-      logger.info(`Shopper ${user_id} has active orders, skipping notifications`, "CheckNotificationsWithSettings");
+      logger.info(
+        `Shopper ${user_id} has active orders, skipping notifications`,
+        "CheckNotificationsWithSettings"
+      );
       return res.status(200).json({
         success: true,
         notifications: [],
-        message: "Shopper has active orders"
+        message: "Shopper has active orders",
       });
     }
 
     // Get available orders with age filtering
-    const tenMinutesAgo = new Date(now.getTime() - 10 * 60 * 1000).toISOString();
+    const tenMinutesAgo = new Date(
+      now.getTime() - 10 * 60 * 1000
+    ).toISOString();
     const [regularOrdersData, reelOrdersData] = await Promise.all([
-      hasuraClient.request(GET_AVAILABLE_ORDERS, { created_after: tenMinutesAgo }) as any,
-      hasuraClient.request(GET_AVAILABLE_REEL_ORDERS, { created_after: tenMinutesAgo }) as any
+      hasuraClient.request(GET_AVAILABLE_ORDERS, {
+        created_after: tenMinutesAgo,
+      }) as any,
+      hasuraClient.request(GET_AVAILABLE_REEL_ORDERS, {
+        created_after: tenMinutesAgo,
+      }) as any,
     ]);
 
     const maxDistance = parseFloat(settings.max_distance);
@@ -319,7 +369,7 @@ export default async function handler(
     if (settings.notification_types.orders && regularOrdersData.Orders) {
       for (const order of regularOrdersData.Orders) {
         const orderCreatedAt = new Date(order.created_at);
-        
+
         // Only process orders that are NEW (created within last 10 minutes)
         if (orderCreatedAt.getTime() > now.getTime() - 10 * 60 * 1000) {
           // Check each location sequentially and add notification for the first location that matches
@@ -343,7 +393,9 @@ export default async function handler(
                 serviceFee: order.service_fee,
                 deliveryFee: order.delivery_fee,
                 itemCount: order.Order_Items_aggregate?.aggregate?.count || 0,
-                ageInMinutes: Math.round((now.getTime() - orderCreatedAt.getTime()) / (1000 * 60))
+                ageInMinutes: Math.round(
+                  (now.getTime() - orderCreatedAt.getTime()) / (1000 * 60)
+                ),
               });
               break; // Only add notification for the first matching location (sequential)
             }
@@ -356,7 +408,7 @@ export default async function handler(
     if (settings.notification_types.batches && reelOrdersData.reel_orders) {
       for (const reelOrder of reelOrdersData.reel_orders) {
         const reelOrderCreatedAt = new Date(reelOrder.created_at);
-        
+
         // Only process reel orders that are NEW (created within last 10 minutes)
         if (reelOrderCreatedAt.getTime() > now.getTime() - 10 * 60 * 1000) {
           // Check each location sequentially and add notification for the first location that matches
@@ -381,7 +433,9 @@ export default async function handler(
                 quantity: reelOrder.quantity,
                 deliveryNote: reelOrder.delivery_note,
                 reelType: reelOrder.Reel.type,
-                ageInMinutes: Math.round((now.getTime() - reelOrderCreatedAt.getTime()) / (1000 * 60))
+                ageInMinutes: Math.round(
+                  (now.getTime() - reelOrderCreatedAt.getTime()) / (1000 * 60)
+                ),
               });
               break; // Only add notification for the first matching location (sequential)
             }
@@ -391,19 +445,26 @@ export default async function handler(
     }
 
     // Sort notifications by creation time (oldest first)
-    notifications.sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime());
+    notifications.sort(
+      (a, b) =>
+        new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
+    );
 
-    logger.info("Notification check completed", "CheckNotificationsWithSettings", {
-      user_id,
-      settings_used: {
-        use_live_location: settings.use_live_location,
-        custom_locations_count: settings.custom_locations.length,
-        max_distance: settings.max_distance,
-        notification_types: settings.notification_types
-      },
-      locations_checked: locationsToCheck.length,
-      notifications_found: notifications.length
-    });
+    logger.info(
+      "Notification check completed",
+      "CheckNotificationsWithSettings",
+      {
+        user_id,
+        settings_used: {
+          use_live_location: settings.use_live_location,
+          custom_locations_count: settings.custom_locations.length,
+          max_distance: settings.max_distance,
+          notification_types: settings.notification_types,
+        },
+        locations_checked: locationsToCheck.length,
+        notifications_found: notifications.length,
+      }
+    );
 
     return res.status(200).json({
       success: true,
@@ -412,22 +473,26 @@ export default async function handler(
         use_live_location: settings.use_live_location,
         max_distance: settings.max_distance,
         notification_types: settings.notification_types,
-        sound_settings: settings.sound_settings
+        sound_settings: settings.sound_settings,
       },
       age_filter_info: {
-        filter_applied: "Only NEW orders/batches (created within last 10 minutes)",
+        filter_applied:
+          "Only NEW orders/batches (created within last 10 minutes)",
         current_time: new Date().toISOString(),
-        ten_minutes_ago: new Date(Date.now() - 10 * 60 * 1000).toISOString()
-      }
+        ten_minutes_ago: new Date(Date.now() - 10 * 60 * 1000).toISOString(),
+      },
     });
-
   } catch (error) {
-    logger.error("Error checking notifications with settings", "CheckNotificationsWithSettings", error);
+    logger.error(
+      "Error checking notifications with settings",
+      "CheckNotificationsWithSettings",
+      error
+    );
     return res.status(500).json({
       success: false,
       message: "Failed to check notifications",
       error: error instanceof Error ? error.message : "Unknown error",
-      details: error instanceof Error ? error.stack : undefined
+      details: error instanceof Error ? error.stack : undefined,
     });
   }
-} 
+}

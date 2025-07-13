@@ -2,19 +2,19 @@ import React, { useState, useEffect, useRef } from "react";
 import { useSession } from "next-auth/react";
 import { useTheme } from "../../../context/ThemeContext";
 import { useGoogleMap } from "../../../context/GoogleMapProvider";
-import { 
-  Toggle, 
-  Button, 
-  Message, 
-  Loader, 
-  Input, 
+import {
+  Toggle,
+  Button,
+  Message,
+  Loader,
+  Input,
   InputGroup,
   Tag,
   IconButton,
   Modal,
   Form,
   SelectPicker,
-  List
+  List,
 } from "rsuite";
 import PlusIcon from "@rsuite/icons/Plus";
 import CloseIcon from "@rsuite/icons/Close";
@@ -78,9 +78,12 @@ export default function NotificationTab() {
   });
 
   // Google Maps Autocomplete refs
-  const autocompleteServiceRef = useRef<google.maps.places.AutocompleteService | null>(null);
+  const autocompleteServiceRef =
+    useRef<google.maps.places.AutocompleteService | null>(null);
   const geocoderRef = useRef<google.maps.Geocoder | null>(null);
-  const [suggestions, setSuggestions] = useState<google.maps.places.AutocompletePrediction[]>([]);
+  const [suggestions, setSuggestions] = useState<
+    google.maps.places.AutocompletePrediction[]
+  >([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
 
   // Load existing settings
@@ -93,7 +96,8 @@ export default function NotificationTab() {
   // Initialize Google Maps services
   useEffect(() => {
     if (isGoogleMapsLoaded && !autocompleteServiceRef.current) {
-      autocompleteServiceRef.current = new google.maps.places.AutocompleteService();
+      autocompleteServiceRef.current =
+        new google.maps.places.AutocompleteService();
       geocoderRef.current = new google.maps.Geocoder();
     }
   }, [isGoogleMapsLoaded]);
@@ -101,17 +105,20 @@ export default function NotificationTab() {
   // Handle address input change for autocomplete
   const handleAddressChange = (value: string | null) => {
     const address = value || "";
-    setNewLocation(prev => ({ ...prev, address }));
-    
+    setNewLocation((prev) => ({ ...prev, address }));
+
     if (address && autocompleteServiceRef.current) {
       autocompleteServiceRef.current.getPlacePredictions(
-        { 
-          input: address, 
+        {
+          input: address,
           componentRestrictions: { country: ["rw"] },
-          types: ['address']
+          types: ["address"],
         },
         (predictions, status) => {
-          if (status === google.maps.places.PlacesServiceStatus.OK && predictions) {
+          if (
+            status === google.maps.places.PlacesServiceStatus.OK &&
+            predictions
+          ) {
             setSuggestions(predictions);
             setShowSuggestions(true);
           } else {
@@ -127,11 +134,13 @@ export default function NotificationTab() {
   };
 
   // Handle selecting a suggestion
-  const handleSelectSuggestion = (suggestion: google.maps.places.AutocompletePrediction) => {
-    setNewLocation(prev => ({ ...prev, address: suggestion.description }));
+  const handleSelectSuggestion = (
+    suggestion: google.maps.places.AutocompletePrediction
+  ) => {
+    setNewLocation((prev) => ({ ...prev, address: suggestion.description }));
     setSuggestions([]);
     setShowSuggestions(false);
-    
+
     // Geocode to get coordinates
     if (geocoderRef.current) {
       geocoderRef.current.geocode(
@@ -140,10 +149,14 @@ export default function NotificationTab() {
           if (status === "OK" && results && results[0]) {
             const lat = results[0].geometry.location.lat();
             const lng = results[0].geometry.location.lng();
-            const address = results[0].formatted_address || suggestion.description;
-            const name = suggestion.structured_formatting?.main_text || address.split(',')[0] || 'Custom Location';
+            const address =
+              results[0].formatted_address || suggestion.description;
+            const name =
+              suggestion.structured_formatting?.main_text ||
+              address.split(",")[0] ||
+              "Custom Location";
 
-            setNewLocation(prev => ({
+            setNewLocation((prev) => ({
               ...prev,
               name: name,
               address: address,
@@ -161,15 +174,18 @@ export default function NotificationTab() {
   const loadNotificationSettings = async () => {
     try {
       setLoading(true);
-      const response = await fetch("/api/queries/shopper-notification-settings", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          user_id: session?.user?.id,
-        }),
-      });
+      const response = await fetch(
+        "/api/queries/shopper-notification-settings",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            user_id: session?.user?.id,
+          }),
+        }
+      );
 
       const data = await response.json();
 
@@ -204,27 +220,30 @@ export default function NotificationTab() {
   const saveNotificationSettings = async () => {
     try {
       setSaving(true);
-      const response = await fetch("/api/mutations/shopper-notification-settings", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          user_id: session?.user?.id,
-          use_live_location: settings.use_live_location,
-          custom_locations: settings.custom_locations,
-          max_distance: settings.max_distance,
-          notification_types: settings.notification_types,
-          sound_settings: settings.sound_settings,
-        }),
-      });
+      const response = await fetch(
+        "/api/mutations/shopper-notification-settings",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            user_id: session?.user?.id,
+            use_live_location: settings.use_live_location,
+            custom_locations: settings.custom_locations,
+            max_distance: settings.max_distance,
+            notification_types: settings.notification_types,
+            sound_settings: settings.sound_settings,
+          }),
+        }
+      );
 
       const data = await response.json();
 
       if (data.success) {
         toast.success("Notification settings saved successfully!");
         if (data.settings?.id) {
-          setSettings(prev => ({ ...prev, id: data.settings.id }));
+          setSettings((prev) => ({ ...prev, id: data.settings.id }));
         }
       } else {
         toast.error(data.message || "Failed to save notification settings");
@@ -238,7 +257,7 @@ export default function NotificationTab() {
   };
 
   const handleLocationToggle = (checked: boolean) => {
-    setSettings(prev => ({
+    setSettings((prev) => ({
       ...prev,
       use_live_location: checked,
       // If enabling live location, disable custom locations
@@ -246,8 +265,11 @@ export default function NotificationTab() {
     }));
   };
 
-  const handleNotificationTypeToggle = (type: keyof typeof settings.notification_types, checked: boolean) => {
-    setSettings(prev => ({
+  const handleNotificationTypeToggle = (
+    type: keyof typeof settings.notification_types,
+    checked: boolean
+  ) => {
+    setSettings((prev) => ({
       ...prev,
       notification_types: {
         ...prev.notification_types,
@@ -257,7 +279,7 @@ export default function NotificationTab() {
   };
 
   const handleMaxDistanceChange = (value: string | null) => {
-    setSettings(prev => ({
+    setSettings((prev) => ({
       ...prev,
       max_distance: value || "10",
     }));
@@ -287,7 +309,7 @@ export default function NotificationTab() {
       longitude: parseFloat(newLocation.longitude),
     };
 
-    setSettings(prev => ({
+    setSettings((prev) => ({
       ...prev,
       custom_locations: [...prev.custom_locations, location],
       // Automatically disable live location when adding custom locations
@@ -307,9 +329,11 @@ export default function NotificationTab() {
   };
 
   const removeCustomLocation = (locationId: string) => {
-    setSettings(prev => ({
+    setSettings((prev) => ({
       ...prev,
-      custom_locations: prev.custom_locations.filter(loc => loc.id !== locationId),
+      custom_locations: prev.custom_locations.filter(
+        (loc) => loc.id !== locationId
+      ),
     }));
     toast.success("Location removed successfully!");
   };
@@ -340,31 +364,46 @@ export default function NotificationTab() {
       >
         Notification Settings
       </h3>
-      <p className={`mb-6 ${theme === "dark" ? "text-gray-300" : "text-gray-600"}`}>
-        Configure how you receive notifications for orders and batches based on your location preferences.
+      <p
+        className={`mb-6 ${
+          theme === "dark" ? "text-gray-300" : "text-gray-600"
+        }`}
+      >
+        Configure how you receive notifications for orders and batches based on
+        your location preferences.
       </p>
 
       {/* Location Settings */}
-      <div className={`mb-6 rounded-lg border p-4 ${
-        theme === "dark" ? "border-gray-700 bg-gray-800" : "border-gray-200 bg-white"
-      }`}>
-        <h4 className={`mb-4 font-medium ${
-          theme === "dark" ? "text-white" : "text-gray-900"
-        }`}>
+      <div
+        className={`mb-6 rounded-lg border p-4 ${
+          theme === "dark"
+            ? "border-gray-700 bg-gray-800"
+            : "border-gray-200 bg-white"
+        }`}
+      >
+        <h4
+          className={`mb-4 font-medium ${
+            theme === "dark" ? "text-white" : "text-gray-900"
+          }`}
+        >
           Location Preferences
         </h4>
 
         <div className="mb-4">
           <div className="flex items-center justify-between">
             <div>
-              <span className={`font-medium ${
-                theme === "dark" ? "text-white" : "text-gray-900"
-              }`}>
+              <span
+                className={`font-medium ${
+                  theme === "dark" ? "text-white" : "text-gray-900"
+                }`}
+              >
                 Use Live Location
               </span>
-              <p className={`text-sm ${
-                theme === "dark" ? "text-gray-400" : "text-gray-600"
-              }`}>
+              <p
+                className={`text-sm ${
+                  theme === "dark" ? "text-gray-400" : "text-gray-600"
+                }`}
+              >
                 Receive notifications based on your current GPS location
               </p>
             </div>
@@ -379,9 +418,11 @@ export default function NotificationTab() {
         {!settings.use_live_location && (
           <div className="mt-4">
             <div className="mb-3 flex items-center justify-between">
-              <span className={`font-medium ${
-                theme === "dark" ? "text-white" : "text-gray-900"
-              }`}>
+              <span
+                className={`font-medium ${
+                  theme === "dark" ? "text-white" : "text-gray-900"
+                }`}
+              >
                 Custom Locations ({settings.custom_locations.length}/2)
               </span>
               {settings.custom_locations.length < 2 && (
@@ -398,9 +439,11 @@ export default function NotificationTab() {
             </div>
 
             {settings.custom_locations.length === 0 ? (
-              <p className={`text-sm italic ${
-                theme === "dark" ? "text-gray-400" : "text-gray-500"
-              }`}>
+              <p
+                className={`text-sm italic ${
+                  theme === "dark" ? "text-gray-400" : "text-gray-500"
+                }`}
+              >
                 No custom locations added. You can add up to 2 locations.
               </p>
             ) : (
@@ -409,18 +452,24 @@ export default function NotificationTab() {
                   <div
                     key={location.id}
                     className={`flex items-center justify-between rounded border p-3 ${
-                      theme === "dark" ? "border-gray-600 bg-gray-700" : "border-gray-200 bg-gray-50"
+                      theme === "dark"
+                        ? "border-gray-600 bg-gray-700"
+                        : "border-gray-200 bg-gray-50"
                     }`}
                   >
                     <div>
-                      <div className={`font-medium ${
-                        theme === "dark" ? "text-white" : "text-gray-900"
-                      }`}>
+                      <div
+                        className={`font-medium ${
+                          theme === "dark" ? "text-white" : "text-gray-900"
+                        }`}
+                      >
                         {location.name}
                       </div>
-                      <div className={`text-sm ${
-                        theme === "dark" ? "text-gray-400" : "text-gray-600"
-                      }`}>
+                      <div
+                        className={`text-sm ${
+                          theme === "dark" ? "text-gray-400" : "text-gray-600"
+                        }`}
+                      >
                         {location.address}
                       </div>
                     </div>
@@ -440,17 +489,25 @@ export default function NotificationTab() {
       </div>
 
       {/* Distance Settings */}
-      <div className={`mb-6 rounded-lg border p-4 ${
-        theme === "dark" ? "border-gray-700 bg-gray-800" : "border-gray-200 bg-white"
-      }`}>
-        <h4 className={`mb-4 font-medium ${
-          theme === "dark" ? "text-white" : "text-gray-900"
-        }`}>
+      <div
+        className={`mb-6 rounded-lg border p-4 ${
+          theme === "dark"
+            ? "border-gray-700 bg-gray-800"
+            : "border-gray-200 bg-white"
+        }`}
+      >
+        <h4
+          className={`mb-4 font-medium ${
+            theme === "dark" ? "text-white" : "text-gray-900"
+          }`}
+        >
           Maximum Distance
         </h4>
-        <p className={`mb-3 text-sm ${
-          theme === "dark" ? "text-gray-400" : "text-gray-600"
-        }`}>
+        <p
+          className={`mb-3 text-sm ${
+            theme === "dark" ? "text-gray-400" : "text-gray-600"
+          }`}
+        >
           Maximum distance to receive notifications for orders and batches
         </p>
         <SelectPicker
@@ -464,91 +521,121 @@ export default function NotificationTab() {
       </div>
 
       {/* Notification Types */}
-      <div className={`mb-6 rounded-lg border p-4 ${
-        theme === "dark" ? "border-gray-700 bg-gray-800" : "border-gray-200 bg-white"
-      }`}>
-        <h4 className={`mb-4 font-medium ${
-          theme === "dark" ? "text-white" : "text-gray-900"
-        }`}>
+      <div
+        className={`mb-6 rounded-lg border p-4 ${
+          theme === "dark"
+            ? "border-gray-700 bg-gray-800"
+            : "border-gray-200 bg-white"
+        }`}
+      >
+        <h4
+          className={`mb-4 font-medium ${
+            theme === "dark" ? "text-white" : "text-gray-900"
+          }`}
+        >
           Notification Types
         </h4>
         <div className="space-y-3">
           <div className="flex items-center justify-between">
             <div>
-              <span className={`font-medium ${
-                theme === "dark" ? "text-white" : "text-gray-900"
-              }`}>
+              <span
+                className={`font-medium ${
+                  theme === "dark" ? "text-white" : "text-gray-900"
+                }`}
+              >
                 New Orders
               </span>
-              <p className={`text-sm ${
-                theme === "dark" ? "text-gray-400" : "text-gray-600"
-              }`}>
+              <p
+                className={`text-sm ${
+                  theme === "dark" ? "text-gray-400" : "text-gray-600"
+                }`}
+              >
                 Receive notifications for new individual orders
               </p>
             </div>
             <Toggle
               checked={settings.notification_types.orders}
-              onChange={(checked) => handleNotificationTypeToggle("orders", checked)}
+              onChange={(checked) =>
+                handleNotificationTypeToggle("orders", checked)
+              }
               size="md"
             />
           </div>
 
           <div className="flex items-center justify-between">
             <div>
-              <span className={`font-medium ${
-                theme === "dark" ? "text-white" : "text-gray-900"
-              }`}>
+              <span
+                className={`font-medium ${
+                  theme === "dark" ? "text-white" : "text-gray-900"
+                }`}
+              >
                 Batch Orders
               </span>
-              <p className={`text-sm ${
-                theme === "dark" ? "text-gray-400" : "text-gray-600"
-              }`}>
+              <p
+                className={`text-sm ${
+                  theme === "dark" ? "text-gray-400" : "text-gray-600"
+                }`}
+              >
                 Receive notifications for batch orders (multiple orders)
               </p>
             </div>
             <Toggle
               checked={settings.notification_types.batches}
-              onChange={(checked) => handleNotificationTypeToggle("batches", checked)}
+              onChange={(checked) =>
+                handleNotificationTypeToggle("batches", checked)
+              }
               size="md"
             />
           </div>
 
           <div className="flex items-center justify-between">
             <div>
-              <span className={`font-medium ${
-                theme === "dark" ? "text-white" : "text-gray-900"
-              }`}>
+              <span
+                className={`font-medium ${
+                  theme === "dark" ? "text-white" : "text-gray-900"
+                }`}
+              >
                 Earnings Updates
               </span>
-              <p className={`text-sm ${
-                theme === "dark" ? "text-gray-400" : "text-gray-600"
-              }`}>
+              <p
+                className={`text-sm ${
+                  theme === "dark" ? "text-gray-400" : "text-gray-600"
+                }`}
+              >
                 Receive notifications about your earnings and payments
               </p>
             </div>
             <Toggle
               checked={settings.notification_types.earnings}
-              onChange={(checked) => handleNotificationTypeToggle("earnings", checked)}
+              onChange={(checked) =>
+                handleNotificationTypeToggle("earnings", checked)
+              }
               size="md"
             />
           </div>
 
           <div className="flex items-center justify-between">
             <div>
-              <span className={`font-medium ${
-                theme === "dark" ? "text-white" : "text-gray-900"
-              }`}>
+              <span
+                className={`font-medium ${
+                  theme === "dark" ? "text-white" : "text-gray-900"
+                }`}
+              >
                 System Notifications
               </span>
-              <p className={`text-sm ${
-                theme === "dark" ? "text-gray-400" : "text-gray-600"
-              }`}>
+              <p
+                className={`text-sm ${
+                  theme === "dark" ? "text-gray-400" : "text-gray-600"
+                }`}
+              >
                 Receive important system updates and announcements
               </p>
             </div>
             <Toggle
               checked={settings.notification_types.system}
-              onChange={(checked) => handleNotificationTypeToggle("system", checked)}
+              onChange={(checked) =>
+                handleNotificationTypeToggle("system", checked)
+              }
               size="md"
             />
           </div>
@@ -556,46 +643,60 @@ export default function NotificationTab() {
       </div>
 
       {/* Sound Settings */}
-      <div className={`mb-6 rounded-lg border p-4 ${
-        theme === "dark" ? "border-gray-700 bg-gray-800" : "border-gray-200 bg-white"
-      }`}>
-        <h4 className={`mb-4 font-medium ${
-          theme === "dark" ? "text-white" : "text-gray-900"
-        }`}>
+      <div
+        className={`mb-6 rounded-lg border p-4 ${
+          theme === "dark"
+            ? "border-gray-700 bg-gray-800"
+            : "border-gray-200 bg-white"
+        }`}
+      >
+        <h4
+          className={`mb-4 font-medium ${
+            theme === "dark" ? "text-white" : "text-gray-900"
+          }`}
+        >
           Sound Settings
         </h4>
         <div className="space-y-3">
           <div className="flex items-center justify-between">
             <div>
-              <span className={`font-medium ${
-                theme === "dark" ? "text-white" : "text-gray-900"
-              }`}>
+              <span
+                className={`font-medium ${
+                  theme === "dark" ? "text-white" : "text-gray-900"
+                }`}
+              >
                 Enable Sound Notifications
               </span>
-              <p className={`text-sm ${
-                theme === "dark" ? "text-gray-400" : "text-gray-600"
-              }`}>
+              <p
+                className={`text-sm ${
+                  theme === "dark" ? "text-gray-400" : "text-gray-600"
+                }`}
+              >
                 Play sound when receiving new order notifications
               </p>
             </div>
             <Toggle
               checked={settings.sound_settings.enabled}
-              onChange={(checked) => setSettings(prev => ({
-                ...prev,
-                sound_settings: {
-                  ...prev.sound_settings,
-                  enabled: checked
-                }
-              }))}
+              onChange={(checked) =>
+                setSettings((prev) => ({
+                  ...prev,
+                  sound_settings: {
+                    ...prev.sound_settings,
+                    enabled: checked,
+                  },
+                }))
+              }
               size="md"
             />
           </div>
-          
+
           {settings.sound_settings.enabled && (
             <div>
-              <span className={`text-sm font-medium ${
-                theme === "dark" ? "text-white" : "text-gray-900"
-              }`}>
+              <span
+                className={`text-sm font-medium ${
+                  theme === "dark" ? "text-white" : "text-gray-900"
+                }`}
+              >
                 Sound Volume
               </span>
               <div className="mt-2">
@@ -604,18 +705,22 @@ export default function NotificationTab() {
                   min="0"
                   max="100"
                   value={settings.sound_settings.volume * 100}
-                  onChange={(e) => setSettings(prev => ({
-                    ...prev,
-                    sound_settings: {
-                      ...prev.sound_settings,
-                      volume: parseInt(e.target.value) / 100
-                    }
-                  }))}
-                  className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer dark:bg-gray-700"
+                  onChange={(e) =>
+                    setSettings((prev) => ({
+                      ...prev,
+                      sound_settings: {
+                        ...prev.sound_settings,
+                        volume: parseInt(e.target.value) / 100,
+                      },
+                    }))
+                  }
+                  className="h-2 w-full cursor-pointer appearance-none rounded-lg bg-gray-200 dark:bg-gray-700"
                 />
-                <div className={`text-xs mt-1 ${
-                  theme === "dark" ? "text-gray-400" : "text-gray-600"
-                }`}>
+                <div
+                  className={`mt-1 text-xs ${
+                    theme === "dark" ? "text-gray-400" : "text-gray-600"
+                  }`}
+                >
                   Volume: {Math.round(settings.sound_settings.volume * 100)}%
                 </div>
               </div>
@@ -652,12 +757,16 @@ export default function NotificationTab() {
               <Form.ControlLabel>Location Name</Form.ControlLabel>
               <Input
                 value={newLocation.name}
-                onChange={(value: string | null) => setNewLocation(prev => ({ ...prev, name: value || "" }))}
+                onChange={(value: string | null) =>
+                  setNewLocation((prev) => ({ ...prev, name: value || "" }))
+                }
                 placeholder="e.g., Home, Work, Downtown"
               />
             </Form.Group>
             <Form.Group className="relative">
-              <Form.ControlLabel>Address (Google Maps Autocomplete)</Form.ControlLabel>
+              <Form.ControlLabel>
+                Address (Google Maps Autocomplete)
+              </Form.ControlLabel>
               <Input
                 value={newLocation.address}
                 onChange={handleAddressChange}
@@ -665,33 +774,43 @@ export default function NotificationTab() {
                 disabled={!isGoogleMapsLoaded}
               />
               {!isGoogleMapsLoaded && (
-                <p className="text-xs text-gray-500 mt-1">
+                <p className="mt-1 text-xs text-gray-500">
                   Loading Google Maps...
                 </p>
               )}
-              
+
               {/* Suggestions dropdown */}
               {showSuggestions && suggestions.length > 0 && (
-                <div className={`absolute z-50 mt-1 w-full rounded border shadow-lg ${
-                  theme === "dark" ? "border-gray-600 bg-gray-700" : "border-gray-200 bg-white"
-                }`}>
+                <div
+                  className={`absolute z-50 mt-1 w-full rounded border shadow-lg ${
+                    theme === "dark"
+                      ? "border-gray-600 bg-gray-700"
+                      : "border-gray-200 bg-white"
+                  }`}
+                >
                   <List>
                     {suggestions.map((suggestion, index) => (
                       <List.Item
                         key={index}
                         onClick={() => handleSelectSuggestion(suggestion)}
                         className={`cursor-pointer p-2 hover:bg-gray-100 ${
-                          theme === "dark" ? "hover:bg-gray-600" : "hover:bg-gray-100"
+                          theme === "dark"
+                            ? "hover:bg-gray-600"
+                            : "hover:bg-gray-100"
                         }`}
                       >
-                        <div className={`text-sm ${
-                          theme === "dark" ? "text-white" : "text-gray-900"
-                        }`}>
+                        <div
+                          className={`text-sm ${
+                            theme === "dark" ? "text-white" : "text-gray-900"
+                          }`}
+                        >
                           {suggestion.structured_formatting?.main_text}
                         </div>
-                        <div className={`text-xs ${
-                          theme === "dark" ? "text-gray-400" : "text-gray-600"
-                        }`}>
+                        <div
+                          className={`text-xs ${
+                            theme === "dark" ? "text-gray-400" : "text-gray-600"
+                          }`}
+                        >
                           {suggestion.structured_formatting?.secondary_text}
                         </div>
                       </List.Item>
@@ -701,11 +820,18 @@ export default function NotificationTab() {
               )}
             </Form.Group>
             <Form.Group>
-              <Form.ControlLabel>Coordinates (Auto-filled from address)</Form.ControlLabel>
+              <Form.ControlLabel>
+                Coordinates (Auto-filled from address)
+              </Form.ControlLabel>
               <div className="flex gap-2">
                 <Input
                   value={newLocation.latitude}
-                  onChange={(value: string | null) => setNewLocation(prev => ({ ...prev, latitude: value || "" }))}
+                  onChange={(value: string | null) =>
+                    setNewLocation((prev) => ({
+                      ...prev,
+                      latitude: value || "",
+                    }))
+                  }
                   placeholder="Latitude"
                   type="number"
                   step="any"
@@ -713,15 +839,21 @@ export default function NotificationTab() {
                 />
                 <Input
                   value={newLocation.longitude}
-                  onChange={(value: string | null) => setNewLocation(prev => ({ ...prev, longitude: value || "" }))}
+                  onChange={(value: string | null) =>
+                    setNewLocation((prev) => ({
+                      ...prev,
+                      longitude: value || "",
+                    }))
+                  }
                   placeholder="Longitude"
                   type="number"
                   step="any"
                   readOnly
                 />
               </div>
-              <p className="text-xs text-gray-500 mt-1">
-                Coordinates are automatically filled when you select an address from the dropdown.
+              <p className="mt-1 text-xs text-gray-500">
+                Coordinates are automatically filled when you select an address
+                from the dropdown.
               </p>
             </Form.Group>
           </Form>
@@ -730,15 +862,23 @@ export default function NotificationTab() {
           <Button
             appearance="primary"
             onClick={addCustomLocation}
-            disabled={!newLocation.name || !newLocation.address || !newLocation.latitude || !newLocation.longitude}
+            disabled={
+              !newLocation.name ||
+              !newLocation.address ||
+              !newLocation.latitude ||
+              !newLocation.longitude
+            }
           >
             Add Location
           </Button>
-          <Button appearance="subtle" onClick={() => setShowLocationModal(false)}>
+          <Button
+            appearance="subtle"
+            onClick={() => setShowLocationModal(false)}
+          >
             Cancel
           </Button>
         </Modal.Footer>
       </Modal>
     </div>
   );
-} 
+}

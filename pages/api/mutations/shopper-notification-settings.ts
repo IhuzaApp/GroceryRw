@@ -47,7 +47,9 @@ export default async function handler(
       }
     `;
 
-    const checkResponse = await hasuraClient.request(checkQuery, { user_id }) as any;
+    const checkResponse = (await hasuraClient.request(checkQuery, {
+      user_id,
+    })) as any;
     const existingSettings = checkResponse.shopper_notification_settings;
 
     let result;
@@ -88,7 +90,8 @@ export default async function handler(
 
       const updateVariables = {
         id: existingSettings[0].id,
-        use_live_location: use_live_location !== undefined ? use_live_location : true,
+        use_live_location:
+          use_live_location !== undefined ? use_live_location : true,
         custom_locations: custom_locations || [],
         max_distance: max_distance || "10",
         notification_types: notification_types || {
@@ -103,7 +106,10 @@ export default async function handler(
         },
       };
 
-      result = await hasuraClient.request(updateQuery, updateVariables) as any;
+      result = (await hasuraClient.request(
+        updateQuery,
+        updateVariables
+      )) as any;
     } else {
       // Insert new settings
       const insertQuery = `
@@ -138,7 +144,8 @@ export default async function handler(
 
       const insertVariables = {
         user_id,
-        use_live_location: use_live_location !== undefined ? use_live_location : true,
+        use_live_location:
+          use_live_location !== undefined ? use_live_location : true,
         custom_locations: custom_locations || [],
         max_distance: max_distance || "10",
         notification_types: notification_types || {
@@ -153,13 +160,18 @@ export default async function handler(
         },
       };
 
-      result = await hasuraClient.request(insertQuery, insertVariables) as any;
+      result = (await hasuraClient.request(
+        insertQuery,
+        insertVariables
+      )) as any;
     }
 
     return res.status(200).json({
       success: true,
       message: "Notification settings saved successfully",
-      settings: result.insert_shopper_notification_settings_one || result.update_shopper_notification_settings_by_pk,
+      settings:
+        result.insert_shopper_notification_settings_one ||
+        result.update_shopper_notification_settings_by_pk,
     });
   } catch (error) {
     console.error("Error saving notification settings:", error);
@@ -168,4 +180,4 @@ export default async function handler(
       message: "Failed to save notification settings",
     });
   }
-} 
+}

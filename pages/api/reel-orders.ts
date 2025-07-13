@@ -82,8 +82,9 @@ export default async function handler(
     !delivery_time ||
     !delivery_address_id
   ) {
-    return res.status(400).json({ 
-      error: "Missing required fields: reel_id, quantity, total, service_fee, delivery_fee, delivery_time, delivery_address_id" 
+    return res.status(400).json({
+      error:
+        "Missing required fields: reel_id, quantity, total, service_fee, delivery_fee, delivery_time, delivery_address_id",
     });
   }
 
@@ -124,4 +125,4 @@ export default async function handler(
       error: error.message || "Failed to place reel order",
     });
   }
-} 
+}

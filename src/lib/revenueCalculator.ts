@@ -89,12 +89,15 @@ export class RevenueCalculator {
     final_price: number;
     profit: number;
   }> {
-    return items.map(item => ({
+    return items.map((item) => ({
       product: item.Product.name || "Unknown Product",
       quantity: item.quantity,
       price: parseFloat(item.Product.price),
       final_price: parseFloat(item.Product.final_price),
-      profit: (parseFloat(item.Product.final_price) - parseFloat(item.Product.price)) * item.quantity
+      profit:
+        (parseFloat(item.Product.final_price) -
+          parseFloat(item.Product.price)) *
+        item.quantity,
     }));
   }
 

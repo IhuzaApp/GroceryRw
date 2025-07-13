@@ -295,7 +295,6 @@ export default function BatchDetails({
         throw new Error("No invoice data returned");
       }
 
-
       setInvoiceData(invoice);
       setShowInvoiceModal(true);
       return true;
@@ -320,7 +319,6 @@ export default function BatchDetails({
     try {
       setInvoiceLoading(true);
 
-
       // Make API request to generate invoice and save to database
       const invoiceResponse = await fetch("/api/invoices/generate", {
         method: "POST",
@@ -340,7 +338,6 @@ export default function BatchDetails({
       }
 
       const invoiceResult = await invoiceResponse.json();
-
 
       if (invoiceResult.success && invoiceResult.invoice) {
         setInvoiceData(invoiceResult.invoice);
@@ -444,8 +441,6 @@ export default function BatchDetails({
       const orderAmount = calculateFoundItemsTotal();
       // Get the original order total for refund calculation
       const originalOrderTotal = calculateOriginalSubtotal();
-
-
 
       // Make API request to update wallet balance and process payment
       let paymentSuccess = false;
@@ -817,9 +812,10 @@ export default function BatchDetails({
             </Button>
           );
         }
-        
+
         // For regular orders, check if any items are marked as found
-        const hasFoundItems = order.Order_Items?.some((item) => item.found) || false;
+        const hasFoundItems =
+          order.Order_Items?.some((item) => item.found) || false;
 
         return (
           <Button
@@ -895,7 +891,7 @@ export default function BatchDetails({
   // Helper function to get status tag with appropriate color
   const getStatusTag = (status: string) => {
     const isReelOrder = order?.orderType === "reel";
-    
+
     switch (status) {
       case "accepted":
         return <Tag color={isReelOrder ? "violet" : "blue"}>Accepted</Tag>;
@@ -1053,7 +1049,9 @@ export default function BatchDetails({
 
       <Panel
         bordered
-        header={`${order.orderType === "reel" ? "Reel " : ""}Order #${order.OrderID || order.id.slice(0, 8)}`}
+        header={`${order.orderType === "reel" ? "Reel " : ""}Order #${
+          order.OrderID || order.id.slice(0, 8)
+        }`}
         className={`${
           theme === "dark" ? "bg-gray-800 text-gray-100" : ""
         } w-full min-w-0 p-1 sm:p-6`}
@@ -1100,23 +1098,40 @@ export default function BatchDetails({
                       />
                     ) : (
                       <div className="flex h-full w-full items-center justify-center bg-gray-300">
-                        <svg className="h-8 w-8 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14.828 14.828a4 4 0 01-5.656 0M9 10h1m4 0h1m-6 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        <svg
+                          className="h-8 w-8 text-gray-500"
+                          fill="none"
+                          viewBox="0 0 24 24"
+                          stroke="currentColor"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M14.828 14.828a4 4 0 01-5.656 0M9 10h1m4 0h1m-6 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                          />
                         </svg>
                       </div>
                     )}
                   </div>
-                  
+
                   {/* Reel Info */}
                   <div className="flex-1">
-                    <h4 className="text-lg font-semibold text-gray-900 dark:text-white">{order.reel?.title}</h4>
-                    <p className="text-sm text-gray-600 dark:text-gray-400">{order.reel?.description}</p>
+                    <h4 className="text-lg font-semibold text-gray-900 dark:text-white">
+                      {order.reel?.title}
+                    </h4>
+                    <p className="text-sm text-gray-600 dark:text-gray-400">
+                      {order.reel?.description}
+                    </p>
                     <div className="mt-2 flex items-center gap-4 text-sm text-gray-500 dark:text-gray-400">
                       <span>Type: {order.reel?.type}</span>
                       <span>Quantity: {order.quantity}</span>
                     </div>
                     <div className="mt-2 text-sm">
-                      <span className="font-medium">Price: {formatCurrency(parseFloat(order.reel?.Price || "0"))}</span>
+                      <span className="font-medium">
+                        Price:{" "}
+                        {formatCurrency(parseFloat(order.reel?.Price || "0"))}
+                      </span>
                     </div>
                     {order.reel?.Restaurant && (
                       <div className="mt-2 text-sm text-gray-500 dark:text-gray-400">
@@ -1176,7 +1191,14 @@ export default function BatchDetails({
                 </div>
               </div>
             )}
-            <Link href={getDirectionsUrl(order.orderType === "reel" ? order.reel?.Restaurant?.location || order.address.street : order.shop?.address || order.address.street)} target="_blank">
+            <Link
+              href={getDirectionsUrl(
+                order.orderType === "reel"
+                  ? order.reel?.Restaurant?.location || order.address.street
+                  : order.shop?.address || order.address.street
+              )}
+              target="_blank"
+            >
               <Button
                 appearance="ghost"
                 className={`mt-3 w-full sm:w-auto ${
@@ -1195,7 +1217,9 @@ export default function BatchDetails({
                     <circle cx="12" cy="10" r="3" />
                   </svg>
                 </span>
-                {order.orderType === "reel" ? "Navigate to Customer" : "Navigate to Shop"}
+                {order.orderType === "reel"
+                  ? "Navigate to Customer"
+                  : "Navigate to Shop"}
               </Button>
             </Link>
           </div>
@@ -1390,23 +1414,40 @@ export default function BatchDetails({
                       />
                     ) : (
                       <div className="flex h-full w-full items-center justify-center bg-gray-300">
-                        <svg className="h-8 w-8 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14.828 14.828a4 4 0 01-5.656 0M9 10h1m4 0h1m-6 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        <svg
+                          className="h-8 w-8 text-gray-500"
+                          fill="none"
+                          viewBox="0 0 24 24"
+                          stroke="currentColor"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M14.828 14.828a4 4 0 01-5.656 0M9 10h1m4 0h1m-6 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                          />
                         </svg>
                       </div>
                     )}
                   </div>
-                  
+
                   {/* Reel Info */}
                   <div className="flex-1">
-                    <h4 className="text-lg font-semibold text-gray-900 dark:text-white">{order.reel?.title}</h4>
-                    <p className="text-sm text-gray-600 dark:text-gray-400">{order.reel?.description}</p>
+                    <h4 className="text-lg font-semibold text-gray-900 dark:text-white">
+                      {order.reel?.title}
+                    </h4>
+                    <p className="text-sm text-gray-600 dark:text-gray-400">
+                      {order.reel?.description}
+                    </p>
                     <div className="mt-2 flex items-center gap-4 text-sm text-gray-500 dark:text-gray-400">
                       <span>Type: {order.reel?.type}</span>
                       <span>Quantity: {order.quantity}</span>
                     </div>
                     <div className="mt-2 text-sm">
-                      <span className="font-medium">Price: {formatCurrency(parseFloat(order.reel?.Price || "0"))}</span>
+                      <span className="font-medium">
+                        Price:{" "}
+                        {formatCurrency(parseFloat(order.reel?.Price || "0"))}
+                      </span>
                     </div>
                   </div>
                 </div>
@@ -1629,7 +1670,9 @@ export default function BatchDetails({
                 <>
                   <div className="flex justify-between">
                     <span>Base Price</span>
-                    <span>{formatCurrency(parseFloat(order.reel?.Price || "0"))}</span>
+                    <span>
+                      {formatCurrency(parseFloat(order.reel?.Price || "0"))}
+                    </span>
                   </div>
                   <div className="flex justify-between">
                     <span>Quantity</span>
@@ -1637,15 +1680,24 @@ export default function BatchDetails({
                   </div>
                   <div className="flex justify-between">
                     <span>Subtotal</span>
-                    <span>{formatCurrency(parseFloat(order.reel?.Price || "0") * (order.quantity || 1))}</span>
+                    <span>
+                      {formatCurrency(
+                        parseFloat(order.reel?.Price || "0") *
+                          (order.quantity || 1)
+                      )}
+                    </span>
                   </div>
                   <div className="flex justify-between">
                     <span>Service Fee</span>
-                    <span>{formatCurrency(parseFloat(order.serviceFee || "0"))}</span>
+                    <span>
+                      {formatCurrency(parseFloat(order.serviceFee || "0"))}
+                    </span>
                   </div>
                   <div className="flex justify-between">
                     <span>Delivery Fee</span>
-                    <span>{formatCurrency(parseFloat(order.deliveryFee || "0"))}</span>
+                    <span>
+                      {formatCurrency(parseFloat(order.deliveryFee || "0"))}
+                    </span>
                   </div>
                   {order.discount > 0 && (
                     <div className="flex justify-between text-green-600">
@@ -1676,8 +1728,9 @@ export default function BatchDetails({
                       <div className="flex justify-between">
                         <span>Items Found</span>
                         <span>
-                          {order.Order_Items?.filter((item) => item.found).length || 0} of{" "}
-                          {order.Order_Items?.length || 0}
+                          {order.Order_Items?.filter((item) => item.found)
+                            .length || 0}{" "}
+                          of {order.Order_Items?.length || 0}
                         </span>
                       </div>
                       <div className="flex justify-between">
@@ -1685,7 +1738,9 @@ export default function BatchDetails({
                         <span>
                           {order.Order_Items?.reduce((total, item) => {
                             if (item.found) {
-                              return total + (item.foundQuantity || item.quantity);
+                              return (
+                                total + (item.foundQuantity || item.quantity)
+                              );
                             }
                             return total;
                           }, 0) || 0}{" "}
@@ -1699,7 +1754,8 @@ export default function BatchDetails({
                       <div className="flex justify-between">
                         <span>Items Not Found</span>
                         <span>
-                          {order.Order_Items?.filter((item) => !item.found).length || 0}
+                          {order.Order_Items?.filter((item) => !item.found)
+                            .length || 0}
                         </span>
                       </div>
                     </>
@@ -1743,13 +1799,13 @@ export default function BatchDetails({
                       }`}
                     >
                       <p>
-                        <strong>Note:</strong> The total reflects only the value of
-                        found items. Service fee (
-                        {formatCurrency(parseFloat(order.serviceFee || "0"))}) and
-                        delivery fee (
-                        {formatCurrency(parseFloat(order.deliveryFee || "0"))}) were
-                        already added to your wallet as earnings when you started
-                        shopping.
+                        <strong>Note:</strong> The total reflects only the value
+                        of found items. Service fee (
+                        {formatCurrency(parseFloat(order.serviceFee || "0"))})
+                        and delivery fee (
+                        {formatCurrency(parseFloat(order.deliveryFee || "0"))})
+                        were already added to your wallet as earnings when you
+                        started shopping.
                       </p>
                     </div>
                   )}

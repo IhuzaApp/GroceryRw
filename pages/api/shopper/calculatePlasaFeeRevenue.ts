@@ -40,7 +40,9 @@ const GET_SYSTEM_CONFIG = gql`
 // Check if plasa fee revenue already exists for this order
 const CHECK_EXISTING_PLASA_FEE_REVENUE = gql`
   query CheckExistingPlasaFeeRevenue($order_id: uuid!) {
-    Revenue(where: { order_id: { _eq: $order_id }, type: { _eq: "plasa_fee" } }) {
+    Revenue(
+      where: { order_id: { _eq: $order_id }, type: { _eq: "plasa_fee" } }
+    ) {
       id
       type
     }
@@ -134,9 +136,10 @@ export default async function handler(
     const systemConfigData = await hasuraClient.request<{
       System_configuratioins: Array<{ deliveryCommissionPercentage: string }>;
     }>(GET_SYSTEM_CONFIG);
-    
+
     const deliveryCommissionPercentage = parseFloat(
-      systemConfigData.System_configuratioins[0]?.deliveryCommissionPercentage || "0"
+      systemConfigData.System_configuratioins[0]
+        ?.deliveryCommissionPercentage || "0"
     );
 
     // Calculate plasa fee
@@ -154,7 +157,7 @@ export default async function handler(
       const shopperData = await hasuraClient.request<{
         shoppers: Array<{ id: string }>;
       }>(GET_SHOPPER_ID, { user_id: order.shopper_id });
-      
+
       if (shopperData.shoppers && shopperData.shoppers.length > 0) {
         shopperId = shopperData.shoppers[0].id;
       }
@@ -182,7 +185,10 @@ export default async function handler(
   } catch (error) {
     console.error("Error calculating plasa fee revenue:", error);
     return res.status(500).json({
-      error: error instanceof Error ? error.message : "Failed to calculate plasa fee revenue",
+      error:
+        error instanceof Error
+          ? error.message
+          : "Failed to calculate plasa fee revenue",
     });
   }
-} 
+}

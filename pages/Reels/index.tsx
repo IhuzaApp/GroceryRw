@@ -373,14 +373,14 @@ interface DatabaseReel {
   }>;
 }
 
-
-
 // Format timestamp to relative time
 const formatTimestamp = (timestamp: string): string => {
   const now = new Date();
   const commentTime = new Date(timestamp);
-  const diffInMinutes = Math.floor((now.getTime() - commentTime.getTime()) / (1000 * 60));
-  
+  const diffInMinutes = Math.floor(
+    (now.getTime() - commentTime.getTime()) / (1000 * 60)
+  );
+
   if (diffInMinutes < 1) return "now";
   if (diffInMinutes < 60) return `${diffInMinutes}m`;
   if (diffInMinutes < 1440) return `${Math.floor(diffInMinutes / 60)}h`;
@@ -388,8 +388,11 @@ const formatTimestamp = (timestamp: string): string => {
 };
 
 // Check if current user has liked a reel
-const checkUserLikeStatus = (reelLikes: Array<{user_id: string}>, currentUserId: string): boolean => {
-  return reelLikes.some(like => like.user_id === currentUserId);
+const checkUserLikeStatus = (
+  reelLikes: Array<{ user_id: string }>,
+  currentUserId: string
+): boolean => {
+  return reelLikes.some((like) => like.user_id === currentUserId);
 };
 
 export default function FoodReelsApp() {
@@ -405,20 +408,26 @@ export default function FoodReelsApp() {
   const [isMobile, setIsMobile] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
   const observerRef = useRef<IntersectionObserver | null>(null);
-  const [optimisticComments, setOptimisticComments] = useState<{ [postId: string]: Comment[] }>({});
+  const [optimisticComments, setOptimisticComments] = useState<{
+    [postId: string]: Comment[];
+  }>({});
 
   // Convert database reel to FoodPost format with current user's like status
   const convertDatabaseReelToFoodPost = (dbReel: DatabaseReel): FoodPost => {
     const currentUserId = session?.user?.id;
-    const userHasLiked = currentUserId ? checkUserLikeStatus(dbReel.reel_likes, currentUserId) : false;
-    
+    const userHasLiked = currentUserId
+      ? checkUserLikeStatus(dbReel.reel_likes, currentUserId)
+      : false;
+
     // Convert comments
     const commentsList: Comment[] = dbReel.Reels_comments.map((comment) => ({
       id: comment.id,
-    user: {
+      user: {
         name: comment.User.name,
-        avatar: comment.User.profile_picture || "/placeholder.svg?height=32&width=32",
-        verified: comment.User.role === "admin" || comment.User.role === "verified",
+        avatar:
+          comment.User.profile_picture || "/placeholder.svg?height=32&width=32",
+        verified:
+          comment.User.role === "admin" || comment.User.role === "verified",
       },
       text: comment.text,
       timestamp: formatTimestamp(comment.created_on),
@@ -430,18 +439,20 @@ export default function FoodReelsApp() {
     const basePost: BasePost = {
       id: dbReel.id,
       type: dbReel.type as PostType,
-    creator: {
+      creator: {
         name: dbReel.User.name,
-        avatar: dbReel.User.profile_picture || "/placeholder.svg?height=40&width=40",
-        verified: dbReel.User.role === "admin" || dbReel.User.role === "verified",
-    },
-    content: {
+        avatar:
+          dbReel.User.profile_picture || "/placeholder.svg?height=40&width=40",
+        verified:
+          dbReel.User.role === "admin" || dbReel.User.role === "verified",
+      },
+      content: {
         title: dbReel.title,
         description: dbReel.description,
         video: dbReel.video_url,
         category: dbReel.category,
-    },
-    stats: {
+      },
+      stats: {
         likes: dbReel.reel_likes.length, // Use actual likes count from reel_likes
         comments: dbReel.Reels_comments.length,
       },
@@ -455,7 +466,7 @@ export default function FoodReelsApp() {
         return {
           ...basePost,
           type: "restaurant",
-    restaurant: {
+          restaurant: {
             rating: 4.5, // Default rating, could be fetched from restaurant data
             reviews: 100, // Default reviews
             location: dbReel.Restaurant?.location || "Location not available",
@@ -468,8 +479,8 @@ export default function FoodReelsApp() {
         const product = dbReel.Product || {};
         return {
           ...basePost,
-    type: "supermarket",
-    product: {
+          type: "supermarket",
+          product: {
             price: parseFloat(dbReel.Price || "0"),
             originalPrice: product.originalPrice || undefined,
             store: dbReel.Restaurant?.name || "Store not available",
@@ -482,8 +493,8 @@ export default function FoodReelsApp() {
         const recipe = dbReel.Product || {};
         return {
           ...basePost,
-    type: "chef",
-    recipe: {
+          type: "chef",
+          recipe: {
             difficulty: recipe.difficulty || "Medium",
             cookTime: recipe.cookTime || "1 hour",
             servings: recipe.servings || 4,
@@ -503,21 +514,21 @@ export default function FoodReelsApp() {
       try {
         setLoading(true);
         setError(null);
-        
-        const response = await fetch('/api/queries/reels');
+
+        const response = await fetch("/api/queries/reels");
         if (!response.ok) {
-          throw new Error('Failed to fetch reels');
+          throw new Error("Failed to fetch reels");
         }
-        
+
         const data = await response.json();
-        const convertedPosts = data.reels.map((reel: DatabaseReel) => 
+        const convertedPosts = data.reels.map((reel: DatabaseReel) =>
           convertDatabaseReelToFoodPost(reel)
         );
-        
+
         setPosts(convertedPosts);
       } catch (err) {
-        console.error('Error fetching reels:', err);
-        setError(err instanceof Error ? err.message : 'Failed to fetch reels');
+        console.error("Error fetching reels:", err);
+        setError(err instanceof Error ? err.message : "Failed to fetch reels");
       } finally {
         setLoading(false);
       }
@@ -625,89 +636,90 @@ export default function FoodReelsApp() {
       if (!currentPost) return;
 
       const isCurrentlyLiked = currentPost.isLiked;
-      
+
       // Immediately update UI for instant feedback
-    setPosts(
+      setPosts(
         posts.map((post: FoodPost) =>
-        post.id === postId
-          ? {
-              ...post,
+          post.id === postId
+            ? {
+                ...post,
                 isLiked: !isCurrentlyLiked,
-              stats: {
-                ...post.stats,
-                  likes: isCurrentlyLiked 
+                stats: {
+                  ...post.stats,
+                  likes: isCurrentlyLiked
                     ? Math.max(0, post.stats.likes - 1)
-                  : post.stats.likes + 1,
-              },
-            }
-          : post
-      )
-    );
+                    : post.stats.likes + 1,
+                },
+              }
+            : post
+        )
+      );
 
       // Process backend request in background
-      const method = isCurrentlyLiked ? 'DELETE' : 'POST';
-      
-      fetch('/api/queries/reel-likes', {
+      const method = isCurrentlyLiked ? "DELETE" : "POST";
+
+      fetch("/api/queries/reel-likes", {
         method,
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          reel_id: postId
+          reel_id: postId,
         }),
-      }).then(response => {
-        if (!response.ok) {
-          console.error('Error toggling like:', response.status);
+      })
+        .then((response) => {
+          if (!response.ok) {
+            console.error("Error toggling like:", response.status);
+            // Optionally revert UI if backend fails
+            // For now, we'll keep the optimistic update
+          }
+        })
+        .catch((error) => {
+          console.error("Error toggling like:", error);
           // Optionally revert UI if backend fails
           // For now, we'll keep the optimistic update
-        }
-      }).catch(error => {
-        console.error('Error toggling like:', error);
-        // Optionally revert UI if backend fails
-        // For now, we'll keep the optimistic update
-      });
-      
+        });
     } catch (error) {
-      console.error('Error toggling like:', error);
+      console.error("Error toggling like:", error);
     }
   };
 
   const toggleCommentLike = async (postId: string, commentId: string) => {
     try {
-      const response = await fetch('/api/queries/reel-comments', {
-        method: 'PUT',
+      const response = await fetch("/api/queries/reel-comments", {
+        method: "PUT",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
         body: JSON.stringify({
           comment_id: commentId,
-          action: 'toggle_like'
+          action: "toggle_like",
         }),
       });
 
       if (response.ok) {
         const result = await response.json();
-    setPosts(
+        setPosts(
           posts.map((post: FoodPost) =>
-        post.id === postId
-          ? {
-              ...post,
+            post.id === postId
+              ? {
+                  ...post,
                   commentsList: post.commentsList.map((comment: Comment) =>
-                comment.id === commentId
-                  ? {
-                      ...comment,
+                    comment.id === commentId
+                      ? {
+                          ...comment,
                           isLiked: result.isLiked,
                           likes: parseInt(result.likes),
-                    }
-                  : comment
-              ),
-            }
-          : post
-      )
-    );
+                        }
+                      : comment
+                  ),
+                }
+              : post
+          )
+        );
       }
     } catch (error) {
-      console.error('Error toggling comment like:', error);
+      console.error("Error toggling comment like:", error);
     }
   };
 
@@ -716,16 +728,16 @@ export default function FoodReelsApp() {
       // Create optimistic comment for immediate UI update
       const optimisticComment: Comment = {
         id: `temp-${Date.now()}`,
-      user: {
+        user: {
           name: session?.user?.name || "You",
           avatar: session?.user?.image || "/placeholder.svg?height=32&width=32",
           verified: false,
-      },
-      text: commentText,
-      timestamp: "now",
-      likes: 0,
-      isLiked: false,
-    };
+        },
+        text: commentText,
+        timestamp: "now",
+        likes: 0,
+        isLiked: false,
+      };
 
       // Add to optimisticComments state
       setOptimisticComments((prev) => ({
@@ -734,56 +746,58 @@ export default function FoodReelsApp() {
       }));
 
       // Optimistic update - add comment immediately to UI
-    setPosts(
+      setPosts(
         posts.map((post: FoodPost) =>
-        post.id === postId
-          ? {
-              ...post,
-              stats: {
-                ...post.stats,
-                comments: post.stats.comments + 1,
-              },
-            }
-          : post
-      )
-    );
+          post.id === postId
+            ? {
+                ...post,
+                stats: {
+                  ...post.stats,
+                  comments: post.stats.comments + 1,
+                },
+              }
+            : post
+        )
+      );
 
       // Make API call to add comment
-      const response = await fetch('/api/queries/reel-comments', {
-        method: 'POST',
+      const response = await fetch("/api/queries/reel-comments", {
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
         body: JSON.stringify({
           reel_id: postId,
-          text: commentText
+          text: commentText,
         }),
       });
 
       if (!response.ok) {
-        throw new Error('Failed to add comment');
+        throw new Error("Failed to add comment");
       }
 
       const result = await response.json();
-      
+
       if (result.success && result.comment) {
         // Remove optimistic comment
         setOptimisticComments((prev) => ({
           ...prev,
-          [postId]: (prev[postId] || []).filter((c) => c.id !== optimisticComment.id),
+          [postId]: (prev[postId] || []).filter(
+            (c) => c.id !== optimisticComment.id
+          ),
         }));
         // Optionally, you can trigger a refetch here for extra safety
         await refetchComments(postId);
-        console.log('Comment added successfully:', result.comment);
+        console.log("Comment added successfully:", result.comment);
       } else {
-        throw new Error('Invalid response from server');
+        throw new Error("Invalid response from server");
       }
     } catch (error) {
-      console.error('Error adding comment:', error);
+      console.error("Error adding comment:", error);
       // Remove optimistic comment on error
       setOptimisticComments((prev) => ({
         ...prev,
-        [postId]: (prev[postId] || []).filter((c) => !c.id.startsWith('temp-')),
+        [postId]: (prev[postId] || []).filter((c) => !c.id.startsWith("temp-")),
       }));
       setPosts(
         posts.map((post: FoodPost) =>
@@ -798,7 +812,7 @@ export default function FoodReelsApp() {
             : post
         )
       );
-      alert('Failed to add comment. Please try again.');
+      alert("Failed to add comment. Please try again.");
     }
   };
 
@@ -806,21 +820,26 @@ export default function FoodReelsApp() {
   const refetchComments = async (postId: string) => {
     try {
       setIsRefreshingComments(true);
-      const response = await fetch(`/api/queries/reel-comments?reel_id=${postId}`);
-      
+      const response = await fetch(
+        `/api/queries/reel-comments?reel_id=${postId}`
+      );
+
       if (!response.ok) {
-        throw new Error('Failed to fetch comments');
+        throw new Error("Failed to fetch comments");
       }
-      
+
       const data = await response.json();
-      
+
       // Convert database comments to frontend format
       const commentsList: Comment[] = data.comments.map((comment: any) => ({
         id: comment.id,
         user: {
           name: comment.User.name,
-          avatar: comment.User.profile_picture || "/placeholder.svg?height=32&width=32",
-          verified: comment.User.role === "admin" || comment.User.role === "verified",
+          avatar:
+            comment.User.profile_picture ||
+            "/placeholder.svg?height=32&width=32",
+          verified:
+            comment.User.role === "admin" || comment.User.role === "verified",
         },
         text: comment.text,
         timestamp: formatTimestamp(comment.created_on),
@@ -832,7 +851,10 @@ export default function FoodReelsApp() {
       const mergedComments = [
         ...(optimisticComments[postId] || []),
         ...commentsList.filter(
-          (c) => !(optimisticComments[postId] || []).some((o) => o.text === c.text && o.user.name === c.user.name)
+          (c) =>
+            !(optimisticComments[postId] || []).some(
+              (o) => o.text === c.text && o.user.name === c.user.name
+            )
         ),
       ];
 
@@ -852,9 +874,9 @@ export default function FoodReelsApp() {
         )
       );
 
-      console.log('Comments refetched successfully for post:', postId);
+      console.log("Comments refetched successfully for post:", postId);
     } catch (error) {
-      console.error('Error refetching comments:', error);
+      console.error("Error refetching comments:", error);
     } finally {
       setIsRefreshingComments(false);
     }
@@ -865,10 +887,10 @@ export default function FoodReelsApp() {
     console.log("Opening comments for post:", postId);
     setActivePostId(postId);
     setShowComments(true);
-    
+
     // Refetch comments when opening to ensure we have the latest data
     await refetchComments(postId);
-    
+
     console.log("Comments state after opening:", {
       postId,
       showComments: true,
@@ -901,7 +923,10 @@ export default function FoodReelsApp() {
     ? [
         ...(optimisticComments[activePost.id] || []),
         ...activePost.commentsList.filter(
-          (c) => !(optimisticComments[activePost.id] || []).some((o) => o.text === c.text && o.user.name === c.user.name)
+          (c) =>
+            !(optimisticComments[activePost.id] || []).some(
+              (o) => o.text === c.text && o.user.name === c.user.name
+            )
         ),
       ]
     : [];
@@ -1035,7 +1060,9 @@ export default function FoodReelsApp() {
       <RootLayout>
         <div
           className={`container mx-auto transition-colors duration-200 ${
-            theme === "dark" ? "bg-gray-900 text-white" : "bg-white text-gray-900"
+            theme === "dark"
+              ? "bg-gray-900 text-white"
+              : "bg-white text-gray-900"
           }`}
         >
           <div
@@ -1068,14 +1095,16 @@ export default function FoodReelsApp() {
   // Error state
   if (error) {
     return (
-      <div className={`min-h-screen flex items-center justify-center ${
-        theme === "dark" ? "bg-gray-900 text-white" : "bg-white text-gray-900"
-      }`}>
+      <div
+        className={`flex min-h-screen items-center justify-center ${
+          theme === "dark" ? "bg-gray-900 text-white" : "bg-white text-gray-900"
+        }`}
+      >
         <div className="text-center">
-          <p className="text-red-500 mb-4">Error: {error}</p>
-          <button 
-            onClick={() => window.location.reload()} 
-            className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
+          <p className="mb-4 text-red-500">Error: {error}</p>
+          <button
+            onClick={() => window.location.reload()}
+            className="rounded bg-blue-500 px-4 py-2 text-white hover:bg-blue-600"
           >
             Retry
           </button>
@@ -1087,12 +1116,16 @@ export default function FoodReelsApp() {
   // Empty state
   if (posts.length === 0) {
     return (
-      <div className={`min-h-screen flex items-center justify-center ${
-        theme === "dark" ? "bg-gray-900 text-white" : "bg-white text-gray-900"
-      }`}>
+      <div
+        className={`flex min-h-screen items-center justify-center ${
+          theme === "dark" ? "bg-gray-900 text-white" : "bg-white text-gray-900"
+        }`}
+      >
         <div className="text-center">
-          <p className="text-gray-500 mb-4">No reels available</p>
-          <p className="text-sm text-gray-400">Check back later for new content</p>
+          <p className="mb-4 text-gray-500">No reels available</p>
+          <p className="text-sm text-gray-400">
+            Check back later for new content
+          </p>
         </div>
       </div>
     );

@@ -247,8 +247,8 @@ export default async function handler(
       );
     }
 
-    const order = isReelOrder 
-      ? orderDetails.reel_orders_by_pk 
+    const order = isReelOrder
+      ? orderDetails.reel_orders_by_pk
       : orderDetails.Orders_by_pk;
 
     if (!order) {
@@ -277,28 +277,30 @@ export default async function handler(
       itemsTotal = parseFloat(reel.Price);
       shopName = reel.Restaurant.name;
       shopAddress = reel.Restaurant.location;
-      
+
       // Create invoice items for reel orders
-      invoiceItems = [{
-        id: reel.id,
-        name: reel.Product,
-        quantity: 1,
-        unit_price: parseFloat(reel.Price),
-        total: parseFloat(reel.Price),
-        unit: "item",
-        description: reel.description,
-        type: reel.type,
-      }];
+      invoiceItems = [
+        {
+          id: reel.id,
+          name: reel.Product,
+          quantity: 1,
+          unit_price: parseFloat(reel.Price),
+          total: parseFloat(reel.Price),
+          unit: "item",
+          description: reel.description,
+          type: reel.type,
+        },
+      ];
     } else {
       // For regular orders, use the order items
       const items = order.Order_Items;
       itemsTotal = items.reduce((total: number, item: any) => {
         return total + parseFloat(item.price) * item.quantity;
       }, 0);
-      
+
       shopName = order.Shop.name;
       shopAddress = order.Shop.address;
-      
+
       // Create invoice items for regular orders
       invoiceItems = items.map((item: any) => ({
         id: item.id,

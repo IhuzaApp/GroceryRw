@@ -82,7 +82,9 @@ export default async function handler(
       return res.status(400).json({ error: "Order ID is required" });
     }
 
-    logger.info("Fetching reel order details", "ReelOrderDetailsAPI", { orderId: id });
+    logger.info("Fetching reel order details", "ReelOrderDetailsAPI", {
+      orderId: id,
+    });
 
     // Fetch reel order details
     const data = await hasuraClient.request<{
@@ -164,19 +166,25 @@ export default async function handler(
       found: orderData.found,
       orderType: "reel" as const,
       reel: orderData.Reel,
-      assignedTo: orderData.shopper ? {
-        id: orderData.shopper.id,
-        name: orderData.shopper.full_name,
-        phone: orderData.shopper.phone_number,
-        profile_photo: orderData.shopper.profile_photo,
-        transport_mode: orderData.shopper.transport_mode,
-        user: orderData.shopper.User,
-      } : null,
+      assignedTo: orderData.shopper
+        ? {
+            id: orderData.shopper.id,
+            name: orderData.shopper.full_name,
+            phone: orderData.shopper.phone_number,
+            profile_photo: orderData.shopper.profile_photo,
+            transport_mode: orderData.shopper.transport_mode,
+            user: orderData.shopper.User,
+          }
+        : null,
     };
 
     res.status(200).json({ order: formattedOrder });
   } catch (error) {
-    logger.error("Error fetching reel order details", "ReelOrderDetailsAPI", error);
+    logger.error(
+      "Error fetching reel order details",
+      "ReelOrderDetailsAPI",
+      error
+    );
     res.status(500).json({ error: "Failed to fetch reel order details" });
   }
-} 
+}

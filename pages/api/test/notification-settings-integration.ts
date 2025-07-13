@@ -45,9 +45,12 @@ export default async function handler(
     const user_id = session.user?.id;
 
     // Get current notification settings
-    const settingsResponse = await hasuraClient.request(GET_SHOPPER_NOTIFICATION_SETTINGS, {
-      user_id
-    }) as any;
+    const settingsResponse = (await hasuraClient.request(
+      GET_SHOPPER_NOTIFICATION_SETTINGS,
+      {
+        user_id,
+      }
+    )) as any;
 
     const settings = settingsResponse.shopper_notification_settings?.[0] || {
       use_live_location: true,
@@ -67,31 +70,42 @@ export default async function handler(
 
     // Test the notification check API
     const testLocation = { lat: -1.9441, lng: 30.0619 }; // Kigali coordinates
-    const testResponse = await fetch(`${req.headers.host ? `http://${req.headers.host}` : 'http://localhost:3000'}/api/shopper/check-notifications-with-settings`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        user_id,
-        current_location: testLocation,
-      }),
-    });
+    const testResponse = await fetch(
+      `${
+        req.headers.host
+          ? `http://${req.headers.host}`
+          : "http://localhost:3000"
+      }/api/shopper/check-notifications-with-settings`,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          user_id,
+          current_location: testLocation,
+        }),
+      }
+    );
 
     const testData = await testResponse.json();
 
     // Log detailed test results
-    logger.info("Notification settings integration test completed", "NotificationSettingsIntegration", {
-      user_id,
-      settings,
-      test_result: {
-        success: testData.success,
-        notifications_count: testData.notifications?.length || 0,
-        message: testData.message,
-        status_code: testResponse.status,
-        error_details: testData.error || testData.details
+    logger.info(
+      "Notification settings integration test completed",
+      "NotificationSettingsIntegration",
+      {
+        user_id,
+        settings,
+        test_result: {
+          success: testData.success,
+          notifications_count: testData.notifications?.length || 0,
+          message: testData.message,
+          status_code: testResponse.status,
+          error_details: testData.error || testData.details,
+        },
       }
-    });
+    );
 
     return res.status(200).json({
       success: true,
@@ -104,17 +118,20 @@ export default async function handler(
         test_details: {
           status_code: testResponse.status,
           error_message: testData.message,
-          error_details: testData.error || testData.details
-        }
-      }
+          error_details: testData.error || testData.details,
+        },
+      },
     });
-
   } catch (error) {
-    logger.error("Error testing notification settings integration", "NotificationSettingsIntegration", error);
+    logger.error(
+      "Error testing notification settings integration",
+      "NotificationSettingsIntegration",
+      error
+    );
     return res.status(500).json({
       success: false,
       message: "Failed to test notification settings integration",
-      error: error instanceof Error ? error.message : "Unknown error"
+      error: error instanceof Error ? error.message : "Unknown error",
     });
   }
-} 
+}
