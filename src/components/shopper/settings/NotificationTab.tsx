@@ -241,6 +241,8 @@ export default function NotificationTab() {
     setSettings(prev => ({
       ...prev,
       use_live_location: checked,
+      // If enabling live location, disable custom locations
+      custom_locations: checked ? [] : prev.custom_locations,
     }));
   };
 
@@ -288,6 +290,8 @@ export default function NotificationTab() {
     setSettings(prev => ({
       ...prev,
       custom_locations: [...prev.custom_locations, location],
+      // Automatically disable live location when adding custom locations
+      use_live_location: false,
     }));
 
     setNewLocation({

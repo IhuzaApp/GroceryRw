@@ -55,12 +55,11 @@ const GET_AVAILABLE_REEL_BATCHES = gql`
 `;
 
 const GET_AVAILABLE_DASHERS = gql`
-  query GetAvailableDashers($current_time: time!, $current_day: Int!) {
+  query GetAvailableDashers($current_time: timetz!, $current_day: Int!) {
     Shopper_Availability(
       where: {
         _and: [
           { is_available: { _eq: true } }
-          { status: { _eq: "ACTIVE" } }
           { day_of_week: { _eq: $current_day } }
           { start_time: { _lte: $current_time } }
           { end_time: { _gte: $current_time } }
@@ -182,7 +181,7 @@ export default async function handler(
 
     // Get current time and day for schedule checking
     const now = new Date();
-    const currentTime = now.toTimeString().split(' ')[0]; // HH:MM:SS format
+    const currentTime = now.toTimeString().split(' ')[0] + '+00:00'; // HH:MM:SS+00:00 format with timezone
     const currentDay = now.getDay() === 0 ? 7 : now.getDay(); // Sunday = 7
 
     const { Shopper_Availability: availableDashers } =
@@ -218,6 +217,8 @@ export default async function handler(
       query GetNotificationSettings($user_ids: [uuid!]!) {
         shopper_notification_settings(where: {user_id: {_in: $user_ids}}) {
           user_id
+          use_live_location
+          custom_locations
           notification_types
           sound_settings
           max_distance
@@ -247,6 +248,8 @@ export default async function handler(
       availableDashers.map(async (dasher) => {
         // Get dasher's notification settings
         const dasherSettings = settingsByUser[dasher.user_id] || {
+          use_live_location: true,
+          custom_locations: [],
           notification_types: { orders: true, batches: true, earnings: true, system: true },
           sound_settings: { enabled: true, volume: 0.8 },
           max_distance: "10"
@@ -257,6 +260,37 @@ export default async function handler(
           logger.info(`Skipping notifications for dasher ${dasher.user_id} - notifications disabled`, "NotifyNearbyDashers");
           return;
         }
+
+        // Determine locations to check for this dasher
+        const locationsToCheck: Array<{
+          name: string;
+          latitude: number;
+          longitude: number;
+        }> = [];
+        
+        if (dasherSettings.use_live_location) {
+          locationsToCheck.push({
+            name: "Live Location",
+            latitude: dasher.last_known_latitude,
+            longitude: dasher.last_known_longitude
+          });
+        }
+
+        if (!dasherSettings.use_live_location && dasherSettings.custom_locations?.length > 0) {
+          dasherSettings.custom_locations.forEach((location: any) => {
+            locationsToCheck.push({
+              name: location.name,
+              latitude: location.latitude,
+              longitude: location.longitude
+            });
+          });
+        }
+
+        if (locationsToCheck.length === 0) {
+          logger.info(`No locations configured for dasher ${dasher.user_id}`, "NotifyNearbyDashers");
+          return;
+        }
+
         const nearbyBatches: Batch[] = [];
         const nearbyReelBatches: ReelBatch[] = [];
 
@@ -264,37 +298,51 @@ export default async function handler(
         const maxDistanceKm = parseFloat(dasherSettings.max_distance || "10");
         const maxDistanceMinutes = maxDistanceKm * 2; // Rough conversion: 1km ≈ 2 minutes
 
-        // Check each shop's distance from the dasher for regular orders
-        for (const shopBatches of Object.values(batchesByShop)) {
-          const shop = shopBatches[0].Shops;
-          const distanceInMinutes = await calculateDistance(
-            {
-              lat: dasher.last_known_latitude,
-              lng: dasher.last_known_longitude,
-            },
-            { lat: shop.latitude, lng: shop.longitude }
-          );
+        // Check each location sequentially for regular orders
+        for (const location of locationsToCheck) {
+          for (const shopBatches of Object.values(batchesByShop)) {
+            const shop = shopBatches[0].Shops;
+            const distanceInMinutes = await calculateDistance(
+              {
+                lat: location.latitude,
+                lng: location.longitude,
+              },
+              { lat: shop.latitude, lng: shop.longitude }
+            );
 
-          // If shop is within dasher's max distance, add its batches to nearbyBatches
-          if (distanceInMinutes <= maxDistanceMinutes) {
-            nearbyBatches.push(...shopBatches);
+            // If shop is within dasher's max distance from this location, add its batches
+            if (distanceInMinutes <= maxDistanceMinutes) {
+              nearbyBatches.push(...shopBatches);
+            }
+          }
+
+          // If we found batches for this location, don't check other locations (sequential)
+          if (nearbyBatches.length > 0) {
+            break;
           }
         }
 
-        // Check each reel creator's location for reel orders
-        for (const reelBatches of Object.values(reelBatchesByLocation)) {
-          const firstBatch = reelBatches[0];
-          const distanceInMinutes = await calculateDistance(
-            {
-              lat: dasher.last_known_latitude,
-              lng: dasher.last_known_longitude,
-            },
-            { lat: firstBatch.address.latitude, lng: firstBatch.address.longitude }
-          );
+        // Check each location sequentially for reel orders
+        for (const location of locationsToCheck) {
+          for (const reelBatches of Object.values(reelBatchesByLocation)) {
+            const firstBatch = reelBatches[0];
+            const distanceInMinutes = await calculateDistance(
+              {
+                lat: location.latitude,
+                lng: location.longitude,
+              },
+              { lat: firstBatch.address.latitude, lng: firstBatch.address.longitude }
+            );
 
-          // If reel creator is within dasher's max distance, add its batches to nearbyReelBatches
-          if (distanceInMinutes <= maxDistanceMinutes) {
-            nearbyReelBatches.push(...reelBatches);
+            // If reel creator is within dasher's max distance from this location, add its batches
+            if (distanceInMinutes <= maxDistanceMinutes) {
+              nearbyReelBatches.push(...reelBatches);
+            }
+          }
+
+          // If we found reel batches for this location, don't check other locations (sequential)
+          if (nearbyReelBatches.length > 0) {
+            break;
           }
         }
 

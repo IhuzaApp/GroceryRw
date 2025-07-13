@@ -223,18 +223,17 @@ export default async function handler(
 
     // Check shopper schedule and status
     const now = new Date();
-    const currentTime = now.toTimeString().split(' ')[0]; // HH:MM:SS format
+    const currentTime = now.toTimeString().split(' ')[0] + '+00:00'; // HH:MM:SS+00:00 format with timezone
     const currentDay = now.getDay() === 0 ? 7 : now.getDay(); // Sunday = 7
 
     // Check if shopper is available and within schedule
     const GET_SHOPPER_AVAILABILITY = gql`
-      query GetShopperAvailability($user_id: uuid!, $current_time: time!, $current_day: Int!) {
+      query GetShopperAvailability($user_id: uuid!, $current_time: timetz!, $current_day: Int!) {
         Shopper_Availability(
           where: {
             _and: [
               { user_id: { _eq: $user_id } }
               { is_available: { _eq: true } }
-              { status: { _eq: "ACTIVE" } }
               { day_of_week: { _eq: $current_day } }
               { start_time: { _lte: $current_time } }
               { end_time: { _gte: $current_time } }
@@ -243,13 +242,18 @@ export default async function handler(
         ) {
           user_id
           is_available
-          status
           day_of_week
           start_time
           end_time
         }
       }
     `;
+
+    logger.info("Checking shopper availability", "CheckNotificationsWithSettings", {
+      user_id,
+      current_time: currentTime,
+      current_day: currentDay
+    });
 
     const availabilityResponse = await hasuraClient.request(GET_SHOPPER_AVAILABILITY, {
       user_id,
@@ -258,6 +262,13 @@ export default async function handler(
     }) as any;
 
     const isAvailable = availabilityResponse.Shopper_Availability.length > 0;
+
+    logger.info("Shopper availability check result", "CheckNotificationsWithSettings", {
+      user_id,
+      isAvailable,
+      availability_count: availabilityResponse.Shopper_Availability.length,
+      availability_data: availabilityResponse.Shopper_Availability
+    });
 
     if (!isAvailable) {
       logger.info(`Shopper ${user_id} is not available or outside schedule`, "CheckNotificationsWithSettings");
@@ -311,6 +322,7 @@ export default async function handler(
         
         // Only process orders that are NEW (created within last 10 minutes)
         if (orderCreatedAt.getTime() > now.getTime() - 10 * 60 * 1000) {
+          // Check each location sequentially and add notification for the first location that matches
           for (const location of locationsToCheck) {
             const distance = calculateDistanceKm(
               location.latitude,
@@ -333,7 +345,7 @@ export default async function handler(
                 itemCount: order.Order_Items_aggregate?.aggregate?.count || 0,
                 ageInMinutes: Math.round((now.getTime() - orderCreatedAt.getTime()) / (1000 * 60))
               });
-              break; // Only add once per order
+              break; // Only add notification for the first matching location (sequential)
             }
           }
         }
@@ -347,6 +359,7 @@ export default async function handler(
         
         // Only process reel orders that are NEW (created within last 10 minutes)
         if (reelOrderCreatedAt.getTime() > now.getTime() - 10 * 60 * 1000) {
+          // Check each location sequentially and add notification for the first location that matches
           for (const location of locationsToCheck) {
             const distance = calculateDistanceKm(
               location.latitude,
@@ -370,7 +383,7 @@ export default async function handler(
                 reelType: reelOrder.Reel.type,
                 ageInMinutes: Math.round((now.getTime() - reelOrderCreatedAt.getTime()) / (1000 * 60))
               });
-              break; // Only add once per reel order
+              break; // Only add notification for the first matching location (sequential)
             }
           }
         }
@@ -412,7 +425,9 @@ export default async function handler(
     logger.error("Error checking notifications with settings", "CheckNotificationsWithSettings", error);
     return res.status(500).json({
       success: false,
-      message: "Failed to check notifications"
+      message: "Failed to check notifications",
+      error: error instanceof Error ? error.message : "Unknown error",
+      details: error instanceof Error ? error.stack : undefined
     });
   }
 } 
