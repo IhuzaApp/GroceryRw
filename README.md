@@ -4057,3 +4057,400 @@ For technical issues or questions about the notification system:
 ---
 
 ## Delivery Photo Upload Feature
+
+---
+
+# Dynamic Currency System
+
+## Overview
+
+The grocery delivery application implements a dynamic currency system that allows administrators to configure the currency used throughout the application via the `System_configuratioins` table. This ensures consistency across all components and eliminates hardcoded currency values.
+
+## Architecture
+
+### System Configuration Table
+
+The currency is stored in the `System_configuratioins` table:
+
+```sql
+System_configuratioins {
+  id: uuid (primary key)
+  currency: string (e.g., "RWF", "USD", "EUR")
+  baseDeliveryFee: string
+  serviceFee: string
+  deliveryCommissionPercentage: string
+  productCommissionPercentage: string
+  // ... other configuration fields
+}
+```
+
+### Currency Utility Functions
+
+The system provides several utility functions for currency formatting:
+
+```typescript
+// src/utils/formatCurrency.ts
+
+// Dynamic currency formatter (async)
+export const formatCurrency = async (amount: string | number) => {
+  const config = await getSystemConfiguration();
+  return new Intl.NumberFormat("en-RW", {
+    style: "currency",
+    currency: config.currency,
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 0,
+  }).format(amount);
+};
+
+// Synchronous version (uses cached config)
+export const formatCurrencySync = (amount: string | number) => {
+  const config = systemConfigCache || { currency: 'RWF' };
+  return new Intl.NumberFormat("en-RW", {
+    style: "currency",
+    currency: config.currency,
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 0,
+  }).format(amount);
+};
+
+// Get currency symbol
+export const getCurrencySymbol = () => {
+  const config = systemConfigCache || { currency: 'RWF' };
+  return config.currency;
+};
+
+// Refresh cache
+export const refreshCurrencyCache = () => {
+  systemConfigCache = null;
+  cacheTimestamp = 0;
+};
+```
+
+## Caching System
+
+### Cache Management
+
+- **Cache Duration**: 5 minutes
+- **Automatic Refresh**: Fetches new config when cache expires
+- **Fallback**: Uses default currency (RWF) if fetch fails
+- **Manual Refresh**: `refreshCurrencyCache()` function available
+
+### Cache Implementation
+
+```typescript
+// Cache for system configuration
+let systemConfigCache: { currency: string } | null = null;
+let cacheTimestamp = 0;
+const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
+
+// Fetch system configuration
+async function getSystemConfiguration() {
+  const now = Date.now();
+  
+  // Return cached config if still valid
+  if (systemConfigCache && (now - cacheTimestamp) < CACHE_DURATION) {
+    return systemConfigCache;
+  }
+
+  try {
+    const response = await fetch('/api/queries/system-configuration');
+    const data = await response.json();
+    
+    if (data.success && data.config) {
+      systemConfigCache = {
+        currency: data.config.currency || 'RWF'
+      };
+      cacheTimestamp = now;
+      return systemConfigCache;
+    }
+  } catch (error) {
+    console.warn('Failed to fetch system configuration, using default currency:', error);
+  }
+
+  return { currency: 'RWF' };
+}
+```
+
+## Usage Examples
+
+### Component Implementation
+
+```typescript
+import { formatCurrencySync, getCurrencySymbol } from "../../utils/formatCurrency";
+
+// In a React component
+function OrderCard({ order }) {
+  return (
+    <div>
+      <p>Total: {formatCurrencySync(order.total)}</p>
+      <p>Currency: {getCurrencySymbol()}</p>
+    </div>
+  );
+}
+```
+
+### API Response Formatting
+
+```typescript
+// In API endpoints
+import { formatCurrencySync } from "../../utils/formatCurrency";
+
+export default async function handler(req, res) {
+  const order = await getOrder(orderId);
+  
+  return res.json({
+    success: true,
+    order: {
+      ...order,
+      formattedTotal: formatCurrencySync(order.total),
+      formattedEarnings: formatCurrencySync(order.estimatedEarnings)
+    }
+  });
+}
+```
+
+## Components Updated
+
+### Shopper Components
+
+- **NotificationSystem**: Dynamic currency in notifications
+- **ActiveBatchesCard**: Currency formatting in batch cards
+- **PaymentModal**: Dynamic currency display
+- **Earnings Components**: All earnings displays use dynamic currency
+- **MapSection**: Order markers show dynamic currency
+
+### User Components
+
+- **UserPaymentCards**: Dynamic currency in payment displays
+- **PaymentMethodSelector**: Currency formatting in checkout
+- **Order Components**: All order displays use dynamic currency
+
+### Admin Components
+
+- **Revenue Reports**: Dynamic currency in reports
+- **Analytics**: Currency-aware calculations
+- **Settings**: Currency configuration interface
+
+## Configuration
+
+### Setting Currency
+
+1. **Database Update**:
+   ```sql
+   UPDATE System_configuratioins 
+   SET currency = 'USD' 
+   WHERE id = 'your-config-id';
+   ```
+
+2. **API Endpoint**:
+   ```typescript
+   POST /api/admin/update-system-config
+   {
+     "currency": "USD"
+   }
+   ```
+
+3. **Cache Refresh**:
+   ```typescript
+   import { refreshCurrencyCache } from "../../utils/formatCurrency";
+   refreshCurrencyCache();
+   ```
+
+### Supported Currencies
+
+The system supports all ISO 4217 currency codes:
+
+- **RWF**: Rwandan Franc (default)
+- **USD**: US Dollar
+- **EUR**: Euro
+- **GBP**: British Pound
+- **KES**: Kenyan Shilling
+- **UGX**: Ugandan Shilling
+- **TZS**: Tanzanian Shilling
+
+## Best Practices
+
+### Performance Optimization
+
+1. **Use Synchronous Functions**: Use `formatCurrencySync` for immediate display
+2. **Cache Management**: Let the system handle cache automatically
+3. **Error Handling**: Always provide fallback values
+
+### Code Examples
+
+```typescript
+// ✅ Good: Use synchronous function for immediate display
+const displayAmount = formatCurrencySync(order.total);
+
+// ✅ Good: Provide fallback values
+const displayAmount = formatCurrencySync(order.total || 0);
+
+// ❌ Bad: Don't hardcode currency
+const displayAmount = `RWF ${order.total}`;
+
+// ❌ Bad: Don't use async in render
+const displayAmount = await formatCurrency(order.total);
+```
+
+### Error Handling
+
+```typescript
+// Handle currency formatting errors
+try {
+  const formattedAmount = formatCurrencySync(amount);
+  return formattedAmount;
+} catch (error) {
+  console.warn('Currency formatting failed:', error);
+  return `${amount}`; // Fallback to plain number
+}
+```
+
+## Migration Guide
+
+### From Hardcoded Currency
+
+1. **Replace Hardcoded Values**:
+   ```typescript
+   // Before
+   const amount = `RWF ${order.total}`;
+   
+   // After
+   import { formatCurrencySync } from "../../utils/formatCurrency";
+   const amount = formatCurrencySync(order.total);
+   ```
+
+2. **Update Intl.NumberFormat**:
+   ```typescript
+   // Before
+   new Intl.NumberFormat("en-RW", {
+     style: "currency",
+     currency: "RWF",
+   }).format(amount);
+   
+   // After
+   formatCurrencySync(amount);
+   ```
+
+3. **Update Currency Symbols**:
+   ```typescript
+   // Before
+   <span>RWF</span>
+   
+   // After
+   import { getCurrencySymbol } from "../../utils/formatCurrency";
+   <span>{getCurrencySymbol()}</span>
+   ```
+
+## Testing
+
+### Unit Tests
+
+```typescript
+describe("Currency Formatting", () => {
+  test("formats currency correctly", () => {
+    const result = formatCurrencySync(1000);
+    expect(result).toContain("RWF");
+  });
+
+  test("handles zero amounts", () => {
+    const result = formatCurrencySync(0);
+    expect(result).toBe("RWF 0");
+  });
+
+  test("handles string amounts", () => {
+    const result = formatCurrencySync("1500");
+    expect(result).toBe("RWF 1,500");
+  });
+});
+```
+
+### Integration Tests
+
+```typescript
+describe("System Configuration", () => {
+  test("fetches currency from API", async () => {
+    const response = await fetch('/api/queries/system-configuration');
+    const data = await response.json();
+    expect(data.config.currency).toBeDefined();
+  });
+});
+```
+
+## Troubleshooting
+
+### Common Issues
+
+1. **Currency Not Updating**:
+   - Check cache duration
+   - Call `refreshCurrencyCache()`
+   - Verify API response
+
+2. **Formatting Errors**:
+   - Check currency code validity
+   - Verify amount is numeric
+   - Handle edge cases
+
+3. **Performance Issues**:
+   - Monitor cache hit rates
+   - Check API response times
+   - Optimize component rendering
+
+### Debug Tools
+
+```typescript
+// Check current currency
+console.log('Current currency:', getCurrencySymbol());
+
+// Refresh cache manually
+refreshCurrencyCache();
+
+// Check cache status
+console.log('Cache timestamp:', cacheTimestamp);
+```
+
+## API Reference
+
+### System Configuration API
+
+```typescript
+GET /api/queries/system-configuration
+
+Response:
+{
+  "success": true,
+  "config": {
+    "currency": "RWF",
+    "baseDeliveryFee": "2000",
+    "serviceFee": "1000",
+    // ... other config fields
+  }
+}
+```
+
+### Currency Utility Functions
+
+| Function | Description | Usage |
+|----------|-------------|-------|
+| `formatCurrencySync(amount)` | Format amount with cached currency | Immediate display |
+| `formatCurrency(amount)` | Format amount with fresh currency | Async operations |
+| `getCurrencySymbol()` | Get current currency symbol | Display currency |
+| `refreshCurrencyCache()` | Clear cache and refetch | Force update |
+
+## Future Enhancements
+
+### Planned Features
+
+- **Multi-Currency Support**: Support for multiple currencies simultaneously
+- **Currency Conversion**: Real-time exchange rates
+- **Regional Formatting**: Locale-specific formatting
+- **Currency Preferences**: User-specific currency settings
+
+### Technical Improvements
+
+- **WebSocket Updates**: Real-time currency changes
+- **Service Worker**: Background currency updates
+- **Progressive Enhancement**: Graceful degradation
+
+---
+
+## Delivery Photo Upload Feature
