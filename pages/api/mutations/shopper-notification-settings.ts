@@ -88,7 +88,7 @@ export default async function handler(
 
       const updateVariables = {
         id: existingSettings[0].id,
-        use_live_location: use_live_location || true,
+        use_live_location: use_live_location !== undefined ? use_live_location : true,
         custom_locations: custom_locations || [],
         max_distance: max_distance || "10",
         notification_types: notification_types || {
@@ -138,7 +138,7 @@ export default async function handler(
 
       const insertVariables = {
         user_id,
-        use_live_location: use_live_location || true,
+        use_live_location: use_live_location !== undefined ? use_live_location : true,
         custom_locations: custom_locations || [],
         max_distance: max_distance || "10",
         notification_types: notification_types || {

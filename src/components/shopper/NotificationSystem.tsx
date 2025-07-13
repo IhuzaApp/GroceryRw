@@ -21,6 +21,7 @@ interface BatchAssignment {
   shopperId: string;
   orderId: string;
   assignedAt: number;
+  expiresAt: number; // Add expiration time
 }
 
 interface ShopperSchedule {
@@ -248,14 +249,10 @@ export default function NotificationSystem({
         if (audioRef.current) {
           audioRef.current.volume = soundSettings?.volume || 0.7;
           await audioRef.current.play();
-          logger.info(
-            "Notification sound played successfully (fallback)",
-            "NotificationSystem"
-          );
         }
       } catch (fallbackError) {
         logger.error(
-          "Fallback notification sound also failed",
+          "Fallback audio play also failed",
           "NotificationSystem",
           fallbackError
         );
@@ -264,170 +261,122 @@ export default function NotificationSystem({
   };
 
   const showDesktopNotification = (order: Order) => {
-    if (window.Notification && window.Notification.permission === "granted") {
-      const options: NotificationOptions = {
-        body: `${order.customerAddress}\n${order.shopName} (${order.distance}km)`,
-        icon: "/app-icon.png",
-        badge: "/app-icon.png",
-        tag: "grocery-notification",
-        requireInteraction: true,
-        silent: true, // We'll handle the sound separately
-      };
+    if (
+      typeof window !== "undefined" &&
+      "Notification" in window &&
+      notificationPermission === "granted"
+    ) {
+      try {
+        const notification = new window.Notification("New Batch Available!", {
+          body: `${order.shopName} (${order.distance}km)\n${order.customerAddress}`,
+          icon: "/app-icon.png",
+          tag: `batch-${order.id}`,
+          requireInteraction: false,
+        });
 
-      const notification = new window.Notification("New Batch!", options);
+        notification.onclick = () => {
+          window.focus();
+          notification.close();
+        };
 
-      notification.onclick = () => {
-        window.focus();
-        if (onViewBatchDetails) {
-          onViewBatchDetails(order.id);
-          logger.info(
-            "Opening batch details from notification click:",
-            order.id
-          );
-        }
-        notification.close();
-      };
+        // Auto-close after 10 seconds
+        setTimeout(() => {
+          notification.close();
+        }, 10000);
+
+        logger.info("Desktop notification shown", "NotificationSystem");
+      } catch (error) {
+        logger.error(
+          "Error showing desktop notification",
+          "NotificationSystem",
+          error
+        );
+      }
     }
   };
 
-  // Check if current time is within shopper's schedule
   const isWithinSchedule = async (): Promise<boolean> => {
+    if (!session?.user?.id) return false;
+
     try {
-      const response = await fetch("/api/shopper/schedule");
-      const data = await response.json();
-
-      if (!data.schedule || data.schedule.length === 0) {
-        logger.info("No schedule found for shopper", "NotificationSystem");
-        return false;
-      }
-
       const now = new Date();
-      const currentDay = now.getDay() === 0 ? 7 : now.getDay(); // Convert Sunday from 0 to 7
+      const currentDay = now.getDay() === 0 ? 7 : now.getDay();
+      const currentTime = now.toTimeString().split(" ")[0] + "+00:00";
 
-      // Get current time in minutes since midnight
-      const currentHours = now.getHours();
-      const currentMinutes = now.getMinutes();
-      const currentTimeInMinutes = currentHours * 60 + currentMinutes;
-
-      const todaySchedule = data.schedule.find(
-        (s: ShopperSchedule) => s.day_of_week === currentDay
-      );
-
-      if (!todaySchedule || !todaySchedule.is_available) {
-        logger.info(
-          "No schedule or not available for today",
-          "NotificationSystem"
-        );
-        return false;
-      }
-
-      // Convert schedule times to minutes since midnight
-      const [startHours, startMinutes] = todaySchedule.start_time
-        .split(":")
-        .map(Number);
-      const [endHours, endMinutes] = todaySchedule.end_time
-        .split(":")
-        .map(Number);
-
-      const startTimeInMinutes = startHours * 60 + startMinutes;
-      const endTimeInMinutes = endHours * 60 + endMinutes;
-
-      const isTimeWithinRange =
-        currentTimeInMinutes >= startTimeInMinutes &&
-        currentTimeInMinutes <= endTimeInMinutes;
-
-      logger.info("Schedule check:", "NotificationSystem", {
-        currentDay,
-        currentTime: `${currentHours}:${currentMinutes}`,
-        scheduleStart: todaySchedule.start_time,
-        scheduleEnd: todaySchedule.end_time,
-        isTimeWithinRange,
+      const response = await fetch("/api/queries/shopper-availability", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          user_id: session.user.id,
+          day_of_week: currentDay,
+          current_time: currentTime,
+        }),
       });
 
-      return isTimeWithinRange;
+      const data = await response.json();
+      return data.is_available;
     } catch (error) {
-      logger.error("Error checking schedule:", "NotificationSystem", error);
+      logger.error("Error checking schedule", "NotificationSystem", error);
       return false;
     }
   };
 
-  // Check if shopper has any active orders
   const hasActiveOrders = async (): Promise<boolean> => {
-    try {
-      const response = await fetch("/api/shopper/activeOrders");
-      const data = await response.json();
+    if (!session?.user?.id) return false;
 
-      const hasActive = data.orders && data.orders.length > 0;
-      logger.debug("Active orders check", "NotificationSystem", {
-        hasActive,
-        count: data.orders?.length || 0,
+    try {
+      const response = await fetch("/api/shopper/activeBatches", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          user_id: session.user.id,
+        }),
       });
 
-      return hasActive;
+      const data = await response.json();
+      return data.hasActiveOrders;
     } catch (error) {
       logger.error("Error checking active orders", "NotificationSystem", error);
-      return true; // Assume has active orders on error to prevent notifications
+      return false;
     }
   };
 
-  // Check if shopper status is active based on their availability schedule
   const isShopperActive = async (): Promise<boolean> => {
+    if (!session?.user?.id) return false;
+
     try {
-      const response = await fetch("/api/shopper/schedule");
-      const data = await response.json();
-
-      if (!data.schedule || data.schedule.length === 0) {
-        logger.info("No schedule found for shopper", "NotificationSystem");
-        return false;
-      }
-
-      const now = new Date();
-      const currentDay = now.getDay() === 0 ? 7 : now.getDay(); // Convert Sunday from 0 to 7
-      const currentTime = now.toLocaleTimeString("en-US", { hour12: false });
-
-      const todaySchedule = data.schedule.find(
-        (s: ShopperSchedule) => s.day_of_week === currentDay
-      );
-
-      if (!todaySchedule) {
-        logger.info("No schedule for today", "NotificationSystem");
-        return false;
-      }
-
-      if (!todaySchedule.is_available) {
-        logger.info("Shopper is not available today", "NotificationSystem");
-        return false;
-      }
-
-      const isTimeWithinRange =
-        currentTime >= todaySchedule.start_time &&
-        currentTime <= todaySchedule.end_time;
-
-      logger.info("Schedule check result", "NotificationSystem", {
-        currentDay,
-        currentTime,
-        scheduleStart: todaySchedule.start_time,
-        scheduleEnd: todaySchedule.end_time,
-        isWithinRange: isTimeWithinRange,
+      const response = await fetch("/api/queries/shopper-availability", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          user_id: session.user.id,
+        }),
       });
 
-      return isTimeWithinRange;
+      const data = await response.json();
+      return data.is_available;
     } catch (error) {
-      logger.error(
-        "Error checking shopper availability",
-        "NotificationSystem",
-        error
-      );
+      logger.error("Error checking shopper status", "NotificationSystem", error);
       return false;
     }
   };
 
   const checkForNewOrders = async () => {
-    if (!currentLocation || !session?.user?.id) return;
+    if (!session?.user?.id || !currentLocation) {
+      logger.debug("Missing session or location, skipping check", "NotificationSystem");
+      return;
+    }
 
     const now = new Date();
     const currentTime = now.getTime();
 
+    // Check if we should skip this check (60-second cooldown)
     if (currentTime - lastNotificationTime.current < 60000) {
       logger.debug(
         `Skipping notification check - ${Math.floor(
@@ -464,9 +413,10 @@ export default function NotificationSystem({
           "NotificationSystem"
         );
 
-        // Clean up expired assignments
+        // Clean up expired assignments (1 minute timeout)
+        const oneMinuteAgo = currentTime - 60000;
         batchAssignments.current = batchAssignments.current.filter(
-          (assignment) => currentTime - assignment.assignedAt < 60000
+          (assignment) => assignment.expiresAt > currentTime
         );
 
         // Sort notifications by creation time (oldest first)
@@ -493,6 +443,7 @@ export default function NotificationSystem({
               shopperId: session.user.id,
               orderId: nextNotification.id,
               assignedAt: currentTime,
+              expiresAt: currentTime + 60000, // Expires in 1 minute
             };
             batchAssignments.current.push(newAssignment);
 
@@ -511,7 +462,7 @@ export default function NotificationSystem({
 
             lastNotificationTime.current = currentTime;
             logger.info(
-              `Showing notification for ${nextNotification.type} from ${nextNotification.shopName} (${nextNotification.locationName})`,
+              `Showing notification for ${nextNotification.type} from ${nextNotification.shopName} (${nextNotification.locationName}) - expires in 1 minute`,
               "NotificationSystem",
               nextNotification
             );
@@ -521,19 +472,13 @@ export default function NotificationSystem({
               "NotificationSystem"
             );
           }
+        } else {
+          logger.debug("No available notifications (all assigned or expired)", "NotificationSystem");
         }
 
-        if (onNewOrder) {
-          // Convert notifications back to order format for compatibility
-          const orders = data.notifications.map((notification: any) => ({
-            id: notification.id,
-            shopName: notification.shopName,
-            distance: notification.distance,
-            createdAt: notification.createdAt,
-            customerAddress: notification.customerAddress,
-          }));
-          onNewOrder(orders);
-        }
+        // Don't call onNewOrder to prevent page refreshes
+        // The notification system should be independent
+        logger.info("Notification shown, not triggering page refresh", "NotificationSystem");
       } else {
         logger.debug("No notifications found based on settings", "NotificationSystem");
       }
@@ -559,7 +504,7 @@ export default function NotificationSystem({
 
     logger.info("Starting notification system", "NotificationSystem");
     logger.info(
-      "Will check for pending orders every 60 seconds",
+      "Will check for pending orders every 60 seconds with 1-minute assignment timeout",
       "NotificationSystem"
     );
 
@@ -587,6 +532,7 @@ export default function NotificationSystem({
     }
     setIsListening(false);
     lastOrderIds.current.clear();
+    batchAssignments.current = []; // Clear all assignments
   };
 
   useEffect(() => {
