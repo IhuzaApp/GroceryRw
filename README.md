@@ -1842,6 +1842,11 @@ interface NotificationTypes {
   earnings: boolean;    // Earnings updates
   system: boolean;      // System notifications
 }
+
+interface SoundSettings {
+  enabled: boolean;     // Enable/disable sound notifications
+  volume: number;       // Volume level (0.0 to 1.0)
+}
 ```
 
 ### Integration Flow
@@ -1849,10 +1854,37 @@ interface NotificationTypes {
 1. **Settings Configuration**: Shopper configures preferences in Settings → Notifications
 2. **Settings Storage**: Preferences saved to `shopper_notification_settings` table
 3. **Notification Check**: `NotificationSystem` calls `/api/shopper/check-notifications-with-settings`
-4. **Location Filtering**: API checks orders against configured locations
-5. **Distance Filtering**: Only orders within `max_distance` are considered
-6. **Type Filtering**: Only enabled notification types are processed
-7. **Notification Display**: Filtered notifications shown to shopper
+4. **Age Filtering**: Only NEW orders/batches (created within last 10 minutes) are shown
+5. **Location Filtering**: API checks orders against configured locations
+6. **Distance Filtering**: Only orders within `max_distance` are considered
+7. **Type Filtering**: Only enabled notification types are processed
+8. **Sound Settings**: Sound notifications respect user preferences (enabled/disabled, volume)
+9. **Notification Display**: Filtered notifications shown to shopper
+
+### Existing APIs Updated
+
+- **`/api/queries/check-new-orders`**: 
+  - Updated to use 10-minute age filter (was 3 minutes)
+  - Added notification settings integration
+  - Added sound settings respect
+  - Added scheduler integration (via shopper availability)
+  - **Fixed**: Now uses `max_distance` from notification settings instead of hardcoded values
+
+- **`/api/queries/notify-nearby-dashers`**: 
+  - Updated to use 10-minute age filter (was 20 minutes)
+  - Added notification settings integration
+  - Added scheduler integration (checks shopper availability)
+  - Added sound settings respect
+  - **Fixed**: Now uses `max_distance` from notification settings instead of hardcoded values
+
+- **`/api/shopper/check-notifications-with-settings`**: 
+  - Already includes age filtering and sound settings
+  - Added `sound_settings` field to response
+  - **Enhanced**: Now includes scheduler checks, shopper status, and active order checks
+  - **Optimized**: Moved all logic to backend to reduce frontend complexity
+
+- **`/api/queries/shopper-notification-settings`**: 
+  - Added `sound_settings` field to query response
 
 ### API Response Format
 
@@ -1952,6 +1984,26 @@ Before showing any notifications, the system checks:
   - Automatic cleanup of expired assignments
   - Logging of all timing-related events
 
+- **Age-Based Filtering**
+  - Only shows NEW orders/batches (created within last 10 minutes)
+  - Prevents notifications for old/stale orders
+  - Ensures shoppers only see fresh opportunities
+  - Applies to both regular orders and reel orders (batches)
+
+### 5. Sound Settings
+
+- **Sound Configuration**
+  - Enable/disable sound notifications per user preference
+  - Configurable volume level (0-100%)
+  - Settings stored in `sound_settings` object
+  - Real-time application of sound preferences
+
+- **Sound Integration**
+  - Sound only plays when enabled in user settings
+  - Volume respects user configuration
+  - Fallback to default settings if not configured
+  - Logging of sound-related events
+
 ## Technical Implementation
 
 ### API Endpoints Required
@@ -1959,6 +2011,18 @@ Before showing any notifications, the system checks:
 1. `/api/shopper/schedule`
 
    - Returns shopper's availability schedule
+
+2. `/api/queries/check-new-orders`
+
+   - Main API for checking NEW orders (10-minute age filter)
+   - Includes sound notifications and travel time calculations
+   - Usage: `GET /api/queries/check-new-orders?latitude=<lat>&longitude=<lng>`
+
+3. `/api/shopper/check-notifications-with-settings`
+
+   - Settings-aware notification API with age filtering
+   - Respects user notification preferences and sound settings
+   - Usage: `GET /api/shopper/check-notifications-with-settings?user_id=<uuid>`
    - Format: `{ schedule: Array<{ day_of_week: number, start_time: string, end_time: string, is_available: boolean }> }`
 
 2. `/api/shopper/activeOrders`

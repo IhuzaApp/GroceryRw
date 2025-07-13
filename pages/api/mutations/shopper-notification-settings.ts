@@ -24,6 +24,7 @@ export default async function handler(
       custom_locations,
       max_distance,
       notification_types,
+      sound_settings,
     } = req.body;
 
     if (!user_id) {
@@ -60,6 +61,7 @@ export default async function handler(
           $custom_locations: jsonb!
           $max_distance: String!
           $notification_types: jsonb!
+          $sound_settings: jsonb!
         ) {
           update_shopper_notification_settings_by_pk(
             pk_columns: { id: $id }
@@ -68,6 +70,7 @@ export default async function handler(
               custom_locations: $custom_locations
               max_distance: $max_distance
               notification_types: $notification_types
+              sound_settings: $sound_settings
               updated_at: "now()"
             }
           ) {
@@ -77,6 +80,7 @@ export default async function handler(
             custom_locations
             max_distance
             notification_types
+            sound_settings
             updated_at
           }
         }
@@ -93,6 +97,10 @@ export default async function handler(
           earnings: true,
           system: true,
         },
+        sound_settings: sound_settings || {
+          enabled: true,
+          volume: 0.8,
+        },
       };
 
       result = await hasuraClient.request(updateQuery, updateVariables) as any;
@@ -105,6 +113,7 @@ export default async function handler(
           $custom_locations: jsonb!
           $max_distance: String!
           $notification_types: jsonb!
+          $sound_settings: jsonb!
         ) {
           insert_shopper_notification_settings_one(object: {
             user_id: $user_id
@@ -112,6 +121,7 @@ export default async function handler(
             custom_locations: $custom_locations
             max_distance: $max_distance
             notification_types: $notification_types
+            sound_settings: $sound_settings
           }) {
             id
             user_id
@@ -119,6 +129,7 @@ export default async function handler(
             custom_locations
             max_distance
             notification_types
+            sound_settings
             created_at
             updated_at
           }
@@ -135,6 +146,10 @@ export default async function handler(
           batches: true,
           earnings: true,
           system: true,
+        },
+        sound_settings: sound_settings || {
+          enabled: true,
+          volume: 0.8,
         },
       };
 

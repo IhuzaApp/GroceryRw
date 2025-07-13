@@ -203,7 +203,13 @@ export default function NotificationSystem({
     );
   };
 
-  const playNotificationSound = async () => {
+  const playNotificationSound = async (soundSettings?: { enabled: boolean; volume: number }) => {
+    // Check if sound is enabled in settings
+    if (soundSettings && !soundSettings.enabled) {
+      logger.info("Sound notifications disabled in settings", "NotificationSystem");
+      return;
+    }
+
     try {
       if (!audioRef.current) {
         logger.warn(
@@ -218,7 +224,7 @@ export default function NotificationSystem({
 
       // Create and play a new instance for better reliability
       const soundInstance = new Audio("/notifySound.mp3");
-      soundInstance.volume = 0.7;
+      soundInstance.volume = soundSettings?.volume || 0.7;
 
       await soundInstance.play();
       logger.info(
@@ -240,6 +246,7 @@ export default function NotificationSystem({
       // Fallback attempt with the original audio element
       try {
         if (audioRef.current) {
+          audioRef.current.volume = soundSettings?.volume || 0.7;
           await audioRef.current.play();
           logger.info(
             "Notification sound played successfully (fallback)",
@@ -431,38 +438,8 @@ export default function NotificationSystem({
       return;
     }
 
-    const [withinSchedule, noActiveOrders, isActive] = await Promise.all([
-      isWithinSchedule(),
-      !(await hasActiveOrders()),
-      isShopperActive(),
-    ]);
-
-    if (!withinSchedule) {
-      logger.debug(
-        "Outside scheduled hours, skipping notification check",
-        "NotificationSystem"
-      );
-      return;
-    }
-
-    if (!noActiveOrders) {
-      logger.debug(
-        "Shopper has active orders, skipping notification check",
-        "NotificationSystem"
-      );
-      return;
-    }
-
-    if (!isActive) {
-      logger.debug(
-        "Shopper is not active, skipping notification check",
-        "NotificationSystem"
-      );
-      return;
-    }
-
     logger.info(
-      "All conditions met, checking for pending orders with settings",
+      "Checking for pending orders with settings (API handles all conditions)",
       "NotificationSystem"
     );
 
@@ -528,7 +505,7 @@ export default function NotificationSystem({
               customerAddress: nextNotification.customerAddress,
             };
 
-            await playNotificationSound();
+            await playNotificationSound(data.settings?.sound_settings);
             showToast(orderForNotification);
             showDesktopNotification(orderForNotification);
 
