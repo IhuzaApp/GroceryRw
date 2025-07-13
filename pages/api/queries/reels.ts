@@ -76,7 +76,10 @@ const GET_ALL_REELS = gql`
 // Fetch reels by user ID
 const GET_REELS_BY_USER = gql`
   query GetReelsByUser($user_id: uuid!) {
-    Reels(where: { user_id: { _eq: $user_id } }, order_by: { created_on: desc }) {
+    Reels(
+      where: { user_id: { _eq: $user_id } }
+      order_by: { created_on: desc }
+    ) {
       id
       category
       created_on
@@ -143,7 +146,10 @@ const GET_REELS_BY_USER = gql`
 // Fetch reels by restaurant ID
 const GET_REELS_BY_RESTAURANT = gql`
   query GetReelsByRestaurant($restaurant_id: uuid!) {
-    Reels(where: { restaurant_id: { _eq: $restaurant_id } }, order_by: { created_on: desc }) {
+    Reels(
+      where: { restaurant_id: { _eq: $restaurant_id } }
+      order_by: { created_on: desc }
+    ) {
       id
       category
       created_on
@@ -277,7 +283,13 @@ const UPDATE_REEL_LIKE = gql`
 const ADD_REEL_COMMENT = gql`
   mutation AddReelComment($reel_id: uuid!, $user_id: uuid!, $text: String!) {
     insert_Reels_comments(
-      objects: { reel_id: $reel_id, user_id: $user_id, text: $text, likes: "0", isLiked: false }
+      objects: {
+        reel_id: $reel_id
+        user_id: $user_id
+        text: $text
+        likes: "0"
+        isLiked: false
+      }
     ) {
       affected_rows
       returning {
@@ -419,9 +431,12 @@ async function handleGetReels(req: NextApiRequest, res: NextApiResponse) {
       });
     } else if (restaurant_id) {
       // Get reels by specific restaurant
-      data = await hasuraClient.request<ReelsResponse>(GET_REELS_BY_RESTAURANT, {
-        restaurant_id: restaurant_id as string,
-      });
+      data = await hasuraClient.request<ReelsResponse>(
+        GET_REELS_BY_RESTAURANT,
+        {
+          restaurant_id: restaurant_id as string,
+        }
+      );
     } else {
       // Get all reels
       data = await hasuraClient.request<ReelsResponse>(GET_ALL_REELS);
@@ -472,7 +487,8 @@ async function handleCreateReel(req: NextApiRequest, res: NextApiResponse) {
 
     if (!title || !video_url || !type) {
       return res.status(400).json({
-        error: "Missing required fields: title, video_url, and type are required",
+        error:
+          "Missing required fields: title, video_url, and type are required",
       });
     }
 
@@ -490,10 +506,12 @@ async function handleCreateReel(req: NextApiRequest, res: NextApiResponse) {
       user_id: userId,
     });
 
-    logger.info("Created new reel", "ReelsAPI", { reelId: result.insert_Reels.returning[0]?.id });
-    res.status(201).json({ 
-      success: true, 
-      reel: result.insert_Reels.returning[0] 
+    logger.info("Created new reel", "ReelsAPI", {
+      reelId: result.insert_Reels.returning[0]?.id,
+    });
+    res.status(201).json({
+      success: true,
+      reel: result.insert_Reels.returning[0],
     });
   } catch (error) {
     logger.error("Error creating reel", "ReelsAPI", error);
@@ -528,7 +546,11 @@ async function handleUpdateReel(req: NextApiRequest, res: NextApiResponse) {
   }
 }
 
-async function handleToggleLike(req: NextApiRequest, res: NextApiResponse, reelId: string) {
+async function handleToggleLike(
+  req: NextApiRequest,
+  res: NextApiResponse,
+  reelId: string
+) {
   try {
     const session = (await getServerSession(
       req,
@@ -560,7 +582,9 @@ async function handleToggleLike(req: NextApiRequest, res: NextApiResponse, reelI
     const reel = reelData.Reels[0];
     const currentLikes = parseInt(reel.likes || "0");
     const newIsLiked = !reel.isLiked;
-    const newLikes = newIsLiked ? (currentLikes + 1).toString() : (currentLikes - 1).toString();
+    const newLikes = newIsLiked
+      ? (currentLikes + 1).toString()
+      : (currentLikes - 1).toString();
 
     const result = await hasuraClient.request(UPDATE_REEL_LIKE, {
       id: reelId,
@@ -568,10 +592,10 @@ async function handleToggleLike(req: NextApiRequest, res: NextApiResponse, reelI
       likes: newLikes,
     });
 
-    res.status(200).json({ 
-      success: true, 
-      isLiked: newIsLiked, 
-      likes: newLikes 
+    res.status(200).json({
+      success: true,
+      isLiked: newIsLiked,
+      likes: newLikes,
     });
   } catch (error) {
     logger.error("Error toggling reel like", "ReelsAPI", error);
@@ -579,7 +603,12 @@ async function handleToggleLike(req: NextApiRequest, res: NextApiResponse, reelI
   }
 }
 
-async function handleAddComment(req: NextApiRequest, res: NextApiResponse, reelId: string, commentText: string) {
+async function handleAddComment(
+  req: NextApiRequest,
+  res: NextApiResponse,
+  reelId: string,
+  commentText: string
+) {
   try {
     const session = (await getServerSession(
       req,
@@ -602,9 +631,9 @@ async function handleAddComment(req: NextApiRequest, res: NextApiResponse, reelI
       text: commentText.trim(),
     });
 
-    res.status(200).json({ 
-      success: true, 
-      comment: result.insert_Reels_comments.returning[0] 
+    res.status(200).json({
+      success: true,
+      comment: result.insert_Reels_comments.returning[0],
     });
   } catch (error) {
     logger.error("Error adding comment", "ReelsAPI", error);
@@ -612,7 +641,11 @@ async function handleAddComment(req: NextApiRequest, res: NextApiResponse, reelI
   }
 }
 
-async function handleToggleCommentLike(req: NextApiRequest, res: NextApiResponse, commentId: string) {
+async function handleToggleCommentLike(
+  req: NextApiRequest,
+  res: NextApiResponse,
+  commentId: string
+) {
   try {
     const session = (await getServerSession(
       req,
@@ -644,7 +677,9 @@ async function handleToggleCommentLike(req: NextApiRequest, res: NextApiResponse
     const comment = commentData.Reels_comments[0];
     const currentLikes = parseInt(comment.likes || "0");
     const newIsLiked = !comment.isLiked;
-    const newLikes = newIsLiked ? (currentLikes + 1).toString() : (currentLikes - 1).toString();
+    const newLikes = newIsLiked
+      ? (currentLikes + 1).toString()
+      : (currentLikes - 1).toString();
 
     const result = await hasuraClient.request(UPDATE_COMMENT_LIKE, {
       id: commentId,
@@ -652,13 +687,13 @@ async function handleToggleCommentLike(req: NextApiRequest, res: NextApiResponse
       likes: newLikes,
     });
 
-    res.status(200).json({ 
-      success: true, 
-      isLiked: newIsLiked, 
-      likes: newLikes 
+    res.status(200).json({
+      success: true,
+      isLiked: newIsLiked,
+      likes: newLikes,
     });
   } catch (error) {
     logger.error("Error toggling comment like", "ReelsAPI", error);
     res.status(500).json({ error: "Failed to toggle comment like" });
   }
-} 
+}

@@ -178,12 +178,20 @@ export default async function handler(
     const orders = ordersData.Orders;
 
     // 2. Fetch reel orders
-    const reelOrdersData = await hasuraClient.request<ReelOrdersResponse>(GET_REEL_ORDERS, {
-      user_id: userId,
-    });
+    const reelOrdersData = await hasuraClient.request<ReelOrdersResponse>(
+      GET_REEL_ORDERS,
+      {
+        user_id: userId,
+      }
+    );
     const reelOrders = reelOrdersData.reel_orders;
 
-    logger.info(`Found ${orders?.length || 0} regular orders and ${reelOrders?.length || 0} reel orders`, "AllOrdersAPI");
+    logger.info(
+      `Found ${orders?.length || 0} regular orders and ${
+        reelOrders?.length || 0
+      } reel orders`,
+      "AllOrdersAPI"
+    );
 
     // 3. Fetch shops for regular orders
     const shopIds = Array.from(new Set(orders.map((o) => o.shop_id))).filter(
@@ -208,17 +216,20 @@ export default async function handler(
       const agg = o.Order_Items_aggregate.aggregate;
       const itemsCount = agg?.count ?? 0;
       const unitsCount = agg?.sum?.quantity ?? 0;
-      
+
       // Calculate subtotal based on final prices (what customer pays)
-      const finalPriceSubtotal = o.Order_Items?.reduce((sum: number, item: any) => {
-        return sum + (parseFloat(item.product.final_price || "0") * item.quantity);
-      }, 0) || 0;
-      
+      const finalPriceSubtotal =
+        o.Order_Items?.reduce((sum: number, item: any) => {
+          return (
+            sum + parseFloat(item.product.final_price || "0") * item.quantity
+          );
+        }, 0) || 0;
+
       // Compute grand total including fees
       const serviceFee = parseFloat(o.service_fee || "0");
       const deliveryFee = parseFloat(o.delivery_fee || "0");
       const grandTotal = finalPriceSubtotal + serviceFee + deliveryFee;
-      
+
       return {
         id: o.id,
         OrderID: o.OrderID,
@@ -242,7 +253,7 @@ export default async function handler(
       const serviceFee = parseFloat(ro.service_fee || "0");
       const deliveryFee = parseFloat(ro.delivery_fee || "0");
       const grandTotal = baseTotal + serviceFee + deliveryFee;
-      
+
       return {
         id: ro.id,
         OrderID: ro.OrderID,
@@ -264,7 +275,8 @@ export default async function handler(
 
     // 6. Combine and sort all orders by creation date (newest first)
     const allOrders = [...enrichedRegularOrders, ...enrichedReelOrders].sort(
-      (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+      (a, b) =>
+        new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
     );
 
     res.status(200).json({ orders: allOrders });
@@ -272,4 +284,4 @@ export default async function handler(
     logger.error("Error fetching all orders", "AllOrdersAPI", error);
     res.status(500).json({ error: "Failed to fetch orders" });
   }
-} 
+}

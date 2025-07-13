@@ -117,7 +117,9 @@ export default async function handler(
     }>(CHECK_EXISTING_REVENUE, { order_id: orderId });
 
     if (existingRevenue.Revenue && existingRevenue.Revenue.length > 0) {
-      console.log(`Revenue already exists for order ${orderId}, skipping calculation`);
+      console.log(
+        `Revenue already exists for order ${orderId}, skipping calculation`
+      );
       return res.status(200).json({
         success: true,
         message: "Revenue already calculated for this order",
@@ -158,7 +160,7 @@ export default async function handler(
     }
 
     // 2. Convert order items to cart items format for revenue calculation
-    const cartItems = order.Order_Items.map(item => ({
+    const cartItems = order.Order_Items.map((item) => ({
       quantity: item.quantity,
       Product: {
         price: item.Product.price,
@@ -175,9 +177,10 @@ export default async function handler(
     const systemConfigData = await hasuraClient.request<{
       System_configuratioins: Array<{ deliveryCommissionPercentage: string }>;
     }>(GET_SYSTEM_CONFIG);
-    
+
     const deliveryCommissionPercentage = parseFloat(
-      systemConfigData.System_configuratioins[0]?.deliveryCommissionPercentage || "0"
+      systemConfigData.System_configuratioins[0]
+        ?.deliveryCommissionPercentage || "0"
     );
 
     // 5. Calculate plasa fee
@@ -195,7 +198,7 @@ export default async function handler(
       const shopperData = await hasuraClient.request<{
         shoppers: Array<{ id: string }>;
       }>(GET_SHOPPER_ID, { user_id: order.shopper_id });
-      
+
       if (shopperData.shoppers && shopperData.shoppers.length > 0) {
         shopperId = shopperData.shoppers[0].id;
       }
@@ -236,8 +239,8 @@ export default async function handler(
     });
   } catch (err: any) {
     console.error("Revenue calculation error:", err);
-    return res.status(500).json({ 
-      error: err.message || "Failed to calculate revenue" 
+    return res.status(500).json({
+      error: err.message || "Failed to calculate revenue",
     });
   }
-} 
+}

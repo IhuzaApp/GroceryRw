@@ -181,7 +181,9 @@ export default async function handler(
   }
 
   if (orderType !== "regular" && orderType !== "reel") {
-    return res.status(400).json({ error: "Invalid orderType. Must be 'regular' or 'reel'" });
+    return res
+      .status(400)
+      .json({ error: "Invalid orderType. Must be 'regular' or 'reel'" });
   }
 
   try {
@@ -206,7 +208,7 @@ export default async function handler(
     const currentTimestamp = new Date().toISOString();
 
     let data: OrderResponse | ReelOrderResponse;
-    
+
     if (orderType === "reel") {
       // For reel orders, we need to update wallet balances during assignment
       // since they don't go through the shopping phase
@@ -256,11 +258,16 @@ export default async function handler(
         // Note: Wallet_Transactions table is designed for regular orders only
         // For reel orders, we skip transaction creation to avoid foreign key constraint issues
         // The wallet balances are still updated correctly above
-        console.log("Wallet balances updated for reel order assignment (no transactions created)");
+        console.log(
+          "Wallet balances updated for reel order assignment (no transactions created)"
+        );
 
         console.log("Wallet balances updated for reel order assignment");
       } catch (walletError) {
-        console.error("Error updating wallet balances for reel order:", walletError);
+        console.error(
+          "Error updating wallet balances for reel order:",
+          walletError
+        );
         return res.status(500).json({
           error:
             walletError instanceof Error
@@ -284,17 +291,16 @@ export default async function handler(
       });
     }
 
-    const result = orderType === "reel" 
-      ? (data as ReelOrderResponse).update_reel_orders_by_pk 
-      : (data as OrderResponse).update_Orders_by_pk;
+    const result =
+      orderType === "reel"
+        ? (data as ReelOrderResponse).update_reel_orders_by_pk
+        : (data as OrderResponse).update_Orders_by_pk;
 
-    return res
-      .status(200)
-      .json({ 
-        success: true, 
-        order: result,
-        orderType: orderType
-      });
+    return res.status(200).json({
+      success: true,
+      order: result,
+      orderType: orderType,
+    });
   } catch (error) {
     console.error("Error assigning order:", error);
     return res.status(500).json({ error: "Failed to assign order" });

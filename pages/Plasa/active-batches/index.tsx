@@ -236,7 +236,7 @@ export const getServerSideProps: GetServerSideProps<
             city: string;
           };
         }>;
-      }>(GET_ACTIVE_REEL_ORDERS, { shopperId: userId })
+      }>(GET_ACTIVE_REEL_ORDERS, { shopperId: userId }),
     ]);
 
     const regularOrders = regularOrdersData.Orders;
@@ -296,7 +296,10 @@ export const getServerSideProps: GetServerSideProps<
     }));
 
     // Combine both types of orders
-    const allActiveOrders = [...transformedRegularOrders, ...transformedReelOrders];
+    const allActiveOrders = [
+      ...transformedRegularOrders,
+      ...transformedReelOrders,
+    ];
 
     // If no orders were found, return an empty array but no error
     if (allActiveOrders.length === 0) {

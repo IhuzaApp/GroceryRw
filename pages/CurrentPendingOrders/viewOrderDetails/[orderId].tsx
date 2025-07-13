@@ -20,10 +20,10 @@ export default function ViewOrderDetailsPage() {
       try {
         setLoading(true);
         setError(null);
-        
+
         // Try to fetch as regular order first
         let res = await fetch(`/api/queries/orderDetails?id=${orderId}`);
-        
+
         if (res.ok) {
           const data = await res.json();
           if (data.order) {
@@ -33,15 +33,19 @@ export default function ViewOrderDetailsPage() {
           }
         } else if (res.status === 404) {
           // Silently handle 404 for regular orders - this is expected for reel orders
-          console.log("Order not found in regular orders, trying reel orders...");
+          console.log(
+            "Order not found in regular orders, trying reel orders..."
+          );
         }
-        
+
         // If not found as regular order, try as reel order
         res = await fetch(`/api/queries/reel-order-details?id=${orderId}`);
-        
+
         if (!res.ok) {
           if (res.status === 404) {
-            throw new Error("Order not found. Please check the order ID and try again.");
+            throw new Error(
+              "Order not found. Please check the order ID and try again."
+            );
           }
           const errorData = await res.json();
           throw new Error(errorData.error || "Failed to fetch order details");

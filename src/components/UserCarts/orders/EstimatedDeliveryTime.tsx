@@ -10,7 +10,11 @@ const EstimatedDeliveryTime: React.FC<EstimatedDeliveryTimeProps> = ({
   status,
 }) => {
   if (!estimatedDelivery) {
-    return <span className="text-gray-500 dark:text-gray-400">No delivery time available</span>;
+    return (
+      <span className="text-gray-500 dark:text-gray-400">
+        No delivery time available
+      </span>
+    );
   }
 
   const now = new Date();

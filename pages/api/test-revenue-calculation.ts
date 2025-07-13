@@ -67,9 +67,15 @@ export default async function handler(
         plasaFee: expectedPlasaFee,
       },
       validation: {
-        customerTotalCorrect: Math.abs(parseFloat(revenueData.customerTotal) - expectedCustomerTotal) < 0.01,
-        actualTotalCorrect: Math.abs(parseFloat(revenueData.actualTotal) - expectedActualTotal) < 0.01,
-        revenueCorrect: Math.abs(parseFloat(revenueData.revenue) - expectedRevenue) < 0.01,
+        customerTotalCorrect:
+          Math.abs(
+            parseFloat(revenueData.customerTotal) - expectedCustomerTotal
+          ) < 0.01,
+        actualTotalCorrect:
+          Math.abs(parseFloat(revenueData.actualTotal) - expectedActualTotal) <
+          0.01,
+        revenueCorrect:
+          Math.abs(parseFloat(revenueData.revenue) - expectedRevenue) < 0.01,
         plasaFeeCorrect: Math.abs(plasaFee - expectedPlasaFee) < 0.01,
       },
     };
@@ -86,4 +92,4 @@ export default async function handler(
       details: error instanceof Error ? error.message : "Unknown error",
     });
   }
-} 
+}

@@ -1,7 +1,15 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { Modal, Button, Input, InputNumber, Radio, toaster, Notification } from "rsuite";
+import {
+  Modal,
+  Button,
+  Input,
+  InputNumber,
+  Radio,
+  toaster,
+  Notification,
+} from "rsuite";
 import { formatCurrency } from "../../lib/formatCurrency";
 import Cookies from "js-cookie";
 import { useRouter } from "next/router";
@@ -69,9 +77,12 @@ export default function OrderModal({
   const router = useRouter();
   const [quantity, setQuantity] = useState(1);
   const [comments, setComments] = useState("");
-  const [systemConfig, setSystemConfig] = useState<SystemConfiguration | null>(null);
+  const [systemConfig, setSystemConfig] = useState<SystemConfiguration | null>(
+    null
+  );
   const [configLoading, setConfigLoading] = useState(true);
-  const [selectedPaymentMethod, setSelectedPaymentMethod] = useState<PaymentMethod | null>(null);
+  const [selectedPaymentMethod, setSelectedPaymentMethod] =
+    useState<PaymentMethod | null>(null);
   const [loadingPayment, setLoadingPayment] = useState(true);
   const [isOrderLoading, setIsOrderLoading] = useState(false);
   const [promoCode, setPromoCode] = useState("");
@@ -136,16 +147,21 @@ export default function OrderModal({
   // Calculate fees and totals
   const basePrice = post?.restaurant?.price || post?.product?.price || 0;
   const subtotal = basePrice * quantity;
-  
+
   // Service and Delivery Fee calculations
   const serviceFee = systemConfig ? parseInt(systemConfig.serviceFee) : 0;
-  const baseDeliveryFee = systemConfig ? parseInt(systemConfig.baseDeliveryFee) : 0;
-  
+  const baseDeliveryFee = systemConfig
+    ? parseInt(systemConfig.baseDeliveryFee)
+    : 0;
+
   // Surcharge based on units beyond extraUnits threshold
-  const extraUnitsThreshold = systemConfig ? parseInt(systemConfig.extraUnits) : 0;
+  const extraUnitsThreshold = systemConfig
+    ? parseInt(systemConfig.extraUnits)
+    : 0;
   const extraUnits = Math.max(0, quantity - extraUnitsThreshold);
-  const unitsSurcharge = extraUnits * (systemConfig ? parseInt(systemConfig.unitsSurcharge) : 0);
-  
+  const unitsSurcharge =
+    extraUnits * (systemConfig ? parseInt(systemConfig.unitsSurcharge) : 0);
+
   // Surcharge based on distance beyond 3km
   let distanceKm = 0;
   let userAlt = 0;
@@ -156,20 +172,30 @@ export default function OrderModal({
       const userLat = parseFloat(userAddr.latitude);
       const userLng = parseFloat(userAddr.longitude);
       userAlt = parseFloat(userAddr.altitude || "0");
-      distanceKm = getDistanceFromLatLonInKm(userLat, userLng, shopLat, shopLng);
+      distanceKm = getDistanceFromLatLonInKm(
+        userLat,
+        userLng,
+        shopLat,
+        shopLng
+      );
     } catch (err) {
       console.error("Error parsing delivery_address cookie:", err);
     }
   }
-  
+
   const extraDistance = Math.max(0, distanceKm - 3);
-  const distanceSurcharge = Math.ceil(extraDistance) * (systemConfig ? parseInt(systemConfig.distanceSurcharge) : 0);
-  
+  const distanceSurcharge =
+    Math.ceil(extraDistance) *
+    (systemConfig ? parseInt(systemConfig.distanceSurcharge) : 0);
+
   // Cap the distance-based delivery fee
   const rawDistanceFee = baseDeliveryFee + distanceSurcharge;
-  const cappedDistanceFee = systemConfig ? parseInt(systemConfig.cappedDistanceFee) : 0;
-  const finalDistanceFee = rawDistanceFee > cappedDistanceFee ? cappedDistanceFee : rawDistanceFee;
-  
+  const cappedDistanceFee = systemConfig
+    ? parseInt(systemConfig.cappedDistanceFee)
+    : 0;
+  const finalDistanceFee =
+    rawDistanceFee > cappedDistanceFee ? cappedDistanceFee : rawDistanceFee;
+
   // Final delivery fee includes unit surcharge
   const deliveryFee = finalDistanceFee + unitsSurcharge;
   const finalTotal = subtotal - discount + serviceFee + deliveryFee;
@@ -177,7 +203,7 @@ export default function OrderModal({
   // Handle promo code application
   const handleApplyPromo = () => {
     const discountsEnabled = systemConfig ? systemConfig.discounts : false;
-    
+
     if (!discountsEnabled) {
       toaster.push(
         <Notification type="warning" header="Discounts Disabled">
@@ -257,7 +283,9 @@ export default function OrderModal({
     setIsOrderLoading(true);
     try {
       // Calculate delivery time
-      const shoppingTime = systemConfig ? parseInt(systemConfig.shoppingTime) : 0;
+      const shoppingTime = systemConfig
+        ? parseInt(systemConfig.shoppingTime)
+        : 0;
       const altKm = (shopAlt - userAlt) / 1000;
       const distance3D = Math.sqrt(distanceKm * distanceKm + altKm * altKm);
       const travelTime = Math.ceil(distance3D);
@@ -326,7 +354,9 @@ export default function OrderModal({
     }
 
     if (!selectedPaymentMethod) {
-      return <div className="text-sm text-gray-500">No payment method selected</div>;
+      return (
+        <div className="text-sm text-gray-500">No payment method selected</div>
+      );
     }
 
     return (
@@ -434,8 +464,12 @@ export default function OrderModal({
               <h3 className="mb-3 font-semibold">Item Details</h3>
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="font-medium">{post.content?.title || "Item from reel"}</p>
-                  <p className="text-sm text-gray-600">{post.content?.description}</p>
+                  <p className="font-medium">
+                    {post.content?.title || "Item from reel"}
+                  </p>
+                  <p className="text-sm text-gray-600">
+                    {post.content?.description}
+                  </p>
                 </div>
                 <div className="text-right">
                   <p className="font-medium">{formatCurrency(basePrice)}</p>
@@ -451,10 +485,13 @@ export default function OrderModal({
                 <InputNumber
                   value={quantity}
                   onChange={(value) => {
-                    if (value === null || value === '') {
+                    if (value === null || value === "") {
                       setQuantity(1);
                     } else {
-                      const numValue = typeof value === 'number' ? value : parseInt(value as string) || 1;
+                      const numValue =
+                        typeof value === "number"
+                          ? value
+                          : parseInt(value as string) || 1;
                       setQuantity(Math.max(1, Math.min(50, numValue)));
                     }
                   }}
@@ -551,4 +588,4 @@ export default function OrderModal({
       </Modal.Footer>
     </Modal>
   );
-} 
+}

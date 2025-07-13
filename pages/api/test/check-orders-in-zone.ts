@@ -7,18 +7,29 @@ import { logger } from "../../../src/utils/logger";
 const TEST_USER_ID = "36672ccc-5f44-465a-b2f6-7ff23f4f643f";
 
 // Haversine formula to calculate distance in kilometers
-function calculateDistanceKm(lat1: number, lon1: number, lat2: number, lon2: number): number {
+function calculateDistanceKm(
+  lat1: number,
+  lon1: number,
+  lat2: number,
+  lon2: number
+): number {
   const R = 6371; // Radius of the Earth in km
   const dLat = (lat2 - lat1) * (Math.PI / 180);
   const dLon = (lon2 - lon1) * (Math.PI / 180);
-  const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-    Math.cos(lat1 * (Math.PI / 180)) * Math.cos(lat2 * (Math.PI / 180)) *
-    Math.sin(dLon / 2) * Math.sin(dLon / 2);
+  const a =
+    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+    Math.cos(lat1 * (Math.PI / 180)) *
+      Math.cos(lat2 * (Math.PI / 180)) *
+      Math.sin(dLon / 2) *
+      Math.sin(dLon / 2);
   const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
   return R * c;
 }
 
-export default async function handler(req: NextApiRequest, res: NextApiResponse) {
+export default async function handler(
+  req: NextApiRequest,
+  res: NextApiResponse
+) {
   if (req.method !== "GET") {
     return res.status(405).json({ message: "Method not allowed" });
   }
@@ -31,7 +42,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     // Get notification settings
     const GET_NOTIFICATION_SETTINGS = gql`
       query GetNotificationSettings($user_id: uuid!) {
-        shopper_notification_settings(where: {user_id: {_eq: $user_id}}) {
+        shopper_notification_settings(where: { user_id: { _eq: $user_id } }) {
           id
           user_id
           use_live_location
@@ -43,9 +54,12 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       }
     `;
 
-    const settingsResponse = await hasuraClient.request(GET_NOTIFICATION_SETTINGS, {
-      user_id: TEST_USER_ID
-    }) as any;
+    const settingsResponse = (await hasuraClient.request(
+      GET_NOTIFICATION_SETTINGS,
+      {
+        user_id: TEST_USER_ID,
+      }
+    )) as any;
 
     const currentSettings = settingsResponse.shopper_notification_settings?.[0];
 
@@ -53,14 +67,16 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       return res.status(200).json({
         success: true,
         message: "No notification settings found",
-        test_user_id: TEST_USER_ID
+        test_user_id: TEST_USER_ID,
       });
     }
 
     // Get available orders
     const GET_AVAILABLE_ORDERS = gql`
       query GetAvailableOrders {
-        Orders(where: { shopper_id: { _is_null: true }, status: { _eq: "PENDING" } }) {
+        Orders(
+          where: { shopper_id: { _is_null: true }, status: { _eq: "PENDING" } }
+        ) {
           id
           created_at
           service_fee
@@ -85,7 +101,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     // Get available reel orders
     const GET_AVAILABLE_REEL_ORDERS = gql`
       query GetAvailableReelOrders {
-        reel_orders(where: { shopper_id: { _is_null: true }, status: { _eq: "PENDING" } }) {
+        reel_orders(
+          where: { shopper_id: { _is_null: true }, status: { _eq: "PENDING" } }
+        ) {
           id
           created_at
           total
@@ -113,12 +131,12 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     const [ordersResponse, reelOrdersResponse] = await Promise.all([
       hasuraClient.request(GET_AVAILABLE_ORDERS) as any,
-      hasuraClient.request(GET_AVAILABLE_REEL_ORDERS) as any
+      hasuraClient.request(GET_AVAILABLE_REEL_ORDERS) as any,
     ]);
 
     const allOrders = ordersResponse.Orders || [];
     const allReelOrders = reelOrdersResponse.reel_orders || [];
-    
+
     // For testing purposes, use a default location
     // In a real app, the shopper's location would come from:
     // 1. GPS coordinates from the mobile app
@@ -126,30 +144,33 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     // 3. Stored in a separate location table
     // 4. Or passed as a parameter in the request
     const defaultLocation = {
-      latitude: -1.9496551,  // Kigali coordinates
-      longitude: 30.1163144
+      latitude: -1.9496551, // Kigali coordinates
+      longitude: 30.1163144,
     };
 
     // Determine locations to check
     const locationsToCheck = [];
-    
+
     if (currentSettings.use_live_location) {
       // For testing, use default location. In real app, this would be shopper's GPS location
       locationsToCheck.push({
         name: "Live Location",
         latitude: defaultLocation.latitude,
         longitude: defaultLocation.longitude,
-        source: "live_location"
+        source: "live_location",
       });
     }
 
-    if (!currentSettings.use_live_location && currentSettings.custom_locations?.length > 0) {
+    if (
+      !currentSettings.use_live_location &&
+      currentSettings.custom_locations?.length > 0
+    ) {
       currentSettings.custom_locations.forEach((location: any) => {
         locationsToCheck.push({
           name: location.name,
           latitude: location.latitude,
           longitude: location.longitude,
-          source: "custom_location"
+          source: "custom_location",
         });
       });
     }
@@ -167,7 +188,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       for (const order of allOrders) {
         const orderCreatedAt = new Date(order.created_at);
         const isNewOrder = orderCreatedAt.getTime() > tenMinutesAgo.getTime();
-        
+
         const distance = calculateDistanceKm(
           location.latitude,
           location.longitude,
@@ -182,7 +203,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
             locationName: location.name,
             locationSource: location.source,
             isNewOrder,
-            ageInMinutes: Math.round((now.getTime() - orderCreatedAt.getTime()) / (1000 * 60))
+            ageInMinutes: Math.round(
+              (now.getTime() - orderCreatedAt.getTime()) / (1000 * 60)
+            ),
           });
         }
       }
@@ -190,8 +213,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       // Check reel orders
       for (const reelOrder of allReelOrders) {
         const reelOrderCreatedAt = new Date(reelOrder.created_at);
-        const isNewReelOrder = reelOrderCreatedAt.getTime() > tenMinutesAgo.getTime();
-        
+        const isNewReelOrder =
+          reelOrderCreatedAt.getTime() > tenMinutesAgo.getTime();
+
         const distance = calculateDistanceKm(
           location.latitude,
           location.longitude,
@@ -206,19 +230,21 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
             locationName: location.name,
             locationSource: location.source,
             isNewReelOrder,
-            ageInMinutes: Math.round((now.getTime() - reelOrderCreatedAt.getTime()) / (1000 * 60))
+            ageInMinutes: Math.round(
+              (now.getTime() - reelOrderCreatedAt.getTime()) / (1000 * 60)
+            ),
           });
         }
       }
     }
 
     // Remove duplicates
-    const uniqueOrdersInZone = ordersInZone.filter((order, index, self) => 
-      index === self.findIndex(o => o.id === order.id)
+    const uniqueOrdersInZone = ordersInZone.filter(
+      (order, index, self) => index === self.findIndex((o) => o.id === order.id)
     );
 
-    const uniqueReelOrdersInZone = reelOrdersInZone.filter((order, index, self) => 
-      index === self.findIndex(o => o.id === order.id)
+    const uniqueReelOrdersInZone = reelOrdersInZone.filter(
+      (order, index, self) => index === self.findIndex((o) => o.id === order.id)
     );
 
     return res.status(200).json({
@@ -228,37 +254,41 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       settings: {
         use_live_location: currentSettings.use_live_location,
         custom_locations: currentSettings.custom_locations || [],
-        max_distance: currentSettings.max_distance
+        max_distance: currentSettings.max_distance,
       },
-      location_note: "For testing: using default Kigali coordinates. In real app, location comes from GPS/browser geolocation.",
-      locations_checked: locationsToCheck.map(loc => ({
+      location_note:
+        "For testing: using default Kigali coordinates. In real app, location comes from GPS/browser geolocation.",
+      locations_checked: locationsToCheck.map((loc) => ({
         name: loc.name,
         source: loc.source,
-        coordinates: { lat: loc.latitude, lng: loc.longitude }
+        coordinates: { lat: loc.latitude, lng: loc.longitude },
       })),
       summary: {
         total_orders_available: allOrders.length,
         total_reel_orders_available: allReelOrders.length,
         orders_in_zone: uniqueOrdersInZone.length,
         reel_orders_in_zone: uniqueReelOrdersInZone.length,
-        new_orders_in_zone: uniqueOrdersInZone.filter(o => o.isNewOrder).length,
-        new_reel_orders_in_zone: uniqueReelOrdersInZone.filter(o => o.isNewReelOrder).length
+        new_orders_in_zone: uniqueOrdersInZone.filter((o) => o.isNewOrder)
+          .length,
+        new_reel_orders_in_zone: uniqueReelOrdersInZone.filter(
+          (o) => o.isNewReelOrder
+        ).length,
       },
       orders_in_zone: uniqueOrdersInZone,
       reel_orders_in_zone: uniqueReelOrdersInZone,
       age_filter_info: {
-        filter_applied: "Only NEW orders/batches (created within last 10 minutes)",
+        filter_applied:
+          "Only NEW orders/batches (created within last 10 minutes)",
         current_time: new Date().toISOString(),
-        ten_minutes_ago: tenMinutesAgo.toISOString()
-      }
+        ten_minutes_ago: tenMinutesAgo.toISOString(),
+      },
     });
-
   } catch (error) {
     logger.error("Error checking orders in zone", "CheckOrdersInZone", error);
     return res.status(500).json({
       success: false,
       message: "Failed to check orders in zone",
-      error: error instanceof Error ? error.message : "Unknown error"
+      error: error instanceof Error ? error.message : "Unknown error",
     });
   }
-} 
+}

@@ -97,7 +97,7 @@ export default async function handler(
 
     // Update the order with the delivery photo and updated_at based on order type
     let data: any;
-    
+
     if (isReelOrder) {
       // Update reel order
       type UpdateReelOrderDeliveryPhotoResponse = {
@@ -131,8 +131,8 @@ export default async function handler(
     }
 
     // Check if the update was successful
-    const affectedRows = isReelOrder 
-      ? data.update_reel_orders.affected_rows 
+    const affectedRows = isReelOrder
+      ? data.update_reel_orders.affected_rows
       : data.update_Orders.affected_rows;
 
     if (affectedRows === 0) {

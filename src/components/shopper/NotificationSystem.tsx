@@ -1,9 +1,6 @@
 import React, { useEffect, useRef, useState } from "react";
 import { useSession } from "next-auth/react";
-import {
-  Message,
-  Button,
-} from "rsuite";
+import { Message, Button } from "rsuite";
 import toast from "react-hot-toast";
 import { logger } from "../../utils/logger";
 
@@ -161,7 +158,10 @@ export default function NotificationSystem({
     if (existingToast) {
       toast.dismiss(existingToast);
       activeToasts.current.delete(orderId);
-      logger.info(`Removed toast for accepted order ${orderId}`, "NotificationSystem");
+      logger.info(
+        `Removed toast for accepted order ${orderId}`,
+        "NotificationSystem"
+      );
     }
   };
 
@@ -175,41 +175,85 @@ export default function NotificationSystem({
       toast.dismiss(existingToast);
       activeToasts.current.delete(order.id);
     }
-    
+
     const toastKey = toast.custom(
       (t) => (
-        <div className={`${t.visible ? 'animate-enter' : 'animate-leave'} max-w-md w-full bg-white shadow-lg rounded-lg pointer-events-auto flex ring-1 ring-black ring-opacity-5`}>
-          <div className="flex-1 w-0 p-4">
+        <div
+          className={`${
+            t.visible ? "animate-enter" : "animate-leave"
+          } pointer-events-auto flex w-full max-w-md rounded-lg bg-white shadow-lg ring-1 ring-black ring-opacity-5`}
+        >
+          <div className="w-0 flex-1 p-4">
             <div className="flex items-start">
               <div className="flex-shrink-0">
                 {type === "success" && (
-                  <svg className="h-6 w-6 text-green-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  <svg
+                    className="h-6 w-6 text-green-400"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth="2"
+                      d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
+                    />
                   </svg>
                 )}
                 {type === "warning" && (
-                  <svg className="h-6 w-6 text-yellow-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
+                  <svg
+                    className="h-6 w-6 text-yellow-400"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth="2"
+                      d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z"
+                    />
                   </svg>
                 )}
                 {type === "error" && (
-                  <svg className="h-6 w-6 text-red-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  <svg
+                    className="h-6 w-6 text-red-400"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth="2"
+                      d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                    />
                   </svg>
                 )}
                 {type === "info" && (
-                  <svg className="h-6 w-6 text-blue-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  <svg
+                    className="h-6 w-6 text-blue-400"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth="2"
+                      d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                    />
                   </svg>
                 )}
               </div>
               <div className="ml-3 flex-1">
-                <p className="text-sm font-medium text-gray-900">
-                  New Batch!
-                </p>
+                <p className="text-sm font-medium text-gray-900">New Batch!</p>
                 <div className="mt-1 text-sm text-gray-500">
                   <div>{order.customerAddress}</div>
-                  <div>{order.shopName} ({order.distance}km)</div>
+                  <div>
+                    {order.shopName} ({order.distance}km)
+                  </div>
                 </div>
                 <div className="mt-3 flex gap-2">
                   <button
@@ -218,7 +262,7 @@ export default function NotificationSystem({
                       onAcceptBatch?.(order.id);
                       toast.dismiss(t.id);
                     }}
-                    className="bg-blue-600 text-white px-3 py-1 rounded text-sm hover:bg-blue-700"
+                    className="rounded bg-blue-600 px-3 py-1 text-sm text-white hover:bg-blue-700"
                   >
                     Accept Batch
                   </button>
@@ -234,7 +278,7 @@ export default function NotificationSystem({
                         );
                       }
                     }}
-                    className="bg-gray-300 text-gray-700 px-3 py-1 rounded text-sm hover:bg-gray-400"
+                    className="rounded bg-gray-300 px-3 py-1 text-sm text-gray-700 hover:bg-gray-400"
                   >
                     View Details
                   </button>
@@ -248,10 +292,14 @@ export default function NotificationSystem({
                 removeToastForOrder(order.id);
                 toast.dismiss(t.id);
               }}
-              className="w-full border border-transparent rounded-none rounded-r-lg p-4 flex items-center justify-center text-sm font-medium text-gray-400 hover:text-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="flex w-full items-center justify-center rounded-none rounded-r-lg border border-transparent p-4 text-sm font-medium text-gray-400 hover:text-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
             >
               <svg className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
+                <path
+                  fillRule="evenodd"
+                  d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"
+                  clipRule="evenodd"
+                />
               </svg>
             </button>
           </div>
@@ -265,14 +313,20 @@ export default function NotificationSystem({
 
     // Store the toast key for this order
     activeToasts.current.set(order.id, toastKey);
-    
+
     return toastKey;
   };
 
-  const playNotificationSound = async (soundSettings?: { enabled: boolean; volume: number }) => {
+  const playNotificationSound = async (soundSettings?: {
+    enabled: boolean;
+    volume: number;
+  }) => {
     // Check if sound is enabled in settings
     if (soundSettings && !soundSettings.enabled) {
-      logger.info("Sound notifications disabled in settings", "NotificationSystem");
+      logger.info(
+        "Sound notifications disabled in settings",
+        "NotificationSystem"
+      );
       return;
     }
 
@@ -332,15 +386,15 @@ export default function NotificationSystem({
       notificationPermission === "granted"
     ) {
       try {
-                const notification = new window.Notification("New Batch Available!", {
+        const notification = new window.Notification("New Batch Available!", {
           body: `${order.shopName} (${order.distance}km)\n${order.customerAddress}`,
           icon: "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%234F46E5'><path d='M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z'/></svg>",
           tag: `batch-${order.id}`,
           requireInteraction: false,
         });
 
-      notification.onclick = () => {
-        window.focus();
+        notification.onclick = () => {
+          window.focus();
           notification.close();
         };
 
@@ -382,12 +436,26 @@ export default function NotificationSystem({
 
     const warningToastKey = toast.custom(
       (t) => (
-        <div className={`${t.visible ? 'animate-enter' : 'animate-leave'} max-w-md w-full bg-white shadow-lg rounded-lg pointer-events-auto flex ring-1 ring-black ring-opacity-5 border-l-4 border-yellow-400`}>
-          <div className="flex-1 w-0 p-4">
+        <div
+          className={`${
+            t.visible ? "animate-enter" : "animate-leave"
+          } pointer-events-auto flex w-full max-w-md rounded-lg border-l-4 border-yellow-400 bg-white shadow-lg ring-1 ring-black ring-opacity-5`}
+        >
+          <div className="w-0 flex-1 p-4">
             <div className="flex items-start">
               <div className="flex-shrink-0">
-                <svg className="h-6 w-6 text-yellow-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
+                <svg
+                  className="h-6 w-6 text-yellow-400"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth="2"
+                    d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z"
+                  />
                 </svg>
               </div>
               <div className="ml-3 flex-1">
@@ -396,8 +464,10 @@ export default function NotificationSystem({
                 </p>
                 <div className="mt-1 text-sm text-gray-500">
                   <div>{order.customerAddress}</div>
-                  <div>{order.shopName} ({order.distance}km)</div>
-                  <div className="text-orange-600 font-medium mt-1">
+                  <div>
+                    {order.shopName} ({order.distance}km)
+                  </div>
+                  <div className="mt-1 font-medium text-orange-600">
                     ⚠️ This batch will be reassigned in 20 seconds!
                   </div>
                 </div>
@@ -408,7 +478,7 @@ export default function NotificationSystem({
                       onAcceptBatch?.(order.id);
                       toast.dismiss(t.id);
                     }}
-                    className="bg-orange-600 text-white px-3 py-1 rounded text-sm hover:bg-orange-700"
+                    className="rounded bg-orange-600 px-3 py-1 text-sm text-white hover:bg-orange-700"
                   >
                     Accept Now
                   </button>
@@ -419,7 +489,7 @@ export default function NotificationSystem({
                         logger.info("Opening batch details for:", order.id);
                       }
                     }}
-                    className="bg-gray-300 text-gray-700 px-3 py-1 rounded text-sm hover:bg-gray-400"
+                    className="rounded bg-gray-300 px-3 py-1 text-sm text-gray-700 hover:bg-gray-400"
                   >
                     View Details
                   </button>
@@ -433,10 +503,14 @@ export default function NotificationSystem({
                 removeToastForOrder(order.id);
                 toast.dismiss(t.id);
               }}
-              className="w-full border border-transparent rounded-none rounded-r-lg p-4 flex items-center justify-center text-sm font-medium text-gray-400 hover:text-gray-500 focus:outline-none focus:ring-2 focus:ring-orange-500"
+              className="flex w-full items-center justify-center rounded-none rounded-r-lg border border-transparent p-4 text-sm font-medium text-gray-400 hover:text-gray-500 focus:outline-none focus:ring-2 focus:ring-orange-500"
             >
               <svg className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
+                <path
+                  fillRule="evenodd"
+                  d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"
+                  clipRule="evenodd"
+                />
               </svg>
             </button>
           </div>
@@ -458,12 +532,15 @@ export default function NotificationSystem({
       notificationPermission === "granted"
     ) {
       try {
-        const notification = new window.Notification("⚠️ Batch Expiring Soon!", {
-          body: `${order.shopName} (${order.distance}km)\n${order.customerAddress}\n\nThis batch will be reassigned in 20 seconds!`,
-          icon: "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23F59E0B'><path d='M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z'/></svg>",
-          tag: `warning-${order.id}`,
-          requireInteraction: false,
-        });
+        const notification = new window.Notification(
+          "⚠️ Batch Expiring Soon!",
+          {
+            body: `${order.shopName} (${order.distance}km)\n${order.customerAddress}\n\nThis batch will be reassigned in 20 seconds!`,
+            icon: "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23F59E0B'><path d='M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z'/></svg>",
+            tag: `warning-${order.id}`,
+            requireInteraction: false,
+          }
+        );
 
         notification.onclick = () => {
           window.focus();
@@ -561,14 +638,21 @@ export default function NotificationSystem({
       const data = await response.json();
       return data.is_available;
     } catch (error) {
-      logger.error("Error checking shopper status", "NotificationSystem", error);
+      logger.error(
+        "Error checking shopper status",
+        "NotificationSystem",
+        error
+      );
       return false;
     }
   };
 
   const checkForNewOrders = async () => {
     if (!session?.user?.id || !currentLocation) {
-      logger.debug("Missing session or location, skipping check", "NotificationSystem");
+      logger.debug(
+        "Missing session or location, skipping check",
+        "NotificationSystem"
+      );
       return;
     }
 
@@ -593,16 +677,19 @@ export default function NotificationSystem({
 
     try {
       // Use the new API that respects notification settings
-      const response = await fetch("/api/shopper/check-notifications-with-settings", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          user_id: session.user.id,
-          current_location: currentLocation,
-        }),
-      });
+      const response = await fetch(
+        "/api/shopper/check-notifications-with-settings",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            user_id: session.user.id,
+            current_location: currentLocation,
+          }),
+        }
+      );
 
       const data = await response.json();
 
@@ -621,9 +708,11 @@ export default function NotificationSystem({
               if (assignment.warningTimeout) {
                 clearTimeout(assignment.warningTimeout);
               }
-              
+
               // Remove toast for expired order
-              const existingToast = activeToasts.current.get(assignment.orderId);
+              const existingToast = activeToasts.current.get(
+                assignment.orderId
+              );
               if (existingToast) {
                 toast.dismiss(existingToast);
                 activeToasts.current.delete(assignment.orderId);
@@ -632,7 +721,7 @@ export default function NotificationSystem({
                   "NotificationSystem"
                 );
               }
-              
+
               logger.info(
                 `Assignment expired for order ${assignment.orderId} - reassigning to next shopper`,
                 "NotificationSystem"
@@ -645,7 +734,8 @@ export default function NotificationSystem({
 
         // Sort notifications by creation time (oldest first)
         const sortedNotifications = [...data.notifications].sort(
-          (a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
+          (a, b) =>
+            new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
         );
 
         const assignedOrderIds = new Set(
@@ -707,14 +797,23 @@ export default function NotificationSystem({
             );
           }
         } else {
-          logger.debug("No available notifications (all assigned or expired)", "NotificationSystem");
+          logger.debug(
+            "No available notifications (all assigned or expired)",
+            "NotificationSystem"
+          );
         }
 
         // Don't call onNewOrder to prevent page refreshes
         // The notification system should be independent
-        logger.info("Notification shown, not triggering page refresh", "NotificationSystem");
+        logger.info(
+          "Notification shown, not triggering page refresh",
+          "NotificationSystem"
+        );
       } else {
-        logger.debug("No notifications found based on settings", "NotificationSystem");
+        logger.debug(
+          "No notifications found based on settings",
+          "NotificationSystem"
+        );
       }
     } catch (error) {
       logger.error(
@@ -764,20 +863,20 @@ export default function NotificationSystem({
       clearInterval(checkInterval.current);
       checkInterval.current = null;
     }
-    
+
     // Clear all warning timeouts
     batchAssignments.current.forEach((assignment) => {
       if (assignment.warningTimeout) {
         clearTimeout(assignment.warningTimeout);
       }
     });
-    
+
     // Clear all active toasts
     activeToasts.current.forEach((toastKey) => {
       toast.dismiss(toastKey);
     });
     activeToasts.current.clear();
-    
+
     setIsListening(false);
     lastOrderIds.current.clear();
     batchAssignments.current = []; // Clear all assignments

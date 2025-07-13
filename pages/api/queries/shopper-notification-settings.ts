@@ -52,7 +52,7 @@ export default async function handler(
       user_id: user_id,
     };
 
-    const response = await hasuraClient.request(query, variables) as any;
+    const response = (await hasuraClient.request(query, variables)) as any;
 
     return res.status(200).json({
       success: true,
@@ -65,4 +65,4 @@ export default async function handler(
       message: "Failed to fetch notification settings",
     });
   }
-} 
+}

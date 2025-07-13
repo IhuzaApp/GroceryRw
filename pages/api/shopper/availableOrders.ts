@@ -146,26 +146,26 @@ export default async function handler(
     // Fetch both regular orders and reel orders in parallel
     const [regularOrdersData, reelOrdersData] = await Promise.all([
       hasuraClient.request<{
-      Orders: Array<{
-        id: string;
-        created_at: string;
-        service_fee: string | null;
-        delivery_fee: string | null;
-        status: string;
-        shop: {
-          name: string;
-          address: string;
-          latitude: string;
-          longitude: string;
-        };
-        address: {
-          latitude: string;
-          longitude: string;
-          street: string;
-          city: string;
-        };
-        Order_Items_aggregate: { aggregate: { count: number | null } | null };
-      }>;
+        Orders: Array<{
+          id: string;
+          created_at: string;
+          service_fee: string | null;
+          delivery_fee: string | null;
+          status: string;
+          shop: {
+            name: string;
+            address: string;
+            latitude: string;
+            longitude: string;
+          };
+          address: {
+            latitude: string;
+            longitude: string;
+            street: string;
+            city: string;
+          };
+          Order_Items_aggregate: { aggregate: { count: number | null } | null };
+        }>;
       }>(GET_AVAILABLE_ORDERS),
       hasuraClient.request<{
         reel_orders: Array<{
@@ -199,7 +199,7 @@ export default async function handler(
             city: string;
           };
         }>;
-      }>(GET_AVAILABLE_REEL_ORDERS)
+      }>(GET_AVAILABLE_REEL_ORDERS),
     ]);
 
     const regularOrders = regularOrdersData.Orders;
@@ -328,7 +328,8 @@ export default async function handler(
       const travelTimeMinutes = estimateTravelTimeMinutes(distanceToPickupKm);
 
       // Round distances to 1 decimal place
-      const formattedDistanceToPickup = Math.round(distanceToPickupKm * 10) / 10;
+      const formattedDistanceToPickup =
+        Math.round(distanceToPickupKm * 10) / 10;
 
       // Calculate priority level (1-5) for UI highlighting
       let priorityLevel = 1;
@@ -378,7 +379,10 @@ export default async function handler(
     });
 
     // Combine both types of orders
-    const allAvailableOrders = [...availableRegularOrders, ...availableReelOrders];
+    const allAvailableOrders = [
+      ...availableRegularOrders,
+      ...availableReelOrders,
+    ];
 
     // Filter orders by travel time - only show orders within 15 minutes travel time
     const filteredOrders = allAvailableOrders.filter(
@@ -388,8 +392,10 @@ export default async function handler(
     // Log the filtered orders
     logger.info("Filtered orders", "AvailableOrders", {
       filteredOrderCount: filteredOrders.length,
-      regularOrderCount: filteredOrders.filter(o => o.orderType === "regular").length,
-      reelOrderCount: filteredOrders.filter(o => o.orderType === "reel").length,
+      regularOrderCount: filteredOrders.filter((o) => o.orderType === "regular")
+        .length,
+      reelOrderCount: filteredOrders.filter((o) => o.orderType === "reel")
+        .length,
       maxTravelTime: `${maxTravelTime} minutes`,
     });
 

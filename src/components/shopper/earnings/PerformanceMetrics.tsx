@@ -102,28 +102,28 @@ const PerformanceMetrics: React.FC<PerformanceMetricsProps> = ({
           </p>
         </div>
       ) : (
-      <div className="space-y-6">
-        {metrics.map((item, index) => (
-          <div key={index}>
-            <div className="mb-1 flex items-center justify-between">
-              <span className="text-sm font-medium">{item.metric}</span>
-              <span className="text-sm">{formatRating(item)}</span>
+        <div className="space-y-6">
+          {metrics.map((item, index) => (
+            <div key={index}>
+              <div className="mb-1 flex items-center justify-between">
+                <span className="text-sm font-medium">{item.metric}</span>
+                <span className="text-sm">{formatRating(item)}</span>
+              </div>
+              <div className="h-2 w-full rounded-full bg-gray-200">
+                <div
+                  className={`h-2 rounded-full ${
+                    item.percentage >= 90
+                      ? "bg-green-500"
+                      : item.percentage >= 70
+                      ? "bg-yellow-500"
+                      : "bg-red-500"
+                  }`}
+                  style={{ width: `${item.percentage}%` }}
+                ></div>
+              </div>
             </div>
-            <div className="h-2 w-full rounded-full bg-gray-200">
-              <div
-                className={`h-2 rounded-full ${
-                  item.percentage >= 90
-                    ? "bg-green-500"
-                    : item.percentage >= 70
-                    ? "bg-yellow-500"
-                    : "bg-red-500"
-                }`}
-                style={{ width: `${item.percentage}%` }}
-              ></div>
-            </div>
-          </div>
-        ))}
-      </div>
+          ))}
+        </div>
       )}
 
       <div className="mt-8 border-t pt-4">

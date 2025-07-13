@@ -605,9 +605,9 @@ export default function MapSection({
           fetch("/api/shopper/assignOrder", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ 
+            body: JSON.stringify({
               orderId: orderId,
-              orderType: orderType
+              orderType: orderType,
             }),
           })
             .then((res) => res.json())
@@ -693,7 +693,10 @@ export default function MapSection({
                                             { placement: "topEnd" }
                                           );
                                           btn.disabled = false;
-                                          btn.style.background = orderType === "reel" ? "#8b5cf6" : "#3b82f6";
+                                          btn.style.background =
+                                            orderType === "reel"
+                                              ? "#8b5cf6"
+                                              : "#3b82f6";
                                           btn.innerHTML = "Accept Batch";
                                         }
                                       })
@@ -711,7 +714,10 @@ export default function MapSection({
                                           { placement: "topEnd" }
                                         );
                                         btn.disabled = false;
-                                        btn.style.background = orderType === "reel" ? "#8b5cf6" : "#3b82f6";
+                                        btn.style.background =
+                                          orderType === "reel"
+                                            ? "#8b5cf6"
+                                            : "#3b82f6";
                                         btn.innerHTML = "Accept Batch";
                                       });
                                   }, 1000); // Small delay to let the wallet creation complete
@@ -751,7 +757,8 @@ export default function MapSection({
 
                 // Reset button
                 btn.disabled = false;
-                btn.style.background = orderType === "reel" ? "#8b5cf6" : "#3b82f6";
+                btn.style.background =
+                  orderType === "reel" ? "#8b5cf6" : "#3b82f6";
                 btn.innerHTML = "Accept Batch";
                 return;
               }
@@ -778,7 +785,8 @@ export default function MapSection({
                 { placement: "topEnd" }
               );
               btn.disabled = false;
-              btn.style.background = orderType === "reel" ? "#8b5cf6" : "#3b82f6";
+              btn.style.background =
+                orderType === "reel" ? "#8b5cf6" : "#3b82f6";
               btn.innerHTML = "Accept Batch";
             });
         });
@@ -844,15 +852,28 @@ export default function MapSection({
   };
 
   // Helper function to create consistent marker icon
-  const createOrderMarkerIcon = (earnings: string, orderType: "regular" | "reel" = "regular") => {
+  const createOrderMarkerIcon = (
+    earnings: string,
+    orderType: "regular" | "reel" = "regular"
+  ) => {
     const simplifiedEarnings = formatEarningsDisplay(earnings);
-    const bgColor = orderType === "reel" 
-      ? (theme === "dark" ? "#7c3aed" : "#8b5cf6") 
-      : (theme === "dark" ? "#065f46" : "#10b981");
-    const borderColor = orderType === "reel" 
-      ? (theme === "dark" ? "#6d28d9" : "#7c3aed") 
-      : (theme === "dark" ? "#047857" : "#059669");
-    
+    const bgColor =
+      orderType === "reel"
+        ? theme === "dark"
+          ? "#7c3aed"
+          : "#8b5cf6"
+        : theme === "dark"
+        ? "#065f46"
+        : "#10b981";
+    const borderColor =
+      orderType === "reel"
+        ? theme === "dark"
+          ? "#6d28d9"
+          : "#7c3aed"
+        : theme === "dark"
+        ? "#047857"
+        : "#059669";
+
     return L.divIcon({
       html: `
         <div style="
@@ -1010,7 +1031,7 @@ export default function MapSection({
     theme: string
   ) => {
     const isReelOrder = order.orderType === "reel";
-    
+
     return `
     <div class="${
       theme === "dark" ? "dark-theme-popup" : "light-theme-popup"
@@ -1031,26 +1052,36 @@ export default function MapSection({
         <div style="display: flex; align-items: center; gap: 6px; margin-bottom: 4px;">
           <span style="font-size: 16px;">🆔</span>
           <strong style="color: ${theme === "dark" ? "#60a5fa" : "#2563eb"};">${
-    order.id
-  }</strong>
+      order.id
+    }</strong>
         </div>
         <div style="display: flex; align-items: center; gap: 6px; margin-bottom: 4px;">
           <span style="font-size: 16px;">💰</span>
           <strong style="color: ${theme === "dark" ? "#34d399" : "#059669"};">${
-    order.estimatedEarnings
-  }</strong>
+      order.estimatedEarnings
+    }</strong>
         </div>
-        ${isReelOrder ? '<div style="display: flex; align-items: center; gap: 6px; margin-bottom: 4px;"><span style="font-size: 16px;">🎬</span><strong style="color: #8b5cf6;">REEL ORDER</strong></div>' : ''}
+        ${
+          isReelOrder
+            ? '<div style="display: flex; align-items: center; gap: 6px; margin-bottom: 4px;"><span style="font-size: 16px;">🎬</span><strong style="color: #8b5cf6;">REEL ORDER</strong></div>'
+            : ""
+        }
       </div>
       
       <div style="display: flex; flex-direction: column; gap: 6px;">
         <div style="display: flex; align-items: center; gap: 6px;">
-          <span style="font-size: 16px;">${isReelOrder ? '🎬' : '🏪'}</span>
-          <span style="flex: 1;">${isReelOrder ? (order.reel?.title || "Reel Order") : order.shopName}</span>
+          <span style="font-size: 16px;">${isReelOrder ? "🎬" : "🏪"}</span>
+          <span style="flex: 1;">${
+            isReelOrder ? order.reel?.title || "Reel Order" : order.shopName
+          }</span>
         </div>
         <div style="display: flex; align-items: center; gap: 6px;">
           <span style="font-size: 16px;">📍</span>
-          <span style="flex: 1;">${isReelOrder ? `From: ${order.customerName || "Reel Creator"}` : order.shopAddress}</span>
+          <span style="flex: 1;">${
+            isReelOrder
+              ? `From: ${order.customerName || "Reel Creator"}`
+              : order.shopAddress
+          }</span>
         </div>
         <div style="display: flex; align-items: center; gap: 6px;">
           <span style="font-size: 16px;">⏱️</span>
@@ -1060,7 +1091,11 @@ export default function MapSection({
           <span style="font-size: 16px;">🚚</span>
           <span style="flex: 1;">Deliver to: ${order.customerAddress}</span>
         </div>
-        ${isReelOrder && order.deliveryNote ? `<div style="display: flex; align-items: center; gap: 6px;"><span style="font-size: 16px;">📝</span><span style="flex: 1;">Note: ${order.deliveryNote}</span></div>` : ''}
+        ${
+          isReelOrder && order.deliveryNote
+            ? `<div style="display: flex; align-items: center; gap: 6px;"><span style="font-size: 16px;">📝</span><span style="flex: 1;">Note: ${order.deliveryNote}</span></div>`
+            : ""
+        }
       </div>
 
       <button 
@@ -1069,7 +1104,15 @@ export default function MapSection({
           width: 100%;
           margin-top: 12px;
           padding: 8px 16px;
-          background: ${isReelOrder ? (theme === "dark" ? "#7c3aed" : "#8b5cf6") : (theme === "dark" ? "#059669" : "#10b981")};
+          background: ${
+            isReelOrder
+              ? theme === "dark"
+                ? "#7c3aed"
+                : "#8b5cf6"
+              : theme === "dark"
+              ? "#059669"
+              : "#10b981"
+          };
           color: white;
           border: none;
           border-radius: 6px;
@@ -1078,10 +1121,22 @@ export default function MapSection({
           transition: all 0.2s;
         "
         onmouseover="this.style.background='${
-          isReelOrder ? (theme === "dark" ? "#6d28d9" : "#7c3aed") : (theme === "dark" ? "#047857" : "#059669")
+          isReelOrder
+            ? theme === "dark"
+              ? "#6d28d9"
+              : "#7c3aed"
+            : theme === "dark"
+            ? "#047857"
+            : "#059669"
         }'"
         onmouseout="this.style.background='${
-          isReelOrder ? (theme === "dark" ? "#7c3aed" : "#8b5cf6") : (theme === "dark" ? "#059669" : "#10b981")
+          isReelOrder
+            ? theme === "dark"
+              ? "#7c3aed"
+              : "#8b5cf6"
+            : theme === "dark"
+            ? "#059669"
+            : "#10b981"
         }'"
       >
         Accept Batch
@@ -1674,7 +1729,10 @@ export default function MapSection({
               const adjustedLng = baseLng + offset.lng;
 
               const marker = L.marker([adjustedLat, adjustedLng], {
-                icon: createOrderMarkerIcon(order.estimatedEarnings, order.orderType),
+                icon: createOrderMarkerIcon(
+                  order.estimatedEarnings,
+                  order.orderType
+                ),
                 zIndexOffset: 1000 + index,
               });
 

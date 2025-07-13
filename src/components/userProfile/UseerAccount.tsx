@@ -53,8 +53,6 @@ export default function UserAccount() {
     setSaving(true);
 
     try {
-
-
       const response = await fetch("/api/user/update", {
         method: "POST",
         headers: {
@@ -115,8 +113,6 @@ export default function UserAccount() {
     setSaving(true);
 
     try {
-
-
       const response = await fetch("/api/user/change-password", {
         method: "POST",
         headers: {

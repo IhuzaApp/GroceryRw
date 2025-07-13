@@ -458,7 +458,7 @@ function ActiveOrderCard({ order }: { order: Order }) {
   };
 
   const getNextActionButton = (status: string) => {
-    const buttonClass = isReelOrder 
+    const buttonClass = isReelOrder
       ? "rounded-md bg-purple-600 px-4 py-2 font-medium text-white transition-colors hover:bg-purple-700"
       : "rounded-md bg-[#125C13] px-4 py-2 font-medium text-white transition-colors hover:bg-[#0A400B]";
 
@@ -466,35 +466,27 @@ function ActiveOrderCard({ order }: { order: Order }) {
       case "ACCEPTED":
         return (
           <Link href={`/Plasa/active-batches/batch/${order.id}`}>
-            <button className={buttonClass}>
-              Start Shopping
-            </button>
+            <button className={buttonClass}>Start Shopping</button>
           </Link>
         );
       case "picked":
       case "shopping":
         return (
           <Link href={`/Plasa/active-batches/batch/${order.id}`}>
-            <button className={buttonClass}>
-              View Details
-            </button>
+            <button className={buttonClass}>View Details</button>
           </Link>
         );
       case "at_customer":
       case "on_the_way":
         return (
           <Link href={`/Plasa/active-batches/batch/${order.id}`}>
-            <button className={buttonClass}>
-              Confirm Delivery
-            </button>
+            <button className={buttonClass}>Confirm Delivery</button>
           </Link>
         );
       default:
         return (
           <Link href={`/Plasa/active-batches/batch/${order.id}`}>
-            <button className={buttonClass}>
-              View Details
-            </button>
+            <button className={buttonClass}>View Details</button>
           </Link>
         );
     }
@@ -520,15 +512,23 @@ function ActiveOrderCard({ order }: { order: Order }) {
           <div
             className={`rounded-full p-2 ${
               isReelOrder
-                ? theme === "dark" ? "bg-purple-900/20" : "bg-purple-50"
-                : theme === "dark" ? "bg-blue-900/20" : "bg-blue-50"
+                ? theme === "dark"
+                  ? "bg-purple-900/20"
+                  : "bg-purple-50"
+                : theme === "dark"
+                ? "bg-blue-900/20"
+                : "bg-blue-50"
             }`}
           >
             <svg
               className={`h-6 w-6 ${
                 isReelOrder
-                  ? theme === "dark" ? "text-purple-400" : "text-purple-500"
-                  : theme === "dark" ? "text-blue-400" : "text-blue-500"
+                  ? theme === "dark"
+                    ? "text-purple-400"
+                    : "text-purple-500"
+                  : theme === "dark"
+                  ? "text-blue-400"
+                  : "text-blue-500"
               }`}
               fill="none"
               viewBox="0 0 24 24"
@@ -559,20 +559,23 @@ function ActiveOrderCard({ order }: { order: Order }) {
                 theme === "dark" ? "text-gray-100" : "text-gray-900"
               }`}
             >
-              {isReelOrder ? "Reel Order" : "Batch"} #{order.id.slice(0, 6).toUpperCase()}
+              {isReelOrder ? "Reel Order" : "Batch"} #
+              {order.id.slice(0, 6).toUpperCase()}
             </h3>
             <p
               className={`text-sm ${
                 theme === "dark" ? "text-gray-400" : "text-gray-500"
               }`}
             >
-              {isReelOrder 
-                ? `${order.quantity || 1} quantity • ${order.reel?.title || "Reel Order"}`
-                : `${order.items} items`
-              } • ${order.estimatedEarnings}
+              {isReelOrder
+                ? `${order.quantity || 1} quantity • ${
+                    order.reel?.title || "Reel Order"
+                  }`
+                : `${order.items} items`}{" "}
+              • ${order.estimatedEarnings}
             </p>
             {isReelOrder && order.reel?.description && (
-              <p className="text-xs text-gray-500 mt-1">
+              <p className="mt-1 text-xs text-gray-500">
                 {order.reel.description}
               </p>
             )}
@@ -582,8 +585,12 @@ function ActiveOrderCard({ order }: { order: Order }) {
           <p
             className={`text-lg font-semibold ${
               isReelOrder
-                ? theme === "dark" ? "text-purple-400" : "text-purple-600"
-                : theme === "dark" ? "text-green-400" : "text-green-600"
+                ? theme === "dark"
+                  ? "text-purple-400"
+                  : "text-purple-600"
+                : theme === "dark"
+                ? "text-green-400"
+                : "text-green-600"
             }`}
           >
             ${order.estimatedEarnings}
@@ -635,10 +642,9 @@ function ActiveOrderCard({ order }: { order: Order }) {
                   theme === "dark" ? "text-gray-400" : "text-gray-500"
                 }`}
               >
-                {isReelOrder 
+                {isReelOrder
                   ? `From: ${order.customerName || "Reel Creator"}`
-                  : `${order.shopName}, ${order.shopAddress}`
-                }
+                  : `${order.shopName}, ${order.shopAddress}`}
               </p>
             </div>
           </div>
@@ -682,9 +688,11 @@ function ActiveOrderCard({ order }: { order: Order }) {
 
         {/* Show delivery note for reel orders */}
         {isReelOrder && order.deliveryNote && (
-          <div className={`flex items-center justify-between rounded-lg p-3 ${
-            theme === "dark" ? "bg-yellow-900/20" : "bg-yellow-50"
-          }`}>
+          <div
+            className={`flex items-center justify-between rounded-lg p-3 ${
+              theme === "dark" ? "bg-yellow-900/20" : "bg-yellow-50"
+            }`}
+          >
             <div className="flex items-center space-x-3">
               <div
                 className={`rounded-full p-2 ${
@@ -708,14 +716,18 @@ function ActiveOrderCard({ order }: { order: Order }) {
                 </svg>
               </div>
               <div>
-                <p className={`text-sm font-medium ${
-                  theme === "dark" ? "text-yellow-300" : "text-yellow-800"
-                }`}>
+                <p
+                  className={`text-sm font-medium ${
+                    theme === "dark" ? "text-yellow-300" : "text-yellow-800"
+                  }`}
+                >
                   Delivery Note
                 </p>
-                <p className={`text-sm ${
-                  theme === "dark" ? "text-yellow-200" : "text-yellow-700"
-                }`}>
+                <p
+                  className={`text-sm ${
+                    theme === "dark" ? "text-yellow-200" : "text-yellow-700"
+                  }`}
+                >
                   {order.deliveryNote}
                 </p>
               </div>

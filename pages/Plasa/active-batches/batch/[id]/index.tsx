@@ -364,7 +364,7 @@ export const getServerSideProps: GetServerSideProps<
         GET_REEL_ORDER_DETAILS,
         { id }
       );
-      
+
       order = reelData.reel_orders[0];
       orderType = "reel";
     }

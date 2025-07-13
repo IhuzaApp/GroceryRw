@@ -1,5 +1,5 @@
 query GetReelsLikes($reel_id: uuid = "") {
-  reel_likes(where: {reel_id: {_eq: $reel_id}}) {
+  reel_likes(where: { reel_id: { _eq: $reel_id } }) {
     created_at
     id
     reel_id

@@ -131,13 +131,13 @@ export default function CommentsDrawer({
 
   const handleAddComment = async () => {
     if (!newComment.trim() || isAddingComment) return;
-    
+
     try {
       setIsAddingComment(true);
       await onAddComment(postId, newComment);
       setNewComment("");
     } catch (error) {
-      console.error('Error adding comment:', error);
+      console.error("Error adding comment:", error);
     } finally {
       setIsAddingComment(false);
     }
@@ -161,8 +161,9 @@ export default function CommentsDrawer({
     if (!isMobile || !isDragging) return;
     const currentY = e.touches[0].clientY;
     const diff = currentY - dragStartY;
-    
-    if (diff > 0) { // Only allow downward drag
+
+    if (diff > 0) {
+      // Only allow downward drag
       setCurrentTranslateY(diff);
     }
   };
@@ -170,8 +171,9 @@ export default function CommentsDrawer({
   const handleTouchEnd = () => {
     if (!isMobile) return;
     setIsDragging(false);
-    
-    if (currentTranslateY > 100) { // Threshold to close
+
+    if (currentTranslateY > 100) {
+      // Threshold to close
       onClose();
     } else {
       setCurrentTranslateY(0);
@@ -240,8 +242,12 @@ export default function CommentsDrawer({
     <>
       <style jsx>{`
         @keyframes spin {
-          0% { transform: rotate(0deg); }
-          100% { transform: rotate(360deg); }
+          0% {
+            transform: rotate(0deg);
+          }
+          100% {
+            transform: rotate(360deg);
+          }
         }
       `}</style>
       {/* Backdrop */}
@@ -269,7 +275,9 @@ export default function CommentsDrawer({
           zIndex: 99999,
           display: "flex",
           flexDirection: "column",
-          transition: isDragging ? "none" : "transform 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
+          transition: isDragging
+            ? "none"
+            : "transform 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
           boxShadow:
             isMobile || isTablet
               ? "0 -10px 25px -5px rgba(0, 0, 0, 0.1)"
@@ -451,11 +459,11 @@ export default function CommentsDrawer({
                             fontSize: isMobile ? "12px" : "14px",
                             color: commentTextColor,
                             lineHeight: 1.4,
-                            opacity: comment.id.startsWith('temp-') ? 0.7 : 1,
+                            opacity: comment.id.startsWith("temp-") ? 0.7 : 1,
                           }}
                         >
                           {comment.text}
-                          {comment.id.startsWith('temp-') && (
+                          {comment.id.startsWith("temp-") && (
                             <span
                               style={{
                                 fontSize: "10px",
@@ -582,7 +590,9 @@ export default function CommentsDrawer({
                 }}
               >
                 <Input
-                  placeholder={isAddingComment ? "Adding comment..." : "Add a comment..."}
+                  placeholder={
+                    isAddingComment ? "Adding comment..." : "Add a comment..."
+                  }
                   value={newComment}
                   onChange={setNewComment}
                   disabled={isAddingComment}

@@ -36,9 +36,13 @@ A comprehensive grocery delivery platform with advanced revenue tracking, wallet
 ## Key Systems
 
 ### 1. Revenue Management System
-### 2. Wallet Balance System  
+
+### 2. Wallet Balance System
+
 ### 3. Order Processing System
+
 ### 4. Payment Management System
+
 ### 5. Reel Orders System
 
 ---
@@ -52,12 +56,14 @@ The revenue system uses a **trigger-based approach** with a two-price model for 
 ## Revenue Types
 
 ### 1. Commission Revenue (Product Profits)
+
 - **Trigger**: Order status changes to "shopping"
 - **Calculation**: `(final_price - price) × quantity` for each product
 - **Purpose**: Track profit margins from product markups
 - **API**: `/api/shopper/calculateCommissionRevenue`
 
 ### 2. Plasa Fee Revenue (Platform Earnings)
+
 - **Trigger**: Order status changes to "delivered"
 - **Calculation**: `(service_fee + delivery_fee) × (deliveryCommissionPercentage / 100)`
 - **Purpose**: Track platform earnings from service fees
@@ -76,6 +82,7 @@ Order Created → Shopper Accepts → Shopping → Picked → On the Way → Del
 ## Example Calculations
 
 ### Commission Revenue Example
+
 ```typescript
 Product: {
   price: 1233,        // Original price
@@ -90,6 +97,7 @@ Our Revenue: 13,665 - 3,699 = 9,966 RWF
 ```
 
 ### Plasa Fee Revenue Example
+
 ```typescript
 Service Fee = 2000
 Delivery Fee = 2400
@@ -106,7 +114,9 @@ Shopper Wallet: 3960 (remaining earnings)
 ## API Endpoints
 
 ### 1. Commission Revenue API (`/api/shopper/calculateCommissionRevenue`)
+
 **POST** - Calculate and record commission revenue
+
 ```typescript
 POST /api/shopper/calculateCommissionRevenue
 {
@@ -125,7 +135,9 @@ POST /api/shopper/calculateCommissionRevenue
 ```
 
 ### 2. Plasa Fee Revenue API (`/api/shopper/calculatePlasaFeeRevenue`)
+
 **POST** - Calculate and record plasa fee revenue
+
 ```typescript
 POST /api/shopper/calculatePlasaFeeRevenue
 {
@@ -144,9 +156,11 @@ POST /api/shopper/calculatePlasaFeeRevenue
 ```
 
 ### 3. Revenue Records API (`/api/revenue`)
+
 **GET** - Fetch all revenue records
+
 ```typescript
-GET /api/revenue
+GET / api / revenue;
 
 // Response
 {
@@ -160,15 +174,16 @@ GET /api/revenue
       shopper_id: uuid,
       products: jsonb,
       commission_percentage: string,
-      created_at: string
-    }
-  ]
+      created_at: string,
+    },
+  ];
 }
 ```
 
 ## Database Schema
 
 ### Revenue Table
+
 ```sql
 Revenue {
   id: uuid (primary key)
@@ -194,11 +209,13 @@ The wallet system manages shopper earnings with two balance types: **Available B
 ## Balance Types
 
 ### 1. Available Balance
+
 **Purpose**: Funds that the shopper has earned and can withdraw
 **Increases**: When order is delivered (remaining earnings after platform fee)
 **Decreases**: When platform fee is deducted
 
 ### 2. Reserved Balance
+
 **Purpose**: Funds set aside for pending orders (locked until completion)
 **Increases**: When order is accepted (order total)
 **Decreases**: When order is delivered (used to pay for goods)
@@ -206,15 +223,17 @@ The wallet system manages shopper earnings with two balance types: **Available B
 ## Wallet Balance Flow
 
 ### Order Acceptance ("shopping" status)
+
 ```typescript
 // Reserved Balance increases by order total
-newReservedBalance = currentReservedBalance + orderTotal
+newReservedBalance = currentReservedBalance + orderTotal;
 
 // Available Balance: No change (shopper hasn't earned fees yet)
 // Commission Revenue: Added to revenue table
 ```
 
 ### Order Delivery ("delivered" status)
+
 ```typescript
 // Calculate platform fee and remaining earnings
 totalEarnings = serviceFee + deliveryFee
@@ -229,9 +248,10 @@ newAvailableBalance = currentAvailableBalance + remainingEarnings
 ```
 
 ### Order Cancellation ("cancelled" status)
+
 ```typescript
 // Reserved Balance decreases by order total
-newReservedBalance = currentReservedBalance - orderTotal
+newReservedBalance = currentReservedBalance - orderTotal;
 
 // Available Balance: No change
 // Refund: Created in Refunds table (not back to available balance)
@@ -259,7 +279,9 @@ Delivered Status:
 ## API Endpoints
 
 ### 1. Wallet Balance API (`/api/queries/wallet-balance`)
+
 **GET/POST** - Get shopper wallet balance
+
 ```typescript
 GET /api/queries/wallet-balance?shopper_id=uuid
 
@@ -275,7 +297,9 @@ GET /api/queries/wallet-balance?shopper_id=uuid
 ```
 
 ### 2. Wallet History API (`/api/shopper/walletHistory`)
+
 **GET** - Get wallet transaction history
+
 ```typescript
 GET /api/shopper/walletHistory
 
@@ -300,7 +324,9 @@ GET /api/shopper/walletHistory
 ```
 
 ### 3. Create Wallet API (`/api/queries/createWallet`)
+
 **POST** - Create new wallet for shopper
+
 ```typescript
 POST /api/queries/createWallet
 {
@@ -322,6 +348,7 @@ POST /api/queries/createWallet
 ## Database Schema
 
 ### Wallets Table
+
 ```sql
 Wallets {
   id: uuid (primary key)
@@ -333,6 +360,7 @@ Wallets {
 ```
 
 ### Wallet_Transactions Table
+
 ```sql
 Wallet_Transactions {
   id: uuid (primary key)
@@ -357,20 +385,26 @@ The order processing system handles order status updates with integrated wallet 
 ## Order Status Flow
 
 ### 1. "shopping" Status
+
 **Triggers**:
+
 - Reserved balance increases by order total
 - Commission revenue is calculated and recorded
 - Wallet transaction created for reserved balance
 
-### 2. "delivered" Status  
+### 2. "delivered" Status
+
 **Triggers**:
+
 - Available balance updated with remaining earnings
 - Plasa fee revenue is calculated and recorded
 - Wallet transactions created for earnings
 - Revenue calculation APIs called
 
 ### 3. "cancelled" Status
+
 **Triggers**:
+
 - Reserved balance decreases by order total
 - Refund record created in Refunds table
 - Wallet transaction created for refund
@@ -378,7 +412,9 @@ The order processing system handles order status updates with integrated wallet 
 ## API Endpoints
 
 ### 1. Update Order Status API (`/api/shopper/updateOrderStatus`)
+
 **POST** - Update order status with wallet balance management
+
 ```typescript
 POST /api/shopper/updateOrderStatus
 {
@@ -400,6 +436,7 @@ POST /api/shopper/updateOrderStatus
 ## Database Schema
 
 ### Orders Table
+
 ```sql
 Orders {
   id: uuid (primary key)
@@ -418,6 +455,7 @@ Orders {
 ```
 
 ### Order_Items Table
+
 ```sql
 Order_Items {
   id: uuid (primary key)
@@ -441,12 +479,14 @@ The payment system handles order payments using reserved balance funds with refu
 ## Payment Flow
 
 ### 1. Payment Processing
+
 - Shopper uses reserved balance to pay for found items
 - System calculates refund for missing items
 - Refund record created if needed
 - Reserved balance updated
 
 ### 2. Refund Management
+
 - Missing items trigger refund creation
 - Refunds go to Refunds table (not back to available balance)
 - Refund status tracking
@@ -454,7 +494,9 @@ The payment system handles order payments using reserved balance funds with refu
 ## API Endpoints
 
 ### 1. Process Payment API (`/api/shopper/processPayment`)
+
 **POST** - Process order payment from reserved balance
+
 ```typescript
 POST /api/shopper/processPayment
 {
@@ -478,7 +520,9 @@ POST /api/shopper/processPayment
 ```
 
 ### 2. Record Transaction API (`/api/shopper/recordTransaction`)
+
 **POST** - Record wallet transaction for payment
+
 ```typescript
 POST /api/shopper/recordTransaction
 {
@@ -505,6 +549,7 @@ POST /api/shopper/recordTransaction
 ## Database Schema
 
 ### Refunds Table
+
 ```sql
 Refunds {
   id: uuid (primary key)
@@ -530,18 +575,21 @@ The Reel Orders system allows users to place direct orders from reel content wit
 ## Key Features
 
 ### 1. Direct Order Placement
+
 - **No Cart Required**: Orders are placed directly from reel content
 - **Instant Purchase**: One-click ordering from video content
 - **Real-time Pricing**: Dynamic pricing based on quantity and delivery location
 - **Promo Code Support**: Apply discount codes during checkout
 
 ### 2. Order Management
+
 - **Unified Order Tracking**: Reel orders appear alongside regular orders
 - **Status Tracking**: Same delivery status system as regular orders
 - **Shopper Assignment**: Automatic shopper assignment when available
 - **Delivery Tracking**: Real-time delivery updates
 
 ### 3. User Experience
+
 - **Modal Checkout**: Clean, focused checkout experience
 - **Quantity Selection**: Adjust quantity with real-time price updates
 - **Special Instructions**: Add delivery notes and special requests
@@ -552,6 +600,7 @@ The Reel Orders system allows users to place direct orders from reel content wit
 ### Database Schema
 
 #### Reel Orders Table
+
 ```sql
 reel_orders {
   id: uuid (primary key)
@@ -579,6 +628,7 @@ reel_orders {
 #### 1. Reel Orders API (`/api/reel-orders`)
 
 **POST** - Create new reel order
+
 ```typescript
 POST /api/reel-orders
 {
@@ -606,8 +656,9 @@ POST /api/reel-orders
 #### 2. All Orders API (`/api/queries/all-orders`)
 
 **GET** - Fetch both regular and reel orders
+
 ```typescript
-GET /api/queries/all-orders
+GET / api / queries / all - orders;
 
 // Response
 {
@@ -620,21 +671,22 @@ GET /api/queries/all-orders
       total: number,
       orderType: "regular" | "reel",
       // Regular order fields
-      shop?: object,
-      itemsCount?: number,
-      unitsCount?: number,
+      shop: object,
+      itemsCount: number,
+      unitsCount: number,
       // Reel order fields
-      reel?: object,
-      quantity?: number,
-      delivery_note?: string
-    }
-  ]
+      reel: object,
+      quantity: number,
+      delivery_note: string,
+    },
+  ];
 }
 ```
 
 #### 3. Reel Order Details API (`/api/queries/reel-order-details`)
 
 **GET** - Fetch detailed reel order information
+
 ```typescript
 GET /api/queries/reel-order-details?id=uuid
 
@@ -677,6 +729,7 @@ GET /api/queries/reel-order-details?id=uuid
 ### 1. Order Modal (`src/components/Reels/OrderModal.tsx`)
 
 **Features:**
+
 - Quantity selection with real-time price updates
 - Promo code application
 - Special instructions input
@@ -685,6 +738,7 @@ GET /api/queries/reel-order-details?id=uuid
 - Loading states with placeholders
 
 **Key Functions:**
+
 ```typescript
 // Calculate order totals
 const basePrice = post?.restaurant?.price || post?.product?.price || 0;
@@ -715,7 +769,7 @@ const handlePlaceOrder = async () => {
     delivery_note: comments || "",
     delivery_address_id: deliveryAddressId,
   };
-  
+
   const res = await fetch("/api/reel-orders", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
@@ -727,66 +781,77 @@ const handlePlaceOrder = async () => {
 ### 2. Video Reel Component (`src/components/Reels/VideoReel.tsx`)
 
 **Features:**
+
 - "Order Now" button integration
 - Modal trigger functionality
 - Reel information display
 - Price and delivery information
 
 **Order Button Integration:**
+
 ```typescript
 // Order button with modal trigger
 <button
   onClick={() => setShowOrderModal(true)}
-  className="bg-purple-500 hover:bg-purple-600 text-white px-4 py-2 rounded-lg"
+  className="rounded-lg bg-purple-500 px-4 py-2 text-white hover:bg-purple-600"
 >
   Order Now
-</button>
+</button>;
 
 // Order modal
-{showOrderModal && (
-  <OrderModal
-    open={showOrderModal}
-    onClose={() => setShowOrderModal(false)}
-    post={post}
-    shopLat={shopLat}
-    shopLng={shopLng}
-    shopAlt={shopAlt}
-    shopId={shopId}
-  />
-)}
+{
+  showOrderModal && (
+    <OrderModal
+      open={showOrderModal}
+      onClose={() => setShowOrderModal(false)}
+      post={post}
+      shopLat={shopLat}
+      shopLng={shopLng}
+      shopAlt={shopAlt}
+      shopId={shopId}
+    />
+  );
+}
 ```
 
 ### 3. Order Details Components
 
 #### Regular Order Details (`src/components/UserCarts/orders/UserOrderDetails.tsx`)
+
 - Displays regular shop orders
 - Shows shop information and item details
 - Green theme styling
 
 #### Reel Order Details (`src/components/UserCarts/orders/UserReelOrderDetails.tsx`)
+
 - Displays reel-specific order information
 - Shows reel video thumbnail and details
 - Purple theme styling
 - Comprehensive shopper information
 
 **Key Differences:**
+
 ```typescript
 // Regular orders show shop information
-{order.shop && (
-  <div className="shop-info">
-    <h3>{order.shop.name}</h3>
-    <p>{order.shop.address}</p>
-  </div>
-)}
+{
+  order.shop && (
+    <div className="shop-info">
+      <h3>{order.shop.name}</h3>
+      <p>{order.shop.address}</p>
+    </div>
+  );
+}
 
 // Reel orders show reel information
-{order.reel && (
-  <div className="reel-info">
-    <video src={order.reel.video_url} />
-    <h3>{order.reel.title}</h3>
-    <p>{order.reel.description}</p>
-  </div>
-)}
+{
+  order.reel && (
+    <div className="reel-info">
+      <video src={order.reel.video_url} />
+      <h3>{order.reel.title}</h3>
+      <p>{order.reel.description}</p>
+    </div>
+  );
+}
 ```
 
 ## Order Management System
@@ -794,30 +859,37 @@ const handlePlaceOrder = async () => {
 ### 1. Unified Order Display (`src/components/userProfile/userRecentOrders.tsx`)
 
 **Features:**
+
 - Displays both regular and reel orders
 - Visual distinction between order types
 - Consistent filtering and pagination
 - Dark theme support
 
 **Order Type Detection:**
+
 ```typescript
 // Visual distinction
-const buttonClass = order.orderType === "reel" 
-  ? "bg-purple-500 hover:bg-purple-600" 
-  : "bg-green-500 hover:bg-green-600";
+const buttonClass =
+  order.orderType === "reel"
+    ? "bg-purple-500 hover:bg-purple-600"
+    : "bg-green-500 hover:bg-green-600";
 
 // Content display
-{order.orderType === "reel" ? (
-  <div className="reel-order-info">
-    <span>{order.quantity} quantity</span>
-    <span>{order.reel?.title}</span>
-  </div>
-) : (
-  <div className="regular-order-info">
-    <span>{order.itemsCount} items ({order.unitsCount} units)</span>
-    <span>{order.shop?.name}</span>
-  </div>
-)}
+{
+  order.orderType === "reel" ? (
+    <div className="reel-order-info">
+      <span>{order.quantity} quantity</span>
+      <span>{order.reel?.title}</span>
+    </div>
+  ) : (
+    <div className="regular-order-info">
+      <span>
+        {order.itemsCount} items ({order.unitsCount} units)
+      </span>
+      <span>{order.shop?.name}</span>
+    </div>
+  );
+}
 ```
 
 ### 2. Order Details Pages
@@ -825,6 +897,7 @@ const buttonClass = order.orderType === "reel"
 #### Unified Order Details (`pages/CurrentPendingOrders/viewOrderDetails/[orderId].tsx`)
 
 **Smart Order Detection:**
+
 ```typescript
 // Try regular order first
 let res = await fetch(`/api/queries/orderDetails?id=${orderId}`);
@@ -846,11 +919,13 @@ if (res.ok) {
 }
 
 // Render appropriate component
-{orderType === "reel" ? (
-  <UserReelOrderDetails order={order} />
-) : (
-  <UserOrderDetails order={order} />
-)}
+{
+  orderType === "reel" ? (
+    <UserReelOrderDetails order={order} />
+  ) : (
+    <UserOrderDetails order={order} />
+  );
+}
 ```
 
 ## User Experience Flow
@@ -889,26 +964,27 @@ if (res.ok) {
 1. **Reel Content**: Video shows fresh pizza being made
 2. **Product Info**: Title: "Margherita Pizza", Price: $15.99
 3. **Order Process**:
+
    ```typescript
    // User clicks "Order Now"
    setShowOrderModal(true);
-   
+
    // User selects quantity
    setQuantity(2);
-   
+
    // User adds special instructions
    setComments("Extra cheese, well done");
-   
+
    // User applies promo code
    handleApplyPromo("SAVE10"); // 10% discount
-   
+
    // Order is placed
    const order = {
      reel_id: "pizza-reel-123",
      quantity: 2,
      total: "28.78", // $15.99 * 2 - 10% discount + fees
      delivery_note: "Extra cheese, well done",
-     voucher_code: "SAVE10"
+     voucher_code: "SAVE10",
    };
    ```
 
@@ -919,19 +995,20 @@ if (res.ok) {
 1. **Reel Content**: Video shows fresh vegetables and fruits
 2. **Product Info**: Title: "Organic Vegetable Basket", Price: $25.00
 3. **Order Process**:
+
    ```typescript
    // User selects quantity
    setQuantity(1);
-   
+
    // System calculates delivery fee based on distance
    const deliveryFee = calculateDeliveryFee(userLocation, shopLocation);
-   
+
    // Order summary
    const orderSummary = {
-     subtotal: 25.00,
-     service_fee: 2.00,
-     delivery_fee: 3.50,
-     total: 30.50
+     subtotal: 25.0,
+     service_fee: 2.0,
+     delivery_fee: 3.5,
+     total: 30.5,
    };
    ```
 
@@ -942,20 +1019,21 @@ if (res.ok) {
 1. **Reel Content**: Video shows chef making pasta from scratch
 2. **Product Info**: Title: "Fresh Homemade Pasta Kit", Price: $35.00
 3. **Order Process**:
+
    ```typescript
    // User adds special dietary requirements
    setComments("Gluten-free pasta, no dairy");
-   
+
    // User applies multiple promo codes
    handleApplyPromo("SAVE20"); // 20% discount
-   
+
    // Final order
    const order = {
      reel_id: "pasta-kit-456",
      quantity: 1,
      total: "30.00", // $35.00 - 20% discount + fees
      delivery_note: "Gluten-free pasta, no dairy",
-     voucher_code: "SAVE20"
+     voucher_code: "SAVE20",
    };
    ```
 
@@ -965,18 +1043,18 @@ if (res.ok) {
 
 ```sql
 -- Reel orders reference reels
-ALTER TABLE reel_orders 
-ADD CONSTRAINT fk_reel_orders_reel 
+ALTER TABLE reel_orders
+ADD CONSTRAINT fk_reel_orders_reel
 FOREIGN KEY (reel_id) REFERENCES reels(id);
 
 -- Reel orders reference users
-ALTER TABLE reel_orders 
-ADD CONSTRAINT fk_reel_orders_user 
+ALTER TABLE reel_orders
+ADD CONSTRAINT fk_reel_orders_user
 FOREIGN KEY (user_id) REFERENCES users(id);
 
 -- Reel orders can reference shoppers
-ALTER TABLE reel_orders 
-ADD CONSTRAINT fk_reel_orders_shopper 
+ALTER TABLE reel_orders
+ADD CONSTRAINT fk_reel_orders_shopper
 FOREIGN KEY (shopper_id) REFERENCES shoppers(id);
 ```
 
@@ -1017,14 +1095,14 @@ try {
 const handlePlaceOrder = async () => {
   // Immediately show loading state
   setIsOrderLoading(true);
-  
+
   try {
     // Place order
     const response = await placeOrder(payload);
-    
+
     // Show success message
     showSuccess("Order placed successfully!");
-    
+
     // Close modal after delay
     setTimeout(() => {
       onClose();
@@ -1069,16 +1147,19 @@ const handlePlaceOrder = async () => {
 ### Common Issues
 
 1. **Order Not Placed**
+
    - Check internet connection
    - Verify delivery address is selected
    - Ensure all required fields are filled
 
 2. **Promo Code Not Working**
+
    - Verify promo code is valid
    - Check if discounts are enabled
    - Ensure minimum order requirements are met
 
 3. **Order Not Appearing**
+
    - Refresh the orders page
    - Check order status filter
    - Contact support if issue persists
@@ -1101,16 +1182,19 @@ For technical issues or questions about the Reels and Reel Orders system:
 ### Planned Features
 
 1. **Advanced Ordering**
+
    - Multiple item selection from single reel
    - Customization options (size, toppings, etc.)
    - Scheduled delivery times
 
 2. **Enhanced Tracking**
+
    - Real-time shopper location
    - Estimated arrival times
    - Delivery notifications
 
 3. **Social Features**
+
    - Share orders with friends
    - Group ordering
    - Order recommendations
@@ -1123,11 +1207,13 @@ For technical issues or questions about the Reels and Reel Orders system:
 ### Performance Improvements
 
 1. **Caching**
+
    - Reel content caching
    - Order history caching
    - API response caching
 
 2. **Optimization**
+
    - Image and video compression
    - Lazy loading
    - Bundle size optimization
@@ -1163,7 +1249,7 @@ The Reels feature is a TikTok-style video feed system that allows users to creat
 ### 1. Video Types
 
 - **Restaurant Posts**: Food delivery and dining experiences
-- **Supermarket Posts**: Product showcases and shopping content  
+- **Supermarket Posts**: Product showcases and shopping content
 - **Chef Posts**: Recipe tutorials and cooking content
 
 ### 2. User Interactions
@@ -1184,6 +1270,7 @@ The Reels feature is a TikTok-style video feed system that allows users to creat
 ### Database Schema
 
 #### Reels Table
+
 ```sql
 Reels {
   id: uuid (primary key)
@@ -1204,6 +1291,7 @@ Reels {
 ```
 
 #### Reel Likes Table
+
 ```sql
 reel_likes {
   id: uuid (primary key)
@@ -1214,6 +1302,7 @@ reel_likes {
 ```
 
 #### Reel Comments Table
+
 ```sql
 Reels_comments {
   id: uuid (primary key)
@@ -1231,6 +1320,7 @@ Reels_comments {
 #### 1. Reels API (`/api/queries/reels`)
 
 **GET** - Fetch reels
+
 ```typescript
 // Get all reels
 GET /api/queries/reels
@@ -1246,6 +1336,7 @@ GET /api/queries/reels?type=restaurant
 ```
 
 **POST** - Create new reel
+
 ```typescript
 POST /api/queries/reels
 {
@@ -1264,34 +1355,39 @@ POST /api/queries/reels
 #### 2. Reel Likes API (`/api/queries/reel-likes`)
 
 **GET** - Get likes for a reel
+
 ```typescript
 GET /api/queries/reel-likes?reel_id=uuid
 ```
 
 **POST** - Add like to reel
+
 ```typescript
-POST /api/queries/reel-likes
+POST / api / queries / reel - likes;
 {
-  reel_id: uuid
+  reel_id: uuid;
 }
 ```
 
 **DELETE** - Remove like from reel
+
 ```typescript
-DELETE /api/queries/reel-likes
+DELETE / api / queries / reel - likes;
 {
-  reel_id: uuid
+  reel_id: uuid;
 }
 ```
 
 #### 3. Reel Comments API (`/api/queries/reel-comments`)
 
 **GET** - Get comments for a reel
+
 ```typescript
 GET /api/queries/reel-comments?reel_id=uuid
 ```
 
 **POST** - Add comment to reel
+
 ```typescript
 POST /api/queries/reel-comments
 {
@@ -1301,6 +1397,7 @@ POST /api/queries/reel-comments
 ```
 
 **PUT** - Toggle comment like
+
 ```typescript
 PUT /api/queries/reel-comments
 {
@@ -1310,10 +1407,11 @@ PUT /api/queries/reel-comments
 ```
 
 **DELETE** - Delete comment
+
 ```typescript
-DELETE /api/queries/reel-comments
+DELETE / api / queries / reel - comments;
 {
-  comment_id: uuid
+  comment_id: uuid;
 }
 ```
 
@@ -1322,6 +1420,7 @@ DELETE /api/queries/reel-comments
 ### 1. Main Reels Component (`pages/Reels/index.tsx`)
 
 **Features:**
+
 - Fetches reels from database
 - Handles responsive layout (mobile/desktop)
 - Manages like/unlike functionality
@@ -1329,10 +1428,11 @@ DELETE /api/queries/reel-comments
 - Loading states with placeholder content
 
 **Key Functions:**
+
 ```typescript
 // Fetch reels from database
 const fetchReels = async () => {
-  const response = await fetch('/api/queries/reels');
+  const response = await fetch("/api/queries/reels");
   const data = await response.json();
   const convertedPosts = data.reels.map(convertDatabaseReelToFoodPost);
   setPosts(convertedPosts);
@@ -1341,20 +1441,33 @@ const fetchReels = async () => {
 // Optimistic like updates
 const toggleLike = async (postId: string) => {
   // Immediately update UI
-  setPosts(posts.map(post => 
-    post.id === postId 
-      ? { ...post, isLiked: !post.isLiked, stats: { ...post.stats, likes: post.isLiked ? post.stats.likes - 1 : post.stats.likes + 1 } }
-      : post
-  ));
-  
+  setPosts(
+    posts.map((post) =>
+      post.id === postId
+        ? {
+            ...post,
+            isLiked: !post.isLiked,
+            stats: {
+              ...post.stats,
+              likes: post.isLiked ? post.stats.likes - 1 : post.stats.likes + 1,
+            },
+          }
+        : post
+    )
+  );
+
   // Process backend request in background
-  fetch('/api/queries/reel-likes', { method: isLiked ? 'DELETE' : 'POST', body: JSON.stringify({ reel_id: postId }) });
+  fetch("/api/queries/reel-likes", {
+    method: isLiked ? "DELETE" : "POST",
+    body: JSON.stringify({ reel_id: postId }),
+  });
 };
 ```
 
 ### 2. Video Reel Component (`src/components/Reels/VideoReel.tsx`)
 
 **Features:**
+
 - Video player with auto-play/pause
 - Like button with visual feedback
 - Comment and share buttons
@@ -1362,22 +1475,29 @@ const toggleLike = async (postId: string) => {
 - Responsive design
 
 **Visual Elements:**
+
 ```typescript
 // Type badges with colors
 const getPostTypeColor = (type: PostType) => {
   switch (type) {
-    case "restaurant": return "#ff6b35"; // Orange
-    case "supermarket": return "#4ade80"; // Green
-    case "chef": return "#3b82f6"; // Blue
+    case "restaurant":
+      return "#ff6b35"; // Orange
+    case "supermarket":
+      return "#4ade80"; // Green
+    case "chef":
+      return "#3b82f6"; // Blue
   }
 };
 
 // Category badges
 const getCategoryColor = (category: string) => {
   switch (category.toLowerCase()) {
-    case "shopping": return "#8b5cf6"; // Purple
-    case "organic": return "#10b981"; // Emerald
-    case "tutorial": return "#f59e0b"; // Amber
+    case "shopping":
+      return "#8b5cf6"; // Purple
+    case "organic":
+      return "#10b981"; // Emerald
+    case "tutorial":
+      return "#f59e0b"; // Amber
     // ... more categories
   }
 };
@@ -1386,6 +1506,7 @@ const getCategoryColor = (category: string) => {
 ### 3. Comments Drawer (`src/components/Reels/CommentsDrawer.tsx`)
 
 **Features:**
+
 - Slide-up drawer for mobile
 - Side panel for desktop
 - Real-time comment addition
@@ -1410,12 +1531,14 @@ const getCategoryColor = (category: string) => {
 ### 3. Responsive Design
 
 **Mobile Layout:**
+
 - Full-screen video experience
 - Bottom navigation bar
 - Slide-up comments drawer
 - Touch-optimized interactions
 
 **Desktop Layout:**
+
 - Integrated with main app layout
 - Side panel comments
 - Keyboard shortcuts support
@@ -1432,21 +1555,25 @@ const getCategoryColor = (category: string) => {
 ## Data Flow
 
 ### 1. Reel Creation
+
 ```
 User Upload → API Validation → Database Storage → UI Update
 ```
 
 ### 2. Like Interaction
+
 ```
 User Click → Optimistic UI Update → Background API Call → Database Update
 ```
 
 ### 3. Comment System
+
 ```
 User Comment → API Call → Database Storage → Real-time UI Update
 ```
 
 ### 4. Data Fetching
+
 ```
 Component Mount → API Call → Database Query → Data Conversion → UI Render
 ```
@@ -1454,16 +1581,19 @@ Component Mount → API Call → Database Query → Data Conversion → UI Rende
 ## Security & Authentication
 
 ### 1. User Authentication
+
 - All write operations require valid session
 - User ID extracted from NextAuth session
 - Unauthorized requests return 401 status
 
 ### 2. Authorization
+
 - Users can only delete their own comments
 - Admin users can delete any comment
 - Like operations tied to authenticated user
 
 ### 3. Input Validation
+
 - Required fields validation
 - Video URL validation
 - Comment text sanitization
@@ -1472,18 +1602,21 @@ Component Mount → API Call → Database Query → Data Conversion → UI Rende
 ## Performance Optimizations
 
 ### 1. Video Optimization
+
 - Preload metadata only
 - Lazy loading for off-screen videos
 - Efficient video format support
 - Background loading
 
 ### 2. State Management
+
 - Optimistic updates for better UX
 - Efficient re-rendering with React
 - Proper cleanup of event listeners
 - Memory leak prevention
 
 ### 3. API Optimization
+
 - Efficient database queries
 - Proper indexing on foreign keys
 - Caching strategies
@@ -1492,6 +1625,7 @@ Component Mount → API Call → Database Query → Data Conversion → UI Rende
 ## Configuration
 
 ### Environment Variables
+
 ```env
 # Database
 HASURA_GRAPHQL_ENDPOINT=your_hasura_endpoint
@@ -1508,7 +1642,9 @@ CLOUDINARY_API_SECRET=your_api_secret
 ```
 
 ### GraphQL Schema
+
 The reels feature uses the following GraphQL operations:
+
 - `GetAllReels` - Fetch all reels with user and restaurant data
 - `AddReels` - Create new reel
 - `GetReelsLikes` - Get likes for specific reel
@@ -1520,6 +1656,7 @@ The reels feature uses the following GraphQL operations:
 ## Future Enhancements
 
 ### Planned Features
+
 - Video upload functionality
 - Advanced filtering and search
 - User profiles and following
@@ -1528,6 +1665,7 @@ The reels feature uses the following GraphQL operations:
 - Content moderation tools
 
 ### Technical Improvements
+
 - Video compression and optimization
 - CDN integration for faster loading
 - Real-time notifications
@@ -1597,29 +1735,31 @@ Total Revenue: 19,932 RWF (27,330 - 7,398)
 ### Revenue Calculation Triggers
 
 #### 1. Order Status Update Trigger
+
 When a shopper updates order status to "delivered":
 
 ```typescript
 // In pages/api/shopper/updateOrderStatus.ts
 if (status === "delivered" && !isReelOrder) {
   // Trigger revenue calculation
-  await fetch('/api/shopper/calculateRevenue', {
-    method: 'POST',
-    body: JSON.stringify({ orderId })
+  await fetch("/api/shopper/calculateRevenue", {
+    method: "POST",
+    body: JSON.stringify({ orderId }),
   });
 }
 ```
 
 #### 2. Delivery Photo Upload Trigger
+
 When a delivery photo is uploaded for a delivered order:
 
 ```typescript
 // In pages/api/shopper/uploadDeliveryPhoto.ts
 if (orderStatus === "delivered") {
   // Trigger revenue calculation
-  await fetch('/api/shopper/calculateRevenue', {
-    method: 'POST',
-    body: JSON.stringify({ orderId })
+  await fetch("/api/shopper/calculateRevenue", {
+    method: "POST",
+    body: JSON.stringify({ orderId }),
   });
 }
 ```
@@ -1679,19 +1819,21 @@ export class RevenueCalculator {
 // Triggered when order is completed
 export default async function handler(req, res) {
   // 1. Get order details with items
-  const orderData = await hasuraClient.request(GET_ORDER_WITH_ITEMS, { orderId });
-  
+  const orderData = await hasuraClient.request(GET_ORDER_WITH_ITEMS, {
+    orderId,
+  });
+
   // 2. Calculate revenue using RevenueCalculator
   const revenueData = RevenueCalculator.calculateRevenue(cartItems);
   const productProfits = RevenueCalculator.calculateProductProfits(cartItems);
-  
+
   // 3. Calculate plasa fee
   const plasaFee = RevenueCalculator.calculatePlasaFee(
-    serviceFee, 
-    deliveryFee, 
+    serviceFee,
+    deliveryFee,
     deliveryCommissionPercentage
   );
-  
+
   // 4. Create revenue records
   await hasuraClient.request(CREATE_REVENUE, {
     type: "commission",
@@ -1699,7 +1841,7 @@ export default async function handler(req, res) {
     amount: revenueData.revenue,
     products: JSON.stringify(productProfits),
   });
-  
+
   await hasuraClient.request(CREATE_REVENUE, {
     type: "plasa_fee",
     amount: plasaFee.toFixed(2),
@@ -1724,6 +1866,7 @@ const orderRes = await hasuraClient.request(CREATE_ORDER, {
 ### Revenue Types
 
 1. **Commission Revenue**:
+
    - Type: `"commission"`
    - Amount: Product profit (final_price - price) × quantity
    - Linked to specific order
@@ -1738,6 +1881,7 @@ const orderRes = await hasuraClient.request(CREATE_ORDER, {
 ### System Configuration
 
 Revenue calculations use settings from `System_configuratioins` table:
+
 - `deliveryCommissionPercentage`: Used for plasa fee calculation
 - `productCommissionPercentage`: Available for future use
 
@@ -1786,7 +1930,7 @@ Shoppers can configure their notification preferences through the Settings page:
 - **Maximum Distance**: Set distance limit (5-30 km) for order notifications per location
 - **Notification Types**: Configure which notifications to receive:
   - New Orders
-  - Batch Orders  
+  - Batch Orders
   - Earnings Updates
   - System Notifications
 
@@ -1839,15 +1983,15 @@ interface Location {
 
 ```typescript
 interface NotificationTypes {
-  orders: boolean;      // Individual orders
-  batches: boolean;     // Batch/reel orders
-  earnings: boolean;    // Earnings updates
-  system: boolean;      // System notifications
+  orders: boolean; // Individual orders
+  batches: boolean; // Batch/reel orders
+  earnings: boolean; // Earnings updates
+  system: boolean; // System notifications
 }
 
 interface SoundSettings {
-  enabled: boolean;     // Enable/disable sound notifications
-  volume: number;       // Volume level (0.0 to 1.0)
+  enabled: boolean; // Enable/disable sound notifications
+  volume: number; // Volume level (0.0 to 1.0)
 }
 ```
 
@@ -1855,13 +1999,13 @@ interface SoundSettings {
 
 1. **Settings Configuration**: Shopper configures preferences in Settings → Notifications
 2. **Settings Storage**: Preferences saved to `shopper_notification_settings` table
-3. **Location Management**: 
+3. **Location Management**:
    - When custom locations are added, live location is automatically disabled
    - When live location is enabled, custom locations are cleared
    - Maximum 2 custom locations allowed
 4. **Notification Check**: `NotificationSystem` calls `/api/shopper/check-notifications-with-settings`
 5. **Age Filtering**: Only NEW orders/batches (created within last 10 minutes) are shown
-6. **Sequential Location Processing**: 
+6. **Sequential Location Processing**:
    - Each location is checked one by one
    - First location with matching orders gets notifications
    - Other locations are skipped to avoid duplicate notifications
@@ -1872,14 +2016,16 @@ interface SoundSettings {
 
 ### Existing APIs Updated
 
-- **`/api/queries/check-new-orders`**: 
+- **`/api/queries/check-new-orders`**:
+
   - Updated to use 10-minute age filter (was 3 minutes)
   - Added notification settings integration
   - Added sound settings respect
   - Added scheduler integration (via shopper availability)
   - **Fixed**: Now uses `max_distance` from notification settings instead of hardcoded values
 
-- **`/api/queries/notify-nearby-dashers`**: 
+- **`/api/queries/notify-nearby-dashers`**:
+
   - Updated to use 10-minute age filter (was 20 minutes)
   - Added notification settings integration
   - Added scheduler integration (checks shopper availability)
@@ -1888,19 +2034,20 @@ interface SoundSettings {
   - **Enhanced**: Added sequential location processing - checks each location one by one
   - **Enhanced**: Added support for custom locations vs live location toggle
 
-- **`/api/shopper/check-notifications-with-settings`**: 
+- **`/api/shopper/check-notifications-with-settings`**:
+
   - Already includes age filtering and sound settings
   - Added `sound_settings` field to response
   - **Enhanced**: Now includes scheduler checks, shopper status, and active order checks
   - **Optimized**: Moved all logic to backend to reduce frontend complexity
   - **Enhanced**: Added sequential location processing for both regular and reel orders
 
-- **`/api/queries/shopper-notification-settings`**: 
+- **`/api/queries/shopper-notification-settings`**:
   - Added `sound_settings` field to query response
 
 ### Frontend Components Updated
 
-- **`NotificationTab.tsx`**: 
+- **`NotificationTab.tsx`**:
   - **Enhanced**: Added automatic live location toggle when custom locations are added
   - **Enhanced**: Added automatic custom location clearing when live location is enabled
   - **Enhanced**: Added validation for maximum 2 custom locations
@@ -1999,6 +2146,7 @@ Before showing any notifications, the system checks:
   - Handles timezone considerations
 
 - **Notification Timing**
+
   - 60-second cooldown between notifications
   - 60-second acceptance window per batch
   - Automatic cleanup of expired assignments
@@ -2013,6 +2161,7 @@ Before showing any notifications, the system checks:
 ### 5. Sound Settings
 
 - **Sound Configuration**
+
   - Enable/disable sound notifications per user preference
   - Configurable volume level (0-100%)
   - Settings stored in `sound_settings` object
@@ -2047,10 +2196,11 @@ Before showing any notifications, the system checks:
 4. `/api/test/notification-settings-integration`
 
    - Test endpoint to verify notification settings integration
+
 - **`/api/test/check-orders-in-zone`**: Test endpoint to check what orders are in the shopper's zone based on their notification preferences
-   - Tests settings retrieval and notification API integration
-   - Usage: `GET /api/test/notification-settings-integration`
-   - Format: `{ schedule: Array<{ day_of_week: number, start_time: string, end_time: string, is_available: boolean }> }`
+  - Tests settings retrieval and notification API integration
+  - Usage: `GET /api/test/notification-settings-integration`
+  - Format: `{ schedule: Array<{ day_of_week: number, start_time: string, end_time: string, is_available: boolean }> }`
 
 2. `/api/shopper/activeOrders`
 
@@ -3522,3 +3672,388 @@ The API route at `pages/api/queries/notify-nearby-dashers.ts` is responsible for
 
 - This endpoint is typically triggered by a scheduled job or backend process every few minutes to proactively alert dashers about new work opportunities close to them.
 - Dashers receive a notification if there are new batches at shops within a 10-minute travel distance, so they can act quickly to claim those orders.
+
+# Grocery Delivery App
+
+## Notification System
+
+### Overview
+
+The notification system provides real-time order notifications to shoppers with persistent toast notifications that stay visible until specific conditions are met. The system uses react-hot-toast for reliable toast management and includes advanced features like location-based filtering, notification preferences, and two-stage notification alerts.
+
+### Key Features
+
+#### 1. Persistent Toast Notifications
+
+- **Duration**: Toasts stay visible until manually closed or order expires
+- **Replacement**: New notifications replace existing ones for the same order
+- **Custom Design**: Beautiful, responsive toast components with action buttons
+- **Type Support**: Info, success, warning, and error notification types
+
+#### 2. Two-Stage Notification System
+
+- **Initial Notification**: Shows immediately when order is assigned (60 seconds)
+- **Warning Notification**: Shows after 40 seconds if not accepted (20 seconds remaining)
+- **Automatic Cleanup**: Toasts are removed when orders expire or are accepted
+
+#### 3. Location-Based Filtering
+
+- **Live Location**: Use current GPS location for notifications
+- **Custom Locations**: Up to 2 saved locations for notification preferences
+- **Distance Filtering**: Maximum distance setting (default: 10km)
+- **Age Filtering**: Only new orders within 10 minutes
+
+#### 4. Notification Preferences
+
+- **Sound Settings**: Enable/disable sound with volume control
+- **Notification Types**: Filter by order types (regular, reel, etc.)
+- **Schedule Integration**: Respect shopper availability schedules
+- **Active Order Check**: Don't notify if shopper has active orders
+
+### Technical Implementation
+
+#### Component Structure
+
+```typescript
+// Main notification system component
+src / components / shopper / NotificationSystem.tsx;
+
+// Key interfaces
+interface Order {
+  id: string;
+  shopName: string;
+  distance: number;
+  createdAt: string;
+  customerAddress: string;
+}
+
+interface BatchAssignment {
+  shopperId: string;
+  orderId: string;
+  assignedAt: number;
+  expiresAt: number;
+  warningShown: boolean;
+  warningTimeout: NodeJS.Timeout | null;
+}
+```
+
+#### Toast Management
+
+```typescript
+// Toast tracking system
+const activeToasts = useRef<Map<string, any>>(new Map());
+
+// Remove existing toast for order
+const removeToastForOrder = (orderId: string) => {
+  const existingToast = activeToasts.current.get(orderId);
+  if (existingToast) {
+    toast.dismiss(existingToast);
+    activeToasts.current.delete(orderId);
+  }
+};
+```
+
+#### Custom Toast Components
+
+```typescript
+// Initial notification toast
+const toastKey = toast.custom(
+  (t) => (
+    <div className="w-full max-w-md rounded-lg bg-white shadow-lg">
+      {/* Toast content with action buttons */}
+    </div>
+  ),
+  {
+    duration: Infinity, // Never auto-dismiss
+    position: "top-right",
+  }
+);
+```
+
+### API Endpoints
+
+#### 1. Check Notifications with Settings
+
+```typescript
+POST /api/shopper/check-notifications-with-settings
+{
+  "user_id": "uuid",
+  "current_location": {
+    "lat": number,
+    "lng": number
+  }
+}
+
+// Response
+{
+  "success": true,
+  "notifications": [...],
+  "settings": {
+    "sound_settings": {
+      "enabled": boolean,
+      "volume": number
+    },
+    "notification_preferences": {
+      "live_location": boolean,
+      "custom_locations": [...],
+      "max_distance": number,
+      "notification_types": [...]
+    }
+  }
+}
+```
+
+#### 2. Save Notification Settings
+
+```typescript
+POST /api/shopper/save-notification-settings
+{
+  "user_id": "uuid",
+  "settings": {
+    "live_location": boolean,
+    "custom_locations": [
+      {
+        "name": string,
+        "lat": number,
+        "lng": number
+      }
+    ],
+    "max_distance": number,
+    "notification_types": string[],
+    "sound_settings": {
+      "enabled": boolean,
+      "volume": number
+    }
+  }
+}
+```
+
+### Database Schema
+
+#### Notifications Table
+
+```sql
+CREATE TABLE notifications (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id UUID REFERENCES users(id),
+  type VARCHAR(50),
+  title VARCHAR(255),
+  message TEXT,
+  shop_name VARCHAR(255),
+  distance DECIMAL(10,2),
+  location_name VARCHAR(255),
+  customer_address TEXT,
+  created_at TIMESTAMP DEFAULT NOW(),
+  expires_at TIMESTAMP,
+  is_read BOOLEAN DEFAULT FALSE
+);
+```
+
+#### Shopper Notification Settings Table
+
+```sql
+CREATE TABLE shopper_notification_settings (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id UUID REFERENCES users(id) UNIQUE,
+  live_location BOOLEAN DEFAULT TRUE,
+  custom_locations JSONB DEFAULT '[]',
+  max_distance INTEGER DEFAULT 10,
+  notification_types TEXT[] DEFAULT '{}',
+  sound_settings JSONB DEFAULT '{"enabled": true, "volume": 0.7}',
+  created_at TIMESTAMP DEFAULT NOW(),
+  updated_at TIMESTAMP DEFAULT NOW()
+);
+```
+
+### Notification Flow
+
+#### 1. Initial Assignment
+
+```
+Order Created → Check Shopper Availability → Assign to Shopper → Show Initial Toast
+```
+
+#### 2. Warning Stage
+
+```
+40 seconds → Show Warning Toast → 20 seconds remaining → Auto-reassign
+```
+
+#### 3. Cleanup
+
+```
+Order Expires → Remove Toast → Reassign to Next Shopper
+```
+
+### Configuration Options
+
+#### Notification Preferences
+
+- **Live Location**: Use current GPS location
+- **Custom Locations**: Up to 2 saved locations
+- **Max Distance**: Filter orders by distance (1-50km)
+- **Notification Types**: Filter by order types
+- **Sound Settings**: Enable/disable with volume control
+
+#### Timing Settings
+
+- **Check Interval**: 60 seconds between checks
+- **Assignment Timeout**: 60 seconds per assignment
+- **Warning Delay**: 40 seconds before warning
+- **Age Filter**: Only orders within 10 minutes
+
+### Usage Examples
+
+#### Basic Implementation
+
+```typescript
+import NotificationSystem from "../components/shopper/NotificationSystem";
+
+function ShopperDashboard() {
+  return (
+    <div>
+      <NotificationSystem
+        currentLocation={userLocation}
+        onAcceptBatch={handleAcceptBatch}
+        onViewBatchDetails={handleViewDetails}
+      />
+    </div>
+  );
+}
+```
+
+#### With Custom Settings
+
+```typescript
+// Notification settings component
+<NotificationTab
+  settings={notificationSettings}
+  onSave={handleSaveSettings}
+  onTest={handleTestNotifications}
+/>
+```
+
+### Error Handling
+
+#### Common Issues
+
+1. **Location Permission Denied**
+
+   - Fallback to saved locations
+   - Show permission request dialog
+
+2. **Network Errors**
+
+   - Retry with exponential backoff
+   - Show offline indicator
+
+3. **Toast Dismissal**
+   - Proper cleanup of active toasts
+   - Remove from tracking system
+
+### Performance Considerations
+
+#### Optimization Strategies
+
+- **Debounced Location Updates**: Prevent excessive API calls
+- **Toast Pooling**: Limit concurrent toasts
+- **Memory Management**: Clean up expired assignments
+- **Caching**: Cache notification settings
+
+#### Monitoring
+
+- **Toast Lifecycle**: Track creation, dismissal, replacement
+- **API Performance**: Monitor response times
+- **User Engagement**: Track acceptance rates
+
+### Security Features
+
+#### Data Protection
+
+- **Authentication**: All endpoints require valid session
+- **Authorization**: Users can only access their own notifications
+- **Input Validation**: Sanitize all user inputs
+- **Rate Limiting**: Prevent API abuse
+
+#### Privacy
+
+- **Location Data**: Encrypted storage and transmission
+- **Notification History**: Automatic cleanup of old data
+- **User Consent**: Explicit permission for notifications
+
+### Testing
+
+#### Manual Testing
+
+1. **Toast Persistence**: Verify toasts stay visible
+2. **Replacement Logic**: Test new notifications replacing old ones
+3. **Expiration Cleanup**: Confirm automatic removal
+4. **Action Buttons**: Test accept and view details functionality
+
+#### Automated Testing
+
+```typescript
+// Example test cases
+describe("NotificationSystem", () => {
+  test("toast stays visible until order expires", () => {
+    // Test implementation
+  });
+
+  test("new notification replaces existing toast", () => {
+    // Test implementation
+  });
+
+  test("warning notification shows after 40 seconds", () => {
+    // Test implementation
+  });
+});
+```
+
+### Troubleshooting
+
+#### Common Problems
+
+1. **Toasts Disappearing Too Soon**
+
+   - Check duration settings
+   - Verify react-hot-toast configuration
+   - Ensure proper cleanup logic
+
+2. **Notifications Not Showing**
+
+   - Check location permissions
+   - Verify notification settings
+   - Confirm API connectivity
+
+3. **Performance Issues**
+   - Monitor toast count
+   - Check memory usage
+   - Review API response times
+
+### Future Enhancements
+
+#### Planned Features
+
+- **Push Notifications**: Browser push notifications
+- **Offline Support**: Queue notifications when offline
+- **Advanced Filtering**: More granular notification preferences
+- **Analytics**: Detailed notification performance metrics
+
+#### Technical Improvements
+
+- **WebSocket Integration**: Real-time notifications
+- **Service Worker**: Background notification handling
+- **Progressive Web App**: Native app-like experience
+
+### Support
+
+For technical issues or questions about the notification system:
+
+- **Documentation**: Check this README section
+- **Code Examples**: See component implementation
+- **API Reference**: Review endpoint documentation
+- **Bug Reports**: Contact development team
+
+---
+
+## Delivery Photo Upload Feature

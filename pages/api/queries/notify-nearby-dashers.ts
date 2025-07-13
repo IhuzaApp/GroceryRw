@@ -158,9 +158,7 @@ export default async function handler(
     }
 
     // Get batches created in the last 10 minutes (NEW orders only)
-    const tenMinutesAgo = new Date(
-      Date.now() - 10 * 60 * 1000
-    ).toISOString();
+    const tenMinutesAgo = new Date(Date.now() - 10 * 60 * 1000).toISOString();
 
     // Fetch both regular orders and reel orders in parallel
     const [regularBatchesData, reelBatchesData] = await Promise.all([
@@ -173,7 +171,7 @@ export default async function handler(
         reel_orders: ReelBatch[];
       }>(GET_AVAILABLE_REEL_BATCHES, {
         created_after: tenMinutesAgo,
-      })
+      }),
     ]);
 
     const availableBatches = regularBatchesData.Orders;
@@ -181,7 +179,7 @@ export default async function handler(
 
     // Get current time and day for schedule checking
     const now = new Date();
-    const currentTime = now.toTimeString().split(' ')[0] + '+00:00'; // HH:MM:SS+00:00 format with timezone
+    const currentTime = now.toTimeString().split(" ")[0] + "+00:00"; // HH:MM:SS+00:00 format with timezone
     const currentDay = now.getDay() === 0 ? 7 : now.getDay(); // Sunday = 7
 
     const { Shopper_Availability: availableDashers } =
@@ -204,7 +202,9 @@ export default async function handler(
 
     // Group reel batches by creator location (using customer address as pickup point)
     const reelBatchesByLocation = availableReelBatches.reduce((acc, batch) => {
-      const locationKey = `${batch.address.latitude.toFixed(4)},${batch.address.longitude.toFixed(4)}`;
+      const locationKey = `${batch.address.latitude.toFixed(
+        4
+      )},${batch.address.longitude.toFixed(4)}`;
       if (!acc[locationKey]) {
         acc[locationKey] = [];
       }
@@ -215,7 +215,7 @@ export default async function handler(
     // Get notification settings for all dashers
     const GET_NOTIFICATION_SETTINGS = gql`
       query GetNotificationSettings($user_ids: [uuid!]!) {
-        shopper_notification_settings(where: {user_id: {_in: $user_ids}}) {
+        shopper_notification_settings(where: { user_id: { _in: $user_ids } }) {
           user_id
           use_live_location
           custom_locations
@@ -226,15 +226,22 @@ export default async function handler(
       }
     `;
 
-    const dasherIds = availableDashers.map(d => d.user_id);
-    const settingsResponse = await hasuraClient.request(GET_NOTIFICATION_SETTINGS, {
-      user_ids: dasherIds,
-    }) as any;
+    const dasherIds = availableDashers.map((d) => d.user_id);
+    const settingsResponse = (await hasuraClient.request(
+      GET_NOTIFICATION_SETTINGS,
+      {
+        user_ids: dasherIds,
+      }
+    )) as any;
 
-    const settingsByUser = settingsResponse.shopper_notification_settings.reduce((acc: any, setting: any) => {
-      acc[setting.user_id] = setting;
-      return acc;
-    }, {});
+    const settingsByUser =
+      settingsResponse.shopper_notification_settings.reduce(
+        (acc: any, setting: any) => {
+          acc[setting.user_id] = setting;
+          return acc;
+        },
+        {}
+      );
 
     // For each dasher, find nearby shops with available batches
     const notificationObjects: Array<{
@@ -250,14 +257,25 @@ export default async function handler(
         const dasherSettings = settingsByUser[dasher.user_id] || {
           use_live_location: true,
           custom_locations: [],
-          notification_types: { orders: true, batches: true, earnings: true, system: true },
+          notification_types: {
+            orders: true,
+            batches: true,
+            earnings: true,
+            system: true,
+          },
           sound_settings: { enabled: true, volume: 0.8 },
-          max_distance: "10"
+          max_distance: "10",
         };
 
         // Check if notifications are enabled for this dasher
-        if (!dasherSettings.notification_types.orders && !dasherSettings.notification_types.batches) {
-          logger.info(`Skipping notifications for dasher ${dasher.user_id} - notifications disabled`, "NotifyNearbyDashers");
+        if (
+          !dasherSettings.notification_types.orders &&
+          !dasherSettings.notification_types.batches
+        ) {
+          logger.info(
+            `Skipping notifications for dasher ${dasher.user_id} - notifications disabled`,
+            "NotifyNearbyDashers"
+          );
           return;
         }
 
@@ -267,27 +285,33 @@ export default async function handler(
           latitude: number;
           longitude: number;
         }> = [];
-        
+
         if (dasherSettings.use_live_location) {
           locationsToCheck.push({
             name: "Live Location",
             latitude: dasher.last_known_latitude,
-            longitude: dasher.last_known_longitude
+            longitude: dasher.last_known_longitude,
           });
         }
 
-        if (!dasherSettings.use_live_location && dasherSettings.custom_locations?.length > 0) {
+        if (
+          !dasherSettings.use_live_location &&
+          dasherSettings.custom_locations?.length > 0
+        ) {
           dasherSettings.custom_locations.forEach((location: any) => {
             locationsToCheck.push({
               name: location.name,
               latitude: location.latitude,
-              longitude: location.longitude
+              longitude: location.longitude,
             });
           });
         }
 
         if (locationsToCheck.length === 0) {
-          logger.info(`No locations configured for dasher ${dasher.user_id}`, "NotifyNearbyDashers");
+          logger.info(
+            `No locations configured for dasher ${dasher.user_id}`,
+            "NotifyNearbyDashers"
+          );
           return;
         }
 
@@ -331,7 +355,10 @@ export default async function handler(
                 lat: location.latitude,
                 lng: location.longitude,
               },
-              { lat: firstBatch.address.latitude, lng: firstBatch.address.longitude }
+              {
+                lat: firstBatch.address.latitude,
+                lng: firstBatch.address.longitude,
+              }
             );
 
             // If reel creator is within dasher's max distance from this location, add its batches
@@ -359,19 +386,27 @@ export default async function handler(
           const uniqueReelCreators = Array.from(
             new Set(nearbyReelBatches.map((batch) => batch.user.name))
           );
-          notificationMessage = `${nearbyBatches.length} regular batch(es) at ${uniqueShops.join(", ")} and ${nearbyReelBatches.length} reel order(s) from ${uniqueReelCreators.join(", ")}`;
+          notificationMessage = `${
+            nearbyBatches.length
+          } regular batch(es) at ${uniqueShops.join(", ")} and ${
+            nearbyReelBatches.length
+          } reel order(s) from ${uniqueReelCreators.join(", ")}`;
         } else if (hasRegularBatches) {
           // Only regular orders
           const uniqueShops = Array.from(
             new Set(nearbyBatches.map((batch) => batch.Shops.name))
           );
-          notificationMessage = `${nearbyBatches.length} new batch(es) available at ${uniqueShops.join(", ")}`;
+          notificationMessage = `${
+            nearbyBatches.length
+          } new batch(es) available at ${uniqueShops.join(", ")}`;
         } else if (hasReelBatches) {
           // Only reel orders
           const uniqueReelCreators = Array.from(
             new Set(nearbyReelBatches.map((batch) => batch.user.name))
           );
-          notificationMessage = `${nearbyReelBatches.length} new reel order(s) available from ${uniqueReelCreators.join(", ")}`;
+          notificationMessage = `${
+            nearbyReelBatches.length
+          } new reel order(s) available from ${uniqueReelCreators.join(", ")}`;
         }
 
         // If there are any nearby batches (regular or reel), create a notification object

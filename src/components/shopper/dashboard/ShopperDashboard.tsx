@@ -176,7 +176,7 @@ export default function ShopperDashboard() {
 
             // Handle both regular and reel orders
             const isReelOrder = order.orderType === "reel";
-            
+
             return {
               id: order.id,
               shopName: order.shopName || "Unknown Shop",
@@ -526,15 +526,15 @@ export default function ShopperDashboard() {
                 </button>
                 <button
                   onClick={toggleHistorical}
-                                      className={`rounded-md px-3 py-1 text-sm font-medium ${
-                      showHistorical
-                        ? "bg-blue-100 text-blue-700"
-                        : "bg-gray-100 text-gray-700"
-                    }`}
-                  >
-                    {showHistorical
-                      ? "Showing All Pending"
-                      : "Showing Recent (10+ min)"}
+                  className={`rounded-md px-3 py-1 text-sm font-medium ${
+                    showHistorical
+                      ? "bg-blue-100 text-blue-700"
+                      : "bg-gray-100 text-gray-700"
+                  }`}
+                >
+                  {showHistorical
+                    ? "Showing All Pending"
+                    : "Showing Recent (10+ min)"}
                 </button>
                 <button
                   className="rounded bg-green-500 px-3 py-1.5 text-sm text-white hover:bg-green-600"
