@@ -208,7 +208,7 @@ export default async function handler(
     const currentTimestamp = new Date().toISOString();
 
     let data: OrderResponse | ReelOrderResponse;
-
+    
     if (orderType === "reel") {
       // For reel orders, we need to update wallet balances during assignment
       // since they don't go through the shopping phase
@@ -293,14 +293,41 @@ export default async function handler(
 
     const result =
       orderType === "reel"
-        ? (data as ReelOrderResponse).update_reel_orders_by_pk
-        : (data as OrderResponse).update_Orders_by_pk;
+      ? (data as ReelOrderResponse).update_reel_orders_by_pk 
+      : (data as OrderResponse).update_Orders_by_pk;
+
+    // Clean up notifications for this order
+    try {
+      const cleanupResponse = await fetch(
+        `${req.headers.host ? `http://${req.headers.host}` : "http://localhost:3000"}/api/shopper/cleanup-notification`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Cookie: req.headers.cookie || "",
+          },
+          body: JSON.stringify({
+            orderId,
+            orderType,
+          }),
+        }
+      );
+
+      if (cleanupResponse.ok) {
+        console.log("Notifications cleaned up successfully");
+      } else {
+        console.warn("Failed to cleanup notifications, but order assignment succeeded");
+      }
+    } catch (cleanupError) {
+      console.warn("Error cleaning up notifications:", cleanupError);
+      // Don't fail the assignment if cleanup fails
+    }
 
     return res.status(200).json({
-      success: true,
-      order: result,
+        success: true, 
+        order: result,
       orderType: orderType,
-    });
+      });
   } catch (error) {
     console.error("Error assigning order:", error);
     return res.status(500).json({ error: "Failed to assign order" });

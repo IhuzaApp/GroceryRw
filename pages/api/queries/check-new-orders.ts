@@ -304,6 +304,10 @@ export default async function handler(
           })),
           timestamp: new Date().toISOString(),
           priority: totalOrders > 2 ? "high" : "normal",
+          // Add order details for notifications
+          itemsCount: totalItems,
+          estimatedEarnings: totalEarnings,
+          totalOrders: totalOrders,
         };
       }
     );

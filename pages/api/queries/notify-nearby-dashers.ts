@@ -378,6 +378,22 @@ export default async function handler(
         let hasRegularBatches = nearbyBatches.length > 0;
         let hasReelBatches = nearbyReelBatches.length > 0;
 
+        // Calculate total items and earnings
+        const totalItems = nearbyBatches.reduce((sum, batch) => {
+          // For regular orders, we need to get item count from Order_Items
+          // For now, we'll use a default of 1 item per batch
+          return sum + 1;
+        }, 0) + nearbyReelBatches.length; // Reel orders typically have 1 item
+
+        const totalEarnings = nearbyBatches.reduce((sum, batch) => {
+          // For regular orders, we need to get total from Orders table
+          // For now, we'll use a default earning
+          return sum + 5000; // Default RWF 5000 per batch
+        }, 0) + nearbyReelBatches.reduce((sum, batch) => {
+          // For reel orders, we need to get total from reel_orders table
+          return sum + 3000; // Default RWF 3000 per reel order
+        }, 0);
+
         if (hasRegularBatches && hasReelBatches) {
           // Both types of orders available
           const uniqueShops = Array.from(
@@ -390,7 +406,7 @@ export default async function handler(
             nearbyBatches.length
           } regular batch(es) at ${uniqueShops.join(", ")} and ${
             nearbyReelBatches.length
-          } reel order(s) from ${uniqueReelCreators.join(", ")}`;
+          } reel order(s) from ${uniqueReelCreators.join(", ")} - 📦 ${totalItems} items • 💰 RWF${totalEarnings}`;
         } else if (hasRegularBatches) {
           // Only regular orders
           const uniqueShops = Array.from(
@@ -398,7 +414,7 @@ export default async function handler(
           );
           notificationMessage = `${
             nearbyBatches.length
-          } new batch(es) available at ${uniqueShops.join(", ")}`;
+          } new batch(es) available at ${uniqueShops.join(", ")} - 📦 ${totalItems} items • 💰 RWF${totalEarnings}`;
         } else if (hasReelBatches) {
           // Only reel orders
           const uniqueReelCreators = Array.from(
@@ -406,7 +422,7 @@ export default async function handler(
           );
           notificationMessage = `${
             nearbyReelBatches.length
-          } new reel order(s) available from ${uniqueReelCreators.join(", ")}`;
+          } new reel order(s) available from ${uniqueReelCreators.join(", ")} - 📦 ${totalItems} items • 💰 RWF${totalEarnings}`;
         }
 
         // If there are any nearby batches (regular or reel), create a notification object

@@ -13,6 +13,8 @@ const CREATE_RATING = gql`
       delivery_experience
       packaging_quality
       professionalism
+      order_id
+      reel_order_id
       created_at
     }
   }
@@ -40,6 +42,7 @@ export default async function handler(
 
     const {
       order_id,
+      reel_order_id,
       shopper_id,
       rating,
       review,
@@ -49,8 +52,13 @@ export default async function handler(
     } = req.body;
 
     // Validate required fields
-    if (!order_id || !shopper_id || !rating) {
+    if (!shopper_id || !rating) {
       return res.status(400).json({ error: "Missing required fields" });
+    }
+
+    // Validate that either order_id or reel_order_id is provided
+    if (!order_id && !reel_order_id) {
+      return res.status(400).json({ error: "Either order_id or reel_order_id is required" });
     }
 
     // Create rating record
@@ -59,11 +67,12 @@ export default async function handler(
     }
 
     const ratingData = {
-      order_id,
+      order_id: order_id || null,
+      reel_order_id: reel_order_id || null,
       shopper_id,
       customer_id: session.user.id,
       rating,
-      review: review || null,
+      review: review || "",
       delivery_experience,
       packaging_quality,
       professionalism,

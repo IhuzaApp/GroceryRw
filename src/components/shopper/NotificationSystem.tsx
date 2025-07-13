@@ -10,6 +10,8 @@ interface Order {
   distance: number;
   createdAt: string;
   customerAddress: string;
+  itemsCount?: number;
+  estimatedEarnings?: number;
   // Add other order properties as needed
 }
 
@@ -163,6 +165,11 @@ export default function NotificationSystem({
         "NotificationSystem"
       );
     }
+    
+    // Also remove from batch assignments
+    batchAssignments.current = batchAssignments.current.filter(
+      (assignment) => assignment.orderId !== orderId
+    );
   };
 
   const showToast = (
@@ -254,6 +261,9 @@ export default function NotificationSystem({
                   <div>
                     {order.shopName} ({order.distance}km)
                   </div>
+                  <div className="mt-1 font-medium text-green-600">
+                    📦 {order.itemsCount || 0} items • 💰 RWF{order.estimatedEarnings || 0}
+                  </div>
                 </div>
                 <div className="mt-3 flex gap-2">
                   <button
@@ -268,19 +278,20 @@ export default function NotificationSystem({
                   </button>
                   <button
                     onClick={() => {
-                      if (onViewBatchDetails) {
-                        onViewBatchDetails(order.id);
-                        logger.info("Opening batch details for:", order.id);
-                      } else {
-                        logger.warn(
-                          "onViewBatchDetails callback not provided",
-                          "NotificationSystem"
-                        );
-                      }
+                      removeToastForOrder(order.id);
+                      // Remove assignment to allow other shoppers to get this order
+                      batchAssignments.current = batchAssignments.current.filter(
+                        (assignment) => assignment.orderId !== order.id
+                      );
+                      toast.dismiss(t.id);
+                      logger.info(
+                        `Skipped order ${order.id} - allowing other shoppers`,
+                        "NotificationSystem"
+                      );
                     }}
                     className="rounded bg-gray-300 px-3 py-1 text-sm text-gray-700 hover:bg-gray-400"
                   >
-                    View Details
+                    Skip
                   </button>
                 </div>
               </div>
@@ -467,6 +478,9 @@ export default function NotificationSystem({
                   <div>
                     {order.shopName} ({order.distance}km)
                   </div>
+                  <div className="mt-1 font-medium text-green-600">
+                    📦 {order.itemsCount || 0} items • 💰 RWF{order.estimatedEarnings || 0}
+                  </div>
                   <div className="mt-1 font-medium text-orange-600">
                     ⚠️ This batch will be reassigned in 20 seconds!
                   </div>
@@ -484,14 +498,20 @@ export default function NotificationSystem({
                   </button>
                   <button
                     onClick={() => {
-                      if (onViewBatchDetails) {
-                        onViewBatchDetails(order.id);
-                        logger.info("Opening batch details for:", order.id);
-                      }
+                      removeToastForOrder(order.id);
+                      // Remove assignment to allow other shoppers to get this order
+                      batchAssignments.current = batchAssignments.current.filter(
+                        (assignment) => assignment.orderId !== order.id
+                      );
+                      toast.dismiss(t.id);
+                      logger.info(
+                        `Skipped expiring order ${order.id} - allowing other shoppers`,
+                        "NotificationSystem"
+                      );
                     }}
                     className="rounded bg-gray-300 px-3 py-1 text-sm text-gray-700 hover:bg-gray-400"
                   >
-                    View Details
+                    Skip
                   </button>
                 </div>
               </div>
@@ -770,6 +790,8 @@ export default function NotificationSystem({
               distance: nextNotification.distance,
               createdAt: nextNotification.createdAt,
               customerAddress: nextNotification.customerAddress,
+              itemsCount: nextNotification.itemsCount || nextNotification.totalItems || 0,
+              estimatedEarnings: nextNotification.estimatedEarnings || nextNotification.totalEarnings || 0,
             };
 
             await playNotificationSound(data.settings?.sound_settings);
