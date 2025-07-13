@@ -1793,31 +1793,89 @@ Shoppers can configure their notification preferences through the Settings page:
 - **API Endpoints**:
   - `GET /api/queries/shopper-notification-settings` - Fetch current settings
   - `POST /api/mutations/shopper-notification-settings` - Save settings
+  - `POST /api/shopper/check-notifications-with-settings` - Check notifications with settings
+  - `GET /api/test/notification-settings-integration` - Test integration
 
-- **Database Schema**:
-  ```sql
-  shopper_notification_settings {
-    id: uuid (primary key)
-    user_id: uuid (foreign key to Users)
-    use_live_location: boolean (default: true)
-    custom_locations: jsonb (array of location objects)
-    max_distance: string (default: "10")
-    notification_types: jsonb (object with boolean flags)
-    created_at: timestamp
-    updated_at: timestamp
-  }
-  ```
+### System Integration
 
-- **Location Object Structure**:
-  ```typescript
-  interface Location {
+The notification settings are fully integrated with the entire notification system:
+
+1. **NotificationSystem Component**: Updated to use settings-aware API
+2. **Location-Based Filtering**: Respects live location vs custom locations
+3. **Distance Filtering**: Only shows notifications within configured distance
+4. **Type Filtering**: Only shows notifications for enabled types
+5. **Real-time Updates**: Settings changes take effect immediately
+
+### Database Schema
+
+```sql
+shopper_notification_settings {
+  id: uuid (primary key)
+  user_id: uuid (foreign key to Users)
+  use_live_location: boolean (default: true)
+  custom_locations: jsonb (array of location objects)
+  max_distance: string (default: "10")
+  notification_types: jsonb (object with boolean flags)
+  created_at: timestamp
+  updated_at: timestamp
+}
+```
+
+### Location Object Structure
+
+```typescript
+interface Location {
+  id: string;
+  name: string;
+  latitude: number;
+  longitude: number;
+  address: string;
+}
+```
+
+### Notification Types Configuration
+
+```typescript
+interface NotificationTypes {
+  orders: boolean;      // Individual orders
+  batches: boolean;     // Batch/reel orders
+  earnings: boolean;    // Earnings updates
+  system: boolean;      // System notifications
+}
+```
+
+### Integration Flow
+
+1. **Settings Configuration**: Shopper configures preferences in Settings → Notifications
+2. **Settings Storage**: Preferences saved to `shopper_notification_settings` table
+3. **Notification Check**: `NotificationSystem` calls `/api/shopper/check-notifications-with-settings`
+4. **Location Filtering**: API checks orders against configured locations
+5. **Distance Filtering**: Only orders within `max_distance` are considered
+6. **Type Filtering**: Only enabled notification types are processed
+7. **Notification Display**: Filtered notifications shown to shopper
+
+### API Response Format
+
+```typescript
+interface NotificationResponse {
+  success: boolean;
+  notifications: Array<{
     id: string;
-    name: string;
-    latitude: number;
-    longitude: number;
-    address: string;
-  }
-  ```
+    type: "order" | "batch";
+    shopName: string;
+    distance: number;
+    createdAt: string;
+    customerAddress: string;
+    locationName: string;
+    // Additional fields based on type
+  }>;
+  settings: {
+    use_live_location: boolean;
+    max_distance: string;
+    notification_types: NotificationTypes;
+  };
+}
+```
 
 ## Core Features
 
