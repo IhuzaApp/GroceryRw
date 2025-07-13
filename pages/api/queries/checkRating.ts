@@ -43,8 +43,8 @@ export default async function handler(
     if (orderId) {
       // Check for regular order rating
       data = await hasuraClient.request(CHECK_ORDER_RATING, {
-        orderId: orderId,
-      });
+      orderId: orderId,
+    });
     } else if (reelOrderId) {
       // Check for reel order rating
       data = await hasuraClient.request(CHECK_REEL_ORDER_RATING, {

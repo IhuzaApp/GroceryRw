@@ -769,7 +769,7 @@ const handlePlaceOrder = async () => {
     delivery_note: comments || "",
     delivery_address_id: deliveryAddressId,
   };
-
+  
   const res = await fetch("/api/reel-orders", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
@@ -801,15 +801,15 @@ const handlePlaceOrder = async () => {
 // Order modal
 {
   showOrderModal && (
-    <OrderModal
-      open={showOrderModal}
-      onClose={() => setShowOrderModal(false)}
-      post={post}
-      shopLat={shopLat}
-      shopLng={shopLng}
-      shopAlt={shopAlt}
-      shopId={shopId}
-    />
+  <OrderModal
+    open={showOrderModal}
+    onClose={() => setShowOrderModal(false)}
+    post={post}
+    shopLat={shopLat}
+    shopLng={shopLng}
+    shopAlt={shopAlt}
+    shopId={shopId}
+  />
   );
 }
 ```
@@ -835,21 +835,21 @@ const handlePlaceOrder = async () => {
 // Regular orders show shop information
 {
   order.shop && (
-    <div className="shop-info">
-      <h3>{order.shop.name}</h3>
-      <p>{order.shop.address}</p>
-    </div>
+  <div className="shop-info">
+    <h3>{order.shop.name}</h3>
+    <p>{order.shop.address}</p>
+  </div>
   );
 }
 
 // Reel orders show reel information
 {
   order.reel && (
-    <div className="reel-info">
-      <video src={order.reel.video_url} />
-      <h3>{order.reel.title}</h3>
-      <p>{order.reel.description}</p>
-    </div>
+  <div className="reel-info">
+    <video src={order.reel.video_url} />
+    <h3>{order.reel.title}</h3>
+    <p>{order.reel.description}</p>
+  </div>
   );
 }
 ```
@@ -871,23 +871,23 @@ const handlePlaceOrder = async () => {
 // Visual distinction
 const buttonClass =
   order.orderType === "reel"
-    ? "bg-purple-500 hover:bg-purple-600"
-    : "bg-green-500 hover:bg-green-600";
+  ? "bg-purple-500 hover:bg-purple-600" 
+  : "bg-green-500 hover:bg-green-600";
 
 // Content display
 {
   order.orderType === "reel" ? (
-    <div className="reel-order-info">
-      <span>{order.quantity} quantity</span>
-      <span>{order.reel?.title}</span>
-    </div>
-  ) : (
-    <div className="regular-order-info">
+  <div className="reel-order-info">
+    <span>{order.quantity} quantity</span>
+    <span>{order.reel?.title}</span>
+  </div>
+) : (
+  <div className="regular-order-info">
       <span>
         {order.itemsCount} items ({order.unitsCount} units)
       </span>
-      <span>{order.shop?.name}</span>
-    </div>
+    <span>{order.shop?.name}</span>
+  </div>
   );
 }
 ```
@@ -921,9 +921,9 @@ if (res.ok) {
 // Render appropriate component
 {
   orderType === "reel" ? (
-    <UserReelOrderDetails order={order} />
-  ) : (
-    <UserOrderDetails order={order} />
+  <UserReelOrderDetails order={order} />
+) : (
+  <UserOrderDetails order={order} />
   );
 }
 ```
@@ -968,16 +968,16 @@ if (res.ok) {
    ```typescript
    // User clicks "Order Now"
    setShowOrderModal(true);
-
+   
    // User selects quantity
    setQuantity(2);
-
+   
    // User adds special instructions
    setComments("Extra cheese, well done");
-
+   
    // User applies promo code
    handleApplyPromo("SAVE10"); // 10% discount
-
+   
    // Order is placed
    const order = {
      reel_id: "pizza-reel-123",
@@ -999,10 +999,10 @@ if (res.ok) {
    ```typescript
    // User selects quantity
    setQuantity(1);
-
+   
    // System calculates delivery fee based on distance
    const deliveryFee = calculateDeliveryFee(userLocation, shopLocation);
-
+   
    // Order summary
    const orderSummary = {
      subtotal: 25.0,
@@ -1023,10 +1023,10 @@ if (res.ok) {
    ```typescript
    // User adds special dietary requirements
    setComments("Gluten-free pasta, no dairy");
-
+   
    // User applies multiple promo codes
    handleApplyPromo("SAVE20"); // 20% discount
-
+   
    // Final order
    const order = {
      reel_id: "pasta-kit-456",
@@ -1043,18 +1043,18 @@ if (res.ok) {
 
 ```sql
 -- Reel orders reference reels
-ALTER TABLE reel_orders
-ADD CONSTRAINT fk_reel_orders_reel
+ALTER TABLE reel_orders 
+ADD CONSTRAINT fk_reel_orders_reel 
 FOREIGN KEY (reel_id) REFERENCES reels(id);
 
 -- Reel orders reference users
-ALTER TABLE reel_orders
-ADD CONSTRAINT fk_reel_orders_user
+ALTER TABLE reel_orders 
+ADD CONSTRAINT fk_reel_orders_user 
 FOREIGN KEY (user_id) REFERENCES users(id);
 
 -- Reel orders can reference shoppers
-ALTER TABLE reel_orders
-ADD CONSTRAINT fk_reel_orders_shopper
+ALTER TABLE reel_orders 
+ADD CONSTRAINT fk_reel_orders_shopper 
 FOREIGN KEY (shopper_id) REFERENCES shoppers(id);
 ```
 
@@ -1095,14 +1095,14 @@ try {
 const handlePlaceOrder = async () => {
   // Immediately show loading state
   setIsOrderLoading(true);
-
+  
   try {
     // Place order
     const response = await placeOrder(payload);
-
+    
     // Show success message
     showSuccess("Order placed successfully!");
-
+    
     // Close modal after delay
     setTimeout(() => {
       onClose();
@@ -1249,7 +1249,7 @@ The Reels feature is a TikTok-style video feed system that allows users to creat
 ### 1. Video Types
 
 - **Restaurant Posts**: Food delivery and dining experiences
-- **Supermarket Posts**: Product showcases and shopping content
+- **Supermarket Posts**: Product showcases and shopping content  
 - **Chef Posts**: Recipe tutorials and cooking content
 
 ### 2. User Interactions
@@ -1443,7 +1443,7 @@ const toggleLike = async (postId: string) => {
   // Immediately update UI
   setPosts(
     posts.map((post) =>
-      post.id === postId
+    post.id === postId 
         ? {
             ...post,
             isLiked: !post.isLiked,
@@ -1452,10 +1452,10 @@ const toggleLike = async (postId: string) => {
               likes: post.isLiked ? post.stats.likes - 1 : post.stats.likes + 1,
             },
           }
-        : post
+      : post
     )
   );
-
+  
   // Process backend request in background
   fetch("/api/queries/reel-likes", {
     method: isLiked ? "DELETE" : "POST",
@@ -1835,8 +1835,8 @@ export default async function handler(req, res) {
   );
 
   // 4. Create revenue records
-  await hasuraClient.request(CREATE_REVENUE, {
-    type: "commission",
+await hasuraClient.request(CREATE_REVENUE, {
+  type: "commission",
     order_id: orderId,
     amount: revenueData.revenue,
     products: JSON.stringify(productProfits),
@@ -2200,7 +2200,7 @@ Before showing any notifications, the system checks:
 - **`/api/test/check-orders-in-zone`**: Test endpoint to check what orders are in the shopper's zone based on their notification preferences
   - Tests settings retrieval and notification API integration
   - Usage: `GET /api/test/notification-settings-integration`
-  - Format: `{ schedule: Array<{ day_of_week: number, start_time: string, end_time: string, is_available: boolean }> }`
+   - Format: `{ schedule: Array<{ day_of_week: number, start_time: string, end_time: string, is_available: boolean }> }`
 
 2. `/api/shopper/activeOrders`
 

@@ -209,9 +209,9 @@ export default async function handler(
         console.error(
           "Authorization failed: Shopper not assigned to this order"
         );
-        return res
-          .status(403)
-          .json({ error: "You are not assigned to this order" });
+      return res
+        .status(403)
+        .json({ error: "You are not assigned to this order" });
       }
     }
 
@@ -238,20 +238,20 @@ export default async function handler(
           });
         } else {
           orderDetails = await hasuraClient.request<{
-            Orders_by_pk: {
-              id: string;
-              total: string;
-              service_fee: string;
-              delivery_fee: string;
-              shopper_id: string;
-            };
-          }>(GET_ORDER_DETAILS, {
-            orderId,
-          });
+          Orders_by_pk: {
+            id: string;
+            total: string;
+            service_fee: string;
+            delivery_fee: string;
+            shopper_id: string;
+          };
+        }>(GET_ORDER_DETAILS, {
+          orderId,
+        });
         }
 
-        const order = isReelOrder
-          ? orderDetails.reel_orders_by_pk
+        const order = isReelOrder 
+          ? orderDetails.reel_orders_by_pk 
           : orderDetails.Orders_by_pk;
 
         if (!order) {
@@ -394,20 +394,20 @@ export default async function handler(
       });
     } else {
       updateResult = await hasuraClient.request<{
-        update_Orders_by_pk: {
-          id: string;
-          status: string;
-          updated_at: string;
-        };
-      }>(UPDATE_ORDER_STATUS, {
-        id: orderId,
-        status,
-        updated_at: currentTimestamp,
-      });
+      update_Orders_by_pk: {
+        id: string;
+        status: string;
+        updated_at: string;
+      };
+    }>(UPDATE_ORDER_STATUS, {
+      id: orderId,
+      status,
+      updated_at: currentTimestamp,
+    });
     }
 
-    const updatedOrder = isReelOrder
-      ? updateResult.update_reel_orders_by_pk
+    const updatedOrder = isReelOrder 
+      ? updateResult.update_reel_orders_by_pk 
       : updateResult.update_Orders_by_pk;
 
     // Special handling for "cancelled" status - process refunds
