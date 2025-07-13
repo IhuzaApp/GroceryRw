@@ -530,7 +530,7 @@ export default function OrderModal({
               </div>
               {appliedPromo && (
                 <p className="mt-2 text-sm text-green-600">
-                  Promo code "{appliedPromo}" applied!
+                  Promo code &quot;{appliedPromo}&quot; applied!
                 </p>
               )}
             </div>
