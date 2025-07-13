@@ -2047,6 +2047,7 @@ Before showing any notifications, the system checks:
 4. `/api/test/notification-settings-integration`
 
    - Test endpoint to verify notification settings integration
+- **`/api/test/check-orders-in-zone`**: Test endpoint to check what orders are in the shopper's zone based on their notification preferences
    - Tests settings retrieval and notification API integration
    - Usage: `GET /api/test/notification-settings-integration`
    - Format: `{ schedule: Array<{ day_of_week: number, start_time: string, end_time: string, is_available: boolean }> }`
