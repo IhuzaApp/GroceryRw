@@ -2,10 +2,9 @@ import React, { useEffect, useRef, useState } from "react";
 import { useSession } from "next-auth/react";
 import {
   Message,
-  toaster,
-  Notification as ToastNotification,
   Button,
 } from "rsuite";
+import toast from "react-hot-toast";
 import { logger } from "../../utils/logger";
 
 interface Order {
@@ -58,6 +57,7 @@ export default function NotificationSystem({
   const lastNotificationTime = useRef<number>(0);
   const batchAssignments = useRef<BatchAssignment[]>([]);
   const lastOrderIds = useRef<Set<string>>(new Set());
+  const activeToasts = useRef<Map<string, any>>(new Map()); // Track active toasts by order ID
 
   // Initialize audio immediately
   useEffect(() => {
@@ -156,54 +156,117 @@ export default function NotificationSystem({
     return `${year}${month}${day}-${orderId}`;
   };
 
+  const removeToastForOrder = (orderId: string) => {
+    const existingToast = activeToasts.current.get(orderId);
+    if (existingToast) {
+      toast.dismiss(existingToast);
+      activeToasts.current.delete(orderId);
+      logger.info(`Removed toast for accepted order ${orderId}`, "NotificationSystem");
+    }
+  };
+
   const showToast = (
     order: Order,
     type: "info" | "success" | "warning" | "error" = "info"
   ) => {
-    toaster.push(
-      <ToastNotification
-        type={type}
-        header="New Batch!"
-        closable
-        duration={60000}
-      >
-        <div className="flex flex-col gap-2 text-sm">
-          <div className="flex flex-col gap-1 text-gray-600">
-            <div>{order.customerAddress}</div>
-            <div>
-              {order.shopName} ({order.distance}km)
+    // Remove any existing toast for this order
+    const existingToast = activeToasts.current.get(order.id);
+    if (existingToast) {
+      toast.dismiss(existingToast);
+      activeToasts.current.delete(order.id);
+    }
+    
+    const toastKey = toast.custom(
+      (t) => (
+        <div className={`${t.visible ? 'animate-enter' : 'animate-leave'} max-w-md w-full bg-white shadow-lg rounded-lg pointer-events-auto flex ring-1 ring-black ring-opacity-5`}>
+          <div className="flex-1 w-0 p-4">
+            <div className="flex items-start">
+              <div className="flex-shrink-0">
+                {type === "success" && (
+                  <svg className="h-6 w-6 text-green-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                )}
+                {type === "warning" && (
+                  <svg className="h-6 w-6 text-yellow-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
+                  </svg>
+                )}
+                {type === "error" && (
+                  <svg className="h-6 w-6 text-red-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                )}
+                {type === "info" && (
+                  <svg className="h-6 w-6 text-blue-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                )}
+              </div>
+              <div className="ml-3 flex-1">
+                <p className="text-sm font-medium text-gray-900">
+                  New Batch!
+                </p>
+                <div className="mt-1 text-sm text-gray-500">
+                  <div>{order.customerAddress}</div>
+                  <div>{order.shopName} ({order.distance}km)</div>
+                </div>
+                <div className="mt-3 flex gap-2">
+                  <button
+                    onClick={() => {
+                      removeToastForOrder(order.id);
+                      onAcceptBatch?.(order.id);
+                      toast.dismiss(t.id);
+                    }}
+                    className="bg-blue-600 text-white px-3 py-1 rounded text-sm hover:bg-blue-700"
+                  >
+                    Accept Batch
+                  </button>
+                  <button
+                    onClick={() => {
+                      if (onViewBatchDetails) {
+                        onViewBatchDetails(order.id);
+                        logger.info("Opening batch details for:", order.id);
+                      } else {
+                        logger.warn(
+                          "onViewBatchDetails callback not provided",
+                          "NotificationSystem"
+                        );
+                      }
+                    }}
+                    className="bg-gray-300 text-gray-700 px-3 py-1 rounded text-sm hover:bg-gray-400"
+                  >
+                    View Details
+                  </button>
+                </div>
+              </div>
             </div>
           </div>
-          <div className="mt-2 flex gap-2">
-            <Button
-              appearance="primary"
-              size="sm"
-              onClick={() => onAcceptBatch?.(order.id)}
-            >
-              Accept Batch
-            </Button>
-            <Button
-              appearance="subtle"
-              size="sm"
+          <div className="flex border-l border-gray-200">
+            <button
               onClick={() => {
-                if (onViewBatchDetails) {
-                  onViewBatchDetails(order.id);
-                  logger.info("Opening batch details for:", order.id);
-                } else {
-                  logger.warn(
-                    "onViewBatchDetails callback not provided",
-                    "NotificationSystem"
-                  );
-                }
+                removeToastForOrder(order.id);
+                toast.dismiss(t.id);
               }}
+              className="w-full border border-transparent rounded-none rounded-r-lg p-4 flex items-center justify-center text-sm font-medium text-gray-400 hover:text-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
             >
-              View Details
-            </Button>
+              <svg className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
+              </svg>
+            </button>
           </div>
         </div>
-      </ToastNotification>,
-      { placement: "topEnd" }
+      ),
+      {
+        duration: Infinity, // Never auto-dismiss
+        position: "top-right",
+      }
     );
+
+    // Store the toast key for this order
+    activeToasts.current.set(order.id, toastKey);
+    
+    return toastKey;
   };
 
   const playNotificationSound = async (soundSettings?: { enabled: boolean; volume: number }) => {
@@ -310,49 +373,83 @@ export default function NotificationSystem({
     // Mark warning as shown
     assignment.warningShown = true;
 
-    // Show warning toast
-    toaster.push(
-      <ToastNotification
-        type="warning"
-        header="⚠️ Batch Expiring Soon!"
-        closable
-        duration={20000}
-      >
-        <div className="flex flex-col gap-2 text-sm">
-          <div className="flex flex-col gap-1 text-gray-600">
-            <div>{order.customerAddress}</div>
-            <div>
-              {order.shopName} ({order.distance}km)
-            </div>
-            <div className="text-orange-600 font-medium">
-              ⚠️ This batch will be reassigned in 20 seconds!
+    // Remove existing toast for this order and show warning toast
+    const existingToast = activeToasts.current.get(order.id);
+    if (existingToast) {
+      toast.dismiss(existingToast);
+      activeToasts.current.delete(order.id);
+    }
+
+    const warningToastKey = toast.custom(
+      (t) => (
+        <div className={`${t.visible ? 'animate-enter' : 'animate-leave'} max-w-md w-full bg-white shadow-lg rounded-lg pointer-events-auto flex ring-1 ring-black ring-opacity-5 border-l-4 border-yellow-400`}>
+          <div className="flex-1 w-0 p-4">
+            <div className="flex items-start">
+              <div className="flex-shrink-0">
+                <svg className="h-6 w-6 text-yellow-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
+                </svg>
+              </div>
+              <div className="ml-3 flex-1">
+                <p className="text-sm font-medium text-gray-900">
+                  ⚠️ Batch Expiring Soon!
+                </p>
+                <div className="mt-1 text-sm text-gray-500">
+                  <div>{order.customerAddress}</div>
+                  <div>{order.shopName} ({order.distance}km)</div>
+                  <div className="text-orange-600 font-medium mt-1">
+                    ⚠️ This batch will be reassigned in 20 seconds!
+                  </div>
+                </div>
+                <div className="mt-3 flex gap-2">
+                  <button
+                    onClick={() => {
+                      removeToastForOrder(order.id);
+                      onAcceptBatch?.(order.id);
+                      toast.dismiss(t.id);
+                    }}
+                    className="bg-orange-600 text-white px-3 py-1 rounded text-sm hover:bg-orange-700"
+                  >
+                    Accept Now
+                  </button>
+                  <button
+                    onClick={() => {
+                      if (onViewBatchDetails) {
+                        onViewBatchDetails(order.id);
+                        logger.info("Opening batch details for:", order.id);
+                      }
+                    }}
+                    className="bg-gray-300 text-gray-700 px-3 py-1 rounded text-sm hover:bg-gray-400"
+                  >
+                    View Details
+                  </button>
+                </div>
+              </div>
             </div>
           </div>
-          <div className="mt-2 flex gap-2">
-            <Button
-              appearance="primary"
-              size="sm"
-              onClick={() => onAcceptBatch?.(order.id)}
-            >
-              Accept Now
-            </Button>
-            <Button
-              appearance="subtle"
-              size="sm"
+          <div className="flex border-l border-gray-200">
+            <button
               onClick={() => {
-        if (onViewBatchDetails) {
-          onViewBatchDetails(order.id);
-                  logger.info("Opening batch details for:", order.id);
-                }
+                removeToastForOrder(order.id);
+                toast.dismiss(t.id);
               }}
+              className="w-full border border-transparent rounded-none rounded-r-lg p-4 flex items-center justify-center text-sm font-medium text-gray-400 hover:text-gray-500 focus:outline-none focus:ring-2 focus:ring-orange-500"
             >
-              View Details
-            </Button>
+              <svg className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
+              </svg>
+            </button>
           </div>
         </div>
-      </ToastNotification>,
-      { placement: "topEnd" }
+      ),
+      {
+        duration: Infinity, // Never auto-dismiss
+        position: "top-right",
+      }
     );
+
+    // Store the warning toast key for this order
+    activeToasts.current.set(order.id, warningToastKey);
 
     // Show warning desktop notification
     if (
@@ -370,8 +467,8 @@ export default function NotificationSystem({
 
         notification.onclick = () => {
           window.focus();
-        notification.close();
-      };
+          notification.close();
+        };
 
         // Auto-close after 20 seconds
         setTimeout(() => {
@@ -524,6 +621,18 @@ export default function NotificationSystem({
               if (assignment.warningTimeout) {
                 clearTimeout(assignment.warningTimeout);
               }
+              
+              // Remove toast for expired order
+              const existingToast = activeToasts.current.get(assignment.orderId);
+              if (existingToast) {
+                toast.dismiss(existingToast);
+                activeToasts.current.delete(assignment.orderId);
+                logger.info(
+                  `Removed toast for expired order ${assignment.orderId}`,
+                  "NotificationSystem"
+                );
+              }
+              
               logger.info(
                 `Assignment expired for order ${assignment.orderId} - reassigning to next shopper`,
                 "NotificationSystem"
@@ -662,6 +771,12 @@ export default function NotificationSystem({
         clearTimeout(assignment.warningTimeout);
       }
     });
+    
+    // Clear all active toasts
+    activeToasts.current.forEach((toastKey) => {
+      toast.dismiss(toastKey);
+    });
+    activeToasts.current.clear();
     
     setIsListening(false);
     lastOrderIds.current.clear();
