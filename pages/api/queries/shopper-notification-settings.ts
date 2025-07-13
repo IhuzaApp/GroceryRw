@@ -41,6 +41,7 @@ export default async function handler(
           custom_locations
           max_distance
           notification_types
+          sound_settings
           created_at
           updated_at
         }

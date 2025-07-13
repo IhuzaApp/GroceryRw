@@ -2,6 +2,7 @@ import { NextApiRequest, NextApiResponse } from "next";
 import { hasuraClient } from "../../../src/lib/hasuraClient";
 import { gql } from "graphql-request";
 import { Client as GoogleMapsClient } from "@googlemaps/google-maps-services-js";
+import { logger } from "../../../src/utils/logger";
 
 const googleMapsClient = new GoogleMapsClient({});
 
@@ -54,8 +55,18 @@ const GET_AVAILABLE_REEL_BATCHES = gql`
 `;
 
 const GET_AVAILABLE_DASHERS = gql`
-  query GetAvailableDashers {
-    Shopper_Availability(where: { is_available: { _eq: true } }) {
+  query GetAvailableDashers($current_time: time!, $current_day: Int!) {
+    Shopper_Availability(
+      where: {
+        _and: [
+          { is_available: { _eq: true } }
+          { status: { _eq: "ACTIVE" } }
+          { day_of_week: { _eq: $current_day } }
+          { start_time: { _lte: $current_time } }
+          { end_time: { _gte: $current_time } }
+        ]
+      }
+    ) {
       user_id
       last_known_latitude
       last_known_longitude
@@ -147,9 +158,9 @@ export default async function handler(
       throw new Error("Hasura client is not initialized");
     }
 
-    // Get batches created in the last 20 minutes
-    const twentyMinutesAgo = new Date(
-      Date.now() - 20 * 60 * 1000
+    // Get batches created in the last 10 minutes (NEW orders only)
+    const tenMinutesAgo = new Date(
+      Date.now() - 10 * 60 * 1000
     ).toISOString();
 
     // Fetch both regular orders and reel orders in parallel
@@ -157,21 +168,30 @@ export default async function handler(
       hasuraClient.request<{
         Orders: Batch[];
       }>(GET_AVAILABLE_BATCHES, {
-        created_after: twentyMinutesAgo,
+        created_after: tenMinutesAgo,
       }),
       hasuraClient.request<{
         reel_orders: ReelBatch[];
       }>(GET_AVAILABLE_REEL_BATCHES, {
-        created_after: twentyMinutesAgo,
+        created_after: tenMinutesAgo,
       })
     ]);
 
     const availableBatches = regularBatchesData.Orders;
     const availableReelBatches = reelBatchesData.reel_orders;
 
+    // Get current time and day for schedule checking
+    const now = new Date();
+    const currentTime = now.toTimeString().split(' ')[0]; // HH:MM:SS format
+    const currentDay = now.getDay() === 0 ? 7 : now.getDay(); // Sunday = 7
+
     const { Shopper_Availability: availableDashers } =
       await hasuraClient.request<{ Shopper_Availability: Dasher[] }>(
-        GET_AVAILABLE_DASHERS
+        GET_AVAILABLE_DASHERS,
+        {
+          current_time: currentTime,
+          current_day: currentDay,
+        }
       );
 
     // Group regular batches by shop
@@ -193,6 +213,28 @@ export default async function handler(
       return acc;
     }, {} as Record<string, ReelBatch[]>);
 
+    // Get notification settings for all dashers
+    const GET_NOTIFICATION_SETTINGS = gql`
+      query GetNotificationSettings($user_ids: [uuid!]!) {
+        shopper_notification_settings(where: {user_id: {_in: $user_ids}}) {
+          user_id
+          notification_types
+          sound_settings
+          max_distance
+        }
+      }
+    `;
+
+    const dasherIds = availableDashers.map(d => d.user_id);
+    const settingsResponse = await hasuraClient.request(GET_NOTIFICATION_SETTINGS, {
+      user_ids: dasherIds,
+    }) as any;
+
+    const settingsByUser = settingsResponse.shopper_notification_settings.reduce((acc: any, setting: any) => {
+      acc[setting.user_id] = setting;
+      return acc;
+    }, {});
+
     // For each dasher, find nearby shops with available batches
     const notificationObjects: Array<{
       user_id: string;
@@ -203,8 +245,24 @@ export default async function handler(
 
     await Promise.all(
       availableDashers.map(async (dasher) => {
+        // Get dasher's notification settings
+        const dasherSettings = settingsByUser[dasher.user_id] || {
+          notification_types: { orders: true, batches: true, earnings: true, system: true },
+          sound_settings: { enabled: true, volume: 0.8 },
+          max_distance: "10"
+        };
+
+        // Check if notifications are enabled for this dasher
+        if (!dasherSettings.notification_types.orders && !dasherSettings.notification_types.batches) {
+          logger.info(`Skipping notifications for dasher ${dasher.user_id} - notifications disabled`, "NotifyNearbyDashers");
+          return;
+        }
         const nearbyBatches: Batch[] = [];
         const nearbyReelBatches: ReelBatch[] = [];
+
+        // Get dasher's max distance from settings
+        const maxDistanceKm = parseFloat(dasherSettings.max_distance || "10");
+        const maxDistanceMinutes = maxDistanceKm * 2; // Rough conversion: 1km ≈ 2 minutes
 
         // Check each shop's distance from the dasher for regular orders
         for (const shopBatches of Object.values(batchesByShop)) {
@@ -217,8 +275,8 @@ export default async function handler(
             { lat: shop.latitude, lng: shop.longitude }
           );
 
-          // If shop is within 10 minutes, add its batches to nearbyBatches
-          if (distanceInMinutes <= 10) {
+          // If shop is within dasher's max distance, add its batches to nearbyBatches
+          if (distanceInMinutes <= maxDistanceMinutes) {
             nearbyBatches.push(...shopBatches);
           }
         }
@@ -234,8 +292,8 @@ export default async function handler(
             { lat: firstBatch.address.latitude, lng: firstBatch.address.longitude }
           );
 
-          // If reel creator is within 10 minutes, add its batches to nearbyReelBatches
-          if (distanceInMinutes <= 10) {
+          // If reel creator is within dasher's max distance, add its batches to nearbyReelBatches
+          if (distanceInMinutes <= maxDistanceMinutes) {
             nearbyReelBatches.push(...reelBatches);
           }
         }

@@ -40,6 +40,10 @@ interface NotificationSettings {
     earnings: boolean;
     system: boolean;
   };
+  sound_settings: {
+    enabled: boolean;
+    volume: number;
+  };
 }
 
 export default function NotificationTab() {
@@ -58,6 +62,10 @@ export default function NotificationTab() {
       batches: true,
       earnings: true,
       system: true,
+    },
+    sound_settings: {
+      enabled: true,
+      volume: 0.8,
     },
   });
 
@@ -179,6 +187,10 @@ export default function NotificationTab() {
             earnings: true,
             system: true,
           },
+          sound_settings: existingSettings.sound_settings || {
+            enabled: true,
+            volume: 0.8,
+          },
         });
       }
     } catch (error) {
@@ -203,6 +215,7 @@ export default function NotificationTab() {
           custom_locations: settings.custom_locations,
           max_distance: settings.max_distance,
           notification_types: settings.notification_types,
+          sound_settings: settings.sound_settings,
         }),
       });
 
@@ -535,6 +548,75 @@ export default function NotificationTab() {
               size="md"
             />
           </div>
+        </div>
+      </div>
+
+      {/* Sound Settings */}
+      <div className={`mb-6 rounded-lg border p-4 ${
+        theme === "dark" ? "border-gray-700 bg-gray-800" : "border-gray-200 bg-white"
+      }`}>
+        <h4 className={`mb-4 font-medium ${
+          theme === "dark" ? "text-white" : "text-gray-900"
+        }`}>
+          Sound Settings
+        </h4>
+        <div className="space-y-3">
+          <div className="flex items-center justify-between">
+            <div>
+              <span className={`font-medium ${
+                theme === "dark" ? "text-white" : "text-gray-900"
+              }`}>
+                Enable Sound Notifications
+              </span>
+              <p className={`text-sm ${
+                theme === "dark" ? "text-gray-400" : "text-gray-600"
+              }`}>
+                Play sound when receiving new order notifications
+              </p>
+            </div>
+            <Toggle
+              checked={settings.sound_settings.enabled}
+              onChange={(checked) => setSettings(prev => ({
+                ...prev,
+                sound_settings: {
+                  ...prev.sound_settings,
+                  enabled: checked
+                }
+              }))}
+              size="md"
+            />
+          </div>
+          
+          {settings.sound_settings.enabled && (
+            <div>
+              <span className={`text-sm font-medium ${
+                theme === "dark" ? "text-white" : "text-gray-900"
+              }`}>
+                Sound Volume
+              </span>
+              <div className="mt-2">
+                <input
+                  type="range"
+                  min="0"
+                  max="100"
+                  value={settings.sound_settings.volume * 100}
+                  onChange={(e) => setSettings(prev => ({
+                    ...prev,
+                    sound_settings: {
+                      ...prev.sound_settings,
+                      volume: parseInt(e.target.value) / 100
+                    }
+                  }))}
+                  className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer dark:bg-gray-700"
+                />
+                <div className={`text-xs mt-1 ${
+                  theme === "dark" ? "text-gray-400" : "text-gray-600"
+                }`}>
+                  Volume: {Math.round(settings.sound_settings.volume * 100)}%
+                </div>
+              </div>
+            </div>
+          )}
         </div>
       </div>
 
