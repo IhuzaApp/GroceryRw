@@ -462,19 +462,28 @@ export default function NotificationSystem({
     }
 
     logger.info(
-      "All conditions met, checking for pending orders",
+      "All conditions met, checking for pending orders with settings",
       "NotificationSystem"
     );
 
     try {
-      const response = await fetch(
-        `/api/shopper/availableOrders?latitude=${currentLocation.lat}&longitude=${currentLocation.lng}&maxTravelTime=15`
-      );
-      const orders: Order[] = await response.json();
+      // Use the new API that respects notification settings
+      const response = await fetch("/api/shopper/check-notifications-with-settings", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          user_id: session.user.id,
+          current_location: currentLocation,
+        }),
+      });
 
-      if (orders.length > 0) {
+      const data = await response.json();
+
+      if (data.success && data.notifications && data.notifications.length > 0) {
         logger.info(
-          `Found ${orders.length} pending orders`,
+          `Found ${data.notifications.length} notifications based on settings`,
           "NotificationSystem"
         );
 
@@ -483,43 +492,51 @@ export default function NotificationSystem({
           (assignment) => currentTime - assignment.assignedAt < 60000
         );
 
-        // Sort and filter orders
-        const sortedOrders = [...orders].sort(
-          (a, b) =>
-            new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
+        // Sort notifications by creation time (oldest first)
+        const sortedNotifications = [...data.notifications].sort(
+          (a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
         );
 
         const assignedOrderIds = new Set(
           batchAssignments.current.map((a) => a.orderId)
         );
-        const availableOrders = sortedOrders.filter(
-          (order) => !assignedOrderIds.has(order.id)
+        const availableNotifications = sortedNotifications.filter(
+          (notification) => !assignedOrderIds.has(notification.id)
         );
 
-        if (availableOrders.length > 0) {
+        if (availableNotifications.length > 0) {
           const currentUserAssignment = batchAssignments.current.find(
             (assignment) => assignment.shopperId === session.user.id
           );
 
           if (!currentUserAssignment) {
-            const nextOrder = availableOrders[0];
+            const nextNotification = availableNotifications[0];
 
             const newAssignment: BatchAssignment = {
               shopperId: session.user.id,
-              orderId: nextOrder.id,
+              orderId: nextNotification.id,
               assignedAt: currentTime,
             };
             batchAssignments.current.push(newAssignment);
 
+            // Convert notification to Order format for compatibility
+            const orderForNotification: Order = {
+              id: nextNotification.id,
+              shopName: nextNotification.shopName,
+              distance: nextNotification.distance,
+              createdAt: nextNotification.createdAt,
+              customerAddress: nextNotification.customerAddress,
+            };
+
             await playNotificationSound();
-            showToast(nextOrder);
-            showDesktopNotification(nextOrder);
+            showToast(orderForNotification);
+            showDesktopNotification(orderForNotification);
 
             lastNotificationTime.current = currentTime;
             logger.info(
-              `Showing notification for batch from ${nextOrder.shopName}`,
+              `Showing notification for ${nextNotification.type} from ${nextNotification.shopName} (${nextNotification.locationName})`,
               "NotificationSystem",
-              nextOrder
+              nextNotification
             );
           } else {
             logger.debug(
@@ -530,14 +547,22 @@ export default function NotificationSystem({
         }
 
         if (onNewOrder) {
+          // Convert notifications back to order format for compatibility
+          const orders = data.notifications.map((notification: any) => ({
+            id: notification.id,
+            shopName: notification.shopName,
+            distance: notification.distance,
+            createdAt: notification.createdAt,
+            customerAddress: notification.customerAddress,
+          }));
           onNewOrder(orders);
         }
       } else {
-        logger.debug("No pending orders found", "NotificationSystem");
+        logger.debug("No notifications found based on settings", "NotificationSystem");
       }
     } catch (error) {
       logger.error(
-        "Error checking for pending orders",
+        "Error checking for notifications with settings",
         "NotificationSystem",
         error
       );
