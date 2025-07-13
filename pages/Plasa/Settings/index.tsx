@@ -7,6 +7,7 @@ import { useTheme } from "../../../src/context/ThemeContext";
 import { Panel, Nav } from "rsuite";
 import WorkScheduleTab from "../../../src/components/shopper/settings/WorkScheduleTab";
 import PaymentTab from "../../../src/components/shopper/settings/PaymentTab";
+import NotificationTab from "../../../src/components/shopper/settings/NotificationTab";
 import { GetServerSideProps } from "next";
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "../../api/auth/[...nextauth]";
@@ -55,20 +56,7 @@ function SettingsPage({ sessionData }: SettingsPageProps) {
     {
       key: "notifications",
       label: "Notifications",
-      component: (
-        <div className="p-4">
-          <h3
-            className={`mb-4 text-lg font-semibold ${
-              theme === "dark" ? "text-white" : "text-gray-900"
-            }`}
-          >
-            Notifications Settings
-          </h3>
-          <p className={theme === "dark" ? "text-gray-300" : "text-gray-600"}>
-            Notification settings coming soon...
-          </p>
-        </div>
-      ),
+      component: <NotificationTab />,
     },
     {
       key: "security",
