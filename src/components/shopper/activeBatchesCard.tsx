@@ -7,6 +7,7 @@ import "rsuite/dist/rsuite.min.css";
 import { useAuth } from "../../context/AuthContext";
 import { useTheme } from "../../context/ThemeContext";
 import { logger } from "../../utils/logger";
+import { formatCurrencySync } from "../../utils/formatCurrency";
 
 // Define interfaces for order data
 interface Order {
@@ -572,7 +573,7 @@ function ActiveOrderCard({ order }: { order: Order }) {
                     order.reel?.title || "Reel Order"
                   }`
                 : `${order.items} items`}{" "}
-              • ${order.estimatedEarnings}
+              • {formatCurrencySync(order.estimatedEarnings || 0)}
             </p>
             {isReelOrder && order.reel?.description && (
               <p className="mt-1 text-xs text-gray-500">
@@ -593,7 +594,7 @@ function ActiveOrderCard({ order }: { order: Order }) {
                 : "text-green-600"
             }`}
           >
-            ${order.estimatedEarnings}
+            {formatCurrencySync(order.estimatedEarnings || 0)}
           </p>
           <p
             className={`text-sm ${

@@ -12,6 +12,7 @@ import {
   Legend,
 } from "recharts";
 import { Loader } from "rsuite";
+import { formatCurrencySync, getCurrencySymbol } from "../../utils/formatCurrency";
 
 interface DailyEarning {
   day: string;
@@ -33,7 +34,7 @@ const DailyEarningsChart: React.FC<DailyEarningsChartProps> = ({
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat("en-RW", {
       style: "currency",
-      currency: "RWF",
+      currency: getCurrencySymbol(),
       maximumFractionDigits: 0,
     }).format(amount);
   };
@@ -145,7 +146,7 @@ const DailyEarningsChart: React.FC<DailyEarningsChartProps> = ({
             tick={{ fontSize: 12 }}
           />
           <YAxis
-            tickFormatter={(value) => formatCurrency(value).replace("RWF", "")}
+            tickFormatter={(value) => formatCurrency(value).replace(getCurrencySymbol(), "")}
             axisLine={false}
             tickLine={false}
             tick={{ fontSize: 12 }}

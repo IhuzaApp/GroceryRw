@@ -393,6 +393,7 @@ export default async function handler(
                 serviceFee: order.service_fee,
                 deliveryFee: order.delivery_fee,
                 itemCount: order.Order_Items_aggregate?.aggregate?.count || 0,
+                estimatedEarnings: parseFloat(order.service_fee || "0") + parseFloat(order.delivery_fee || "0"),
                 ageInMinutes: Math.round(
                   (now.getTime() - orderCreatedAt.getTime()) / (1000 * 60)
                 ),
@@ -433,6 +434,7 @@ export default async function handler(
                 quantity: reelOrder.quantity,
                 deliveryNote: reelOrder.delivery_note,
                 reelType: reelOrder.Reel.type,
+                estimatedEarnings: parseFloat(reelOrder.service_fee || "0") + parseFloat(reelOrder.delivery_fee || "0"),
                 ageInMinutes: Math.round(
                   (now.getTime() - reelOrderCreatedAt.getTime()) / (1000 * 60)
                 ),

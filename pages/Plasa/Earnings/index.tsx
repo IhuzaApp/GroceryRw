@@ -11,6 +11,7 @@ import PerformanceMetrics from "@components/shopper/earnings/PerformanceMetrics"
 import EarningsGoals from "@components/shopper/earnings/EarningsGoals";
 import PaymentHistory from "@components/shopper/earnings/PaymentHistory";
 import { logger } from "../../../src/utils/logger";
+import { formatCurrencySync, getCurrencySymbol } from "../../../src/utils/formatCurrency";
 
 // Interface for earnings stats
 interface EarningsStats {
@@ -353,11 +354,7 @@ const EarningsPage: React.FC = () => {
 
   // Format currency for display
   const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat("en-RW", {
-      style: "currency",
-      currency: "RWF",
-      maximumFractionDigits: 0,
-    }).format(amount);
+    return formatCurrencySync(amount);
   };
 
   // Create delivery stats for the performance metrics component

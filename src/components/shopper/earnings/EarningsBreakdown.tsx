@@ -1,6 +1,7 @@
 import React from "react";
 import { Panel } from "rsuite";
 import { useTheme } from "../../../context/ThemeContext";
+import { formatCurrencySync } from "../../utils/formatCurrency";
 
 interface StoreBreakdown {
   store: string;
@@ -27,11 +28,7 @@ const EarningsBreakdown: React.FC<EarningsBreakdownProps> = ({
 
   // Format currency
   const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat("en-RW", {
-      style: "currency",
-      currency: "RWF",
-      maximumFractionDigits: 0,
-    }).format(amount);
+    return formatCurrencySync(amount);
   };
 
   return (

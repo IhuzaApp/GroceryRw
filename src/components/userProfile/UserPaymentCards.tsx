@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { GetServerSideProps } from "next";
 import AddPaymentCard from "./AddPaymentCard";
 import CryptoJS from "crypto-js";
+import { formatCurrencySync } from "../../utils/formatCurrency";
 
 // Encryption key - in production, this should be in environment variables
 const ENCRYPTION_KEY =
@@ -28,17 +29,6 @@ type BalancesType = {
 };
 
 // Helper function to format RWF
-const formatRWF = (amount: string | number) => {
-  const numAmount = typeof amount === "string" ? parseFloat(amount) : amount;
-  return new Intl.NumberFormat("en-RW", {
-    style: "currency",
-    currency: "RWF",
-    minimumFractionDigits: 0,
-    maximumFractionDigits: 0,
-  }).format(numAmount);
-};
-
-// Decrypt sensitive data
 const decryptData = (encryptedText: string) => {
   try {
     const bytes = CryptoJS.AES.decrypt(encryptedText, ENCRYPTION_KEY);
@@ -466,7 +456,7 @@ export default function UserPaymentCards({
                 />
               </div>
               <p className="font-mono text-lg tracking-wider">
-                {formatRWF(totalRefundAmount)}
+                {formatCurrencySync(totalRefundAmount)}
               </p>
             </div>
           </div>
@@ -532,7 +522,7 @@ export default function UserPaymentCards({
                   />
                 </div>
                 <p className="font-mono text-lg tracking-wider">
-                  {formatRWF(walletBalance)}
+                  {formatCurrencySync(walletBalance)}
                 </p>
               </div>
             </div>
