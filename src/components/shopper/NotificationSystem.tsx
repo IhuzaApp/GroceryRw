@@ -22,6 +22,8 @@ interface BatchAssignment {
   orderId: string;
   assignedAt: number;
   expiresAt: number; // Add expiration time
+  warningShown: boolean; // Track if warning was shown
+  warningTimeout: NodeJS.Timeout | null; // Track warning timeout
 }
 
 interface ShopperSchedule {
@@ -267,15 +269,15 @@ export default function NotificationSystem({
       notificationPermission === "granted"
     ) {
       try {
-        const notification = new window.Notification("New Batch Available!", {
+                const notification = new window.Notification("New Batch Available!", {
           body: `${order.shopName} (${order.distance}km)\n${order.customerAddress}`,
-          icon: "/app-icon.png",
+          icon: "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%234F46E5'><path d='M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z'/></svg>",
           tag: `batch-${order.id}`,
           requireInteraction: false,
         });
 
-        notification.onclick = () => {
-          window.focus();
+      notification.onclick = () => {
+        window.focus();
           notification.close();
         };
 
@@ -293,6 +295,106 @@ export default function NotificationSystem({
         );
       }
     }
+  };
+
+  const showWarningNotification = (order: Order) => {
+    // Check if assignment still exists and warning hasn't been shown
+    const assignment = batchAssignments.current.find(
+      (a) => a.orderId === order.id && a.shopperId === session?.user?.id
+    );
+
+    if (!assignment || assignment.warningShown) {
+      return; // Assignment expired or warning already shown
+    }
+
+    // Mark warning as shown
+    assignment.warningShown = true;
+
+    // Show warning toast
+    toaster.push(
+      <ToastNotification
+        type="warning"
+        header="⚠️ Batch Expiring Soon!"
+        closable
+        duration={20000}
+      >
+        <div className="flex flex-col gap-2 text-sm">
+          <div className="flex flex-col gap-1 text-gray-600">
+            <div>{order.customerAddress}</div>
+            <div>
+              {order.shopName} ({order.distance}km)
+            </div>
+            <div className="text-orange-600 font-medium">
+              ⚠️ This batch will be reassigned in 20 seconds!
+            </div>
+          </div>
+          <div className="mt-2 flex gap-2">
+            <Button
+              appearance="primary"
+              size="sm"
+              onClick={() => onAcceptBatch?.(order.id)}
+            >
+              Accept Now
+            </Button>
+            <Button
+              appearance="subtle"
+              size="sm"
+              onClick={() => {
+        if (onViewBatchDetails) {
+          onViewBatchDetails(order.id);
+                  logger.info("Opening batch details for:", order.id);
+                }
+              }}
+            >
+              View Details
+            </Button>
+          </div>
+        </div>
+      </ToastNotification>,
+      { placement: "topEnd" }
+    );
+
+    // Show warning desktop notification
+    if (
+      typeof window !== "undefined" &&
+      "Notification" in window &&
+      notificationPermission === "granted"
+    ) {
+      try {
+        const notification = new window.Notification("⚠️ Batch Expiring Soon!", {
+          body: `${order.shopName} (${order.distance}km)\n${order.customerAddress}\n\nThis batch will be reassigned in 20 seconds!`,
+          icon: "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23F59E0B'><path d='M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z'/></svg>",
+          tag: `warning-${order.id}`,
+          requireInteraction: false,
+        });
+
+        notification.onclick = () => {
+          window.focus();
+        notification.close();
+      };
+
+        // Auto-close after 20 seconds
+        setTimeout(() => {
+          notification.close();
+        }, 20000);
+
+        logger.info("Warning desktop notification shown", "NotificationSystem");
+      } catch (error) {
+        logger.error(
+          "Error showing warning desktop notification",
+          "NotificationSystem",
+          error
+        );
+      }
+    }
+
+    // Play warning sound
+    playNotificationSound({ enabled: true, volume: 0.8 });
+
+    logger.info(
+      `Warning notification shown for order ${order.id} - expires in 20 seconds`,
+      "NotificationSystem"
+    );
   };
 
   const isWithinSchedule = async (): Promise<boolean> => {
@@ -413,10 +515,23 @@ export default function NotificationSystem({
           "NotificationSystem"
         );
 
-        // Clean up expired assignments (1 minute timeout)
+        // Clean up expired assignments and clear warning timeouts
         const oneMinuteAgo = currentTime - 60000;
         batchAssignments.current = batchAssignments.current.filter(
-          (assignment) => assignment.expiresAt > currentTime
+          (assignment) => {
+            if (assignment.expiresAt <= currentTime) {
+              // Clear warning timeout if assignment is expired
+              if (assignment.warningTimeout) {
+                clearTimeout(assignment.warningTimeout);
+              }
+              logger.info(
+                `Assignment expired for order ${assignment.orderId} - reassigning to next shopper`,
+                "NotificationSystem"
+              );
+              return false; // Remove expired assignment
+            }
+            return true; // Keep active assignment
+          }
         );
 
         // Sort notifications by creation time (oldest first)
@@ -444,6 +559,8 @@ export default function NotificationSystem({
               orderId: nextNotification.id,
               assignedAt: currentTime,
               expiresAt: currentTime + 60000, // Expires in 1 minute
+              warningShown: false,
+              warningTimeout: null,
             };
             batchAssignments.current.push(newAssignment);
 
@@ -460,9 +577,17 @@ export default function NotificationSystem({
             showToast(orderForNotification);
             showDesktopNotification(orderForNotification);
 
+            // Set up warning notification after 40 seconds
+            const warningTimeout = setTimeout(() => {
+              showWarningNotification(orderForNotification);
+            }, 40000); // 40 seconds
+
+            // Update assignment with warning timeout
+            newAssignment.warningTimeout = warningTimeout;
+
             lastNotificationTime.current = currentTime;
             logger.info(
-              `Showing notification for ${nextNotification.type} from ${nextNotification.shopName} (${nextNotification.locationName}) - expires in 1 minute`,
+              `Showing initial notification for ${nextNotification.type} from ${nextNotification.shopName} (${nextNotification.locationName}) - warning in 40s, expires in 1 minute`,
               "NotificationSystem",
               nextNotification
             );
@@ -530,6 +655,14 @@ export default function NotificationSystem({
       clearInterval(checkInterval.current);
       checkInterval.current = null;
     }
+    
+    // Clear all warning timeouts
+    batchAssignments.current.forEach((assignment) => {
+      if (assignment.warningTimeout) {
+        clearTimeout(assignment.warningTimeout);
+      }
+    });
+    
     setIsListening(false);
     lastOrderIds.current.clear();
     batchAssignments.current = []; // Clear all assignments
