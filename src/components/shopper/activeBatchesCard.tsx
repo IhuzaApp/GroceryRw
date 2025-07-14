@@ -221,33 +221,33 @@ export default function ActiveBatches({
 
         {/* Display a warning when user doesn't have the shopper role */}
         {!isLoading && role !== "shopper" && (
-                  <div
+          <div
           className={`mb-4 rounded-lg border p-3 ${
-            theme === "dark"
-              ? "border-yellow-500/20 bg-yellow-900/20"
-              : "border-yellow-200 bg-yellow-50"
-          }`}
-        >
-          <h3
+              theme === "dark"
+                ? "border-yellow-500/20 bg-yellow-900/20"
+                : "border-yellow-200 bg-yellow-50"
+            }`}
+          >
+            <h3
             className={`text-sm font-semibold ${
-              theme === "dark" ? "text-yellow-300" : "text-yellow-800"
-            }`}
-          >
-            Shopper Access Required
-          </h3>
-          <p
+                theme === "dark" ? "text-yellow-300" : "text-yellow-800"
+              }`}
+            >
+              Shopper Access Required
+            </h3>
+            <p
             className={`mt-1 text-xs ${
-              theme === "dark" ? "text-yellow-200" : "text-yellow-700"
-            }`}
-          >
-            This page is only accessible to users with shopper privileges.
-            Your current role is: <strong>{role}</strong>
-          </p>
-          <p
+                theme === "dark" ? "text-yellow-200" : "text-yellow-700"
+              }`}
+            >
+              This page is only accessible to users with shopper privileges.
+              Your current role is: <strong>{role}</strong>
+            </p>
+            <p
             className={`mt-2 text-xs ${
-              theme === "dark" ? "text-yellow-200" : "text-yellow-700"
-            }`}
-          >
+                theme === "dark" ? "text-yellow-200" : "text-yellow-700"
+              }`}
+            >
               If you believe you should have shopper access, please try:
             </p>
             <ul
