@@ -1399,66 +1399,89 @@ export default function BatchDetails({
                     {order.Order_Items?.map((item) => (
                       <div
                         key={item.id}
-                        className="flex flex-col gap-3 rounded-lg border border-slate-200 bg-white p-3 dark:border-slate-600 dark:bg-slate-700 sm:flex-row sm:items-center sm:p-4"
+                        className="flex items-center gap-3 rounded-lg border border-slate-200 bg-white p-3 dark:border-slate-600 dark:bg-slate-700 sm:p-4"
                       >
-                        <div className="flex items-center gap-3">
-                          <div
-                            className="h-10 w-10 flex-shrink-0 cursor-pointer overflow-hidden rounded-lg bg-slate-200 sm:h-12 sm:w-12"
-                            onClick={() => showProductImage(item)}
-                          >
-                            {item.product.image ? (
-                              <Image
-                                src={item.product.image}
-                                alt={item.product.name}
-                                width={48}
-                                height={48}
-                                className="h-full w-full object-cover"
-                              />
-                            ) : (
-                              <div className="flex h-full w-full items-center justify-center bg-slate-300 text-slate-400">
-                                <svg
-                                  viewBox="0 0 24 24"
-                                  fill="none"
-                                  stroke="currentColor"
-                                  strokeWidth="2"
-                                  className="h-5 w-5 sm:h-6 sm:w-6"
-                                >
-                                  <path d="M9 17h6M9 12h6M9 7h6" />
-                                </svg>
-                              </div>
-                            )}
-                          </div>
-                          <div className="flex-1">
-                            <p className="text-base font-medium text-slate-900 dark:text-slate-100 sm:text-lg">
-                              {item.product.name}
-                            </p>
-                            <p className="text-sm text-slate-500 dark:text-slate-400 sm:text-base">
-                              {formatCurrency(item.price)} × {item.quantity}
-                            </p>
-                            {item.found &&
-                              item.foundQuantity &&
-                              item.foundQuantity < item.quantity && (
-                                <p className="text-xs text-amber-600 dark:text-amber-400">
-                                  Found: {item.foundQuantity} of {item.quantity}
-                                </p>
-                              )}
-                          </div>
+                        <div
+                          className="h-10 w-10 flex-shrink-0 cursor-pointer overflow-hidden rounded-lg bg-slate-200 sm:h-12 sm:w-12"
+                          onClick={() => showProductImage(item)}
+                        >
+                          {item.product.image ? (
+                            <Image
+                              src={item.product.image}
+                              alt={item.product.name}
+                              width={48}
+                              height={48}
+                              className="h-full w-full object-cover"
+                            />
+                          ) : (
+                            <div className="flex h-full w-full items-center justify-center bg-slate-300 text-slate-400">
+                              <svg
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                stroke="currentColor"
+                                strokeWidth="2"
+                                className="h-5 w-5 sm:h-6 sm:w-6"
+                              >
+                                <path d="M9 17h6M9 12h6M9 7h6" />
+                              </svg>
+                            </div>
+                          )}
                         </div>
-                        <div className="flex justify-between sm:flex-col sm:items-end sm:text-right">
-                          <div className="text-base font-bold text-slate-900 dark:text-slate-100 sm:text-lg">
+                        
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-medium text-slate-900 dark:text-slate-100 sm:text-base truncate">
+                            {item.product.name}
+                          </p>
+                          <p className="text-xs text-slate-500 dark:text-slate-400 sm:text-sm">
+                            {formatCurrency(item.price)} × {item.quantity}
+                          </p>
+                          {item.found &&
+                            item.foundQuantity &&
+                            item.foundQuantity < item.quantity && (
+                              <p className="text-xs text-amber-600 dark:text-amber-400">
+                                Found: {item.foundQuantity} of {item.quantity}
+                              </p>
+                            )}
+                        </div>
+
+                        <div className="flex items-center gap-3">
+                          <div className="text-sm font-bold text-slate-900 dark:text-slate-100 sm:text-base">
                             {formatCurrency(item.price * item.quantity)}
                           </div>
                           {order.status === "shopping" && (
-                            <Checkbox
-                              checked={item.found || false}
-                              onChange={(_, checked) =>
-                                toggleItemFound(item, checked)
-                              }
+                            <button
+                              onClick={() => toggleItemFound(item, !item.found)}
+                              className={`flex items-center gap-2 rounded-lg px-3 py-1.5 text-xs font-medium transition-all duration-200 sm:text-sm whitespace-nowrap ${
+                                item.found
+                                  ? "bg-emerald-100 text-emerald-800 border border-emerald-200 hover:bg-emerald-200 dark:bg-emerald-900/20 dark:text-emerald-300 dark:border-emerald-700"
+                                  : "bg-slate-100 text-slate-700 border border-slate-200 hover:bg-slate-200 dark:bg-slate-700 dark:text-slate-300 dark:border-slate-600 dark:hover:bg-slate-600"
+                              }`}
                             >
-                              <span className="text-sm sm:text-base">
-                                Found
-                              </span>
-                            </Checkbox>
+                              <svg
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                stroke="currentColor"
+                                strokeWidth="2"
+                                className={`h-3 w-3 sm:h-4 sm:w-4 ${
+                                  item.found ? "text-emerald-600 dark:text-emerald-400" : "text-slate-500 dark:text-slate-400"
+                                }`}
+                              >
+                                {item.found ? (
+                                  <path
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                    d="M5 13l4 4L19 7"
+                                  />
+                                ) : (
+                                  <path
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                    d="M12 6v6m0 0v6m0-6h6m-6 0H6"
+                                  />
+                                )}
+                              </svg>
+                              {item.found ? "Found" : "Mark Found"}
+                            </button>
                           )}
                         </div>
                       </div>
