@@ -1,7 +1,7 @@
 import React from "react";
 import { Panel } from "rsuite";
 import { useTheme } from "../../../context/ThemeContext";
-import { formatCurrencySync } from "../../utils/formatCurrency";
+import { formatCurrencySync } from "../../../utils/formatCurrency";
 
 interface StoreBreakdown {
   store: string;

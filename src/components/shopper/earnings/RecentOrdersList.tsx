@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { Button, Loader, Pagination } from "rsuite";
 import { useTheme } from "../../../context/ThemeContext";
-import { formatCurrencySync } from "../../utils/formatCurrency";
+import { formatCurrencySync } from "../../../utils/formatCurrency";
 
 interface Order {
   id: string;

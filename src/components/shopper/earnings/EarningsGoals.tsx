@@ -3,7 +3,7 @@ import { Panel, Button, InputNumber, Modal } from "rsuite";
 import {
   formatCurrencySync,
   getCurrencySymbol,
-} from "../../utils/formatCurrency";
+} from "../../../utils/formatCurrency";
 
 interface Goal {
   goal: string;

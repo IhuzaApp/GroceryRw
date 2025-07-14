@@ -411,8 +411,8 @@ const EarningsPage: React.FC = () => {
 
   return (
     <ShopperLayout>
-      <div className="container mx-auto px-4 py-4 pb-24 sm:py-8 sm:pb-8">
-        <div className="mx-auto max-w-7xl">
+      <div className="container mx-auto h-full px-2 py-4 pb-24 sm:py-8 sm:pb-8">
+        <div className="mx-auto h-full w-full">
           {/* Earnings Period Selector */}
           <div className="mb-6 flex items-center justify-between">
             <div className="flex items-center space-x-4">
@@ -532,201 +532,209 @@ const EarningsPage: React.FC = () => {
             )}
           </div>
 
-          {/* Earnings Tabs */}
-          <Tabs
-            className={`mb-6 ${
-              theme === "dark"
-                ? "rs-tabs-dark !text-white [&_.rs-nav-item-active]:!text-white [&_.rs-nav-item-content]:!text-white [&_.rs-nav-item]:!text-white"
-                : ""
-            }`}
-            activeKey={activeTab}
-            onSelect={handleTabChange}
-            appearance="subtle"
-          >
-            <Tabs.Tab eventKey="earnings" title="Earnings">
-              <Panel
-                shaded
-                bordered
-                className={`mt-4 ${
-                  theme === "dark"
-                    ? "rs-panel-dark !text-white [&_*]:!text-white"
-                    : ""
-                }`}
-              >
-                <h3
-                  className={`mb-2 text-lg font-bold ${
-                    theme === "dark" ? "!text-white" : "text-gray-800"
+          {/* Earnings Tabs - Fill remaining space */}
+          <div className="flex-1 min-h-0">
+            <Tabs
+              className={`h-full ${
+                theme === "dark"
+                  ? "rs-tabs-dark !text-white [&_.rs-nav-item-active]:!text-white [&_.rs-nav-item-content]:!text-white [&_.rs-nav-item]:!text-white"
+                  : ""
+              }`}
+              activeKey={activeTab}
+              onSelect={handleTabChange}
+              appearance="subtle"
+            >
+              <Tabs.Tab eventKey="earnings" title="Earnings">
+                <Panel
+                  shaded
+                  bordered
+                  className={`mt-4 h-full ${
+                    theme === "dark"
+                      ? "rs-panel-dark !text-white [&_*]:!text-white"
+                      : ""
                   }`}
                 >
-                  Daily Earnings
-                </h3>
-                <p
-                  className={`mb-4 text-sm ${
-                    theme === "dark" ? "!text-white" : "text-gray-500"
-                  }`}
-                >
-                  Your earnings for each day this week
-                </p>
-
-                <DailyEarningsChart
-                  data={dailyEarnings}
-                  isLoading={dailyEarningsLoading}
-                  period={period}
-                />
-              </Panel>
-            </Tabs.Tab>
-
-            <Tabs.Tab eventKey="recent-orders" title="Recent Orders">
-              <Panel
-                shaded
-                bordered
-                className={`mt-4 ${
-                  theme === "dark"
-                    ? "rs-panel-dark !text-white [&_*]:!text-white"
-                    : ""
-                }`}
-              >
-                <h3
-                  className={`mb-2 text-lg font-bold ${
-                    theme === "dark" ? "!text-white" : "text-gray-800"
-                  }`}
-                >
-                  Recent Orders
-                </h3>
-                <p
-                  className={`mb-4 text-sm ${
-                    theme === "dark" ? "!text-white" : "text-gray-500"
-                  }`}
-                >
-                  Your recently completed orders and earnings
-                </p>
-
-                <RecentOrdersList
-                  orders={recentOrders}
-                  isLoading={recentOrdersLoading}
-                  pageSize={ordersPerPage}
-                  currentPage={currentPage}
-                  totalOrders={totalOrders}
-                  onPageChange={handleOrdersPageChange}
-                  serverPagination={true}
-                />
-              </Panel>
-            </Tabs.Tab>
-
-            <Tabs.Tab eventKey="breakdown" title="Breakdown">
-              <Panel
-                shaded
-                bordered
-                className={`mt-4 p-4 ${
-                  theme === "dark"
-                    ? "rs-panel-dark !text-white [&_*]:!text-white"
-                    : ""
-                }`}
-              >
-                <h3
-                  className={`mb-2 text-lg font-bold ${
-                    theme === "dark" ? "!text-white" : "text-gray-800"
-                  }`}
-                >
-                  Earnings Breakdown
-                </h3>
-                <p
-                  className={`mb-4 text-sm ${
-                    theme === "dark" ? "!text-white" : "text-gray-500"
-                  }`}
-                >
-                  How your earnings are distributed
-                </p>
-
-                {loading ? (
-                  <div
-                    className={`flex justify-center py-8 ${
-                      theme === "dark" ? "!text-white" : ""
+                  <h3
+                    className={`mb-2 text-lg font-bold ${
+                      theme === "dark" ? "!text-white" : "text-gray-800"
                     }`}
                   >
-                    <Loader size="md" content="Loading earnings data..." />
-                  </div>
-                ) : !earningsStats.storeBreakdown ||
-                  !earningsStats.earningsComponents ? (
-                  <div
-                    className={`py-8 text-center ${
-                      theme === "dark" ? "!text-white" : "text-gray-600"
+                    Daily Earnings
+                  </h3>
+                  <p
+                    className={`mb-4 text-sm ${
+                      theme === "dark" ? "!text-white" : "text-gray-500"
                     }`}
                   >
-                    <p>No earnings breakdown data available.</p>
-                  </div>
-                ) : (
-                  <>
-                    <EarningsBreakdown
-                      storeBreakdown={earningsStats.storeBreakdown.map(
-                        (store) => ({
-                          ...store,
-                          amount: parseFloat(store.amount.toFixed(2)),
-                        })
-                      )}
-                      earningsComponents={earningsStats.earningsComponents.map(
-                        (component) => ({
-                          ...component,
-                          amount: parseFloat(component.amount.toFixed(2)),
-                        })
-                      )}
+                    Your earnings for each day this week
+                  </p>
+
+                  <div className="h-full flex-1">
+                    <DailyEarningsChart
+                      data={dailyEarnings}
+                      isLoading={dailyEarningsLoading}
+                      period={period}
                     />
+                  </div>
+                </Panel>
+              </Tabs.Tab>
 
-                    <ActivityHeatmap />
-                  </>
-                )}
-              </Panel>
-            </Tabs.Tab>
-
-            <Tabs.Tab eventKey="payouts" title="Payouts">
-              <Panel
-                shaded
-                bordered
-                className={`mt-4 p-4 ${
-                  theme === "dark"
-                    ? "rs-panel-dark !text-white [&_*]:!text-white"
-                    : ""
-                }`}
-              >
-                <h3
-                  className={`mb-2 text-lg font-bold ${
-                    theme === "dark" ? "!text-white" : "text-gray-800"
+              <Tabs.Tab eventKey="recent-orders" title="Recent Orders">
+                <Panel
+                  shaded
+                  bordered
+                  className={`mt-4 h-full ${
+                    theme === "dark"
+                      ? "rs-panel-dark !text-white [&_*]:!text-white"
+                      : ""
                   }`}
                 >
-                  Payment History
-                </h3>
-                <p
-                  className={`mb-4 text-sm ${
-                    theme === "dark" ? "!text-white" : "text-gray-500"
-                  }`}
-                >
-                  Your recent payouts and upcoming payments
-                </p>
-
-                {walletLoading ? (
-                  <div
-                    className={`flex justify-center py-8 ${
-                      theme === "dark" ? "!text-white" : ""
+                  <h3
+                    className={`mb-2 text-lg font-bold ${
+                      theme === "dark" ? "!text-white" : "text-gray-800"
                     }`}
                   >
-                    <Loader size="md" content="Loading wallet data..." />
+                    Recent Orders
+                  </h3>
+                  <p
+                    className={`mb-4 text-sm ${
+                      theme === "dark" ? "!text-white" : "text-gray-500"
+                    }`}
+                  >
+                    Your recently completed orders and earnings
+                  </p>
+
+                  <div className="h-full flex-1">
+                    <RecentOrdersList
+                      orders={recentOrders}
+                      isLoading={recentOrdersLoading}
+                      pageSize={ordersPerPage}
+                      currentPage={currentPage}
+                      totalOrders={totalOrders}
+                      onPageChange={handleOrdersPageChange}
+                      serverPagination={true}
+                    />
                   </div>
-                ) : (
-                  <PaymentHistory
-                    wallet={wallet}
-                    transactions={transactions}
-                    onViewAllPayments={() =>
-                      console.log("View all payments clicked")
-                    }
-                    isLoading={walletLoading}
-                  />
-                )}
-              </Panel>
-            </Tabs.Tab>
-          </Tabs>
+                </Panel>
+              </Tabs.Tab>
+
+              <Tabs.Tab eventKey="breakdown" title="Breakdown">
+                <Panel
+                  shaded
+                  bordered
+                  className={`mt-4 p-4 h-full ${
+                    theme === "dark"
+                      ? "rs-panel-dark !text-white [&_*]:!text-white"
+                      : ""
+                  }`}
+                >
+                  <h3
+                    className={`mb-2 text-lg font-bold ${
+                      theme === "dark" ? "!text-white" : "text-gray-800"
+                    }`}
+                  >
+                    Earnings Breakdown
+                  </h3>
+                  <p
+                    className={`mb-4 text-sm ${
+                      theme === "dark" ? "!text-white" : "text-gray-500"
+                    }`}
+                  >
+                    How your earnings are distributed
+                  </p>
+
+                  {loading ? (
+                    <div
+                      className={`flex justify-center py-8 ${
+                        theme === "dark" ? "!text-white" : ""
+                      }`}
+                    >
+                      <Loader size="md" content="Loading earnings data..." />
+                    </div>
+                  ) : !earningsStats.storeBreakdown ||
+                    !earningsStats.earningsComponents ? (
+                    <div
+                      className={`py-8 text-center ${
+                        theme === "dark" ? "!text-white" : "text-gray-600"
+                      }`}
+                    >
+                      <p>No earnings breakdown data available.</p>
+                    </div>
+                  ) : (
+                    <div className="h-full flex-1">
+                      <EarningsBreakdown
+                        storeBreakdown={earningsStats.storeBreakdown.map(
+                          (store) => ({
+                            ...store,
+                            amount: parseFloat(store.amount.toFixed(2)),
+                          })
+                        )}
+                        earningsComponents={earningsStats.earningsComponents.map(
+                          (component) => ({
+                            ...component,
+                            amount: parseFloat(component.amount.toFixed(2)),
+                          })
+                        )}
+                      />
+
+                      <ActivityHeatmap />
+                    </div>
+                  )}
+                </Panel>
+              </Tabs.Tab>
+
+              <Tabs.Tab eventKey="payouts" title="Payouts">
+                <Panel
+                  shaded
+                  bordered
+                  className={`mt-4 p-4 h-full ${
+                    theme === "dark"
+                      ? "rs-panel-dark !text-white [&_*]:!text-white"
+                      : ""
+                  }`}
+                >
+                  <h3
+                    className={`mb-2 text-lg font-bold ${
+                      theme === "dark" ? "!text-white" : "text-gray-800"
+                    }`}
+                  >
+                    Payment History
+                  </h3>
+                  <p
+                    className={`mb-4 text-sm ${
+                      theme === "dark" ? "!text-white" : "text-gray-500"
+                    }`}
+                  >
+                    Your recent payouts and upcoming payments
+                  </p>
+
+                  {walletLoading ? (
+                    <div
+                      className={`flex justify-center py-8 ${
+                        theme === "dark" ? "!text-white" : ""
+                      }`}
+                    >
+                      <Loader size="md" content="Loading wallet data..." />
+                    </div>
+                  ) : (
+                    <div className="h-full flex-1">
+                      <PaymentHistory
+                        wallet={wallet}
+                        transactions={transactions}
+                        onViewAllPayments={() =>
+                          console.log("View all payments clicked")
+                        }
+                        isLoading={walletLoading}
+                      />
+                    </div>
+                  )}
+                </Panel>
+              </Tabs.Tab>
+            </Tabs>
+          </div>
 
           {/* Performance Metrics and Goals */}
-          <div className="mb-6 grid grid-cols-1 gap-6 lg:grid-cols-2">
+          <div className="mt-6 grid grid-cols-1 gap-6 lg:grid-cols-2">
             {deliveryStatsLoading ? (
               <div className="flex h-96 items-center justify-center rounded-lg border">
                 <Loader size="md" content="Loading delivery stats..." />

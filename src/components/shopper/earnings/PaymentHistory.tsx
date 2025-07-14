@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { Panel, Button, Tag, Pagination } from "rsuite";
 import { useTheme } from "../../../context/ThemeContext";
-import { formatCurrencySync } from "../../utils/formatCurrency";
+import { formatCurrencySync } from "../../../utils/formatCurrency";
 
 interface Wallet {
   id: string;
