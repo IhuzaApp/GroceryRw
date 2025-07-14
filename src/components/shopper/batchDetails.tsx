@@ -1023,75 +1023,75 @@ export default function BatchDetails({
         )}
 
       {/* Main Content */}
-      <main className="max-w-9xl mx-auto p-6">
-        <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-xl  dark:border-gray-700 overflow-hidden">
+      <main className="max-w-9xl mx-auto p-3 sm:p-6">
+        <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-xl dark:border-gray-700 overflow-hidden">
           {/* Header with gradient background */}
-          <div className={`text-gray-900 dark:text-gray-100 p-6`}>
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-4">
+          <div className={`text-gray-900 dark:text-gray-100 p-4 sm:p-6`}>
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4">
+              <div className="flex items-center gap-3 sm:gap-4">
                 <Button
                   appearance="link"
                   onClick={() => router.back()}
-                  className="flex items-center text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-gray-100 px-0"
+                  className="flex items-center text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-gray-100 px-0 text-sm sm:text-base"
                 >
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="h-5 w-5 mr-2">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="h-4 w-4 sm:h-5 sm:w-5 mr-1 sm:mr-2">
                     <path d="M19 12H5M12 19l-7-7 7-7" />
                   </svg>
                   Back
                 </Button>
-                <div className="h-6 w-px bg-gray-300 dark:bg-gray-600"></div>
-                <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">
+                <div className="h-4 sm:h-6 w-px bg-gray-300 dark:bg-gray-600"></div>
+                <h1 className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-gray-100">
                   {order.orderType === "reel" ? "Reel Batch" : "Regular Batch"} #{order.OrderID || order.id.slice(0, 8)}
                 </h1>
               </div>
-              <div className="flex items-center gap-3">
+              <div className="flex items-center gap-2 sm:gap-3">
                 {getStatusTag(order.status)}
               </div>
             </div>
           </div>
 
           {/* Content */}
-          <div className="p-8 space-y-8">
+          <div className="p-4 sm:p-8 space-y-6 sm:space-y-8">
             {/* Main Info Grid */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-8">
               {/* Shop/Reel Info */}
-              <div className="bg-slate-50 dark:bg-slate-800 rounded-xl p-6 border border-slate-200 dark:border-slate-700">
-                <div className="flex items-center gap-3 mb-4">
-                  <span className={`inline-block rounded-full p-2 ${order.orderType === "reel" ? "bg-indigo-100" : "bg-emerald-100"}`}>
+              <div className="bg-slate-50 dark:bg-slate-800 rounded-xl p-4 sm:p-6 border border-slate-200 dark:border-slate-700">
+                <div className="flex items-center gap-2 sm:gap-3 mb-3 sm:mb-4">
+                  <span className={`inline-block rounded-full p-1.5 sm:p-2 ${order.orderType === "reel" ? "bg-indigo-100" : "bg-emerald-100"}`}>
                     {order.orderType === "reel" ? (
-                      <svg className="h-5 w-5 text-indigo-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <svg className="h-4 w-4 sm:h-5 sm:w-5 text-indigo-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 10l4.553-2.276A2 2 0 0020 6.382V5a2 2 0 00-2-2H6a2 2 0 00-2 2v1.382a2 2 0 00.447 1.342L9 10m6 0v4m0 0l-4.553 2.276A2 2 0 016 17.618V19a2 2 0 002 2h8a2 2 0 002-2v-1.382a2 2 0 00-.447-1.342L15 14z" />
                       </svg>
                     ) : (
-                      <svg className="h-5 w-5 text-emerald-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <svg className="h-4 w-4 sm:h-5 sm:w-5 text-emerald-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 7v4a1 1 0 001 1h3m10 0h3a1 1 0 001-1V7m-1-4H5a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2V5a2 2 0 00-2-2z" />
                       </svg>
                     )}
                   </span>
-                  <h2 className="text-lg font-semibold text-slate-900 dark:text-slate-100">
+                  <h2 className="text-lg sm:text-xl font-semibold text-slate-900 dark:text-slate-100">
                     {order.orderType === "reel" ? "Reel Details" : "Shop Details"}
                   </h2>
                 </div>
                 
                 {order.orderType === "reel" ? (
-                  <div className="space-y-4">
-                    <div className="flex gap-4">
-                      <div className="relative h-20 w-20 flex-shrink-0 overflow-hidden rounded-lg bg-slate-200">
+                  <div className="space-y-3 sm:space-y-4">
+                    <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
+                      <div className="relative h-16 w-16 sm:h-20 sm:w-20 flex-shrink-0 overflow-hidden rounded-lg bg-slate-200 mx-auto sm:mx-0">
                         {order.reel?.video_url ? (
                           <video src={order.reel.video_url} className="h-full w-full object-cover" muted preload="metadata" />
                         ) : (
                           <div className="flex h-full w-full items-center justify-center bg-slate-300">
-                            <svg className="h-8 w-8 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <svg className="h-6 w-6 sm:h-8 sm:w-8 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                               <circle cx="12" cy="12" r="10" />
                               <path d="M14.828 14.828a4 4 0 01-5.656 0" />
                             </svg>
                           </div>
                         )}
                       </div>
-                      <div className="flex-1">
-                        <h3 className="font-semibold text-slate-900 dark:text-slate-100 mb-1">{order.reel?.title}</h3>
-                        <p className="text-sm text-slate-600 dark:text-slate-400 mb-2">{order.reel?.description}</p>
-                        <div className="flex gap-4 text-sm">
+                      <div className="flex-1 text-center sm:text-left">
+                        <h3 className="font-semibold text-slate-900 dark:text-slate-100 mb-1 text-base sm:text-lg">{order.reel?.title}</h3>
+                        <p className="text-sm sm:text-base text-slate-600 dark:text-slate-400 mb-2">{order.reel?.description}</p>
+                        <div className="flex flex-wrap justify-center sm:justify-start gap-2 sm:gap-4 text-sm sm:text-base">
                           <span className="text-slate-500">Type: {order.reel?.type}</span>
                           <span className="text-slate-500">Qty: {order.quantity}</span>
                           <span className="font-semibold text-indigo-600">{formatCurrency(parseFloat(order.reel?.Price || "0"))}</span>
@@ -1100,75 +1100,75 @@ export default function BatchDetails({
                     </div>
                     {order.reel?.Restaurant && (
                       <div className="bg-white dark:bg-slate-700 rounded-lg p-3 border border-slate-200 dark:border-slate-600">
-                        <p className="text-sm font-medium text-slate-900 dark:text-slate-100">{order.reel.Restaurant.name}</p>
+                        <p className="text-sm sm:text-base font-medium text-slate-900 dark:text-slate-100">{order.reel.Restaurant.name}</p>
                         <p className="text-xs text-slate-500 dark:text-slate-400">{order.reel.Restaurant.location}</p>
                       </div>
                     )}
                   </div>
                 ) : (
-                  <div className="flex gap-4">
-                    <div className="relative h-16 w-16 flex-shrink-0 overflow-hidden rounded-lg bg-slate-200">
+                  <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
+                    <div className="relative h-12 w-12 sm:h-16 sm:w-16 flex-shrink-0 overflow-hidden rounded-lg bg-slate-200 mx-auto sm:mx-0">
                       {order.shop?.image ? (
                         <Image src={order.shop.image} alt={order.shop.name} width={64} height={64} className="h-full w-full object-cover" />
                       ) : (
                         <div className="flex h-full w-full items-center justify-center bg-slate-300 text-slate-400">
-                          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="h-6 w-6">
+                          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="h-5 w-5 sm:h-6 sm:w-6">
                             <rect x="3" y="3" width="18" height="18" rx="2" />
                             <path d="M16 8h.01M8 16h.01M16 16h.01" />
                           </svg>
                         </div>
                       )}
                     </div>
-                    <div className="flex-1">
-                      <h3 className="font-semibold text-slate-900 dark:text-slate-100 mb-1">{order.shop?.name}</h3>
-                      <p className="text-sm text-slate-600 dark:text-slate-400">{order.shop?.address}</p>
+                    <div className="flex-1 text-center sm:text-left">
+                      <h3 className="font-semibold text-slate-900 dark:text-slate-100 mb-1 text-base sm:text-lg">{order.shop?.name}</h3>
+                      <p className="text-sm sm:text-base text-slate-600 dark:text-slate-400">{order.shop?.address}</p>
                     </div>
                   </div>
                 )}
               </div>
 
               {/* Customer Info */}
-              <div className="bg-slate-50 dark:bg-slate-800 rounded-xl p-6 border border-slate-200 dark:border-slate-700">
-                <div className="flex items-center gap-3 mb-4">
-                  <span className="inline-block rounded-full p-2 bg-sky-100">
-                    <svg className="h-5 w-5 text-sky-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <div className="bg-slate-50 dark:bg-slate-800 rounded-xl p-4 sm:p-6 border border-slate-200 dark:border-slate-700">
+                <div className="flex items-center gap-2 sm:gap-3 mb-3 sm:mb-4">
+                  <span className="inline-block rounded-full p-1.5 sm:p-2 bg-sky-100">
+                    <svg className="h-4 w-4 sm:h-5 sm:w-5 text-sky-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5.121 17.804A13.937 13.937 0 0112 15c2.5 0 4.847.655 6.879 1.804M15 10a3 3 0 11-6 0 3 3 0 016 0z" />
                     </svg>
                   </span>
-                  <h2 className="text-lg font-semibold text-slate-900 dark:text-slate-100">Customer</h2>
+                  <h2 className="text-lg sm:text-xl font-semibold text-slate-900 dark:text-slate-100">Customer</h2>
                 </div>
                 
-                <div className="flex items-center gap-3 mb-4">
-                  <div className="h-12 w-12 rounded-full overflow-hidden bg-slate-200">
+                <div className="flex flex-col sm:flex-row items-center sm:items-start gap-3 mb-3 sm:mb-4">
+                  <div className="h-10 w-10 sm:h-12 sm:w-12 rounded-full overflow-hidden bg-slate-200">
                     {order.user.profile_picture ? (
                       <Image src={order.user.profile_picture} alt={order.user.name} width={48} height={48} className="h-full w-full object-cover" />
                     ) : (
                       <div className="flex h-full w-full items-center justify-center bg-slate-200 text-slate-400">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="h-6 w-6">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="h-5 w-5 sm:h-6 sm:w-6">
                           <circle cx="12" cy="8" r="4" />
                           <path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2" />
                         </svg>
                       </div>
                     )}
                   </div>
-                  <div>
-                    <h4 className="font-medium text-slate-900 dark:text-slate-100">{order.user.name}</h4>
-                    <p className="text-sm text-slate-500 dark:text-slate-400">{order.user.email}</p>
+                  <div className="text-center sm:text-left">
+                    <h4 className="font-medium text-slate-900 dark:text-slate-100 text-base sm:text-lg">{order.user.name}</h4>
+                    <p className="text-sm sm:text-base text-slate-500 dark:text-slate-400">{order.user.email}</p>
                   </div>
                 </div>
                 
                 <div className="space-y-3">
                   <div className="bg-white dark:bg-slate-700 rounded-lg p-3 border border-slate-200 dark:border-slate-600">
                     <p className="text-xs font-medium text-slate-500 dark:text-slate-400 mb-1">Delivery Address</p>
-                    <p className="text-sm text-slate-900 dark:text-slate-100">
+                    <p className="text-sm sm:text-base text-slate-900 dark:text-slate-100">
                       {order.address.street}, {order.address.city}{order.address.postal_code ? `, ${order.address.postal_code}` : ""}
                     </p>
                   </div>
                   
-                  <div className="flex gap-2">
+                  <div className="flex flex-wrap justify-center sm:justify-start gap-2">
                     <Link href={`https://www.google.com/maps/dir/?api=1&origin=${encodeURIComponent(order.shop?.address || order.address.street)}&destination=${encodeURIComponent(`${order.address.street}, ${order.address.city}${order.address.postal_code ? `, ${order.address.postal_code}` : ""}`)}`} target="_blank">
-                      <Button appearance="ghost" size="sm" className="text-sky-600 dark:text-sky-400 hover:text-sky-700 hover:bg-sky-50 dark:hover:bg-sky-900/20">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="h-4 w-4 mr-1">
+                      <Button appearance="ghost" size="sm" className="text-sky-600 dark:text-sky-400 hover:text-sky-700 hover:bg-sky-50 dark:hover:bg-sky-900/20 text-sm sm:text-base">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="h-4 w-4 sm:h-5 sm:w-5 mr-1">
                           <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z" />
                           <circle cx="12" cy="10" r="3" />
                         </svg>
@@ -1177,15 +1177,15 @@ export default function BatchDetails({
                     </Link>
                     
                     {order.status !== "delivered" ? (
-                      <Button appearance="ghost" size="sm" className="text-sky-600 dark:text-sky-400 hover:text-sky-700 hover:bg-sky-50 dark:hover:bg-sky-900/20" onClick={handleChatClick}>
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="h-4 w-4 mr-1">
+                      <Button appearance="ghost" size="sm" className="text-sky-600 dark:text-sky-400 hover:text-sky-700 hover:bg-sky-50 dark:hover:bg-sky-900/20 text-sm sm:text-base" onClick={handleChatClick}>
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="h-4 w-4 sm:h-5 sm:w-5 mr-1">
                           <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
                         </svg>
                         Message
                       </Button>
                     ) : (
-                      <Button appearance="ghost" size="sm" className="text-slate-400 cursor-not-allowed" disabled>
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="h-4 w-4 mr-1">
+                      <Button appearance="ghost" size="sm" className="text-slate-400 cursor-not-allowed text-sm sm:text-base" disabled>
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="h-4 w-4 sm:h-5 sm:w-5 mr-1">
                           <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
                         </svg>
                         Chat Closed
@@ -1198,48 +1198,50 @@ export default function BatchDetails({
 
             {/* Order Items */}
             {shouldShowOrderDetails() && (
-              <div className="bg-slate-50 dark:bg-slate-800 rounded-xl p-6 border border-slate-200 dark:border-slate-700">
-                <div className="flex items-center gap-3 mb-4">
-                  <span className={`inline-block rounded-full p-2 ${order.orderType === "reel" ? "bg-indigo-100" : "bg-emerald-100"}`}>
-                    <svg className={`h-5 w-5 ${order.orderType === "reel" ? "text-indigo-600" : "text-emerald-600"}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <div className="bg-slate-50 dark:bg-slate-800 rounded-xl p-4 sm:p-6 border border-slate-200 dark:border-slate-700">
+                <div className="flex items-center gap-2 sm:gap-3 mb-3 sm:mb-4">
+                  <span className={`inline-block rounded-full p-1.5 sm:p-2 ${order.orderType === "reel" ? "bg-indigo-100" : "bg-emerald-100"}`}>
+                    <svg className={`h-4 w-4 sm:h-5 sm:w-5 ${order.orderType === "reel" ? "text-indigo-600" : "text-emerald-600"}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 7v4a1 1 0 001 1h3m10 0h3a1 1 0 001-1V7m-1-4H5a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2V5a2 2 0 00-2-2z" />
                     </svg>
                   </span>
-                  <h2 className="text-lg font-semibold text-slate-900 dark:text-slate-100">{order.orderType === "reel" ? "Reel Details" : "Order Items"}</h2>
+                  <h2 className="text-lg sm:text-xl font-semibold text-slate-900 dark:text-slate-100">{order.orderType === "reel" ? "Reel Details" : "Order Items"}</h2>
                 </div>
                 
                 {order.orderType === "reel" ? (
-                  <div className="bg-white dark:bg-slate-700 rounded-lg p-4 border border-slate-200 dark:border-slate-600">
-                    <div className="text-base text-slate-700 dark:text-slate-200 mb-2">{order.reel?.Product}</div>
-                    <div className="text-sm text-slate-500 dark:text-slate-400">Quantity: {order.quantity}</div>
+                  <div className="bg-white dark:bg-slate-700 rounded-lg p-3 sm:p-4 border border-slate-200 dark:border-slate-600">
+                    <div className="text-base sm:text-lg text-slate-700 dark:text-slate-200 mb-2">{order.reel?.Product}</div>
+                    <div className="text-sm sm:text-base text-slate-500 dark:text-slate-400">Quantity: {order.quantity}</div>
                   </div>
                 ) : (
                   <div className="space-y-3">
                     {order.Order_Items?.map((item) => (
-                      <div key={item.id} className="bg-white dark:bg-slate-700 rounded-lg p-4 flex items-center border border-slate-200 dark:border-slate-600">
-                        <div className="mr-4 h-12 w-12 flex-shrink-0 cursor-pointer overflow-hidden rounded-lg bg-slate-200" onClick={() => showProductImage(item)}>
-                          {item.product.image ? (
-                            <Image src={item.product.image} alt={item.product.name} width={48} height={48} className="h-full w-full object-cover" />
-                          ) : (
-                            <div className="flex h-full w-full items-center justify-center bg-slate-300 text-slate-400">
-                              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="h-6 w-6">
-                                <path d="M9 17h6M9 12h6M9 7h6" />
-                              </svg>
-                            </div>
-                          )}
+                      <div key={item.id} className="bg-white dark:bg-slate-700 rounded-lg p-3 sm:p-4 flex flex-col sm:flex-row sm:items-center border border-slate-200 dark:border-slate-600 gap-3">
+                        <div className="flex items-center gap-3">
+                          <div className="h-10 w-10 sm:h-12 sm:w-12 flex-shrink-0 cursor-pointer overflow-hidden rounded-lg bg-slate-200" onClick={() => showProductImage(item)}>
+                            {item.product.image ? (
+                              <Image src={item.product.image} alt={item.product.name} width={48} height={48} className="h-full w-full object-cover" />
+                            ) : (
+                              <div className="flex h-full w-full items-center justify-center bg-slate-300 text-slate-400">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="h-5 w-5 sm:h-6 sm:w-6">
+                                  <path d="M9 17h6M9 12h6M9 7h6" />
+                                </svg>
+                              </div>
+                            )}
+                          </div>
+                          <div className="flex-1">
+                            <p className="font-medium text-slate-900 dark:text-slate-100 text-base sm:text-lg">{item.product.name}</p>
+                            <p className="text-sm sm:text-base text-slate-500 dark:text-slate-400">{formatCurrency(item.price)} × {item.quantity}</p>
+                            {item.found && item.foundQuantity && item.foundQuantity < item.quantity && (
+                              <p className="text-xs text-amber-600 dark:text-amber-400">Found: {item.foundQuantity} of {item.quantity}</p>
+                            )}
+                          </div>
                         </div>
-                        <div className="flex-grow">
-                          <p className="font-medium text-slate-900 dark:text-slate-100">{item.product.name}</p>
-                          <p className="text-sm text-slate-500 dark:text-slate-400">{formatCurrency(item.price)} × {item.quantity}</p>
-                          {item.found && item.foundQuantity && item.foundQuantity < item.quantity && (
-                            <p className="text-xs text-amber-600 dark:text-amber-400">Found: {item.foundQuantity} of {item.quantity}</p>
-                          )}
-                        </div>
-                        <div className="flex flex-col items-end text-right">
-                          <div className="mb-2 font-bold text-slate-900 dark:text-slate-100">{formatCurrency(item.price * item.quantity)}</div>
+                        <div className="flex justify-between sm:flex-col sm:items-end sm:text-right">
+                          <div className="font-bold text-slate-900 dark:text-slate-100 text-base sm:text-lg">{formatCurrency(item.price * item.quantity)}</div>
                           {order.status === "shopping" && (
                             <Checkbox checked={item.found || false} onChange={(_, checked) => toggleItemFound(item, checked)}>
-                              Found
+                              <span className="text-sm sm:text-base">Found</span>
                             </Checkbox>
                           )}
                         </div>
@@ -1252,18 +1254,18 @@ export default function BatchDetails({
 
             {/* Order Summary */}
             {shouldShowOrderDetails() && (
-              <div className="bg-slate-50 dark:bg-slate-800 rounded-xl p-6 border border-slate-200 dark:border-slate-700">
-                <div className="flex items-center gap-3 mb-4">
-                  <span className="inline-block rounded-full p-2 bg-slate-100">
-                    <svg className="h-5 w-5 text-slate-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <div className="bg-slate-50 dark:bg-slate-800 rounded-xl p-4 sm:p-6 border border-slate-200 dark:border-slate-700">
+                <div className="flex items-center gap-2 sm:gap-3 mb-3 sm:mb-4">
+                  <span className="inline-block rounded-full p-1.5 sm:p-2 bg-slate-100">
+                    <svg className="h-4 w-4 sm:h-5 sm:w-5 text-slate-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 7v4a1 1 0 001 1h3m10 0h3a1 1 0 001-1V7m-1-4H5a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2V5a2 2 0 00-2-2z" />
                     </svg>
                   </span>
-                  <h2 className="text-lg font-semibold text-slate-900 dark:text-slate-100">Order Summary</h2>
+                  <h2 className="text-lg sm:text-xl font-semibold text-slate-900 dark:text-slate-100">Order Summary</h2>
                 </div>
                 
-                <div className="bg-white dark:bg-slate-700 rounded-lg p-4 border border-slate-200 dark:border-slate-600">
-                  <div className="space-y-2">
+                <div className="bg-white dark:bg-slate-700 rounded-lg p-3 sm:p-4 border border-slate-200 dark:border-slate-600">
+                  <div className="space-y-2 text-base sm:text-lg">
                     {order.orderType === "reel" ? (
                       <>
                         <div className="flex justify-between">
@@ -1293,7 +1295,7 @@ export default function BatchDetails({
                           </div>
                         )}
                         <Divider />
-                        <div className="flex justify-between text-lg font-bold">
+                        <div className="flex justify-between text-lg sm:text-xl font-bold">
                           <span>Total</span>
                           <span>{formatCurrency(order.total)}</span>
                         </div>
@@ -1353,7 +1355,7 @@ export default function BatchDetails({
                           </div>
                         )}
                         <Divider />
-                        <div className="flex justify-between text-lg font-bold">
+                        <div className="flex justify-between text-lg sm:text-xl font-bold">
                           <span>Total</span>
                           <span>
                             {order.status === "shopping"
@@ -1363,7 +1365,7 @@ export default function BatchDetails({
                         </div>
 
                         {order.status === "shopping" && (
-                          <div className="mt-4 p-3 bg-sky-50 dark:bg-sky-900/20 rounded-lg text-sm text-sky-700 dark:text-sky-300 border border-sky-200 dark:border-sky-800">
+                          <div className="mt-3 sm:mt-4 p-3 bg-sky-50 dark:bg-sky-900/20 rounded-lg text-sm sm:text-base text-sky-700 dark:text-sky-300 border border-sky-200 dark:border-sky-800">
                             <p>
                               <strong>Note:</strong> The total reflects only the value of found items. Service fee ({formatCurrency(parseFloat(order.serviceFee || "0"))}) and delivery fee ({formatCurrency(parseFloat(order.deliveryFee || "0"))}) were already added to your wallet as earnings when you started shopping.
                             </p>
@@ -1378,26 +1380,26 @@ export default function BatchDetails({
 
             {/* Delivery Notes */}
             {(order.deliveryNotes || order.deliveryNote) && (
-              <div className="bg-slate-50 dark:bg-slate-800 rounded-xl p-6 border border-slate-200 dark:border-slate-700">
-                <div className="flex items-center gap-3 mb-4">
-                  <span className="inline-block rounded-full p-2 bg-amber-100">
-                    <svg className="h-5 w-5 text-amber-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <div className="bg-slate-50 dark:bg-slate-800 rounded-xl p-4 sm:p-6 border border-slate-200 dark:border-slate-700">
+                <div className="flex items-center gap-2 sm:gap-3 mb-3 sm:mb-4">
+                  <span className="inline-block rounded-full p-1.5 sm:p-2 bg-amber-100">
+                    <svg className="h-4 w-4 sm:h-5 sm:w-5 text-amber-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01" />
                     </svg>
                   </span>
-                  <h2 className="text-lg font-semibold text-slate-900 dark:text-slate-100">Delivery Notes</h2>
+                  <h2 className="text-lg sm:text-xl font-semibold text-slate-900 dark:text-slate-100">Delivery Notes</h2>
                 </div>
-                <div className="bg-white dark:bg-slate-700 rounded-lg p-4 border border-slate-200 dark:border-slate-600">
-                  <p className="text-slate-700 dark:text-slate-300">{order.deliveryNotes || order.deliveryNote}</p>
+                <div className="bg-white dark:bg-slate-700 rounded-lg p-3 sm:p-4 border border-slate-200 dark:border-slate-600">
+                  <p className="text-slate-700 dark:text-slate-300 text-base sm:text-lg">{order.deliveryNotes || order.deliveryNote}</p>
                 </div>
               </div>
             )}
 
             {/* Action Button */}
-            <div className="pt-4">
+            <div className="pt-3 sm:pt-4">
               <Button 
                 appearance="primary" 
-                className={`w-full py-4 rounded-xl text-lg font-semibold ${order.orderType === "reel" ? "bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700" : "bg-gradient-to-r from-emerald-600 to-green-600 hover:from-emerald-700 hover:to-green-700"} text-white shadow-lg transition-all duration-200`}
+                className={`w-full py-3 sm:py-4 rounded-xl text-lg sm:text-xl font-semibold ${order.orderType === "reel" ? "bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700" : "bg-gradient-to-r from-emerald-600 to-green-600 hover:from-emerald-700 hover:to-green-700"} text-white shadow-lg transition-all duration-200`}
               >
                 {getActionButton()}
               </Button>
