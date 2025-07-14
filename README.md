@@ -769,7 +769,7 @@ const handlePlaceOrder = async () => {
     delivery_note: comments || "",
     delivery_address_id: deliveryAddressId,
   };
-  
+
   const res = await fetch("/api/reel-orders", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
@@ -801,15 +801,15 @@ const handlePlaceOrder = async () => {
 // Order modal
 {
   showOrderModal && (
-  <OrderModal
-    open={showOrderModal}
-    onClose={() => setShowOrderModal(false)}
-    post={post}
-    shopLat={shopLat}
-    shopLng={shopLng}
-    shopAlt={shopAlt}
-    shopId={shopId}
-  />
+    <OrderModal
+      open={showOrderModal}
+      onClose={() => setShowOrderModal(false)}
+      post={post}
+      shopLat={shopLat}
+      shopLng={shopLng}
+      shopAlt={shopAlt}
+      shopId={shopId}
+    />
   );
 }
 ```
@@ -835,21 +835,21 @@ const handlePlaceOrder = async () => {
 // Regular orders show shop information
 {
   order.shop && (
-  <div className="shop-info">
-    <h3>{order.shop.name}</h3>
-    <p>{order.shop.address}</p>
-  </div>
+    <div className="shop-info">
+      <h3>{order.shop.name}</h3>
+      <p>{order.shop.address}</p>
+    </div>
   );
 }
 
 // Reel orders show reel information
 {
   order.reel && (
-  <div className="reel-info">
-    <video src={order.reel.video_url} />
-    <h3>{order.reel.title}</h3>
-    <p>{order.reel.description}</p>
-  </div>
+    <div className="reel-info">
+      <video src={order.reel.video_url} />
+      <h3>{order.reel.title}</h3>
+      <p>{order.reel.description}</p>
+    </div>
   );
 }
 ```
@@ -871,23 +871,23 @@ const handlePlaceOrder = async () => {
 // Visual distinction
 const buttonClass =
   order.orderType === "reel"
-  ? "bg-purple-500 hover:bg-purple-600" 
-  : "bg-green-500 hover:bg-green-600";
+    ? "bg-purple-500 hover:bg-purple-600"
+    : "bg-green-500 hover:bg-green-600";
 
 // Content display
 {
   order.orderType === "reel" ? (
-  <div className="reel-order-info">
-    <span>{order.quantity} quantity</span>
-    <span>{order.reel?.title}</span>
-  </div>
-) : (
-  <div className="regular-order-info">
+    <div className="reel-order-info">
+      <span>{order.quantity} quantity</span>
+      <span>{order.reel?.title}</span>
+    </div>
+  ) : (
+    <div className="regular-order-info">
       <span>
         {order.itemsCount} items ({order.unitsCount} units)
       </span>
-    <span>{order.shop?.name}</span>
-  </div>
+      <span>{order.shop?.name}</span>
+    </div>
   );
 }
 ```
@@ -921,9 +921,9 @@ if (res.ok) {
 // Render appropriate component
 {
   orderType === "reel" ? (
-  <UserReelOrderDetails order={order} />
-) : (
-  <UserOrderDetails order={order} />
+    <UserReelOrderDetails order={order} />
+  ) : (
+    <UserOrderDetails order={order} />
   );
 }
 ```
@@ -968,16 +968,16 @@ if (res.ok) {
    ```typescript
    // User clicks "Order Now"
    setShowOrderModal(true);
-   
+
    // User selects quantity
    setQuantity(2);
-   
+
    // User adds special instructions
    setComments("Extra cheese, well done");
-   
+
    // User applies promo code
    handleApplyPromo("SAVE10"); // 10% discount
-   
+
    // Order is placed
    const order = {
      reel_id: "pizza-reel-123",
@@ -999,10 +999,10 @@ if (res.ok) {
    ```typescript
    // User selects quantity
    setQuantity(1);
-   
+
    // System calculates delivery fee based on distance
    const deliveryFee = calculateDeliveryFee(userLocation, shopLocation);
-   
+
    // Order summary
    const orderSummary = {
      subtotal: 25.0,
@@ -1023,10 +1023,10 @@ if (res.ok) {
    ```typescript
    // User adds special dietary requirements
    setComments("Gluten-free pasta, no dairy");
-   
+
    // User applies multiple promo codes
    handleApplyPromo("SAVE20"); // 20% discount
-   
+
    // Final order
    const order = {
      reel_id: "pasta-kit-456",
@@ -1043,18 +1043,18 @@ if (res.ok) {
 
 ```sql
 -- Reel orders reference reels
-ALTER TABLE reel_orders 
-ADD CONSTRAINT fk_reel_orders_reel 
+ALTER TABLE reel_orders
+ADD CONSTRAINT fk_reel_orders_reel
 FOREIGN KEY (reel_id) REFERENCES reels(id);
 
 -- Reel orders reference users
-ALTER TABLE reel_orders 
-ADD CONSTRAINT fk_reel_orders_user 
+ALTER TABLE reel_orders
+ADD CONSTRAINT fk_reel_orders_user
 FOREIGN KEY (user_id) REFERENCES users(id);
 
 -- Reel orders can reference shoppers
-ALTER TABLE reel_orders 
-ADD CONSTRAINT fk_reel_orders_shopper 
+ALTER TABLE reel_orders
+ADD CONSTRAINT fk_reel_orders_shopper
 FOREIGN KEY (shopper_id) REFERENCES shoppers(id);
 ```
 
@@ -1095,14 +1095,14 @@ try {
 const handlePlaceOrder = async () => {
   // Immediately show loading state
   setIsOrderLoading(true);
-  
+
   try {
     // Place order
     const response = await placeOrder(payload);
-    
+
     // Show success message
     showSuccess("Order placed successfully!");
-    
+
     // Close modal after delay
     setTimeout(() => {
       onClose();
@@ -1249,7 +1249,7 @@ The Reels feature is a TikTok-style video feed system that allows users to creat
 ### 1. Video Types
 
 - **Restaurant Posts**: Food delivery and dining experiences
-- **Supermarket Posts**: Product showcases and shopping content  
+- **Supermarket Posts**: Product showcases and shopping content
 - **Chef Posts**: Recipe tutorials and cooking content
 
 ### 2. User Interactions
@@ -1443,7 +1443,7 @@ const toggleLike = async (postId: string) => {
   // Immediately update UI
   setPosts(
     posts.map((post) =>
-    post.id === postId 
+      post.id === postId
         ? {
             ...post,
             isLiked: !post.isLiked,
@@ -1452,10 +1452,10 @@ const toggleLike = async (postId: string) => {
               likes: post.isLiked ? post.stats.likes - 1 : post.stats.likes + 1,
             },
           }
-      : post
+        : post
     )
   );
-  
+
   // Process backend request in background
   fetch("/api/queries/reel-likes", {
     method: isLiked ? "DELETE" : "POST",
@@ -1835,8 +1835,8 @@ export default async function handler(req, res) {
   );
 
   // 4. Create revenue records
-await hasuraClient.request(CREATE_REVENUE, {
-  type: "commission",
+  await hasuraClient.request(CREATE_REVENUE, {
+    type: "commission",
     order_id: orderId,
     amount: revenueData.revenue,
     products: JSON.stringify(productProfits),
@@ -2200,7 +2200,7 @@ Before showing any notifications, the system checks:
 - **`/api/test/check-orders-in-zone`**: Test endpoint to check what orders are in the shopper's zone based on their notification preferences
   - Tests settings retrieval and notification API integration
   - Usage: `GET /api/test/notification-settings-integration`
-   - Format: `{ schedule: Array<{ day_of_week: number, start_time: string, end_time: string, is_available: boolean }> }`
+  - Format: `{ schedule: Array<{ day_of_week: number, start_time: string, end_time: string, is_available: boolean }> }`
 
 2. `/api/shopper/activeOrders`
 
@@ -4104,7 +4104,7 @@ export const formatCurrency = async (amount: string | number) => {
 
 // Synchronous version (uses cached config)
 export const formatCurrencySync = (amount: string | number) => {
-  const config = systemConfigCache || { currency: 'RWF' };
+  const config = systemConfigCache || { currency: "RWF" };
   return new Intl.NumberFormat("en-RW", {
     style: "currency",
     currency: config.currency,
@@ -4115,7 +4115,7 @@ export const formatCurrencySync = (amount: string | number) => {
 
 // Get currency symbol
 export const getCurrencySymbol = () => {
-  const config = systemConfigCache || { currency: 'RWF' };
+  const config = systemConfigCache || { currency: "RWF" };
   return config.currency;
 };
 
@@ -4146,28 +4146,31 @@ const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
 // Fetch system configuration
 async function getSystemConfiguration() {
   const now = Date.now();
-  
+
   // Return cached config if still valid
-  if (systemConfigCache && (now - cacheTimestamp) < CACHE_DURATION) {
+  if (systemConfigCache && now - cacheTimestamp < CACHE_DURATION) {
     return systemConfigCache;
   }
 
   try {
-    const response = await fetch('/api/queries/system-configuration');
+    const response = await fetch("/api/queries/system-configuration");
     const data = await response.json();
-    
+
     if (data.success && data.config) {
       systemConfigCache = {
-        currency: data.config.currency || 'RWF'
+        currency: data.config.currency || "RWF",
       };
       cacheTimestamp = now;
       return systemConfigCache;
     }
   } catch (error) {
-    console.warn('Failed to fetch system configuration, using default currency:', error);
+    console.warn(
+      "Failed to fetch system configuration, using default currency:",
+      error
+    );
   }
 
-  return { currency: 'RWF' };
+  return { currency: "RWF" };
 }
 ```
 
@@ -4176,7 +4179,10 @@ async function getSystemConfiguration() {
 ### Component Implementation
 
 ```typescript
-import { formatCurrencySync, getCurrencySymbol } from "../../utils/formatCurrency";
+import {
+  formatCurrencySync,
+  getCurrencySymbol,
+} from "../../utils/formatCurrency";
 
 // In a React component
 function OrderCard({ order }) {
@@ -4197,14 +4203,14 @@ import { formatCurrencySync } from "../../utils/formatCurrency";
 
 export default async function handler(req, res) {
   const order = await getOrder(orderId);
-  
+
   return res.json({
     success: true,
     order: {
       ...order,
       formattedTotal: formatCurrencySync(order.total),
-      formattedEarnings: formatCurrencySync(order.estimatedEarnings)
-    }
+      formattedEarnings: formatCurrencySync(order.estimatedEarnings),
+    },
   });
 }
 ```
@@ -4236,13 +4242,15 @@ export default async function handler(req, res) {
 ### Setting Currency
 
 1. **Database Update**:
+
    ```sql
-   UPDATE System_configuratioins 
-   SET currency = 'USD' 
+   UPDATE System_configuratioins
+   SET currency = 'USD'
    WHERE id = 'your-config-id';
    ```
 
 2. **API Endpoint**:
+
    ```typescript
    POST /api/admin/update-system-config
    {
@@ -4300,7 +4308,7 @@ try {
   const formattedAmount = formatCurrencySync(amount);
   return formattedAmount;
 } catch (error) {
-  console.warn('Currency formatting failed:', error);
+  console.warn("Currency formatting failed:", error);
   return `${amount}`; // Fallback to plain number
 }
 ```
@@ -4310,35 +4318,38 @@ try {
 ### From Hardcoded Currency
 
 1. **Replace Hardcoded Values**:
+
    ```typescript
    // Before
    const amount = `RWF ${order.total}`;
-   
+
    // After
    import { formatCurrencySync } from "../../utils/formatCurrency";
    const amount = formatCurrencySync(order.total);
    ```
 
 2. **Update Intl.NumberFormat**:
+
    ```typescript
    // Before
    new Intl.NumberFormat("en-RW", {
      style: "currency",
      currency: "RWF",
    }).format(amount);
-   
+
    // After
    formatCurrencySync(amount);
    ```
 
 3. **Update Currency Symbols**:
+
    ```typescript
    // Before
-   <span>RWF</span>
-   
+   <span>RWF</span>;
+
    // After
    import { getCurrencySymbol } from "../../utils/formatCurrency";
-   <span>{getCurrencySymbol()}</span>
+   <span>{getCurrencySymbol()}</span>;
    ```
 
 ## Testing
@@ -4369,7 +4380,7 @@ describe("Currency Formatting", () => {
 ```typescript
 describe("System Configuration", () => {
   test("fetches currency from API", async () => {
-    const response = await fetch('/api/queries/system-configuration');
+    const response = await fetch("/api/queries/system-configuration");
     const data = await response.json();
     expect(data.config.currency).toBeDefined();
   });
@@ -4381,11 +4392,13 @@ describe("System Configuration", () => {
 ### Common Issues
 
 1. **Currency Not Updating**:
+
    - Check cache duration
    - Call `refreshCurrencyCache()`
    - Verify API response
 
 2. **Formatting Errors**:
+
    - Check currency code validity
    - Verify amount is numeric
    - Handle edge cases
@@ -4399,13 +4412,13 @@ describe("System Configuration", () => {
 
 ```typescript
 // Check current currency
-console.log('Current currency:', getCurrencySymbol());
+console.log("Current currency:", getCurrencySymbol());
 
 // Refresh cache manually
 refreshCurrencyCache();
 
 // Check cache status
-console.log('Cache timestamp:', cacheTimestamp);
+console.log("Cache timestamp:", cacheTimestamp);
 ```
 
 ## API Reference
@@ -4429,12 +4442,12 @@ Response:
 
 ### Currency Utility Functions
 
-| Function | Description | Usage |
-|----------|-------------|-------|
+| Function                     | Description                        | Usage             |
+| ---------------------------- | ---------------------------------- | ----------------- |
 | `formatCurrencySync(amount)` | Format amount with cached currency | Immediate display |
-| `formatCurrency(amount)` | Format amount with fresh currency | Async operations |
-| `getCurrencySymbol()` | Get current currency symbol | Display currency |
-| `refreshCurrencyCache()` | Clear cache and refetch | Force update |
+| `formatCurrency(amount)`     | Format amount with fresh currency  | Async operations  |
+| `getCurrencySymbol()`        | Get current currency symbol        | Display currency  |
+| `refreshCurrencyCache()`     | Clear cache and refetch            | Force update      |
 
 ## Future Enhancements
 

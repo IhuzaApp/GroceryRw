@@ -11,7 +11,10 @@ import PerformanceMetrics from "@components/shopper/earnings/PerformanceMetrics"
 import EarningsGoals from "@components/shopper/earnings/EarningsGoals";
 import PaymentHistory from "@components/shopper/earnings/PaymentHistory";
 import { logger } from "../../../src/utils/logger";
-import { formatCurrencySync, getCurrencySymbol } from "../../../src/utils/formatCurrency";
+import {
+  formatCurrencySync,
+  getCurrencySymbol,
+} from "../../../src/utils/formatCurrency";
 
 // Interface for earnings stats
 interface EarningsStats {

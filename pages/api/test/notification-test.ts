@@ -6,7 +6,7 @@ import { logger } from "../../../src/utils/logger";
 const GET_TEST_NOTIFICATIONS = gql`
   query GetTestNotifications($user_id: uuid!) {
     Notifications(
-      where: { 
+      where: {
         user_id: { _eq: $user_id }
         type: { _eq: "NEW_BATCHES" }
         is_read: { _eq: false }
@@ -59,21 +59,28 @@ export default async function handler(
     }
 
     // Get recent notifications for the user
-    const notificationsData = await hasuraClient.request(GET_TEST_NOTIFICATIONS, {
-      user_id: userId,
-    });
+    const notificationsData = await hasuraClient.request(
+      GET_TEST_NOTIFICATIONS,
+      {
+        user_id: userId,
+      }
+    );
 
     // Get some sample order details to test the notification system
     const sampleOrderId = "550e8400-e29b-41d4-a716-446655440000"; // Replace with actual order ID
     let orderDetails = null;
-    
+
     try {
       const orderData = await hasuraClient.request(GET_ORDER_DETAILS, {
         order_id: sampleOrderId,
       });
       orderDetails = orderData.Orders_by_pk;
     } catch (error) {
-      logger.warn("Could not fetch sample order details", "NotificationTest", error);
+      logger.warn(
+        "Could not fetch sample order details",
+        "NotificationTest",
+        error
+      );
     }
 
     // Test notification system features
@@ -83,7 +90,7 @@ export default async function handler(
       sampleOrder: orderDetails,
       features: {
         assignmentCleanup: "✅ Implemented",
-        skipButton: "✅ Implemented", 
+        skipButton: "✅ Implemented",
         orderDetails: "✅ Implemented (items count & earnings)",
         warningSystem: "✅ Implemented",
         soundSettings: "✅ Implemented",
@@ -107,7 +114,11 @@ export default async function handler(
       },
     };
 
-    logger.info("Notification system test completed", "NotificationTest", testResults);
+    logger.info(
+      "Notification system test completed",
+      "NotificationTest",
+      testResults
+    );
 
     res.status(200).json({
       success: true,
@@ -118,4 +129,4 @@ export default async function handler(
     logger.error("Error in notification test", "NotificationTest", error);
     res.status(500).json({ error: "Failed to run notification test" });
   }
-} 
+}

@@ -9,10 +9,7 @@ import { logger } from "../../../src/utils/logger";
 const MARK_NOTIFICATIONS_READ = gql`
   mutation MarkNotificationsRead($user_id: uuid!, $order_id: String!) {
     update_Notifications(
-      where: { 
-        user_id: { _eq: $user_id }
-        message: { _ilike: $order_id }
-      }
+      where: { user_id: { _eq: $user_id }, message: { _ilike: $order_id } }
       _set: { is_read: true }
     ) {
       affected_rows
@@ -79,9 +76,9 @@ export default async function handler(
 
     // Check if order is assigned to this shopper
     if (order.shopper_id !== userId) {
-      return res.status(403).json({ 
+      return res.status(403).json({
         error: "Order not assigned to this shopper",
-        success: false 
+        success: false,
       });
     }
 
@@ -112,4 +109,4 @@ export default async function handler(
     );
     return res.status(500).json({ error: "Failed to cleanup notifications" });
   }
-} 
+}

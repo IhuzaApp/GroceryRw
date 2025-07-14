@@ -30,7 +30,9 @@ export default async function handler(
   const { orderId, reelOrderId } = req.query;
 
   if (!orderId && !reelOrderId) {
-    return res.status(400).json({ message: "Either orderId or reelOrderId is required" });
+    return res
+      .status(400)
+      .json({ message: "Either orderId or reelOrderId is required" });
   }
 
   if (!hasuraClient) {
@@ -39,12 +41,12 @@ export default async function handler(
 
   try {
     let data;
-    
+
     if (orderId) {
       // Check for regular order rating
       data = await hasuraClient.request(CHECK_ORDER_RATING, {
-      orderId: orderId,
-    });
+        orderId: orderId,
+      });
     } else if (reelOrderId) {
       // Check for reel order rating
       data = await hasuraClient.request(CHECK_REEL_ORDER_RATING, {

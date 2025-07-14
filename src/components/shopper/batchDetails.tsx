@@ -1024,382 +1024,677 @@ export default function BatchDetails({
 
       {/* Main Content */}
       <main className="max-w-9xl mx-auto p-3 sm:p-6">
-        <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-xl dark:border-gray-700 overflow-hidden">
+        <div className="overflow-hidden rounded-2xl bg-white shadow-xl dark:border-gray-700 dark:bg-gray-900">
           {/* Header with gradient background */}
-          <div className={`text-gray-900 dark:text-gray-100 p-4 sm:p-6`}>
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4">
+          <div className={`p-4 text-gray-900 dark:text-gray-100 sm:p-6`}>
+            <div className="flex flex-col justify-between gap-3 sm:flex-row sm:items-center sm:gap-4">
               <div className="flex items-center gap-3 sm:gap-4">
-        <Button
-          appearance="link"
-          onClick={() => router.back()}
-                  className="flex items-center text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-gray-100 px-0 text-sm sm:text-base"
+                <Button
+                  appearance="link"
+                  onClick={() => router.back()}
+                  className="flex items-center px-0 text-sm text-gray-700 hover:text-gray-900 dark:text-gray-300 dark:hover:text-gray-100 sm:text-base"
                 >
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="h-4 w-4 sm:h-5 sm:w-5 mr-1 sm:mr-2">
-              <path d="M19 12H5M12 19l-7-7 7-7" />
-            </svg>
-          Back
-        </Button>
-                <div className="h-4 sm:h-6 w-px bg-gray-300 dark:bg-gray-600"></div>
-                <h1 className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-gray-100">
-                  {order.orderType === "reel" ? "Reel Batch" : "Regular Batch"} #{order.OrderID || order.id.slice(0, 8)}
+                  <svg
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    className="mr-1 h-4 w-4 sm:mr-2 sm:h-5 sm:w-5"
+                  >
+                    <path d="M19 12H5M12 19l-7-7 7-7" />
+                  </svg>
+                  Back
+                </Button>
+                <div className="h-4 w-px bg-gray-300 dark:bg-gray-600 sm:h-6"></div>
+                <h1 className="text-xl font-bold text-gray-900 dark:text-gray-100 sm:text-2xl">
+                  {order.orderType === "reel" ? "Reel Batch" : "Regular Batch"}{" "}
+                  #{order.OrderID || order.id.slice(0, 8)}
                 </h1>
-      </div>
+              </div>
               <div className="flex items-center gap-2 sm:gap-3">
                 {getStatusTag(order.status)}
               </div>
             </div>
-        </div>
+          </div>
 
           {/* Content */}
-          <div className="p-4 sm:p-8 space-y-6 sm:space-y-8">
+          <div className="space-y-6 p-4 sm:space-y-8 sm:p-8">
             {/* Main Info Grid */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-8">
+            <div className="grid grid-cols-1 gap-4 sm:gap-8 lg:grid-cols-2">
               {/* Shop/Reel Info */}
-              <div className="bg-slate-50 dark:bg-slate-800 rounded-xl p-4 sm:p-6 border border-slate-200 dark:border-slate-700">
-                <div className="flex items-center gap-2 sm:gap-3 mb-3 sm:mb-4">
-                  <span className={`inline-block rounded-full p-1.5 sm:p-2 ${order.orderType === "reel" ? "bg-indigo-100" : "bg-emerald-100"}`}>
+              <div className="rounded-xl border border-slate-200 bg-slate-50 p-4 dark:border-slate-700 dark:bg-slate-800 sm:p-6">
+                <div className="mb-3 flex items-center gap-2 sm:mb-4 sm:gap-3">
+                  <span
+                    className={`inline-block rounded-full p-1.5 sm:p-2 ${
+                      order.orderType === "reel"
+                        ? "bg-indigo-100"
+                        : "bg-emerald-100"
+                    }`}
+                  >
                     {order.orderType === "reel" ? (
-                      <svg className="h-4 w-4 sm:h-5 sm:w-5 text-indigo-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 10l4.553-2.276A2 2 0 0020 6.382V5a2 2 0 00-2-2H6a2 2 0 00-2 2v1.382a2 2 0 00.447 1.342L9 10m6 0v4m0 0l-4.553 2.276A2 2 0 016 17.618V19a2 2 0 002 2h8a2 2 0 002-2v-1.382a2 2 0 00-.447-1.342L15 14z" />
+                      <svg
+                        className="h-4 w-4 text-indigo-600 sm:h-5 sm:w-5"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M15 10l4.553-2.276A2 2 0 0020 6.382V5a2 2 0 00-2-2H6a2 2 0 00-2 2v1.382a2 2 0 00.447 1.342L9 10m6 0v4m0 0l-4.553 2.276A2 2 0 016 17.618V19a2 2 0 002 2h8a2 2 0 002-2v-1.382a2 2 0 00-.447-1.342L15 14z"
+                        />
                       </svg>
                     ) : (
-                      <svg className="h-4 w-4 sm:h-5 sm:w-5 text-emerald-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 7v4a1 1 0 001 1h3m10 0h3a1 1 0 001-1V7m-1-4H5a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2V5a2 2 0 00-2-2z" />
+                      <svg
+                        className="h-4 w-4 text-emerald-600 sm:h-5 sm:w-5"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M3 7v4a1 1 0 001 1h3m10 0h3a1 1 0 001-1V7m-1-4H5a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2V5a2 2 0 00-2-2z"
+                        />
                       </svg>
                     )}
                   </span>
-                  <h2 className="text-lg sm:text-xl font-semibold text-slate-900 dark:text-slate-100">
-              {order.orderType === "reel" ? "Reel Details" : "Shop Details"}
+                  <h2 className="text-lg font-semibold text-slate-900 dark:text-slate-100 sm:text-xl">
+                    {order.orderType === "reel"
+                      ? "Reel Details"
+                      : "Shop Details"}
                   </h2>
                 </div>
-                
-            {order.orderType === "reel" ? (
+
+                {order.orderType === "reel" ? (
                   <div className="space-y-3 sm:space-y-4">
-                    <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
-                      <div className="relative h-16 w-16 sm:h-20 sm:w-20 flex-shrink-0 overflow-hidden rounded-lg bg-slate-200 mx-auto sm:mx-0">
-                    {order.reel?.video_url ? (
-                          <video src={order.reel.video_url} className="h-full w-full object-cover" muted preload="metadata" />
+                    <div className="flex flex-col gap-3 sm:flex-row sm:gap-4">
+                      <div className="relative mx-auto h-16 w-16 flex-shrink-0 overflow-hidden rounded-lg bg-slate-200 sm:mx-0 sm:h-20 sm:w-20">
+                        {order.reel?.video_url ? (
+                          <video
+                            src={order.reel.video_url}
+                            className="h-full w-full object-cover"
+                            muted
+                            preload="metadata"
+                          />
                         ) : (
                           <div className="flex h-full w-full items-center justify-center bg-slate-300">
-                            <svg className="h-6 w-6 sm:h-8 sm:w-8 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <svg
+                              className="h-6 w-6 text-slate-400 sm:h-8 sm:w-8"
+                              fill="none"
+                              viewBox="0 0 24 24"
+                              stroke="currentColor"
+                            >
                               <circle cx="12" cy="12" r="10" />
                               <path d="M14.828 14.828a4 4 0 01-5.656 0" />
+                            </svg>
+                          </div>
+                        )}
+                      </div>
+                      <div className="flex-1 text-center sm:text-left">
+                        <h3 className="mb-1 text-base font-semibold text-slate-900 dark:text-slate-100 sm:text-lg">
+                          {order.reel?.title}
+                        </h3>
+                        <p className="mb-2 text-sm text-slate-600 dark:text-slate-400 sm:text-base">
+                          {order.reel?.description}
+                        </p>
+                        <div className="flex flex-wrap justify-center gap-2 text-sm sm:justify-start sm:gap-4 sm:text-base">
+                          <span className="text-slate-500">
+                            Type: {order.reel?.type}
+                          </span>
+                          <span className="text-slate-500">
+                            Qty: {order.quantity}
+                          </span>
+                          <span className="font-semibold text-indigo-600">
+                            {formatCurrency(
+                              parseFloat(order.reel?.Price || "0")
+                            )}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                    {order.reel?.Restaurant && (
+                      <div className="rounded-lg border border-slate-200 bg-white p-3 dark:border-slate-600 dark:bg-slate-700">
+                        <p className="text-sm font-medium text-slate-900 dark:text-slate-100 sm:text-base">
+                          {order.reel.Restaurant.name}
+                        </p>
+                        <p className="text-xs text-slate-500 dark:text-slate-400">
+                          {order.reel.Restaurant.location}
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                ) : (
+                  <div className="flex flex-col gap-3 sm:flex-row sm:gap-4">
+                    <div className="relative mx-auto h-12 w-12 flex-shrink-0 overflow-hidden rounded-lg bg-slate-200 sm:mx-0 sm:h-16 sm:w-16">
+                      {order.shop?.image ? (
+                        <Image
+                          src={order.shop.image}
+                          alt={order.shop.name}
+                          width={64}
+                          height={64}
+                          className="h-full w-full object-cover"
+                        />
+                      ) : (
+                        <div className="flex h-full w-full items-center justify-center bg-slate-300 text-slate-400">
+                          <svg
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            strokeWidth="2"
+                            className="h-5 w-5 sm:h-6 sm:w-6"
+                          >
+                            <rect x="3" y="3" width="18" height="18" rx="2" />
+                            <path d="M16 8h.01M8 16h.01M16 16h.01" />
+                          </svg>
+                        </div>
+                      )}
+                    </div>
+                    <div className="flex-1 text-center sm:text-left">
+                      <h3 className="mb-1 text-base font-semibold text-slate-900 dark:text-slate-100 sm:text-lg">
+                        {order.shop?.name}
+                      </h3>
+                      <p className="text-sm text-slate-600 dark:text-slate-400 sm:text-base">
+                        {order.shop?.address}
+                      </p>
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* Customer Info */}
+              <div className="rounded-xl border border-slate-200 bg-slate-50 p-4 dark:border-slate-700 dark:bg-slate-800 sm:p-6">
+                <div className="mb-3 flex items-center gap-2 sm:mb-4 sm:gap-3">
+                  <span className="inline-block rounded-full bg-sky-100 p-1.5 sm:p-2">
+                    <svg
+                      className="h-4 w-4 text-sky-600 sm:h-5 sm:w-5"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M5.121 17.804A13.937 13.937 0 0112 15c2.5 0 4.847.655 6.879 1.804M15 10a3 3 0 11-6 0 3 3 0 016 0z"
+                      />
+                    </svg>
+                  </span>
+                  <h2 className="text-lg font-semibold text-slate-900 dark:text-slate-100 sm:text-xl">
+                    Customer
+                  </h2>
+                </div>
+
+                <div className="mb-3 flex flex-col items-center gap-3 sm:mb-4 sm:flex-row sm:items-start">
+                  <div className="h-10 w-10 overflow-hidden rounded-full bg-slate-200 sm:h-12 sm:w-12">
+                    {order.user.profile_picture ? (
+                      <Image
+                        src={order.user.profile_picture}
+                        alt={order.user.name}
+                        width={48}
+                        height={48}
+                        className="h-full w-full object-cover"
+                      />
+                    ) : (
+                      <div className="flex h-full w-full items-center justify-center bg-slate-200 text-slate-400">
+                        <svg
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          stroke="currentColor"
+                          strokeWidth="2"
+                          className="h-5 w-5 sm:h-6 sm:w-6"
+                        >
+                          <circle cx="12" cy="8" r="4" />
+                          <path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2" />
                         </svg>
                       </div>
                     )}
                   </div>
-                      <div className="flex-1 text-center sm:text-left">
-                        <h3 className="font-semibold text-slate-900 dark:text-slate-100 mb-1 text-base sm:text-lg">{order.reel?.title}</h3>
-                        <p className="text-sm sm:text-base text-slate-600 dark:text-slate-400 mb-2">{order.reel?.description}</p>
-                        <div className="flex flex-wrap justify-center sm:justify-start gap-2 sm:gap-4 text-sm sm:text-base">
-                          <span className="text-slate-500">Type: {order.reel?.type}</span>
-                          <span className="text-slate-500">Qty: {order.quantity}</span>
-                          <span className="font-semibold text-indigo-600">{formatCurrency(parseFloat(order.reel?.Price || "0"))}</span>
-                    </div>
-                      </div>
-                    </div>
-                    {order.reel?.Restaurant && (
-                      <div className="bg-white dark:bg-slate-700 rounded-lg p-3 border border-slate-200 dark:border-slate-600">
-                        <p className="text-sm sm:text-base font-medium text-slate-900 dark:text-slate-100">{order.reel.Restaurant.name}</p>
-                        <p className="text-xs text-slate-500 dark:text-slate-400">{order.reel.Restaurant.location}</p>
-                      </div>
-                    )}
-              </div>
-            ) : (
-                  <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
-                    <div className="relative h-12 w-12 sm:h-16 sm:w-16 flex-shrink-0 overflow-hidden rounded-lg bg-slate-200 mx-auto sm:mx-0">
-                  {order.shop?.image ? (
-                        <Image src={order.shop.image} alt={order.shop.name} width={64} height={64} className="h-full w-full object-cover" />
-                      ) : (
-                        <div className="flex h-full w-full items-center justify-center bg-slate-300 text-slate-400">
-                          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="h-5 w-5 sm:h-6 sm:w-6">
-                            <rect x="3" y="3" width="18" height="18" rx="2" />
-                            <path d="M16 8h.01M8 16h.01M16 16h.01" />
-                      </svg>
-                    </div>
-                  )}
-                </div>
-                    <div className="flex-1 text-center sm:text-left">
-                      <h3 className="font-semibold text-slate-900 dark:text-slate-100 mb-1 text-base sm:text-lg">{order.shop?.name}</h3>
-                      <p className="text-sm sm:text-base text-slate-600 dark:text-slate-400">{order.shop?.address}</p>
-                </div>
-              </div>
-            )}
-              </div>
-
-              {/* Customer Info */}
-              <div className="bg-slate-50 dark:bg-slate-800 rounded-xl p-4 sm:p-6 border border-slate-200 dark:border-slate-700">
-                <div className="flex items-center gap-2 sm:gap-3 mb-3 sm:mb-4">
-                  <span className="inline-block rounded-full p-1.5 sm:p-2 bg-sky-100">
-                    <svg className="h-4 w-4 sm:h-5 sm:w-5 text-sky-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5.121 17.804A13.937 13.937 0 0112 15c2.5 0 4.847.655 6.879 1.804M15 10a3 3 0 11-6 0 3 3 0 016 0z" />
-                  </svg>
-                </span>
-                  <h2 className="text-lg sm:text-xl font-semibold text-slate-900 dark:text-slate-100">Customer</h2>
-          </div>
-
-                <div className="flex flex-col sm:flex-row items-center sm:items-start gap-3 mb-3 sm:mb-4">
-                  <div className="h-10 w-10 sm:h-12 sm:w-12 rounded-full overflow-hidden bg-slate-200">
-                  {order.user.profile_picture ? (
-                      <Image src={order.user.profile_picture} alt={order.user.name} width={48} height={48} className="h-full w-full object-cover" />
-                    ) : (
-                      <div className="flex h-full w-full items-center justify-center bg-slate-200 text-slate-400">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="h-5 w-5 sm:h-6 sm:w-6">
-                        <circle cx="12" cy="8" r="4" />
-                        <path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2" />
-                      </svg>
-                    </div>
-                  )}
-                </div>
                   <div className="text-center sm:text-left">
-                    <h4 className="font-medium text-slate-900 dark:text-slate-100 text-base sm:text-lg">{order.user.name}</h4>
-                    <p className="text-sm sm:text-base text-slate-500 dark:text-slate-400">{order.user.email}</p>
-                </div>
-              </div>
-
-                <div className="space-y-3">
-                  <div className="bg-white dark:bg-slate-700 rounded-lg p-3 border border-slate-200 dark:border-slate-600">
-                    <p className="text-xs font-medium text-slate-500 dark:text-slate-400 mb-1">Delivery Address</p>
-                    <p className="text-sm sm:text-base text-slate-900 dark:text-slate-100">
-                      {order.address.street}, {order.address.city}{order.address.postal_code ? `, ${order.address.postal_code}` : ""}
+                    <h4 className="text-base font-medium text-slate-900 dark:text-slate-100 sm:text-lg">
+                      {order.user.name}
+                    </h4>
+                    <p className="text-sm text-slate-500 dark:text-slate-400 sm:text-base">
+                      {order.user.email}
                     </p>
                   </div>
-                  
-                  <div className="flex flex-wrap justify-center sm:justify-start gap-2">
-                    <Link href={`https://www.google.com/maps/dir/?api=1&origin=${encodeURIComponent(order.shop?.address || order.address.street)}&destination=${encodeURIComponent(`${order.address.street}, ${order.address.city}${order.address.postal_code ? `, ${order.address.postal_code}` : ""}`)}`} target="_blank">
-                      <Button appearance="ghost" size="sm" className="text-sky-600 dark:text-sky-400 hover:text-sky-700 hover:bg-sky-50 dark:hover:bg-sky-900/20 text-sm sm:text-base">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="h-4 w-4 sm:h-5 sm:w-5 mr-1">
+                </div>
+
+                <div className="space-y-3">
+                  <div className="rounded-lg border border-slate-200 bg-white p-3 dark:border-slate-600 dark:bg-slate-700">
+                    <p className="mb-1 text-xs font-medium text-slate-500 dark:text-slate-400">
+                      Delivery Address
+                    </p>
+                    <p className="text-sm text-slate-900 dark:text-slate-100 sm:text-base">
+                      {order.address.street}, {order.address.city}
+                      {order.address.postal_code
+                        ? `, ${order.address.postal_code}`
+                        : ""}
+                    </p>
+                  </div>
+
+                  <div className="flex flex-wrap justify-center gap-2 sm:justify-start">
+                    <Link
+                      href={`https://www.google.com/maps/dir/?api=1&origin=${encodeURIComponent(
+                        order.shop?.address || order.address.street
+                      )}&destination=${encodeURIComponent(
+                        `${order.address.street}, ${order.address.city}${
+                          order.address.postal_code
+                            ? `, ${order.address.postal_code}`
+                            : ""
+                        }`
+                      )}`}
+                      target="_blank"
+                    >
+                      <Button
+                        appearance="ghost"
+                        size="sm"
+                        className="text-sm text-sky-600 hover:bg-sky-50 hover:text-sky-700 dark:text-sky-400 dark:hover:bg-sky-900/20 sm:text-base"
+                      >
+                        <svg
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          stroke="currentColor"
+                          strokeWidth="2"
+                          className="mr-1 h-4 w-4 sm:h-5 sm:w-5"
+                        >
                           <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z" />
                           <circle cx="12" cy="10" r="3" />
                         </svg>
                         Directions
                       </Button>
                     </Link>
-                    
-              {order.status !== "delivered" ? (
-                      <Button appearance="ghost" size="sm" className="text-sky-600 dark:text-sky-400 hover:text-sky-700 hover:bg-sky-50 dark:hover:bg-sky-900/20 text-sm sm:text-base" onClick={handleChatClick}>
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="h-4 w-4 sm:h-5 sm:w-5 mr-1">
-                    <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
-                  </svg>
-                  Message
-                </Button>
-              ) : (
-                      <Button appearance="ghost" size="sm" className="text-slate-400 cursor-not-allowed text-sm sm:text-base" disabled>
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="h-4 w-4 sm:h-5 sm:w-5 mr-1">
-                    <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
-                  </svg>
-                  Chat Closed
-                </Button>
-              )}
-            </div>
-            </div>
-          </div>
-        </div>
 
-        {/* Order Items */}
-        {shouldShowOrderDetails() && (
-              <div className="bg-slate-50 dark:bg-slate-800 rounded-xl p-4 sm:p-6 border border-slate-200 dark:border-slate-700">
-                <div className="flex items-center gap-2 sm:gap-3 mb-3 sm:mb-4">
-                  <span className={`inline-block rounded-full p-1.5 sm:p-2 ${order.orderType === "reel" ? "bg-indigo-100" : "bg-emerald-100"}`}>
-                    <svg className={`h-4 w-4 sm:h-5 sm:w-5 ${order.orderType === "reel" ? "text-indigo-600" : "text-emerald-600"}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 7v4a1 1 0 001 1h3m10 0h3a1 1 0 001-1V7m-1-4H5a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2V5a2 2 0 00-2-2z" />
+                    {order.status !== "delivered" ? (
+                      <Button
+                        appearance="ghost"
+                        size="sm"
+                        className="text-sm text-sky-600 hover:bg-sky-50 hover:text-sky-700 dark:text-sky-400 dark:hover:bg-sky-900/20 sm:text-base"
+                        onClick={handleChatClick}
+                      >
+                        <svg
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          stroke="currentColor"
+                          strokeWidth="2"
+                          className="mr-1 h-4 w-4 sm:h-5 sm:w-5"
+                        >
+                          <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
                         </svg>
-                  </span>
-                  <h2 className="text-lg sm:text-xl font-semibold text-slate-900 dark:text-slate-100">{order.orderType === "reel" ? "Reel Details" : "Order Items"}</h2>
+                        Message
+                      </Button>
+                    ) : (
+                      <Button
+                        appearance="ghost"
+                        size="sm"
+                        className="cursor-not-allowed text-sm text-slate-400 sm:text-base"
+                        disabled
+                      >
+                        <svg
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          stroke="currentColor"
+                          strokeWidth="2"
+                          className="mr-1 h-4 w-4 sm:h-5 sm:w-5"
+                        >
+                          <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
+                        </svg>
+                        Chat Closed
+                      </Button>
+                    )}
                   </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Order Items */}
+            {shouldShowOrderDetails() && (
+              <div className="rounded-xl border border-slate-200 bg-slate-50 p-4 dark:border-slate-700 dark:bg-slate-800 sm:p-6">
+                <div className="mb-3 flex items-center gap-2 sm:mb-4 sm:gap-3">
+                  <span
+                    className={`inline-block rounded-full p-1.5 sm:p-2 ${
+                      order.orderType === "reel"
+                        ? "bg-indigo-100"
+                        : "bg-emerald-100"
+                    }`}
+                  >
+                    <svg
+                      className={`h-4 w-4 sm:h-5 sm:w-5 ${
+                        order.orderType === "reel"
+                          ? "text-indigo-600"
+                          : "text-emerald-600"
+                      }`}
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M3 7v4a1 1 0 001 1h3m10 0h3a1 1 0 001-1V7m-1-4H5a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2V5a2 2 0 00-2-2z"
+                      />
+                    </svg>
+                  </span>
+                  <h2 className="text-lg font-semibold text-slate-900 dark:text-slate-100 sm:text-xl">
+                    {order.orderType === "reel"
+                      ? "Reel Details"
+                      : "Order Items"}
+                  </h2>
+                </div>
 
                 {order.orderType === "reel" ? (
-                  <div className="bg-white dark:bg-slate-700 rounded-lg p-3 sm:p-4 border border-slate-200 dark:border-slate-600">
-                    <div className="text-base sm:text-lg text-slate-700 dark:text-slate-200 mb-2">{order.reel?.Product}</div>
-                    <div className="text-sm sm:text-base text-slate-500 dark:text-slate-400">Quantity: {order.quantity}</div>
-              </div>
-            ) : (
-                  <div className="space-y-3">
-                {order.Order_Items?.map((item) => (
-                      <div key={item.id} className="bg-white dark:bg-slate-700 rounded-lg p-3 sm:p-4 flex flex-col sm:flex-row sm:items-center border border-slate-200 dark:border-slate-600 gap-3">
-                        <div className="flex items-center gap-3">
-                          <div className="h-10 w-10 sm:h-12 sm:w-12 flex-shrink-0 cursor-pointer overflow-hidden rounded-lg bg-slate-200" onClick={() => showProductImage(item)}>
-                      {item.product.image ? (
-                              <Image src={item.product.image} alt={item.product.name} width={48} height={48} className="h-full w-full object-cover" />
-                            ) : (
-                              <div className="flex h-full w-full items-center justify-center bg-slate-300 text-slate-400">
-                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="h-5 w-5 sm:h-6 sm:w-6">
-                            <path d="M9 17h6M9 12h6M9 7h6" />
-                          </svg>
-                        </div>
-                      )}
+                  <div className="rounded-lg border border-slate-200 bg-white p-3 dark:border-slate-600 dark:bg-slate-700 sm:p-4">
+                    <div className="mb-2 text-base text-slate-700 dark:text-slate-200 sm:text-lg">
+                      {order.reel?.Product}
                     </div>
-                          <div className="flex-1">
-                            <p className="font-medium text-slate-900 dark:text-slate-100 text-base sm:text-lg">{item.product.name}</p>
-                            <p className="text-sm sm:text-base text-slate-500 dark:text-slate-400">{formatCurrency(item.price)} × {item.quantity}</p>
-                            {item.found && item.foundQuantity && item.foundQuantity < item.quantity && (
-                              <p className="text-xs text-amber-600 dark:text-amber-400">Found: {item.foundQuantity} of {item.quantity}</p>
-                        )}
-                    </div>
-                      </div>
-                        <div className="flex justify-between sm:flex-col sm:items-end sm:text-right">
-                          <div className="font-bold text-slate-900 dark:text-slate-100 text-base sm:text-lg">{formatCurrency(item.price * item.quantity)}</div>
-                      {order.status === "shopping" && (
-                            <Checkbox checked={item.found || false} onChange={(_, checked) => toggleItemFound(item, checked)}>
-                              <span className="text-sm sm:text-base">Found</span>
-                        </Checkbox>
-                      )}
+                    <div className="text-sm text-slate-500 dark:text-slate-400 sm:text-base">
+                      Quantity: {order.quantity}
                     </div>
                   </div>
-                ))}
+                ) : (
+                  <div className="space-y-3">
+                    {order.Order_Items?.map((item) => (
+                      <div
+                        key={item.id}
+                        className="flex flex-col gap-3 rounded-lg border border-slate-200 bg-white p-3 dark:border-slate-600 dark:bg-slate-700 sm:flex-row sm:items-center sm:p-4"
+                      >
+                        <div className="flex items-center gap-3">
+                          <div
+                            className="h-10 w-10 flex-shrink-0 cursor-pointer overflow-hidden rounded-lg bg-slate-200 sm:h-12 sm:w-12"
+                            onClick={() => showProductImage(item)}
+                          >
+                            {item.product.image ? (
+                              <Image
+                                src={item.product.image}
+                                alt={item.product.name}
+                                width={48}
+                                height={48}
+                                className="h-full w-full object-cover"
+                              />
+                            ) : (
+                              <div className="flex h-full w-full items-center justify-center bg-slate-300 text-slate-400">
+                                <svg
+                                  viewBox="0 0 24 24"
+                                  fill="none"
+                                  stroke="currentColor"
+                                  strokeWidth="2"
+                                  className="h-5 w-5 sm:h-6 sm:w-6"
+                                >
+                                  <path d="M9 17h6M9 12h6M9 7h6" />
+                                </svg>
+                              </div>
+                            )}
+                          </div>
+                          <div className="flex-1">
+                            <p className="text-base font-medium text-slate-900 dark:text-slate-100 sm:text-lg">
+                              {item.product.name}
+                            </p>
+                            <p className="text-sm text-slate-500 dark:text-slate-400 sm:text-base">
+                              {formatCurrency(item.price)} × {item.quantity}
+                            </p>
+                            {item.found &&
+                              item.foundQuantity &&
+                              item.foundQuantity < item.quantity && (
+                                <p className="text-xs text-amber-600 dark:text-amber-400">
+                                  Found: {item.foundQuantity} of {item.quantity}
+                                </p>
+                              )}
+                          </div>
+                        </div>
+                        <div className="flex justify-between sm:flex-col sm:items-end sm:text-right">
+                          <div className="text-base font-bold text-slate-900 dark:text-slate-100 sm:text-lg">
+                            {formatCurrency(item.price * item.quantity)}
+                          </div>
+                          {order.status === "shopping" && (
+                            <Checkbox
+                              checked={item.found || false}
+                              onChange={(_, checked) =>
+                                toggleItemFound(item, checked)
+                              }
+                            >
+                              <span className="text-sm sm:text-base">
+                                Found
+                              </span>
+                            </Checkbox>
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
             )}
-          </div>
-        )}
 
             {/* Order Summary */}
             {shouldShowOrderDetails() && (
-              <div className="bg-slate-50 dark:bg-slate-800 rounded-xl p-4 sm:p-6 border border-slate-200 dark:border-slate-700">
-                <div className="flex items-center gap-2 sm:gap-3 mb-3 sm:mb-4">
-                  <span className="inline-block rounded-full p-1.5 sm:p-2 bg-slate-100">
-                    <svg className="h-4 w-4 sm:h-5 sm:w-5 text-slate-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 7v4a1 1 0 001 1h3m10 0h3a1 1 0 001-1V7m-1-4H5a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2V5a2 2 0 00-2-2z" />
-                    </svg>
-                          </span>
-                  <h2 className="text-lg sm:text-xl font-semibold text-slate-900 dark:text-slate-100">Order Summary</h2>
-              </div>
-
-                <div className="bg-white dark:bg-slate-700 rounded-lg p-3 sm:p-4 border border-slate-200 dark:border-slate-600">
-                  <div className="space-y-2 text-base sm:text-lg">
-              {order.orderType === "reel" ? (
-                <>
-                  <div className="flex justify-between">
-                    <span>Base Price</span>
-                          <span>{formatCurrency(parseFloat(order.reel?.Price || "0"))}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span>Quantity</span>
-                    <span>{order.quantity}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span>Subtotal</span>
-                          <span>{formatCurrency(parseFloat(order.reel?.Price || "0") * (order.quantity || 1))}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span>Service Fee</span>
-                          <span>{formatCurrency(parseFloat(order.serviceFee || "0"))}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span>Delivery Fee</span>
-                          <span>{formatCurrency(parseFloat(order.deliveryFee || "0"))}</span>
-                  </div>
-                  {order.discount > 0 && (
-                          <div className="flex justify-between text-emerald-600">
-                      <span>Discount</span>
-                      <span>-{formatCurrency(order.discount)}</span>
-                    </div>
-                  )}
-                  <Divider />
-                        <div className="flex justify-between text-lg sm:text-xl font-bold">
-                    <span>Total</span>
-                    <span>{formatCurrency(order.total)}</span>
-                  </div>
-                </>
-              ) : (
-                <>
-                  <div className="flex justify-between">
-                    <span>Subtotal</span>
-                    <span>
-                      {order.status === "shopping"
-                        ? formatCurrency(calculateFoundTotal())
-                        : formatCurrency(calculateOriginalSubtotal())}
-                    </span>
-                  </div>
-
-                  {order.status === "shopping" ? (
-                    <>
-                      <div className="flex justify-between">
-                        <span>Items Found</span>
-                        <span>
-                                {order.Order_Items?.filter((item) => item.found).length || 0} of {order.Order_Items?.length || 0}
-                        </span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span>Units Found</span>
-                        <span>
-                          {order.Order_Items?.reduce((total, item) => {
-                            if (item.found) {
-                                    return total + (item.foundQuantity || item.quantity);
-                            }
-                            return total;
-                                }, 0) || 0} of {order.Order_Items?.reduce((total, item) => total + item.quantity, 0) || 0}
-                        </span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span>Items Not Found</span>
-                              <span>{order.Order_Items?.filter((item) => !item.found).length || 0}</span>
-                      </div>
-                    </>
-                  ) : (
-                    <>
-                      <div className="flex justify-between">
-                        <span>Delivery Fee</span>
-                              <span>{formatCurrency(parseFloat(order.deliveryFee || "0"))}</span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span>Service Fee</span>
-                              <span>{formatCurrency(parseFloat(order.serviceFee || "0"))}</span>
-                      </div>
-                    </>
-                  )}
-
-                  {order.discount > 0 && (
-                          <div className="flex justify-between text-emerald-600">
-                      <span>Discount</span>
-                      <span>-{formatCurrency(order.discount)}</span>
-                    </div>
-                  )}
-                  <Divider />
-                        <div className="flex justify-between text-lg sm:text-xl font-bold">
-                    <span>Total</span>
-                    <span>
-                      {order.status === "shopping"
-                        ? formatCurrency(calculateFoundItemsTotal())
-                        : formatCurrency(calculateOriginalSubtotal())}
-                    </span>
-                  </div>
-
-                  {order.status === "shopping" && (
-                          <div className="mt-3 sm:mt-4 p-3 bg-sky-50 dark:bg-sky-900/20 rounded-lg text-sm sm:text-base text-sky-700 dark:text-sky-300 border border-sky-200 dark:border-sky-800">
-                            <p>
-                              <strong>Note:</strong> The total reflects only the value of found items. Service fee ({formatCurrency(parseFloat(order.serviceFee || "0"))}) and delivery fee ({formatCurrency(parseFloat(order.deliveryFee || "0"))}) were already added to your wallet as earnings when you started shopping.
-                      </p>
-                    </div>
-                  )}
-                </>
-              )}
-                  </div>
-            </div>
-          </div>
-        )}
-
-            {/* Delivery Notes */}
-        {(order.deliveryNotes || order.deliveryNote) && (
-              <div className="bg-slate-50 dark:bg-slate-800 rounded-xl p-4 sm:p-6 border border-slate-200 dark:border-slate-700">
-                <div className="flex items-center gap-2 sm:gap-3 mb-3 sm:mb-4">
-                  <span className="inline-block rounded-full p-1.5 sm:p-2 bg-amber-100">
-                    <svg className="h-4 w-4 sm:h-5 sm:w-5 text-amber-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01" />
+              <div className="rounded-xl border border-slate-200 bg-slate-50 p-4 dark:border-slate-700 dark:bg-slate-800 sm:p-6">
+                <div className="mb-3 flex items-center gap-2 sm:mb-4 sm:gap-3">
+                  <span className="inline-block rounded-full bg-slate-100 p-1.5 sm:p-2">
+                    <svg
+                      className="h-4 w-4 text-slate-600 sm:h-5 sm:w-5"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M3 7v4a1 1 0 001 1h3m10 0h3a1 1 0 001-1V7m-1-4H5a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2V5a2 2 0 00-2-2z"
+                      />
                     </svg>
                   </span>
-                  <h2 className="text-lg sm:text-xl font-semibold text-slate-900 dark:text-slate-100">Delivery Notes</h2>
+                  <h2 className="text-lg font-semibold text-slate-900 dark:text-slate-100 sm:text-xl">
+                    Order Summary
+                  </h2>
                 </div>
-                <div className="bg-white dark:bg-slate-700 rounded-lg p-3 sm:p-4 border border-slate-200 dark:border-slate-600">
-                  <p className="text-slate-700 dark:text-slate-300 text-base sm:text-lg">{order.deliveryNotes || order.deliveryNote}</p>
-                </div>
-          </div>
-        )}
 
-        {/* Action Button */}
+                <div className="rounded-lg border border-slate-200 bg-white p-3 dark:border-slate-600 dark:bg-slate-700 sm:p-4">
+                  <div className="space-y-2 text-base sm:text-lg">
+                    {order.orderType === "reel" ? (
+                      <>
+                        <div className="flex justify-between">
+                          <span>Base Price</span>
+                          <span>
+                            {formatCurrency(
+                              parseFloat(order.reel?.Price || "0")
+                            )}
+                          </span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span>Quantity</span>
+                          <span>{order.quantity}</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span>Subtotal</span>
+                          <span>
+                            {formatCurrency(
+                              parseFloat(order.reel?.Price || "0") *
+                                (order.quantity || 1)
+                            )}
+                          </span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span>Service Fee</span>
+                          <span>
+                            {formatCurrency(
+                              parseFloat(order.serviceFee || "0")
+                            )}
+                          </span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span>Delivery Fee</span>
+                          <span>
+                            {formatCurrency(
+                              parseFloat(order.deliveryFee || "0")
+                            )}
+                          </span>
+                        </div>
+                        {order.discount > 0 && (
+                          <div className="flex justify-between text-emerald-600">
+                            <span>Discount</span>
+                            <span>-{formatCurrency(order.discount)}</span>
+                          </div>
+                        )}
+                        <Divider />
+                        <div className="flex justify-between text-lg font-bold sm:text-xl">
+                          <span>Total</span>
+                          <span>{formatCurrency(order.total)}</span>
+                        </div>
+                      </>
+                    ) : (
+                      <>
+                        <div className="flex justify-between">
+                          <span>Subtotal</span>
+                          <span>
+                            {order.status === "shopping"
+                              ? formatCurrency(calculateFoundTotal())
+                              : formatCurrency(calculateOriginalSubtotal())}
+                          </span>
+                        </div>
+
+                        {order.status === "shopping" ? (
+                          <>
+                            <div className="flex justify-between">
+                              <span>Items Found</span>
+                              <span>
+                                {order.Order_Items?.filter((item) => item.found)
+                                  .length || 0}{" "}
+                                of {order.Order_Items?.length || 0}
+                              </span>
+                            </div>
+                            <div className="flex justify-between">
+                              <span>Units Found</span>
+                              <span>
+                                {order.Order_Items?.reduce((total, item) => {
+                                  if (item.found) {
+                                    return (
+                                      total +
+                                      (item.foundQuantity || item.quantity)
+                                    );
+                                  }
+                                  return total;
+                                }, 0) || 0}{" "}
+                                of{" "}
+                                {order.Order_Items?.reduce(
+                                  (total, item) => total + item.quantity,
+                                  0
+                                ) || 0}
+                              </span>
+                            </div>
+                            <div className="flex justify-between">
+                              <span>Items Not Found</span>
+                              <span>
+                                {order.Order_Items?.filter(
+                                  (item) => !item.found
+                                ).length || 0}
+                              </span>
+                            </div>
+                          </>
+                        ) : (
+                          <>
+                            <div className="flex justify-between">
+                              <span>Delivery Fee</span>
+                              <span>
+                                {formatCurrency(
+                                  parseFloat(order.deliveryFee || "0")
+                                )}
+                              </span>
+                            </div>
+                            <div className="flex justify-between">
+                              <span>Service Fee</span>
+                              <span>
+                                {formatCurrency(
+                                  parseFloat(order.serviceFee || "0")
+                                )}
+                              </span>
+                            </div>
+                          </>
+                        )}
+
+                        {order.discount > 0 && (
+                          <div className="flex justify-between text-emerald-600">
+                            <span>Discount</span>
+                            <span>-{formatCurrency(order.discount)}</span>
+                          </div>
+                        )}
+                        <Divider />
+                        <div className="flex justify-between text-lg font-bold sm:text-xl">
+                          <span>Total</span>
+                          <span>
+                            {order.status === "shopping"
+                              ? formatCurrency(calculateFoundItemsTotal())
+                              : formatCurrency(calculateOriginalSubtotal())}
+                          </span>
+                        </div>
+
+                        {order.status === "shopping" && (
+                          <div className="mt-3 rounded-lg border border-sky-200 bg-sky-50 p-3 text-sm text-sky-700 dark:border-sky-800 dark:bg-sky-900/20 dark:text-sky-300 sm:mt-4 sm:text-base">
+                            <p>
+                              <strong>Note:</strong> The total reflects only the
+                              value of found items. Service fee (
+                              {formatCurrency(
+                                parseFloat(order.serviceFee || "0")
+                              )}
+                              ) and delivery fee (
+                              {formatCurrency(
+                                parseFloat(order.deliveryFee || "0")
+                              )}
+                              ) were already added to your wallet as earnings
+                              when you started shopping.
+                            </p>
+                          </div>
+                        )}
+                      </>
+                    )}
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Delivery Notes */}
+            {(order.deliveryNotes || order.deliveryNote) && (
+              <div className="rounded-xl border border-slate-200 bg-slate-50 p-4 dark:border-slate-700 dark:bg-slate-800 sm:p-6">
+                <div className="mb-3 flex items-center gap-2 sm:mb-4 sm:gap-3">
+                  <span className="inline-block rounded-full bg-amber-100 p-1.5 sm:p-2">
+                    <svg
+                      className="h-4 w-4 text-amber-600 sm:h-5 sm:w-5"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M13 16h-1v-4h-1m1-4h.01"
+                      />
+                    </svg>
+                  </span>
+                  <h2 className="text-lg font-semibold text-slate-900 dark:text-slate-100 sm:text-xl">
+                    Delivery Notes
+                  </h2>
+                </div>
+                <div className="rounded-lg border border-slate-200 bg-white p-3 dark:border-slate-600 dark:bg-slate-700 sm:p-4">
+                  <p className="text-base text-slate-700 dark:text-slate-300 sm:text-lg">
+                    {order.deliveryNotes || order.deliveryNote}
+                  </p>
+                </div>
+              </div>
+            )}
+
+            {/* Action Button */}
             <div className="pt-3 sm:pt-4">
-              <Button 
-                appearance="primary" 
-                className={`w-full py-3 sm:py-4 rounded-xl text-lg sm:text-xl font-semibold ${order.orderType === "reel" ? "bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700" : "bg-gradient-to-r from-emerald-600 to-green-600 hover:from-emerald-700 hover:to-green-700"} text-white shadow-lg transition-all duration-200`}
+              <Button
+                appearance="primary"
+                className={`w-full rounded-xl py-3 text-lg font-semibold sm:py-4 sm:text-xl ${
+                  order.orderType === "reel"
+                    ? "bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700"
+                    : "bg-gradient-to-r from-emerald-600 to-green-600 hover:from-emerald-700 hover:to-green-700"
+                } text-white shadow-lg transition-all duration-200`}
               >
                 {getActionButton()}
               </Button>

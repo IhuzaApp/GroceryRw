@@ -539,7 +539,9 @@ export default function UserOrderDetails({ order }: UserOrderDetailsProps) {
                   />
                 </svg>
               </div>
-              <span className="text-lg font-semibold text-gray-900">Rate Your Experience</span>
+              <span className="text-lg font-semibold text-gray-900">
+                Rate Your Experience
+              </span>
             </div>
           </Modal.Title>
         </Modal.Header>
@@ -569,7 +571,9 @@ export default function UserOrderDetails({ order }: UserOrderDetailsProps) {
           <div className="space-y-6">
             {/* Rating Section */}
             <div className="rounded-lg bg-gray-50 p-6 text-center">
-              <h4 className="mb-4 text-lg font-medium text-gray-900">How was your experience?</h4>
+              <h4 className="mb-4 text-lg font-medium text-gray-900">
+                How was your experience?
+              </h4>
               <div className="flex justify-center">
                 <Rate
                   defaultValue={0}
@@ -591,7 +595,9 @@ export default function UserOrderDetails({ order }: UserOrderDetailsProps) {
             </div>
             {/* Details Section */}
             <div className="space-y-4 rounded-lg border border-gray-200 bg-white p-6">
-              <h4 className="text-lg font-medium text-gray-900">Additional Feedback</h4>
+              <h4 className="text-lg font-medium text-gray-900">
+                Additional Feedback
+              </h4>
               <div>
                 <label className="mb-2 block text-sm font-medium text-gray-700">
                   Share your thoughts
