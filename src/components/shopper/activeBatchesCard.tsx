@@ -176,9 +176,9 @@ export default function ActiveBatches({
       {/* Main Content */}
       <main className="max-w-1xl mx-auto p-4">
         {/* Page Title - Desktop Only */}
-        <div className="mb-6 flex items-center justify-between">
+        <div className="mb-4 flex items-center justify-between">
           <h1
-            className={`text-2xl font-bold ${
+            className={`text-xl font-bold ${
               theme === "dark" ? "text-gray-100" : "text-gray-900"
             }`}
           >
@@ -204,7 +204,7 @@ export default function ActiveBatches({
 
         {/* Description about what orders are shown */}
         <div
-          className={`mb-4 rounded-md p-3 text-sm ${
+          className={`mb-3 rounded-md p-2 text-xs ${
             theme === "dark"
               ? "bg-blue-900/20 text-blue-300"
               : "bg-blue-50 text-blue-700"
@@ -221,33 +221,33 @@ export default function ActiveBatches({
 
         {/* Display a warning when user doesn't have the shopper role */}
         {!isLoading && role !== "shopper" && (
-          <div
-            className={`mb-6 rounded-lg border p-4 ${
-              theme === "dark"
-                ? "border-yellow-500/20 bg-yellow-900/20"
-                : "border-yellow-200 bg-yellow-50"
+                  <div
+          className={`mb-4 rounded-lg border p-3 ${
+            theme === "dark"
+              ? "border-yellow-500/20 bg-yellow-900/20"
+              : "border-yellow-200 bg-yellow-50"
+          }`}
+        >
+          <h3
+            className={`text-sm font-semibold ${
+              theme === "dark" ? "text-yellow-300" : "text-yellow-800"
             }`}
           >
-            <h3
-              className={`font-semibold ${
-                theme === "dark" ? "text-yellow-300" : "text-yellow-800"
-              }`}
-            >
-              Shopper Access Required
-            </h3>
-            <p
-              className={`mt-1 ${
-                theme === "dark" ? "text-yellow-200" : "text-yellow-700"
-              }`}
-            >
-              This page is only accessible to users with shopper privileges.
-              Your current role is: <strong>{role}</strong>
-            </p>
-            <p
-              className={`mt-2 ${
-                theme === "dark" ? "text-yellow-200" : "text-yellow-700"
-              }`}
-            >
+            Shopper Access Required
+          </h3>
+          <p
+            className={`mt-1 text-xs ${
+              theme === "dark" ? "text-yellow-200" : "text-yellow-700"
+            }`}
+          >
+            This page is only accessible to users with shopper privileges.
+            Your current role is: <strong>{role}</strong>
+          </p>
+          <p
+            className={`mt-2 text-xs ${
+              theme === "dark" ? "text-yellow-200" : "text-yellow-700"
+            }`}
+          >
               If you believe you should have shopper access, please try:
             </p>
             <ul
@@ -320,7 +320,7 @@ export default function ActiveBatches({
             <Loader content="Loading orders..." />
           </div>
         ) : activeOrders.length > 0 ? (
-          <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
             {activeOrders.map((order) => (
               <ActiveOrderCard key={order.id} order={order} />
             ))}
@@ -402,10 +402,10 @@ function ActiveOrderCard({ order }: { order: Order }) {
         return (
           <Badge
             content="Accepted"
-            className={`rounded bg-blue-100 px-2 py-1 text-xs font-medium ${
+            className={`rounded bg-green-900/20 px-2 py-1 text-xs font-medium ${
               theme === "dark"
-                ? "bg-blue-900/20 text-blue-300"
-                : "text-blue-800"
+                ? "bg-green-900/40 text-green-200"
+                : "text-green-800"
             }`}
           />
         );
@@ -460,8 +460,8 @@ function ActiveOrderCard({ order }: { order: Order }) {
 
   const getNextActionButton = (status: string) => {
     const buttonClass = isReelOrder
-      ? "rounded-md bg-purple-600 px-4 py-2 font-medium text-white transition-colors hover:bg-purple-700"
-      : "rounded-md bg-[#125C13] px-4 py-2 font-medium text-white transition-colors hover:bg-[#0A400B]";
+      ? "rounded-md bg-purple-600 px-3 py-1 text-sm font-medium text-white transition-colors hover:bg-purple-700"
+      : "rounded-md bg-[#125C13] px-3 py-1 text-sm font-medium text-white transition-colors hover:bg-[#0A400B]";
 
     switch (status) {
       case "ACCEPTED":
@@ -495,15 +495,19 @@ function ActiveOrderCard({ order }: { order: Order }) {
 
   return (
     <div
-      className={`mb-4 rounded-lg border p-4 shadow-sm transition-colors duration-200 ${
+      className={`mb-3 rounded-xl border-2 p-4 shadow-lg transition-all duration-300 hover:shadow-xl ${
         theme === "dark"
-          ? "border-gray-700 bg-gray-800 text-gray-100"
-          : "border-gray-200 bg-white text-gray-900"
-      } ${isReelOrder ? "border-purple-500" : ""}`}
+          ? isReelOrder
+            ? "border-purple-500 bg-gray-800 text-gray-100 hover:border-purple-400 dark:shadow-purple-900/20"
+            : "border-green-900 bg-gray-800 text-gray-100 hover:border-green-800 shadow-green-900/40"
+          : isReelOrder
+          ? "border-purple-400 shadow-purple-100 bg-white text-gray-900 hover:border-purple-500"
+          : "border-green-800 shadow-green-900/20 bg-white text-gray-900 hover:border-green-900"
+      }`}
     >
       {/* Reel order indicator */}
       {isReelOrder && (
-        <div className="mb-3 rounded-md bg-purple-100 px-3 py-2 text-center text-sm font-medium text-purple-800 dark:bg-purple-900/20 dark:text-purple-300">
+        <div className="mb-3 rounded-lg bg-gradient-to-r from-purple-500 to-purple-600 px-3 py-2 text-center text-xs font-bold text-white shadow-md">
           🎬 REEL ORDER
         </div>
       )}
@@ -511,26 +515,16 @@ function ActiveOrderCard({ order }: { order: Order }) {
       <div className="flex items-center justify-between">
         <div className="flex items-center space-x-3">
           <div
-            className={`rounded-full p-2 ${
+            className={`rounded-full p-3 shadow-md ${
               isReelOrder
                 ? theme === "dark"
-                  ? "bg-purple-900/20"
-                  : "bg-purple-50"
-                : theme === "dark"
-                ? "bg-blue-900/20"
-                : "bg-blue-50"
+                  ? "bg-gradient-to-br from-purple-500 to-purple-600"
+                  : "bg-gradient-to-br from-purple-400 to-purple-500"
+                : "bg-gradient-to-br from-green-800 to-green-900"
             }`}
           >
             <svg
-              className={`h-6 w-6 ${
-                isReelOrder
-                  ? theme === "dark"
-                    ? "text-purple-400"
-                    : "text-purple-500"
-                  : theme === "dark"
-                  ? "text-blue-400"
-                  : "text-blue-500"
-              }`}
+              className={`h-6 w-6 text-white`}
               fill="none"
               viewBox="0 0 24 24"
               stroke="currentColor"
@@ -556,7 +550,7 @@ function ActiveOrderCard({ order }: { order: Order }) {
           </div>
           <div>
             <h3
-              className={`font-medium ${
+              className={`text-sm font-medium ${
                 theme === "dark" ? "text-gray-100" : "text-gray-900"
               }`}
             >
@@ -564,7 +558,7 @@ function ActiveOrderCard({ order }: { order: Order }) {
               {order.id.slice(0, 6).toUpperCase()}
             </h3>
             <p
-              className={`text-sm ${
+              className={`text-xs ${
                 theme === "dark" ? "text-gray-400" : "text-gray-500"
               }`}
             >
@@ -584,7 +578,7 @@ function ActiveOrderCard({ order }: { order: Order }) {
         </div>
         <div className="text-right">
           <p
-            className={`text-lg font-semibold ${
+            className={`text-base font-semibold ${
               isReelOrder
                 ? theme === "dark"
                   ? "text-purple-400"
@@ -597,7 +591,7 @@ function ActiveOrderCard({ order }: { order: Order }) {
             {formatCurrencySync(order.estimatedEarnings || 0)}
           </p>
           <p
-            className={`text-sm ${
+            className={`text-xs ${
               theme === "dark" ? "text-gray-400" : "text-gray-500"
             }`}
           >
@@ -606,16 +600,16 @@ function ActiveOrderCard({ order }: { order: Order }) {
         </div>
       </div>
 
-      <div className="mt-4 space-y-2">
-        <div className={`flex items-center justify-between rounded-lg p-3`}>
-          <div className="flex items-center space-x-3">
+      <div className="mt-3 space-y-1">
+        <div className={`flex items-center justify-between rounded-lg p-2`}>
+          <div className="flex items-center space-x-2">
             <div
-              className={`rounded-full p-2 ${
+              className={`rounded-full p-1 ${
                 theme === "dark" ? "bg-gray-600" : "bg-white"
               }`}
             >
               <svg
-                className={`h-5 w-5 ${
+                className={`h-4 w-4 ${
                   theme === "dark" ? "text-gray-300" : "text-gray-500"
                 }`}
                 fill="none"
@@ -632,14 +626,14 @@ function ActiveOrderCard({ order }: { order: Order }) {
             </div>
             <div>
               <p
-                className={`text-sm font-medium ${
+                className={`text-xs font-medium ${
                   theme === "dark" ? "text-gray-100" : "text-gray-900"
                 }`}
               >
                 {isReelOrder ? "Pickup Location" : "Pickup Location"}
               </p>
               <p
-                className={`text-sm ${
+                className={`text-xs ${
                   theme === "dark" ? "text-gray-400" : "text-gray-500"
                 }`}
               >
@@ -651,15 +645,15 @@ function ActiveOrderCard({ order }: { order: Order }) {
           </div>
         </div>
 
-        <div className={`flex items-center justify-between rounded-lg p-3`}>
-          <div className="flex items-center space-x-3">
+        <div className={`flex items-center justify-between rounded-lg p-2`}>
+          <div className="flex items-center space-x-2">
             <div
-              className={`rounded-full p-2 ${
+              className={`rounded-full p-1 ${
                 theme === "dark" ? "bg-gray-600" : "bg-white"
               }`}
             >
               <svg
-                className={`h-5 w-5 ${
+                className={`h-4 w-4 ${
                   theme === "dark" ? "text-gray-300" : "text-gray-500"
                 }`}
                 fill="none"
@@ -675,9 +669,9 @@ function ActiveOrderCard({ order }: { order: Order }) {
               </svg>
             </div>
             <div>
-              <p className={`text-sm `}>Delivery Location</p>
+              <p className={`text-xs font-medium`}>Delivery Location</p>
               <p
-                className={`text-sm ${
+                className={`text-xs ${
                   theme === "dark" ? "text-gray-400" : "text-gray-500"
                 }`}
               >
@@ -690,18 +684,18 @@ function ActiveOrderCard({ order }: { order: Order }) {
         {/* Show delivery note for reel orders */}
         {isReelOrder && order.deliveryNote && (
           <div
-            className={`flex items-center justify-between rounded-lg p-3 ${
+            className={`flex items-center justify-between rounded-lg p-2 ${
               theme === "dark" ? "bg-yellow-900/20" : "bg-yellow-50"
             }`}
           >
-            <div className="flex items-center space-x-3">
+            <div className="flex items-center space-x-2">
               <div
-                className={`rounded-full p-2 ${
+                className={`rounded-full p-1 ${
                   theme === "dark" ? "bg-yellow-600" : "bg-yellow-100"
                 }`}
               >
                 <svg
-                  className={`h-5 w-5 ${
+                  className={`h-4 w-4 ${
                     theme === "dark" ? "text-yellow-300" : "text-yellow-600"
                   }`}
                   fill="none"
@@ -718,14 +712,14 @@ function ActiveOrderCard({ order }: { order: Order }) {
               </div>
               <div>
                 <p
-                  className={`text-sm font-medium ${
+                  className={`text-xs font-medium ${
                     theme === "dark" ? "text-yellow-300" : "text-yellow-800"
                   }`}
                 >
                   Delivery Note
                 </p>
                 <p
-                  className={`text-sm ${
+                  className={`text-xs ${
                     theme === "dark" ? "text-yellow-200" : "text-yellow-700"
                   }`}
                 >
@@ -742,14 +736,14 @@ function ActiveOrderCard({ order }: { order: Order }) {
           href={`https://maps.google.com/?q=${order.customerLat},${order.customerLng}`}
           target="_blank"
           rel="noopener noreferrer"
-          className="flex items-center px-4 py-2 text-blue-500 hover:text-blue-200"
+          className="flex items-center px-3 py-1 text-blue-500 hover:text-blue-200 text-sm"
         >
           <svg
             viewBox="0 0 24 24"
             fill="none"
             stroke="currentColor"
             strokeWidth="2"
-            className="mr-1 h-4 w-4"
+            className="mr-1 h-3 w-3"
           >
             <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z" />
             <circle cx="12" cy="10" r="3" />
