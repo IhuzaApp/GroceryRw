@@ -16,6 +16,7 @@ interface Order {
   status: string;
   createdAt?: string;
   created_at?: string;
+  deliveryTime?: string;
   shopName?: string;
   shopAddress?: string;
   shopLat?: number;
@@ -58,6 +59,22 @@ interface ActiveBatchesProps {
   initialError?: string | null;
 }
 
+// Calculate countdown for delivery time
+const getDeliveryCountdown = (deliveryTime: string, currentTime: Date) => {
+  const deliveryDate = new Date(deliveryTime);
+  const timeDiff = deliveryDate.getTime() - currentTime.getTime();
+  
+  if (timeDiff <= 0) {
+    return { isOverdue: true, minutes: 0, hours: 0, totalMinutes: 0 };
+  }
+  
+  const totalMinutes = Math.ceil(timeDiff / (1000 * 60));
+  const hours = Math.floor(totalMinutes / 60);
+  const minutes = totalMinutes % 60;
+  
+  return { isOverdue: false, minutes, hours, totalMinutes };
+};
+
 export default function ActiveBatches({
   initialOrders = [],
   initialError = null,
@@ -70,6 +87,7 @@ export default function ActiveBatches({
   const [fetchAttempted, setFetchAttempted] = useState(false);
   const fetchedRef = useRef(false);
   const { theme } = useTheme();
+  const [currentTime, setCurrentTime] = useState(new Date());
 
   useEffect(() => {
     const checkIfMobile = () => {
@@ -82,6 +100,15 @@ export default function ActiveBatches({
     return () => {
       window.removeEventListener("resize", checkIfMobile);
     };
+  }, []);
+
+  // Update current time every second for real-time countdown
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setCurrentTime(new Date());
+    }, 1000); // Update every second
+
+    return () => clearInterval(timer);
   }, []);
 
   // Only fetch orders client-side if we don't have them from server-side
@@ -164,6 +191,19 @@ export default function ActiveBatches({
       controller.abort();
     };
   }, [role, initialOrders.length]);
+
+  // Calculate countdown for delivery time
+  const getDeliveryCountdown = (deliveryTime: string) => {
+    const deliveryDate = new Date(deliveryTime);
+    const timeDiff = deliveryDate.getTime() - currentTime.getTime();
+    
+    if (timeDiff <= 0) {
+      return { isOverdue: true, minutes: 0 };
+    }
+    
+    const minutes = Math.ceil(timeDiff / (1000 * 60));
+    return { isOverdue: false, minutes };
+  };
 
   return (
     <div
@@ -322,7 +362,7 @@ export default function ActiveBatches({
         ) : activeOrders.length > 0 ? (
           <div className="grid grid-cols-1 gap-4 sm:gap-6 lg:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
             {activeOrders.map((order) => (
-              <ActiveOrderCard key={order.id} order={order} />
+              <ActiveOrderCard key={order.id} order={order} currentTime={currentTime} />
             ))}
           </div>
         ) : (
@@ -392,7 +432,7 @@ export default function ActiveBatches({
   );
 }
 
-function ActiveOrderCard({ order }: { order: Order }) {
+function ActiveOrderCard({ order, currentTime }: { order: Order; currentTime: Date }) {
   const { theme } = useTheme();
   const isReelOrder = order.orderType === "reel";
 
@@ -565,6 +605,7 @@ function ActiveOrderCard({ order }: { order: Order }) {
                 : `${order.items} items`}{" "}
               • {formatCurrencySync(order.estimatedEarnings || 0)}
             </p>
+
           </div>
         </div>
         <div className="text-right">
@@ -725,6 +766,50 @@ function ActiveOrderCard({ order }: { order: Order }) {
           </div>
         )}
       </div>
+
+      {/* Delivery Countdown */}
+      {order.deliveryTime && (
+        <div className="mt-3 flex items-center justify-center">
+          {(() => {
+            const countdown = getDeliveryCountdown(order.deliveryTime, currentTime);
+            return (
+              <div className={`flex items-center gap-2 rounded-lg px-3 py-2 ${
+                countdown.isOverdue
+                  ? "bg-red-50 border border-red-200 dark:bg-red-900/20 dark:border-red-800"
+                  : countdown.minutes <= 30
+                  ? "bg-amber-50 border border-amber-200 dark:bg-amber-900/20 dark:border-amber-800"
+                  : "bg-slate-50 border border-slate-200 dark:bg-slate-800 dark:border-slate-700"
+              }`}>
+                <svg className={`h-4 w-4 ${
+                  countdown.isOverdue
+                    ? "text-red-600 dark:text-red-400"
+                    : countdown.minutes <= 30
+                    ? "text-amber-600 dark:text-amber-400"
+                    : "text-slate-500 dark:text-slate-400"
+                }`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <circle cx="12" cy="12" r="10" />
+                  <polyline points="12,6 12,12 16,14" />
+                </svg>
+                <span className={`text-sm font-medium ${
+                  countdown.isOverdue
+                    ? "text-red-800 dark:text-red-300"
+                    : countdown.totalMinutes <= 30
+                    ? "text-amber-800 dark:text-amber-300"
+                    : "text-slate-700 dark:text-slate-300"
+                }`}>
+                  {countdown.isOverdue
+                    ? "OVERDUE"
+                    : countdown.totalMinutes <= 30
+                    ? `${countdown.totalMinutes}m left`
+                    : countdown.hours > 0
+                    ? `${countdown.hours}h ${countdown.minutes}m left`
+                    : `${countdown.minutes}m left`}
+                </span>
+              </div>
+            );
+          })()}
+        </div>
+      )}
 
       <div className="mt-4 flex items-center justify-between">
         <a

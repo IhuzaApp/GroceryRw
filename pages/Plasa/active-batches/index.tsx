@@ -11,6 +11,7 @@ interface Order {
   OrderID: string;
   status: string;
   createdAt: string;
+  deliveryTime?: string;
   shopName: string;
   shopAddress: string;
   shopLat: number;
@@ -100,6 +101,7 @@ export const getServerSideProps: GetServerSideProps<
         service_fee
         delivery_fee
         total
+        delivery_time
         Shop {
           name
           address
@@ -144,6 +146,7 @@ export const getServerSideProps: GetServerSideProps<
         service_fee
         delivery_fee
         total
+        delivery_time
         quantity
         delivery_note
         Reel {
@@ -185,6 +188,7 @@ export const getServerSideProps: GetServerSideProps<
           service_fee: string | null;
           delivery_fee: string | null;
           total: number | null;
+          delivery_time: string | null;
           Shop: {
             name: string;
             address: string;
@@ -213,6 +217,7 @@ export const getServerSideProps: GetServerSideProps<
           service_fee: string | null;
           delivery_fee: string | null;
           total: string;
+          delivery_time: string | null;
           quantity: string;
           delivery_note: string | null;
           Reel: {
@@ -253,6 +258,7 @@ export const getServerSideProps: GetServerSideProps<
       OrderID: o.id,
       status: o.status,
       createdAt: o.created_at,
+      deliveryTime: o.delivery_time || undefined,
       shopName: o.Shop.name,
       shopAddress: o.Shop.address,
       shopLat: parseFloat(o.Shop.latitude),
@@ -275,6 +281,7 @@ export const getServerSideProps: GetServerSideProps<
       OrderID: o.id,
       status: o.status,
       createdAt: o.created_at,
+      deliveryTime: o.delivery_time || undefined,
       shopName: "Reel Order", // Reel orders don't have shops
       shopAddress: "From Reel Creator", // Reel orders come from reel creators
       shopLat: parseFloat(o.Address.latitude), // Use customer location as pickup point
