@@ -178,7 +178,7 @@ export default function ActiveBatches({
         {/* Page Title - Desktop Only */}
         <div className="mb-4 flex items-center justify-between">
           <p
-            className={`text-xl sm:text-2xl font-bold ${
+            className={`text-xl font-bold sm:text-2xl ${
               theme === "dark" ? "text-gray-100" : "text-gray-900"
             }`}
           >
@@ -204,10 +204,10 @@ export default function ActiveBatches({
 
         {/* Description about what orders are shown */}
         <div
-          className={`mb-4 rounded-lg p-3 text-md ${
+          className={`text-md mb-4 rounded-lg p-3 ${
             theme === "dark"
-              ? "bg-green-900/20 text-green-300 border border-green-800"
-              : "bg-green-50 text-green-700 border border-green-200"
+              ? "border border-green-800 bg-green-900/20 text-green-300"
+              : "border border-green-200 bg-green-50 text-green-700"
           }`}
         >
           <p>
@@ -222,21 +222,21 @@ export default function ActiveBatches({
         {/* Display a warning when user doesn't have the shopper role */}
         {!isLoading && role !== "shopper" && (
           <div
-          className={`mb-4 rounded-lg border p-4 ${
+            className={`mb-4 rounded-lg border p-4 ${
               theme === "dark"
                 ? "border-amber-500/20 bg-amber-900/20"
                 : "border-amber-200 bg-amber-50"
             }`}
           >
             <p
-            className={`text-base font-bold ${
+              className={`text-base font-bold ${
                 theme === "dark" ? "text-amber-300" : "text-amber-800"
               }`}
             >
               Shopper Access Required
             </p>
             <p
-            className={`mt-1 text-sm ${
+              className={`mt-1 text-sm ${
                 theme === "dark" ? "text-amber-200" : "text-amber-700"
               }`}
             >
@@ -244,7 +244,7 @@ export default function ActiveBatches({
               Your current role is: <strong>{role}</strong>
             </p>
             <p
-            className={`mt-2 text-sm ${
+              className={`mt-2 text-sm ${
                 theme === "dark" ? "text-amber-200" : "text-amber-700"
               }`}
             >
@@ -272,7 +272,7 @@ export default function ActiveBatches({
             }`}
           >
             <p
-              className={`font-bold text-base ${
+              className={`text-base font-bold ${
                 theme === "dark" ? "text-red-300" : "text-red-800"
               }`}
             >
@@ -351,7 +351,7 @@ export default function ActiveBatches({
               </svg>
             </div>
             <p
-              className={`mb-2 text-lg sm:text-xl font-bold ${
+              className={`mb-2 text-lg font-bold sm:text-xl ${
                 theme === "dark" ? "text-gray-100" : "text-gray-900"
               }`}
             >
@@ -495,10 +495,10 @@ function ActiveOrderCard({ order }: { order: Order }) {
 
   return (
     <div
-      className={`rounded-xl border-2 p-4 sm:p-6 transition-all duration-300 ${
+      className={`rounded-xl border-2 p-4 transition-all duration-300 sm:p-6 ${
         theme === "dark"
-          ? "border-gray-600 bg-gray-800 text-gray-100 hover:border-gray-500 shadow-md hover:shadow-lg"
-          : "border-gray-200 bg-white text-gray-900 hover:border-gray-300 shadow-md hover:shadow-lg"
+          ? "border-gray-600 bg-gray-800 text-gray-100 shadow-md hover:border-gray-500 hover:shadow-lg"
+          : "border-gray-200 bg-white text-gray-900 shadow-md hover:border-gray-300 hover:shadow-lg"
       }`}
     >
       {/* Quick Batch indicator */}
@@ -546,7 +546,7 @@ function ActiveOrderCard({ order }: { order: Order }) {
           </div>
           <div>
             <p
-              className={`text-base sm:text-lg font-bold ${
+              className={`text-base font-bold sm:text-lg ${
                 theme === "dark" ? "text-gray-100" : "text-gray-900"
               }`}
             >
@@ -592,7 +592,9 @@ function ActiveOrderCard({ order }: { order: Order }) {
       </div>
 
       <div className="mt-4 space-y-2">
-        <div className={`flex items-center justify-between rounded-lg p-3 bg-slate-50 dark:bg-slate-700`}>
+        <div
+          className={`flex items-center justify-between rounded-lg bg-slate-50 p-3 dark:bg-slate-700`}
+        >
           <div className="flex items-center space-x-3">
             <div
               className={`rounded-full p-2 ${
@@ -636,7 +638,9 @@ function ActiveOrderCard({ order }: { order: Order }) {
           </div>
         </div>
 
-        <div className={`flex items-center justify-between rounded-lg p-3 bg-slate-50 dark:bg-slate-700`}>
+        <div
+          className={`flex items-center justify-between rounded-lg bg-slate-50 p-3 dark:bg-slate-700`}
+        >
           <div className="flex items-center space-x-3">
             <div
               className={`rounded-full p-2 ${
@@ -722,12 +726,12 @@ function ActiveOrderCard({ order }: { order: Order }) {
         )}
       </div>
 
-      <div className="flex items-center justify-between mt-4">
+      <div className="mt-4 flex items-center justify-between">
         <a
           href={`https://maps.google.com/?q=${order.customerLat},${order.customerLng}`}
           target="_blank"
           rel="noopener noreferrer"
-          className="flex items-center px-3 py-2 text-sky-600 dark:text-sky-400 hover:text-sky-700 dark:hover:text-sky-300 text-sm font-medium"
+          className="flex items-center px-3 py-2 text-sm font-medium text-sky-600 hover:text-sky-700 dark:text-sky-400 dark:hover:text-sky-300"
         >
           <svg
             viewBox="0 0 24 24"

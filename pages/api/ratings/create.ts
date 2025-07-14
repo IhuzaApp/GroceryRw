@@ -58,7 +58,9 @@ export default async function handler(
 
     // Validate that either order_id or reel_order_id is provided
     if (!order_id && !reel_order_id) {
-      return res.status(400).json({ error: "Either order_id or reel_order_id is required" });
+      return res
+        .status(400)
+        .json({ error: "Either order_id or reel_order_id is required" });
     }
 
     // Create rating record

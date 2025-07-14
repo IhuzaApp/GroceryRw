@@ -324,19 +324,19 @@ export default async function handler(
 
         // Check each location sequentially for regular orders
         for (const location of locationsToCheck) {
-        for (const shopBatches of Object.values(batchesByShop)) {
-          const shop = shopBatches[0].Shops;
-          const distanceInMinutes = await calculateDistance(
-            {
+          for (const shopBatches of Object.values(batchesByShop)) {
+            const shop = shopBatches[0].Shops;
+            const distanceInMinutes = await calculateDistance(
+              {
                 lat: location.latitude,
                 lng: location.longitude,
-            },
-            { lat: shop.latitude, lng: shop.longitude }
-          );
+              },
+              { lat: shop.latitude, lng: shop.longitude }
+            );
 
             // If shop is within dasher's max distance from this location, add its batches
             if (distanceInMinutes <= maxDistanceMinutes) {
-            nearbyBatches.push(...shopBatches);
+              nearbyBatches.push(...shopBatches);
             }
           }
 
@@ -348,22 +348,22 @@ export default async function handler(
 
         // Check each location sequentially for reel orders
         for (const location of locationsToCheck) {
-        for (const reelBatches of Object.values(reelBatchesByLocation)) {
-          const firstBatch = reelBatches[0];
-          const distanceInMinutes = await calculateDistance(
-            {
+          for (const reelBatches of Object.values(reelBatchesByLocation)) {
+            const firstBatch = reelBatches[0];
+            const distanceInMinutes = await calculateDistance(
+              {
                 lat: location.latitude,
                 lng: location.longitude,
-            },
+              },
               {
                 lat: firstBatch.address.latitude,
                 lng: firstBatch.address.longitude,
               }
-          );
+            );
 
             // If reel creator is within dasher's max distance from this location, add its batches
             if (distanceInMinutes <= maxDistanceMinutes) {
-            nearbyReelBatches.push(...reelBatches);
+              nearbyReelBatches.push(...reelBatches);
             }
           }
 
@@ -379,20 +379,23 @@ export default async function handler(
         let hasReelBatches = nearbyReelBatches.length > 0;
 
         // Calculate total items and earnings
-        const totalItems = nearbyBatches.reduce((sum, batch) => {
-          // For regular orders, we need to get item count from Order_Items
-          // For now, we'll use a default of 1 item per batch
-          return sum + 1;
-        }, 0) + nearbyReelBatches.length; // Reel orders typically have 1 item
+        const totalItems =
+          nearbyBatches.reduce((sum, batch) => {
+            // For regular orders, we need to get item count from Order_Items
+            // For now, we'll use a default of 1 item per batch
+            return sum + 1;
+          }, 0) + nearbyReelBatches.length; // Reel orders typically have 1 item
 
-        const totalEarnings = nearbyBatches.reduce((sum, batch) => {
-          // For regular orders, we need to get total from Orders table
-          // For now, we'll use a default earning
-          return sum + 5000; // Default RWF 5000 per batch
-        }, 0) + nearbyReelBatches.reduce((sum, batch) => {
-          // For reel orders, we need to get total from reel_orders table
-          return sum + 3000; // Default RWF 3000 per reel order
-        }, 0);
+        const totalEarnings =
+          nearbyBatches.reduce((sum, batch) => {
+            // For regular orders, we need to get total from Orders table
+            // For now, we'll use a default earning
+            return sum + 5000; // Default RWF 5000 per batch
+          }, 0) +
+          nearbyReelBatches.reduce((sum, batch) => {
+            // For reel orders, we need to get total from reel_orders table
+            return sum + 3000; // Default RWF 3000 per reel order
+          }, 0);
 
         if (hasRegularBatches && hasReelBatches) {
           // Both types of orders available
@@ -406,7 +409,9 @@ export default async function handler(
             nearbyBatches.length
           } regular batch(es) at ${uniqueShops.join(", ")} and ${
             nearbyReelBatches.length
-          } reel order(s) from ${uniqueReelCreators.join(", ")} - 📦 ${totalItems} items • 💰 RWF${totalEarnings}`;
+          } reel order(s) from ${uniqueReelCreators.join(
+            ", "
+          )} - 📦 ${totalItems} items • 💰 RWF${totalEarnings}`;
         } else if (hasRegularBatches) {
           // Only regular orders
           const uniqueShops = Array.from(
@@ -414,7 +419,9 @@ export default async function handler(
           );
           notificationMessage = `${
             nearbyBatches.length
-          } new batch(es) available at ${uniqueShops.join(", ")} - 📦 ${totalItems} items • 💰 RWF${totalEarnings}`;
+          } new batch(es) available at ${uniqueShops.join(
+            ", "
+          )} - 📦 ${totalItems} items • 💰 RWF${totalEarnings}`;
         } else if (hasReelBatches) {
           // Only reel orders
           const uniqueReelCreators = Array.from(
@@ -422,7 +429,9 @@ export default async function handler(
           );
           notificationMessage = `${
             nearbyReelBatches.length
-          } new reel order(s) available from ${uniqueReelCreators.join(", ")} - 📦 ${totalItems} items • 💰 RWF${totalEarnings}`;
+          } new reel order(s) available from ${uniqueReelCreators.join(
+            ", "
+          )} - 📦 ${totalItems} items • 💰 RWF${totalEarnings}`;
         }
 
         // If there are any nearby batches (regular or reel), create a notification object

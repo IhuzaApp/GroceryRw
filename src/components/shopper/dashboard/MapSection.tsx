@@ -5,7 +5,10 @@ import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 import { Loader, toaster, Message, Button } from "rsuite";
 import "rsuite/dist/rsuite.min.css";
-import { formatCurrencySync, getCurrencySymbol } from "../../../utils/formatCurrency";
+import {
+  formatCurrencySync,
+  getCurrencySymbol,
+} from "../../../utils/formatCurrency";
 import { useTheme } from "../../../context/ThemeContext";
 import { logger } from "../../../utils/logger";
 

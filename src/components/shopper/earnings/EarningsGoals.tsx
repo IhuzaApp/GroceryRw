@@ -1,6 +1,9 @@
 import React, { useState, useEffect } from "react";
 import { Panel, Button, InputNumber, Modal } from "rsuite";
-import { formatCurrencySync, getCurrencySymbol } from "../../utils/formatCurrency";
+import {
+  formatCurrencySync,
+  getCurrencySymbol,
+} from "../../utils/formatCurrency";
 
 interface Goal {
   goal: string;

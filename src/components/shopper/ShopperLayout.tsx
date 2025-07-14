@@ -123,7 +123,7 @@ export default function ShopperLayout({ children }: ShopperLayoutProps) {
   const handleAcceptBatch = async (orderId: string) => {
     try {
       logger.info("Accepting batch", "ShopperLayout", { orderId });
-      
+
       // First, try to determine if it's a regular batch or reel batch
       // We'll try regular batch first, and if it fails, try reel batch
       let orderType = "regular";
@@ -140,9 +140,13 @@ export default function ShopperLayout({ children }: ShopperLayoutProps) {
 
       let data = await response.json();
 
-              // If regular batch assignment fails, try reel batch
-        if (!data.success && data.error !== "no_wallet") {
-          logger.info("Regular batch assignment failed, trying reel batch", "ShopperLayout", { orderId });
+      // If regular batch assignment fails, try reel batch
+      if (!data.success && data.error !== "no_wallet") {
+        logger.info(
+          "Regular batch assignment failed, trying reel batch",
+          "ShopperLayout",
+          { orderId }
+        );
         orderType = "reel";
         response = await fetch("/api/shopper/assignOrder", {
           method: "POST",
@@ -158,20 +162,24 @@ export default function ShopperLayout({ children }: ShopperLayoutProps) {
       }
 
       if (data.success) {
-        logger.info("Order assigned successfully", "ShopperLayout", { orderId });
-        
+        logger.info("Order assigned successfully", "ShopperLayout", {
+          orderId,
+        });
+
         // Show success notification
         if (typeof window !== "undefined") {
-          window.dispatchEvent(new CustomEvent("orderAssigned", { 
-            detail: { orderId, success: true } 
-          }));
+          window.dispatchEvent(
+            new CustomEvent("orderAssigned", {
+              detail: { orderId, success: true },
+            })
+          );
         }
 
         // Navigate to the order details page
         window.location.href = `/Plasa/active-batches/batch/${orderId}`;
       } else if (data.error === "no_wallet") {
         logger.warn("No wallet found for shopper", "ShopperLayout");
-        
+
         // Try to create wallet automatically
         try {
           const walletResponse = await fetch("/api/queries/createWallet", {
@@ -184,8 +192,11 @@ export default function ShopperLayout({ children }: ShopperLayoutProps) {
           const walletData = await walletResponse.json();
 
           if (walletData.success) {
-            logger.info("Wallet created successfully, retrying order assignment", "ShopperLayout");
-            
+            logger.info(
+              "Wallet created successfully, retrying order assignment",
+              "ShopperLayout"
+            );
+
             // Retry the order assignment
             const retryResponse = await fetch("/api/shopper/assignOrder", {
               method: "POST",
@@ -201,19 +212,31 @@ export default function ShopperLayout({ children }: ShopperLayoutProps) {
             const retryData = await retryResponse.json();
 
             if (retryData.success) {
-              logger.info("Order assigned successfully after wallet creation", "ShopperLayout", { orderId });
+              logger.info(
+                "Order assigned successfully after wallet creation",
+                "ShopperLayout",
+                { orderId }
+              );
               window.location.href = `/Plasa/active-batches/batch/${orderId}`;
             } else {
-              logger.error("Failed to assign order after wallet creation", "ShopperLayout", { error: retryData.error });
+              logger.error(
+                "Failed to assign order after wallet creation",
+                "ShopperLayout",
+                { error: retryData.error }
+              );
             }
           } else {
-            logger.error("Failed to create wallet", "ShopperLayout", { error: walletData.error });
+            logger.error("Failed to create wallet", "ShopperLayout", {
+              error: walletData.error,
+            });
           }
         } catch (walletError) {
           logger.error("Error creating wallet", "ShopperLayout", walletError);
         }
       } else {
-        logger.error("Failed to assign order", "ShopperLayout", { error: data.error });
+        logger.error("Failed to assign order", "ShopperLayout", {
+          error: data.error,
+        });
       }
     } catch (error) {
       logger.error("Error accepting batch", "ShopperLayout", error);

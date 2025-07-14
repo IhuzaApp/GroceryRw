@@ -167,7 +167,7 @@ export default function NotificationSystem({
         "NotificationSystem"
       );
     }
-    
+
     // Also remove from batch assignments
     batchAssignments.current = batchAssignments.current.filter(
       (assignment) => assignment.orderId !== orderId
@@ -259,14 +259,15 @@ export default function NotificationSystem({
               <div className="ml-3 flex-1">
                 <p className="text-sm font-medium text-gray-900">New Batch!</p>
                 <div className="mt-1 text-sm text-gray-500">
-            <div>{order.customerAddress}</div>
-            <div>
-              {order.shopName} ({order.distance}km)
-            </div>
-                  <div className="mt-1 font-medium text-green-600">
-                    📦 {order.itemsCount || 0} items • 💰 {formatCurrencySync(order.estimatedEarnings || 0)}
+                  <div>{order.customerAddress}</div>
+                  <div>
+                    {order.shopName} ({order.distance}km)
                   </div>
-          </div>
+                  <div className="mt-1 font-medium text-green-600">
+                    📦 {order.itemsCount || 0} items • 💰{" "}
+                    {formatCurrencySync(order.estimatedEarnings || 0)}
+                  </div>
+                </div>
                 <div className="mt-3 flex gap-2">
                   <button
                     onClick={() => {
@@ -275,16 +276,17 @@ export default function NotificationSystem({
                       toast.dismiss(t.id);
                     }}
                     className="rounded bg-blue-600 px-3 py-1 text-sm text-white hover:bg-blue-700"
-            >
-              Accept Batch
+                  >
+                    Accept Batch
                   </button>
                   <button
                     onClick={() => {
                       removeToastForOrder(order.id);
                       // Remove assignment to allow other shoppers to get this order
-                      batchAssignments.current = batchAssignments.current.filter(
-                        (assignment) => assignment.orderId !== order.id
-                      );
+                      batchAssignments.current =
+                        batchAssignments.current.filter(
+                          (assignment) => assignment.orderId !== order.id
+                        );
                       toast.dismiss(t.id);
                       logger.info(
                         `Skipped order ${order.id} - allowing other shoppers`,
@@ -406,8 +408,8 @@ export default function NotificationSystem({
           requireInteraction: false,
         });
 
-      notification.onclick = () => {
-        window.focus();
+        notification.onclick = () => {
+          window.focus();
           notification.close();
         };
 
@@ -481,7 +483,8 @@ export default function NotificationSystem({
                     {order.shopName} ({order.distance}km)
                   </div>
                   <div className="mt-1 font-medium text-green-600">
-                    📦 {order.itemsCount || 0} items • 💰 {formatCurrencySync(order.estimatedEarnings || 0)}
+                    📦 {order.itemsCount || 0} items • 💰{" "}
+                    {formatCurrencySync(order.estimatedEarnings || 0)}
                   </div>
                   <div className="mt-1 font-medium text-orange-600">
                     ⚠️ This batch will be reassigned in 20 seconds!
@@ -502,9 +505,10 @@ export default function NotificationSystem({
                     onClick={() => {
                       removeToastForOrder(order.id);
                       // Remove assignment to allow other shoppers to get this order
-                      batchAssignments.current = batchAssignments.current.filter(
-                        (assignment) => assignment.orderId !== order.id
-                      );
+                      batchAssignments.current =
+                        batchAssignments.current.filter(
+                          (assignment) => assignment.orderId !== order.id
+                        );
                       toast.dismiss(t.id);
                       logger.info(
                         `Skipped expiring order ${order.id} - allowing other shoppers`,
@@ -566,8 +570,8 @@ export default function NotificationSystem({
 
         notification.onclick = () => {
           window.focus();
-        notification.close();
-      };
+          notification.close();
+        };
 
         // Auto-close after 20 seconds
         setTimeout(() => {
@@ -792,11 +796,22 @@ export default function NotificationSystem({
               distance: nextNotification.distance,
               createdAt: nextNotification.createdAt,
               customerAddress: nextNotification.customerAddress,
-              itemsCount: nextNotification.itemCount || nextNotification.itemsCount || nextNotification.totalItems || nextNotification.quantity || 0,
-              estimatedEarnings: nextNotification.estimatedEarnings || nextNotification.totalEarnings || 
-                (nextNotification.serviceFee && nextNotification.deliveryFee ? 
-                  parseFloat(nextNotification.serviceFee) + parseFloat(nextNotification.deliveryFee) : 0) ||
-                (nextNotification.total ? parseFloat(nextNotification.total) : 0),
+              itemsCount:
+                nextNotification.itemCount ||
+                nextNotification.itemsCount ||
+                nextNotification.totalItems ||
+                nextNotification.quantity ||
+                0,
+              estimatedEarnings:
+                nextNotification.estimatedEarnings ||
+                nextNotification.totalEarnings ||
+                (nextNotification.serviceFee && nextNotification.deliveryFee
+                  ? parseFloat(nextNotification.serviceFee) +
+                    parseFloat(nextNotification.deliveryFee)
+                  : 0) ||
+                (nextNotification.total
+                  ? parseFloat(nextNotification.total)
+                  : 0),
               orderType: nextNotification.type === "reel" ? "reel" : "regular",
             };
 

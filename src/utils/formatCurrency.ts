@@ -6,36 +6,39 @@ const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
 // Fetch system configuration
 async function getSystemConfiguration() {
   const now = Date.now();
-  
+
   // Return cached config if still valid
-  if (systemConfigCache && (now - cacheTimestamp) < CACHE_DURATION) {
+  if (systemConfigCache && now - cacheTimestamp < CACHE_DURATION) {
     return systemConfigCache;
   }
 
   try {
-    const response = await fetch('/api/queries/system-configuration');
+    const response = await fetch("/api/queries/system-configuration");
     const data = await response.json();
-    
+
     if (data.success && data.config) {
       systemConfigCache = {
-        currency: data.config.currency || 'RWF' // Default to RWF if not configured
+        currency: data.config.currency || "RWF", // Default to RWF if not configured
       };
       cacheTimestamp = now;
       return systemConfigCache;
     }
   } catch (error) {
-    console.warn('Failed to fetch system configuration, using default currency:', error);
+    console.warn(
+      "Failed to fetch system configuration, using default currency:",
+      error
+    );
   }
 
   // Return default if fetch fails
-  return { currency: 'RWF' };
+  return { currency: "RWF" };
 }
 
 // Dynamic currency formatter
 export const formatCurrency = async (amount: string | number) => {
   const config = await getSystemConfiguration();
   const numAmount = typeof amount === "string" ? parseFloat(amount) : amount;
-  
+
   return new Intl.NumberFormat("en-RW", {
     style: "currency",
     currency: config.currency,
@@ -46,9 +49,9 @@ export const formatCurrency = async (amount: string | number) => {
 
 // Synchronous version for immediate use (uses cached config or default)
 export const formatCurrencySync = (amount: string | number) => {
-  const config = systemConfigCache || { currency: 'RWF' };
+  const config = systemConfigCache || { currency: "RWF" };
   const numAmount = typeof amount === "string" ? parseFloat(amount) : amount;
-  
+
   return new Intl.NumberFormat("en-RW", {
     style: "currency",
     currency: config.currency,
@@ -64,7 +67,7 @@ export const formatRWF = (amount: string | number) => {
 
 // Function to get just the currency symbol
 export const getCurrencySymbol = () => {
-  const config = systemConfigCache || { currency: 'RWF' };
+  const config = systemConfigCache || { currency: "RWF" };
   return config.currency;
 };
 
