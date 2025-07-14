@@ -797,7 +797,7 @@ export default function NotificationSystem({
                 (nextNotification.serviceFee && nextNotification.deliveryFee ? 
                   parseFloat(nextNotification.serviceFee) + parseFloat(nextNotification.deliveryFee) : 0) ||
                 (nextNotification.total ? parseFloat(nextNotification.total) : 0),
-              orderType: nextNotification.type === "batch" ? "reel" : "regular", // "batch" = reel order, "order" = regular order
+              orderType: nextNotification.type === "reel" ? "reel" : "regular",
             };
 
             await playNotificationSound(data.settings?.sound_settings);
