@@ -247,12 +247,12 @@ export default function ShopperLayout({ children }: ShopperLayoutProps) {
   // status is 'authenticated' | 'loading' | 'unauthenticated'
   return (
     <div
-      className={`min-h-screen ${
+      className={`h-screen ${
         theme === "dark" ? "bg-gray-900" : "bg-gray-50"
       }`}
     >
       <ShopperHeader />
-      <div className="flex">
+      <div className="flex h-full">
         <ShopperSidebar />
         <main
           className={`relative flex-1 transition-colors duration-200 ${
@@ -261,7 +261,7 @@ export default function ShopperLayout({ children }: ShopperLayoutProps) {
               : "bg-gray-50 text-gray-900"
           } ${isMobile ? "p-0 pb-24" : "p-4 pl-64"}`}
         >
-          <div className="relative z-0">{children}</div>
+          <div className="relative z-0 h-full">{children}</div>
         </main>
       </div>
 

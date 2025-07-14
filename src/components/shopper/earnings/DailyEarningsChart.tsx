@@ -15,7 +15,7 @@ import { Loader } from "rsuite";
 import {
   formatCurrencySync,
   getCurrencySymbol,
-} from "../../utils/formatCurrency";
+} from "../../../utils/formatCurrency";
 
 interface DailyEarning {
   day: string;

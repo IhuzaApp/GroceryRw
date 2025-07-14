@@ -1,6 +1,6 @@
 import React from "react";
 import { Panel } from "rsuite";
-import { formatCurrencySync } from "../../utils/formatCurrency";
+import { formatCurrencySync } from "../../../utils/formatCurrency";
 
 interface EarningsSummaryCardProps {
   title: string;
