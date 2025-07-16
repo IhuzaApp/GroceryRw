@@ -73,7 +73,7 @@ export default function QuantityConfirmationModal({
               </p>
               <p className={`text-sm font-medium ${theme === "dark" ? "text-gray-300" : "text-gray-700"}`}>
                 Price: ${currentItem.price} each
-              </p>
+          </p>
             </div>
           </div>
         </div>
@@ -92,11 +92,11 @@ export default function QuantityConfirmationModal({
             
             <div className="flex items-center gap-3">
               <div className="flex-1">
-                <InputNumber
-                  value={foundQuantity}
-                  onChange={(value) => setFoundQuantity(value || 0)}
-                  min={0}
-                  max={currentItem.quantity}
+            <InputNumber
+              value={foundQuantity}
+              onChange={(value) => setFoundQuantity(value || 0)}
+              min={0}
+              max={currentItem.quantity}
                   className={`w-full ${theme === "dark" ? "bg-slate-600 text-gray-100 border-slate-500" : "bg-white text-gray-900 border-slate-300"} rounded-lg border px-3 py-2 text-center text-lg font-semibold`}
                   size="lg"
                 />
@@ -160,21 +160,21 @@ export default function QuantityConfirmationModal({
       
       <Modal.Footer className={`${theme === "dark" ? "bg-gray-800" : "bg-white"} border-t border-slate-200 dark:border-slate-700 p-4`}>
         <div className="flex w-full gap-3">
-          <Button
-            appearance="subtle"
-            onClick={onClose}
+        <Button
+          appearance="subtle"
+          onClick={onClose}
             className={`flex-1 ${theme === "dark" ? "text-gray-300 hover:bg-gray-700" : "text-gray-600 hover:bg-gray-100"}`}
-          >
-            Cancel
-          </Button>
-          <Button
-            appearance="primary"
-            onClick={onConfirm}
-            disabled={foundQuantity === 0}
+        >
+          Cancel
+        </Button>
+        <Button
+          appearance="primary"
+          onClick={onConfirm}
+          disabled={foundQuantity === 0}
             className={`flex-1 bg-emerald-600 hover:bg-emerald-700 disabled:bg-gray-300 disabled:text-gray-500`}
-          >
+        >
             Confirm Found
-          </Button>
+        </Button>
         </div>
       </Modal.Footer>
     </Modal>

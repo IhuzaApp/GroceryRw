@@ -1,10 +1,10 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "../../api/auth/[...nextauth]";
 import ShopperLayout from "../../../src/components/shopper/ShopperLayout";
-import { Panel, Button, Loader, Input, InputGroup, SelectPicker } from "rsuite";
+import { Panel, Button, Loader, Input, InputGroup, SelectPicker, Modal } from "rsuite";
 import "rsuite/dist/rsuite.min.css";
 import { useTheme } from "../../../src/context/ThemeContext";
 import { formatCurrencySync } from "../../../src/utils/formatCurrency";
@@ -38,6 +38,7 @@ interface Invoice {
   delivery_note?: string;
   found?: boolean;
   order_status: string;
+  Proof?: string;
 }
 
 interface InvoicesPageProps {
@@ -57,6 +58,14 @@ const InvoicesPage: React.FC<InvoicesPageProps> = ({
   const [typeFilter, setTypeFilter] = useState<string | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
+  const [showProofModal, setShowProofModal] = useState(false);
+  const [selectedInvoice, setSelectedInvoice] = useState<Invoice | null>(null);
+  const [proofImage, setProofImage] = useState<string | null>(null);
+  const [uploadingProof, setUploadingProof] = useState(false);
+  const [cameraActive, setCameraActive] = useState(false);
+  const [stream, setStream] = useState<MediaStream | null>(null);
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const canvasRef = useRef<HTMLCanvasElement>(null);
   const { theme } = useTheme();
 
   // Fetch invoices
@@ -85,6 +94,126 @@ const InvoicesPage: React.FC<InvoicesPageProps> = ({
     }
   }, []);
 
+  // Camera functions
+  const startCamera = async () => {
+    try {
+      const mediaStream = await navigator.mediaDevices.getUserMedia({
+        video: { facingMode: "environment" },
+        audio: false,
+      });
+
+      setStream(mediaStream);
+      setCameraActive(true);
+
+      // When the modal is shown, attach the stream to the video element
+      setTimeout(() => {
+        if (videoRef.current) {
+          videoRef.current.srcObject = mediaStream;
+        }
+      }, 100);
+    } catch (error) {
+      console.error("Error accessing camera:", error);
+      alert("Could not access camera. Please check permissions.");
+    }
+  };
+
+  const stopCamera = () => {
+    if (stream) {
+      stream.getTracks().forEach((track) => track.stop());
+      setStream(null);
+    }
+    setCameraActive(false);
+  };
+
+  const capturePhoto = () => {
+    if (videoRef.current && canvasRef.current) {
+      const video = videoRef.current;
+      const canvas = canvasRef.current;
+
+      // Set canvas dimensions to match video
+      canvas.width = video.videoWidth;
+      canvas.height = video.videoHeight;
+
+      // Draw the video frame to the canvas
+      const context = canvas.getContext("2d");
+      if (context) {
+        context.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+        // Get the image data as base64
+        const imageData = canvas.toDataURL("image/jpeg");
+        setProofImage(imageData);
+        stopCamera();
+      }
+    }
+  };
+
+  const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        setProofImage(e.target?.result as string);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const handleUploadProof = async () => {
+    if (!selectedInvoice || !proofImage) return;
+
+    setUploadingProof(true);
+    try {
+      const response = await fetch('/api/invoices/upload-proof', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          invoice_id: selectedInvoice.id,
+          proof_image: proofImage
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to upload proof');
+      }
+
+      const result = await response.json();
+      
+      // Update the invoice in the list
+      setInvoices(prev => prev.map(inv => 
+        inv.id === selectedInvoice.id 
+          ? { ...inv, Proof: proofImage }
+          : inv
+      ));
+
+      setShowProofModal(false);
+      setSelectedInvoice(null);
+      setProofImage(null);
+      alert('Proof uploaded successfully!');
+      
+    } catch (error) {
+      console.error('Error uploading proof:', error);
+      alert('Failed to upload proof. Please try again.');
+    } finally {
+      setUploadingProof(false);
+    }
+  };
+
+  const openProofModal = (invoice: Invoice) => {
+    setSelectedInvoice(invoice);
+    setShowProofModal(true);
+    setProofImage(null);
+    setCameraActive(false);
+  };
+
+  const closeProofModal = () => {
+    setShowProofModal(false);
+    setSelectedInvoice(null);
+    setProofImage(null);
+    stopCamera();
+  };
+
   // Filter invoices based on search and filters
   const filteredInvoices = invoices.filter((invoice) => {
     const matchesSearch = searchTerm === "" || 
@@ -102,28 +231,6 @@ const InvoicesPage: React.FC<InvoicesPageProps> = ({
   const handlePageChange = (page: number) => {
     setCurrentPage(page);
     fetchInvoices(page);
-  };
-
-  const handleDownloadInvoice = async (invoiceId: string) => {
-    try {
-      const response = await fetch(`/api/invoices/${invoiceId}/download`);
-      if (response.ok) {
-        const blob = await response.blob();
-        const url = window.URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = `invoice-${invoiceId}.pdf`;
-        document.body.appendChild(a);
-        a.click();
-        window.URL.revokeObjectURL(url);
-        document.body.removeChild(a);
-      } else {
-        throw new Error("Failed to download invoice");
-      }
-    } catch (error) {
-      logger.error("Error downloading invoice", "InvoicesPage", error);
-      // You could show a toast notification here
-    }
   };
 
   const getStatusBadge = (status: string) => {
@@ -194,7 +301,7 @@ const InvoicesPage: React.FC<InvoicesPageProps> = ({
             <p className={`mt-2 text-sm ${
               theme === "dark" ? "text-gray-400" : "text-gray-600"
             }`}>
-              View and download invoices for all your completed orders
+              View invoices and upload proof of delivery for your completed orders
             </p>
           </div>
 
@@ -211,13 +318,13 @@ const InvoicesPage: React.FC<InvoicesPageProps> = ({
             
             <SelectPicker
               data={[
-                { label: "All Status", value: null },
+                { label: "All Status", value: "" },
                 { label: "Paid", value: "paid" },
                 { label: "Pending", value: "pending" },
                 { label: "Overdue", value: "overdue" },
               ]}
-              value={statusFilter}
-              onChange={setStatusFilter}
+              value={statusFilter || ""}
+              onChange={(value) => setStatusFilter(value === "" ? null : value)}
               placeholder="Filter by status"
               cleanable={false}
               className={theme === "dark" ? "rs-picker-dark" : ""}
@@ -225,12 +332,12 @@ const InvoicesPage: React.FC<InvoicesPageProps> = ({
 
             <SelectPicker
               data={[
-                { label: "All Types", value: null },
+                { label: "All Types", value: "" },
                 { label: "Regular Orders", value: "regular" },
                 { label: "Reel Orders", value: "reel" },
               ]}
-              value={typeFilter}
-              onChange={setTypeFilter}
+              value={typeFilter || ""}
+              onChange={(value) => setTypeFilter(value === "" ? null : value)}
               placeholder="Filter by type"
               cleanable={false}
               className={theme === "dark" ? "rs-picker-dark" : ""}
@@ -416,6 +523,18 @@ const InvoicesPage: React.FC<InvoicesPageProps> = ({
                             {formatCurrencySync(invoice.service_fee)}
                           </span>
                         </div>
+                        {invoice.Proof && (
+                          <div className="col-span-2">
+                            <span className={`font-medium ${
+                              theme === "dark" ? "text-gray-300" : "text-gray-700"
+                            }`}>
+                              Proof Status:
+                            </span>
+                            <span className="ml-2 text-green-600 font-medium">
+                              ✓ Proof Uploaded
+                            </span>
+                          </div>
+                        )}
                       </div>
                     </div>
                     
@@ -423,16 +542,17 @@ const InvoicesPage: React.FC<InvoicesPageProps> = ({
                       <Button
                         size="sm"
                         appearance="primary"
-                        onClick={() => handleDownloadInvoice(invoice.id)}
+                        onClick={() => openProofModal(invoice)}
+                        disabled={!!invoice.Proof}
                       >
-                        Download
+                        {invoice.Proof ? "Proof Uploaded" : "Upload Proof"}
                       </Button>
                       <Button
                         size="sm"
                         appearance="ghost"
                         onClick={() => window.open(`/Plasa/invoices/${invoice.id}`, '_blank')}
                       >
-                        View
+                        View Details
                       </Button>
                     </div>
                   </div>
@@ -467,6 +587,138 @@ const InvoicesPage: React.FC<InvoicesPageProps> = ({
           )}
         </div>
       </div>
+
+      {/* Hidden canvas for photo capture */}
+      <canvas
+        ref={canvasRef}
+        className="hidden"
+      />
+      
+      {/* Proof Upload Modal */}
+      <Modal
+        open={showProofModal}
+        onClose={closeProofModal}
+        size="lg"
+        className={theme === "dark" ? "rs-modal-dark" : ""}
+      >
+        <Modal.Header>
+          <Modal.Title>Upload Proof of Delivery</Modal.Title>
+        </Modal.Header>
+        <Modal.Body>
+          <div className="space-y-4">
+                         <p className="text-sm text-gray-600 mb-4">
+               Please upload a photo showing the delivered goods for invoice #{selectedInvoice?.invoice_number}
+             </p>
+             
+             <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 mb-4">
+               <p className="text-sm text-blue-800">
+                 💡 <strong>Tip:</strong> Make sure the photo clearly shows the delivered items and any relevant details like packaging or receipts.
+               </p>
+             </div>
+            
+            {!proofImage ? (
+              <div className="space-y-4">
+                {/* Camera Section */}
+                <div className="border-2 border-dashed border-gray-300 rounded-lg p-4">
+                  <div className="text-center">
+                    <h4 className="font-medium mb-2">Take Photo</h4>
+                    {!cameraActive ? (
+                      <Button
+                        appearance="primary"
+                        onClick={startCamera}
+                        className="mb-2"
+                      >
+                        📷 Open Camera
+                      </Button>
+                                         ) : (
+                       <div className="space-y-2">
+                         <div className="relative aspect-video w-full max-w-md mx-auto overflow-hidden rounded-lg">
+                           <video
+                             ref={videoRef}
+                             autoPlay
+                             playsInline
+                             muted
+                             className="h-full w-full object-cover"
+                             style={{ transform: 'scaleX(-1)' }} // Mirror the camera
+                           />
+                           <div className="absolute inset-0 flex items-center justify-center">
+                             <div className="bg-black bg-opacity-50 text-white px-3 py-1 rounded-full text-sm">
+                               📷 Camera Active
+                             </div>
+                           </div>
+                         </div>
+                         <div className="flex justify-center space-x-2">
+                           <Button
+                             appearance="primary"
+                             onClick={capturePhoto}
+                             size="lg"
+                           >
+                             📸 Capture Photo
+                           </Button>
+                           <Button
+                             appearance="ghost"
+                             onClick={stopCamera}
+                           >
+                             ❌ Cancel
+                           </Button>
+                         </div>
+                       </div>
+                     )}
+                  </div>
+                </div>
+
+                {/* File Upload Section */}
+                <div className="border-2 border-dashed border-gray-300 rounded-lg p-4">
+                  <div className="text-center">
+                    <h4 className="font-medium mb-2">Or Upload from Gallery</h4>
+                    <input
+                      type="file"
+                      accept="image/*"
+                      onChange={handleFileUpload}
+                      className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-green-50 file:text-green-700 hover:file:bg-green-100"
+                    />
+                  </div>
+                </div>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                <div className="text-center">
+                  <h4 className="font-medium mb-2">Preview</h4>
+                  <img
+                    src={proofImage}
+                    alt="Proof of delivery"
+                    className="w-full max-w-md mx-auto rounded-lg shadow-md"
+                  />
+                </div>
+                <div className="flex justify-center space-x-2">
+                  <Button
+                    appearance="ghost"
+                    onClick={() => setProofImage(null)}
+                  >
+                    📷 Take New Photo
+                  </Button>
+                </div>
+              </div>
+            )}
+          </div>
+        </Modal.Body>
+        <Modal.Footer>
+          <Button
+            appearance="ghost"
+            onClick={closeProofModal}
+          >
+            Cancel
+          </Button>
+          <Button
+            appearance="primary"
+            onClick={handleUploadProof}
+            disabled={!proofImage || uploadingProof}
+            loading={uploadingProof}
+          >
+            {uploadingProof ? "Uploading..." : "Upload Proof"}
+          </Button>
+        </Modal.Footer>
+      </Modal>
     </ShopperLayout>
   );
 };
