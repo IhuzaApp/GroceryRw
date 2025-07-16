@@ -604,7 +604,7 @@ function ActiveOrderCard({ order, currentTime }: { order: Order; currentTime: Da
                   }`
                 : `${order.items} items`}{" "}
               • {formatCurrencySync(order.estimatedEarnings || 0)}
-            </p>
+              </p>
 
           </div>
         </div>

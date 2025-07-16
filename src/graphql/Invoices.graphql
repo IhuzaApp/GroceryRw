@@ -7,6 +7,7 @@ query getInvoiceDetials {
     id
     invoice_items
     invoice_number
+    Proof
     order_id
     reel_order_id
     service_fee
