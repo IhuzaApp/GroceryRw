@@ -100,7 +100,8 @@ const ProofUploadModal: React.FC<ProofUploadModalProps> = ({
         },
         body: JSON.stringify({
           invoice_id: invoice.id,
-          proof_image: proofImage
+          proof_image: proofImage,
+          order_type: invoice.order_type
         }),
       });
 

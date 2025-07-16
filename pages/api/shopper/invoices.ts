@@ -31,6 +31,7 @@ const GET_SHOPPER_INVOICES = gql`
       created_at
       invoice_items
       customer_id
+      Proof
       # Customer details
       User {
         id
@@ -94,6 +95,7 @@ const GET_SHOPPER_INVOICES = gql`
       found
       shopper_id
       quantity
+      delivery_photo_url
       Reel {
         id
         title
@@ -149,6 +151,7 @@ interface Invoice {
   created_at: string;
   invoice_items: any;
   customer_id: string;
+  Proof?: string;
   User: {
     id: string;
     name: string;
@@ -231,6 +234,7 @@ export default async function handler(
         found: boolean;
         shopper_id: string;
         quantity: string;
+        delivery_photo_url?: string;
         Reel: {
           id: string;
           title: string;
@@ -295,6 +299,7 @@ export default async function handler(
           delivery_notes: invoice.Order.delivery_notes,
           found: invoice.Order.found,
           order_status: invoice.Order.status,
+          Proof: invoice.Proof,
         };
       }
       return null;
@@ -326,6 +331,7 @@ export default async function handler(
         delivery_notes: reelOrder.delivery_note,
         found: reelOrder.found,
         order_status: reelOrder.status,
+        Proof: reelOrder.delivery_photo_url,
         reel_details: {
           title: reelOrder.Reel.title,
           description: reelOrder.Reel.description,
