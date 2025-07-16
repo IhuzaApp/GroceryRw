@@ -1,4 +1,4 @@
-query GetInvoiceDetails {
+query getInvoiceDetials {
   Invoices {
     created_at
     customer_id
@@ -8,14 +8,76 @@ query GetInvoiceDetails {
     invoice_items
     invoice_number
     order_id
+    reel_order_id
     service_fee
     status
     subtotal
     tax
     total_amount
-    reel_order_id
+    Order {
+      combined_order_id
+      created_at
+      delivery_address_id
+      delivery_fee
+      delivery_notes
+      delivery_photo_url
+      delivery_time
+      discount
+      found
+      id
+      service_fee
+      shop_id
+      shopper_id
+      status
+      total
+      updated_at
+      user_id
+      voucher_code
+      Order_Items {
+        created_at
+        id
+        order_id
+        price
+        product_id
+        quantity
+        Product {
+          barcode
+          category
+          created_at
+          description
+          final_price
+          id
+          image
+          is_active
+          measurement_unit
+          name
+          price
+          quantity
+          reorder_point
+          shop_id
+          sku
+          supplier
+          updated_at
+        }
+      }
+      OrderID
+    }
+    User {
+      created_at
+      email
+      gender
+      id
+      is_active
+      name
+      password_hash
+      phone
+      profile_picture
+      role
+      updated_at
+    }
   }
 }
+
 
 mutation addInvoiceDetails(
   $customer_id: uuid = ""
