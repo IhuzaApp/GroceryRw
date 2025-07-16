@@ -302,15 +302,15 @@ export default function InvoicePage({
                   Error Loading Invoice
                 </h2>
                 <p className="mb-6 text-gray-600 dark:text-gray-400">
-                  {errorMessage || "Invoice data not available"}
-                </p>
-                <Button
-                  appearance="primary"
-                  onClick={goBack}
+              {errorMessage || "Invoice data not available"}
+            </p>
+            <Button
+              appearance="primary"
+              onClick={goBack}
                   className="rounded-lg px-6 py-2 font-medium"
-                >
-                  Go Back
-                </Button>
+            >
+              Go Back
+            </Button>
               </div>
             </div>
           </div>
@@ -338,15 +338,15 @@ export default function InvoicePage({
                   : "text-gray-600 hover:bg-gray-100 hover:text-gray-900"
               }`}
             >
-              <svg
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
+                <svg
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
                 className="mr-2 h-5 w-5"
-              >
-                <path d="M19 12H5M12 19l-7-7 7-7" />
-              </svg>
+                >
+                  <path d="M19 12H5M12 19l-7-7 7-7" />
+                </svg>
               Back to Invoices
             </Button>
 
@@ -394,11 +394,11 @@ export default function InvoicePage({
                   </div>
                   <div>
                     <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100">
-                      Invoice
-                    </h1>
+                    Invoice
+                  </h1>
                     <p className="text-lg text-gray-600 dark:text-gray-400">
-                      #{invoiceData.invoiceNumber}
-                    </p>
+                    #{invoiceData.invoiceNumber}
+                  </p>
                     <div className="mt-2 flex items-center space-x-2">
                       <span
                         className={`inline-flex items-center rounded-full px-3 py-1 text-sm font-medium ${
@@ -461,9 +461,9 @@ export default function InvoicePage({
                           Created
                         </p>
                         <p className="text-sm text-gray-600 dark:text-gray-400">
-                          {invoiceData.dateCreated}
-                        </p>
-                      </div>
+                  {invoiceData.dateCreated}
+                </p>
+              </div>
                     </div>
                   </div>
 
@@ -480,18 +480,18 @@ export default function InvoicePage({
                           <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                         </svg>
                       </div>
-                      <div>
+              <div>
                         <p className="font-medium text-gray-900 dark:text-gray-100">
                           Completed
                         </p>
                         <p className="text-sm text-gray-600 dark:text-gray-400">
-                          {invoiceData.dateCompleted}
-                        </p>
+                  {invoiceData.dateCompleted}
+                </p>
                       </div>
                     </div>
                   </div>
-                </div>
               </div>
+            </div>
 
               {/* Shop & Customer Info */}
               <div className="space-y-4">
@@ -517,12 +517,12 @@ export default function InvoicePage({
                       </h4>
                     </div>
                     <p className="font-semibold text-gray-900 dark:text-gray-100">
-                      {invoiceData.shop}
-                    </p>
+                  {invoiceData.shop}
+                </p>
                     <p className="text-sm text-gray-600 dark:text-gray-400">
-                      {invoiceData.shopAddress}
-                    </p>
-                  </div>
+                  {invoiceData.shopAddress}
+                </p>
+              </div>
 
                   <div className="rounded-lg bg-gray-50 p-4 dark:bg-gray-700">
                     <div className="mb-3 flex items-center space-x-3">
@@ -538,15 +538,15 @@ export default function InvoicePage({
                         </svg>
                       </div>
                       <h4 className="font-medium text-gray-900 dark:text-gray-100">
-                        Customer
+                  Customer
                       </h4>
                     </div>
                     <p className="font-semibold text-gray-900 dark:text-gray-100">
-                      {invoiceData.customer}
-                    </p>
+                  {invoiceData.customer}
+                </p>
                     <p className="text-sm text-gray-600 dark:text-gray-400">
-                      {invoiceData.customerEmail}
-                    </p>
+                  {invoiceData.customerEmail}
+                </p>
                   </div>
                 </div>
               </div>
@@ -626,27 +626,27 @@ export default function InvoicePage({
                   <div className="flex justify-between text-sm">
                     <span className="text-gray-600 dark:text-gray-400">
                       Subtotal
-                    </span>
+                </span>
                     <span className="font-medium text-gray-900 dark:text-gray-100">
-                      {formatCurrency(invoiceData.subtotal)}
-                    </span>
-                  </div>
+                  {formatCurrency(invoiceData.subtotal)}
+                </span>
+              </div>
                   <div className="flex justify-between text-sm">
                     <span className="text-gray-600 dark:text-gray-400">
                       Service Fee
-                    </span>
+                </span>
                     <span className="font-medium text-gray-900 dark:text-gray-100">
-                      {formatCurrency(invoiceData.serviceFee)}
-                    </span>
-                  </div>
+                  {formatCurrency(invoiceData.serviceFee)}
+                </span>
+              </div>
                   <div className="flex justify-between text-sm">
                     <span className="text-gray-600 dark:text-gray-400">
                       Delivery Fee
-                    </span>
+                </span>
                     <span className="font-medium text-gray-900 dark:text-gray-100">
-                      {formatCurrency(invoiceData.deliveryFee)}
-                    </span>
-                  </div>
+                  {formatCurrency(invoiceData.deliveryFee)}
+                </span>
+              </div>
                   <div
                     className={`border-t pt-3 ${
                       theme === "dark" ? "border-gray-700" : "border-gray-200"
@@ -655,12 +655,12 @@ export default function InvoicePage({
                     <div className="flex justify-between">
                       <span className="text-lg font-bold text-gray-900 dark:text-gray-100">
                         Total
-                      </span>
+                </span>
                       <span className="text-lg font-bold text-gray-900 dark:text-gray-100">
-                        {formatCurrency(invoiceData.total)}
-                      </span>
-                    </div>
-                  </div>
+                  {formatCurrency(invoiceData.total)}
+                </span>
+              </div>
+            </div>
                 </div>
               </div>
             </div>

@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from "react";
-import { Modal, Button, Loader } from "rsuite";
+import { Modal, Button, Loader, toaster } from "rsuite";
 import { useTheme } from "../../context/ThemeContext";
 import { Invoice } from "./types";
 
@@ -21,14 +21,26 @@ const ProofUploadModal: React.FC<ProofUploadModalProps> = ({
   const [uploadingProof, setUploadingProof] = useState(false);
   const [cameraActive, setCameraActive] = useState(false);
   const [stream, setStream] = useState<MediaStream | null>(null);
+  const [error, setError] = useState<string | null>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
   // Camera functions
   const startCamera = async () => {
     try {
+      setError(null);
+      
+      // Check if camera is supported
+      if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+        throw new Error("Camera not supported on this device");
+      }
+
       const mediaStream = await navigator.mediaDevices.getUserMedia({
-        video: { facingMode: "environment" },
+        video: { 
+          facingMode: "environment",
+          width: { ideal: 1280 },
+          height: { ideal: 720 }
+        },
         audio: false,
       });
 
@@ -43,7 +55,8 @@ const ProofUploadModal: React.FC<ProofUploadModalProps> = ({
       }, 100);
     } catch (error) {
       console.error("Error accessing camera:", error);
-      alert("Could not access camera. Please check permissions.");
+      const errorMessage = error instanceof Error ? error.message : "Could not access camera";
+      setError(`Camera Error: ${errorMessage}. Please try uploading from gallery instead.`);
     }
   };
 
@@ -70,7 +83,7 @@ const ProofUploadModal: React.FC<ProofUploadModalProps> = ({
         context.drawImage(video, 0, 0, canvas.width, canvas.height);
 
         // Get the image data as base64
-        const imageData = canvas.toDataURL("image/jpeg");
+        const imageData = canvas.toDataURL("image/jpeg", 0.8);
         setProofImage(imageData);
         stopCamera();
       }
@@ -80,9 +93,25 @@ const ProofUploadModal: React.FC<ProofUploadModalProps> = ({
   const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (file) {
+      // Check file size (max 5MB)
+      if (file.size > 5 * 1024 * 1024) {
+        setError("File size too large. Please select an image smaller than 5MB.");
+        return;
+      }
+
+      // Check file type
+      if (!file.type.startsWith('image/')) {
+        setError("Please select a valid image file.");
+        return;
+      }
+
+      setError(null);
       const reader = new FileReader();
       reader.onload = (e) => {
         setProofImage(e.target?.result as string);
+      };
+      reader.onerror = () => {
+        setError("Error reading file. Please try again.");
       };
       reader.readAsDataURL(file);
     }
@@ -92,6 +121,8 @@ const ProofUploadModal: React.FC<ProofUploadModalProps> = ({
     if (!invoice || !proofImage) return;
 
     setUploadingProof(true);
+    setError(null);
+    
     try {
       const response = await fetch("/api/invoices/upload-proof", {
         method: "POST",
@@ -105,20 +136,42 @@ const ProofUploadModal: React.FC<ProofUploadModalProps> = ({
         }),
       });
 
-      if (!response.ok) {
-        throw new Error("Failed to upload proof");
-      }
-
       const result = await response.json();
+
+      if (!response.ok) {
+        throw new Error(result.error || "Failed to upload proof");
+      }
 
       // Call the success callback
       onUploadSuccess(invoice.id, proofImage);
 
+      // Show success toast
+      toaster.push(
+        <div className="text-green-800">
+          Proof uploaded successfully for invoice #{invoice.invoice_number}
+        </div>,
+        {
+          duration: 3000,
+          placement: 'topCenter'
+        }
+      );
+
       onClose();
-      alert("Proof uploaded successfully!");
     } catch (error) {
       console.error("Error uploading proof:", error);
-      alert("Failed to upload proof. Please try again.");
+      const errorMessage = error instanceof Error ? error.message : "Failed to upload proof";
+      setError(errorMessage);
+      
+      // Show error toast
+      toaster.push(
+        <div className="text-red-800">
+          Upload failed: {errorMessage}
+        </div>,
+        {
+          duration: 5000,
+          placement: 'topCenter'
+        }
+      );
     } finally {
       setUploadingProof(false);
     }
@@ -130,6 +183,7 @@ const ProofUploadModal: React.FC<ProofUploadModalProps> = ({
     }
     stopCamera();
     setProofImage(null);
+    setError(null);
     onClose();
   };
 
@@ -159,6 +213,15 @@ const ProofUploadModal: React.FC<ProofUploadModalProps> = ({
               {invoice?.invoice_number}
             </p>
 
+            {/* Error Message */}
+            {error && (
+              <div className="mb-4 rounded-lg border border-red-200 bg-red-50 p-3">
+                <p className="text-sm text-red-800">
+                  ⚠️ <strong>Error:</strong> {error}
+                </p>
+              </div>
+            )}
+
             <div className="mb-4 rounded-lg border border-blue-200 bg-blue-50 p-3">
               <p className="text-sm text-blue-800">
                 💡 <strong>Tip:</strong> Make sure the photo clearly shows the
@@ -179,7 +242,7 @@ const ProofUploadModal: React.FC<ProofUploadModalProps> = ({
                         onClick={startCamera}
                         className="mb-2"
                       >
-                        📷 Open Camera
+                        Open Camera
                       </Button>
                     ) : (
                       <div className="space-y-2">
@@ -241,7 +304,10 @@ const ProofUploadModal: React.FC<ProofUploadModalProps> = ({
                 <div className="flex justify-center space-x-2">
                   <Button
                     appearance="ghost"
-                    onClick={() => setProofImage(null)}
+                    onClick={() => {
+                      setProofImage(null);
+                      setError(null);
+                    }}
                   >
                     📷 Take New Photo
                   </Button>
