@@ -10,8 +10,11 @@ const GET_SHOPPER_INVOICES = gql`
   query GetShopperInvoices($shopper_id: uuid!, $limit: Int!, $offset: Int!) {
     # Regular order invoices
     RegularOrderInvoices: Invoices(
-      where: { 
-        Order: { shopper_id: { _eq: $shopper_id }, status: { _eq: "delivered" } }
+      where: {
+        Order: {
+          shopper_id: { _eq: $shopper_id }
+          status: { _eq: "delivered" }
+        }
       }
       order_by: { created_at: desc }
       limit: $limit
@@ -75,13 +78,10 @@ const GET_SHOPPER_INVOICES = gql`
         }
       }
     }
-    
+
     # Get delivered reel orders for this shopper
     DeliveredReelOrders: reel_orders(
-      where: { 
-        shopper_id: { _eq: $shopper_id }
-        status: { _eq: "delivered" }
-      }
+      where: { shopper_id: { _eq: $shopper_id }, status: { _eq: "delivered" } }
     ) {
       id
       OrderID
@@ -122,11 +122,14 @@ const GET_SHOPPER_INVOICES = gql`
         postal_code
       }
     }
-    
+
     # Count for regular order invoices
     Invoices_aggregate(
-      where: { 
-        Order: { shopper_id: { _eq: $shopper_id }, status: { _eq: "delivered" } }
+      where: {
+        Order: {
+          shopper_id: { _eq: $shopper_id }
+          status: { _eq: "delivered" }
+        }
       }
     ) {
       aggregate {
@@ -204,7 +207,11 @@ export default async function handler(
 
   try {
     // Authenticate user
-    const session = (await getServerSession(req, res, authOptions as any)) as any;
+    const session = (await getServerSession(
+      req,
+      res,
+      authOptions as any
+    )) as any;
     if (!session?.user?.id) {
       return res.status(401).json({ error: "Unauthorized" });
     }
@@ -273,84 +280,96 @@ export default async function handler(
     });
 
     // Transform regular order invoices
-    const transformedRegularInvoices = data.RegularOrderInvoices.map((invoice) => {
-      if (invoice.Order) {
-        return {
-          id: invoice.id,
-          invoice_number: invoice.invoice_number,
-          order_id: invoice.order_id,
-          order_type: "regular" as const,
-          total_amount: invoice.total_amount,
-          subtotal: invoice.subtotal,
-          delivery_fee: invoice.delivery_fee,
-          service_fee: invoice.service_fee,
-          tax: invoice.tax,
-          discount: invoice.discount,
-          created_at: invoice.created_at,
-          status: invoice.status as "paid" | "pending" | "overdue",
-          customer_name: invoice.User.name,
-          customer_email: invoice.User.email,
-          customer_phone: invoice.User.phone,
-          customer_address: `${invoice.Order.Address.street}, ${invoice.Order.Address.city}`,
-          items_count: invoice.Order.Order_Items_aggregate.aggregate.count,
-          shop_name: invoice.Order.Shop.name,
-          shop_address: invoice.Order.Shop.address,
-          delivery_time: invoice.Order.delivery_time,
-          delivery_notes: invoice.Order.delivery_notes,
-          found: invoice.Order.found,
-          order_status: invoice.Order.status,
-          Proof: invoice.Proof,
-        };
+    const transformedRegularInvoices = data.RegularOrderInvoices.map(
+      (invoice) => {
+        if (invoice.Order) {
+          return {
+            id: invoice.id,
+            invoice_number: invoice.invoice_number,
+            order_id: invoice.order_id,
+            order_type: "regular" as const,
+            total_amount: invoice.total_amount,
+            subtotal: invoice.subtotal,
+            delivery_fee: invoice.delivery_fee,
+            service_fee: invoice.service_fee,
+            tax: invoice.tax,
+            discount: invoice.discount,
+            created_at: invoice.created_at,
+            status: invoice.status as "paid" | "pending" | "overdue",
+            customer_name: invoice.User.name,
+            customer_email: invoice.User.email,
+            customer_phone: invoice.User.phone,
+            customer_address: `${invoice.Order.Address.street}, ${invoice.Order.Address.city}`,
+            items_count: invoice.Order.Order_Items_aggregate.aggregate.count,
+            shop_name: invoice.Order.Shop.name,
+            shop_address: invoice.Order.Shop.address,
+            delivery_time: invoice.Order.delivery_time,
+            delivery_notes: invoice.Order.delivery_notes,
+            found: invoice.Order.found,
+            order_status: invoice.Order.status,
+            Proof: invoice.Proof,
+          };
+        }
+        return null;
       }
-      return null;
-    }).filter(Boolean);
+    ).filter(Boolean);
 
     // Transform reel orders to invoice format
-    const transformedReelInvoices = data.DeliveredReelOrders.map((reelOrder) => {
-      return {
-        id: `reel-${reelOrder.id}`, // Generate a unique ID for reel orders
-        invoice_number: `REEL-${reelOrder.OrderID}`,
-        order_id: reelOrder.id,
-        order_type: "reel" as const,
-        total_amount: parseFloat(reelOrder.total),
-        subtotal: parseFloat(reelOrder.total) - parseFloat(reelOrder.service_fee) - parseFloat(reelOrder.delivery_fee),
-        delivery_fee: parseFloat(reelOrder.delivery_fee),
-        service_fee: parseFloat(reelOrder.service_fee),
-        tax: 0, // Reel orders might not have tax
-        discount: 0,
-        created_at: reelOrder.created_at,
-        status: "paid" as const,
-        customer_name: reelOrder.User.name,
-        customer_email: reelOrder.User.email,
-        customer_phone: reelOrder.User.phone,
-        customer_address: `${reelOrder.Address.street}, ${reelOrder.Address.city}`,
-        items_count: 1, // Reel orders have 1 item (the reel)
-        shop_name: reelOrder.Reel.Restaurant.name,
-        shop_address: reelOrder.Reel.Restaurant.location,
-        delivery_time: reelOrder.delivery_time,
-        delivery_notes: reelOrder.delivery_note,
-        found: reelOrder.found,
-        order_status: reelOrder.status,
-        Proof: reelOrder.delivery_photo_url,
-        reel_details: {
-          title: reelOrder.Reel.title,
-          description: reelOrder.Reel.description,
-          product: reelOrder.Reel.Product,
-          quantity: reelOrder.quantity,
-        },
-      };
-    });
+    const transformedReelInvoices = data.DeliveredReelOrders.map(
+      (reelOrder) => {
+        return {
+          id: `reel-${reelOrder.id}`, // Generate a unique ID for reel orders
+          invoice_number: `REEL-${reelOrder.OrderID}`,
+          order_id: reelOrder.id,
+          order_type: "reel" as const,
+          total_amount: parseFloat(reelOrder.total),
+          subtotal:
+            parseFloat(reelOrder.total) -
+            parseFloat(reelOrder.service_fee) -
+            parseFloat(reelOrder.delivery_fee),
+          delivery_fee: parseFloat(reelOrder.delivery_fee),
+          service_fee: parseFloat(reelOrder.service_fee),
+          tax: 0, // Reel orders might not have tax
+          discount: 0,
+          created_at: reelOrder.created_at,
+          status: "paid" as const,
+          customer_name: reelOrder.User.name,
+          customer_email: reelOrder.User.email,
+          customer_phone: reelOrder.User.phone,
+          customer_address: `${reelOrder.Address.street}, ${reelOrder.Address.city}`,
+          items_count: 1, // Reel orders have 1 item (the reel)
+          shop_name: reelOrder.Reel.Restaurant.name,
+          shop_address: reelOrder.Reel.Restaurant.location,
+          delivery_time: reelOrder.delivery_time,
+          delivery_notes: reelOrder.delivery_note,
+          found: reelOrder.found,
+          order_status: reelOrder.status,
+          Proof: reelOrder.delivery_photo_url,
+          reel_details: {
+            title: reelOrder.Reel.title,
+            description: reelOrder.Reel.description,
+            product: reelOrder.Reel.Product,
+            quantity: reelOrder.quantity,
+          },
+        };
+      }
+    );
 
     // Combine and sort all invoices by creation date
-    const allInvoices = [...transformedRegularInvoices, ...transformedReelInvoices]
+    const allInvoices = [
+      ...transformedRegularInvoices,
+      ...transformedReelInvoices,
+    ]
       .sort((a, b) => {
         if (!a || !b) return 0;
-        return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+        return (
+          new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+        );
       })
       .slice(0, limit); // Ensure we don't exceed the limit
 
-    const totalCount = data.Invoices_aggregate.aggregate.count + 
-                      data.DeliveredReelOrders.length;
+    const totalCount =
+      data.Invoices_aggregate.aggregate.count + data.DeliveredReelOrders.length;
     const totalPages = Math.ceil(totalCount / limit);
 
     logger.info("Invoices fetched successfully", "ShopperInvoicesAPI", {
@@ -371,9 +390,14 @@ export default async function handler(
       totalCount,
     });
   } catch (error) {
-    logger.error("Error fetching shopper invoices", "ShopperInvoicesAPI", error);
+    logger.error(
+      "Error fetching shopper invoices",
+      "ShopperInvoicesAPI",
+      error
+    );
     return res.status(500).json({
-      error: error instanceof Error ? error.message : "Failed to fetch invoices",
+      error:
+        error instanceof Error ? error.message : "Failed to fetch invoices",
     });
   }
-} 
+}

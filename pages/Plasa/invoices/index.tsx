@@ -14,7 +14,7 @@ import {
   InvoicePagination,
   InvoicesTable,
   Invoice,
-  InvoicesPageProps
+  InvoicesPageProps,
 } from "../../../src/components/invoices";
 import { formatCurrencySync } from "../../../src/utils/formatCurrency";
 
@@ -63,11 +63,11 @@ const InvoicesPage: React.FC<InvoicesPageProps> = ({
   // Event handlers
   const handleUploadProof = (invoiceId: string, proofImage: string) => {
     // Update the invoice in the list
-    setInvoices(prev => prev.map(inv => 
-      inv.id === invoiceId 
-        ? { ...inv, Proof: proofImage }
-        : inv
-    ));
+    setInvoices((prev) =>
+      prev.map((inv) =>
+        inv.id === invoiceId ? { ...inv, Proof: proofImage } : inv
+      )
+    );
   };
 
   const openProofModal = (invoice: Invoice) => {
@@ -81,16 +81,19 @@ const InvoicesPage: React.FC<InvoicesPageProps> = ({
   };
 
   const handleViewDetails = (invoiceId: string) => {
-    window.open(`/Plasa/invoices/${invoiceId}`, '_blank');
+    window.open(`/Plasa/invoices/${invoiceId}`, "_blank");
   };
 
   // Filter invoices based on search and filters
   const filteredInvoices = invoices.filter((invoice) => {
-    const matchesSearch = searchTerm === "" || 
+    const matchesSearch =
+      searchTerm === "" ||
       invoice.invoice_number.toLowerCase().includes(searchTerm.toLowerCase()) ||
       invoice.customer_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      (invoice.shop_name && invoice.shop_name.toLowerCase().includes(searchTerm.toLowerCase())) ||
-      (invoice.reel_title && invoice.reel_title.toLowerCase().includes(searchTerm.toLowerCase()));
+      (invoice.shop_name &&
+        invoice.shop_name.toLowerCase().includes(searchTerm.toLowerCase())) ||
+      (invoice.reel_title &&
+        invoice.reel_title.toLowerCase().includes(searchTerm.toLowerCase()));
 
     const matchesStatus = !statusFilter || invoice.status === statusFilter;
     const matchesType = !typeFilter || invoice.order_type === typeFilter;
@@ -102,8 +105,6 @@ const InvoicesPage: React.FC<InvoicesPageProps> = ({
     setCurrentPage(page);
     fetchInvoices(page);
   };
-
-
 
   if (loading) {
     return (
@@ -120,10 +121,12 @@ const InvoicesPage: React.FC<InvoicesPageProps> = ({
       <ShopperLayout>
         <div className="flex h-full items-center justify-center">
           <div className="text-center">
-            <h3 className="text-lg font-medium text-gray-900">Error Loading Invoices</h3>
+            <h3 className="text-lg font-medium text-gray-900">
+              Error Loading Invoices
+            </h3>
             <p className="text-gray-500">{error}</p>
             <button
-              className="mt-4 bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700"
+              className="mt-4 rounded-lg bg-green-600 px-4 py-2 text-white hover:bg-green-700"
               onClick={() => fetchInvoices()}
             >
               Retry
@@ -140,15 +143,20 @@ const InvoicesPage: React.FC<InvoicesPageProps> = ({
         <div className="mx-auto h-full w-full">
           {/* Header */}
           <div className="mb-6">
-            <h1 className={`text-2xl font-bold ${
-              theme === "dark" ? "text-white" : "text-gray-900"
-            }`}>
+            <h1
+              className={`text-2xl font-bold ${
+                theme === "dark" ? "text-white" : "text-gray-900"
+              }`}
+            >
               My Invoices
             </h1>
-            <p className={`mt-2 text-sm ${
-              theme === "dark" ? "text-gray-400" : "text-gray-600"
-            }`}>
-              View invoices and upload proof of delivery for your completed orders
+            <p
+              className={`mt-2 text-sm ${
+                theme === "dark" ? "text-gray-400" : "text-gray-600"
+              }`}
+            >
+              View invoices and upload proof of delivery for your completed
+              orders
             </p>
           </div>
 
@@ -194,7 +202,11 @@ export default InvoicesPage;
 
 export const getServerSideProps = async (context: any) => {
   try {
-    const session = await getServerSession(context.req, context.res, authOptions);
+    const session = await getServerSession(
+      context.req,
+      context.res,
+      authOptions
+    );
 
     if (!session) {
       return {
@@ -206,7 +218,9 @@ export const getServerSideProps = async (context: any) => {
     }
 
     // Fetch initial invoices data
-    const response = await fetch(`${process.env.NEXTAUTH_URL}/api/shopper/invoices?page=1`);
+    const response = await fetch(
+      `${process.env.NEXTAUTH_URL}/api/shopper/invoices?page=1`
+    );
     const data = await response.json();
 
     return {
@@ -224,4 +238,4 @@ export const getServerSideProps = async (context: any) => {
       },
     };
   }
-}; 
+};

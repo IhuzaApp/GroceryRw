@@ -93,33 +93,32 @@ const ProofUploadModal: React.FC<ProofUploadModalProps> = ({
 
     setUploadingProof(true);
     try {
-      const response = await fetch('/api/invoices/upload-proof', {
-        method: 'POST',
+      const response = await fetch("/api/invoices/upload-proof", {
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
         body: JSON.stringify({
           invoice_id: invoice.id,
           proof_image: proofImage,
-          order_type: invoice.order_type
+          order_type: invoice.order_type,
         }),
       });
 
       if (!response.ok) {
-        throw new Error('Failed to upload proof');
+        throw new Error("Failed to upload proof");
       }
 
       const result = await response.json();
-      
+
       // Call the success callback
       onUploadSuccess(invoice.id, proofImage);
 
       onClose();
-      alert('Proof uploaded successfully!');
-      
+      alert("Proof uploaded successfully!");
     } catch (error) {
-      console.error('Error uploading proof:', error);
-      alert('Failed to upload proof. Please try again.');
+      console.error("Error uploading proof:", error);
+      alert("Failed to upload proof. Please try again.");
     } finally {
       setUploadingProof(false);
     }
@@ -155,22 +154,25 @@ const ProofUploadModal: React.FC<ProofUploadModalProps> = ({
         </Modal.Header>
         <Modal.Body>
           <div className="space-y-4">
-            <p className="text-sm text-gray-600 mb-4">
-              Please upload a photo showing the delivered goods for invoice #{invoice?.invoice_number}
+            <p className="mb-4 text-sm text-gray-600">
+              Please upload a photo showing the delivered goods for invoice #
+              {invoice?.invoice_number}
             </p>
-            
-            <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 mb-4">
+
+            <div className="mb-4 rounded-lg border border-blue-200 bg-blue-50 p-3">
               <p className="text-sm text-blue-800">
-                💡 <strong>Tip:</strong> Make sure the photo clearly shows the delivered items and any relevant details like packaging or receipts.
+                💡 <strong>Tip:</strong> Make sure the photo clearly shows the
+                delivered items and any relevant details like packaging or
+                receipts.
               </p>
             </div>
-            
+
             {!proofImage ? (
               <div className="space-y-4">
                 {/* Camera Section */}
-                <div className="border-2 border-dashed border-gray-300 rounded-lg p-4">
+                <div className="rounded-lg border-2 border-dashed border-gray-300 p-4">
                   <div className="text-center">
-                    <h4 className="font-medium mb-2">Take Photo</h4>
+                    <h4 className="mb-2 font-medium">Take Photo</h4>
                     {!cameraActive ? (
                       <Button
                         appearance="primary"
@@ -181,17 +183,17 @@ const ProofUploadModal: React.FC<ProofUploadModalProps> = ({
                       </Button>
                     ) : (
                       <div className="space-y-2">
-                        <div className="relative aspect-video w-full max-w-md mx-auto overflow-hidden rounded-lg">
+                        <div className="relative mx-auto aspect-video w-full max-w-md overflow-hidden rounded-lg">
                           <video
                             ref={videoRef}
                             autoPlay
                             playsInline
                             muted
                             className="h-full w-full object-cover"
-                            style={{ transform: 'scaleX(-1)' }} // Mirror the camera
+                            style={{ transform: "scaleX(-1)" }} // Mirror the camera
                           />
                           <div className="absolute inset-0 flex items-center justify-center">
-                            <div className="bg-black bg-opacity-50 text-white px-3 py-1 rounded-full text-sm">
+                            <div className="rounded-full bg-black bg-opacity-50 px-3 py-1 text-sm text-white">
                               📷 Camera Active
                             </div>
                           </div>
@@ -204,10 +206,7 @@ const ProofUploadModal: React.FC<ProofUploadModalProps> = ({
                           >
                             📸 Capture Photo
                           </Button>
-                          <Button
-                            appearance="ghost"
-                            onClick={stopCamera}
-                          >
+                          <Button appearance="ghost" onClick={stopCamera}>
                             ❌ Cancel
                           </Button>
                         </div>
@@ -217,14 +216,14 @@ const ProofUploadModal: React.FC<ProofUploadModalProps> = ({
                 </div>
 
                 {/* File Upload Section */}
-                <div className="border-2 border-dashed border-gray-300 rounded-lg p-4">
+                <div className="rounded-lg border-2 border-dashed border-gray-300 p-4">
                   <div className="text-center">
-                    <h4 className="font-medium mb-2">Or Upload from Gallery</h4>
+                    <h4 className="mb-2 font-medium">Or Upload from Gallery</h4>
                     <input
                       type="file"
                       accept="image/*"
                       onChange={handleFileUpload}
-                      className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-green-50 file:text-green-700 hover:file:bg-green-100"
+                      className="block w-full text-sm text-gray-500 file:mr-4 file:rounded-full file:border-0 file:bg-green-50 file:px-4 file:py-2 file:text-sm file:font-semibold file:text-green-700 hover:file:bg-green-100"
                     />
                   </div>
                 </div>
@@ -232,11 +231,11 @@ const ProofUploadModal: React.FC<ProofUploadModalProps> = ({
             ) : (
               <div className="space-y-4">
                 <div className="text-center">
-                  <h4 className="font-medium mb-2">Preview</h4>
+                  <h4 className="mb-2 font-medium">Preview</h4>
                   <img
                     src={proofImage}
                     alt="Proof of delivery"
-                    className="w-full max-w-md mx-auto rounded-lg shadow-md"
+                    className="mx-auto w-full max-w-md rounded-lg shadow-md"
                   />
                 </div>
                 <div className="flex justify-center space-x-2">
@@ -271,12 +270,9 @@ const ProofUploadModal: React.FC<ProofUploadModalProps> = ({
       </Modal>
 
       {/* Hidden canvas for photo capture */}
-      <canvas
-        ref={canvasRef}
-        className="hidden"
-      />
+      <canvas ref={canvasRef} className="hidden" />
     </>
   );
 };
 
-export default ProofUploadModal; 
+export default ProofUploadModal;
