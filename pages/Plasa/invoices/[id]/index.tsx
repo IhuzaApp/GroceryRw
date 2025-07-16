@@ -114,11 +114,161 @@ export default function InvoicePage({
     return (
       <ShopperLayout>
         <div
-          className={`flex h-[calc(100vh-200px)] items-center justify-center ${
-            theme === "dark" ? "text-gray-300" : "text-gray-700"
+          className={`min-h-screen ${
+            theme === "dark" ? "bg-gray-900" : "bg-gray-50"
           }`}
         >
-          <Loader size="lg" content="Loading invoice..." />
+          <div className="mx-auto max-w-4xl p-4">
+            {/* Header Skeleton */}
+            <div className="mb-6 flex items-center justify-between">
+              <div className="h-10 w-32 animate-pulse rounded-lg bg-gray-200 dark:bg-gray-700"></div>
+              <div className="h-10 w-40 animate-pulse rounded-lg bg-gray-200 dark:bg-gray-700"></div>
+            </div>
+
+            {/* Main Invoice Card Skeleton */}
+            <div className="overflow-hidden rounded-2xl bg-white shadow-xl dark:bg-gray-800">
+              {/* Invoice Header Skeleton */}
+              <div className="border-b border-gray-200 p-8 dark:border-gray-700">
+                <div className="flex flex-col justify-between space-y-6 lg:flex-row lg:space-y-0">
+                  <div className="flex items-start space-x-4">
+                    <div className="h-16 w-16 animate-pulse rounded-xl bg-gray-200 dark:bg-gray-700"></div>
+                    <div className="space-y-2">
+                      <div className="h-8 w-32 animate-pulse rounded bg-gray-200 dark:bg-gray-700"></div>
+                      <div className="h-6 w-24 animate-pulse rounded bg-gray-200 dark:bg-gray-700"></div>
+                      <div className="h-6 w-20 animate-pulse rounded-full bg-gray-200 dark:bg-gray-700"></div>
+                    </div>
+                  </div>
+                  <div className="rounded-lg bg-gray-50 p-4 dark:bg-gray-700">
+                    <div className="h-4 w-20 animate-pulse rounded bg-gray-200 dark:bg-gray-600"></div>
+                    <div className="mt-2 h-6 w-24 animate-pulse rounded bg-gray-200 dark:bg-gray-600"></div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Invoice Details Grid Skeleton */}
+              <div className="grid grid-cols-1 gap-6 p-8 lg:grid-cols-2">
+                {/* Dates Skeleton */}
+                <div className="space-y-4">
+                  <div className="h-6 w-32 animate-pulse rounded bg-gray-200 dark:bg-gray-700"></div>
+                  <div className="space-y-3">
+                    <div className="flex items-center justify-between rounded-lg bg-gray-50 p-4 dark:bg-gray-700">
+                      <div className="flex items-center space-x-3">
+                        <div className="h-10 w-10 animate-pulse rounded-full bg-gray-200 dark:bg-gray-600"></div>
+                        <div className="space-y-2">
+                          <div className="h-4 w-16 animate-pulse rounded bg-gray-200 dark:bg-gray-600"></div>
+                          <div className="h-3 w-24 animate-pulse rounded bg-gray-200 dark:bg-gray-600"></div>
+                        </div>
+                      </div>
+                    </div>
+                    <div className="flex items-center justify-between rounded-lg bg-gray-50 p-4 dark:bg-gray-700">
+                      <div className="flex items-center space-x-3">
+                        <div className="h-10 w-10 animate-pulse rounded-full bg-gray-200 dark:bg-gray-600"></div>
+                        <div className="space-y-2">
+                          <div className="h-4 w-20 animate-pulse rounded bg-gray-200 dark:bg-gray-600"></div>
+                          <div className="h-3 w-24 animate-pulse rounded bg-gray-200 dark:bg-gray-600"></div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Shop & Customer Info Skeleton */}
+                <div className="space-y-4">
+                  <div className="h-6 w-28 animate-pulse rounded bg-gray-200 dark:bg-gray-700"></div>
+                  <div className="space-y-4">
+                    <div className="rounded-lg bg-gray-50 p-4 dark:bg-gray-700">
+                      <div className="flex items-center space-x-3 mb-3">
+                        <div className="h-8 w-8 animate-pulse rounded-full bg-gray-200 dark:bg-gray-600"></div>
+                        <div className="h-4 w-12 animate-pulse rounded bg-gray-200 dark:bg-gray-600"></div>
+                      </div>
+                      <div className="h-4 w-32 animate-pulse rounded bg-gray-200 dark:bg-gray-600"></div>
+                      <div className="mt-2 h-3 w-40 animate-pulse rounded bg-gray-200 dark:bg-gray-600"></div>
+                    </div>
+                    <div className="rounded-lg bg-gray-50 p-4 dark:bg-gray-700">
+                      <div className="flex items-center space-x-3 mb-3">
+                        <div className="h-8 w-8 animate-pulse rounded-full bg-gray-200 dark:bg-gray-600"></div>
+                        <div className="h-4 w-16 animate-pulse rounded bg-gray-200 dark:bg-gray-600"></div>
+                      </div>
+                      <div className="h-4 w-28 animate-pulse rounded bg-gray-200 dark:bg-gray-600"></div>
+                      <div className="mt-2 h-3 w-36 animate-pulse rounded bg-gray-200 dark:bg-gray-600"></div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Items Table Skeleton */}
+              <div className="px-8 pb-8">
+                <div className="mb-4 h-6 w-24 animate-pulse rounded bg-gray-200 dark:bg-gray-700"></div>
+                <div className="overflow-hidden rounded-xl border border-gray-200 dark:border-gray-700">
+                  <table className="w-full">
+                    <thead className="bg-gray-50 dark:bg-gray-700">
+                      <tr>
+                        <th className="px-6 py-4 text-left">
+                          <div className="h-4 w-16 animate-pulse rounded bg-gray-200 dark:bg-gray-600"></div>
+                        </th>
+                        <th className="px-6 py-4 text-center">
+                          <div className="h-4 w-16 animate-pulse rounded bg-gray-200 dark:bg-gray-600"></div>
+                        </th>
+                        <th className="px-6 py-4 text-right">
+                          <div className="h-4 w-20 animate-pulse rounded bg-gray-200 dark:bg-gray-600"></div>
+                        </th>
+                        <th className="px-6 py-4 text-right">
+                          <div className="h-4 w-12 animate-pulse rounded bg-gray-200 dark:bg-gray-600"></div>
+                        </th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
+                      {[1, 2, 3].map((index) => (
+                        <tr key={index} className="bg-white dark:bg-gray-800">
+                          <td className="px-6 py-4">
+                            <div className="space-y-2">
+                              <div className="h-4 w-32 animate-pulse rounded bg-gray-200 dark:bg-gray-600"></div>
+                              <div className="h-3 w-16 animate-pulse rounded bg-gray-200 dark:bg-gray-600"></div>
+                            </div>
+                          </td>
+                          <td className="px-6 py-4 text-center">
+                            <div className="mx-auto h-6 w-8 animate-pulse rounded-full bg-gray-200 dark:bg-gray-600"></div>
+                          </td>
+                          <td className="px-6 py-4 text-right">
+                            <div className="ml-auto h-4 w-16 animate-pulse rounded bg-gray-200 dark:bg-gray-600"></div>
+                          </td>
+                          <td className="px-6 py-4 text-right">
+                            <div className="ml-auto h-4 w-16 animate-pulse rounded bg-gray-200 dark:bg-gray-600"></div>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+
+              {/* Totals Section Skeleton */}
+              <div className="border-t border-gray-200 p-8 dark:border-gray-700">
+                <div className="mx-auto max-w-md">
+                  <div className="space-y-3">
+                    <div className="flex justify-between">
+                      <div className="h-4 w-16 animate-pulse rounded bg-gray-200 dark:bg-gray-600"></div>
+                      <div className="h-4 w-20 animate-pulse rounded bg-gray-200 dark:bg-gray-600"></div>
+                    </div>
+                    <div className="flex justify-between">
+                      <div className="h-4 w-20 animate-pulse rounded bg-gray-200 dark:bg-gray-600"></div>
+                      <div className="h-4 w-16 animate-pulse rounded bg-gray-200 dark:bg-gray-600"></div>
+                    </div>
+                    <div className="flex justify-between">
+                      <div className="h-4 w-20 animate-pulse rounded bg-gray-200 dark:bg-gray-600"></div>
+                      <div className="h-4 w-16 animate-pulse rounded bg-gray-200 dark:bg-gray-600"></div>
+                    </div>
+                    <div className="border-t border-gray-200 pt-3 dark:border-gray-700">
+                      <div className="flex justify-between">
+                        <div className="h-6 w-12 animate-pulse rounded bg-gray-200 dark:bg-gray-600"></div>
+                        <div className="h-6 w-20 animate-pulse rounded bg-gray-200 dark:bg-gray-600"></div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
       </ShopperLayout>
     );
@@ -127,26 +277,43 @@ export default function InvoicePage({
   if (errorMessage || !invoiceData) {
     return (
       <ShopperLayout>
-        <div
-          className={`p-4 ${theme === "dark" ? "bg-gray-900" : "bg-gray-50"}`}
-        >
-          <Panel
-            bordered
-            header="Error"
-            shaded
-            className={theme === "dark" ? "bg-gray-800" : ""}
-          >
-            <p className="text-red-600">
-              {errorMessage || "Invoice data not available"}
-            </p>
-            <Button
-              appearance="primary"
-              onClick={goBack}
-              className={`mt-4 ${theme === "dark" ? "rs-btn-dark" : ""}`}
-            >
-              Go Back
-            </Button>
-          </Panel>
+        <div className="min-h-screen p-4">
+          <div className="mx-auto max-w-2xl">
+            <div className="rounded-xl bg-white p-8 shadow-lg dark:bg-gray-800">
+              <div className="text-center">
+                <div className="mb-4">
+                  <svg
+                    className={`mx-auto h-16 w-16 ${
+                      theme === "dark" ? "text-red-400" : "text-red-500"
+                    }`}
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth="2"
+                      d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z"
+                    />
+                  </svg>
+                </div>
+                <h2 className="mb-2 text-xl font-bold text-gray-900 dark:text-gray-100">
+                  Error Loading Invoice
+                </h2>
+                <p className="mb-6 text-gray-600 dark:text-gray-400">
+                  {errorMessage || "Invoice data not available"}
+                </p>
+                <Button
+                  appearance="primary"
+                  onClick={goBack}
+                  className="rounded-lg px-6 py-2 font-medium"
+                >
+                  Go Back
+                </Button>
+              </div>
+            </div>
+          </div>
         </div>
       </ShopperLayout>
     );
@@ -159,250 +326,288 @@ export default function InvoicePage({
           theme === "dark" ? "bg-gray-900" : "bg-gray-50"
         }`}
       >
-        <div className="mx-auto max-w-3xl p-4">
-          <div className="mb-4 flex items-center justify-between">
+        <div className="mx-auto max-w-4xl p-4">
+          {/* Header */}
+          <div className="mb-6 flex items-center justify-between">
             <Button
               appearance="link"
               onClick={goBack}
-              className={`flex items-center ${
+              className={`flex items-center rounded-lg px-4 py-2 transition-colors ${
                 theme === "dark"
-                  ? "text-gray-300 hover:text-gray-100"
-                  : "text-gray-600 hover:text-gray-900"
+                  ? "text-gray-300 hover:bg-gray-800 hover:text-gray-100"
+                  : "text-gray-600 hover:bg-gray-100 hover:text-gray-900"
               }`}
             >
-              <span className="mr-2">
-                <svg
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  className="h-4 w-4"
-                >
-                  <path d="M19 12H5M12 19l-7-7 7-7" />
-                </svg>
-              </span>
-              Back
+              <svg
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                className="mr-2 h-5 w-5"
+              >
+                <path d="M19 12H5M12 19l-7-7 7-7" />
+              </svg>
+              Back to Invoices
             </Button>
+            
+            <button
+              onClick={handleDownload}
+              className="flex items-center rounded-lg bg-green-600 px-6 py-2 font-medium text-white hover:bg-green-700 dark:bg-green-500 dark:hover:bg-green-600 transition-colors duration-200"
+            >
+              <svg
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                className="mr-2 h-5 w-5"
+              >
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3" />
+              </svg>
+              Download PDF
+            </button>
           </div>
 
-          {/* Invoice Card */}
-          <Panel
-            bordered
-            shaded
-            className={theme === "dark" ? "bg-gray-800" : "bg-white"}
-          >
+          {/* Main Invoice Card */}
+          <div className="overflow-hidden rounded-2xl bg-white shadow-xl dark:bg-gray-800">
             {/* Invoice Header */}
             <div
-              className={`mb-6 border-b pb-4 ${
-                theme === "dark" ? "border-gray-700" : ""
+              className={`border-b p-8 ${
+                theme === "dark" ? "border-gray-700" : "border-gray-200"
               }`}
             >
-              <div className="flex justify-between">
-                <div>
-                  <h1
-                    className={`text-2xl font-bold ${
-                      theme === "dark" ? "text-gray-100" : "text-gray-900"
-                    }`}
-                  >
-                    Invoice
-                  </h1>
-                  <p
-                    className={
-                      theme === "dark" ? "text-gray-400" : "text-gray-600"
-                    }
-                  >
-                    #{invoiceData.invoiceNumber}
-                  </p>
-                </div>
-                <div className="text-right">
-                  <p
-                    className={`font-medium ${
-                      theme === "dark" ? "text-gray-100" : "text-gray-900"
-                    }`}
-                  >
-                    Order #{invoiceData.orderNumber}
-                  </p>
-                  <p
-                    className={
-                      theme === "dark" ? "text-gray-400" : "text-gray-600"
-                    }
-                  >
-                    Status:{" "}
-                    <span
-                      className={`font-semibold ${
-                        theme === "dark" ? "text-green-400" : "text-green-600"
-                      }`}
+              <div className="flex flex-col justify-between space-y-6 lg:flex-row lg:space-y-0">
+                <div className="flex items-start space-x-4">
+                                     <div
+                     className={`flex h-16 w-16 items-center justify-center rounded-xl ${
+                       theme === "dark" ? "bg-green-600" : "bg-green-500"
+                     }`}
+                   >
+                    <svg
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      className="h-8 w-8 text-white"
                     >
-                      {invoiceData.status}
-                    </span>
-                  </p>
+                      <path d="M9 12h6m-6 4h6m2 5H7a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5.586a1 1 0 0 1 .707.293l5.414 5.414a1 1 0 0 1 .293.707V19a2 2 0 0 1-2 2z" />
+                    </svg>
+                  </div>
+                  <div>
+                    <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100">
+                      Invoice
+                    </h1>
+                    <p className="text-lg text-gray-600 dark:text-gray-400">
+                      #{invoiceData.invoiceNumber}
+                    </p>
+                    <div className="mt-2 flex items-center space-x-2">
+                      <span
+                        className={`inline-flex items-center rounded-full px-3 py-1 text-sm font-medium ${
+                          theme === "dark"
+                            ? "bg-green-900/20 text-green-400"
+                            : "bg-green-100 text-green-800"
+                        }`}
+                      >
+                        <svg
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          stroke="currentColor"
+                          strokeWidth="2"
+                          className="mr-1 h-4 w-4"
+                        >
+                          <path d="M5 13l4 4L19 7" />
+                        </svg>
+                        {invoiceData.status}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+                
+                <div className="text-right">
+                  <div className="rounded-lg bg-gray-50 p-4 dark:bg-gray-700">
+                    <p className="text-sm font-medium text-gray-600 dark:text-gray-400">
+                      Order Number
+                    </p>
+                    <p className="text-xl font-bold text-gray-900 dark:text-gray-100">
+                      #{invoiceData.orderNumber}
+                    </p>
+                  </div>
                 </div>
               </div>
             </div>
 
-            {/* Date and Order Info */}
-            <div className="mb-6 grid grid-cols-2 gap-4">
-              <div>
-                <h3
-                  className={`text-sm font-medium ${
-                    theme === "dark" ? "text-gray-400" : "text-gray-600"
-                  }`}
-                >
-                  Date Created
+            {/* Invoice Details Grid */}
+            <div className="grid grid-cols-1 gap-6 p-8 lg:grid-cols-2">
+              {/* Dates */}
+              <div className="space-y-4">
+                <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
+                  Order Timeline
                 </h3>
-                <p
-                  className={
-                    theme === "dark" ? "text-gray-100" : "text-gray-900"
-                  }
-                >
-                  {invoiceData.dateCreated}
-                </p>
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between rounded-lg bg-gray-50 p-4 dark:bg-gray-700">
+                    <div className="flex items-center space-x-3">
+                                             <div className="flex h-10 w-10 items-center justify-center rounded-full bg-green-100 dark:bg-green-900">
+                         <svg
+                           viewBox="0 0 24 24"
+                           fill="none"
+                           stroke="currentColor"
+                           strokeWidth="2"
+                           className="h-5 w-5 text-green-600 dark:text-green-400"
+                         >
+                          <path d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                        </svg>
+                      </div>
+                      <div>
+                        <p className="font-medium text-gray-900 dark:text-gray-100">
+                          Created
+                        </p>
+                        <p className="text-sm text-gray-600 dark:text-gray-400">
+                          {invoiceData.dateCreated}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div className="flex items-center justify-between rounded-lg bg-gray-50 p-4 dark:bg-gray-700">
+                    <div className="flex items-center space-x-3">
+                      <div className="flex h-10 w-10 items-center justify-center rounded-full bg-green-100 dark:bg-green-900">
+                        <svg
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          stroke="currentColor"
+                          strokeWidth="2"
+                          className="h-5 w-5 text-green-600 dark:text-green-400"
+                        >
+                          <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                      </div>
+                      <div>
+                        <p className="font-medium text-gray-900 dark:text-gray-100">
+                          Completed
+                        </p>
+                        <p className="text-sm text-gray-600 dark:text-gray-400">
+                          {invoiceData.dateCompleted}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
               </div>
-              <div>
-                <h3
-                  className={`text-sm font-medium ${
-                    theme === "dark" ? "text-gray-400" : "text-gray-600"
-                  }`}
-                >
-                  Date Completed
-                </h3>
-                <p
-                  className={
-                    theme === "dark" ? "text-gray-100" : "text-gray-900"
-                  }
-                >
-                  {invoiceData.dateCompleted}
-                </p>
-              </div>
-            </div>
 
-            {/* Shop and Customer Info */}
-            <div
-              className={`mb-6 grid grid-cols-2 gap-4 rounded-md p-4 ${
-                theme === "dark" ? "bg-gray-700/50" : "bg-gray-50"
-              }`}
-            >
-              <div>
-                <h3
-                  className={`text-sm font-medium ${
-                    theme === "dark" ? "text-gray-400" : "text-gray-600"
-                  }`}
-                >
-                  Shopped At
+              {/* Shop & Customer Info */}
+              <div className="space-y-4">
+                <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
+                  Order Details
                 </h3>
-                <p
-                  className={`font-medium ${
-                    theme === "dark" ? "text-gray-100" : "text-gray-900"
-                  }`}
-                >
-                  {invoiceData.shop}
-                </p>
-                <p
-                  className={
-                    theme === "dark" ? "text-gray-400" : "text-gray-600"
-                  }
-                >
-                  {invoiceData.shopAddress}
-                </p>
-              </div>
-              <div>
-                <h3
-                  className={`text-sm font-medium ${
-                    theme === "dark" ? "text-gray-400" : "text-gray-600"
-                  }`}
-                >
-                  Customer
-                </h3>
-                <p
-                  className={`font-medium ${
-                    theme === "dark" ? "text-gray-100" : "text-gray-900"
-                  }`}
-                >
-                  {invoiceData.customer}
-                </p>
-                <p
-                  className={
-                    theme === "dark" ? "text-gray-400" : "text-gray-600"
-                  }
-                >
-                  {invoiceData.customerEmail}
-                </p>
+                <div className="space-y-4">
+                  <div className="rounded-lg bg-gray-50 p-4 dark:bg-gray-700">
+                    <div className="flex items-center space-x-3 mb-3">
+                      <div className="flex h-8 w-8 items-center justify-center rounded-full bg-orange-100 dark:bg-orange-900">
+                        <svg
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          stroke="currentColor"
+                          strokeWidth="2"
+                          className="h-4 w-4 text-orange-600 dark:text-orange-400"
+                        >
+                          <path d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                        </svg>
+                      </div>
+                      <h4 className="font-medium text-gray-900 dark:text-gray-100">
+                        Shop
+                      </h4>
+                    </div>
+                    <p className="font-semibold text-gray-900 dark:text-gray-100">
+                      {invoiceData.shop}
+                    </p>
+                    <p className="text-sm text-gray-600 dark:text-gray-400">
+                      {invoiceData.shopAddress}
+                    </p>
+                  </div>
+
+                  <div className="rounded-lg bg-gray-50 p-4 dark:bg-gray-700">
+                    <div className="flex items-center space-x-3 mb-3">
+                      <div className="flex h-8 w-8 items-center justify-center rounded-full bg-purple-100 dark:bg-purple-900">
+                        <svg
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          stroke="currentColor"
+                          strokeWidth="2"
+                          className="h-4 w-4 text-purple-600 dark:text-purple-400"
+                        >
+                          <path d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                        </svg>
+                      </div>
+                      <h4 className="font-medium text-gray-900 dark:text-gray-100">
+                        Customer
+                      </h4>
+                    </div>
+                    <p className="font-semibold text-gray-900 dark:text-gray-100">
+                      {invoiceData.customer}
+                    </p>
+                    <p className="text-sm text-gray-600 dark:text-gray-400">
+                      {invoiceData.customerEmail}
+                    </p>
+                  </div>
+                </div>
               </div>
             </div>
 
             {/* Items Table */}
-            <div className="mb-6">
-              <h3
-                className={`mb-2 text-sm font-medium ${
-                  theme === "dark" ? "text-gray-400" : "text-gray-600"
-                }`}
-              >
-                Items
+            <div className="px-8 pb-8">
+              <h3 className="mb-4 text-lg font-semibold text-gray-900 dark:text-gray-100">
+                Order Items
               </h3>
-              <div className="overflow-x-auto">
+              <div className="overflow-hidden rounded-xl border border-gray-200 dark:border-gray-700">
                 <table className="w-full">
                   <thead
-                    className={`border-b text-left ${
-                      theme === "dark"
-                        ? "border-gray-700 bg-gray-700/50"
-                        : "border-gray-200 bg-gray-50"
+                    className={`${
+                      theme === "dark" ? "bg-gray-700" : "bg-gray-50"
                     }`}
                   >
                     <tr>
-                      <th
-                        className={`p-2 text-sm font-medium ${
-                          theme === "dark" ? "text-gray-300" : "text-gray-600"
-                        }`}
-                      >
+                      <th className="px-6 py-4 text-left text-sm font-semibold text-gray-900 dark:text-gray-100">
                         Item
                       </th>
-                      <th
-                        className={`p-2 text-sm font-medium ${
-                          theme === "dark" ? "text-gray-300" : "text-gray-600"
-                        }`}
-                      >
-                        Qty
+                      <th className="px-6 py-4 text-center text-sm font-semibold text-gray-900 dark:text-gray-100">
+                        Quantity
                       </th>
-                      <th
-                        className={`p-2 text-sm font-medium ${
-                          theme === "dark" ? "text-gray-300" : "text-gray-600"
-                        }`}
-                      >
-                        Price
+                      <th className="px-6 py-4 text-right text-sm font-semibold text-gray-900 dark:text-gray-100">
+                        Unit Price
                       </th>
-                      <th
-                        className={`p-2 text-sm font-medium ${
-                          theme === "dark" ? "text-gray-300" : "text-gray-600"
-                        }`}
-                      >
+                      <th className="px-6 py-4 text-right text-sm font-semibold text-gray-900 dark:text-gray-100">
                         Total
                       </th>
                     </tr>
                   </thead>
-                  <tbody
-                    className={
-                      theme === "dark" ? "text-gray-100" : "text-gray-900"
-                    }
-                  >
+                  <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
                     {invoiceData.items.map((item, index) => (
                       <tr
                         key={index}
-                        className={
-                          theme === "dark"
-                            ? index % 2 === 0
-                              ? "bg-gray-800"
-                              : "bg-gray-700/50"
-                            : index % 2 === 0
-                            ? "bg-white"
-                            : "bg-gray-50"
-                        }
+                        className={`transition-colors hover:bg-gray-50 dark:hover:bg-gray-700/50 ${
+                          theme === "dark" ? "bg-gray-800" : "bg-white"
+                        }`}
                       >
-                        <td className="p-2">{item.name}</td>
-                        <td className="p-2">{item.quantity}</td>
-                        <td className="p-2">
+                        <td className="px-6 py-4">
+                          <div>
+                            <p className="font-medium text-gray-900 dark:text-gray-100">
+                              {item.name}
+                            </p>
+                            <p className="text-sm text-gray-600 dark:text-gray-400">
+                              {item.unit}
+                            </p>
+                          </div>
+                        </td>
+                                                 <td className="px-6 py-4 text-center">
+                           <span className="inline-flex items-center rounded-full bg-green-100 px-3 py-1 text-sm font-medium text-green-800 dark:bg-green-900 dark:text-green-200">
+                             {item.quantity}
+                           </span>
+                         </td>
+                        <td className="px-6 py-4 text-right font-medium text-gray-900 dark:text-gray-100">
                           {formatCurrency(item.unitPrice)}
                         </td>
-                        <td className="p-2">{formatCurrency(item.total)}</td>
+                        <td className="px-6 py-4 text-right font-semibold text-gray-900 dark:text-gray-100">
+                          {formatCurrency(item.total)}
+                        </td>
                       </tr>
                     ))}
                   </tbody>
@@ -410,90 +615,56 @@ export default function InvoicePage({
               </div>
             </div>
 
-            {/* Totals */}
+            {/* Totals Section */}
             <div
-              className={`mt-6 rounded-md p-4 ${
-                theme === "dark" ? "bg-gray-700/50" : "bg-gray-50"
+              className={`border-t p-8 ${
+                theme === "dark" ? "border-gray-700" : "border-gray-200"
               }`}
             >
-              <div className="flex justify-between">
-                <span
-                  className={`font-medium ${
-                    theme === "dark" ? "text-gray-300" : "text-gray-600"
-                  }`}
-                >
-                  Subtotal:
-                </span>
-                <span
-                  className={
-                    theme === "dark" ? "text-gray-100" : "text-gray-900"
-                  }
-                >
-                  {formatCurrency(invoiceData.subtotal)}
-                </span>
-              </div>
-              <div className="mt-2 flex justify-between">
-                <span
-                  className={`font-medium ${
-                    theme === "dark" ? "text-gray-300" : "text-gray-600"
-                  }`}
-                >
-                  Service Fee:
-                </span>
-                <span
-                  className={
-                    theme === "dark" ? "text-gray-100" : "text-gray-900"
-                  }
-                >
-                  {formatCurrency(invoiceData.serviceFee)}
-                </span>
-              </div>
-              <div className="mt-2 flex justify-between">
-                <span
-                  className={`font-medium ${
-                    theme === "dark" ? "text-gray-300" : "text-gray-600"
-                  }`}
-                >
-                  Delivery Fee:
-                </span>
-                <span
-                  className={
-                    theme === "dark" ? "text-gray-100" : "text-gray-900"
-                  }
-                >
-                  {formatCurrency(invoiceData.deliveryFee)}
-                </span>
-              </div>
-              <Divider className={theme === "dark" ? "border-gray-600" : ""} />
-              <div className="flex justify-between">
-                <span
-                  className={`text-lg font-bold ${
-                    theme === "dark" ? "text-gray-100" : "text-gray-900"
-                  }`}
-                >
-                  Total:
-                </span>
-                <span
-                  className={`text-lg font-bold ${
-                    theme === "dark" ? "text-gray-100" : "text-gray-900"
-                  }`}
-                >
-                  {formatCurrency(invoiceData.total)}
-                </span>
+              <div className="mx-auto max-w-md">
+                <div className="space-y-3">
+                  <div className="flex justify-between text-sm">
+                    <span className="text-gray-600 dark:text-gray-400">
+                      Subtotal
+                    </span>
+                    <span className="font-medium text-gray-900 dark:text-gray-100">
+                      {formatCurrency(invoiceData.subtotal)}
+                    </span>
+                  </div>
+                  <div className="flex justify-between text-sm">
+                    <span className="text-gray-600 dark:text-gray-400">
+                      Service Fee
+                    </span>
+                    <span className="font-medium text-gray-900 dark:text-gray-100">
+                      {formatCurrency(invoiceData.serviceFee)}
+                    </span>
+                  </div>
+                  <div className="flex justify-between text-sm">
+                    <span className="text-gray-600 dark:text-gray-400">
+                      Delivery Fee
+                    </span>
+                    <span className="font-medium text-gray-900 dark:text-gray-100">
+                      {formatCurrency(invoiceData.deliveryFee)}
+                    </span>
+                  </div>
+                  <div
+                    className={`border-t pt-3 ${
+                      theme === "dark" ? "border-gray-700" : "border-gray-200"
+                    }`}
+                  >
+                    <div className="flex justify-between">
+                      <span className="text-lg font-bold text-gray-900 dark:text-gray-100">
+                        Total
+                      </span>
+                      <span className="text-lg font-bold text-gray-900 dark:text-gray-100">
+                        {formatCurrency(invoiceData.total)}
+                      </span>
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
-
-            {/* Actions */}
-            <div className="mt-6 flex justify-end">
-              <Button
-                appearance="primary"
-                onClick={handleDownload}
-                className={theme === "dark" ? "rs-btn-dark" : ""}
-              >
-                Download PDF
-              </Button>
-            </div>
-          </Panel>
+          </div>
         </div>
       </div>
     </ShopperLayout>
