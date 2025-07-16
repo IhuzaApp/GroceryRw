@@ -479,7 +479,7 @@ export default function InvoicePage({
                         >
                           <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                         </svg>
-                      </div>
+              </div>
               <div>
                         <p className="font-medium text-gray-900 dark:text-gray-100">
                           Completed

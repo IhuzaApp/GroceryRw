@@ -27,6 +27,7 @@ export interface Invoice {
   found?: boolean;
   order_status: string;
   Proof?: string;
+  delivery_photo_url?: string;
 }
 
 export interface InvoicesPageProps {

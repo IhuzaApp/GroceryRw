@@ -6,14 +6,26 @@ import { gql } from "graphql-request";
 
 // GraphQL mutation to update invoice proof
 const UPDATE_INVOICE_PROOF = gql`
-  mutation UpdateInvoiceProof($invoice_id: uuid!, $proof: String!) {
-    update_Invoices_by_pk(
-      pk_columns: { id: $invoice_id }
-      _set: { Proof: $proof }
+  mutation UpdateInvoiceProof($invoice_id: uuid!, $Proof: String!) {
+    update_Invoices(
+      where: { id: { _eq: $invoice_id } }
+      _set: { Proof: $Proof }
+    ) {
+      affected_rows
+    }
+  }
+`;
+
+// GraphQL mutation to update reel order proof
+const UPDATE_REEL_ORDER_PROOF = gql`
+  mutation UpdateReelOrderProof($reel_order_id: uuid!, $delivery_photo_url: String!) {
+    update_reel_orders_by_pk(
+      pk_columns: { id: $reel_order_id }
+      _set: { delivery_photo_url: $delivery_photo_url }
     ) {
       id
-      Proof
-      invoice_number
+      delivery_photo_url
+      OrderID
     }
   }
 `;
@@ -27,8 +39,20 @@ const GET_INVOICE_DETAILS = gql`
       order_id
       reel_order_id
       Order {
+        id
         shopper_id
       }
+    }
+  }
+`;
+
+// GraphQL query to get reel order details for verification
+const GET_REEL_ORDER_DETAILS = gql`
+  query GetReelOrderDetails($reel_order_id: uuid!) {
+    reel_orders_by_pk(id: $reel_order_id) {
+      id
+      OrderID
+      shopper_id
     }
   }
 `;
@@ -48,7 +72,7 @@ export default async function handler(
       return res.status(401).json({ error: "Unauthorized" });
     }
 
-    const { invoice_id, proof_image } = req.body;
+    const { invoice_id, proof_image, order_type } = req.body;
 
     if (!invoice_id || !proof_image) {
       return res.status(400).json({ 
@@ -62,39 +86,75 @@ export default async function handler(
       });
     }
 
-    // Verify the invoice exists and belongs to the authenticated shopper
-    const invoiceData = await hasuraClient.request(GET_INVOICE_DETAILS, {
-      invoice_id
-    }) as any;
+    let result;
 
-    if (!invoiceData.Invoices_by_pk) {
-      return res.status(404).json({ error: "Invoice not found" });
-    }
+    if (order_type === "reel") {
+      // Handle reel order proof upload
+      const reelOrderId = invoice_id.replace("reel-", ""); // Remove the "reel-" prefix
+      
+      // Verify the reel order exists and belongs to the authenticated shopper
+      const reelOrderData = await hasuraClient.request(GET_REEL_ORDER_DETAILS, {
+        reel_order_id: reelOrderId
+      }) as any;
 
-    // Check if the invoice belongs to the authenticated shopper
-    const shopperId = invoiceData.Invoices_by_pk.Order?.shopper_id;
-    if (shopperId !== session.user.id) {
-      return res.status(403).json({ 
-        error: "You can only upload proof for your own invoices" 
-      });
-    }
+      if (!reelOrderData.reel_orders_by_pk) {
+        return res.status(404).json({ error: "Reel order not found" });
+      }
 
-    // Update the invoice with the proof image
-    const result = await hasuraClient.request(UPDATE_INVOICE_PROOF, {
-      invoice_id,
-      proof: proof_image
-    }) as any;
+      // Check if the reel order belongs to the authenticated shopper
+      if (reelOrderData.reel_orders_by_pk.shopper_id !== session.user.id) {
+        return res.status(403).json({ 
+          error: "You can only upload proof for your own reel orders" 
+        });
+      }
 
-    if (!result.update_Invoices_by_pk) {
-      return res.status(500).json({ 
-        error: "Failed to update invoice proof" 
-      });
+      // Update the reel order with the proof image
+      result = await hasuraClient.request(UPDATE_REEL_ORDER_PROOF, {
+        reel_order_id: reelOrderId,
+        delivery_photo_url: proof_image
+      }) as any;
+
+      if (!result.update_reel_orders_by_pk) {
+        return res.status(500).json({ 
+          error: "Failed to update reel order proof" 
+        });
+      }
+    } else {
+      // Handle regular order invoice proof upload
+      // Verify the invoice exists and belongs to the authenticated shopper
+      const invoiceData = await hasuraClient.request(GET_INVOICE_DETAILS, {
+        invoice_id
+      }) as any;
+
+      if (!invoiceData.Invoices_by_pk) {
+        return res.status(404).json({ error: "Invoice not found" });
+      }
+
+      // Check if the invoice belongs to the authenticated shopper
+      const shopperId = invoiceData.Invoices_by_pk.Order?.shopper_id;
+      if (shopperId !== session.user.id) {
+        return res.status(403).json({ 
+          error: "You can only upload proof for your own invoices" 
+        });
+      }
+
+      // Update the invoice with the proof image
+      result = await hasuraClient.request(UPDATE_INVOICE_PROOF, {
+        invoice_id: invoiceData.Invoices_by_pk.id,
+        Proof: proof_image
+      }) as any;
+
+      if (!result.update_Invoices || result.update_Invoices.affected_rows === 0) {
+        return res.status(500).json({ 
+          error: "Failed to update invoice proof" 
+        });
+      }
     }
 
     res.status(200).json({
       success: true,
       message: "Proof uploaded successfully",
-      invoice: result.update_Invoices_by_pk
+      invoice: order_type === "reel" ? result.update_reel_orders_by_pk : { id: invoice_id }
     });
 
   } catch (error) {
