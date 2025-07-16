@@ -18,7 +18,10 @@ const UPDATE_INVOICE_PROOF = gql`
 
 // GraphQL mutation to update reel order proof
 const UPDATE_REEL_ORDER_PROOF = gql`
-  mutation UpdateReelOrderProof($reel_order_id: uuid!, $delivery_photo_url: String!) {
+  mutation UpdateReelOrderProof(
+    $reel_order_id: uuid!
+    $delivery_photo_url: String!
+  ) {
     update_reel_orders_by_pk(
       pk_columns: { id: $reel_order_id }
       _set: { delivery_photo_url: $delivery_photo_url }
@@ -75,14 +78,14 @@ export default async function handler(
     const { invoice_id, proof_image, order_type } = req.body;
 
     if (!invoice_id || !proof_image) {
-      return res.status(400).json({ 
-        error: "Missing required fields: invoice_id and proof_image" 
+      return res.status(400).json({
+        error: "Missing required fields: invoice_id and proof_image",
       });
     }
 
     if (!hasuraClient) {
-      return res.status(500).json({ 
-        error: "Database connection not available" 
+      return res.status(500).json({
+        error: "Database connection not available",
       });
     }
 
@@ -91,11 +94,14 @@ export default async function handler(
     if (order_type === "reel") {
       // Handle reel order proof upload
       const reelOrderId = invoice_id.replace("reel-", ""); // Remove the "reel-" prefix
-      
+
       // Verify the reel order exists and belongs to the authenticated shopper
-      const reelOrderData = await hasuraClient.request(GET_REEL_ORDER_DETAILS, {
-        reel_order_id: reelOrderId
-      }) as any;
+      const reelOrderData = (await hasuraClient.request(
+        GET_REEL_ORDER_DETAILS,
+        {
+          reel_order_id: reelOrderId,
+        }
+      )) as any;
 
       if (!reelOrderData.reel_orders_by_pk) {
         return res.status(404).json({ error: "Reel order not found" });
@@ -103,28 +109,28 @@ export default async function handler(
 
       // Check if the reel order belongs to the authenticated shopper
       if (reelOrderData.reel_orders_by_pk.shopper_id !== session.user.id) {
-        return res.status(403).json({ 
-          error: "You can only upload proof for your own reel orders" 
+        return res.status(403).json({
+          error: "You can only upload proof for your own reel orders",
         });
       }
 
       // Update the reel order with the proof image
-      result = await hasuraClient.request(UPDATE_REEL_ORDER_PROOF, {
+      result = (await hasuraClient.request(UPDATE_REEL_ORDER_PROOF, {
         reel_order_id: reelOrderId,
-        delivery_photo_url: proof_image
-      }) as any;
+        delivery_photo_url: proof_image,
+      })) as any;
 
       if (!result.update_reel_orders_by_pk) {
-        return res.status(500).json({ 
-          error: "Failed to update reel order proof" 
+        return res.status(500).json({
+          error: "Failed to update reel order proof",
         });
       }
     } else {
       // Handle regular order invoice proof upload
       // Verify the invoice exists and belongs to the authenticated shopper
-      const invoiceData = await hasuraClient.request(GET_INVOICE_DETAILS, {
-        invoice_id
-      }) as any;
+      const invoiceData = (await hasuraClient.request(GET_INVOICE_DETAILS, {
+        invoice_id,
+      })) as any;
 
       if (!invoiceData.Invoices_by_pk) {
         return res.status(404).json({ error: "Invoice not found" });
@@ -133,20 +139,23 @@ export default async function handler(
       // Check if the invoice belongs to the authenticated shopper
       const shopperId = invoiceData.Invoices_by_pk.Order?.shopper_id;
       if (shopperId !== session.user.id) {
-        return res.status(403).json({ 
-          error: "You can only upload proof for your own invoices" 
+        return res.status(403).json({
+          error: "You can only upload proof for your own invoices",
         });
       }
 
       // Update the invoice with the proof image
-      result = await hasuraClient.request(UPDATE_INVOICE_PROOF, {
+      result = (await hasuraClient.request(UPDATE_INVOICE_PROOF, {
         invoice_id: invoiceData.Invoices_by_pk.id,
-        Proof: proof_image
-      }) as any;
+        Proof: proof_image,
+      })) as any;
 
-      if (!result.update_Invoices || result.update_Invoices.affected_rows === 0) {
-        return res.status(500).json({ 
-          error: "Failed to update invoice proof" 
+      if (
+        !result.update_Invoices ||
+        result.update_Invoices.affected_rows === 0
+      ) {
+        return res.status(500).json({
+          error: "Failed to update invoice proof",
         });
       }
     }
@@ -154,14 +163,16 @@ export default async function handler(
     res.status(200).json({
       success: true,
       message: "Proof uploaded successfully",
-      invoice: order_type === "reel" ? result.update_reel_orders_by_pk : { id: invoice_id }
+      invoice:
+        order_type === "reel"
+          ? result.update_reel_orders_by_pk
+          : { id: invoice_id },
     });
-
   } catch (error) {
     console.error("Error uploading proof:", error);
     res.status(500).json({
       error: "Failed to upload proof",
-      message: error instanceof Error ? error.message : "Unknown error"
+      message: error instanceof Error ? error.message : "Unknown error",
     });
   }
-} 
+}

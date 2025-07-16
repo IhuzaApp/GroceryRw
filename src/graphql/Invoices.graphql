@@ -79,7 +79,6 @@ query getInvoiceDetials {
   }
 }
 
-
 mutation addInvoiceDetails(
   $customer_id: uuid = ""
   $delivery_fee: String = ""

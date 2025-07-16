@@ -36,27 +36,33 @@ const InvoiceFilters: React.FC<InvoiceFiltersProps> = ({
 
   return (
     <div className="mb-6 space-y-4">
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <div>
-          <label className={`block text-sm font-medium mb-2 ${
+      {/* Search Filter - Always visible */}
+      <div>
+        <label
+          className={`mb-2 block text-sm font-medium ${
             theme === "dark" ? "text-gray-300" : "text-gray-700"
-          }`}>
-            Search Invoices
-          </label>
-          <InputGroup>
-            <Input
-              placeholder="Search by invoice number, customer, shop..."
-              value={searchTerm}
-              onChange={setSearchTerm}
-              className={theme === "dark" ? "bg-gray-700 text-gray-100" : ""}
-            />
-          </InputGroup>
-        </div>
+          }`}
+        >
+          Search Invoices
+        </label>
+        <InputGroup>
+          <Input
+            placeholder="Search by invoice number, customer, shop..."
+            value={searchTerm}
+            onChange={setSearchTerm}
+            className={theme === "dark" ? "bg-gray-700 text-gray-100" : ""}
+          />
+        </InputGroup>
+      </div>
 
+      {/* Status and Type Filters - Hidden on mobile */}
+      <div className="hidden gap-4 md:grid md:grid-cols-2">
         <div>
-          <label className={`block text-sm font-medium mb-2 ${
-            theme === "dark" ? "text-gray-300" : "text-gray-700"
-          }`}>
+          <label
+            className={`mb-2 block text-sm font-medium ${
+              theme === "dark" ? "text-gray-300" : "text-gray-700"
+            }`}
+          >
             Status Filter
           </label>
           <SelectPicker
@@ -70,9 +76,11 @@ const InvoiceFilters: React.FC<InvoiceFiltersProps> = ({
         </div>
 
         <div>
-          <label className={`block text-sm font-medium mb-2 ${
-            theme === "dark" ? "text-gray-300" : "text-gray-700"
-          }`}>
+          <label
+            className={`mb-2 block text-sm font-medium ${
+              theme === "dark" ? "text-gray-300" : "text-gray-700"
+            }`}
+          >
             Order Type
           </label>
           <SelectPicker
@@ -89,4 +97,4 @@ const InvoiceFilters: React.FC<InvoiceFiltersProps> = ({
   );
 };
 
-export default InvoiceFilters; 
+export default InvoiceFilters;

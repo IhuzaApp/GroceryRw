@@ -28,9 +28,11 @@ const InvoicePagination: React.FC<InvoicePaginationProps> = ({
         >
           Previous
         </Button>
-        <span className={`flex items-center px-3 ${
-          theme === "dark" ? "text-white" : "text-gray-700"
-        }`}>
+        <span
+          className={`flex items-center px-3 ${
+            theme === "dark" ? "text-white" : "text-gray-700"
+          }`}
+        >
           Page {currentPage} of {totalPages}
         </span>
         <Button
@@ -44,4 +46,4 @@ const InvoicePagination: React.FC<InvoicePaginationProps> = ({
   );
 };
 
-export default InvoicePagination; 
+export default InvoicePagination;

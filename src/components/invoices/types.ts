@@ -33,4 +33,4 @@ export interface Invoice {
 export interface InvoicesPageProps {
   initialInvoices?: Invoice[];
   initialError?: string | null;
-} 
+}

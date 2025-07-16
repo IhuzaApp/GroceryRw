@@ -90,10 +90,12 @@ export default async function handler(
     const variables = { id };
 
     if (!hasuraClient) {
-      return res.status(500).json({ message: "Database connection not available" });
+      return res
+        .status(500)
+        .json({ message: "Database connection not available" });
     }
 
-    const response = await hasuraClient.request(query, variables) as any;
+    const response = (await hasuraClient.request(query, variables)) as any;
     const invoice = response.Invoices_by_pk;
 
     if (!invoice) {
@@ -108,20 +110,21 @@ export default async function handler(
       orderNumber: invoice.Order?.OrderID || `INV-${invoice.invoice_number}`,
       status: invoice.status,
       dateCreated: new Date(invoice.created_at).toLocaleDateString(),
-      dateCompleted: invoice.Order?.updated_at 
+      dateCompleted: invoice.Order?.updated_at
         ? new Date(invoice.Order.updated_at).toLocaleDateString()
         : new Date(invoice.created_at).toLocaleDateString(),
       shop: invoice.Order?.Shop?.name || "Unknown Shop",
       shopAddress: invoice.Order?.Shop?.address || "Address not available",
       customer: invoice.User?.name || "Unknown Customer",
       customerEmail: invoice.User?.email || "Email not available",
-      items: invoice.Order?.Order_Items?.map((item: any) => ({
-        name: item.Product?.name || "Unknown Product",
-        quantity: item.quantity,
-        unitPrice: parseFloat(item.price) || 0,
-        unit: item.Product?.measurement_unit || "unit",
-        total: (parseFloat(item.price) || 0) * (item.quantity || 0),
-      })) || [],
+      items:
+        invoice.Order?.Order_Items?.map((item: any) => ({
+          name: item.Product?.name || "Unknown Product",
+          quantity: item.quantity,
+          unitPrice: parseFloat(item.price) || 0,
+          unit: item.Product?.measurement_unit || "unit",
+          total: (parseFloat(item.price) || 0) * (item.quantity || 0),
+        })) || [],
       subtotal: parseFloat(invoice.subtotal) || 0,
       serviceFee: parseFloat(invoice.service_fee) || 0,
       deliveryFee: parseFloat(invoice.delivery_fee) || 0,
@@ -131,9 +134,9 @@ export default async function handler(
     res.status(200).json({ invoice: transformedInvoice });
   } catch (error) {
     console.error("Error fetching invoice:", error);
-    res.status(500).json({ 
+    res.status(500).json({
       message: "Failed to fetch invoice",
-      error: error instanceof Error ? error.message : "Unknown error"
+      error: error instanceof Error ? error.message : "Unknown error",
     });
   }
 }

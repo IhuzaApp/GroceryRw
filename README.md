@@ -4509,6 +4509,7 @@ Total Delivery Time = Travel Time + Shopping Time
 ```
 
 Where:
+
 - **Travel Time**: Calculated from 3D distance (including altitude)
 - **Shopping Time**: Configurable system parameter from `System_configuratioins.shoppingTime`
 
@@ -4518,7 +4519,12 @@ The system uses a 3D distance calculation that includes altitude differences:
 
 ```typescript
 // Calculate 2D distance using Haversine formula
-const distanceKm = getDistanceFromLatLonInKm(userLat, userLng, shopLat, shopLng);
+const distanceKm = getDistanceFromLatLonInKm(
+  userLat,
+  userLng,
+  shopLat,
+  shopLng
+);
 
 // Calculate altitude difference in kilometers
 const altKm = (shopAlt - userAlt) / 1000;
@@ -4545,6 +4551,7 @@ The delivery time calculation uses these configurable parameters from the `Syste
 ### Delivery Time Calculation Examples
 
 #### Example 1: Short Distance Order
+
 ```typescript
 // User location: (lat: -1.9441, lng: 30.0619, alt: 1500m)
 // Shop location: (lat: -1.9440, lng: 30.0620, alt: 1500m)
@@ -4560,6 +4567,7 @@ const totalTime = 1 + 40 = 41 minutes;
 ```
 
 #### Example 2: Long Distance Order
+
 ```typescript
 // User location: (lat: -1.9441, lng: 30.0619, alt: 1500m)
 // Shop location: (lat: -1.9400, lng: 30.0700, alt: 1600m)
@@ -4600,9 +4608,9 @@ if (hours > 0) {
 ### Countdown Features
 
 1. **Real-time Updates**: Countdown updates every second
-2. **Color-coded Urgency**: 
+2. **Color-coded Urgency**:
    - Green: > 30 minutes remaining
-   - Yellow: 10-30 minutes remaining  
+   - Yellow: 10-30 minutes remaining
    - Red: < 10 minutes remaining
 3. **User-friendly Format**: Shows hours and minutes in readable format
 4. **Positioning**: Displayed at the bottom of active batch cards
@@ -4636,17 +4644,19 @@ When a user places a reel order:
 **GET** - Fetch delivery time parameters
 
 ```typescript
-GET /api/queries/system-configuration
+GET / api / queries / system - configuration;
 
 // Response
 {
-  System_configuratioins: [{
-    shoppingTime: "40",
-    baseDeliveryFee: "1000",
-    distanceSurcharge: "300",
-    cappedDistanceFee: "5000",
-    // ... other parameters
-  }]
+  System_configuratioins: [
+    {
+      shoppingTime: "40",
+      baseDeliveryFee: "1000",
+      distanceSurcharge: "300",
+      cappedDistanceFee: "5000",
+      // ... other parameters
+    },
+  ];
 }
 ```
 
@@ -4724,25 +4734,25 @@ useEffect(() => {
     const now = new Date();
     const deliveryTime = new Date(order.delivery_time);
     const remaining = deliveryTime.getTime() - now.getTime();
-    
+
     if (remaining <= 0) {
       setTimeRemaining("Delivered");
       return;
     }
-    
+
     const hours = Math.floor(remaining / (1000 * 60 * 60));
     const minutes = Math.floor((remaining % (1000 * 60 * 60)) / (1000 * 60));
-    
+
     if (hours > 0) {
       setTimeRemaining(`${hours}h ${minutes}m`);
     } else {
       setTimeRemaining(`${minutes}m`);
     }
   };
-  
+
   updateCountdown();
   const interval = setInterval(updateCountdown, 1000);
-  
+
   return () => clearInterval(interval);
 }, [order.delivery_time]);
 ```
@@ -4750,28 +4760,34 @@ useEffect(() => {
 ## Error Handling
 
 ### Missing Delivery Address
+
 - System falls back to default delivery time calculation
 - User is prompted to select delivery address
 
 ### Invalid Coordinates
+
 - System uses default values for distance calculation
 - Logs warning for debugging
 
 ### System Configuration Unavailable
+
 - Uses fallback values for shopping time and fees
 - Ensures order creation continues with reasonable defaults
 
 ## Performance Considerations
 
 ### Caching
+
 - System configuration is cached to reduce database queries
 - Distance calculations are memoized for repeated calculations
 
 ### Real-time Updates
+
 - Countdown timers use efficient intervals (1-second updates)
 - Components clean up intervals on unmount to prevent memory leaks
 
 ### Database Optimization
+
 - Delivery time calculations are performed at order creation
 - Stored timestamps enable efficient querying and sorting
 
@@ -4780,14 +4796,17 @@ useEffect(() => {
 ### Planned Improvements
 
 1. **Traffic Integration**
+
    - Real-time traffic data integration
    - Dynamic delivery time adjustments based on traffic conditions
 
 2. **Weather Considerations**
+
    - Weather impact on delivery times
    - Seasonal adjustments for delivery estimates
 
 3. **Machine Learning**
+
    - Historical delivery time analysis
    - Predictive delivery time improvements
    - Shopper performance-based adjustments

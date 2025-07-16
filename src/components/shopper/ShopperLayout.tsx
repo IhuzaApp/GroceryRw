@@ -247,9 +247,7 @@ export default function ShopperLayout({ children }: ShopperLayoutProps) {
   // status is 'authenticated' | 'loading' | 'unauthenticated'
   return (
     <div
-      className={`h-screen ${
-        theme === "dark" ? "bg-gray-900" : "bg-gray-50"
-      }`}
+      className={`h-screen ${theme === "dark" ? "bg-gray-900" : "bg-gray-50"}`}
     >
       <ShopperHeader />
       <div className="flex h-full">
