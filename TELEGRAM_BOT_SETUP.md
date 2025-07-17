@@ -14,6 +14,10 @@ The Telegram bot allows shoppers to:
 ### ✅ Implemented
 - **Account Connection**: Shoppers can connect their Telegram account using a unique shopper ID
 - **Session-Based Status**: Online/offline status is managed through the web interface (not via Telegram commands)
+- **Today's Summary**: View today's orders, earnings, and hourly chart
+- **Weekly Summary**: View this week's orders, earnings, and daily chart
+- **Monthly Summary**: View this month's orders, earnings, and weekly chart
+- **Available Orders**: View orders not picked up for 40+ minutes with web dashboard button
 - **Order Notifications**: Shoppers receive notifications about new orders and updates
 - **Help System**: Built-in help commands and user guidance
 
@@ -42,6 +46,10 @@ The Telegram bot allows shoppers to:
 | `/start [shopperId]` | Connect with specific shopper ID |
 | `/online` | Get instructions to go online via web interface |
 | `/offline` | Get instructions to go offline via web interface |
+| `/today` | View today's orders, earnings, and chart |
+| `/week` | View this week's orders, earnings, and daily chart |
+| `/month` | View this month's orders, earnings, and weekly chart |
+| `/orders` | View available orders (not picked up for 40+ minutes) |
 | `/help` | Show all available commands |
 | `/status` | Check your current connection status |
 
@@ -174,6 +182,18 @@ node test-bot-api.js
 # Test shopper creation workflow
 node test-shopper-creation.js
 
+# Test today's earnings API
+node test-today-command.js
+
+# Test week's earnings API
+node test-week-command.js
+
+# Test month's earnings API
+node test-month-command.js
+
+# Test available orders API
+node test-orders-command.js
+
 # Test bot commands
 node test-bot-commands.js
 ```
@@ -191,7 +211,28 @@ node test-bot-commands.js
    - Send `/offline` to the bot
    - Verify it provides instructions to use the web interface
 
-3. **Help Test**:
+3. **Today's Summary Test**:
+   - Send `/today` to the bot
+   - Verify it shows today's earnings, order count, and chart
+   - Check that the hourly chart displays correctly
+
+4. **Weekly Summary Test**:
+   - Send `/week` to the bot
+   - Verify it shows this week's earnings, order count, and daily chart
+   - Check that the daily chart displays correctly
+
+5. **Monthly Summary Test**:
+   - Send `/month` to the bot
+   - Verify it shows this month's earnings, order count, and weekly chart
+   - Check that the weekly chart displays correctly
+
+6. **Available Orders Test**:
+   - Send `/orders` to the bot
+   - Verify it shows available orders (40+ minutes old)
+   - Check that the web dashboard button appears
+   - Test clicking the button to go to the web interface
+
+7. **Help Test**:
    - Send `/help` to the bot
    - Verify all commands are listed correctly
 
