@@ -5,10 +5,13 @@ import { gql } from "graphql-request";
 // Define types for the GraphQL response
 interface Order {
   id: string;
+  OrderID: number;
   created_at: string;
+  delivery_time: string | null;
   service_fee: string | null;
   delivery_fee: string | null;
   status: string;
+  delivery_notes: string | null;
   shop: {
     name: string;
     address: string;
@@ -27,6 +30,7 @@ interface Order {
 interface ReelOrder {
   id: string;
   created_at: string;
+  delivery_time: string | null;
   service_fee: string | null;
   delivery_fee: string | null;
   total: string;
@@ -57,22 +61,24 @@ interface GraphQLResponse {
   reel_orders: ReelOrder[];
 }
 
-// GraphQL query to fetch available orders
-const GET_AVAILABLE_ORDERS = gql`
-  query GetAvailableOrders {
+// GraphQL query to fetch assigned orders for a specific shopper
+const GET_ASSIGNED_BATCHES = gql`
+  query GetAssignedBatches($shopper_id: uuid!) {
     Orders(
       where: { 
-        shopper_id: { _is_null: true }, 
-        status: { _eq: "PENDING" }
+        shopper_id: { _eq: $shopper_id }, 
+        status: { _neq: "delivered" }
       }
       order_by: { created_at: desc }
-      limit: 10
     ) {
       id
+      OrderID
       created_at
+      delivery_time
       service_fee
       delivery_fee
       status
+      delivery_notes
       shop: Shop {
         name
         address
@@ -90,14 +96,14 @@ const GET_AVAILABLE_ORDERS = gql`
 
     reel_orders(
       where: { 
-        shopper_id: { _is_null: true }, 
-        status: { _eq: "PENDING" }
+        shopper_id: { _eq: $shopper_id }, 
+        status: { _neq: "delivered" }
       }
       order_by: { created_at: desc }
-      limit: 10
     ) {
       id
       created_at
+      delivery_time
       service_fee
       delivery_fee
       total
@@ -134,16 +140,22 @@ export default async function handler(
   }
 
   try {
+    const { userId } = req.body;
+
+    if (!userId) {
+      return res.status(400).json({ error: "userId is required" });
+    }
+
     if (!hasuraClient) {
       throw new Error("Hasura client is not initialized");
     }
 
-    // Calculate 40 minutes ago
-    const fortyMinutesAgo = new Date(Date.now() - 40 * 60 * 1000);
-
-    // Fetch available orders
+    // Fetch assigned orders for this shopper
     const data = await hasuraClient.request<GraphQLResponse>(
-      GET_AVAILABLE_ORDERS
+      GET_ASSIGNED_BATCHES,
+      {
+        shopper_id: userId,
+      }
     );
 
     // Process regular orders
@@ -152,18 +164,25 @@ export default async function handler(
       const deliveryFee = parseFloat(order.delivery_fee || "0");
       const totalEarnings = serviceFee + deliveryFee;
       
-      const createdAt = new Date(order.created_at);
-      const minutesAgo = Math.floor((Date.now() - createdAt.getTime()) / (1000 * 60));
+      const deliveryTime = order.delivery_time ? new Date(order.delivery_time) : null;
+      const timeRemaining = deliveryTime ? Math.max(0, deliveryTime.getTime() - Date.now()) : null;
+      const minutesRemaining = timeRemaining ? Math.floor(timeRemaining / (1000 * 60)) : null;
 
       return {
         id: order.id,
+        orderId: order.OrderID,
         type: "regular",
+        status: order.status,
         shopName: order.shop?.name || "Unknown Shop",
         shopAddress: order.shop?.address || "No address",
         customerAddress: `${order.address?.street || "No street"}, ${order.address?.city || "No city"}`,
         earnings: totalEarnings,
+        serviceFee,
+        deliveryFee,
         itemsCount: order.Order_Items_aggregate.aggregate?.count || 0,
-        minutesAgo,
+        deliveryTime: order.delivery_time,
+        minutesRemaining,
+        deliveryNotes: order.delivery_notes,
         createdAt: order.created_at,
       };
     });
@@ -174,12 +193,14 @@ export default async function handler(
       const deliveryFee = parseFloat(order.delivery_fee || "0");
       const totalEarnings = serviceFee + deliveryFee;
       
-      const createdAt = new Date(order.created_at);
-      const minutesAgo = Math.floor((Date.now() - createdAt.getTime()) / (1000 * 60));
+      const deliveryTime = order.delivery_time ? new Date(order.delivery_time) : null;
+      const timeRemaining = deliveryTime ? Math.max(0, deliveryTime.getTime() - Date.now()) : null;
+      const minutesRemaining = timeRemaining ? Math.floor(timeRemaining / (1000 * 60)) : null;
 
       return {
         id: order.id,
         type: "reel",
+        status: order.status,
         title: order.Reel.title,
         description: order.Reel.description,
         product: order.Reel.Product,
@@ -188,16 +209,19 @@ export default async function handler(
         customerPhone: order.user.phone,
         customerAddress: `${order.address?.street || "No street"}, ${order.address?.city || "No city"}`,
         earnings: totalEarnings,
+        serviceFee,
+        deliveryFee,
         quantity: parseInt(order.quantity),
+        deliveryTime: order.delivery_time,
+        minutesRemaining,
         deliveryNote: order.delivery_note,
-        minutesAgo,
         createdAt: order.created_at,
       };
     });
 
-    // Combine and sort all orders by creation time (oldest first)
+    // Combine and sort all orders by creation time (newest first)
     const allOrders = [...regularOrders, ...reelOrders].sort((a, b) => 
-      new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
+      new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
     );
 
     return res.status(200).json({
@@ -207,16 +231,15 @@ export default async function handler(
         totalCount: allOrders.length,
         regularCount: regularOrders.length,
         reelCount: reelOrders.length,
-        fortyMinutesAgo: fortyMinutesAgo.toISOString(),
       },
     });
   } catch (error) {
-    console.error("Error fetching available orders:", error);
+    console.error("Error fetching assigned batches:", error);
     return res.status(500).json({
       error:
         error instanceof Error
           ? error.message
-          : "Failed to fetch available orders",
+          : "Failed to fetch assigned batches",
     });
   }
 } 

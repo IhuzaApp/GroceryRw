@@ -8,9 +8,6 @@
     "lint": "next lint",
     "codegen": "graphql-codegen --config codegen.yml -r dotenv/config",
     "telegram:setup": "node scripts/setup-telegram-webhook.js",
-    "telegram:test": "node test-telegram-service.js",
-    "telegram:db-test": "node test-database-integration.js",
-    "telegram:create-test": "node test-shopper-creation.js",
     "dev:full": "node scripts/dev-with-telegram.js"
   },
   "dependencies": {

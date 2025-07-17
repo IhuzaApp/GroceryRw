@@ -11,6 +11,7 @@ import { useAuth } from "../../context/AuthContext";
 import { initiateRoleSwitch } from "../../lib/sessionRefresh";
 import { useTheme } from "../../context/ThemeContext";
 import { logger } from "../../utils/logger";
+import TelegramStatusButton from "./TelegramStatusButton";
 
 // Define interface for earnings response
 interface EarningsResponse {
@@ -190,7 +191,7 @@ export default function ShopperSidebar() {
           stroke="currentColor"
           strokeWidth="2"
         >
-          <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+          <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 00-4 4v2" />
           <circle cx="12" cy="7" r="4" />
         </svg>
       ),
@@ -628,6 +629,10 @@ export default function ShopperSidebar() {
             }`}
           >
             <div className="mx-auto max-w-md space-y-2">
+                      {/* Telegram Connect/Disconnect Button for mobile */}
+                      <div className="mt-2">
+                <TelegramStatusButton className="w-full" size="md" variant="primary" />
+              </div>
               {moreMenuItems.map((item) => (
                 <div
                   key={item.path}
@@ -663,6 +668,7 @@ export default function ShopperSidebar() {
                   <span className="flex-1">{item.label}</span>
                 </div>
               ))}
+      
             </div>
           </div>
         )}
