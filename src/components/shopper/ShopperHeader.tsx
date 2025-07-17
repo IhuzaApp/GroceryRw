@@ -7,7 +7,7 @@ import "rsuite/dist/rsuite.min.css";
 import { usePathname } from "next/navigation";
 import { useTheme } from "@context/ThemeContext";
 import { Button } from "rsuite";
-import TelegramConnectButton from "./TelegramConnectButton";
+import TelegramStatusButton from "./TelegramStatusButton";
 
 export default function ShopperHeader() {
   const [isMobile, setIsMobile] = useState(false);
@@ -42,7 +42,7 @@ export default function ShopperHeader() {
 
       <div className="flex items-center gap-3">
         <div className="hidden items-center gap-2 md:flex">
-          <TelegramConnectButton 
+          <TelegramStatusButton 
             variant="primary"
             size="md"
             className="bg-blue-500 hover:bg-blue-600 text-white"

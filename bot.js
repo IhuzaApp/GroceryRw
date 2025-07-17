@@ -15,6 +15,9 @@ const bot = new TelegramBot(token, { polling: true });
 // API base URL (for local development)
 const API_BASE_URL = process.env.API_BASE_URL || 'http://localhost:3000';
 
+// Public base URL for Telegram buttons (must be HTTPS)
+const PUBLIC_BASE_URL = process.env.PUBLIC_BASE_URL || 'https://grocery-rw.vercel.app';
+
 console.log('🤖 Telegram Bot is starting...');
 console.log('📝 Listening for /start messages...');
 console.log('🔗 API Base URL:', API_BASE_URL);
@@ -289,6 +292,7 @@ bot.onText(/\/help/, async (msg) => {
     `/week - View this week's orders and earnings\n` +
     `/month - View this month's orders and earnings\n` +
     `/orders - View available orders (40+ min old)\n` +
+    `/batches - View your assigned batches\n` +
     `/help - Show this help message`
   );
 });
@@ -577,7 +581,7 @@ bot.onText(/\/orders/, async (msg) => {
           inline_keyboard: [[
             {
               text: "🚀 View Orders on Web",
-              url: `${API_BASE_URL}/Plasa/orders`
+              url: `${PUBLIC_BASE_URL}/Plasa/orders`
             }
           ]]
         };
@@ -605,6 +609,117 @@ bot.onText(/\/orders/, async (msg) => {
   }
 });
 
+// Handle assigned batches/orders for the shopper
+bot.onText(/\/batches/, async (msg) => {
+  const chatId = msg.chat.id;
+  const name = `${msg.from.first_name || ''} ${msg.from.last_name || ''}`.trim();
+
+  console.log(`📦 /batches command from chat ${chatId}`);
+
+  const shopper = await getShopperByTelegramId(chatId.toString());
+  
+  if (shopper) {
+    try {
+      // Fetch assigned batches
+      const response = await fetch(`${API_BASE_URL}/api/telegram/assigned-batches`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          userId: shopper.user_id
+        })
+      });
+
+      const data = await response.json();
+      
+      if (data && data.success && data.data.orders.length > 0) {
+        const { orders, totalCount, regularCount, reelCount } = data.data;
+        
+        // Create order list message
+        let message = `📦 ${name}, here are your assigned batches:\n\n`;
+        message += `📊 Summary: ${totalCount} total orders (${regularCount} regular, ${reelCount} reel)\n\n`;
+        
+        // Add first 5 orders to the message
+        orders.slice(0, 5).forEach((order, index) => {
+          const typeIcon = order.type === 'reel' ? '🎬' : '🛒';
+          const typeLabel = order.type === 'reel' ? 'REEL' : 'REGULAR';
+          const statusIcon = order.status === 'shopping' ? '🛍️' : 
+                           order.status === 'picked_up' ? '📦' : 
+                           order.status === 'on_way' ? '🚚' : '⏳';
+          
+          message += `${index + 1}. ${typeIcon} ${typeLabel} ${statusIcon}\n`;
+          
+          if (order.type === 'regular') {
+            message += `   🆔 Order ID: ${order.orderId}\n`;
+            message += `   💰 Earnings: $${order.earnings.toFixed(2)}\n`;
+            message += `   🏪 Shop: ${order.shopName}\n`;
+            message += `   📦 Items: ${order.itemsCount}\n`;
+          } else {
+            message += `   💰 Earnings: $${order.earnings.toFixed(2)}\n`;
+            message += `   📝 ${order.title}\n`;
+            message += `   👤 ${order.customerName}\n`;
+            message += `   📦 Qty: ${order.quantity}\n`;
+          }
+          
+          if (order.deliveryTime) {
+            const deliveryTime = new Date(order.deliveryTime).toLocaleTimeString();
+            message += `   ⏰ Delivery: ${deliveryTime}\n`;
+            if (order.minutesRemaining !== null) {
+              if (order.minutesRemaining > 0) {
+                message += `   ⏳ Time left: ${order.minutesRemaining} min\n`;
+              } else {
+                message += `   ⚠️ Overdue: ${Math.abs(order.minutesRemaining)} min\n`;
+              }
+            }
+          }
+          
+          if (order.deliveryNotes || order.deliveryNote) {
+            message += `   📝 Note: ${order.deliveryNotes || order.deliveryNote}\n`;
+          }
+          
+          message += `\n`;
+        });
+        
+        if (orders.length > 5) {
+          message += `... and ${orders.length - 5} more orders\n\n`;
+        }
+        
+        message += `🚀 Click the button below to view and manage orders on the web dashboard!`;
+        
+        // Create inline keyboard with button to go to web dashboard
+        const keyboard = {
+          inline_keyboard: [[
+            {
+              text: "🚀 View Batches on Web",
+              url: `${PUBLIC_BASE_URL}/Plasa/active-batches`
+            }
+          ]]
+        };
+        
+        await bot.sendMessage(chatId, message, { reply_markup: keyboard });
+      } else {
+        await bot.sendMessage(
+          chatId,
+          `📦 ${name}, you don't have any assigned batches at the moment.\n\n` +
+          `All your orders have been delivered or you're currently free to accept new orders.`
+        );
+      }
+    } catch (error) {
+      console.error('Error fetching assigned batches:', error);
+      await bot.sendMessage(
+        chatId,
+        `❌ Sorry, there was an error fetching your assigned batches. Please try again later.`
+      );
+    }
+  } else {
+    await bot.sendMessage(
+      chatId,
+      `❌ You're not connected as a shopper. Please use /start to connect your account first.`
+    );
+  }
+});
+
 // Handle errors
 bot.on('error', (error) => {
   console.error('❌ Bot error:', error);
@@ -614,6 +729,6 @@ bot.on('polling_error', (error) => {
   console.error('❌ Polling error:', error);
 });
 
-console.log('✅ Bot is ready! Send /start to @PlaseraBot to test.');
+console.log('✅ Bot is ready! Send /start to @PlaseraBot to connect.');
 console.log('📊 Database integration: ENABLED');
 console.log('🔄 Status updates: ENABLED'); 

@@ -156,17 +156,8 @@ await TelegramService.sendOrderAssignment(shopperId, {
 
 ## 🧪 Testing
 
-### Test Database Integration
+### Test Bot with Database
 ```bash
-# Test the complete database integration
-yarn telegram:db-test
-```
-
-### Test Individual Components
-```bash
-# Test basic Telegram service
-yarn telegram:test
-
 # Test bot with database
 node bot.js
 ```
