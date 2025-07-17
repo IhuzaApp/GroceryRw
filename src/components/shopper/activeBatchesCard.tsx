@@ -7,7 +7,7 @@ import "rsuite/dist/rsuite.min.css";
 import { useAuth } from "../../context/AuthContext";
 import { useTheme } from "../../context/ThemeContext";
 import { logger } from "../../utils/logger";
-import { formatCurrencySync } from "../../../utils/formatCurrency";
+import { formatCurrencySync } from "../../utils/formatCurrency";
 
 // Define interfaces for order data
 interface Order {

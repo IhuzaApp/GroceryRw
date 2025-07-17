@@ -7,7 +7,7 @@ import { logger } from "../../../src/utils/logger";
 const GET_AVAILABLE_ORDERS = gql`
   query GetAvailableOrders {
     Orders(
-      where: { shopper_id: { _is_null: true }, status: { _eq: "PENDING" } }
+      where: { user_id: { _is_null: true }, status: { _eq: "PENDING" } }
       order_by: { created_at: desc }
     ) {
       id

@@ -31,6 +31,38 @@ async function testBotCommands() {
     await bot.sendMessage(testChatId, '/help');
     console.log('✅ /help command sent\n');
 
+    // Wait a moment
+    await new Promise(resolve => setTimeout(resolve, 2000));
+
+    // Test 4: /today command
+    console.log('4️⃣ Testing /today command...');
+    await bot.sendMessage(testChatId, '/today');
+    console.log('✅ /today command sent\n');
+
+    // Wait a moment
+    await new Promise(resolve => setTimeout(resolve, 2000));
+
+    // Test 5: /week command
+    console.log('5️⃣ Testing /week command...');
+    await bot.sendMessage(testChatId, '/week');
+    console.log('✅ /week command sent\n');
+
+    // Wait a moment
+    await new Promise(resolve => setTimeout(resolve, 2000));
+
+    // Test 6: /month command
+    console.log('6️⃣ Testing /month command...');
+    await bot.sendMessage(testChatId, '/month');
+    console.log('✅ /month command sent\n');
+
+    // Wait a moment
+    await new Promise(resolve => setTimeout(resolve, 2000));
+
+    // Test 7: /orders command
+    console.log('7️⃣ Testing /orders command...');
+    await bot.sendMessage(testChatId, '/orders');
+    console.log('✅ /orders command sent\n');
+
     console.log('🎉 All test commands sent! Check your Telegram for responses.');
 
   } catch (error) {

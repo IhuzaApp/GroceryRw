@@ -16,7 +16,7 @@ import {
   Invoice,
   InvoicesPageProps,
 } from "../../../src/components/invoices";
-import { formatCurrencySync } from "../../../src/utils/formatCurrency";
+import { formatCurrencySync } from "../../../src/lib/formatCurrency";
 
 const InvoicesPage: React.FC<InvoicesPageProps> = ({
   initialInvoices = [],
