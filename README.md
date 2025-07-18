@@ -1,32 +1,3 @@
-This is a [Next.js](https://nextjs.org/) project bootstrapped with [`create-next-app`](https://github.com/vercel/next.js/tree/canary/packages/create-next-app).
-
-## Getting Started
-
-First, run the development server:
-
-```bash
-npm run dev
-# or
-yarn dev
-```
-
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
-
-You can start editing the page by modifying `pages/index.tsx`. The page auto-updates as you edit the file.
-
-[API routes](https://nextjs.org/docs/api-routes/introduction) can be accessed on [http://localhost:3000/api/hello](http://localhost:3000/api/hello). This endpoint can be edited in `pages/api/hello.ts`.
-
-The `pages/api` directory is mapped to `/api/*`. Files in this directory are treated as [API routes](https://nextjs.org/docs/api-routes/introduction) instead of React pages.
-
-## Learn More
-
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-  - [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js/) - your feedback and contributions are welcome!
-
 # Grocery Delivery System
 
 ## Overview
@@ -1240,6 +1211,7 @@ Check out our [Next.js deployment documentation](https://nextjs.org/docs/deploym
 3. [Delivery Photo Upload Feature](#delivery-photo-upload-feature)
 4. [Nearby Dasher Notification Logic](#nearby-dasher-notification-logic)
 5. [Telegram Bot Integration](#telegram-bot-integration)
+6. [Barcode Scanner System](#barcode-scanner-system)
 
 # Reels Feature Documentation
 
@@ -6553,3 +6525,94 @@ bot.onText(/\/start (.+)/, async (msg, match) => {
 ---
 
 For more details, see the bot implementation in `bot.js` and the API endpoints in `/pages/api/telegram/`.
+
+# Barcode Scanner System
+
+## Overview
+
+The barcode scanner system is a critical component for shoppers to verify products during the shopping process. It is designed to be robust, simple, and prevent common issues like accidental multiple scans from a single camera view.
+
+## Core Logic & Design Philosophy
+
+The primary challenge with in-browser barcode scanning is managing the lifecycle of the camera stream and the scanner's detection loop. A naive implementation can easily lead to race conditions where the scanner detects a barcode multiple times before the component has a chance to unmount or stop the process, leading to an unstoppable loop.
+
+To solve this, the system uses a clean, state-free (as much as possible) approach centered on React's `useEffect` hook for lifecycle management.
+
+### Key Principles:
+
+1.  **One-Time Scan, One-Time Cleanup**: The scanner is designed for a single successful scan. Once a barcode is detected, the component's entire lifecycle is torn down, ensuring no lingering processes.
+2.  **`useEffect` for Lifecycle**: The `useEffect` hook is the single source of truth for starting and stopping the scanner. Its cleanup function is guaranteed to run on unmount.
+3.  **Guard Flag for Race Conditions**: A `useRef` flag (`isScannedRef`) is used to "lock" the component after the first successful scan, preventing the detection callback from firing multiple times in quick succession.
+4.  **Official ZXing Controls**: The system uses the official `IScannerControls` object provided by the `@zxing/browser` library to stop the scanner, which is the recommended and most reliable method.
+
+## Component Implementation (`src/components/shopper/BarcodeScanner.tsx`)
+
+### State Management
+
+-   `videoRef`: A `useRef` to hold the `<video>` element.
+-   `controlsRef`: A `useRef` to hold the `IScannerControls` object from ZXing. This is used to programmatically stop the scanner.
+-   `isScannedRef`: A `useRef` boolean flag that acts as a **guard**. It is set to `true` the instant a barcode is detected to prevent the callback from processing any subsequent detections.
+-   `error`: A `useState` string to display any user-facing errors (e.g., camera permission denied).
+
+### Lifecycle (`useEffect`)
+
+```typescript
+useEffect(() => {
+  // 1. Reset the guard flag on each new mount.
+  isScannedRef.current = false;
+
+  // 2. Define an async function to start the scanner.
+  const startScanner = async () => {
+    // ...
+  };
+
+  startScanner();
+
+  // 3. The cleanup function is the key. It runs when the component unmounts.
+  return () => {
+    stopScanner();
+  };
+}, [onBarcodeDetected, onClose, stopScanner]);
+```
+
+### Scanning and Cleanup Logic
+
+1.  **`startScanner()`**:
+    -   Requests camera access using `navigator.mediaDevices.getUserMedia`.
+    -   Initializes the `BrowserMultiFormatReader` from ZXing.
+    -   Calls `reader.decodeFromStream(...)`, which starts the video feed and the detection loop. The controls for this process are stored in `controlsRef`.
+
+2.  **Detection Callback**: The callback function passed to `decodeFromStream` contains the core logic:
+
+    ```typescript
+    (result, err) => {
+      // Guard: Immediately exit if a scan has already been processed.
+      if (isScannedRef.current) {
+        return;
+      }
+
+      if (result) {
+        // Lock: Set the guard flag IMMEDIATELY.
+        isScannedRef.current = true;
+        
+        console.log('📷 Barcode detected:', result.getText());
+        
+        // Teardown:
+        stopScanner();
+        onBarcodeDetected(result.getText());
+        onClose();
+      }
+      // ... error handling ...
+    }
+    ```
+
+3.  **`stopScanner()`**: A `useCallback`-memoized function that:
+    -   Checks if `controlsRef.current` exists.
+    -   Calls `controlsRef.current.stop()`, which correctly stops the ZXing decoding loop and releases the camera stream.
+    -   Sets `controlsRef.current` to `null`.
+
+### Why This Design is Robust
+
+-   **No Race Condition**: The `isScannedRef` flag immediately prevents the callback's logic from running more than once. This is more reliable than trying to manage complex state transitions.
+-   **Guaranteed Cleanup**: By tying the `stopScanner` call to the `useEffect` cleanup function, React ensures that the camera and scanner are turned off when the component unmounts, preventing resource leaks.
+-   **Simplicity**: The component avoids complex state flags (`isLoading`, `isProcessing`, `isDestroyed`, etc.), which were the source of previous issues. The logic is linear and easy to follow: mount -> start -> scan -> stop -> unmount.
