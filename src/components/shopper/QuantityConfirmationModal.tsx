@@ -70,16 +70,27 @@ export default function QuantityConfirmationModal({
         setCustomerBudget(price);
       }
 
-      // For weight-based items, automatically set as valid
+      // Reset barcode validation for new item
       if (isWeight) {
         setBarcodeValidation({
           isValid: true,
           message: "Weight-based item - no barcode required",
           isWeightBased: true,
         });
+      } else {
+        // Reset barcode validation for non-weight-based items
+        setBarcodeValidation({
+          isValid: false,
+          message: "",
+          isWeightBased: false,
+        });
       }
+      
+      // Reset found quantity for new item
+      setFoundQuantity(0);
+      setFoundWeight(0);
     }
-  }, [currentItem]);
+  }, [currentItem, setFoundQuantity]);
 
   // Calculate if weight exceeds budget and refund amounts
   useEffect(() => {
