@@ -79,7 +79,7 @@ export default function SideBar() {
         <div className="flex flex-col items-center gap-6 p-4">
           {/* Home */}
           <Link
-            className="rounded-full p-2 text-inherit transition-colors duration-200 hover:bg-gray-200 dark:hover:bg-gray-700"
+            className="rounded-full p-2 text-inherit transition-colors duration-200 hover:bg-gray-200 dark:hover:bg-green-700 dark:hover:text-white"
             href={"/"}
             passHref
           >
@@ -116,7 +116,7 @@ export default function SideBar() {
 
           {/* Profile */}
           <Link
-            className="rounded-full p-2 text-inherit transition-colors duration-200 hover:bg-gray-200 dark:hover:bg-gray-700"
+            className="rounded-full p-2 text-inherit transition-colors duration-200 hover:bg-gray-200 dark:hover:bg-green-700 dark:hover:text-white"
             href={"/Myprofile"}
             passHref
           >
@@ -154,7 +154,7 @@ export default function SideBar() {
 
           {/* Orders */}
           <Link
-            className="relative rounded-full p-2 text-inherit transition-colors duration-200 hover:bg-gray-200 dark:hover:bg-gray-700"
+            className="relative rounded-full p-2 text-inherit transition-colors duration-200 hover:bg-gray-200 dark:hover:bg-green-700 dark:hover:text-white"
             href={"/CurrentPendingOrders"}
             passHref
           >
@@ -193,7 +193,7 @@ export default function SideBar() {
 
           {/* Recipes */}
           <Link
-            className="rounded-full p-2 text-inherit transition-colors duration-200 hover:bg-gray-200 dark:hover:bg-gray-700"
+            className="rounded-full p-2 text-inherit transition-colors duration-200 hover:bg-gray-200 dark:hover:bg-green-700 dark:hover:text-white"
             href={"/Recipes"}
             passHref
           >
@@ -217,7 +217,7 @@ export default function SideBar() {
 
           {/* Reels */}
           <Link
-            className="rounded-full p-2 text-inherit transition-colors duration-200 hover:bg-gray-200 dark:hover:bg-gray-700"
+            className="rounded-full p-2 text-inherit transition-colors duration-200 hover:bg-gray-200 dark:hover:bg-green-700 dark:hover:text-white"
             href={"/Reels"}
             passHref
           >
@@ -230,18 +230,35 @@ export default function SideBar() {
               className="text-inherit"
             >
               <path
-                d="M19 7V5H5v2m14 0v2H5V7m14 0H5m0 4v6a2 2 0 002 2h10a2 2 0 002-2v-6m-4 3h.01M12 14h.01M8 14h.01"
+                d="M3 5.80005C3 4.25368 4.25368 3.00005 5.80005 3.00005H18.2C19.7464 3.00005 21 4.25368 21 5.80005V18.2C21 19.7464 19.7464 21 18.2 21H5.80005C4.25368 21 3 19.7464 3 18.2V5.80005Z"
+                className="stroke-current"
+                strokeWidth="1.5"
+              />
+              <path
+                d="M10 17L15 12L10 7V17Z"
                 className="stroke-current"
                 strokeWidth="1.5"
                 strokeLinecap="round"
                 strokeLinejoin="round"
+              />
+              <path
+                d="M3 8H21"
+                className="stroke-current"
+                strokeWidth="1.5"
+                strokeLinecap="round"
+              />
+              <path
+                d="M3 16H21"
+                className="stroke-current"
+                strokeWidth="1.5"
+                strokeLinecap="round"
               />
             </svg>
           </Link>
 
           {/* Chat */}
           <Link
-            className="relative rounded-full p-2 text-inherit transition-colors duration-200 hover:bg-gray-200 dark:hover:bg-gray-700"
+            className="relative rounded-full p-2 text-inherit transition-colors duration-200 hover:bg-gray-200 dark:hover:bg-green-700 dark:hover:text-white"
             href={"/Messages"}
             passHref
           >
