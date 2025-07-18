@@ -1,6 +1,7 @@
 import React, { useRef, useState, useEffect, useCallback } from 'react';
 import { createPortal } from 'react-dom';
 import { BrowserMultiFormatReader, IScannerControls } from '@zxing/browser';
+import { useTheme } from '../../context/ThemeContext'; // Import useTheme
 
 interface BarcodeScannerProps {
   onBarcodeDetected: (barcode: string) => void;
@@ -8,6 +9,7 @@ interface BarcodeScannerProps {
 }
 
 const BarcodeScanner: React.FC<BarcodeScannerProps> = ({ onBarcodeDetected, onClose }) => {
+  const { theme } = useTheme(); // Get theme context
   const videoRef = useRef<HTMLVideoElement>(null);
   const controlsRef = useRef<IScannerControls | null>(null);
   const isScannedRef = useRef(false); // Guard flag to prevent multiple scans
@@ -73,11 +75,15 @@ const BarcodeScanner: React.FC<BarcodeScannerProps> = ({ onBarcodeDetected, onCl
   }, [onBarcodeDetected, onClose, stopScanner]);
 
   const scannerContent = (
-    <div className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center" style={{ zIndex: 999999 }}>
-      <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4 relative">
+    <div className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center p-4 sm:p-6" style={{ zIndex: 999999 }}>
+      <div className={`rounded-lg p-4 sm:p-6 w-full max-w-sm sm:max-w-md mx-auto relative ${
+        theme === 'dark' ? 'bg-gray-800 text-white' : 'bg-white text-gray-900'
+      }`}>
         <div className="flex justify-between items-center mb-4">
           <h3 className="text-lg font-semibold">Scan Barcode</h3>
-          <button onClick={onClose} className="text-gray-500 hover:text-gray-700">
+          <button onClick={onClose} className={`hover:text-gray-400 ${
+            theme === 'dark' ? 'text-gray-300' : 'text-gray-500'
+          }`}>
             ✕
           </button>
         </div>
@@ -94,17 +100,21 @@ const BarcodeScanner: React.FC<BarcodeScannerProps> = ({ onBarcodeDetected, onCl
             autoPlay
             playsInline
             muted
-            className="w-full h-64 bg-gray-900 rounded"
+            className="w-full h-48 sm:h-64 bg-gray-900 rounded"
           />
           <div className="absolute inset-0 flex items-center justify-center">
-            <div className="h-48 w-80 border border-white border-dashed rounded-lg opacity-50" />
+            <div className="h-40 w-full max-w-xs sm:h-48 sm:w-80 border border-white border-dashed rounded-lg opacity-50" />
           </div>
         </div>
         
         <div className="mt-4 flex justify-end">
           <button
             onClick={onClose}
-            className="px-4 py-2 border border-gray-300 rounded hover:bg-gray-50"
+            className={`px-4 py-2 rounded transition-colors ${
+              theme === 'dark' 
+                ? 'bg-gray-700 hover:bg-gray-600 border border-gray-600' 
+                : 'bg-gray-100 hover:bg-gray-200 border border-gray-300'
+            }`}
           >
             Cancel
           </button>
