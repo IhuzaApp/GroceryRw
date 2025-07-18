@@ -128,6 +128,7 @@ interface OrderDetailsType {
     id: string;
     name: string;
     email: string;
+    phone?: string;
     profile_picture: string;
   };
   shop?: {
@@ -135,6 +136,10 @@ interface OrderDetailsType {
     name: string;
     address: string;
     image: string;
+    phone?: string;
+    operating_hours?: any;
+    latitude?: string;
+    longitude?: string;
   };
   Order_Items?: OrderItem[];
   address: {
@@ -264,9 +269,23 @@ export default function BatchDetails({
           });
         },
         (error) => {
-          console.error("Error getting location:", error);
+          // Fallback: Use a default location (Kigali, Rwanda)
+          setCurrentLocation({
+            lat: -1.9441,
+            lng: 30.0619,
+          });
+        },
+        {
+          enableHighAccuracy: true,
+          timeout: 10000,
+          maximumAge: 300000 // 5 minutes
         }
       );
+    } else {
+      setCurrentLocation({
+        lat: -1.9441,
+        lng: 30.0619,
+      });
     }
   }, []);
 
@@ -298,19 +317,93 @@ export default function BatchDetails({
     fetchSystemConfig();
   }, []);
 
-  // Function to generate directions URL
-  const getDirectionsUrl = (destinationAddress: string) => {
+  // Function to generate directions URL with mobile app support
+  const getDirectionsUrl = (destinationAddress: string, isMobile: boolean = false) => {
     if (currentLocation) {
-      return `https://www.google.com/maps/dir/?api=1&origin=${
-        currentLocation.lat
-      },${currentLocation.lng}&destination=${encodeURIComponent(
-        destinationAddress
-      )}`;
+      if (isMobile) {
+        // For mobile, try to open native map apps
+        const encodedDestination = encodeURIComponent(destinationAddress);
+        const origin = `${currentLocation.lat},${currentLocation.lng}`;
+        
+        // Try Apple Maps first (iOS), then Google Maps, then fallback to web
+        if (navigator.userAgent.includes('iPhone') || navigator.userAgent.includes('iPad')) {
+          return `http://maps.apple.com/?saddr=${origin}&daddr=${encodedDestination}`;
+        } else {
+          // For Android and other mobile devices, try Google Maps app
+          return `https://www.google.com/maps/dir/?api=1&origin=${origin}&destination=${encodedDestination}`;
+        }
+      } else {
+        // For desktop, use web version
+        return `https://www.google.com/maps/dir/?api=1&origin=${
+          currentLocation.lat
+        },${currentLocation.lng}&destination=${encodeURIComponent(
+          destinationAddress
+        )}`;
+      }
     }
     // Fallback to just the destination if no current location
+    if (isMobile) {
+      const encodedDestination = encodeURIComponent(destinationAddress);
+      if (navigator.userAgent.includes('iPhone') || navigator.userAgent.includes('iPad')) {
+        return `http://maps.apple.com/?q=${encodedDestination}`;
+      } else {
+        return `https://www.google.com/maps/search/?api=1&query=${encodedDestination}`;
+      }
+    }
     return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(
       destinationAddress
     )}`;
+  };
+
+  // Function to handle direction button click with mobile detection
+  const handleDirectionsClick = (address: string) => {
+    const isMobile = isMobileDevice();
+    const directionsUrl = getDirectionsUrl(address, isMobile);
+    
+    if (isMobile) {
+      // For mobile, try to open in app, fallback to web
+      window.location.href = directionsUrl;
+    } else {
+      // For desktop, open in new tab
+      window.open(directionsUrl, '_blank');
+    }
+  };
+
+  // Function to calculate distance between two points
+  const calculateDistance = (lat1: number, lon1: number, lat2: number, lon2: number): number => {
+    const R = 6371; // Radius of the Earth in kilometers
+    const dLat = (lat2 - lat1) * Math.PI / 180;
+    const dLon = (lon2 - lon1) * Math.PI / 180;
+    const a = 
+      Math.sin(dLat/2) * Math.sin(dLat/2) +
+      Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * 
+      Math.sin(dLon/2) * Math.sin(dLon/2);
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+    const distance = R * c; // Distance in kilometers
+    return Math.round(distance * 10) / 10; // Round to 1 decimal place
+  };
+
+  // Function to get shop distance
+  const getShopDistance = (): string | null => {
+    if (!currentLocation || !order?.shop?.latitude || !order?.shop?.longitude) {
+      return null;
+    }
+    
+    const shopLat = parseFloat(order.shop.latitude);
+    const shopLng = parseFloat(order.shop.longitude);
+    
+    if (isNaN(shopLat) || isNaN(shopLng)) {
+      return null;
+    }
+    
+    const distance = calculateDistance(
+      currentLocation.lat,
+      currentLocation.lng,
+      shopLat,
+      shopLng
+    );
+    
+    return `${distance} km`;
   };
 
   // Generate a 5-digit OTP
@@ -1004,6 +1097,22 @@ export default function BatchDetails({
     }
   };
 
+  // Fetch complete order data when component mounts
+  useEffect(() => {
+    if (order?.id) {
+      fetch(`/api/queries/orderDetails?id=${order.id}`)
+        .then(res => res.json())
+        .then(data => {
+          if (data.order) {
+            setOrder(data.order);
+          }
+        })
+        .catch(err => {
+          console.error("Error fetching complete order data:", err);
+        });
+    }
+  }, [order?.id]);
+
   if (loading && !order) {
     return (
       <div className="flex h-[calc(100vh-200px)] items-center justify-center">
@@ -1207,8 +1316,10 @@ export default function BatchDetails({
 
             {/* Main Info Grid */}
             <div className="grid grid-cols-1 gap-3 sm:gap-8 lg:grid-cols-2">
-              {/* Shop/Reel Info */}
-              <div className="rounded-lg border border-slate-200 bg-slate-50 p-3 dark:border-slate-700 dark:bg-slate-800 sm:rounded-xl sm:p-6">
+              
+
+            {/* Shop/Reel Info */}
+            <div className="rounded-lg border border-slate-200 bg-slate-50 p-3 dark:border-slate-700 dark:bg-slate-800 sm:rounded-xl sm:p-6">
                 <div className="mb-3 flex items-center gap-2 sm:mb-4 sm:gap-3">
                   <span
                     className={`inline-block rounded-full p-1.5 sm:p-2 ${
@@ -1242,8 +1353,7 @@ export default function BatchDetails({
                           strokeLinecap="round"
                           strokeLinejoin="round"
                           strokeWidth={2}
-                          d="M3 7v4a1 1 0 001 1h3m10 0h3a1 1 0 001-1V7m-1-4H5a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2V5a2 2 0 00-2-2z"
-                        />
+                          d="M3 7v4a1 1 0 001 1h3m10 0h3a1 1 0 001-1V7m-1-4H5a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2V5a2 2 0 00-2-2z" />
                       </svg>
                     )}
                   </span>
@@ -1313,39 +1423,133 @@ export default function BatchDetails({
                     )}
                   </div>
                 ) : (
-                  <div className="flex flex-col gap-3 sm:flex-row sm:gap-4">
-                    <div className="relative mx-auto h-10 w-10 flex-shrink-0 overflow-hidden rounded-lg bg-slate-200 sm:mx-0 sm:h-16 sm:w-16">
-                      {order.shop?.image ? (
-                        <Image
-                          src={order.shop.image}
-                          alt={order.shop.name}
-                          width={64}
-                          height={64}
-                          className="h-full w-full object-cover"
-                        />
-                      ) : (
-                        <div className="flex h-full w-full items-center justify-center bg-slate-300 text-slate-400">
+                  <div className="space-y-3">
+                    <div className="flex flex-col gap-3 sm:flex-row sm:gap-4">
+                      <div className="relative mx-auto h-10 w-10 flex-shrink-0 overflow-hidden rounded-lg bg-slate-200 sm:mx-0 sm:h-16 sm:w-16">
+                        {order.shop?.image ? (
+                          <Image
+                            src={order.shop.image}
+                            alt={order.shop.name}
+                            width={64}
+                            height={64}
+                            className="h-full w-full object-cover"
+                          />
+                        ) : (
+                          <div className="flex h-full w-full items-center justify-center bg-slate-300 text-slate-400">
+                            <svg
+                              viewBox="0 0 24 24"
+                              fill="none"
+                              stroke="currentColor"
+                              strokeWidth="2"
+                              className="h-5 w-5 sm:h-6 sm:w-6"
+                            >
+                              <rect x="3" y="3" width="18" height="18" rx="2" />
+                              <path d="M16 8h.01M8 16h.01M16 16h.01" />
+                            </svg>
+                          </div>
+                        )}
+                      </div>
+                      <div className="flex-1 text-center sm:text-left">
+                        <h3 className="mb-1 text-base font-semibold text-slate-900 dark:text-slate-100 sm:text-lg">
+                          {order.shop?.name}
+                        </h3>
+                        <p className="text-sm text-slate-600 dark:text-slate-400 sm:text-base">
+                          {order.shop?.address}
+                        </p>
+                      </div>
+                    </div>
+
+                    {/* Shop Contact Information */}
+                    <div className="rounded-lg border border-slate-200 bg-white p-3 dark:border-slate-600 dark:bg-slate-700 sm:p-4">
+                      <div className="space-y-2 text-sm sm:text-base">
+                        {/* Phone Number */}
+                        <div className="flex items-center justify-between">
+                          <span className="flex items-center text-slate-600 dark:text-slate-400">
+                            <svg
+                              viewBox="0 0 24 24"
+                              fill="none"
+                              stroke="currentColor"
+                              strokeWidth="2"
+                              className="mr-2 h-4 w-4"
+                            >
+                              <path d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
+                            </svg>
+                            Phone
+                          </span>
+                          {order.shop?.phone ? (
+                            <a
+                              href={`tel:${order.shop.phone}`}
+                              className="font-medium text-emerald-600 hover:text-emerald-700 dark:text-emerald-400 dark:hover:text-emerald-300"
+                            >
+                              {order.shop.phone}
+                            </a>
+                          ) : (
+                            <span className="font-medium text-slate-500 dark:text-slate-400">
+                              N/A
+                            </span>
+                          )}
+                        </div>
+
+                        {/* Operating Hours */}
+                        {order.shop?.operating_hours && (
+                          <div className="flex items-center justify-between">
+                            <span className="flex items-center text-slate-600 dark:text-slate-400">
+                              <svg
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                stroke="currentColor"
+                                strokeWidth="2"
+                                className="mr-2 h-4 w-4"
+                              >
+                                <circle cx="12" cy="12" r="10" />
+                                <polyline points="12,6 12,12 16,14" />
+                              </svg>
+                              Hours
+                            </span>
+                            <span className="font-medium text-slate-900 dark:text-slate-100">
+                              {(() => {
+                                const hoursObj = order.shop.operating_hours;
+                                if (hoursObj && typeof hoursObj === "object") {
+                                  const now = new Date();
+                                  const dayKey = now
+                                    .toLocaleDateString("en-US", { weekday: "long" })
+                                    .toLowerCase();
+                                  const todaysHours = (hoursObj as any)[dayKey];
+                                  if (todaysHours) {
+                                    return todaysHours;
+                                  }
+                                }
+                                return "Check store for hours";
+                              })()}
+                            </span>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                    
+                    {/* Shop Directions Button */}
+                    {order.shop?.address && (
+                      <div className="flex justify-center sm:justify-start">
+                        <Button
+                          appearance="ghost"
+                          size="sm"
+                          className="text-sm text-emerald-600 hover:bg-emerald-50 hover:text-emerald-700 dark:text-emerald-400 dark:hover:bg-emerald-900/20 sm:text-base"
+                          onClick={() => handleDirectionsClick(order.shop?.address || '')}
+                        >
                           <svg
                             viewBox="0 0 24 24"
                             fill="none"
                             stroke="currentColor"
                             strokeWidth="2"
-                            className="h-5 w-5 sm:h-6 sm:w-6"
+                            className="mr-1 h-4 w-4 sm:h-5 sm:w-5"
                           >
-                            <rect x="3" y="3" width="18" height="18" rx="2" />
-                            <path d="M16 8h.01M8 16h.01M16 16h.01" />
+                            <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z" />
+                            <circle cx="12" cy="10" r="3" />
                           </svg>
-                        </div>
-                      )}
-                    </div>
-                    <div className="flex-1 text-center sm:text-left">
-                      <h3 className="mb-1 text-base font-semibold text-slate-900 dark:text-slate-100 sm:text-lg">
-                        {order.shop?.name}
-                      </h3>
-                      <p className="text-sm text-slate-600 dark:text-slate-400 sm:text-base">
-                        {order.shop?.address}
-                      </p>
-                    </div>
+                          Directions to Shop
+                        </Button>
+                      </div>
+                    )}
                   </div>
                 )}
               </div>
@@ -1403,7 +1607,7 @@ export default function BatchDetails({
                       {order.user.name}
                     </h4>
                     <p className="text-sm text-slate-500 dark:text-slate-400 sm:text-base">
-                      {order.user.email}
+                      {order.user.phone || 'N/A'}
                     </p>
                   </div>
                 </div>
@@ -1422,22 +1626,37 @@ export default function BatchDetails({
                   </div>
 
                   <div className="flex flex-wrap justify-center gap-2 sm:justify-start">
-                    <Link
-                      href={`https://www.google.com/maps/dir/?api=1&origin=${encodeURIComponent(
-                        order.shop?.address || order.address.street
-                      )}&destination=${encodeURIComponent(
+                    <Button
+                      appearance="ghost"
+                      size="sm"
+                      className="text-sm text-sky-600 hover:bg-sky-50 hover:text-sky-700 dark:text-sky-400 dark:hover:bg-sky-900/20 sm:text-base"
+                      onClick={() => handleDirectionsClick(
                         `${order.address.street}, ${order.address.city}${
                           order.address.postal_code
                             ? `, ${order.address.postal_code}`
                             : ""
                         }`
-                      )}`}
-                      target="_blank"
+                      )}
                     >
+                      <svg
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                        className="mr-1 h-4 w-4 sm:h-5 sm:w-5"
+                      >
+                        <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z" />
+                        <circle cx="12" cy="10" r="3" />
+                      </svg>
+                      Directions to Customer
+                    </Button>
+
+                    {order.user.phone && (
                       <Button
                         appearance="ghost"
                         size="sm"
                         className="text-sm text-sky-600 hover:bg-sky-50 hover:text-sky-700 dark:text-sky-400 dark:hover:bg-sky-900/20 sm:text-base"
+                        onClick={() => window.location.href = `tel:${order.user.phone}`}
                       >
                         <svg
                           viewBox="0 0 24 24"
@@ -1446,13 +1665,12 @@ export default function BatchDetails({
                           strokeWidth="2"
                           className="mr-1 h-4 w-4 sm:h-5 sm:w-5"
                         >
-                          <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z" />
-                          <circle cx="12" cy="10" r="3" />
+                          <path d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
                         </svg>
-                        Directions
+                        Call Customer
                       </Button>
-                    </Link>
-
+                    )}
+                    
                     {order.status !== "delivered" ? (
                       <Button
                         appearance="ghost"
@@ -1899,12 +2117,12 @@ export default function BatchDetails({
 
             {/* Action Button */}
             <div className="pt-2 sm:pt-4">
-              <Button
+            <Button
                 appearance="primary"
                 color={order.orderType === "reel" ? "violet" : "green"}
-                size="lg"
+                size="sm"
                 block
-                className="rounded-lg py-3 text-lg font-bold sm:rounded-xl sm:py-4 sm:text-2xl sm:text-xl"
+                className="rounded-lg py-2 text-lg font-bold sm:rounded-xl sm:py-4 sm:text-2xl sm:text-xl"
               >
                 {getActionButton()}
               </Button>
