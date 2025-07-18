@@ -21,6 +21,8 @@
     "@types/cookie": "^1.0.0",
     "@types/date-fns": "^2.6.3",
     "@types/jsonwebtoken": "^9.0.9",
+    "@zxing/browser": "^0.1.5",
+    "@zxing/library": "^0.21.3",
     "bcryptjs": "^3.0.2",
     "cookie": "^1.0.2",
     "crypto-js": "^4.2.0",
