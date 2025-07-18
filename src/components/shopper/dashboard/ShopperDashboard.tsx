@@ -487,7 +487,9 @@ export default function ShopperDashboard() {
       <div
         className={`${
           isMobile ? "relative h-full overflow-hidden" : "min-h-screen"
-        } bg-gray-50`}
+        } ${
+          theme === 'dark' ? 'bg-gray-900 text-gray-100' : 'bg-gray-50 text-gray-900'
+        }`}
       >
         {/* Map Section */}
         <div className="w-full">
@@ -649,7 +651,9 @@ export default function ShopperDashboard() {
                 </Grid>
               </div>
             ) : !isOnline ? (
-              <div className="rounded-lg border bg-white p-8 text-center">
+              <div className={`rounded-lg border p-8 text-center ${
+                theme === 'dark' ? 'bg-gray-800 border-gray-700' : 'bg-white'
+              }`}>
                 <h3 className="mb-2 text-lg font-medium">
                   You&apos;re Currently Offline
                 </h3>
@@ -683,7 +687,9 @@ export default function ShopperDashboard() {
                 ))}
               </div>
             ) : (
-              <div className="rounded-lg border bg-white p-8 text-center">
+              <div className={`rounded-lg border p-8 text-center ${
+                theme === 'dark' ? 'bg-gray-800 border-gray-700' : 'bg-white'
+              }`}>
                 <h3 className="mb-2 text-lg font-medium">No Batches Nearby</h3>
                 <p className="mb-4 text-gray-500">
                   {showHistorical
