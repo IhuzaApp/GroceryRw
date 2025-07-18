@@ -20,7 +20,7 @@ export default function ShopperHeader() {
     window.addEventListener("resize", checkIfMobile);
     return () => window.removeEventListener("resize", checkIfMobile);
   }, []);
-  
+
   if (isMobile) {
     return null;
   }
@@ -42,10 +42,10 @@ export default function ShopperHeader() {
 
       <div className="flex items-center gap-3">
         <div className="hidden items-center gap-2 md:flex">
-          <TelegramStatusButton 
+          <TelegramStatusButton
             variant="primary"
             size="md"
-            className="bg-blue-500 hover:bg-blue-600 text-white"
+            className="bg-blue-500 text-white hover:bg-blue-600"
           />
           <Button
             appearance="subtle"

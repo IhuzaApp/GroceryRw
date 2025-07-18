@@ -629,9 +629,13 @@ export default function ShopperSidebar() {
             }`}
           >
             <div className="mx-auto max-w-md space-y-2">
-                      {/* Telegram Connect/Disconnect Button for mobile */}
-                      <div className="mt-2">
-                <TelegramStatusButton className="w-full" size="md" variant="primary" />
+              {/* Telegram Connect/Disconnect Button for mobile */}
+              <div className="mt-2">
+                <TelegramStatusButton
+                  className="w-full"
+                  size="md"
+                  variant="primary"
+                />
               </div>
               {moreMenuItems.map((item) => (
                 <div
@@ -668,7 +672,6 @@ export default function ShopperSidebar() {
                   <span className="flex-1">{item.label}</span>
                 </div>
               ))}
-      
             </div>
           </div>
         )}

@@ -77,8 +77,8 @@ export default async function handler(
     switch (action) {
       case "update_telegram_id":
         if (!shopperId || !telegramId) {
-          return res.status(400).json({ 
-            error: "Missing required fields: shopperId and telegramId" 
+          return res.status(400).json({
+            error: "Missing required fields: shopperId and telegramId",
           });
         }
 
@@ -96,9 +96,12 @@ export default async function handler(
           { user_id: session.user.id }
         );
 
-        if (!shopperData.shoppers.length || shopperData.shoppers[0].id !== shopperId) {
-          return res.status(403).json({ 
-            error: "Not authorized to update this shopper" 
+        if (
+          !shopperData.shoppers.length ||
+          shopperData.shoppers[0].id !== shopperId
+        ) {
+          return res.status(403).json({
+            error: "Not authorized to update this shopper",
           });
         }
 
@@ -111,22 +114,24 @@ export default async function handler(
             status: string;
             active: boolean;
           };
-        }>(
-          UPDATE_SHOPPER_TELEGRAM_ID,
-          { shopper_id: shopperId, telegram_id: telegramId }
+        }>(UPDATE_SHOPPER_TELEGRAM_ID, {
+          shopper_id: shopperId,
+          telegram_id: telegramId,
+        });
+
+        console.log(
+          `✅ Telegram ID updated for shopper ${shopperId}: ${telegramId}`
         );
 
-        console.log(`✅ Telegram ID updated for shopper ${shopperId}: ${telegramId}`);
-
-        return res.status(200).json({ 
-          success: true, 
-          shopper: updateResult.update_shoppers_by_pk 
+        return res.status(200).json({
+          success: true,
+          shopper: updateResult.update_shoppers_by_pk,
         });
 
       case "update_status":
         if (!shopperId || !status) {
-          return res.status(400).json({ 
-            error: "Missing required fields: shopperId and status" 
+          return res.status(400).json({
+            error: "Missing required fields: shopperId and status",
           });
         }
 
@@ -138,22 +143,19 @@ export default async function handler(
             full_name: string;
             telegram_id: string;
           };
-        }>(
-          UPDATE_SHOPPER_STATUS,
-          { shopper_id: shopperId, status }
-        );
+        }>(UPDATE_SHOPPER_STATUS, { shopper_id: shopperId, status });
 
         console.log(`✅ Status updated for shopper ${shopperId}: ${status}`);
 
-        return res.status(200).json({ 
-          success: true, 
-          shopper: statusResult.update_shoppers_by_pk 
+        return res.status(200).json({
+          success: true,
+          shopper: statusResult.update_shoppers_by_pk,
         });
 
       case "get_by_telegram_id":
         if (!telegramId) {
-          return res.status(400).json({ 
-            error: "Missing required field: telegramId" 
+          return res.status(400).json({
+            error: "Missing required field: telegramId",
           });
         }
 
@@ -172,26 +174,23 @@ export default async function handler(
             created_at: string;
             updated_at: string;
           }>;
-        }>(
-          GET_SHOPPER_BY_TELEGRAM_ID,
-          { telegram_id: telegramId }
-        );
+        }>(GET_SHOPPER_BY_TELEGRAM_ID, { telegram_id: telegramId });
 
-        return res.status(200).json({ 
-          success: true, 
-          shopper: shopperResult.shoppers[0] || null 
+        return res.status(200).json({
+          success: true,
+          shopper: shopperResult.shoppers[0] || null,
         });
 
       default:
-        return res.status(400).json({ 
-          error: "Invalid action. Use: update_telegram_id, update_status, or get_by_telegram_id" 
+        return res.status(400).json({
+          error:
+            "Invalid action. Use: update_telegram_id, update_status, or get_by_telegram_id",
         });
     }
-
   } catch (error) {
     console.error("Error updating shopper:", error);
-    return res.status(500).json({ 
-      error: "Failed to update shopper" 
+    return res.status(500).json({
+      error: "Failed to update shopper",
     });
   }
-} 
+}

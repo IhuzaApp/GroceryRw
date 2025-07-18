@@ -24,13 +24,15 @@ const GET_SHOPPER_BY_USER_ID = gql`
 
 const CREATE_SHOPPER = gql`
   mutation CreateShopper($user_id: uuid!) {
-    insert_shoppers_one(object: {
-      user_id: $user_id,
-      full_name: "Shopper",
-      status: "offline",
-      active: true,
-      transport_mode: "bike"
-    }) {
+    insert_shoppers_one(
+      object: {
+        user_id: $user_id
+        full_name: "Shopper"
+        status: "offline"
+        active: true
+        transport_mode: "bike"
+      }
+    ) {
       id
       full_name
       status
@@ -78,15 +80,15 @@ export default async function handler(
     const { userId } = req.body;
 
     if (!userId) {
-      return res.status(400).json({ 
-        error: "Missing required field: userId" 
+      return res.status(400).json({
+        error: "Missing required field: userId",
       });
     }
 
     // Verify the authenticated user matches the request
     if (userId !== session.user.id) {
-      return res.status(403).json({ 
-        error: "Not authorized to access this user" 
+      return res.status(403).json({
+        error: "Not authorized to access this user",
       });
     }
 
@@ -154,16 +156,15 @@ export default async function handler(
       console.log(`✅ Existing shopper found: ${shopper.id}`);
     }
 
-    return res.status(200).json({ 
-      success: true, 
+    return res.status(200).json({
+      success: true,
       shopper: shopper,
-      isNew: !existingShopperData.shoppers[0]
+      isNew: !existingShopperData.shoppers[0],
     });
-
   } catch (error) {
     console.error("Error ensuring shopper:", error);
-    return res.status(500).json({ 
-      error: "Failed to ensure shopper" 
+    return res.status(500).json({
+      error: "Failed to ensure shopper",
     });
   }
-} 
+}

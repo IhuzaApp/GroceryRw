@@ -272,7 +272,7 @@ export default function BatchDetails({
 
   // Inject custom styles for green steps
   useEffect(() => {
-    const styleElement = document.createElement('style');
+    const styleElement = document.createElement("style");
     styleElement.textContent = greenStepsStyles;
     document.head.appendChild(styleElement);
 
@@ -285,13 +285,13 @@ export default function BatchDetails({
   useEffect(() => {
     const fetchSystemConfig = async () => {
       try {
-        const response = await fetch('/api/queries/system-configuration');
+        const response = await fetch("/api/queries/system-configuration");
         if (response.ok) {
           const data = await response.json();
           setSystemConfig(data.config);
         }
       } catch (error) {
-        console.error('Error fetching system configuration:', error);
+        console.error("Error fetching system configuration:", error);
       }
     };
 
@@ -1120,44 +1120,44 @@ export default function BatchDetails({
         )}
 
       {/* Main Content */}
-      <main className="w-full mx-auto p-2 sm:p-6 pb-20 sm:pb-6">
-        <div className="overflow-hidden rounded-lg sm:rounded-2xl bg-white shadow-lg sm:shadow-xl dark:border-gray-700 dark:bg-gray-900">
+      <main className="mx-auto w-full p-2 pb-20 sm:p-6 sm:pb-6">
+        <div className="overflow-hidden rounded-lg bg-white shadow-lg dark:border-gray-700 dark:bg-gray-900 sm:rounded-2xl sm:shadow-xl">
           {/* Header with gradient background */}
           <div className={`p-4 text-gray-900 dark:text-gray-100 sm:p-6`}>
             <div className="flex flex-col justify-between gap-3 sm:flex-row sm:items-center sm:gap-4">
               <div className="flex items-center gap-3 sm:gap-4">
-        <Button
-          appearance="link"
-          onClick={() => router.back()}
+                <Button
+                  appearance="link"
+                  onClick={() => router.back()}
                   className="flex items-center px-0 text-sm text-gray-700 hover:text-gray-900 dark:text-gray-300 dark:hover:text-gray-100 sm:text-base"
-        >
-            <svg
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
+                >
+                  <svg
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
                     className="mr-1 h-4 w-4 sm:mr-2 sm:h-5 sm:w-5"
-            >
-              <path d="M19 12H5M12 19l-7-7 7-7" />
-            </svg>
-          Back
-        </Button>
+                  >
+                    <path d="M19 12H5M12 19l-7-7 7-7" />
+                  </svg>
+                  Back
+                </Button>
                 <div className="h-4 w-px bg-gray-300 dark:bg-gray-600 sm:h-6"></div>
                 <h1 className="text-xl font-bold text-gray-900 dark:text-gray-100 sm:text-2xl">
                   {order.orderType === "reel" ? "Reel Batch" : "Regular Batch"}{" "}
                   #{order.OrderID || order.id.slice(0, 8)}
                 </h1>
-      </div>
+              </div>
               <div className="flex items-center gap-2 sm:gap-3">
                 {getStatusTag(order.status)}
               </div>
             </div>
-        </div>
+          </div>
 
           {/* Content */}
           <div className="space-y-4 p-3 sm:space-y-8 sm:p-8">
             {/* Order Progress Steps - Hidden on Mobile */}
-            <div className="hidden sm:block rounded-xl border border-slate-200 bg-slate-50 p-4 dark:border-slate-700 dark:bg-slate-800 sm:p-6">
+            <div className="hidden rounded-xl border border-slate-200 bg-slate-50 p-4 dark:border-slate-700 dark:bg-slate-800 sm:block sm:p-6">
               <div className="mb-3 flex items-center gap-2 sm:mb-4 sm:gap-3">
                 <span className="inline-block rounded-full bg-blue-100 p-1.5 sm:p-2">
                   <svg
@@ -1178,26 +1178,26 @@ export default function BatchDetails({
                   Order Progress
                 </h2>
               </div>
-              
+
               <div className="rounded-lg border border-slate-200 bg-white p-4 dark:border-slate-600 dark:bg-slate-700 sm:p-6">
                 <Steps current={currentStep} className="custom-steps-green">
-                  <Steps.Item 
-                    title="Order Accepted" 
+                  <Steps.Item
+                    title="Order Accepted"
                     description="Order has been assigned to you"
                     status={currentStep >= 0 ? "finish" : "wait"}
                   />
-                  <Steps.Item 
-                    title="Shopping" 
+                  <Steps.Item
+                    title="Shopping"
                     description="Collecting items from the store"
                     status={currentStep >= 1 ? "finish" : "wait"}
                   />
-                  <Steps.Item 
-                    title="On The Way" 
+                  <Steps.Item
+                    title="On The Way"
                     description="Delivering to customer"
                     status={currentStep >= 2 ? "finish" : "wait"}
                   />
-                  <Steps.Item 
-                    title="Delivered" 
+                  <Steps.Item
+                    title="Delivered"
                     description="Order completed successfully"
                     status={currentStep >= 3 ? "finish" : "wait"}
                   />
@@ -1208,7 +1208,7 @@ export default function BatchDetails({
             {/* Main Info Grid */}
             <div className="grid grid-cols-1 gap-3 sm:gap-8 lg:grid-cols-2">
               {/* Shop/Reel Info */}
-              <div className="rounded-lg sm:rounded-xl border border-slate-200 bg-slate-50 p-3 dark:border-slate-700 dark:bg-slate-800 sm:p-6">
+              <div className="rounded-lg border border-slate-200 bg-slate-50 p-3 dark:border-slate-700 dark:bg-slate-800 sm:rounded-xl sm:p-6">
                 <div className="mb-3 flex items-center gap-2 sm:mb-4 sm:gap-3">
                   <span
                     className={`inline-block rounded-full p-1.5 sm:p-2 ${
@@ -1254,38 +1254,38 @@ export default function BatchDetails({
                   </h2>
                 </div>
 
-            {order.orderType === "reel" ? (
+                {order.orderType === "reel" ? (
                   <div className="space-y-3 sm:space-y-4">
                     <div className="flex flex-col gap-3 sm:flex-row sm:gap-4">
-                    <div className="relative mx-auto h-14 w-14 flex-shrink-0 overflow-hidden rounded-lg bg-slate-200 sm:mx-0 sm:h-20 sm:w-20">
-                    {order.reel?.video_url ? (
-                      <video
-                        src={order.reel.video_url}
-                        className="h-full w-full object-cover"
-                        muted
-                        preload="metadata"
-                      />
-                    ) : (
+                      <div className="relative mx-auto h-14 w-14 flex-shrink-0 overflow-hidden rounded-lg bg-slate-200 sm:mx-0 sm:h-20 sm:w-20">
+                        {order.reel?.video_url ? (
+                          <video
+                            src={order.reel.video_url}
+                            className="h-full w-full object-cover"
+                            muted
+                            preload="metadata"
+                          />
+                        ) : (
                           <div className="flex h-full w-full items-center justify-center bg-slate-300">
-                        <svg
+                            <svg
                               className="h-6 w-6 text-slate-400 sm:h-8 sm:w-8"
-                          fill="none"
-                          viewBox="0 0 24 24"
-                          stroke="currentColor"
-                        >
+                              fill="none"
+                              viewBox="0 0 24 24"
+                              stroke="currentColor"
+                            >
                               <circle cx="12" cy="12" r="10" />
                               <path d="M14.828 14.828a4 4 0 01-5.656 0" />
-                        </svg>
+                            </svg>
+                          </div>
+                        )}
                       </div>
-                    )}
-                  </div>
                       <div className="flex-1 text-center sm:text-left">
                         <h3 className="mb-1 text-base font-semibold text-slate-900 dark:text-slate-100 sm:text-lg">
-                      {order.reel?.title}
+                          {order.reel?.title}
                         </h3>
                         <p className="mb-2 text-sm text-slate-600 dark:text-slate-400 sm:text-base">
-                      {order.reel?.description}
-                    </p>
+                          {order.reel?.description}
+                        </p>
                         <div className="flex flex-wrap justify-center gap-2 text-sm sm:justify-start sm:gap-4 sm:text-base">
                           <span className="text-slate-500">
                             Type: {order.reel?.type}
@@ -1297,7 +1297,7 @@ export default function BatchDetails({
                             {formatCurrency(
                               parseFloat(order.reel?.Price || "0")
                             )}
-                      </span>
+                          </span>
                         </div>
                       </div>
                     </div>
@@ -1311,54 +1311,54 @@ export default function BatchDetails({
                         </p>
                       </div>
                     )}
-              </div>
-            ) : (
+                  </div>
+                ) : (
                   <div className="flex flex-col gap-3 sm:flex-row sm:gap-4">
                     <div className="relative mx-auto h-10 w-10 flex-shrink-0 overflow-hidden rounded-lg bg-slate-200 sm:mx-0 sm:h-16 sm:w-16">
-                  {order.shop?.image ? (
-                    <Image
-                      src={order.shop.image}
-                      alt={order.shop.name}
+                      {order.shop?.image ? (
+                        <Image
+                          src={order.shop.image}
+                          alt={order.shop.name}
                           width={64}
                           height={64}
-                      className="h-full w-full object-cover"
-                    />
-                  ) : (
+                          className="h-full w-full object-cover"
+                        />
+                      ) : (
                         <div className="flex h-full w-full items-center justify-center bg-slate-300 text-slate-400">
-                      <svg
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="currentColor"
-                        strokeWidth="2"
+                          <svg
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            strokeWidth="2"
                             className="h-5 w-5 sm:h-6 sm:w-6"
-                      >
+                          >
                             <rect x="3" y="3" width="18" height="18" rx="2" />
                             <path d="M16 8h.01M8 16h.01M16 16h.01" />
-                      </svg>
+                          </svg>
+                        </div>
+                      )}
                     </div>
-                  )}
-                </div>
                     <div className="flex-1 text-center sm:text-left">
                       <h3 className="mb-1 text-base font-semibold text-slate-900 dark:text-slate-100 sm:text-lg">
-                    {order.shop?.name}
+                        {order.shop?.name}
                       </h3>
                       <p className="text-sm text-slate-600 dark:text-slate-400 sm:text-base">
-                    {order.shop?.address}
-                  </p>
-                </div>
-              </div>
-            )}
+                        {order.shop?.address}
+                      </p>
+                    </div>
+                  </div>
+                )}
               </div>
 
               {/* Customer Info */}
-              <div className="rounded-lg sm:rounded-xl border border-slate-200 bg-slate-50 p-3 dark:border-slate-700 dark:bg-slate-800 sm:p-6">
+              <div className="rounded-lg border border-slate-200 bg-slate-50 p-3 dark:border-slate-700 dark:bg-slate-800 sm:rounded-xl sm:p-6">
                 <div className="mb-3 flex items-center gap-2 sm:mb-4 sm:gap-3">
                   <span className="inline-block rounded-full bg-sky-100 p-1.5 sm:p-2">
                     <svg
                       className="h-4 w-4 text-sky-600 sm:h-5 sm:w-5"
-                    fill="none"
+                      fill="none"
                       viewBox="0 0 24 24"
-                    stroke="currentColor"
+                      stroke="currentColor"
                     >
                       <path
                         strokeLinecap="round"
@@ -1366,47 +1366,47 @@ export default function BatchDetails({
                         strokeWidth={2}
                         d="M5.121 17.804A13.937 13.937 0 0112 15c2.5 0 4.847.655 6.879 1.804M15 10a3 3 0 11-6 0 3 3 0 016 0z"
                       />
-                  </svg>
-                </span>
+                    </svg>
+                  </span>
                   <h2 className="text-lg font-semibold text-slate-900 dark:text-slate-100 sm:text-xl">
                     Customer
                   </h2>
-          </div>
+                </div>
 
                 <div className="mb-3 flex flex-col items-center gap-3 sm:mb-4 sm:flex-row sm:items-start">
                   <div className="h-8 w-8 overflow-hidden rounded-full bg-slate-200 sm:h-12 sm:w-12">
-                  {order.user.profile_picture ? (
-                    <Image
-                      src={order.user.profile_picture}
-                      alt={order.user.name}
-                      width={48}
-                      height={48}
-                      className="h-full w-full object-cover"
-                    />
-                  ) : (
+                    {order.user.profile_picture ? (
+                      <Image
+                        src={order.user.profile_picture}
+                        alt={order.user.name}
+                        width={48}
+                        height={48}
+                        className="h-full w-full object-cover"
+                      />
+                    ) : (
                       <div className="flex h-full w-full items-center justify-center bg-slate-200 text-slate-400">
-                      <svg
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="currentColor"
-                        strokeWidth="2"
+                        <svg
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          stroke="currentColor"
+                          strokeWidth="2"
                           className="h-5 w-5 sm:h-6 sm:w-6"
-                      >
-                        <circle cx="12" cy="8" r="4" />
-                        <path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2" />
-                      </svg>
-                    </div>
-                  )}
-                </div>
+                        >
+                          <circle cx="12" cy="8" r="4" />
+                          <path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2" />
+                        </svg>
+                      </div>
+                    )}
+                  </div>
                   <div className="text-center sm:text-left">
                     <h4 className="text-base font-medium text-slate-900 dark:text-slate-100 sm:text-lg">
-                    {order.user.name}
-                  </h4>
+                      {order.user.name}
+                    </h4>
                     <p className="text-sm text-slate-500 dark:text-slate-400 sm:text-base">
-                    {order.user.email}
-                  </p>
+                      {order.user.email}
+                    </p>
+                  </div>
                 </div>
-              </div>
 
                 <div className="space-y-3">
                   <div className="rounded-lg border border-slate-200 bg-white p-3 dark:border-slate-600 dark:bg-slate-700">
@@ -1434,70 +1434,70 @@ export default function BatchDetails({
                       )}`}
                       target="_blank"
                     >
-                <Button
-                  appearance="ghost"
+                      <Button
+                        appearance="ghost"
                         size="sm"
                         className="text-sm text-sky-600 hover:bg-sky-50 hover:text-sky-700 dark:text-sky-400 dark:hover:bg-sky-900/20 sm:text-base"
-                >
-                  <svg
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="2"
+                      >
+                        <svg
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          stroke="currentColor"
+                          strokeWidth="2"
                           className="mr-1 h-4 w-4 sm:h-5 sm:w-5"
-                  >
+                        >
                           <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z" />
                           <circle cx="12" cy="10" r="3" />
-                  </svg>
+                        </svg>
                         Directions
-                </Button>
+                      </Button>
                     </Link>
 
                     {order.status !== "delivered" ? (
-                <Button
-                  appearance="ghost"
+                      <Button
+                        appearance="ghost"
                         size="sm"
                         className="text-sm text-sky-600 hover:bg-sky-50 hover:text-sky-700 dark:text-sky-400 dark:hover:bg-sky-900/20 sm:text-base"
                         onClick={handleChatClick}
-                >
-                  <svg
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="2"
+                      >
+                        <svg
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          stroke="currentColor"
+                          strokeWidth="2"
                           className="mr-1 h-4 w-4 sm:h-5 sm:w-5"
-                  >
-                    <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
-                  </svg>
+                        >
+                          <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
+                        </svg>
                         Message
-                </Button>
+                      </Button>
                     ) : (
-                <Button
-                  appearance="ghost"
+                      <Button
+                        appearance="ghost"
                         size="sm"
                         className="cursor-not-allowed text-sm text-slate-400 sm:text-base"
                         disabled
                       >
-                    <svg
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth="2"
+                        <svg
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          stroke="currentColor"
+                          strokeWidth="2"
                           className="mr-1 h-4 w-4 sm:h-5 sm:w-5"
-                    >
+                        >
                           <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
-                    </svg>
+                        </svg>
                         Chat Closed
-                </Button>
+                      </Button>
                     )}
                   </div>
+                </div>
+              </div>
             </div>
-          </div>
-        </div>
 
-        {/* Order Items */}
-        {shouldShowOrderDetails() && (
-              <div className="rounded-lg sm:rounded-xl border border-slate-200 bg-slate-50 p-3 dark:border-slate-700 dark:bg-slate-800 sm:p-6">
+            {/* Order Items */}
+            {shouldShowOrderDetails() && (
+              <div className="rounded-lg border border-slate-200 bg-slate-50 p-3 dark:border-slate-700 dark:bg-slate-800 sm:rounded-xl sm:p-6">
                 <div className="mb-3 flex items-center gap-2 sm:mb-4 sm:gap-3">
                   <span
                     className={`inline-block rounded-full p-1.5 sm:p-2 ${
@@ -1512,24 +1512,24 @@ export default function BatchDetails({
                           ? "text-indigo-600"
                           : "text-emerald-600"
                       }`}
-                          fill="none"
-                          viewBox="0 0 24 24"
-                          stroke="currentColor"
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={2}
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
                         d="M3 7v4a1 1 0 001 1h3m10 0h3a1 1 0 001-1V7m-1-4H5a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2V5a2 2 0 00-2-2z"
-                          />
-                        </svg>
+                      />
+                    </svg>
                   </span>
                   <h2 className="text-lg font-semibold text-slate-900 dark:text-slate-100 sm:text-xl">
                     {order.orderType === "reel"
                       ? "Reel Details"
                       : "Order Items"}
                   </h2>
-                  </div>
+                </div>
 
                 {order.orderType === "reel" ? (
                   <div className="rounded-lg border border-slate-200 bg-white p-3 dark:border-slate-600 dark:bg-slate-700 sm:p-4">
@@ -1538,66 +1538,66 @@ export default function BatchDetails({
                     </div>
                     <div className="text-sm text-slate-500 dark:text-slate-400 sm:text-base">
                       Quantity: {order.quantity}
-                </div>
-              </div>
-            ) : (
-                  <div className="space-y-3">
-                {order.Order_Items?.map((item) => (
-                  <div
-                    key={item.id}
-                        className="flex items-center gap-2 sm:gap-3 rounded-lg border border-slate-200 bg-white p-2 dark:border-slate-600 dark:bg-slate-700 sm:p-4"
-                  >
-                    <div
-                          className="h-8 w-8 flex-shrink-0 cursor-pointer overflow-hidden rounded-lg bg-slate-200 sm:h-12 sm:w-12"
-                      onClick={() => showProductImage(item)}
-                    >
-                      {item.product.image ? (
-                        <Image
-                          src={item.product.image}
-                          alt={item.product.name}
-                          width={48}
-                          height={48}
-                          className="h-full w-full object-cover"
-                        />
-                      ) : (
-                            <div className="flex h-full w-full items-center justify-center bg-slate-300 text-slate-400">
-                          <svg
-                            viewBox="0 0 24 24"
-                            fill="none"
-                            stroke="currentColor"
-                            strokeWidth="2"
-                                className="h-5 w-5 sm:h-6 sm:w-6"
-                          >
-                            <path d="M9 17h6M9 12h6M9 7h6" />
-                          </svg>
-                        </div>
-                      )}
                     </div>
+                  </div>
+                ) : (
+                  <div className="space-y-3">
+                    {order.Order_Items?.map((item) => (
+                      <div
+                        key={item.id}
+                        className="flex items-center gap-2 rounded-lg border border-slate-200 bg-white p-2 dark:border-slate-600 dark:bg-slate-700 sm:gap-3 sm:p-4"
+                      >
+                        <div
+                          className="h-8 w-8 flex-shrink-0 cursor-pointer overflow-hidden rounded-lg bg-slate-200 sm:h-12 sm:w-12"
+                          onClick={() => showProductImage(item)}
+                        >
+                          {item.product.image ? (
+                            <Image
+                              src={item.product.image}
+                              alt={item.product.name}
+                              width={48}
+                              height={48}
+                              className="h-full w-full object-cover"
+                            />
+                          ) : (
+                            <div className="flex h-full w-full items-center justify-center bg-slate-300 text-slate-400">
+                              <svg
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                stroke="currentColor"
+                                strokeWidth="2"
+                                className="h-5 w-5 sm:h-6 sm:w-6"
+                              >
+                                <path d="M9 17h6M9 12h6M9 7h6" />
+                              </svg>
+                            </div>
+                          )}
+                        </div>
 
                         <div className="min-w-0 flex-1">
-                          <p className="truncate text-xs sm:text-sm font-medium text-slate-900 dark:text-slate-100 sm:text-base">
-                        {item.product.name}
-                      </p>
-                          <p className="text-xs text-slate-500 dark:text-slate-400 sm:text-sm">
-                        {formatCurrency(item.price)} × {item.quantity}
-                      </p>
-                      {item.found &&
-                        item.foundQuantity &&
-                        item.foundQuantity < item.quantity && (
-                              <p className="text-xs text-amber-600 dark:text-amber-400">
-                            Found: {item.foundQuantity} of {item.quantity}
+                          <p className="truncate text-xs font-medium text-slate-900 dark:text-slate-100 sm:text-base sm:text-sm">
+                            {item.product.name}
                           </p>
-                        )}
-                    </div>
+                          <p className="text-xs text-slate-500 dark:text-slate-400 sm:text-sm">
+                            {formatCurrency(item.price)} × {item.quantity}
+                          </p>
+                          {item.found &&
+                            item.foundQuantity &&
+                            item.foundQuantity < item.quantity && (
+                              <p className="text-xs text-amber-600 dark:text-amber-400">
+                                Found: {item.foundQuantity} of {item.quantity}
+                              </p>
+                            )}
+                        </div>
 
                         <div className="flex items-center gap-2 sm:gap-3">
-                          <div className="text-xs sm:text-sm font-bold text-slate-900 dark:text-slate-100 sm:text-base">
-                        {formatCurrency(item.price * item.quantity)}
-                      </div>
-                      {order.status === "shopping" && (
+                          <div className="text-xs font-bold text-slate-900 dark:text-slate-100 sm:text-base sm:text-sm">
+                            {formatCurrency(item.price * item.quantity)}
+                          </div>
+                          {order.status === "shopping" && (
                             <button
                               onClick={() => toggleItemFound(item, !item.found)}
-                              className={`flex items-center gap-1 sm:gap-2 whitespace-nowrap rounded-lg px-2 sm:px-3 py-1 sm:py-1.5 text-xs font-medium transition-all duration-200 sm:text-sm ${
+                              className={`flex items-center gap-1 whitespace-nowrap rounded-lg px-2 py-1 text-xs font-medium transition-all duration-200 sm:gap-2 sm:px-3 sm:py-1.5 sm:text-sm ${
                                 item.found
                                   ? "border border-emerald-200 bg-emerald-100 text-emerald-800 hover:bg-emerald-200 dark:border-emerald-700 dark:bg-emerald-900/20 dark:text-emerald-300"
                                   : "border border-slate-200 bg-slate-100 text-slate-700 hover:bg-slate-200 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-300 dark:hover:bg-slate-600"
@@ -1609,39 +1609,39 @@ export default function BatchDetails({
                                 stroke="currentColor"
                                 strokeWidth="2"
                                 className={`h-3 w-3 sm:h-4 sm:w-4 ${
-                      item.found
+                                  item.found
                                     ? "text-emerald-600 dark:text-emerald-400"
                                     : "text-slate-500 dark:text-slate-400"
                                 }`}
                               >
-                      {item.found ? (
+                                {item.found ? (
                                   <path
                                     strokeLinecap="round"
                                     strokeLinejoin="round"
                                     d="M5 13l4 4L19 7"
                                   />
                                 ) : (
-                        <path
+                                  <path
                                     strokeLinecap="round"
                                     strokeLinejoin="round"
                                     d="M12 6v6m0 0v6m0-6h6m-6 0H6"
                                   />
                                 )}
-                      </svg>
+                              </svg>
                               {item.found ? "Found" : "Mark Found"}
                             </button>
                           )}
-                    </div>
-                    </div>
+                        </div>
+                      </div>
                     ))}
-                </div>
-              )}
-          </div>
-        )}
+                  </div>
+                )}
+              </div>
+            )}
 
-        {/* Order Summary */}
-        {shouldShowOrderDetails() && (
-              <div className="rounded-lg sm:rounded-xl border border-slate-200 bg-slate-50 p-3 dark:border-slate-700 dark:bg-slate-800 sm:p-6">
+            {/* Order Summary */}
+            {shouldShowOrderDetails() && (
+              <div className="rounded-lg border border-slate-200 bg-slate-50 p-3 dark:border-slate-700 dark:bg-slate-800 sm:rounded-xl sm:p-6">
                 <div className="mb-3 flex items-center gap-2 sm:mb-4 sm:gap-3">
                   <span className="inline-block rounded-full bg-slate-100 p-1.5 sm:p-2">
                     <svg
@@ -1659,112 +1659,114 @@ export default function BatchDetails({
                     </svg>
                   </span>
                   <h2 className="text-lg font-semibold text-slate-900 dark:text-slate-100 sm:text-xl">
-              Order Summary
+                    Order Summary
                   </h2>
                 </div>
 
                 <div className="rounded-lg border border-slate-200 bg-white p-3 dark:border-slate-600 dark:bg-slate-700 sm:p-4">
                   <div className="space-y-2 text-base sm:text-lg">
-              {order.orderType === "reel" ? (
-                <>
-                  <div className="flex justify-between">
-                    <span>Base Price</span>
-                    <span>
+                    {order.orderType === "reel" ? (
+                      <>
+                        <div className="flex justify-between">
+                          <span>Base Price</span>
+                          <span>
                             {formatCurrency(
                               parseFloat(order.reel?.Price || "0")
                             )}
-                    </span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span>Quantity</span>
-                    <span>{order.quantity}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span>Subtotal</span>
-                    <span>
-                      {formatCurrency(
-                        parseFloat(order.reel?.Price || "0") *
-                          (order.quantity || 1)
-                      )}
-                    </span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span>Service Fee</span>
-                    <span>
+                          </span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span>Quantity</span>
+                          <span>{order.quantity}</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span>Subtotal</span>
+                          <span>
+                            {formatCurrency(
+                              parseFloat(order.reel?.Price || "0") *
+                                (order.quantity || 1)
+                            )}
+                          </span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span>Service Fee</span>
+                          <span>
                             {formatCurrency(
                               parseFloat(order.serviceFee || "0")
                             )}
-                    </span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span>Delivery Fee</span>
-                    <span>
+                          </span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span>Delivery Fee</span>
+                          <span>
                             {formatCurrency(
                               parseFloat(order.deliveryFee || "0")
                             )}
-                    </span>
-                  </div>
-                      {systemConfig?.tax && (
-                        <div className="flex justify-between">
-                          <span>Tax ({systemConfig.tax}%)</span>
-                          <span>
-                            {formatCurrency(calculateTax(calculateOriginalSubtotal()))}
                           </span>
                         </div>
-                      )}
-                  {order.discount > 0 && (
+                        {systemConfig?.tax && (
+                          <div className="flex justify-between">
+                            <span>Tax ({systemConfig.tax}%)</span>
+                            <span>
+                              {formatCurrency(
+                                calculateTax(calculateOriginalSubtotal())
+                              )}
+                            </span>
+                          </div>
+                        )}
+                        {order.discount > 0 && (
                           <div className="flex justify-between text-emerald-600">
-                      <span>Discount</span>
-                      <span>-{formatCurrency(order.discount)}</span>
-                    </div>
-                  )}
-                  <Divider />
+                            <span>Discount</span>
+                            <span>-{formatCurrency(order.discount)}</span>
+                          </div>
+                        )}
+                        <Divider />
                         <div className="flex justify-between text-lg font-bold sm:text-xl">
-                    <span>Total</span>
-                    <span>{formatCurrency(order.total)}</span>
-                  </div>
-                </>
-              ) : (
-                <>
-                  <div className="flex justify-between">
-                    <span>Subtotal</span>
-                    <span>
-                      {formatCurrency(calculateOriginalSubtotal())}
-                    </span>
-                  </div>
+                          <span>Total</span>
+                          <span>{formatCurrency(order.total)}</span>
+                        </div>
+                      </>
+                    ) : (
+                      <>
+                        <div className="flex justify-between">
+                          <span>Subtotal</span>
+                          <span>
+                            {formatCurrency(calculateOriginalSubtotal())}
+                          </span>
+                        </div>
 
-                  {order.status === "shopping" ? (
-                    <>
-                      <div className="flex justify-between">
-                        <span>Items Found</span>
-                        <span>
-                          {order.Order_Items?.filter((item) => item.found)
-                            .length || 0}{" "}
-                          of {order.Order_Items?.length || 0}
-                        </span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span>Units Found</span>
-                        <span>
-                          {order.Order_Items?.reduce((total, item) => {
-                            if (item.found) {
-                              return (
+                        {order.status === "shopping" ? (
+                          <>
+                            <div className="flex justify-between">
+                              <span>Items Found</span>
+                              <span>
+                                {order.Order_Items?.filter((item) => item.found)
+                                  .length || 0}{" "}
+                                of {order.Order_Items?.length || 0}
+                              </span>
+                            </div>
+                            <div className="flex justify-between">
+                              <span>Units Found</span>
+                              <span>
+                                {order.Order_Items?.reduce((total, item) => {
+                                  if (item.found) {
+                                    return (
                                       total +
                                       (item.foundQuantity || item.quantity)
-                              );
-                            }
-                            return total;
-                          }, 0) || 0}{" "}
-                          of{" "}
-                          {order.Order_Items?.reduce(
-                            (total, item) => total + item.quantity,
-                            0
-                          ) || 0}
-                        </span>
-                      </div>
-                      <div className="flex justify-between">
+                                    );
+                                  }
+                                  return total;
+                                }, 0) || 0}{" "}
+                                of{" "}
+                                {order.Order_Items?.reduce(
+                                  (total, item) => total + item.quantity,
+                                  0
+                                ) || 0}
+                              </span>
+                            </div>
+                            <div className="flex justify-between">
                               <span>Units Not Found</span>
-                        <span>
+                              <span>
                                 {order.Order_Items?.reduce((total, item) => {
                                   if (!item.found) {
                                     return total + item.quantity;
@@ -1780,61 +1782,67 @@ export default function BatchDetails({
                                   }
                                   return total;
                                 }, 0) || 0}
-                        </span>
-                      </div>
-                      <div className="flex justify-between text-red-600 dark:text-red-400">
-                        <span>Refund Amount</span>
-                        <span>
-                          -{formatCurrency(calculateOriginalSubtotal() - calculateFoundItemsTotal())}
-                        </span>
-                      </div>
-                      {systemConfig?.tax && (
-                        <div className="flex justify-between">
-                          <span>Tax ({systemConfig.tax}%)</span>
-                          <span>
-                            {formatCurrency(calculateTax(calculateFoundItemsTotal()))}
-                          </span>
-                        </div>
-                      )}
-                    </>
-                  ) : (
-                    <>
-                      <div className="flex justify-between">
-                        <span>Delivery Fee</span>
-                        <span>
+                              </span>
+                            </div>
+                            <div className="flex justify-between text-red-600 dark:text-red-400">
+                              <span>Refund Amount</span>
+                              <span>
+                                -
+                                {formatCurrency(
+                                  calculateOriginalSubtotal() -
+                                    calculateFoundItemsTotal()
+                                )}
+                              </span>
+                            </div>
+                            {systemConfig?.tax && (
+                              <div className="flex justify-between">
+                                <span>Tax ({systemConfig.tax}%)</span>
+                                <span>
+                                  {formatCurrency(
+                                    calculateTax(calculateFoundItemsTotal())
+                                  )}
+                                </span>
+                              </div>
+                            )}
+                          </>
+                        ) : (
+                          <>
+                            <div className="flex justify-between">
+                              <span>Delivery Fee</span>
+                              <span>
                                 {formatCurrency(
                                   parseFloat(order.deliveryFee || "0")
                                 )}
-                        </span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span>Service Fee</span>
-                        <span>
+                              </span>
+                            </div>
+                            <div className="flex justify-between">
+                              <span>Service Fee</span>
+                              <span>
                                 {formatCurrency(
                                   parseFloat(order.serviceFee || "0")
                                 )}
-                        </span>
-                      </div>
-                    </>
-                  )}
+                              </span>
+                            </div>
+                          </>
+                        )}
 
-                  {order.discount > 0 && (
+                        {order.discount > 0 && (
                           <div className="flex justify-between text-emerald-600">
-                      <span>Discount</span>
-                      <span>-{formatCurrency(order.discount)}</span>
-                    </div>
-                  )}
-                  <Divider />
+                            <span>Discount</span>
+                            <span>-{formatCurrency(order.discount)}</span>
+                          </div>
+                        )}
+                        <Divider />
                         <div className="flex justify-between text-lg font-bold sm:text-xl">
-                    <span>Total</span>
-                    <span>
-                      {order.status === "shopping"
-                        ? formatCurrency(calculateFoundItemsTotal())
-                        : formatCurrency(calculateOriginalSubtotal())}
-                    </span>
-                  </div>
+                          <span>Total</span>
+                          <span>
+                            {order.status === "shopping"
+                              ? formatCurrency(calculateFoundItemsTotal())
+                              : formatCurrency(calculateOriginalSubtotal())}
+                          </span>
+                        </div>
 
-                  {order.status === "shopping" && (
+                        {order.status === "shopping" && (
                           <div className="mt-3 rounded-lg border border-sky-200 bg-sky-50 p-3 text-sm text-sky-700 dark:border-sky-800 dark:bg-sky-900/20 dark:text-sky-300 sm:mt-4 sm:text-base">
                             <p>
                               <strong>Note:</strong> The total reflects only the
@@ -1848,19 +1856,19 @@ export default function BatchDetails({
                               )}
                               ) were already added to your wallet as earnings
                               when you started shopping.
-                      </p>
-                    </div>
-                  )}
-                </>
-              )}
+                            </p>
+                          </div>
+                        )}
+                      </>
+                    )}
                   </div>
-            </div>
-          </div>
-        )}
+                </div>
+              </div>
+            )}
 
             {/* Delivery Notes */}
-        {(order.deliveryNotes || order.deliveryNote) && (
-              <div className="rounded-lg sm:rounded-xl border border-slate-200 bg-slate-50 p-3 dark:border-slate-700 dark:bg-slate-800 sm:p-6">
+            {(order.deliveryNotes || order.deliveryNote) && (
+              <div className="rounded-lg border border-slate-200 bg-slate-50 p-3 dark:border-slate-700 dark:bg-slate-800 sm:rounded-xl sm:p-6">
                 <div className="mb-3 flex items-center gap-2 sm:mb-4 sm:gap-3">
                   <span className="inline-block rounded-full bg-amber-100 p-1.5 sm:p-2">
                     <svg
@@ -1878,25 +1886,25 @@ export default function BatchDetails({
                     </svg>
                   </span>
                   <h2 className="text-lg font-semibold text-slate-900 dark:text-slate-100 sm:text-xl">
-              Delivery Notes
+                    Delivery Notes
                   </h2>
                 </div>
                 <div className="rounded-lg border border-slate-200 bg-white p-3 dark:border-slate-600 dark:bg-slate-700 sm:p-4">
                   <p className="text-base text-slate-700 dark:text-slate-300 sm:text-lg">
-              {order.deliveryNotes || order.deliveryNote}
-            </p>
+                    {order.deliveryNotes || order.deliveryNote}
+                  </p>
                 </div>
-          </div>
-        )}
+              </div>
+            )}
 
-        {/* Action Button */}
+            {/* Action Button */}
             <div className="pt-2 sm:pt-4">
               <Button
                 appearance="primary"
-                  color={order.orderType === "reel" ? "violet" : "green"}
-                  size="lg"
-                  block
-                  className="rounded-lg sm:rounded-xl py-3 sm:py-4 text-lg sm:text-xl font-bold sm:text-2xl"
+                color={order.orderType === "reel" ? "violet" : "green"}
+                size="lg"
+                block
+                className="rounded-lg py-3 text-lg font-bold sm:rounded-xl sm:py-4 sm:text-2xl sm:text-xl"
               >
                 {getActionButton()}
               </Button>

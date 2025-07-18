@@ -61,10 +61,7 @@ interface GraphQLResponse {
 const GET_AVAILABLE_ORDERS = gql`
   query GetAvailableOrders {
     Orders(
-      where: { 
-        shopper_id: { _is_null: true }, 
-        status: { _eq: "PENDING" }
-      }
+      where: { shopper_id: { _is_null: true }, status: { _eq: "PENDING" } }
       order_by: { created_at: desc }
       limit: 10
     ) {
@@ -89,10 +86,7 @@ const GET_AVAILABLE_ORDERS = gql`
     }
 
     reel_orders(
-      where: { 
-        shopper_id: { _is_null: true }, 
-        status: { _eq: "PENDING" }
-      }
+      where: { shopper_id: { _is_null: true }, status: { _eq: "PENDING" } }
       order_by: { created_at: desc }
       limit: 10
     ) {
@@ -151,16 +145,20 @@ export default async function handler(
       const serviceFee = parseFloat(order.service_fee || "0");
       const deliveryFee = parseFloat(order.delivery_fee || "0");
       const totalEarnings = serviceFee + deliveryFee;
-      
+
       const createdAt = new Date(order.created_at);
-      const minutesAgo = Math.floor((Date.now() - createdAt.getTime()) / (1000 * 60));
+      const minutesAgo = Math.floor(
+        (Date.now() - createdAt.getTime()) / (1000 * 60)
+      );
 
       return {
         id: order.id,
         type: "regular",
         shopName: order.shop?.name || "Unknown Shop",
         shopAddress: order.shop?.address || "No address",
-        customerAddress: `${order.address?.street || "No street"}, ${order.address?.city || "No city"}`,
+        customerAddress: `${order.address?.street || "No street"}, ${
+          order.address?.city || "No city"
+        }`,
         earnings: totalEarnings,
         itemsCount: order.Order_Items_aggregate.aggregate?.count || 0,
         minutesAgo,
@@ -173,9 +171,11 @@ export default async function handler(
       const serviceFee = parseFloat(order.service_fee || "0");
       const deliveryFee = parseFloat(order.delivery_fee || "0");
       const totalEarnings = serviceFee + deliveryFee;
-      
+
       const createdAt = new Date(order.created_at);
-      const minutesAgo = Math.floor((Date.now() - createdAt.getTime()) / (1000 * 60));
+      const minutesAgo = Math.floor(
+        (Date.now() - createdAt.getTime()) / (1000 * 60)
+      );
 
       return {
         id: order.id,
@@ -186,7 +186,9 @@ export default async function handler(
         price: order.Reel.Price,
         customerName: order.user.name,
         customerPhone: order.user.phone,
-        customerAddress: `${order.address?.street || "No street"}, ${order.address?.city || "No city"}`,
+        customerAddress: `${order.address?.street || "No street"}, ${
+          order.address?.city || "No city"
+        }`,
         earnings: totalEarnings,
         quantity: parseInt(order.quantity),
         deliveryNote: order.delivery_note,
@@ -196,8 +198,9 @@ export default async function handler(
     });
 
     // Combine and sort all orders by creation time (oldest first)
-    const allOrders = [...regularOrders, ...reelOrders].sort((a, b) => 
-      new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
+    const allOrders = [...regularOrders, ...reelOrders].sort(
+      (a, b) =>
+        new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
     );
 
     return res.status(200).json({
@@ -219,4 +222,4 @@ export default async function handler(
           : "Failed to fetch available orders",
     });
   }
-} 
+}

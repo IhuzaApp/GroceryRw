@@ -32,8 +32,6 @@ const REMOVE_SHOPPER_TELEGRAM_ID = gql`
   }
 `;
 
-
-
 const GET_SHOPPER_BY_TELEGRAM_ID = gql`
   query GetShopperByTelegramId($telegram_id: String!) {
     shoppers(where: { telegram_id: { _eq: $telegram_id } }) {
@@ -88,8 +86,8 @@ export default async function handler(
     switch (action) {
       case "update_telegram_id":
         if (!shopperId || !telegramId) {
-          return res.status(400).json({ 
-            error: "Missing required fields: shopperId and telegramId" 
+          return res.status(400).json({
+            error: "Missing required fields: shopperId and telegramId",
           });
         }
 
@@ -102,22 +100,24 @@ export default async function handler(
             status: string;
             active: boolean;
           };
-        }>(
-          UPDATE_SHOPPER_TELEGRAM_ID,
-          { shopper_id: shopperId, telegram_id: telegramId }
+        }>(UPDATE_SHOPPER_TELEGRAM_ID, {
+          shopper_id: shopperId,
+          telegram_id: telegramId,
+        });
+
+        console.log(
+          `✅ Telegram ID updated for shopper ${shopperId}: ${telegramId}`
         );
 
-        console.log(`✅ Telegram ID updated for shopper ${shopperId}: ${telegramId}`);
-
-        return res.status(200).json({ 
-          success: true, 
-          shopper: updateResult.update_shoppers_by_pk 
+        return res.status(200).json({
+          success: true,
+          shopper: updateResult.update_shoppers_by_pk,
         });
 
       case "remove_telegram_id":
         if (!shopperId) {
-          return res.status(400).json({ 
-            error: "Missing required field: shopperId" 
+          return res.status(400).json({
+            error: "Missing required field: shopperId",
           });
         }
 
@@ -130,22 +130,19 @@ export default async function handler(
             status: string;
             active: boolean;
           };
-        }>(
-          REMOVE_SHOPPER_TELEGRAM_ID,
-          { shopper_id: shopperId }
-        );
+        }>(REMOVE_SHOPPER_TELEGRAM_ID, { shopper_id: shopperId });
 
         console.log(`✅ Telegram ID removed for shopper ${shopperId}`);
 
-        return res.status(200).json({ 
-          success: true, 
-          shopper: removeResult.update_shoppers_by_pk 
+        return res.status(200).json({
+          success: true,
+          shopper: removeResult.update_shoppers_by_pk,
         });
 
       case "get_by_user_id":
         if (!userId) {
-          return res.status(400).json({ 
-            error: "Missing required field: userId" 
+          return res.status(400).json({
+            error: "Missing required field: userId",
           });
         }
 
@@ -164,20 +161,17 @@ export default async function handler(
             created_at: string;
             updated_at: string;
           }>;
-        }>(
-          GET_SHOPPER_BY_USER_ID,
-          { user_id: userId }
-        );
+        }>(GET_SHOPPER_BY_USER_ID, { user_id: userId });
 
-        return res.status(200).json({ 
-          success: true, 
-          shopper: userShopperResult.shoppers[0] || null 
+        return res.status(200).json({
+          success: true,
+          shopper: userShopperResult.shoppers[0] || null,
         });
 
       case "get_by_telegram_id":
         if (!telegramId) {
-          return res.status(400).json({ 
-            error: "Missing required field: telegramId" 
+          return res.status(400).json({
+            error: "Missing required field: telegramId",
           });
         }
 
@@ -196,26 +190,23 @@ export default async function handler(
             created_at: string;
             updated_at: string;
           }>;
-        }>(
-          GET_SHOPPER_BY_TELEGRAM_ID,
-          { telegram_id: telegramId }
-        );
+        }>(GET_SHOPPER_BY_TELEGRAM_ID, { telegram_id: telegramId });
 
-        return res.status(200).json({ 
-          success: true, 
-          shopper: shopperResult.shoppers[0] || null 
+        return res.status(200).json({
+          success: true,
+          shopper: shopperResult.shoppers[0] || null,
         });
 
       default:
-        return res.status(400).json({ 
-          error: "Invalid action. Use: update_telegram_id, remove_telegram_id, get_by_telegram_id, or get_by_user_id" 
+        return res.status(400).json({
+          error:
+            "Invalid action. Use: update_telegram_id, remove_telegram_id, get_by_telegram_id, or get_by_user_id",
         });
     }
-
   } catch (error) {
     console.error("Error updating shopper:", error);
-    return res.status(500).json({ 
-      error: "Failed to update shopper" 
+    return res.status(500).json({
+      error: "Failed to update shopper",
     });
   }
-} 
+}

@@ -29,17 +29,17 @@ const ProofUploadModal: React.FC<ProofUploadModalProps> = ({
   const startCamera = async () => {
     try {
       setError(null);
-      
+
       // Check if camera is supported
       if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
         throw new Error("Camera not supported on this device");
       }
 
       const mediaStream = await navigator.mediaDevices.getUserMedia({
-        video: { 
+        video: {
           facingMode: "environment",
           width: { ideal: 1280 },
-          height: { ideal: 720 }
+          height: { ideal: 720 },
         },
         audio: false,
       });
@@ -55,8 +55,11 @@ const ProofUploadModal: React.FC<ProofUploadModalProps> = ({
       }, 100);
     } catch (error) {
       console.error("Error accessing camera:", error);
-      const errorMessage = error instanceof Error ? error.message : "Could not access camera";
-      setError(`Camera Error: ${errorMessage}. Please try uploading from gallery instead.`);
+      const errorMessage =
+        error instanceof Error ? error.message : "Could not access camera";
+      setError(
+        `Camera Error: ${errorMessage}. Please try uploading from gallery instead.`
+      );
     }
   };
 
@@ -95,12 +98,14 @@ const ProofUploadModal: React.FC<ProofUploadModalProps> = ({
     if (file) {
       // Check file size (max 5MB)
       if (file.size > 5 * 1024 * 1024) {
-        setError("File size too large. Please select an image smaller than 5MB.");
+        setError(
+          "File size too large. Please select an image smaller than 5MB."
+        );
         return;
       }
 
       // Check file type
-      if (!file.type.startsWith('image/')) {
+      if (!file.type.startsWith("image/")) {
         setError("Please select a valid image file.");
         return;
       }
@@ -122,7 +127,7 @@ const ProofUploadModal: React.FC<ProofUploadModalProps> = ({
 
     setUploadingProof(true);
     setError(null);
-    
+
     try {
       const response = await fetch("/api/invoices/upload-proof", {
         method: "POST",
@@ -152,24 +157,23 @@ const ProofUploadModal: React.FC<ProofUploadModalProps> = ({
         </div>,
         {
           duration: 3000,
-          placement: 'topCenter'
+          placement: "topCenter",
         }
       );
 
       onClose();
     } catch (error) {
       console.error("Error uploading proof:", error);
-      const errorMessage = error instanceof Error ? error.message : "Failed to upload proof";
+      const errorMessage =
+        error instanceof Error ? error.message : "Failed to upload proof";
       setError(errorMessage);
-      
+
       // Show error toast
       toaster.push(
-        <div className="text-red-800">
-          Upload failed: {errorMessage}
-        </div>,
+        <div className="text-red-800">Upload failed: {errorMessage}</div>,
         {
           duration: 5000,
-          placement: 'topCenter'
+          placement: "topCenter",
         }
       );
     } finally {

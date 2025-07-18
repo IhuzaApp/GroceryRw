@@ -3,6 +3,7 @@
 ## 🎯 Overview
 
 This integration connects your Telegram bot directly to your database, allowing:
+
 - ✅ **Automatic shopper registration** via Telegram
 - ✅ **Real-time status updates** (online/offline)
 - ✅ **Persistent connections** stored in database
@@ -11,7 +12,9 @@ This integration connects your Telegram bot directly to your database, allowing:
 ## 📊 Database Schema
 
 ### Shoppers Table
+
 Your existing `shoppers` table already includes:
+
 ```sql
 telegram_id: String  -- Stores Telegram chat ID
 status: String       -- Stores online/offline status
@@ -22,6 +25,7 @@ status: String       -- Stores online/offline status
 ### Mutations Created
 
 #### 1. Update Shopper Telegram ID
+
 ```graphql
 mutation UpdateShopperTelegramId($shopper_id: uuid!, $telegram_id: String!) {
   update_shoppers_by_pk(
@@ -38,6 +42,7 @@ mutation UpdateShopperTelegramId($shopper_id: uuid!, $telegram_id: String!) {
 ```
 
 #### 2. Update Shopper Status
+
 ```graphql
 mutation UpdateShopperStatus($shopper_id: uuid!, $status: String!) {
   update_shoppers_by_pk(
@@ -55,6 +60,7 @@ mutation UpdateShopperStatus($shopper_id: uuid!, $status: String!) {
 ### Queries Created
 
 #### 1. Get Shopper by Telegram ID
+
 ```graphql
 query GetShopperByTelegramId($telegram_id: String!) {
   shoppers(where: { telegram_id: { _eq: $telegram_id } }) {
@@ -78,11 +84,13 @@ query GetShopperByTelegramId($telegram_id: String!) {
 ### 1. Update Shopper (`/api/telegram/update-shopper`)
 
 **Actions:**
+
 - `update_telegram_id` - Store Telegram chat ID
 - `update_status` - Update online/offline status
 - `get_by_telegram_id` - Get shopper by Telegram ID
 
 **Example Usage:**
+
 ```bash
 # Update Telegram ID
 curl -X POST http://localhost:3000/api/telegram/update-shopper \
@@ -108,25 +116,30 @@ curl -X POST http://localhost:3000/api/telegram/update-shopper \
 ### New Commands Available
 
 #### `/start [shopperId]`
+
 - Connects shopper account to Telegram
 - Updates database with Telegram chat ID
 - Sends confirmation message
 
 #### `/online`
+
 - Sets shopper status to "online"
 - Updates database
 - Confirms status change
 
 #### `/offline`
+
 - Sets shopper status to "offline"
 - Updates database
 - Confirms status change
 
 #### `/status`
+
 - Shows current shopper information
 - Displays ID, name, status, transport mode, location
 
 #### `/help`
+
 - Shows all available commands
 
 ## 📱 Enhanced Telegram Service
@@ -134,29 +147,33 @@ curl -X POST http://localhost:3000/api/telegram/update-shopper \
 ### New Methods
 
 #### `getShopperByTelegramId(telegramId)`
+
 ```typescript
-const shopper = await TelegramService.getShopperByTelegramId('7871631863');
+const shopper = await TelegramService.getShopperByTelegramId("7871631863");
 ```
 
 #### `sendStatusUpdate(shopperId, status)`
+
 ```typescript
-await TelegramService.sendStatusUpdate(shopperId, 'online');
+await TelegramService.sendStatusUpdate(shopperId, "online");
 ```
 
 #### `sendOrderAssignment(shopperId, orderDetails)`
+
 ```typescript
 await TelegramService.sendOrderAssignment(shopperId, {
   orderId: "ORD-123",
   shopName: "Fresh Market",
   total: 45.99,
   pickupAddress: "123 Main St",
-  deliveryAddress: "456 Oak Ave"
+  deliveryAddress: "456 Oak Ave",
 });
 ```
 
 ## 🧪 Testing
 
 ### Test Bot with Database
+
 ```bash
 # Test bot with database
 node bot.js
@@ -165,8 +182,9 @@ node bot.js
 ## 🔄 Workflow
 
 ### 1. Shopper Connects via Telegram
+
 ```
-Shopper clicks "Connect Telegram" 
+Shopper clicks "Connect Telegram"
 → Opens: https://t.me/PlaseraBot?start={shopperId}
 → Bot receives: /start {shopperId}
 → Bot updates database: shoppers.telegram_id = chatId
@@ -174,6 +192,7 @@ Shopper clicks "Connect Telegram"
 ```
 
 ### 2. Shopper Updates Status
+
 ```
 Shopper sends: /online or /offline
 → Bot looks up shopper by telegram_id
@@ -182,6 +201,7 @@ Shopper sends: /online or /offline
 ```
 
 ### 3. System Sends Notifications
+
 ```
 Order assigned to shopper
 → System looks up shopper.telegram_id
@@ -192,16 +212,19 @@ Order assigned to shopper
 ## 🔐 Security Features
 
 ### Authentication
+
 - ✅ User session validation
 - ✅ Shopper ID verification
 - ✅ Authorization checks
 
 ### Data Validation
+
 - ✅ Required field validation
 - ✅ UUID format validation
 - ✅ Status value validation
 
 ### Error Handling
+
 - ✅ Graceful error responses
 - ✅ Detailed error logging
 - ✅ Fallback mechanisms
@@ -209,16 +232,19 @@ Order assigned to shopper
 ## 📊 Monitoring
 
 ### Database Logs
+
 - Telegram ID updates
 - Status changes
 - Connection attempts
 
 ### Bot Logs
+
 - Command processing
 - Database operations
 - Error handling
 
 ### API Logs
+
 - Request/response tracking
 - Authentication attempts
 - Performance metrics
@@ -226,6 +252,7 @@ Order assigned to shopper
 ## 🚀 Deployment
 
 ### Local Development
+
 ```bash
 # Start everything together
 yarn dev:full
@@ -236,6 +263,7 @@ node bot.js       # Telegram bot
 ```
 
 ### Production (Vercel)
+
 ```bash
 # Deploy to Vercel
 vercel --prod
@@ -249,6 +277,7 @@ WEBHOOK_URL=https://your-app.vercel.app/api/telegram/webhook yarn telegram:setup
 ### Common Issues
 
 #### Bot Not Updating Database
+
 ```bash
 # Check API endpoint
 curl -X POST http://localhost:3000/api/telegram/update-shopper \
@@ -257,6 +286,7 @@ curl -X POST http://localhost:3000/api/telegram/update-shopper \
 ```
 
 #### Database Connection Issues
+
 ```bash
 # Check Hasura client
 curl -X POST http://localhost:8080/v1/graphql \
@@ -265,6 +295,7 @@ curl -X POST http://localhost:8080/v1/graphql \
 ```
 
 #### Authentication Errors
+
 ```bash
 # Check session
 curl -X GET http://localhost:3000/api/auth/session
@@ -289,4 +320,4 @@ curl -X GET http://localhost:3000/api/auth/session
 
 ---
 
-**🎯 Result**: Your Telegram bot is now fully integrated with your database, providing persistent connections and real-time status updates! 
+**🎯 Result**: Your Telegram bot is now fully integrated with your database, providing persistent connections and real-time status updates!

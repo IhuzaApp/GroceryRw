@@ -66,9 +66,28 @@ export default async function handler(
     const now = new Date();
     const dayOfWeek = now.getUTCDay(); // 0 = Sunday, 1 = Monday, etc.
     const daysToMonday = dayOfWeek === 0 ? 6 : dayOfWeek - 1; // Days to go back to Monday
-    
-    const weekStart = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate() - daysToMonday, 0, 0, 0));
-    const weekEnd = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate() - daysToMonday + 6, 23, 59, 59, 999));
+
+    const weekStart = new Date(
+      Date.UTC(
+        now.getUTCFullYear(),
+        now.getUTCMonth(),
+        now.getUTCDate() - daysToMonday,
+        0,
+        0,
+        0
+      )
+    );
+    const weekEnd = new Date(
+      Date.UTC(
+        now.getUTCFullYear(),
+        now.getUTCMonth(),
+        now.getUTCDate() - daysToMonday + 6,
+        23,
+        59,
+        59,
+        999
+      )
+    );
 
     // Fetch orders for this week
     const data = await hasuraClient.request<GraphQLResponse>(
@@ -83,7 +102,7 @@ export default async function handler(
     console.log(`🔍 Week query for user ${userId}:`, {
       weekStart: weekStart.toISOString(),
       weekEnd: weekEnd.toISOString(),
-      ordersFound: data.Orders.length
+      ordersFound: data.Orders.length,
     });
 
     // Calculate total earnings and get order details
@@ -104,8 +123,10 @@ export default async function handler(
 
     // Group orders by day
     const dailyData: Record<string, { count: number; earnings: number }> = {};
-    completedOrders.forEach(order => {
-      const day = new Date(order.completed_at).toLocaleDateString('en-US', { weekday: 'short' });
+    completedOrders.forEach((order) => {
+      const day = new Date(order.completed_at).toLocaleDateString("en-US", {
+        weekday: "short",
+      });
       if (!dailyData[day]) {
         dailyData[day] = { count: 0, earnings: 0 };
       }
@@ -133,4 +154,4 @@ export default async function handler(
           : "Failed to fetch week's completed earnings",
     });
   }
-} 
+}
