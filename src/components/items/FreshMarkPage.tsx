@@ -25,6 +25,7 @@ interface Shop {
   name: string;
   description: string;
   image: string;
+  logo: string;
   address: string;
   latitude: string;
   longitude: string;
@@ -115,7 +116,7 @@ const FreshMarkPage: React.FC<FreshMarkPageProps> = ({ shop, products }) => {
     rating: 4.8,
     reviews: 1245,
     deliveryTime: dynamicDeliveryTime,
-    deliveryFee: "Free",
+    deliveryFee: "Charged", // This is where "Free" is set
     distance: dynamicDistance,
     products: products || [],
   };
@@ -128,9 +129,9 @@ const FreshMarkPage: React.FC<FreshMarkPageProps> = ({ shop, products }) => {
           (product) => product.category === activeCategory
         );
 
-  const sanitizeSrc = (raw: string) => {
-    if (raw.startsWith("/")) return raw;
-    if (raw.startsWith("http")) return raw;
+  const sanitizeSrc = (raw: string | null | undefined) => {
+    if (raw && raw.startsWith("/")) return raw;
+    if (raw && raw.startsWith("http")) return raw;
     return "/assets/images/shop-placeholder.jpg";
   };
 
@@ -139,7 +140,7 @@ const FreshMarkPage: React.FC<FreshMarkPageProps> = ({ shop, products }) => {
       <div className="p-4 md:ml-16">
         <div className="container mx-auto">
           {/* Shop Banner */}
-          <div className="relative h-48 bg-gray-200">
+          <div className="relative h-48 bg-gray-200 dark:bg-gray-700">
             <Image
               src={sanitizeSrc(shopData.image)}
               alt={shopData?.name}
@@ -148,6 +149,13 @@ const FreshMarkPage: React.FC<FreshMarkPageProps> = ({ shop, products }) => {
             />
             <div className="absolute inset-0 flex items-end bg-black bg-opacity-30">
               <div className="p-6 text-white">
+                <Image
+                  src={sanitizeSrc(shopData.logo)}
+                  alt={`${shopData.name} logo`}
+                  width={64}
+                  height={64}
+                  className="mb-2 h-16 w-16 rounded-md border-2 border-white object-cover"
+                />
                 <h1 className="text-3xl font-bold">{shopData.name}</h1>
                 <div className="mt-2 flex items-center">
                   <div className="flex items-center">
@@ -172,7 +180,7 @@ const FreshMarkPage: React.FC<FreshMarkPageProps> = ({ shop, products }) => {
             </div>
             <Link
               href="/"
-              className="absolute left-4 top-4 rounded-full bg-white p-2"
+              className="absolute left-4 top-4 rounded-full bg-white p-2 dark:bg-gray-800 dark:text-white"
             >
               <svg
                 viewBox="0 0 24 24"
@@ -187,8 +195,8 @@ const FreshMarkPage: React.FC<FreshMarkPageProps> = ({ shop, products }) => {
           </div>
 
           {/* Shop Description */}
-          <div className="border-b bg-white px-4 py-3">
-            <p className="text-gray-600">{shopData?.description}</p>
+          <div className="border-b bg-white px-4 py-3 dark:bg-gray-800 dark:border-gray-700">
+            <p className="text-gray-600 dark:text-gray-300">{shopData?.description}</p>
           </div>
           <ItemsSection
             activeCategory={activeCategory}

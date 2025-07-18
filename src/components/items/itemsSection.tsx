@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { formatCurrency } from "../../lib/formatCurrency";
 import ProdCategories from "@components/ui/categories";
 import Image from "next/image";
-import { Input, InputGroup, Button, Badge, Nav } from "rsuite";
+import { Input, InputGroup, Button, Badge, Nav, Pagination } from "rsuite";
 import { useCart } from "../../context/CartContext";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/router";
@@ -28,6 +28,9 @@ export default function ItemsSection({
   setActiveCategory,
 }: any) {
   const [loadingProducts, setLoadingProducts] = useState<boolean>(false);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
+  const productsPerPage = 12;
 
   // Simulate loading when category changes
   useEffect(() => {
@@ -44,10 +47,24 @@ export default function ItemsSection({
 
   // Use the provided activeCategory and setActiveCategory for filtering
 
+  const handleSearchChange = (value: string) => {
+    setSearchQuery(value);
+    setCurrentPage(1);
+  };
+
+  const searchedProducts = filteredProducts.filter((product: any) =>
+    product.name.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
+  const paginatedProducts = searchedProducts.slice(
+    (currentPage - 1) * productsPerPage,
+    currentPage * productsPerPage
+  );
+
   return (
     <>
       {/* Categories Navigation */}
-      <div className="sticky top-[73px] z-10 border-b bg-white shadow-sm">
+      <div className="sticky top-[73px] z-10 border-b bg-white shadow-sm dark:bg-gray-800 dark:border-gray-700">
         <div className="overflow-x-auto px-4">
           <Nav
             appearance="subtle"
@@ -58,7 +75,7 @@ export default function ItemsSection({
               <Nav.Item
                 key={category}
                 eventKey={category}
-                className="px-4 capitalize"
+                className="px-4 capitalize dark:text-gray-200"
               >
                 {category}
               </Nav.Item>
@@ -69,12 +86,40 @@ export default function ItemsSection({
 
       {/* Products Grid */}
       <div className="p-4">
-        <h2 className="mb-4 text-xl font-bold">
-          {activeCategory && activeCategory !== "all"
-            ? String(activeCategory).charAt(0).toUpperCase() +
-              String(activeCategory).slice(1)
-            : "All Products"}
-        </h2>
+        <div className="flex flex-col items-baseline justify-between gap-4 md:flex-row">
+          <h2 className="text-xl font-bold">
+            {activeCategory && activeCategory !== "all"
+              ? String(activeCategory).charAt(0).toUpperCase() +
+                String(activeCategory).slice(1)
+              : "All Products"}
+          </h2>
+          <div className="w-full md:w-72">
+            <InputGroup inside>
+              <Input
+                placeholder="Search products..."
+                value={searchQuery}
+                onChange={handleSearchChange}
+              />
+              <InputGroup.Addon>
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  className="h-5 w-5"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+                  />
+                </svg>
+              </InputGroup.Addon>
+            </InputGroup>
+          </div>
+        </div>
+        <div className="my-4 border-b dark:border-gray-700"></div>
         <div className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-6">
           {loadingProducts
             ? Array(12)
@@ -82,17 +127,17 @@ export default function ItemsSection({
                 .map((_, idx) => (
                   <div
                     key={idx}
-                    className="animate-pulse overflow-hidden rounded-lg bg-white shadow-sm"
+                    className="animate-pulse overflow-hidden rounded-lg bg-white shadow-sm dark:bg-gray-700"
                   >
-                    <div className="h-40 bg-gray-200" />
+                    <div className="h-40 bg-gray-200 dark:bg-gray-600" />
                     <div className="space-y-2 p-3">
-                      <div className="h-4 w-3/4 rounded bg-gray-200" />
-                      <div className="h-3 w-1/2 rounded bg-gray-200" />
-                      <div className="h-6 w-1/2 rounded bg-gray-200" />
+                      <div className="h-4 w-3/4 rounded bg-gray-200 dark:bg-gray-600" />
+                      <div className="h-3 w-1/2 rounded bg-gray-200 dark:bg-gray-600" />
+                      <div className="h-6 w-1/2 rounded bg-gray-200 dark:bg-gray-600" />
                     </div>
                   </div>
                 ))
-            : filteredProducts.map((product: any) => (
+            : paginatedProducts.map((product: any) => (
                 <ProductCard
                   key={product.id}
                   id={product.id}
@@ -108,6 +153,19 @@ export default function ItemsSection({
                 />
               ))}
         </div>
+        {searchedProducts.length > productsPerPage && (
+          <div className="mt-8 flex justify-center">
+            <Pagination
+              prev
+              next
+              size="md"
+              total={searchedProducts.length}
+              limit={productsPerPage}
+              activePage={currentPage}
+              onChangePage={setCurrentPage}
+            />
+          </div>
+        )}
       </div>
     </>
   );
@@ -159,10 +217,10 @@ function ProductCard({
       // Update toast with success message
       toast.success(
         <div className="flex items-center gap-2">
-          <div className="flex h-6 w-6 items-center justify-center rounded-full bg-green-100">
+          <div className="flex h-6 w-6 items-center justify-center rounded-full bg-green-100 dark:bg-green-900">
             <svg
               viewBox="0 0 24 24"
-              className="h-4 w-4 text-green-500"
+              className="h-4 w-4 text-green-500 dark:text-green-400"
               fill="none"
               stroke="currentColor"
               strokeWidth="2"
@@ -172,7 +230,7 @@ function ProductCard({
           </div>
           <div>
             <p className="font-medium">1 × {name}</p>
-            <p className="text-xs text-gray-500">Added to cart</p>
+            <p className="text-xs text-gray-500 dark:text-gray-400">Added to cart</p>
           </div>
         </div>,
         {
@@ -192,7 +250,7 @@ function ProductCard({
 
   return (
     <>
-      <div className="overflow-hidden rounded-lg bg-white shadow-sm">
+      <div className="overflow-hidden rounded-lg bg-white shadow-sm dark:bg-gray-800">
         <div className="relative">
           <Image
             src={
@@ -218,16 +276,16 @@ function ProductCard({
           )}
         </div>
         <div className="p-3">
-          <h3 className="mb-1 font-medium text-gray-900">{name}</h3>
-          <p className="mb-2 text-sm text-gray-500">{unit}</p>
+          <h3 className="mb-1 font-medium text-gray-900 dark:text-gray-100">{name}</h3>
+          <p className="mb-2 text-sm text-gray-500 dark:text-gray-400">{unit}</p>
           <div className="flex items-center justify-between">
             <div>
-              <span className="font-bold text-gray-900">
+              <span className="font-bold text-gray-900 dark:text-gray-100">
                 {formatCurrency(parseFloat(final_price || "0"))}
                 {measurement_unit ? ` / ${measurement_unit}` : ""}
               </span>
               {sale && originalPrice && (
-                <span className="ml-2 text-sm text-gray-500 line-through">
+                <span className="ml-2 text-sm text-gray-500 line-through dark:text-gray-400">
                   {formatCurrency(parseFloat(originalPrice || "0"))}
                 </span>
               )}
@@ -236,7 +294,7 @@ function ProductCard({
               <Button
                 appearance="primary"
                 size="sm"
-                className="flex h-8 w-8 items-center justify-center rounded-full bg-green-500 p-0 text-white hover:bg-green-600"
+                className="flex h-8 w-8 items-center justify-center rounded-full bg-green-500 p-0 text-white hover:bg-green-600 dark:bg-green-600 dark:hover:bg-green-700"
                 onClick={handleQuickAdd}
                 disabled={isAdding}
               >
@@ -259,7 +317,7 @@ function ProductCard({
               <Button
                 appearance="primary"
                 size="sm"
-                className="flex h-8 w-8 items-center justify-center rounded-full bg-gray-200 p-0 text-gray-700 hover:bg-gray-300"
+                className="flex h-8 w-8 items-center justify-center rounded-full bg-gray-200 p-0 text-gray-700 hover:bg-gray-300 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600"
                 onClick={() => {
                   setShowModal(true);
                   setSelectedQuantity(1);
@@ -283,7 +341,7 @@ function ProductCard({
       {showModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
           <div
-            className="w-80 rounded-lg bg-white p-6 shadow-lg"
+            className="w-80 rounded-lg bg-white p-6 shadow-lg dark:bg-gray-800"
             onKeyDown={(e) => {
               // Enter key submits the form
               if (e.key === "Enter") {
@@ -306,16 +364,16 @@ function ProductCard({
               }
             }}
           >
-            <h3 className="mb-4 text-lg font-bold">Add {name} to Cart</h3>
+            <h3 className="mb-4 text-lg font-bold dark:text-white">Add {name} to Cart</h3>
             <div className="mb-4">
               <div className="mb-2 flex items-center justify-between">
-                <span className="text-sm font-medium">Quantity:</span>
+                <span className="text-sm font-medium dark:text-gray-300">Quantity:</span>
                 <div className="flex items-center">
                   <button
                     onClick={() =>
                       setSelectedQuantity(Math.max(1, selectedQuantity - 1))
                     }
-                    className="flex h-8 w-8 items-center justify-center rounded-l border border-gray-300 bg-gray-100 text-gray-600 hover:bg-gray-200"
+                    className="flex h-8 w-8 items-center justify-center rounded-l border border-gray-300 bg-gray-100 text-gray-600 hover:bg-gray-200 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600"
                   >
                     -
                   </button>
@@ -328,13 +386,13 @@ function ProductCard({
                         Math.max(1, parseInt(e.target.value, 10) || 1)
                       )
                     }
-                    className="h-8 w-16 border-y border-gray-300 p-0 text-center focus:outline-none"
+                    className="h-8 w-16 border-y border-gray-300 p-0 text-center focus:outline-none dark:border-gray-600 dark:bg-gray-700 dark:text-white"
                     onFocus={(e) => e.target.select()}
                     autoFocus
                   />
                   <button
                     onClick={() => setSelectedQuantity(selectedQuantity + 1)}
-                    className="flex h-8 w-8 items-center justify-center rounded-r border border-gray-300 bg-gray-100 text-gray-600 hover:bg-gray-200"
+                    className="flex h-8 w-8 items-center justify-center rounded-r border border-gray-300 bg-gray-100 text-gray-600 hover:bg-gray-200 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600"
                   >
                     +
                   </button>
@@ -349,8 +407,8 @@ function ProductCard({
                     onClick={() => setSelectedQuantity(qty)}
                     className={`rounded-full border px-3 py-1 text-xs font-medium ${
                       selectedQuantity === qty
-                        ? "border-green-500 bg-green-50 text-green-700"
-                        : "border-gray-300 bg-white text-gray-700"
+                        ? "border-green-500 bg-green-50 text-green-700 dark:border-green-500 dark:bg-green-900 dark:text-green-300"
+                        : "border-gray-300 bg-white text-gray-700 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-300"
                     }`}
                   >
                     {qty}
@@ -361,7 +419,7 @@ function ProductCard({
             <div className="flex justify-end space-x-2">
               <button
                 onClick={() => setShowModal(false)}
-                className="rounded border px-4 py-2 text-gray-700"
+                className="rounded border px-4 py-2 text-gray-700 dark:text-gray-300 dark:border-gray-600"
               >
                 Cancel
               </button>
@@ -395,10 +453,10 @@ function ProductCard({
                     // Update toast with success message
                     toast.success(
                       <div className="flex items-center gap-2">
-                        <div className="flex h-6 w-6 items-center justify-center rounded-full bg-green-100">
+                        <div className="flex h-6 w-6 items-center justify-center rounded-full bg-green-100 dark:bg-green-900">
                           <svg
                             viewBox="0 0 24 24"
-                            className="h-4 w-4 text-green-500"
+                            className="h-4 w-4 text-green-500 dark:text-green-400"
                             fill="none"
                             stroke="currentColor"
                             strokeWidth="2"
@@ -410,7 +468,7 @@ function ProductCard({
                           <p className="font-medium">
                             {selectedQuantity} × {name}
                           </p>
-                          <p className="text-xs text-gray-500">Added to cart</p>
+                          <p className="text-xs text-gray-500 dark:text-gray-400">Added to cart</p>
                         </div>
                       </div>,
                       {
@@ -427,7 +485,7 @@ function ProductCard({
                     });
                   }
                 }}
-                className="rounded bg-green-500 px-4 py-2 text-white hover:bg-green-600"
+                className="rounded bg-green-500 px-4 py-2 text-white hover:bg-green-600 dark:bg-green-600 dark:hover:bg-green-700"
               >
                 Add to Cart
               </button>
