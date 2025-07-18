@@ -1256,7 +1256,7 @@ export default function BatchDetails({
 
             {order.orderType === "reel" ? (
                   <div className="space-y-3 sm:space-y-4">
-                                      <div className="flex flex-col gap-3 sm:flex-row sm:gap-4">
+                    <div className="flex flex-col gap-3 sm:flex-row sm:gap-4">
                     <div className="relative mx-auto h-14 w-14 flex-shrink-0 overflow-hidden rounded-lg bg-slate-200 sm:mx-0 sm:h-20 sm:w-20">
                     {order.reel?.video_url ? (
                       <video
@@ -1688,22 +1688,22 @@ export default function BatchDetails({
                       )}
                     </span>
                   </div>
-                                        <div className="flex justify-between">
-                        <span>Service Fee</span>
-                        <span>
-                                {formatCurrency(
-                                  parseFloat(order.serviceFee || "0")
-                                )}
-                        </span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span>Delivery Fee</span>
-                        <span>
-                                {formatCurrency(
-                                  parseFloat(order.deliveryFee || "0")
-                                )}
-                        </span>
-                      </div>
+                  <div className="flex justify-between">
+                    <span>Service Fee</span>
+                    <span>
+                            {formatCurrency(
+                              parseFloat(order.serviceFee || "0")
+                            )}
+                    </span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span>Delivery Fee</span>
+                    <span>
+                            {formatCurrency(
+                              parseFloat(order.deliveryFee || "0")
+                            )}
+                    </span>
+                  </div>
                       {systemConfig?.tax && (
                         <div className="flex justify-between">
                           <span>Tax ({systemConfig.tax}%)</span>
@@ -1891,13 +1891,13 @@ export default function BatchDetails({
 
         {/* Action Button */}
             <div className="pt-2 sm:pt-4">
-                              <Button
-                  appearance="primary"
+              <Button
+                appearance="primary"
                   color={order.orderType === "reel" ? "violet" : "green"}
                   size="lg"
                   block
                   className="rounded-lg sm:rounded-xl py-3 sm:py-4 text-lg sm:text-xl font-bold sm:text-2xl"
-                >
+              >
                 {getActionButton()}
               </Button>
             </div>

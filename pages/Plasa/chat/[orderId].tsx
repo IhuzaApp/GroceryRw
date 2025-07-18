@@ -89,19 +89,25 @@ export default function ChatPage() {
         const res = await fetch(`/api/queries/orderDetails?id=${orderId}`);
         const data = await res.json();
 
+        console.log("API Response:", data);
+        console.log("Order data:", data.order);
+
         if (data.order) {
           setOrder(data.order);
 
-          // Set customer data
-          setCustomerData({
-            id: data.order.user_id,
-            name: data.order.user_name || "Customer",
-            avatar: "/placeholder.svg?height=80&width=80",
+          // Set customer data - user data is in data.order.user object
+          const customerDataToSet = {
+            id: data.order.user?.id,
+            name: data.order.user?.name || "Customer",
+            avatar: data.order.user?.profile_picture || "/placeholder.svg?height=80&width=80",
             lastSeen: "Online now",
-          });
+          };
+          
+          console.log("Setting customer data:", customerDataToSet);
+          setCustomerData(customerDataToSet);
 
           // Get or create conversation
-          await getOrCreateConversation(data.order.id, data.order.user_id);
+          await getOrCreateConversation(data.order.id, customerDataToSet.id);
         }
       } catch (error) {
         console.error("Error fetching order details:", error);
@@ -224,12 +230,32 @@ export default function ChatPage() {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   };
 
-  const handleSendMessage = async () => {
-    if (!message.trim() || !user?.id || !conversationId || !customerData?.id)
+  const handleSendMessage = async (e?: React.FormEvent) => {
+    console.log("=== handleSendMessage function called ===");
+    
+    if (e) {
+      e.preventDefault();
+    }
+    
+    console.log("handleSendMessage called with:", {
+      message: message.trim(),
+      userId: user?.id,
+      conversationId,
+      customerDataId: customerData?.id,
+      hasMessage: !!message.trim(),
+      hasUser: !!user?.id,
+      hasConversation: !!conversationId,
+      hasCustomerData: !!customerData?.id
+    });
+    
+    if (!message.trim() || !user?.id || !conversationId || !customerData?.id) {
+      console.log("Early return - missing required data");
       return;
+    }
 
     try {
       setIsSending(true);
+      console.log("Sending message to Firestore...");
 
       // Add new message to Firestore
       const messagesRef = collection(
@@ -258,6 +284,7 @@ export default function ChatPage() {
 
       // Clear input
       setMessage("");
+      console.log("Message sent successfully");
     } catch (error) {
       console.error("Error sending message:", error);
     } finally {
@@ -525,8 +552,9 @@ export default function ChatPage() {
                 theme === "dark" ? "bg-gray-800" : "bg-white"
               }`}
             >
-              <div className="flex items-center space-x-2">
+              <form onSubmit={handleSendMessage} className="flex items-center space-x-2">
                 <button
+                  type="button"
                   onClick={handleAttachmentClick}
                   className={`rounded-full p-2 transition-colors ${
                     theme === "dark" ? "hover:bg-gray-700" : "hover:bg-gray-100"
@@ -557,7 +585,7 @@ export default function ChatPage() {
                   }`}
                 />
                 <button
-                  onClick={handleSendMessage}
+                  type="submit"
                   disabled={isSending || !message.trim()}
                   className={`rounded-lg px-6 py-2 font-medium ${
                     isSending || !message.trim()
@@ -578,7 +606,7 @@ export default function ChatPage() {
                     "Send"
                   )}
                 </button>
-              </div>
+              </form>
               <input
                 type="file"
                 ref={fileInputRef}
