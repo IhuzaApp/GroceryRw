@@ -115,8 +115,8 @@ export default function QuantityConfirmationModal({
   }, [foundWeight, pricePerUnit, customerBudget, isWeightBased, currentItem]);
 
   // Function to handle barcode scan result
-  const handleBarcodeScanned = (barcode: string) => {
-    console.log("🔍 Barcode scanned:", barcode);
+  const handleBarcodeScanned = (scannedBarcode: string) => {
+    console.log("🔍 Barcode scanned:", scannedBarcode);
     console.log("🔍 Current item:", currentItem);
     
     if (!currentItem) {
@@ -128,48 +128,39 @@ export default function QuantityConfirmationModal({
       return;
     }
 
-    // Check if the item has a barcode in the database
     const itemBarcode = currentItem.product.barcode;
     const itemSku = currentItem.product.sku;
     
     console.log("🔍 Item barcode from DB:", itemBarcode);
     console.log("🔍 Item SKU from DB:", itemSku);
-    console.log("🔍 Scanned barcode:", barcode);
+    console.log("�� Scanned barcode:", scannedBarcode);
 
-    // If no barcode/SKU in database, accept any scanned barcode
-    if (!itemBarcode && !itemSku) {
-      console.log("✅ No barcode/SKU in database - accepting scanned barcode");
-      setBarcodeValidation({
-        isValid: true,
-        message: `Barcode scanned: ${barcode} (no database reference)`,
-        isWeightBased: false,
-      });
-      // Close scanner modal after successful scan
-      setShowBarcodeScanner(false);
+    // If the item has a barcode or SKU in the database, it MUST match.
+    if (itemBarcode || itemSku) {
+      const isValid = scannedBarcode === itemBarcode || scannedBarcode === itemSku;
+      if (isValid) {
+        setBarcodeValidation({
+          isValid: true,
+          message: "Barcode/SKU matches!",
+          isWeightBased: false,
+        });
+        setShowBarcodeScanner(false);
+      } else {
+        setBarcodeValidation({
+          isValid: false,
+          message: "Scanned code does not match the product's barcode/SKU.",
+          isWeightBased: false,
+        });
+      }
       return;
     }
 
-    // Validate against database barcode or SKU
-    const isValid = barcode === itemBarcode || barcode === itemSku;
-    
-    console.log("🔍 Validation result:", isValid);
-    
-    if (isValid) {
-      setBarcodeValidation({
-        isValid: true,
-        message: "Barcode/SKU matches!",
-        isWeightBased: false,
-      });
-      // Close scanner modal after successful scan
-      setShowBarcodeScanner(false);
-    } else {
-      setBarcodeValidation({
-        isValid: false,
-        message: "Barcode/SKU does not match. Please try again.",
-        isWeightBased: false,
-      });
-      // Keep scanner open for retry
-    }
+    // If the item has NO barcode or SKU in the database, it cannot be validated.
+    setBarcodeValidation({
+      isValid: false,
+      message: "This product has no barcode/SKU in our system. It cannot be scanned and must be marked as 'Not Found'.",
+      isWeightBased: false,
+    });
   };
 
   if (!currentItem) return null;

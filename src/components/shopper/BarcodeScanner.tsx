@@ -17,7 +17,6 @@ const BarcodeScanner: React.FC<BarcodeScannerProps> = ({ onBarcodeDetected, onCl
 
   const stopScanner = useCallback(() => {
     if (controlsRef.current) {
-      console.log('📷 Stopping scanner and camera...');
       controlsRef.current.stop();
       controlsRef.current = null;
     }
@@ -47,8 +46,6 @@ const BarcodeScanner: React.FC<BarcodeScannerProps> = ({ onBarcodeDetected, onCl
             if (result) {
               // Set the guard flag IMMEDIATELY to prevent re-entry.
               isScannedRef.current = true;
-              
-              console.log('📷 Barcode detected:', result.getText());
               
               stopScanner();
               onBarcodeDetected(result.getText());
