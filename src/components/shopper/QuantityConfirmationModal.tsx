@@ -51,15 +51,12 @@ export default function QuantityConfirmationModal({
   // Check if item is weight-based
   useEffect(() => {
     if (currentItem) {
-      const unit = currentItem.product.measurement_unit?.toLowerCase() || "";
+      const unit = currentItem.product.measurement_unit?.toLowerCase().trim() || "";
       const isWeight = [
-        "kg",
-        "g",
-        "grams",
-        "lbs",
-        "pounds",
-        "oz",
-        "ounces",
+        "kg", "g", "mg",
+        "kilogram", "gram", "milligram",
+        "lbs", "oz",
+        "pound", "ounce",
       ].includes(unit);
       setIsWeightBased(isWeight);
       setMeasurementUnit(unit);
