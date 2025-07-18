@@ -26,6 +26,8 @@ export default function QuantityConfirmationModal({
 
   // State for barcode scanning
   const [showBarcodeScanner, setShowBarcodeScanner] = useState(false);
+  const [showManualInput, setShowManualInput] = useState(false);
+  const [manualSku, setManualSku] = useState("");
   const [barcodeValidation, setBarcodeValidation] = useState<{
     isValid: boolean;
     message: string;
@@ -186,7 +188,7 @@ export default function QuantityConfirmationModal({
     <Modal
       open={open}
       onClose={onClose}
-        size="md"
+        size="sm"
       className={`${theme === "dark" ? "bg-gray-900" : "bg-white"} rounded-xl`}
     >
       <Modal.Header
@@ -211,7 +213,7 @@ export default function QuantityConfirmationModal({
           <div className="space-y-4">
             {/* Barcode Scanning Section - Only for non-weight-based items */}
             {!isWeightBased && (
-              <div className={`rounded-lg bg-white p-4 dark:bg-slate-700`}>
+              <div className={`rounded-lg bg-transparent`}>
                 <div className="mb-3">
                   <label
                     className={`text-sm font-medium ${
@@ -229,43 +231,88 @@ export default function QuantityConfirmationModal({
                   </p>
                 </div>
 
-                <div className="flex items-center gap-3">
-                  <button
-                    onClick={() => setShowBarcodeScanner(true)}
-                    className="flex-1 rounded-lg bg-blue-600 px-4 py-2 font-medium text-white transition-colors hover:bg-blue-700"
-                  >
-                    <svg
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth="2"
-                      className="mr-2 h-4 w-4 inline"
-                    >
-                      <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
-                  </svg>
-                    Open Camera Scanner
-                  </button>
-                  <button
+                {/* Card-based selection */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  {/* Open Camera Scanner Card */}
+                  <div
                     onClick={() => {
-                      const manualBarcode = prompt("Enter barcode or SKU manually:");
-                      if (manualBarcode) {
-                        handleBarcodeScanned(manualBarcode.trim());
-                      }
+                      setShowManualInput(false);
+                      setShowBarcodeScanner(true);
                     }}
-                    className="flex-1 rounded-lg bg-green-600 px-4 py-2 font-medium text-white transition-colors hover:bg-green-700"
+                    className={`p-4 rounded-lg border-2 cursor-pointer transition-all ${
+                      showBarcodeScanner
+                        ? "border-purple-500 bg-purple-50 dark:bg-purple-900/20"
+                        : "border-gray-300 dark:border-gray-600 hover:border-purple-400 dark:hover:border-purple-500"
+                    }`}
                   >
-                    <svg
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth="2"
-                      className="mr-2 h-4 w-4 inline"
-                    >
-                      <path d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                    </svg>
-                    Manual Entry
-                  </button>
+                    <div className="flex items-center">
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 mr-3 text-purple-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M4 6h16M4 10h16M4 14h16M4 18h16" />
+                      </svg>
+                      <div>
+                        <p className="font-semibold">Scan with Camera</p>
+                        <p className="text-xs text-gray-500 dark:text-gray-400">Use your device's camera</p>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Manual Entry Card */}
+                  <div
+                    onClick={() => {
+                      setShowBarcodeScanner(false);
+                      setShowManualInput(true);
+                    }}
+                    className={`p-4 rounded-lg border-2 cursor-pointer transition-all ${
+                      showManualInput
+                        ? "border-green-500 bg-green-50 dark:bg-green-900/20"
+                        : "border-gray-300 dark:border-gray-600 hover:border-green-400 dark:hover:border-green-500"
+                    }`}
+                  >
+                    <div className="flex items-center">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="h-6 w-6 mr-3 text-green-500">
+                        <path d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                      </svg>
+                      <div>
+                        <p className="font-semibold">Enter Manually</p>
+                        <p className="text-xs text-gray-500 dark:text-gray-400">Type in the SKU or barcode</p>
+                      </div>
+                    </div>
+                  </div>
                 </div>
+
+                {/* Manual SKU Input Form */}
+                {showManualInput && (
+                  <div className="mt-4">
+                    <form
+                      onSubmit={(e) => {
+                        e.preventDefault();
+                        if (manualSku.trim()) {
+                          handleBarcodeScanned(manualSku.trim());
+                        }
+                      }}
+                    >
+                      <div className="flex items-center gap-2">
+                        <input
+                          type="text"
+                          value={manualSku}
+                          onChange={(e) => setManualSku(e.target.value)}
+                          placeholder="Enter SKU or barcode"
+                          className={`flex-1 rounded-lg border px-3 py-2 ${
+                            theme === 'dark'
+                              ? 'bg-gray-800 border-gray-600'
+                              : 'bg-white border-gray-300'
+                          }`}
+                        />
+                        <button
+                          type="submit"
+                          className="rounded-lg bg-green-600 px-4 py-2 font-medium text-white transition-colors hover:bg-green-700"
+                        >
+                          Validate
+                        </button>
+                      </div>
+                    </form>
+                  </div>
+                )}
 
                 {/* Validation Status */}
                 {barcodeValidation.message && (
