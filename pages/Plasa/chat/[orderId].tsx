@@ -498,10 +498,10 @@ export default function ChatPage() {
                 <div className="flex items-center space-x-3">
                   <div className="relative">
                     <img
-                      src={customerData?.avatar || "/placeholder.svg"}
-                      alt={customerData?.name || "Customer"}
+                    src={customerData?.avatar || "/placeholder.svg"}
+                    alt={customerData?.name || "Customer"}
                       className="h-10 w-10 rounded-full object-cover border-2 border-gray-200 dark:border-gray-600"
-                    />
+                  />
                     <div className="absolute -bottom-1 -right-1 h-3 w-3 rounded-full bg-green-500 border-2 border-white dark:border-gray-800"></div>
                   </div>
                   <div>
@@ -542,9 +542,9 @@ export default function ChatPage() {
                 </div>
               ) : (
                 <div className="space-y-4">
-                  {messages.map((msg, index) => (
-                    <div
-                      key={msg.id}
+              {messages.map((msg, index) => (
+                <div
+                  key={msg.id}
                       className={`flex ${msg.senderType === "shopper" ? "justify-end" : "justify-start"}`}
                     >
                       <div className="max-w-[75%]">
@@ -560,16 +560,16 @@ export default function ChatPage() {
                         )}
                         <div
                           className={`rounded-2xl px-4 py-3 shadow-sm ${
-                            msg.senderType === "shopper"
+                      msg.senderType === "shopper"
                               ? "bg-green-500 text-white"
                               : "bg-white text-gray-900 dark:bg-gray-800 dark:text-white"
-                          }`}
-                        >
-                          {msg.image && (
+                    }`}
+                  >
+                    {msg.image && (
                             <div className="mb-2">
-                              <img
-                                src={msg.image}
-                                alt="Message attachment"
+                      <img
+                        src={msg.image}
+                        alt="Message attachment"
                                 className="max-h-48 w-auto rounded-lg"
                               />
                             </div>
@@ -578,7 +578,7 @@ export default function ChatPage() {
                           {msg.senderType === "shopper" && (
                             <div className="mt-1 flex items-center justify-end space-x-1">
                               <span className="text-xs text-green-100">
-                                {formatMessageTime(msg.timestamp)}
+                      {formatMessageTime(msg.timestamp)}
                               </span>
                               <svg className="h-3 w-3 text-green-100" fill="currentColor" viewBox="0 0 20 20">
                                 <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
@@ -586,10 +586,10 @@ export default function ChatPage() {
                             </div>
                           )}
                         </div>
-                      </div>
-                    </div>
-                  ))}
-                  <div ref={messagesEndRef} />
+                  </div>
+                </div>
+              ))}
+              <div ref={messagesEndRef} />
                 </div>
               )}
             </div>
@@ -607,12 +607,12 @@ export default function ChatPage() {
                   </svg>
                 </button>
                 <div className="flex-1">
-                  <input
-                    type="text"
-                    value={message}
-                    onChange={(e) => setMessage(e.target.value)}
-                    onKeyPress={handleKeyPress}
-                    placeholder="Type your message..."
+                <input
+                  type="text"
+                  value={message}
+                  onChange={(e) => setMessage(e.target.value)}
+                  onKeyPress={handleKeyPress}
+                  placeholder="Type your message..."
                     className="w-full rounded-full border border-gray-300 bg-gray-50 px-4 py-3 text-sm focus:border-green-500 focus:bg-white focus:outline-none focus:ring-2 focus:ring-green-500/20 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:placeholder-gray-400 dark:focus:border-green-400 dark:focus:bg-gray-600"
                   />
                 </div>
