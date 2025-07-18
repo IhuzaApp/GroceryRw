@@ -89,9 +89,6 @@ export default function ChatPage() {
         const res = await fetch(`/api/queries/orderDetails?id=${orderId}`);
         const data = await res.json();
 
-        console.log("API Response:", data);
-        console.log("Order data:", data.order);
-
         if (data.order) {
           setOrder(data.order);
 
@@ -103,7 +100,6 @@ export default function ChatPage() {
             lastSeen: "Online now",
           };
           
-          console.log("Setting customer data:", customerDataToSet);
           setCustomerData(customerDataToSet);
 
           // Get or create conversation
@@ -231,31 +227,18 @@ export default function ChatPage() {
   };
 
   const handleSendMessage = async (e?: React.FormEvent) => {
-    console.log("=== handleSendMessage function called ===");
     
     if (e) {
       e.preventDefault();
     }
     
-    console.log("handleSendMessage called with:", {
-      message: message.trim(),
-      userId: user?.id,
-      conversationId,
-      customerDataId: customerData?.id,
-      hasMessage: !!message.trim(),
-      hasUser: !!user?.id,
-      hasConversation: !!conversationId,
-      hasCustomerData: !!customerData?.id
-    });
     
     if (!message.trim() || !user?.id || !conversationId || !customerData?.id) {
-      console.log("Early return - missing required data");
       return;
     }
 
     try {
       setIsSending(true);
-      console.log("Sending message to Firestore...");
 
       // Add new message to Firestore
       const messagesRef = collection(
@@ -284,7 +267,6 @@ export default function ChatPage() {
 
       // Clear input
       setMessage("");
-      console.log("Message sent successfully");
     } catch (error) {
       console.error("Error sending message:", error);
     } finally {
@@ -410,12 +392,65 @@ export default function ChatPage() {
         }`}
       >
         {isLoading ? (
-          <div
-            className={`flex h-[calc(100vh-200px)] items-center justify-center ${
-              theme === "dark" ? "text-gray-300" : "text-gray-700"
-            }`}
-          >
-            <Loader content="Loading chat..." />
+          <div className="flex h-screen flex-col bg-white dark:bg-gray-900 pb-20">
+            {/* Professional Header */}
+            <div className="flex items-center justify-between border-b border-gray-200 bg-white px-4 py-3 shadow-sm dark:border-gray-700 dark:bg-gray-800">
+              <div className="flex items-center space-x-3">
+                <Link href="/Plasa" className="flex items-center">
+                  <button className="rounded-full p-2 text-gray-600 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-700">
+                    <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                    </svg>
+                  </button>
+                </Link>
+                <div className="flex items-center space-x-3">
+                  <div className="relative">
+                    <div className="h-10 w-10 rounded-full bg-gray-200 dark:bg-gray-600 animate-pulse"></div>
+                  </div>
+                  <div>
+                    <div className="h-5 w-32 rounded bg-gray-200 dark:bg-gray-600 animate-pulse mb-1"></div>
+                    <div className="h-4 w-24 rounded bg-gray-200 dark:bg-gray-600 animate-pulse"></div>
+                  </div>
+                </div>
+              </div>
+              <div className="h-8 w-8 rounded-full bg-gray-200 dark:bg-gray-600 animate-pulse"></div>
+            </div>
+
+            {/* Messages Container */}
+            <div className="flex-1 overflow-y-auto bg-gray-50 dark:bg-gray-900 px-4 py-4">
+              <div className="flex h-full items-center justify-center">
+                <div className="text-center">
+                  <div className="mx-auto mb-4 h-16 w-16 rounded-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center">
+                    <svg className="h-8 w-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+                    </svg>
+                  </div>
+                  <h3 className="text-lg font-medium text-gray-900 dark:text-white">Loading chat...</h3>
+                  <p className="text-gray-500 dark:text-gray-400">Please wait while we load the conversation</p>
+                </div>
+              </div>
+            </div>
+
+            {/* Professional Message Input */}
+            <div className="border-t border-gray-200 bg-white px-4 py-3 dark:border-gray-700 dark:bg-gray-800">
+              <div className="flex items-end space-x-3">
+                <div className="flex-shrink-0 rounded-full p-2 text-gray-300 dark:text-gray-600">
+                  <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13" />
+                  </svg>
+                </div>
+                <div className="flex-1">
+                  <div className="w-full rounded-full border border-gray-200 bg-gray-100 px-4 py-3 text-sm dark:border-gray-600 dark:bg-gray-700">
+                    <div className="h-4 w-32 rounded bg-gray-200 dark:bg-gray-600 animate-pulse"></div>
+                  </div>
+                </div>
+                <div className="flex-shrink-0 rounded-full bg-gray-300 p-3 text-gray-400 dark:bg-gray-600">
+                  <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
+                  </svg>
+                </div>
+              </div>
+            </div>
           </div>
         ) : !customerData ? (
           <div className="mx-auto max-w-2xl">
@@ -474,7 +509,10 @@ export default function ChatPage() {
                       {customerData?.name || "Customer"}
                     </h2>
                     <p className="text-sm text-gray-500 dark:text-gray-400">
-                      Order #{formatOrderID(orderId)}
+                      {order?.address?.street && order?.address?.city 
+                        ? `${order.address.street}, ${order.address.city}`
+                        : "Address not available"
+                      }
                     </p>
                   </div>
                 </div>
