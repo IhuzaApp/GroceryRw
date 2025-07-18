@@ -250,7 +250,7 @@ function ProductCard({
 
   return (
     <>
-      <div className="overflow-hidden rounded-lg bg-white shadow-sm dark:bg-gray-800">
+      <div className="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-lg shadow-black/5 transition-all duration-300 ease-in-out hover:-translate-y-1 hover:shadow-xl hover:shadow-black/10 dark:border-gray-700 dark:bg-gray-800 dark:shadow-gray-400/10 dark:hover:shadow-gray-300/15">
         <div className="relative">
           <Image
             src={
