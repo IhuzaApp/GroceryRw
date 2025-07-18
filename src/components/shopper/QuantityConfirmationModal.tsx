@@ -35,7 +35,7 @@ export default function QuantityConfirmationModal({
       <Modal.Header
         className={`${
           theme === "dark" ? "bg-gray-800" : "bg-white"
-        } border-b border-slate-200 dark:border-slate-700`}
+        }`}
       >
         <Modal.Title
           className={`text-lg font-semibold ${
@@ -55,7 +55,7 @@ export default function QuantityConfirmationModal({
       >
         {/* Product Info Card */}
         <div
-          className={`mb-6 rounded-xl border border-slate-200 bg-slate-50 p-4 dark:border-slate-700 dark:bg-slate-800`}
+          className={`mb-6 rounded-xl bg-slate-50 p-4 dark:bg-slate-800`}
         >
           <div className="flex items-center gap-4">
             <div className="h-16 w-16 flex-shrink-0 overflow-hidden rounded-lg bg-slate-200">
@@ -106,10 +106,10 @@ export default function QuantityConfirmationModal({
           </div>
         </div>
 
-        {/* Quantity Input Section */}
+                  {/* Quantity Input Section */}
         <div className="space-y-4">
           <div
-            className={`rounded-lg border border-slate-200 bg-white p-4 dark:border-slate-600 dark:bg-slate-700`}
+            className={`rounded-lg bg-white p-4 dark:bg-slate-700`}
           >
             <div className="mb-3">
               <label
@@ -132,7 +132,7 @@ export default function QuantityConfirmationModal({
               <div className="flex-1">
                 <InputNumber
                   value={foundQuantity}
-                  onChange={(value) => setFoundQuantity(value || 0)}
+                  onChange={(value) => setFoundQuantity(Number(value) || 0)}
                   min={0}
                   max={currentItem.quantity}
                   className={`w-full ${
@@ -140,7 +140,7 @@ export default function QuantityConfirmationModal({
                       ? "border-slate-500 bg-slate-600 text-gray-100"
                       : "border-slate-300 bg-white text-gray-900"
                   } rounded-lg border px-3 py-2 text-center text-lg font-semibold`}
-                  size="lg"
+                  size="sm"
                 />
               </div>
               <div
@@ -157,10 +157,10 @@ export default function QuantityConfirmationModal({
           <div
             className={`rounded-lg p-3 ${
               foundQuantity === 0
-                ? "border border-red-200 bg-red-50 dark:border-red-800 dark:bg-red-900/20"
+                ? "bg-red-50 dark:bg-red-900/20"
                 : foundQuantity === currentItem.quantity
-                ? "border border-emerald-200 bg-emerald-50 dark:border-emerald-800 dark:bg-emerald-900/20"
-                : "border border-amber-200 bg-amber-50 dark:border-amber-800 dark:bg-amber-900/20"
+                ? "bg-emerald-50 dark:bg-emerald-900/20"
+                : "bg-amber-50 dark:bg-amber-900/20"
             }`}
           >
             <div className="flex items-center gap-2">
@@ -232,28 +232,22 @@ export default function QuantityConfirmationModal({
       <Modal.Footer
         className={`${
           theme === "dark" ? "bg-gray-800" : "bg-white"
-        } border-t border-slate-200 p-4 dark:border-slate-700`}
+        } p-4`}
       >
         <div className="flex w-full gap-3">
-          <Button
-            appearance="subtle"
+          <button
             onClick={onClose}
-            className={`flex-1 ${
-              theme === "dark"
-                ? "text-gray-300 hover:bg-gray-700"
-                : "text-gray-600 hover:bg-gray-100"
-            }`}
+            className={`flex-1 bg-red-600 hover:bg-red-700 text-white border-0 rounded-lg px-4 py-2 font-medium transition-colors duration-200`}
           >
             Cancel
-          </Button>
-          <Button
-            appearance="primary"
+          </button>
+          <button
             onClick={onConfirm}
             disabled={foundQuantity === 0}
-            className={`flex-1 bg-emerald-600 hover:bg-emerald-700 disabled:bg-gray-300 disabled:text-gray-500`}
+            className={`flex-1 bg-green-600 hover:bg-green-700 disabled:bg-gray-300 disabled:text-gray-500 text-white border-0 rounded-lg px-4 py-2 font-medium transition-colors duration-200`}
           >
             Confirm Found
-          </Button>
+          </button>
         </div>
       </Modal.Footer>
     </Modal>
