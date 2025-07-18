@@ -11,6 +11,8 @@ export interface OrderItem {
     measurement_unit?: string;
     category?: string;
     quantity?: number;
+    barcode?: string;
+    sku?: string;
   };
   found?: boolean;
   foundQuantity?: number;

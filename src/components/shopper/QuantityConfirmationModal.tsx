@@ -3,6 +3,7 @@ import { Modal, Button, InputNumber, Form } from "rsuite";
 import { OrderItem } from "../../types/order";
 import { useTheme } from "../../context/ThemeContext";
 import Image from "next/image";
+import BarcodeScanner from "./BarcodeScanner";
 
 interface QuantityConfirmationModalProps {
   open: boolean;
@@ -22,6 +23,18 @@ export default function QuantityConfirmationModal({
   onConfirm,
 }: QuantityConfirmationModalProps) {
   const { theme } = useTheme();
+
+  // State for barcode scanning
+  const [showBarcodeScanner, setShowBarcodeScanner] = useState(false);
+  const [barcodeValidation, setBarcodeValidation] = useState<{
+    isValid: boolean;
+    message: string;
+    isWeightBased: boolean;
+  }>({
+    isValid: false,
+    message: "",
+    isWeightBased: false,
+  });
 
   // State for weight-based measurements
   const [foundWeight, setFoundWeight] = useState(0);
@@ -56,6 +69,15 @@ export default function QuantityConfirmationModal({
         setPricePerUnit(price / quantity);
         setCustomerBudget(price);
       }
+
+      // For weight-based items, automatically set as valid
+      if (isWeight) {
+        setBarcodeValidation({
+          isValid: true,
+          message: "Weight-based item - no barcode required",
+          isWeightBased: true,
+        });
+      }
     }
   }, [currentItem]);
 
@@ -79,13 +101,81 @@ export default function QuantityConfirmationModal({
     }
   }, [foundWeight, pricePerUnit, customerBudget, isWeightBased, currentItem]);
 
+  // Function to handle barcode scan result
+  const handleBarcodeScanned = (barcode: string) => {
+    console.log("🔍 Barcode scanned:", barcode);
+    console.log("🔍 Current item:", currentItem);
+    
+    if (!currentItem) {
+      setBarcodeValidation({
+        isValid: false,
+        message: "No item selected",
+        isWeightBased: false,
+      });
+      return;
+    }
+
+    // Check if the item has a barcode in the database
+    const itemBarcode = currentItem.product.barcode;
+    const itemSku = currentItem.product.sku;
+    
+    console.log("🔍 Item barcode from DB:", itemBarcode);
+    console.log("🔍 Item SKU from DB:", itemSku);
+    console.log("🔍 Scanned barcode:", barcode);
+
+    // If no barcode/SKU in database, accept any scanned barcode
+    if (!itemBarcode && !itemSku) {
+      console.log("✅ No barcode/SKU in database - accepting scanned barcode");
+      setBarcodeValidation({
+        isValid: true,
+        message: `Barcode scanned: ${barcode} (no database reference)`,
+        isWeightBased: false,
+      });
+      // Close scanner modal after successful scan
+      setShowBarcodeScanner(false);
+      return;
+    }
+
+    // Validate against database barcode or SKU
+    const isValid = barcode === itemBarcode || barcode === itemSku;
+    
+    console.log("🔍 Validation result:", isValid);
+    
+    if (isValid) {
+      setBarcodeValidation({
+        isValid: true,
+        message: "Barcode/SKU matches!",
+        isWeightBased: false,
+      });
+      // Close scanner modal after successful scan
+      setShowBarcodeScanner(false);
+    } else {
+      setBarcodeValidation({
+        isValid: false,
+        message: "Barcode/SKU does not match. Please try again.",
+        isWeightBased: false,
+      });
+      // Keep scanner open for retry
+    }
+  };
+
   if (!currentItem) return null;
 
   return (
+    <>
+      {/* Barcode Scanner Modal */}
+      {showBarcodeScanner && (
+        <BarcodeScanner
+          onBarcodeDetected={handleBarcodeScanned}
+          onClose={() => setShowBarcodeScanner(false)}
+        />
+      )}
+
+      {/* Quantity Confirmation Modal */}
     <Modal
       open={open}
       onClose={onClose}
-      size="sm"
+        size="md"
       className={`${theme === "dark" ? "bg-gray-900" : "bg-white"} rounded-xl`}
     >
       <Modal.Header
@@ -96,7 +186,7 @@ export default function QuantityConfirmationModal({
             theme === "dark" ? "text-gray-100" : "text-gray-900"
           }`}
         >
-          Confirm Found Quantity
+            Confirm Found Quantity: {currentItem.product.name}
         </Modal.Title>
       </Modal.Header>
 
@@ -107,71 +197,126 @@ export default function QuantityConfirmationModal({
             : "bg-white text-gray-900"
         } p-6`}
       >
-        {/* Product Info Card */}
-        <div className={`mb-6 rounded-xl bg-slate-50 p-4 dark:bg-slate-800`}>
-          <div className="flex items-center gap-4">
-            <div className="h-16 w-16 flex-shrink-0 overflow-hidden rounded-lg bg-slate-200">
-              {currentItem.product.image ? (
-                <Image
-                  src={currentItem.product.image}
-                  alt={currentItem.product.name}
-                  width={64}
-                  height={64}
-                  className="h-full w-full object-cover"
-                />
-              ) : (
-                <div className="flex h-full w-full items-center justify-center bg-slate-300">
-                  <svg
-                    className="h-6 w-6 text-slate-400"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
+          <div className="space-y-4">
+            {/* Barcode Scanning Section - Only for non-weight-based items */}
+            {!isWeightBased && (
+              <div className={`rounded-lg bg-white p-4 dark:bg-slate-700`}>
+                <div className="mb-3">
+                  <label
+                    className={`text-sm font-medium ${
+                      theme === "dark" ? "text-gray-300" : "text-gray-700"
+                    }`}
                   >
-                    <path d="M9 17h6M9 12h6M9 7h6" />
-                  </svg>
+                    Scan Barcode or Enter SKU
+                  </label>
+                  <p
+                    className={`text-xs ${
+                      theme === "dark" ? "text-gray-400" : "text-gray-500"
+                    } mt-1`}
+                  >
+                    Scan the product barcode or enter the SKU manually
+                  </p>
                 </div>
-              )}
-            </div>
-            <div className="flex-1">
-              <h3
-                className={`text-base font-semibold ${
-                  theme === "dark" ? "text-gray-100" : "text-gray-900"
-                }`}
-              >
-                {currentItem.product.name}
-              </h3>
-              <p
-                className={`text-sm ${
-                  theme === "dark" ? "text-gray-400" : "text-gray-600"
-                }`}
-              >
-                Requested: {currentItem.quantity} units
-              </p>
-              <p
-                className={`text-sm font-medium ${
-                  theme === "dark" ? "text-gray-300" : "text-gray-700"
-                }`}
-              >
-                {isWeightBased
-                  ? `Price: $${pricePerUnit.toFixed(2)} per ${measurementUnit}`
-                  : `Price: $${currentItem.price} each`}
-              </p>
-              {isWeightBased && (
-                <p
-                  className={`text-xs ${
-                    theme === "dark" ? "text-gray-400" : "text-gray-500"
-                  }`}
-                >
-                  Customer budget: ${customerBudget.toFixed(2)} for{" "}
-                  {currentItem.quantity} {measurementUnit}
-                </p>
-              )}
+
+                <div className="flex items-center gap-3">
+                  <button
+                    onClick={() => setShowBarcodeScanner(true)}
+                    className="flex-1 rounded-lg bg-blue-600 px-4 py-2 font-medium text-white transition-colors hover:bg-blue-700"
+                  >
+                    <svg
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      className="mr-2 h-4 w-4 inline"
+                    >
+                      <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
+                  </svg>
+                    Open Camera Scanner
+                  </button>
+                  <button
+                    onClick={() => {
+                      const manualBarcode = prompt("Enter barcode or SKU manually:");
+                      if (manualBarcode) {
+                        handleBarcodeScanned(manualBarcode.trim());
+                      }
+                    }}
+                    className="flex-1 rounded-lg bg-green-600 px-4 py-2 font-medium text-white transition-colors hover:bg-green-700"
+                  >
+                    <svg
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      className="mr-2 h-4 w-4 inline"
+                    >
+                      <path d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                    </svg>
+                    Manual Entry
+                  </button>
+                </div>
+
+                {/* Validation Status */}
+                {barcodeValidation.message && (
+                  <div
+                    className={`mt-3 rounded-lg p-3 ${
+                      barcodeValidation.isValid
+                        ? "bg-green-50 dark:bg-green-900/20"
+                        : "bg-red-50 dark:bg-red-900/20"
+                    }`}
+                  >
+                    <div className="flex items-center gap-2">
+                      <div
+                        className={`rounded-full p-1 ${
+                          barcodeValidation.isValid
+                            ? "bg-green-100 dark:bg-green-800"
+                            : "bg-red-100 dark:bg-red-800"
+                        }`}
+                      >
+                        <svg
+                          className={`h-4 w-4 ${
+                            barcodeValidation.isValid
+                              ? "text-green-600 dark:text-green-400"
+                              : "text-red-600 dark:text-red-400"
+                          }`}
+                          fill="none"
+                          viewBox="0 0 24 24"
+                          stroke="currentColor"
+                        >
+                          {barcodeValidation.isValid ? (
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M5 13l4 4L19 7"
+                            />
+                          ) : (
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M6 18L18 6M6 6l12 12"
+                            />
+                          )}
+                        </svg>
+                      </div>
+                      <span
+                        className={`text-sm font-medium ${
+                          barcodeValidation.isValid
+                            ? "text-green-800 dark:text-green-300"
+                            : "text-red-800 dark:text-red-300"
+                        }`}
+                      >
+                        {barcodeValidation.message}
+                      </span>
             </div>
           </div>
+                )}
         </div>
+            )}
 
-        {/* Quantity Input Section */}
-        <div className="space-y-4">
+            {/* Quantity Input Section - Only show if barcode is valid or item is weight-based */}
+            {(barcodeValidation.isValid || isWeightBased) && (
           <div className={`rounded-lg bg-white p-4 dark:bg-slate-700`}>
             <div className="mb-3">
               <label
@@ -230,8 +375,10 @@ export default function QuantityConfirmationModal({
               </div>
             </div>
           </div>
+            )}
 
           {/* Status Indicator */}
+            {(barcodeValidation.isValid || isWeightBased) && (
           <div
             className={`rounded-lg p-3 ${
               foundQuantity === 0
@@ -359,6 +506,7 @@ export default function QuantityConfirmationModal({
               </div>
             </div>
           </div>
+            )}
         </div>
       </Modal.Body>
 
@@ -374,7 +522,11 @@ export default function QuantityConfirmationModal({
           </button>
           <button
             onClick={onConfirm}
-            disabled={foundQuantity === 0 || exceedsBudget}
+              disabled={
+                foundQuantity === 0 || 
+                exceedsBudget || 
+                (!isWeightBased && !barcodeValidation.isValid)
+              }
             className={`flex-1 rounded-lg border-0 bg-green-600 px-4 py-2 font-medium text-white transition-colors duration-200 hover:bg-green-700 disabled:bg-gray-300 disabled:text-gray-500`}
           >
             Confirm Found
@@ -382,5 +534,6 @@ export default function QuantityConfirmationModal({
         </div>
       </Modal.Footer>
     </Modal>
+    </>
   );
 }
