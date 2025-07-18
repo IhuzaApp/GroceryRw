@@ -545,8 +545,7 @@ export default function VideoReel({
       case "supermarket":
         const supermarketPost = post as SupermarketPost;
         return (
-          <div style={{ marginTop: 16 }}>
-            <div
+          <div style={{ marginTop: 16, width: "50%" }}>            <div
               style={{
                 display: "flex",
                 alignItems: "center",
@@ -643,7 +642,7 @@ export default function VideoReel({
       case "chef":
         const chefPost = post as ChefPost;
         return (
-          <div style={{ marginTop: 16 }}>
+          <div style={{ marginTop: 16, width: "50%" }}>
             <div
               style={{
                 display: "flex",
@@ -727,7 +726,7 @@ export default function VideoReel({
         style={{ scrollSnapAlign: "start" }}
       >
         {/* Background Video */}
-        <div style={{ position: "absolute", inset: 0 }}>
+        <div style={{ position: "absolute", inset: 0}}>
           <video
             ref={videoRef}
             src={post.content.video}

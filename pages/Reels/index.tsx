@@ -1184,47 +1184,49 @@ export default function FoodReelsApp() {
   // Desktop layout - with normal page alignment matching main page
   return (
     <RootLayout>
-      <div
-        className={`container mx-auto transition-colors duration-200 ${
-          theme === "dark" ? "bg-gray-900 text-white" : "bg-white text-gray-900"
-        }`}
-      >
+      <div className="flex h-fit items-center justify-center">
         <div
-          ref={containerRef}
-          className="h-screen"
-          style={{ overflowY: "auto" }}
+          className={`container mx-auto h-full max-w-md transition-colors duration-200 md:h-[95vh] md:rounded-2xl md:shadow-2xl ${
+            theme === "dark" ? "bg-gray-900 text-white" : "bg-white text-gray-900"
+          }`}
         >
-          <div style={{ scrollSnapType: "y mandatory" }}>
-            {posts.map((post, index) => (
-              <div
-                key={`${post.id}-${isMobile ? "mobile" : "desktop"}`}
-                data-index={index}
-              >
-                <VideoReel
-                  post={post}
-                  isVisible={visiblePostIndex === index}
-                  onLike={toggleLike}
-                  onComment={openComments}
-                  onShare={handleShare}
-                />
-              </div>
-            ))}
+          <div
+            ref={containerRef}
+            className="h-full w-full overflow-y-auto"
+            style={{ scrollSnapType: "y mandatory" }}
+          >
+            <div>
+              {posts.map((post, index) => (
+                <div
+                  key={`${post.id}-${isMobile ? "mobile" : "desktop"}`}
+                  data-index={index}
+                >
+                  <VideoReel
+                    post={post}
+                    isVisible={visiblePostIndex === index}
+                    onLike={toggleLike}
+                    onComment={openComments}
+                    onShare={handleShare}
+                  />
+                </div>
+              ))}
+            </div>
           </div>
-        </div>
 
-        {/* Comments Drawer */}
-        {activePost && (
-          <CommentsDrawer
-            open={showComments}
-            onClose={closeComments}
-            comments={mergedActiveComments}
-            commentCount={activePost.stats.comments}
-            postId={activePost.id}
-            onToggleCommentLike={toggleCommentLike}
-            onAddComment={addComment}
-            isRefreshing={isRefreshingComments}
-          />
-        )}
+          {/* Comments Drawer */}
+          {activePost && (
+            <CommentsDrawer
+              open={showComments}
+              onClose={closeComments}
+              comments={mergedActiveComments}
+              commentCount={activePost.stats.comments}
+              postId={activePost.id}
+              onToggleCommentLike={toggleCommentLike}
+              onAddComment={addComment}
+              isRefreshing={isRefreshingComments}
+            />
+          )}
+        </div>
       </div>
     </RootLayout>
   );
