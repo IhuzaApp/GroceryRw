@@ -1530,10 +1530,8 @@ export default function BatchDetails({
                     {/* Shop Directions Button */}
                     {order.shop?.address && (
                       <div className="flex justify-center sm:justify-start">
-                        <Button
-                          appearance="ghost"
-                          size="sm"
-                          className="text-sm text-emerald-600 hover:bg-emerald-50 hover:text-emerald-700 dark:text-emerald-400 dark:hover:bg-emerald-900/20 sm:text-base"
+                        <button
+                          className="flex items-center rounded-full border border-green-400 px-3 py-1 text-sm font-medium text-green-600 transition-colors hover:bg-green-50 hover:border-green-300 hover:text-green-700 dark:border-green-700 dark:text-green-400 dark:hover:bg-green-900/20 dark:hover:border-green-600 sm:text-base"
                           onClick={() => handleDirectionsClick(order.shop?.address || '')}
                         >
                           <svg
@@ -1547,7 +1545,7 @@ export default function BatchDetails({
                             <circle cx="12" cy="10" r="3" />
                           </svg>
                           Directions to Shop
-                        </Button>
+                        </button>
                       </div>
                     )}
                   </div>
@@ -1626,10 +1624,8 @@ export default function BatchDetails({
                   </div>
 
                   <div className="flex flex-wrap justify-center gap-2 sm:justify-start">
-                    <Button
-                      appearance="ghost"
-                      size="sm"
-                      className="text-sm text-sky-600 hover:bg-sky-50 hover:text-sky-700 dark:text-sky-400 dark:hover:bg-sky-900/20 sm:text-base"
+                    <button
+                      className="flex items-center rounded-full border border-green-400 px-3 py-1 text-sm text-green-600 transition-colors hover:bg-green-50 hover:border-green-300 hover:text-green-700 dark:border-green-700 dark:text-green-400 dark:hover:bg-green-900/20 dark:hover:border-green-600 sm:text-base"
                       onClick={() => handleDirectionsClick(
                         `${order.address.street}, ${order.address.city}${
                           order.address.postal_code
@@ -1649,13 +1645,11 @@ export default function BatchDetails({
                         <circle cx="12" cy="10" r="3" />
                       </svg>
                       Directions to Customer
-                    </Button>
+                    </button>
 
                     {order.user.phone && (
-                      <Button
-                        appearance="ghost"
-                        size="sm"
-                        className="text-sm text-sky-600 hover:bg-sky-50 hover:text-sky-700 dark:text-sky-400 dark:hover:bg-sky-900/20 sm:text-base"
+                      <button
+                        className="flex items-center rounded-full border border-green-400 px-3 py-1 text-sm text-green-600 transition-colors hover:bg-green-50 hover:border-green-300 hover:text-green-700 dark:border-green-700 dark:text-green-400 dark:hover:bg-green-900/20 dark:hover:border-green-600 sm:text-base"
                         onClick={() => window.location.href = `tel:${order.user.phone}`}
                       >
                         <svg
@@ -1668,14 +1662,12 @@ export default function BatchDetails({
                           <path d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
                         </svg>
                         Call Customer
-                      </Button>
+                      </button>
                     )}
                     
                     {order.status !== "delivered" ? (
-                      <Button
-                        appearance="ghost"
-                        size="sm"
-                        className="text-sm text-sky-600 hover:bg-sky-50 hover:text-sky-700 dark:text-sky-400 dark:hover:bg-sky-900/20 sm:text-base"
+                      <button
+                        className="flex items-center rounded-full border border-green-400 px-3 py-1 text-sm text-green-600 transition-colors hover:bg-green-50 hover:border-green-300 hover:text-green-700 dark:border-green-700 dark:text-green-400 dark:hover:bg-green-900/20 dark:hover:border-green-600 sm:text-base"
                         onClick={handleChatClick}
                       >
                         <svg
@@ -1688,12 +1680,10 @@ export default function BatchDetails({
                           <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
                         </svg>
                         Message
-                      </Button>
+                      </button>
                     ) : (
-                      <Button
-                        appearance="ghost"
-                        size="sm"
-                        className="cursor-not-allowed text-sm text-slate-400 sm:text-base"
+                      <button
+                        className="flex items-center rounded-lg border border-slate-300 px-3 py-1 text-sm font-medium text-slate-400 cursor-not-allowed dark:border-slate-600 sm:text-base"
                         disabled
                       >
                         <svg
@@ -1706,7 +1696,7 @@ export default function BatchDetails({
                           <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
                         </svg>
                         Chat Closed
-                      </Button>
+                      </button>
                     )}
                   </div>
                 </div>
