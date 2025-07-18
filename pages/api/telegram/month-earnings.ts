@@ -64,8 +64,12 @@ export default async function handler(
 
     // Calculate this month's date range in UTC
     const now = new Date();
-    const monthStart = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), 1, 0, 0, 0, 0));
-    const monthEnd = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() + 1, 0, 23, 59, 59, 999));
+    const monthStart = new Date(
+      Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), 1, 0, 0, 0, 0)
+    );
+    const monthEnd = new Date(
+      Date.UTC(now.getUTCFullYear(), now.getUTCMonth() + 1, 0, 23, 59, 59, 999)
+    );
 
     // Fetch orders for this month
     const data = await hasuraClient.request<GraphQLResponse>(
@@ -80,7 +84,7 @@ export default async function handler(
     console.log(`🔍 Month query for user ${userId}:`, {
       monthStart: monthStart.toISOString(),
       monthEnd: monthEnd.toISOString(),
-      ordersFound: data.Orders.length
+      ordersFound: data.Orders.length,
     });
 
     // Calculate total earnings and get order details
@@ -101,12 +105,14 @@ export default async function handler(
 
     // Group orders by week
     const weeklyData: Record<string, { count: number; earnings: number }> = {};
-    completedOrders.forEach(order => {
+    completedOrders.forEach((order) => {
       const orderDate = new Date(order.completed_at);
       const weekStart = new Date(orderDate);
       weekStart.setDate(orderDate.getDate() - orderDate.getDay() + 1); // Monday
-      const weekKey = `Week ${Math.ceil((orderDate.getDate() + orderDate.getDay()) / 7)}`;
-      
+      const weekKey = `Week ${Math.ceil(
+        (orderDate.getDate() + orderDate.getDay()) / 7
+      )}`;
+
       if (!weeklyData[weekKey]) {
         weeklyData[weekKey] = { count: 0, earnings: 0 };
       }
@@ -134,4 +140,4 @@ export default async function handler(
           : "Failed to fetch month's completed earnings",
     });
   }
-} 
+}

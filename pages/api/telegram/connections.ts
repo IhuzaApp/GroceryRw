@@ -17,7 +17,7 @@ export default async function handler(
     const session = (await getServerSession(req, res, authOptions as any)) as {
       user?: { id?: string };
     } | null;
-    
+
     if (!session?.user?.id) {
       return res.status(401).json({ error: "Unauthorized" });
     }
@@ -28,16 +28,15 @@ export default async function handler(
       connections[shopperId] = chatId;
     });
 
-    return res.status(200).json({ 
-      success: true, 
+    return res.status(200).json({
+      success: true,
       connections,
-      count: Object.keys(connections).length
+      count: Object.keys(connections).length,
     });
-
   } catch (error) {
     console.error("Error fetching connections:", error);
-    return res.status(500).json({ 
-      error: "Failed to fetch connections" 
+    return res.status(500).json({
+      error: "Failed to fetch connections",
     });
   }
-} 
+}

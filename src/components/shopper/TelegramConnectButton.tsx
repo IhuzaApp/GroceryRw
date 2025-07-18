@@ -17,7 +17,7 @@ export default function TelegramConnectButton({
   size = "md",
   variant = "primary",
   showIcon = true,
-  children
+  children,
 }: TelegramConnectButtonProps) {
   const { data: session } = useSession();
   const [isConnecting, setIsConnecting] = useState(false);
@@ -35,28 +35,30 @@ export default function TelegramConnectButton({
 
     try {
       // First, ensure the shopper record exists and get the shopper ID
-      const response = await fetch('/api/telegram/ensure-shopper', {
-        method: 'POST',
+      const response = await fetch("/api/telegram/ensure-shopper", {
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          userId: userId
-        })
+          userId: userId,
+        }),
       });
 
       const result = await response.json();
 
       if (result.success && result.shopper) {
         const shopperId = result.shopper.id;
-        
+
         // Create Telegram bot deep link with the shopper ID
         const telegramBotLink = `https://t.me/PlaseraBot?start=${shopperId}`;
-        
+
         // Open Telegram bot link in new tab
-        window.open(telegramBotLink, '_blank', 'noopener,noreferrer');
-        
-        console.log(`✅ Telegram connection initiated for shopper: ${shopperId}`);
+        window.open(telegramBotLink, "_blank", "noopener,noreferrer");
+
+        console.log(
+          `✅ Telegram connection initiated for shopper: ${shopperId}`
+        );
       } else {
         console.error("Failed to ensure shopper record:", result.error);
         alert("Failed to connect Telegram. Please try again.");
@@ -119,10 +121,10 @@ export default function TelegramConnectButton({
           fill="currentColor"
           className={`mr-2 ${getIconSize()}`}
         >
-          <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm4.64 6.8c-.15 1.58-.8 5.42-1.13 7.19-.14.75-.42 1-.68 1.03-.58.05-1.02-.38-1.58-.75-.88-.58-1.38-.94-2.23-1.5-.99-.65-.35-1.01.22-1.59.15-.15 2.71-2.48 2.76-2.69a.2.2 0 00-.05-.18c-.06-.05-.14-.03-.21-.02-.09.02-1.49.95-4.22 2.79-.4.27-.76.41-1.08.4-.36-.01-1.04-.2-1.55-.37-.63-.2-1.12-.31-1.08-.66.02-.18.27-.36.74-.55 2.92-1.27 4.86-2.11 5.83-2.51 2.78-1.16 3.35-1.36 3.73-1.36.08 0 .27.02.39.12.1.08.13.19.14.27-.01.06-.01.13-.02.2z"/>
+          <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm4.64 6.8c-.15 1.58-.8 5.42-1.13 7.19-.14.75-.42 1-.68 1.03-.58.05-1.02-.38-1.58-.75-.88-.58-1.38-.94-2.23-1.5-.99-.65-.35-1.01.22-1.59.15-.15 2.71-2.48 2.76-2.69a.2.2 0 00-.05-.18c-.06-.05-.14-.03-.21-.02-.09.02-1.49.95-4.22 2.79-.4.27-.76.41-1.08.4-.36-.01-1.04-.2-1.55-.37-.63-.2-1.12-.31-1.08-.66.02-.18.27-.36.74-.55 2.92-1.27 4.86-2.11 5.83-2.51 2.78-1.16 3.35-1.36 3.73-1.36.08 0 .27.02.39.12.1.08.13.19.14.27-.01.06-.01.13-.02.2z" />
         </svg>
       )}
       {children || (isConnecting ? "Connecting..." : "Connect Telegram")}
     </Button>
   );
-} 
+}

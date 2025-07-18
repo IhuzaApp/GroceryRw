@@ -65,10 +65,7 @@ interface GraphQLResponse {
 const GET_ASSIGNED_BATCHES = gql`
   query GetAssignedBatches($shopper_id: uuid!) {
     Orders(
-      where: { 
-        shopper_id: { _eq: $shopper_id }, 
-        status: { _neq: "delivered" }
-      }
+      where: { shopper_id: { _eq: $shopper_id }, status: { _neq: "delivered" } }
       order_by: { created_at: desc }
     ) {
       id
@@ -95,10 +92,7 @@ const GET_ASSIGNED_BATCHES = gql`
     }
 
     reel_orders(
-      where: { 
-        shopper_id: { _eq: $shopper_id }, 
-        status: { _neq: "delivered" }
-      }
+      where: { shopper_id: { _eq: $shopper_id }, status: { _neq: "delivered" } }
       order_by: { created_at: desc }
     ) {
       id
@@ -163,10 +157,16 @@ export default async function handler(
       const serviceFee = parseFloat(order.service_fee || "0");
       const deliveryFee = parseFloat(order.delivery_fee || "0");
       const totalEarnings = serviceFee + deliveryFee;
-      
-      const deliveryTime = order.delivery_time ? new Date(order.delivery_time) : null;
-      const timeRemaining = deliveryTime ? Math.max(0, deliveryTime.getTime() - Date.now()) : null;
-      const minutesRemaining = timeRemaining ? Math.floor(timeRemaining / (1000 * 60)) : null;
+
+      const deliveryTime = order.delivery_time
+        ? new Date(order.delivery_time)
+        : null;
+      const timeRemaining = deliveryTime
+        ? Math.max(0, deliveryTime.getTime() - Date.now())
+        : null;
+      const minutesRemaining = timeRemaining
+        ? Math.floor(timeRemaining / (1000 * 60))
+        : null;
 
       return {
         id: order.id,
@@ -175,7 +175,9 @@ export default async function handler(
         status: order.status,
         shopName: order.shop?.name || "Unknown Shop",
         shopAddress: order.shop?.address || "No address",
-        customerAddress: `${order.address?.street || "No street"}, ${order.address?.city || "No city"}`,
+        customerAddress: `${order.address?.street || "No street"}, ${
+          order.address?.city || "No city"
+        }`,
         earnings: totalEarnings,
         serviceFee,
         deliveryFee,
@@ -192,10 +194,16 @@ export default async function handler(
       const serviceFee = parseFloat(order.service_fee || "0");
       const deliveryFee = parseFloat(order.delivery_fee || "0");
       const totalEarnings = serviceFee + deliveryFee;
-      
-      const deliveryTime = order.delivery_time ? new Date(order.delivery_time) : null;
-      const timeRemaining = deliveryTime ? Math.max(0, deliveryTime.getTime() - Date.now()) : null;
-      const minutesRemaining = timeRemaining ? Math.floor(timeRemaining / (1000 * 60)) : null;
+
+      const deliveryTime = order.delivery_time
+        ? new Date(order.delivery_time)
+        : null;
+      const timeRemaining = deliveryTime
+        ? Math.max(0, deliveryTime.getTime() - Date.now())
+        : null;
+      const minutesRemaining = timeRemaining
+        ? Math.floor(timeRemaining / (1000 * 60))
+        : null;
 
       return {
         id: order.id,
@@ -207,7 +215,9 @@ export default async function handler(
         price: order.Reel.Price,
         customerName: order.user.name,
         customerPhone: order.user.phone,
-        customerAddress: `${order.address?.street || "No street"}, ${order.address?.city || "No city"}`,
+        customerAddress: `${order.address?.street || "No street"}, ${
+          order.address?.city || "No city"
+        }`,
         earnings: totalEarnings,
         serviceFee,
         deliveryFee,
@@ -220,8 +230,9 @@ export default async function handler(
     });
 
     // Combine and sort all orders by creation time (newest first)
-    const allOrders = [...regularOrders, ...reelOrders].sort((a, b) => 
-      new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+    const allOrders = [...regularOrders, ...reelOrders].sort(
+      (a, b) =>
+        new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
     );
 
     return res.status(200).json({
@@ -242,4 +253,4 @@ export default async function handler(
           : "Failed to fetch assigned batches",
     });
   }
-} 
+}

@@ -22,7 +22,7 @@ export default function QuantityConfirmationModal({
   onConfirm,
 }: QuantityConfirmationModalProps) {
   const { theme } = useTheme();
-  
+
   // State for weight-based measurements
   const [foundWeight, setFoundWeight] = useState(0);
   const [isWeightBased, setIsWeightBased] = useState(false);
@@ -37,10 +37,18 @@ export default function QuantityConfirmationModal({
   useEffect(() => {
     if (currentItem) {
       const unit = currentItem.product.measurement_unit?.toLowerCase() || "";
-      const isWeight = ["kg", "g", "grams", "lbs", "pounds", "oz", "ounces"].includes(unit);
+      const isWeight = [
+        "kg",
+        "g",
+        "grams",
+        "lbs",
+        "pounds",
+        "oz",
+        "ounces",
+      ].includes(unit);
       setIsWeightBased(isWeight);
       setMeasurementUnit(unit);
-      
+
       // Calculate price per unit weight
       if (isWeight && currentItem.product.final_price) {
         const price = parseFloat(currentItem.product.final_price);
@@ -56,12 +64,12 @@ export default function QuantityConfirmationModal({
     if (isWeightBased && foundWeight > 0) {
       const totalCost = foundWeight * pricePerUnit;
       setExceedsBudget(totalCost > customerBudget);
-      
+
       // Calculate missing weight and refund amount
       const requestedWeight = currentItem?.quantity || 0;
       const missing = Math.max(0, requestedWeight - foundWeight);
       setMissingWeight(missing);
-      
+
       // Calculate refund amount for missing weight
       const refund = missing * pricePerUnit;
       setRefundAmount(refund);
@@ -81,9 +89,7 @@ export default function QuantityConfirmationModal({
       className={`${theme === "dark" ? "bg-gray-900" : "bg-white"} rounded-xl`}
     >
       <Modal.Header
-        className={`${
-          theme === "dark" ? "bg-gray-800" : "bg-white"
-        }`}
+        className={`${theme === "dark" ? "bg-gray-800" : "bg-white"}`}
       >
         <Modal.Title
           className={`text-lg font-semibold ${
@@ -102,9 +108,7 @@ export default function QuantityConfirmationModal({
         } p-6`}
       >
         {/* Product Info Card */}
-        <div
-          className={`mb-6 rounded-xl bg-slate-50 p-4 dark:bg-slate-800`}
-        >
+        <div className={`mb-6 rounded-xl bg-slate-50 p-4 dark:bg-slate-800`}>
           <div className="flex items-center gap-4">
             <div className="h-16 w-16 flex-shrink-0 overflow-hidden rounded-lg bg-slate-200">
               {currentItem.product.image ? (
@@ -148,10 +152,9 @@ export default function QuantityConfirmationModal({
                   theme === "dark" ? "text-gray-300" : "text-gray-700"
                 }`}
               >
-                {isWeightBased 
+                {isWeightBased
                   ? `Price: $${pricePerUnit.toFixed(2)} per ${measurementUnit}`
-                  : `Price: $${currentItem.price} each`
-                }
+                  : `Price: $${currentItem.price} each`}
               </p>
               {isWeightBased && (
                 <p
@@ -159,38 +162,35 @@ export default function QuantityConfirmationModal({
                     theme === "dark" ? "text-gray-400" : "text-gray-500"
                   }`}
                 >
-                  Customer budget: ${customerBudget.toFixed(2)} for {currentItem.quantity} {measurementUnit}
+                  Customer budget: ${customerBudget.toFixed(2)} for{" "}
+                  {currentItem.quantity} {measurementUnit}
                 </p>
               )}
             </div>
           </div>
         </div>
 
-                  {/* Quantity Input Section */}
+        {/* Quantity Input Section */}
         <div className="space-y-4">
-          <div
-            className={`rounded-lg bg-white p-4 dark:bg-slate-700`}
-          >
+          <div className={`rounded-lg bg-white p-4 dark:bg-slate-700`}>
             <div className="mb-3">
               <label
                 className={`text-sm font-medium ${
                   theme === "dark" ? "text-gray-300" : "text-gray-700"
                 }`}
               >
-                {isWeightBased 
+                {isWeightBased
                   ? `How much ${measurementUnit} did you find?`
-                  : "How many units did you find?"
-                }
+                  : "How many units did you find?"}
               </label>
               <p
                 className={`text-xs ${
                   theme === "dark" ? "text-gray-400" : "text-gray-500"
                 } mt-1`}
               >
-                {isWeightBased 
+                {isWeightBased
                   ? `Enter the weight you found (0 to ${currentItem.quantity} ${measurementUnit})`
-                  : `Enter the quantity you found (0 to ${currentItem.quantity})`
-                }
+                  : `Enter the quantity you found (0 to ${currentItem.quantity})`}
               </p>
             </div>
 
@@ -215,7 +215,7 @@ export default function QuantityConfirmationModal({
                     theme === "dark"
                       ? "border-slate-500 bg-slate-600 text-gray-100"
                       : "border-slate-300 bg-white text-gray-900"
-                  } rounded-lg border px-3 py-2 text-center text-lg font-semibold focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent`}
+                  } rounded-lg border px-3 py-2 text-center text-lg font-semibold focus:border-transparent focus:outline-none focus:ring-2 focus:ring-blue-500`}
                   placeholder={isWeightBased ? `0.00 ${measurementUnit}` : "0"}
                 />
               </div>
@@ -224,7 +224,9 @@ export default function QuantityConfirmationModal({
                   theme === "dark" ? "text-gray-400" : "text-gray-500"
                 }`}
               >
-                {isWeightBased ? `of ${currentItem.quantity} ${measurementUnit}` : `of ${currentItem.quantity}`}
+                {isWeightBased
+                  ? `of ${currentItem.quantity} ${measurementUnit}`
+                  : `of ${currentItem.quantity}`}
               </div>
             </div>
           </div>
@@ -311,36 +313,45 @@ export default function QuantityConfirmationModal({
                   }`}
                 >
                   {foundQuantity === 0
-                    ? isWeightBased 
+                    ? isWeightBased
                       ? `No ${measurementUnit} found`
                       : "No units found"
                     : exceedsBudget
-                    ? `Weight exceeds budget by $${((foundWeight * pricePerUnit) - customerBudget).toFixed(2)}`
+                    ? `Weight exceeds budget by $${(
+                        foundWeight * pricePerUnit -
+                        customerBudget
+                      ).toFixed(2)}`
                     : foundQuantity === currentItem.quantity
-                    ? isWeightBased 
+                    ? isWeightBased
                       ? `All ${measurementUnit} found`
                       : "All units found"
-                    : isWeightBased 
-                      ? `Partial ${measurementUnit} found - Refund will be processed`
-                      : "Partial quantity found"}
+                    : isWeightBased
+                    ? `Partial ${measurementUnit} found - Refund will be processed`
+                    : "Partial quantity found"}
                 </span>
                 {isWeightBased && foundQuantity > 0 && (
-                  <div className="text-xs mt-1 space-y-1">
-                    <p className={`${
-                      exceedsBudget 
-                        ? "text-red-600 dark:text-red-400"
-                        : "text-gray-600 dark:text-gray-400"
-                    }`}>
-                      Cost: ${(foundWeight * pricePerUnit).toFixed(2)} | Budget: ${customerBudget.toFixed(2)}
+                  <div className="mt-1 space-y-1 text-xs">
+                    <p
+                      className={`${
+                        exceedsBudget
+                          ? "text-red-600 dark:text-red-400"
+                          : "text-gray-600 dark:text-gray-400"
+                      }`}
+                    >
+                      Cost: ${(foundWeight * pricePerUnit).toFixed(2)} | Budget:
+                      ${customerBudget.toFixed(2)}
                     </p>
                     {missingWeight > 0 && (
                       <p className="text-amber-600 dark:text-amber-400">
-                        Missing: {missingWeight.toFixed(2)} {measurementUnit} | Refund: ${refundAmount.toFixed(2)}
+                        Missing: {missingWeight.toFixed(2)} {measurementUnit} |
+                        Refund: ${refundAmount.toFixed(2)}
                       </p>
                     )}
                     {missingWeight > 0 && (
-                      <p className="text-blue-600 dark:text-blue-400 font-medium">
-                        Customer will be charged: ${(foundWeight * pricePerUnit).toFixed(2)} | Refund: ${refundAmount.toFixed(2)}
+                      <p className="font-medium text-blue-600 dark:text-blue-400">
+                        Customer will be charged: $
+                        {(foundWeight * pricePerUnit).toFixed(2)} | Refund: $
+                        {refundAmount.toFixed(2)}
                       </p>
                     )}
                   </div>
@@ -352,21 +363,19 @@ export default function QuantityConfirmationModal({
       </Modal.Body>
 
       <Modal.Footer
-        className={`${
-          theme === "dark" ? "bg-gray-800" : "bg-white"
-        } p-4`}
+        className={`${theme === "dark" ? "bg-gray-800" : "bg-white"} p-4`}
       >
         <div className="flex w-full gap-3">
           <button
             onClick={onClose}
-            className={`flex-1 bg-red-600 hover:bg-red-700 text-white border-0 rounded-lg px-4 py-2 font-medium transition-colors duration-200`}
+            className={`flex-1 rounded-lg border-0 bg-red-600 px-4 py-2 font-medium text-white transition-colors duration-200 hover:bg-red-700`}
           >
             Cancel
           </button>
           <button
             onClick={onConfirm}
             disabled={foundQuantity === 0 || exceedsBudget}
-            className={`flex-1 bg-green-600 hover:bg-green-700 disabled:bg-gray-300 disabled:text-gray-500 text-white border-0 rounded-lg px-4 py-2 font-medium transition-colors duration-200`}
+            className={`flex-1 rounded-lg border-0 bg-green-600 px-4 py-2 font-medium text-white transition-colors duration-200 hover:bg-green-700 disabled:bg-gray-300 disabled:text-gray-500`}
           >
             Confirm Found
           </button>

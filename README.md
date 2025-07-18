@@ -5995,6 +5995,255 @@ For technical issues or questions about the Reels and Reel Orders system:
    - API rate limiting
    - Load balancing
 
+# Chat System & Message Logic
+
+## Overview
+
+The chat system enables real-time communication between shoppers and customers during order fulfillment. The system supports both mobile chat pages and desktop chat drawers with consistent message handling and UI.
+
+## Message Architecture
+
+### Message Storage
+
+- **Firebase Firestore**: All messages are stored in Firestore collections
+- **Real-time Updates**: Messages sync across all chat interfaces in real-time
+- **Message Metadata**: Each message includes sender information and timestamps
+
+### Message Structure
+
+```typescript
+interface Message {
+  id: string;
+  text: string;
+  senderId: string; // User ID of sender
+  senderType: "customer" | "shopper";
+  orderId: string; // Associated order
+  timestamp: Date;
+  isRead: boolean;
+}
+```
+
+## Chat Components
+
+### 1. Mobile Chat Page (`pages/Plasa/chat/[orderId].tsx`)
+
+- **Purpose**: Full-screen chat interface for mobile devices
+- **Features**:
+  - Real-time message fetching from Firebase
+  - Message sending with form validation
+  - Professional UI with message bubbles
+  - Customer address display in header
+  - Bottom padding for mobile navigation
+
+### 2. Chat Drawer (`src/components/chat/ChatDrawer.tsx`)
+
+- **Purpose**: Slide-out chat interface for desktop
+- **Features**:
+  - Same message logic as mobile chat
+  - Responsive design
+  - Real-time message updates
+  - Consistent styling with mobile chat
+
+### 3. Messages Page (`pages/Messages/[orderId].tsx`)
+
+- **Purpose**: Alternative chat interface
+- **Features**:
+  - Same message handling logic
+  - Unified message alignment
+
+## Message Alignment Logic
+
+### Current User Detection
+
+```typescript
+// All chat components use this logic
+const isCurrentUser = message.senderId === currentUserId;
+```
+
+### Message Styling
+
+```typescript
+// Shopper messages (current user)
+className={`rounded-2xl px-4 py-1 shadow-sm bg-green-700 text-white`}
+
+// Customer messages (other user)
+className={`rounded-2xl px-4 py-1 shadow-sm bg-white text-gray-900 dark:bg-gray-800 dark:text-white`}
+```
+
+## Message Flow
+
+### 1. Message Sending
+
+```typescript
+// Form submission with validation
+const handleSubmit = async (e: React.FormEvent) => {
+  e.preventDefault();
+  if (!message.trim()) return;
+
+  // Send message to Firebase
+  await sendMessage(orderId, message, currentUserId, "shopper");
+  setMessage("");
+};
+```
+
+### 2. Message Fetching
+
+```typescript
+// Real-time listener setup
+useEffect(() => {
+  const unsubscribe = onSnapshot(
+    query(
+      collection(db, "messages"),
+      where("orderId", "==", orderId),
+      orderBy("timestamp", "asc")
+    ),
+    (snapshot) => {
+      const messages = snapshot.docs.map((doc) => ({
+        id: doc.id,
+        ...doc.data(),
+      }));
+      setMessages(messages);
+    }
+  );
+
+  return () => unsubscribe();
+}, [orderId]);
+```
+
+### 3. Message Display
+
+```typescript
+// Message bubble rendering
+{
+  messages.map((message) => {
+    const isCurrentUser = message.senderId === currentUserId;
+
+    return (
+      <div
+        key={message.id}
+        className={`flex ${isCurrentUser ? "justify-end" : "justify-start"}`}
+      >
+        <div
+          className={`rounded-2xl px-4 py-1 shadow-sm ${
+            isCurrentUser
+              ? "bg-green-700 text-white"
+              : "bg-white text-gray-900 dark:bg-gray-800 dark:text-white"
+          }`}
+        >
+          {message.text}
+        </div>
+      </div>
+    );
+  });
+}
+```
+
+## Key Features
+
+### Real-time Synchronization
+
+- All chat interfaces update simultaneously
+- Messages appear instantly across devices
+- No page refresh required
+
+### Message Persistence
+
+- All messages stored in Firebase Firestore
+- Messages survive app restarts
+- Order-specific message collections
+
+### Responsive Design
+
+- Mobile-optimized chat pages
+- Desktop-friendly chat drawers
+- Consistent UI across platforms
+
+### Error Handling
+
+- Form validation for empty messages
+- Network error handling
+- Graceful fallbacks for missing data
+
+## API Integration
+
+### Message Service (`src/services/chatService.ts`)
+
+```typescript
+// Send message to Firebase
+export const sendMessage = async (
+  orderId: string,
+  text: string,
+  senderId: string,
+  senderType: "customer" | "shopper"
+) => {
+  const messageRef = collection(db, "messages");
+  await addDoc(messageRef, {
+    orderId,
+    text,
+    senderId,
+    senderType,
+    timestamp: new Date(),
+    isRead: false,
+  });
+};
+```
+
+### Chat Context (`src/context/ChatContext.tsx`)
+
+- Provides chat state management
+- Handles real-time message updates
+- Manages chat session state
+
+## Best Practices
+
+### Message Alignment
+
+- Always use `message.senderId === currentUserId` for alignment
+- Ensure consistent sender metadata across all components
+- Test message alignment in both mobile and desktop views
+
+### Performance
+
+- Use real-time listeners efficiently
+- Clean up listeners on component unmount
+- Implement message pagination for large conversations
+
+### User Experience
+
+- Show loading states during message sending
+- Provide clear visual feedback for message status
+- Maintain consistent styling across all chat interfaces
+
+## Troubleshooting
+
+### Common Issues
+
+1. **Messages not aligning correctly**
+
+   - Check if `senderId` is properly set in message metadata
+   - Verify `currentUserId` is correctly identified
+   - Ensure message fetching includes all required fields
+
+2. **Messages not sending**
+
+   - Validate form submission handling
+   - Check Firebase connection and permissions
+   - Verify message structure matches expected format
+
+3. **Real-time updates not working**
+   - Ensure Firebase listeners are properly set up
+   - Check for listener cleanup on component unmount
+   - Verify Firestore security rules allow read/write access
+
+### Debug Steps
+
+1. Check browser console for errors
+2. Verify Firebase configuration
+3. Test message sending in different chat interfaces
+4. Confirm message metadata is consistent
+
+---
+
 ## Deploy on Vercel
 
 The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
@@ -6008,6 +6257,7 @@ Check out our [Next.js deployment documentation](https://nextjs.org/docs/deploym
 The Telegram bot allows shoppers to connect their Telegram account to receive notifications, manage their online/offline status, and get real-time updates about orders and earnings. The integration is designed for both local development (polling) and production (webhook on Vercel).
 
 ## Key Features
+
 - Shopper connects Telegram via web dashboard (deep link with unique shopper ID)
 - Bot receives `/start [shopperId]` and stores Telegram chat ID
 - Shoppers receive notifications for new orders, earnings, and status updates
@@ -6017,19 +6267,24 @@ The Telegram bot allows shoppers to connect their Telegram account to receive no
 ## Setup Instructions
 
 ### 1. Environment Variables
+
 Add to your `.env`:
+
 ```env
 TELEGRAM_BOT_TOKEN=your_bot_token_here
 API_BASE_URL=http://localhost:3000 # or your production URL
 ```
 
 ### 2. Install Dependencies
+
 ```bash
 yarn add node-telegram-bot-api
 ```
 
 ### 3. Database Schema
+
 Ensure your `shoppers` table includes:
+
 ```sql
 CREATE TABLE shoppers (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -6047,10 +6302,12 @@ CREATE TABLE shoppers (
 ```
 
 ### 4. Local Development
+
 - Start Next.js: `yarn dev`
 - Start the bot: `node bot.js` (uses polling)
 
 ### 5. Production Deployment (Vercel)
+
 - Deploy to Vercel
 - Set webhook URL: `https://your-domain.vercel.app/api/telegram/webhook`
 - Set environment variables in Vercel dashboard
@@ -6058,10 +6315,12 @@ CREATE TABLE shoppers (
 ## API Endpoints
 
 ### Bot Endpoints (No Auth)
+
 - `POST /api/telegram/bot-update` — Update Telegram ID, get shopper by Telegram ID
 - `POST /api/telegram/ensure-shopper` — Ensure a shopper record exists for the authenticated user
 
 ### Example Payloads
+
 ```json
 // Update Telegram ID
 {
@@ -6077,21 +6336,23 @@ CREATE TABLE shoppers (
 ```
 
 ## Bot Commands
-| Command         | Description                                      |
-|-----------------|--------------------------------------------------|
-| `/start`        | Connect your account (no shopper ID)             |
-| `/start [id]`   | Connect with specific shopper ID                 |
-| `/online`       | Get instructions to go online via web interface  |
-| `/offline`      | Get instructions to go offline via web interface |
-| `/today`        | View today's orders, earnings, and chart         |
-| `/week`         | View this week's orders, earnings, and chart     |
-| `/month`        | View this month's orders, earnings, and chart    |
-| `/orders`       | View available orders (40+ min old)              |
-| `/batches`      | View assigned batches/orders                     |
-| `/help`         | Show all available commands                      |
-| `/status`       | Check your current connection status             |
+
+| Command       | Description                                      |
+| ------------- | ------------------------------------------------ |
+| `/start`      | Connect your account (no shopper ID)             |
+| `/start [id]` | Connect with specific shopper ID                 |
+| `/online`     | Get instructions to go online via web interface  |
+| `/offline`    | Get instructions to go offline via web interface |
+| `/today`      | View today's orders, earnings, and chart         |
+| `/week`       | View this week's orders, earnings, and chart     |
+| `/month`      | View this month's orders, earnings, and chart    |
+| `/orders`     | View available orders (40+ min old)              |
+| `/batches`    | View assigned batches/orders                     |
+| `/help`       | Show all available commands                      |
+| `/status`     | Check your current connection status             |
 
 ## Connection Workflow
+
 1. Shopper clicks "Connect Telegram" in the web dashboard
 2. System ensures a shopper record exists (API call)
 3. Telegram opens with a deep link: `https://t.me/PlaseraBot?start={shopperId}`
@@ -6099,6 +6360,7 @@ CREATE TABLE shoppers (
 5. Shopper receives a confirmation message
 
 ## Implementation Logic
+
 - Shopper ID is generated and stored automatically when connecting
 - Bot updates the database with Telegram chat ID via API
 - All status changes (online/offline) are managed via the web, not Telegram
@@ -6106,6 +6368,7 @@ CREATE TABLE shoppers (
 - Admins can trigger notifications using TelegramService
 
 ## Best Practices
+
 - Never commit bot tokens to version control
 - Use web interface for status/session management
 - Use webhook in production, polling in development
@@ -6113,6 +6376,7 @@ CREATE TABLE shoppers (
 - Rate-limit unauthenticated bot endpoints
 
 ## Example: Ensuring Shopper Record
+
 ```typescript
 // /api/telegram/ensure-shopper.ts
 export default async function handler(req, res) {
@@ -6124,6 +6388,7 @@ export default async function handler(req, res) {
 ```
 
 ## Example: Bot `/start` Command
+
 ```javascript
 bot.onText(/\/start (.+)/, async (msg, match) => {
   const shopperId = match[1];
