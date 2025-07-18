@@ -19,10 +19,12 @@ const GET_ORDER_DETAILS = gql`
       discount
       combinedOrderId: combined_order_id
       voucherCode: voucher_code
+      shop_id
       user: userByUserId {
         id
         name
         email
+        phone
         profile_picture
       }
       shop: Shop {
@@ -30,6 +32,10 @@ const GET_ORDER_DETAILS = gql`
         name
         address
         image
+        phone
+        latitude
+        longitude
+        operating_hours
       }
       Order_Items {
         id
@@ -100,7 +106,7 @@ export default async function handler(
     if (!hasuraClient) {
       throw new Error("Hasura client is not initialized");
     }
-
+    
     const data = await hasuraClient.request<{ Orders: any[] }>(
       GET_ORDER_DETAILS,
       { id: orderId }
@@ -113,9 +119,42 @@ export default async function handler(
 
     const order = data.Orders[0];
 
+    // If shop data is missing or incomplete, fetch it separately
+    let shopData = order.shop;
+    
+    if (!shopData || !shopData.phone || !shopData.latitude || !shopData.longitude) {
+      if (order.shop_id) {
+        try {
+          const shopQuery = gql`
+            query GetShopById($id: uuid!) {
+              Shops_by_pk(id: $id) {
+                id
+                name
+                address
+                image
+                phone
+                latitude
+                longitude
+                operating_hours
+              }
+            }
+          `;
+          
+          const shopResponse = await hasuraClient.request<{ Shops_by_pk: any }>(shopQuery, { id: order.shop_id });
+          
+          if (shopResponse.Shops_by_pk) {
+            shopData = shopResponse.Shops_by_pk;
+          }
+        } catch (shopError) {
+          // Shop data fetch failed, continue with existing data
+        }
+      }
+    }
+
     // Format timestamps to human-readable strings
     const formattedOrder = {
       ...order,
+      shop: shopData,
       placedAt: new Date(order.placedAt).toLocaleString("en-US", {
         dateStyle: "medium",
         timeStyle: "short",
@@ -128,7 +167,6 @@ export default async function handler(
 
     res.status(200).json({ order: formattedOrder });
   } catch (error) {
-    console.error("Error fetching order details:", error);
     res.status(500).json({ error: "Failed to fetch order details" });
   }
 }
