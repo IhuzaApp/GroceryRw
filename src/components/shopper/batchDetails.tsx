@@ -233,6 +233,7 @@ export default function BatchDetails({
   const [walletLoading, setWalletLoading] = useState(false);
   const [newMessage, setNewMessage] = useState("");
   const [isSending, setIsSending] = useState(false);
+  const [systemConfig, setSystemConfig] = useState<any>(null);
 
   const [currentStep, setCurrentStep] = useState(() => {
     if (!orderData) return 0;
@@ -278,6 +279,23 @@ export default function BatchDetails({
     return () => {
       document.head.removeChild(styleElement);
     };
+  }, []);
+
+  // Fetch system configuration
+  useEffect(() => {
+    const fetchSystemConfig = async () => {
+      try {
+        const response = await fetch('/api/queries/system-configuration');
+        if (response.ok) {
+          const data = await response.json();
+          setSystemConfig(data.config);
+        }
+      } catch (error) {
+        console.error('Error fetching system configuration:', error);
+      }
+    };
+
+    fetchSystemConfig();
   }, []);
 
   // Function to generate directions URL
@@ -821,12 +839,20 @@ export default function BatchDetails({
     );
   };
 
-  // Calculate the true total (subtotal + fees)
+  // Calculate tax amount (tax is included in the total, not added on top)
+  const calculateTax = (totalAmount: number) => {
+    if (!systemConfig?.tax) return 0;
+    const taxRate = parseFloat(systemConfig.tax) / 100; // Convert percentage to decimal
+    // If tax is included, we calculate: totalAmount * (taxRate / (1 + taxRate))
+    return totalAmount * (taxRate / (1 + taxRate));
+  };
+
+  // Calculate the true total (subtotal + fees + tax)
   const calculateTrueTotal = () => {
     const subtotal = calculateOriginalSubtotal();
     const serviceFee = parseFloat(order?.serviceFee || "0");
     const deliveryFee = parseFloat(order?.deliveryFee || "0");
-
+    // Tax is already included in the order total, so we don't add it again
     return subtotal + serviceFee + deliveryFee;
   };
 
@@ -1094,8 +1120,8 @@ export default function BatchDetails({
         )}
 
       {/* Main Content */}
-      <main className="max-w-9xl mx-auto p-3 sm:p-6">
-        <div className="overflow-hidden rounded-2xl bg-white shadow-xl dark:border-gray-700 dark:bg-gray-900">
+      <main className="w-full mx-auto p-2 sm:p-6 pb-20 sm:pb-6">
+        <div className="overflow-hidden rounded-lg sm:rounded-2xl bg-white shadow-lg sm:shadow-xl dark:border-gray-700 dark:bg-gray-900">
           {/* Header with gradient background */}
           <div className={`p-4 text-gray-900 dark:text-gray-100 sm:p-6`}>
             <div className="flex flex-col justify-between gap-3 sm:flex-row sm:items-center sm:gap-4">
@@ -1129,9 +1155,9 @@ export default function BatchDetails({
         </div>
 
           {/* Content */}
-          <div className="space-y-6 p-4 sm:space-y-8 sm:p-8">
-            {/* Order Progress Steps */}
-            <div className="rounded-xl border border-slate-200 bg-slate-50 p-4 dark:border-slate-700 dark:bg-slate-800 sm:p-6">
+          <div className="space-y-4 p-3 sm:space-y-8 sm:p-8">
+            {/* Order Progress Steps - Hidden on Mobile */}
+            <div className="hidden sm:block rounded-xl border border-slate-200 bg-slate-50 p-4 dark:border-slate-700 dark:bg-slate-800 sm:p-6">
               <div className="mb-3 flex items-center gap-2 sm:mb-4 sm:gap-3">
                 <span className="inline-block rounded-full bg-blue-100 p-1.5 sm:p-2">
                   <svg
@@ -1154,7 +1180,7 @@ export default function BatchDetails({
               </div>
               
               <div className="rounded-lg border border-slate-200 bg-white p-4 dark:border-slate-600 dark:bg-slate-700 sm:p-6">
-                <Steps current={currentStep} size="sm" className="custom-steps-green">
+                <Steps current={currentStep} className="custom-steps-green">
                   <Steps.Item 
                     title="Order Accepted" 
                     description="Order has been assigned to you"
@@ -1180,9 +1206,9 @@ export default function BatchDetails({
             </div>
 
             {/* Main Info Grid */}
-            <div className="grid grid-cols-1 gap-4 sm:gap-8 lg:grid-cols-2">
+            <div className="grid grid-cols-1 gap-3 sm:gap-8 lg:grid-cols-2">
               {/* Shop/Reel Info */}
-              <div className="rounded-xl border border-slate-200 bg-slate-50 p-4 dark:border-slate-700 dark:bg-slate-800 sm:p-6">
+              <div className="rounded-lg sm:rounded-xl border border-slate-200 bg-slate-50 p-3 dark:border-slate-700 dark:bg-slate-800 sm:p-6">
                 <div className="mb-3 flex items-center gap-2 sm:mb-4 sm:gap-3">
                   <span
                     className={`inline-block rounded-full p-1.5 sm:p-2 ${
@@ -1230,8 +1256,8 @@ export default function BatchDetails({
 
             {order.orderType === "reel" ? (
                   <div className="space-y-3 sm:space-y-4">
-                    <div className="flex flex-col gap-3 sm:flex-row sm:gap-4">
-                      <div className="relative mx-auto h-16 w-16 flex-shrink-0 overflow-hidden rounded-lg bg-slate-200 sm:mx-0 sm:h-20 sm:w-20">
+                                      <div className="flex flex-col gap-3 sm:flex-row sm:gap-4">
+                    <div className="relative mx-auto h-14 w-14 flex-shrink-0 overflow-hidden rounded-lg bg-slate-200 sm:mx-0 sm:h-20 sm:w-20">
                     {order.reel?.video_url ? (
                       <video
                         src={order.reel.video_url}
@@ -1288,7 +1314,7 @@ export default function BatchDetails({
               </div>
             ) : (
                   <div className="flex flex-col gap-3 sm:flex-row sm:gap-4">
-                    <div className="relative mx-auto h-12 w-12 flex-shrink-0 overflow-hidden rounded-lg bg-slate-200 sm:mx-0 sm:h-16 sm:w-16">
+                    <div className="relative mx-auto h-10 w-10 flex-shrink-0 overflow-hidden rounded-lg bg-slate-200 sm:mx-0 sm:h-16 sm:w-16">
                   {order.shop?.image ? (
                     <Image
                       src={order.shop.image}
@@ -1325,7 +1351,7 @@ export default function BatchDetails({
               </div>
 
               {/* Customer Info */}
-              <div className="rounded-xl border border-slate-200 bg-slate-50 p-4 dark:border-slate-700 dark:bg-slate-800 sm:p-6">
+              <div className="rounded-lg sm:rounded-xl border border-slate-200 bg-slate-50 p-3 dark:border-slate-700 dark:bg-slate-800 sm:p-6">
                 <div className="mb-3 flex items-center gap-2 sm:mb-4 sm:gap-3">
                   <span className="inline-block rounded-full bg-sky-100 p-1.5 sm:p-2">
                     <svg
@@ -1348,7 +1374,7 @@ export default function BatchDetails({
           </div>
 
                 <div className="mb-3 flex flex-col items-center gap-3 sm:mb-4 sm:flex-row sm:items-start">
-                  <div className="h-10 w-10 overflow-hidden rounded-full bg-slate-200 sm:h-12 sm:w-12">
+                  <div className="h-8 w-8 overflow-hidden rounded-full bg-slate-200 sm:h-12 sm:w-12">
                   {order.user.profile_picture ? (
                     <Image
                       src={order.user.profile_picture}
@@ -1471,7 +1497,7 @@ export default function BatchDetails({
 
         {/* Order Items */}
         {shouldShowOrderDetails() && (
-              <div className="rounded-xl border border-slate-200 bg-slate-50 p-4 dark:border-slate-700 dark:bg-slate-800 sm:p-6">
+              <div className="rounded-lg sm:rounded-xl border border-slate-200 bg-slate-50 p-3 dark:border-slate-700 dark:bg-slate-800 sm:p-6">
                 <div className="mb-3 flex items-center gap-2 sm:mb-4 sm:gap-3">
                   <span
                     className={`inline-block rounded-full p-1.5 sm:p-2 ${
@@ -1519,10 +1545,10 @@ export default function BatchDetails({
                 {order.Order_Items?.map((item) => (
                   <div
                     key={item.id}
-                        className="flex items-center gap-3 rounded-lg border border-slate-200 bg-white p-3 dark:border-slate-600 dark:bg-slate-700 sm:p-4"
+                        className="flex items-center gap-2 sm:gap-3 rounded-lg border border-slate-200 bg-white p-2 dark:border-slate-600 dark:bg-slate-700 sm:p-4"
                   >
                     <div
-                          className="h-10 w-10 flex-shrink-0 cursor-pointer overflow-hidden rounded-lg bg-slate-200 sm:h-12 sm:w-12"
+                          className="h-8 w-8 flex-shrink-0 cursor-pointer overflow-hidden rounded-lg bg-slate-200 sm:h-12 sm:w-12"
                       onClick={() => showProductImage(item)}
                     >
                       {item.product.image ? (
@@ -1549,7 +1575,7 @@ export default function BatchDetails({
                     </div>
 
                         <div className="min-w-0 flex-1">
-                          <p className="truncate text-sm font-medium text-slate-900 dark:text-slate-100 sm:text-base">
+                          <p className="truncate text-xs sm:text-sm font-medium text-slate-900 dark:text-slate-100 sm:text-base">
                         {item.product.name}
                       </p>
                           <p className="text-xs text-slate-500 dark:text-slate-400 sm:text-sm">
@@ -1564,14 +1590,14 @@ export default function BatchDetails({
                         )}
                     </div>
 
-                        <div className="flex items-center gap-3">
-                          <div className="text-sm font-bold text-slate-900 dark:text-slate-100 sm:text-base">
+                        <div className="flex items-center gap-2 sm:gap-3">
+                          <div className="text-xs sm:text-sm font-bold text-slate-900 dark:text-slate-100 sm:text-base">
                         {formatCurrency(item.price * item.quantity)}
                       </div>
                       {order.status === "shopping" && (
                             <button
                               onClick={() => toggleItemFound(item, !item.found)}
-                              className={`flex items-center gap-2 whitespace-nowrap rounded-lg px-3 py-1.5 text-xs font-medium transition-all duration-200 sm:text-sm ${
+                              className={`flex items-center gap-1 sm:gap-2 whitespace-nowrap rounded-lg px-2 sm:px-3 py-1 sm:py-1.5 text-xs font-medium transition-all duration-200 sm:text-sm ${
                                 item.found
                                   ? "border border-emerald-200 bg-emerald-100 text-emerald-800 hover:bg-emerald-200 dark:border-emerald-700 dark:bg-emerald-900/20 dark:text-emerald-300"
                                   : "border border-slate-200 bg-slate-100 text-slate-700 hover:bg-slate-200 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-300 dark:hover:bg-slate-600"
@@ -1615,7 +1641,7 @@ export default function BatchDetails({
 
         {/* Order Summary */}
         {shouldShowOrderDetails() && (
-              <div className="rounded-xl border border-slate-200 bg-slate-50 p-4 dark:border-slate-700 dark:bg-slate-800 sm:p-6">
+              <div className="rounded-lg sm:rounded-xl border border-slate-200 bg-slate-50 p-3 dark:border-slate-700 dark:bg-slate-800 sm:p-6">
                 <div className="mb-3 flex items-center gap-2 sm:mb-4 sm:gap-3">
                   <span className="inline-block rounded-full bg-slate-100 p-1.5 sm:p-2">
                     <svg
@@ -1662,22 +1688,30 @@ export default function BatchDetails({
                       )}
                     </span>
                   </div>
-                  <div className="flex justify-between">
-                    <span>Service Fee</span>
-                    <span>
-                            {formatCurrency(
-                              parseFloat(order.serviceFee || "0")
-                            )}
-                    </span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span>Delivery Fee</span>
-                    <span>
-                            {formatCurrency(
-                              parseFloat(order.deliveryFee || "0")
-                            )}
-                    </span>
-                  </div>
+                                        <div className="flex justify-between">
+                        <span>Service Fee</span>
+                        <span>
+                                {formatCurrency(
+                                  parseFloat(order.serviceFee || "0")
+                                )}
+                        </span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span>Delivery Fee</span>
+                        <span>
+                                {formatCurrency(
+                                  parseFloat(order.deliveryFee || "0")
+                                )}
+                        </span>
+                      </div>
+                      {systemConfig?.tax && (
+                        <div className="flex justify-between">
+                          <span>Tax ({systemConfig.tax}%)</span>
+                          <span>
+                            {formatCurrency(calculateTax(calculateOriginalSubtotal()))}
+                          </span>
+                        </div>
+                      )}
                   {order.discount > 0 && (
                           <div className="flex justify-between text-emerald-600">
                       <span>Discount</span>
@@ -1695,9 +1729,7 @@ export default function BatchDetails({
                   <div className="flex justify-between">
                     <span>Subtotal</span>
                     <span>
-                      {order.status === "shopping"
-                        ? formatCurrency(calculateFoundTotal())
-                        : formatCurrency(calculateOriginalSubtotal())}
+                      {formatCurrency(calculateOriginalSubtotal())}
                     </span>
                   </div>
 
@@ -1750,6 +1782,20 @@ export default function BatchDetails({
                                 }, 0) || 0}
                         </span>
                       </div>
+                      <div className="flex justify-between text-red-600 dark:text-red-400">
+                        <span>Refund Amount</span>
+                        <span>
+                          -{formatCurrency(calculateOriginalSubtotal() - calculateFoundItemsTotal())}
+                        </span>
+                      </div>
+                      {systemConfig?.tax && (
+                        <div className="flex justify-between">
+                          <span>Tax ({systemConfig.tax}%)</span>
+                          <span>
+                            {formatCurrency(calculateTax(calculateFoundItemsTotal()))}
+                          </span>
+                        </div>
+                      )}
                     </>
                   ) : (
                     <>
@@ -1814,7 +1860,7 @@ export default function BatchDetails({
 
             {/* Delivery Notes */}
         {(order.deliveryNotes || order.deliveryNote) && (
-              <div className="rounded-xl border border-slate-200 bg-slate-50 p-4 dark:border-slate-700 dark:bg-slate-800 sm:p-6">
+              <div className="rounded-lg sm:rounded-xl border border-slate-200 bg-slate-50 p-3 dark:border-slate-700 dark:bg-slate-800 sm:p-6">
                 <div className="mb-3 flex items-center gap-2 sm:mb-4 sm:gap-3">
                   <span className="inline-block rounded-full bg-amber-100 p-1.5 sm:p-2">
                     <svg
@@ -1844,15 +1890,14 @@ export default function BatchDetails({
         )}
 
         {/* Action Button */}
-            <div className="pt-3 sm:pt-4">
-              <Button
-                appearance="primary"
-                className={`w-full rounded-xl py-3 text-lg font-semibold sm:py-4 sm:text-xl ${
-                  order.orderType === "reel"
-                    ? "bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700"
-                    : "bg-gradient-to-r from-emerald-600 to-green-600 hover:from-emerald-700 hover:to-green-700"
-                } text-white shadow-lg transition-all duration-200`}
-              >
+            <div className="pt-2 sm:pt-4">
+                              <Button
+                  appearance="primary"
+                  color={order.orderType === "reel" ? "violet" : "green"}
+                  size="lg"
+                  block
+                  className="rounded-lg sm:rounded-xl py-3 sm:py-4 text-lg sm:text-xl font-bold sm:text-2xl"
+                >
                 {getActionButton()}
               </Button>
             </div>

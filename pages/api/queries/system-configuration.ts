@@ -18,6 +18,7 @@ const GET_SYSTEM_CONFIGURATION = gql`
       distanceSurcharge
       deliveryCommissionPercentage
       productCommissionPercentage
+      tax
     }
   }
 `;
@@ -36,6 +37,7 @@ interface SystemConfigurationResponse {
     distanceSurcharge: string;
     deliveryCommissionPercentage: string;
     productCommissionPercentage: string;
+    tax: string;
   }>;
 }
 

@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { Modal, Button, InputNumber, Form } from "rsuite";
 import { OrderItem } from "../../types/order";
 import { useTheme } from "../../context/ThemeContext";
@@ -22,6 +22,54 @@ export default function QuantityConfirmationModal({
   onConfirm,
 }: QuantityConfirmationModalProps) {
   const { theme } = useTheme();
+  
+  // State for weight-based measurements
+  const [foundWeight, setFoundWeight] = useState(0);
+  const [isWeightBased, setIsWeightBased] = useState(false);
+  const [measurementUnit, setMeasurementUnit] = useState("");
+  const [pricePerUnit, setPricePerUnit] = useState(0);
+  const [customerBudget, setCustomerBudget] = useState(0);
+  const [exceedsBudget, setExceedsBudget] = useState(false);
+  const [refundAmount, setRefundAmount] = useState(0);
+  const [missingWeight, setMissingWeight] = useState(0);
+
+  // Check if item is weight-based
+  useEffect(() => {
+    if (currentItem) {
+      const unit = currentItem.product.measurement_unit?.toLowerCase() || "";
+      const isWeight = ["kg", "g", "grams", "lbs", "pounds", "oz", "ounces"].includes(unit);
+      setIsWeightBased(isWeight);
+      setMeasurementUnit(unit);
+      
+      // Calculate price per unit weight
+      if (isWeight && currentItem.product.final_price) {
+        const price = parseFloat(currentItem.product.final_price);
+        const quantity = currentItem.quantity;
+        setPricePerUnit(price / quantity);
+        setCustomerBudget(price);
+      }
+    }
+  }, [currentItem]);
+
+  // Calculate if weight exceeds budget and refund amounts
+  useEffect(() => {
+    if (isWeightBased && foundWeight > 0) {
+      const totalCost = foundWeight * pricePerUnit;
+      setExceedsBudget(totalCost > customerBudget);
+      
+      // Calculate missing weight and refund amount
+      const requestedWeight = currentItem?.quantity || 0;
+      const missing = Math.max(0, requestedWeight - foundWeight);
+      setMissingWeight(missing);
+      
+      // Calculate refund amount for missing weight
+      const refund = missing * pricePerUnit;
+      setRefundAmount(refund);
+    } else {
+      setMissingWeight(0);
+      setRefundAmount(0);
+    }
+  }, [foundWeight, pricePerUnit, customerBudget, isWeightBased, currentItem]);
 
   if (!currentItem) return null;
 
@@ -100,8 +148,20 @@ export default function QuantityConfirmationModal({
                   theme === "dark" ? "text-gray-300" : "text-gray-700"
                 }`}
               >
-                Price: ${currentItem.price} each
+                {isWeightBased 
+                  ? `Price: $${pricePerUnit.toFixed(2)} per ${measurementUnit}`
+                  : `Price: $${currentItem.price} each`
+                }
               </p>
+              {isWeightBased && (
+                <p
+                  className={`text-xs ${
+                    theme === "dark" ? "text-gray-400" : "text-gray-500"
+                  }`}
+                >
+                  Customer budget: ${customerBudget.toFixed(2)} for {currentItem.quantity} {measurementUnit}
+                </p>
+              )}
             </div>
           </div>
         </div>
@@ -117,30 +177,46 @@ export default function QuantityConfirmationModal({
                   theme === "dark" ? "text-gray-300" : "text-gray-700"
                 }`}
               >
-                How many units did you find?
+                {isWeightBased 
+                  ? `How much ${measurementUnit} did you find?`
+                  : "How many units did you find?"
+                }
               </label>
               <p
                 className={`text-xs ${
                   theme === "dark" ? "text-gray-400" : "text-gray-500"
                 } mt-1`}
               >
-                Enter the quantity you found (0 to {currentItem.quantity})
+                {isWeightBased 
+                  ? `Enter the weight you found (0 to ${currentItem.quantity} ${measurementUnit})`
+                  : `Enter the quantity you found (0 to ${currentItem.quantity})`
+                }
               </p>
             </div>
 
             <div className="flex items-center gap-3">
               <div className="flex-1">
-                <InputNumber
-                  value={foundQuantity}
-                  onChange={(value) => setFoundQuantity(Number(value) || 0)}
+                <input
+                  type="number"
+                  value={isWeightBased ? foundWeight : foundQuantity}
+                  onChange={(e) => {
+                    const numValue = Number(e.target.value) || 0;
+                    if (isWeightBased) {
+                      setFoundWeight(numValue);
+                      setFoundQuantity(numValue); // Update quantity for compatibility
+                    } else {
+                      setFoundQuantity(numValue);
+                    }
+                  }}
                   min={0}
                   max={currentItem.quantity}
+                  step={isWeightBased ? "0.01" : "1"}
                   className={`w-full ${
                     theme === "dark"
                       ? "border-slate-500 bg-slate-600 text-gray-100"
                       : "border-slate-300 bg-white text-gray-900"
-                  } rounded-lg border px-3 py-2 text-center text-lg font-semibold`}
-                  size="sm"
+                  } rounded-lg border px-3 py-2 text-center text-lg font-semibold focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent`}
+                  placeholder={isWeightBased ? `0.00 ${measurementUnit}` : "0"}
                 />
               </div>
               <div
@@ -148,7 +224,7 @@ export default function QuantityConfirmationModal({
                   theme === "dark" ? "text-gray-400" : "text-gray-500"
                 }`}
               >
-                of {currentItem.quantity}
+                {isWeightBased ? `of ${currentItem.quantity} ${measurementUnit}` : `of ${currentItem.quantity}`}
               </div>
             </div>
           </div>
@@ -157,6 +233,8 @@ export default function QuantityConfirmationModal({
           <div
             className={`rounded-lg p-3 ${
               foundQuantity === 0
+                ? "bg-red-50 dark:bg-red-900/20"
+                : exceedsBudget
                 ? "bg-red-50 dark:bg-red-900/20"
                 : foundQuantity === currentItem.quantity
                 ? "bg-emerald-50 dark:bg-emerald-900/20"
@@ -168,6 +246,8 @@ export default function QuantityConfirmationModal({
                 className={`rounded-full p-1 ${
                   foundQuantity === 0
                     ? "bg-red-100 dark:bg-red-800"
+                    : exceedsBudget
+                    ? "bg-red-100 dark:bg-red-800"
                     : foundQuantity === currentItem.quantity
                     ? "bg-emerald-100 dark:bg-emerald-800"
                     : "bg-amber-100 dark:bg-amber-800"
@@ -176,6 +256,8 @@ export default function QuantityConfirmationModal({
                 <svg
                   className={`h-4 w-4 ${
                     foundQuantity === 0
+                      ? "text-red-600 dark:text-red-400"
+                      : exceedsBudget
                       ? "text-red-600 dark:text-red-400"
                       : foundQuantity === currentItem.quantity
                       ? "text-emerald-600 dark:text-emerald-400"
@@ -191,6 +273,13 @@ export default function QuantityConfirmationModal({
                       strokeLinejoin="round"
                       strokeWidth={2}
                       d="M6 18L18 6M6 6l12 12"
+                    />
+                  ) : exceedsBudget ? (
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z"
                     />
                   ) : foundQuantity === currentItem.quantity ? (
                     <path
@@ -209,21 +298,54 @@ export default function QuantityConfirmationModal({
                   )}
                 </svg>
               </div>
-              <span
-                className={`text-sm font-medium ${
-                  foundQuantity === 0
-                    ? "text-red-800 dark:text-red-300"
+              <div className="flex-1">
+                <span
+                  className={`text-sm font-medium ${
+                    foundQuantity === 0
+                      ? "text-red-800 dark:text-red-300"
+                      : exceedsBudget
+                      ? "text-red-800 dark:text-red-300"
+                      : foundQuantity === currentItem.quantity
+                      ? "text-emerald-800 dark:text-emerald-300"
+                      : "text-amber-800 dark:text-amber-300"
+                  }`}
+                >
+                  {foundQuantity === 0
+                    ? isWeightBased 
+                      ? `No ${measurementUnit} found`
+                      : "No units found"
+                    : exceedsBudget
+                    ? `Weight exceeds budget by $${((foundWeight * pricePerUnit) - customerBudget).toFixed(2)}`
                     : foundQuantity === currentItem.quantity
-                    ? "text-emerald-800 dark:text-emerald-300"
-                    : "text-amber-800 dark:text-amber-300"
-                }`}
-              >
-                {foundQuantity === 0
-                  ? "No units found"
-                  : foundQuantity === currentItem.quantity
-                  ? "All units found"
-                  : "Partial quantity found"}
-              </span>
+                    ? isWeightBased 
+                      ? `All ${measurementUnit} found`
+                      : "All units found"
+                    : isWeightBased 
+                      ? `Partial ${measurementUnit} found - Refund will be processed`
+                      : "Partial quantity found"}
+                </span>
+                {isWeightBased && foundQuantity > 0 && (
+                  <div className="text-xs mt-1 space-y-1">
+                    <p className={`${
+                      exceedsBudget 
+                        ? "text-red-600 dark:text-red-400"
+                        : "text-gray-600 dark:text-gray-400"
+                    }`}>
+                      Cost: ${(foundWeight * pricePerUnit).toFixed(2)} | Budget: ${customerBudget.toFixed(2)}
+                    </p>
+                    {missingWeight > 0 && (
+                      <p className="text-amber-600 dark:text-amber-400">
+                        Missing: {missingWeight.toFixed(2)} {measurementUnit} | Refund: ${refundAmount.toFixed(2)}
+                      </p>
+                    )}
+                    {missingWeight > 0 && (
+                      <p className="text-blue-600 dark:text-blue-400 font-medium">
+                        Customer will be charged: ${(foundWeight * pricePerUnit).toFixed(2)} | Refund: ${refundAmount.toFixed(2)}
+                      </p>
+                    )}
+                  </div>
+                )}
+              </div>
             </div>
           </div>
         </div>
@@ -243,7 +365,7 @@ export default function QuantityConfirmationModal({
           </button>
           <button
             onClick={onConfirm}
-            disabled={foundQuantity === 0}
+            disabled={foundQuantity === 0 || exceedsBudget}
             className={`flex-1 bg-green-600 hover:bg-green-700 disabled:bg-gray-300 disabled:text-gray-500 text-white border-0 rounded-lg px-4 py-2 font-medium transition-colors duration-200`}
           >
             Confirm Found
