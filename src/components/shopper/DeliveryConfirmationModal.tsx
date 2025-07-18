@@ -58,6 +58,8 @@ const DeliveryConfirmationModal: React.FC<DeliveryConfirmationModalProps> = ({
   const [stream, setStream] = useState<MediaStream | null>(null);
   const [showPreview, setShowPreview] = useState(false);
   const [forceOpen, setForceOpen] = useState(false);
+  const [confirmingDelivery, setConfirmingDelivery] = useState(false);
+  const [deliveryConfirmed, setDeliveryConfirmed] = useState(false);
 
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -98,6 +100,49 @@ const DeliveryConfirmationModal: React.FC<DeliveryConfirmationModalProps> = ({
       }
     }
   }, [photoUploading, photoUploaded, invoiceData?.orderId]);
+
+  // Handle delivery confirmation and redirect
+  const handleConfirmDelivery = async () => {
+    if (!invoiceData?.orderId) {
+      setUploadError("Order ID is missing");
+      return;
+    }
+
+    try {
+      setConfirmingDelivery(true);
+      setForceOpen(true);
+
+      // Update order status to delivered
+      const response = await fetch("/api/shopper/updateOrderStatus", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          orderId: invoiceData.orderId,
+          status: "delivered",
+        }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || "Failed to confirm delivery");
+      }
+
+      setDeliveryConfirmed(true);
+      
+      // Redirect to active batches page after a short delay
+      setTimeout(() => {
+        router.push("/Plasa/active-batches");
+      }, 1500);
+
+    } catch (error) {
+      console.error("Error confirming delivery:", error);
+      setUploadError("Failed to confirm delivery. Please try again.");
+    } finally {
+      setConfirmingDelivery(false);
+    }
+  };
 
   const handleViewInvoiceDetails = () => {
     if (!invoiceData?.id) {
@@ -179,8 +224,8 @@ const DeliveryConfirmationModal: React.FC<DeliveryConfirmationModalProps> = ({
   };
 
   const handleClose = () => {
-    if (photoUploading || forceOpen) {
-      return; // Prevent closing while uploading or if force open
+    if (photoUploading || forceOpen || confirmingDelivery) {
+      return; // Prevent closing while uploading, confirming, or if force open
     }
     onClose();
   };
@@ -341,6 +386,10 @@ const DeliveryConfirmationModal: React.FC<DeliveryConfirmationModalProps> = ({
         <Modal.Title className="text-lg font-semibold sm:text-xl">
           {photoUploading
             ? "Uploading Delivery Photo..."
+            : confirmingDelivery
+            ? "Confirming Delivery..."
+            : deliveryConfirmed
+            ? "Delivery Confirmed!"
             : "Delivery Confirmation"}
         </Modal.Title>
       </Modal.Header>
@@ -377,38 +426,15 @@ const DeliveryConfirmationModal: React.FC<DeliveryConfirmationModalProps> = ({
               </svg>
             </div>
             <h3 className="text-base font-semibold sm:text-lg">
-              Order Successfully Delivered!
+              {deliveryConfirmed
+                ? "Order Successfully Delivered!"
+                : "Order Ready for Delivery Confirmation!"}
             </h3>
             <p className="mt-1 text-sm sm:text-base">
-              Order #{invoiceData.orderNumber} has been marked as delivered.
+              {deliveryConfirmed
+                ? "Redirecting to active batches..."
+                : `Order #${invoiceData.orderNumber} has been prepared for delivery confirmation.`}
             </p>
-          </div>
-
-          {/* Order summary */}
-          <div
-            className={`rounded-lg border p-4 ${
-              theme === "dark" ? "border-gray-700 bg-gray-800" : "bg-gray-50"
-            }`}
-          >
-            <h3 className="mb-2 text-base font-semibold sm:text-lg">
-              Order Summary
-            </h3>
-            <div className="space-y-2 text-sm sm:text-base">
-              <div className="flex justify-between">
-                <span>Items:</span>
-                <span>{invoiceData.items.length}</span>
-              </div>
-              <div className="flex justify-between">
-                <span>Total Amount:</span>
-                <span className="font-semibold">
-                  {formatCurrency(invoiceData.total)}
-                </span>
-              </div>
-              <div className="flex justify-between">
-                <span>Delivery Date:</span>
-                <span>{new Date().toLocaleDateString()}</span>
-              </div>
-            </div>
           </div>
 
           {/* Photo upload section */}
@@ -528,6 +554,55 @@ const DeliveryConfirmationModal: React.FC<DeliveryConfirmationModalProps> = ({
               </div>
             )}
           </div>
+
+          {/* Confirm Delivery Button - Only show after photo is uploaded */}
+          {photoUploaded && !deliveryConfirmed && (
+            <div className="mt-6 text-center">
+              <Button
+                onClick={handleConfirmDelivery}
+                appearance="primary"
+                size="lg"
+                className="w-full"
+                disabled={confirmingDelivery}
+                loading={confirmingDelivery}
+              >
+                {confirmingDelivery ? "Confirming Delivery..." : "Confirm Delivery"}
+              </Button>
+              <p className="mt-2 text-sm text-gray-500">
+                This will mark the order as delivered and update your earnings
+              </p>
+            </div>
+          )}
+
+          {/* Delivery Confirmation Loading */}
+          {confirmingDelivery && (
+            <div className="mt-4 text-center">
+              <Loader size="md" content="Updating order status..." />
+              <p className="mt-2 text-sm text-gray-500">
+                Please wait while we confirm your delivery...
+              </p>
+            </div>
+          )}
+
+          {/* Delivery Confirmed Success */}
+          {deliveryConfirmed && (
+            <div className="mt-4 text-center">
+              <div
+                className={`rounded-lg border p-4 ${
+                  theme === "dark"
+                    ? "border-green-700 bg-green-900/20"
+                    : "bg-green-50 border-green-200"
+                }`}
+              >
+                <p className="font-medium text-green-600 dark:text-green-400">
+                  Delivery confirmed successfully!
+                </p>
+                <p className="mt-1 text-sm text-gray-500">
+                  Redirecting to active batches...
+                </p>
+              </div>
+            </div>
+          )}
         </div>
       </Modal.Body>
       <Modal.Footer
@@ -538,7 +613,7 @@ const DeliveryConfirmationModal: React.FC<DeliveryConfirmationModalProps> = ({
             onClick={handleViewInvoiceDetails}
             appearance="primary"
             className="w-full sm:w-auto"
-            disabled={!photoUploaded || photoUploading}
+            disabled={!photoUploaded || photoUploading || confirmingDelivery}
           >
             View Invoice Details
           </Button>
@@ -546,7 +621,7 @@ const DeliveryConfirmationModal: React.FC<DeliveryConfirmationModalProps> = ({
             onClick={handleReturnToBatches}
             appearance="subtle"
             className="w-full sm:w-auto"
-            disabled={photoUploading}
+            disabled={photoUploading || confirmingDelivery}
           >
             Return to Batches
           </Button>

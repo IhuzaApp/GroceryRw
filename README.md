@@ -2770,6 +2770,158 @@ The Plasa profile management system allows users to update their delivery servic
    - Invoice generation
    - Delivery confirmation
 
+## 3.1. Delivery Confirmation Flow
+
+### Overview
+
+The delivery confirmation system ensures proper photo documentation and order status management before marking orders as delivered. This two-step process prevents premature order completion and ensures delivery proof is captured.
+
+### Core Components
+
+- Location: `src/components/shopper/DeliveryConfirmationModal.tsx`
+- Purpose: Handles delivery photo upload and order status confirmation
+
+### Flow Process
+
+#### Step 1: Photo Upload (Required)
+1. **Modal Opens** - Order status remains unchanged
+2. **Photo Capture/Upload** - User takes photo via camera or uploads file
+3. **Photo Validation** - File type, size, and format validation
+4. **Photo Upload** - Image uploaded to server via `/api/shopper/uploadDeliveryPhoto`
+5. **Upload Confirmation** - `photoUploaded` state becomes `true`
+
+#### Step 2: Delivery Confirmation (Optional)
+1. **Button Appears** - "Confirm Delivery" button only shows after photo upload
+2. **User Confirmation** - User clicks "Confirm Delivery" button
+3. **Status Update** - Order status changes to "delivered" via `/api/shopper/updateOrderStatus`
+4. **Success Feedback** - Success message displayed
+5. **Automatic Redirect** - Redirects to active batches page after 1.5 seconds
+
+### Key Features
+
+#### 1. **Two-Step Process**
+```typescript
+// Step 1: Photo Upload (Required)
+const handleUpdateDatabase = async (imageData: string) => {
+  // Upload photo to server
+  // Set photoUploaded = true
+};
+
+// Step 2: Delivery Confirmation (Optional)
+const handleConfirmDelivery = async () => {
+  // Update order status to "delivered"
+  // Show success message
+  // Redirect to active batches
+};
+```
+
+#### 2. **Conditional Button Display**
+```typescript
+{photoUploaded && !deliveryConfirmed && (
+  <Button onClick={handleConfirmDelivery}>
+    Confirm Delivery
+  </Button>
+)}
+```
+
+#### 3. **State Management**
+- `photoUploading`: Prevents modal closure during upload
+- `photoUploaded`: Enables delivery confirmation button
+- `confirmingDelivery`: Shows loading state during status update
+- `deliveryConfirmed`: Prevents duplicate confirmations
+
+#### 4. **Safety Features**
+- **Modal Lock**: Cannot close during critical operations
+- **Upload Protection**: State persists across page refreshes
+- **Error Handling**: Clear error messages and retry options
+- **Validation**: File type and size validation
+
+### API Endpoints
+
+#### 1. Photo Upload API (`/api/shopper/uploadDeliveryPhoto`)
+```typescript
+POST /api/shopper/uploadDeliveryPhoto
+{
+  orderId: string,
+  file: string (base64),
+  updatedAt: string,
+  orderType: "regular" | "reel"
+}
+```
+
+#### 2. Order Status Update API (`/api/shopper/updateOrderStatus`)
+```typescript
+POST /api/shopper/updateOrderStatus
+{
+  orderId: string,
+  status: "delivered"
+}
+```
+
+### User Experience Flow
+
+```
+Modal Opens
+    ↓
+Take/Upload Photo
+    ↓
+Photo Uploading... (Loading)
+    ↓
+Photo Uploaded Successfully
+    ↓
+"Confirm Delivery" Button Appears
+    ↓
+Click "Confirm Delivery"
+    ↓
+Updating Order Status... (Loading)
+    ↓
+Delivery Confirmed Successfully
+    ↓
+Redirecting to Active Batches...
+```
+
+### Technical Requirements
+
+- **Photo Validation**: JPEG, PNG, JPG, HEIC formats up to 5MB
+- **Camera Access**: Device camera for photo capture
+- **Internet Connection**: Stable connection for upload
+- **Authentication**: User must be authenticated
+- **Order Assignment**: User must be assigned to the order
+
+### Error Handling
+
+1. **Upload Failures**
+   - Retry mechanism
+   - Clear error messages
+   - State preservation
+
+2. **Network Issues**
+   - Connection validation
+   - Automatic retry
+   - Offline detection
+
+3. **Permission Issues**
+   - Camera access handling
+   - File system permissions
+   - User guidance
+
+### Best Practices
+
+1. **Photo Quality**
+   - Good lighting conditions
+   - Clear package visibility
+   - Include delivery context
+
+2. **Upload Process**
+   - Stable internet connection
+   - Don't close browser during upload
+   - Wait for confirmation messages
+
+3. **Confirmation Process**
+   - Verify photo quality before confirming
+   - Ensure all requirements are met
+   - Follow proper delivery protocols
+
 2. **Payment System**
 
    - OTP verification
