@@ -339,9 +339,9 @@ function ProductCard({
         </div>
       </div>
       {showModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 px-4 backdrop-blur-sm">
           <div
-            className="w-80 rounded-lg bg-white p-6 shadow-lg dark:bg-gray-800"
+            className="w-full max-w-sm rounded-2xl border border-gray-200 bg-white p-6 shadow-xl dark:border-gray-700 dark:bg-gray-800"
             onKeyDown={(e) => {
               // Enter key submits the form
               if (e.key === "Enter") {
@@ -364,16 +364,41 @@ function ProductCard({
               }
             }}
           >
-            <h3 className="mb-4 text-lg font-bold dark:text-white">Add {name} to Cart</h3>
-            <div className="mb-4">
-              <div className="mb-2 flex items-center justify-between">
-                <span className="text-sm font-medium dark:text-gray-300">Quantity:</span>
-                <div className="flex items-center">
+            <div className="flex items-start justify-between">
+              <h3 className="text-xl font-bold text-gray-900 dark:text-white">
+                Add {name} to Cart
+              </h3>
+              <button
+                onClick={() => setShowModal(false)}
+                className="-mt-2 -mr-2 rounded-full p-2 text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-600 dark:hover:bg-gray-700"
+              >
+                <svg
+                  className="h-6 w-6"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M6 18L18 6M6 6l12 12"
+                  />
+                </svg>
+              </button>
+            </div>
+
+            <div className="my-6">
+              <div className="mb-4 flex items-center justify-between">
+                <span className="font-semibold text-gray-700 dark:text-gray-300">
+                  Quantity
+                </span>
+                <div className="flex items-center rounded-lg border border-gray-300 dark:border-gray-600">
                   <button
                     onClick={() =>
                       setSelectedQuantity(Math.max(1, selectedQuantity - 1))
                     }
-                    className="flex h-8 w-8 items-center justify-center rounded-l border border-gray-300 bg-gray-100 text-gray-600 hover:bg-gray-200 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600"
+                    className="flex h-10 w-10 items-center justify-center rounded-l-lg text-gray-600 transition-colors hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-gray-700"
                   >
                     -
                   </button>
@@ -383,16 +408,16 @@ function ProductCard({
                     value={selectedQuantity}
                     onChange={(e) =>
                       setSelectedQuantity(
-                        Math.max(1, parseInt(e.target.value, 10) || 1)
+                        Math.max(1, parseInt(e.target.value, 10) || 1),
                       )
                     }
-                    className="h-8 w-16 border-y border-gray-300 p-0 text-center focus:outline-none dark:border-gray-600 dark:bg-gray-700 dark:text-white"
+                    className="h-10 w-16 border-x border-gray-300 p-0 text-center font-semibold text-gray-800 focus:outline-none dark:border-gray-600 dark:bg-gray-700/50 dark:text-white"
                     onFocus={(e) => e.target.select()}
                     autoFocus
                   />
                   <button
                     onClick={() => setSelectedQuantity(selectedQuantity + 1)}
-                    className="flex h-8 w-8 items-center justify-center rounded-r border border-gray-300 bg-gray-100 text-gray-600 hover:bg-gray-200 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600"
+                    className="flex h-10 w-10 items-center justify-center rounded-r-lg text-gray-600 transition-colors hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-gray-700"
                   >
                     +
                   </button>
@@ -400,15 +425,15 @@ function ProductCard({
               </div>
 
               {/* Quick quantity buttons */}
-              <div className="mt-2 flex flex-wrap gap-2">
+              <div className="mt-4 flex flex-wrap justify-center gap-2">
                 {[1, 2, 3, 5, 10].map((qty) => (
                   <button
                     key={qty}
                     onClick={() => setSelectedQuantity(qty)}
-                    className={`rounded-full border px-3 py-1 text-xs font-medium ${
+                    className={`rounded-full border px-4 py-1.5 text-sm font-medium transition-colors ${
                       selectedQuantity === qty
-                        ? "border-green-500 bg-green-50 text-green-700 dark:border-green-500 dark:bg-green-900 dark:text-green-300"
-                        : "border-gray-300 bg-white text-gray-700 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-300"
+                        ? "border-green-600 bg-green-100 text-green-800 dark:border-green-500 dark:bg-green-500/20 dark:text-green-300"
+                        : "border-gray-300 bg-gray-50 text-gray-700 hover:bg-gray-100 dark:border-gray-600 dark:bg-gray-700/50 dark:text-gray-300 dark:hover:bg-gray-700"
                     }`}
                   >
                     {qty}
@@ -416,16 +441,16 @@ function ProductCard({
                 ))}
               </div>
             </div>
-            <div className="flex justify-end space-x-2">
+            <div className="grid grid-cols-2 gap-3">
               <button
                 onClick={() => setShowModal(false)}
-                className="rounded border px-4 py-2 text-gray-700 dark:text-gray-300 dark:border-gray-600"
+                className="rounded-lg bg-gray-100 px-4 py-3 text-sm font-semibold text-gray-800 transition-colors hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600"
               >
                 Cancel
               </button>
               <button
                 id="add-to-cart-btn"
-                onClick={async () => {
+                onClick={() => {
                   if (status === "loading") return;
                   if (status === "unauthenticated") {
                     localStorage.setItem(
@@ -434,58 +459,59 @@ function ProductCard({
                         shopId,
                         productId: id,
                         quantity: selectedQuantity,
-                      })
+                      }),
                     );
                     router.push(
                       `/auth/login?redirect=${encodeURIComponent(
-                        router.asPath
-                      )}`
+                        router.asPath,
+                      )}`,
                     );
                     return;
                   }
 
-                  // Show loading state
+                  // Immediately close the modal to allow the user to continue shopping
+                  setShowModal(false);
+
+                  // Show loading toast and handle add-to-cart in the background
                   const toastId = toast.loading("Adding to cart...");
-
-                  try {
-                    await addItem(shopId, id, selectedQuantity);
-
-                    // Update toast with success message
-                    toast.success(
-                      <div className="flex items-center gap-2">
-                        <div className="flex h-6 w-6 items-center justify-center rounded-full bg-green-100 dark:bg-green-900">
-                          <svg
-                            viewBox="0 0 24 24"
-                            className="h-4 w-4 text-green-500 dark:text-green-400"
-                            fill="none"
-                            stroke="currentColor"
-                            strokeWidth="2"
-                          >
-                            <path d="M5 13l4 4L19 7" />
-                          </svg>
-                        </div>
-                        <div>
-                          <p className="font-medium">
-                            {selectedQuantity} × {name}
-                          </p>
-                          <p className="text-xs text-gray-500 dark:text-gray-400">Added to cart</p>
-                        </div>
-                      </div>,
-                      {
+                  addItem(shopId, id, selectedQuantity)
+                    .then(() => {
+                      toast.success(
+                        <div className="flex items-center gap-2">
+                          <div className="flex h-6 w-6 items-center justify-center rounded-full bg-green-100 dark:bg-green-900">
+                            <svg
+                              viewBox="0 0 24 24"
+                              className="h-4 w-4 text-green-500 dark:text-green-400"
+                              fill="none"
+                              stroke="currentColor"
+                              strokeWidth="2"
+                            >
+                              <path d="M5 13l4 4L19 7" />
+                            </svg>
+                          </div>
+                          <div>
+                            <p className="font-medium">
+                              {selectedQuantity} × {name}
+                            </p>
+                            <p className="text-xs text-gray-500 dark:text-gray-400">
+                              Added to cart
+                            </p>
+                          </div>
+                        </div>,
+                        {
+                          id: toastId,
+                          duration: 2000,
+                        },
+                      );
+                    })
+                    .catch((err: any) => {
+                      console.error("Add to cart failed:", err);
+                      toast.error(err.message || "Failed to add to cart", {
                         id: toastId,
-                        duration: 2000,
-                      }
-                    );
-
-                    setShowModal(false);
-                  } catch (err: any) {
-                    console.error("Add to cart failed:", err);
-                    toast.error(err.message || "Failed to add to cart", {
-                      id: toastId,
+                      });
                     });
-                  }
                 }}
-                className="rounded bg-green-500 px-4 py-2 text-white hover:bg-green-600 dark:bg-green-600 dark:hover:bg-green-700"
+                className="rounded-lg bg-green-600 px-4 py-3 text-sm font-semibold text-white shadow-sm shadow-green-500/20 transition-colors hover:bg-green-700"
               >
                 Add to Cart
               </button>
