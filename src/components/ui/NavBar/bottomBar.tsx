@@ -394,13 +394,13 @@ export default function BottomBar() {
                   r="4"
                   stroke="currentColor"
                   strokeWidth="1.5"
-                      />
+                />
                 <path
                   d="M19.9975 18C20 17.8358 20 17.669 20 17.5C20 15.0147 16.4183 13 12 13C7.58172 13 4 15.0147 4 17.5C4 19.9853 4 22 12 22C14.231 22 15.8398 21.8433 17 21.5634"
                   stroke="currentColor"
                   strokeWidth="1.5"
                   strokeLinecap="round"
-                      />
+                />
                     </g>
                   </svg>
                 }
@@ -451,35 +451,35 @@ export default function BottomBar() {
                     <g id="SVGRepo_bgCarrier" strokeWidth="0"></g>
                     <g id="SVGRepo_tracerCarrier" strokeLinecap="round" strokeLinejoin="round"></g>
                     <g id="SVGRepo_iconCarrier">
-                      <path
+                <path
                         d="M8 10.5H16"
                         stroke="currentColor"
                         strokeWidth="1.5"
                         strokeLinecap="round"
-                      />
-                      <path
+                />
+                <path
                         d="M8 14H13.5"
-                        stroke="currentColor"
-                        strokeWidth="1.5"
+                  stroke="currentColor"
+                  strokeWidth="1.5"
                         strokeLinecap="round"
-                      />
-                      <path
+                />
+                <path
                         d="M17 3.33782C15.5291 2.48697 13.8214 2 12 2C6.47715 2 2 6.47715 2 12C2 13.5997 2.37562 15.1116 3.04346 16.4525C3.22094 16.8088 3.28001 17.2161 3.17712 17.6006L2.58151 19.8267C2.32295 20.793 3.20701 21.677 4.17335 21.4185L6.39939 20.8229C6.78393 20.72 7.19121 20.7791 7.54753 20.9565C8.88837 21.6244 10.4003 22 12 22C17.5228 22 22 17.5228 22 12C22 10.1786 21.513 8.47087 20.6622 7"
-                        stroke="currentColor"
-                        strokeWidth="1.5"
-                        strokeLinecap="round"
-                      />
-                    </g>
-                  </svg>
-                }
+                  stroke="currentColor"
+                  strokeWidth="1.5"
+                  strokeLinecap="round"
+                />
+              </g>
+            </svg>
+          }
                 label="Messages"
                 href="/Messages"
                 onClick={() => setMoreOpen(false)}
-              />
-              
+        />
+
               <div className="border-t border-gray-200 dark:border-gray-700 my-1"></div>
               
-              <button
+          <button
                 onClick={() => {
                   handleThemeToggle();
                   setMoreOpen(false);
@@ -488,12 +488,12 @@ export default function BottomBar() {
               >
                 <span className="text-lg">
                   {theme === "dark" ? (
-                    <svg
-                      width="20px"
-                      height="20px"
+              <svg
+                width="20px"
+                height="20px"
                       viewBox="0 0 24 24"
                       fill="none"
-                      xmlns="http://www.w3.org/2000/svg"
+                xmlns="http://www.w3.org/2000/svg"
                       className="text-yellow-500"
                     >
                       <path
@@ -559,63 +559,63 @@ export default function BottomBar() {
                         strokeLinecap="round"
                         strokeLinejoin="round"
                       />
-                    </svg>
-                  ) : (
-                    <svg
-                      width="20px"
-                      height="20px"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      xmlns="http://www.w3.org/2000/svg"
+              </svg>
+            ) : (
+              <svg
+                width="20px"
+                height="20px"
+                viewBox="0 0 24 24"
+                fill="none"
+                xmlns="http://www.w3.org/2000/svg"
                       className="text-gray-600 dark:text-gray-300"
                     >
-                      <path
+                  <path
                         d="M21.752 15.002A9.718 9.718 0 0118 15.75c-5.385 0-9.75-4.365-9.75-9.75 0-1.33.266-2.597.748-3.752A9.753 9.753 0 003 11.25C3 16.635 7.365 21 12.75 21a9.753 9.753 0 009.002-5.998z"
-                        stroke="currentColor"
+                    stroke="currentColor"
                         strokeWidth="1.5"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
                       />
-                    </svg>
-                  )}
+              </svg>
+            )}
                 </span>
                 <span>{theme === "dark" ? "Light Mode" : "Dark Mode"}</span>
-              </button>
+          </button>
               
               <MoreMenuItem
-                icon={
-                  <svg
+          icon={
+            <svg
                     width="20px"
                     height="20px"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    xmlns="http://www.w3.org/2000/svg"
+              viewBox="0 0 24 24"
+              fill="none"
+              xmlns="http://www.w3.org/2000/svg"
                     className="text-red-500"
-                  >
-                    <g id="SVGRepo_bgCarrier" strokeWidth="0"></g>
+            >
+              <g id="SVGRepo_bgCarrier" strokeWidth="0"></g>
                     <g id="SVGRepo_tracerCarrier" strokeLinecap="round" strokeLinejoin="round"></g>
-                    <g id="SVGRepo_iconCarrier">
-                      <path
+              <g id="SVGRepo_iconCarrier">
+                <path
                         d="M9 21H5C4.46957 21 3.96086 20.7893 3.58579 20.4142C3.21071 20.0391 3 19.5304 3 19V5C3 4.46957 3.21071 3.96086 3.58579 3.58579C3.96086 3.21071 4.46957 3 5 3H9"
-                        stroke="currentColor"
-                        strokeWidth="1.5"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                      />
-                      <path
+                  stroke="currentColor"
+                  strokeWidth="1.5"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+                <path
                         d="M16 17L21 12L16 7"
-                        stroke="currentColor"
-                        strokeWidth="1.5"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                      />
-                      <path
+                  stroke="currentColor"
+                  strokeWidth="1.5"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+                <path
                         d="M21 12H9"
-                        stroke="currentColor"
-                        strokeWidth="1.5"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                      />
+                  stroke="currentColor"
+                  strokeWidth="1.5"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
               </g>
             </svg>
           }
