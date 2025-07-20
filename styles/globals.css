@@ -167,6 +167,29 @@
   background-color: rgba(192, 132, 252, 0.1) !important;
 }
 
+/* Force green styling for light mode RSuite buttons */
+.rs-btn-primary {
+  background-color: #10b981 !important; /* green-500 */
+  color: #ffffff !important;
+  border-color: #10b981 !important;
+}
+
+.rs-btn-primary:hover {
+  background-color: #059669 !important; /* green-600 */
+  border-color: #059669 !important;
+}
+
+.rs-btn-subtle {
+  background-color: #dcfce7 !important; /* green-100 */
+  color: #15803d !important; /* green-700 */
+  border-color: #dcfce7 !important;
+}
+
+.rs-btn-subtle:hover {
+  background-color: #bbf7d0 !important; /* green-200 */
+  color: #15803d !important; /* green-700 */
+}
+
 /* RSuite Input Styles */
 .rs-input,
 .rs-input-group,
