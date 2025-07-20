@@ -24,6 +24,13 @@ const GET_ALL_REELS = gql`
       delivery_time
       Price
       Product
+      shop_id
+      Shops {
+        name
+        id
+        image
+        description
+      }
       User {
         email
         gender
@@ -94,6 +101,13 @@ const GET_REELS_BY_USER = gql`
       delivery_time
       Price
       Product
+      shop_id
+      Shops {
+        name
+        id
+        image
+        description
+      }
       User {
         email
         gender
@@ -164,6 +178,13 @@ const GET_REELS_BY_RESTAURANT = gql`
       delivery_time
       Price
       Product
+      shop_id
+      Shops {
+        name
+        id
+        image
+        description
+      }
       User {
         email
         gender
@@ -247,19 +268,6 @@ const CREATE_REEL = gql`
       affected_rows
       returning {
         id
-        category
-        created_on
-        description
-        isLiked
-        likes
-        restaurant_id
-        title
-        type
-        user_id
-        video_url
-        delivery_time
-        Price
-        Product
       }
     }
   }
@@ -273,8 +281,6 @@ const UPDATE_REEL_LIKE = gql`
       _set: { isLiked: $isLiked, likes: $likes }
     ) {
       id
-      isLiked
-      likes
     }
   }
 `;
@@ -294,16 +300,6 @@ const ADD_REEL_COMMENT = gql`
       affected_rows
       returning {
         id
-        text
-        created_on
-        user_id
-        reel_id
-        likes
-        isLiked
-        User {
-          name
-          profile_picture
-        }
       }
     }
   }
@@ -317,87 +313,102 @@ const UPDATE_COMMENT_LIKE = gql`
       _set: { isLiked: $isLiked, likes: $likes }
     ) {
       id
-      isLiked
-      likes
     }
   }
 `;
 
-interface ReelsResponse {
-  Reels: Array<{
+interface Reel {
+  id: string;
+  category: string;
+  created_on: string;
+  description: string;
+  isLiked: boolean;
+  likes: string;
+  restaurant_id: string | null;
+  title: string;
+  type: string;
+  user_id: string;
+  video_url: string;
+  delivery_time: string | null;
+  Price: string | null;
+  Product: any;
+  shop_id?: string;
+  Shops?: {
+    name: string;
     id: string;
-    category: string;
-    created_on: string;
+    image: string;
     description: string;
-    isLiked: boolean;
-    likes: string;
-    restaurant_id: string | null;
-    title: string;
-    type: string;
+  } | null;
+  User: {
+    email: string;
+    gender: string;
+    id: string;
+    is_active: boolean;
+    name: string;
+    created_at: string;
+    role: string;
+    phone: string;
+    profile_picture: string;
+  };
+  Restaurant: {
+    created_at: string;
+    email: string;
+    id: string;
+    lat: number;
+    location: string;
+    long: number;
+    name: string;
+    phone: string;
+    profile: string;
+    verified: boolean;
+  } | null;
+  Reels_comments: Array<{
     user_id: string;
-    video_url: string;
-    delivery_time: string | null;
-    Price: string | null;
-    Product: any;
+    text: string;
+    reel_id: string;
+    likes: string;
+    isLiked: boolean;
+    id: string;
+    created_on: string;
     User: {
-      email: string;
       gender: string;
-      id: string;
-      is_active: boolean;
-      name: string;
-      created_at: string;
-      role: string;
-      phone: string;
-      profile_picture: string;
-    };
-    Restaurant: {
-      created_at: string;
       email: string;
-      id: string;
-      lat: number;
-      location: string;
-      long: number;
       name: string;
       phone: string;
-      profile: string;
-      verified: boolean;
-    } | null;
-    Reels_comments: Array<{
-      user_id: string;
-      text: string;
-      reel_id: string;
-      likes: string;
-      isLiked: boolean;
-      id: string;
-      created_on: string;
-      User: {
-        gender: string;
-        email: string;
-        name: string;
-        phone: string;
-        role: string;
-      };
-    }>;
-    reel_likes: Array<{
-      created_at: string;
-      id: string;
-      reel_id: string;
-      user_id: string;
-    }>;
+      role: string;
+    };
   }>;
+  reel_likes: Array<{
+    created_at: string;
+    id: string;
+    reel_id: string;
+    user_id: string;
+  }>;
+}
+interface ReelsResponse {
+  Reels: Reel[];
+}
+interface CreateReelResponse {
+    insert_Reels: { returning: { id: string }[] };
+}
+interface AddReelCommentResponse {
+    insert_Reels_comments: { returning: { id: string }[] };
+}
+interface CommentDataResponse {
+    Reels_comments: { id: string; isLiked: boolean; likes: string }[];
 }
 
 export default async function handler(
   req: NextApiRequest,
   res: NextApiResponse
 ) {
+  if (!hasuraClient) {
+    logger.error("Hasura client is not initialized", "ReelsAPI");
+    return res.status(500).json({ error: "Hasura client is not initialized" });
+  }
+
   try {
-    if (!hasuraClient) {
-      throw new Error("Hasura client is not initialized");
-    }
-
     const { method } = req;
-
     switch (method) {
       case "GET":
         await handleGetReels(req, res);
@@ -419,18 +430,19 @@ export default async function handler(
 }
 
 async function handleGetReels(req: NextApiRequest, res: NextApiResponse) {
+  if (!hasuraClient) {
+    return res.status(500).json({ error: "Hasura client not initialized" });
+  }
   const { user_id, restaurant_id, type } = req.query;
 
   try {
     let data: ReelsResponse;
 
     if (user_id) {
-      // Get reels by specific user
       data = await hasuraClient.request<ReelsResponse>(GET_REELS_BY_USER, {
         user_id: user_id as string,
       });
     } else if (restaurant_id) {
-      // Get reels by specific restaurant
       data = await hasuraClient.request<ReelsResponse>(
         GET_REELS_BY_RESTAURANT,
         {
@@ -438,11 +450,9 @@ async function handleGetReels(req: NextApiRequest, res: NextApiResponse) {
         }
       );
     } else {
-      // Get all reels
       data = await hasuraClient.request<ReelsResponse>(GET_ALL_REELS);
     }
 
-    // Filter by type if specified
     let reels = data.Reels;
     if (type) {
       reels = reels.filter((reel) => reel.type === type);
@@ -457,8 +467,10 @@ async function handleGetReels(req: NextApiRequest, res: NextApiResponse) {
 }
 
 async function handleCreateReel(req: NextApiRequest, res: NextApiResponse) {
+  if (!hasuraClient) {
+    return res.status(500).json({ error: "Hasura client not initialized" });
+  }
   try {
-    // Get the user ID from the session
     const session = (await getServerSession(
       req,
       res,
@@ -492,7 +504,7 @@ async function handleCreateReel(req: NextApiRequest, res: NextApiResponse) {
       });
     }
 
-    const result = await hasuraClient.request(CREATE_REEL, {
+    const result = await hasuraClient.request<CreateReelResponse>(CREATE_REEL, {
       category: category || "",
       description: description || "",
       likes: "0",
@@ -506,12 +518,13 @@ async function handleCreateReel(req: NextApiRequest, res: NextApiResponse) {
       user_id: userId,
     });
 
+    const newReel = result.insert_Reels.returning[0];
     logger.info("Created new reel", "ReelsAPI", {
-      reelId: result.insert_Reels.returning[0]?.id,
+      reelId: newReel?.id,
     });
     res.status(201).json({
       success: true,
-      reel: result.insert_Reels.returning[0],
+      reel: newReel,
     });
   } catch (error) {
     logger.error("Error creating reel", "ReelsAPI", error);
@@ -551,6 +564,9 @@ async function handleToggleLike(
   res: NextApiResponse,
   reelId: string
 ) {
+  if (!hasuraClient) {
+    return res.status(500).json({ error: "Hasura client not initialized" });
+  }
   try {
     const session = (await getServerSession(
       req,
@@ -561,8 +577,7 @@ async function handleToggleLike(
       return res.status(401).json({ error: "Unauthorized" });
     }
 
-    // Get current reel data
-    const reelData = await hasuraClient.request<ReelsResponse>(
+    const reelData = await hasuraClient.request<{ Reels: { id: string, isLiked: boolean, likes: string }[] }>(
       gql`
         query GetReel($id: uuid!) {
           Reels(where: { id: { _eq: $id } }) {
@@ -586,7 +601,7 @@ async function handleToggleLike(
       ? (currentLikes + 1).toString()
       : (currentLikes - 1).toString();
 
-    const result = await hasuraClient.request(UPDATE_REEL_LIKE, {
+    await hasuraClient.request(UPDATE_REEL_LIKE, {
       id: reelId,
       isLiked: newIsLiked,
       likes: newLikes,
@@ -609,6 +624,9 @@ async function handleAddComment(
   reelId: string,
   commentText: string
 ) {
+  if (!hasuraClient) {
+    return res.status(500).json({ error: "Hasura client not initialized" });
+  }
   try {
     const session = (await getServerSession(
       req,
@@ -625,7 +643,7 @@ async function handleAddComment(
       return res.status(400).json({ error: "Comment text is required" });
     }
 
-    const result = await hasuraClient.request(ADD_REEL_COMMENT, {
+    const result = await hasuraClient.request<AddReelCommentResponse>(ADD_REEL_COMMENT, {
       reel_id: reelId,
       user_id: userId,
       text: commentText.trim(),
@@ -646,6 +664,9 @@ async function handleToggleCommentLike(
   res: NextApiResponse,
   commentId: string
 ) {
+  if (!hasuraClient) {
+    return res.status(500).json({ error: "Hasura client not initialized" });
+  }
   try {
     const session = (await getServerSession(
       req,
@@ -656,8 +677,7 @@ async function handleToggleCommentLike(
       return res.status(401).json({ error: "Unauthorized" });
     }
 
-    // Get current comment data
-    const commentData = await hasuraClient.request(
+    const commentData = await hasuraClient.request<CommentDataResponse>(
       gql`
         query GetComment($id: uuid!) {
           Reels_comments(where: { id: { _eq: $id } }) {
@@ -681,7 +701,7 @@ async function handleToggleCommentLike(
       ? (currentLikes + 1).toString()
       : (currentLikes - 1).toString();
 
-    const result = await hasuraClient.request(UPDATE_COMMENT_LIKE, {
+    await hasuraClient.request(UPDATE_COMMENT_LIKE, {
       id: commentId,
       isLiked: newIsLiked,
       likes: newLikes,

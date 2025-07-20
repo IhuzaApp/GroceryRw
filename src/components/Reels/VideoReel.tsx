@@ -722,7 +722,7 @@ export default function VideoReel({
   return (
     <>
       <div
-        className={`relative h-screen w-full overflow-hidden ${
+        className={`relative h-[80vh] w-full overflow-hidden ${
           theme === "dark" ? "bg-gray-900" : "bg-black"
         }`}
         style={{ scrollSnapAlign: "start" }}

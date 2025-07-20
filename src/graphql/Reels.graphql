@@ -59,8 +59,26 @@ query GetAllReels {
       reel_id
       user_id
     }
+    shop_id
+    Shops {
+      address
+      category_id
+      created_at
+      description
+      id
+      image
+      is_active
+      latitude
+      logo
+      longitude
+      name
+      operating_hours
+      phone
+      updated_at
+    }
   }
 }
+
 
 mutation AddReels(
   $category: String = ""
