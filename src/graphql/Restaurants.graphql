@@ -1,0 +1,14 @@
+query getRestaurants {
+  Restaurants {
+    verified
+    profile
+    phone
+    name
+    long
+    location
+    lat
+    id
+    email
+    created_at
+  }
+}
