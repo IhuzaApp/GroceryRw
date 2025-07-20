@@ -8,8 +8,7 @@
     "lint": "next lint",
     "codegen": "graphql-codegen --config codegen.yml -r dotenv/config",
     "telegram:setup": "node scripts/setup-telegram-webhook.js",
-    "dev:full": "node scripts/dev-with-telegram.js",
-    "setup-voice": "npm install @stt/coqui-stt-node && npm install -g kokoro-tts"
+    "dev:full": "node scripts/dev-with-telegram.js"
   },
   "dependencies": {
     "@apollo/client": "^3.13.8",
