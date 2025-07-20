@@ -24,6 +24,9 @@ export default function HeaderLayout() {
     street: string;
     city: string;
     postal_code: string;
+    latitude?: string;
+    longitude?: string;
+    altitude?: string;
   } | null>(null);
   const [showAddressModal, setShowAddressModal] = useState<boolean>(false);
   const [unreadMessages, setUnreadMessages] = useState<number>(0);
@@ -33,7 +36,17 @@ export default function HeaderLayout() {
     const saved = Cookies.get("delivery_address");
     if (saved) {
       try {
-        setDefaultAddress(JSON.parse(saved));
+        const parsedAddress = JSON.parse(saved);
+        // If it's a nearby location (has lat/lng but no street), show "Current Location"
+        if (parsedAddress.latitude && parsedAddress.longitude && !parsedAddress.street) {
+          setDefaultAddress({
+            ...parsedAddress,
+            street: "Current Location",
+            city: "GPS Coordinates"
+          });
+        } else {
+          setDefaultAddress(parsedAddress);
+        }
       } catch {}
     } else {
       // Fall back to default address from API
@@ -56,8 +69,29 @@ export default function HeaderLayout() {
       const updated = Cookies.get("delivery_address");
       if (updated) {
         try {
-          setDefaultAddress(JSON.parse(updated));
+          const parsedAddress = JSON.parse(updated);
+          // If it's a nearby location (has lat/lng but no street), show "Current Location"
+          if (parsedAddress.latitude && parsedAddress.longitude && !parsedAddress.street) {
+            setDefaultAddress({
+              ...parsedAddress,
+              street: "Current Location",
+              city: "GPS Coordinates"
+            });
+          } else {
+            setDefaultAddress(parsedAddress);
+          }
         } catch {}
+      } else {
+        // If no cookie, try to fetch default address from API
+        fetch("/api/queries/addresses")
+          .then((res) => res.json())
+          .then((data) => {
+            const def = (data.addresses || []).find((a: any) => a.is_default);
+            setDefaultAddress(def || null);
+          })
+          .catch((err) =>
+            console.error("Error fetching addresses in header:", err)
+          );
       }
     };
     window.addEventListener("addressChanged", handleAddrChange);
@@ -115,7 +149,11 @@ export default function HeaderLayout() {
             <div>
               <h6 className="font-medium text-inherit">
                 {defaultAddress
-                  ? `${defaultAddress.street}, ${defaultAddress.city}`
+                  ? defaultAddress.street && defaultAddress.city
+                    ? `${defaultAddress.street}, ${defaultAddress.city}`
+                    : defaultAddress.latitude && defaultAddress.longitude
+                    ? "Current Location"
+                    : "No address set"
                   : "No address set"}
               </h6>
               <p className="text-xs text-gray-500 dark:text-gray-300">
