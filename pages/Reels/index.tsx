@@ -325,6 +325,10 @@ interface DatabaseReel {
   delivery_time: string | null;
   Price: string | null;
   Product: any;
+  Shops: {
+    name: string;
+    // add other shop fields if needed
+  } | null;
   User: {
     email: string;
     gender: string;
@@ -483,7 +487,7 @@ export default function FoodReelsApp() {
           product: {
             price: parseFloat(dbReel.Price || "0"),
             originalPrice: product.originalPrice || undefined,
-            store: dbReel.Restaurant?.name || "Store not available",
+            store: dbReel.Shops?.name || "Store not available",
             inStock: product.inStock !== false,
             discount: product.discount || undefined,
           },

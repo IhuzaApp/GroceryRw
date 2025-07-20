@@ -88,11 +88,11 @@ export default function ItemsSection({
       <div className="p-4">
         <div className="flex flex-col items-baseline justify-between gap-4 md:flex-row">
           <h2 className="text-xl font-bold">
-            {activeCategory && activeCategory !== "all"
-              ? String(activeCategory).charAt(0).toUpperCase() +
-                String(activeCategory).slice(1)
-              : "All Products"}
-          </h2>
+          {activeCategory && activeCategory !== "all"
+            ? String(activeCategory).charAt(0).toUpperCase() +
+              String(activeCategory).slice(1)
+            : "All Products"}
+        </h2>
           <div className="w-full md:w-72">
             <InputGroup inside>
               <Input
@@ -482,38 +482,38 @@ function ProductCard({
                   const toastId = toast.loading("Adding to cart...");
                   addItem(shopId, id, selectedQuantity)
                     .then(() => {
-                      toast.success(
-                        <div className="flex items-center gap-2">
+                    toast.success(
+                      <div className="flex items-center gap-2">
                           <div className="flex h-6 w-6 items-center justify-center rounded-full bg-green-100 dark:bg-green-900">
-                            <svg
-                              viewBox="0 0 24 24"
+                          <svg
+                            viewBox="0 0 24 24"
                               className="h-4 w-4 text-green-500 dark:text-green-400"
-                              fill="none"
-                              stroke="currentColor"
-                              strokeWidth="2"
-                            >
-                              <path d="M5 13l4 4L19 7" />
-                            </svg>
-                          </div>
-                          <div>
-                            <p className="font-medium">
-                              {selectedQuantity} × {name}
-                            </p>
+                            fill="none"
+                            stroke="currentColor"
+                            strokeWidth="2"
+                          >
+                            <path d="M5 13l4 4L19 7" />
+                          </svg>
+                        </div>
+                        <div>
+                          <p className="font-medium">
+                            {selectedQuantity} × {name}
+                          </p>
                             <p className="text-xs text-gray-500 dark:text-gray-400">
                               Added to cart
                             </p>
-                          </div>
-                        </div>,
-                        {
-                          id: toastId,
-                          duration: 2000,
-                        }
-                      );
+                        </div>
+                      </div>,
+                      {
+                        id: toastId,
+                        duration: 2000,
+                      }
+                    );
                     })
                     .catch((err: any) => {
-                      console.error("Add to cart failed:", err);
-                      toast.error(err.message || "Failed to add to cart", {
-                        id: toastId,
+                    console.error("Add to cart failed:", err);
+                    toast.error(err.message || "Failed to add to cart", {
+                      id: toastId,
                       });
                     });
                 }}
