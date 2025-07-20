@@ -5,6 +5,9 @@ import Link from "next/link";
 import Cookies from "js-cookie";
 import { Data } from "../../../types";
 import ShopCard from "./ShopCard";
+import SortDropdown from "./SortDropdown";
+import { Button, Dropdown } from "rsuite";
+import "rsuite/dist/rsuite.min.css";
 
 // Helper Components
 const CategoryIcon = ({ category }: { category: string }) => {
@@ -154,6 +157,9 @@ export default function UserDashboard({ initialData }: { initialData: Data }) {
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [sortBy, setSortBy] = useState<string>("name");
+  const [isNearbyActive, setIsNearbyActive] = useState(false);
+  const [userLocation, setUserLocation] = useState<{lat: number, lng: number} | null>(null);
   const [shopDynamics, setShopDynamics] = useState<
     Record<
       string,
@@ -167,6 +173,54 @@ export default function UserDashboard({ initialData }: { initialData: Data }) {
       setDataLoaded(true);
     }
   }, [data, authReady]);
+
+  const handleNearbyClick = async () => {
+    if (isNearbyActive) {
+      // Deactivate nearby filter
+      setIsNearbyActive(false);
+      setUserLocation(null);
+      // Clear the delivery address cookie to reset to default location
+      Cookies.remove("delivery_address");
+      return;
+    }
+
+    setIsLoading(true);
+    setError(null);
+
+    try {
+      // Get user's current location
+      const position = await new Promise<GeolocationPosition>((resolve, reject) => {
+        navigator.geolocation.getCurrentPosition(resolve, reject, {
+          enableHighAccuracy: true,
+          timeout: 10000,
+          maximumAge: 60000 // 1 minute cache
+        });
+      });
+
+      const { latitude, longitude } = position.coords;
+      setUserLocation({ lat: latitude, lng: longitude });
+      setIsNearbyActive(true);
+
+      // Store location in cookie for delivery calculations
+      const locationData = {
+        latitude: latitude.toString(),
+        longitude: longitude.toString(),
+        altitude: "0"
+      };
+      Cookies.set("delivery_address", JSON.stringify(locationData));
+
+      // Trigger recomputation of shop dynamics
+      setTimeout(() => {
+        window.dispatchEvent(new CustomEvent("addressChanged"));
+      }, 100);
+
+    } catch (err) {
+      console.error("Error getting location:", err);
+      setError("Unable to get your location. Please check location permissions.");
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   const filteredShops = useMemo(() => {
     if (!authReady || role === "shopper") return [];
@@ -200,8 +254,117 @@ export default function UserDashboard({ initialData }: { initialData: Data }) {
     }
 
     // When no category is selected, show both shops and restaurants
-    return [...shops, ...restaurantsAsShops];
-  }, [authReady, role, selectedCategory, data.shops, data.restaurants, data.categories]);
+    let allShops = [...shops, ...restaurantsAsShops];
+
+    // Filter by distance if nearby mode is active
+    if (isNearbyActive && userLocation) {
+      allShops = allShops.filter((shop) => {
+        if (!shop.latitude || !shop.longitude) return false;
+        
+        const shopLat = parseFloat(shop.latitude);
+        const shopLng = parseFloat(shop.longitude);
+        const distance = getDistanceFromLatLonInKm(
+          userLocation.lat,
+          userLocation.lng,
+          shopLat,
+          shopLng
+        );
+        
+        // Only show shops within 3 kilometers
+        return distance <= 3;
+      });
+    }
+
+    // Sort the shops based on selected criteria
+    allShops.sort((a, b) => {
+      switch (sortBy) {
+        case "name":
+          return a.name.localeCompare(b.name);
+        case "distance":
+          const aDistance = parseFloat(shopDynamics[a.id]?.distance?.replace(" km", "") || "999");
+          const bDistance = parseFloat(shopDynamics[b.id]?.distance?.replace(" km", "") || "999");
+          return aDistance - bDistance;
+        case "rating":
+          // Mock rating for now - you can add real rating data later
+          const aRating = 4.5; // Mock rating
+          const bRating = 4.3; // Mock rating
+          return bRating - aRating; // Higher rating first
+        case "reviews":
+          // Mock reviews count for now
+          const aReviews = 1245; // Mock reviews
+          const bReviews = 890; // Mock reviews
+          return bReviews - aReviews; // More reviews first
+        case "delivery_time":
+          const aTime = shopDynamics[a.id]?.time || "N/A";
+          const bTime = shopDynamics[b.id]?.time || "N/A";
+          // Extract minutes from time string (e.g., "45 mins" -> 45)
+          const aMinutes = parseInt(aTime.match(/(\d+)/)?.[1] || "999");
+          const bMinutes = parseInt(bTime.match(/(\d+)/)?.[1] || "999");
+          return aMinutes - bMinutes; // Lower time first
+        default:
+          return 0;
+      }
+    });
+
+    return allShops;
+  }, [authReady, role, selectedCategory, data.shops, data.restaurants, data.categories, sortBy, shopDynamics, isNearbyActive, userLocation]);
+
+  // Separate useMemo for shops without dynamics to avoid circular dependency
+  const shopsWithoutDynamics = useMemo(() => {
+    if (!authReady || role === "shopper") return [];
+
+    let shops = data.shops || [];
+    let restaurants = data.restaurants || [];
+
+    // Convert restaurants to shop format for consistent rendering
+    const restaurantsAsShops = restaurants.map(restaurant => ({
+      ...restaurant,
+      id: restaurant.id,
+      name: restaurant.name,
+      description: restaurant.location || "Restaurant",
+      image: restaurant.profile,
+      category_id: 'restaurant-category',
+      latitude: restaurant.lat,
+      longitude: restaurant.long,
+      operating_hours: null,
+      is_restaurant: true
+    }));
+
+    if (selectedCategory) {
+      // If "Restaurant" category is selected, show only restaurants
+      if (selectedCategory === 'restaurant-category') {
+        return restaurantsAsShops;
+      } else {
+        // Filter shops by category
+        shops = shops.filter((shop) => shop.category_id === selectedCategory);
+        return shops;
+      }
+    }
+
+    // When no category is selected, show both shops and restaurants
+    let allShops = [...shops, ...restaurantsAsShops];
+
+    // Filter by distance if nearby mode is active
+    if (isNearbyActive && userLocation) {
+      allShops = allShops.filter((shop) => {
+        if (!shop.latitude || !shop.longitude) return false;
+        
+        const shopLat = parseFloat(shop.latitude);
+        const shopLng = parseFloat(shop.longitude);
+        const distance = getDistanceFromLatLonInKm(
+          userLocation.lat,
+          userLocation.lng,
+          shopLat,
+          shopLng
+        );
+        
+        // Only show shops within 3 kilometers
+        return distance <= 3;
+      });
+    }
+
+    return allShops;
+  }, [authReady, role, selectedCategory, data.shops, data.restaurants, data.categories, isNearbyActive, userLocation]);
 
   useEffect(() => {
     if (!authReady || role === "shopper") return;
@@ -222,7 +385,7 @@ export default function UserDashboard({ initialData }: { initialData: Data }) {
           { distance: string; time: string; fee: string; open: boolean }
         > = {};
 
-        filteredShops.forEach((shop) => {
+        shopsWithoutDynamics.forEach((shop) => {
           if (shop.latitude && shop.longitude) {
             const shopLat = parseFloat(shop.latitude);
             const shopLng = parseFloat(shop.longitude);
@@ -297,7 +460,7 @@ export default function UserDashboard({ initialData }: { initialData: Data }) {
     computeDynamics();
     window.addEventListener("addressChanged", computeDynamics);
     return () => window.removeEventListener("addressChanged", computeDynamics);
-  }, [filteredShops, authReady, role]);
+  }, [shopsWithoutDynamics, authReady, role]);
 
   const handleCategoryClick = (categoryId: string) => {
     setIsLoading(true);
@@ -327,6 +490,22 @@ export default function UserDashboard({ initialData }: { initialData: Data }) {
         setIsLoading(false);
       }
     }, 300);
+  };
+
+  const handleSortChange = (value: string) => {
+    setSortBy(value);
+  };
+
+  // Helper function to display sort option names
+  const getSortDisplayName = (key: string) => {
+    switch (key) {
+      case "name": return "Name";
+      case "distance": return "Distance";
+      case "rating": return "Rating";
+      case "reviews": return "Reviews";
+      case "delivery_time": return "Delivery Time";
+      default: return key;
+    }
   };
 
   if (!authReady || !dataLoaded) {
@@ -437,17 +616,20 @@ export default function UserDashboard({ initialData }: { initialData: Data }) {
         {/* Shops */}
         <div className="mt-4 md:mt-8">
           <div className="mb-4 flex items-center justify-between">
-            <h2 className="text-3xl font-bold text-gray-900 dark:text-white">
+            <h4 className="text-3xl font-bold text-gray-900 dark:text-white">
               {selectedCategory
                 ? data.categories?.find((c) => c.id === selectedCategory)?.name
-                : "All Shops"}
-            </h2>
-            <Link
-              href="#"
-              className="text-gray-500 transition-colors duration-200 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300"
-            >
-              View All
-            </Link>
+                : "All Mart"}
+            </h4>
+            <div className="flex items-center gap-2">
+              {/* Sort Dropdown */}
+              <SortDropdown 
+                sortBy={sortBy} 
+                onSortChange={handleSortChange}
+                onNearbyClick={handleNearbyClick}
+                isNearbyActive={isNearbyActive}
+              />
+            </div>
           </div>
 
           {isLoading ? (
