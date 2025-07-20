@@ -123,8 +123,13 @@ export default async function handler(
 
     // If shop data is missing or incomplete, fetch it separately
     let shopData = order.shop;
-    
-    if (!shopData || !shopData.phone || !shopData.latitude || !shopData.longitude) {
+
+    if (
+      !shopData ||
+      !shopData.phone ||
+      !shopData.latitude ||
+      !shopData.longitude
+    ) {
       if (order.shop_id) {
         try {
           const shopQuery = gql`
@@ -141,9 +146,12 @@ export default async function handler(
               }
             }
           `;
-          
-          const shopResponse = await hasuraClient.request<{ Shops_by_pk: any }>(shopQuery, { id: order.shop_id });
-          
+
+          const shopResponse = await hasuraClient.request<{ Shops_by_pk: any }>(
+            shopQuery,
+            { id: order.shop_id }
+          );
+
           if (shopResponse.Shops_by_pk) {
             shopData = shopResponse.Shops_by_pk;
           }

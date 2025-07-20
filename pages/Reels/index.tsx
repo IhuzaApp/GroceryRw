@@ -1187,7 +1187,9 @@ export default function FoodReelsApp() {
       <div className="flex h-fit items-center justify-center">
         <div
           className={`container mx-auto h-full max-w-md transition-colors duration-200 md:h-[95vh] md:rounded-2xl md:shadow-2xl ${
-            theme === "dark" ? "bg-gray-900 text-white" : "bg-white text-gray-900"
+            theme === "dark"
+              ? "bg-gray-900 text-white"
+              : "bg-white text-gray-900"
           }`}
         >
           <div

@@ -17,7 +17,9 @@ export default function ShopsList({
           {shops.map((shop) => (
             <li key={shop.id}>
               <Link href={`/shops/${shop.id}`}>
-                <a className="text-blue-600 hover:underline dark:text-blue-400">{shop.name}</a>
+                <a className="text-blue-600 hover:underline dark:text-blue-400">
+                  {shop.name}
+                </a>
               </Link>
             </li>
           ))}

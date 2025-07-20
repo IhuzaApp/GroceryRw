@@ -221,7 +221,7 @@ const FreshMarkPage: React.FC<FreshMarkPageProps> = ({ shop, products }) => {
           </div>
 
           {/* Shop Description */}
-          <div className="border-b bg-white px-4 py-3 dark:bg-gray-800 dark:border-gray-700">
+          <div className="border-b bg-white px-4 py-3 dark:border-gray-700 dark:bg-gray-800">
             <p className="text-sm text-gray-600 dark:text-gray-300">
               {shopData?.description}
             </p>
