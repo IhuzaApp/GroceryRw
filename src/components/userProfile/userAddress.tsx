@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import { Button, Panel, Tag, Modal, Form, Checkbox } from "rsuite";
 import { useGoogleMap } from "../../context/GoogleMapProvider";
+import Cookies from "js-cookie";
 
 // Skeleton loader for address cards
 function AddressSkeleton() {
@@ -163,6 +164,44 @@ export default function UserAddress({ onSelect }: UserAddressProps) {
     }
   };
 
+  // Set address as default
+  const handleSetDefault = async (addressId: string) => {
+    setSaving(true);
+    try {
+      const res = await fetch("/api/queries/addresses", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          id: addressId,
+          is_default: true,
+        }),
+      });
+      if (!res.ok) throw new Error(`Failed to set default (${res.status})`);
+      await res.json();
+      fetchAddresses();
+      
+      // Update the delivery address cookie with the new default address
+      const updatedAddresses = await fetch("/api/queries/addresses").then(res => res.json());
+      const newDefaultAddress = (updatedAddresses.addresses || []).find((a: any) => a.is_default);
+      if (newDefaultAddress) {
+        const locationData = {
+          latitude: newDefaultAddress.latitude || "0",
+          longitude: newDefaultAddress.longitude || "0",
+          altitude: "0",
+          street: newDefaultAddress.street,
+          city: newDefaultAddress.city,
+          postal_code: newDefaultAddress.postal_code
+        };
+        Cookies.set("delivery_address", JSON.stringify(locationData));
+        window.dispatchEvent(new Event("addressChanged"));
+      }
+    } catch (err: any) {
+      alert(err.message || "Failed to set address as default");
+    } finally {
+      setSaving(false);
+    }
+  };
+
   return (
     <>
       <div className="mb-4 flex items-center justify-between">
@@ -197,15 +236,13 @@ export default function UserAddress({ onSelect }: UserAddressProps) {
                 {addr.city}, {addr.postal_code}
               </p>
               <div className="mt-4 flex gap-2">
-                <button className="rounded border border-purple-500 px-3 py-1 text-sm text-purple-500 hover:bg-purple-100">
-                  Edit
-                </button>
-                <button className="rounded border border-red-500 px-3 py-1 text-sm text-red-500 hover:bg-red-100">
-                  Delete
-                </button>
                 {!addr.is_default && (
-                  <button className="rounded border border-green-700 px-3 py-1 text-sm text-green-700 hover:bg-green-100">
-                    Set as Default
+                  <button 
+                    className="rounded border border-green-700 px-3 py-1 text-sm text-green-700 hover:bg-green-100 disabled:opacity-50 disabled:cursor-not-allowed"
+                    onClick={() => handleSetDefault(addr.id)}
+                    disabled={saving}
+                  >
+                    {saving ? "Setting..." : "Set as Default"}
                   </button>
                 )}
                 {onSelect && (
