@@ -84,42 +84,42 @@ export default function ItemsSection({
           <div className="flex flex-col gap-4 md:flex-row md:items-baseline md:justify-between">
             <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4">
               <h2 className="text-lg sm:text-xl font-bold transition-all duration-300">
-                {activeCategory && activeCategory !== "all"
-                  ? String(activeCategory).charAt(0).toUpperCase() +
-                    String(activeCategory).slice(1)
-                  : "All Products"}
-              </h2>
+          {activeCategory && activeCategory !== "all"
+            ? String(activeCategory).charAt(0).toUpperCase() +
+              String(activeCategory).slice(1)
+            : "All Products"}
+        </h2>
               <span className="text-xs sm:text-sm text-gray-500 dark:text-gray-400 transition-all duration-300">
                 Showing {paginatedProducts.length} of {searchedProducts.length} products
               </span>
             </div>
-            <div className="w-full md:w-72">
-              <InputGroup inside>
-                <Input
-                  placeholder="Search products..."
-                  value={searchQuery}
-                  onChange={handleSearchChange}
+          <div className="w-full md:w-72">
+            <InputGroup inside>
+              <Input
+                placeholder="Search products..."
+                value={searchQuery}
+                onChange={handleSearchChange}
                   className="text-sm sm:text-base"
-                />
-                <InputGroup.Addon>
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
+              />
+              <InputGroup.Addon>
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
                     className="h-4 w-4 sm:h-5 sm:w-5"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
-                    />
-                  </svg>
-                </InputGroup.Addon>
-              </InputGroup>
-            </div>
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+                  />
+                </svg>
+              </InputGroup.Addon>
+            </InputGroup>
           </div>
+        </div>
         </div>
         <div className="overflow-x-auto px-2 sm:px-4">
           <Nav

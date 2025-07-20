@@ -3,7 +3,7 @@ import Image from "next/image";
 
 export default function MainBanners() {
   return (
-    <div className="p-4 md:ml-16">
+    <div className="p-2 md:p-4 md:ml-16">
       <div className="container mx-auto">
         <div className="relative z-10 flex hidden gap-4 overflow-x-auto pb-2 lg:flex">
           <div className="relative h-[220px] min-w-[300px] flex-1 overflow-hidden rounded-xl bg-green-800 dark:bg-green-900">

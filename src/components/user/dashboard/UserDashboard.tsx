@@ -4,6 +4,7 @@ import Image from "next/image";
 import Link from "next/link";
 import Cookies from "js-cookie";
 import { Data } from "../../../types";
+import ShopCard from "./ShopCard";
 
 // Helper Components
 const CategoryIcon = ({ category }: { category: string }) => {
@@ -15,6 +16,7 @@ const CategoryIcon = ({ category }: { category: string }) => {
     Delicatessen: "🥪",
     "Organic Shops": "🌿",
     "Specialty Foods": "🍱",
+    "Restaurant": "🍽️",
   };
 
   return (
@@ -105,6 +107,11 @@ const MobileCategoryDropdown = ({
 function getShopImageUrl(imageUrl: string | undefined): string {
   if (!imageUrl) return "/images/shop-placeholder.jpg";
 
+  // Handle relative paths (like "profile.png")
+  if (imageUrl && !imageUrl.startsWith('/') && !imageUrl.startsWith('http')) {
+    return "/images/shop-placeholder.jpg";
+  }
+
   const validExtensions = [".jpg", ".jpeg", ".png", ".webp", ".gif"];
   const hasValidExtension = validExtensions.some((ext) =>
     imageUrl.toLowerCase().endsWith(ext)
@@ -164,11 +171,37 @@ export default function UserDashboard({ initialData }: { initialData: Data }) {
   const filteredShops = useMemo(() => {
     if (!authReady || role === "shopper") return [];
 
-    return selectedCategory
-      ? data.shops?.filter((shop) => shop.category_id === selectedCategory) ||
-          []
-      : data.shops || [];
-  }, [authReady, role, selectedCategory, data.shops]);
+    let shops = data.shops || [];
+    let restaurants = data.restaurants || [];
+
+    // Convert restaurants to shop format for consistent rendering
+    const restaurantsAsShops = restaurants.map(restaurant => ({
+      ...restaurant,
+      id: restaurant.id,
+      name: restaurant.name,
+      description: restaurant.location || "Restaurant",
+      image: restaurant.profile,
+      category_id: 'restaurant-category',
+      latitude: restaurant.lat,
+      longitude: restaurant.long,
+      operating_hours: null,
+      is_restaurant: true
+    }));
+
+    if (selectedCategory) {
+      // If "Restaurant" category is selected, show only restaurants
+      if (selectedCategory === 'restaurant-category') {
+        return restaurantsAsShops;
+      } else {
+        // Filter shops by category
+        shops = shops.filter((shop) => shop.category_id === selectedCategory);
+        return shops;
+      }
+    }
+
+    // When no category is selected, show both shops and restaurants
+    return [...shops, ...restaurantsAsShops];
+  }, [authReady, role, selectedCategory, data.shops, data.restaurants, data.categories]);
 
   useEffect(() => {
     if (!authReady || role === "shopper") return;
@@ -301,11 +334,11 @@ export default function UserDashboard({ initialData }: { initialData: Data }) {
   }
 
   return (
-    <div className="p-4 md:ml-16">
+    <div className="p-0 md:p-4 md:ml-16">
       <div className="container mx-auto">
         {/* Shop Categories */}
-        <div className="mt-4">
-          <div className="mb-4 flex items-center justify-between">
+        <div className="mt-0 md:mt-4">
+          <div className="mb-2 md:mb-4 flex items-center justify-between">
             <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
               Shop by Category
             </h2>
@@ -333,7 +366,18 @@ export default function UserDashboard({ initialData }: { initialData: Data }) {
               </div>
             ) : (
               <MobileCategoryDropdown
-                categories={data.categories || []}
+                categories={[
+                  ...(data.categories || []),
+                  // Add Restaurant category if restaurants exist
+                  ...(data.restaurants && data.restaurants.length > 0 ? [{
+                    id: 'restaurant-category',
+                    name: 'Restaurant',
+                    description: 'Restaurants and dining',
+                    created_at: new Date().toISOString(),
+                    image: '',
+                    is_active: true
+                  }] : [])
+                ]}
                 selectedCategory={selectedCategory}
                 onSelect={handleCategoryClick}
                 onClear={clearFilter}
@@ -355,7 +399,18 @@ export default function UserDashboard({ initialData }: { initialData: Data }) {
                       <div className="h-4 w-3/4 rounded bg-gray-200 dark:bg-gray-700"></div>
                     </div>
                   ))
-              : data.categories?.map((category) => (
+              : [
+                  ...(data.categories || []),
+                  // Add Restaurant category if restaurants exist
+                  ...(data.restaurants && data.restaurants.length > 0 ? [{
+                    id: 'restaurant-category',
+                    name: 'Restaurant',
+                    description: 'Restaurants and dining',
+                    created_at: new Date().toISOString(),
+                    image: '',
+                    is_active: true
+                  }] : [])
+                ].map((category) => (
                   <div
                     key={category.id}
                     onClick={() => handleCategoryClick(category.id)}
@@ -380,7 +435,7 @@ export default function UserDashboard({ initialData }: { initialData: Data }) {
         </div>
 
         {/* Shops */}
-        <div className="mt-8">
+        <div className="mt-4 md:mt-8">
           <div className="mb-4 flex items-center justify-between">
             <h2 className="text-3xl font-bold text-gray-900 dark:text-white">
               {selectedCategory
@@ -414,75 +469,12 @@ export default function UserDashboard({ initialData }: { initialData: Data }) {
                     open: false,
                   };
                   return (
-                    <Link key={shop.id} href={`/shops/${shop.id}`}>
-                      <div className="relative transform cursor-pointer overflow-hidden rounded-2xl border shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-lg">
-                        <div className="relative h-48 w-full bg-gray-100 dark:bg-gray-800">
-                          <Image
-                            src={getShopImageUrl(shop.image)}
-                            alt={shop.name}
-                            fill
-                            sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-                            style={{
-                              objectFit: "cover",
-                              objectPosition: "center",
-                            }}
-                            className="transition-transform duration-300 hover:scale-105"
-                            priority={false}
-                            loading="lazy"
-                            onError={(e) => {
-                              const target = e.target as HTMLImageElement;
-                              target.src = "/images/shop-placeholder.jpg";
-                              target.onerror = null;
-                            }}
-                          />
-                          {dyn.open ? (
-                            <span className="absolute right-2 top-2 rounded-full bg-green-100 px-2 py-1 text-xs font-semibold text-green-800 dark:bg-green-900 dark:text-green-100">
-                              Open
-                            </span>
-                          ) : (
-                            <span className="absolute right-2 top-2 rounded-full bg-red-100 px-2 py-1 text-xs font-semibold text-red-800 dark:bg-red-900 dark:text-red-100">
-                              Closed
-                            </span>
-                          )}
-                        </div>
-                        <div className="p-5">
-                          <h3 className="mb-2 text-xl font-semibold text-gray-800 dark:text-white">
-                            {shop.name}
-                          </h3>
-                          <p className="text-sm leading-relaxed text-gray-500 dark:text-gray-400">
-                            {shop.description?.slice(0, 80) || "No description"}
-                          </p>
-                          <div className="mt-2 flex items-center text-sm text-gray-600 dark:text-gray-300">
-                            <div className="flex items-center">
-                              <svg
-                                viewBox="0 0 24 24"
-                                fill="none"
-                                stroke="currentColor"
-                                strokeWidth="2"
-                                className="mr-1 h-4 w-4"
-                              >
-                                <circle cx="12" cy="12" r="10" />
-                                <polyline points="12 6 12 12 16 14" />
-                              </svg>
-                              {dyn.time}
-                            </div>
-                            <span className="mx-2 text-gray-300">•</span>
-                            <div className="flex items-center text-sm text-gray-600 dark:text-gray-300">
-                              <svg
-                                viewBox="0 0 24 24"
-                                fill="none"
-                                stroke="currentColor"
-                                strokeWidth="2"
-                                className="mr-1 h-4 w-4"
-                              >
-                                <path d="M12 2v20M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6" />
-                              </svg>
-                              {dyn.distance}
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                    </Link>
+                    <ShopCard
+                      key={shop.id}
+                      shop={shop}
+                      dynamics={dyn}
+                      getShopImageUrl={getShopImageUrl}
+                    />
                   );
                 })
               ) : (
