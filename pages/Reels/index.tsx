@@ -7,6 +7,7 @@ import { useTheme } from "../../src/context/ThemeContext";
 import VideoReel from "../../src/components/Reels/VideoReel";
 import CommentsDrawer from "../../src/components/Reels/CommentsDrawer";
 import { useSession } from "next-auth/react";
+import ReelPlaceholder from "@components/Reels/ReelPlaceholder";
 
 // Inline SVGs for icons
 const HeartIcon = ({ filled = false }: { filled?: boolean }) => (
@@ -935,161 +936,14 @@ export default function FoodReelsApp() {
       ]
     : [];
 
-  // Loading state - show placeholder reels
   if (loading) {
-    const placeholderPosts: FoodPost[] = [
-      {
-        id: "placeholder-1",
-        type: "restaurant",
-        creator: {
-          name: "Loading...",
-          avatar: "/placeholder.svg?height=40&width=40",
-          verified: false,
-        },
-        content: {
-          title: "Loading content...",
-          description: "Please wait while we load the latest reels for you.",
-          video: "/assets/Videos/coverr-shopping-for-fresh-fruits-1080p.mp4",
-          category: "Loading",
-        },
-        stats: {
-          likes: 0,
-          comments: 0,
-        },
-        restaurant: {
-          rating: 0,
-          reviews: 0,
-          location: "Loading...",
-          deliveryTime: "Loading...",
-          price: 0,
-        },
-        isLiked: false,
-        commentsList: [],
-      },
-      {
-        id: "placeholder-2",
-        type: "supermarket",
-        creator: {
-          name: "Loading...",
-          avatar: "/placeholder.svg?height=40&width=40",
-          verified: false,
-        },
-        content: {
-          title: "Loading content...",
-          description: "Please wait while we load the latest reels for you.",
-          video: "/assets/Videos/coverr-shopping-for-fresh-fruits-1080p.mp4",
-          category: "Loading",
-        },
-        stats: {
-          likes: 0,
-          comments: 0,
-        },
-        product: {
-          price: 0,
-          store: "Loading...",
-          inStock: false,
-        },
-        isLiked: false,
-        commentsList: [],
-      },
-      {
-        id: "placeholder-3",
-        type: "chef",
-        creator: {
-          name: "Loading...",
-          avatar: "/placeholder.svg?height=40&width=40",
-          verified: false,
-        },
-        content: {
-          title: "Loading content...",
-          description: "Please wait while we load the latest reels for you.",
-          video: "/assets/Videos/coverr-shopping-for-fresh-fruits-1080p.mp4",
-          category: "Loading",
-        },
-        stats: {
-          likes: 0,
-          comments: 0,
-        },
-        recipe: {
-          difficulty: "Easy",
-          cookTime: "Loading...",
-          servings: 0,
-          youtubeChannel: "Loading...",
-          subscribers: "Loading...",
-        },
-        isLiked: false,
-        commentsList: [],
-      },
-    ];
-
-    // Use placeholder posts for loading state
-    const loadingPosts = placeholderPosts;
-
-    // Mobile layout with placeholder posts
-    if (isMobile) {
-      return (
-        <div
-          className={`min-h-screen bg-black transition-colors duration-200 ${
-            theme === "dark" ? "bg-gray-900" : "bg-black"
-          }`}
-        >
-          <div
-            ref={containerRef}
-            style={{ height: "calc(100vh - 80px)", overflowY: "auto" }}
-          >
-            <div style={{ scrollSnapType: "y mandatory" }}>
-              {loadingPosts.map((post, index) => (
-                <div
-                  key={`${post.id}-${isMobile ? "mobile" : "desktop"}`}
-                  data-index={index}
-                >
-                  <VideoReel
-                    post={post}
-                    isVisible={visiblePostIndex === index}
-                    onLike={toggleLike}
-                    onComment={openComments}
-                    onShare={handleShare}
-                  />
-                </div>
-              ))}
-            </div>
-          </div>
-          <BottomBar />
-        </div>
-      );
-    }
-
-    // Desktop layout with placeholder posts
     return (
       <RootLayout>
-        <div
-          className={`container mx-auto transition-colors duration-200 ${
-            theme === "dark"
-              ? "bg-gray-900 text-white"
-              : "bg-white text-gray-900"
-          }`}
-        >
-          <div
-            ref={containerRef}
-            className="h-screen"
-            style={{ overflowY: "auto" }}
-          >
-            <div style={{ scrollSnapType: "y mandatory" }}>
-              {loadingPosts.map((post, index) => (
-                <div
-                  key={`${post.id}-${isMobile ? "mobile" : "desktop"}`}
-                  data-index={index}
-                >
-                  <VideoReel
-                    post={post}
-                    isVisible={visiblePostIndex === index}
-                    onLike={toggleLike}
-                    onComment={openComments}
-                    onShare={handleShare}
-                  />
-                </div>
-              ))}
-            </div>
+        <div className="flex h-screen w-full items-center justify-center  md:p-4">
+          <div className="relative h-full w-full overflow-hidden md:max-w-sm md:rounded-2xl md:shadow-2xl">
+            <ReelPlaceholder />
+            <ReelPlaceholder />
+            <ReelPlaceholder />
           </div>
         </div>
       </RootLayout>
@@ -1139,9 +993,7 @@ export default function FoodReelsApp() {
   if (isMobile) {
     return (
       <div
-        className={`min-h-screen bg-black transition-colors duration-200 ${
-          theme === "dark" ? "bg-gray-900" : "bg-black"
-        }`}
+        className={`min-h-screen transition-colors duration-200 `}
       >
         <div
           ref={containerRef}
