@@ -179,8 +179,39 @@ export default function UserDashboard({ initialData }: { initialData: Data }) {
       // Deactivate nearby filter
       setIsNearbyActive(false);
       setUserLocation(null);
-      // Clear the delivery address cookie to reset to default location
-      Cookies.remove("delivery_address");
+      
+      // Restore user's default address from database instead of clearing cookie
+      try {
+        const response = await fetch("/api/queries/addresses");
+        const data = await response.json();
+        const defaultAddress = (data.addresses || []).find((a: any) => a.is_default);
+        
+        if (defaultAddress) {
+          // Convert default address to the format expected by delivery calculations
+          const locationData = {
+            latitude: defaultAddress.latitude || "0",
+            longitude: defaultAddress.longitude || "0",
+            altitude: "0",
+            street: defaultAddress.street,
+            city: defaultAddress.city,
+            postal_code: defaultAddress.postal_code
+          };
+          Cookies.set("delivery_address", JSON.stringify(locationData));
+        } else {
+          // If no default address, remove the cookie to trigger fallback
+          Cookies.remove("delivery_address");
+        }
+        
+        // Trigger recomputation of shop dynamics
+        setTimeout(() => {
+          window.dispatchEvent(new CustomEvent("addressChanged"));
+        }, 100);
+      } catch (err) {
+        console.error("Error restoring default address:", err);
+        // Fallback: remove cookie if API call fails
+        Cookies.remove("delivery_address");
+      }
+      
       return;
     }
 
@@ -377,8 +408,8 @@ export default function UserDashboard({ initialData }: { initialData: Data }) {
       }
       try {
         const userAddr = JSON.parse(cookie);
-        const userLat = parseFloat(userAddr.latitude);
-        const userLng = parseFloat(userAddr.longitude);
+        const userLat = parseFloat(userAddr.latitude || "0");
+        const userLng = parseFloat(userAddr.longitude || "0");
         const userAlt = parseFloat(userAddr.altitude || "0");
         const newDyn: Record<
           string,
