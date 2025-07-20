@@ -300,7 +300,7 @@ function ProductCard({
               <Button
                 appearance="primary"
                 size="sm"
-                className="flex h-8 w-8 items-center justify-center rounded-full bg-green-500 p-0 text-white hover:bg-green-600 dark:bg-green-600 dark:hover:bg-green-700"
+                className="!bg-green-500 !text-white hover:!bg-green-600 dark:!bg-green-600 dark:hover:!bg-green-700 flex h-8 w-8 items-center justify-center rounded-full p-0 border-0"
                 onClick={handleQuickAdd}
                 disabled={isAdding}
               >
@@ -321,9 +321,9 @@ function ProductCard({
                 )}
               </Button>
               <Button
-                appearance="primary"
+                appearance="subtle"
                 size="sm"
-                className="flex h-8 w-8 items-center justify-center rounded-full bg-gray-200 p-0 text-gray-700 hover:bg-gray-300 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600"
+                className="!bg-green-100 !text-green-700 hover:!bg-green-200 dark:!bg-gray-700 dark:!text-gray-300 dark:hover:!bg-gray-600 flex h-8 w-8 items-center justify-center rounded-full p-0 border-0"
                 onClick={() => {
                   setShowModal(true);
                   setSelectedQuantity(1);
@@ -439,7 +439,7 @@ function ProductCard({
                     className={`rounded-full border px-4 py-1.5 text-sm font-medium transition-colors ${
                       selectedQuantity === qty
                         ? "border-green-600 bg-green-100 text-green-800 dark:border-green-500 dark:bg-green-500/20 dark:text-green-300"
-                        : "border-gray-300 bg-gray-50 text-gray-700 hover:bg-gray-100 dark:border-gray-600 dark:bg-gray-700/50 dark:text-gray-300 dark:hover:bg-gray-700"
+                        : "border-green-300 bg-green-50 text-green-700 hover:bg-green-100 dark:border-gray-600 dark:bg-gray-700/50 dark:text-gray-300 dark:hover:bg-gray-700"
                     }`}
                   >
                     {qty}
@@ -450,7 +450,7 @@ function ProductCard({
             <div className="grid grid-cols-2 gap-3">
               <button
                 onClick={() => setShowModal(false)}
-                className="rounded-lg bg-gray-100 px-4 py-3 text-sm font-semibold text-gray-800 transition-colors hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600"
+                className="rounded-lg bg-green-50 px-4 py-3 text-sm font-semibold text-green-700 transition-colors hover:bg-green-100 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600"
               >
                 Cancel
               </button>
