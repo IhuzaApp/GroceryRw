@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Input, InputGroup, Nav, Pagination } from "rsuite";
+import { Input, InputGroup, Nav } from "rsuite";
 import ProductCard from "./ProductCard";
 
 export default function ItemsSection({
@@ -10,8 +10,9 @@ export default function ItemsSection({
 }: any) {
   const [loadingProducts, setLoadingProducts] = useState<boolean>(false);
   const [searchQuery, setSearchQuery] = useState("");
-  const [currentPage, setCurrentPage] = useState(1);
-  const productsPerPage = 12;
+  const [displayedProducts, setDisplayedProducts] = useState(30);
+  const [isSticky, setIsSticky] = useState(false);
+  const productsPerPage = 30;
 
   // Simulate loading when category changes
   useEffect(() => {
@@ -20,43 +21,118 @@ export default function ItemsSection({
     return () => clearTimeout(timer);
   }, [activeCategory]);
 
+  // Reset displayed products when category or search changes
+  useEffect(() => {
+    setDisplayedProducts(30);
+  }, [activeCategory, searchQuery]);
+
   // Extract unique categories from products
   const allCategories: string[] = Array.from(
     new Set(shop.products.map((p: any) => p.category))
   );
   const categories: string[] = ["all", ...allCategories];
 
-  // Use the provided activeCategory and setActiveCategory for filtering
-
   const handleSearchChange = (value: string) => {
     setSearchQuery(value);
-    setCurrentPage(1);
+  };
+
+  const handleViewMore = () => {
+    setDisplayedProducts(prev => prev + productsPerPage);
   };
 
   const searchedProducts = filteredProducts.filter((product: any) =>
     product.name.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
-  const paginatedProducts = searchedProducts.slice(
-    (currentPage - 1) * productsPerPage,
-    currentPage * productsPerPage
-  );
+  // Handle scroll to make category navigation sticky
+  useEffect(() => {
+    const handleScroll = () => {
+      const scrollY = window.scrollY;
+      const bannerHeight = 200; // Approximate banner height
+      const totalProducts = searchedProducts.length;
+      
+      // Adjust sticky trigger based on number of products
+      let stickyTriggerHeight = bannerHeight;
+      
+      if (totalProducts < 30) {
+        // For fewer products, require more scrolling before making sticky
+        stickyTriggerHeight = bannerHeight + 300; // Additional 300px scroll required
+      } else if (totalProducts < 60) {
+        // For moderate products, require some additional scrolling
+        stickyTriggerHeight = bannerHeight + 150; // Additional 150px scroll required
+      }
+      
+      if (scrollY > stickyTriggerHeight) {
+        setIsSticky(true);
+      } else {
+        setIsSticky(false);
+      }
+    };
+
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, [searchedProducts.length]);
+
+  const paginatedProducts = searchedProducts.slice(0, displayedProducts);
+  const hasMoreProducts = searchedProducts.length > displayedProducts;
 
   return (
     <>
-      {/* Categories Navigation */}
-      <div className="sticky top-[73px] z-10 border-b bg-white shadow-sm dark:border-gray-700 dark:bg-gray-800">
-        <div className="overflow-x-auto px-4">
+            {/* Sticky Navigation with Header and Search */}
+      <div className={`${isSticky ? 'fixed top-12 left-0 right-0 z-50' : 'relative'} border-b bg-white shadow-sm dark:border-gray-700 dark:bg-gray-800 transition-all duration-500 ease-in-out ${isSticky ? 'backdrop-blur-sm shadow-lg' : ''}`}>
+        <div className="p-2 sm:p-4">
+          <div className="flex flex-col gap-4 md:flex-row md:items-baseline md:justify-between">
+            <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4">
+              <h2 className="text-lg sm:text-xl font-bold transition-all duration-300">
+                {activeCategory && activeCategory !== "all"
+                  ? String(activeCategory).charAt(0).toUpperCase() +
+                    String(activeCategory).slice(1)
+                  : "All Products"}
+              </h2>
+              <span className="text-xs sm:text-sm text-gray-500 dark:text-gray-400 transition-all duration-300">
+                Showing {paginatedProducts.length} of {searchedProducts.length} products
+              </span>
+            </div>
+            <div className="w-full md:w-72">
+              <InputGroup inside>
+                <Input
+                  placeholder="Search products..."
+                  value={searchQuery}
+                  onChange={handleSearchChange}
+                  className="text-sm sm:text-base"
+                />
+                <InputGroup.Addon>
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    className="h-4 w-4 sm:h-5 sm:w-5"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+                    />
+                  </svg>
+                </InputGroup.Addon>
+              </InputGroup>
+            </div>
+          </div>
+        </div>
+        <div className="overflow-x-auto px-2 sm:px-4">
           <Nav
             appearance="subtle"
             activeKey={activeCategory}
             onSelect={(value) => setActiveCategory(value as string)}
+            className="flex-nowrap"
           >
             {categories.map((category: string) => (
               <Nav.Item
                 key={category}
                 eventKey={category}
-                className="px-4 capitalize dark:text-gray-200"
+                className="whitespace-nowrap px-2 sm:px-4 capitalize dark:text-gray-200 text-sm sm:text-base"
               >
                 {category}
               </Nav.Item>
@@ -66,44 +142,11 @@ export default function ItemsSection({
       </div>
 
       {/* Products Grid */}
-      <div className="p-4">
-        <div className="flex flex-col items-baseline justify-between gap-4 md:flex-row">
-          <h2 className="text-xl font-bold">
-          {activeCategory && activeCategory !== "all"
-            ? String(activeCategory).charAt(0).toUpperCase() +
-              String(activeCategory).slice(1)
-            : "All Products"}
-        </h2>
-          <div className="w-full md:w-72">
-            <InputGroup inside>
-              <Input
-                placeholder="Search products..."
-                value={searchQuery}
-                onChange={handleSearchChange}
-              />
-              <InputGroup.Addon>
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  className="h-5 w-5"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
-                  />
-                </svg>
-              </InputGroup.Addon>
-            </InputGroup>
-          </div>
-        </div>
+      <div className={`p-2 sm:p-4 transition-all duration-500 ease-in-out ${isSticky ? 'pt-24' : 'pt-0'}`}>
         <div className="my-4 border-b dark:border-gray-700"></div>
-        <div className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-6">
+        <div className="grid grid-cols-2 gap-2 sm:gap-4 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 transition-all duration-300">
           {loadingProducts
-            ? Array(12)
+            ? Array(30)
                 .fill(0)
                 .map((_, idx) => (
                   <div
@@ -134,20 +177,69 @@ export default function ItemsSection({
                 />
               ))}
         </div>
-        {searchedProducts.length > productsPerPage && (
-          <div className="mt-8 flex justify-center">
-            <Pagination
-              prev
-              next
-              size="md"
-              total={searchedProducts.length}
-              limit={productsPerPage}
-              activePage={currentPage}
-              onChangePage={setCurrentPage}
-            />
+        
+        {/* View More Button */}
+        {hasMoreProducts && (
+          <div className="mt-6 sm:mt-8 flex justify-center px-2 sm:px-0">
+            <button
+              onClick={handleViewMore}
+              className="flex items-center gap-2 rounded-lg bg-green-600 px-4 sm:px-6 py-2 sm:py-3 text-sm sm:text-base text-white shadow-sm shadow-green-500/20 transition-all duration-300 ease-in-out hover:bg-green-700 hover:scale-105 active:scale-95 dark:bg-green-600 dark:hover:bg-green-700 w-full sm:w-auto"
+            >
+              <svg
+                className="h-4 w-4 sm:h-5 sm:w-5"
+                fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M19 9l-7 7-7-7"
+                />
+            </svg>
+              <span className="hidden sm:inline">View More</span>
+              <span className="sm:hidden">Load More</span>
+              <span className="text-xs sm:text-sm">
+                ({Math.min(productsPerPage, searchedProducts.length - displayedProducts)} more)
+              </span>
+            </button>
           </div>
         )}
-      </div>
+
+        {/* End of products message */}
+        {!hasMoreProducts && searchedProducts.length > 0 && (
+          <div className="mt-8 text-center">
+            <p className="text-gray-500 dark:text-gray-400">
+              You've reached the end of all products
+            </p>
+          </div>
+        )}
+
+        {/* No products message */}
+        {searchedProducts.length === 0 && !loadingProducts && (
+          <div className="mt-8 text-center">
+            <div className="mx-auto mb-4 h-16 w-16 rounded-full bg-gray-100 dark:bg-gray-700 flex items-center justify-center">
+              <svg
+                className="h-8 w-8 text-gray-400"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                  d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+                  />
+                </svg>
+            </div>
+            <p className="text-gray-500 dark:text-gray-400">
+              No products found matching your search
+            </p>
+          </div>
+        )}
+        </div>
     </>
   );
 }

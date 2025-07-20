@@ -113,16 +113,16 @@ export default function ProductCard({
             height={150}
             className="w-full object-cover"
           />
-          {sale && (
-            <div className="absolute left-2 top-2 rounded bg-red-500 px-2 py-1 text-xs font-bold text-white">
-              SALE
-            </div>
-          )}
-          {quantity !== undefined && (
-            <div className="absolute right-2 top-2 rounded-full bg-purple-500 px-2 py-1 text-xs font-bold text-white">
-             {measurement_unit}
-            </div>
-          )}
+                      {sale && (
+              <div className="absolute left-2 top-2 rounded bg-red-500 px-2 py-1 text-xs font-bold !text-white">
+                SALE
+              </div>
+            )}
+            {quantity !== undefined && (
+              <div className="absolute right-2 top-2  rounded-full bg-purple-500 px-2 py-1 text-xs font-bold !text-white">
+               {measurement_unit}
+              </div>
+            )}
         </div>
         <div className="p-3">
           <h3 className="mb-1 font-medium text-gray-900 dark:text-gray-100">
