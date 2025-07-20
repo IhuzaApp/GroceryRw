@@ -2,7 +2,7 @@ import Link from "next/link";
 import React, { useState, useEffect } from "react";
 import { Input, InputGroup, Modal } from "rsuite";
 import { useCart } from "../../../context/CartContext";
-import UserAddress from "../../userProfile/userAddress";
+import AddressManagementModal from "../../userProfile/AddressManagementModal";
 import Cookies from "js-cookie";
 import { useSession } from "next-auth/react";
 import { useTheme } from "../../../context/ThemeContext";
@@ -318,15 +318,34 @@ export default function HeaderLayout() {
 
         {/* Mobile version */}
         <div className="flex items-center justify-between px-3 pt-2 md:hidden">
-          {/* Logo or Icon */}
-          <div className="flex h-9 w-9 items-center justify-center rounded-full bg-green-500">
-            <svg
-              viewBox="0 0 24 24"
-              className="h-5 w-5 text-white"
-              fill="currentColor"
-            >
-              <path d="..." />
-            </svg>
+          {/* Address Section - Mobile */}
+          <div className="flex flex-1 items-center gap-2">
+            <div className="flex h-8 w-8 items-center justify-center rounded-full bg-green-500">
+              <svg
+                viewBox="0 0 24 24"
+                className="h-4 w-4 text-white"
+                fill="currentColor"
+              >
+                <path fillRule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clipRule="evenodd" />
+              </svg>
+            </div>
+            <div className="flex-1 min-w-0">
+              <h6 className="text-sm font-medium text-inherit truncate">
+                {defaultAddress
+                  ? defaultAddress.street && defaultAddress.city
+                    ? `${defaultAddress.street}, ${defaultAddress.city}`
+                    : defaultAddress.latitude && defaultAddress.longitude
+                    ? "Current Location"
+                    : "No address set"
+                  : "No address set"}
+              </h6>
+              <button
+                className="text-xs text-green-500 hover:underline dark:text-green-400"
+                onClick={() => setShowAddressModal(true)}
+              >
+                Change Address
+              </button>
+            </div>
           </div>
 
           <div className="flex items-center gap-2">
@@ -483,26 +502,16 @@ export default function HeaderLayout() {
           </div>
         </div>
       </header>
-      <Modal
+      <AddressManagementModal
         open={showAddressModal}
         onClose={() => setShowAddressModal(false)}
-        size="lg"
-        className="dark:text-white [&_.rs-modal-content]:dark:bg-gray-800"
-      >
-        <Modal.Header>
-          <Modal.Title>Manage Addresses</Modal.Title>
-        </Modal.Header>
-        <Modal.Body>
-          <UserAddress
-            onSelect={(addr) => {
-              setDefaultAddress(addr);
-              Cookies.set("delivery_address", JSON.stringify(addr));
-              window.dispatchEvent(new Event("addressChanged"));
-              setShowAddressModal(false);
-            }}
-          />
-        </Modal.Body>
-      </Modal>
+        onSelect={(addr) => {
+          setDefaultAddress(addr);
+          Cookies.set("delivery_address", JSON.stringify(addr));
+          window.dispatchEvent(new Event("addressChanged"));
+          setShowAddressModal(false);
+        }}
+      />
     </>
   );
 }
