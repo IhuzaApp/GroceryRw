@@ -64,7 +64,7 @@ export default function ItemsSection({
   return (
     <>
       {/* Categories Navigation */}
-      <div className="sticky top-[73px] z-10 border-b bg-white shadow-sm dark:bg-gray-800 dark:border-gray-700">
+      <div className="sticky top-[73px] z-10 border-b bg-white shadow-sm dark:border-gray-700 dark:bg-gray-800">
         <div className="overflow-x-auto px-4">
           <Nav
             appearance="subtle"
@@ -230,7 +230,9 @@ function ProductCard({
           </div>
           <div>
             <p className="font-medium">1 × {name}</p>
-            <p className="text-xs text-gray-500 dark:text-gray-400">Added to cart</p>
+            <p className="text-xs text-gray-500 dark:text-gray-400">
+              Added to cart
+            </p>
           </div>
         </div>,
         {
@@ -276,8 +278,12 @@ function ProductCard({
           )}
         </div>
         <div className="p-3">
-          <h3 className="mb-1 font-medium text-gray-900 dark:text-gray-100">{name}</h3>
-          <p className="mb-2 text-sm text-gray-500 dark:text-gray-400">{unit}</p>
+          <h3 className="mb-1 font-medium text-gray-900 dark:text-gray-100">
+            {name}
+          </h3>
+          <p className="mb-2 text-sm text-gray-500 dark:text-gray-400">
+            {unit}
+          </p>
           <div className="flex items-center justify-between">
             <div>
               <span className="font-bold text-gray-900 dark:text-gray-100">
@@ -370,7 +376,7 @@ function ProductCard({
               </h3>
               <button
                 onClick={() => setShowModal(false)}
-                className="-mt-2 -mr-2 rounded-full p-2 text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-600 dark:hover:bg-gray-700"
+                className="-mr-2 -mt-2 rounded-full p-2 text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-600 dark:hover:bg-gray-700"
               >
                 <svg
                   className="h-6 w-6"
@@ -408,7 +414,7 @@ function ProductCard({
                     value={selectedQuantity}
                     onChange={(e) =>
                       setSelectedQuantity(
-                        Math.max(1, parseInt(e.target.value, 10) || 1),
+                        Math.max(1, parseInt(e.target.value, 10) || 1)
                       )
                     }
                     className="h-10 w-16 border-x border-gray-300 p-0 text-center font-semibold text-gray-800 focus:outline-none dark:border-gray-600 dark:bg-gray-700/50 dark:text-white"
@@ -459,12 +465,12 @@ function ProductCard({
                         shopId,
                         productId: id,
                         quantity: selectedQuantity,
-                      }),
+                      })
                     );
                     router.push(
                       `/auth/login?redirect=${encodeURIComponent(
-                        router.asPath,
-                      )}`,
+                        router.asPath
+                      )}`
                     );
                     return;
                   }
@@ -501,7 +507,7 @@ function ProductCard({
                         {
                           id: toastId,
                           duration: 2000,
-                        },
+                        }
                       );
                     })
                     .catch((err: any) => {

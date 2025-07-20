@@ -130,12 +130,11 @@ const DeliveryConfirmationModal: React.FC<DeliveryConfirmationModalProps> = ({
       }
 
       setDeliveryConfirmed(true);
-      
+
       // Redirect to active batches page after a short delay
       setTimeout(() => {
         router.push("/Plasa/active-batches");
       }, 1500);
-
     } catch (error) {
       console.error("Error confirming delivery:", error);
       setUploadError("Failed to confirm delivery. Please try again.");
@@ -566,7 +565,9 @@ const DeliveryConfirmationModal: React.FC<DeliveryConfirmationModalProps> = ({
                 disabled={confirmingDelivery}
                 loading={confirmingDelivery}
               >
-                {confirmingDelivery ? "Confirming Delivery..." : "Confirm Delivery"}
+                {confirmingDelivery
+                  ? "Confirming Delivery..."
+                  : "Confirm Delivery"}
               </Button>
               <p className="mt-2 text-sm text-gray-500">
                 This will mark the order as delivered and update your earnings
@@ -591,7 +592,7 @@ const DeliveryConfirmationModal: React.FC<DeliveryConfirmationModalProps> = ({
                 className={`rounded-lg border p-4 ${
                   theme === "dark"
                     ? "border-green-700 bg-green-900/20"
-                    : "bg-green-50 border-green-200"
+                    : "border-green-200 bg-green-50"
                 }`}
               >
                 <p className="font-medium text-green-600 dark:text-green-400">

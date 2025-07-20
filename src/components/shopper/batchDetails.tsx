@@ -278,7 +278,7 @@ export default function BatchDetails({
         {
           enableHighAccuracy: true,
           timeout: 10000,
-          maximumAge: 300000 // 5 minutes
+          maximumAge: 300000, // 5 minutes
         }
       );
     } else {
@@ -318,15 +318,21 @@ export default function BatchDetails({
   }, []);
 
   // Function to generate directions URL with mobile app support
-  const getDirectionsUrl = (destinationAddress: string, isMobile: boolean = false) => {
+  const getDirectionsUrl = (
+    destinationAddress: string,
+    isMobile: boolean = false
+  ) => {
     if (currentLocation) {
       if (isMobile) {
         // For mobile, try to open native map apps
         const encodedDestination = encodeURIComponent(destinationAddress);
         const origin = `${currentLocation.lat},${currentLocation.lng}`;
-        
+
         // Try Apple Maps first (iOS), then Google Maps, then fallback to web
-        if (navigator.userAgent.includes('iPhone') || navigator.userAgent.includes('iPad')) {
+        if (
+          navigator.userAgent.includes("iPhone") ||
+          navigator.userAgent.includes("iPad")
+        ) {
           return `http://maps.apple.com/?saddr=${origin}&daddr=${encodedDestination}`;
         } else {
           // For Android and other mobile devices, try Google Maps app
@@ -344,7 +350,10 @@ export default function BatchDetails({
     // Fallback to just the destination if no current location
     if (isMobile) {
       const encodedDestination = encodeURIComponent(destinationAddress);
-      if (navigator.userAgent.includes('iPhone') || navigator.userAgent.includes('iPad')) {
+      if (
+        navigator.userAgent.includes("iPhone") ||
+        navigator.userAgent.includes("iPad")
+      ) {
         return `http://maps.apple.com/?q=${encodedDestination}`;
       } else {
         return `https://www.google.com/maps/search/?api=1&query=${encodedDestination}`;
@@ -359,26 +368,33 @@ export default function BatchDetails({
   const handleDirectionsClick = (address: string) => {
     const isMobile = isMobileDevice();
     const directionsUrl = getDirectionsUrl(address, isMobile);
-    
+
     if (isMobile) {
       // For mobile, try to open in app, fallback to web
       window.location.href = directionsUrl;
     } else {
       // For desktop, open in new tab
-      window.open(directionsUrl, '_blank');
+      window.open(directionsUrl, "_blank");
     }
   };
 
   // Function to calculate distance between two points
-  const calculateDistance = (lat1: number, lon1: number, lat2: number, lon2: number): number => {
+  const calculateDistance = (
+    lat1: number,
+    lon1: number,
+    lat2: number,
+    lon2: number
+  ): number => {
     const R = 6371; // Radius of the Earth in kilometers
-    const dLat = (lat2 - lat1) * Math.PI / 180;
-    const dLon = (lon2 - lon1) * Math.PI / 180;
-    const a = 
-      Math.sin(dLat/2) * Math.sin(dLat/2) +
-      Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * 
-      Math.sin(dLon/2) * Math.sin(dLon/2);
-    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+    const dLat = ((lat2 - lat1) * Math.PI) / 180;
+    const dLon = ((lon2 - lon1) * Math.PI) / 180;
+    const a =
+      Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+      Math.cos((lat1 * Math.PI) / 180) *
+        Math.cos((lat2 * Math.PI) / 180) *
+        Math.sin(dLon / 2) *
+        Math.sin(dLon / 2);
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
     const distance = R * c; // Distance in kilometers
     return Math.round(distance * 10) / 10; // Round to 1 decimal place
   };
@@ -388,21 +404,21 @@ export default function BatchDetails({
     if (!currentLocation || !order?.shop?.latitude || !order?.shop?.longitude) {
       return null;
     }
-    
+
     const shopLat = parseFloat(order.shop.latitude);
     const shopLng = parseFloat(order.shop.longitude);
-    
+
     if (isNaN(shopLat) || isNaN(shopLng)) {
       return null;
     }
-    
+
     const distance = calculateDistance(
       currentLocation.lat,
       currentLocation.lng,
       shopLat,
       shopLng
     );
-    
+
     return `${distance} km`;
   };
 
@@ -1101,13 +1117,13 @@ export default function BatchDetails({
   useEffect(() => {
     if (order?.id) {
       fetch(`/api/queries/orderDetails?id=${order.id}`)
-        .then(res => res.json())
-        .then(data => {
+        .then((res) => res.json())
+        .then((data) => {
           if (data.order) {
             setOrder(data.order);
           }
         })
-        .catch(err => {
+        .catch((err) => {
           console.error("Error fetching complete order data:", err);
         });
     }
@@ -1316,10 +1332,8 @@ export default function BatchDetails({
 
             {/* Main Info Grid */}
             <div className="grid grid-cols-1 gap-3 sm:gap-8 lg:grid-cols-2">
-              
-
-            {/* Shop/Reel Info */}
-            <div className="rounded-lg border border-slate-200 bg-slate-50 p-3 dark:border-slate-700 dark:bg-slate-800 sm:rounded-xl sm:p-6">
+              {/* Shop/Reel Info */}
+              <div className="rounded-lg border border-slate-200 bg-slate-50 p-3 dark:border-slate-700 dark:bg-slate-800 sm:rounded-xl sm:p-6">
                 <div className="mb-3 flex items-center gap-2 sm:mb-4 sm:gap-3">
                   <span
                     className={`inline-block rounded-full p-1.5 sm:p-2 ${
@@ -1353,7 +1367,8 @@ export default function BatchDetails({
                           strokeLinecap="round"
                           strokeLinejoin="round"
                           strokeWidth={2}
-                          d="M3 7v4a1 1 0 001 1h3m10 0h3a1 1 0 001-1V7m-1-4H5a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2V5a2 2 0 00-2-2z" />
+                          d="M3 7v4a1 1 0 001 1h3m10 0h3a1 1 0 001-1V7m-1-4H5a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2V5a2 2 0 00-2-2z"
+                        />
                       </svg>
                     )}
                   </span>
@@ -1512,7 +1527,9 @@ export default function BatchDetails({
                                 if (hoursObj && typeof hoursObj === "object") {
                                   const now = new Date();
                                   const dayKey = now
-                                    .toLocaleDateString("en-US", { weekday: "long" })
+                                    .toLocaleDateString("en-US", {
+                                      weekday: "long",
+                                    })
                                     .toLowerCase();
                                   const todaysHours = (hoursObj as any)[dayKey];
                                   if (todaysHours) {
@@ -1526,13 +1543,15 @@ export default function BatchDetails({
                         )}
                       </div>
                     </div>
-                    
+
                     {/* Shop Directions Button */}
                     {order.shop?.address && (
                       <div className="flex justify-center sm:justify-start">
                         <button
-                          className="flex items-center rounded-full border border-green-400 px-3 py-1 text-sm font-medium text-green-600 transition-colors hover:bg-green-50 hover:border-green-300 hover:text-green-700 dark:border-green-700 dark:text-green-400 dark:hover:bg-green-900/20 dark:hover:border-green-600 sm:text-base"
-                          onClick={() => handleDirectionsClick(order.shop?.address || '')}
+                          className="flex items-center rounded-full border border-green-400 px-3 py-1 text-sm font-medium text-green-600 transition-colors hover:border-green-300 hover:bg-green-50 hover:text-green-700 dark:border-green-700 dark:text-green-400 dark:hover:border-green-600 dark:hover:bg-green-900/20 sm:text-base"
+                          onClick={() =>
+                            handleDirectionsClick(order.shop?.address || "")
+                          }
                         >
                           <svg
                             viewBox="0 0 24 24"
@@ -1605,7 +1624,7 @@ export default function BatchDetails({
                       {order.user.name}
                     </h4>
                     <p className="text-sm text-slate-500 dark:text-slate-400 sm:text-base">
-                      {order.user.phone || 'N/A'}
+                      {order.user.phone || "N/A"}
                     </p>
                   </div>
                 </div>
@@ -1625,14 +1644,16 @@ export default function BatchDetails({
 
                   <div className="flex flex-wrap justify-center gap-2 sm:justify-start">
                     <button
-                      className="flex items-center rounded-full border border-green-400 px-3 py-1 text-sm text-green-600 transition-colors hover:bg-green-50 hover:border-green-300 hover:text-green-700 dark:border-green-700 dark:text-green-400 dark:hover:bg-green-900/20 dark:hover:border-green-600 sm:text-base"
-                      onClick={() => handleDirectionsClick(
-                        `${order.address.street}, ${order.address.city}${
-                          order.address.postal_code
-                            ? `, ${order.address.postal_code}`
-                            : ""
-                        }`
-                      )}
+                      className="flex items-center rounded-full border border-green-400 px-3 py-1 text-sm text-green-600 transition-colors hover:border-green-300 hover:bg-green-50 hover:text-green-700 dark:border-green-700 dark:text-green-400 dark:hover:border-green-600 dark:hover:bg-green-900/20 sm:text-base"
+                      onClick={() =>
+                        handleDirectionsClick(
+                          `${order.address.street}, ${order.address.city}${
+                            order.address.postal_code
+                              ? `, ${order.address.postal_code}`
+                              : ""
+                          }`
+                        )
+                      }
                     >
                       <svg
                         viewBox="0 0 24 24"
@@ -1649,8 +1670,10 @@ export default function BatchDetails({
 
                     {order.user.phone && (
                       <button
-                        className="flex items-center rounded-full border border-green-400 px-3 py-1 text-sm text-green-600 transition-colors hover:bg-green-50 hover:border-green-300 hover:text-green-700 dark:border-green-700 dark:text-green-400 dark:hover:bg-green-900/20 dark:hover:border-green-600 sm:text-base"
-                        onClick={() => window.location.href = `tel:${order.user.phone}`}
+                        className="flex items-center rounded-full border border-green-400 px-3 py-1 text-sm text-green-600 transition-colors hover:border-green-300 hover:bg-green-50 hover:text-green-700 dark:border-green-700 dark:text-green-400 dark:hover:border-green-600 dark:hover:bg-green-900/20 sm:text-base"
+                        onClick={() =>
+                          (window.location.href = `tel:${order.user.phone}`)
+                        }
                       >
                         <svg
                           viewBox="0 0 24 24"
@@ -1664,10 +1687,10 @@ export default function BatchDetails({
                         Call Customer
                       </button>
                     )}
-                    
+
                     {order.status !== "delivered" ? (
                       <button
-                        className="flex items-center rounded-full border border-green-400 px-3 py-1 text-sm text-green-600 transition-colors hover:bg-green-50 hover:border-green-300 hover:text-green-700 dark:border-green-700 dark:text-green-400 dark:hover:bg-green-900/20 dark:hover:border-green-600 sm:text-base"
+                        className="flex items-center rounded-full border border-green-400 px-3 py-1 text-sm text-green-600 transition-colors hover:border-green-300 hover:bg-green-50 hover:text-green-700 dark:border-green-700 dark:text-green-400 dark:hover:border-green-600 dark:hover:bg-green-900/20 sm:text-base"
                         onClick={handleChatClick}
                       >
                         <svg
@@ -1683,7 +1706,7 @@ export default function BatchDetails({
                       </button>
                     ) : (
                       <button
-                        className="flex items-center rounded-lg border border-slate-300 px-3 py-1 text-sm font-medium text-slate-400 cursor-not-allowed dark:border-slate-600 sm:text-base"
+                        className="flex cursor-not-allowed items-center rounded-lg border border-slate-300 px-3 py-1 text-sm font-medium text-slate-400 dark:border-slate-600 sm:text-base"
                         disabled
                       >
                         <svg
@@ -2107,7 +2130,7 @@ export default function BatchDetails({
 
             {/* Action Button */}
             <div className="pt-2 sm:pt-4">
-            <Button
+              <Button
                 appearance="primary"
                 color={order.orderType === "reel" ? "violet" : "green"}
                 size="sm"

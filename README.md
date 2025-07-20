@@ -2756,6 +2756,7 @@ The delivery confirmation system ensures proper photo documentation and order st
 ### Flow Process
 
 #### Step 1: Photo Upload (Required)
+
 1. **Modal Opens** - Order status remains unchanged
 2. **Photo Capture/Upload** - User takes photo via camera or uploads file
 3. **Photo Validation** - File type, size, and format validation
@@ -2763,6 +2764,7 @@ The delivery confirmation system ensures proper photo documentation and order st
 5. **Upload Confirmation** - `photoUploaded` state becomes `true`
 
 #### Step 2: Delivery Confirmation (Optional)
+
 1. **Button Appears** - "Confirm Delivery" button only shows after photo upload
 2. **User Confirmation** - User clicks "Confirm Delivery" button
 3. **Status Update** - Order status changes to "delivered" via `/api/shopper/updateOrderStatus`
@@ -2772,6 +2774,7 @@ The delivery confirmation system ensures proper photo documentation and order st
 ### Key Features
 
 #### 1. **Two-Step Process**
+
 ```typescript
 // Step 1: Photo Upload (Required)
 const handleUpdateDatabase = async (imageData: string) => {
@@ -2788,21 +2791,24 @@ const handleConfirmDelivery = async () => {
 ```
 
 #### 2. **Conditional Button Display**
+
 ```typescript
-{photoUploaded && !deliveryConfirmed && (
-  <Button onClick={handleConfirmDelivery}>
-    Confirm Delivery
-  </Button>
-)}
+{
+  photoUploaded && !deliveryConfirmed && (
+    <Button onClick={handleConfirmDelivery}>Confirm Delivery</Button>
+  );
+}
 ```
 
 #### 3. **State Management**
+
 - `photoUploading`: Prevents modal closure during upload
 - `photoUploaded`: Enables delivery confirmation button
 - `confirmingDelivery`: Shows loading state during status update
 - `deliveryConfirmed`: Prevents duplicate confirmations
 
 #### 4. **Safety Features**
+
 - **Modal Lock**: Cannot close during critical operations
 - **Upload Protection**: State persists across page refreshes
 - **Error Handling**: Clear error messages and retry options
@@ -2811,6 +2817,7 @@ const handleConfirmDelivery = async () => {
 ### API Endpoints
 
 #### 1. Photo Upload API (`/api/shopper/uploadDeliveryPhoto`)
+
 ```typescript
 POST /api/shopper/uploadDeliveryPhoto
 {
@@ -2822,6 +2829,7 @@ POST /api/shopper/uploadDeliveryPhoto
 ```
 
 #### 2. Order Status Update API (`/api/shopper/updateOrderStatus`)
+
 ```typescript
 POST /api/shopper/updateOrderStatus
 {
@@ -2863,11 +2871,13 @@ Redirecting to Active Batches...
 ### Error Handling
 
 1. **Upload Failures**
+
    - Retry mechanism
    - Clear error messages
    - State preservation
 
 2. **Network Issues**
+
    - Connection validation
    - Automatic retry
    - Offline detection
@@ -2880,28 +2890,31 @@ Redirecting to Active Batches...
 ### Best Practices
 
 1. **Photo Quality**
+
    - Good lighting conditions
    - Clear package visibility
    - Include delivery context
 
 2. **Upload Process**
+
    - Stable internet connection
    - Don't close browser during upload
    - Wait for confirmation messages
 
 3. **Confirmation Process**
+
    - Verify photo quality before confirming
    - Ensure all requirements are met
    - Follow proper delivery protocols
 
-2. **Payment System**
+4. **Payment System**
 
    - OTP verification
    - Refund processing
    - Wallet integration
    - Transaction logging
 
-3. **Document Generation**
+5. **Document Generation**
    - Invoice creation
    - Receipt generation
    - Order history
@@ -6549,10 +6562,10 @@ To solve this, the system uses a clean, state-free (as much as possible) approac
 
 ### State Management
 
--   `videoRef`: A `useRef` to hold the `<video>` element.
--   `controlsRef`: A `useRef` to hold the `IScannerControls` object from ZXing. This is used to programmatically stop the scanner.
--   `isScannedRef`: A `useRef` boolean flag that acts as a **guard**. It is set to `true` the instant a barcode is detected to prevent the callback from processing any subsequent detections.
--   `error`: A `useState` string to display any user-facing errors (e.g., camera permission denied).
+- `videoRef`: A `useRef` to hold the `<video>` element.
+- `controlsRef`: A `useRef` to hold the `IScannerControls` object from ZXing. This is used to programmatically stop the scanner.
+- `isScannedRef`: A `useRef` boolean flag that acts as a **guard**. It is set to `true` the instant a barcode is detected to prevent the callback from processing any subsequent detections.
+- `error`: A `useState` string to display any user-facing errors (e.g., camera permission denied).
 
 ### Lifecycle (`useEffect`)
 
@@ -6578,9 +6591,10 @@ useEffect(() => {
 ### Scanning and Cleanup Logic
 
 1.  **`startScanner()`**:
-    -   Requests camera access using `navigator.mediaDevices.getUserMedia`.
-    -   Initializes the `BrowserMultiFormatReader` from ZXing.
-    -   Calls `reader.decodeFromStream(...)`, which starts the video feed and the detection loop. The controls for this process are stored in `controlsRef`.
+
+    - Requests camera access using `navigator.mediaDevices.getUserMedia`.
+    - Initializes the `BrowserMultiFormatReader` from ZXing.
+    - Calls `reader.decodeFromStream(...)`, which starts the video feed and the detection loop. The controls for this process are stored in `controlsRef`.
 
 2.  **Detection Callback**: The callback function passed to `decodeFromStream` contains the core logic:
 
@@ -6594,25 +6608,25 @@ useEffect(() => {
       if (result) {
         // Lock: Set the guard flag IMMEDIATELY.
         isScannedRef.current = true;
-        
-        console.log('📷 Barcode detected:', result.getText());
-        
+
+        console.log("📷 Barcode detected:", result.getText());
+
         // Teardown:
         stopScanner();
         onBarcodeDetected(result.getText());
         onClose();
       }
       // ... error handling ...
-    }
+    };
     ```
 
 3.  **`stopScanner()`**: A `useCallback`-memoized function that:
-    -   Checks if `controlsRef.current` exists.
-    -   Calls `controlsRef.current.stop()`, which correctly stops the ZXing decoding loop and releases the camera stream.
-    -   Sets `controlsRef.current` to `null`.
+    - Checks if `controlsRef.current` exists.
+    - Calls `controlsRef.current.stop()`, which correctly stops the ZXing decoding loop and releases the camera stream.
+    - Sets `controlsRef.current` to `null`.
 
 ### Why This Design is Robust
 
--   **No Race Condition**: The `isScannedRef` flag immediately prevents the callback's logic from running more than once. This is more reliable than trying to manage complex state transitions.
--   **Guaranteed Cleanup**: By tying the `stopScanner` call to the `useEffect` cleanup function, React ensures that the camera and scanner are turned off when the component unmounts, preventing resource leaks.
--   **Simplicity**: The component avoids complex state flags (`isLoading`, `isProcessing`, `isDestroyed`, etc.), which were the source of previous issues. The logic is linear and easy to follow: mount -> start -> scan -> stop -> unmount.
+- **No Race Condition**: The `isScannedRef` flag immediately prevents the callback's logic from running more than once. This is more reliable than trying to manage complex state transitions.
+- **Guaranteed Cleanup**: By tying the `stopScanner` call to the `useEffect` cleanup function, React ensures that the camera and scanner are turned off when the component unmounts, preventing resource leaks.
+- **Simplicity**: The component avoids complex state flags (`isLoading`, `isProcessing`, `isDestroyed`, etc.), which were the source of previous issues. The logic is linear and easy to follow: mount -> start -> scan -> stop -> unmount.
