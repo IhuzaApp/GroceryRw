@@ -1,6 +1,6 @@
-import React from 'react';
-import Image from 'next/image';
-import Link from 'next/link';
+import React from "react";
+import Image from "next/image";
+import Link from "next/link";
 
 interface ShopCardProps {
   shop: {
@@ -19,7 +19,11 @@ interface ShopCardProps {
   getShopImageUrl: (imageUrl: string | undefined) => string;
 }
 
-const ShopCard: React.FC<ShopCardProps> = ({ shop, dynamics, getShopImageUrl }) => {
+const ShopCard: React.FC<ShopCardProps> = ({
+  shop,
+  dynamics,
+  getShopImageUrl,
+}) => {
   const isRestaurant = (shop as any).is_restaurant;
 
   return (
@@ -95,4 +99,4 @@ const ShopCard: React.FC<ShopCardProps> = ({ shop, dynamics, getShopImageUrl }) 
   );
 };
 
-export default ShopCard; 
+export default ShopCard;

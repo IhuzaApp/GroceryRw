@@ -37,7 +37,7 @@ export default function ItemsSection({
   };
 
   const handleViewMore = () => {
-    setDisplayedProducts(prev => prev + productsPerPage);
+    setDisplayedProducts((prev) => prev + productsPerPage);
   };
 
   const searchedProducts = filteredProducts.filter((product: any) =>
@@ -50,10 +50,10 @@ export default function ItemsSection({
       const scrollY = window.scrollY;
       const bannerHeight = 200; // Approximate banner height
       const totalProducts = searchedProducts.length;
-      
+
       // Adjust sticky trigger based on number of products
       let stickyTriggerHeight = bannerHeight;
-      
+
       if (totalProducts < 30) {
         // For fewer products, require more scrolling before making sticky
         stickyTriggerHeight = bannerHeight + 300; // Additional 300px scroll required
@@ -61,7 +61,7 @@ export default function ItemsSection({
         // For moderate products, require some additional scrolling
         stickyTriggerHeight = bannerHeight + 150; // Additional 150px scroll required
       }
-      
+
       if (scrollY > stickyTriggerHeight) {
         setIsSticky(true);
       } else {
@@ -69,8 +69,8 @@ export default function ItemsSection({
       }
     };
 
-    window.addEventListener('scroll', handleScroll);
-    return () => window.removeEventListener('scroll', handleScroll);
+    window.addEventListener("scroll", handleScroll);
+    return () => window.removeEventListener("scroll", handleScroll);
   }, [searchedProducts.length]);
 
   const paginatedProducts = searchedProducts.slice(0, displayedProducts);
@@ -78,48 +78,55 @@ export default function ItemsSection({
 
   return (
     <>
-            {/* Sticky Navigation with Header and Search */}
-      <div className={`${isSticky ? 'fixed top-12 left-0 right-0 z-50' : 'relative'} border-b bg-white shadow-sm dark:border-gray-700 dark:bg-gray-800 transition-all duration-500 ease-in-out ${isSticky ? 'backdrop-blur-sm shadow-lg' : ''}`}>
+      {/* Sticky Navigation with Header and Search */}
+      <div
+        className={`${
+          isSticky ? "fixed left-0 right-0 top-12 z-50" : "relative"
+        } border-b bg-white shadow-sm transition-all duration-500 ease-in-out dark:border-gray-700 dark:bg-gray-800 ${
+          isSticky ? "shadow-lg backdrop-blur-sm" : ""
+        }`}
+      >
         <div className="p-2 sm:p-4">
           <div className="flex flex-col gap-4 md:flex-row md:items-baseline md:justify-between">
-            <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4">
-              <h2 className="text-lg sm:text-xl font-bold transition-all duration-300">
-          {activeCategory && activeCategory !== "all"
-            ? String(activeCategory).charAt(0).toUpperCase() +
-              String(activeCategory).slice(1)
-            : "All Products"}
-        </h2>
-              <span className="text-xs sm:text-sm text-gray-500 dark:text-gray-400 transition-all duration-300">
-                Showing {paginatedProducts.length} of {searchedProducts.length} products
+            <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-4">
+              <h2 className="text-lg font-bold transition-all duration-300 sm:text-xl">
+                {activeCategory && activeCategory !== "all"
+                  ? String(activeCategory).charAt(0).toUpperCase() +
+                    String(activeCategory).slice(1)
+                  : "All Products"}
+              </h2>
+              <span className="text-xs text-gray-500 transition-all duration-300 dark:text-gray-400 sm:text-sm">
+                Showing {paginatedProducts.length} of {searchedProducts.length}{" "}
+                products
               </span>
             </div>
-          <div className="w-full md:w-72">
-            <InputGroup inside>
-              <Input
-                placeholder="Search products..."
-                value={searchQuery}
-                onChange={handleSearchChange}
+            <div className="w-full md:w-72">
+              <InputGroup inside>
+                <Input
+                  placeholder="Search products..."
+                  value={searchQuery}
+                  onChange={handleSearchChange}
                   className="text-sm sm:text-base"
-              />
-              <InputGroup.Addon>
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
+                />
+                <InputGroup.Addon>
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
                     className="h-4 w-4 sm:h-5 sm:w-5"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
-                  />
-                </svg>
-              </InputGroup.Addon>
-            </InputGroup>
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+                    />
+                  </svg>
+                </InputGroup.Addon>
+              </InputGroup>
+            </div>
           </div>
-        </div>
         </div>
         <div className="overflow-x-auto px-2 sm:px-4">
           <Nav
@@ -132,7 +139,7 @@ export default function ItemsSection({
               <Nav.Item
                 key={category}
                 eventKey={category}
-                className="whitespace-nowrap px-2 sm:px-4 capitalize dark:text-gray-200 text-sm sm:text-base"
+                className="whitespace-nowrap px-2 text-sm capitalize dark:text-gray-200 sm:px-4 sm:text-base"
               >
                 {category}
               </Nav.Item>
@@ -142,9 +149,13 @@ export default function ItemsSection({
       </div>
 
       {/* Products Grid */}
-      <div className={`p-2 sm:p-4 transition-all duration-500 ease-in-out ${isSticky ? 'pt-24' : 'pt-0'}`}>
+      <div
+        className={`p-2 transition-all duration-500 ease-in-out sm:p-4 ${
+          isSticky ? "pt-24" : "pt-0"
+        }`}
+      >
         <div className="my-4 border-b dark:border-gray-700"></div>
-        <div className="grid grid-cols-2 gap-2 sm:gap-4 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 transition-all duration-300">
+        <div className="grid grid-cols-2 gap-2 transition-all duration-300 sm:gap-4 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6">
           {loadingProducts
             ? Array(30)
                 .fill(0)
@@ -177,19 +188,19 @@ export default function ItemsSection({
                 />
               ))}
         </div>
-        
+
         {/* View More Button */}
         {hasMoreProducts && (
-          <div className="mt-6 sm:mt-8 flex justify-center px-2 sm:px-0">
+          <div className="mt-6 flex justify-center px-2 sm:mt-8 sm:px-0">
             <button
               onClick={handleViewMore}
-              className="flex items-center gap-2 rounded-lg bg-green-600 px-4 sm:px-6 py-2 sm:py-3 text-sm sm:text-base text-white shadow-sm shadow-green-500/20 transition-all duration-300 ease-in-out hover:bg-green-700 hover:scale-105 active:scale-95 dark:bg-green-600 dark:hover:bg-green-700 w-full sm:w-auto"
+              className="flex w-full items-center gap-2 rounded-lg bg-green-600 px-4 py-2 text-sm text-white shadow-sm shadow-green-500/20 transition-all duration-300 ease-in-out hover:scale-105 hover:bg-green-700 active:scale-95 dark:bg-green-600 dark:hover:bg-green-700 sm:w-auto sm:px-6 sm:py-3 sm:text-base"
             >
               <svg
                 className="h-4 w-4 sm:h-5 sm:w-5"
                 fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
               >
                 <path
                   strokeLinecap="round"
@@ -197,11 +208,16 @@ export default function ItemsSection({
                   strokeWidth={2}
                   d="M19 9l-7 7-7-7"
                 />
-            </svg>
+              </svg>
               <span className="hidden sm:inline">View More</span>
               <span className="sm:hidden">Load More</span>
               <span className="text-xs sm:text-sm">
-                ({Math.min(productsPerPage, searchedProducts.length - displayedProducts)} more)
+                (
+                {Math.min(
+                  productsPerPage,
+                  searchedProducts.length - displayedProducts
+                )}{" "}
+                more)
               </span>
             </button>
           </div>
@@ -219,27 +235,27 @@ export default function ItemsSection({
         {/* No products message */}
         {searchedProducts.length === 0 && !loadingProducts && (
           <div className="mt-8 text-center">
-            <div className="mx-auto mb-4 h-16 w-16 rounded-full bg-gray-100 dark:bg-gray-700 flex items-center justify-center">
+            <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-gray-100 dark:bg-gray-700">
               <svg
                 className="h-8 w-8 text-gray-400"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
                   d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
-                  />
-                </svg>
+                />
+              </svg>
             </div>
             <p className="text-gray-500 dark:text-gray-400">
               No products found matching your search
             </p>
           </div>
         )}
-        </div>
+      </div>
     </>
   );
 }

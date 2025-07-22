@@ -128,7 +128,7 @@ export default function RestaurantPage({ restaurant }: RestaurantPageProps) {
               <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
                 Restaurant Information
               </h2>
-              
+
               <div className="space-y-3">
                 <div className="flex items-center space-x-3">
                   <svg
@@ -148,7 +148,7 @@ export default function RestaurantPage({ restaurant }: RestaurantPageProps) {
                     {restaurant.phone || "Phone not available"}
                   </span>
                 </div>
-                
+
                 <div className="flex items-center space-x-3">
                   <svg
                     className="h-5 w-5 text-gray-400"
@@ -167,7 +167,7 @@ export default function RestaurantPage({ restaurant }: RestaurantPageProps) {
                     {restaurant.email || "Email not available"}
                   </span>
                 </div>
-                
+
                 <div className="flex items-center space-x-3">
                   <svg
                     className="h-5 w-5 text-gray-400"
@@ -199,7 +199,7 @@ export default function RestaurantPage({ restaurant }: RestaurantPageProps) {
               <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
                 Location
               </h2>
-              
+
               <div className="rounded-lg border border-gray-200 bg-gray-50 p-4 dark:border-gray-700 dark:bg-gray-800">
                 <div className="flex items-center space-x-2">
                   <svg
@@ -225,7 +225,7 @@ export default function RestaurantPage({ restaurant }: RestaurantPageProps) {
                     Coordinates: {restaurant.lat}, {restaurant.long}
                   </span>
                 </div>
-                
+
                 <div className="mt-2 text-sm text-gray-600 dark:text-gray-400">
                   <p>Latitude: {restaurant.lat}</p>
                   <p>Longitude: {restaurant.long}</p>
@@ -236,7 +236,7 @@ export default function RestaurantPage({ restaurant }: RestaurantPageProps) {
 
           {/* Coming Soon Message */}
           <div className="mt-8 rounded-lg bg-blue-50 p-6 text-center dark:bg-blue-900/20">
-            <div className="mx-auto mb-4 h-16 w-16 rounded-full bg-blue-100 dark:bg-blue-900 flex items-center justify-center">
+            <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-blue-100 dark:bg-blue-900">
               <svg
                 className="h-8 w-8 text-blue-600 dark:text-blue-400"
                 fill="none"
@@ -255,7 +255,8 @@ export default function RestaurantPage({ restaurant }: RestaurantPageProps) {
               Menu Coming Soon
             </h3>
             <p className="mt-2 text-blue-700 dark:text-blue-300">
-              We're working on bringing you the full menu and ordering experience for {restaurant.name}.
+              We're working on bringing you the full menu and ordering
+              experience for {restaurant.name}.
             </p>
           </div>
         </div>
@@ -272,22 +273,25 @@ export const getServerSideProps: GetServerSideProps = async ({ params }) => {
 
     const { id } = params as { id: string };
 
-    const response = await hasuraClient.request<{ Restaurants: Restaurant[] }>(gql`
-      query GetRestaurant($id: String!) {
-        Restaurants(where: { id: { _eq: $id } }) {
-          id
-          name
-          email
-          phone
-          location
-          lat
-          long
-          profile
-          verified
-          created_at
+    const response = await hasuraClient.request<{ Restaurants: Restaurant[] }>(
+      gql`
+        query GetRestaurant($id: String!) {
+          Restaurants(where: { id: { _eq: $id } }) {
+            id
+            name
+            email
+            phone
+            location
+            lat
+            long
+            profile
+            verified
+            created_at
+          }
         }
-      }
-    `, { id });
+      `,
+      { id }
+    );
 
     const restaurant = response?.Restaurants?.[0] || null;
 
@@ -304,4 +308,4 @@ export const getServerSideProps: GetServerSideProps = async ({ params }) => {
       },
     };
   }
-}; 
+};

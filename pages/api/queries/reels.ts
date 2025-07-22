@@ -389,13 +389,13 @@ interface ReelsResponse {
   Reels: Reel[];
 }
 interface CreateReelResponse {
-    insert_Reels: { returning: { id: string }[] };
+  insert_Reels: { returning: { id: string }[] };
 }
 interface AddReelCommentResponse {
-    insert_Reels_comments: { returning: { id: string }[] };
+  insert_Reels_comments: { returning: { id: string }[] };
 }
 interface CommentDataResponse {
-    Reels_comments: { id: string; isLiked: boolean; likes: string }[];
+  Reels_comments: { id: string; isLiked: boolean; likes: string }[];
 }
 
 export default async function handler(
@@ -577,7 +577,9 @@ async function handleToggleLike(
       return res.status(401).json({ error: "Unauthorized" });
     }
 
-    const reelData = await hasuraClient.request<{ Reels: { id: string, isLiked: boolean, likes: string }[] }>(
+    const reelData = await hasuraClient.request<{
+      Reels: { id: string; isLiked: boolean; likes: string }[];
+    }>(
       gql`
         query GetReel($id: uuid!) {
           Reels(where: { id: { _eq: $id } }) {
@@ -643,11 +645,14 @@ async function handleAddComment(
       return res.status(400).json({ error: "Comment text is required" });
     }
 
-    const result = await hasuraClient.request<AddReelCommentResponse>(ADD_REEL_COMMENT, {
-      reel_id: reelId,
-      user_id: userId,
-      text: commentText.trim(),
-    });
+    const result = await hasuraClient.request<AddReelCommentResponse>(
+      ADD_REEL_COMMENT,
+      {
+        reel_id: reelId,
+        user_id: userId,
+        text: commentText.trim(),
+      }
+    );
 
     res.status(200).json({
       success: true,

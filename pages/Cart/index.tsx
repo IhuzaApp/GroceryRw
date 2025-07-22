@@ -13,9 +13,11 @@ import { useTheme } from "../../src/context/ThemeContext";
 function ShopSelectionSkeleton() {
   const { theme } = useTheme();
   return (
-    <div className={`relative h-24 w-40 min-w-[10rem] flex-shrink-0 animate-pulse rounded-lg p-2 ${
-      theme === "dark" ? "bg-gray-700" : "bg-gray-200"
-    }`} />
+    <div
+      className={`relative h-24 w-40 min-w-[10rem] flex-shrink-0 animate-pulse rounded-lg p-2 ${
+        theme === "dark" ? "bg-gray-700" : "bg-gray-200"
+      }`}
+    />
   );
 }
 
@@ -25,26 +27,38 @@ function CheckoutSkeleton() {
   return (
     <>
       {/* Mobile view skeleton */}
-      <div className={`fixed bottom-4 left-1/2 z-50 w-[95%] max-w-4xl -translate-x-1/2 animate-pulse rounded-2xl p-6 shadow-2xl md:hidden ${
-        theme === "dark" ? "bg-gray-800" : "bg-white"
-      }`} />
+      <div
+        className={`fixed bottom-4 left-1/2 z-50 w-[95%] max-w-4xl -translate-x-1/2 animate-pulse rounded-2xl p-6 shadow-2xl md:hidden ${
+          theme === "dark" ? "bg-gray-800" : "bg-white"
+        }`}
+      />
       {/* Desktop view skeleton */}
       <div className="hidden w-full md:block lg:w-1/3">
-        <div className={`sticky top-20 animate-pulse space-y-4 rounded-xl p-4 shadow-lg ${
-          theme === "dark" ? "bg-gray-800" : "bg-white"
-        }`}>
-          <div className={`h-8 rounded ${
-            theme === "dark" ? "bg-gray-700" : "bg-gray-200"
-          }`} />
-          <div className={`h-4 w-3/4 rounded ${
-            theme === "dark" ? "bg-gray-700" : "bg-gray-200"
-          }`} />
-          <div className={`h-4 w-1/2 rounded ${
-            theme === "dark" ? "bg-gray-700" : "bg-gray-200"
-          }`} />
-          <div className={`h-12 rounded ${
-            theme === "dark" ? "bg-gray-700" : "bg-gray-200"
-          }`} />
+        <div
+          className={`sticky top-20 animate-pulse space-y-4 rounded-xl p-4 shadow-lg ${
+            theme === "dark" ? "bg-gray-800" : "bg-white"
+          }`}
+        >
+          <div
+            className={`h-8 rounded ${
+              theme === "dark" ? "bg-gray-700" : "bg-gray-200"
+            }`}
+          />
+          <div
+            className={`h-4 w-3/4 rounded ${
+              theme === "dark" ? "bg-gray-700" : "bg-gray-200"
+            }`}
+          />
+          <div
+            className={`h-4 w-1/2 rounded ${
+              theme === "dark" ? "bg-gray-700" : "bg-gray-200"
+            }`}
+          />
+          <div
+            className={`h-12 rounded ${
+              theme === "dark" ? "bg-gray-700" : "bg-gray-200"
+            }`}
+          />
         </div>
       </div>
     </>
@@ -53,7 +67,7 @@ function CheckoutSkeleton() {
 
 export default function CartMainPage() {
   const { theme } = useTheme();
-  
+
   // User's active shops (carts): id, name, and number of line items
   const [shops, setShops] = useState<
     {
@@ -115,9 +129,12 @@ export default function CartMainPage() {
         <div className="container mx-auto">
           {/* Cart Selection */}
           <div className="mb-6 flex items-center">
-            <Link href="/" className={`flex items-center ${
-              theme === "dark" ? "text-gray-300" : "text-gray-700"
-            }`}>
+            <Link
+              href="/"
+              className={`flex items-center ${
+                theme === "dark" ? "text-gray-300" : "text-gray-700"
+              }`}
+            >
               <svg
                 viewBox="0 0 24 24"
                 fill="none"
@@ -128,9 +145,13 @@ export default function CartMainPage() {
                 <path d="M19 12H5M12 19l-7-7 7-7" />
               </svg>
             </Link>
-            <h1 className={`text-2xl font-bold ${
-              theme === "dark" ? "text-white" : "text-gray-900"
-            }`}>My Shopping Carts</h1>
+            <h1
+              className={`text-2xl font-bold ${
+                theme === "dark" ? "text-white" : "text-gray-900"
+              }`}
+            >
+              My Shopping Carts
+            </h1>
           </div>
 
           <div className="mb-6">
@@ -153,9 +174,13 @@ export default function CartMainPage() {
                     >
                       <div className="flex items-center gap-2">
                         <div className="flex-shrink-0">
-                          <div className={`flex h-8 w-8 items-center justify-center rounded-full border ${
-                            theme === "dark" ? "bg-gray-700 border-gray-600" : "bg-white border-gray-300"
-                          }`}>
+                          <div
+                            className={`flex h-8 w-8 items-center justify-center rounded-full border ${
+                              theme === "dark"
+                                ? "border-gray-600 bg-gray-700"
+                                : "border-gray-300 bg-white"
+                            }`}
+                          >
                             <svg
                               width="94px"
                               height="94px"
@@ -186,9 +211,11 @@ export default function CartMainPage() {
                           </div>
                         </div>
                         <div className="truncate">
-                          <h3 className={`truncate text-sm font-medium ${
-                            theme === "dark" ? "text-white" : "text-gray-900"
-                          }`}>
+                          <h3
+                            className={`truncate text-sm font-medium ${
+                              theme === "dark" ? "text-white" : "text-gray-900"
+                            }`}
+                          >
                             {shop.name}
                           </h3>
                         </div>
@@ -221,9 +248,11 @@ export default function CartMainPage() {
             <div className="w-full lg:w-2/3">
               {selectedCartId ? (
                 <>
-                  <h2 className={`mb-4 text-xl font-semibold ${
-                    theme === "dark" ? "text-white" : "text-gray-900"
-                  }`}>
+                  <h2
+                    className={`mb-4 text-xl font-semibold ${
+                      theme === "dark" ? "text-white" : "text-gray-900"
+                    }`}
+                  >
                     {shops.find((s) => s.id === selectedCartId)?.name}
                   </h2>
                   <ItemCartTable
@@ -234,9 +263,11 @@ export default function CartMainPage() {
                   />
                 </>
               ) : (
-                <div className={`p-4 ${
-                  theme === "dark" ? "text-gray-400" : "text-gray-500"
-                }`}>
+                <div
+                  className={`p-4 ${
+                    theme === "dark" ? "text-gray-400" : "text-gray-500"
+                  }`}
+                >
                   Select a cart to view items.
                 </div>
               )}

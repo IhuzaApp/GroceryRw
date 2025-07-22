@@ -113,16 +113,16 @@ export default function ProductCard({
             height={150}
             className="w-full object-cover"
           />
-                      {sale && (
-              <div className="absolute left-2 top-2 rounded bg-red-500 px-2 py-1 text-xs font-bold !text-white">
-                SALE
-              </div>
-            )}
-            {quantity !== undefined && (
-              <div className="absolute right-2 top-2  rounded-full bg-purple-500 px-2 py-1 text-xs font-bold !text-white">
-               {measurement_unit}
-              </div>
-            )}
+          {sale && (
+            <div className="absolute left-2 top-2 rounded bg-red-500 px-2 py-1 text-xs font-bold !text-white">
+              SALE
+            </div>
+          )}
+          {quantity !== undefined && (
+            <div className="absolute right-2 top-2  rounded-full bg-purple-500 px-2 py-1 text-xs font-bold !text-white">
+              {measurement_unit}
+            </div>
+          )}
         </div>
         <div className="p-3">
           <h3 className="mb-1 font-medium text-gray-900 dark:text-gray-100">
@@ -135,7 +135,6 @@ export default function ProductCard({
             <div>
               <span className="font-bold text-gray-900 dark:text-gray-100">
                 {formatCurrency(parseFloat(final_price || "0"))}
-            
               </span>
               {sale && originalPrice && (
                 <span className="ml-2 text-sm text-gray-500 line-through dark:text-gray-400">
@@ -147,7 +146,7 @@ export default function ProductCard({
               <Button
                 appearance="primary"
                 size="sm"
-                className="!bg-green-500 !text-white hover:!bg-green-600 dark:!bg-green-600 dark:hover:!bg-green-700 flex h-8 w-8 items-center justify-center rounded-full p-0 border-0"
+                className="flex h-8 w-8 items-center justify-center rounded-full border-0 !bg-green-500 p-0 !text-white hover:!bg-green-600 dark:!bg-green-600 dark:hover:!bg-green-700"
                 onClick={handleQuickAdd}
                 disabled={isAdding}
               >
@@ -170,7 +169,7 @@ export default function ProductCard({
               <Button
                 appearance="subtle"
                 size="sm"
-                className="!bg-green-100 !text-green-700 hover:!bg-green-200 dark:!bg-gray-700 dark:!text-gray-300 dark:hover:!bg-gray-600 flex h-8 w-8 items-center justify-center rounded-full p-0 border-0"
+                className="flex h-8 w-8 items-center justify-center rounded-full border-0 !bg-green-100 p-0 !text-green-700 hover:!bg-green-200 dark:!bg-gray-700 dark:!text-gray-300 dark:hover:!bg-gray-600"
                 onClick={() => {
                   setShowModal(true);
                   setSelectedQuantity(1);
@@ -329,38 +328,38 @@ export default function ProductCard({
                   const toastId = toast.loading("Adding to cart...");
                   addItem(shopId, id, selectedQuantity)
                     .then(() => {
-                    toast.success(
-                      <div className="flex items-center gap-2">
+                      toast.success(
+                        <div className="flex items-center gap-2">
                           <div className="flex h-6 w-6 items-center justify-center rounded-full bg-green-100 dark:bg-green-900">
-                          <svg
-                            viewBox="0 0 24 24"
+                            <svg
+                              viewBox="0 0 24 24"
                               className="h-4 w-4 text-green-500 dark:text-green-400"
-                            fill="none"
-                            stroke="currentColor"
-                            strokeWidth="2"
-                          >
-                            <path d="M5 13l4 4L19 7" />
-                          </svg>
-                        </div>
-                        <div>
-                          <p className="font-medium">
-                            {selectedQuantity} × {name}
-                          </p>
+                              fill="none"
+                              stroke="currentColor"
+                              strokeWidth="2"
+                            >
+                              <path d="M5 13l4 4L19 7" />
+                            </svg>
+                          </div>
+                          <div>
+                            <p className="font-medium">
+                              {selectedQuantity} × {name}
+                            </p>
                             <p className="text-xs text-gray-500 dark:text-gray-400">
                               Added to cart
                             </p>
-                        </div>
-                      </div>,
-                      {
-                        id: toastId,
-                        duration: 2000,
-                      }
-                    );
+                          </div>
+                        </div>,
+                        {
+                          id: toastId,
+                          duration: 2000,
+                        }
+                      );
                     })
                     .catch((err: any) => {
-                    console.error("Add to cart failed:", err);
-                    toast.error(err.message || "Failed to add to cart", {
-                      id: toastId,
+                      console.error("Add to cart failed:", err);
+                      toast.error(err.message || "Failed to add to cart", {
+                        id: toastId,
                       });
                     });
                 }}
@@ -374,4 +373,4 @@ export default function ProductCard({
       )}
     </>
   );
-} 
+}

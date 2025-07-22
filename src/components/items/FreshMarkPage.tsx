@@ -156,7 +156,7 @@ const FreshMarkPage: React.FC<FreshMarkPageProps> = ({ shop, products }) => {
                   height={80}
                   className="mx-auto mb-3 h-20 w-20 rounded-full border-4 border-white object-cover shadow-lg sm:mx-0 sm:h-24 sm:w-24"
                 />
-                <h1 className="!text-white text-3xl font-bold sm:text-4xl">
+                <h1 className="text-3xl font-bold !text-white sm:text-4xl">
                   {shopData.name}
                 </h1>
                 <div className="mt-3 flex flex-wrap justify-center gap-2 sm:justify-start">
@@ -199,7 +199,9 @@ const FreshMarkPage: React.FC<FreshMarkPageProps> = ({ shop, products }) => {
                       <path d="M8 16.5a1.5 1.5 0 11-3 0 1.5 1.5 0 013 0zM15 16.5a1.5 1.5 0 11-3 0 1.5 1.5 0 013 0z" />
                       <path d="M3 4a1 1 0 00-1 1v10a1 1 0 001 1h1.05a2.5 2.5 0 014.9 0H10a1 1 0 001-1V5a1 1 0 00-1-1H3zM14 7a1 1 0 00-1-1h-1a1 1 0 00-1 1v5a1 1 0 001 1h1a1 1 0 001-1V7z" />
                     </svg>
-                    <span className="!text-white">{shopData.deliveryFee} delivery</span>
+                    <span className="!text-white">
+                      {shopData.deliveryFee} delivery
+                    </span>
                   </div>
                 </div>
               </div>

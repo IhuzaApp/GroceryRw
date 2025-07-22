@@ -19,7 +19,7 @@ const CategoryIcon = ({ category }: { category: string }) => {
     Delicatessen: "🥪",
     "Organic Shops": "🌿",
     "Specialty Foods": "🍱",
-    "Restaurant": "🍽️",
+    Restaurant: "🍽️",
   };
 
   return (
@@ -111,7 +111,7 @@ function getShopImageUrl(imageUrl: string | undefined): string {
   if (!imageUrl) return "/images/shop-placeholder.jpg";
 
   // Handle relative paths (like "profile.png")
-  if (imageUrl && !imageUrl.startsWith('/') && !imageUrl.startsWith('http')) {
+  if (imageUrl && !imageUrl.startsWith("/") && !imageUrl.startsWith("http")) {
     return "/images/shop-placeholder.jpg";
   }
 
@@ -159,7 +159,10 @@ export default function UserDashboard({ initialData }: { initialData: Data }) {
   const [error, setError] = useState<string | null>(null);
   const [sortBy, setSortBy] = useState<string>("name");
   const [isNearbyActive, setIsNearbyActive] = useState(false);
-  const [userLocation, setUserLocation] = useState<{lat: number, lng: number} | null>(null);
+  const [userLocation, setUserLocation] = useState<{
+    lat: number;
+    lng: number;
+  } | null>(null);
   const [shopDynamics, setShopDynamics] = useState<
     Record<
       string,
@@ -179,13 +182,15 @@ export default function UserDashboard({ initialData }: { initialData: Data }) {
       // Deactivate nearby filter
       setIsNearbyActive(false);
       setUserLocation(null);
-      
+
       // Restore user's default address from database instead of clearing cookie
       try {
         const response = await fetch("/api/queries/addresses");
         const data = await response.json();
-        const defaultAddress = (data.addresses || []).find((a: any) => a.is_default);
-        
+        const defaultAddress = (data.addresses || []).find(
+          (a: any) => a.is_default
+        );
+
         if (defaultAddress) {
           // Convert default address to the format expected by delivery calculations
           const locationData = {
@@ -194,14 +199,14 @@ export default function UserDashboard({ initialData }: { initialData: Data }) {
             altitude: "0",
             street: defaultAddress.street,
             city: defaultAddress.city,
-            postal_code: defaultAddress.postal_code
+            postal_code: defaultAddress.postal_code,
           };
           Cookies.set("delivery_address", JSON.stringify(locationData));
         } else {
           // If no default address, remove the cookie to trigger fallback
           Cookies.remove("delivery_address");
         }
-        
+
         // Trigger recomputation of shop dynamics
         setTimeout(() => {
           window.dispatchEvent(new CustomEvent("addressChanged"));
@@ -211,7 +216,7 @@ export default function UserDashboard({ initialData }: { initialData: Data }) {
         // Fallback: remove cookie if API call fails
         Cookies.remove("delivery_address");
       }
-      
+
       return;
     }
 
@@ -220,13 +225,15 @@ export default function UserDashboard({ initialData }: { initialData: Data }) {
 
     try {
       // Get user's current location
-      const position = await new Promise<GeolocationPosition>((resolve, reject) => {
-        navigator.geolocation.getCurrentPosition(resolve, reject, {
-          enableHighAccuracy: true,
-          timeout: 10000,
-          maximumAge: 60000 // 1 minute cache
-        });
-      });
+      const position = await new Promise<GeolocationPosition>(
+        (resolve, reject) => {
+          navigator.geolocation.getCurrentPosition(resolve, reject, {
+            enableHighAccuracy: true,
+            timeout: 10000,
+            maximumAge: 60000, // 1 minute cache
+          });
+        }
+      );
 
       const { latitude, longitude } = position.coords;
       setUserLocation({ lat: latitude, lng: longitude });
@@ -236,7 +243,7 @@ export default function UserDashboard({ initialData }: { initialData: Data }) {
       const locationData = {
         latitude: latitude.toString(),
         longitude: longitude.toString(),
-        altitude: "0"
+        altitude: "0",
       };
       Cookies.set("delivery_address", JSON.stringify(locationData));
 
@@ -244,10 +251,11 @@ export default function UserDashboard({ initialData }: { initialData: Data }) {
       setTimeout(() => {
         window.dispatchEvent(new CustomEvent("addressChanged"));
       }, 100);
-
     } catch (err) {
       console.error("Error getting location:", err);
-      setError("Unable to get your location. Please check location permissions.");
+      setError(
+        "Unable to get your location. Please check location permissions."
+      );
     } finally {
       setIsLoading(false);
     }
@@ -260,22 +268,22 @@ export default function UserDashboard({ initialData }: { initialData: Data }) {
     let restaurants = data.restaurants || [];
 
     // Convert restaurants to shop format for consistent rendering
-    const restaurantsAsShops = restaurants.map(restaurant => ({
+    const restaurantsAsShops = restaurants.map((restaurant) => ({
       ...restaurant,
       id: restaurant.id,
       name: restaurant.name,
       description: restaurant.location || "Restaurant",
       image: restaurant.profile,
-      category_id: 'restaurant-category',
+      category_id: "restaurant-category",
       latitude: restaurant.lat,
       longitude: restaurant.long,
       operating_hours: null,
-      is_restaurant: true
+      is_restaurant: true,
     }));
 
     if (selectedCategory) {
       // If "Restaurant" category is selected, show only restaurants
-      if (selectedCategory === 'restaurant-category') {
+      if (selectedCategory === "restaurant-category") {
         return restaurantsAsShops;
       } else {
         // Filter shops by category
@@ -291,7 +299,7 @@ export default function UserDashboard({ initialData }: { initialData: Data }) {
     if (isNearbyActive && userLocation) {
       allShops = allShops.filter((shop) => {
         if (!shop.latitude || !shop.longitude) return false;
-        
+
         const shopLat = parseFloat(shop.latitude);
         const shopLng = parseFloat(shop.longitude);
         const distance = getDistanceFromLatLonInKm(
@@ -300,7 +308,7 @@ export default function UserDashboard({ initialData }: { initialData: Data }) {
           shopLat,
           shopLng
         );
-        
+
         // Only show shops within 3 kilometers
         return distance <= 3;
       });
@@ -312,8 +320,12 @@ export default function UserDashboard({ initialData }: { initialData: Data }) {
         case "name":
           return a.name.localeCompare(b.name);
         case "distance":
-          const aDistance = parseFloat(shopDynamics[a.id]?.distance?.replace(" km", "") || "999");
-          const bDistance = parseFloat(shopDynamics[b.id]?.distance?.replace(" km", "") || "999");
+          const aDistance = parseFloat(
+            shopDynamics[a.id]?.distance?.replace(" km", "") || "999"
+          );
+          const bDistance = parseFloat(
+            shopDynamics[b.id]?.distance?.replace(" km", "") || "999"
+          );
           return aDistance - bDistance;
         case "rating":
           // Mock rating for now - you can add real rating data later
@@ -338,7 +350,18 @@ export default function UserDashboard({ initialData }: { initialData: Data }) {
     });
 
     return allShops;
-  }, [authReady, role, selectedCategory, data.shops, data.restaurants, data.categories, sortBy, shopDynamics, isNearbyActive, userLocation]);
+  }, [
+    authReady,
+    role,
+    selectedCategory,
+    data.shops,
+    data.restaurants,
+    data.categories,
+    sortBy,
+    shopDynamics,
+    isNearbyActive,
+    userLocation,
+  ]);
 
   // Separate useMemo for shops without dynamics to avoid circular dependency
   const shopsWithoutDynamics = useMemo(() => {
@@ -348,22 +371,22 @@ export default function UserDashboard({ initialData }: { initialData: Data }) {
     let restaurants = data.restaurants || [];
 
     // Convert restaurants to shop format for consistent rendering
-    const restaurantsAsShops = restaurants.map(restaurant => ({
+    const restaurantsAsShops = restaurants.map((restaurant) => ({
       ...restaurant,
       id: restaurant.id,
       name: restaurant.name,
       description: restaurant.location || "Restaurant",
       image: restaurant.profile,
-      category_id: 'restaurant-category',
+      category_id: "restaurant-category",
       latitude: restaurant.lat,
       longitude: restaurant.long,
       operating_hours: null,
-      is_restaurant: true
+      is_restaurant: true,
     }));
 
     if (selectedCategory) {
       // If "Restaurant" category is selected, show only restaurants
-      if (selectedCategory === 'restaurant-category') {
+      if (selectedCategory === "restaurant-category") {
         return restaurantsAsShops;
       } else {
         // Filter shops by category
@@ -379,7 +402,7 @@ export default function UserDashboard({ initialData }: { initialData: Data }) {
     if (isNearbyActive && userLocation) {
       allShops = allShops.filter((shop) => {
         if (!shop.latitude || !shop.longitude) return false;
-        
+
         const shopLat = parseFloat(shop.latitude);
         const shopLng = parseFloat(shop.longitude);
         const distance = getDistanceFromLatLonInKm(
@@ -388,14 +411,23 @@ export default function UserDashboard({ initialData }: { initialData: Data }) {
           shopLat,
           shopLng
         );
-        
+
         // Only show shops within 3 kilometers
         return distance <= 3;
       });
     }
 
     return allShops;
-  }, [authReady, role, selectedCategory, data.shops, data.restaurants, data.categories, isNearbyActive, userLocation]);
+  }, [
+    authReady,
+    role,
+    selectedCategory,
+    data.shops,
+    data.restaurants,
+    data.categories,
+    isNearbyActive,
+    userLocation,
+  ]);
 
   useEffect(() => {
     if (!authReady || role === "shopper") return;
@@ -530,12 +562,18 @@ export default function UserDashboard({ initialData }: { initialData: Data }) {
   // Helper function to display sort option names
   const getSortDisplayName = (key: string) => {
     switch (key) {
-      case "name": return "Name";
-      case "distance": return "Distance";
-      case "rating": return "Rating";
-      case "reviews": return "Reviews";
-      case "delivery_time": return "Delivery Time";
-      default: return key;
+      case "name":
+        return "Name";
+      case "distance":
+        return "Distance";
+      case "rating":
+        return "Rating";
+      case "reviews":
+        return "Reviews";
+      case "delivery_time":
+        return "Delivery Time";
+      default:
+        return key;
     }
   };
 
@@ -544,11 +582,11 @@ export default function UserDashboard({ initialData }: { initialData: Data }) {
   }
 
   return (
-    <div className="p-0 md:p-4 md:ml-16">
+    <div className="p-0 md:ml-16 md:p-4">
       <div className="container mx-auto">
         {/* Shop Categories */}
         <div className="mt-0 md:mt-4">
-          <div className="mb-2 md:mb-4 flex items-center justify-between">
+          <div className="mb-2 flex items-center justify-between md:mb-4">
             <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
               Shop by Category
             </h2>
@@ -579,14 +617,18 @@ export default function UserDashboard({ initialData }: { initialData: Data }) {
                 categories={[
                   ...(data.categories || []),
                   // Add Restaurant category if restaurants exist
-                  ...(data.restaurants && data.restaurants.length > 0 ? [{
-                    id: 'restaurant-category',
-                    name: 'Restaurant',
-                    description: 'Restaurants and dining',
-                    created_at: new Date().toISOString(),
-                    image: '',
-                    is_active: true
-                  }] : [])
+                  ...(data.restaurants && data.restaurants.length > 0
+                    ? [
+                        {
+                          id: "restaurant-category",
+                          name: "Restaurant",
+                          description: "Restaurants and dining",
+                          created_at: new Date().toISOString(),
+                          image: "",
+                          is_active: true,
+                        },
+                      ]
+                    : []),
                 ]}
                 selectedCategory={selectedCategory}
                 onSelect={handleCategoryClick}
@@ -612,14 +654,18 @@ export default function UserDashboard({ initialData }: { initialData: Data }) {
               : [
                   ...(data.categories || []),
                   // Add Restaurant category if restaurants exist
-                  ...(data.restaurants && data.restaurants.length > 0 ? [{
-                    id: 'restaurant-category',
-                    name: 'Restaurant',
-                    description: 'Restaurants and dining',
-                    created_at: new Date().toISOString(),
-                    image: '',
-                    is_active: true
-                  }] : [])
+                  ...(data.restaurants && data.restaurants.length > 0
+                    ? [
+                        {
+                          id: "restaurant-category",
+                          name: "Restaurant",
+                          description: "Restaurants and dining",
+                          created_at: new Date().toISOString(),
+                          image: "",
+                          is_active: true,
+                        },
+                      ]
+                    : []),
                 ].map((category) => (
                   <div
                     key={category.id}
@@ -654,8 +700,8 @@ export default function UserDashboard({ initialData }: { initialData: Data }) {
             </h4>
             <div className="flex items-center gap-2">
               {/* Sort Dropdown */}
-              <SortDropdown 
-                sortBy={sortBy} 
+              <SortDropdown
+                sortBy={sortBy}
                 onSortChange={handleSortChange}
                 onNearbyClick={handleNearbyClick}
                 isNearbyActive={isNearbyActive}
