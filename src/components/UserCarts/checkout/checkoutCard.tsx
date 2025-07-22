@@ -549,10 +549,18 @@ export default function CheckoutItems({
   return (
     <>
       {/* Mobile View - Only visible on small devices */}
+      {/* Backdrop overlay when expanded */}
+      {isExpanded && (
+        <div 
+          className="fixed inset-0 z-40 bg-black/80 backdrop-blur-lg transition-all duration-300 md:hidden"
+          onClick={toggleExpand}
+        />
+      )}
+      
       <div
-        className={`fixed bottom-16 left-0 right-0 z-50 w-full shadow-2xl transition-all duration-300 md:hidden ${
+        className={`fixed bottom-16 left-0 right-0 z-50 w-full transition-all duration-300 md:hidden ${
           theme === "dark" ? "bg-gray-800" : "bg-white"
-        }`}
+        } ${isExpanded ? "ring-4 ring-white/20 border-2 border-white/10 shadow-[0_25px_50px_-12px_rgba(0,0,0,0.8)]" : "shadow-2xl"}`}
         style={{
           maxHeight: isExpanded ? "calc(90vh - 64px)" : "160px",
           overflow: "hidden",
