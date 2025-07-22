@@ -86,8 +86,6 @@ function LoadingScreen() {
   );
 }
 
-
-
 // Add this new component for category icons
 const CategoryIcon = ({ category }: { category: string }) => {
   const icons: { [key: string]: string } = {
@@ -98,7 +96,7 @@ const CategoryIcon = ({ category }: { category: string }) => {
     Delicatessen: "🥪",
     "Organic Shops": "🌿",
     "Specialty Foods": "🍱",
-    "Restaurant": "🍽️",
+    Restaurant: "🍽️",
   };
 
   return (
@@ -107,8 +105,6 @@ const CategoryIcon = ({ category }: { category: string }) => {
     </div>
   );
 };
-
-
 
 export default function Home({ initialData }: { initialData: Data }) {
   const { role, authReady } = useAuth();

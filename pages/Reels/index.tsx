@@ -992,9 +992,7 @@ export default function FoodReelsApp() {
   // Mobile layout - full screen without navbar/sidebar but with bottom bar
   if (isMobile) {
     return (
-      <div
-        className={`min-h-screen transition-colors duration-200 `}
-      >
+      <div className={`min-h-screen transition-colors duration-200 `}>
         <div
           ref={containerRef}
           style={{ height: "calc(100vh - 80px)", overflowY: "auto" }} // Account for bottom bar height

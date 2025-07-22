@@ -179,10 +179,14 @@ export default function UserAddress({ onSelect }: UserAddressProps) {
       if (!res.ok) throw new Error(`Failed to set default (${res.status})`);
       await res.json();
       fetchAddresses();
-      
+
       // Update the delivery address cookie with the new default address
-      const updatedAddresses = await fetch("/api/queries/addresses").then(res => res.json());
-      const newDefaultAddress = (updatedAddresses.addresses || []).find((a: any) => a.is_default);
+      const updatedAddresses = await fetch("/api/queries/addresses").then(
+        (res) => res.json()
+      );
+      const newDefaultAddress = (updatedAddresses.addresses || []).find(
+        (a: any) => a.is_default
+      );
       if (newDefaultAddress) {
         const locationData = {
           latitude: newDefaultAddress.latitude || "0",
@@ -190,7 +194,7 @@ export default function UserAddress({ onSelect }: UserAddressProps) {
           altitude: "0",
           street: newDefaultAddress.street,
           city: newDefaultAddress.city,
-          postal_code: newDefaultAddress.postal_code
+          postal_code: newDefaultAddress.postal_code,
         };
         Cookies.set("delivery_address", JSON.stringify(locationData));
         window.dispatchEvent(new Event("addressChanged"));
@@ -237,8 +241,8 @@ export default function UserAddress({ onSelect }: UserAddressProps) {
               </p>
               <div className="mt-4 flex gap-2">
                 {!addr.is_default && (
-                  <button 
-                    className="rounded border border-green-700 px-3 py-1 text-sm text-green-700 hover:bg-green-100 disabled:opacity-50 disabled:cursor-not-allowed"
+                  <button
+                    className="rounded border border-green-700 px-3 py-1 text-sm text-green-700 hover:bg-green-100 disabled:cursor-not-allowed disabled:opacity-50"
                     onClick={() => handleSetDefault(addr.id)}
                     disabled={saving}
                   >

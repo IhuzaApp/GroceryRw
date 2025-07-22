@@ -79,7 +79,6 @@ query GetAllReels {
   }
 }
 
-
 mutation AddReels(
   $category: String = ""
   $description: String = ""

@@ -38,11 +38,15 @@ export default function HeaderLayout() {
       try {
         const parsedAddress = JSON.parse(saved);
         // If it's a nearby location (has lat/lng but no street), show "Current Location"
-        if (parsedAddress.latitude && parsedAddress.longitude && !parsedAddress.street) {
+        if (
+          parsedAddress.latitude &&
+          parsedAddress.longitude &&
+          !parsedAddress.street
+        ) {
           setDefaultAddress({
             ...parsedAddress,
             street: "Current Location",
-            city: "GPS Coordinates"
+            city: "GPS Coordinates",
           });
         } else {
           setDefaultAddress(parsedAddress);
@@ -71,11 +75,15 @@ export default function HeaderLayout() {
         try {
           const parsedAddress = JSON.parse(updated);
           // If it's a nearby location (has lat/lng but no street), show "Current Location"
-          if (parsedAddress.latitude && parsedAddress.longitude && !parsedAddress.street) {
+          if (
+            parsedAddress.latitude &&
+            parsedAddress.longitude &&
+            !parsedAddress.street
+          ) {
             setDefaultAddress({
               ...parsedAddress,
               street: "Current Location",
-              city: "GPS Coordinates"
+              city: "GPS Coordinates",
             });
           } else {
             setDefaultAddress(parsedAddress);
@@ -326,11 +334,15 @@ export default function HeaderLayout() {
                 className="h-4 w-4 text-white"
                 fill="currentColor"
               >
-                <path fillRule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clipRule="evenodd" />
+                <path
+                  fillRule="evenodd"
+                  d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z"
+                  clipRule="evenodd"
+                />
               </svg>
             </div>
-            <div className="flex-1 min-w-0">
-              <h6 className="text-sm font-medium text-inherit truncate">
+            <div className="min-w-0 flex-1">
+              <h6 className="truncate text-sm font-medium text-inherit">
                 {defaultAddress
                   ? defaultAddress.street && defaultAddress.city
                     ? `${defaultAddress.street}, ${defaultAddress.city}`
