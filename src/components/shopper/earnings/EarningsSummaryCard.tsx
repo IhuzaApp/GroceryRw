@@ -1,5 +1,6 @@
 import React from "react";
 import { Panel } from "rsuite";
+import { formatCurrencySync } from "../../../utils/formatCurrency";
 
 interface EarningsSummaryCardProps {
   title: string;
@@ -24,7 +25,7 @@ const EarningsSummaryCard: React.FC<EarningsSummaryCardProps> = ({
   const formatRwfCurrency = (value: number) => {
     return new Intl.NumberFormat("en-RW", {
       style: "currency",
-      currency: "RWF",
+      currency: formatCurrencySync("RWF"),
       maximumFractionDigits: 0,
     }).format(value);
   };

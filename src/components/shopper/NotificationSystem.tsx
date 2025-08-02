@@ -1,12 +1,9 @@
 import React, { useEffect, useRef, useState } from "react";
 import { useSession } from "next-auth/react";
-import {
-  Message,
-  toaster,
-  Notification as ToastNotification,
-  Button,
-} from "rsuite";
+import { Message, Button } from "rsuite";
+import toast from "react-hot-toast";
 import { logger } from "../../utils/logger";
+import { formatCurrencySync } from "../../utils/formatCurrency";
 
 interface Order {
   id: string;
@@ -14,6 +11,9 @@ interface Order {
   distance: number;
   createdAt: string;
   customerAddress: string;
+  itemsCount?: number;
+  estimatedEarnings?: number;
+  orderType?: "regular" | "reel";
   // Add other order properties as needed
 }
 
@@ -21,6 +21,9 @@ interface BatchAssignment {
   shopperId: string;
   orderId: string;
   assignedAt: number;
+  expiresAt: number; // Add expiration time
+  warningShown: boolean; // Track if warning was shown
+  warningTimeout: NodeJS.Timeout | null; // Track warning timeout
 }
 
 interface ShopperSchedule {
@@ -55,6 +58,7 @@ export default function NotificationSystem({
   const lastNotificationTime = useRef<number>(0);
   const batchAssignments = useRef<BatchAssignment[]>([]);
   const lastOrderIds = useRef<Set<string>>(new Set());
+  const activeToasts = useRef<Map<string, any>>(new Map()); // Track active toasts by order ID
 
   // Initialize audio immediately
   useEffect(() => {
@@ -153,57 +157,194 @@ export default function NotificationSystem({
     return `${year}${month}${day}-${orderId}`;
   };
 
+  const removeToastForOrder = (orderId: string) => {
+    const existingToast = activeToasts.current.get(orderId);
+    if (existingToast) {
+      toast.dismiss(existingToast);
+      activeToasts.current.delete(orderId);
+      logger.info(
+        `Removed toast for accepted order ${orderId}`,
+        "NotificationSystem"
+      );
+    }
+
+    // Also remove from batch assignments
+    batchAssignments.current = batchAssignments.current.filter(
+      (assignment) => assignment.orderId !== orderId
+    );
+  };
+
   const showToast = (
     order: Order,
     type: "info" | "success" | "warning" | "error" = "info"
   ) => {
-    toaster.push(
-      <ToastNotification
-        type={type}
-        header="New Batch!"
-        closable
-        duration={60000}
-      >
-        <div className="flex flex-col gap-2 text-sm">
-          <div className="flex flex-col gap-1 text-gray-600">
-            <div>{order.customerAddress}</div>
-            <div>
-              {order.shopName} ({order.distance}km)
+    // Remove any existing toast for this order
+    const existingToast = activeToasts.current.get(order.id);
+    if (existingToast) {
+      toast.dismiss(existingToast);
+      activeToasts.current.delete(order.id);
+    }
+
+    const toastKey = toast.custom(
+      (t) => (
+        <div
+          className={`${
+            t.visible ? "animate-enter" : "animate-leave"
+          } pointer-events-auto flex w-full max-w-md rounded-lg bg-white shadow-lg ring-1 ring-black ring-opacity-5`}
+        >
+          <div className="w-0 flex-1 p-4">
+            <div className="flex items-start">
+              <div className="flex-shrink-0">
+                {type === "success" && (
+                  <svg
+                    className="h-6 w-6 text-green-400"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth="2"
+                      d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
+                    />
+                  </svg>
+                )}
+                {type === "warning" && (
+                  <svg
+                    className="h-6 w-6 text-yellow-400"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth="2"
+                      d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z"
+                    />
+                  </svg>
+                )}
+                {type === "error" && (
+                  <svg
+                    className="h-6 w-6 text-red-400"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth="2"
+                      d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                    />
+                  </svg>
+                )}
+                {type === "info" && (
+                  <svg
+                    className="h-6 w-6 text-blue-400"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth="2"
+                      d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                    />
+                  </svg>
+                )}
+              </div>
+              <div className="ml-3 flex-1">
+                <p className="text-sm font-medium text-gray-900">New Batch!</p>
+                <div className="mt-1 text-sm text-gray-500">
+                  <div>{order.customerAddress}</div>
+                  <div>
+                    {order.shopName} ({order.distance}km)
+                  </div>
+                  <div className="mt-1 font-medium text-green-600">
+                    📦 {order.itemsCount || 0} items • 💰{" "}
+                    {formatCurrencySync(order.estimatedEarnings || 0)}
+                  </div>
+                </div>
+                <div className="mt-3 flex gap-2">
+                  <button
+                    onClick={() => {
+                      removeToastForOrder(order.id);
+                      onAcceptBatch?.(order.id);
+                      toast.dismiss(t.id);
+                    }}
+                    className="rounded bg-blue-600 px-3 py-1 text-sm text-white hover:bg-blue-700"
+                  >
+                    Accept Batch
+                  </button>
+                  <button
+                    onClick={() => {
+                      removeToastForOrder(order.id);
+                      // Remove assignment to allow other shoppers to get this order
+                      batchAssignments.current =
+                        batchAssignments.current.filter(
+                          (assignment) => assignment.orderId !== order.id
+                        );
+                      toast.dismiss(t.id);
+                      logger.info(
+                        `Skipped order ${order.id} - allowing other shoppers`,
+                        "NotificationSystem"
+                      );
+                    }}
+                    className="rounded bg-gray-300 px-3 py-1 text-sm text-gray-700 hover:bg-gray-400"
+                  >
+                    Skip
+                  </button>
+                </div>
+              </div>
             </div>
           </div>
-          <div className="mt-2 flex gap-2">
-            <Button
-              appearance="primary"
-              size="sm"
-              onClick={() => onAcceptBatch?.(order.id)}
-            >
-              Accept Batch
-            </Button>
-            <Button
-              appearance="subtle"
-              size="sm"
+          <div className="flex border-l border-gray-200">
+            <button
               onClick={() => {
-                if (onViewBatchDetails) {
-                  onViewBatchDetails(order.id);
-                  logger.info("Opening batch details for:", order.id);
-                } else {
-                  logger.warn(
-                    "onViewBatchDetails callback not provided",
-                    "NotificationSystem"
-                  );
-                }
+                removeToastForOrder(order.id);
+                toast.dismiss(t.id);
               }}
+              className="flex w-full items-center justify-center rounded-none rounded-r-lg border border-transparent p-4 text-sm font-medium text-gray-400 hover:text-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
             >
-              View Details
-            </Button>
+              <svg className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                <path
+                  fillRule="evenodd"
+                  d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"
+                  clipRule="evenodd"
+                />
+              </svg>
+            </button>
           </div>
         </div>
-      </ToastNotification>,
-      { placement: "topEnd" }
+      ),
+      {
+        duration: Infinity, // Never auto-dismiss
+        position: "top-right",
+      }
     );
+
+    // Store the toast key for this order
+    activeToasts.current.set(order.id, toastKey);
+
+    return toastKey;
   };
 
-  const playNotificationSound = async () => {
+  const playNotificationSound = async (soundSettings?: {
+    enabled: boolean;
+    volume: number;
+  }) => {
+    // Check if sound is enabled in settings
+    if (soundSettings && !soundSettings.enabled) {
+      logger.info(
+        "Sound notifications disabled in settings",
+        "NotificationSystem"
+      );
+      return;
+    }
+
     try {
       if (!audioRef.current) {
         logger.warn(
@@ -218,7 +359,7 @@ export default function NotificationSystem({
 
       // Create and play a new instance for better reliability
       const soundInstance = new Audio("/notifySound.mp3");
-      soundInstance.volume = 0.7;
+      soundInstance.volume = soundSettings?.volume || 0.7;
 
       await soundInstance.play();
       logger.info(
@@ -240,15 +381,12 @@ export default function NotificationSystem({
       // Fallback attempt with the original audio element
       try {
         if (audioRef.current) {
+          audioRef.current.volume = soundSettings?.volume || 0.7;
           await audioRef.current.play();
-          logger.info(
-            "Notification sound played successfully (fallback)",
-            "NotificationSystem"
-          );
         }
       } catch (fallbackError) {
         logger.error(
-          "Fallback notification sound also failed",
+          "Fallback audio play also failed",
           "NotificationSystem",
           fallbackError
         );
@@ -257,157 +395,277 @@ export default function NotificationSystem({
   };
 
   const showDesktopNotification = (order: Order) => {
-    if (window.Notification && window.Notification.permission === "granted") {
-      const options: NotificationOptions = {
-        body: `${order.customerAddress}\n${order.shopName} (${order.distance}km)`,
-        icon: "/app-icon.png",
-        badge: "/app-icon.png",
-        tag: "grocery-notification",
-        requireInteraction: true,
-        silent: true, // We'll handle the sound separately
-      };
+    if (
+      typeof window !== "undefined" &&
+      "Notification" in window &&
+      notificationPermission === "granted"
+    ) {
+      try {
+        const notification = new window.Notification("New Batch Available!", {
+          body: `${order.shopName} (${order.distance}km)\n${order.customerAddress}`,
+          icon: "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%234F46E5'><path d='M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z'/></svg>",
+          tag: `batch-${order.id}`,
+          requireInteraction: false,
+        });
 
-      const notification = new window.Notification("New Batch!", options);
+        notification.onclick = () => {
+          window.focus();
+          notification.close();
+        };
 
-      notification.onclick = () => {
-        window.focus();
-        if (onViewBatchDetails) {
-          onViewBatchDetails(order.id);
-          logger.info(
-            "Opening batch details from notification click:",
-            order.id
-          );
-        }
-        notification.close();
-      };
+        // Auto-close after 10 seconds
+        setTimeout(() => {
+          notification.close();
+        }, 10000);
+
+        logger.info("Desktop notification shown", "NotificationSystem");
+      } catch (error) {
+        logger.error(
+          "Error showing desktop notification",
+          "NotificationSystem",
+          error
+        );
+      }
     }
   };
 
-  // Check if current time is within shopper's schedule
-  const isWithinSchedule = async (): Promise<boolean> => {
-    try {
-      const response = await fetch("/api/shopper/schedule");
-      const data = await response.json();
+  const showWarningNotification = (order: Order) => {
+    // Check if assignment still exists and warning hasn't been shown
+    const assignment = batchAssignments.current.find(
+      (a) => a.orderId === order.id && a.shopperId === session?.user?.id
+    );
 
-      if (!data.schedule || data.schedule.length === 0) {
-        logger.info("No schedule found for shopper", "NotificationSystem");
-        return false;
+    if (!assignment || assignment.warningShown) {
+      return; // Assignment expired or warning already shown
+    }
+
+    // Mark warning as shown
+    assignment.warningShown = true;
+
+    // Remove existing toast for this order and show warning toast
+    const existingToast = activeToasts.current.get(order.id);
+    if (existingToast) {
+      toast.dismiss(existingToast);
+      activeToasts.current.delete(order.id);
+    }
+
+    const warningToastKey = toast.custom(
+      (t) => (
+        <div
+          className={`${
+            t.visible ? "animate-enter" : "animate-leave"
+          } pointer-events-auto flex w-full max-w-md rounded-lg border-l-4 border-yellow-400 bg-white shadow-lg ring-1 ring-black ring-opacity-5`}
+        >
+          <div className="w-0 flex-1 p-4">
+            <div className="flex items-start">
+              <div className="flex-shrink-0">
+                <svg
+                  className="h-6 w-6 text-yellow-400"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth="2"
+                    d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z"
+                  />
+                </svg>
+              </div>
+              <div className="ml-3 flex-1">
+                <p className="text-sm font-medium text-gray-900">
+                  ⚠️ Batch Expiring Soon!
+                </p>
+                <div className="mt-1 text-sm text-gray-500">
+                  <div>{order.customerAddress}</div>
+                  <div>
+                    {order.shopName} ({order.distance}km)
+                  </div>
+                  <div className="mt-1 font-medium text-green-600">
+                    📦 {order.itemsCount || 0} items • 💰{" "}
+                    {formatCurrencySync(order.estimatedEarnings || 0)}
+                  </div>
+                  <div className="mt-1 font-medium text-orange-600">
+                    ⚠️ This batch will be reassigned in 20 seconds!
+                  </div>
+                </div>
+                <div className="mt-3 flex gap-2">
+                  <button
+                    onClick={() => {
+                      removeToastForOrder(order.id);
+                      onAcceptBatch?.(order.id);
+                      toast.dismiss(t.id);
+                    }}
+                    className="rounded bg-orange-600 px-3 py-1 text-sm text-white hover:bg-orange-700"
+                  >
+                    Accept Now
+                  </button>
+                  <button
+                    onClick={() => {
+                      removeToastForOrder(order.id);
+                      // Remove assignment to allow other shoppers to get this order
+                      batchAssignments.current =
+                        batchAssignments.current.filter(
+                          (assignment) => assignment.orderId !== order.id
+                        );
+                      toast.dismiss(t.id);
+                      logger.info(
+                        `Skipped expiring order ${order.id} - allowing other shoppers`,
+                        "NotificationSystem"
+                      );
+                    }}
+                    className="rounded bg-gray-300 px-3 py-1 text-sm text-gray-700 hover:bg-gray-400"
+                  >
+                    Skip
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div className="flex border-l border-gray-200">
+            <button
+              onClick={() => {
+                removeToastForOrder(order.id);
+                toast.dismiss(t.id);
+              }}
+              className="flex w-full items-center justify-center rounded-none rounded-r-lg border border-transparent p-4 text-sm font-medium text-gray-400 hover:text-gray-500 focus:outline-none focus:ring-2 focus:ring-orange-500"
+            >
+              <svg className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                <path
+                  fillRule="evenodd"
+                  d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"
+                  clipRule="evenodd"
+                />
+              </svg>
+            </button>
+          </div>
+        </div>
+      ),
+      {
+        duration: Infinity, // Never auto-dismiss
+        position: "top-right",
       }
+    );
 
-      const now = new Date();
-      const currentDay = now.getDay() === 0 ? 7 : now.getDay(); // Convert Sunday from 0 to 7
+    // Store the warning toast key for this order
+    activeToasts.current.set(order.id, warningToastKey);
 
-      // Get current time in minutes since midnight
-      const currentHours = now.getHours();
-      const currentMinutes = now.getMinutes();
-      const currentTimeInMinutes = currentHours * 60 + currentMinutes;
-
-      const todaySchedule = data.schedule.find(
-        (s: ShopperSchedule) => s.day_of_week === currentDay
-      );
-
-      if (!todaySchedule || !todaySchedule.is_available) {
-        logger.info(
-          "No schedule or not available for today",
-          "NotificationSystem"
+    // Show warning desktop notification
+    if (
+      typeof window !== "undefined" &&
+      "Notification" in window &&
+      notificationPermission === "granted"
+    ) {
+      try {
+        const notification = new window.Notification(
+          "⚠️ Batch Expiring Soon!",
+          {
+            body: `${order.shopName} (${order.distance}km)\n${order.customerAddress}\n\nThis batch will be reassigned in 20 seconds!`,
+            icon: "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23F59E0B'><path d='M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z'/></svg>",
+            tag: `warning-${order.id}`,
+            requireInteraction: false,
+          }
         );
-        return false;
+
+        notification.onclick = () => {
+          window.focus();
+          notification.close();
+        };
+
+        // Auto-close after 20 seconds
+        setTimeout(() => {
+          notification.close();
+        }, 20000);
+
+        logger.info("Warning desktop notification shown", "NotificationSystem");
+      } catch (error) {
+        logger.error(
+          "Error showing warning desktop notification",
+          "NotificationSystem",
+          error
+        );
       }
+    }
 
-      // Convert schedule times to minutes since midnight
-      const [startHours, startMinutes] = todaySchedule.start_time
-        .split(":")
-        .map(Number);
-      const [endHours, endMinutes] = todaySchedule.end_time
-        .split(":")
-        .map(Number);
+    // Play warning sound
+    playNotificationSound({ enabled: true, volume: 0.8 });
 
-      const startTimeInMinutes = startHours * 60 + startMinutes;
-      const endTimeInMinutes = endHours * 60 + endMinutes;
+    logger.info(
+      `Warning notification shown for order ${order.id} - expires in 20 seconds`,
+      "NotificationSystem"
+    );
+  };
 
-      const isTimeWithinRange =
-        currentTimeInMinutes >= startTimeInMinutes &&
-        currentTimeInMinutes <= endTimeInMinutes;
+  const isWithinSchedule = async (): Promise<boolean> => {
+    if (!session?.user?.id) return false;
 
-      logger.info("Schedule check:", "NotificationSystem", {
-        currentDay,
-        currentTime: `${currentHours}:${currentMinutes}`,
-        scheduleStart: todaySchedule.start_time,
-        scheduleEnd: todaySchedule.end_time,
-        isTimeWithinRange,
+    try {
+      const now = new Date();
+      const currentDay = now.getDay() === 0 ? 7 : now.getDay();
+      const currentTime = now.toTimeString().split(" ")[0] + "+00:00";
+
+      const response = await fetch("/api/queries/shopper-availability", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          user_id: session.user.id,
+          day_of_week: currentDay,
+          current_time: currentTime,
+        }),
       });
 
-      return isTimeWithinRange;
+      const data = await response.json();
+      return data.is_available;
     } catch (error) {
-      logger.error("Error checking schedule:", "NotificationSystem", error);
+      logger.error("Error checking schedule", "NotificationSystem", error);
       return false;
     }
   };
 
-  // Check if shopper has any active orders
   const hasActiveOrders = async (): Promise<boolean> => {
-    try {
-      const response = await fetch("/api/shopper/activeOrders");
-      const data = await response.json();
+    if (!session?.user?.id) return false;
 
-      const hasActive = data.orders && data.orders.length > 0;
-      logger.debug("Active orders check", "NotificationSystem", {
-        hasActive,
-        count: data.orders?.length || 0,
+    try {
+      const response = await fetch("/api/shopper/activeBatches", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          user_id: session.user.id,
+        }),
       });
 
-      return hasActive;
+      const data = await response.json();
+      return data.hasActiveOrders;
     } catch (error) {
       logger.error("Error checking active orders", "NotificationSystem", error);
-      return true; // Assume has active orders on error to prevent notifications
+      return false;
     }
   };
 
-  // Check if shopper status is active based on their availability schedule
   const isShopperActive = async (): Promise<boolean> => {
+    if (!session?.user?.id) return false;
+
     try {
-      const response = await fetch("/api/shopper/schedule");
-      const data = await response.json();
-
-      if (!data.schedule || data.schedule.length === 0) {
-        logger.info("No schedule found for shopper", "NotificationSystem");
-        return false;
-      }
-
-      const now = new Date();
-      const currentDay = now.getDay() === 0 ? 7 : now.getDay(); // Convert Sunday from 0 to 7
-      const currentTime = now.toLocaleTimeString("en-US", { hour12: false });
-
-      const todaySchedule = data.schedule.find(
-        (s: ShopperSchedule) => s.day_of_week === currentDay
-      );
-
-      if (!todaySchedule) {
-        logger.info("No schedule for today", "NotificationSystem");
-        return false;
-      }
-
-      if (!todaySchedule.is_available) {
-        logger.info("Shopper is not available today", "NotificationSystem");
-        return false;
-      }
-
-      const isTimeWithinRange =
-        currentTime >= todaySchedule.start_time &&
-        currentTime <= todaySchedule.end_time;
-
-      logger.info("Schedule check result", "NotificationSystem", {
-        currentDay,
-        currentTime,
-        scheduleStart: todaySchedule.start_time,
-        scheduleEnd: todaySchedule.end_time,
-        isWithinRange: isTimeWithinRange,
+      const response = await fetch("/api/queries/shopper-availability", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          user_id: session.user.id,
+        }),
       });
 
-      return isTimeWithinRange;
+      const data = await response.json();
+      return data.is_available;
     } catch (error) {
       logger.error(
-        "Error checking shopper availability",
+        "Error checking shopper status",
         "NotificationSystem",
         error
       );
@@ -416,11 +674,18 @@ export default function NotificationSystem({
   };
 
   const checkForNewOrders = async () => {
-    if (!currentLocation || !session?.user?.id) return;
+    if (!session?.user?.id || !currentLocation) {
+      logger.debug(
+        "Missing session or location, skipping check",
+        "NotificationSystem"
+      );
+      return;
+    }
 
     const now = new Date();
     const currentTime = now.getTime();
 
+    // Check if we should skip this check (60-second cooldown)
     if (currentTime - lastNotificationTime.current < 60000) {
       logger.debug(
         `Skipping notification check - ${Math.floor(
@@ -431,60 +696,70 @@ export default function NotificationSystem({
       return;
     }
 
-    const [withinSchedule, noActiveOrders, isActive] = await Promise.all([
-      isWithinSchedule(),
-      !(await hasActiveOrders()),
-      isShopperActive(),
-    ]);
-
-    if (!withinSchedule) {
-      logger.debug(
-        "Outside scheduled hours, skipping notification check",
-        "NotificationSystem"
-      );
-      return;
-    }
-
-    if (!noActiveOrders) {
-      logger.debug(
-        "Shopper has active orders, skipping notification check",
-        "NotificationSystem"
-      );
-      return;
-    }
-
-    if (!isActive) {
-      logger.debug(
-        "Shopper is not active, skipping notification check",
-        "NotificationSystem"
-      );
-      return;
-    }
-
     logger.info(
-      "All conditions met, checking for pending orders",
+      "Checking for pending orders with settings (API handles all conditions)",
       "NotificationSystem"
     );
 
     try {
+      // Use the new API that respects notification settings
       const response = await fetch(
-        `/api/shopper/availableOrders?latitude=${currentLocation.lat}&longitude=${currentLocation.lng}&maxTravelTime=15`
+        "/api/shopper/check-notifications-with-settings",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            user_id: session.user.id,
+            current_location: currentLocation,
+          }),
+        }
       );
-      const orders: Order[] = await response.json();
 
-      if (orders.length > 0) {
+      const data = await response.json();
+
+      if (data.success && data.notifications && data.notifications.length > 0) {
         logger.info(
-          `Found ${orders.length} pending orders`,
+          `Found ${data.notifications.length} notifications based on settings`,
           "NotificationSystem"
         );
 
-        // Clean up expired assignments
+        // Clean up expired assignments and clear warning timeouts
+        const oneMinuteAgo = currentTime - 60000;
         batchAssignments.current = batchAssignments.current.filter(
-          (assignment) => currentTime - assignment.assignedAt < 60000
+          (assignment) => {
+            if (assignment.expiresAt <= currentTime) {
+              // Clear warning timeout if assignment is expired
+              if (assignment.warningTimeout) {
+                clearTimeout(assignment.warningTimeout);
+              }
+
+              // Remove toast for expired order
+              const existingToast = activeToasts.current.get(
+                assignment.orderId
+              );
+              if (existingToast) {
+                toast.dismiss(existingToast);
+                activeToasts.current.delete(assignment.orderId);
+                logger.info(
+                  `Removed toast for expired order ${assignment.orderId}`,
+                  "NotificationSystem"
+                );
+              }
+
+              logger.info(
+                `Assignment expired for order ${assignment.orderId} - reassigning to next shopper`,
+                "NotificationSystem"
+              );
+              return false; // Remove expired assignment
+            }
+            return true; // Keep active assignment
+          }
         );
 
-        // Sort and filter orders
-        const sortedOrders = [...orders].sort(
+        // Sort notifications by creation time (oldest first)
+        const sortedNotifications = [...data.notifications].sort(
           (a, b) =>
             new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
         );
@@ -492,34 +767,71 @@ export default function NotificationSystem({
         const assignedOrderIds = new Set(
           batchAssignments.current.map((a) => a.orderId)
         );
-        const availableOrders = sortedOrders.filter(
-          (order) => !assignedOrderIds.has(order.id)
+        const availableNotifications = sortedNotifications.filter(
+          (notification) => !assignedOrderIds.has(notification.id)
         );
 
-        if (availableOrders.length > 0) {
+        if (availableNotifications.length > 0) {
           const currentUserAssignment = batchAssignments.current.find(
             (assignment) => assignment.shopperId === session.user.id
           );
 
           if (!currentUserAssignment) {
-            const nextOrder = availableOrders[0];
+            const nextNotification = availableNotifications[0];
 
             const newAssignment: BatchAssignment = {
               shopperId: session.user.id,
-              orderId: nextOrder.id,
+              orderId: nextNotification.id,
               assignedAt: currentTime,
+              expiresAt: currentTime + 60000, // Expires in 1 minute
+              warningShown: false,
+              warningTimeout: null,
             };
             batchAssignments.current.push(newAssignment);
 
-            await playNotificationSound();
-            showToast(nextOrder);
-            showDesktopNotification(nextOrder);
+            // Convert notification to Order format for compatibility
+            const orderForNotification: Order = {
+              id: nextNotification.id,
+              shopName: nextNotification.shopName,
+              distance: nextNotification.distance,
+              createdAt: nextNotification.createdAt,
+              customerAddress: nextNotification.customerAddress,
+              itemsCount:
+                nextNotification.itemCount ||
+                nextNotification.itemsCount ||
+                nextNotification.totalItems ||
+                nextNotification.quantity ||
+                0,
+              estimatedEarnings:
+                nextNotification.estimatedEarnings ||
+                nextNotification.totalEarnings ||
+                (nextNotification.serviceFee && nextNotification.deliveryFee
+                  ? parseFloat(nextNotification.serviceFee) +
+                    parseFloat(nextNotification.deliveryFee)
+                  : 0) ||
+                (nextNotification.total
+                  ? parseFloat(nextNotification.total)
+                  : 0),
+              orderType: nextNotification.type === "reel" ? "reel" : "regular",
+            };
+
+            await playNotificationSound(data.settings?.sound_settings);
+            showToast(orderForNotification);
+            showDesktopNotification(orderForNotification);
+
+            // Set up warning notification after 40 seconds
+            const warningTimeout = setTimeout(() => {
+              showWarningNotification(orderForNotification);
+            }, 40000); // 40 seconds
+
+            // Update assignment with warning timeout
+            newAssignment.warningTimeout = warningTimeout;
 
             lastNotificationTime.current = currentTime;
             logger.info(
-              `Showing notification for batch from ${nextOrder.shopName}`,
+              `Showing initial notification for ${nextNotification.type} from ${nextNotification.shopName} (${nextNotification.locationName}) - warning in 40s, expires in 1 minute`,
               "NotificationSystem",
-              nextOrder
+              nextNotification
             );
           } else {
             logger.debug(
@@ -527,17 +839,28 @@ export default function NotificationSystem({
               "NotificationSystem"
             );
           }
+        } else {
+          logger.debug(
+            "No available notifications (all assigned or expired)",
+            "NotificationSystem"
+          );
         }
 
-        if (onNewOrder) {
-          onNewOrder(orders);
-        }
+        // Don't call onNewOrder to prevent page refreshes
+        // The notification system should be independent
+        logger.info(
+          "Notification shown, not triggering page refresh",
+          "NotificationSystem"
+        );
       } else {
-        logger.debug("No pending orders found", "NotificationSystem");
+        logger.debug(
+          "No notifications found based on settings",
+          "NotificationSystem"
+        );
       }
     } catch (error) {
       logger.error(
-        "Error checking for pending orders",
+        "Error checking for notifications with settings",
         "NotificationSystem",
         error
       );
@@ -557,7 +880,7 @@ export default function NotificationSystem({
 
     logger.info("Starting notification system", "NotificationSystem");
     logger.info(
-      "Will check for pending orders every 60 seconds",
+      "Will check for pending orders every 60 seconds with 1-minute assignment timeout",
       "NotificationSystem"
     );
 
@@ -583,8 +906,23 @@ export default function NotificationSystem({
       clearInterval(checkInterval.current);
       checkInterval.current = null;
     }
+
+    // Clear all warning timeouts
+    batchAssignments.current.forEach((assignment) => {
+      if (assignment.warningTimeout) {
+        clearTimeout(assignment.warningTimeout);
+      }
+    });
+
+    // Clear all active toasts
+    activeToasts.current.forEach((toastKey) => {
+      toast.dismiss(toastKey);
+    });
+    activeToasts.current.clear();
+
     setIsListening(false);
     lastOrderIds.current.clear();
+    batchAssignments.current = []; // Clear all assignments
   };
 
   useEffect(() => {

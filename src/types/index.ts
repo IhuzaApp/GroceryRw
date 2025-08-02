@@ -12,6 +12,7 @@ export interface Data {
   deliveryIssues?: any[];
   notifications?: any[];
   platformSettings?: any[];
+  restaurants?: any[];
 }
 
 export interface UsersResponse {
@@ -143,6 +144,21 @@ export interface PlatformSettingsResponse {
     id: string;
     key: string;
     value: string;
+    created_at: string;
+  }>;
+}
+
+export interface RestaurantsResponse {
+  Restaurants: Array<{
+    id: string;
+    name: string;
+    email: string;
+    phone: string;
+    location: string;
+    lat: string;
+    long: string;
+    profile: string;
+    verified: boolean;
     created_at: string;
   }>;
 }

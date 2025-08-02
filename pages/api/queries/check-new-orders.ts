@@ -149,10 +149,10 @@ export default async function handler(
       throw new Error("Hasura client is not initialized");
     }
 
-    // Get shopper's location from query params
+    // Get shopper's location and settings from query params
     const shopperLatitude = parseFloat(req.query.latitude as string) || 0;
     const shopperLongitude = parseFloat(req.query.longitude as string) || 0;
-    const maxTravelTime = parseInt(req.query.maxTravelTime as string) || 15;
+    const userId = req.query.user_id as string;
 
     // If this is not the first check, ensure at least 3 minutes have passed
     if (lastCheckTime) {
@@ -170,12 +170,41 @@ export default async function handler(
     // Update last check time
     lastCheckTime = new Date();
 
-    // Get orders created in the last 3 minutes
-    const threeMinutesAgo = new Date(Date.now() - 3 * 60 * 1000).toISOString();
+    // Get notification settings if user_id is provided
+    let notificationSettings = null;
+    if (userId) {
+      const GET_NOTIFICATION_SETTINGS = gql`
+        query GetNotificationSettings($user_id: uuid!) {
+          shopper_notification_settings(where: { user_id: { _eq: $user_id } }) {
+            notification_types
+            sound_settings
+            max_distance
+          }
+        }
+      `;
+
+      try {
+        const settingsResponse = (await hasuraClient.request(
+          GET_NOTIFICATION_SETTINGS,
+          { user_id: userId }
+        )) as any;
+        notificationSettings =
+          settingsResponse.shopper_notification_settings?.[0];
+      } catch (error) {
+        logger.warn(
+          "Failed to fetch notification settings",
+          "CheckNewOrdersAPI",
+          error
+        );
+      }
+    }
+
+    // Get orders created in the last 10 minutes (NEW orders only)
+    const tenMinutesAgo = new Date(Date.now() - 10 * 60 * 1000).toISOString();
     const { Orders: newOrders } = await hasuraClient.request<{
       Orders: Order[];
     }>(GET_NEW_ORDERS, {
-      created_after: threeMinutesAgo,
+      created_after: tenMinutesAgo,
     });
 
     if (newOrders.length === 0) {
@@ -206,6 +235,12 @@ export default async function handler(
         travelTimeMinutes,
       };
     });
+
+    // Get max distance from notification settings or use default
+    const maxDistanceKm = notificationSettings?.max_distance
+      ? parseFloat(notificationSettings.max_distance)
+      : 10;
+    const maxTravelTime = maxDistanceKm * 2; // Rough conversion: 1km ≈ 2 minutes
 
     // Filter orders by travel time
     const nearbyOrders = ordersWithDistance.filter(
@@ -269,6 +304,10 @@ export default async function handler(
           })),
           timestamp: new Date().toISOString(),
           priority: totalOrders > 2 ? "high" : "normal",
+          // Add order details for notifications
+          itemsCount: totalItems,
+          estimatedEarnings: totalEarnings,
+          totalOrders: totalOrders,
         };
       }
     );
@@ -284,14 +323,21 @@ export default async function handler(
             latitude: shopperLatitude,
             longitude: shopperLongitude,
           },
-          maxDistance: maxTravelTime,
+          maxDistance: maxDistanceKm,
         }
       );
 
       res.status(200).json({
         success: true,
         notifications,
-        should_play_sound: notifications.length > 0,
+        should_play_sound:
+          notifications.length > 0 &&
+          (!notificationSettings?.sound_settings ||
+            notificationSettings.sound_settings.enabled),
+        sound_settings: notificationSettings?.sound_settings || {
+          enabled: true,
+          volume: 0.8,
+        },
         message: `Found ${notifications.length} new nearby order notifications`,
       });
 

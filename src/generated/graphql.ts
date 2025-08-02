@@ -50,6 +50,10 @@ export type Addresses = {
   latitude: Scalars["String"]["output"];
   longitude: Scalars["String"]["output"];
   postal_code?: Maybe<Scalars["String"]["output"]>;
+  /** An array relationship */
+  reel_orders: Array<Reel_Orders>;
+  /** An aggregate relationship */
+  reel_orders_aggregate: Reel_Orders_Aggregate;
   street: Scalars["String"]["output"];
   updated_at?: Maybe<Scalars["String"]["output"]>;
   user_id: Scalars["uuid"]["output"];
@@ -71,6 +75,24 @@ export type AddressesOrders_AggregateArgs = {
   offset?: InputMaybe<Scalars["Int"]["input"]>;
   order_by?: InputMaybe<Array<Orders_Order_By>>;
   where?: InputMaybe<Orders_Bool_Exp>;
+};
+
+/** Addresses */
+export type AddressesReel_OrdersArgs = {
+  distinct_on?: InputMaybe<Array<Reel_Orders_Select_Column>>;
+  limit?: InputMaybe<Scalars["Int"]["input"]>;
+  offset?: InputMaybe<Scalars["Int"]["input"]>;
+  order_by?: InputMaybe<Array<Reel_Orders_Order_By>>;
+  where?: InputMaybe<Reel_Orders_Bool_Exp>;
+};
+
+/** Addresses */
+export type AddressesReel_Orders_AggregateArgs = {
+  distinct_on?: InputMaybe<Array<Reel_Orders_Select_Column>>;
+  limit?: InputMaybe<Scalars["Int"]["input"]>;
+  offset?: InputMaybe<Scalars["Int"]["input"]>;
+  order_by?: InputMaybe<Array<Reel_Orders_Order_By>>;
+  where?: InputMaybe<Reel_Orders_Bool_Exp>;
 };
 
 /** aggregated selection of "Addresses" */
@@ -148,6 +170,8 @@ export type Addresses_Bool_Exp = {
   latitude?: InputMaybe<String_Comparison_Exp>;
   longitude?: InputMaybe<String_Comparison_Exp>;
   postal_code?: InputMaybe<String_Comparison_Exp>;
+  reel_orders?: InputMaybe<Reel_Orders_Bool_Exp>;
+  reel_orders_aggregate?: InputMaybe<Reel_Orders_Aggregate_Bool_Exp>;
   street?: InputMaybe<String_Comparison_Exp>;
   updated_at?: InputMaybe<String_Comparison_Exp>;
   user_id?: InputMaybe<Uuid_Comparison_Exp>;
@@ -169,6 +193,7 @@ export type Addresses_Insert_Input = {
   latitude?: InputMaybe<Scalars["String"]["input"]>;
   longitude?: InputMaybe<Scalars["String"]["input"]>;
   postal_code?: InputMaybe<Scalars["String"]["input"]>;
+  reel_orders?: InputMaybe<Reel_Orders_Arr_Rel_Insert_Input>;
   street?: InputMaybe<Scalars["String"]["input"]>;
   updated_at?: InputMaybe<Scalars["String"]["input"]>;
   user_id?: InputMaybe<Scalars["uuid"]["input"]>;
@@ -259,6 +284,7 @@ export type Addresses_Order_By = {
   latitude?: InputMaybe<Order_By>;
   longitude?: InputMaybe<Order_By>;
   postal_code?: InputMaybe<Order_By>;
+  reel_orders_aggregate?: InputMaybe<Reel_Orders_Aggregate_Order_By>;
   street?: InputMaybe<Order_By>;
   updated_at?: InputMaybe<Order_By>;
   user_id?: InputMaybe<Order_By>;
@@ -1509,7 +1535,8 @@ export type Int_Comparison_Exp = {
 /** columns and relationships of "Invoices" */
 export type Invoices = {
   /** An object relationship */
-  Order: Orders;
+  Order?: Maybe<Orders>;
+  Proof?: Maybe<Scalars["String"]["output"]>;
   /** An object relationship */
   User: Users;
   created_at: Scalars["timestamptz"]["output"];
@@ -1519,7 +1546,8 @@ export type Invoices = {
   id: Scalars["uuid"]["output"];
   invoice_items: Scalars["jsonb"]["output"];
   invoice_number: Scalars["String"]["output"];
-  order_id: Scalars["uuid"]["output"];
+  order_id?: Maybe<Scalars["uuid"]["output"]>;
+  reel_order_id?: Maybe<Scalars["uuid"]["output"]>;
   service_fee: Scalars["String"]["output"];
   status: Scalars["String"]["output"];
   subtotal: Scalars["String"]["output"];
@@ -1584,6 +1612,7 @@ export type Invoices_Arr_Rel_Insert_Input = {
 /** Boolean expression to filter rows from the table "Invoices". All fields are combined with a logical 'AND'. */
 export type Invoices_Bool_Exp = {
   Order?: InputMaybe<Orders_Bool_Exp>;
+  Proof?: InputMaybe<String_Comparison_Exp>;
   User?: InputMaybe<Users_Bool_Exp>;
   _and?: InputMaybe<Array<Invoices_Bool_Exp>>;
   _not?: InputMaybe<Invoices_Bool_Exp>;
@@ -1596,6 +1625,7 @@ export type Invoices_Bool_Exp = {
   invoice_items?: InputMaybe<Jsonb_Comparison_Exp>;
   invoice_number?: InputMaybe<String_Comparison_Exp>;
   order_id?: InputMaybe<Uuid_Comparison_Exp>;
+  reel_order_id?: InputMaybe<Uuid_Comparison_Exp>;
   service_fee?: InputMaybe<String_Comparison_Exp>;
   status?: InputMaybe<String_Comparison_Exp>;
   subtotal?: InputMaybe<String_Comparison_Exp>;
@@ -1605,10 +1635,8 @@ export type Invoices_Bool_Exp = {
 
 /** unique or primary key constraints on table "Invoices" */
 export type Invoices_Constraint =
-  /** unique or primary key constraint on columns "order_id" */
-  | "Invoices_order_id_key"
   /** unique or primary key constraint on columns "id" */
-  | "Invoices_pkey";
+  "Invoices_pkey";
 
 /** delete the field or element with specified path (for JSON arrays, negative integers count from the end) */
 export type Invoices_Delete_At_Path_Input = {
@@ -1628,6 +1656,7 @@ export type Invoices_Delete_Key_Input = {
 /** input type for inserting data into table "Invoices" */
 export type Invoices_Insert_Input = {
   Order?: InputMaybe<Orders_Obj_Rel_Insert_Input>;
+  Proof?: InputMaybe<Scalars["String"]["input"]>;
   User?: InputMaybe<Users_Obj_Rel_Insert_Input>;
   created_at?: InputMaybe<Scalars["timestamptz"]["input"]>;
   customer_id?: InputMaybe<Scalars["uuid"]["input"]>;
@@ -1637,6 +1666,7 @@ export type Invoices_Insert_Input = {
   invoice_items?: InputMaybe<Scalars["jsonb"]["input"]>;
   invoice_number?: InputMaybe<Scalars["String"]["input"]>;
   order_id?: InputMaybe<Scalars["uuid"]["input"]>;
+  reel_order_id?: InputMaybe<Scalars["uuid"]["input"]>;
   service_fee?: InputMaybe<Scalars["String"]["input"]>;
   status?: InputMaybe<Scalars["String"]["input"]>;
   subtotal?: InputMaybe<Scalars["String"]["input"]>;
@@ -1646,6 +1676,7 @@ export type Invoices_Insert_Input = {
 
 /** aggregate max on columns */
 export type Invoices_Max_Fields = {
+  Proof?: Maybe<Scalars["String"]["output"]>;
   created_at?: Maybe<Scalars["timestamptz"]["output"]>;
   customer_id?: Maybe<Scalars["uuid"]["output"]>;
   delivery_fee?: Maybe<Scalars["String"]["output"]>;
@@ -1653,6 +1684,7 @@ export type Invoices_Max_Fields = {
   id?: Maybe<Scalars["uuid"]["output"]>;
   invoice_number?: Maybe<Scalars["String"]["output"]>;
   order_id?: Maybe<Scalars["uuid"]["output"]>;
+  reel_order_id?: Maybe<Scalars["uuid"]["output"]>;
   service_fee?: Maybe<Scalars["String"]["output"]>;
   status?: Maybe<Scalars["String"]["output"]>;
   subtotal?: Maybe<Scalars["String"]["output"]>;
@@ -1662,6 +1694,7 @@ export type Invoices_Max_Fields = {
 
 /** order by max() on columns of table "Invoices" */
 export type Invoices_Max_Order_By = {
+  Proof?: InputMaybe<Order_By>;
   created_at?: InputMaybe<Order_By>;
   customer_id?: InputMaybe<Order_By>;
   delivery_fee?: InputMaybe<Order_By>;
@@ -1669,6 +1702,7 @@ export type Invoices_Max_Order_By = {
   id?: InputMaybe<Order_By>;
   invoice_number?: InputMaybe<Order_By>;
   order_id?: InputMaybe<Order_By>;
+  reel_order_id?: InputMaybe<Order_By>;
   service_fee?: InputMaybe<Order_By>;
   status?: InputMaybe<Order_By>;
   subtotal?: InputMaybe<Order_By>;
@@ -1678,6 +1712,7 @@ export type Invoices_Max_Order_By = {
 
 /** aggregate min on columns */
 export type Invoices_Min_Fields = {
+  Proof?: Maybe<Scalars["String"]["output"]>;
   created_at?: Maybe<Scalars["timestamptz"]["output"]>;
   customer_id?: Maybe<Scalars["uuid"]["output"]>;
   delivery_fee?: Maybe<Scalars["String"]["output"]>;
@@ -1685,6 +1720,7 @@ export type Invoices_Min_Fields = {
   id?: Maybe<Scalars["uuid"]["output"]>;
   invoice_number?: Maybe<Scalars["String"]["output"]>;
   order_id?: Maybe<Scalars["uuid"]["output"]>;
+  reel_order_id?: Maybe<Scalars["uuid"]["output"]>;
   service_fee?: Maybe<Scalars["String"]["output"]>;
   status?: Maybe<Scalars["String"]["output"]>;
   subtotal?: Maybe<Scalars["String"]["output"]>;
@@ -1694,6 +1730,7 @@ export type Invoices_Min_Fields = {
 
 /** order by min() on columns of table "Invoices" */
 export type Invoices_Min_Order_By = {
+  Proof?: InputMaybe<Order_By>;
   created_at?: InputMaybe<Order_By>;
   customer_id?: InputMaybe<Order_By>;
   delivery_fee?: InputMaybe<Order_By>;
@@ -1701,6 +1738,7 @@ export type Invoices_Min_Order_By = {
   id?: InputMaybe<Order_By>;
   invoice_number?: InputMaybe<Order_By>;
   order_id?: InputMaybe<Order_By>;
+  reel_order_id?: InputMaybe<Order_By>;
   service_fee?: InputMaybe<Order_By>;
   status?: InputMaybe<Order_By>;
   subtotal?: InputMaybe<Order_By>;
@@ -1733,6 +1771,7 @@ export type Invoices_On_Conflict = {
 /** Ordering options when selecting data from "Invoices". */
 export type Invoices_Order_By = {
   Order?: InputMaybe<Orders_Order_By>;
+  Proof?: InputMaybe<Order_By>;
   User?: InputMaybe<Users_Order_By>;
   created_at?: InputMaybe<Order_By>;
   customer_id?: InputMaybe<Order_By>;
@@ -1742,6 +1781,7 @@ export type Invoices_Order_By = {
   invoice_items?: InputMaybe<Order_By>;
   invoice_number?: InputMaybe<Order_By>;
   order_id?: InputMaybe<Order_By>;
+  reel_order_id?: InputMaybe<Order_By>;
   service_fee?: InputMaybe<Order_By>;
   status?: InputMaybe<Order_By>;
   subtotal?: InputMaybe<Order_By>;
@@ -1762,6 +1802,8 @@ export type Invoices_Prepend_Input = {
 /** select columns of table "Invoices" */
 export type Invoices_Select_Column =
   /** column name */
+  | "Proof"
+  /** column name */
   | "created_at"
   /** column name */
   | "customer_id"
@@ -1778,6 +1820,8 @@ export type Invoices_Select_Column =
   /** column name */
   | "order_id"
   /** column name */
+  | "reel_order_id"
+  /** column name */
   | "service_fee"
   /** column name */
   | "status"
@@ -1790,6 +1834,7 @@ export type Invoices_Select_Column =
 
 /** input type for updating data in table "Invoices" */
 export type Invoices_Set_Input = {
+  Proof?: InputMaybe<Scalars["String"]["input"]>;
   created_at?: InputMaybe<Scalars["timestamptz"]["input"]>;
   customer_id?: InputMaybe<Scalars["uuid"]["input"]>;
   delivery_fee?: InputMaybe<Scalars["String"]["input"]>;
@@ -1798,6 +1843,7 @@ export type Invoices_Set_Input = {
   invoice_items?: InputMaybe<Scalars["jsonb"]["input"]>;
   invoice_number?: InputMaybe<Scalars["String"]["input"]>;
   order_id?: InputMaybe<Scalars["uuid"]["input"]>;
+  reel_order_id?: InputMaybe<Scalars["uuid"]["input"]>;
   service_fee?: InputMaybe<Scalars["String"]["input"]>;
   status?: InputMaybe<Scalars["String"]["input"]>;
   subtotal?: InputMaybe<Scalars["String"]["input"]>;
@@ -1815,6 +1861,7 @@ export type Invoices_Stream_Cursor_Input = {
 
 /** Initial value of the column from where the streaming should start */
 export type Invoices_Stream_Cursor_Value_Input = {
+  Proof?: InputMaybe<Scalars["String"]["input"]>;
   created_at?: InputMaybe<Scalars["timestamptz"]["input"]>;
   customer_id?: InputMaybe<Scalars["uuid"]["input"]>;
   delivery_fee?: InputMaybe<Scalars["String"]["input"]>;
@@ -1823,6 +1870,7 @@ export type Invoices_Stream_Cursor_Value_Input = {
   invoice_items?: InputMaybe<Scalars["jsonb"]["input"]>;
   invoice_number?: InputMaybe<Scalars["String"]["input"]>;
   order_id?: InputMaybe<Scalars["uuid"]["input"]>;
+  reel_order_id?: InputMaybe<Scalars["uuid"]["input"]>;
   service_fee?: InputMaybe<Scalars["String"]["input"]>;
   status?: InputMaybe<Scalars["String"]["input"]>;
   subtotal?: InputMaybe<Scalars["String"]["input"]>;
@@ -1832,6 +1880,8 @@ export type Invoices_Stream_Cursor_Value_Input = {
 
 /** update columns of table "Invoices" */
 export type Invoices_Update_Column =
+  /** column name */
+  | "Proof"
   /** column name */
   | "created_at"
   /** column name */
@@ -1848,6 +1898,8 @@ export type Invoices_Update_Column =
   | "invoice_number"
   /** column name */
   | "order_id"
+  /** column name */
+  | "reel_order_id"
   /** column name */
   | "service_fee"
   /** column name */
@@ -2460,6 +2512,10 @@ export type Orders = {
   Delivery_Issues_aggregate: Delivery_Issues_Aggregate;
   /** An object relationship */
   Invoice?: Maybe<Invoices>;
+  /** An array relationship */
+  Invoices: Array<Invoices>;
+  /** An aggregate relationship */
+  Invoices_aggregate: Invoices_Aggregate;
   OrderID: Scalars["Int"]["output"];
   /** An array relationship */
   Order_Items: Array<Order_Items>;
@@ -2521,6 +2577,24 @@ export type OrdersDelivery_Issues_AggregateArgs = {
   offset?: InputMaybe<Scalars["Int"]["input"]>;
   order_by?: InputMaybe<Array<Delivery_Issues_Order_By>>;
   where?: InputMaybe<Delivery_Issues_Bool_Exp>;
+};
+
+/** columns and relationships of "Orders" */
+export type OrdersInvoicesArgs = {
+  distinct_on?: InputMaybe<Array<Invoices_Select_Column>>;
+  limit?: InputMaybe<Scalars["Int"]["input"]>;
+  offset?: InputMaybe<Scalars["Int"]["input"]>;
+  order_by?: InputMaybe<Array<Invoices_Order_By>>;
+  where?: InputMaybe<Invoices_Bool_Exp>;
+};
+
+/** columns and relationships of "Orders" */
+export type OrdersInvoices_AggregateArgs = {
+  distinct_on?: InputMaybe<Array<Invoices_Select_Column>>;
+  limit?: InputMaybe<Scalars["Int"]["input"]>;
+  offset?: InputMaybe<Scalars["Int"]["input"]>;
+  order_by?: InputMaybe<Array<Invoices_Order_By>>;
+  where?: InputMaybe<Invoices_Bool_Exp>;
 };
 
 /** columns and relationships of "Orders" */
@@ -2687,6 +2761,8 @@ export type Orders_Bool_Exp = {
   Delivery_Issues?: InputMaybe<Delivery_Issues_Bool_Exp>;
   Delivery_Issues_aggregate?: InputMaybe<Delivery_Issues_Aggregate_Bool_Exp>;
   Invoice?: InputMaybe<Invoices_Bool_Exp>;
+  Invoices?: InputMaybe<Invoices_Bool_Exp>;
+  Invoices_aggregate?: InputMaybe<Invoices_Aggregate_Bool_Exp>;
   OrderID?: InputMaybe<Int_Comparison_Exp>;
   Order_Items?: InputMaybe<Order_Items_Bool_Exp>;
   Order_Items_aggregate?: InputMaybe<Order_Items_Aggregate_Bool_Exp>;
@@ -2740,6 +2816,7 @@ export type Orders_Insert_Input = {
   Address?: InputMaybe<Addresses_Obj_Rel_Insert_Input>;
   Delivery_Issues?: InputMaybe<Delivery_Issues_Arr_Rel_Insert_Input>;
   Invoice?: InputMaybe<Invoices_Obj_Rel_Insert_Input>;
+  Invoices?: InputMaybe<Invoices_Arr_Rel_Insert_Input>;
   OrderID?: InputMaybe<Scalars["Int"]["input"]>;
   Order_Items?: InputMaybe<Order_Items_Arr_Rel_Insert_Input>;
   Ratings?: InputMaybe<Ratings_Arr_Rel_Insert_Input>;
@@ -2884,6 +2961,7 @@ export type Orders_Order_By = {
   Address?: InputMaybe<Addresses_Order_By>;
   Delivery_Issues_aggregate?: InputMaybe<Delivery_Issues_Aggregate_Order_By>;
   Invoice?: InputMaybe<Invoices_Order_By>;
+  Invoices_aggregate?: InputMaybe<Invoices_Aggregate_Order_By>;
   OrderID?: InputMaybe<Order_By>;
   Order_Items_aggregate?: InputMaybe<Order_Items_Aggregate_Order_By>;
   Ratings_aggregate?: InputMaybe<Ratings_Aggregate_Order_By>;
@@ -4188,17 +4266,18 @@ export type Products_Variance_Order_By = {
 /** columns and relationships of "Ratings" */
 export type Ratings = {
   /** An object relationship */
-  Order: Orders;
+  Order?: Maybe<Orders>;
   /** An object relationship */
   User: Users;
   created_at: Scalars["timestamptz"]["output"];
   customer_id: Scalars["uuid"]["output"];
   delivery_experience?: Maybe<Scalars["String"]["output"]>;
   id: Scalars["uuid"]["output"];
-  order_id: Scalars["uuid"]["output"];
+  order_id?: Maybe<Scalars["uuid"]["output"]>;
   packaging_quality?: Maybe<Scalars["String"]["output"]>;
   professionalism?: Maybe<Scalars["String"]["output"]>;
   rating: Scalars["Int"]["output"];
+  reel_order_id?: Maybe<Scalars["uuid"]["output"]>;
   review: Scalars["String"]["output"];
   reviewed_at?: Maybe<Scalars["timestamptz"]["output"]>;
   shopper_id: Scalars["uuid"]["output"];
@@ -4292,6 +4371,7 @@ export type Ratings_Bool_Exp = {
   packaging_quality?: InputMaybe<String_Comparison_Exp>;
   professionalism?: InputMaybe<String_Comparison_Exp>;
   rating?: InputMaybe<Int_Comparison_Exp>;
+  reel_order_id?: InputMaybe<Uuid_Comparison_Exp>;
   review?: InputMaybe<String_Comparison_Exp>;
   reviewed_at?: InputMaybe<Timestamptz_Comparison_Exp>;
   shopper_id?: InputMaybe<Uuid_Comparison_Exp>;
@@ -4321,6 +4401,7 @@ export type Ratings_Insert_Input = {
   packaging_quality?: InputMaybe<Scalars["String"]["input"]>;
   professionalism?: InputMaybe<Scalars["String"]["input"]>;
   rating?: InputMaybe<Scalars["Int"]["input"]>;
+  reel_order_id?: InputMaybe<Scalars["uuid"]["input"]>;
   review?: InputMaybe<Scalars["String"]["input"]>;
   reviewed_at?: InputMaybe<Scalars["timestamptz"]["input"]>;
   shopper_id?: InputMaybe<Scalars["uuid"]["input"]>;
@@ -4338,6 +4419,7 @@ export type Ratings_Max_Fields = {
   packaging_quality?: Maybe<Scalars["String"]["output"]>;
   professionalism?: Maybe<Scalars["String"]["output"]>;
   rating?: Maybe<Scalars["Int"]["output"]>;
+  reel_order_id?: Maybe<Scalars["uuid"]["output"]>;
   review?: Maybe<Scalars["String"]["output"]>;
   reviewed_at?: Maybe<Scalars["timestamptz"]["output"]>;
   shopper_id?: Maybe<Scalars["uuid"]["output"]>;
@@ -4354,6 +4436,7 @@ export type Ratings_Max_Order_By = {
   packaging_quality?: InputMaybe<Order_By>;
   professionalism?: InputMaybe<Order_By>;
   rating?: InputMaybe<Order_By>;
+  reel_order_id?: InputMaybe<Order_By>;
   review?: InputMaybe<Order_By>;
   reviewed_at?: InputMaybe<Order_By>;
   shopper_id?: InputMaybe<Order_By>;
@@ -4370,6 +4453,7 @@ export type Ratings_Min_Fields = {
   packaging_quality?: Maybe<Scalars["String"]["output"]>;
   professionalism?: Maybe<Scalars["String"]["output"]>;
   rating?: Maybe<Scalars["Int"]["output"]>;
+  reel_order_id?: Maybe<Scalars["uuid"]["output"]>;
   review?: Maybe<Scalars["String"]["output"]>;
   reviewed_at?: Maybe<Scalars["timestamptz"]["output"]>;
   shopper_id?: Maybe<Scalars["uuid"]["output"]>;
@@ -4386,6 +4470,7 @@ export type Ratings_Min_Order_By = {
   packaging_quality?: InputMaybe<Order_By>;
   professionalism?: InputMaybe<Order_By>;
   rating?: InputMaybe<Order_By>;
+  reel_order_id?: InputMaybe<Order_By>;
   review?: InputMaybe<Order_By>;
   reviewed_at?: InputMaybe<Order_By>;
   shopper_id?: InputMaybe<Order_By>;
@@ -4419,6 +4504,7 @@ export type Ratings_Order_By = {
   packaging_quality?: InputMaybe<Order_By>;
   professionalism?: InputMaybe<Order_By>;
   rating?: InputMaybe<Order_By>;
+  reel_order_id?: InputMaybe<Order_By>;
   review?: InputMaybe<Order_By>;
   reviewed_at?: InputMaybe<Order_By>;
   shopper_id?: InputMaybe<Order_By>;
@@ -4450,6 +4536,8 @@ export type Ratings_Select_Column =
   /** column name */
   | "rating"
   /** column name */
+  | "reel_order_id"
+  /** column name */
   | "review"
   /** column name */
   | "reviewed_at"
@@ -4468,6 +4556,7 @@ export type Ratings_Set_Input = {
   packaging_quality?: InputMaybe<Scalars["String"]["input"]>;
   professionalism?: InputMaybe<Scalars["String"]["input"]>;
   rating?: InputMaybe<Scalars["Int"]["input"]>;
+  reel_order_id?: InputMaybe<Scalars["uuid"]["input"]>;
   review?: InputMaybe<Scalars["String"]["input"]>;
   reviewed_at?: InputMaybe<Scalars["timestamptz"]["input"]>;
   shopper_id?: InputMaybe<Scalars["uuid"]["input"]>;
@@ -4522,6 +4611,7 @@ export type Ratings_Stream_Cursor_Value_Input = {
   packaging_quality?: InputMaybe<Scalars["String"]["input"]>;
   professionalism?: InputMaybe<Scalars["String"]["input"]>;
   rating?: InputMaybe<Scalars["Int"]["input"]>;
+  reel_order_id?: InputMaybe<Scalars["uuid"]["input"]>;
   review?: InputMaybe<Scalars["String"]["input"]>;
   reviewed_at?: InputMaybe<Scalars["timestamptz"]["input"]>;
   shopper_id?: InputMaybe<Scalars["uuid"]["input"]>;
@@ -4556,6 +4646,8 @@ export type Ratings_Update_Column =
   | "professionalism"
   /** column name */
   | "rating"
+  /** column name */
+  | "reel_order_id"
   /** column name */
   | "review"
   /** column name */
@@ -4602,6 +4694,770 @@ export type Ratings_Variance_Fields = {
 /** order by variance() on columns of table "Ratings" */
 export type Ratings_Variance_Order_By = {
   rating?: InputMaybe<Order_By>;
+};
+
+/** columns and relationships of "Reels" */
+export type Reels = {
+  Price: Scalars["String"]["output"];
+  Product?: Maybe<Scalars["jsonb"]["output"]>;
+  /** An array relationship */
+  Reels_comments: Array<Reels_Comments>;
+  /** An aggregate relationship */
+  Reels_comments_aggregate: Reels_Comments_Aggregate;
+  /** An object relationship */
+  Restaurant?: Maybe<Restaurants>;
+  /** An object relationship */
+  Shops?: Maybe<Shops>;
+  /** An object relationship */
+  User?: Maybe<Users>;
+  category: Scalars["String"]["output"];
+  created_on: Scalars["timestamptz"]["output"];
+  delivery_time?: Maybe<Scalars["String"]["output"]>;
+  description: Scalars["String"]["output"];
+  id: Scalars["uuid"]["output"];
+  isLiked: Scalars["Boolean"]["output"];
+  likes?: Maybe<Scalars["String"]["output"]>;
+  /** An array relationship */
+  reel_likes: Array<Reel_Likes>;
+  /** An aggregate relationship */
+  reel_likes_aggregate: Reel_Likes_Aggregate;
+  /** An array relationship */
+  reel_orders: Array<Reel_Orders>;
+  /** An aggregate relationship */
+  reel_orders_aggregate: Reel_Orders_Aggregate;
+  restaurant_id?: Maybe<Scalars["uuid"]["output"]>;
+  shop_id?: Maybe<Scalars["uuid"]["output"]>;
+  title: Scalars["String"]["output"];
+  type: Scalars["String"]["output"];
+  user_id?: Maybe<Scalars["uuid"]["output"]>;
+  video_url: Scalars["String"]["output"];
+};
+
+/** columns and relationships of "Reels" */
+export type ReelsProductArgs = {
+  path?: InputMaybe<Scalars["String"]["input"]>;
+};
+
+/** columns and relationships of "Reels" */
+export type ReelsReels_CommentsArgs = {
+  distinct_on?: InputMaybe<Array<Reels_Comments_Select_Column>>;
+  limit?: InputMaybe<Scalars["Int"]["input"]>;
+  offset?: InputMaybe<Scalars["Int"]["input"]>;
+  order_by?: InputMaybe<Array<Reels_Comments_Order_By>>;
+  where?: InputMaybe<Reels_Comments_Bool_Exp>;
+};
+
+/** columns and relationships of "Reels" */
+export type ReelsReels_Comments_AggregateArgs = {
+  distinct_on?: InputMaybe<Array<Reels_Comments_Select_Column>>;
+  limit?: InputMaybe<Scalars["Int"]["input"]>;
+  offset?: InputMaybe<Scalars["Int"]["input"]>;
+  order_by?: InputMaybe<Array<Reels_Comments_Order_By>>;
+  where?: InputMaybe<Reels_Comments_Bool_Exp>;
+};
+
+/** columns and relationships of "Reels" */
+export type ReelsReel_LikesArgs = {
+  distinct_on?: InputMaybe<Array<Reel_Likes_Select_Column>>;
+  limit?: InputMaybe<Scalars["Int"]["input"]>;
+  offset?: InputMaybe<Scalars["Int"]["input"]>;
+  order_by?: InputMaybe<Array<Reel_Likes_Order_By>>;
+  where?: InputMaybe<Reel_Likes_Bool_Exp>;
+};
+
+/** columns and relationships of "Reels" */
+export type ReelsReel_Likes_AggregateArgs = {
+  distinct_on?: InputMaybe<Array<Reel_Likes_Select_Column>>;
+  limit?: InputMaybe<Scalars["Int"]["input"]>;
+  offset?: InputMaybe<Scalars["Int"]["input"]>;
+  order_by?: InputMaybe<Array<Reel_Likes_Order_By>>;
+  where?: InputMaybe<Reel_Likes_Bool_Exp>;
+};
+
+/** columns and relationships of "Reels" */
+export type ReelsReel_OrdersArgs = {
+  distinct_on?: InputMaybe<Array<Reel_Orders_Select_Column>>;
+  limit?: InputMaybe<Scalars["Int"]["input"]>;
+  offset?: InputMaybe<Scalars["Int"]["input"]>;
+  order_by?: InputMaybe<Array<Reel_Orders_Order_By>>;
+  where?: InputMaybe<Reel_Orders_Bool_Exp>;
+};
+
+/** columns and relationships of "Reels" */
+export type ReelsReel_Orders_AggregateArgs = {
+  distinct_on?: InputMaybe<Array<Reel_Orders_Select_Column>>;
+  limit?: InputMaybe<Scalars["Int"]["input"]>;
+  offset?: InputMaybe<Scalars["Int"]["input"]>;
+  order_by?: InputMaybe<Array<Reel_Orders_Order_By>>;
+  where?: InputMaybe<Reel_Orders_Bool_Exp>;
+};
+
+/** aggregated selection of "Reels" */
+export type Reels_Aggregate = {
+  aggregate?: Maybe<Reels_Aggregate_Fields>;
+  nodes: Array<Reels>;
+};
+
+export type Reels_Aggregate_Bool_Exp = {
+  bool_and?: InputMaybe<Reels_Aggregate_Bool_Exp_Bool_And>;
+  bool_or?: InputMaybe<Reels_Aggregate_Bool_Exp_Bool_Or>;
+  count?: InputMaybe<Reels_Aggregate_Bool_Exp_Count>;
+};
+
+export type Reels_Aggregate_Bool_Exp_Bool_And = {
+  arguments: Reels_Select_Column_Reels_Aggregate_Bool_Exp_Bool_And_Arguments_Columns;
+  distinct?: InputMaybe<Scalars["Boolean"]["input"]>;
+  filter?: InputMaybe<Reels_Bool_Exp>;
+  predicate: Boolean_Comparison_Exp;
+};
+
+export type Reels_Aggregate_Bool_Exp_Bool_Or = {
+  arguments: Reels_Select_Column_Reels_Aggregate_Bool_Exp_Bool_Or_Arguments_Columns;
+  distinct?: InputMaybe<Scalars["Boolean"]["input"]>;
+  filter?: InputMaybe<Reels_Bool_Exp>;
+  predicate: Boolean_Comparison_Exp;
+};
+
+export type Reels_Aggregate_Bool_Exp_Count = {
+  arguments?: InputMaybe<Array<Reels_Select_Column>>;
+  distinct?: InputMaybe<Scalars["Boolean"]["input"]>;
+  filter?: InputMaybe<Reels_Bool_Exp>;
+  predicate: Int_Comparison_Exp;
+};
+
+/** aggregate fields of "Reels" */
+export type Reels_Aggregate_Fields = {
+  count: Scalars["Int"]["output"];
+  max?: Maybe<Reels_Max_Fields>;
+  min?: Maybe<Reels_Min_Fields>;
+};
+
+/** aggregate fields of "Reels" */
+export type Reels_Aggregate_FieldsCountArgs = {
+  columns?: InputMaybe<Array<Reels_Select_Column>>;
+  distinct?: InputMaybe<Scalars["Boolean"]["input"]>;
+};
+
+/** order by aggregate values of table "Reels" */
+export type Reels_Aggregate_Order_By = {
+  count?: InputMaybe<Order_By>;
+  max?: InputMaybe<Reels_Max_Order_By>;
+  min?: InputMaybe<Reels_Min_Order_By>;
+};
+
+/** append existing jsonb value of filtered columns with new jsonb value */
+export type Reels_Append_Input = {
+  Product?: InputMaybe<Scalars["jsonb"]["input"]>;
+};
+
+/** input type for inserting array relation for remote table "Reels" */
+export type Reels_Arr_Rel_Insert_Input = {
+  data: Array<Reels_Insert_Input>;
+  /** upsert condition */
+  on_conflict?: InputMaybe<Reels_On_Conflict>;
+};
+
+/** Boolean expression to filter rows from the table "Reels". All fields are combined with a logical 'AND'. */
+export type Reels_Bool_Exp = {
+  Price?: InputMaybe<String_Comparison_Exp>;
+  Product?: InputMaybe<Jsonb_Comparison_Exp>;
+  Reels_comments?: InputMaybe<Reels_Comments_Bool_Exp>;
+  Reels_comments_aggregate?: InputMaybe<Reels_Comments_Aggregate_Bool_Exp>;
+  Restaurant?: InputMaybe<Restaurants_Bool_Exp>;
+  Shops?: InputMaybe<Shops_Bool_Exp>;
+  User?: InputMaybe<Users_Bool_Exp>;
+  _and?: InputMaybe<Array<Reels_Bool_Exp>>;
+  _not?: InputMaybe<Reels_Bool_Exp>;
+  _or?: InputMaybe<Array<Reels_Bool_Exp>>;
+  category?: InputMaybe<String_Comparison_Exp>;
+  created_on?: InputMaybe<Timestamptz_Comparison_Exp>;
+  delivery_time?: InputMaybe<String_Comparison_Exp>;
+  description?: InputMaybe<String_Comparison_Exp>;
+  id?: InputMaybe<Uuid_Comparison_Exp>;
+  isLiked?: InputMaybe<Boolean_Comparison_Exp>;
+  likes?: InputMaybe<String_Comparison_Exp>;
+  reel_likes?: InputMaybe<Reel_Likes_Bool_Exp>;
+  reel_likes_aggregate?: InputMaybe<Reel_Likes_Aggregate_Bool_Exp>;
+  reel_orders?: InputMaybe<Reel_Orders_Bool_Exp>;
+  reel_orders_aggregate?: InputMaybe<Reel_Orders_Aggregate_Bool_Exp>;
+  restaurant_id?: InputMaybe<Uuid_Comparison_Exp>;
+  shop_id?: InputMaybe<Uuid_Comparison_Exp>;
+  title?: InputMaybe<String_Comparison_Exp>;
+  type?: InputMaybe<String_Comparison_Exp>;
+  user_id?: InputMaybe<Uuid_Comparison_Exp>;
+  video_url?: InputMaybe<String_Comparison_Exp>;
+};
+
+/** columns and relationships of "Reels_comments" */
+export type Reels_Comments = {
+  /** An object relationship */
+  Reel: Reels;
+  /** An object relationship */
+  User: Users;
+  created_on: Scalars["timestamptz"]["output"];
+  id: Scalars["uuid"]["output"];
+  isLiked: Scalars["Boolean"]["output"];
+  likes: Scalars["String"]["output"];
+  reel_id: Scalars["uuid"]["output"];
+  text: Scalars["String"]["output"];
+  user_id: Scalars["uuid"]["output"];
+};
+
+/** aggregated selection of "Reels_comments" */
+export type Reels_Comments_Aggregate = {
+  aggregate?: Maybe<Reels_Comments_Aggregate_Fields>;
+  nodes: Array<Reels_Comments>;
+};
+
+export type Reels_Comments_Aggregate_Bool_Exp = {
+  bool_and?: InputMaybe<Reels_Comments_Aggregate_Bool_Exp_Bool_And>;
+  bool_or?: InputMaybe<Reels_Comments_Aggregate_Bool_Exp_Bool_Or>;
+  count?: InputMaybe<Reels_Comments_Aggregate_Bool_Exp_Count>;
+};
+
+export type Reels_Comments_Aggregate_Bool_Exp_Bool_And = {
+  arguments: Reels_Comments_Select_Column_Reels_Comments_Aggregate_Bool_Exp_Bool_And_Arguments_Columns;
+  distinct?: InputMaybe<Scalars["Boolean"]["input"]>;
+  filter?: InputMaybe<Reels_Comments_Bool_Exp>;
+  predicate: Boolean_Comparison_Exp;
+};
+
+export type Reels_Comments_Aggregate_Bool_Exp_Bool_Or = {
+  arguments: Reels_Comments_Select_Column_Reels_Comments_Aggregate_Bool_Exp_Bool_Or_Arguments_Columns;
+  distinct?: InputMaybe<Scalars["Boolean"]["input"]>;
+  filter?: InputMaybe<Reels_Comments_Bool_Exp>;
+  predicate: Boolean_Comparison_Exp;
+};
+
+export type Reels_Comments_Aggregate_Bool_Exp_Count = {
+  arguments?: InputMaybe<Array<Reels_Comments_Select_Column>>;
+  distinct?: InputMaybe<Scalars["Boolean"]["input"]>;
+  filter?: InputMaybe<Reels_Comments_Bool_Exp>;
+  predicate: Int_Comparison_Exp;
+};
+
+/** aggregate fields of "Reels_comments" */
+export type Reels_Comments_Aggregate_Fields = {
+  count: Scalars["Int"]["output"];
+  max?: Maybe<Reels_Comments_Max_Fields>;
+  min?: Maybe<Reels_Comments_Min_Fields>;
+};
+
+/** aggregate fields of "Reels_comments" */
+export type Reels_Comments_Aggregate_FieldsCountArgs = {
+  columns?: InputMaybe<Array<Reels_Comments_Select_Column>>;
+  distinct?: InputMaybe<Scalars["Boolean"]["input"]>;
+};
+
+/** order by aggregate values of table "Reels_comments" */
+export type Reels_Comments_Aggregate_Order_By = {
+  count?: InputMaybe<Order_By>;
+  max?: InputMaybe<Reels_Comments_Max_Order_By>;
+  min?: InputMaybe<Reels_Comments_Min_Order_By>;
+};
+
+/** input type for inserting array relation for remote table "Reels_comments" */
+export type Reels_Comments_Arr_Rel_Insert_Input = {
+  data: Array<Reels_Comments_Insert_Input>;
+  /** upsert condition */
+  on_conflict?: InputMaybe<Reels_Comments_On_Conflict>;
+};
+
+/** Boolean expression to filter rows from the table "Reels_comments". All fields are combined with a logical 'AND'. */
+export type Reels_Comments_Bool_Exp = {
+  Reel?: InputMaybe<Reels_Bool_Exp>;
+  User?: InputMaybe<Users_Bool_Exp>;
+  _and?: InputMaybe<Array<Reels_Comments_Bool_Exp>>;
+  _not?: InputMaybe<Reels_Comments_Bool_Exp>;
+  _or?: InputMaybe<Array<Reels_Comments_Bool_Exp>>;
+  created_on?: InputMaybe<Timestamptz_Comparison_Exp>;
+  id?: InputMaybe<Uuid_Comparison_Exp>;
+  isLiked?: InputMaybe<Boolean_Comparison_Exp>;
+  likes?: InputMaybe<String_Comparison_Exp>;
+  reel_id?: InputMaybe<Uuid_Comparison_Exp>;
+  text?: InputMaybe<String_Comparison_Exp>;
+  user_id?: InputMaybe<Uuid_Comparison_Exp>;
+};
+
+/** unique or primary key constraints on table "Reels_comments" */
+export type Reels_Comments_Constraint =
+  /** unique or primary key constraint on columns "id" */
+  "Reels_comments_pkey";
+
+/** input type for inserting data into table "Reels_comments" */
+export type Reels_Comments_Insert_Input = {
+  Reel?: InputMaybe<Reels_Obj_Rel_Insert_Input>;
+  User?: InputMaybe<Users_Obj_Rel_Insert_Input>;
+  created_on?: InputMaybe<Scalars["timestamptz"]["input"]>;
+  id?: InputMaybe<Scalars["uuid"]["input"]>;
+  isLiked?: InputMaybe<Scalars["Boolean"]["input"]>;
+  likes?: InputMaybe<Scalars["String"]["input"]>;
+  reel_id?: InputMaybe<Scalars["uuid"]["input"]>;
+  text?: InputMaybe<Scalars["String"]["input"]>;
+  user_id?: InputMaybe<Scalars["uuid"]["input"]>;
+};
+
+/** aggregate max on columns */
+export type Reels_Comments_Max_Fields = {
+  created_on?: Maybe<Scalars["timestamptz"]["output"]>;
+  id?: Maybe<Scalars["uuid"]["output"]>;
+  likes?: Maybe<Scalars["String"]["output"]>;
+  reel_id?: Maybe<Scalars["uuid"]["output"]>;
+  text?: Maybe<Scalars["String"]["output"]>;
+  user_id?: Maybe<Scalars["uuid"]["output"]>;
+};
+
+/** order by max() on columns of table "Reels_comments" */
+export type Reels_Comments_Max_Order_By = {
+  created_on?: InputMaybe<Order_By>;
+  id?: InputMaybe<Order_By>;
+  likes?: InputMaybe<Order_By>;
+  reel_id?: InputMaybe<Order_By>;
+  text?: InputMaybe<Order_By>;
+  user_id?: InputMaybe<Order_By>;
+};
+
+/** aggregate min on columns */
+export type Reels_Comments_Min_Fields = {
+  created_on?: Maybe<Scalars["timestamptz"]["output"]>;
+  id?: Maybe<Scalars["uuid"]["output"]>;
+  likes?: Maybe<Scalars["String"]["output"]>;
+  reel_id?: Maybe<Scalars["uuid"]["output"]>;
+  text?: Maybe<Scalars["String"]["output"]>;
+  user_id?: Maybe<Scalars["uuid"]["output"]>;
+};
+
+/** order by min() on columns of table "Reels_comments" */
+export type Reels_Comments_Min_Order_By = {
+  created_on?: InputMaybe<Order_By>;
+  id?: InputMaybe<Order_By>;
+  likes?: InputMaybe<Order_By>;
+  reel_id?: InputMaybe<Order_By>;
+  text?: InputMaybe<Order_By>;
+  user_id?: InputMaybe<Order_By>;
+};
+
+/** response of any mutation on the table "Reels_comments" */
+export type Reels_Comments_Mutation_Response = {
+  /** number of rows affected by the mutation */
+  affected_rows: Scalars["Int"]["output"];
+  /** data from the rows affected by the mutation */
+  returning: Array<Reels_Comments>;
+};
+
+/** on_conflict condition type for table "Reels_comments" */
+export type Reels_Comments_On_Conflict = {
+  constraint: Reels_Comments_Constraint;
+  update_columns?: Array<Reels_Comments_Update_Column>;
+  where?: InputMaybe<Reels_Comments_Bool_Exp>;
+};
+
+/** Ordering options when selecting data from "Reels_comments". */
+export type Reels_Comments_Order_By = {
+  Reel?: InputMaybe<Reels_Order_By>;
+  User?: InputMaybe<Users_Order_By>;
+  created_on?: InputMaybe<Order_By>;
+  id?: InputMaybe<Order_By>;
+  isLiked?: InputMaybe<Order_By>;
+  likes?: InputMaybe<Order_By>;
+  reel_id?: InputMaybe<Order_By>;
+  text?: InputMaybe<Order_By>;
+  user_id?: InputMaybe<Order_By>;
+};
+
+/** primary key columns input for table: Reels_comments */
+export type Reels_Comments_Pk_Columns_Input = {
+  id: Scalars["uuid"]["input"];
+};
+
+/** select columns of table "Reels_comments" */
+export type Reels_Comments_Select_Column =
+  /** column name */
+  | "created_on"
+  /** column name */
+  | "id"
+  /** column name */
+  | "isLiked"
+  /** column name */
+  | "likes"
+  /** column name */
+  | "reel_id"
+  /** column name */
+  | "text"
+  /** column name */
+  | "user_id";
+
+/** select "Reels_comments_aggregate_bool_exp_bool_and_arguments_columns" columns of table "Reels_comments" */
+export type Reels_Comments_Select_Column_Reels_Comments_Aggregate_Bool_Exp_Bool_And_Arguments_Columns =
+  /** column name */
+  "isLiked";
+
+/** select "Reels_comments_aggregate_bool_exp_bool_or_arguments_columns" columns of table "Reels_comments" */
+export type Reels_Comments_Select_Column_Reels_Comments_Aggregate_Bool_Exp_Bool_Or_Arguments_Columns =
+  /** column name */
+  "isLiked";
+
+/** input type for updating data in table "Reels_comments" */
+export type Reels_Comments_Set_Input = {
+  created_on?: InputMaybe<Scalars["timestamptz"]["input"]>;
+  id?: InputMaybe<Scalars["uuid"]["input"]>;
+  isLiked?: InputMaybe<Scalars["Boolean"]["input"]>;
+  likes?: InputMaybe<Scalars["String"]["input"]>;
+  reel_id?: InputMaybe<Scalars["uuid"]["input"]>;
+  text?: InputMaybe<Scalars["String"]["input"]>;
+  user_id?: InputMaybe<Scalars["uuid"]["input"]>;
+};
+
+/** Streaming cursor of the table "Reels_comments" */
+export type Reels_Comments_Stream_Cursor_Input = {
+  /** Stream column input with initial value */
+  initial_value: Reels_Comments_Stream_Cursor_Value_Input;
+  /** cursor ordering */
+  ordering?: InputMaybe<Cursor_Ordering>;
+};
+
+/** Initial value of the column from where the streaming should start */
+export type Reels_Comments_Stream_Cursor_Value_Input = {
+  created_on?: InputMaybe<Scalars["timestamptz"]["input"]>;
+  id?: InputMaybe<Scalars["uuid"]["input"]>;
+  isLiked?: InputMaybe<Scalars["Boolean"]["input"]>;
+  likes?: InputMaybe<Scalars["String"]["input"]>;
+  reel_id?: InputMaybe<Scalars["uuid"]["input"]>;
+  text?: InputMaybe<Scalars["String"]["input"]>;
+  user_id?: InputMaybe<Scalars["uuid"]["input"]>;
+};
+
+/** update columns of table "Reels_comments" */
+export type Reels_Comments_Update_Column =
+  /** column name */
+  | "created_on"
+  /** column name */
+  | "id"
+  /** column name */
+  | "isLiked"
+  /** column name */
+  | "likes"
+  /** column name */
+  | "reel_id"
+  /** column name */
+  | "text"
+  /** column name */
+  | "user_id";
+
+export type Reels_Comments_Updates = {
+  /** sets the columns of the filtered rows to the given values */
+  _set?: InputMaybe<Reels_Comments_Set_Input>;
+  /** filter the rows which have to be updated */
+  where: Reels_Comments_Bool_Exp;
+};
+
+/** unique or primary key constraints on table "Reels" */
+export type Reels_Constraint =
+  /** unique or primary key constraint on columns "id" */
+  "Reels_pkey";
+
+/** delete the field or element with specified path (for JSON arrays, negative integers count from the end) */
+export type Reels_Delete_At_Path_Input = {
+  Product?: InputMaybe<Array<Scalars["String"]["input"]>>;
+};
+
+/** delete the array element with specified index (negative integers count from the end). throws an error if top level container is not an array */
+export type Reels_Delete_Elem_Input = {
+  Product?: InputMaybe<Scalars["Int"]["input"]>;
+};
+
+/** delete key/value pair or string element. key/value pairs are matched based on their key value */
+export type Reels_Delete_Key_Input = {
+  Product?: InputMaybe<Scalars["String"]["input"]>;
+};
+
+/** input type for inserting data into table "Reels" */
+export type Reels_Insert_Input = {
+  Price?: InputMaybe<Scalars["String"]["input"]>;
+  Product?: InputMaybe<Scalars["jsonb"]["input"]>;
+  Reels_comments?: InputMaybe<Reels_Comments_Arr_Rel_Insert_Input>;
+  Restaurant?: InputMaybe<Restaurants_Obj_Rel_Insert_Input>;
+  Shops?: InputMaybe<Shops_Obj_Rel_Insert_Input>;
+  User?: InputMaybe<Users_Obj_Rel_Insert_Input>;
+  category?: InputMaybe<Scalars["String"]["input"]>;
+  created_on?: InputMaybe<Scalars["timestamptz"]["input"]>;
+  delivery_time?: InputMaybe<Scalars["String"]["input"]>;
+  description?: InputMaybe<Scalars["String"]["input"]>;
+  id?: InputMaybe<Scalars["uuid"]["input"]>;
+  isLiked?: InputMaybe<Scalars["Boolean"]["input"]>;
+  likes?: InputMaybe<Scalars["String"]["input"]>;
+  reel_likes?: InputMaybe<Reel_Likes_Arr_Rel_Insert_Input>;
+  reel_orders?: InputMaybe<Reel_Orders_Arr_Rel_Insert_Input>;
+  restaurant_id?: InputMaybe<Scalars["uuid"]["input"]>;
+  shop_id?: InputMaybe<Scalars["uuid"]["input"]>;
+  title?: InputMaybe<Scalars["String"]["input"]>;
+  type?: InputMaybe<Scalars["String"]["input"]>;
+  user_id?: InputMaybe<Scalars["uuid"]["input"]>;
+  video_url?: InputMaybe<Scalars["String"]["input"]>;
+};
+
+/** aggregate max on columns */
+export type Reels_Max_Fields = {
+  Price?: Maybe<Scalars["String"]["output"]>;
+  category?: Maybe<Scalars["String"]["output"]>;
+  created_on?: Maybe<Scalars["timestamptz"]["output"]>;
+  delivery_time?: Maybe<Scalars["String"]["output"]>;
+  description?: Maybe<Scalars["String"]["output"]>;
+  id?: Maybe<Scalars["uuid"]["output"]>;
+  likes?: Maybe<Scalars["String"]["output"]>;
+  restaurant_id?: Maybe<Scalars["uuid"]["output"]>;
+  shop_id?: Maybe<Scalars["uuid"]["output"]>;
+  title?: Maybe<Scalars["String"]["output"]>;
+  type?: Maybe<Scalars["String"]["output"]>;
+  user_id?: Maybe<Scalars["uuid"]["output"]>;
+  video_url?: Maybe<Scalars["String"]["output"]>;
+};
+
+/** order by max() on columns of table "Reels" */
+export type Reels_Max_Order_By = {
+  Price?: InputMaybe<Order_By>;
+  category?: InputMaybe<Order_By>;
+  created_on?: InputMaybe<Order_By>;
+  delivery_time?: InputMaybe<Order_By>;
+  description?: InputMaybe<Order_By>;
+  id?: InputMaybe<Order_By>;
+  likes?: InputMaybe<Order_By>;
+  restaurant_id?: InputMaybe<Order_By>;
+  shop_id?: InputMaybe<Order_By>;
+  title?: InputMaybe<Order_By>;
+  type?: InputMaybe<Order_By>;
+  user_id?: InputMaybe<Order_By>;
+  video_url?: InputMaybe<Order_By>;
+};
+
+/** aggregate min on columns */
+export type Reels_Min_Fields = {
+  Price?: Maybe<Scalars["String"]["output"]>;
+  category?: Maybe<Scalars["String"]["output"]>;
+  created_on?: Maybe<Scalars["timestamptz"]["output"]>;
+  delivery_time?: Maybe<Scalars["String"]["output"]>;
+  description?: Maybe<Scalars["String"]["output"]>;
+  id?: Maybe<Scalars["uuid"]["output"]>;
+  likes?: Maybe<Scalars["String"]["output"]>;
+  restaurant_id?: Maybe<Scalars["uuid"]["output"]>;
+  shop_id?: Maybe<Scalars["uuid"]["output"]>;
+  title?: Maybe<Scalars["String"]["output"]>;
+  type?: Maybe<Scalars["String"]["output"]>;
+  user_id?: Maybe<Scalars["uuid"]["output"]>;
+  video_url?: Maybe<Scalars["String"]["output"]>;
+};
+
+/** order by min() on columns of table "Reels" */
+export type Reels_Min_Order_By = {
+  Price?: InputMaybe<Order_By>;
+  category?: InputMaybe<Order_By>;
+  created_on?: InputMaybe<Order_By>;
+  delivery_time?: InputMaybe<Order_By>;
+  description?: InputMaybe<Order_By>;
+  id?: InputMaybe<Order_By>;
+  likes?: InputMaybe<Order_By>;
+  restaurant_id?: InputMaybe<Order_By>;
+  shop_id?: InputMaybe<Order_By>;
+  title?: InputMaybe<Order_By>;
+  type?: InputMaybe<Order_By>;
+  user_id?: InputMaybe<Order_By>;
+  video_url?: InputMaybe<Order_By>;
+};
+
+/** response of any mutation on the table "Reels" */
+export type Reels_Mutation_Response = {
+  /** number of rows affected by the mutation */
+  affected_rows: Scalars["Int"]["output"];
+  /** data from the rows affected by the mutation */
+  returning: Array<Reels>;
+};
+
+/** input type for inserting object relation for remote table "Reels" */
+export type Reels_Obj_Rel_Insert_Input = {
+  data: Reels_Insert_Input;
+  /** upsert condition */
+  on_conflict?: InputMaybe<Reels_On_Conflict>;
+};
+
+/** on_conflict condition type for table "Reels" */
+export type Reels_On_Conflict = {
+  constraint: Reels_Constraint;
+  update_columns?: Array<Reels_Update_Column>;
+  where?: InputMaybe<Reels_Bool_Exp>;
+};
+
+/** Ordering options when selecting data from "Reels". */
+export type Reels_Order_By = {
+  Price?: InputMaybe<Order_By>;
+  Product?: InputMaybe<Order_By>;
+  Reels_comments_aggregate?: InputMaybe<Reels_Comments_Aggregate_Order_By>;
+  Restaurant?: InputMaybe<Restaurants_Order_By>;
+  Shops?: InputMaybe<Shops_Order_By>;
+  User?: InputMaybe<Users_Order_By>;
+  category?: InputMaybe<Order_By>;
+  created_on?: InputMaybe<Order_By>;
+  delivery_time?: InputMaybe<Order_By>;
+  description?: InputMaybe<Order_By>;
+  id?: InputMaybe<Order_By>;
+  isLiked?: InputMaybe<Order_By>;
+  likes?: InputMaybe<Order_By>;
+  reel_likes_aggregate?: InputMaybe<Reel_Likes_Aggregate_Order_By>;
+  reel_orders_aggregate?: InputMaybe<Reel_Orders_Aggregate_Order_By>;
+  restaurant_id?: InputMaybe<Order_By>;
+  shop_id?: InputMaybe<Order_By>;
+  title?: InputMaybe<Order_By>;
+  type?: InputMaybe<Order_By>;
+  user_id?: InputMaybe<Order_By>;
+  video_url?: InputMaybe<Order_By>;
+};
+
+/** primary key columns input for table: Reels */
+export type Reels_Pk_Columns_Input = {
+  id: Scalars["uuid"]["input"];
+};
+
+/** prepend existing jsonb value of filtered columns with new jsonb value */
+export type Reels_Prepend_Input = {
+  Product?: InputMaybe<Scalars["jsonb"]["input"]>;
+};
+
+/** select columns of table "Reels" */
+export type Reels_Select_Column =
+  /** column name */
+  | "Price"
+  /** column name */
+  | "Product"
+  /** column name */
+  | "category"
+  /** column name */
+  | "created_on"
+  /** column name */
+  | "delivery_time"
+  /** column name */
+  | "description"
+  /** column name */
+  | "id"
+  /** column name */
+  | "isLiked"
+  /** column name */
+  | "likes"
+  /** column name */
+  | "restaurant_id"
+  /** column name */
+  | "shop_id"
+  /** column name */
+  | "title"
+  /** column name */
+  | "type"
+  /** column name */
+  | "user_id"
+  /** column name */
+  | "video_url";
+
+/** select "Reels_aggregate_bool_exp_bool_and_arguments_columns" columns of table "Reels" */
+export type Reels_Select_Column_Reels_Aggregate_Bool_Exp_Bool_And_Arguments_Columns =
+  /** column name */
+  "isLiked";
+
+/** select "Reels_aggregate_bool_exp_bool_or_arguments_columns" columns of table "Reels" */
+export type Reels_Select_Column_Reels_Aggregate_Bool_Exp_Bool_Or_Arguments_Columns =
+  /** column name */
+  "isLiked";
+
+/** input type for updating data in table "Reels" */
+export type Reels_Set_Input = {
+  Price?: InputMaybe<Scalars["String"]["input"]>;
+  Product?: InputMaybe<Scalars["jsonb"]["input"]>;
+  category?: InputMaybe<Scalars["String"]["input"]>;
+  created_on?: InputMaybe<Scalars["timestamptz"]["input"]>;
+  delivery_time?: InputMaybe<Scalars["String"]["input"]>;
+  description?: InputMaybe<Scalars["String"]["input"]>;
+  id?: InputMaybe<Scalars["uuid"]["input"]>;
+  isLiked?: InputMaybe<Scalars["Boolean"]["input"]>;
+  likes?: InputMaybe<Scalars["String"]["input"]>;
+  restaurant_id?: InputMaybe<Scalars["uuid"]["input"]>;
+  shop_id?: InputMaybe<Scalars["uuid"]["input"]>;
+  title?: InputMaybe<Scalars["String"]["input"]>;
+  type?: InputMaybe<Scalars["String"]["input"]>;
+  user_id?: InputMaybe<Scalars["uuid"]["input"]>;
+  video_url?: InputMaybe<Scalars["String"]["input"]>;
+};
+
+/** Streaming cursor of the table "Reels" */
+export type Reels_Stream_Cursor_Input = {
+  /** Stream column input with initial value */
+  initial_value: Reels_Stream_Cursor_Value_Input;
+  /** cursor ordering */
+  ordering?: InputMaybe<Cursor_Ordering>;
+};
+
+/** Initial value of the column from where the streaming should start */
+export type Reels_Stream_Cursor_Value_Input = {
+  Price?: InputMaybe<Scalars["String"]["input"]>;
+  Product?: InputMaybe<Scalars["jsonb"]["input"]>;
+  category?: InputMaybe<Scalars["String"]["input"]>;
+  created_on?: InputMaybe<Scalars["timestamptz"]["input"]>;
+  delivery_time?: InputMaybe<Scalars["String"]["input"]>;
+  description?: InputMaybe<Scalars["String"]["input"]>;
+  id?: InputMaybe<Scalars["uuid"]["input"]>;
+  isLiked?: InputMaybe<Scalars["Boolean"]["input"]>;
+  likes?: InputMaybe<Scalars["String"]["input"]>;
+  restaurant_id?: InputMaybe<Scalars["uuid"]["input"]>;
+  shop_id?: InputMaybe<Scalars["uuid"]["input"]>;
+  title?: InputMaybe<Scalars["String"]["input"]>;
+  type?: InputMaybe<Scalars["String"]["input"]>;
+  user_id?: InputMaybe<Scalars["uuid"]["input"]>;
+  video_url?: InputMaybe<Scalars["String"]["input"]>;
+};
+
+/** update columns of table "Reels" */
+export type Reels_Update_Column =
+  /** column name */
+  | "Price"
+  /** column name */
+  | "Product"
+  /** column name */
+  | "category"
+  /** column name */
+  | "created_on"
+  /** column name */
+  | "delivery_time"
+  /** column name */
+  | "description"
+  /** column name */
+  | "id"
+  /** column name */
+  | "isLiked"
+  /** column name */
+  | "likes"
+  /** column name */
+  | "restaurant_id"
+  /** column name */
+  | "shop_id"
+  /** column name */
+  | "title"
+  /** column name */
+  | "type"
+  /** column name */
+  | "user_id"
+  /** column name */
+  | "video_url";
+
+export type Reels_Updates = {
+  /** append existing jsonb value of filtered columns with new jsonb value */
+  _append?: InputMaybe<Reels_Append_Input>;
+  /** delete the field or element with specified path (for JSON arrays, negative integers count from the end) */
+  _delete_at_path?: InputMaybe<Reels_Delete_At_Path_Input>;
+  /** delete the array element with specified index (negative integers count from the end). throws an error if top level container is not an array */
+  _delete_elem?: InputMaybe<Reels_Delete_Elem_Input>;
+  /** delete key/value pair or string element. key/value pairs are matched based on their key value */
+  _delete_key?: InputMaybe<Reels_Delete_Key_Input>;
+  /** prepend existing jsonb value of filtered columns with new jsonb value */
+  _prepend?: InputMaybe<Reels_Prepend_Input>;
+  /** sets the columns of the filtered rows to the given values */
+  _set?: InputMaybe<Reels_Set_Input>;
+  /** filter the rows which have to be updated */
+  where: Reels_Bool_Exp;
 };
 
 /** columns and relationships of "Refunds" */
@@ -4918,15 +5774,281 @@ export type Refunds_Updates = {
   where: Refunds_Bool_Exp;
 };
 
+/** columns and relationships of "Restaurants" */
+export type Restaurants = {
+  /** An array relationship */
+  Reels: Array<Reels>;
+  /** An aggregate relationship */
+  Reels_aggregate: Reels_Aggregate;
+  created_at: Scalars["timestamptz"]["output"];
+  email: Scalars["String"]["output"];
+  id: Scalars["uuid"]["output"];
+  lat: Scalars["String"]["output"];
+  location: Scalars["String"]["output"];
+  long: Scalars["String"]["output"];
+  name: Scalars["String"]["output"];
+  phone: Scalars["String"]["output"];
+  profile: Scalars["String"]["output"];
+  verified: Scalars["Boolean"]["output"];
+};
+
+/** columns and relationships of "Restaurants" */
+export type RestaurantsReelsArgs = {
+  distinct_on?: InputMaybe<Array<Reels_Select_Column>>;
+  limit?: InputMaybe<Scalars["Int"]["input"]>;
+  offset?: InputMaybe<Scalars["Int"]["input"]>;
+  order_by?: InputMaybe<Array<Reels_Order_By>>;
+  where?: InputMaybe<Reels_Bool_Exp>;
+};
+
+/** columns and relationships of "Restaurants" */
+export type RestaurantsReels_AggregateArgs = {
+  distinct_on?: InputMaybe<Array<Reels_Select_Column>>;
+  limit?: InputMaybe<Scalars["Int"]["input"]>;
+  offset?: InputMaybe<Scalars["Int"]["input"]>;
+  order_by?: InputMaybe<Array<Reels_Order_By>>;
+  where?: InputMaybe<Reels_Bool_Exp>;
+};
+
+/** aggregated selection of "Restaurants" */
+export type Restaurants_Aggregate = {
+  aggregate?: Maybe<Restaurants_Aggregate_Fields>;
+  nodes: Array<Restaurants>;
+};
+
+/** aggregate fields of "Restaurants" */
+export type Restaurants_Aggregate_Fields = {
+  count: Scalars["Int"]["output"];
+  max?: Maybe<Restaurants_Max_Fields>;
+  min?: Maybe<Restaurants_Min_Fields>;
+};
+
+/** aggregate fields of "Restaurants" */
+export type Restaurants_Aggregate_FieldsCountArgs = {
+  columns?: InputMaybe<Array<Restaurants_Select_Column>>;
+  distinct?: InputMaybe<Scalars["Boolean"]["input"]>;
+};
+
+/** Boolean expression to filter rows from the table "Restaurants". All fields are combined with a logical 'AND'. */
+export type Restaurants_Bool_Exp = {
+  Reels?: InputMaybe<Reels_Bool_Exp>;
+  Reels_aggregate?: InputMaybe<Reels_Aggregate_Bool_Exp>;
+  _and?: InputMaybe<Array<Restaurants_Bool_Exp>>;
+  _not?: InputMaybe<Restaurants_Bool_Exp>;
+  _or?: InputMaybe<Array<Restaurants_Bool_Exp>>;
+  created_at?: InputMaybe<Timestamptz_Comparison_Exp>;
+  email?: InputMaybe<String_Comparison_Exp>;
+  id?: InputMaybe<Uuid_Comparison_Exp>;
+  lat?: InputMaybe<String_Comparison_Exp>;
+  location?: InputMaybe<String_Comparison_Exp>;
+  long?: InputMaybe<String_Comparison_Exp>;
+  name?: InputMaybe<String_Comparison_Exp>;
+  phone?: InputMaybe<String_Comparison_Exp>;
+  profile?: InputMaybe<String_Comparison_Exp>;
+  verified?: InputMaybe<Boolean_Comparison_Exp>;
+};
+
+/** unique or primary key constraints on table "Restaurants" */
+export type Restaurants_Constraint =
+  /** unique or primary key constraint on columns "name" */
+  | "Restaurants_name_key"
+  /** unique or primary key constraint on columns "id" */
+  | "Restaurants_pkey";
+
+/** input type for inserting data into table "Restaurants" */
+export type Restaurants_Insert_Input = {
+  Reels?: InputMaybe<Reels_Arr_Rel_Insert_Input>;
+  created_at?: InputMaybe<Scalars["timestamptz"]["input"]>;
+  email?: InputMaybe<Scalars["String"]["input"]>;
+  id?: InputMaybe<Scalars["uuid"]["input"]>;
+  lat?: InputMaybe<Scalars["String"]["input"]>;
+  location?: InputMaybe<Scalars["String"]["input"]>;
+  long?: InputMaybe<Scalars["String"]["input"]>;
+  name?: InputMaybe<Scalars["String"]["input"]>;
+  phone?: InputMaybe<Scalars["String"]["input"]>;
+  profile?: InputMaybe<Scalars["String"]["input"]>;
+  verified?: InputMaybe<Scalars["Boolean"]["input"]>;
+};
+
+/** aggregate max on columns */
+export type Restaurants_Max_Fields = {
+  created_at?: Maybe<Scalars["timestamptz"]["output"]>;
+  email?: Maybe<Scalars["String"]["output"]>;
+  id?: Maybe<Scalars["uuid"]["output"]>;
+  lat?: Maybe<Scalars["String"]["output"]>;
+  location?: Maybe<Scalars["String"]["output"]>;
+  long?: Maybe<Scalars["String"]["output"]>;
+  name?: Maybe<Scalars["String"]["output"]>;
+  phone?: Maybe<Scalars["String"]["output"]>;
+  profile?: Maybe<Scalars["String"]["output"]>;
+};
+
+/** aggregate min on columns */
+export type Restaurants_Min_Fields = {
+  created_at?: Maybe<Scalars["timestamptz"]["output"]>;
+  email?: Maybe<Scalars["String"]["output"]>;
+  id?: Maybe<Scalars["uuid"]["output"]>;
+  lat?: Maybe<Scalars["String"]["output"]>;
+  location?: Maybe<Scalars["String"]["output"]>;
+  long?: Maybe<Scalars["String"]["output"]>;
+  name?: Maybe<Scalars["String"]["output"]>;
+  phone?: Maybe<Scalars["String"]["output"]>;
+  profile?: Maybe<Scalars["String"]["output"]>;
+};
+
+/** response of any mutation on the table "Restaurants" */
+export type Restaurants_Mutation_Response = {
+  /** number of rows affected by the mutation */
+  affected_rows: Scalars["Int"]["output"];
+  /** data from the rows affected by the mutation */
+  returning: Array<Restaurants>;
+};
+
+/** input type for inserting object relation for remote table "Restaurants" */
+export type Restaurants_Obj_Rel_Insert_Input = {
+  data: Restaurants_Insert_Input;
+  /** upsert condition */
+  on_conflict?: InputMaybe<Restaurants_On_Conflict>;
+};
+
+/** on_conflict condition type for table "Restaurants" */
+export type Restaurants_On_Conflict = {
+  constraint: Restaurants_Constraint;
+  update_columns?: Array<Restaurants_Update_Column>;
+  where?: InputMaybe<Restaurants_Bool_Exp>;
+};
+
+/** Ordering options when selecting data from "Restaurants". */
+export type Restaurants_Order_By = {
+  Reels_aggregate?: InputMaybe<Reels_Aggregate_Order_By>;
+  created_at?: InputMaybe<Order_By>;
+  email?: InputMaybe<Order_By>;
+  id?: InputMaybe<Order_By>;
+  lat?: InputMaybe<Order_By>;
+  location?: InputMaybe<Order_By>;
+  long?: InputMaybe<Order_By>;
+  name?: InputMaybe<Order_By>;
+  phone?: InputMaybe<Order_By>;
+  profile?: InputMaybe<Order_By>;
+  verified?: InputMaybe<Order_By>;
+};
+
+/** primary key columns input for table: Restaurants */
+export type Restaurants_Pk_Columns_Input = {
+  id: Scalars["uuid"]["input"];
+};
+
+/** select columns of table "Restaurants" */
+export type Restaurants_Select_Column =
+  /** column name */
+  | "created_at"
+  /** column name */
+  | "email"
+  /** column name */
+  | "id"
+  /** column name */
+  | "lat"
+  /** column name */
+  | "location"
+  /** column name */
+  | "long"
+  /** column name */
+  | "name"
+  /** column name */
+  | "phone"
+  /** column name */
+  | "profile"
+  /** column name */
+  | "verified";
+
+/** input type for updating data in table "Restaurants" */
+export type Restaurants_Set_Input = {
+  created_at?: InputMaybe<Scalars["timestamptz"]["input"]>;
+  email?: InputMaybe<Scalars["String"]["input"]>;
+  id?: InputMaybe<Scalars["uuid"]["input"]>;
+  lat?: InputMaybe<Scalars["String"]["input"]>;
+  location?: InputMaybe<Scalars["String"]["input"]>;
+  long?: InputMaybe<Scalars["String"]["input"]>;
+  name?: InputMaybe<Scalars["String"]["input"]>;
+  phone?: InputMaybe<Scalars["String"]["input"]>;
+  profile?: InputMaybe<Scalars["String"]["input"]>;
+  verified?: InputMaybe<Scalars["Boolean"]["input"]>;
+};
+
+/** Streaming cursor of the table "Restaurants" */
+export type Restaurants_Stream_Cursor_Input = {
+  /** Stream column input with initial value */
+  initial_value: Restaurants_Stream_Cursor_Value_Input;
+  /** cursor ordering */
+  ordering?: InputMaybe<Cursor_Ordering>;
+};
+
+/** Initial value of the column from where the streaming should start */
+export type Restaurants_Stream_Cursor_Value_Input = {
+  created_at?: InputMaybe<Scalars["timestamptz"]["input"]>;
+  email?: InputMaybe<Scalars["String"]["input"]>;
+  id?: InputMaybe<Scalars["uuid"]["input"]>;
+  lat?: InputMaybe<Scalars["String"]["input"]>;
+  location?: InputMaybe<Scalars["String"]["input"]>;
+  long?: InputMaybe<Scalars["String"]["input"]>;
+  name?: InputMaybe<Scalars["String"]["input"]>;
+  phone?: InputMaybe<Scalars["String"]["input"]>;
+  profile?: InputMaybe<Scalars["String"]["input"]>;
+  verified?: InputMaybe<Scalars["Boolean"]["input"]>;
+};
+
+/** update columns of table "Restaurants" */
+export type Restaurants_Update_Column =
+  /** column name */
+  | "created_at"
+  /** column name */
+  | "email"
+  /** column name */
+  | "id"
+  /** column name */
+  | "lat"
+  /** column name */
+  | "location"
+  /** column name */
+  | "long"
+  /** column name */
+  | "name"
+  /** column name */
+  | "phone"
+  /** column name */
+  | "profile"
+  /** column name */
+  | "verified";
+
+export type Restaurants_Updates = {
+  /** sets the columns of the filtered rows to the given values */
+  _set?: InputMaybe<Restaurants_Set_Input>;
+  /** filter the rows which have to be updated */
+  where: Restaurants_Bool_Exp;
+};
+
 /** columns and relationships of "Revenue" */
 export type Revenue = {
   /** An object relationship */
-  Order: Orders;
+  Order?: Maybe<Orders>;
+  /** An object relationship */
+  Shop?: Maybe<Shops>;
   amount: Scalars["String"]["output"];
+  commission_percentage?: Maybe<Scalars["String"]["output"]>;
   created_at: Scalars["timestamptz"]["output"];
   id: Scalars["uuid"]["output"];
-  order_id: Scalars["uuid"]["output"];
+  order_id?: Maybe<Scalars["uuid"]["output"]>;
+  products?: Maybe<Scalars["jsonb"]["output"]>;
+  shop_id?: Maybe<Scalars["uuid"]["output"]>;
+  /** An object relationship */
+  shopper?: Maybe<Shoppers>;
+  shopper_id?: Maybe<Scalars["uuid"]["output"]>;
   type: Scalars["String"]["output"];
+};
+
+/** columns and relationships of "Revenue" */
+export type RevenueProductsArgs = {
+  path?: InputMaybe<Scalars["String"]["input"]>;
 };
 
 /** aggregated selection of "Revenue" */
@@ -4966,6 +6088,11 @@ export type Revenue_Aggregate_Order_By = {
   min?: InputMaybe<Revenue_Min_Order_By>;
 };
 
+/** append existing jsonb value of filtered columns with new jsonb value */
+export type Revenue_Append_Input = {
+  products?: InputMaybe<Scalars["jsonb"]["input"]>;
+};
+
 /** input type for inserting array relation for remote table "Revenue" */
 export type Revenue_Arr_Rel_Insert_Input = {
   data: Array<Revenue_Insert_Input>;
@@ -4976,13 +6103,19 @@ export type Revenue_Arr_Rel_Insert_Input = {
 /** Boolean expression to filter rows from the table "Revenue". All fields are combined with a logical 'AND'. */
 export type Revenue_Bool_Exp = {
   Order?: InputMaybe<Orders_Bool_Exp>;
+  Shop?: InputMaybe<Shops_Bool_Exp>;
   _and?: InputMaybe<Array<Revenue_Bool_Exp>>;
   _not?: InputMaybe<Revenue_Bool_Exp>;
   _or?: InputMaybe<Array<Revenue_Bool_Exp>>;
   amount?: InputMaybe<String_Comparison_Exp>;
+  commission_percentage?: InputMaybe<String_Comparison_Exp>;
   created_at?: InputMaybe<Timestamptz_Comparison_Exp>;
   id?: InputMaybe<Uuid_Comparison_Exp>;
   order_id?: InputMaybe<Uuid_Comparison_Exp>;
+  products?: InputMaybe<Jsonb_Comparison_Exp>;
+  shop_id?: InputMaybe<Uuid_Comparison_Exp>;
+  shopper?: InputMaybe<Shoppers_Bool_Exp>;
+  shopper_id?: InputMaybe<Uuid_Comparison_Exp>;
   type?: InputMaybe<String_Comparison_Exp>;
 };
 
@@ -4991,49 +6124,82 @@ export type Revenue_Constraint =
   /** unique or primary key constraint on columns "id" */
   "Revenue_pkey";
 
+/** delete the field or element with specified path (for JSON arrays, negative integers count from the end) */
+export type Revenue_Delete_At_Path_Input = {
+  products?: InputMaybe<Array<Scalars["String"]["input"]>>;
+};
+
+/** delete the array element with specified index (negative integers count from the end). throws an error if top level container is not an array */
+export type Revenue_Delete_Elem_Input = {
+  products?: InputMaybe<Scalars["Int"]["input"]>;
+};
+
+/** delete key/value pair or string element. key/value pairs are matched based on their key value */
+export type Revenue_Delete_Key_Input = {
+  products?: InputMaybe<Scalars["String"]["input"]>;
+};
+
 /** input type for inserting data into table "Revenue" */
 export type Revenue_Insert_Input = {
   Order?: InputMaybe<Orders_Obj_Rel_Insert_Input>;
+  Shop?: InputMaybe<Shops_Obj_Rel_Insert_Input>;
   amount?: InputMaybe<Scalars["String"]["input"]>;
+  commission_percentage?: InputMaybe<Scalars["String"]["input"]>;
   created_at?: InputMaybe<Scalars["timestamptz"]["input"]>;
   id?: InputMaybe<Scalars["uuid"]["input"]>;
   order_id?: InputMaybe<Scalars["uuid"]["input"]>;
+  products?: InputMaybe<Scalars["jsonb"]["input"]>;
+  shop_id?: InputMaybe<Scalars["uuid"]["input"]>;
+  shopper?: InputMaybe<Shoppers_Obj_Rel_Insert_Input>;
+  shopper_id?: InputMaybe<Scalars["uuid"]["input"]>;
   type?: InputMaybe<Scalars["String"]["input"]>;
 };
 
 /** aggregate max on columns */
 export type Revenue_Max_Fields = {
   amount?: Maybe<Scalars["String"]["output"]>;
+  commission_percentage?: Maybe<Scalars["String"]["output"]>;
   created_at?: Maybe<Scalars["timestamptz"]["output"]>;
   id?: Maybe<Scalars["uuid"]["output"]>;
   order_id?: Maybe<Scalars["uuid"]["output"]>;
+  shop_id?: Maybe<Scalars["uuid"]["output"]>;
+  shopper_id?: Maybe<Scalars["uuid"]["output"]>;
   type?: Maybe<Scalars["String"]["output"]>;
 };
 
 /** order by max() on columns of table "Revenue" */
 export type Revenue_Max_Order_By = {
   amount?: InputMaybe<Order_By>;
+  commission_percentage?: InputMaybe<Order_By>;
   created_at?: InputMaybe<Order_By>;
   id?: InputMaybe<Order_By>;
   order_id?: InputMaybe<Order_By>;
+  shop_id?: InputMaybe<Order_By>;
+  shopper_id?: InputMaybe<Order_By>;
   type?: InputMaybe<Order_By>;
 };
 
 /** aggregate min on columns */
 export type Revenue_Min_Fields = {
   amount?: Maybe<Scalars["String"]["output"]>;
+  commission_percentage?: Maybe<Scalars["String"]["output"]>;
   created_at?: Maybe<Scalars["timestamptz"]["output"]>;
   id?: Maybe<Scalars["uuid"]["output"]>;
   order_id?: Maybe<Scalars["uuid"]["output"]>;
+  shop_id?: Maybe<Scalars["uuid"]["output"]>;
+  shopper_id?: Maybe<Scalars["uuid"]["output"]>;
   type?: Maybe<Scalars["String"]["output"]>;
 };
 
 /** order by min() on columns of table "Revenue" */
 export type Revenue_Min_Order_By = {
   amount?: InputMaybe<Order_By>;
+  commission_percentage?: InputMaybe<Order_By>;
   created_at?: InputMaybe<Order_By>;
   id?: InputMaybe<Order_By>;
   order_id?: InputMaybe<Order_By>;
+  shop_id?: InputMaybe<Order_By>;
+  shopper_id?: InputMaybe<Order_By>;
   type?: InputMaybe<Order_By>;
 };
 
@@ -5055,10 +6221,16 @@ export type Revenue_On_Conflict = {
 /** Ordering options when selecting data from "Revenue". */
 export type Revenue_Order_By = {
   Order?: InputMaybe<Orders_Order_By>;
+  Shop?: InputMaybe<Shops_Order_By>;
   amount?: InputMaybe<Order_By>;
+  commission_percentage?: InputMaybe<Order_By>;
   created_at?: InputMaybe<Order_By>;
   id?: InputMaybe<Order_By>;
   order_id?: InputMaybe<Order_By>;
+  products?: InputMaybe<Order_By>;
+  shop_id?: InputMaybe<Order_By>;
+  shopper?: InputMaybe<Shoppers_Order_By>;
+  shopper_id?: InputMaybe<Order_By>;
   type?: InputMaybe<Order_By>;
 };
 
@@ -5067,10 +6239,17 @@ export type Revenue_Pk_Columns_Input = {
   id: Scalars["uuid"]["input"];
 };
 
+/** prepend existing jsonb value of filtered columns with new jsonb value */
+export type Revenue_Prepend_Input = {
+  products?: InputMaybe<Scalars["jsonb"]["input"]>;
+};
+
 /** select columns of table "Revenue" */
 export type Revenue_Select_Column =
   /** column name */
   | "amount"
+  /** column name */
+  | "commission_percentage"
   /** column name */
   | "created_at"
   /** column name */
@@ -5078,14 +6257,24 @@ export type Revenue_Select_Column =
   /** column name */
   | "order_id"
   /** column name */
+  | "products"
+  /** column name */
+  | "shop_id"
+  /** column name */
+  | "shopper_id"
+  /** column name */
   | "type";
 
 /** input type for updating data in table "Revenue" */
 export type Revenue_Set_Input = {
   amount?: InputMaybe<Scalars["String"]["input"]>;
+  commission_percentage?: InputMaybe<Scalars["String"]["input"]>;
   created_at?: InputMaybe<Scalars["timestamptz"]["input"]>;
   id?: InputMaybe<Scalars["uuid"]["input"]>;
   order_id?: InputMaybe<Scalars["uuid"]["input"]>;
+  products?: InputMaybe<Scalars["jsonb"]["input"]>;
+  shop_id?: InputMaybe<Scalars["uuid"]["input"]>;
+  shopper_id?: InputMaybe<Scalars["uuid"]["input"]>;
   type?: InputMaybe<Scalars["String"]["input"]>;
 };
 
@@ -5100,9 +6289,13 @@ export type Revenue_Stream_Cursor_Input = {
 /** Initial value of the column from where the streaming should start */
 export type Revenue_Stream_Cursor_Value_Input = {
   amount?: InputMaybe<Scalars["String"]["input"]>;
+  commission_percentage?: InputMaybe<Scalars["String"]["input"]>;
   created_at?: InputMaybe<Scalars["timestamptz"]["input"]>;
   id?: InputMaybe<Scalars["uuid"]["input"]>;
   order_id?: InputMaybe<Scalars["uuid"]["input"]>;
+  products?: InputMaybe<Scalars["jsonb"]["input"]>;
+  shop_id?: InputMaybe<Scalars["uuid"]["input"]>;
+  shopper_id?: InputMaybe<Scalars["uuid"]["input"]>;
   type?: InputMaybe<Scalars["String"]["input"]>;
 };
 
@@ -5111,15 +6304,33 @@ export type Revenue_Update_Column =
   /** column name */
   | "amount"
   /** column name */
+  | "commission_percentage"
+  /** column name */
   | "created_at"
   /** column name */
   | "id"
   /** column name */
   | "order_id"
   /** column name */
+  | "products"
+  /** column name */
+  | "shop_id"
+  /** column name */
+  | "shopper_id"
+  /** column name */
   | "type";
 
 export type Revenue_Updates = {
+  /** append existing jsonb value of filtered columns with new jsonb value */
+  _append?: InputMaybe<Revenue_Append_Input>;
+  /** delete the field or element with specified path (for JSON arrays, negative integers count from the end) */
+  _delete_at_path?: InputMaybe<Revenue_Delete_At_Path_Input>;
+  /** delete the array element with specified index (negative integers count from the end). throws an error if top level container is not an array */
+  _delete_elem?: InputMaybe<Revenue_Delete_Elem_Input>;
+  /** delete key/value pair or string element. key/value pairs are matched based on their key value */
+  _delete_key?: InputMaybe<Revenue_Delete_Key_Input>;
+  /** prepend existing jsonb value of filtered columns with new jsonb value */
+  _prepend?: InputMaybe<Revenue_Prepend_Input>;
   /** sets the columns of the filtered rows to the given values */
   _set?: InputMaybe<Revenue_Set_Input>;
   /** filter the rows which have to be updated */
@@ -5517,6 +6728,10 @@ export type Shops = {
   Products: Array<Products>;
   /** An aggregate relationship */
   Products_aggregate: Products_Aggregate;
+  /** An array relationship */
+  Revenues: Array<Revenue>;
+  /** An aggregate relationship */
+  Revenues_aggregate: Revenue_Aggregate;
   address: Scalars["String"]["output"];
   category_id: Scalars["uuid"]["output"];
   created_at: Scalars["timestamptz"]["output"];
@@ -5525,9 +6740,11 @@ export type Shops = {
   image: Scalars["String"]["output"];
   is_active: Scalars["Boolean"]["output"];
   latitude: Scalars["String"]["output"];
+  logo?: Maybe<Scalars["String"]["output"]>;
   longitude: Scalars["String"]["output"];
   name: Scalars["String"]["output"];
   operating_hours: Scalars["json"]["output"];
+  phone?: Maybe<Scalars["String"]["output"]>;
   updated_at?: Maybe<Scalars["String"]["output"]>;
 };
 
@@ -5583,6 +6800,24 @@ export type ShopsProducts_AggregateArgs = {
   offset?: InputMaybe<Scalars["Int"]["input"]>;
   order_by?: InputMaybe<Array<Products_Order_By>>;
   where?: InputMaybe<Products_Bool_Exp>;
+};
+
+/** Shops */
+export type ShopsRevenuesArgs = {
+  distinct_on?: InputMaybe<Array<Revenue_Select_Column>>;
+  limit?: InputMaybe<Scalars["Int"]["input"]>;
+  offset?: InputMaybe<Scalars["Int"]["input"]>;
+  order_by?: InputMaybe<Array<Revenue_Order_By>>;
+  where?: InputMaybe<Revenue_Bool_Exp>;
+};
+
+/** Shops */
+export type ShopsRevenues_AggregateArgs = {
+  distinct_on?: InputMaybe<Array<Revenue_Select_Column>>;
+  limit?: InputMaybe<Scalars["Int"]["input"]>;
+  offset?: InputMaybe<Scalars["Int"]["input"]>;
+  order_by?: InputMaybe<Array<Revenue_Order_By>>;
+  where?: InputMaybe<Revenue_Bool_Exp>;
 };
 
 /** Shops */
@@ -5659,6 +6894,8 @@ export type Shops_Bool_Exp = {
   Orders_aggregate?: InputMaybe<Orders_Aggregate_Bool_Exp>;
   Products?: InputMaybe<Products_Bool_Exp>;
   Products_aggregate?: InputMaybe<Products_Aggregate_Bool_Exp>;
+  Revenues?: InputMaybe<Revenue_Bool_Exp>;
+  Revenues_aggregate?: InputMaybe<Revenue_Aggregate_Bool_Exp>;
   _and?: InputMaybe<Array<Shops_Bool_Exp>>;
   _not?: InputMaybe<Shops_Bool_Exp>;
   _or?: InputMaybe<Array<Shops_Bool_Exp>>;
@@ -5670,9 +6907,11 @@ export type Shops_Bool_Exp = {
   image?: InputMaybe<String_Comparison_Exp>;
   is_active?: InputMaybe<Boolean_Comparison_Exp>;
   latitude?: InputMaybe<String_Comparison_Exp>;
+  logo?: InputMaybe<String_Comparison_Exp>;
   longitude?: InputMaybe<String_Comparison_Exp>;
   name?: InputMaybe<String_Comparison_Exp>;
   operating_hours?: InputMaybe<Json_Comparison_Exp>;
+  phone?: InputMaybe<String_Comparison_Exp>;
   updated_at?: InputMaybe<String_Comparison_Exp>;
 };
 
@@ -5689,6 +6928,7 @@ export type Shops_Insert_Input = {
   Category?: InputMaybe<Categories_Obj_Rel_Insert_Input>;
   Orders?: InputMaybe<Orders_Arr_Rel_Insert_Input>;
   Products?: InputMaybe<Products_Arr_Rel_Insert_Input>;
+  Revenues?: InputMaybe<Revenue_Arr_Rel_Insert_Input>;
   address?: InputMaybe<Scalars["String"]["input"]>;
   category_id?: InputMaybe<Scalars["uuid"]["input"]>;
   created_at?: InputMaybe<Scalars["timestamptz"]["input"]>;
@@ -5697,9 +6937,11 @@ export type Shops_Insert_Input = {
   image?: InputMaybe<Scalars["String"]["input"]>;
   is_active?: InputMaybe<Scalars["Boolean"]["input"]>;
   latitude?: InputMaybe<Scalars["String"]["input"]>;
+  logo?: InputMaybe<Scalars["String"]["input"]>;
   longitude?: InputMaybe<Scalars["String"]["input"]>;
   name?: InputMaybe<Scalars["String"]["input"]>;
   operating_hours?: InputMaybe<Scalars["json"]["input"]>;
+  phone?: InputMaybe<Scalars["String"]["input"]>;
   updated_at?: InputMaybe<Scalars["String"]["input"]>;
 };
 
@@ -5712,8 +6954,10 @@ export type Shops_Max_Fields = {
   id?: Maybe<Scalars["uuid"]["output"]>;
   image?: Maybe<Scalars["String"]["output"]>;
   latitude?: Maybe<Scalars["String"]["output"]>;
+  logo?: Maybe<Scalars["String"]["output"]>;
   longitude?: Maybe<Scalars["String"]["output"]>;
   name?: Maybe<Scalars["String"]["output"]>;
+  phone?: Maybe<Scalars["String"]["output"]>;
   updated_at?: Maybe<Scalars["String"]["output"]>;
 };
 
@@ -5726,8 +6970,10 @@ export type Shops_Max_Order_By = {
   id?: InputMaybe<Order_By>;
   image?: InputMaybe<Order_By>;
   latitude?: InputMaybe<Order_By>;
+  logo?: InputMaybe<Order_By>;
   longitude?: InputMaybe<Order_By>;
   name?: InputMaybe<Order_By>;
+  phone?: InputMaybe<Order_By>;
   updated_at?: InputMaybe<Order_By>;
 };
 
@@ -5740,8 +6986,10 @@ export type Shops_Min_Fields = {
   id?: Maybe<Scalars["uuid"]["output"]>;
   image?: Maybe<Scalars["String"]["output"]>;
   latitude?: Maybe<Scalars["String"]["output"]>;
+  logo?: Maybe<Scalars["String"]["output"]>;
   longitude?: Maybe<Scalars["String"]["output"]>;
   name?: Maybe<Scalars["String"]["output"]>;
+  phone?: Maybe<Scalars["String"]["output"]>;
   updated_at?: Maybe<Scalars["String"]["output"]>;
 };
 
@@ -5754,8 +7002,10 @@ export type Shops_Min_Order_By = {
   id?: InputMaybe<Order_By>;
   image?: InputMaybe<Order_By>;
   latitude?: InputMaybe<Order_By>;
+  logo?: InputMaybe<Order_By>;
   longitude?: InputMaybe<Order_By>;
   name?: InputMaybe<Order_By>;
+  phone?: InputMaybe<Order_By>;
   updated_at?: InputMaybe<Order_By>;
 };
 
@@ -5787,6 +7037,7 @@ export type Shops_Order_By = {
   Category?: InputMaybe<Categories_Order_By>;
   Orders_aggregate?: InputMaybe<Orders_Aggregate_Order_By>;
   Products_aggregate?: InputMaybe<Products_Aggregate_Order_By>;
+  Revenues_aggregate?: InputMaybe<Revenue_Aggregate_Order_By>;
   address?: InputMaybe<Order_By>;
   category_id?: InputMaybe<Order_By>;
   created_at?: InputMaybe<Order_By>;
@@ -5795,9 +7046,11 @@ export type Shops_Order_By = {
   image?: InputMaybe<Order_By>;
   is_active?: InputMaybe<Order_By>;
   latitude?: InputMaybe<Order_By>;
+  logo?: InputMaybe<Order_By>;
   longitude?: InputMaybe<Order_By>;
   name?: InputMaybe<Order_By>;
   operating_hours?: InputMaybe<Order_By>;
+  phone?: InputMaybe<Order_By>;
   updated_at?: InputMaybe<Order_By>;
 };
 
@@ -5825,11 +7078,15 @@ export type Shops_Select_Column =
   /** column name */
   | "latitude"
   /** column name */
+  | "logo"
+  /** column name */
   | "longitude"
   /** column name */
   | "name"
   /** column name */
   | "operating_hours"
+  /** column name */
+  | "phone"
   /** column name */
   | "updated_at";
 
@@ -5853,9 +7110,11 @@ export type Shops_Set_Input = {
   image?: InputMaybe<Scalars["String"]["input"]>;
   is_active?: InputMaybe<Scalars["Boolean"]["input"]>;
   latitude?: InputMaybe<Scalars["String"]["input"]>;
+  logo?: InputMaybe<Scalars["String"]["input"]>;
   longitude?: InputMaybe<Scalars["String"]["input"]>;
   name?: InputMaybe<Scalars["String"]["input"]>;
   operating_hours?: InputMaybe<Scalars["json"]["input"]>;
+  phone?: InputMaybe<Scalars["String"]["input"]>;
   updated_at?: InputMaybe<Scalars["String"]["input"]>;
 };
 
@@ -5877,9 +7136,11 @@ export type Shops_Stream_Cursor_Value_Input = {
   image?: InputMaybe<Scalars["String"]["input"]>;
   is_active?: InputMaybe<Scalars["Boolean"]["input"]>;
   latitude?: InputMaybe<Scalars["String"]["input"]>;
+  logo?: InputMaybe<Scalars["String"]["input"]>;
   longitude?: InputMaybe<Scalars["String"]["input"]>;
   name?: InputMaybe<Scalars["String"]["input"]>;
   operating_hours?: InputMaybe<Scalars["json"]["input"]>;
+  phone?: InputMaybe<Scalars["String"]["input"]>;
   updated_at?: InputMaybe<Scalars["String"]["input"]>;
 };
 
@@ -5902,11 +7163,15 @@ export type Shops_Update_Column =
   /** column name */
   | "latitude"
   /** column name */
+  | "logo"
+  /** column name */
   | "longitude"
   /** column name */
   | "name"
   /** column name */
   | "operating_hours"
+  /** column name */
+  | "phone"
   /** column name */
   | "updated_at";
 
@@ -6152,6 +7417,7 @@ export type System_Configuratioins = {
   serviceFee: Scalars["String"]["output"];
   shoppingTime: Scalars["String"]["output"];
   suggestedMinimumTip: Scalars["String"]["output"];
+  tax?: Maybe<Scalars["String"]["output"]>;
   unitsSurcharge: Scalars["String"]["output"];
 };
 
@@ -6195,6 +7461,7 @@ export type System_Configuratioins_Bool_Exp = {
   serviceFee?: InputMaybe<String_Comparison_Exp>;
   shoppingTime?: InputMaybe<String_Comparison_Exp>;
   suggestedMinimumTip?: InputMaybe<String_Comparison_Exp>;
+  tax?: InputMaybe<String_Comparison_Exp>;
   unitsSurcharge?: InputMaybe<String_Comparison_Exp>;
 };
 
@@ -6223,6 +7490,7 @@ export type System_Configuratioins_Insert_Input = {
   serviceFee?: InputMaybe<Scalars["String"]["input"]>;
   shoppingTime?: InputMaybe<Scalars["String"]["input"]>;
   suggestedMinimumTip?: InputMaybe<Scalars["String"]["input"]>;
+  tax?: InputMaybe<Scalars["String"]["input"]>;
   unitsSurcharge?: InputMaybe<Scalars["String"]["input"]>;
 };
 
@@ -6241,6 +7509,7 @@ export type System_Configuratioins_Max_Fields = {
   serviceFee?: Maybe<Scalars["String"]["output"]>;
   shoppingTime?: Maybe<Scalars["String"]["output"]>;
   suggestedMinimumTip?: Maybe<Scalars["String"]["output"]>;
+  tax?: Maybe<Scalars["String"]["output"]>;
   unitsSurcharge?: Maybe<Scalars["String"]["output"]>;
 };
 
@@ -6259,6 +7528,7 @@ export type System_Configuratioins_Min_Fields = {
   serviceFee?: Maybe<Scalars["String"]["output"]>;
   shoppingTime?: Maybe<Scalars["String"]["output"]>;
   suggestedMinimumTip?: Maybe<Scalars["String"]["output"]>;
+  tax?: Maybe<Scalars["String"]["output"]>;
   unitsSurcharge?: Maybe<Scalars["String"]["output"]>;
 };
 
@@ -6295,6 +7565,7 @@ export type System_Configuratioins_Order_By = {
   serviceFee?: InputMaybe<Order_By>;
   shoppingTime?: InputMaybe<Order_By>;
   suggestedMinimumTip?: InputMaybe<Order_By>;
+  tax?: InputMaybe<Order_By>;
   unitsSurcharge?: InputMaybe<Order_By>;
 };
 
@@ -6338,6 +7609,8 @@ export type System_Configuratioins_Select_Column =
   /** column name */
   | "suggestedMinimumTip"
   /** column name */
+  | "tax"
+  /** column name */
   | "unitsSurcharge";
 
 /** input type for updating data in table "System_configuratioins" */
@@ -6358,6 +7631,7 @@ export type System_Configuratioins_Set_Input = {
   serviceFee?: InputMaybe<Scalars["String"]["input"]>;
   shoppingTime?: InputMaybe<Scalars["String"]["input"]>;
   suggestedMinimumTip?: InputMaybe<Scalars["String"]["input"]>;
+  tax?: InputMaybe<Scalars["String"]["input"]>;
   unitsSurcharge?: InputMaybe<Scalars["String"]["input"]>;
 };
 
@@ -6387,6 +7661,7 @@ export type System_Configuratioins_Stream_Cursor_Value_Input = {
   serviceFee?: InputMaybe<Scalars["String"]["input"]>;
   shoppingTime?: InputMaybe<Scalars["String"]["input"]>;
   suggestedMinimumTip?: InputMaybe<Scalars["String"]["input"]>;
+  tax?: InputMaybe<Scalars["String"]["input"]>;
   unitsSurcharge?: InputMaybe<Scalars["String"]["input"]>;
 };
 
@@ -6424,6 +7699,8 @@ export type System_Configuratioins_Update_Column =
   | "shoppingTime"
   /** column name */
   | "suggestedMinimumTip"
+  /** column name */
+  | "tax"
   /** column name */
   | "unitsSurcharge";
 
@@ -6469,6 +7746,14 @@ export type Users = {
   /** An aggregate relationship */
   Ratings_aggregate: Ratings_Aggregate;
   /** An array relationship */
+  Reels: Array<Reels>;
+  /** An aggregate relationship */
+  Reels_aggregate: Reels_Aggregate;
+  /** An array relationship */
+  Reels_comments: Array<Reels_Comments>;
+  /** An aggregate relationship */
+  Reels_comments_aggregate: Reels_Comments_Aggregate;
+  /** An array relationship */
   Refunds: Array<Refunds>;
   /** An aggregate relationship */
   Refunds_aggregate: Refunds_Aggregate;
@@ -6491,12 +7776,28 @@ export type Users = {
   /** An aggregate relationship */
   ordersByUserId_aggregate: Orders_Aggregate;
   password_hash: Scalars["String"]["output"];
+  /** An array relationship */
+  paymentCards: Array<PaymentCards>;
+  /** An aggregate relationship */
+  paymentCards_aggregate: PaymentCards_Aggregate;
   phone: Scalars["String"]["output"];
   profile_picture?: Maybe<Scalars["String"]["output"]>;
   /** An array relationship */
   ratingsByShopperId: Array<Ratings>;
   /** An aggregate relationship */
   ratingsByShopperId_aggregate: Ratings_Aggregate;
+  /** An array relationship */
+  reelOrdersByShopperId: Array<Reel_Orders>;
+  /** An aggregate relationship */
+  reelOrdersByShopperId_aggregate: Reel_Orders_Aggregate;
+  /** An array relationship */
+  reel_likes: Array<Reel_Likes>;
+  /** An aggregate relationship */
+  reel_likes_aggregate: Reel_Likes_Aggregate;
+  /** An array relationship */
+  reel_orders: Array<Reel_Orders>;
+  /** An aggregate relationship */
+  reel_orders_aggregate: Reel_Orders_Aggregate;
   role: Scalars["String"]["output"];
   /** An object relationship */
   shopper?: Maybe<Shoppers>;
@@ -6505,6 +7806,8 @@ export type Users = {
   /** An aggregate relationship */
   tickets_aggregate: Tickets_Aggregate;
   updated_at?: Maybe<Scalars["String"]["output"]>;
+  /** An object relationship */
+  vehicle?: Maybe<Vehicles>;
 };
 
 /** Users */
@@ -6652,6 +7955,42 @@ export type UsersRatings_AggregateArgs = {
 };
 
 /** Users */
+export type UsersReelsArgs = {
+  distinct_on?: InputMaybe<Array<Reels_Select_Column>>;
+  limit?: InputMaybe<Scalars["Int"]["input"]>;
+  offset?: InputMaybe<Scalars["Int"]["input"]>;
+  order_by?: InputMaybe<Array<Reels_Order_By>>;
+  where?: InputMaybe<Reels_Bool_Exp>;
+};
+
+/** Users */
+export type UsersReels_AggregateArgs = {
+  distinct_on?: InputMaybe<Array<Reels_Select_Column>>;
+  limit?: InputMaybe<Scalars["Int"]["input"]>;
+  offset?: InputMaybe<Scalars["Int"]["input"]>;
+  order_by?: InputMaybe<Array<Reels_Order_By>>;
+  where?: InputMaybe<Reels_Bool_Exp>;
+};
+
+/** Users */
+export type UsersReels_CommentsArgs = {
+  distinct_on?: InputMaybe<Array<Reels_Comments_Select_Column>>;
+  limit?: InputMaybe<Scalars["Int"]["input"]>;
+  offset?: InputMaybe<Scalars["Int"]["input"]>;
+  order_by?: InputMaybe<Array<Reels_Comments_Order_By>>;
+  where?: InputMaybe<Reels_Comments_Bool_Exp>;
+};
+
+/** Users */
+export type UsersReels_Comments_AggregateArgs = {
+  distinct_on?: InputMaybe<Array<Reels_Comments_Select_Column>>;
+  limit?: InputMaybe<Scalars["Int"]["input"]>;
+  offset?: InputMaybe<Scalars["Int"]["input"]>;
+  order_by?: InputMaybe<Array<Reels_Comments_Order_By>>;
+  where?: InputMaybe<Reels_Comments_Bool_Exp>;
+};
+
+/** Users */
 export type UsersRefundsArgs = {
   distinct_on?: InputMaybe<Array<Refunds_Select_Column>>;
   limit?: InputMaybe<Scalars["Int"]["input"]>;
@@ -6724,6 +8063,24 @@ export type UsersOrdersByUserId_AggregateArgs = {
 };
 
 /** Users */
+export type UsersPaymentCardsArgs = {
+  distinct_on?: InputMaybe<Array<PaymentCards_Select_Column>>;
+  limit?: InputMaybe<Scalars["Int"]["input"]>;
+  offset?: InputMaybe<Scalars["Int"]["input"]>;
+  order_by?: InputMaybe<Array<PaymentCards_Order_By>>;
+  where?: InputMaybe<PaymentCards_Bool_Exp>;
+};
+
+/** Users */
+export type UsersPaymentCards_AggregateArgs = {
+  distinct_on?: InputMaybe<Array<PaymentCards_Select_Column>>;
+  limit?: InputMaybe<Scalars["Int"]["input"]>;
+  offset?: InputMaybe<Scalars["Int"]["input"]>;
+  order_by?: InputMaybe<Array<PaymentCards_Order_By>>;
+  where?: InputMaybe<PaymentCards_Bool_Exp>;
+};
+
+/** Users */
 export type UsersRatingsByShopperIdArgs = {
   distinct_on?: InputMaybe<Array<Ratings_Select_Column>>;
   limit?: InputMaybe<Scalars["Int"]["input"]>;
@@ -6739,6 +8096,60 @@ export type UsersRatingsByShopperId_AggregateArgs = {
   offset?: InputMaybe<Scalars["Int"]["input"]>;
   order_by?: InputMaybe<Array<Ratings_Order_By>>;
   where?: InputMaybe<Ratings_Bool_Exp>;
+};
+
+/** Users */
+export type UsersReelOrdersByShopperIdArgs = {
+  distinct_on?: InputMaybe<Array<Reel_Orders_Select_Column>>;
+  limit?: InputMaybe<Scalars["Int"]["input"]>;
+  offset?: InputMaybe<Scalars["Int"]["input"]>;
+  order_by?: InputMaybe<Array<Reel_Orders_Order_By>>;
+  where?: InputMaybe<Reel_Orders_Bool_Exp>;
+};
+
+/** Users */
+export type UsersReelOrdersByShopperId_AggregateArgs = {
+  distinct_on?: InputMaybe<Array<Reel_Orders_Select_Column>>;
+  limit?: InputMaybe<Scalars["Int"]["input"]>;
+  offset?: InputMaybe<Scalars["Int"]["input"]>;
+  order_by?: InputMaybe<Array<Reel_Orders_Order_By>>;
+  where?: InputMaybe<Reel_Orders_Bool_Exp>;
+};
+
+/** Users */
+export type UsersReel_LikesArgs = {
+  distinct_on?: InputMaybe<Array<Reel_Likes_Select_Column>>;
+  limit?: InputMaybe<Scalars["Int"]["input"]>;
+  offset?: InputMaybe<Scalars["Int"]["input"]>;
+  order_by?: InputMaybe<Array<Reel_Likes_Order_By>>;
+  where?: InputMaybe<Reel_Likes_Bool_Exp>;
+};
+
+/** Users */
+export type UsersReel_Likes_AggregateArgs = {
+  distinct_on?: InputMaybe<Array<Reel_Likes_Select_Column>>;
+  limit?: InputMaybe<Scalars["Int"]["input"]>;
+  offset?: InputMaybe<Scalars["Int"]["input"]>;
+  order_by?: InputMaybe<Array<Reel_Likes_Order_By>>;
+  where?: InputMaybe<Reel_Likes_Bool_Exp>;
+};
+
+/** Users */
+export type UsersReel_OrdersArgs = {
+  distinct_on?: InputMaybe<Array<Reel_Orders_Select_Column>>;
+  limit?: InputMaybe<Scalars["Int"]["input"]>;
+  offset?: InputMaybe<Scalars["Int"]["input"]>;
+  order_by?: InputMaybe<Array<Reel_Orders_Order_By>>;
+  where?: InputMaybe<Reel_Orders_Bool_Exp>;
+};
+
+/** Users */
+export type UsersReel_Orders_AggregateArgs = {
+  distinct_on?: InputMaybe<Array<Reel_Orders_Select_Column>>;
+  limit?: InputMaybe<Scalars["Int"]["input"]>;
+  offset?: InputMaybe<Scalars["Int"]["input"]>;
+  order_by?: InputMaybe<Array<Reel_Orders_Order_By>>;
+  where?: InputMaybe<Reel_Orders_Bool_Exp>;
 };
 
 /** Users */
@@ -6796,6 +8207,10 @@ export type Users_Bool_Exp = {
   Payment_Methods_aggregate?: InputMaybe<Payment_Methods_Aggregate_Bool_Exp>;
   Ratings?: InputMaybe<Ratings_Bool_Exp>;
   Ratings_aggregate?: InputMaybe<Ratings_Aggregate_Bool_Exp>;
+  Reels?: InputMaybe<Reels_Bool_Exp>;
+  Reels_aggregate?: InputMaybe<Reels_Aggregate_Bool_Exp>;
+  Reels_comments?: InputMaybe<Reels_Comments_Bool_Exp>;
+  Reels_comments_aggregate?: InputMaybe<Reels_Comments_Aggregate_Bool_Exp>;
   Refunds?: InputMaybe<Refunds_Bool_Exp>;
   Refunds_aggregate?: InputMaybe<Refunds_Aggregate_Bool_Exp>;
   Shopper_Availabilities?: InputMaybe<Shopper_Availability_Bool_Exp>;
@@ -6814,15 +8229,24 @@ export type Users_Bool_Exp = {
   ordersByUserId?: InputMaybe<Orders_Bool_Exp>;
   ordersByUserId_aggregate?: InputMaybe<Orders_Aggregate_Bool_Exp>;
   password_hash?: InputMaybe<String_Comparison_Exp>;
+  paymentCards?: InputMaybe<PaymentCards_Bool_Exp>;
+  paymentCards_aggregate?: InputMaybe<PaymentCards_Aggregate_Bool_Exp>;
   phone?: InputMaybe<String_Comparison_Exp>;
   profile_picture?: InputMaybe<String_Comparison_Exp>;
   ratingsByShopperId?: InputMaybe<Ratings_Bool_Exp>;
   ratingsByShopperId_aggregate?: InputMaybe<Ratings_Aggregate_Bool_Exp>;
+  reelOrdersByShopperId?: InputMaybe<Reel_Orders_Bool_Exp>;
+  reelOrdersByShopperId_aggregate?: InputMaybe<Reel_Orders_Aggregate_Bool_Exp>;
+  reel_likes?: InputMaybe<Reel_Likes_Bool_Exp>;
+  reel_likes_aggregate?: InputMaybe<Reel_Likes_Aggregate_Bool_Exp>;
+  reel_orders?: InputMaybe<Reel_Orders_Bool_Exp>;
+  reel_orders_aggregate?: InputMaybe<Reel_Orders_Aggregate_Bool_Exp>;
   role?: InputMaybe<String_Comparison_Exp>;
   shopper?: InputMaybe<Shoppers_Bool_Exp>;
   tickets?: InputMaybe<Tickets_Bool_Exp>;
   tickets_aggregate?: InputMaybe<Tickets_Aggregate_Bool_Exp>;
   updated_at?: InputMaybe<String_Comparison_Exp>;
+  vehicle?: InputMaybe<Vehicles_Bool_Exp>;
 };
 
 /** unique or primary key constraints on table "Users" */
@@ -6844,6 +8268,8 @@ export type Users_Insert_Input = {
   Orders?: InputMaybe<Orders_Arr_Rel_Insert_Input>;
   Payment_Methods?: InputMaybe<Payment_Methods_Arr_Rel_Insert_Input>;
   Ratings?: InputMaybe<Ratings_Arr_Rel_Insert_Input>;
+  Reels?: InputMaybe<Reels_Arr_Rel_Insert_Input>;
+  Reels_comments?: InputMaybe<Reels_Comments_Arr_Rel_Insert_Input>;
   Refunds?: InputMaybe<Refunds_Arr_Rel_Insert_Input>;
   Shopper_Availabilities?: InputMaybe<Shopper_Availability_Arr_Rel_Insert_Input>;
   Wallets?: InputMaybe<Wallets_Arr_Rel_Insert_Input>;
@@ -6855,13 +8281,18 @@ export type Users_Insert_Input = {
   name?: InputMaybe<Scalars["String"]["input"]>;
   ordersByUserId?: InputMaybe<Orders_Arr_Rel_Insert_Input>;
   password_hash?: InputMaybe<Scalars["String"]["input"]>;
+  paymentCards?: InputMaybe<PaymentCards_Arr_Rel_Insert_Input>;
   phone?: InputMaybe<Scalars["String"]["input"]>;
   profile_picture?: InputMaybe<Scalars["String"]["input"]>;
   ratingsByShopperId?: InputMaybe<Ratings_Arr_Rel_Insert_Input>;
+  reelOrdersByShopperId?: InputMaybe<Reel_Orders_Arr_Rel_Insert_Input>;
+  reel_likes?: InputMaybe<Reel_Likes_Arr_Rel_Insert_Input>;
+  reel_orders?: InputMaybe<Reel_Orders_Arr_Rel_Insert_Input>;
   role?: InputMaybe<Scalars["String"]["input"]>;
   shopper?: InputMaybe<Shoppers_Obj_Rel_Insert_Input>;
   tickets?: InputMaybe<Tickets_Arr_Rel_Insert_Input>;
   updated_at?: InputMaybe<Scalars["String"]["input"]>;
+  vehicle?: InputMaybe<Vehicles_Obj_Rel_Insert_Input>;
 };
 
 /** aggregate max on columns */
@@ -6924,6 +8355,8 @@ export type Users_Order_By = {
   Orders_aggregate?: InputMaybe<Orders_Aggregate_Order_By>;
   Payment_Methods_aggregate?: InputMaybe<Payment_Methods_Aggregate_Order_By>;
   Ratings_aggregate?: InputMaybe<Ratings_Aggregate_Order_By>;
+  Reels_aggregate?: InputMaybe<Reels_Aggregate_Order_By>;
+  Reels_comments_aggregate?: InputMaybe<Reels_Comments_Aggregate_Order_By>;
   Refunds_aggregate?: InputMaybe<Refunds_Aggregate_Order_By>;
   Shopper_Availabilities_aggregate?: InputMaybe<Shopper_Availability_Aggregate_Order_By>;
   Wallets_aggregate?: InputMaybe<Wallets_Aggregate_Order_By>;
@@ -6935,13 +8368,18 @@ export type Users_Order_By = {
   name?: InputMaybe<Order_By>;
   ordersByUserId_aggregate?: InputMaybe<Orders_Aggregate_Order_By>;
   password_hash?: InputMaybe<Order_By>;
+  paymentCards_aggregate?: InputMaybe<PaymentCards_Aggregate_Order_By>;
   phone?: InputMaybe<Order_By>;
   profile_picture?: InputMaybe<Order_By>;
   ratingsByShopperId_aggregate?: InputMaybe<Ratings_Aggregate_Order_By>;
+  reelOrdersByShopperId_aggregate?: InputMaybe<Reel_Orders_Aggregate_Order_By>;
+  reel_likes_aggregate?: InputMaybe<Reel_Likes_Aggregate_Order_By>;
+  reel_orders_aggregate?: InputMaybe<Reel_Orders_Aggregate_Order_By>;
   role?: InputMaybe<Order_By>;
   shopper?: InputMaybe<Shoppers_Order_By>;
   tickets_aggregate?: InputMaybe<Tickets_Aggregate_Order_By>;
   updated_at?: InputMaybe<Order_By>;
+  vehicle?: InputMaybe<Vehicles_Order_By>;
 };
 
 /** primary key columns input for table: Users */
@@ -7055,6 +8493,7 @@ export type Wallet_Transactions = {
   description?: Maybe<Scalars["String"]["output"]>;
   id: Scalars["uuid"]["output"];
   related_order_id?: Maybe<Scalars["uuid"]["output"]>;
+  related_reel_orderId?: Maybe<Scalars["uuid"]["output"]>;
   status: Scalars["String"]["output"];
   type: Scalars["String"]["output"];
   wallet_id: Scalars["uuid"]["output"];
@@ -7116,6 +8555,7 @@ export type Wallet_Transactions_Bool_Exp = {
   description?: InputMaybe<String_Comparison_Exp>;
   id?: InputMaybe<Uuid_Comparison_Exp>;
   related_order_id?: InputMaybe<Uuid_Comparison_Exp>;
+  related_reel_orderId?: InputMaybe<Uuid_Comparison_Exp>;
   status?: InputMaybe<String_Comparison_Exp>;
   type?: InputMaybe<String_Comparison_Exp>;
   wallet_id?: InputMaybe<Uuid_Comparison_Exp>;
@@ -7135,6 +8575,7 @@ export type Wallet_Transactions_Insert_Input = {
   description?: InputMaybe<Scalars["String"]["input"]>;
   id?: InputMaybe<Scalars["uuid"]["input"]>;
   related_order_id?: InputMaybe<Scalars["uuid"]["input"]>;
+  related_reel_orderId?: InputMaybe<Scalars["uuid"]["input"]>;
   status?: InputMaybe<Scalars["String"]["input"]>;
   type?: InputMaybe<Scalars["String"]["input"]>;
   wallet_id?: InputMaybe<Scalars["uuid"]["input"]>;
@@ -7147,6 +8588,7 @@ export type Wallet_Transactions_Max_Fields = {
   description?: Maybe<Scalars["String"]["output"]>;
   id?: Maybe<Scalars["uuid"]["output"]>;
   related_order_id?: Maybe<Scalars["uuid"]["output"]>;
+  related_reel_orderId?: Maybe<Scalars["uuid"]["output"]>;
   status?: Maybe<Scalars["String"]["output"]>;
   type?: Maybe<Scalars["String"]["output"]>;
   wallet_id?: Maybe<Scalars["uuid"]["output"]>;
@@ -7159,6 +8601,7 @@ export type Wallet_Transactions_Max_Order_By = {
   description?: InputMaybe<Order_By>;
   id?: InputMaybe<Order_By>;
   related_order_id?: InputMaybe<Order_By>;
+  related_reel_orderId?: InputMaybe<Order_By>;
   status?: InputMaybe<Order_By>;
   type?: InputMaybe<Order_By>;
   wallet_id?: InputMaybe<Order_By>;
@@ -7171,6 +8614,7 @@ export type Wallet_Transactions_Min_Fields = {
   description?: Maybe<Scalars["String"]["output"]>;
   id?: Maybe<Scalars["uuid"]["output"]>;
   related_order_id?: Maybe<Scalars["uuid"]["output"]>;
+  related_reel_orderId?: Maybe<Scalars["uuid"]["output"]>;
   status?: Maybe<Scalars["String"]["output"]>;
   type?: Maybe<Scalars["String"]["output"]>;
   wallet_id?: Maybe<Scalars["uuid"]["output"]>;
@@ -7183,6 +8627,7 @@ export type Wallet_Transactions_Min_Order_By = {
   description?: InputMaybe<Order_By>;
   id?: InputMaybe<Order_By>;
   related_order_id?: InputMaybe<Order_By>;
+  related_reel_orderId?: InputMaybe<Order_By>;
   status?: InputMaybe<Order_By>;
   type?: InputMaybe<Order_By>;
   wallet_id?: InputMaybe<Order_By>;
@@ -7212,6 +8657,7 @@ export type Wallet_Transactions_Order_By = {
   description?: InputMaybe<Order_By>;
   id?: InputMaybe<Order_By>;
   related_order_id?: InputMaybe<Order_By>;
+  related_reel_orderId?: InputMaybe<Order_By>;
   status?: InputMaybe<Order_By>;
   type?: InputMaybe<Order_By>;
   wallet_id?: InputMaybe<Order_By>;
@@ -7235,6 +8681,8 @@ export type Wallet_Transactions_Select_Column =
   /** column name */
   | "related_order_id"
   /** column name */
+  | "related_reel_orderId"
+  /** column name */
   | "status"
   /** column name */
   | "type"
@@ -7248,6 +8696,7 @@ export type Wallet_Transactions_Set_Input = {
   description?: InputMaybe<Scalars["String"]["input"]>;
   id?: InputMaybe<Scalars["uuid"]["input"]>;
   related_order_id?: InputMaybe<Scalars["uuid"]["input"]>;
+  related_reel_orderId?: InputMaybe<Scalars["uuid"]["input"]>;
   status?: InputMaybe<Scalars["String"]["input"]>;
   type?: InputMaybe<Scalars["String"]["input"]>;
   wallet_id?: InputMaybe<Scalars["uuid"]["input"]>;
@@ -7268,6 +8717,7 @@ export type Wallet_Transactions_Stream_Cursor_Value_Input = {
   description?: InputMaybe<Scalars["String"]["input"]>;
   id?: InputMaybe<Scalars["uuid"]["input"]>;
   related_order_id?: InputMaybe<Scalars["uuid"]["input"]>;
+  related_reel_orderId?: InputMaybe<Scalars["uuid"]["input"]>;
   status?: InputMaybe<Scalars["String"]["input"]>;
   type?: InputMaybe<Scalars["String"]["input"]>;
   wallet_id?: InputMaybe<Scalars["uuid"]["input"]>;
@@ -7285,6 +8735,8 @@ export type Wallet_Transactions_Update_Column =
   | "id"
   /** column name */
   | "related_order_id"
+  /** column name */
+  | "related_reel_orderId"
   /** column name */
   | "status"
   /** column name */
@@ -7642,10 +9094,22 @@ export type Mutation_Root = {
   delete_Ratings?: Maybe<Ratings_Mutation_Response>;
   /** delete single row from the table: "Ratings" */
   delete_Ratings_by_pk?: Maybe<Ratings>;
+  /** delete data from the table: "Reels" */
+  delete_Reels?: Maybe<Reels_Mutation_Response>;
+  /** delete single row from the table: "Reels" */
+  delete_Reels_by_pk?: Maybe<Reels>;
+  /** delete data from the table: "Reels_comments" */
+  delete_Reels_comments?: Maybe<Reels_Comments_Mutation_Response>;
+  /** delete single row from the table: "Reels_comments" */
+  delete_Reels_comments_by_pk?: Maybe<Reels_Comments>;
   /** delete data from the table: "Refunds" */
   delete_Refunds?: Maybe<Refunds_Mutation_Response>;
   /** delete single row from the table: "Refunds" */
   delete_Refunds_by_pk?: Maybe<Refunds>;
+  /** delete data from the table: "Restaurants" */
+  delete_Restaurants?: Maybe<Restaurants_Mutation_Response>;
+  /** delete single row from the table: "Restaurants" */
+  delete_Restaurants_by_pk?: Maybe<Restaurants>;
   /** delete data from the table: "Revenue" */
   delete_Revenue?: Maybe<Revenue_Mutation_Response>;
   /** delete single row from the table: "Revenue" */
@@ -7686,6 +9150,22 @@ export type Mutation_Root = {
   delete_promotions?: Maybe<Promotions_Mutation_Response>;
   /** delete single row from the table: "promotions" */
   delete_promotions_by_pk?: Maybe<Promotions>;
+  /** delete data from the table: "push_subscriptions" */
+  delete_push_subscriptions?: Maybe<Push_Subscriptions_Mutation_Response>;
+  /** delete single row from the table: "push_subscriptions" */
+  delete_push_subscriptions_by_pk?: Maybe<Push_Subscriptions>;
+  /** delete data from the table: "reel_likes" */
+  delete_reel_likes?: Maybe<Reel_Likes_Mutation_Response>;
+  /** delete single row from the table: "reel_likes" */
+  delete_reel_likes_by_pk?: Maybe<Reel_Likes>;
+  /** delete data from the table: "reel_orders" */
+  delete_reel_orders?: Maybe<Reel_Orders_Mutation_Response>;
+  /** delete single row from the table: "reel_orders" */
+  delete_reel_orders_by_pk?: Maybe<Reel_Orders>;
+  /** delete data from the table: "shopper_notification_settings" */
+  delete_shopper_notification_settings?: Maybe<Shopper_Notification_Settings_Mutation_Response>;
+  /** delete single row from the table: "shopper_notification_settings" */
+  delete_shopper_notification_settings_by_pk?: Maybe<Shopper_Notification_Settings>;
   /** delete data from the table: "shoppers" */
   delete_shoppers?: Maybe<Shoppers_Mutation_Response>;
   /** delete single row from the table: "shoppers" */
@@ -7694,6 +9174,10 @@ export type Mutation_Root = {
   delete_tickets?: Maybe<Tickets_Mutation_Response>;
   /** delete single row from the table: "tickets" */
   delete_tickets_by_pk?: Maybe<Tickets>;
+  /** delete data from the table: "vehicles" */
+  delete_vehicles?: Maybe<Vehicles_Mutation_Response>;
+  /** delete single row from the table: "vehicles" */
+  delete_vehicles_by_pk?: Maybe<Vehicles>;
   /** insert data into the table: "Addresses" */
   insert_Addresses?: Maybe<Addresses_Mutation_Response>;
   /** insert a single row into the table: "Addresses" */
@@ -7746,10 +9230,22 @@ export type Mutation_Root = {
   insert_Ratings?: Maybe<Ratings_Mutation_Response>;
   /** insert a single row into the table: "Ratings" */
   insert_Ratings_one?: Maybe<Ratings>;
+  /** insert data into the table: "Reels" */
+  insert_Reels?: Maybe<Reels_Mutation_Response>;
+  /** insert data into the table: "Reels_comments" */
+  insert_Reels_comments?: Maybe<Reels_Comments_Mutation_Response>;
+  /** insert a single row into the table: "Reels_comments" */
+  insert_Reels_comments_one?: Maybe<Reels_Comments>;
+  /** insert a single row into the table: "Reels" */
+  insert_Reels_one?: Maybe<Reels>;
   /** insert data into the table: "Refunds" */
   insert_Refunds?: Maybe<Refunds_Mutation_Response>;
   /** insert a single row into the table: "Refunds" */
   insert_Refunds_one?: Maybe<Refunds>;
+  /** insert data into the table: "Restaurants" */
+  insert_Restaurants?: Maybe<Restaurants_Mutation_Response>;
+  /** insert a single row into the table: "Restaurants" */
+  insert_Restaurants_one?: Maybe<Restaurants>;
   /** insert data into the table: "Revenue" */
   insert_Revenue?: Maybe<Revenue_Mutation_Response>;
   /** insert a single row into the table: "Revenue" */
@@ -7790,6 +9286,22 @@ export type Mutation_Root = {
   insert_promotions?: Maybe<Promotions_Mutation_Response>;
   /** insert a single row into the table: "promotions" */
   insert_promotions_one?: Maybe<Promotions>;
+  /** insert data into the table: "push_subscriptions" */
+  insert_push_subscriptions?: Maybe<Push_Subscriptions_Mutation_Response>;
+  /** insert a single row into the table: "push_subscriptions" */
+  insert_push_subscriptions_one?: Maybe<Push_Subscriptions>;
+  /** insert data into the table: "reel_likes" */
+  insert_reel_likes?: Maybe<Reel_Likes_Mutation_Response>;
+  /** insert a single row into the table: "reel_likes" */
+  insert_reel_likes_one?: Maybe<Reel_Likes>;
+  /** insert data into the table: "reel_orders" */
+  insert_reel_orders?: Maybe<Reel_Orders_Mutation_Response>;
+  /** insert a single row into the table: "reel_orders" */
+  insert_reel_orders_one?: Maybe<Reel_Orders>;
+  /** insert data into the table: "shopper_notification_settings" */
+  insert_shopper_notification_settings?: Maybe<Shopper_Notification_Settings_Mutation_Response>;
+  /** insert a single row into the table: "shopper_notification_settings" */
+  insert_shopper_notification_settings_one?: Maybe<Shopper_Notification_Settings>;
   /** insert data into the table: "shoppers" */
   insert_shoppers?: Maybe<Shoppers_Mutation_Response>;
   /** insert a single row into the table: "shoppers" */
@@ -7798,6 +9310,10 @@ export type Mutation_Root = {
   insert_tickets?: Maybe<Tickets_Mutation_Response>;
   /** insert a single row into the table: "tickets" */
   insert_tickets_one?: Maybe<Tickets>;
+  /** insert data into the table: "vehicles" */
+  insert_vehicles?: Maybe<Vehicles_Mutation_Response>;
+  /** insert a single row into the table: "vehicles" */
+  insert_vehicles_one?: Maybe<Vehicles>;
   /** update data of the table: "Addresses" */
   update_Addresses?: Maybe<Addresses_Mutation_Response>;
   /** update single row of the table: "Addresses" */
@@ -7884,12 +9400,32 @@ export type Mutation_Root = {
   update_Ratings_by_pk?: Maybe<Ratings>;
   /** update multiples rows of table: "Ratings" */
   update_Ratings_many?: Maybe<Array<Maybe<Ratings_Mutation_Response>>>;
+  /** update data of the table: "Reels" */
+  update_Reels?: Maybe<Reels_Mutation_Response>;
+  /** update single row of the table: "Reels" */
+  update_Reels_by_pk?: Maybe<Reels>;
+  /** update data of the table: "Reels_comments" */
+  update_Reels_comments?: Maybe<Reels_Comments_Mutation_Response>;
+  /** update single row of the table: "Reels_comments" */
+  update_Reels_comments_by_pk?: Maybe<Reels_Comments>;
+  /** update multiples rows of table: "Reels_comments" */
+  update_Reels_comments_many?: Maybe<
+    Array<Maybe<Reels_Comments_Mutation_Response>>
+  >;
+  /** update multiples rows of table: "Reels" */
+  update_Reels_many?: Maybe<Array<Maybe<Reels_Mutation_Response>>>;
   /** update data of the table: "Refunds" */
   update_Refunds?: Maybe<Refunds_Mutation_Response>;
   /** update single row of the table: "Refunds" */
   update_Refunds_by_pk?: Maybe<Refunds>;
   /** update multiples rows of table: "Refunds" */
   update_Refunds_many?: Maybe<Array<Maybe<Refunds_Mutation_Response>>>;
+  /** update data of the table: "Restaurants" */
+  update_Restaurants?: Maybe<Restaurants_Mutation_Response>;
+  /** update single row of the table: "Restaurants" */
+  update_Restaurants_by_pk?: Maybe<Restaurants>;
+  /** update multiples rows of table: "Restaurants" */
+  update_Restaurants_many?: Maybe<Array<Maybe<Restaurants_Mutation_Response>>>;
   /** update data of the table: "Revenue" */
   update_Revenue?: Maybe<Revenue_Mutation_Response>;
   /** update single row of the table: "Revenue" */
@@ -7958,6 +9494,34 @@ export type Mutation_Root = {
   update_promotions_by_pk?: Maybe<Promotions>;
   /** update multiples rows of table: "promotions" */
   update_promotions_many?: Maybe<Array<Maybe<Promotions_Mutation_Response>>>;
+  /** update data of the table: "push_subscriptions" */
+  update_push_subscriptions?: Maybe<Push_Subscriptions_Mutation_Response>;
+  /** update single row of the table: "push_subscriptions" */
+  update_push_subscriptions_by_pk?: Maybe<Push_Subscriptions>;
+  /** update multiples rows of table: "push_subscriptions" */
+  update_push_subscriptions_many?: Maybe<
+    Array<Maybe<Push_Subscriptions_Mutation_Response>>
+  >;
+  /** update data of the table: "reel_likes" */
+  update_reel_likes?: Maybe<Reel_Likes_Mutation_Response>;
+  /** update single row of the table: "reel_likes" */
+  update_reel_likes_by_pk?: Maybe<Reel_Likes>;
+  /** update multiples rows of table: "reel_likes" */
+  update_reel_likes_many?: Maybe<Array<Maybe<Reel_Likes_Mutation_Response>>>;
+  /** update data of the table: "reel_orders" */
+  update_reel_orders?: Maybe<Reel_Orders_Mutation_Response>;
+  /** update single row of the table: "reel_orders" */
+  update_reel_orders_by_pk?: Maybe<Reel_Orders>;
+  /** update multiples rows of table: "reel_orders" */
+  update_reel_orders_many?: Maybe<Array<Maybe<Reel_Orders_Mutation_Response>>>;
+  /** update data of the table: "shopper_notification_settings" */
+  update_shopper_notification_settings?: Maybe<Shopper_Notification_Settings_Mutation_Response>;
+  /** update single row of the table: "shopper_notification_settings" */
+  update_shopper_notification_settings_by_pk?: Maybe<Shopper_Notification_Settings>;
+  /** update multiples rows of table: "shopper_notification_settings" */
+  update_shopper_notification_settings_many?: Maybe<
+    Array<Maybe<Shopper_Notification_Settings_Mutation_Response>>
+  >;
   /** update data of the table: "shoppers" */
   update_shoppers?: Maybe<Shoppers_Mutation_Response>;
   /** update single row of the table: "shoppers" */
@@ -7970,6 +9534,12 @@ export type Mutation_Root = {
   update_tickets_by_pk?: Maybe<Tickets>;
   /** update multiples rows of table: "tickets" */
   update_tickets_many?: Maybe<Array<Maybe<Tickets_Mutation_Response>>>;
+  /** update data of the table: "vehicles" */
+  update_vehicles?: Maybe<Vehicles_Mutation_Response>;
+  /** update single row of the table: "vehicles" */
+  update_vehicles_by_pk?: Maybe<Vehicles>;
+  /** update multiples rows of table: "vehicles" */
+  update_vehicles_many?: Maybe<Array<Maybe<Vehicles_Mutation_Response>>>;
 };
 
 /** mutation root */
@@ -8103,12 +9673,42 @@ export type Mutation_RootDelete_Ratings_By_PkArgs = {
 };
 
 /** mutation root */
+export type Mutation_RootDelete_ReelsArgs = {
+  where: Reels_Bool_Exp;
+};
+
+/** mutation root */
+export type Mutation_RootDelete_Reels_By_PkArgs = {
+  id: Scalars["uuid"]["input"];
+};
+
+/** mutation root */
+export type Mutation_RootDelete_Reels_CommentsArgs = {
+  where: Reels_Comments_Bool_Exp;
+};
+
+/** mutation root */
+export type Mutation_RootDelete_Reels_Comments_By_PkArgs = {
+  id: Scalars["uuid"]["input"];
+};
+
+/** mutation root */
 export type Mutation_RootDelete_RefundsArgs = {
   where: Refunds_Bool_Exp;
 };
 
 /** mutation root */
 export type Mutation_RootDelete_Refunds_By_PkArgs = {
+  id: Scalars["uuid"]["input"];
+};
+
+/** mutation root */
+export type Mutation_RootDelete_RestaurantsArgs = {
+  where: Restaurants_Bool_Exp;
+};
+
+/** mutation root */
+export type Mutation_RootDelete_Restaurants_By_PkArgs = {
   id: Scalars["uuid"]["input"];
 };
 
@@ -8213,6 +9813,46 @@ export type Mutation_RootDelete_Promotions_By_PkArgs = {
 };
 
 /** mutation root */
+export type Mutation_RootDelete_Push_SubscriptionsArgs = {
+  where: Push_Subscriptions_Bool_Exp;
+};
+
+/** mutation root */
+export type Mutation_RootDelete_Push_Subscriptions_By_PkArgs = {
+  id: Scalars["uuid"]["input"];
+};
+
+/** mutation root */
+export type Mutation_RootDelete_Reel_LikesArgs = {
+  where: Reel_Likes_Bool_Exp;
+};
+
+/** mutation root */
+export type Mutation_RootDelete_Reel_Likes_By_PkArgs = {
+  id: Scalars["uuid"]["input"];
+};
+
+/** mutation root */
+export type Mutation_RootDelete_Reel_OrdersArgs = {
+  where: Reel_Orders_Bool_Exp;
+};
+
+/** mutation root */
+export type Mutation_RootDelete_Reel_Orders_By_PkArgs = {
+  id: Scalars["uuid"]["input"];
+};
+
+/** mutation root */
+export type Mutation_RootDelete_Shopper_Notification_SettingsArgs = {
+  where: Shopper_Notification_Settings_Bool_Exp;
+};
+
+/** mutation root */
+export type Mutation_RootDelete_Shopper_Notification_Settings_By_PkArgs = {
+  id: Scalars["uuid"]["input"];
+};
+
+/** mutation root */
 export type Mutation_RootDelete_ShoppersArgs = {
   where: Shoppers_Bool_Exp;
 };
@@ -8229,6 +9869,16 @@ export type Mutation_RootDelete_TicketsArgs = {
 
 /** mutation root */
 export type Mutation_RootDelete_Tickets_By_PkArgs = {
+  id: Scalars["uuid"]["input"];
+};
+
+/** mutation root */
+export type Mutation_RootDelete_VehiclesArgs = {
+  where: Vehicles_Bool_Exp;
+};
+
+/** mutation root */
+export type Mutation_RootDelete_Vehicles_By_PkArgs = {
   id: Scalars["uuid"]["input"];
 };
 
@@ -8389,6 +10039,30 @@ export type Mutation_RootInsert_Ratings_OneArgs = {
 };
 
 /** mutation root */
+export type Mutation_RootInsert_ReelsArgs = {
+  objects: Array<Reels_Insert_Input>;
+  on_conflict?: InputMaybe<Reels_On_Conflict>;
+};
+
+/** mutation root */
+export type Mutation_RootInsert_Reels_CommentsArgs = {
+  objects: Array<Reels_Comments_Insert_Input>;
+  on_conflict?: InputMaybe<Reels_Comments_On_Conflict>;
+};
+
+/** mutation root */
+export type Mutation_RootInsert_Reels_Comments_OneArgs = {
+  object: Reels_Comments_Insert_Input;
+  on_conflict?: InputMaybe<Reels_Comments_On_Conflict>;
+};
+
+/** mutation root */
+export type Mutation_RootInsert_Reels_OneArgs = {
+  object: Reels_Insert_Input;
+  on_conflict?: InputMaybe<Reels_On_Conflict>;
+};
+
+/** mutation root */
 export type Mutation_RootInsert_RefundsArgs = {
   objects: Array<Refunds_Insert_Input>;
   on_conflict?: InputMaybe<Refunds_On_Conflict>;
@@ -8398,6 +10072,18 @@ export type Mutation_RootInsert_RefundsArgs = {
 export type Mutation_RootInsert_Refunds_OneArgs = {
   object: Refunds_Insert_Input;
   on_conflict?: InputMaybe<Refunds_On_Conflict>;
+};
+
+/** mutation root */
+export type Mutation_RootInsert_RestaurantsArgs = {
+  objects: Array<Restaurants_Insert_Input>;
+  on_conflict?: InputMaybe<Restaurants_On_Conflict>;
+};
+
+/** mutation root */
+export type Mutation_RootInsert_Restaurants_OneArgs = {
+  object: Restaurants_Insert_Input;
+  on_conflict?: InputMaybe<Restaurants_On_Conflict>;
 };
 
 /** mutation root */
@@ -8521,6 +10207,54 @@ export type Mutation_RootInsert_Promotions_OneArgs = {
 };
 
 /** mutation root */
+export type Mutation_RootInsert_Push_SubscriptionsArgs = {
+  objects: Array<Push_Subscriptions_Insert_Input>;
+  on_conflict?: InputMaybe<Push_Subscriptions_On_Conflict>;
+};
+
+/** mutation root */
+export type Mutation_RootInsert_Push_Subscriptions_OneArgs = {
+  object: Push_Subscriptions_Insert_Input;
+  on_conflict?: InputMaybe<Push_Subscriptions_On_Conflict>;
+};
+
+/** mutation root */
+export type Mutation_RootInsert_Reel_LikesArgs = {
+  objects: Array<Reel_Likes_Insert_Input>;
+  on_conflict?: InputMaybe<Reel_Likes_On_Conflict>;
+};
+
+/** mutation root */
+export type Mutation_RootInsert_Reel_Likes_OneArgs = {
+  object: Reel_Likes_Insert_Input;
+  on_conflict?: InputMaybe<Reel_Likes_On_Conflict>;
+};
+
+/** mutation root */
+export type Mutation_RootInsert_Reel_OrdersArgs = {
+  objects: Array<Reel_Orders_Insert_Input>;
+  on_conflict?: InputMaybe<Reel_Orders_On_Conflict>;
+};
+
+/** mutation root */
+export type Mutation_RootInsert_Reel_Orders_OneArgs = {
+  object: Reel_Orders_Insert_Input;
+  on_conflict?: InputMaybe<Reel_Orders_On_Conflict>;
+};
+
+/** mutation root */
+export type Mutation_RootInsert_Shopper_Notification_SettingsArgs = {
+  objects: Array<Shopper_Notification_Settings_Insert_Input>;
+  on_conflict?: InputMaybe<Shopper_Notification_Settings_On_Conflict>;
+};
+
+/** mutation root */
+export type Mutation_RootInsert_Shopper_Notification_Settings_OneArgs = {
+  object: Shopper_Notification_Settings_Insert_Input;
+  on_conflict?: InputMaybe<Shopper_Notification_Settings_On_Conflict>;
+};
+
+/** mutation root */
 export type Mutation_RootInsert_ShoppersArgs = {
   objects: Array<Shoppers_Insert_Input>;
   on_conflict?: InputMaybe<Shoppers_On_Conflict>;
@@ -8542,6 +10276,18 @@ export type Mutation_RootInsert_TicketsArgs = {
 export type Mutation_RootInsert_Tickets_OneArgs = {
   object: Tickets_Insert_Input;
   on_conflict?: InputMaybe<Tickets_On_Conflict>;
+};
+
+/** mutation root */
+export type Mutation_RootInsert_VehiclesArgs = {
+  objects: Array<Vehicles_Insert_Input>;
+  on_conflict?: InputMaybe<Vehicles_On_Conflict>;
+};
+
+/** mutation root */
+export type Mutation_RootInsert_Vehicles_OneArgs = {
+  object: Vehicles_Insert_Input;
+  on_conflict?: InputMaybe<Vehicles_On_Conflict>;
 };
 
 /** mutation root */
@@ -8786,6 +10532,50 @@ export type Mutation_RootUpdate_Ratings_ManyArgs = {
 };
 
 /** mutation root */
+export type Mutation_RootUpdate_ReelsArgs = {
+  _append?: InputMaybe<Reels_Append_Input>;
+  _delete_at_path?: InputMaybe<Reels_Delete_At_Path_Input>;
+  _delete_elem?: InputMaybe<Reels_Delete_Elem_Input>;
+  _delete_key?: InputMaybe<Reels_Delete_Key_Input>;
+  _prepend?: InputMaybe<Reels_Prepend_Input>;
+  _set?: InputMaybe<Reels_Set_Input>;
+  where: Reels_Bool_Exp;
+};
+
+/** mutation root */
+export type Mutation_RootUpdate_Reels_By_PkArgs = {
+  _append?: InputMaybe<Reels_Append_Input>;
+  _delete_at_path?: InputMaybe<Reels_Delete_At_Path_Input>;
+  _delete_elem?: InputMaybe<Reels_Delete_Elem_Input>;
+  _delete_key?: InputMaybe<Reels_Delete_Key_Input>;
+  _prepend?: InputMaybe<Reels_Prepend_Input>;
+  _set?: InputMaybe<Reels_Set_Input>;
+  pk_columns: Reels_Pk_Columns_Input;
+};
+
+/** mutation root */
+export type Mutation_RootUpdate_Reels_CommentsArgs = {
+  _set?: InputMaybe<Reels_Comments_Set_Input>;
+  where: Reels_Comments_Bool_Exp;
+};
+
+/** mutation root */
+export type Mutation_RootUpdate_Reels_Comments_By_PkArgs = {
+  _set?: InputMaybe<Reels_Comments_Set_Input>;
+  pk_columns: Reels_Comments_Pk_Columns_Input;
+};
+
+/** mutation root */
+export type Mutation_RootUpdate_Reels_Comments_ManyArgs = {
+  updates: Array<Reels_Comments_Updates>;
+};
+
+/** mutation root */
+export type Mutation_RootUpdate_Reels_ManyArgs = {
+  updates: Array<Reels_Updates>;
+};
+
+/** mutation root */
 export type Mutation_RootUpdate_RefundsArgs = {
   _set?: InputMaybe<Refunds_Set_Input>;
   where: Refunds_Bool_Exp;
@@ -8803,13 +10593,40 @@ export type Mutation_RootUpdate_Refunds_ManyArgs = {
 };
 
 /** mutation root */
+export type Mutation_RootUpdate_RestaurantsArgs = {
+  _set?: InputMaybe<Restaurants_Set_Input>;
+  where: Restaurants_Bool_Exp;
+};
+
+/** mutation root */
+export type Mutation_RootUpdate_Restaurants_By_PkArgs = {
+  _set?: InputMaybe<Restaurants_Set_Input>;
+  pk_columns: Restaurants_Pk_Columns_Input;
+};
+
+/** mutation root */
+export type Mutation_RootUpdate_Restaurants_ManyArgs = {
+  updates: Array<Restaurants_Updates>;
+};
+
+/** mutation root */
 export type Mutation_RootUpdate_RevenueArgs = {
+  _append?: InputMaybe<Revenue_Append_Input>;
+  _delete_at_path?: InputMaybe<Revenue_Delete_At_Path_Input>;
+  _delete_elem?: InputMaybe<Revenue_Delete_Elem_Input>;
+  _delete_key?: InputMaybe<Revenue_Delete_Key_Input>;
+  _prepend?: InputMaybe<Revenue_Prepend_Input>;
   _set?: InputMaybe<Revenue_Set_Input>;
   where: Revenue_Bool_Exp;
 };
 
 /** mutation root */
 export type Mutation_RootUpdate_Revenue_By_PkArgs = {
+  _append?: InputMaybe<Revenue_Append_Input>;
+  _delete_at_path?: InputMaybe<Revenue_Delete_At_Path_Input>;
+  _delete_elem?: InputMaybe<Revenue_Delete_Elem_Input>;
+  _delete_key?: InputMaybe<Revenue_Delete_Key_Input>;
+  _prepend?: InputMaybe<Revenue_Prepend_Input>;
   _set?: InputMaybe<Revenue_Set_Input>;
   pk_columns: Revenue_Pk_Columns_Input;
 };
@@ -8975,6 +10792,86 @@ export type Mutation_RootUpdate_Promotions_ManyArgs = {
 };
 
 /** mutation root */
+export type Mutation_RootUpdate_Push_SubscriptionsArgs = {
+  _set?: InputMaybe<Push_Subscriptions_Set_Input>;
+  where: Push_Subscriptions_Bool_Exp;
+};
+
+/** mutation root */
+export type Mutation_RootUpdate_Push_Subscriptions_By_PkArgs = {
+  _set?: InputMaybe<Push_Subscriptions_Set_Input>;
+  pk_columns: Push_Subscriptions_Pk_Columns_Input;
+};
+
+/** mutation root */
+export type Mutation_RootUpdate_Push_Subscriptions_ManyArgs = {
+  updates: Array<Push_Subscriptions_Updates>;
+};
+
+/** mutation root */
+export type Mutation_RootUpdate_Reel_LikesArgs = {
+  _set?: InputMaybe<Reel_Likes_Set_Input>;
+  where: Reel_Likes_Bool_Exp;
+};
+
+/** mutation root */
+export type Mutation_RootUpdate_Reel_Likes_By_PkArgs = {
+  _set?: InputMaybe<Reel_Likes_Set_Input>;
+  pk_columns: Reel_Likes_Pk_Columns_Input;
+};
+
+/** mutation root */
+export type Mutation_RootUpdate_Reel_Likes_ManyArgs = {
+  updates: Array<Reel_Likes_Updates>;
+};
+
+/** mutation root */
+export type Mutation_RootUpdate_Reel_OrdersArgs = {
+  _inc?: InputMaybe<Reel_Orders_Inc_Input>;
+  _set?: InputMaybe<Reel_Orders_Set_Input>;
+  where: Reel_Orders_Bool_Exp;
+};
+
+/** mutation root */
+export type Mutation_RootUpdate_Reel_Orders_By_PkArgs = {
+  _inc?: InputMaybe<Reel_Orders_Inc_Input>;
+  _set?: InputMaybe<Reel_Orders_Set_Input>;
+  pk_columns: Reel_Orders_Pk_Columns_Input;
+};
+
+/** mutation root */
+export type Mutation_RootUpdate_Reel_Orders_ManyArgs = {
+  updates: Array<Reel_Orders_Updates>;
+};
+
+/** mutation root */
+export type Mutation_RootUpdate_Shopper_Notification_SettingsArgs = {
+  _append?: InputMaybe<Shopper_Notification_Settings_Append_Input>;
+  _delete_at_path?: InputMaybe<Shopper_Notification_Settings_Delete_At_Path_Input>;
+  _delete_elem?: InputMaybe<Shopper_Notification_Settings_Delete_Elem_Input>;
+  _delete_key?: InputMaybe<Shopper_Notification_Settings_Delete_Key_Input>;
+  _prepend?: InputMaybe<Shopper_Notification_Settings_Prepend_Input>;
+  _set?: InputMaybe<Shopper_Notification_Settings_Set_Input>;
+  where: Shopper_Notification_Settings_Bool_Exp;
+};
+
+/** mutation root */
+export type Mutation_RootUpdate_Shopper_Notification_Settings_By_PkArgs = {
+  _append?: InputMaybe<Shopper_Notification_Settings_Append_Input>;
+  _delete_at_path?: InputMaybe<Shopper_Notification_Settings_Delete_At_Path_Input>;
+  _delete_elem?: InputMaybe<Shopper_Notification_Settings_Delete_Elem_Input>;
+  _delete_key?: InputMaybe<Shopper_Notification_Settings_Delete_Key_Input>;
+  _prepend?: InputMaybe<Shopper_Notification_Settings_Prepend_Input>;
+  _set?: InputMaybe<Shopper_Notification_Settings_Set_Input>;
+  pk_columns: Shopper_Notification_Settings_Pk_Columns_Input;
+};
+
+/** mutation root */
+export type Mutation_RootUpdate_Shopper_Notification_Settings_ManyArgs = {
+  updates: Array<Shopper_Notification_Settings_Updates>;
+};
+
+/** mutation root */
 export type Mutation_RootUpdate_ShoppersArgs = {
   _inc?: InputMaybe<Shoppers_Inc_Input>;
   _set?: InputMaybe<Shoppers_Set_Input>;
@@ -9012,6 +10909,23 @@ export type Mutation_RootUpdate_Tickets_ManyArgs = {
   updates: Array<Tickets_Updates>;
 };
 
+/** mutation root */
+export type Mutation_RootUpdate_VehiclesArgs = {
+  _set?: InputMaybe<Vehicles_Set_Input>;
+  where: Vehicles_Bool_Exp;
+};
+
+/** mutation root */
+export type Mutation_RootUpdate_Vehicles_By_PkArgs = {
+  _set?: InputMaybe<Vehicles_Set_Input>;
+  pk_columns: Vehicles_Pk_Columns_Input;
+};
+
+/** mutation root */
+export type Mutation_RootUpdate_Vehicles_ManyArgs = {
+  updates: Array<Vehicles_Updates>;
+};
+
 /** column ordering options */
 export type Order_By =
   /** in ascending order, nulls last */
@@ -9030,6 +10944,8 @@ export type Order_By =
 /** columns and relationships of "paymentCards" */
 export type PaymentCards = {
   CVV: Scalars["String"]["output"];
+  /** An object relationship */
+  User: Users;
   created_at: Scalars["timestamptz"]["output"];
   expiry_date: Scalars["String"]["output"];
   id: Scalars["uuid"]["output"];
@@ -9046,6 +10962,17 @@ export type PaymentCards_Aggregate = {
   nodes: Array<PaymentCards>;
 };
 
+export type PaymentCards_Aggregate_Bool_Exp = {
+  count?: InputMaybe<PaymentCards_Aggregate_Bool_Exp_Count>;
+};
+
+export type PaymentCards_Aggregate_Bool_Exp_Count = {
+  arguments?: InputMaybe<Array<PaymentCards_Select_Column>>;
+  distinct?: InputMaybe<Scalars["Boolean"]["input"]>;
+  filter?: InputMaybe<PaymentCards_Bool_Exp>;
+  predicate: Int_Comparison_Exp;
+};
+
 /** aggregate fields of "paymentCards" */
 export type PaymentCards_Aggregate_Fields = {
   count: Scalars["Int"]["output"];
@@ -9059,9 +10986,24 @@ export type PaymentCards_Aggregate_FieldsCountArgs = {
   distinct?: InputMaybe<Scalars["Boolean"]["input"]>;
 };
 
+/** order by aggregate values of table "paymentCards" */
+export type PaymentCards_Aggregate_Order_By = {
+  count?: InputMaybe<Order_By>;
+  max?: InputMaybe<PaymentCards_Max_Order_By>;
+  min?: InputMaybe<PaymentCards_Min_Order_By>;
+};
+
+/** input type for inserting array relation for remote table "paymentCards" */
+export type PaymentCards_Arr_Rel_Insert_Input = {
+  data: Array<PaymentCards_Insert_Input>;
+  /** upsert condition */
+  on_conflict?: InputMaybe<PaymentCards_On_Conflict>;
+};
+
 /** Boolean expression to filter rows from the table "paymentCards". All fields are combined with a logical 'AND'. */
 export type PaymentCards_Bool_Exp = {
   CVV?: InputMaybe<String_Comparison_Exp>;
+  User?: InputMaybe<Users_Bool_Exp>;
   _and?: InputMaybe<Array<PaymentCards_Bool_Exp>>;
   _not?: InputMaybe<PaymentCards_Bool_Exp>;
   _or?: InputMaybe<Array<PaymentCards_Bool_Exp>>;
@@ -9085,6 +11027,7 @@ export type PaymentCards_Constraint =
 /** input type for inserting data into table "paymentCards" */
 export type PaymentCards_Insert_Input = {
   CVV?: InputMaybe<Scalars["String"]["input"]>;
+  User?: InputMaybe<Users_Obj_Rel_Insert_Input>;
   created_at?: InputMaybe<Scalars["timestamptz"]["input"]>;
   expiry_date?: InputMaybe<Scalars["String"]["input"]>;
   id?: InputMaybe<Scalars["uuid"]["input"]>;
@@ -9108,6 +11051,19 @@ export type PaymentCards_Max_Fields = {
   user_id?: Maybe<Scalars["uuid"]["output"]>;
 };
 
+/** order by max() on columns of table "paymentCards" */
+export type PaymentCards_Max_Order_By = {
+  CVV?: InputMaybe<Order_By>;
+  created_at?: InputMaybe<Order_By>;
+  expiry_date?: InputMaybe<Order_By>;
+  id?: InputMaybe<Order_By>;
+  image?: InputMaybe<Order_By>;
+  name?: InputMaybe<Order_By>;
+  number?: InputMaybe<Order_By>;
+  update_on?: InputMaybe<Order_By>;
+  user_id?: InputMaybe<Order_By>;
+};
+
 /** aggregate min on columns */
 export type PaymentCards_Min_Fields = {
   CVV?: Maybe<Scalars["String"]["output"]>;
@@ -9119,6 +11075,19 @@ export type PaymentCards_Min_Fields = {
   number?: Maybe<Scalars["String"]["output"]>;
   update_on?: Maybe<Scalars["timestamptz"]["output"]>;
   user_id?: Maybe<Scalars["uuid"]["output"]>;
+};
+
+/** order by min() on columns of table "paymentCards" */
+export type PaymentCards_Min_Order_By = {
+  CVV?: InputMaybe<Order_By>;
+  created_at?: InputMaybe<Order_By>;
+  expiry_date?: InputMaybe<Order_By>;
+  id?: InputMaybe<Order_By>;
+  image?: InputMaybe<Order_By>;
+  name?: InputMaybe<Order_By>;
+  number?: InputMaybe<Order_By>;
+  update_on?: InputMaybe<Order_By>;
+  user_id?: InputMaybe<Order_By>;
 };
 
 /** response of any mutation on the table "paymentCards" */
@@ -9139,6 +11108,7 @@ export type PaymentCards_On_Conflict = {
 /** Ordering options when selecting data from "paymentCards". */
 export type PaymentCards_Order_By = {
   CVV?: InputMaybe<Order_By>;
+  User?: InputMaybe<Users_Order_By>;
   created_at?: InputMaybe<Order_By>;
   expiry_date?: InputMaybe<Order_By>;
   id?: InputMaybe<Order_By>;
@@ -9445,6 +11415,207 @@ export type Promotions_Updates = {
   where: Promotions_Bool_Exp;
 };
 
+/** for deskop noificaions */
+export type Push_Subscriptions = {
+  /** An object relationship */
+  User: Users;
+  auth: Scalars["String"]["output"];
+  created_at: Scalars["timestamptz"]["output"];
+  device_type: Scalars["String"]["output"];
+  endpoint: Scalars["String"]["output"];
+  id: Scalars["uuid"]["output"];
+  p256dh: Scalars["String"]["output"];
+  updated_at?: Maybe<Scalars["timestamptz"]["output"]>;
+  user_id: Scalars["uuid"]["output"];
+};
+
+/** aggregated selection of "push_subscriptions" */
+export type Push_Subscriptions_Aggregate = {
+  aggregate?: Maybe<Push_Subscriptions_Aggregate_Fields>;
+  nodes: Array<Push_Subscriptions>;
+};
+
+/** aggregate fields of "push_subscriptions" */
+export type Push_Subscriptions_Aggregate_Fields = {
+  count: Scalars["Int"]["output"];
+  max?: Maybe<Push_Subscriptions_Max_Fields>;
+  min?: Maybe<Push_Subscriptions_Min_Fields>;
+};
+
+/** aggregate fields of "push_subscriptions" */
+export type Push_Subscriptions_Aggregate_FieldsCountArgs = {
+  columns?: InputMaybe<Array<Push_Subscriptions_Select_Column>>;
+  distinct?: InputMaybe<Scalars["Boolean"]["input"]>;
+};
+
+/** Boolean expression to filter rows from the table "push_subscriptions". All fields are combined with a logical 'AND'. */
+export type Push_Subscriptions_Bool_Exp = {
+  User?: InputMaybe<Users_Bool_Exp>;
+  _and?: InputMaybe<Array<Push_Subscriptions_Bool_Exp>>;
+  _not?: InputMaybe<Push_Subscriptions_Bool_Exp>;
+  _or?: InputMaybe<Array<Push_Subscriptions_Bool_Exp>>;
+  auth?: InputMaybe<String_Comparison_Exp>;
+  created_at?: InputMaybe<Timestamptz_Comparison_Exp>;
+  device_type?: InputMaybe<String_Comparison_Exp>;
+  endpoint?: InputMaybe<String_Comparison_Exp>;
+  id?: InputMaybe<Uuid_Comparison_Exp>;
+  p256dh?: InputMaybe<String_Comparison_Exp>;
+  updated_at?: InputMaybe<Timestamptz_Comparison_Exp>;
+  user_id?: InputMaybe<Uuid_Comparison_Exp>;
+};
+
+/** unique or primary key constraints on table "push_subscriptions" */
+export type Push_Subscriptions_Constraint =
+  /** unique or primary key constraint on columns "id" */
+  "push_subscriptions_pkey";
+
+/** input type for inserting data into table "push_subscriptions" */
+export type Push_Subscriptions_Insert_Input = {
+  User?: InputMaybe<Users_Obj_Rel_Insert_Input>;
+  auth?: InputMaybe<Scalars["String"]["input"]>;
+  created_at?: InputMaybe<Scalars["timestamptz"]["input"]>;
+  device_type?: InputMaybe<Scalars["String"]["input"]>;
+  endpoint?: InputMaybe<Scalars["String"]["input"]>;
+  id?: InputMaybe<Scalars["uuid"]["input"]>;
+  p256dh?: InputMaybe<Scalars["String"]["input"]>;
+  updated_at?: InputMaybe<Scalars["timestamptz"]["input"]>;
+  user_id?: InputMaybe<Scalars["uuid"]["input"]>;
+};
+
+/** aggregate max on columns */
+export type Push_Subscriptions_Max_Fields = {
+  auth?: Maybe<Scalars["String"]["output"]>;
+  created_at?: Maybe<Scalars["timestamptz"]["output"]>;
+  device_type?: Maybe<Scalars["String"]["output"]>;
+  endpoint?: Maybe<Scalars["String"]["output"]>;
+  id?: Maybe<Scalars["uuid"]["output"]>;
+  p256dh?: Maybe<Scalars["String"]["output"]>;
+  updated_at?: Maybe<Scalars["timestamptz"]["output"]>;
+  user_id?: Maybe<Scalars["uuid"]["output"]>;
+};
+
+/** aggregate min on columns */
+export type Push_Subscriptions_Min_Fields = {
+  auth?: Maybe<Scalars["String"]["output"]>;
+  created_at?: Maybe<Scalars["timestamptz"]["output"]>;
+  device_type?: Maybe<Scalars["String"]["output"]>;
+  endpoint?: Maybe<Scalars["String"]["output"]>;
+  id?: Maybe<Scalars["uuid"]["output"]>;
+  p256dh?: Maybe<Scalars["String"]["output"]>;
+  updated_at?: Maybe<Scalars["timestamptz"]["output"]>;
+  user_id?: Maybe<Scalars["uuid"]["output"]>;
+};
+
+/** response of any mutation on the table "push_subscriptions" */
+export type Push_Subscriptions_Mutation_Response = {
+  /** number of rows affected by the mutation */
+  affected_rows: Scalars["Int"]["output"];
+  /** data from the rows affected by the mutation */
+  returning: Array<Push_Subscriptions>;
+};
+
+/** on_conflict condition type for table "push_subscriptions" */
+export type Push_Subscriptions_On_Conflict = {
+  constraint: Push_Subscriptions_Constraint;
+  update_columns?: Array<Push_Subscriptions_Update_Column>;
+  where?: InputMaybe<Push_Subscriptions_Bool_Exp>;
+};
+
+/** Ordering options when selecting data from "push_subscriptions". */
+export type Push_Subscriptions_Order_By = {
+  User?: InputMaybe<Users_Order_By>;
+  auth?: InputMaybe<Order_By>;
+  created_at?: InputMaybe<Order_By>;
+  device_type?: InputMaybe<Order_By>;
+  endpoint?: InputMaybe<Order_By>;
+  id?: InputMaybe<Order_By>;
+  p256dh?: InputMaybe<Order_By>;
+  updated_at?: InputMaybe<Order_By>;
+  user_id?: InputMaybe<Order_By>;
+};
+
+/** primary key columns input for table: push_subscriptions */
+export type Push_Subscriptions_Pk_Columns_Input = {
+  id: Scalars["uuid"]["input"];
+};
+
+/** select columns of table "push_subscriptions" */
+export type Push_Subscriptions_Select_Column =
+  /** column name */
+  | "auth"
+  /** column name */
+  | "created_at"
+  /** column name */
+  | "device_type"
+  /** column name */
+  | "endpoint"
+  /** column name */
+  | "id"
+  /** column name */
+  | "p256dh"
+  /** column name */
+  | "updated_at"
+  /** column name */
+  | "user_id";
+
+/** input type for updating data in table "push_subscriptions" */
+export type Push_Subscriptions_Set_Input = {
+  auth?: InputMaybe<Scalars["String"]["input"]>;
+  created_at?: InputMaybe<Scalars["timestamptz"]["input"]>;
+  device_type?: InputMaybe<Scalars["String"]["input"]>;
+  endpoint?: InputMaybe<Scalars["String"]["input"]>;
+  id?: InputMaybe<Scalars["uuid"]["input"]>;
+  p256dh?: InputMaybe<Scalars["String"]["input"]>;
+  updated_at?: InputMaybe<Scalars["timestamptz"]["input"]>;
+  user_id?: InputMaybe<Scalars["uuid"]["input"]>;
+};
+
+/** Streaming cursor of the table "push_subscriptions" */
+export type Push_Subscriptions_Stream_Cursor_Input = {
+  /** Stream column input with initial value */
+  initial_value: Push_Subscriptions_Stream_Cursor_Value_Input;
+  /** cursor ordering */
+  ordering?: InputMaybe<Cursor_Ordering>;
+};
+
+/** Initial value of the column from where the streaming should start */
+export type Push_Subscriptions_Stream_Cursor_Value_Input = {
+  auth?: InputMaybe<Scalars["String"]["input"]>;
+  created_at?: InputMaybe<Scalars["timestamptz"]["input"]>;
+  device_type?: InputMaybe<Scalars["String"]["input"]>;
+  endpoint?: InputMaybe<Scalars["String"]["input"]>;
+  id?: InputMaybe<Scalars["uuid"]["input"]>;
+  p256dh?: InputMaybe<Scalars["String"]["input"]>;
+  updated_at?: InputMaybe<Scalars["timestamptz"]["input"]>;
+  user_id?: InputMaybe<Scalars["uuid"]["input"]>;
+};
+
+/** update columns of table "push_subscriptions" */
+export type Push_Subscriptions_Update_Column =
+  /** column name */
+  | "auth"
+  /** column name */
+  | "created_at"
+  /** column name */
+  | "device_type"
+  /** column name */
+  | "endpoint"
+  /** column name */
+  | "id"
+  /** column name */
+  | "p256dh"
+  /** column name */
+  | "updated_at"
+  /** column name */
+  | "user_id";
+
+export type Push_Subscriptions_Updates = {
+  /** sets the columns of the filtered rows to the given values */
+  _set?: InputMaybe<Push_Subscriptions_Set_Input>;
+  /** filter the rows which have to be updated */
+  where: Push_Subscriptions_Bool_Exp;
+};
+
 export type Query_Root = {
   /** An array relationship */
   Addresses: Array<Addresses>;
@@ -9525,11 +11696,29 @@ export type Query_Root = {
   /** fetch data from the table: "Ratings" using primary key columns */
   Ratings_by_pk?: Maybe<Ratings>;
   /** An array relationship */
+  Reels: Array<Reels>;
+  /** An aggregate relationship */
+  Reels_aggregate: Reels_Aggregate;
+  /** fetch data from the table: "Reels" using primary key columns */
+  Reels_by_pk?: Maybe<Reels>;
+  /** An array relationship */
+  Reels_comments: Array<Reels_Comments>;
+  /** An aggregate relationship */
+  Reels_comments_aggregate: Reels_Comments_Aggregate;
+  /** fetch data from the table: "Reels_comments" using primary key columns */
+  Reels_comments_by_pk?: Maybe<Reels_Comments>;
+  /** An array relationship */
   Refunds: Array<Refunds>;
   /** An aggregate relationship */
   Refunds_aggregate: Refunds_Aggregate;
   /** fetch data from the table: "Refunds" using primary key columns */
   Refunds_by_pk?: Maybe<Refunds>;
+  /** fetch data from the table: "Restaurants" */
+  Restaurants: Array<Restaurants>;
+  /** fetch aggregated fields from the table: "Restaurants" */
+  Restaurants_aggregate: Restaurants_Aggregate;
+  /** fetch data from the table: "Restaurants" using primary key columns */
+  Restaurants_by_pk?: Maybe<Restaurants>;
   /** fetch data from the table: "Revenue" */
   Revenue: Array<Revenue>;
   /** fetch aggregated fields from the table: "Revenue" */
@@ -9578,9 +11767,9 @@ export type Query_Root = {
   Wallets_aggregate: Wallets_Aggregate;
   /** fetch data from the table: "Wallets" using primary key columns */
   Wallets_by_pk?: Maybe<Wallets>;
-  /** fetch data from the table: "paymentCards" */
+  /** An array relationship */
   paymentCards: Array<PaymentCards>;
-  /** fetch aggregated fields from the table: "paymentCards" */
+  /** An aggregate relationship */
   paymentCards_aggregate: PaymentCards_Aggregate;
   /** fetch data from the table: "paymentCards" using primary key columns */
   paymentCards_by_pk?: Maybe<PaymentCards>;
@@ -9590,6 +11779,30 @@ export type Query_Root = {
   promotions_aggregate: Promotions_Aggregate;
   /** fetch data from the table: "promotions" using primary key columns */
   promotions_by_pk?: Maybe<Promotions>;
+  /** fetch data from the table: "push_subscriptions" */
+  push_subscriptions: Array<Push_Subscriptions>;
+  /** fetch aggregated fields from the table: "push_subscriptions" */
+  push_subscriptions_aggregate: Push_Subscriptions_Aggregate;
+  /** fetch data from the table: "push_subscriptions" using primary key columns */
+  push_subscriptions_by_pk?: Maybe<Push_Subscriptions>;
+  /** An array relationship */
+  reel_likes: Array<Reel_Likes>;
+  /** An aggregate relationship */
+  reel_likes_aggregate: Reel_Likes_Aggregate;
+  /** fetch data from the table: "reel_likes" using primary key columns */
+  reel_likes_by_pk?: Maybe<Reel_Likes>;
+  /** An array relationship */
+  reel_orders: Array<Reel_Orders>;
+  /** An aggregate relationship */
+  reel_orders_aggregate: Reel_Orders_Aggregate;
+  /** fetch data from the table: "reel_orders" using primary key columns */
+  reel_orders_by_pk?: Maybe<Reel_Orders>;
+  /** fetch data from the table: "shopper_notification_settings" */
+  shopper_notification_settings: Array<Shopper_Notification_Settings>;
+  /** fetch aggregated fields from the table: "shopper_notification_settings" */
+  shopper_notification_settings_aggregate: Shopper_Notification_Settings_Aggregate;
+  /** fetch data from the table: "shopper_notification_settings" using primary key columns */
+  shopper_notification_settings_by_pk?: Maybe<Shopper_Notification_Settings>;
   /** fetch data from the table: "shoppers" */
   shoppers: Array<Shoppers>;
   /** fetch aggregated fields from the table: "shoppers" */
@@ -9602,6 +11815,12 @@ export type Query_Root = {
   tickets_aggregate: Tickets_Aggregate;
   /** fetch data from the table: "tickets" using primary key columns */
   tickets_by_pk?: Maybe<Tickets>;
+  /** fetch data from the table: "vehicles" */
+  vehicles: Array<Vehicles>;
+  /** fetch aggregated fields from the table: "vehicles" */
+  vehicles_aggregate: Vehicles_Aggregate;
+  /** fetch data from the table: "vehicles" using primary key columns */
+  vehicles_by_pk?: Maybe<Vehicles>;
 };
 
 export type Query_RootAddressesArgs = {
@@ -9864,6 +12083,46 @@ export type Query_RootRatings_By_PkArgs = {
   id: Scalars["uuid"]["input"];
 };
 
+export type Query_RootReelsArgs = {
+  distinct_on?: InputMaybe<Array<Reels_Select_Column>>;
+  limit?: InputMaybe<Scalars["Int"]["input"]>;
+  offset?: InputMaybe<Scalars["Int"]["input"]>;
+  order_by?: InputMaybe<Array<Reels_Order_By>>;
+  where?: InputMaybe<Reels_Bool_Exp>;
+};
+
+export type Query_RootReels_AggregateArgs = {
+  distinct_on?: InputMaybe<Array<Reels_Select_Column>>;
+  limit?: InputMaybe<Scalars["Int"]["input"]>;
+  offset?: InputMaybe<Scalars["Int"]["input"]>;
+  order_by?: InputMaybe<Array<Reels_Order_By>>;
+  where?: InputMaybe<Reels_Bool_Exp>;
+};
+
+export type Query_RootReels_By_PkArgs = {
+  id: Scalars["uuid"]["input"];
+};
+
+export type Query_RootReels_CommentsArgs = {
+  distinct_on?: InputMaybe<Array<Reels_Comments_Select_Column>>;
+  limit?: InputMaybe<Scalars["Int"]["input"]>;
+  offset?: InputMaybe<Scalars["Int"]["input"]>;
+  order_by?: InputMaybe<Array<Reels_Comments_Order_By>>;
+  where?: InputMaybe<Reels_Comments_Bool_Exp>;
+};
+
+export type Query_RootReels_Comments_AggregateArgs = {
+  distinct_on?: InputMaybe<Array<Reels_Comments_Select_Column>>;
+  limit?: InputMaybe<Scalars["Int"]["input"]>;
+  offset?: InputMaybe<Scalars["Int"]["input"]>;
+  order_by?: InputMaybe<Array<Reels_Comments_Order_By>>;
+  where?: InputMaybe<Reels_Comments_Bool_Exp>;
+};
+
+export type Query_RootReels_Comments_By_PkArgs = {
+  id: Scalars["uuid"]["input"];
+};
+
 export type Query_RootRefundsArgs = {
   distinct_on?: InputMaybe<Array<Refunds_Select_Column>>;
   limit?: InputMaybe<Scalars["Int"]["input"]>;
@@ -9881,6 +12140,26 @@ export type Query_RootRefunds_AggregateArgs = {
 };
 
 export type Query_RootRefunds_By_PkArgs = {
+  id: Scalars["uuid"]["input"];
+};
+
+export type Query_RootRestaurantsArgs = {
+  distinct_on?: InputMaybe<Array<Restaurants_Select_Column>>;
+  limit?: InputMaybe<Scalars["Int"]["input"]>;
+  offset?: InputMaybe<Scalars["Int"]["input"]>;
+  order_by?: InputMaybe<Array<Restaurants_Order_By>>;
+  where?: InputMaybe<Restaurants_Bool_Exp>;
+};
+
+export type Query_RootRestaurants_AggregateArgs = {
+  distinct_on?: InputMaybe<Array<Restaurants_Select_Column>>;
+  limit?: InputMaybe<Scalars["Int"]["input"]>;
+  offset?: InputMaybe<Scalars["Int"]["input"]>;
+  order_by?: InputMaybe<Array<Restaurants_Order_By>>;
+  where?: InputMaybe<Restaurants_Bool_Exp>;
+};
+
+export type Query_RootRestaurants_By_PkArgs = {
   id: Scalars["uuid"]["input"];
 };
 
@@ -10084,6 +12363,86 @@ export type Query_RootPromotions_By_PkArgs = {
   id: Scalars["uuid"]["input"];
 };
 
+export type Query_RootPush_SubscriptionsArgs = {
+  distinct_on?: InputMaybe<Array<Push_Subscriptions_Select_Column>>;
+  limit?: InputMaybe<Scalars["Int"]["input"]>;
+  offset?: InputMaybe<Scalars["Int"]["input"]>;
+  order_by?: InputMaybe<Array<Push_Subscriptions_Order_By>>;
+  where?: InputMaybe<Push_Subscriptions_Bool_Exp>;
+};
+
+export type Query_RootPush_Subscriptions_AggregateArgs = {
+  distinct_on?: InputMaybe<Array<Push_Subscriptions_Select_Column>>;
+  limit?: InputMaybe<Scalars["Int"]["input"]>;
+  offset?: InputMaybe<Scalars["Int"]["input"]>;
+  order_by?: InputMaybe<Array<Push_Subscriptions_Order_By>>;
+  where?: InputMaybe<Push_Subscriptions_Bool_Exp>;
+};
+
+export type Query_RootPush_Subscriptions_By_PkArgs = {
+  id: Scalars["uuid"]["input"];
+};
+
+export type Query_RootReel_LikesArgs = {
+  distinct_on?: InputMaybe<Array<Reel_Likes_Select_Column>>;
+  limit?: InputMaybe<Scalars["Int"]["input"]>;
+  offset?: InputMaybe<Scalars["Int"]["input"]>;
+  order_by?: InputMaybe<Array<Reel_Likes_Order_By>>;
+  where?: InputMaybe<Reel_Likes_Bool_Exp>;
+};
+
+export type Query_RootReel_Likes_AggregateArgs = {
+  distinct_on?: InputMaybe<Array<Reel_Likes_Select_Column>>;
+  limit?: InputMaybe<Scalars["Int"]["input"]>;
+  offset?: InputMaybe<Scalars["Int"]["input"]>;
+  order_by?: InputMaybe<Array<Reel_Likes_Order_By>>;
+  where?: InputMaybe<Reel_Likes_Bool_Exp>;
+};
+
+export type Query_RootReel_Likes_By_PkArgs = {
+  id: Scalars["uuid"]["input"];
+};
+
+export type Query_RootReel_OrdersArgs = {
+  distinct_on?: InputMaybe<Array<Reel_Orders_Select_Column>>;
+  limit?: InputMaybe<Scalars["Int"]["input"]>;
+  offset?: InputMaybe<Scalars["Int"]["input"]>;
+  order_by?: InputMaybe<Array<Reel_Orders_Order_By>>;
+  where?: InputMaybe<Reel_Orders_Bool_Exp>;
+};
+
+export type Query_RootReel_Orders_AggregateArgs = {
+  distinct_on?: InputMaybe<Array<Reel_Orders_Select_Column>>;
+  limit?: InputMaybe<Scalars["Int"]["input"]>;
+  offset?: InputMaybe<Scalars["Int"]["input"]>;
+  order_by?: InputMaybe<Array<Reel_Orders_Order_By>>;
+  where?: InputMaybe<Reel_Orders_Bool_Exp>;
+};
+
+export type Query_RootReel_Orders_By_PkArgs = {
+  id: Scalars["uuid"]["input"];
+};
+
+export type Query_RootShopper_Notification_SettingsArgs = {
+  distinct_on?: InputMaybe<Array<Shopper_Notification_Settings_Select_Column>>;
+  limit?: InputMaybe<Scalars["Int"]["input"]>;
+  offset?: InputMaybe<Scalars["Int"]["input"]>;
+  order_by?: InputMaybe<Array<Shopper_Notification_Settings_Order_By>>;
+  where?: InputMaybe<Shopper_Notification_Settings_Bool_Exp>;
+};
+
+export type Query_RootShopper_Notification_Settings_AggregateArgs = {
+  distinct_on?: InputMaybe<Array<Shopper_Notification_Settings_Select_Column>>;
+  limit?: InputMaybe<Scalars["Int"]["input"]>;
+  offset?: InputMaybe<Scalars["Int"]["input"]>;
+  order_by?: InputMaybe<Array<Shopper_Notification_Settings_Order_By>>;
+  where?: InputMaybe<Shopper_Notification_Settings_Bool_Exp>;
+};
+
+export type Query_RootShopper_Notification_Settings_By_PkArgs = {
+  id: Scalars["uuid"]["input"];
+};
+
 export type Query_RootShoppersArgs = {
   distinct_on?: InputMaybe<Array<Shoppers_Select_Column>>;
   limit?: InputMaybe<Scalars["Int"]["input"]>;
@@ -10124,16 +12483,1057 @@ export type Query_RootTickets_By_PkArgs = {
   id: Scalars["uuid"]["input"];
 };
 
+export type Query_RootVehiclesArgs = {
+  distinct_on?: InputMaybe<Array<Vehicles_Select_Column>>;
+  limit?: InputMaybe<Scalars["Int"]["input"]>;
+  offset?: InputMaybe<Scalars["Int"]["input"]>;
+  order_by?: InputMaybe<Array<Vehicles_Order_By>>;
+  where?: InputMaybe<Vehicles_Bool_Exp>;
+};
+
+export type Query_RootVehicles_AggregateArgs = {
+  distinct_on?: InputMaybe<Array<Vehicles_Select_Column>>;
+  limit?: InputMaybe<Scalars["Int"]["input"]>;
+  offset?: InputMaybe<Scalars["Int"]["input"]>;
+  order_by?: InputMaybe<Array<Vehicles_Order_By>>;
+  where?: InputMaybe<Vehicles_Bool_Exp>;
+};
+
+export type Query_RootVehicles_By_PkArgs = {
+  id: Scalars["uuid"]["input"];
+};
+
+/** columns and relationships of "reel_likes" */
+export type Reel_Likes = {
+  /** An object relationship */
+  Reel: Reels;
+  /** An object relationship */
+  User: Users;
+  created_at: Scalars["timestamptz"]["output"];
+  id: Scalars["uuid"]["output"];
+  reel_id: Scalars["uuid"]["output"];
+  user_id: Scalars["uuid"]["output"];
+};
+
+/** aggregated selection of "reel_likes" */
+export type Reel_Likes_Aggregate = {
+  aggregate?: Maybe<Reel_Likes_Aggregate_Fields>;
+  nodes: Array<Reel_Likes>;
+};
+
+export type Reel_Likes_Aggregate_Bool_Exp = {
+  count?: InputMaybe<Reel_Likes_Aggregate_Bool_Exp_Count>;
+};
+
+export type Reel_Likes_Aggregate_Bool_Exp_Count = {
+  arguments?: InputMaybe<Array<Reel_Likes_Select_Column>>;
+  distinct?: InputMaybe<Scalars["Boolean"]["input"]>;
+  filter?: InputMaybe<Reel_Likes_Bool_Exp>;
+  predicate: Int_Comparison_Exp;
+};
+
+/** aggregate fields of "reel_likes" */
+export type Reel_Likes_Aggregate_Fields = {
+  count: Scalars["Int"]["output"];
+  max?: Maybe<Reel_Likes_Max_Fields>;
+  min?: Maybe<Reel_Likes_Min_Fields>;
+};
+
+/** aggregate fields of "reel_likes" */
+export type Reel_Likes_Aggregate_FieldsCountArgs = {
+  columns?: InputMaybe<Array<Reel_Likes_Select_Column>>;
+  distinct?: InputMaybe<Scalars["Boolean"]["input"]>;
+};
+
+/** order by aggregate values of table "reel_likes" */
+export type Reel_Likes_Aggregate_Order_By = {
+  count?: InputMaybe<Order_By>;
+  max?: InputMaybe<Reel_Likes_Max_Order_By>;
+  min?: InputMaybe<Reel_Likes_Min_Order_By>;
+};
+
+/** input type for inserting array relation for remote table "reel_likes" */
+export type Reel_Likes_Arr_Rel_Insert_Input = {
+  data: Array<Reel_Likes_Insert_Input>;
+  /** upsert condition */
+  on_conflict?: InputMaybe<Reel_Likes_On_Conflict>;
+};
+
+/** Boolean expression to filter rows from the table "reel_likes". All fields are combined with a logical 'AND'. */
+export type Reel_Likes_Bool_Exp = {
+  Reel?: InputMaybe<Reels_Bool_Exp>;
+  User?: InputMaybe<Users_Bool_Exp>;
+  _and?: InputMaybe<Array<Reel_Likes_Bool_Exp>>;
+  _not?: InputMaybe<Reel_Likes_Bool_Exp>;
+  _or?: InputMaybe<Array<Reel_Likes_Bool_Exp>>;
+  created_at?: InputMaybe<Timestamptz_Comparison_Exp>;
+  id?: InputMaybe<Uuid_Comparison_Exp>;
+  reel_id?: InputMaybe<Uuid_Comparison_Exp>;
+  user_id?: InputMaybe<Uuid_Comparison_Exp>;
+};
+
+/** unique or primary key constraints on table "reel_likes" */
+export type Reel_Likes_Constraint =
+  /** unique or primary key constraint on columns "id" */
+  "reel_likes_pkey";
+
+/** input type for inserting data into table "reel_likes" */
+export type Reel_Likes_Insert_Input = {
+  Reel?: InputMaybe<Reels_Obj_Rel_Insert_Input>;
+  User?: InputMaybe<Users_Obj_Rel_Insert_Input>;
+  created_at?: InputMaybe<Scalars["timestamptz"]["input"]>;
+  id?: InputMaybe<Scalars["uuid"]["input"]>;
+  reel_id?: InputMaybe<Scalars["uuid"]["input"]>;
+  user_id?: InputMaybe<Scalars["uuid"]["input"]>;
+};
+
+/** aggregate max on columns */
+export type Reel_Likes_Max_Fields = {
+  created_at?: Maybe<Scalars["timestamptz"]["output"]>;
+  id?: Maybe<Scalars["uuid"]["output"]>;
+  reel_id?: Maybe<Scalars["uuid"]["output"]>;
+  user_id?: Maybe<Scalars["uuid"]["output"]>;
+};
+
+/** order by max() on columns of table "reel_likes" */
+export type Reel_Likes_Max_Order_By = {
+  created_at?: InputMaybe<Order_By>;
+  id?: InputMaybe<Order_By>;
+  reel_id?: InputMaybe<Order_By>;
+  user_id?: InputMaybe<Order_By>;
+};
+
+/** aggregate min on columns */
+export type Reel_Likes_Min_Fields = {
+  created_at?: Maybe<Scalars["timestamptz"]["output"]>;
+  id?: Maybe<Scalars["uuid"]["output"]>;
+  reel_id?: Maybe<Scalars["uuid"]["output"]>;
+  user_id?: Maybe<Scalars["uuid"]["output"]>;
+};
+
+/** order by min() on columns of table "reel_likes" */
+export type Reel_Likes_Min_Order_By = {
+  created_at?: InputMaybe<Order_By>;
+  id?: InputMaybe<Order_By>;
+  reel_id?: InputMaybe<Order_By>;
+  user_id?: InputMaybe<Order_By>;
+};
+
+/** response of any mutation on the table "reel_likes" */
+export type Reel_Likes_Mutation_Response = {
+  /** number of rows affected by the mutation */
+  affected_rows: Scalars["Int"]["output"];
+  /** data from the rows affected by the mutation */
+  returning: Array<Reel_Likes>;
+};
+
+/** on_conflict condition type for table "reel_likes" */
+export type Reel_Likes_On_Conflict = {
+  constraint: Reel_Likes_Constraint;
+  update_columns?: Array<Reel_Likes_Update_Column>;
+  where?: InputMaybe<Reel_Likes_Bool_Exp>;
+};
+
+/** Ordering options when selecting data from "reel_likes". */
+export type Reel_Likes_Order_By = {
+  Reel?: InputMaybe<Reels_Order_By>;
+  User?: InputMaybe<Users_Order_By>;
+  created_at?: InputMaybe<Order_By>;
+  id?: InputMaybe<Order_By>;
+  reel_id?: InputMaybe<Order_By>;
+  user_id?: InputMaybe<Order_By>;
+};
+
+/** primary key columns input for table: reel_likes */
+export type Reel_Likes_Pk_Columns_Input = {
+  id: Scalars["uuid"]["input"];
+};
+
+/** select columns of table "reel_likes" */
+export type Reel_Likes_Select_Column =
+  /** column name */
+  | "created_at"
+  /** column name */
+  | "id"
+  /** column name */
+  | "reel_id"
+  /** column name */
+  | "user_id";
+
+/** input type for updating data in table "reel_likes" */
+export type Reel_Likes_Set_Input = {
+  created_at?: InputMaybe<Scalars["timestamptz"]["input"]>;
+  id?: InputMaybe<Scalars["uuid"]["input"]>;
+  reel_id?: InputMaybe<Scalars["uuid"]["input"]>;
+  user_id?: InputMaybe<Scalars["uuid"]["input"]>;
+};
+
+/** Streaming cursor of the table "reel_likes" */
+export type Reel_Likes_Stream_Cursor_Input = {
+  /** Stream column input with initial value */
+  initial_value: Reel_Likes_Stream_Cursor_Value_Input;
+  /** cursor ordering */
+  ordering?: InputMaybe<Cursor_Ordering>;
+};
+
+/** Initial value of the column from where the streaming should start */
+export type Reel_Likes_Stream_Cursor_Value_Input = {
+  created_at?: InputMaybe<Scalars["timestamptz"]["input"]>;
+  id?: InputMaybe<Scalars["uuid"]["input"]>;
+  reel_id?: InputMaybe<Scalars["uuid"]["input"]>;
+  user_id?: InputMaybe<Scalars["uuid"]["input"]>;
+};
+
+/** update columns of table "reel_likes" */
+export type Reel_Likes_Update_Column =
+  /** column name */
+  | "created_at"
+  /** column name */
+  | "id"
+  /** column name */
+  | "reel_id"
+  /** column name */
+  | "user_id";
+
+export type Reel_Likes_Updates = {
+  /** sets the columns of the filtered rows to the given values */
+  _set?: InputMaybe<Reel_Likes_Set_Input>;
+  /** filter the rows which have to be updated */
+  where: Reel_Likes_Bool_Exp;
+};
+
+/** columns and relationships of "reel_orders" */
+export type Reel_Orders = {
+  /** An object relationship */
+  Address: Addresses;
+  OrderID: Scalars["Int"]["output"];
+  /** An object relationship */
+  Reel: Reels;
+  /** An object relationship */
+  Shoppers?: Maybe<Users>;
+  /** An object relationship */
+  User: Users;
+  combined_order_id?: Maybe<Scalars["uuid"]["output"]>;
+  created_at: Scalars["timestamptz"]["output"];
+  delivery_address_id: Scalars["uuid"]["output"];
+  delivery_fee: Scalars["String"]["output"];
+  delivery_note?: Maybe<Scalars["String"]["output"]>;
+  delivery_photo_url?: Maybe<Scalars["String"]["output"]>;
+  delivery_time: Scalars["String"]["output"];
+  discount?: Maybe<Scalars["String"]["output"]>;
+  found: Scalars["Boolean"]["output"];
+  id: Scalars["uuid"]["output"];
+  quantity: Scalars["String"]["output"];
+  reel_id: Scalars["uuid"]["output"];
+  service_fee: Scalars["String"]["output"];
+  shopper_id?: Maybe<Scalars["uuid"]["output"]>;
+  status: Scalars["String"]["output"];
+  total: Scalars["String"]["output"];
+  updated_at?: Maybe<Scalars["timestamptz"]["output"]>;
+  user_id: Scalars["uuid"]["output"];
+  voucher_code?: Maybe<Scalars["String"]["output"]>;
+};
+
+/** aggregated selection of "reel_orders" */
+export type Reel_Orders_Aggregate = {
+  aggregate?: Maybe<Reel_Orders_Aggregate_Fields>;
+  nodes: Array<Reel_Orders>;
+};
+
+export type Reel_Orders_Aggregate_Bool_Exp = {
+  bool_and?: InputMaybe<Reel_Orders_Aggregate_Bool_Exp_Bool_And>;
+  bool_or?: InputMaybe<Reel_Orders_Aggregate_Bool_Exp_Bool_Or>;
+  count?: InputMaybe<Reel_Orders_Aggregate_Bool_Exp_Count>;
+};
+
+export type Reel_Orders_Aggregate_Bool_Exp_Bool_And = {
+  arguments: Reel_Orders_Select_Column_Reel_Orders_Aggregate_Bool_Exp_Bool_And_Arguments_Columns;
+  distinct?: InputMaybe<Scalars["Boolean"]["input"]>;
+  filter?: InputMaybe<Reel_Orders_Bool_Exp>;
+  predicate: Boolean_Comparison_Exp;
+};
+
+export type Reel_Orders_Aggregate_Bool_Exp_Bool_Or = {
+  arguments: Reel_Orders_Select_Column_Reel_Orders_Aggregate_Bool_Exp_Bool_Or_Arguments_Columns;
+  distinct?: InputMaybe<Scalars["Boolean"]["input"]>;
+  filter?: InputMaybe<Reel_Orders_Bool_Exp>;
+  predicate: Boolean_Comparison_Exp;
+};
+
+export type Reel_Orders_Aggregate_Bool_Exp_Count = {
+  arguments?: InputMaybe<Array<Reel_Orders_Select_Column>>;
+  distinct?: InputMaybe<Scalars["Boolean"]["input"]>;
+  filter?: InputMaybe<Reel_Orders_Bool_Exp>;
+  predicate: Int_Comparison_Exp;
+};
+
+/** aggregate fields of "reel_orders" */
+export type Reel_Orders_Aggregate_Fields = {
+  avg?: Maybe<Reel_Orders_Avg_Fields>;
+  count: Scalars["Int"]["output"];
+  max?: Maybe<Reel_Orders_Max_Fields>;
+  min?: Maybe<Reel_Orders_Min_Fields>;
+  stddev?: Maybe<Reel_Orders_Stddev_Fields>;
+  stddev_pop?: Maybe<Reel_Orders_Stddev_Pop_Fields>;
+  stddev_samp?: Maybe<Reel_Orders_Stddev_Samp_Fields>;
+  sum?: Maybe<Reel_Orders_Sum_Fields>;
+  var_pop?: Maybe<Reel_Orders_Var_Pop_Fields>;
+  var_samp?: Maybe<Reel_Orders_Var_Samp_Fields>;
+  variance?: Maybe<Reel_Orders_Variance_Fields>;
+};
+
+/** aggregate fields of "reel_orders" */
+export type Reel_Orders_Aggregate_FieldsCountArgs = {
+  columns?: InputMaybe<Array<Reel_Orders_Select_Column>>;
+  distinct?: InputMaybe<Scalars["Boolean"]["input"]>;
+};
+
+/** order by aggregate values of table "reel_orders" */
+export type Reel_Orders_Aggregate_Order_By = {
+  avg?: InputMaybe<Reel_Orders_Avg_Order_By>;
+  count?: InputMaybe<Order_By>;
+  max?: InputMaybe<Reel_Orders_Max_Order_By>;
+  min?: InputMaybe<Reel_Orders_Min_Order_By>;
+  stddev?: InputMaybe<Reel_Orders_Stddev_Order_By>;
+  stddev_pop?: InputMaybe<Reel_Orders_Stddev_Pop_Order_By>;
+  stddev_samp?: InputMaybe<Reel_Orders_Stddev_Samp_Order_By>;
+  sum?: InputMaybe<Reel_Orders_Sum_Order_By>;
+  var_pop?: InputMaybe<Reel_Orders_Var_Pop_Order_By>;
+  var_samp?: InputMaybe<Reel_Orders_Var_Samp_Order_By>;
+  variance?: InputMaybe<Reel_Orders_Variance_Order_By>;
+};
+
+/** input type for inserting array relation for remote table "reel_orders" */
+export type Reel_Orders_Arr_Rel_Insert_Input = {
+  data: Array<Reel_Orders_Insert_Input>;
+  /** upsert condition */
+  on_conflict?: InputMaybe<Reel_Orders_On_Conflict>;
+};
+
+/** aggregate avg on columns */
+export type Reel_Orders_Avg_Fields = {
+  OrderID?: Maybe<Scalars["Float"]["output"]>;
+};
+
+/** order by avg() on columns of table "reel_orders" */
+export type Reel_Orders_Avg_Order_By = {
+  OrderID?: InputMaybe<Order_By>;
+};
+
+/** Boolean expression to filter rows from the table "reel_orders". All fields are combined with a logical 'AND'. */
+export type Reel_Orders_Bool_Exp = {
+  Address?: InputMaybe<Addresses_Bool_Exp>;
+  OrderID?: InputMaybe<Int_Comparison_Exp>;
+  Reel?: InputMaybe<Reels_Bool_Exp>;
+  Shoppers?: InputMaybe<Users_Bool_Exp>;
+  User?: InputMaybe<Users_Bool_Exp>;
+  _and?: InputMaybe<Array<Reel_Orders_Bool_Exp>>;
+  _not?: InputMaybe<Reel_Orders_Bool_Exp>;
+  _or?: InputMaybe<Array<Reel_Orders_Bool_Exp>>;
+  combined_order_id?: InputMaybe<Uuid_Comparison_Exp>;
+  created_at?: InputMaybe<Timestamptz_Comparison_Exp>;
+  delivery_address_id?: InputMaybe<Uuid_Comparison_Exp>;
+  delivery_fee?: InputMaybe<String_Comparison_Exp>;
+  delivery_note?: InputMaybe<String_Comparison_Exp>;
+  delivery_photo_url?: InputMaybe<String_Comparison_Exp>;
+  delivery_time?: InputMaybe<String_Comparison_Exp>;
+  discount?: InputMaybe<String_Comparison_Exp>;
+  found?: InputMaybe<Boolean_Comparison_Exp>;
+  id?: InputMaybe<Uuid_Comparison_Exp>;
+  quantity?: InputMaybe<String_Comparison_Exp>;
+  reel_id?: InputMaybe<Uuid_Comparison_Exp>;
+  service_fee?: InputMaybe<String_Comparison_Exp>;
+  shopper_id?: InputMaybe<Uuid_Comparison_Exp>;
+  status?: InputMaybe<String_Comparison_Exp>;
+  total?: InputMaybe<String_Comparison_Exp>;
+  updated_at?: InputMaybe<Timestamptz_Comparison_Exp>;
+  user_id?: InputMaybe<Uuid_Comparison_Exp>;
+  voucher_code?: InputMaybe<String_Comparison_Exp>;
+};
+
+/** unique or primary key constraints on table "reel_orders" */
+export type Reel_Orders_Constraint =
+  /** unique or primary key constraint on columns "id" */
+  "reel_orders_pkey";
+
+/** input type for incrementing numeric columns in table "reel_orders" */
+export type Reel_Orders_Inc_Input = {
+  OrderID?: InputMaybe<Scalars["Int"]["input"]>;
+};
+
+/** input type for inserting data into table "reel_orders" */
+export type Reel_Orders_Insert_Input = {
+  Address?: InputMaybe<Addresses_Obj_Rel_Insert_Input>;
+  OrderID?: InputMaybe<Scalars["Int"]["input"]>;
+  Reel?: InputMaybe<Reels_Obj_Rel_Insert_Input>;
+  Shoppers?: InputMaybe<Users_Obj_Rel_Insert_Input>;
+  User?: InputMaybe<Users_Obj_Rel_Insert_Input>;
+  combined_order_id?: InputMaybe<Scalars["uuid"]["input"]>;
+  created_at?: InputMaybe<Scalars["timestamptz"]["input"]>;
+  delivery_address_id?: InputMaybe<Scalars["uuid"]["input"]>;
+  delivery_fee?: InputMaybe<Scalars["String"]["input"]>;
+  delivery_note?: InputMaybe<Scalars["String"]["input"]>;
+  delivery_photo_url?: InputMaybe<Scalars["String"]["input"]>;
+  delivery_time?: InputMaybe<Scalars["String"]["input"]>;
+  discount?: InputMaybe<Scalars["String"]["input"]>;
+  found?: InputMaybe<Scalars["Boolean"]["input"]>;
+  id?: InputMaybe<Scalars["uuid"]["input"]>;
+  quantity?: InputMaybe<Scalars["String"]["input"]>;
+  reel_id?: InputMaybe<Scalars["uuid"]["input"]>;
+  service_fee?: InputMaybe<Scalars["String"]["input"]>;
+  shopper_id?: InputMaybe<Scalars["uuid"]["input"]>;
+  status?: InputMaybe<Scalars["String"]["input"]>;
+  total?: InputMaybe<Scalars["String"]["input"]>;
+  updated_at?: InputMaybe<Scalars["timestamptz"]["input"]>;
+  user_id?: InputMaybe<Scalars["uuid"]["input"]>;
+  voucher_code?: InputMaybe<Scalars["String"]["input"]>;
+};
+
+/** aggregate max on columns */
+export type Reel_Orders_Max_Fields = {
+  OrderID?: Maybe<Scalars["Int"]["output"]>;
+  combined_order_id?: Maybe<Scalars["uuid"]["output"]>;
+  created_at?: Maybe<Scalars["timestamptz"]["output"]>;
+  delivery_address_id?: Maybe<Scalars["uuid"]["output"]>;
+  delivery_fee?: Maybe<Scalars["String"]["output"]>;
+  delivery_note?: Maybe<Scalars["String"]["output"]>;
+  delivery_photo_url?: Maybe<Scalars["String"]["output"]>;
+  delivery_time?: Maybe<Scalars["String"]["output"]>;
+  discount?: Maybe<Scalars["String"]["output"]>;
+  id?: Maybe<Scalars["uuid"]["output"]>;
+  quantity?: Maybe<Scalars["String"]["output"]>;
+  reel_id?: Maybe<Scalars["uuid"]["output"]>;
+  service_fee?: Maybe<Scalars["String"]["output"]>;
+  shopper_id?: Maybe<Scalars["uuid"]["output"]>;
+  status?: Maybe<Scalars["String"]["output"]>;
+  total?: Maybe<Scalars["String"]["output"]>;
+  updated_at?: Maybe<Scalars["timestamptz"]["output"]>;
+  user_id?: Maybe<Scalars["uuid"]["output"]>;
+  voucher_code?: Maybe<Scalars["String"]["output"]>;
+};
+
+/** order by max() on columns of table "reel_orders" */
+export type Reel_Orders_Max_Order_By = {
+  OrderID?: InputMaybe<Order_By>;
+  combined_order_id?: InputMaybe<Order_By>;
+  created_at?: InputMaybe<Order_By>;
+  delivery_address_id?: InputMaybe<Order_By>;
+  delivery_fee?: InputMaybe<Order_By>;
+  delivery_note?: InputMaybe<Order_By>;
+  delivery_photo_url?: InputMaybe<Order_By>;
+  delivery_time?: InputMaybe<Order_By>;
+  discount?: InputMaybe<Order_By>;
+  id?: InputMaybe<Order_By>;
+  quantity?: InputMaybe<Order_By>;
+  reel_id?: InputMaybe<Order_By>;
+  service_fee?: InputMaybe<Order_By>;
+  shopper_id?: InputMaybe<Order_By>;
+  status?: InputMaybe<Order_By>;
+  total?: InputMaybe<Order_By>;
+  updated_at?: InputMaybe<Order_By>;
+  user_id?: InputMaybe<Order_By>;
+  voucher_code?: InputMaybe<Order_By>;
+};
+
+/** aggregate min on columns */
+export type Reel_Orders_Min_Fields = {
+  OrderID?: Maybe<Scalars["Int"]["output"]>;
+  combined_order_id?: Maybe<Scalars["uuid"]["output"]>;
+  created_at?: Maybe<Scalars["timestamptz"]["output"]>;
+  delivery_address_id?: Maybe<Scalars["uuid"]["output"]>;
+  delivery_fee?: Maybe<Scalars["String"]["output"]>;
+  delivery_note?: Maybe<Scalars["String"]["output"]>;
+  delivery_photo_url?: Maybe<Scalars["String"]["output"]>;
+  delivery_time?: Maybe<Scalars["String"]["output"]>;
+  discount?: Maybe<Scalars["String"]["output"]>;
+  id?: Maybe<Scalars["uuid"]["output"]>;
+  quantity?: Maybe<Scalars["String"]["output"]>;
+  reel_id?: Maybe<Scalars["uuid"]["output"]>;
+  service_fee?: Maybe<Scalars["String"]["output"]>;
+  shopper_id?: Maybe<Scalars["uuid"]["output"]>;
+  status?: Maybe<Scalars["String"]["output"]>;
+  total?: Maybe<Scalars["String"]["output"]>;
+  updated_at?: Maybe<Scalars["timestamptz"]["output"]>;
+  user_id?: Maybe<Scalars["uuid"]["output"]>;
+  voucher_code?: Maybe<Scalars["String"]["output"]>;
+};
+
+/** order by min() on columns of table "reel_orders" */
+export type Reel_Orders_Min_Order_By = {
+  OrderID?: InputMaybe<Order_By>;
+  combined_order_id?: InputMaybe<Order_By>;
+  created_at?: InputMaybe<Order_By>;
+  delivery_address_id?: InputMaybe<Order_By>;
+  delivery_fee?: InputMaybe<Order_By>;
+  delivery_note?: InputMaybe<Order_By>;
+  delivery_photo_url?: InputMaybe<Order_By>;
+  delivery_time?: InputMaybe<Order_By>;
+  discount?: InputMaybe<Order_By>;
+  id?: InputMaybe<Order_By>;
+  quantity?: InputMaybe<Order_By>;
+  reel_id?: InputMaybe<Order_By>;
+  service_fee?: InputMaybe<Order_By>;
+  shopper_id?: InputMaybe<Order_By>;
+  status?: InputMaybe<Order_By>;
+  total?: InputMaybe<Order_By>;
+  updated_at?: InputMaybe<Order_By>;
+  user_id?: InputMaybe<Order_By>;
+  voucher_code?: InputMaybe<Order_By>;
+};
+
+/** response of any mutation on the table "reel_orders" */
+export type Reel_Orders_Mutation_Response = {
+  /** number of rows affected by the mutation */
+  affected_rows: Scalars["Int"]["output"];
+  /** data from the rows affected by the mutation */
+  returning: Array<Reel_Orders>;
+};
+
+/** on_conflict condition type for table "reel_orders" */
+export type Reel_Orders_On_Conflict = {
+  constraint: Reel_Orders_Constraint;
+  update_columns?: Array<Reel_Orders_Update_Column>;
+  where?: InputMaybe<Reel_Orders_Bool_Exp>;
+};
+
+/** Ordering options when selecting data from "reel_orders". */
+export type Reel_Orders_Order_By = {
+  Address?: InputMaybe<Addresses_Order_By>;
+  OrderID?: InputMaybe<Order_By>;
+  Reel?: InputMaybe<Reels_Order_By>;
+  Shoppers?: InputMaybe<Users_Order_By>;
+  User?: InputMaybe<Users_Order_By>;
+  combined_order_id?: InputMaybe<Order_By>;
+  created_at?: InputMaybe<Order_By>;
+  delivery_address_id?: InputMaybe<Order_By>;
+  delivery_fee?: InputMaybe<Order_By>;
+  delivery_note?: InputMaybe<Order_By>;
+  delivery_photo_url?: InputMaybe<Order_By>;
+  delivery_time?: InputMaybe<Order_By>;
+  discount?: InputMaybe<Order_By>;
+  found?: InputMaybe<Order_By>;
+  id?: InputMaybe<Order_By>;
+  quantity?: InputMaybe<Order_By>;
+  reel_id?: InputMaybe<Order_By>;
+  service_fee?: InputMaybe<Order_By>;
+  shopper_id?: InputMaybe<Order_By>;
+  status?: InputMaybe<Order_By>;
+  total?: InputMaybe<Order_By>;
+  updated_at?: InputMaybe<Order_By>;
+  user_id?: InputMaybe<Order_By>;
+  voucher_code?: InputMaybe<Order_By>;
+};
+
+/** primary key columns input for table: reel_orders */
+export type Reel_Orders_Pk_Columns_Input = {
+  id: Scalars["uuid"]["input"];
+};
+
+/** select columns of table "reel_orders" */
+export type Reel_Orders_Select_Column =
+  /** column name */
+  | "OrderID"
+  /** column name */
+  | "combined_order_id"
+  /** column name */
+  | "created_at"
+  /** column name */
+  | "delivery_address_id"
+  /** column name */
+  | "delivery_fee"
+  /** column name */
+  | "delivery_note"
+  /** column name */
+  | "delivery_photo_url"
+  /** column name */
+  | "delivery_time"
+  /** column name */
+  | "discount"
+  /** column name */
+  | "found"
+  /** column name */
+  | "id"
+  /** column name */
+  | "quantity"
+  /** column name */
+  | "reel_id"
+  /** column name */
+  | "service_fee"
+  /** column name */
+  | "shopper_id"
+  /** column name */
+  | "status"
+  /** column name */
+  | "total"
+  /** column name */
+  | "updated_at"
+  /** column name */
+  | "user_id"
+  /** column name */
+  | "voucher_code";
+
+/** select "reel_orders_aggregate_bool_exp_bool_and_arguments_columns" columns of table "reel_orders" */
+export type Reel_Orders_Select_Column_Reel_Orders_Aggregate_Bool_Exp_Bool_And_Arguments_Columns =
+  /** column name */
+  "found";
+
+/** select "reel_orders_aggregate_bool_exp_bool_or_arguments_columns" columns of table "reel_orders" */
+export type Reel_Orders_Select_Column_Reel_Orders_Aggregate_Bool_Exp_Bool_Or_Arguments_Columns =
+  /** column name */
+  "found";
+
+/** input type for updating data in table "reel_orders" */
+export type Reel_Orders_Set_Input = {
+  OrderID?: InputMaybe<Scalars["Int"]["input"]>;
+  combined_order_id?: InputMaybe<Scalars["uuid"]["input"]>;
+  created_at?: InputMaybe<Scalars["timestamptz"]["input"]>;
+  delivery_address_id?: InputMaybe<Scalars["uuid"]["input"]>;
+  delivery_fee?: InputMaybe<Scalars["String"]["input"]>;
+  delivery_note?: InputMaybe<Scalars["String"]["input"]>;
+  delivery_photo_url?: InputMaybe<Scalars["String"]["input"]>;
+  delivery_time?: InputMaybe<Scalars["String"]["input"]>;
+  discount?: InputMaybe<Scalars["String"]["input"]>;
+  found?: InputMaybe<Scalars["Boolean"]["input"]>;
+  id?: InputMaybe<Scalars["uuid"]["input"]>;
+  quantity?: InputMaybe<Scalars["String"]["input"]>;
+  reel_id?: InputMaybe<Scalars["uuid"]["input"]>;
+  service_fee?: InputMaybe<Scalars["String"]["input"]>;
+  shopper_id?: InputMaybe<Scalars["uuid"]["input"]>;
+  status?: InputMaybe<Scalars["String"]["input"]>;
+  total?: InputMaybe<Scalars["String"]["input"]>;
+  updated_at?: InputMaybe<Scalars["timestamptz"]["input"]>;
+  user_id?: InputMaybe<Scalars["uuid"]["input"]>;
+  voucher_code?: InputMaybe<Scalars["String"]["input"]>;
+};
+
+/** aggregate stddev on columns */
+export type Reel_Orders_Stddev_Fields = {
+  OrderID?: Maybe<Scalars["Float"]["output"]>;
+};
+
+/** order by stddev() on columns of table "reel_orders" */
+export type Reel_Orders_Stddev_Order_By = {
+  OrderID?: InputMaybe<Order_By>;
+};
+
+/** aggregate stddev_pop on columns */
+export type Reel_Orders_Stddev_Pop_Fields = {
+  OrderID?: Maybe<Scalars["Float"]["output"]>;
+};
+
+/** order by stddev_pop() on columns of table "reel_orders" */
+export type Reel_Orders_Stddev_Pop_Order_By = {
+  OrderID?: InputMaybe<Order_By>;
+};
+
+/** aggregate stddev_samp on columns */
+export type Reel_Orders_Stddev_Samp_Fields = {
+  OrderID?: Maybe<Scalars["Float"]["output"]>;
+};
+
+/** order by stddev_samp() on columns of table "reel_orders" */
+export type Reel_Orders_Stddev_Samp_Order_By = {
+  OrderID?: InputMaybe<Order_By>;
+};
+
+/** Streaming cursor of the table "reel_orders" */
+export type Reel_Orders_Stream_Cursor_Input = {
+  /** Stream column input with initial value */
+  initial_value: Reel_Orders_Stream_Cursor_Value_Input;
+  /** cursor ordering */
+  ordering?: InputMaybe<Cursor_Ordering>;
+};
+
+/** Initial value of the column from where the streaming should start */
+export type Reel_Orders_Stream_Cursor_Value_Input = {
+  OrderID?: InputMaybe<Scalars["Int"]["input"]>;
+  combined_order_id?: InputMaybe<Scalars["uuid"]["input"]>;
+  created_at?: InputMaybe<Scalars["timestamptz"]["input"]>;
+  delivery_address_id?: InputMaybe<Scalars["uuid"]["input"]>;
+  delivery_fee?: InputMaybe<Scalars["String"]["input"]>;
+  delivery_note?: InputMaybe<Scalars["String"]["input"]>;
+  delivery_photo_url?: InputMaybe<Scalars["String"]["input"]>;
+  delivery_time?: InputMaybe<Scalars["String"]["input"]>;
+  discount?: InputMaybe<Scalars["String"]["input"]>;
+  found?: InputMaybe<Scalars["Boolean"]["input"]>;
+  id?: InputMaybe<Scalars["uuid"]["input"]>;
+  quantity?: InputMaybe<Scalars["String"]["input"]>;
+  reel_id?: InputMaybe<Scalars["uuid"]["input"]>;
+  service_fee?: InputMaybe<Scalars["String"]["input"]>;
+  shopper_id?: InputMaybe<Scalars["uuid"]["input"]>;
+  status?: InputMaybe<Scalars["String"]["input"]>;
+  total?: InputMaybe<Scalars["String"]["input"]>;
+  updated_at?: InputMaybe<Scalars["timestamptz"]["input"]>;
+  user_id?: InputMaybe<Scalars["uuid"]["input"]>;
+  voucher_code?: InputMaybe<Scalars["String"]["input"]>;
+};
+
+/** aggregate sum on columns */
+export type Reel_Orders_Sum_Fields = {
+  OrderID?: Maybe<Scalars["Int"]["output"]>;
+};
+
+/** order by sum() on columns of table "reel_orders" */
+export type Reel_Orders_Sum_Order_By = {
+  OrderID?: InputMaybe<Order_By>;
+};
+
+/** update columns of table "reel_orders" */
+export type Reel_Orders_Update_Column =
+  /** column name */
+  | "OrderID"
+  /** column name */
+  | "combined_order_id"
+  /** column name */
+  | "created_at"
+  /** column name */
+  | "delivery_address_id"
+  /** column name */
+  | "delivery_fee"
+  /** column name */
+  | "delivery_note"
+  /** column name */
+  | "delivery_photo_url"
+  /** column name */
+  | "delivery_time"
+  /** column name */
+  | "discount"
+  /** column name */
+  | "found"
+  /** column name */
+  | "id"
+  /** column name */
+  | "quantity"
+  /** column name */
+  | "reel_id"
+  /** column name */
+  | "service_fee"
+  /** column name */
+  | "shopper_id"
+  /** column name */
+  | "status"
+  /** column name */
+  | "total"
+  /** column name */
+  | "updated_at"
+  /** column name */
+  | "user_id"
+  /** column name */
+  | "voucher_code";
+
+export type Reel_Orders_Updates = {
+  /** increments the numeric columns with given value of the filtered values */
+  _inc?: InputMaybe<Reel_Orders_Inc_Input>;
+  /** sets the columns of the filtered rows to the given values */
+  _set?: InputMaybe<Reel_Orders_Set_Input>;
+  /** filter the rows which have to be updated */
+  where: Reel_Orders_Bool_Exp;
+};
+
+/** aggregate var_pop on columns */
+export type Reel_Orders_Var_Pop_Fields = {
+  OrderID?: Maybe<Scalars["Float"]["output"]>;
+};
+
+/** order by var_pop() on columns of table "reel_orders" */
+export type Reel_Orders_Var_Pop_Order_By = {
+  OrderID?: InputMaybe<Order_By>;
+};
+
+/** aggregate var_samp on columns */
+export type Reel_Orders_Var_Samp_Fields = {
+  OrderID?: Maybe<Scalars["Float"]["output"]>;
+};
+
+/** order by var_samp() on columns of table "reel_orders" */
+export type Reel_Orders_Var_Samp_Order_By = {
+  OrderID?: InputMaybe<Order_By>;
+};
+
+/** aggregate variance on columns */
+export type Reel_Orders_Variance_Fields = {
+  OrderID?: Maybe<Scalars["Float"]["output"]>;
+};
+
+/** order by variance() on columns of table "reel_orders" */
+export type Reel_Orders_Variance_Order_By = {
+  OrderID?: InputMaybe<Order_By>;
+};
+
+/** columns and relationships of "shopper_notification_settings" */
+export type Shopper_Notification_Settings = {
+  created_at: Scalars["timestamptz"]["output"];
+  custom_locations: Scalars["jsonb"]["output"];
+  id: Scalars["uuid"]["output"];
+  max_distance: Scalars["String"]["output"];
+  notification_types: Scalars["jsonb"]["output"];
+  sound_settings?: Maybe<Scalars["jsonb"]["output"]>;
+  updated_at?: Maybe<Scalars["timestamptz"]["output"]>;
+  use_live_location: Scalars["Boolean"]["output"];
+  user_id: Scalars["uuid"]["output"];
+};
+
+/** columns and relationships of "shopper_notification_settings" */
+export type Shopper_Notification_SettingsCustom_LocationsArgs = {
+  path?: InputMaybe<Scalars["String"]["input"]>;
+};
+
+/** columns and relationships of "shopper_notification_settings" */
+export type Shopper_Notification_SettingsNotification_TypesArgs = {
+  path?: InputMaybe<Scalars["String"]["input"]>;
+};
+
+/** columns and relationships of "shopper_notification_settings" */
+export type Shopper_Notification_SettingsSound_SettingsArgs = {
+  path?: InputMaybe<Scalars["String"]["input"]>;
+};
+
+/** aggregated selection of "shopper_notification_settings" */
+export type Shopper_Notification_Settings_Aggregate = {
+  aggregate?: Maybe<Shopper_Notification_Settings_Aggregate_Fields>;
+  nodes: Array<Shopper_Notification_Settings>;
+};
+
+/** aggregate fields of "shopper_notification_settings" */
+export type Shopper_Notification_Settings_Aggregate_Fields = {
+  count: Scalars["Int"]["output"];
+  max?: Maybe<Shopper_Notification_Settings_Max_Fields>;
+  min?: Maybe<Shopper_Notification_Settings_Min_Fields>;
+};
+
+/** aggregate fields of "shopper_notification_settings" */
+export type Shopper_Notification_Settings_Aggregate_FieldsCountArgs = {
+  columns?: InputMaybe<Array<Shopper_Notification_Settings_Select_Column>>;
+  distinct?: InputMaybe<Scalars["Boolean"]["input"]>;
+};
+
+/** append existing jsonb value of filtered columns with new jsonb value */
+export type Shopper_Notification_Settings_Append_Input = {
+  custom_locations?: InputMaybe<Scalars["jsonb"]["input"]>;
+  notification_types?: InputMaybe<Scalars["jsonb"]["input"]>;
+  sound_settings?: InputMaybe<Scalars["jsonb"]["input"]>;
+};
+
+/** Boolean expression to filter rows from the table "shopper_notification_settings". All fields are combined with a logical 'AND'. */
+export type Shopper_Notification_Settings_Bool_Exp = {
+  _and?: InputMaybe<Array<Shopper_Notification_Settings_Bool_Exp>>;
+  _not?: InputMaybe<Shopper_Notification_Settings_Bool_Exp>;
+  _or?: InputMaybe<Array<Shopper_Notification_Settings_Bool_Exp>>;
+  created_at?: InputMaybe<Timestamptz_Comparison_Exp>;
+  custom_locations?: InputMaybe<Jsonb_Comparison_Exp>;
+  id?: InputMaybe<Uuid_Comparison_Exp>;
+  max_distance?: InputMaybe<String_Comparison_Exp>;
+  notification_types?: InputMaybe<Jsonb_Comparison_Exp>;
+  sound_settings?: InputMaybe<Jsonb_Comparison_Exp>;
+  updated_at?: InputMaybe<Timestamptz_Comparison_Exp>;
+  use_live_location?: InputMaybe<Boolean_Comparison_Exp>;
+  user_id?: InputMaybe<Uuid_Comparison_Exp>;
+};
+
+/** unique or primary key constraints on table "shopper_notification_settings" */
+export type Shopper_Notification_Settings_Constraint =
+  /** unique or primary key constraint on columns "id" */
+  "shopper_notification_settings_pkey";
+
+/** delete the field or element with specified path (for JSON arrays, negative integers count from the end) */
+export type Shopper_Notification_Settings_Delete_At_Path_Input = {
+  custom_locations?: InputMaybe<Array<Scalars["String"]["input"]>>;
+  notification_types?: InputMaybe<Array<Scalars["String"]["input"]>>;
+  sound_settings?: InputMaybe<Array<Scalars["String"]["input"]>>;
+};
+
+/** delete the array element with specified index (negative integers count from the end). throws an error if top level container is not an array */
+export type Shopper_Notification_Settings_Delete_Elem_Input = {
+  custom_locations?: InputMaybe<Scalars["Int"]["input"]>;
+  notification_types?: InputMaybe<Scalars["Int"]["input"]>;
+  sound_settings?: InputMaybe<Scalars["Int"]["input"]>;
+};
+
+/** delete key/value pair or string element. key/value pairs are matched based on their key value */
+export type Shopper_Notification_Settings_Delete_Key_Input = {
+  custom_locations?: InputMaybe<Scalars["String"]["input"]>;
+  notification_types?: InputMaybe<Scalars["String"]["input"]>;
+  sound_settings?: InputMaybe<Scalars["String"]["input"]>;
+};
+
+/** input type for inserting data into table "shopper_notification_settings" */
+export type Shopper_Notification_Settings_Insert_Input = {
+  created_at?: InputMaybe<Scalars["timestamptz"]["input"]>;
+  custom_locations?: InputMaybe<Scalars["jsonb"]["input"]>;
+  id?: InputMaybe<Scalars["uuid"]["input"]>;
+  max_distance?: InputMaybe<Scalars["String"]["input"]>;
+  notification_types?: InputMaybe<Scalars["jsonb"]["input"]>;
+  sound_settings?: InputMaybe<Scalars["jsonb"]["input"]>;
+  updated_at?: InputMaybe<Scalars["timestamptz"]["input"]>;
+  use_live_location?: InputMaybe<Scalars["Boolean"]["input"]>;
+  user_id?: InputMaybe<Scalars["uuid"]["input"]>;
+};
+
+/** aggregate max on columns */
+export type Shopper_Notification_Settings_Max_Fields = {
+  created_at?: Maybe<Scalars["timestamptz"]["output"]>;
+  id?: Maybe<Scalars["uuid"]["output"]>;
+  max_distance?: Maybe<Scalars["String"]["output"]>;
+  updated_at?: Maybe<Scalars["timestamptz"]["output"]>;
+  user_id?: Maybe<Scalars["uuid"]["output"]>;
+};
+
+/** aggregate min on columns */
+export type Shopper_Notification_Settings_Min_Fields = {
+  created_at?: Maybe<Scalars["timestamptz"]["output"]>;
+  id?: Maybe<Scalars["uuid"]["output"]>;
+  max_distance?: Maybe<Scalars["String"]["output"]>;
+  updated_at?: Maybe<Scalars["timestamptz"]["output"]>;
+  user_id?: Maybe<Scalars["uuid"]["output"]>;
+};
+
+/** response of any mutation on the table "shopper_notification_settings" */
+export type Shopper_Notification_Settings_Mutation_Response = {
+  /** number of rows affected by the mutation */
+  affected_rows: Scalars["Int"]["output"];
+  /** data from the rows affected by the mutation */
+  returning: Array<Shopper_Notification_Settings>;
+};
+
+/** on_conflict condition type for table "shopper_notification_settings" */
+export type Shopper_Notification_Settings_On_Conflict = {
+  constraint: Shopper_Notification_Settings_Constraint;
+  update_columns?: Array<Shopper_Notification_Settings_Update_Column>;
+  where?: InputMaybe<Shopper_Notification_Settings_Bool_Exp>;
+};
+
+/** Ordering options when selecting data from "shopper_notification_settings". */
+export type Shopper_Notification_Settings_Order_By = {
+  created_at?: InputMaybe<Order_By>;
+  custom_locations?: InputMaybe<Order_By>;
+  id?: InputMaybe<Order_By>;
+  max_distance?: InputMaybe<Order_By>;
+  notification_types?: InputMaybe<Order_By>;
+  sound_settings?: InputMaybe<Order_By>;
+  updated_at?: InputMaybe<Order_By>;
+  use_live_location?: InputMaybe<Order_By>;
+  user_id?: InputMaybe<Order_By>;
+};
+
+/** primary key columns input for table: shopper_notification_settings */
+export type Shopper_Notification_Settings_Pk_Columns_Input = {
+  id: Scalars["uuid"]["input"];
+};
+
+/** prepend existing jsonb value of filtered columns with new jsonb value */
+export type Shopper_Notification_Settings_Prepend_Input = {
+  custom_locations?: InputMaybe<Scalars["jsonb"]["input"]>;
+  notification_types?: InputMaybe<Scalars["jsonb"]["input"]>;
+  sound_settings?: InputMaybe<Scalars["jsonb"]["input"]>;
+};
+
+/** select columns of table "shopper_notification_settings" */
+export type Shopper_Notification_Settings_Select_Column =
+  /** column name */
+  | "created_at"
+  /** column name */
+  | "custom_locations"
+  /** column name */
+  | "id"
+  /** column name */
+  | "max_distance"
+  /** column name */
+  | "notification_types"
+  /** column name */
+  | "sound_settings"
+  /** column name */
+  | "updated_at"
+  /** column name */
+  | "use_live_location"
+  /** column name */
+  | "user_id";
+
+/** input type for updating data in table "shopper_notification_settings" */
+export type Shopper_Notification_Settings_Set_Input = {
+  created_at?: InputMaybe<Scalars["timestamptz"]["input"]>;
+  custom_locations?: InputMaybe<Scalars["jsonb"]["input"]>;
+  id?: InputMaybe<Scalars["uuid"]["input"]>;
+  max_distance?: InputMaybe<Scalars["String"]["input"]>;
+  notification_types?: InputMaybe<Scalars["jsonb"]["input"]>;
+  sound_settings?: InputMaybe<Scalars["jsonb"]["input"]>;
+  updated_at?: InputMaybe<Scalars["timestamptz"]["input"]>;
+  use_live_location?: InputMaybe<Scalars["Boolean"]["input"]>;
+  user_id?: InputMaybe<Scalars["uuid"]["input"]>;
+};
+
+/** Streaming cursor of the table "shopper_notification_settings" */
+export type Shopper_Notification_Settings_Stream_Cursor_Input = {
+  /** Stream column input with initial value */
+  initial_value: Shopper_Notification_Settings_Stream_Cursor_Value_Input;
+  /** cursor ordering */
+  ordering?: InputMaybe<Cursor_Ordering>;
+};
+
+/** Initial value of the column from where the streaming should start */
+export type Shopper_Notification_Settings_Stream_Cursor_Value_Input = {
+  created_at?: InputMaybe<Scalars["timestamptz"]["input"]>;
+  custom_locations?: InputMaybe<Scalars["jsonb"]["input"]>;
+  id?: InputMaybe<Scalars["uuid"]["input"]>;
+  max_distance?: InputMaybe<Scalars["String"]["input"]>;
+  notification_types?: InputMaybe<Scalars["jsonb"]["input"]>;
+  sound_settings?: InputMaybe<Scalars["jsonb"]["input"]>;
+  updated_at?: InputMaybe<Scalars["timestamptz"]["input"]>;
+  use_live_location?: InputMaybe<Scalars["Boolean"]["input"]>;
+  user_id?: InputMaybe<Scalars["uuid"]["input"]>;
+};
+
+/** update columns of table "shopper_notification_settings" */
+export type Shopper_Notification_Settings_Update_Column =
+  /** column name */
+  | "created_at"
+  /** column name */
+  | "custom_locations"
+  /** column name */
+  | "id"
+  /** column name */
+  | "max_distance"
+  /** column name */
+  | "notification_types"
+  /** column name */
+  | "sound_settings"
+  /** column name */
+  | "updated_at"
+  /** column name */
+  | "use_live_location"
+  /** column name */
+  | "user_id";
+
+export type Shopper_Notification_Settings_Updates = {
+  /** append existing jsonb value of filtered columns with new jsonb value */
+  _append?: InputMaybe<Shopper_Notification_Settings_Append_Input>;
+  /** delete the field or element with specified path (for JSON arrays, negative integers count from the end) */
+  _delete_at_path?: InputMaybe<Shopper_Notification_Settings_Delete_At_Path_Input>;
+  /** delete the array element with specified index (negative integers count from the end). throws an error if top level container is not an array */
+  _delete_elem?: InputMaybe<Shopper_Notification_Settings_Delete_Elem_Input>;
+  /** delete key/value pair or string element. key/value pairs are matched based on their key value */
+  _delete_key?: InputMaybe<Shopper_Notification_Settings_Delete_Key_Input>;
+  /** prepend existing jsonb value of filtered columns with new jsonb value */
+  _prepend?: InputMaybe<Shopper_Notification_Settings_Prepend_Input>;
+  /** sets the columns of the filtered rows to the given values */
+  _set?: InputMaybe<Shopper_Notification_Settings_Set_Input>;
+  /** filter the rows which have to be updated */
+  where: Shopper_Notification_Settings_Bool_Exp;
+};
+
 /** columns and relationships of "shoppers" */
 export type Shoppers = {
   Employment_id: Scalars["Int"]["output"];
+  /** An array relationship */
+  Revenues: Array<Revenue>;
+  /** An aggregate relationship */
+  Revenues_aggregate: Revenue_Aggregate;
   /** An object relationship */
   User: Users;
   active: Scalars["Boolean"]["output"];
   address: Scalars["String"]["output"];
   background_check_completed: Scalars["Boolean"]["output"];
   created_at: Scalars["timestamptz"]["output"];
-  driving_license: Scalars["String"]["output"];
+  driving_license?: Maybe<Scalars["String"]["output"]>;
   full_name: Scalars["String"]["output"];
   id: Scalars["uuid"]["output"];
   national_id: Scalars["String"]["output"];
@@ -10141,9 +13541,28 @@ export type Shoppers = {
   phone_number: Scalars["String"]["output"];
   profile_photo: Scalars["String"]["output"];
   status: Scalars["String"]["output"];
+  telegram_id?: Maybe<Scalars["String"]["output"]>;
   transport_mode: Scalars["String"]["output"];
   updated_at?: Maybe<Scalars["timestamptz"]["output"]>;
   user_id: Scalars["uuid"]["output"];
+};
+
+/** columns and relationships of "shoppers" */
+export type ShoppersRevenuesArgs = {
+  distinct_on?: InputMaybe<Array<Revenue_Select_Column>>;
+  limit?: InputMaybe<Scalars["Int"]["input"]>;
+  offset?: InputMaybe<Scalars["Int"]["input"]>;
+  order_by?: InputMaybe<Array<Revenue_Order_By>>;
+  where?: InputMaybe<Revenue_Bool_Exp>;
+};
+
+/** columns and relationships of "shoppers" */
+export type ShoppersRevenues_AggregateArgs = {
+  distinct_on?: InputMaybe<Array<Revenue_Select_Column>>;
+  limit?: InputMaybe<Scalars["Int"]["input"]>;
+  offset?: InputMaybe<Scalars["Int"]["input"]>;
+  order_by?: InputMaybe<Array<Revenue_Order_By>>;
+  where?: InputMaybe<Revenue_Bool_Exp>;
 };
 
 /** aggregated selection of "shoppers" */
@@ -10181,6 +13600,8 @@ export type Shoppers_Avg_Fields = {
 /** Boolean expression to filter rows from the table "shoppers". All fields are combined with a logical 'AND'. */
 export type Shoppers_Bool_Exp = {
   Employment_id?: InputMaybe<Int_Comparison_Exp>;
+  Revenues?: InputMaybe<Revenue_Bool_Exp>;
+  Revenues_aggregate?: InputMaybe<Revenue_Aggregate_Bool_Exp>;
   User?: InputMaybe<Users_Bool_Exp>;
   _and?: InputMaybe<Array<Shoppers_Bool_Exp>>;
   _not?: InputMaybe<Shoppers_Bool_Exp>;
@@ -10197,6 +13618,7 @@ export type Shoppers_Bool_Exp = {
   phone_number?: InputMaybe<String_Comparison_Exp>;
   profile_photo?: InputMaybe<String_Comparison_Exp>;
   status?: InputMaybe<String_Comparison_Exp>;
+  telegram_id?: InputMaybe<String_Comparison_Exp>;
   transport_mode?: InputMaybe<String_Comparison_Exp>;
   updated_at?: InputMaybe<Timestamptz_Comparison_Exp>;
   user_id?: InputMaybe<Uuid_Comparison_Exp>;
@@ -10206,8 +13628,6 @@ export type Shoppers_Bool_Exp = {
 export type Shoppers_Constraint =
   /** unique or primary key constraint on columns "Employment_id" */
   | "shoppers_Employment_id_key"
-  /** unique or primary key constraint on columns "national_id" */
-  | "shoppers_national_id_key"
   /** unique or primary key constraint on columns "phone_number" */
   | "shoppers_phone_number_key"
   /** unique or primary key constraint on columns "id" */
@@ -10223,6 +13643,7 @@ export type Shoppers_Inc_Input = {
 /** input type for inserting data into table "shoppers" */
 export type Shoppers_Insert_Input = {
   Employment_id?: InputMaybe<Scalars["Int"]["input"]>;
+  Revenues?: InputMaybe<Revenue_Arr_Rel_Insert_Input>;
   User?: InputMaybe<Users_Obj_Rel_Insert_Input>;
   active?: InputMaybe<Scalars["Boolean"]["input"]>;
   address?: InputMaybe<Scalars["String"]["input"]>;
@@ -10236,6 +13657,7 @@ export type Shoppers_Insert_Input = {
   phone_number?: InputMaybe<Scalars["String"]["input"]>;
   profile_photo?: InputMaybe<Scalars["String"]["input"]>;
   status?: InputMaybe<Scalars["String"]["input"]>;
+  telegram_id?: InputMaybe<Scalars["String"]["input"]>;
   transport_mode?: InputMaybe<Scalars["String"]["input"]>;
   updated_at?: InputMaybe<Scalars["timestamptz"]["input"]>;
   user_id?: InputMaybe<Scalars["uuid"]["input"]>;
@@ -10254,6 +13676,7 @@ export type Shoppers_Max_Fields = {
   phone_number?: Maybe<Scalars["String"]["output"]>;
   profile_photo?: Maybe<Scalars["String"]["output"]>;
   status?: Maybe<Scalars["String"]["output"]>;
+  telegram_id?: Maybe<Scalars["String"]["output"]>;
   transport_mode?: Maybe<Scalars["String"]["output"]>;
   updated_at?: Maybe<Scalars["timestamptz"]["output"]>;
   user_id?: Maybe<Scalars["uuid"]["output"]>;
@@ -10272,6 +13695,7 @@ export type Shoppers_Min_Fields = {
   phone_number?: Maybe<Scalars["String"]["output"]>;
   profile_photo?: Maybe<Scalars["String"]["output"]>;
   status?: Maybe<Scalars["String"]["output"]>;
+  telegram_id?: Maybe<Scalars["String"]["output"]>;
   transport_mode?: Maybe<Scalars["String"]["output"]>;
   updated_at?: Maybe<Scalars["timestamptz"]["output"]>;
   user_id?: Maybe<Scalars["uuid"]["output"]>;
@@ -10302,6 +13726,7 @@ export type Shoppers_On_Conflict = {
 /** Ordering options when selecting data from "shoppers". */
 export type Shoppers_Order_By = {
   Employment_id?: InputMaybe<Order_By>;
+  Revenues_aggregate?: InputMaybe<Revenue_Aggregate_Order_By>;
   User?: InputMaybe<Users_Order_By>;
   active?: InputMaybe<Order_By>;
   address?: InputMaybe<Order_By>;
@@ -10315,6 +13740,7 @@ export type Shoppers_Order_By = {
   phone_number?: InputMaybe<Order_By>;
   profile_photo?: InputMaybe<Order_By>;
   status?: InputMaybe<Order_By>;
+  telegram_id?: InputMaybe<Order_By>;
   transport_mode?: InputMaybe<Order_By>;
   updated_at?: InputMaybe<Order_By>;
   user_id?: InputMaybe<Order_By>;
@@ -10354,6 +13780,8 @@ export type Shoppers_Select_Column =
   /** column name */
   | "status"
   /** column name */
+  | "telegram_id"
+  /** column name */
   | "transport_mode"
   /** column name */
   | "updated_at"
@@ -10375,6 +13803,7 @@ export type Shoppers_Set_Input = {
   phone_number?: InputMaybe<Scalars["String"]["input"]>;
   profile_photo?: InputMaybe<Scalars["String"]["input"]>;
   status?: InputMaybe<Scalars["String"]["input"]>;
+  telegram_id?: InputMaybe<Scalars["String"]["input"]>;
   transport_mode?: InputMaybe<Scalars["String"]["input"]>;
   updated_at?: InputMaybe<Scalars["timestamptz"]["input"]>;
   user_id?: InputMaybe<Scalars["uuid"]["input"]>;
@@ -10418,6 +13847,7 @@ export type Shoppers_Stream_Cursor_Value_Input = {
   phone_number?: InputMaybe<Scalars["String"]["input"]>;
   profile_photo?: InputMaybe<Scalars["String"]["input"]>;
   status?: InputMaybe<Scalars["String"]["input"]>;
+  telegram_id?: InputMaybe<Scalars["String"]["input"]>;
   transport_mode?: InputMaybe<Scalars["String"]["input"]>;
   updated_at?: InputMaybe<Scalars["timestamptz"]["input"]>;
   user_id?: InputMaybe<Scalars["uuid"]["input"]>;
@@ -10456,6 +13886,8 @@ export type Shoppers_Update_Column =
   | "profile_photo"
   /** column name */
   | "status"
+  /** column name */
+  | "telegram_id"
   /** column name */
   | "transport_mode"
   /** column name */
@@ -10593,6 +14025,22 @@ export type Subscription_Root = {
   /** fetch data from the table in a streaming manner: "Ratings" */
   Ratings_stream: Array<Ratings>;
   /** An array relationship */
+  Reels: Array<Reels>;
+  /** An aggregate relationship */
+  Reels_aggregate: Reels_Aggregate;
+  /** fetch data from the table: "Reels" using primary key columns */
+  Reels_by_pk?: Maybe<Reels>;
+  /** An array relationship */
+  Reels_comments: Array<Reels_Comments>;
+  /** An aggregate relationship */
+  Reels_comments_aggregate: Reels_Comments_Aggregate;
+  /** fetch data from the table: "Reels_comments" using primary key columns */
+  Reels_comments_by_pk?: Maybe<Reels_Comments>;
+  /** fetch data from the table in a streaming manner: "Reels_comments" */
+  Reels_comments_stream: Array<Reels_Comments>;
+  /** fetch data from the table in a streaming manner: "Reels" */
+  Reels_stream: Array<Reels>;
+  /** An array relationship */
   Refunds: Array<Refunds>;
   /** An aggregate relationship */
   Refunds_aggregate: Refunds_Aggregate;
@@ -10600,6 +14048,14 @@ export type Subscription_Root = {
   Refunds_by_pk?: Maybe<Refunds>;
   /** fetch data from the table in a streaming manner: "Refunds" */
   Refunds_stream: Array<Refunds>;
+  /** fetch data from the table: "Restaurants" */
+  Restaurants: Array<Restaurants>;
+  /** fetch aggregated fields from the table: "Restaurants" */
+  Restaurants_aggregate: Restaurants_Aggregate;
+  /** fetch data from the table: "Restaurants" using primary key columns */
+  Restaurants_by_pk?: Maybe<Restaurants>;
+  /** fetch data from the table in a streaming manner: "Restaurants" */
+  Restaurants_stream: Array<Restaurants>;
   /** fetch data from the table: "Revenue" */
   Revenue: Array<Revenue>;
   /** fetch aggregated fields from the table: "Revenue" */
@@ -10664,9 +14120,9 @@ export type Subscription_Root = {
   Wallets_by_pk?: Maybe<Wallets>;
   /** fetch data from the table in a streaming manner: "Wallets" */
   Wallets_stream: Array<Wallets>;
-  /** fetch data from the table: "paymentCards" */
+  /** An array relationship */
   paymentCards: Array<PaymentCards>;
-  /** fetch aggregated fields from the table: "paymentCards" */
+  /** An aggregate relationship */
   paymentCards_aggregate: PaymentCards_Aggregate;
   /** fetch data from the table: "paymentCards" using primary key columns */
   paymentCards_by_pk?: Maybe<PaymentCards>;
@@ -10680,6 +14136,38 @@ export type Subscription_Root = {
   promotions_by_pk?: Maybe<Promotions>;
   /** fetch data from the table in a streaming manner: "promotions" */
   promotions_stream: Array<Promotions>;
+  /** fetch data from the table: "push_subscriptions" */
+  push_subscriptions: Array<Push_Subscriptions>;
+  /** fetch aggregated fields from the table: "push_subscriptions" */
+  push_subscriptions_aggregate: Push_Subscriptions_Aggregate;
+  /** fetch data from the table: "push_subscriptions" using primary key columns */
+  push_subscriptions_by_pk?: Maybe<Push_Subscriptions>;
+  /** fetch data from the table in a streaming manner: "push_subscriptions" */
+  push_subscriptions_stream: Array<Push_Subscriptions>;
+  /** An array relationship */
+  reel_likes: Array<Reel_Likes>;
+  /** An aggregate relationship */
+  reel_likes_aggregate: Reel_Likes_Aggregate;
+  /** fetch data from the table: "reel_likes" using primary key columns */
+  reel_likes_by_pk?: Maybe<Reel_Likes>;
+  /** fetch data from the table in a streaming manner: "reel_likes" */
+  reel_likes_stream: Array<Reel_Likes>;
+  /** An array relationship */
+  reel_orders: Array<Reel_Orders>;
+  /** An aggregate relationship */
+  reel_orders_aggregate: Reel_Orders_Aggregate;
+  /** fetch data from the table: "reel_orders" using primary key columns */
+  reel_orders_by_pk?: Maybe<Reel_Orders>;
+  /** fetch data from the table in a streaming manner: "reel_orders" */
+  reel_orders_stream: Array<Reel_Orders>;
+  /** fetch data from the table: "shopper_notification_settings" */
+  shopper_notification_settings: Array<Shopper_Notification_Settings>;
+  /** fetch aggregated fields from the table: "shopper_notification_settings" */
+  shopper_notification_settings_aggregate: Shopper_Notification_Settings_Aggregate;
+  /** fetch data from the table: "shopper_notification_settings" using primary key columns */
+  shopper_notification_settings_by_pk?: Maybe<Shopper_Notification_Settings>;
+  /** fetch data from the table in a streaming manner: "shopper_notification_settings" */
+  shopper_notification_settings_stream: Array<Shopper_Notification_Settings>;
   /** fetch data from the table: "shoppers" */
   shoppers: Array<Shoppers>;
   /** fetch aggregated fields from the table: "shoppers" */
@@ -10696,6 +14184,14 @@ export type Subscription_Root = {
   tickets_by_pk?: Maybe<Tickets>;
   /** fetch data from the table in a streaming manner: "tickets" */
   tickets_stream: Array<Tickets>;
+  /** fetch data from the table: "vehicles" */
+  vehicles: Array<Vehicles>;
+  /** fetch aggregated fields from the table: "vehicles" */
+  vehicles_aggregate: Vehicles_Aggregate;
+  /** fetch data from the table: "vehicles" using primary key columns */
+  vehicles_by_pk?: Maybe<Vehicles>;
+  /** fetch data from the table in a streaming manner: "vehicles" */
+  vehicles_stream: Array<Vehicles>;
 };
 
 export type Subscription_RootAddressesArgs = {
@@ -11036,6 +14532,58 @@ export type Subscription_RootRatings_StreamArgs = {
   where?: InputMaybe<Ratings_Bool_Exp>;
 };
 
+export type Subscription_RootReelsArgs = {
+  distinct_on?: InputMaybe<Array<Reels_Select_Column>>;
+  limit?: InputMaybe<Scalars["Int"]["input"]>;
+  offset?: InputMaybe<Scalars["Int"]["input"]>;
+  order_by?: InputMaybe<Array<Reels_Order_By>>;
+  where?: InputMaybe<Reels_Bool_Exp>;
+};
+
+export type Subscription_RootReels_AggregateArgs = {
+  distinct_on?: InputMaybe<Array<Reels_Select_Column>>;
+  limit?: InputMaybe<Scalars["Int"]["input"]>;
+  offset?: InputMaybe<Scalars["Int"]["input"]>;
+  order_by?: InputMaybe<Array<Reels_Order_By>>;
+  where?: InputMaybe<Reels_Bool_Exp>;
+};
+
+export type Subscription_RootReels_By_PkArgs = {
+  id: Scalars["uuid"]["input"];
+};
+
+export type Subscription_RootReels_CommentsArgs = {
+  distinct_on?: InputMaybe<Array<Reels_Comments_Select_Column>>;
+  limit?: InputMaybe<Scalars["Int"]["input"]>;
+  offset?: InputMaybe<Scalars["Int"]["input"]>;
+  order_by?: InputMaybe<Array<Reels_Comments_Order_By>>;
+  where?: InputMaybe<Reels_Comments_Bool_Exp>;
+};
+
+export type Subscription_RootReels_Comments_AggregateArgs = {
+  distinct_on?: InputMaybe<Array<Reels_Comments_Select_Column>>;
+  limit?: InputMaybe<Scalars["Int"]["input"]>;
+  offset?: InputMaybe<Scalars["Int"]["input"]>;
+  order_by?: InputMaybe<Array<Reels_Comments_Order_By>>;
+  where?: InputMaybe<Reels_Comments_Bool_Exp>;
+};
+
+export type Subscription_RootReels_Comments_By_PkArgs = {
+  id: Scalars["uuid"]["input"];
+};
+
+export type Subscription_RootReels_Comments_StreamArgs = {
+  batch_size: Scalars["Int"]["input"];
+  cursor: Array<InputMaybe<Reels_Comments_Stream_Cursor_Input>>;
+  where?: InputMaybe<Reels_Comments_Bool_Exp>;
+};
+
+export type Subscription_RootReels_StreamArgs = {
+  batch_size: Scalars["Int"]["input"];
+  cursor: Array<InputMaybe<Reels_Stream_Cursor_Input>>;
+  where?: InputMaybe<Reels_Bool_Exp>;
+};
+
 export type Subscription_RootRefundsArgs = {
   distinct_on?: InputMaybe<Array<Refunds_Select_Column>>;
   limit?: InputMaybe<Scalars["Int"]["input"]>;
@@ -11060,6 +14608,32 @@ export type Subscription_RootRefunds_StreamArgs = {
   batch_size: Scalars["Int"]["input"];
   cursor: Array<InputMaybe<Refunds_Stream_Cursor_Input>>;
   where?: InputMaybe<Refunds_Bool_Exp>;
+};
+
+export type Subscription_RootRestaurantsArgs = {
+  distinct_on?: InputMaybe<Array<Restaurants_Select_Column>>;
+  limit?: InputMaybe<Scalars["Int"]["input"]>;
+  offset?: InputMaybe<Scalars["Int"]["input"]>;
+  order_by?: InputMaybe<Array<Restaurants_Order_By>>;
+  where?: InputMaybe<Restaurants_Bool_Exp>;
+};
+
+export type Subscription_RootRestaurants_AggregateArgs = {
+  distinct_on?: InputMaybe<Array<Restaurants_Select_Column>>;
+  limit?: InputMaybe<Scalars["Int"]["input"]>;
+  offset?: InputMaybe<Scalars["Int"]["input"]>;
+  order_by?: InputMaybe<Array<Restaurants_Order_By>>;
+  where?: InputMaybe<Restaurants_Bool_Exp>;
+};
+
+export type Subscription_RootRestaurants_By_PkArgs = {
+  id: Scalars["uuid"]["input"];
+};
+
+export type Subscription_RootRestaurants_StreamArgs = {
+  batch_size: Scalars["Int"]["input"];
+  cursor: Array<InputMaybe<Restaurants_Stream_Cursor_Input>>;
+  where?: InputMaybe<Restaurants_Bool_Exp>;
 };
 
 export type Subscription_RootRevenueArgs = {
@@ -11322,6 +14896,110 @@ export type Subscription_RootPromotions_StreamArgs = {
   where?: InputMaybe<Promotions_Bool_Exp>;
 };
 
+export type Subscription_RootPush_SubscriptionsArgs = {
+  distinct_on?: InputMaybe<Array<Push_Subscriptions_Select_Column>>;
+  limit?: InputMaybe<Scalars["Int"]["input"]>;
+  offset?: InputMaybe<Scalars["Int"]["input"]>;
+  order_by?: InputMaybe<Array<Push_Subscriptions_Order_By>>;
+  where?: InputMaybe<Push_Subscriptions_Bool_Exp>;
+};
+
+export type Subscription_RootPush_Subscriptions_AggregateArgs = {
+  distinct_on?: InputMaybe<Array<Push_Subscriptions_Select_Column>>;
+  limit?: InputMaybe<Scalars["Int"]["input"]>;
+  offset?: InputMaybe<Scalars["Int"]["input"]>;
+  order_by?: InputMaybe<Array<Push_Subscriptions_Order_By>>;
+  where?: InputMaybe<Push_Subscriptions_Bool_Exp>;
+};
+
+export type Subscription_RootPush_Subscriptions_By_PkArgs = {
+  id: Scalars["uuid"]["input"];
+};
+
+export type Subscription_RootPush_Subscriptions_StreamArgs = {
+  batch_size: Scalars["Int"]["input"];
+  cursor: Array<InputMaybe<Push_Subscriptions_Stream_Cursor_Input>>;
+  where?: InputMaybe<Push_Subscriptions_Bool_Exp>;
+};
+
+export type Subscription_RootReel_LikesArgs = {
+  distinct_on?: InputMaybe<Array<Reel_Likes_Select_Column>>;
+  limit?: InputMaybe<Scalars["Int"]["input"]>;
+  offset?: InputMaybe<Scalars["Int"]["input"]>;
+  order_by?: InputMaybe<Array<Reel_Likes_Order_By>>;
+  where?: InputMaybe<Reel_Likes_Bool_Exp>;
+};
+
+export type Subscription_RootReel_Likes_AggregateArgs = {
+  distinct_on?: InputMaybe<Array<Reel_Likes_Select_Column>>;
+  limit?: InputMaybe<Scalars["Int"]["input"]>;
+  offset?: InputMaybe<Scalars["Int"]["input"]>;
+  order_by?: InputMaybe<Array<Reel_Likes_Order_By>>;
+  where?: InputMaybe<Reel_Likes_Bool_Exp>;
+};
+
+export type Subscription_RootReel_Likes_By_PkArgs = {
+  id: Scalars["uuid"]["input"];
+};
+
+export type Subscription_RootReel_Likes_StreamArgs = {
+  batch_size: Scalars["Int"]["input"];
+  cursor: Array<InputMaybe<Reel_Likes_Stream_Cursor_Input>>;
+  where?: InputMaybe<Reel_Likes_Bool_Exp>;
+};
+
+export type Subscription_RootReel_OrdersArgs = {
+  distinct_on?: InputMaybe<Array<Reel_Orders_Select_Column>>;
+  limit?: InputMaybe<Scalars["Int"]["input"]>;
+  offset?: InputMaybe<Scalars["Int"]["input"]>;
+  order_by?: InputMaybe<Array<Reel_Orders_Order_By>>;
+  where?: InputMaybe<Reel_Orders_Bool_Exp>;
+};
+
+export type Subscription_RootReel_Orders_AggregateArgs = {
+  distinct_on?: InputMaybe<Array<Reel_Orders_Select_Column>>;
+  limit?: InputMaybe<Scalars["Int"]["input"]>;
+  offset?: InputMaybe<Scalars["Int"]["input"]>;
+  order_by?: InputMaybe<Array<Reel_Orders_Order_By>>;
+  where?: InputMaybe<Reel_Orders_Bool_Exp>;
+};
+
+export type Subscription_RootReel_Orders_By_PkArgs = {
+  id: Scalars["uuid"]["input"];
+};
+
+export type Subscription_RootReel_Orders_StreamArgs = {
+  batch_size: Scalars["Int"]["input"];
+  cursor: Array<InputMaybe<Reel_Orders_Stream_Cursor_Input>>;
+  where?: InputMaybe<Reel_Orders_Bool_Exp>;
+};
+
+export type Subscription_RootShopper_Notification_SettingsArgs = {
+  distinct_on?: InputMaybe<Array<Shopper_Notification_Settings_Select_Column>>;
+  limit?: InputMaybe<Scalars["Int"]["input"]>;
+  offset?: InputMaybe<Scalars["Int"]["input"]>;
+  order_by?: InputMaybe<Array<Shopper_Notification_Settings_Order_By>>;
+  where?: InputMaybe<Shopper_Notification_Settings_Bool_Exp>;
+};
+
+export type Subscription_RootShopper_Notification_Settings_AggregateArgs = {
+  distinct_on?: InputMaybe<Array<Shopper_Notification_Settings_Select_Column>>;
+  limit?: InputMaybe<Scalars["Int"]["input"]>;
+  offset?: InputMaybe<Scalars["Int"]["input"]>;
+  order_by?: InputMaybe<Array<Shopper_Notification_Settings_Order_By>>;
+  where?: InputMaybe<Shopper_Notification_Settings_Bool_Exp>;
+};
+
+export type Subscription_RootShopper_Notification_Settings_By_PkArgs = {
+  id: Scalars["uuid"]["input"];
+};
+
+export type Subscription_RootShopper_Notification_Settings_StreamArgs = {
+  batch_size: Scalars["Int"]["input"];
+  cursor: Array<InputMaybe<Shopper_Notification_Settings_Stream_Cursor_Input>>;
+  where?: InputMaybe<Shopper_Notification_Settings_Bool_Exp>;
+};
+
 export type Subscription_RootShoppersArgs = {
   distinct_on?: InputMaybe<Array<Shoppers_Select_Column>>;
   limit?: InputMaybe<Scalars["Int"]["input"]>;
@@ -11372,6 +15050,32 @@ export type Subscription_RootTickets_StreamArgs = {
   batch_size: Scalars["Int"]["input"];
   cursor: Array<InputMaybe<Tickets_Stream_Cursor_Input>>;
   where?: InputMaybe<Tickets_Bool_Exp>;
+};
+
+export type Subscription_RootVehiclesArgs = {
+  distinct_on?: InputMaybe<Array<Vehicles_Select_Column>>;
+  limit?: InputMaybe<Scalars["Int"]["input"]>;
+  offset?: InputMaybe<Scalars["Int"]["input"]>;
+  order_by?: InputMaybe<Array<Vehicles_Order_By>>;
+  where?: InputMaybe<Vehicles_Bool_Exp>;
+};
+
+export type Subscription_RootVehicles_AggregateArgs = {
+  distinct_on?: InputMaybe<Array<Vehicles_Select_Column>>;
+  limit?: InputMaybe<Scalars["Int"]["input"]>;
+  offset?: InputMaybe<Scalars["Int"]["input"]>;
+  order_by?: InputMaybe<Array<Vehicles_Order_By>>;
+  where?: InputMaybe<Vehicles_Bool_Exp>;
+};
+
+export type Subscription_RootVehicles_By_PkArgs = {
+  id: Scalars["uuid"]["input"];
+};
+
+export type Subscription_RootVehicles_StreamArgs = {
+  batch_size: Scalars["Int"]["input"];
+  cursor: Array<InputMaybe<Vehicles_Stream_Cursor_Input>>;
+  where?: InputMaybe<Vehicles_Bool_Exp>;
 };
 
 /** for shopper and other clients */
@@ -11782,6 +15486,218 @@ export type Uuid_Comparison_Exp = {
   _nin?: InputMaybe<Array<Scalars["uuid"]["input"]>>;
 };
 
+/** columns and relationships of "vehicles" */
+export type Vehicles = {
+  /** An object relationship */
+  User: Users;
+  created_at: Scalars["timestamptz"]["output"];
+  id: Scalars["uuid"]["output"];
+  model: Scalars["String"]["output"];
+  photo: Scalars["String"]["output"];
+  plate_number: Scalars["String"]["output"];
+  type: Scalars["String"]["output"];
+  update_on?: Maybe<Scalars["timestamptz"]["output"]>;
+  user_id: Scalars["uuid"]["output"];
+};
+
+/** aggregated selection of "vehicles" */
+export type Vehicles_Aggregate = {
+  aggregate?: Maybe<Vehicles_Aggregate_Fields>;
+  nodes: Array<Vehicles>;
+};
+
+/** aggregate fields of "vehicles" */
+export type Vehicles_Aggregate_Fields = {
+  count: Scalars["Int"]["output"];
+  max?: Maybe<Vehicles_Max_Fields>;
+  min?: Maybe<Vehicles_Min_Fields>;
+};
+
+/** aggregate fields of "vehicles" */
+export type Vehicles_Aggregate_FieldsCountArgs = {
+  columns?: InputMaybe<Array<Vehicles_Select_Column>>;
+  distinct?: InputMaybe<Scalars["Boolean"]["input"]>;
+};
+
+/** Boolean expression to filter rows from the table "vehicles". All fields are combined with a logical 'AND'. */
+export type Vehicles_Bool_Exp = {
+  User?: InputMaybe<Users_Bool_Exp>;
+  _and?: InputMaybe<Array<Vehicles_Bool_Exp>>;
+  _not?: InputMaybe<Vehicles_Bool_Exp>;
+  _or?: InputMaybe<Array<Vehicles_Bool_Exp>>;
+  created_at?: InputMaybe<Timestamptz_Comparison_Exp>;
+  id?: InputMaybe<Uuid_Comparison_Exp>;
+  model?: InputMaybe<String_Comparison_Exp>;
+  photo?: InputMaybe<String_Comparison_Exp>;
+  plate_number?: InputMaybe<String_Comparison_Exp>;
+  type?: InputMaybe<String_Comparison_Exp>;
+  update_on?: InputMaybe<Timestamptz_Comparison_Exp>;
+  user_id?: InputMaybe<Uuid_Comparison_Exp>;
+};
+
+/** unique or primary key constraints on table "vehicles" */
+export type Vehicles_Constraint =
+  /** unique or primary key constraint on columns "id" */
+  | "vehicles_pkey"
+  /** unique or primary key constraint on columns "plate_number" */
+  | "vehicles_plate_number_key"
+  /** unique or primary key constraint on columns "user_id" */
+  | "vehicles_user_id_key";
+
+/** input type for inserting data into table "vehicles" */
+export type Vehicles_Insert_Input = {
+  User?: InputMaybe<Users_Obj_Rel_Insert_Input>;
+  created_at?: InputMaybe<Scalars["timestamptz"]["input"]>;
+  id?: InputMaybe<Scalars["uuid"]["input"]>;
+  model?: InputMaybe<Scalars["String"]["input"]>;
+  photo?: InputMaybe<Scalars["String"]["input"]>;
+  plate_number?: InputMaybe<Scalars["String"]["input"]>;
+  type?: InputMaybe<Scalars["String"]["input"]>;
+  update_on?: InputMaybe<Scalars["timestamptz"]["input"]>;
+  user_id?: InputMaybe<Scalars["uuid"]["input"]>;
+};
+
+/** aggregate max on columns */
+export type Vehicles_Max_Fields = {
+  created_at?: Maybe<Scalars["timestamptz"]["output"]>;
+  id?: Maybe<Scalars["uuid"]["output"]>;
+  model?: Maybe<Scalars["String"]["output"]>;
+  photo?: Maybe<Scalars["String"]["output"]>;
+  plate_number?: Maybe<Scalars["String"]["output"]>;
+  type?: Maybe<Scalars["String"]["output"]>;
+  update_on?: Maybe<Scalars["timestamptz"]["output"]>;
+  user_id?: Maybe<Scalars["uuid"]["output"]>;
+};
+
+/** aggregate min on columns */
+export type Vehicles_Min_Fields = {
+  created_at?: Maybe<Scalars["timestamptz"]["output"]>;
+  id?: Maybe<Scalars["uuid"]["output"]>;
+  model?: Maybe<Scalars["String"]["output"]>;
+  photo?: Maybe<Scalars["String"]["output"]>;
+  plate_number?: Maybe<Scalars["String"]["output"]>;
+  type?: Maybe<Scalars["String"]["output"]>;
+  update_on?: Maybe<Scalars["timestamptz"]["output"]>;
+  user_id?: Maybe<Scalars["uuid"]["output"]>;
+};
+
+/** response of any mutation on the table "vehicles" */
+export type Vehicles_Mutation_Response = {
+  /** number of rows affected by the mutation */
+  affected_rows: Scalars["Int"]["output"];
+  /** data from the rows affected by the mutation */
+  returning: Array<Vehicles>;
+};
+
+/** input type for inserting object relation for remote table "vehicles" */
+export type Vehicles_Obj_Rel_Insert_Input = {
+  data: Vehicles_Insert_Input;
+  /** upsert condition */
+  on_conflict?: InputMaybe<Vehicles_On_Conflict>;
+};
+
+/** on_conflict condition type for table "vehicles" */
+export type Vehicles_On_Conflict = {
+  constraint: Vehicles_Constraint;
+  update_columns?: Array<Vehicles_Update_Column>;
+  where?: InputMaybe<Vehicles_Bool_Exp>;
+};
+
+/** Ordering options when selecting data from "vehicles". */
+export type Vehicles_Order_By = {
+  User?: InputMaybe<Users_Order_By>;
+  created_at?: InputMaybe<Order_By>;
+  id?: InputMaybe<Order_By>;
+  model?: InputMaybe<Order_By>;
+  photo?: InputMaybe<Order_By>;
+  plate_number?: InputMaybe<Order_By>;
+  type?: InputMaybe<Order_By>;
+  update_on?: InputMaybe<Order_By>;
+  user_id?: InputMaybe<Order_By>;
+};
+
+/** primary key columns input for table: vehicles */
+export type Vehicles_Pk_Columns_Input = {
+  id: Scalars["uuid"]["input"];
+};
+
+/** select columns of table "vehicles" */
+export type Vehicles_Select_Column =
+  /** column name */
+  | "created_at"
+  /** column name */
+  | "id"
+  /** column name */
+  | "model"
+  /** column name */
+  | "photo"
+  /** column name */
+  | "plate_number"
+  /** column name */
+  | "type"
+  /** column name */
+  | "update_on"
+  /** column name */
+  | "user_id";
+
+/** input type for updating data in table "vehicles" */
+export type Vehicles_Set_Input = {
+  created_at?: InputMaybe<Scalars["timestamptz"]["input"]>;
+  id?: InputMaybe<Scalars["uuid"]["input"]>;
+  model?: InputMaybe<Scalars["String"]["input"]>;
+  photo?: InputMaybe<Scalars["String"]["input"]>;
+  plate_number?: InputMaybe<Scalars["String"]["input"]>;
+  type?: InputMaybe<Scalars["String"]["input"]>;
+  update_on?: InputMaybe<Scalars["timestamptz"]["input"]>;
+  user_id?: InputMaybe<Scalars["uuid"]["input"]>;
+};
+
+/** Streaming cursor of the table "vehicles" */
+export type Vehicles_Stream_Cursor_Input = {
+  /** Stream column input with initial value */
+  initial_value: Vehicles_Stream_Cursor_Value_Input;
+  /** cursor ordering */
+  ordering?: InputMaybe<Cursor_Ordering>;
+};
+
+/** Initial value of the column from where the streaming should start */
+export type Vehicles_Stream_Cursor_Value_Input = {
+  created_at?: InputMaybe<Scalars["timestamptz"]["input"]>;
+  id?: InputMaybe<Scalars["uuid"]["input"]>;
+  model?: InputMaybe<Scalars["String"]["input"]>;
+  photo?: InputMaybe<Scalars["String"]["input"]>;
+  plate_number?: InputMaybe<Scalars["String"]["input"]>;
+  type?: InputMaybe<Scalars["String"]["input"]>;
+  update_on?: InputMaybe<Scalars["timestamptz"]["input"]>;
+  user_id?: InputMaybe<Scalars["uuid"]["input"]>;
+};
+
+/** update columns of table "vehicles" */
+export type Vehicles_Update_Column =
+  /** column name */
+  | "created_at"
+  /** column name */
+  | "id"
+  /** column name */
+  | "model"
+  /** column name */
+  | "photo"
+  /** column name */
+  | "plate_number"
+  /** column name */
+  | "type"
+  /** column name */
+  | "update_on"
+  /** column name */
+  | "user_id";
+
+export type Vehicles_Updates = {
+  /** sets the columns of the filtered rows to the given values */
+  _set?: InputMaybe<Vehicles_Set_Input>;
+  /** filter the rows which have to be updated */
+  where: Vehicles_Bool_Exp;
+};
+
 export type GetAddressesQueryVariables = Exact<{ [key: string]: never }>;
 
 export type GetAddressesQuery = {
@@ -11932,9 +15848,9 @@ export type GetDeliveryIssuesQuery = {
   }>;
 };
 
-export type GetInvoiceDetailsQueryVariables = Exact<{ [key: string]: never }>;
+export type GetInvoiceDetialsQueryVariables = Exact<{ [key: string]: never }>;
 
-export type GetInvoiceDetailsQuery = {
+export type GetInvoiceDetialsQuery = {
   Invoices: Array<{
     created_at: string;
     customer_id: string;
@@ -11943,12 +15859,75 @@ export type GetInvoiceDetailsQuery = {
     id: string;
     invoice_items: any;
     invoice_number: string;
-    order_id: string;
+    Proof?: string | null;
+    order_id?: string | null;
+    reel_order_id?: string | null;
     service_fee: string;
     status: string;
     subtotal: string;
     tax: string;
     total_amount: string;
+    Order?: {
+      combined_order_id?: string | null;
+      created_at: string;
+      delivery_address_id: string;
+      delivery_fee: string;
+      delivery_notes?: string | null;
+      delivery_photo_url?: string | null;
+      delivery_time?: string | null;
+      discount?: string | null;
+      found: boolean;
+      id: string;
+      service_fee: string;
+      shop_id: string;
+      shopper_id?: string | null;
+      status: string;
+      total: string;
+      updated_at?: string | null;
+      user_id: string;
+      voucher_code?: string | null;
+      OrderID: number;
+      Order_Items: Array<{
+        created_at: string;
+        id: string;
+        order_id: string;
+        price: string;
+        product_id: string;
+        quantity: number;
+        Product: {
+          barcode?: string | null;
+          category: string;
+          created_at: string;
+          description: string;
+          final_price?: string | null;
+          id: string;
+          image?: string | null;
+          is_active: boolean;
+          measurement_unit: string;
+          name: string;
+          price: string;
+          quantity: number;
+          reorder_point?: number | null;
+          shop_id: string;
+          sku?: string | null;
+          supplier?: string | null;
+          updated_at?: string | null;
+        };
+      }>;
+    } | null;
+    User: {
+      created_at: string;
+      email: string;
+      gender: string;
+      id: string;
+      is_active: boolean;
+      name: string;
+      password_hash: string;
+      phone: string;
+      profile_picture?: string | null;
+      role: string;
+      updated_at?: string | null;
+    };
   }>;
 };
 
@@ -11964,6 +15943,7 @@ export type AddInvoiceDetailsMutationVariables = Exact<{
   subtotal?: InputMaybe<Scalars["String"]["input"]>;
   tax?: InputMaybe<Scalars["String"]["input"]>;
   total_amount?: InputMaybe<Scalars["String"]["input"]>;
+  reel_order_id?: InputMaybe<Scalars["uuid"]["input"]>;
 }>;
 
 export type AddInvoiceDetailsMutation = {
@@ -12155,6 +16135,179 @@ export type GetProductsQuery = {
   }>;
 };
 
+export type GetAllReelsQueryVariables = Exact<{ [key: string]: never }>;
+
+export type GetAllReelsQuery = {
+  Reels: Array<{
+    category: string;
+    created_on: string;
+    description: string;
+    id: string;
+    isLiked: boolean;
+    likes?: string | null;
+    restaurant_id?: string | null;
+    title: string;
+    type: string;
+    user_id?: string | null;
+    video_url: string;
+    delivery_time?: string | null;
+    Price: string;
+    Product?: any | null;
+    shop_id?: string | null;
+    User?: {
+      email: string;
+      gender: string;
+      id: string;
+      is_active: boolean;
+      name: string;
+      created_at: string;
+      role: string;
+      phone: string;
+      profile_picture?: string | null;
+    } | null;
+    Restaurant?: {
+      created_at: string;
+      email: string;
+      id: string;
+      lat: string;
+      location: string;
+      long: string;
+      name: string;
+      phone: string;
+      profile: string;
+      verified: boolean;
+    } | null;
+    Reels_comments: Array<{
+      user_id: string;
+      text: string;
+      reel_id: string;
+      likes: string;
+      isLiked: boolean;
+      id: string;
+      created_on: string;
+      User: {
+        gender: string;
+        email: string;
+        name: string;
+        phone: string;
+        role: string;
+      };
+    }>;
+    reel_likes: Array<{
+      created_at: string;
+      id: string;
+      reel_id: string;
+      user_id: string;
+    }>;
+    Shops?: {
+      address: string;
+      category_id: string;
+      created_at: string;
+      description: string;
+      id: string;
+      image: string;
+      is_active: boolean;
+      latitude: string;
+      logo?: string | null;
+      longitude: string;
+      name: string;
+      operating_hours: any;
+      phone?: string | null;
+      updated_at?: string | null;
+    } | null;
+  }>;
+};
+
+export type AddReelsMutationVariables = Exact<{
+  category?: InputMaybe<Scalars["String"]["input"]>;
+  description?: InputMaybe<Scalars["String"]["input"]>;
+  likes?: InputMaybe<Scalars["String"]["input"]>;
+  restaurant_id?: InputMaybe<Scalars["uuid"]["input"]>;
+  title?: InputMaybe<Scalars["String"]["input"]>;
+  type?: InputMaybe<Scalars["String"]["input"]>;
+  video_url?: InputMaybe<Scalars["String"]["input"]>;
+  Product?: InputMaybe<Scalars["jsonb"]["input"]>;
+  delivery_time?: InputMaybe<Scalars["String"]["input"]>;
+  Price?: InputMaybe<Scalars["String"]["input"]>;
+  user_id?: InputMaybe<Scalars["uuid"]["input"]>;
+}>;
+
+export type AddReelsMutation = {
+  insert_Reels?: { affected_rows: number } | null;
+};
+
+export type GetRestaurantsQueryVariables = Exact<{ [key: string]: never }>;
+
+export type GetRestaurantsQuery = {
+  Restaurants: Array<{
+    verified: boolean;
+    profile: string;
+    phone: string;
+    name: string;
+    long: string;
+    location: string;
+    lat: string;
+    id: string;
+    email: string;
+    created_at: string;
+  }>;
+};
+
+export type GetShopperDetailsQueryVariables = Exact<{ [key: string]: never }>;
+
+export type GetShopperDetailsQuery = {
+  shoppers: Array<{
+    Employment_id: number;
+    active: boolean;
+    address: string;
+    background_check_completed: boolean;
+    created_at: string;
+    driving_license?: string | null;
+    full_name: string;
+    id: string;
+    national_id: string;
+    onboarding_step: string;
+    phone_number: string;
+    profile_photo: string;
+    status: string;
+    telegram_id?: string | null;
+    transport_mode: string;
+    updated_at?: string | null;
+    user_id: string;
+  }>;
+};
+
+export type AddShopperNotificationSetingsMutationVariables = Exact<{
+  custom_locations?: InputMaybe<Scalars["jsonb"]["input"]>;
+  max_distance?: InputMaybe<Scalars["String"]["input"]>;
+  notification_types?: InputMaybe<Scalars["jsonb"]["input"]>;
+  use_live_location?: InputMaybe<Scalars["Boolean"]["input"]>;
+  sound_settings?: InputMaybe<Scalars["jsonb"]["input"]>;
+  user_id?: InputMaybe<Scalars["uuid"]["input"]>;
+}>;
+
+export type AddShopperNotificationSetingsMutation = {
+  insert_shopper_notification_settings?: { affected_rows: number } | null;
+};
+
+export type GetShopperNotifiicaionSetingsQueryVariables = Exact<{
+  user_id?: InputMaybe<Scalars["uuid"]["input"]>;
+}>;
+
+export type GetShopperNotifiicaionSetingsQuery = {
+  shopper_notification_settings: Array<{
+    created_at: string;
+    custom_locations: any;
+    id: string;
+    max_distance: string;
+    notification_types: any;
+    updated_at?: string | null;
+    user_id: string;
+    use_live_location: boolean;
+    sound_settings?: any | null;
+  }>;
+};
+
 export type GetShopperAvailabilityQueryVariables = Exact<{
   [key: string]: never;
 }>;
@@ -12188,6 +16341,8 @@ export type GetShopsQuery = {
     created_at: string;
     updated_at?: string | null;
     is_active: boolean;
+    logo?: string | null;
+    phone?: string | null;
   }>;
 };
 
@@ -12229,6 +16384,77 @@ export type AddItemsToCartMutation = {
   insert_Carts?: { affected_rows: number } | null;
 };
 
+export type AddReelCommentMutationVariables = Exact<{
+  likes?: InputMaybe<Scalars["String"]["input"]>;
+  reel_id?: InputMaybe<Scalars["uuid"]["input"]>;
+  text?: InputMaybe<Scalars["String"]["input"]>;
+  user_id?: InputMaybe<Scalars["uuid"]["input"]>;
+}>;
+
+export type AddReelCommentMutation = {
+  insert_Reels_comments?: { affected_rows: number } | null;
+};
+
+export type GetCommentsQueryVariables = Exact<{ [key: string]: never }>;
+
+export type GetCommentsQuery = {
+  Reels_comments: Array<{
+    user_id: string;
+    text: string;
+    reel_id: string;
+    likes: string;
+    isLiked: boolean;
+    id: string;
+    created_on: string;
+    User: {
+      email: string;
+      gender: string;
+      name: string;
+      phone: string;
+      profile_picture?: string | null;
+    };
+    Reel: {
+      category: string;
+      isLiked: boolean;
+      likes?: string | null;
+      restaurant_id?: string | null;
+      title: string;
+      id: string;
+    };
+  }>;
+};
+
+export type GetCommentsWhereReelIdQueryVariables = Exact<{
+  reel_id?: InputMaybe<Scalars["uuid"]["input"]>;
+}>;
+
+export type GetCommentsWhereReelIdQuery = {
+  Reels_comments: Array<{
+    user_id: string;
+    text: string;
+    reel_id: string;
+    likes: string;
+    isLiked: boolean;
+    id: string;
+    created_on: string;
+    User: {
+      email: string;
+      gender: string;
+      name: string;
+      phone: string;
+      profile_picture?: string | null;
+    };
+    Reel: {
+      category: string;
+      isLiked: boolean;
+      likes?: string | null;
+      restaurant_id?: string | null;
+      title: string;
+      id: string;
+    };
+  }>;
+};
+
 export type GetPaymentMethodQueryVariables = Exact<{ [key: string]: never }>;
 
 export type GetPaymentMethodQuery = {
@@ -12250,32 +16476,66 @@ export type GetRevenueQueryVariables = Exact<{ [key: string]: never }>;
 
 export type GetRevenueQuery = {
   Revenue: Array<{
-    amount: string;
-    created_at: string;
-    id: string;
-    order_id: string;
     type: string;
-    Order: {
-      OrderID: number;
-      combined_order_id?: string | null;
-      created_at: string;
-      delivery_address_id: string;
-      delivery_fee: string;
-      delivery_notes?: string | null;
-      delivery_photo_url?: string | null;
-      delivery_time?: string | null;
-      discount?: string | null;
-      found: boolean;
-      total: string;
+    shopper_id?: string | null;
+    shop_id?: string | null;
+    products?: any | null;
+    order_id?: string | null;
+    id: string;
+    created_at: string;
+    commission_percentage?: string | null;
+    amount: string;
+    Order?: {
+      user_id: string;
+      voucher_code?: string | null;
       updated_at?: string | null;
+      total: string;
       status: string;
       shopper_id?: string | null;
       shop_id: string;
       service_fee: string;
+      discount?: string | null;
+      found: boolean;
+      delivery_notes?: string | null;
+      delivery_photo_url?: string | null;
+      delivery_time?: string | null;
+      created_at: string;
+      delivery_address_id: string;
+      delivery_fee: string;
+      combined_order_id?: string | null;
+    } | null;
+    Shop?: {
+      logo?: string | null;
+      longitude: string;
+      name: string;
+      operating_hours: any;
+      updated_at?: string | null;
+      category_id: string;
+      created_at: string;
+      description: string;
       id: string;
+      image: string;
+      is_active: boolean;
+      latitude: string;
+      address: string;
+    } | null;
+    shopper?: {
+      Employment_id: number;
+      address: string;
+      active: boolean;
+      created_at: string;
+      background_check_completed: boolean;
+      full_name: string;
+      driving_license?: string | null;
+      id: string;
+      phone_number: string;
       user_id: string;
-      voucher_code?: string | null;
-    };
+      updated_at?: string | null;
+      status: string;
+      profile_photo: string;
+      onboarding_step: string;
+      national_id: string;
+    } | null;
   }>;
 };
 
@@ -12289,7 +16549,7 @@ export type GetShopperInformationQuery = {
     address: string;
     background_check_completed: boolean;
     created_at: string;
-    driving_license: string;
+    driving_license?: string | null;
     full_name: string;
     id: string;
     national_id: string;
@@ -12312,7 +16572,7 @@ export type GetShopperRatingQuery = {
     customer_id: string;
     delivery_experience?: string | null;
     id: string;
-    order_id: string;
+    order_id?: string | null;
     packaging_quality?: string | null;
     professionalism?: string | null;
     rating: number;
@@ -12338,6 +16598,9 @@ export type GetSystemConfigurationQuery = {
     unitsSurcharge: string;
     extraUnits: string;
     cappedDistanceFee: string;
+    distanceSurcharge: string;
+    deliveryCommissionPercentage: string;
+    productCommissionPercentage: string;
   }>;
 };
 
@@ -12349,7 +16612,7 @@ export type GetRatingsQuery = {
     customer_id: string;
     delivery_experience?: string | null;
     id: string;
-    order_id: string;
+    order_id?: string | null;
     packaging_quality?: string | null;
     professionalism?: string | null;
     rating: number;
@@ -12357,7 +16620,7 @@ export type GetRatingsQuery = {
     reviewed_at?: string | null;
     shopper_id: string;
     updated_at?: string | null;
-    Order: {
+    Order?: {
       OrderID: number;
       combined_order_id?: string | null;
       id: string;
@@ -12377,7 +16640,7 @@ export type GetRatingsQuery = {
       service_fee: string;
       voucher_code?: string | null;
       user_id: string;
-    };
+    } | null;
   }>;
 };
 
@@ -12386,6 +16649,73 @@ export type CheckOrderRatingQueryVariables = Exact<{
 }>;
 
 export type CheckOrderRatingQuery = { Ratings: Array<{ id: string }> };
+
+export type GetReelsLikesQueryVariables = Exact<{
+  reel_id?: InputMaybe<Scalars["uuid"]["input"]>;
+}>;
+
+export type GetReelsLikesQuery = {
+  reel_likes: Array<{
+    created_at: string;
+    id: string;
+    reel_id: string;
+    user_id: string;
+  }>;
+};
+
+export type GetReelOrdersQueryVariables = Exact<{ [key: string]: never }>;
+
+export type GetReelOrdersQuery = {
+  reel_orders: Array<{
+    OrderID: number;
+    combined_order_id?: string | null;
+    created_at: string;
+    delivery_address_id: string;
+    delivery_fee: string;
+    delivery_note?: string | null;
+    delivery_photo_url?: string | null;
+    delivery_time: string;
+    discount?: string | null;
+    found: boolean;
+    id: string;
+    reel_id: string;
+    service_fee: string;
+    shopper_id?: string | null;
+    status: string;
+    total: string;
+    updated_at?: string | null;
+    user_id: string;
+    voucher_code?: string | null;
+    Reel: {
+      Price: string;
+      Product?: any | null;
+      category: string;
+      created_on: string;
+      delivery_time?: string | null;
+      description: string;
+      id: string;
+      isLiked: boolean;
+      likes?: string | null;
+      restaurant_id?: string | null;
+      title: string;
+      type: string;
+      user_id?: string | null;
+      video_url: string;
+      Restaurant?: {
+        created_at: string;
+        email: string;
+        id: string;
+        lat: string;
+        location: string;
+        long: string;
+        name: string;
+        phone: string;
+        profile: string;
+        verified: boolean;
+      } | null;
+    };
+  }>;
+};
 
 export type GetAllREfundsQueryVariables = Exact<{ [key: string]: never }>;
 
@@ -12455,6 +16785,81 @@ export type InsertSystemLogMutation = {
     details?: string | null;
     time: string;
   } | null;
+};
+
+export type ClearSystemLogsMutationVariables = Exact<{ [key: string]: never }>;
+
+export type ClearSystemLogsMutation = {
+  delete_System_Logs?: { affected_rows: number } | null;
+};
+
+export type UpdateShopperTelegramIdMutationVariables = Exact<{
+  shopper_id: Scalars["uuid"]["input"];
+  telegram_id: Scalars["String"]["input"];
+}>;
+
+export type UpdateShopperTelegramIdMutation = {
+  update_shoppers_by_pk?: {
+    id: string;
+    telegram_id?: string | null;
+    full_name: string;
+    status: string;
+    active: boolean;
+  } | null;
+};
+
+export type UpdateShopperStatusMutationVariables = Exact<{
+  shopper_id: Scalars["uuid"]["input"];
+  status: Scalars["String"]["input"];
+}>;
+
+export type UpdateShopperStatusMutation = {
+  update_shoppers_by_pk?: {
+    id: string;
+    status: string;
+    full_name: string;
+    telegram_id?: string | null;
+  } | null;
+};
+
+export type GetShopperByTelegramIdQueryVariables = Exact<{
+  telegram_id: Scalars["String"]["input"];
+}>;
+
+export type GetShopperByTelegramIdQuery = {
+  shoppers: Array<{
+    id: string;
+    full_name: string;
+    status: string;
+    active: boolean;
+    telegram_id?: string | null;
+    user_id: string;
+    phone_number: string;
+    address: string;
+    transport_mode: string;
+    created_at: string;
+    updated_at?: string | null;
+  }>;
+};
+
+export type GetShopperByUserIdQueryVariables = Exact<{
+  user_id: Scalars["uuid"]["input"];
+}>;
+
+export type GetShopperByUserIdQuery = {
+  shoppers: Array<{
+    id: string;
+    full_name: string;
+    status: string;
+    active: boolean;
+    telegram_id?: string | null;
+    user_id: string;
+    phone_number: string;
+    address: string;
+    transport_mode: string;
+    created_at: string;
+    updated_at?: string | null;
+  }>;
 };
 
 export type GetAllWallettTtransactionsQueryVariables = Exact<{
@@ -12764,8 +17169,8 @@ export const GetDeliveryIssuesDocument = gql`
     }
   }
 `;
-export const GetInvoiceDetailsDocument = gql`
-  query GetInvoiceDetails {
+export const GetInvoiceDetialsDocument = gql`
+  query getInvoiceDetials {
     Invoices {
       created_at
       customer_id
@@ -12774,12 +17179,75 @@ export const GetInvoiceDetailsDocument = gql`
       id
       invoice_items
       invoice_number
+      Proof
       order_id
+      reel_order_id
       service_fee
       status
       subtotal
       tax
       total_amount
+      Order {
+        combined_order_id
+        created_at
+        delivery_address_id
+        delivery_fee
+        delivery_notes
+        delivery_photo_url
+        delivery_time
+        discount
+        found
+        id
+        service_fee
+        shop_id
+        shopper_id
+        status
+        total
+        updated_at
+        user_id
+        voucher_code
+        Order_Items {
+          created_at
+          id
+          order_id
+          price
+          product_id
+          quantity
+          Product {
+            barcode
+            category
+            created_at
+            description
+            final_price
+            id
+            image
+            is_active
+            measurement_unit
+            name
+            price
+            quantity
+            reorder_point
+            shop_id
+            sku
+            supplier
+            updated_at
+          }
+        }
+        OrderID
+      }
+      User {
+        created_at
+        email
+        gender
+        id
+        is_active
+        name
+        password_hash
+        phone
+        profile_picture
+        role
+        updated_at
+      }
     }
   }
 `;
@@ -12796,6 +17264,7 @@ export const AddInvoiceDetailsDocument = gql`
     $subtotal: String = ""
     $tax: String = ""
     $total_amount: String = ""
+    $reel_order_id: uuid = ""
   ) {
     insert_Invoices(
       objects: {
@@ -12810,6 +17279,7 @@ export const AddInvoiceDetailsDocument = gql`
         subtotal: $subtotal
         tax: $tax
         total_amount: $total_amount
+        reel_order_id: $reel_order_id
       }
     ) {
       affected_rows
@@ -12996,6 +17466,199 @@ export const GetProductsDocument = gql`
     }
   }
 `;
+export const GetAllReelsDocument = gql`
+  query GetAllReels {
+    Reels {
+      category
+      created_on
+      description
+      id
+      isLiked
+      likes
+      restaurant_id
+      title
+      type
+      user_id
+      video_url
+      User {
+        email
+        gender
+        id
+        is_active
+        name
+        created_at
+        role
+        phone
+        profile_picture
+      }
+      Restaurant {
+        created_at
+        email
+        id
+        lat
+        location
+        long
+        name
+        phone
+        profile
+        verified
+      }
+      Reels_comments {
+        user_id
+        text
+        reel_id
+        likes
+        isLiked
+        id
+        created_on
+        User {
+          gender
+          email
+          name
+          phone
+          role
+        }
+      }
+      delivery_time
+      Price
+      Product
+      reel_likes {
+        created_at
+        id
+        reel_id
+        user_id
+      }
+      shop_id
+      Shops {
+        address
+        category_id
+        created_at
+        description
+        id
+        image
+        is_active
+        latitude
+        logo
+        longitude
+        name
+        operating_hours
+        phone
+        updated_at
+      }
+    }
+  }
+`;
+export const AddReelsDocument = gql`
+  mutation AddReels(
+    $category: String = ""
+    $description: String = ""
+    $likes: String = ""
+    $restaurant_id: uuid = ""
+    $title: String = ""
+    $type: String = ""
+    $video_url: String = ""
+    $Product: jsonb = ""
+    $delivery_time: String = ""
+    $Price: String = ""
+    $user_id: uuid = ""
+  ) {
+    insert_Reels(
+      objects: {
+        category: $category
+        description: $description
+        isLiked: false
+        likes: $likes
+        restaurant_id: $restaurant_id
+        title: $title
+        type: $type
+        video_url: $video_url
+        Product: $Product
+        delivery_time: $delivery_time
+        Price: $Price
+        user_id: $user_id
+      }
+    ) {
+      affected_rows
+    }
+  }
+`;
+export const GetRestaurantsDocument = gql`
+  query getRestaurants {
+    Restaurants {
+      verified
+      profile
+      phone
+      name
+      long
+      location
+      lat
+      id
+      email
+      created_at
+    }
+  }
+`;
+export const GetShopperDetailsDocument = gql`
+  query getShopperDetails {
+    shoppers {
+      Employment_id
+      active
+      address
+      background_check_completed
+      created_at
+      driving_license
+      full_name
+      id
+      national_id
+      onboarding_step
+      phone_number
+      profile_photo
+      status
+      telegram_id
+      transport_mode
+      updated_at
+      user_id
+    }
+  }
+`;
+export const AddShopperNotificationSetingsDocument = gql`
+  mutation addShopperNotificationSetings(
+    $custom_locations: jsonb = ""
+    $max_distance: String = ""
+    $notification_types: jsonb = ""
+    $use_live_location: Boolean = true
+    $sound_settings: jsonb = ""
+    $user_id: uuid = ""
+  ) {
+    insert_shopper_notification_settings(
+      objects: {
+        custom_locations: $custom_locations
+        max_distance: $max_distance
+        notification_types: $notification_types
+        use_live_location: $use_live_location
+        sound_settings: $sound_settings
+        user_id: $user_id
+      }
+    ) {
+      affected_rows
+    }
+  }
+`;
+export const GetShopperNotifiicaionSetingsDocument = gql`
+  query GetShopperNotifiicaionSetings($user_id: uuid = "") {
+    shopper_notification_settings(where: { user_id: { _eq: $user_id } }) {
+      created_at
+      custom_locations
+      id
+      max_distance
+      notification_types
+      updated_at
+      user_id
+      use_live_location
+      sound_settings
+    }
+  }
+`;
 export const GetShopperAvailabilityDocument = gql`
   query GetShopperAvailability {
     Shopper_Availability {
@@ -13025,6 +17688,8 @@ export const GetShopsDocument = gql`
       created_at
       updated_at
       is_active
+      logo
+      phone
     }
   }
 `;
@@ -13081,6 +17746,82 @@ export const AddItemsToCartDocument = gql`
     }
   }
 `;
+export const AddReelCommentDocument = gql`
+  mutation addReelComment(
+    $likes: String = ""
+    $reel_id: uuid = ""
+    $text: String = ""
+    $user_id: uuid = ""
+  ) {
+    insert_Reels_comments(
+      objects: {
+        isLiked: false
+        likes: $likes
+        reel_id: $reel_id
+        text: $text
+        user_id: $user_id
+      }
+    ) {
+      affected_rows
+    }
+  }
+`;
+export const GetCommentsDocument = gql`
+  query GetComments {
+    Reels_comments {
+      user_id
+      text
+      reel_id
+      likes
+      isLiked
+      id
+      created_on
+      User {
+        email
+        gender
+        name
+        phone
+        profile_picture
+      }
+      Reel {
+        category
+        isLiked
+        likes
+        restaurant_id
+        title
+        id
+      }
+    }
+  }
+`;
+export const GetCommentsWhereReelIdDocument = gql`
+  query GetCommentsWhereReelID($reel_id: uuid = "") {
+    Reels_comments(where: { reel_id: { _eq: $reel_id } }) {
+      user_id
+      text
+      reel_id
+      likes
+      isLiked
+      id
+      created_on
+      User {
+        email
+        gender
+        name
+        phone
+        profile_picture
+      }
+      Reel {
+        category
+        isLiked
+        likes
+        restaurant_id
+        title
+        id
+      }
+    }
+  }
+`;
 export const GetPaymentMethodDocument = gql`
   query getPaymentMethod {
     Payment_Methods {
@@ -13100,31 +17841,65 @@ export const GetPaymentMethodDocument = gql`
 export const GetRevenueDocument = gql`
   query getRevenue {
     Revenue {
-      amount
-      created_at
-      id
-      order_id
       type
+      shopper_id
+      shop_id
+      products
+      order_id
+      id
+      created_at
+      commission_percentage
+      amount
       Order {
-        OrderID
-        combined_order_id
-        created_at
-        delivery_address_id
-        delivery_fee
-        delivery_notes
-        delivery_photo_url
-        delivery_time
-        discount
-        found
-        total
+        user_id
+        voucher_code
         updated_at
+        total
         status
         shopper_id
         shop_id
         service_fee
+        discount
+        found
+        delivery_notes
+        delivery_photo_url
+        delivery_time
+        created_at
+        delivery_address_id
+        delivery_fee
+        combined_order_id
+      }
+      Shop {
+        logo
+        longitude
+        name
+        operating_hours
+        updated_at
+        category_id
+        created_at
+        description
         id
+        image
+        is_active
+        latitude
+        address
+      }
+      shopper {
+        Employment_id
+        address
+        active
+        created_at
+        background_check_completed
+        full_name
+        driving_license
+        id
+        phone_number
         user_id
-        voucher_code
+        updated_at
+        status
+        profile_photo
+        onboarding_step
+        national_id
       }
     }
   }
@@ -13181,6 +17956,9 @@ export const GetSystemConfigurationDocument = gql`
       unitsSurcharge
       extraUnits
       cappedDistanceFee
+      distanceSurcharge
+      deliveryCommissionPercentage
+      productCommissionPercentage
     }
   }
 `;
@@ -13227,6 +18005,69 @@ export const CheckOrderRatingDocument = gql`
   query CheckOrderRating($orderId: uuid!) {
     Ratings(where: { order_id: { _eq: $orderId } }) {
       id
+    }
+  }
+`;
+export const GetReelsLikesDocument = gql`
+  query GetReelsLikes($reel_id: uuid = "") {
+    reel_likes(where: { reel_id: { _eq: $reel_id } }) {
+      created_at
+      id
+      reel_id
+      user_id
+    }
+  }
+`;
+export const GetReelOrdersDocument = gql`
+  query getReelOrders {
+    reel_orders {
+      OrderID
+      combined_order_id
+      created_at
+      delivery_address_id
+      delivery_fee
+      delivery_note
+      delivery_photo_url
+      delivery_time
+      discount
+      found
+      id
+      reel_id
+      service_fee
+      shopper_id
+      status
+      total
+      updated_at
+      user_id
+      voucher_code
+      Reel {
+        Price
+        Product
+        category
+        created_on
+        delivery_time
+        description
+        id
+        isLiked
+        likes
+        restaurant_id
+        title
+        type
+        user_id
+        video_url
+        Restaurant {
+          created_at
+          email
+          id
+          lat
+          location
+          long
+          name
+          phone
+          profile
+          verified
+        }
+      }
     }
   }
 `;
@@ -13316,6 +18157,74 @@ export const InsertSystemLogDocument = gql`
       component
       details
       time
+    }
+  }
+`;
+export const ClearSystemLogsDocument = gql`
+  mutation clearSystemLogs {
+    delete_System_Logs(where: {}) {
+      affected_rows
+    }
+  }
+`;
+export const UpdateShopperTelegramIdDocument = gql`
+  mutation UpdateShopperTelegramId($shopper_id: uuid!, $telegram_id: String!) {
+    update_shoppers_by_pk(
+      pk_columns: { id: $shopper_id }
+      _set: { telegram_id: $telegram_id }
+    ) {
+      id
+      telegram_id
+      full_name
+      status
+      active
+    }
+  }
+`;
+export const UpdateShopperStatusDocument = gql`
+  mutation UpdateShopperStatus($shopper_id: uuid!, $status: String!) {
+    update_shoppers_by_pk(
+      pk_columns: { id: $shopper_id }
+      _set: { status: $status }
+    ) {
+      id
+      status
+      full_name
+      telegram_id
+    }
+  }
+`;
+export const GetShopperByTelegramIdDocument = gql`
+  query GetShopperByTelegramId($telegram_id: String!) {
+    shoppers(where: { telegram_id: { _eq: $telegram_id } }) {
+      id
+      full_name
+      status
+      active
+      telegram_id
+      user_id
+      phone_number
+      address
+      transport_mode
+      created_at
+      updated_at
+    }
+  }
+`;
+export const GetShopperByUserIdDocument = gql`
+  query GetShopperByUserId($user_id: uuid!) {
+    shoppers(where: { user_id: { _eq: $user_id } }) {
+      id
+      full_name
+      status
+      active
+      telegram_id
+      user_id
+      phone_number
+      address
+      transport_mode
+      created_at
+      updated_at
     }
   }
 `;
@@ -13583,18 +18492,18 @@ export function getSdk(
         variables
       );
     },
-    GetInvoiceDetails(
-      variables?: GetInvoiceDetailsQueryVariables,
+    getInvoiceDetials(
+      variables?: GetInvoiceDetialsQueryVariables,
       requestHeaders?: GraphQLClientRequestHeaders
-    ): Promise<GetInvoiceDetailsQuery> {
+    ): Promise<GetInvoiceDetialsQuery> {
       return withWrapper(
         (wrappedRequestHeaders) =>
-          client.request<GetInvoiceDetailsQuery>(
-            GetInvoiceDetailsDocument,
+          client.request<GetInvoiceDetialsQuery>(
+            GetInvoiceDetialsDocument,
             variables,
             { ...requestHeaders, ...wrappedRequestHeaders }
           ),
-        "GetInvoiceDetails",
+        "getInvoiceDetials",
         "query",
         variables
       );
@@ -13692,6 +18601,100 @@ export function getSdk(
         variables
       );
     },
+    GetAllReels(
+      variables?: GetAllReelsQueryVariables,
+      requestHeaders?: GraphQLClientRequestHeaders
+    ): Promise<GetAllReelsQuery> {
+      return withWrapper(
+        (wrappedRequestHeaders) =>
+          client.request<GetAllReelsQuery>(GetAllReelsDocument, variables, {
+            ...requestHeaders,
+            ...wrappedRequestHeaders,
+          }),
+        "GetAllReels",
+        "query",
+        variables
+      );
+    },
+    AddReels(
+      variables?: AddReelsMutationVariables,
+      requestHeaders?: GraphQLClientRequestHeaders
+    ): Promise<AddReelsMutation> {
+      return withWrapper(
+        (wrappedRequestHeaders) =>
+          client.request<AddReelsMutation>(AddReelsDocument, variables, {
+            ...requestHeaders,
+            ...wrappedRequestHeaders,
+          }),
+        "AddReels",
+        "mutation",
+        variables
+      );
+    },
+    getRestaurants(
+      variables?: GetRestaurantsQueryVariables,
+      requestHeaders?: GraphQLClientRequestHeaders
+    ): Promise<GetRestaurantsQuery> {
+      return withWrapper(
+        (wrappedRequestHeaders) =>
+          client.request<GetRestaurantsQuery>(
+            GetRestaurantsDocument,
+            variables,
+            { ...requestHeaders, ...wrappedRequestHeaders }
+          ),
+        "getRestaurants",
+        "query",
+        variables
+      );
+    },
+    getShopperDetails(
+      variables?: GetShopperDetailsQueryVariables,
+      requestHeaders?: GraphQLClientRequestHeaders
+    ): Promise<GetShopperDetailsQuery> {
+      return withWrapper(
+        (wrappedRequestHeaders) =>
+          client.request<GetShopperDetailsQuery>(
+            GetShopperDetailsDocument,
+            variables,
+            { ...requestHeaders, ...wrappedRequestHeaders }
+          ),
+        "getShopperDetails",
+        "query",
+        variables
+      );
+    },
+    addShopperNotificationSetings(
+      variables?: AddShopperNotificationSetingsMutationVariables,
+      requestHeaders?: GraphQLClientRequestHeaders
+    ): Promise<AddShopperNotificationSetingsMutation> {
+      return withWrapper(
+        (wrappedRequestHeaders) =>
+          client.request<AddShopperNotificationSetingsMutation>(
+            AddShopperNotificationSetingsDocument,
+            variables,
+            { ...requestHeaders, ...wrappedRequestHeaders }
+          ),
+        "addShopperNotificationSetings",
+        "mutation",
+        variables
+      );
+    },
+    GetShopperNotifiicaionSetings(
+      variables?: GetShopperNotifiicaionSetingsQueryVariables,
+      requestHeaders?: GraphQLClientRequestHeaders
+    ): Promise<GetShopperNotifiicaionSetingsQuery> {
+      return withWrapper(
+        (wrappedRequestHeaders) =>
+          client.request<GetShopperNotifiicaionSetingsQuery>(
+            GetShopperNotifiicaionSetingsDocument,
+            variables,
+            { ...requestHeaders, ...wrappedRequestHeaders }
+          ),
+        "GetShopperNotifiicaionSetings",
+        "query",
+        variables
+      );
+    },
     GetShopperAvailability(
       variables?: GetShopperAvailabilityQueryVariables,
       requestHeaders?: GraphQLClientRequestHeaders
@@ -13766,6 +18769,53 @@ export function getSdk(
           ),
         "AddItemsToCart",
         "mutation",
+        variables
+      );
+    },
+    addReelComment(
+      variables?: AddReelCommentMutationVariables,
+      requestHeaders?: GraphQLClientRequestHeaders
+    ): Promise<AddReelCommentMutation> {
+      return withWrapper(
+        (wrappedRequestHeaders) =>
+          client.request<AddReelCommentMutation>(
+            AddReelCommentDocument,
+            variables,
+            { ...requestHeaders, ...wrappedRequestHeaders }
+          ),
+        "addReelComment",
+        "mutation",
+        variables
+      );
+    },
+    GetComments(
+      variables?: GetCommentsQueryVariables,
+      requestHeaders?: GraphQLClientRequestHeaders
+    ): Promise<GetCommentsQuery> {
+      return withWrapper(
+        (wrappedRequestHeaders) =>
+          client.request<GetCommentsQuery>(GetCommentsDocument, variables, {
+            ...requestHeaders,
+            ...wrappedRequestHeaders,
+          }),
+        "GetComments",
+        "query",
+        variables
+      );
+    },
+    GetCommentsWhereReelID(
+      variables?: GetCommentsWhereReelIdQueryVariables,
+      requestHeaders?: GraphQLClientRequestHeaders
+    ): Promise<GetCommentsWhereReelIdQuery> {
+      return withWrapper(
+        (wrappedRequestHeaders) =>
+          client.request<GetCommentsWhereReelIdQuery>(
+            GetCommentsWhereReelIdDocument,
+            variables,
+            { ...requestHeaders, ...wrappedRequestHeaders }
+          ),
+        "GetCommentsWhereReelID",
+        "query",
         variables
       );
     },
@@ -13879,6 +18929,36 @@ export function getSdk(
         variables
       );
     },
+    GetReelsLikes(
+      variables?: GetReelsLikesQueryVariables,
+      requestHeaders?: GraphQLClientRequestHeaders
+    ): Promise<GetReelsLikesQuery> {
+      return withWrapper(
+        (wrappedRequestHeaders) =>
+          client.request<GetReelsLikesQuery>(GetReelsLikesDocument, variables, {
+            ...requestHeaders,
+            ...wrappedRequestHeaders,
+          }),
+        "GetReelsLikes",
+        "query",
+        variables
+      );
+    },
+    getReelOrders(
+      variables?: GetReelOrdersQueryVariables,
+      requestHeaders?: GraphQLClientRequestHeaders
+    ): Promise<GetReelOrdersQuery> {
+      return withWrapper(
+        (wrappedRequestHeaders) =>
+          client.request<GetReelOrdersQuery>(GetReelOrdersDocument, variables, {
+            ...requestHeaders,
+            ...wrappedRequestHeaders,
+          }),
+        "getReelOrders",
+        "query",
+        variables
+      );
+    },
     getAllREfunds(
       variables?: GetAllREfundsQueryVariables,
       requestHeaders?: GraphQLClientRequestHeaders
@@ -13938,6 +19018,86 @@ export function getSdk(
           ),
         "insertSystemLog",
         "mutation",
+        variables
+      );
+    },
+    clearSystemLogs(
+      variables?: ClearSystemLogsMutationVariables,
+      requestHeaders?: GraphQLClientRequestHeaders
+    ): Promise<ClearSystemLogsMutation> {
+      return withWrapper(
+        (wrappedRequestHeaders) =>
+          client.request<ClearSystemLogsMutation>(
+            ClearSystemLogsDocument,
+            variables,
+            { ...requestHeaders, ...wrappedRequestHeaders }
+          ),
+        "clearSystemLogs",
+        "mutation",
+        variables
+      );
+    },
+    UpdateShopperTelegramId(
+      variables: UpdateShopperTelegramIdMutationVariables,
+      requestHeaders?: GraphQLClientRequestHeaders
+    ): Promise<UpdateShopperTelegramIdMutation> {
+      return withWrapper(
+        (wrappedRequestHeaders) =>
+          client.request<UpdateShopperTelegramIdMutation>(
+            UpdateShopperTelegramIdDocument,
+            variables,
+            { ...requestHeaders, ...wrappedRequestHeaders }
+          ),
+        "UpdateShopperTelegramId",
+        "mutation",
+        variables
+      );
+    },
+    UpdateShopperStatus(
+      variables: UpdateShopperStatusMutationVariables,
+      requestHeaders?: GraphQLClientRequestHeaders
+    ): Promise<UpdateShopperStatusMutation> {
+      return withWrapper(
+        (wrappedRequestHeaders) =>
+          client.request<UpdateShopperStatusMutation>(
+            UpdateShopperStatusDocument,
+            variables,
+            { ...requestHeaders, ...wrappedRequestHeaders }
+          ),
+        "UpdateShopperStatus",
+        "mutation",
+        variables
+      );
+    },
+    GetShopperByTelegramId(
+      variables: GetShopperByTelegramIdQueryVariables,
+      requestHeaders?: GraphQLClientRequestHeaders
+    ): Promise<GetShopperByTelegramIdQuery> {
+      return withWrapper(
+        (wrappedRequestHeaders) =>
+          client.request<GetShopperByTelegramIdQuery>(
+            GetShopperByTelegramIdDocument,
+            variables,
+            { ...requestHeaders, ...wrappedRequestHeaders }
+          ),
+        "GetShopperByTelegramId",
+        "query",
+        variables
+      );
+    },
+    GetShopperByUserId(
+      variables: GetShopperByUserIdQueryVariables,
+      requestHeaders?: GraphQLClientRequestHeaders
+    ): Promise<GetShopperByUserIdQuery> {
+      return withWrapper(
+        (wrappedRequestHeaders) =>
+          client.request<GetShopperByUserIdQuery>(
+            GetShopperByUserIdDocument,
+            variables,
+            { ...requestHeaders, ...wrappedRequestHeaders }
+          ),
+        "GetShopperByUserId",
+        "query",
         variables
       );
     },

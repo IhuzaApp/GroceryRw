@@ -15,7 +15,7 @@ export default function CurrentOrdersPage() {
     try {
       const userId = session?.user?.id;
       const res = await fetch(
-        `/api/queries/orders${userId ? `?user_id=${userId}` : ""}`
+        `/api/queries/all-orders${userId ? `?user_id=${userId}` : ""}`
       );
       const data = await res.json();
       setOrders(data.orders || []);

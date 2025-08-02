@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { Button, Modal, Radio } from "rsuite";
-import { formatRWF } from "../../../utils/formatCurrency";
+import { formatCurrencySync } from "../../../utils/formatCurrency";
 
 interface PaymentMethod {
   id: string;
@@ -29,12 +29,7 @@ export default function PaymentMethodSelector({
   const [loading, setLoading] = useState(false);
   const [refundBalance, setRefundBalance] = useState(0);
 
-  useEffect(() => {
-    fetchPaymentMethods();
-    fetchRefundBalance();
-  }, []);
-
-  const fetchPaymentMethods = async () => {
+  const fetchPaymentMethods = useCallback(async () => {
     try {
       const response = await fetch("/api/queries/payment-methods");
       const data = await response.json();
@@ -56,9 +51,9 @@ export default function PaymentMethodSelector({
     } catch (error) {
       console.error("Error fetching payment methods:", error);
     }
-  };
+  }, [onSelect]);
 
-  const fetchRefundBalance = async () => {
+  const fetchRefundBalance = useCallback(async () => {
     try {
       const response = await fetch("/api/queries/refunds");
       const data = await response.json();
@@ -66,7 +61,12 @@ export default function PaymentMethodSelector({
     } catch (error) {
       console.error("Error fetching refund balance:", error);
     }
-  };
+  }, []);
+
+  useEffect(() => {
+    fetchPaymentMethods();
+    fetchRefundBalance();
+  }, [fetchPaymentMethods, fetchRefundBalance]);
 
   const handleOpen = () => setShow(true);
   const handleClose = () => setShow(false);
@@ -127,7 +127,7 @@ export default function PaymentMethodSelector({
                 <div className="ml-2">
                   <div className="font-medium">Use Refund Balance</div>
                   <div className="text-sm text-gray-600">
-                    Available: {formatRWF(refundBalance)}
+                    Available: {formatCurrencySync(refundBalance)}
                     {!canUseRefund && (
                       <span className="ml-2 text-red-500">
                         (Insufficient balance)

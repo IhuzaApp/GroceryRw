@@ -92,16 +92,20 @@ export default function ChatPage() {
         if (data.order) {
           setOrder(data.order);
 
-          // Set customer data
-          setCustomerData({
-            id: data.order.user_id,
-            name: data.order.user_name || "Customer",
-            avatar: "/placeholder.svg?height=80&width=80",
+          // Set customer data - user data is in data.order.user object
+          const customerDataToSet = {
+            id: data.order.user?.id,
+            name: data.order.user?.name || "Customer",
+            avatar:
+              data.order.user?.profile_picture ||
+              "/placeholder.svg?height=80&width=80",
             lastSeen: "Online now",
-          });
+          };
+
+          setCustomerData(customerDataToSet);
 
           // Get or create conversation
-          await getOrCreateConversation(data.order.id, data.order.user_id);
+          await getOrCreateConversation(data.order.id, customerDataToSet.id);
         }
       } catch (error) {
         console.error("Error fetching order details:", error);
@@ -224,9 +228,14 @@ export default function ChatPage() {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   };
 
-  const handleSendMessage = async () => {
-    if (!message.trim() || !user?.id || !conversationId || !customerData?.id)
+  const handleSendMessage = async (e?: React.FormEvent) => {
+    if (e) {
+      e.preventDefault();
+    }
+
+    if (!message.trim() || !user?.id || !conversationId || !customerData?.id) {
       return;
+    }
 
     try {
       setIsSending(true);
@@ -383,12 +392,109 @@ export default function ChatPage() {
         }`}
       >
         {isLoading ? (
-          <div
-            className={`flex h-[calc(100vh-200px)] items-center justify-center ${
-              theme === "dark" ? "text-gray-300" : "text-gray-700"
-            }`}
-          >
-            <Loader content="Loading chat..." />
+          <div className="flex h-screen flex-col bg-white pb-20 dark:bg-gray-900">
+            {/* Professional Header */}
+            <div className="flex items-center justify-between border-b border-gray-200 bg-white px-4 py-3 shadow-sm dark:border-gray-700 dark:bg-gray-800">
+              <div className="flex items-center space-x-3">
+                <Link href="/Plasa" className="flex items-center">
+                  <button className="rounded-full p-2 text-gray-600 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-700">
+                    <svg
+                      className="h-5 w-5"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M15 19l-7-7 7-7"
+                      />
+                    </svg>
+                  </button>
+                </Link>
+                <div className="flex items-center space-x-3">
+                  <div className="relative">
+                    <div className="h-10 w-10 animate-pulse rounded-full bg-gray-200 dark:bg-gray-600"></div>
+                  </div>
+                  <div>
+                    <div className="mb-1 h-5 w-32 animate-pulse rounded bg-gray-200 dark:bg-gray-600"></div>
+                    <div className="h-4 w-24 animate-pulse rounded bg-gray-200 dark:bg-gray-600"></div>
+                  </div>
+                </div>
+              </div>
+              <div className="h-8 w-8 animate-pulse rounded-full bg-gray-200 dark:bg-gray-600"></div>
+            </div>
+
+            {/* Messages Container */}
+            <div className="flex-1 overflow-y-auto bg-gray-50 px-4 py-4 dark:bg-gray-900">
+              <div className="flex h-full items-center justify-center">
+                <div className="text-center">
+                  <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-gray-100 dark:bg-gray-800">
+                    <svg
+                      className="h-8 w-8 text-gray-400"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"
+                      />
+                    </svg>
+                  </div>
+                  <h3 className="text-lg font-medium text-gray-900 dark:text-white">
+                    Loading chat...
+                  </h3>
+                  <p className="text-gray-500 dark:text-gray-400">
+                    Please wait while we load the conversation
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            {/* Professional Message Input */}
+            <div className="border-t border-gray-200 bg-white px-4 py-3 dark:border-gray-700 dark:bg-gray-800">
+              <div className="flex items-end space-x-3">
+                <div className="flex-shrink-0 rounded-full p-2 text-gray-300 dark:text-gray-600">
+                  <svg
+                    className="h-5 w-5"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13"
+                    />
+                  </svg>
+                </div>
+                <div className="flex-1">
+                  <div className="w-full rounded-full border border-gray-200 bg-gray-100 px-4 py-3 text-sm dark:border-gray-600 dark:bg-gray-700">
+                    <div className="h-4 w-32 animate-pulse rounded bg-gray-200 dark:bg-gray-600"></div>
+                  </div>
+                </div>
+                <div className="flex-shrink-0 rounded-full bg-gray-300 p-3 text-gray-400 dark:bg-gray-600">
+                  <svg
+                    className="h-4 w-4"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"
+                    />
+                  </svg>
+                </div>
+              </div>
+            </div>
           </div>
         ) : !customerData ? (
           <div className="mx-auto max-w-2xl">
@@ -422,163 +528,242 @@ export default function ChatPage() {
             </div>
           </div>
         ) : (
-          <div className="mx-auto max-w-4xl p-4">
-            {/* Chat Header */}
-            <div
-              className={`mb-4 rounded-lg p-4 shadow-sm ${
-                theme === "dark"
-                  ? "bg-gray-800 text-gray-100"
-                  : "bg-white text-gray-900"
-              }`}
-            >
-              <div className="flex items-center justify-between">
-                <div className="flex items-center space-x-4">
-                  <Avatar
-                    circle
-                    src={customerData?.avatar || "/placeholder.svg"}
-                    alt={customerData?.name || "Customer"}
-                  />
-                  <div>
-                    <h2
-                      className={`text-lg font-semibold ${
-                        theme === "dark" ? "text-gray-100" : "text-gray-900"
-                      }`}
+          <div className="flex h-screen flex-col bg-white pb-20 dark:bg-gray-900">
+            {/* Professional Header */}
+            <div className="flex items-center justify-between border-b border-gray-200 bg-white px-4 py-3 shadow-sm dark:border-gray-700 dark:bg-gray-800">
+              <div className="flex items-center space-x-3">
+                <Link href="/Plasa" className="flex items-center">
+                  <button className="rounded-full p-2 text-gray-600 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-700">
+                    <svg
+                      className="h-5 w-5"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
                     >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M15 19l-7-7 7-7"
+                      />
+                    </svg>
+                  </button>
+                </Link>
+                <div className="flex items-center space-x-3">
+                  <div className="relative">
+                    <img
+                      src={customerData?.avatar || "/placeholder.svg"}
+                      alt={customerData?.name || "Customer"}
+                      className="h-10 w-10 rounded-full border-2 border-gray-200 object-cover dark:border-gray-600"
+                    />
+                    <div className="absolute -bottom-1 -right-1 h-3 w-3 rounded-full border-2 border-white bg-green-500 dark:border-gray-800"></div>
+                  </div>
+                  <div>
+                    <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
                       {customerData?.name || "Customer"}
                     </h2>
-                    <p
-                      className={`text-sm ${
-                        theme === "dark" ? "text-gray-400" : "text-gray-600"
-                      }`}
-                    >
-                      Order #{formatOrderID(orderId)}
+                    <p className="text-sm text-gray-500 dark:text-gray-400">
+                      {order?.address?.street && order?.address?.city
+                        ? `${order.address.street}, ${order.address.city}`
+                        : "Address not available"}
                     </p>
                   </div>
                 </div>
-                <Link href={`/Plasa/orders/${orderId}`}>
-                  <Button
-                    appearance="ghost"
-                    className={theme === "dark" ? "rs-btn-dark" : ""}
-                  >
-                    View Order
-                  </Button>
-                </Link>
               </div>
+              <Link href={`/Plasa/orders/${orderId}`}>
+                <button className="rounded-full p-2 text-gray-600 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-700">
+                  <svg
+                    className="h-5 w-5"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"
+                    />
+                  </svg>
+                </button>
+              </Link>
             </div>
 
             {/* Messages Container */}
-            <div
-              className={`mb-4 h-[calc(100vh-300px)] overflow-y-auto rounded-lg p-4 shadow-sm ${
-                theme === "dark"
-                  ? "bg-gray-800 text-gray-100"
-                  : "bg-white text-gray-900"
-              }`}
-            >
-              {messages.map((msg, index) => (
-                <div
-                  key={msg.id}
-                  className={`mb-4 flex ${
-                    msg.senderType === "shopper"
-                      ? "justify-end"
-                      : "justify-start"
-                  }`}
-                >
-                  <div
-                    className={`max-w-[70%] rounded-lg p-3 ${
-                      msg.senderType === "shopper"
-                        ? theme === "dark"
-                          ? "bg-green-600 text-white"
-                          : "bg-green-500 text-white"
-                        : theme === "dark"
-                        ? "bg-gray-700 text-gray-100"
-                        : "bg-gray-100 text-gray-900"
-                    }`}
-                  >
-                    {msg.image && (
-                      <img
-                        src={msg.image}
-                        alt="Message attachment"
-                        className="mb-2 max-h-48 w-auto rounded-lg"
-                      />
-                    )}
-                    <p>{msg.text || msg.message}</p>
-                    <p
-                      className={`mt-1 text-right text-xs ${
-                        msg.senderType === "shopper"
-                          ? "text-green-100"
-                          : theme === "dark"
-                          ? "text-gray-400"
-                          : "text-gray-500"
-                      }`}
-                    >
-                      {formatMessageTime(msg.timestamp)}
+            <div className="flex-1 overflow-y-auto bg-gray-50 px-4 py-4 dark:bg-gray-900">
+              {messages.length === 0 ? (
+                <div className="flex h-full items-center justify-center">
+                  <div className="text-center">
+                    <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-gray-100 dark:bg-gray-800">
+                      <svg
+                        className="h-8 w-8 text-gray-400"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"
+                        />
+                      </svg>
+                    </div>
+                    <h3 className="text-lg font-medium text-gray-900 dark:text-white">
+                      No messages yet
+                    </h3>
+                    <p className="text-gray-500 dark:text-gray-400">
+                      Start the conversation with your customer
                     </p>
                   </div>
                 </div>
-              ))}
-              <div ref={messagesEndRef} />
+              ) : (
+                <div className="space-y-4">
+                  {messages.map((msg, index) => (
+                    <div
+                      key={msg.id}
+                      className={`flex ${
+                        msg.senderType === "shopper"
+                          ? "justify-end"
+                          : "justify-start"
+                      }`}
+                    >
+                      <div className="max-w-[75%]">
+                        {msg.senderType !== "shopper" && (
+                          <div className="mb-1 flex items-center space-x-2">
+                            <span className="text-xs font-medium text-gray-600 dark:text-gray-400">
+                              {customerData?.name || "Customer"}
+                            </span>
+                            <span className="text-xs text-gray-400 dark:text-gray-500">
+                              {formatMessageTime(msg.timestamp)}
+                            </span>
+                          </div>
+                        )}
+                        <div
+                          className={`rounded-2xl px-4 py-3 shadow-sm ${
+                            msg.senderType === "shopper"
+                              ? "bg-green-500 text-white"
+                              : "bg-white text-gray-900 dark:bg-gray-800 dark:text-white"
+                          }`}
+                        >
+                          {msg.image && (
+                            <div className="mb-2">
+                              <img
+                                src={msg.image}
+                                alt="Message attachment"
+                                className="max-h-48 w-auto rounded-lg"
+                              />
+                            </div>
+                          )}
+                          <p className="text-sm leading-relaxed">
+                            {msg.text || msg.message}
+                          </p>
+                          {msg.senderType === "shopper" && (
+                            <div className="mt-1 flex items-center justify-end space-x-1">
+                              <span className="text-xs text-green-100">
+                                {formatMessageTime(msg.timestamp)}
+                              </span>
+                              <svg
+                                className="h-3 w-3 text-green-100"
+                                fill="currentColor"
+                                viewBox="0 0 20 20"
+                              >
+                                <path
+                                  fillRule="evenodd"
+                                  d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                                  clipRule="evenodd"
+                                />
+                              </svg>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                  <div ref={messagesEndRef} />
+                </div>
+              )}
             </div>
 
-            {/* Message Input */}
-            <div
-              className={`rounded-lg p-4 shadow-sm ${
-                theme === "dark" ? "bg-gray-800" : "bg-white"
-              }`}
-            >
-              <div className="flex items-center space-x-2">
+            {/* Professional Message Input */}
+            <div className="border-t border-gray-200 bg-white px-4 py-3 dark:border-gray-700 dark:bg-gray-800">
+              <form
+                onSubmit={handleSendMessage}
+                className="flex items-end space-x-3"
+              >
                 <button
+                  type="button"
                   onClick={handleAttachmentClick}
-                  className={`rounded-full p-2 transition-colors ${
-                    theme === "dark" ? "hover:bg-gray-700" : "hover:bg-gray-100"
-                  }`}
+                  className="flex-shrink-0 rounded-full p-2 text-gray-500 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-gray-700"
                 >
                   <svg
-                    viewBox="0 0 24 24"
+                    className="h-5 w-5"
                     fill="none"
                     stroke="currentColor"
-                    strokeWidth="2"
-                    className={`h-6 w-6 ${
-                      theme === "dark" ? "text-gray-400" : "text-gray-600"
-                    }`}
+                    viewBox="0 0 24 24"
                   >
-                    <path d="M21.44 11.05l-9.19 9.19a6 6 0 01-8.49-8.49l9.19-9.19a4 4 0 015.66 5.66l-9.2 9.19a2 2 0 01-2.83-2.83l8.49-8.48" />
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13"
+                    />
                   </svg>
                 </button>
-                <input
-                  type="text"
-                  value={message}
-                  onChange={(e) => setMessage(e.target.value)}
-                  onKeyPress={handleKeyPress}
-                  placeholder="Type your message..."
-                  className={`flex-1 rounded-lg border px-4 py-2 ${
-                    theme === "dark"
-                      ? "border-gray-700 bg-gray-700 text-gray-100 placeholder-gray-400"
-                      : "border-gray-200 bg-gray-50 text-gray-900 placeholder-gray-500"
-                  }`}
-                />
+                <div className="flex-1">
+                  <input
+                    type="text"
+                    value={message}
+                    onChange={(e) => setMessage(e.target.value)}
+                    onKeyPress={handleKeyPress}
+                    placeholder="Type your message..."
+                    className="w-full rounded-full border border-gray-300 bg-gray-50 px-4 py-3 text-sm focus:border-green-500 focus:bg-white focus:outline-none focus:ring-2 focus:ring-green-500/20 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:placeholder-gray-400 dark:focus:border-green-400 dark:focus:bg-gray-600"
+                  />
+                </div>
                 <button
-                  onClick={handleSendMessage}
+                  type="submit"
                   disabled={isSending || !message.trim()}
-                  className={`rounded-lg px-6 py-2 font-medium ${
-                    isSending || !message.trim()
-                      ? theme === "dark"
-                        ? "cursor-not-allowed bg-gray-700 text-gray-500"
-                        : "cursor-not-allowed bg-gray-100 text-gray-400"
-                      : theme === "dark"
-                      ? "bg-green-600 text-white hover:bg-green-700"
-                      : "bg-green-500 text-white hover:bg-green-600"
-                  }`}
+                  className="flex-shrink-0 rounded-full bg-green-500 p-3 text-white shadow-lg transition-all duration-200 hover:bg-green-600 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 dark:focus:ring-offset-gray-800"
                 >
                   {isSending ? (
                     <div className="flex items-center">
-                      <span className="mr-2 inline-block h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent"></span>
-                      Sending...
+                      <svg
+                        className="h-4 w-4 animate-spin"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                      >
+                        <circle
+                          className="opacity-25"
+                          cx="12"
+                          cy="12"
+                          r="10"
+                          stroke="currentColor"
+                          strokeWidth="4"
+                        ></circle>
+                        <path
+                          className="opacity-75"
+                          fill="currentColor"
+                          d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                        ></path>
+                      </svg>
                     </div>
                   ) : (
-                    "Send"
+                    <svg
+                      className="h-4 w-4"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"
+                      />
+                    </svg>
                   )}
                 </button>
-              </div>
+              </form>
               <input
                 type="file"
                 ref={fileInputRef}

@@ -9,6 +9,7 @@ import {
   Divider,
 } from "rsuite";
 import { useTheme } from "../../context/ThemeContext";
+import { formatCurrencySync } from "../../utils/formatCurrency";
 
 interface PaymentModalProps {
   open: boolean;
@@ -38,7 +39,7 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
   const { theme } = useTheme();
 
   const formattedCurrency = (amount: number) => {
-    return `RWF ${amount.toLocaleString()}`;
+    return formatCurrencySync(amount);
   };
 
   return (

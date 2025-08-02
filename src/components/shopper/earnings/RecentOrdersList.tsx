@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { Button, Loader, Pagination } from "rsuite";
 import { useTheme } from "../../../context/ThemeContext";
+import { formatCurrencySync } from "../../../utils/formatCurrency";
 
 interface Order {
   id: string;
@@ -43,11 +44,7 @@ const RecentOrdersList: React.FC<RecentOrdersListProps> = ({
 
   // Format currency in RWF
   const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat("en-RW", {
-      style: "currency",
-      currency: "RWF",
-      maximumFractionDigits: 0,
-    }).format(amount);
+    return formatCurrencySync(amount);
   };
 
   // Handle pagination change

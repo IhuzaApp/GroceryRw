@@ -7,6 +7,7 @@ import "rsuite/dist/rsuite.min.css";
 import { useAuth } from "../../context/AuthContext";
 import { useTheme } from "../../context/ThemeContext";
 import { logger } from "../../utils/logger";
+import { formatCurrencySync } from "../../utils/formatCurrency";
 
 // Define interfaces for order data
 interface Order {
@@ -15,6 +16,7 @@ interface Order {
   status: string;
   createdAt?: string;
   created_at?: string;
+  deliveryTime?: string;
   shopName?: string;
   shopAddress?: string;
   shopLat?: number;
@@ -36,12 +38,42 @@ interface Order {
   unitsCount?: number;
   service_fee?: string;
   delivery_fee?: string;
+  // Add order type and reel-specific fields
+  orderType?: "regular" | "reel";
+  reel?: {
+    id: string;
+    title: string;
+    description: string;
+    Price: string;
+    Product: string;
+    type: string;
+    video_url: string;
+  };
+  quantity?: number;
+  deliveryNote?: string | null;
+  customerPhone?: string;
 }
 
 interface ActiveBatchesProps {
   initialOrders?: Order[];
   initialError?: string | null;
 }
+
+// Calculate countdown for delivery time
+const getDeliveryCountdown = (deliveryTime: string, currentTime: Date) => {
+  const deliveryDate = new Date(deliveryTime);
+  const timeDiff = deliveryDate.getTime() - currentTime.getTime();
+
+  if (timeDiff <= 0) {
+    return { isOverdue: true, minutes: 0, hours: 0, totalMinutes: 0 };
+  }
+
+  const totalMinutes = Math.ceil(timeDiff / (1000 * 60));
+  const hours = Math.floor(totalMinutes / 60);
+  const minutes = totalMinutes % 60;
+
+  return { isOverdue: false, minutes, hours, totalMinutes };
+};
 
 export default function ActiveBatches({
   initialOrders = [],
@@ -55,6 +87,7 @@ export default function ActiveBatches({
   const [fetchAttempted, setFetchAttempted] = useState(false);
   const fetchedRef = useRef(false);
   const { theme } = useTheme();
+  const [currentTime, setCurrentTime] = useState(new Date());
 
   useEffect(() => {
     const checkIfMobile = () => {
@@ -67,6 +100,15 @@ export default function ActiveBatches({
     return () => {
       window.removeEventListener("resize", checkIfMobile);
     };
+  }, []);
+
+  // Update current time every second for real-time countdown
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setCurrentTime(new Date());
+    }, 1000); // Update every second
+
+    return () => clearInterval(timer);
   }, []);
 
   // Only fetch orders client-side if we don't have them from server-side
@@ -150,6 +192,19 @@ export default function ActiveBatches({
     };
   }, [role, initialOrders.length]);
 
+  // Calculate countdown for delivery time
+  const getDeliveryCountdown = (deliveryTime: string) => {
+    const deliveryDate = new Date(deliveryTime);
+    const timeDiff = deliveryDate.getTime() - currentTime.getTime();
+
+    if (timeDiff <= 0) {
+      return { isOverdue: true, minutes: 0 };
+    }
+
+    const minutes = Math.ceil(timeDiff / (1000 * 60));
+    return { isOverdue: false, minutes };
+  };
+
   return (
     <div
       className={`min-h-screen ${
@@ -159,16 +214,16 @@ export default function ActiveBatches({
       } ${isMobile ? "pb-16" : ""}`}
     >
       {/* Main Content */}
-      <main className="max-w-1xl mx-auto p-4">
+      <main className="max-w-9xl mx-auto p-3 sm:p-6">
         {/* Page Title - Desktop Only */}
-        <div className="mb-6 flex items-center justify-between">
-          <h1
-            className={`text-2xl font-bold ${
+        <div className="mb-4 flex items-center justify-between">
+          <p
+            className={`text-xl font-bold sm:text-2xl ${
               theme === "dark" ? "text-gray-100" : "text-gray-900"
             }`}
           >
             Active Batches
-          </h1>
+          </p>
           <button
             className={`rounded-full p-2 transition-colors ${
               theme === "dark" ? "hover:bg-gray-800" : "hover:bg-gray-200"
@@ -189,10 +244,10 @@ export default function ActiveBatches({
 
         {/* Description about what orders are shown */}
         <div
-          className={`mb-4 rounded-md p-3 text-sm ${
+          className={`text-md mb-4 rounded-lg p-3 ${
             theme === "dark"
-              ? "bg-blue-900/20 text-blue-300"
-              : "bg-blue-50 text-blue-700"
+              ? "border border-green-800 bg-green-900/20 text-green-300"
+              : "border border-green-200 bg-green-50 text-green-700"
           }`}
         >
           <p>
@@ -207,37 +262,37 @@ export default function ActiveBatches({
         {/* Display a warning when user doesn't have the shopper role */}
         {!isLoading && role !== "shopper" && (
           <div
-            className={`mb-6 rounded-lg border p-4 ${
+            className={`mb-4 rounded-lg border p-4 ${
               theme === "dark"
-                ? "border-yellow-500/20 bg-yellow-900/20"
-                : "border-yellow-200 bg-yellow-50"
+                ? "border-amber-500/20 bg-amber-900/20"
+                : "border-amber-200 bg-amber-50"
             }`}
           >
-            <h3
-              className={`font-semibold ${
-                theme === "dark" ? "text-yellow-300" : "text-yellow-800"
+            <p
+              className={`text-base font-bold ${
+                theme === "dark" ? "text-amber-300" : "text-amber-800"
               }`}
             >
               Shopper Access Required
-            </h3>
+            </p>
             <p
-              className={`mt-1 ${
-                theme === "dark" ? "text-yellow-200" : "text-yellow-700"
+              className={`mt-1 text-sm ${
+                theme === "dark" ? "text-amber-200" : "text-amber-700"
               }`}
             >
               This page is only accessible to users with shopper privileges.
               Your current role is: <strong>{role}</strong>
             </p>
             <p
-              className={`mt-2 ${
-                theme === "dark" ? "text-yellow-200" : "text-yellow-700"
+              className={`mt-2 text-sm ${
+                theme === "dark" ? "text-amber-200" : "text-amber-700"
               }`}
             >
               If you believe you should have shopper access, please try:
             </p>
             <ul
-              className={`mt-1 list-inside list-disc ${
-                theme === "dark" ? "text-yellow-200" : "text-yellow-700"
+              className={`mt-1 list-inside list-disc text-sm ${
+                theme === "dark" ? "text-amber-200" : "text-amber-700"
               }`}
             >
               <li>Logging out and logging back in</li>
@@ -256,15 +311,15 @@ export default function ActiveBatches({
                 : "border-red-200 bg-red-50"
             }`}
           >
-            <h3
-              className={`font-semibold ${
+            <p
+              className={`text-base font-bold ${
                 theme === "dark" ? "text-red-300" : "text-red-800"
               }`}
             >
               There was a problem loading your batches
-            </h3>
+            </p>
             <p
-              className={`mt-1 ${
+              className={`mt-1 text-sm ${
                 theme === "dark" ? "text-red-200" : "text-red-600"
               }`}
             >
@@ -285,7 +340,7 @@ export default function ActiveBatches({
             </div>
             <button
               onClick={() => window.location.reload()}
-              className={`mt-3 rounded px-4 py-1.5 text-sm font-medium ${
+              className={`mt-3 rounded px-4 py-2 text-sm font-medium ${
                 theme === "dark"
                   ? "bg-red-500 text-white hover:bg-red-600"
                   : "bg-red-600 text-white hover:bg-red-700"
@@ -305,14 +360,18 @@ export default function ActiveBatches({
             <Loader content="Loading orders..." />
           </div>
         ) : activeOrders.length > 0 ? (
-          <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
+          <div className="grid grid-cols-1 gap-4 sm:gap-6 lg:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
             {activeOrders.map((order) => (
-              <ActiveOrderCard key={order.id} order={order} />
+              <ActiveOrderCard
+                key={order.id}
+                order={order}
+                currentTime={currentTime}
+              />
             ))}
           </div>
         ) : (
           <div
-            className={`rounded-lg border p-8 text-center ${
+            className={`rounded-xl border p-8 text-center ${
               theme === "dark"
                 ? "border-gray-700 bg-gray-800"
                 : "border-gray-200 bg-white"
@@ -335,15 +394,15 @@ export default function ActiveBatches({
                 <path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
               </svg>
             </div>
-            <h3
-              className={`mb-2 text-lg font-semibold ${
+            <p
+              className={`mb-2 text-lg font-bold sm:text-xl ${
                 theme === "dark" ? "text-gray-100" : "text-gray-900"
               }`}
             >
               No Active Orders
-            </h3>
+            </p>
             <p
-              className={`mb-4 ${
+              className={`mb-4 text-sm sm:text-base ${
                 theme === "dark" ? "text-gray-400" : "text-gray-600"
               }`}
             >
@@ -353,14 +412,14 @@ export default function ActiveBatches({
             </p>
             <div className="flex flex-col items-center justify-center gap-3 sm:flex-row">
               <Link href="/Plasa">
-                <button className="rounded-md bg-[#125C13] px-4 py-2 font-medium text-white transition-colors hover:bg-[#0A400B]">
+                <button className="rounded-lg bg-emerald-600 px-4 py-2 font-medium text-white transition-colors hover:bg-emerald-700">
                   Return to Dashboard
                 </button>
               </Link>
               {!fetchAttempted && !initialOrders.length && (
                 <button
                   onClick={() => window.location.reload()}
-                  className={`rounded-md border px-4 py-2 font-medium transition-colors ${
+                  className={`rounded-lg border px-4 py-2 font-medium transition-colors ${
                     theme === "dark"
                       ? "border-gray-600 text-gray-300 hover:bg-gray-700"
                       : "border-gray-300 text-gray-700 hover:bg-gray-100"
@@ -377,8 +436,15 @@ export default function ActiveBatches({
   );
 }
 
-function ActiveOrderCard({ order }: { order: Order }) {
+function ActiveOrderCard({
+  order,
+  currentTime,
+}: {
+  order: Order;
+  currentTime: Date;
+}) {
   const { theme } = useTheme();
+  const isReelOrder = order.orderType === "reel";
 
   const getStatusBadge = (status: string) => {
     switch (status) {
@@ -386,10 +452,10 @@ function ActiveOrderCard({ order }: { order: Order }) {
         return (
           <Badge
             content="Accepted"
-            className={`rounded bg-blue-100 px-2 py-1 text-xs font-medium ${
+            className={`rounded bg-emerald-900/20 px-2 py-1 text-xs font-medium ${
               theme === "dark"
-                ? "bg-blue-900/20 text-blue-300"
-                : "text-blue-800"
+                ? "bg-emerald-900/40 text-emerald-200"
+                : "text-emerald-800"
             }`}
           />
         );
@@ -443,39 +509,35 @@ function ActiveOrderCard({ order }: { order: Order }) {
   };
 
   const getNextActionButton = (status: string) => {
+    const buttonClass = isReelOrder
+      ? "rounded-lg bg-gradient-to-r from-indigo-600 to-purple-600 px-4 py-2 text-sm font-medium text-white transition-all duration-200 hover:from-indigo-700 hover:to-purple-700 shadow-lg"
+      : "rounded-lg bg-gradient-to-r from-emerald-600 to-green-600 px-4 py-2 text-sm font-medium text-white transition-all duration-200 hover:from-emerald-700 hover:to-green-700 shadow-lg";
+
     switch (status) {
       case "ACCEPTED":
         return (
           <Link href={`/Plasa/active-batches/batch/${order.id}`}>
-            <button className="rounded-md bg-[#125C13] px-4 py-2 font-medium text-white transition-colors hover:bg-[#0A400B]">
-              Start Shopping
-            </button>
+            <button className={buttonClass}>Start Shopping</button>
           </Link>
         );
       case "picked":
       case "shopping":
         return (
           <Link href={`/Plasa/active-batches/batch/${order.id}`}>
-            <button className="rounded-md bg-[#125C13] px-4 py-2 font-medium text-white transition-colors hover:bg-[#0A400B]">
-              View Details
-            </button>
+            <button className={buttonClass}>View Details</button>
           </Link>
         );
       case "at_customer":
       case "on_the_way":
         return (
           <Link href={`/Plasa/active-batches/batch/${order.id}`}>
-            <button className="rounded-md bg-[#125C13] px-4 py-2 font-medium text-white transition-colors hover:bg-[#0A400B]">
-              Confirm Delivery
-            </button>
+            <button className={buttonClass}>Confirm Delivery</button>
           </Link>
         );
       default:
         return (
           <Link href={`/Plasa/active-batches/batch/${order.id}`}>
-            <button className="rounded-md bg-[#125C13] px-4 py-2 font-medium text-white transition-colors hover:bg-[#0A400B]">
-              View Details
-            </button>
+            <button className={buttonClass}>View Details</button>
           </Link>
         );
     }
@@ -483,62 +545,94 @@ function ActiveOrderCard({ order }: { order: Order }) {
 
   return (
     <div
-      className={`mb-4 rounded-lg border p-4 shadow-sm transition-colors duration-200 ${
+      className={`rounded-xl border-2 p-4 transition-all duration-300 sm:p-6 ${
         theme === "dark"
-          ? "border-gray-700 bg-gray-800 text-gray-100"
-          : "border-gray-200 bg-white text-gray-900"
+          ? "border-gray-600 bg-gray-800 text-gray-100 shadow-md hover:border-gray-500 hover:shadow-lg"
+          : "border-gray-200 bg-white text-gray-900 shadow-md hover:border-gray-300 hover:shadow-lg"
       }`}
     >
+      {/* Quick Batch indicator */}
+      {isReelOrder && (
+        <div className="mb-3 rounded-lg bg-gradient-to-r from-indigo-600 to-purple-600 px-3 py-2 text-center text-xs font-bold text-white shadow-md">
+          Quick Batch
+        </div>
+      )}
+
       <div className="flex items-center justify-between">
         <div className="flex items-center space-x-3">
           <div
-            className={`rounded-full p-2 ${
-              theme === "dark" ? "bg-blue-900/20" : "bg-blue-50"
+            className={`rounded-full p-3 shadow-md ${
+              isReelOrder
+                ? theme === "dark"
+                  ? "bg-gradient-to-br from-indigo-500 to-purple-600"
+                  : "bg-gradient-to-br from-indigo-400 to-purple-500"
+                : "bg-gradient-to-br from-emerald-600 to-green-700"
             }`}
           >
             <svg
-              className={`h-6 w-6 ${
-                theme === "dark" ? "text-blue-400" : "text-blue-500"
-              }`}
+              className={`h-6 w-6 text-white`}
               fill="none"
               viewBox="0 0 24 24"
               stroke="currentColor"
             >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"
-              />
+              {isReelOrder ? (
+                // Video icon for Quick Batchs
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"
+                />
+              ) : (
+                // Clipboard icon for regular orders
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"
+                />
+              )}
             </svg>
           </div>
           <div>
-            <h3
-              className={`font-medium ${
+            <p
+              className={`text-base font-bold sm:text-lg ${
                 theme === "dark" ? "text-gray-100" : "text-gray-900"
               }`}
             >
-              Batch #{order.id.slice(0, 6).toUpperCase()}
-            </h3>
+              {isReelOrder ? "Quick Batch" : "Batch"} #
+              {order.id.slice(0, 6).toUpperCase()}
+            </p>
             <p
               className={`text-sm ${
                 theme === "dark" ? "text-gray-400" : "text-gray-500"
               }`}
             >
-              {order.items} items • ${order.estimatedEarnings}
+              {isReelOrder
+                ? `${order.quantity || 1} quantity • ${
+                    order.reel?.title || "Quick Batch"
+                  }`
+                : `${order.items} items`}{" "}
+              • {formatCurrencySync(order.estimatedEarnings || 0)}
             </p>
           </div>
         </div>
         <div className="text-right">
           <p
             className={`text-lg font-semibold ${
-              theme === "dark" ? "text-green-400" : "text-green-600"
+              isReelOrder
+                ? theme === "dark"
+                  ? "text-indigo-400"
+                  : "text-indigo-600"
+                : theme === "dark"
+                ? "text-emerald-400"
+                : "text-emerald-600"
             }`}
           >
-            ${order.estimatedEarnings}
+            {formatCurrencySync(order.estimatedEarnings || 0)}
           </p>
           <p
-            className={`text-sm ${
+            className={`text-xs ${
               theme === "dark" ? "text-gray-400" : "text-gray-500"
             }`}
           >
@@ -548,16 +642,18 @@ function ActiveOrderCard({ order }: { order: Order }) {
       </div>
 
       <div className="mt-4 space-y-2">
-        <div className={`flex items-center justify-between rounded-lg p-3`}>
+        <div
+          className={`flex items-center justify-between rounded-lg bg-slate-50 p-3 dark:bg-slate-700`}
+        >
           <div className="flex items-center space-x-3">
             <div
               className={`rounded-full p-2 ${
-                theme === "dark" ? "bg-gray-600" : "bg-white"
+                theme === "dark" ? "bg-slate-600" : "bg-white"
               }`}
             >
               <svg
-                className={`h-5 w-5 ${
-                  theme === "dark" ? "text-gray-300" : "text-gray-500"
+                className={`h-4 w-4 ${
+                  theme === "dark" ? "text-slate-300" : "text-slate-500"
                 }`}
                 fill="none"
                 viewBox="0 0 24 24"
@@ -577,29 +673,33 @@ function ActiveOrderCard({ order }: { order: Order }) {
                   theme === "dark" ? "text-gray-100" : "text-gray-900"
                 }`}
               >
-                Pickup Location
+                {isReelOrder ? "Pickup Location" : "Pickup Location"}
               </p>
               <p
-                className={`text-sm ${
+                className={`text-xs ${
                   theme === "dark" ? "text-gray-400" : "text-gray-500"
                 }`}
               >
-                {order.shopName}, {order.shopAddress}
+                {isReelOrder
+                  ? `From: ${order.customerName || "Reel Creator"}`
+                  : `${order.shopName}, ${order.shopAddress}`}
               </p>
             </div>
           </div>
         </div>
 
-        <div className={`flex items-center justify-between rounded-lg p-3`}>
+        <div
+          className={`flex items-center justify-between rounded-lg bg-slate-50 p-3 dark:bg-slate-700`}
+        >
           <div className="flex items-center space-x-3">
             <div
               className={`rounded-full p-2 ${
-                theme === "dark" ? "bg-gray-600" : "bg-white"
+                theme === "dark" ? "bg-slate-600" : "bg-white"
               }`}
             >
               <svg
-                className={`h-5 w-5 ${
-                  theme === "dark" ? "text-gray-300" : "text-gray-500"
+                className={`h-4 w-4 ${
+                  theme === "dark" ? "text-slate-300" : "text-slate-500"
                 }`}
                 fill="none"
                 viewBox="0 0 24 24"
@@ -614,9 +714,9 @@ function ActiveOrderCard({ order }: { order: Order }) {
               </svg>
             </div>
             <div>
-              <p className={`text-sm `}>Delivery Location</p>
+              <p className={`text-sm font-medium`}>Delivery Location</p>
               <p
-                className={`text-sm ${
+                className={`text-xs ${
                   theme === "dark" ? "text-gray-400" : "text-gray-500"
                 }`}
               >
@@ -625,14 +725,119 @@ function ActiveOrderCard({ order }: { order: Order }) {
             </div>
           </div>
         </div>
+
+        {/* Show delivery note for Quick Batchs */}
+        {isReelOrder && order.deliveryNote && (
+          <div
+            className={`flex items-center justify-between rounded-lg p-3 ${
+              theme === "dark" ? "bg-amber-900/20" : "bg-amber-50"
+            }`}
+          >
+            <div className="flex items-center space-x-3">
+              <div
+                className={`rounded-full p-2 ${
+                  theme === "dark" ? "bg-amber-600" : "bg-amber-100"
+                }`}
+              >
+                <svg
+                  className={`h-4 w-4 ${
+                    theme === "dark" ? "text-amber-300" : "text-amber-600"
+                  }`}
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                  />
+                </svg>
+              </div>
+              <div>
+                <p
+                  className={`text-sm font-medium ${
+                    theme === "dark" ? "text-amber-300" : "text-amber-800"
+                  }`}
+                >
+                  Delivery Note
+                </p>
+                <p
+                  className={`text-xs ${
+                    theme === "dark" ? "text-amber-200" : "text-amber-700"
+                  }`}
+                >
+                  {order.deliveryNote}
+                </p>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
 
-      <div className="flex items-center justify-between">
+      {/* Delivery Countdown */}
+      {order.deliveryTime && (
+        <div className="mt-3 flex items-center justify-center">
+          {(() => {
+            const countdown = getDeliveryCountdown(
+              order.deliveryTime,
+              currentTime
+            );
+            return (
+              <div
+                className={`flex items-center gap-2 rounded-lg px-3 py-2 ${
+                  countdown.isOverdue
+                    ? "border border-red-200 bg-red-50 dark:border-red-800 dark:bg-red-900/20"
+                    : countdown.minutes <= 30
+                    ? "border border-amber-200 bg-amber-50 dark:border-amber-800 dark:bg-amber-900/20"
+                    : "border border-slate-200 bg-slate-50 dark:border-slate-700 dark:bg-slate-800"
+                }`}
+              >
+                <svg
+                  className={`h-4 w-4 ${
+                    countdown.isOverdue
+                      ? "text-red-600 dark:text-red-400"
+                      : countdown.minutes <= 30
+                      ? "text-amber-600 dark:text-amber-400"
+                      : "text-slate-500 dark:text-slate-400"
+                  }`}
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <circle cx="12" cy="12" r="10" />
+                  <polyline points="12,6 12,12 16,14" />
+                </svg>
+                <span
+                  className={`text-sm font-medium ${
+                    countdown.isOverdue
+                      ? "text-red-800 dark:text-red-300"
+                      : countdown.totalMinutes <= 30
+                      ? "text-amber-800 dark:text-amber-300"
+                      : "text-slate-700 dark:text-slate-300"
+                  }`}
+                >
+                  {countdown.isOverdue
+                    ? "OVERDUE"
+                    : countdown.totalMinutes <= 30
+                    ? `${countdown.totalMinutes}m left`
+                    : countdown.hours > 0
+                    ? `${countdown.hours}h ${countdown.minutes}m left`
+                    : `${countdown.minutes}m left`}
+                </span>
+              </div>
+            );
+          })()}
+        </div>
+      )}
+
+      <div className="mt-4 flex items-center justify-between">
         <a
           href={`https://maps.google.com/?q=${order.customerLat},${order.customerLng}`}
           target="_blank"
           rel="noopener noreferrer"
-          className="flex items-center px-4 py-2 text-blue-500 hover:text-blue-200"
+          className="flex items-center px-3 py-2 text-sm font-medium text-sky-600 hover:text-sky-700 dark:text-sky-400 dark:hover:text-sky-300"
         >
           <svg
             viewBox="0 0 24 24"

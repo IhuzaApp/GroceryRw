@@ -1,5 +1,9 @@
 import React, { useState, useEffect } from "react";
 import { Panel, Button, InputNumber, Modal } from "rsuite";
+import {
+  formatCurrencySync,
+  getCurrencySymbol,
+} from "../../../utils/formatCurrency";
 
 interface Goal {
   goal: string;
@@ -71,7 +75,7 @@ const EarningsGoals: React.FC<EarningsGoalsProps> = ({
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat("en-RW", {
       style: "currency",
-      currency: "RWF",
+      currency: getCurrencySymbol(),
       maximumFractionDigits: 0, // RWF typically doesn't use decimal places
     }).format(amount);
   };
@@ -260,7 +264,7 @@ const EarningsGoals: React.FC<EarningsGoalsProps> = ({
             <div>
               <p className="mb-4">Set a new target for {editingGoal.goal}</p>
               <div className="flex items-center">
-                <span className="mr-2 text-lg">RWF</span>
+                <span className="mr-2 text-lg">{getCurrencySymbol()}</span>
                 <InputNumber
                   value={newTarget}
                   onChange={(value) => setNewTarget(Number(value))}

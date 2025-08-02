@@ -2,7 +2,7 @@ import Link from "next/link";
 import React, { useState, useEffect } from "react";
 import { Input, InputGroup, Modal } from "rsuite";
 import { useCart } from "../../../context/CartContext";
-import UserAddress from "../../userProfile/userAddress";
+import AddressManagementModal from "../../userProfile/AddressManagementModal";
 import Cookies from "js-cookie";
 import { useSession } from "next-auth/react";
 import { useTheme } from "../../../context/ThemeContext";
@@ -24,6 +24,9 @@ export default function HeaderLayout() {
     street: string;
     city: string;
     postal_code: string;
+    latitude?: string;
+    longitude?: string;
+    altitude?: string;
   } | null>(null);
   const [showAddressModal, setShowAddressModal] = useState<boolean>(false);
   const [unreadMessages, setUnreadMessages] = useState<number>(0);
@@ -33,7 +36,21 @@ export default function HeaderLayout() {
     const saved = Cookies.get("delivery_address");
     if (saved) {
       try {
-        setDefaultAddress(JSON.parse(saved));
+        const parsedAddress = JSON.parse(saved);
+        // If it's a nearby location (has lat/lng but no street), show "Current Location"
+        if (
+          parsedAddress.latitude &&
+          parsedAddress.longitude &&
+          !parsedAddress.street
+        ) {
+          setDefaultAddress({
+            ...parsedAddress,
+            street: "Current Location",
+            city: "GPS Coordinates",
+          });
+        } else {
+          setDefaultAddress(parsedAddress);
+        }
       } catch {}
     } else {
       // Fall back to default address from API
@@ -56,8 +73,33 @@ export default function HeaderLayout() {
       const updated = Cookies.get("delivery_address");
       if (updated) {
         try {
-          setDefaultAddress(JSON.parse(updated));
+          const parsedAddress = JSON.parse(updated);
+          // If it's a nearby location (has lat/lng but no street), show "Current Location"
+          if (
+            parsedAddress.latitude &&
+            parsedAddress.longitude &&
+            !parsedAddress.street
+          ) {
+            setDefaultAddress({
+              ...parsedAddress,
+              street: "Current Location",
+              city: "GPS Coordinates",
+            });
+          } else {
+            setDefaultAddress(parsedAddress);
+          }
         } catch {}
+      } else {
+        // If no cookie, try to fetch default address from API
+        fetch("/api/queries/addresses")
+          .then((res) => res.json())
+          .then((data) => {
+            const def = (data.addresses || []).find((a: any) => a.is_default);
+            setDefaultAddress(def || null);
+          })
+          .catch((err) =>
+            console.error("Error fetching addresses in header:", err)
+          );
       }
     };
     window.addEventListener("addressChanged", handleAddrChange);
@@ -115,7 +157,11 @@ export default function HeaderLayout() {
             <div>
               <h6 className="font-medium text-inherit">
                 {defaultAddress
-                  ? `${defaultAddress.street}, ${defaultAddress.city}`
+                  ? defaultAddress.street && defaultAddress.city
+                    ? `${defaultAddress.street}, ${defaultAddress.city}`
+                    : defaultAddress.latitude && defaultAddress.longitude
+                    ? "Current Location"
+                    : "No address set"
                   : "No address set"}
               </h6>
               <p className="text-xs text-gray-500 dark:text-gray-300">
@@ -280,121 +326,41 @@ export default function HeaderLayout() {
 
         {/* Mobile version */}
         <div className="flex items-center justify-between px-3 pt-2 md:hidden">
-          {/* Logo or Icon */}
-          <div className="flex h-9 w-9 items-center justify-center rounded-full bg-green-500">
-            <svg
-              viewBox="0 0 24 24"
-              className="h-5 w-5 text-white"
-              fill="currentColor"
-            >
-              <path d="..." />
-            </svg>
+          {/* Address Section - Mobile */}
+          <div className="flex flex-1 items-center gap-2">
+            <div className="flex h-8 w-8 items-center justify-center rounded-full bg-green-500">
+              <svg
+                viewBox="0 0 24 24"
+                className="h-4 w-4 text-white"
+                fill="currentColor"
+              >
+                <path
+                  fillRule="evenodd"
+                  d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z"
+                  clipRule="evenodd"
+                />
+              </svg>
+            </div>
+            <div className="min-w-0 flex-1">
+              <h6 className="truncate text-sm font-medium text-inherit">
+                {defaultAddress
+                  ? defaultAddress.street && defaultAddress.city
+                    ? `${defaultAddress.street}, ${defaultAddress.city}`
+                    : defaultAddress.latitude && defaultAddress.longitude
+                    ? "Current Location"
+                    : "No address set"
+                  : "No address set"}
+              </h6>
+              <button
+                className="text-xs text-green-500 hover:underline dark:text-green-400"
+                onClick={() => setShowAddressModal(true)}
+              >
+                Change Address
+              </button>
+            </div>
           </div>
 
           <div className="flex items-center gap-2">
-            {/* Theme Switch - Mobile */}
-            <button
-              onClick={handleThemeToggle}
-              className="flex items-center gap-1 rounded-md p-1.5 transition-colors duration-200 hover:cursor-pointer hover:bg-green-50 dark:hover:bg-green-900"
-              aria-label={
-                theme === "dark"
-                  ? "Switch to light mode"
-                  : "Switch to dark mode"
-              }
-            >
-              {theme === "dark" ? (
-                <svg
-                  width="24px"
-                  height="24px"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  xmlns="http://www.w3.org/2000/svg"
-                  className="stroke-current"
-                >
-                  <path
-                    d="M12 16C14.2091 16 16 14.2091 16 12C16 9.79086 14.2091 8 12 8C9.79086 8 8 9.79086 8 12C8 14.2091 9.79086 16 12 16Z"
-                    stroke="currentColor"
-                    strokeWidth="1.5"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  />
-                  <path
-                    d="M12 2V4"
-                    stroke="currentColor"
-                    strokeWidth="1.5"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  />
-                  <path
-                    d="M12 20V22"
-                    stroke="currentColor"
-                    strokeWidth="1.5"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  />
-                  <path
-                    d="M4.93 4.93L6.34 6.34"
-                    stroke="currentColor"
-                    strokeWidth="1.5"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  />
-                  <path
-                    d="M17.66 17.66L19.07 19.07"
-                    stroke="currentColor"
-                    strokeWidth="1.5"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  />
-                  <path
-                    d="M2 12H4"
-                    stroke="currentColor"
-                    strokeWidth="1.5"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  />
-                  <path
-                    d="M20 12H22"
-                    stroke="currentColor"
-                    strokeWidth="1.5"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  />
-                  <path
-                    d="M6.34 17.66L4.93 19.07"
-                    stroke="currentColor"
-                    strokeWidth="1.5"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  />
-                  <path
-                    d="M19.07 4.93L17.66 6.34"
-                    stroke="currentColor"
-                    strokeWidth="1.5"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  />
-                </svg>
-              ) : (
-                <svg
-                  width="24px"
-                  height="24px"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  xmlns="http://www.w3.org/2000/svg"
-                  className="stroke-current"
-                >
-                  <path
-                    d="M21.752 15.002A9.718 9.718 0 0118 15.75c-5.385 0-9.75-4.365-9.75-9.75 0-1.33.266-2.597.748-3.752A9.753 9.753 0 003 11.25C3 16.635 7.365 21 12.75 21a9.753 9.753 0 009.002-5.998z"
-                    stroke="currentColor"
-                    strokeWidth="1.5"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  />
-                </svg>
-              )}
-            </button>
-
             {/* Messages Icon - Mobile only */}
             <Link href="/Messages" passHref>
               <div className="relative flex items-center gap-1 rounded-md p-1.5 transition-colors duration-200 hover:cursor-pointer hover:bg-green-50 dark:hover:bg-green-900">
@@ -445,26 +411,16 @@ export default function HeaderLayout() {
           </div>
         </div>
       </header>
-      <Modal
+      <AddressManagementModal
         open={showAddressModal}
         onClose={() => setShowAddressModal(false)}
-        size="lg"
-        className="dark:text-white [&_.rs-modal-content]:dark:bg-gray-800"
-      >
-        <Modal.Header>
-          <Modal.Title>Manage Addresses</Modal.Title>
-        </Modal.Header>
-        <Modal.Body>
-          <UserAddress
-            onSelect={(addr) => {
-              setDefaultAddress(addr);
-              Cookies.set("delivery_address", JSON.stringify(addr));
-              window.dispatchEvent(new Event("addressChanged"));
-              setShowAddressModal(false);
-            }}
-          />
-        </Modal.Body>
-      </Modal>
+        onSelect={(addr) => {
+          setDefaultAddress(addr);
+          Cookies.set("delivery_address", JSON.stringify(addr));
+          window.dispatchEvent(new Event("addressChanged"));
+          setShowAddressModal(false);
+        }}
+      />
     </>
   );
 }

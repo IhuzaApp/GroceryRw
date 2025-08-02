@@ -9,6 +9,7 @@ interface Shop {
   name: string;
   description: string;
   image: string;
+  logo: string;
   address: string;
   latitude: string;
   longitude: string;
@@ -41,6 +42,7 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
         name
         description
         image
+        logo
         address
         latitude
         longitude

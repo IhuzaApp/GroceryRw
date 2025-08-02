@@ -6,6 +6,8 @@ import BottomBar from "@components/ui/NavBar/bottomBar";
 import { useTheme } from "../../src/context/ThemeContext";
 import VideoReel from "../../src/components/Reels/VideoReel";
 import CommentsDrawer from "../../src/components/Reels/CommentsDrawer";
+import { useSession } from "next-auth/react";
+import ReelPlaceholder from "@components/Reels/ReelPlaceholder";
 
 // Inline SVGs for icons
 const HeartIcon = ({ filled = false }: { filled?: boolean }) => (
@@ -308,166 +310,237 @@ interface ChefPost extends BasePost {
 
 type FoodPost = RestaurantPost | SupermarketPost | ChefPost;
 
-const mockComments: Comment[] = [
-  {
-    id: "1",
-    user: {
-      name: "foodie_sarah",
-      avatar: "/placeholder.svg?height=32&width=32",
-      verified: true,
-    },
-    text: "This looks absolutely amazing! 😍 Can't wait to try it!",
-    timestamp: "2h",
-    likes: 24,
-    isLiked: false,
-  },
-  {
-    id: "2",
-    user: {
-      name: "mike_eats",
-      avatar: "/placeholder.svg?height=32&width=32",
-    },
-    text: "Just ordered this yesterday and it was incredible! Highly recommend 👌",
-    timestamp: "4h",
-    likes: 12,
-    isLiked: true,
-  },
-  {
-    id: "3",
-    user: {
-      name: "chef_anna",
-      avatar: "/placeholder.svg?height=32&width=32",
-      verified: true,
-    },
-    text: "The technique shown here is perfect! Great job on the presentation 🔥",
-    timestamp: "6h",
-    likes: 45,
-    isLiked: false,
-  },
-  {
-    id: "4",
-    user: {
-      name: "hungry_student",
-      avatar: "/placeholder.svg?height=32&width=32",
-    },
-    text: "Is this available for delivery in downtown area?",
-    timestamp: "8h",
-    likes: 3,
-    isLiked: false,
-  },
-  {
-    id: "5",
-    user: {
-      name: "taste_tester",
-      avatar: "/placeholder.svg?height=32&width=32",
-    },
-    text: "The price is so reasonable for the quality! Will definitely visit this place soon 💯",
-    timestamp: "12h",
-    likes: 18,
-    isLiked: false,
-  },
-];
+// Database interface for API response
+interface DatabaseReel {
+  id: string;
+  category: string;
+  created_on: string;
+  description: string;
+  isLiked: boolean;
+  likes: string;
+  restaurant_id: string | null;
+  title: string;
+  type: string;
+  user_id: string;
+  video_url: string;
+  delivery_time: string | null;
+  Price: string | null;
+  Product: any;
+  Shops: {
+    name: string;
+    // add other shop fields if needed
+  } | null;
+  User: {
+    email: string;
+    gender: string;
+    id: string;
+    is_active: boolean;
+    name: string;
+    created_at: string;
+    role: string;
+    phone: string;
+    profile_picture: string;
+  };
+  Restaurant: {
+    created_at: string;
+    email: string;
+    id: string;
+    lat: number;
+    location: string;
+    long: number;
+    name: string;
+    phone: string;
+    profile: string;
+    verified: boolean;
+  } | null;
+  Reels_comments: Array<{
+    user_id: string;
+    text: string;
+    reel_id: string;
+    likes: string;
+    isLiked: boolean;
+    id: string;
+    created_on: string;
+    User: {
+      gender: string;
+      email: string;
+      name: string;
+      phone: string;
+      role: string;
+      profile_picture?: string;
+    };
+  }>;
+  reel_likes: Array<{
+    created_at: string;
+    id: string;
+    reel_id: string;
+    user_id: string;
+  }>;
+}
 
-const foodPosts: FoodPost[] = [
-  {
-    id: "1",
-    type: "restaurant",
-    creator: {
-      name: "Bella Italia",
-      avatar: "/placeholder.svg?height=40&width=40",
-      verified: true,
-    },
-    content: {
-      title: "Fresh Fruit Shopping Experience",
-      description:
-        "Join us for a delightful shopping experience as we explore fresh fruits and vegetables. Watch how we select the best produce for our customers.",
-      video: "/assets/Videos/coverr-shopping-for-fresh-fruits-1080p.mp4",
-      category: "Shopping",
-    },
-    stats: {
-      likes: 1247,
-      comments: 89,
-    },
-    restaurant: {
-      rating: 4.8,
-      reviews: 156,
-      location: "0.8 miles away",
-      deliveryTime: "25-35 min",
-      price: 24.99,
-    },
-    isLiked: false,
-    commentsList: mockComments,
-  },
-  {
-    id: "2",
-    type: "supermarket",
-    creator: {
-      name: "Fresh Market",
-      avatar: "/placeholder.svg?height=40&width=40",
-      verified: true,
-    },
-    content: {
-      title: "Organic Produce Selection",
-      description:
-        "Discover our premium organic selection. From farm to table, we ensure the highest quality for your healthy lifestyle.",
-      video: "/assets/Videos/coverr-shopping-for-fresh-fruits-1080p.mp4",
-      category: "Organic",
-    },
-    stats: {
-      likes: 892,
-      comments: 45,
-    },
-    product: {
-      price: 3.99,
-      originalPrice: 5.99,
-      store: "Fresh Market Downtown",
-      inStock: true,
-      discount: 33,
-    },
-    isLiked: true,
-    commentsList: mockComments.slice(0, 3),
-  },
-  {
-    id: "3",
-    type: "chef",
-    creator: {
-      name: "Chef Marco",
-      avatar: "/placeholder.svg?height=40&width=40",
-      verified: true,
-    },
-    content: {
-      title: "Cooking with Fresh Ingredients",
-      description:
-        "Learn how to cook amazing dishes using fresh, locally sourced ingredients. Simple techniques, incredible results!",
-      video: "/assets/Videos/coverr-shopping-for-fresh-fruits-1080p.mp4",
-      category: "Tutorial",
-    },
-    stats: {
-      likes: 3421,
-      comments: 234,
-      views: 45600,
-    },
-    recipe: {
-      difficulty: "Medium",
-      cookTime: "2 hours",
-      servings: 4,
-      youtubeChannel: "@ChefMarcoKitchen",
-      subscribers: "2.3M",
-    },
-    isLiked: false,
-    commentsList: mockComments,
-  },
-];
+// Format timestamp to relative time
+const formatTimestamp = (timestamp: string): string => {
+  const now = new Date();
+  const commentTime = new Date(timestamp);
+  const diffInMinutes = Math.floor(
+    (now.getTime() - commentTime.getTime()) / (1000 * 60)
+  );
+
+  if (diffInMinutes < 1) return "now";
+  if (diffInMinutes < 60) return `${diffInMinutes}m`;
+  if (diffInMinutes < 1440) return `${Math.floor(diffInMinutes / 60)}h`;
+  return `${Math.floor(diffInMinutes / 1440)}d`;
+};
+
+// Check if current user has liked a reel
+const checkUserLikeStatus = (
+  reelLikes: Array<{ user_id: string }>,
+  currentUserId: string
+): boolean => {
+  return reelLikes.some((like) => like.user_id === currentUserId);
+};
 
 export default function FoodReelsApp() {
   const { theme } = useTheme();
-  const [posts, setPosts] = useState(foodPosts);
+  const { data: session } = useSession();
+  const [posts, setPosts] = useState<FoodPost[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [showComments, setShowComments] = useState(false);
   const [activePostId, setActivePostId] = useState<string | null>(null);
+  const [isRefreshingComments, setIsRefreshingComments] = useState(false);
   const [visiblePostIndex, setVisiblePostIndex] = useState(0);
   const [isMobile, setIsMobile] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
   const observerRef = useRef<IntersectionObserver | null>(null);
+  const [optimisticComments, setOptimisticComments] = useState<{
+    [postId: string]: Comment[];
+  }>({});
+
+  // Convert database reel to FoodPost format with current user's like status
+  const convertDatabaseReelToFoodPost = (dbReel: DatabaseReel): FoodPost => {
+    const currentUserId = session?.user?.id;
+    const userHasLiked = currentUserId
+      ? checkUserLikeStatus(dbReel.reel_likes, currentUserId)
+      : false;
+
+    // Convert comments
+    const commentsList: Comment[] = dbReel.Reels_comments.map((comment) => ({
+      id: comment.id,
+      user: {
+        name: comment.User.name,
+        avatar:
+          comment.User.profile_picture || "/placeholder.svg?height=32&width=32",
+        verified:
+          comment.User.role === "admin" || comment.User.role === "verified",
+      },
+      text: comment.text,
+      timestamp: formatTimestamp(comment.created_on),
+      likes: parseInt(comment.likes || "0"),
+      isLiked: comment.isLiked,
+    }));
+
+    // Base post structure
+    const basePost: BasePost = {
+      id: dbReel.id,
+      type: dbReel.type as PostType,
+      creator: {
+        name: dbReel.User.name,
+        avatar:
+          dbReel.User.profile_picture || "/placeholder.svg?height=40&width=40",
+        verified:
+          dbReel.User.role === "admin" || dbReel.User.role === "verified",
+      },
+      content: {
+        title: dbReel.title,
+        description: dbReel.description,
+        video: dbReel.video_url,
+        category: dbReel.category,
+      },
+      stats: {
+        likes: dbReel.reel_likes.length, // Use actual likes count from reel_likes
+        comments: dbReel.Reels_comments.length,
+      },
+      isLiked: userHasLiked, // Use actual user like status
+      commentsList,
+    };
+
+    // Convert based on type
+    switch (dbReel.type) {
+      case "restaurant":
+        return {
+          ...basePost,
+          type: "restaurant",
+          restaurant: {
+            rating: 4.5, // Default rating, could be fetched from restaurant data
+            reviews: 100, // Default reviews
+            location: dbReel.Restaurant?.location || "Location not available",
+            deliveryTime: dbReel.delivery_time || "30-45 min",
+            price: parseFloat(dbReel.Price || "0"),
+          },
+        } as RestaurantPost;
+
+      case "supermarket":
+        const product = dbReel.Product || {};
+        return {
+          ...basePost,
+          type: "supermarket",
+          product: {
+            price: parseFloat(dbReel.Price || "0"),
+            originalPrice: product.originalPrice || undefined,
+            store: dbReel.Shops?.name || "Store not available",
+            inStock: product.inStock !== false,
+            discount: product.discount || undefined,
+          },
+        } as SupermarketPost;
+
+      case "chef":
+        const recipe = dbReel.Product || {};
+        return {
+          ...basePost,
+          type: "chef",
+          recipe: {
+            difficulty: recipe.difficulty || "Medium",
+            cookTime: recipe.cookTime || "1 hour",
+            servings: recipe.servings || 4,
+            youtubeChannel: recipe.youtubeChannel || "@ChefChannel",
+            subscribers: recipe.subscribers || "1M",
+          },
+        } as ChefPost;
+
+      default:
+        return basePost as FoodPost;
+    }
+  };
+
+  // Fetch reels from database
+  useEffect(() => {
+    const fetchReels = async () => {
+      try {
+        setLoading(true);
+        setError(null);
+
+        const response = await fetch("/api/queries/reels");
+        if (!response.ok) {
+          throw new Error("Failed to fetch reels");
+        }
+
+        const data = await response.json();
+        const convertedPosts = data.reels.map((reel: DatabaseReel) =>
+          convertDatabaseReelToFoodPost(reel)
+        );
+
+        setPosts(convertedPosts);
+      } catch (err) {
+        console.error("Error fetching reels:", err);
+        setError(err instanceof Error ? err.message : "Failed to fetch reels");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchReels();
+  }, [session?.user?.id]);
 
   // Check if mobile on mount and resize with debouncing
   useEffect(() => {
@@ -562,57 +635,283 @@ export default function FoodReelsApp() {
     };
   }, [posts.length, isMobile]); // Re-run when posts change or mobile state changes
 
-  const toggleLike = (postId: string) => {
-    setPosts(
-      posts.map((post) =>
-        post.id === postId
-          ? {
-              ...post,
-              isLiked: !post.isLiked,
-              stats: {
-                ...post.stats,
-                likes: post.isLiked
-                  ? post.stats.likes - 1
-                  : post.stats.likes + 1,
-              },
-            }
-          : post
-      )
-    );
+  const toggleLike = async (postId: string) => {
+    try {
+      const currentPost = posts.find((post: FoodPost) => post.id === postId);
+      if (!currentPost) return;
+
+      const isCurrentlyLiked = currentPost.isLiked;
+
+      // Immediately update UI for instant feedback
+      setPosts(
+        posts.map((post: FoodPost) =>
+          post.id === postId
+            ? {
+                ...post,
+                isLiked: !isCurrentlyLiked,
+                stats: {
+                  ...post.stats,
+                  likes: isCurrentlyLiked
+                    ? Math.max(0, post.stats.likes - 1)
+                    : post.stats.likes + 1,
+                },
+              }
+            : post
+        )
+      );
+
+      // Process backend request in background
+      const method = isCurrentlyLiked ? "DELETE" : "POST";
+
+      fetch("/api/queries/reel-likes", {
+        method,
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          reel_id: postId,
+        }),
+      })
+        .then((response) => {
+          if (!response.ok) {
+            console.error("Error toggling like:", response.status);
+            // Optionally revert UI if backend fails
+            // For now, we'll keep the optimistic update
+          }
+        })
+        .catch((error) => {
+          console.error("Error toggling like:", error);
+          // Optionally revert UI if backend fails
+          // For now, we'll keep the optimistic update
+        });
+    } catch (error) {
+      console.error("Error toggling like:", error);
+    }
   };
 
-  const toggleCommentLike = (postId: string, commentId: string) => {
-    setPosts(
-      posts.map((post) =>
-        post.id === postId
-          ? {
-              ...post,
-              commentsList: post.commentsList.map((comment) =>
-                comment.id === commentId
-                  ? {
-                      ...comment,
-                      isLiked: !comment.isLiked,
-                      likes: comment.isLiked
-                        ? comment.likes - 1
-                        : comment.likes + 1,
-                    }
-                  : comment
-              ),
-            }
-          : post
-      )
-    );
+  const toggleCommentLike = async (postId: string, commentId: string) => {
+    try {
+      const response = await fetch("/api/queries/reel-comments", {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          comment_id: commentId,
+          action: "toggle_like",
+        }),
+      });
+
+      if (response.ok) {
+        const result = await response.json();
+        setPosts(
+          posts.map((post: FoodPost) =>
+            post.id === postId
+              ? {
+                  ...post,
+                  commentsList: post.commentsList.map((comment: Comment) =>
+                    comment.id === commentId
+                      ? {
+                          ...comment,
+                          isLiked: result.isLiked,
+                          likes: parseInt(result.likes),
+                        }
+                      : comment
+                  ),
+                }
+              : post
+          )
+        );
+      }
+    } catch (error) {
+      console.error("Error toggling comment like:", error);
+    }
   };
 
-  const openComments = (postId: string) => {
+  const addComment = async (postId: string, commentText: string) => {
+    try {
+      // Create optimistic comment for immediate UI update
+      const optimisticComment: Comment = {
+        id: `temp-${Date.now()}`,
+        user: {
+          name: session?.user?.name || "You",
+          avatar: session?.user?.image || "/placeholder.svg?height=32&width=32",
+          verified: false,
+        },
+        text: commentText,
+        timestamp: "now",
+        likes: 0,
+        isLiked: false,
+      };
+
+      // Add to optimisticComments state
+      setOptimisticComments((prev) => ({
+        ...prev,
+        [postId]: [optimisticComment, ...(prev[postId] || [])],
+      }));
+
+      // Optimistic update - add comment immediately to UI
+      setPosts(
+        posts.map((post: FoodPost) =>
+          post.id === postId
+            ? {
+                ...post,
+                stats: {
+                  ...post.stats,
+                  comments: post.stats.comments + 1,
+                },
+              }
+            : post
+        )
+      );
+
+      // Make API call to add comment
+      const response = await fetch("/api/queries/reel-comments", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          reel_id: postId,
+          text: commentText,
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to add comment");
+      }
+
+      const result = await response.json();
+
+      if (result.success && result.comment) {
+        // Remove optimistic comment
+        setOptimisticComments((prev) => ({
+          ...prev,
+          [postId]: (prev[postId] || []).filter(
+            (c) => c.id !== optimisticComment.id
+          ),
+        }));
+        // Optionally, you can trigger a refetch here for extra safety
+        await refetchComments(postId);
+        console.log("Comment added successfully:", result.comment);
+      } else {
+        throw new Error("Invalid response from server");
+      }
+    } catch (error) {
+      console.error("Error adding comment:", error);
+      // Remove optimistic comment on error
+      setOptimisticComments((prev) => ({
+        ...prev,
+        [postId]: (prev[postId] || []).filter((c) => !c.id.startsWith("temp-")),
+      }));
+      setPosts(
+        posts.map((post: FoodPost) =>
+          post.id === postId
+            ? {
+                ...post,
+                stats: {
+                  ...post.stats,
+                  comments: Math.max(0, post.stats.comments - 1),
+                },
+              }
+            : post
+        )
+      );
+      alert("Failed to add comment. Please try again.");
+    }
+  };
+
+  // Function to refetch comments for a specific post
+  const refetchComments = async (postId: string) => {
+    try {
+      setIsRefreshingComments(true);
+      const response = await fetch(
+        `/api/queries/reel-comments?reel_id=${postId}`
+      );
+
+      if (!response.ok) {
+        throw new Error("Failed to fetch comments");
+      }
+
+      const data = await response.json();
+
+      // Convert database comments to frontend format
+      const commentsList: Comment[] = data.comments.map((comment: any) => ({
+        id: comment.id,
+        user: {
+          name: comment.User.name,
+          avatar:
+            comment.User.profile_picture ||
+            "/placeholder.svg?height=32&width=32",
+          verified:
+            comment.User.role === "admin" || comment.User.role === "verified",
+        },
+        text: comment.text,
+        timestamp: formatTimestamp(comment.created_on),
+        likes: parseInt(comment.likes || "0"),
+        isLiked: comment.isLiked,
+      }));
+
+      // Merge optimistic comments (if any)
+      const mergedComments = [
+        ...(optimisticComments[postId] || []),
+        ...commentsList.filter(
+          (c) =>
+            !(optimisticComments[postId] || []).some(
+              (o) => o.text === c.text && o.user.name === c.user.name
+            )
+        ),
+      ];
+
+      // Update posts with fresh comment data
+      setPosts(
+        posts.map((post: FoodPost) =>
+          post.id === postId
+            ? {
+                ...post,
+                commentsList: mergedComments,
+                stats: {
+                  ...post.stats,
+                  comments: mergedComments.length,
+                },
+              }
+            : post
+        )
+      );
+
+      console.log("Comments refetched successfully for post:", postId);
+    } catch (error) {
+      console.error("Error refetching comments:", error);
+    } finally {
+      setIsRefreshingComments(false);
+    }
+  };
+
+  // Enhanced openComments function with comment refetching
+  const openComments = async (postId: string) => {
     console.log("Opening comments for post:", postId);
     setActivePostId(postId);
     setShowComments(true);
+
+    // Refetch comments when opening to ensure we have the latest data
+    await refetchComments(postId);
+
     console.log("Comments state after opening:", {
       postId,
       showComments: true,
     });
   };
+
+  // Set up periodic comment refresh when comments are open
+  useEffect(() => {
+    if (!showComments || !activePostId) return;
+
+    const refreshInterval = setInterval(() => {
+      refetchComments(activePostId);
+    }, 10000); // Refresh every 10 seconds
+
+    return () => clearInterval(refreshInterval);
+  }, [showComments, activePostId]);
 
   const closeComments = () => {
     console.log("Closing comments");
@@ -620,49 +919,80 @@ export default function FoodReelsApp() {
     setActivePostId(null);
   };
 
-  const addComment = (postId: string, commentText: string) => {
-    const newComment: Comment = {
-      id: Date.now().toString(),
-      user: {
-        name: "you",
-        avatar: "/placeholder.svg?height=32&width=32",
-      },
-      text: commentText,
-      timestamp: "now",
-      likes: 0,
-      isLiked: false,
-    };
-
-    setPosts(
-      posts.map((post) =>
-        post.id === postId
-          ? {
-              ...post,
-              commentsList: [newComment, ...post.commentsList],
-              stats: {
-                ...post.stats,
-                comments: post.stats.comments + 1,
-              },
-            }
-          : post
-      )
-    );
-  };
-
   const handleShare = (postId: string) => {
     console.log("Sharing post:", postId);
   };
 
-  const activePost = posts.find((post) => post.id === activePostId);
+  const activePost = posts.find((post: FoodPost) => post.id === activePostId);
+  const mergedActiveComments = activePost
+    ? [
+        ...(optimisticComments[activePost.id] || []),
+        ...activePost.commentsList.filter(
+          (c) =>
+            !(optimisticComments[activePost.id] || []).some(
+              (o) => o.text === c.text && o.user.name === c.user.name
+            )
+        ),
+      ]
+    : [];
+
+  if (loading) {
+    return (
+      <RootLayout>
+        <div className="flex h-screen w-full items-center justify-center  md:p-4">
+          <div className="relative h-full w-full overflow-hidden md:max-w-sm md:rounded-2xl md:shadow-2xl">
+            <ReelPlaceholder />
+            <ReelPlaceholder />
+            <ReelPlaceholder />
+          </div>
+        </div>
+      </RootLayout>
+    );
+  }
+
+  // Error state
+  if (error) {
+    return (
+      <div
+        className={`flex min-h-screen items-center justify-center ${
+          theme === "dark" ? "bg-gray-900 text-white" : "bg-white text-gray-900"
+        }`}
+      >
+        <div className="text-center">
+          <p className="mb-4 text-red-500">Error: {error}</p>
+          <button
+            onClick={() => window.location.reload()}
+            className="rounded bg-blue-500 px-4 py-2 text-white hover:bg-blue-600"
+          >
+            Retry
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  // Empty state
+  if (posts.length === 0) {
+    return (
+      <div
+        className={`flex min-h-screen items-center justify-center ${
+          theme === "dark" ? "bg-gray-900 text-white" : "bg-white text-gray-900"
+        }`}
+      >
+        <div className="text-center">
+          <p className="mb-4 text-gray-500">No reels available</p>
+          <p className="text-sm text-gray-400">
+            Check back later for new content
+          </p>
+        </div>
+      </div>
+    );
+  }
 
   // Mobile layout - full screen without navbar/sidebar but with bottom bar
   if (isMobile) {
     return (
-      <div
-        className={`min-h-screen bg-black transition-colors duration-200 ${
-          theme === "dark" ? "bg-gray-900" : "bg-black"
-        }`}
-      >
+      <div className={`min-h-screen transition-colors duration-200 `}>
         <div
           ref={containerRef}
           style={{ height: "calc(100vh - 80px)", overflowY: "auto" }} // Account for bottom bar height
@@ -690,11 +1020,12 @@ export default function FoodReelsApp() {
           <CommentsDrawer
             open={showComments}
             onClose={closeComments}
-            comments={activePost.commentsList}
+            comments={mergedActiveComments}
             commentCount={activePost.stats.comments}
             postId={activePost.id}
             onToggleCommentLike={toggleCommentLike}
             onAddComment={addComment}
+            isRefreshing={isRefreshingComments}
           />
         )}
 
@@ -707,46 +1038,51 @@ export default function FoodReelsApp() {
   // Desktop layout - with normal page alignment matching main page
   return (
     <RootLayout>
-      <div
-        className={`container mx-auto transition-colors duration-200 ${
-          theme === "dark" ? "bg-gray-900 text-white" : "bg-white text-gray-900"
-        }`}
-      >
+      <div className="flex h-fit items-center justify-center">
         <div
-          ref={containerRef}
-          className="h-screen"
-          style={{ overflowY: "auto" }}
+          className={`container mx-auto h-full max-w-md transition-colors duration-200 md:h-[95vh] md:rounded-2xl md:shadow-2xl ${
+            theme === "dark"
+              ? "bg-gray-900 text-white"
+              : "bg-white text-gray-900"
+          }`}
         >
-          <div style={{ scrollSnapType: "y mandatory" }}>
-            {posts.map((post, index) => (
-              <div
-                key={`${post.id}-${isMobile ? "mobile" : "desktop"}`}
-                data-index={index}
-              >
-                <VideoReel
-                  post={post}
-                  isVisible={visiblePostIndex === index}
-                  onLike={toggleLike}
-                  onComment={openComments}
-                  onShare={handleShare}
-                />
-              </div>
-            ))}
+          <div
+            ref={containerRef}
+            className="h-full w-full overflow-y-auto"
+            style={{ scrollSnapType: "y mandatory" }}
+          >
+            <div>
+              {posts.map((post, index) => (
+                <div
+                  key={`${post.id}-${isMobile ? "mobile" : "desktop"}`}
+                  data-index={index}
+                >
+                  <VideoReel
+                    post={post}
+                    isVisible={visiblePostIndex === index}
+                    onLike={toggleLike}
+                    onComment={openComments}
+                    onShare={handleShare}
+                  />
+                </div>
+              ))}
+            </div>
           </div>
-        </div>
 
-        {/* Comments Drawer */}
-        {activePost && (
-          <CommentsDrawer
-            open={showComments}
-            onClose={closeComments}
-            comments={activePost.commentsList}
-            commentCount={activePost.stats.comments}
-            postId={activePost.id}
-            onToggleCommentLike={toggleCommentLike}
-            onAddComment={addComment}
-          />
-        )}
+          {/* Comments Drawer */}
+          {activePost && (
+            <CommentsDrawer
+              open={showComments}
+              onClose={closeComments}
+              comments={mergedActiveComments}
+              commentCount={activePost.stats.comments}
+              postId={activePost.id}
+              onToggleCommentLike={toggleCommentLike}
+              onAddComment={addComment}
+              isRefreshing={isRefreshingComments}
+            />
+          )}
+        </div>
       </div>
     </RootLayout>
   );

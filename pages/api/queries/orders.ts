@@ -97,15 +97,11 @@ export default async function handler(
       return res.status(400).json({ error: "Missing user ID in session" });
     }
 
-    logger.info("Fetching orders for user", "OrdersAPI", { userId });
-
     // 1. Fetch orders
     const data = await hasuraClient.request<OrdersResponse>(GET_ORDERS, {
       user_id: userId,
     });
     const orders = data.Orders;
-
-    logger.info(`Found ${orders?.length || 0} orders`, "OrdersAPI");
 
     // If no orders found, return empty array
     if (!orders || orders.length === 0) {
