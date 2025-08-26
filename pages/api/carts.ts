@@ -27,6 +27,7 @@ const GET_SHOPS_BY_IDS = gql`
       name
       latitude
       longitude
+      logo
     }
   }
 `;
@@ -89,6 +90,7 @@ export default async function handler(
           name: string;
           latitude: string;
           longitude: string;
+          logo?: string;
         }>;
       }>(GET_SHOPS_BY_IDS, { ids: shopIds });
       carts = shopsData.Shops.map((shop) => ({
@@ -97,6 +99,7 @@ export default async function handler(
         count: countsMap[shop.id] ?? 0,
         latitude: shop.latitude,
         longitude: shop.longitude,
+        logo: shop.logo,
       }));
     }
 
