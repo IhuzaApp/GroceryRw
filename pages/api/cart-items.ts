@@ -121,6 +121,7 @@ const GET_PRODUCTS_BY_IDS = gql`
       id
       ProductName {
         name
+        description
       }
       image
       measurement_unit
@@ -249,7 +250,10 @@ export default async function handler(
       const productsData = await hasuraClient.request<{
         Products: Array<{
           id: string;
-          name: string;
+          ProductName: {
+            name: string;
+            description?: string;
+          };
           image: string;
           measurement_unit: string;
           quantity: number;
@@ -258,7 +262,12 @@ export default async function handler(
       const productsMap = productsData.Products.reduce((map, p) => {
         map[p.id] = p;
         return map;
-      }, {} as Record<string, { name: string; image: string; measurement_unit: string; quantity: number }>);
+      }, {} as Record<string, { 
+        ProductName: { name: string; description?: string; }; 
+        image: string; 
+        measurement_unit: string; 
+        quantity: number 
+      }>);
       // 3) Combine items with metadata
       const items = rawItems.map((item) => {
         const prod = productsMap[item.product_id];
@@ -266,7 +275,7 @@ export default async function handler(
           id: item.id,
           price: item.price,
           quantity: item.quantity,
-          name: prod?.name || "",
+          name: prod?.ProductName?.name || "",
           image: prod?.image || "",
           size: prod ? `${prod.quantity}${prod.measurement_unit}` : "",
         };

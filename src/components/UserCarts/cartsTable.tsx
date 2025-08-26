@@ -50,26 +50,22 @@ function CartItem({
   return (
     <div className="border-b pb-6 md:grid md:grid-cols-12 md:items-center md:gap-4">
       {/* Mobile Layout */}
-      <div className="flex flex-col gap-3 md:hidden">
-        <div className="flex items-start gap-3">
-          <Checkbox checked={checked} onChange={onToggle} />
-          <Image
-            src={image}
-            alt={name}
-            width={80}
-            height={80}
-            className="rounded-md"
-          />
-          <div>
-            <h3 className="font-medium text-gray-900">{name}</h3>
-            <p className="text-sm text-gray-500">{size}</p>
-            <p className="mt-1 font-bold text-gray-900">
-              {formatCurrency(parseFloat(price || "0"))}
-            </p>
-          </div>
+      <div className="flex items-center gap-3 md:hidden">
+        <Image
+          src={image || "/images/groceryPlaceholder.png"}
+          alt={name}
+          width={60}
+          height={60}
+          className="rounded-md"
+        />
+        <div className="flex-1 min-w-0">
+          <h3 className="font-medium text-gray-900 text-sm truncate">{name}</h3>
+          <p className="text-xs text-gray-500">{size}</p>
+          <p className="mt-1 font-bold text-gray-900 text-sm">
+            {formatCurrency(parseFloat(price || "0"))}
+          </p>
         </div>
-
-        <div className="flex items-center justify-between">
+        <div className="flex flex-col items-end gap-2">
           <div className="flex items-center gap-2">
             <button
               onClick={onDecrease}
@@ -80,7 +76,7 @@ function CartItem({
                 <path fill="currentColor" d="M19 13H5v-2h14v2z" />
               </svg>
             </button>
-            <span className="w-8 text-center">{quantity}</span>
+            <span className="w-6 text-center text-sm">{quantity}</span>
             <button
               onClick={onIncrease}
               disabled={loading}
@@ -95,23 +91,21 @@ function CartItem({
             </button>
           </div>
           <div className="text-right">
-            <div className="font-bold text-gray-900">
+            <div className="font-bold text-gray-900 text-sm">
               {formatCurrency(parseFloat(subtotal))}
             </div>
-            <div className="text-sm text-gray-500">
-              {formatCurrency(parseFloat(price || "0"))} each
-            </div>
           </div>
-        </div>
-
-        <div className="mt-2 flex justify-end">
           <Button
             color="red"
-            appearance="subtle"
+            appearance="ghost"
+            size="sm"
             onClick={onRemove}
             loading={loading}
+            className="text-red-600 hover:bg-red-50 hover:text-red-700 px-2 py-1"
           >
-            ✕ Remove
+            <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <path d="M3 6h18M8 6V4a2 2 0 012-2h4a2 2 0 012 2v2m3 0v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6h14z" />
+            </svg>
           </Button>
         </div>
       </div>
@@ -122,7 +116,7 @@ function CartItem({
       </div>
       <div className="hidden md:col-span-1 md:block">
         <Image
-          src={image}
+          src={image || "/images/groceryPlaceholder.png"}
           alt={name}
           width={80}
           height={80}
