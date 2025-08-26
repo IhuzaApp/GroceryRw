@@ -483,7 +483,7 @@ export default function UserDashboard({ initialData }: { initialData: Data }) {
                 .toLocaleDateString("en-US", { weekday: "long" })
                 .toLowerCase();
               const todaysHours = (hoursObj as any)[dayKey];
-              
+
               if (todaysHours && todaysHours.toLowerCase() !== "closed") {
                 const parts = todaysHours
                   .split("-")
@@ -512,7 +512,10 @@ export default function UserDashboard({ initialData }: { initialData: Data }) {
                     }
                   }
                 }
-              } else if (todaysHours && todaysHours.toLowerCase() === "closed") {
+              } else if (
+                todaysHours &&
+                todaysHours.toLowerCase() === "closed"
+              ) {
                 isOpen = false;
               }
             }

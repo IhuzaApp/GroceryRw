@@ -60,12 +60,12 @@ function CartItem({
           height={60}
           className="rounded-md"
         />
-        <div className="flex-1 min-w-0">
-          <h3 className="font-medium text-gray-900 text-sm truncate">{name}</h3>
+        <div className="min-w-0 flex-1">
+          <h3 className="truncate text-sm font-medium text-gray-900">{name}</h3>
           <span className="inline-flex items-center rounded-full bg-blue-100 px-2 py-1 text-xs font-medium text-blue-800 dark:bg-blue-900/20 dark:text-blue-300">
             {size}
           </span>
-          <p className="mt-1 font-bold text-gray-900 text-sm">
+          <p className="mt-1 text-sm font-bold text-gray-900">
             {formatCurrency(parseFloat(price || "0"))}
           </p>
         </div>
@@ -103,7 +103,7 @@ function CartItem({
             </button>
           </div>
           <div className="text-right">
-            <div className="font-bold text-gray-900 text-sm">
+            <div className="text-sm font-bold text-gray-900">
               {formatCurrency(parseFloat(subtotal))}
             </div>
           </div>
@@ -113,9 +113,15 @@ function CartItem({
             size="sm"
             onClick={onRemove}
             loading={loading}
-            className="text-red-600 hover:bg-red-50 hover:text-red-700 px-2 py-1"
+            className="px-2 py-1 text-red-600 hover:bg-red-50 hover:text-red-700"
           >
-            <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <svg
+              className="h-4 w-4"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+            >
               <path d="M3 6h18M8 6V4a2 2 0 012-2h4a2 2 0 012 2v2m3 0v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6h14z" />
             </svg>
           </Button>

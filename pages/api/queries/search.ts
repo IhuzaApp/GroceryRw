@@ -4,7 +4,10 @@ import { gql } from "graphql-request";
 
 const SEARCH_ITEMS = gql`
   query SearchItems($searchTerm: String!) {
-    Products(where: { ProductName: { name: { _ilike: $searchTerm } } }, limit: 10) {
+    Products(
+      where: { ProductName: { name: { _ilike: $searchTerm } } }
+      limit: 10
+    ) {
       id
       ProductName {
         name

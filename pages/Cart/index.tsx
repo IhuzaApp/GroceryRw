@@ -165,7 +165,9 @@ export default function CartMainPage() {
                   {loadingShops
                     ? Array(5)
                         .fill(0)
-                        .map((_, index) => <ShopSelectionSkeleton key={index} />)
+                        .map((_, index) => (
+                          <ShopSelectionSkeleton key={index} />
+                        ))
                     : shops.map((shop) => (
                         <div
                           key={shop.id}
@@ -181,7 +183,7 @@ export default function CartMainPage() {
                           <div className="flex items-center gap-2">
                             <div className="flex-shrink-0">
                               <div
-                                className={`flex h-8 w-8 items-center justify-center rounded-full border overflow-hidden ${
+                                className={`flex h-8 w-8 items-center justify-center overflow-hidden rounded-full border ${
                                   theme === "dark"
                                     ? "border-gray-600 bg-gray-700"
                                     : "border-gray-300 bg-white"
@@ -193,9 +195,12 @@ export default function CartMainPage() {
                                     alt={`${shop.name} logo`}
                                     className="h-full w-full object-cover"
                                     onError={(e) => {
-                                      const target = e.target as HTMLImageElement;
-                                      target.style.display = 'none';
-                                      target.nextElementSibling?.classList.remove('hidden');
+                                      const target =
+                                        e.target as HTMLImageElement;
+                                      target.style.display = "none";
+                                      target.nextElementSibling?.classList.remove(
+                                        "hidden"
+                                      );
                                     }}
                                   />
                                 ) : null}
@@ -205,7 +210,9 @@ export default function CartMainPage() {
                                   viewBox="0 0 24 24"
                                   fill="none"
                                   xmlns="http://www.w3.org/2000/svg"
-                                  className={`${shop.logo ? 'hidden' : ''} h-5 w-5 text-gray-500`}
+                                  className={`${
+                                    shop.logo ? "hidden" : ""
+                                  } h-5 w-5 text-gray-500`}
                                 >
                                   <path
                                     d="M3 7a2 2 0 012-2h14a2 2 0 012 2v10a2 2 0 01-2 2H5a2 2 0 01-2-2V7z"
@@ -227,7 +234,9 @@ export default function CartMainPage() {
                             <div className="truncate">
                               <h3
                                 className={`truncate text-sm font-medium ${
-                                  theme === "dark" ? "text-white" : "text-gray-900"
+                                  theme === "dark"
+                                    ? "text-white"
+                                    : "text-gray-900"
                                 }`}
                               >
                                 {shop.name}

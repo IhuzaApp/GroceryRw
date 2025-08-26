@@ -327,7 +327,7 @@ export default function HeaderLayout() {
         {/* Mobile version */}
         <div className="flex items-center justify-between px-3 pt-2 md:hidden">
           {/* Address Section - Mobile */}
-          <div className="hidden md:flex flex-1 items-center gap-2">
+          <div className="hidden flex-1 items-center gap-2 md:flex">
             <div className="flex h-8 w-8 items-center justify-center rounded-full bg-green-500">
               <svg
                 viewBox="0 0 24 24"

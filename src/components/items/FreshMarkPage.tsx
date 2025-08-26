@@ -130,7 +130,9 @@ const FreshMarkPage: React.FC<FreshMarkPageProps> = ({ shop, products }) => {
     activeCategory === "all"
       ? shopData.products
       : shopData.products.filter(
-          (product) => (product.ProductName?.name || product.name) && product.category === activeCategory
+          (product) =>
+            (product.ProductName?.name || product.name) &&
+            product.category === activeCategory
         );
 
   const sanitizeSrc = (raw: string | null | undefined) => {

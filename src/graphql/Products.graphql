@@ -54,7 +54,6 @@ query GetProducts {
   }
 }
 
-
 query getProducts {
   Products {
     category

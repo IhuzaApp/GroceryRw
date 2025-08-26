@@ -42,7 +42,7 @@ const ShopCard: React.FC<ShopCardProps> = ({
       .toLocaleDateString("en-US", { weekday: "long" })
       .toLowerCase();
     const todaysHours = (hoursObj as any)[dayKey];
-    
+
     if (!todaysHours) {
       return false;
     }
@@ -70,7 +70,7 @@ const ShopCard: React.FC<ShopCardProps> = ({
 
     const openMins = parseTime(parts[0]);
     const closeMins = parseTime(parts[1]);
-    
+
     if (openMins === null || closeMins === null) {
       return false;
     }
@@ -115,7 +115,7 @@ const ShopCard: React.FC<ShopCardProps> = ({
             }}
             onLoad={() => {}}
           />
-      
+
           {isShopOpen ? (
             <span className="absolute right-2 top-2 rounded-full bg-green-100 px-2 py-1 text-xs font-semibold text-green-800 dark:bg-green-900 dark:text-green-100">
               Open
@@ -127,9 +127,9 @@ const ShopCard: React.FC<ShopCardProps> = ({
           )}
         </div>
         <div className="p-4 sm:p-5">
-          <h3 className="mb-1 text-base sm:text-xl font-semibold text-gray-800 dark:text-white flex items-center gap-3">
+          <h3 className="mb-1 flex items-center gap-3 text-base font-semibold text-gray-800 dark:text-white sm:text-xl">
             {shop.logo && shop.logo.trim() !== "" && (
-              <div className="h-8 w-8 rounded-full border-2 border-gray-200 bg-white shadow-sm overflow-hidden flex-shrink-0">
+              <div className="h-8 w-8 flex-shrink-0 overflow-hidden rounded-full border-2 border-gray-200 bg-white shadow-sm">
                 <img
                   src={shop.logo}
                   alt={`${shop.name} logo`}
@@ -143,11 +143,11 @@ const ShopCard: React.FC<ShopCardProps> = ({
             )}
             <span>{shop.name}</span>
           </h3>
-          <p className="hidden sm:block text-sm leading-relaxed text-gray-500 dark:text-gray-400">
+          <p className="hidden text-sm leading-relaxed text-gray-500 dark:text-gray-400 sm:block">
             {shop.description?.slice(0, 80) || "No description"}
           </p>
           {isLoggedIn && (
-            <div className="mt-2 flex flex-wrap items-center gap-3 text-xs sm:text-sm text-gray-600 dark:text-gray-300">
+            <div className="mt-2 flex flex-wrap items-center gap-3 text-xs text-gray-600 dark:text-gray-300 sm:text-sm">
               <div className="flex items-center">
                 <svg
                   viewBox="0 0 24 24"

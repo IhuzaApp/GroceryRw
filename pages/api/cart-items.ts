@@ -259,15 +259,21 @@ export default async function handler(
           quantity: number;
         }>;
       }>(GET_PRODUCTS_BY_IDS, { ids: productIds });
-      const productsMap = productsData.Products.reduce((map, p) => {
-        map[p.id] = p;
-        return map;
-      }, {} as Record<string, { 
-        ProductName: { name: string; description?: string; }; 
-        image: string; 
-        measurement_unit: string; 
-        quantity: number 
-      }>);
+      const productsMap = productsData.Products.reduce(
+        (map, p) => {
+          map[p.id] = p;
+          return map;
+        },
+        {} as Record<
+          string,
+          {
+            ProductName: { name: string; description?: string };
+            image: string;
+            measurement_unit: string;
+            quantity: number;
+          }
+        >
+      );
       // 3) Combine items with metadata
       const items = rawItems.map((item) => {
         const prod = productsMap[item.product_id];

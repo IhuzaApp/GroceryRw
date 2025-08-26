@@ -795,9 +795,7 @@ export default function CheckoutItems({
                     const cookieValue = Cookies.get("delivery_address");
                     if (!cookieValue) {
                       return (
-                        <span className="text-sm text-red-500">
-                          No address
-                        </span>
+                        <span className="text-sm text-red-500">No address</span>
                       );
                     }
                     try {
@@ -806,7 +804,9 @@ export default function CheckoutItems({
                         return (
                           <div className="text-right">
                             <div className="text-sm font-medium text-gray-900 dark:text-white">
-                              {addressObj.street.length > 20 ? `${addressObj.street.substring(0, 20)}...` : addressObj.street}
+                              {addressObj.street.length > 20
+                                ? `${addressObj.street.substring(0, 20)}...`
+                                : addressObj.street}
                             </div>
                             <div className="text-xs text-gray-600 dark:text-gray-400">
                               {addressObj.city}
@@ -821,16 +821,12 @@ export default function CheckoutItems({
                         );
                       } else {
                         return (
-                          <span className="text-sm text-red-500">
-                            Invalid
-                          </span>
+                          <span className="text-sm text-red-500">Invalid</span>
                         );
                       }
                     } catch (err) {
                       return (
-                        <span className="text-sm text-red-500">
-                          Error
-                        </span>
+                        <span className="text-sm text-red-500">Error</span>
                       );
                     }
                   })()}
@@ -838,7 +834,7 @@ export default function CheckoutItems({
                 <Button
                   size="xs"
                   appearance="ghost"
-                  className="text-green-600 hover:bg-green-50 hover:text-green-700 dark:text-green-400 dark:hover:bg-green-900/20 px-2 py-1"
+                  className="px-2 py-1 text-green-600 hover:bg-green-50 hover:text-green-700 dark:text-green-400 dark:hover:bg-green-900/20"
                   onClick={() => {
                     setShowAddressModal(true);
                   }}
@@ -908,12 +904,16 @@ export default function CheckoutItems({
                 "0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1)",
             }}
           >
-            <div className={`-mx-4 -mt-4 mb-6 p-4 ${
-              theme === "dark" ? "bg-gray-700" : "bg-gray-50"
-            }`}>
-              <h2 className={`text-xl font-bold ${
-                theme === "dark" ? "text-white" : "text-gray-900"
-              }`}>
+            <div
+              className={`-mx-4 -mt-4 mb-6 p-4 ${
+                theme === "dark" ? "bg-gray-700" : "bg-gray-50"
+              }`}
+            >
+              <h2
+                className={`text-xl font-bold ${
+                  theme === "dark" ? "text-white" : "text-gray-900"
+                }`}
+              >
                 Order Summary
               </h2>
             </div>
@@ -936,9 +936,7 @@ export default function CheckoutItems({
               )}
 
               <div className="flex justify-between">
-                <span className="text-gray-600 dark:text-gray-300">
-                  Units
-                </span>
+                <span className="text-gray-600 dark:text-gray-300">Units</span>
                 <span className="font-medium text-gray-900 dark:text-white">
                   {totalUnits}
                 </span>
@@ -964,9 +962,7 @@ export default function CheckoutItems({
 
               <div className="mt-3 border-t border-gray-200 pt-3 dark:border-gray-700">
                 <div className="flex justify-between text-lg font-bold">
-                  <span className="text-gray-900 dark:text-white">
-                    Total
-                  </span>
+                  <span className="text-gray-900 dark:text-white">Total</span>
                   <span className="text-green-600 dark:text-green-400">
                     {formatCurrency(finalTotal)}
                   </span>
@@ -1032,11 +1028,15 @@ export default function CheckoutItems({
                                 </p>
                                 <p className="text-xs text-gray-600 dark:text-gray-400">
                                   {addressObj.city}
-                                  {addressObj.postal_code && `, ${addressObj.postal_code}`}
+                                  {addressObj.postal_code &&
+                                    `, ${addressObj.postal_code}`}
                                 </p>
                               </div>
                             );
-                          } else if (addressObj.latitude && addressObj.longitude) {
+                          } else if (
+                            addressObj.latitude &&
+                            addressObj.longitude
+                          ) {
                             return (
                               <p className="text-sm text-gray-900 dark:text-white">
                                 Current Location
