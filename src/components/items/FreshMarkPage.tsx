@@ -136,7 +136,7 @@ const FreshMarkPage: React.FC<FreshMarkPageProps> = ({ shop, products }) => {
   const sanitizeSrc = (raw: string | null | undefined) => {
     if (raw && raw.startsWith("/")) return raw;
     if (raw && raw.startsWith("http")) return raw;
-    return "/assets/images/shop-placeholder.jpg";
+    return "/images/shop-placeholder.jpg";
   };
 
   return (

@@ -133,11 +133,11 @@ export default function ShopList({
             >
               <div className="relative mb-4 h-24 w-full">
                 <img
-                  src={shop.image || "/assets/images/shop-placeholder.jpg"}
+                  src={shop.image || "/images/shop-placeholder.jpg"}
                   alt={shop.name}
                   className="h-full w-full object-cover rounded-lg"
                   onError={(e) => {
-                    e.currentTarget.src = "/assets/images/shop-placeholder.jpg";
+                    e.currentTarget.src = "/images/shop-placeholder.jpg";
                   }}
                 />
                 {shop.logo && shop.logo.trim() !== "" && (
