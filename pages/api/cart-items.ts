@@ -277,7 +277,7 @@ export default async function handler(
           quantity: item.quantity,
           name: prod?.ProductName?.name || "",
           image: prod?.image || "",
-          size: prod ? `${prod.quantity}${prod.measurement_unit}` : "",
+          size: prod?.measurement_unit || "",
         };
       });
       // Count distinct cart items (not sum of quantities)
