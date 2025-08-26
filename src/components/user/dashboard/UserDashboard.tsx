@@ -483,6 +483,7 @@ export default function UserDashboard({ initialData }: { initialData: Data }) {
                 .toLocaleDateString("en-US", { weekday: "long" })
                 .toLowerCase();
               const todaysHours = (hoursObj as any)[dayKey];
+              
               if (todaysHours && todaysHours.toLowerCase() !== "closed") {
                 const parts = todaysHours
                   .split("-")
@@ -503,12 +504,16 @@ export default function UserDashboard({ initialData }: { initialData: Data }) {
                   if (openMins !== null && closeMins !== null) {
                     const nowMins = now.getHours() * 60 + now.getMinutes();
                     if (openMins < closeMins) {
+                      // Normal case: shop opens and closes on the same day
                       isOpen = nowMins >= openMins && nowMins <= closeMins;
                     } else {
+                      // Special case: shop opens one day and closes the next (e.g., 8pm - 2am)
                       isOpen = nowMins >= openMins || nowMins <= closeMins;
                     }
                   }
                 }
+              } else if (todaysHours && todaysHours.toLowerCase() === "closed") {
+                isOpen = false;
               }
             }
             newDyn[shop.id] = { distance, time, fee, open: isOpen };
