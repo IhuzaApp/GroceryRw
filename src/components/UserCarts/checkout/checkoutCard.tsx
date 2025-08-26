@@ -897,9 +897,7 @@ export default function CheckoutItems({
           <Panel
             shaded
             bordered
-            className={`overflow-hidden rounded-xl border-0 shadow-lg ${
-              theme === "dark" ? "bg-gray-800" : "bg-white"
-            }`}
+            className="overflow-hidden rounded-xl border-0 bg-white shadow-lg dark:bg-gray-800"
             style={{
               boxShadow:
                 "0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1)",
@@ -911,18 +909,10 @@ export default function CheckoutItems({
 
             <div className="space-y-3">
               <div className="flex justify-between">
-                <span
-                  className={
-                    theme === "dark" ? "text-gray-300" : "text-gray-600"
-                  }
-                >
+                <span className="text-gray-600 dark:text-gray-300">
                   Subtotal
                 </span>
-                <span
-                  className={`font-medium ${
-                    theme === "dark" ? "text-white" : "text-gray-900"
-                  }`}
-                >
+                <span className="font-medium text-gray-900 dark:text-white">
                   {formatCurrency(Total)}
                 </span>
               </div>
@@ -935,63 +925,35 @@ export default function CheckoutItems({
               )}
 
               <div className="flex justify-between">
-                <span
-                  className={
-                    theme === "dark" ? "text-gray-300" : "text-gray-600"
-                  }
-                >
+                <span className="text-gray-600 dark:text-gray-300">
                   Units
                 </span>
-                <span
-                  className={`font-medium ${
-                    theme === "dark" ? "text-white" : "text-gray-900"
-                  }`}
-                >
+                <span className="font-medium text-gray-900 dark:text-white">
                   {totalUnits}
                 </span>
               </div>
 
               <div className="flex justify-between">
-                <span
-                  className={
-                    theme === "dark" ? "text-gray-300" : "text-gray-600"
-                  }
-                >
+                <span className="text-gray-600 dark:text-gray-300">
                   Service Fee
                 </span>
-                <span
-                  className={`font-medium ${
-                    theme === "dark" ? "text-white" : "text-gray-900"
-                  }`}
-                >
+                <span className="font-medium text-gray-900 dark:text-white">
                   {formatCurrency(serviceFee)}
                 </span>
               </div>
 
               <div className="flex justify-between">
-                <span
-                  className={
-                    theme === "dark" ? "text-gray-300" : "text-gray-600"
-                  }
-                >
+                <span className="text-gray-600 dark:text-gray-300">
                   Delivery Fee
                 </span>
-                <span
-                  className={`font-medium ${
-                    theme === "dark" ? "text-white" : "text-gray-900"
-                  }`}
-                >
+                <span className="font-medium text-gray-900 dark:text-white">
                   {formatCurrency(deliveryFee)}
                 </span>
               </div>
 
-              <div className="mt-3 border-t pt-3">
+              <div className="mt-3 border-t border-gray-200 pt-3 dark:border-gray-700">
                 <div className="flex justify-between text-lg font-bold">
-                  <span
-                    className={
-                      theme === "dark" ? "text-white" : "text-gray-900"
-                    }
-                  >
+                  <span className="text-gray-900 dark:text-white">
                     Total
                   </span>
                   <span className="text-green-600 dark:text-green-400">
@@ -1002,18 +964,10 @@ export default function CheckoutItems({
             </div>
 
             <div className="mt-6">
-              <h4
-                className={`mb-2 font-medium ${
-                  theme === "dark" ? "text-white" : "text-gray-900"
-                }`}
-              >
+              <h4 className="mb-2 font-medium text-gray-900 dark:text-white">
                 Delivery Time
               </h4>
-              <div
-                className={`flex items-center rounded-lg p-3 ${
-                  theme === "dark" ? "bg-gray-700" : "bg-gray-50"
-                }`}
-              >
+              <div className="flex items-center rounded-lg bg-gray-50 p-3 dark:bg-gray-700">
                 <svg
                   viewBox="0 0 24 24"
                   fill="none"
@@ -1031,18 +985,10 @@ export default function CheckoutItems({
             </div>
 
             <div className="mt-6">
-              <h4
-                className={`mb-2 font-medium ${
-                  theme === "dark" ? "text-white" : "text-gray-900"
-                }`}
-              >
+              <h4 className="mb-2 font-medium text-gray-900 dark:text-white">
                 Delivery Address
               </h4>
-              <div
-                className={`rounded-lg p-3 ${
-                  theme === "dark" ? "bg-gray-700" : "bg-gray-50"
-                }`}
-              >
+              <div className="rounded-lg bg-gray-50 p-3 dark:bg-gray-700">
                 <div className="flex items-start justify-between">
                   <div className="flex items-start gap-2">
                     <svg
@@ -1118,18 +1064,10 @@ export default function CheckoutItems({
             </div>
 
             <div className="mt-6">
-              <h4
-                className={`mb-2 font-medium ${
-                  theme === "dark" ? "text-white" : "text-gray-900"
-                }`}
-              >
+              <h4 className="mb-2 font-medium text-gray-900 dark:text-white">
                 Payment Method
               </h4>
-              <div
-                className={`flex items-center justify-between rounded-lg p-3 ${
-                  theme === "dark" ? "bg-gray-700" : "bg-gray-50"
-                }`}
-              >
+              <div className="flex items-center justify-between rounded-lg bg-gray-50 p-3 dark:bg-gray-700">
                 {renderPaymentMethod()}
                 <PaymentMethodSelector
                   totalAmount={finalTotal}
@@ -1142,11 +1080,7 @@ export default function CheckoutItems({
 
             {discountsEnabled && (
               <div className="mt-4">
-                <h4
-                  className={`mb-2 font-medium ${
-                    theme === "dark" ? "text-white" : "text-gray-900"
-                  }`}
-                >
+                <h4 className="mb-2 font-medium text-gray-900 dark:text-white">
                   Promo Code
                 </h4>
                 <div className="flex gap-2">
@@ -1168,11 +1102,7 @@ export default function CheckoutItems({
             )}
 
             <div className="mt-4">
-              <h4
-                className={`mb-2 font-medium ${
-                  theme === "dark" ? "text-white" : "text-gray-900"
-                }`}
-              >
+              <h4 className="mb-2 font-medium text-gray-900 dark:text-white">
                 Add a Note
               </h4>
               <Input
@@ -1196,11 +1126,7 @@ export default function CheckoutItems({
               Proceed to Checkout
             </Button>
 
-            <div
-              className={`mt-4 text-center text-sm ${
-                theme === "dark" ? "text-gray-400" : "text-gray-500"
-              }`}
-            >
+            <div className="mt-4 text-center text-sm text-gray-500 dark:text-gray-400">
               By placing your order, you agree to our{" "}
               <Link
                 href="/terms"

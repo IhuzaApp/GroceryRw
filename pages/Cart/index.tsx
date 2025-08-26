@@ -154,98 +154,100 @@ export default function CartMainPage() {
             </h1>
           </div>
 
-          <div className="mb-6">
-            <div className="mb-4 flex gap-3 overflow-x-auto pb-2">
-              {loadingShops
-                ? Array(5)
-                    .fill(0)
-                    .map((_, index) => <ShopSelectionSkeleton key={index} />)
-                : shops.map((shop) => (
-                    <div
-                      key={shop.id}
-                      onClick={() => handleSelectCart(shop.id)}
-                      className={`relative w-40 min-w-[10rem] flex-shrink-0 cursor-pointer rounded-lg border-2 p-2 transition-all ${
-                        selectedCartId === shop.id
-                          ? "border-green-500 bg-green-50 dark:bg-green-900/20"
-                          : theme === "dark"
-                          ? "border-gray-600 bg-gray-800 hover:border-green-400"
-                          : "border-gray-200 bg-white hover:border-green-200"
-                      }`}
-                    >
-                      <div className="flex items-center gap-2">
-                        <div className="flex-shrink-0">
-                          <div
-                            className={`flex h-8 w-8 items-center justify-center rounded-full border ${
-                              theme === "dark"
-                                ? "border-gray-600 bg-gray-700"
-                                : "border-gray-300 bg-white"
-                            }`}
-                          >
-                            <svg
-                              width="94px"
-                              height="94px"
-                              viewBox="0 0 24 24"
-                              fill="none"
-                              xmlns="http://www.w3.org/2000/svg"
-                            >
-                              <g id="SVGRepo_bgCarrier" stroke-width="0"></g>
-                              <g
-                                id="SVGRepo_tracerCarrier"
-                                stroke-linecap="round"
-                                stroke-linejoin="round"
-                              ></g>
-                              <g id="SVGRepo_iconCarrier">
-                                {" "}
-                                <path
-                                  d="M16.53 2H7.47C6.27 2 5.67 2 5.18 2.3C4.7 2.6 4.43 3.14 3.89 4.21L2.49 7.76C2.17 8.58 1.88 9.55 2.43 10.24C2.79 10.7 3.36 11 4 11C5.1 11 6 10.1 6 9C6 10.1 6.9 11 8 11C9.1 11 10 10.1 10 9C10 10.1 10.9 11 12 11C13.1 11 14 10.1 14 9C14 10.1 14.9 11 16 11C17.1 11 18 10.1 18 9C18 10.1 18.9 11 20 11C20.64 11 21.2 10.7 21.57 10.24C22.12 9.55 21.83 8.58 21.51 7.76L20.11 4.21C19.57 3.14 19.3 2.6 18.82 2.3C18.33 2 17.73 2 16.53 2Z"
-                                  fill="#c651c8"
-                                ></path>{" "}
-                                <path
-                                  fill-rule="evenodd"
-                                  clip-rule="evenodd"
-                                  d="M20 21.25H22C22.4142 21.25 22.75 21.5858 22.75 22C22.75 22.4142 22.4142 22.75 22 22.75H2C1.58579 22.75 1.25 22.4142 1.25 22C1.25 21.5858 1.58579 21.25 2 21.25H4L4 12.5C4.74363 12.5 5.43309 12.2681 6 11.8727C6.56692 12.2681 7.25638 12.5 8 12.5C8.74363 12.5 9.43309 12.2681 10 11.8727C10.5669 12.2681 11.2564 12.5 12 12.5C12.7436 12.5 13.4331 12.2681 14 11.8727C14.5669 12.2681 15.2564 12.5 16 12.5C16.7436 12.5 17.4331 12.2681 18 11.8727C18.5669 12.2681 19.2564 12.5 20 12.5L20 21.25ZM9.5 21.25H14.5V18.5C14.5 17.5654 14.5 17.0981 14.299 16.75C14.1674 16.522 13.978 16.3326 13.75 16.2009C13.4019 16 12.9346 16 12 16C11.0654 16 10.5981 16 10.25 16.2009C10.022 16.3326 9.83261 16.522 9.70096 16.75C9.5 17.0981 9.5 17.5654 9.5 18.5V21.25Z"
-                                  fill="#c651c8"
-                                ></path>{" "}
-                              </g>
-                            </svg>
-                          </div>
-                        </div>
-                        <div className="truncate">
-                          <h3
-                            className={`truncate text-sm font-medium ${
-                              theme === "dark" ? "text-white" : "text-gray-900"
-                            }`}
-                          >
-                            {shop.name}
-                          </h3>
-                        </div>
-                      </div>
-                      {/* Show number of distinct items in this cart */}
-                      <Badge
-                        content={shop.count}
-                        className="absolute -right-2 bg-green-500 text-white"
-                      />
-                      {selectedCartId === shop.id && (
-                        <div className="absolute -right-2 top-1 flex h-4 w-4 items-center justify-center rounded-full bg-green-500">
-                          <svg
-                            viewBox="0 0 24 24"
-                            fill="none"
-                            stroke="white"
-                            strokeWidth="3"
-                            className="h-3 w-3"
-                          >
-                            <polyline points="20 6 9 17 4 12" />
-                          </svg>
-                        </div>
-                      )}
-                    </div>
-                  ))}
-            </div>
-          </div>
-
           <div className="flex flex-col gap-6 lg:flex-row">
-            {/* Cart Items Column */}
+            {/* Cart Items Column - Shop Selection + Cart Table */}
             <div className="w-full lg:w-2/3">
+              {/* Shop Selection */}
+              <div className="mb-6">
+                <div className="mb-4 flex gap-3 overflow-x-auto pb-2">
+                  {loadingShops
+                    ? Array(5)
+                        .fill(0)
+                        .map((_, index) => <ShopSelectionSkeleton key={index} />)
+                    : shops.map((shop) => (
+                        <div
+                          key={shop.id}
+                          onClick={() => handleSelectCart(shop.id)}
+                          className={`relative w-40 min-w-[10rem] flex-shrink-0 cursor-pointer rounded-lg border-2 p-2 transition-all ${
+                            selectedCartId === shop.id
+                              ? "border-green-500 bg-green-50 dark:bg-green-900/20"
+                              : theme === "dark"
+                              ? "border-gray-600 bg-gray-800 hover:border-green-400"
+                              : "border-gray-200 bg-white hover:border-green-200"
+                          }`}
+                        >
+                          <div className="flex items-center gap-2">
+                            <div className="flex-shrink-0">
+                              <div
+                                className={`flex h-8 w-8 items-center justify-center rounded-full border ${
+                                  theme === "dark"
+                                    ? "border-gray-600 bg-gray-700"
+                                    : "border-gray-300 bg-white"
+                                }`}
+                              >
+                                <svg
+                                  width="94px"
+                                  height="94px"
+                                  viewBox="0 0 24 24"
+                                  fill="none"
+                                  xmlns="http://www.w3.org/2000/svg"
+                                >
+                                  <g id="SVGRepo_bgCarrier" stroke-width="0"></g>
+                                  <g
+                                    id="SVGRepo_tracerCarrier"
+                                    stroke-linecap="round"
+                                    stroke-linejoin="round"
+                                  ></g>
+                                  <g id="SVGRepo_iconCarrier">
+                                    {" "}
+                                    <path
+                                      d="M16.53 2H7.47C6.27 2 5.67 2 5.18 2.3C4.7 2.6 4.43 3.14 3.89 4.21L2.49 7.76C2.17 8.58 1.88 9.55 2.43 10.24C2.79 10.7 3.36 11 4 11C5.1 11 6 10.1 6 9C6 10.1 6.9 11 8 11C9.1 11 10 10.1 10 9C10 10.1 10.9 11 12 11C13.1 11 14 10.1 14 9C14 10.1 14.9 11 16 11C17.1 11 18 10.1 18 9C18 10.1 18.9 11 20 11C20.64 11 21.2 10.7 21.57 10.24C22.12 9.55 21.83 8.58 21.51 7.76L20.11 4.21C19.57 3.14 19.3 2.6 18.82 2.3C18.33 2 17.73 2 16.53 2Z"
+                                      fill="#c651c8"
+                                    ></path>{" "}
+                                    <path
+                                      fill-rule="evenodd"
+                                      clip-rule="evenodd"
+                                      d="M20 21.25H22C22.4142 21.25 22.75 21.5858 22.75 22C22.75 22.4142 22.4142 22.75 22 22.75H2C1.58579 22.75 1.25 22.4142 1.25 22C1.25 21.5858 1.58579 21.25 2 21.25H4L4 12.5C4.74363 12.5 5.43309 12.2681 6 11.8727C6.56692 12.2681 7.25638 12.5 8 12.5C8.74363 12.5 9.43309 12.2681 10 11.8727C10.5669 12.2681 11.2564 12.5 12 12.5C12.7436 12.5 13.4331 12.2681 14 11.8727C14.5669 12.2681 15.2564 12.5 16 12.5C16.7436 12.5 17.4331 12.2681 18 11.8727C18.5669 12.2681 19.2564 12.5 20 12.5L20 21.25ZM9.5 21.25H14.5V18.5C14.5 17.5654 14.5 17.0981 14.299 16.75C14.1674 16.522 13.978 16.3326 13.75 16.2009C13.4019 16 12.9346 16 12 16C11.0654 16 10.5981 16 10.25 16.2009C10.022 16.3326 9.83261 16.522 9.70096 16.75C9.5 17.0981 9.5 17.5654 9.5 18.5V21.25Z"
+                                      fill="#c651c8"
+                                    ></path>{" "}
+                                  </g>
+                                </svg>
+                              </div>
+                            </div>
+                            <div className="truncate">
+                              <h3
+                                className={`truncate text-sm font-medium ${
+                                  theme === "dark" ? "text-white" : "text-gray-900"
+                                }`}
+                              >
+                                {shop.name}
+                              </h3>
+                            </div>
+                          </div>
+                          {/* Show number of distinct items in this cart */}
+                          <Badge
+                            content={shop.count}
+                            className="absolute -right-2 bg-green-500 text-white"
+                          />
+                          {selectedCartId === shop.id && (
+                            <div className="absolute -right-2 top-1 flex h-4 w-4 items-center justify-center rounded-full bg-green-500">
+                              <svg
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                stroke="white"
+                                strokeWidth="3"
+                                className="h-3 w-3"
+                              >
+                                <polyline points="20 6 9 17 4 12" />
+                              </svg>
+                            </div>
+                          )}
+                        </div>
+                      ))}
+                </div>
+              </div>
+
+              {/* Cart Table */}
               {selectedCartId ? (
                 <>
                   <h2
