@@ -76,9 +76,10 @@ export default function ShopList({
   }, []);
 
   // Filter shops by category if category is specified
-  const filteredShops = category && category !== "all" 
-    ? shops.filter((shop) => shop.category_id === category)
-    : shops;
+  const filteredShops =
+    category && category !== "all"
+      ? shops.filter((shop) => shop.category_id === category)
+      : shops;
 
   if (loading) {
     return (
@@ -94,11 +95,11 @@ export default function ShopList({
   if (error) {
     return (
       <div className="px-4 py-6">
-        <div className="text-center py-12">
-          <p className="text-red-500 mb-4">{error}</p>
-          <button 
-            onClick={() => window.location.reload()} 
-            className="px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600"
+        <div className="py-12 text-center">
+          <p className="mb-4 text-red-500">{error}</p>
+          <button
+            onClick={() => window.location.reload()}
+            className="rounded-lg bg-green-500 px-4 py-2 text-white hover:bg-green-600"
           >
             Retry
           </button>
@@ -110,18 +111,16 @@ export default function ShopList({
   return (
     <div className="px-4 py-6">
       <h3 className="mb-4 text-xl font-semibold text-gray-700">
-        {category && category !== "all" 
+        {category && category !== "all"
           ? `Select a shop in ${category} to start shopping`
-          : "Select a shop to start shopping"
-        }
+          : "Select a shop to start shopping"}
       </h3>
 
       {filteredShops.length === 0 ? (
-        <p className="text-gray-500 text-center py-8">
-          {category && category !== "all" 
+        <p className="py-8 text-center text-gray-500">
+          {category && category !== "all"
             ? `No shops found in ${category} category.`
-            : "No shops available at the moment."
-          }
+            : "No shops available at the moment."}
         </p>
       ) : (
         <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
@@ -135,23 +134,28 @@ export default function ShopList({
                 <img
                   src={shop.image || "/images/shop-placeholder.jpg"}
                   alt={shop.name}
-                  className="h-full w-full object-cover rounded-lg"
+                  className="h-full w-full rounded-lg object-cover"
                   onError={(e) => {
                     e.currentTarget.src = "/images/shop-placeholder.jpg";
                   }}
                 />
                 {shop.logo && shop.logo.trim() !== "" && (
-                  <div className="absolute -bottom-2 -right-2 h-12 w-12 rounded-full border-2 border-white bg-white shadow-md overflow-hidden">
+                  <div className="absolute -bottom-2 -right-2 h-12 w-12 overflow-hidden rounded-full border-2 border-white bg-white shadow-md">
                     <img
                       src={shop.logo}
                       alt={`${shop.name} logo`}
                       className="h-full w-full object-cover"
                       onError={(e) => {
-                        console.error(`Failed to load logo for shop ${shop.name}:`, shop.logo);
+                        console.error(
+                          `Failed to load logo for shop ${shop.name}:`,
+                          shop.logo
+                        );
                         e.currentTarget.style.display = "none";
                       }}
                       onLoad={() => {
-                        console.log(`Successfully loaded logo for shop ${shop.name}`);
+                        console.log(
+                          `Successfully loaded logo for shop ${shop.name}`
+                        );
                       }}
                     />
                   </div>

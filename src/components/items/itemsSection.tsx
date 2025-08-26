@@ -41,7 +41,9 @@ export default function ItemsSection({
   };
 
   const searchedProducts = filteredProducts.filter((product: any) =>
-    (product.ProductName?.name || product.name || "").toLowerCase().includes(searchQuery.toLowerCase())
+    (product.ProductName?.name || product.name || "")
+      .toLowerCase()
+      .includes(searchQuery.toLowerCase())
   );
 
   // Handle scroll to make category navigation sticky
