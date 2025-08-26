@@ -6,6 +6,7 @@ import Image from "next/image";
 import CheckoutItems from "./checkout/checkoutCard";
 import { formatCurrency } from "../../lib/formatCurrency";
 import { logger } from "../../utils/logger";
+import { useTheme } from "../../context/ThemeContext";
 
 interface CartItemProps {
   item: CartItemType;
@@ -44,6 +45,7 @@ function CartItem({
   onRemove,
   loading,
 }: CartItemProps) {
+  const { theme } = useTheme();
   const { checked, image, name, size, price, quantity } = item;
   const subtotal = (parseFloat(price || "0") * quantity).toFixed(2);
 
@@ -72,7 +74,11 @@ function CartItem({
             <button
               onClick={onDecrease}
               disabled={quantity <= 1 || loading}
-              className="rounded-full bg-gray-100 p-1 text-gray-600 transition hover:bg-gray-200 disabled:cursor-not-allowed disabled:opacity-50"
+              className={`rounded-full p-1 transition disabled:cursor-not-allowed disabled:opacity-50 ${
+                theme === "dark"
+                  ? "bg-green-600 text-white hover:bg-green-700"
+                  : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+              }`}
             >
               <svg className="h-4 w-4" viewBox="0 0 24 24">
                 <path fill="currentColor" d="M19 13H5v-2h14v2z" />
@@ -82,7 +88,11 @@ function CartItem({
             <button
               onClick={onIncrease}
               disabled={loading}
-              className="rounded-full bg-gray-100 p-1 text-gray-600 transition hover:bg-gray-200 disabled:cursor-not-allowed disabled:opacity-50"
+              className={`rounded-full p-1 transition disabled:cursor-not-allowed disabled:opacity-50 ${
+                theme === "dark"
+                  ? "bg-green-600 text-white hover:bg-green-700"
+                  : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+              }`}
             >
               <svg className="h-4 w-4" viewBox="0 0 24 24">
                 <path
@@ -135,7 +145,11 @@ function CartItem({
         <button
           onClick={onDecrease}
           disabled={quantity <= 1 || loading}
-          className="rounded-full bg-gray-100 p-1 text-gray-600 transition hover:bg-gray-200 disabled:cursor-not-allowed disabled:opacity-50"
+          className={`rounded-full p-1 transition disabled:cursor-not-allowed disabled:opacity-50 ${
+            theme === "dark"
+              ? "bg-green-600 text-white hover:bg-green-700"
+              : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+          }`}
         >
           <svg className="h-4 w-4" viewBox="0 0 24 24">
             <path fill="currentColor" d="M19 13H5v-2h14v2z" />
@@ -145,7 +159,11 @@ function CartItem({
         <button
           onClick={onIncrease}
           disabled={loading}
-          className="rounded-full bg-gray-100 p-1 text-gray-600 transition hover:bg-gray-200 disabled:cursor-not-allowed disabled:opacity-50"
+          className={`rounded-full p-1 transition disabled:cursor-not-allowed disabled:opacity-50 ${
+            theme === "dark"
+              ? "bg-green-600 text-white hover:bg-green-700"
+              : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+          }`}
         >
           <svg className="h-4 w-4" viewBox="0 0 24 24">
             <path fill="currentColor" d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z" />
