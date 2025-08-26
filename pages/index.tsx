@@ -185,6 +185,7 @@ export const getServerSideProps: GetServerSideProps = async () => {
             created_at
             category_id
             image
+            logo
             is_active
             latitude
             longitude
@@ -197,8 +198,10 @@ export const getServerSideProps: GetServerSideProps = async () => {
         query GetProducts {
           Products {
             id
-            name
-            description
+            ProductName {
+              name
+              description
+            }
             price
             created_at
           }

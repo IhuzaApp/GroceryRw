@@ -41,7 +41,7 @@ export default function ItemsSection({
   };
 
   const searchedProducts = filteredProducts.filter((product: any) =>
-    product.name.toLowerCase().includes(searchQuery.toLowerCase())
+    (product.ProductName?.name || product.name || "").toLowerCase().includes(searchQuery.toLowerCase())
   );
 
   // Handle scroll to make category navigation sticky
@@ -177,7 +177,7 @@ export default function ItemsSection({
                   key={product.id}
                   id={product.id}
                   shopId={shop.id}
-                  name={product.name}
+                  name={product.ProductName?.name || product.name}
                   image={product.image}
                   final_price={product.final_price}
                   unit={product.unit}

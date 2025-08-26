@@ -119,7 +119,9 @@ const GET_PRODUCTS_BY_IDS = gql`
   query GetProductsByIds($ids: [uuid!]!) {
     Products(where: { id: { _in: $ids } }) {
       id
-      name
+      ProductName {
+        name
+      }
       image
       measurement_unit
       quantity

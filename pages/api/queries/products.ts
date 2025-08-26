@@ -6,8 +6,10 @@ const GET_PRODUCTS = gql`
   query GetProducts {
     Products {
       id
-      name
-      description
+      ProductName {
+        name
+        description
+      }
       price
       final_price
       created_at
@@ -25,8 +27,10 @@ const GET_PRODUCTS = gql`
 interface ProductsResponse {
   Products: Array<{
     id: string;
-    name: string;
-    description: string;
+    ProductName: {
+      name: string;
+      description: string;
+    };
     price: string;
     final_price: string;
     created_at: string;

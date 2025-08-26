@@ -14,5 +14,8 @@ query GetShops {
     is_active
     logo
     phone
+    relatedTo
+    ssd
+    tin
   }
 }

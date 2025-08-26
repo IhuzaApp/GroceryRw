@@ -8,7 +8,11 @@ import Cookies from "js-cookie";
 
 interface Product {
   id: string;
-  name: string;
+  name?: string; // Keep for backward compatibility
+  ProductName?: {
+    name: string;
+    description?: string;
+  };
   image: string;
   price: string;
   final_price: string;
@@ -126,7 +130,7 @@ const FreshMarkPage: React.FC<FreshMarkPageProps> = ({ shop, products }) => {
     activeCategory === "all"
       ? shopData.products
       : shopData.products.filter(
-          (product) => product.category === activeCategory
+          (product) => (product.ProductName?.name || product.name) && product.category === activeCategory
         );
 
   const sanitizeSrc = (raw: string | null | undefined) => {
