@@ -26,7 +26,6 @@ const ShopCard: React.FC<ShopCardProps> = ({
   getShopImageUrl,
 }) => {
   const isRestaurant = (shop as any).is_restaurant;
-  console.log(shop.logo);
 
   return (
     <Link href={isRestaurant ? `/restaurant/${shop.id}` : `/shops/${shop.id}`}>
@@ -49,6 +48,9 @@ const ShopCard: React.FC<ShopCardProps> = ({
               target.src = "/images/shop-placeholder.jpg";
               target.onerror = null;
             }}
+            onLoad={() => {
+              // Image loaded successfully
+            }}
           />
       
           {dynamics.open ? (
@@ -61,8 +63,8 @@ const ShopCard: React.FC<ShopCardProps> = ({
             </span>
           )}
         </div>
-        <div className="p-5">
-          <h3 className="mb-2 text-xl font-semibold text-gray-800 dark:text-white flex items-center gap-3">
+        <div className="p-4 sm:p-5">
+          <h3 className="mb-1 text-base sm:text-xl font-semibold text-gray-800 dark:text-white flex items-center gap-3">
             {shop.logo && shop.logo.trim() !== "" && (
               <div className="h-8 w-8 rounded-full border-2 border-gray-200 bg-white shadow-sm overflow-hidden flex-shrink-0">
                 <img
@@ -81,10 +83,10 @@ const ShopCard: React.FC<ShopCardProps> = ({
             )}
             <span>{shop.name}</span>
           </h3>
-          <p className="text-sm leading-relaxed text-gray-500 dark:text-gray-400">
+          <p className="hidden sm:block text-sm leading-relaxed text-gray-500 dark:text-gray-400">
             {shop.description?.slice(0, 80) || "No description"}
           </p>
-          <div className="mt-2 flex items-center text-sm text-gray-600 dark:text-gray-300">
+          <div className="mt-2 flex flex-wrap items-center gap-3 text-xs sm:text-sm text-gray-600 dark:text-gray-300">
             <div className="flex items-center">
               <svg
                 viewBox="0 0 24 24"
@@ -98,8 +100,7 @@ const ShopCard: React.FC<ShopCardProps> = ({
               </svg>
               {dynamics.time}
             </div>
-            <span className="mx-2 text-gray-300">•</span>
-            <div className="flex items-center text-sm text-gray-600 dark:text-gray-300">
+            <div className="flex items-center">
               <svg
                 viewBox="0 0 24 24"
                 fill="none"

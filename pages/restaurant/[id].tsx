@@ -58,7 +58,7 @@ export default function RestaurantPage({ restaurant }: RestaurantPageProps) {
           {/* Restaurant Banner */}
           <div className="relative h-56 overflow-hidden rounded-lg bg-gray-200 dark:bg-gray-700 sm:h-48">
             <Image
-              src={restaurant.profile || "/assets/images/shop-placeholder.jpg"}
+              src={restaurant.profile || "/images/shop-placeholder.jpg"}
               alt={restaurant.name}
               fill
               className="object-cover"
