@@ -5,6 +5,7 @@ import { useTheme } from "../../context/ThemeContext";
 import { Button, Avatar, Badge, toaster } from "rsuite";
 import Image from "next/image";
 import OrderModal from "./OrderModal";
+import { formatCurrencySync } from "../../utils/formatCurrency";
 
 // Inline SVGs for icons
 const HeartIcon = ({ filled = false }: { filled?: boolean }) => (
@@ -481,7 +482,7 @@ export default function VideoReel({
                 </span>
               </div>
               <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
-                <DollarSignIcon />
+        
                 <span
                   style={{
                     color: "#fff",
@@ -489,7 +490,7 @@ export default function VideoReel({
                     fontSize: "18px",
                   }}
                 >
-                  ${restaurantPost.restaurant.price}
+                  {formatCurrencySync(restaurantPost.restaurant.price)}
                 </span>
               </div>
             </div>
@@ -559,7 +560,7 @@ export default function VideoReel({
                     fontSize: "18px",
                   }}
                 >
-                  ${supermarketPost.product.price}
+                  {formatCurrencySync(supermarketPost.product.price)}
                 </span>
                 {supermarketPost.product.originalPrice && (
                   <span
@@ -570,7 +571,7 @@ export default function VideoReel({
                       fontSize: "14px",
                     }}
                   >
-                    ${supermarketPost.product.originalPrice}
+                    {formatCurrencySync(supermarketPost.product.originalPrice)}
                   </span>
                 )}
               </div>
