@@ -174,8 +174,8 @@ export default function CartMainPage() {
                             selectedCartId === shop.id
                               ? "border-green-500 bg-green-50 dark:bg-green-900/20"
                               : theme === "dark"
-                              ? "border-gray-600 bg-gray-800 hover:border-green-400"
-                              : "border-gray-200 bg-white hover:border-green-200"
+                              ? "border-gray-600 bg-gray-800 hover:border-green-400 hover:bg-gray-700"
+                              : "border-gray-200 bg-white hover:border-green-200 hover:bg-gray-50"
                           }`}
                         >
                           <div className="flex items-center gap-2">

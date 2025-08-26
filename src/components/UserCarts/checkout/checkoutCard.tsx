@@ -7,6 +7,7 @@ import { useRouter } from "next/router";
 import PaymentMethodSelector from "./PaymentMethodSelector";
 import { useTheme } from "../../../context/ThemeContext";
 import { useAuth } from "../../../context/AuthContext";
+import AddressManagementModal from "../../userProfile/AddressManagementModal";
 
 // Cookie name for system configuration cache
 const SYSTEM_CONFIG_COOKIE = "system_configuration";
@@ -85,6 +86,8 @@ export default function CheckoutItems({
     null
   );
   const [configLoading, setConfigLoading] = useState(true);
+  // Address management modal state
+  const [showAddressModal, setShowAddressModal] = useState(false);
 
   // Fetch system configuration
   useEffect(() => {
@@ -837,7 +840,7 @@ export default function CheckoutItems({
                   appearance="ghost"
                   className="text-green-600 hover:bg-green-50 hover:text-green-700 dark:text-green-400 dark:hover:bg-green-900/20 px-2 py-1"
                   onClick={() => {
-                    window.location.href = "/profile";
+                    setShowAddressModal(true);
                   }}
                 >
                   Change
@@ -897,14 +900,22 @@ export default function CheckoutItems({
           <Panel
             shaded
             bordered
-            className="overflow-hidden rounded-xl border-0 bg-white shadow-lg dark:bg-gray-800"
+            className={`overflow-hidden rounded-xl border-0 shadow-lg ${
+              theme === "dark" ? "bg-gray-800" : "bg-white"
+            }`}
             style={{
               boxShadow:
                 "0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1)",
             }}
           >
-            <div className="-mx-4 -mt-4 mb-6 bg-purple-800 p-4 text-white">
-              <h2 className="text-xl font-bold">Order Summary</h2>
+            <div className={`-mx-4 -mt-4 mb-6 p-4 ${
+              theme === "dark" ? "bg-gray-700" : "bg-gray-50"
+            }`}>
+              <h2 className={`text-xl font-bold ${
+                theme === "dark" ? "text-white" : "text-gray-900"
+              }`}>
+                Order Summary
+              </h2>
             </div>
 
             <div className="space-y-3">
@@ -1053,8 +1064,7 @@ export default function CheckoutItems({
                     appearance="ghost"
                     className="text-green-600 hover:bg-green-50 hover:text-green-700 dark:text-green-400 dark:hover:bg-green-900/20"
                     onClick={() => {
-                      // Open address selection modal - you can implement this or redirect to profile
-                      window.location.href = "/profile";
+                      setShowAddressModal(true);
                     }}
                   >
                     Change
@@ -1145,6 +1155,17 @@ export default function CheckoutItems({
           </Panel>
         </div>
       </div>
+
+      {/* Address Management Modal */}
+      <AddressManagementModal
+        open={showAddressModal}
+        onClose={() => setShowAddressModal(false)}
+        onSelect={(address) => {
+          Cookies.set("delivery_address", JSON.stringify(address));
+          setShowAddressModal(false);
+          setTick((t) => t + 1); // Force re-render to update address display
+        }}
+      />
     </>
   );
 }
