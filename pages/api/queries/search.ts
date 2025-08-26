@@ -4,10 +4,12 @@ import { gql } from "graphql-request";
 
 const SEARCH_ITEMS = gql`
   query SearchItems($searchTerm: String!) {
-    Products(where: { name: { _ilike: $searchTerm } }, limit: 10) {
+    Products(where: { ProductName: { name: { _ilike: $searchTerm } } }, limit: 10) {
       id
-      name
-      description
+      ProductName {
+        name
+        description
+      }
       price
       final_price
       image
@@ -38,8 +40,10 @@ const SEARCH_ITEMS = gql`
 interface SearchResponse {
   Products: Array<{
     id: string;
-    name: string;
-    description: string;
+    ProductName: {
+      name: string;
+      description: string;
+    };
     price: string;
     final_price: string;
     image: string;
@@ -92,11 +96,11 @@ export default async function handler(
     // Transform products
     const products = data.Products.map((product) => ({
       id: product.id,
-      name: product.name,
+      name: product.ProductName.name,
       type: "product" as const,
       image: product.image,
       price: parseFloat(product.final_price),
-      description: product.description,
+      description: product.ProductName.description,
       shopId: product.shop_id,
       category: product.category,
       inStock: product.is_active,

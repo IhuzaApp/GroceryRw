@@ -26,10 +26,12 @@ export default async function handler(
     // Search products
     const productsQuery = `
       query SearchProducts($searchTerm: String!) {
-        Products(where: {_or: [{name: {_ilike: $searchTerm}}, {description: {_ilike: $searchTerm}}]}) {
+        Products(where: {_or: [{ProductName: {name: {_ilike: $searchTerm}}}, {ProductName: {description: {_ilike: $searchTerm}}}]}) {
           id
-          name
-          description
+          ProductName {
+            name
+            description
+          }
           price
           final_price
           image
@@ -46,6 +48,8 @@ export default async function handler(
     })) as any;
     const products = productsResponse.Products.map((product: any) => ({
       ...product,
+      name: product.ProductName?.name || product.name,
+      description: product.ProductName?.description || product.description,
       type: "product",
       shop_name: product.Shop?.name,
       shop_id: product.Shop?.id,

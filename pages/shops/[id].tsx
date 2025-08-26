@@ -57,8 +57,10 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
     query GetProductsByShop($shop_id: uuid!) {
       Products(where: { shop_id: { _eq: $shop_id } }) {
         id
-        name
-        description
+        ProductName {
+          name
+          description
+        }
         price
         final_price
         quantity

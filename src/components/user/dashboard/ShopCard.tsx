@@ -8,6 +8,7 @@ interface ShopCardProps {
     name: string;
     description?: string;
     image?: string;
+    logo?: string;
     is_restaurant?: boolean;
   };
   dynamics: {
@@ -25,6 +26,7 @@ const ShopCard: React.FC<ShopCardProps> = ({
   getShopImageUrl,
 }) => {
   const isRestaurant = (shop as any).is_restaurant;
+  console.log(shop.logo);
 
   return (
     <Link href={isRestaurant ? `/restaurant/${shop.id}` : `/shops/${shop.id}`}>
@@ -48,6 +50,7 @@ const ShopCard: React.FC<ShopCardProps> = ({
               target.onerror = null;
             }}
           />
+      
           {dynamics.open ? (
             <span className="absolute right-2 top-2 rounded-full bg-green-100 px-2 py-1 text-xs font-semibold text-green-800 dark:bg-green-900 dark:text-green-100">
               Open
@@ -59,8 +62,24 @@ const ShopCard: React.FC<ShopCardProps> = ({
           )}
         </div>
         <div className="p-5">
-          <h3 className="mb-2 text-xl font-semibold text-gray-800 dark:text-white">
-            {shop.name}
+          <h3 className="mb-2 text-xl font-semibold text-gray-800 dark:text-white flex items-center gap-3">
+            {shop.logo && shop.logo.trim() !== "" && (
+              <div className="h-8 w-8 rounded-full border-2 border-gray-200 bg-white shadow-sm overflow-hidden flex-shrink-0">
+                <img
+                  src={shop.logo}
+                  alt={`${shop.name} logo`}
+                  className="h-full w-full object-cover"
+                  onError={(e) => {
+                    console.error(`Failed to load logo for shop ${shop.name}:`, shop.logo);
+                    e.currentTarget.style.display = "none";
+                  }}
+                  onLoad={() => {
+                    console.log(`Successfully loaded logo for shop ${shop.name}`);
+                  }}
+                />
+              </div>
+            )}
+            <span>{shop.name}</span>
           </h3>
           <p className="text-sm leading-relaxed text-gray-500 dark:text-gray-400">
             {shop.description?.slice(0, 80) || "No description"}
