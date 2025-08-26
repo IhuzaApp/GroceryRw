@@ -395,3 +395,19 @@ a:visited {
 .logs-table ::-webkit-scrollbar-thumb:hover {
   background: var(--text-primary);
 }
+
+/* Hide scrollbars for TikTok-style scrolling */
+.scrollbar-hide {
+  -ms-overflow-style: none;  /* Internet Explorer 10+ */
+  scrollbar-width: none;  /* Firefox */
+}
+
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;  /* Safari and Chrome */
+}
+
+/* Smooth scrolling for reels */
+.reels-container {
+  scroll-behavior: smooth;
+  -webkit-overflow-scrolling: touch; /* iOS momentum scrolling */
+}
