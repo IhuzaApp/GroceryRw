@@ -638,7 +638,7 @@ export default function UserDashboard({ initialData }: { initialData: Data }) {
           </div>
 
           {/* Desktop Grid */}
-          <div className="hidden grid-cols-3 gap-4 md:grid lg:grid-cols-7">
+          <div className="hidden grid-cols-3 gap-4 md:grid lg:grid-cols-8">
             {isLoading
               ? Array(7)
                   .fill(0)
