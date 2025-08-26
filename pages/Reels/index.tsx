@@ -340,7 +340,7 @@ interface DatabaseReel {
     role: string;
     phone: string;
     profile_picture: string;
-  };
+  } | null;
   Restaurant: {
     created_at: string;
     email: string;
@@ -368,7 +368,7 @@ interface DatabaseReel {
       phone: string;
       role: string;
       profile_picture?: string;
-    };
+    } | null;
   }>;
   reel_likes: Array<{
     created_at: string;
@@ -428,11 +428,11 @@ export default function FoodReelsApp() {
     const commentsList: Comment[] = dbReel.Reels_comments.map((comment) => ({
       id: comment.id,
       user: {
-        name: comment.User.name,
+        name: comment.User?.name || "Plas Reel Agent",
         avatar:
-          comment.User.profile_picture || "/placeholder.svg?height=32&width=32",
+          comment.User?.profile_picture || "/placeholder.svg?height=32&width=32",
         verified:
-          comment.User.role === "admin" || comment.User.role === "verified",
+          comment.User?.role === "admin" || comment.User?.role === "verified" || false,
       },
       text: comment.text,
       timestamp: formatTimestamp(comment.created_on),
@@ -445,11 +445,11 @@ export default function FoodReelsApp() {
       id: dbReel.id,
       type: dbReel.type as PostType,
       creator: {
-        name: dbReel.User.name,
+        name: dbReel.User?.name || "Plas Reel Agent",
         avatar:
-          dbReel.User.profile_picture || "/placeholder.svg?height=40&width=40",
+          dbReel.User?.profile_picture || "/placeholder.svg?height=40&width=40",
         verified:
-          dbReel.User.role === "admin" || dbReel.User.role === "verified",
+          dbReel.User?.role === "admin" || dbReel.User?.role === "verified" || false,
       },
       content: {
         title: dbReel.title,
@@ -541,6 +541,95 @@ export default function FoodReelsApp() {
 
     fetchReels();
   }, [session?.user?.id]);
+
+  // Enhanced scroll handling for TikTok-style navigation
+  useEffect(() => {
+    if (!containerRef.current) return;
+
+    const container = containerRef.current;
+    let isScrolling = false;
+    let scrollTimeout: NodeJS.Timeout;
+
+    const handleWheel = (e: WheelEvent) => {
+      e.preventDefault();
+      
+      if (isScrolling) return;
+      
+      isScrolling = true;
+      const currentIndex = visiblePostIndex;
+      let nextIndex = currentIndex;
+      
+      if (e.deltaY > 0 && currentIndex < posts.length - 1) {
+        // Scroll down - next video
+        nextIndex = currentIndex + 1;
+      } else if (e.deltaY < 0 && currentIndex > 0) {
+        // Scroll up - previous video
+        nextIndex = currentIndex - 1;
+      }
+      
+      if (nextIndex !== currentIndex) {
+        const targetElement = container.children[nextIndex] as HTMLElement;
+        if (targetElement) {
+          targetElement.scrollIntoView({ behavior: 'smooth' });
+          setVisiblePostIndex(nextIndex);
+        }
+      }
+      
+      // Debounce scroll events
+      clearTimeout(scrollTimeout);
+      scrollTimeout = setTimeout(() => {
+        isScrolling = false;
+      }, 300);
+    };
+
+    const handleTouchStart = (e: TouchEvent) => {
+      const touch = e.touches[0];
+      container.dataset.touchStartY = touch.clientY.toString();
+    };
+
+    const handleTouchEnd = (e: TouchEvent) => {
+      if (!container.dataset.touchStartY) return;
+      
+      const touchEndY = e.changedTouches[0].clientY;
+      const touchStartY = parseInt(container.dataset.touchStartY);
+      const deltaY = touchStartY - touchEndY;
+      const threshold = 50; // Minimum swipe distance
+      
+      if (Math.abs(deltaY) > threshold) {
+        const currentIndex = visiblePostIndex;
+        let nextIndex = currentIndex;
+        
+        if (deltaY > 0 && currentIndex < posts.length - 1) {
+          // Swipe up - next video
+          nextIndex = currentIndex + 1;
+        } else if (deltaY < 0 && currentIndex > 0) {
+          // Swipe down - previous video
+          nextIndex = currentIndex - 1;
+        }
+        
+        if (nextIndex !== currentIndex) {
+          const targetElement = container.children[nextIndex] as HTMLElement;
+          if (targetElement) {
+            targetElement.scrollIntoView({ behavior: 'smooth' });
+            setVisiblePostIndex(nextIndex);
+          }
+        }
+      }
+      
+      delete container.dataset.touchStartY;
+    };
+
+    container.addEventListener('wheel', handleWheel, { passive: false });
+    container.addEventListener('touchstart', handleTouchStart, { passive: true });
+    container.addEventListener('touchend', handleTouchEnd, { passive: true });
+
+    return () => {
+      container.removeEventListener('wheel', handleWheel);
+      container.removeEventListener('touchstart', handleTouchStart);
+      container.removeEventListener('touchend', handleTouchEnd);
+      clearTimeout(scrollTimeout);
+    };
+  }, [posts.length, visiblePostIndex]);
 
   // Check if mobile on mount and resize with debouncing
   useEffect(() => {
@@ -995,24 +1084,29 @@ export default function FoodReelsApp() {
       <div className={`min-h-screen transition-colors duration-200 `}>
         <div
           ref={containerRef}
-          style={{ height: "calc(100vh - 80px)", overflowY: "auto" }} // Account for bottom bar height
+          className="h-full w-full overflow-y-auto scrollbar-hide reels-container"
+          style={{ 
+            height: "calc(100vh - 80px)",
+            scrollSnapType: "y mandatory",
+            scrollBehavior: "smooth"
+          }}
         >
-          <div style={{ scrollSnapType: "y mandatory" }}>
-            {posts.map((post, index) => (
-              <div
-                key={`${post.id}-${isMobile ? "mobile" : "desktop"}`}
-                data-index={index}
-              >
-                <VideoReel
-                  post={post}
-                  isVisible={visiblePostIndex === index}
-                  onLike={toggleLike}
-                  onComment={openComments}
-                  onShare={handleShare}
-                />
-              </div>
-            ))}
-          </div>
+          {posts.map((post, index) => (
+            <div
+              key={`${post.id}-${isMobile ? "mobile" : "desktop"}`}
+              data-index={index}
+              className="h-screen w-full"
+              style={{ scrollSnapAlign: "start" }}
+            >
+              <VideoReel
+                post={post}
+                isVisible={visiblePostIndex === index}
+                onLike={toggleLike}
+                onComment={openComments}
+                onShare={handleShare}
+              />
+            </div>
+          ))}
         </div>
 
         {/* Comments Drawer */}
@@ -1048,25 +1142,28 @@ export default function FoodReelsApp() {
         >
           <div
             ref={containerRef}
-            className="h-full w-full overflow-y-auto"
-            style={{ scrollSnapType: "y mandatory" }}
+            className="h-full w-full overflow-y-auto scrollbar-hide reels-container"
+            style={{ 
+              scrollSnapType: "y mandatory",
+              scrollBehavior: "smooth"
+            }}
           >
-            <div>
-              {posts.map((post, index) => (
-                <div
-                  key={`${post.id}-${isMobile ? "mobile" : "desktop"}`}
-                  data-index={index}
-                >
-                  <VideoReel
-                    post={post}
-                    isVisible={visiblePostIndex === index}
-                    onLike={toggleLike}
-                    onComment={openComments}
-                    onShare={handleShare}
-                  />
-                </div>
-              ))}
-            </div>
+            {posts.map((post, index) => (
+              <div
+                key={`${post.id}-${isMobile ? "mobile" : "desktop"}`}
+                data-index={index}
+                className="h-screen w-full"
+                style={{ scrollSnapAlign: "start" }}
+              >
+                <VideoReel
+                  post={post}
+                  isVisible={visiblePostIndex === index}
+                  onLike={toggleLike}
+                  onComment={openComments}
+                  onShare={handleShare}
+                />
+              </div>
+            ))}
           </div>
 
           {/* Comments Drawer */}

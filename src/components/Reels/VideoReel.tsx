@@ -2,7 +2,7 @@
 
 import React, { useRef, useEffect, useState } from "react";
 import { useTheme } from "../../context/ThemeContext";
-import { Button, Avatar, Badge } from "rsuite";
+import { Button, Avatar, Badge, toaster } from "rsuite";
 import Image from "next/image";
 import OrderModal from "./OrderModal";
 
@@ -343,9 +343,7 @@ export default function VideoReel({
           try {
             // Check if component is still mounted and video exists
             if (!mountedRef.current || !videoRef.current) {
-              console.log(
-                `Component unmounted or video removed for post ${post.id}`
-              );
+        
               return;
             }
 
@@ -358,18 +356,13 @@ export default function VideoReel({
           } catch (error) {
             // Only log error if component is still mounted and it's not an AbortError
             if (mountedRef.current && (error as Error).name !== "AbortError") {
-              console.error(`Error playing video for post ${post.id}:`, error);
               setVideoError(true);
             }
           }
         };
         playVideo();
       } else {
-        console.log(
-          `Pausing video for post ${post.id} on ${
-            isMobile ? "mobile" : "desktop"
-          }`
-        );
+
         if (videoRef.current && mountedRef.current) {
           videoRef.current.pause();
           setIsPlaying(false);
@@ -380,28 +373,23 @@ export default function VideoReel({
 
   const handleVideoLoad = () => {
     if (!mountedRef.current) return;
-    console.log(
-      `Video loaded for post ${post.id} on ${isMobile ? "mobile" : "desktop"}`
-    );
     setVideoLoading(false);
     setVideoError(false);
   };
 
   const handleVideoError = (error: any) => {
     if (!mountedRef.current) return;
-    console.error(
-      `Video error for post ${post.id} on ${isMobile ? "mobile" : "desktop"}:`,
-      error
-    );
+    toaster.push({
+      message: `Video error: ${(error as Error).message || 'Unknown error occurred'}`,
+      type: 'error',
+      duration: 4000
+    });
     setVideoError(true);
     setVideoLoading(false);
   };
 
   const handleVideoCanPlay = () => {
     if (!mountedRef.current) return;
-    console.log(
-      `Video can play for post ${post.id} on ${isMobile ? "mobile" : "desktop"}`
-    );
     if (isVisible && videoRef.current && mountedRef.current) {
       const playVideo = async () => {
         try {
@@ -409,10 +397,11 @@ export default function VideoReel({
           await videoRef.current.play();
         } catch (error) {
           if (mountedRef.current && (error as Error).name !== "AbortError") {
-            console.error(
-              `Error playing video after canplay for post ${post.id}:`,
-              error
-            );
+            toaster.push({
+              message: `Failed to play video: ${(error as Error).message || 'Unknown error occurred'}`,
+              type: 'error',
+              duration: 4000
+            });
           }
         }
       };
@@ -524,21 +513,27 @@ export default function VideoReel({
                 <span>{restaurantPost.restaurant.deliveryTime}</span>
               </div>
             </div>
-            <Button
-              appearance="primary"
-              color="green"
+            <button
               style={{
                 width: "100%",
                 padding: "12px",
                 borderRadius: "25px",
                 fontWeight: "bold",
                 fontSize: "16px",
+                backgroundColor: "#166534",
+                borderColor: "#166534",
+                color: "white",
+                border: "none",
+                cursor: "pointer",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
               }}
               onClick={() => setShowOrderModal(true)}
             >
               <UtensilsIcon />
-              <span style={{ marginLeft: 8 }}>Order Now</span>
-            </Button>
+              <span style={{ marginLeft: 8, whiteSpace: "nowrap" }}>Order Now</span>
+            </button>
           </div>
         );
 
@@ -609,34 +604,47 @@ export default function VideoReel({
               </Badge>
             </div>
             <div style={{ display: "flex", gap: 8 }}>
-              <Button
-                appearance="primary"
-                color="blue"
+              <button
                 style={{
                   flex: 1,
                   padding: "12px",
                   borderRadius: "25px",
                   fontWeight: "bold",
+                  backgroundColor: "#2563eb",
+                  borderColor: "#2563eb",
+                  color: "white",
+                  border: "none",
+                  cursor: "pointer",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
                 }}
               >
                 <StoreIcon />
-                <span style={{ marginLeft: 8 }}>Visit Store</span>
-              </Button>
-              <Button
-                appearance="primary"
-                color="green"
+                <span style={{ marginLeft: 8, whiteSpace: "nowrap" }}>Visit Store</span>
+              </button>
+              <button
                 style={{
                   flex: 1,
                   padding: "12px",
                   borderRadius: "25px",
                   fontWeight: "bold",
+                  backgroundColor: "#166534",
+                  borderColor: "#166534",
+                  color: "white",
+                  border: "none",
+                  cursor: "pointer",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  opacity: supermarketPost.product.inStock ? 1 : 0.5,
                 }}
                 onClick={() => setShowOrderModal(true)}
                 disabled={!supermarketPost.product.inStock}
               >
                 <ShoppingCartIcon />
-                <span style={{ marginLeft: 8 }}>Order Now</span>
-              </Button>
+                <span style={{ marginLeft: 8, whiteSpace: "nowrap" }}>Order Now</span>
+              </button>
             </div>
           </div>
         );
@@ -687,32 +695,44 @@ export default function VideoReel({
               </span>
             </div>
             <div style={{ display: "flex", gap: 8 }}>
-              <Button
-                appearance="primary"
-                color="red"
+              <button
                 style={{
                   flex: 1,
                   padding: "12px",
                   borderRadius: "25px",
                   fontWeight: "bold",
+                  backgroundColor: "#dc2626",
+                  borderColor: "#dc2626",
+                  color: "white",
+                  border: "none",
+                  cursor: "pointer",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
                 }}
               >
                 <YoutubeIcon />
-                <span style={{ marginLeft: 8 }}>Watch on YouTube</span>
-              </Button>
-              <Button
-                appearance="primary"
-                color="blue"
+                <span style={{ marginLeft: 8, whiteSpace: "nowrap" }}>YouTube</span>
+              </button>
+              <button
                 style={{
                   flex: 1,
                   padding: "12px",
                   borderRadius: "25px",
                   fontWeight: "bold",
+                  backgroundColor: "#7c3aed",
+                  borderColor: "#7c3aed",
+                  color: "white",
+                  border: "none",
+                  cursor: "pointer",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
                 }}
               >
                 <BookOpenIcon />
-                <span style={{ marginLeft: 8 }}>Get Recipe</span>
-              </Button>
+                <span style={{ marginLeft: 8, whiteSpace: "nowrap" }}>Get Recipe</span>
+              </button>
             </div>
           </div>
         );
@@ -891,7 +911,7 @@ export default function VideoReel({
           style={{
             position: "absolute",
             right: 16,
-            bottom: 160,
+            bottom: 240, // Increased from 160 to be above bottom navbar
             display: "flex",
             flexDirection: "column",
             gap: 24,
@@ -957,10 +977,7 @@ export default function VideoReel({
                 border: "none",
                 color: "#fff",
               }}
-              onClick={() => {
-                console.log("Comment button clicked for post:", post.id);
-                onComment(post.id);
-              }}
+              onClick={() => onComment(post.id)}
             >
               <MessageIcon />
             </Button>
@@ -1006,7 +1023,7 @@ export default function VideoReel({
         <div
           style={{
             position: "absolute",
-            bottom: 0,
+            bottom: 80, // Account for bottom navbar height
             left: 0,
             right: 0,
             padding: 16,
