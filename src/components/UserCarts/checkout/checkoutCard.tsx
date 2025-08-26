@@ -6,6 +6,7 @@ import Cookies from "js-cookie";
 import { useRouter } from "next/router";
 import PaymentMethodSelector from "./PaymentMethodSelector";
 import { useTheme } from "../../../context/ThemeContext";
+import { useAuth } from "../../../context/AuthContext";
 
 // Cookie name for system configuration cache
 const SYSTEM_CONFIG_COOKIE = "system_configuration";
@@ -766,7 +767,7 @@ export default function CheckoutItems({
             <div className="flex justify-between">
               <span
                 className={`text-sm ${
-                  theme === "dark" ? "text-gray-300" : "text-gray-600"
+                  theme === "dark" ? "text-white" : "text-gray-900"
                 }`}
               >
                 Delivery Time
@@ -776,6 +777,72 @@ export default function CheckoutItems({
               >
                 {deliveryTime}
               </span>
+            </div>
+            <div className="flex justify-between">
+              <span
+                className={`text-sm ${
+                  theme === "dark" ? "text-white" : "text-gray-900"
+                }`}
+              >
+                Delivery Address
+              </span>
+              <div className="flex items-center gap-2">
+                <div className="text-right">
+                  {(() => {
+                    const cookieValue = Cookies.get("delivery_address");
+                    if (!cookieValue) {
+                      return (
+                        <span className="text-sm text-red-500">
+                          No address
+                        </span>
+                      );
+                    }
+                    try {
+                      const addressObj = JSON.parse(cookieValue);
+                      if (addressObj.street && addressObj.city) {
+                        return (
+                          <div className="text-right">
+                            <div className="text-sm font-medium text-gray-900 dark:text-white">
+                              {addressObj.street.length > 20 ? `${addressObj.street.substring(0, 20)}...` : addressObj.street}
+                            </div>
+                            <div className="text-xs text-gray-600 dark:text-gray-400">
+                              {addressObj.city}
+                            </div>
+                          </div>
+                        );
+                      } else if (addressObj.latitude && addressObj.longitude) {
+                        return (
+                          <span className="text-sm text-gray-900 dark:text-white">
+                            Current Location
+                          </span>
+                        );
+                      } else {
+                        return (
+                          <span className="text-sm text-red-500">
+                            Invalid
+                          </span>
+                        );
+                      }
+                    } catch (err) {
+                      return (
+                        <span className="text-sm text-red-500">
+                          Error
+                        </span>
+                      );
+                    }
+                  })()}
+                </div>
+                <Button
+                  size="xs"
+                  appearance="ghost"
+                  className="text-green-600 hover:bg-green-50 hover:text-green-700 dark:text-green-400 dark:hover:bg-green-900/20 px-2 py-1"
+                  onClick={() => {
+                    window.location.href = "/profile";
+                  }}
+                >
+                  Change
+                </Button>
+              </div>
             </div>
             <div className="mt-2 flex justify-between">
               <span
@@ -960,6 +1027,93 @@ export default function CheckoutItems({
                 <span className="font-medium text-green-600 dark:text-green-400">
                   {deliveryTime}
                 </span>
+              </div>
+            </div>
+
+            <div className="mt-6">
+              <h4
+                className={`mb-2 font-medium ${
+                  theme === "dark" ? "text-white" : "text-gray-900"
+                }`}
+              >
+                Delivery Address
+              </h4>
+              <div
+                className={`rounded-lg p-3 ${
+                  theme === "dark" ? "bg-gray-700" : "bg-gray-50"
+                }`}
+              >
+                <div className="flex items-start justify-between">
+                  <div className="flex items-start gap-2">
+                    <svg
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      className="mt-0.5 h-4 w-4 text-green-500"
+                    >
+                      <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z" />
+                      <circle cx="12" cy="10" r="3" />
+                    </svg>
+                    <div className="min-w-0 flex-1">
+                      {(() => {
+                        const cookieValue = Cookies.get("delivery_address");
+                        if (!cookieValue) {
+                          return (
+                            <p className="text-sm text-red-500">
+                              No delivery address selected
+                            </p>
+                          );
+                        }
+                        try {
+                          const addressObj = JSON.parse(cookieValue);
+                          if (addressObj.street && addressObj.city) {
+                            return (
+                              <div>
+                                <p className="text-sm font-medium text-gray-900 dark:text-white">
+                                  {addressObj.street}
+                                </p>
+                                <p className="text-xs text-gray-600 dark:text-gray-400">
+                                  {addressObj.city}
+                                  {addressObj.postal_code && `, ${addressObj.postal_code}`}
+                                </p>
+                              </div>
+                            );
+                          } else if (addressObj.latitude && addressObj.longitude) {
+                            return (
+                              <p className="text-sm text-gray-900 dark:text-white">
+                                Current Location
+                              </p>
+                            );
+                          } else {
+                            return (
+                              <p className="text-sm text-red-500">
+                                Invalid address format
+                              </p>
+                            );
+                          }
+                        } catch (err) {
+                          return (
+                            <p className="text-sm text-red-500">
+                              Error reading address
+                            </p>
+                          );
+                        }
+                      })()}
+                    </div>
+                  </div>
+                  <Button
+                    size="sm"
+                    appearance="ghost"
+                    className="text-green-600 hover:bg-green-50 hover:text-green-700 dark:text-green-400 dark:hover:bg-green-900/20"
+                    onClick={() => {
+                      // Open address selection modal - you can implement this or redirect to profile
+                      window.location.href = "/profile";
+                    }}
+                  >
+                    Change
+                  </Button>
+                </div>
               </div>
             </div>
 

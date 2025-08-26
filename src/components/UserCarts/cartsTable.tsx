@@ -60,7 +60,9 @@ function CartItem({
         />
         <div className="flex-1 min-w-0">
           <h3 className="font-medium text-gray-900 text-sm truncate">{name}</h3>
-          <p className="text-xs text-gray-500">{size}</p>
+          <span className="inline-flex items-center rounded-full bg-blue-100 px-2 py-1 text-xs font-medium text-blue-800 dark:bg-blue-900/20 dark:text-blue-300">
+            {size}
+          </span>
           <p className="mt-1 font-bold text-gray-900 text-sm">
             {formatCurrency(parseFloat(price || "0"))}
           </p>
@@ -112,9 +114,6 @@ function CartItem({
 
       {/* Desktop Layout */}
       <div className="hidden md:col-span-1 md:block">
-        <Checkbox checked={checked} onChange={onToggle} />
-      </div>
-      <div className="hidden md:col-span-1 md:block">
         <Image
           src={image || "/images/groceryPlaceholder.png"}
           alt={name}
@@ -123,9 +122,11 @@ function CartItem({
           className="rounded-md"
         />
       </div>
-      <div className="hidden md:col-span-4 md:block">
+      <div className="hidden md:col-span-5 md:block">
         <h3 className="font-medium text-gray-900">{name}</h3>
-        <p className="text-sm text-gray-500">{size}</p>
+        <span className="inline-flex items-center rounded-full bg-blue-100 px-2 py-1 text-xs font-medium text-blue-800 dark:bg-blue-900/20 dark:text-blue-300">
+          {size}
+        </span>
       </div>
       <div className="hidden font-bold md:col-span-2 md:flex md:justify-center">
         {formatCurrency(parseFloat(price || "0"))}
@@ -154,9 +155,6 @@ function CartItem({
       <div className="hidden md:col-span-2 md:block md:text-right">
         <div className="font-bold text-gray-900">
           {formatCurrency(parseFloat(subtotal))}
-        </div>
-        <div className="text-sm text-gray-500">
-          {formatCurrency(parseFloat(price || "0"))} each
         </div>
       </div>
     </div>
@@ -311,12 +309,11 @@ export default function ItemCartTable({
 
   return (
     <>
-      <div className="mb-4 hidden border-b pb-2 font-medium text-gray-500 md:grid md:grid-cols-12">
+      <div className="mb-4 hidden border-b pb-2 font-medium text-gray-500 md:grid md:grid-cols-11">
         <div className="md:col-span-6">Product</div>
         <div className="text-center md:col-span-2">Price</div>
         <div className="text-center md:col-span-2">Quantity</div>
-        <div className="text-right md:col-span-2">Subtotal</div>
-        <div className="md:col-span-1"></div>
+        <div className="text-right md:col-span-1">Total</div>
       </div>
 
       <div className="space-y-6">
