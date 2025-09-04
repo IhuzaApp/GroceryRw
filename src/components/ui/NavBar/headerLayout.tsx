@@ -288,7 +288,7 @@ export default function HeaderLayout() {
             {/* Cart Icon */}
             <Link href="/Cart" passHref>
               <div className="flex items-center gap-1 rounded-md p-1.5 transition-colors duration-200 hover:cursor-pointer">
-                <div className="text-white">
+                <div className="text-gray-900 dark:text-white">
                   <svg
                     width="24px"
                     height="24px"
