@@ -400,6 +400,18 @@ const checkUserLikeStatus = (
   return reelLikes.some((like) => like.user_id === currentUserId);
 };
 
+// Cache configuration
+const CACHE_KEY = 'reels_cache';
+const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes in milliseconds
+const MAX_CACHE_AGE = 30 * 60 * 1000; // 30 minutes maximum cache age
+
+interface CachedReels {
+  data: FoodPost[];
+  timestamp: number;
+  lastFetch: number;
+  version: string;
+}
+
 export default function FoodReelsApp() {
   const { theme } = useTheme();
   const { data: session } = useSession();
@@ -416,6 +428,163 @@ export default function FoodReelsApp() {
   const [optimisticComments, setOptimisticComments] = useState<{
     [postId: string]: Comment[];
   }>({});
+  const [isRefreshing, setIsRefreshing] = useState(false);
+  const [pullToRefresh, setPullToRefresh] = useState({ isPulling: false, startY: 0, currentY: 0 });
+
+  // Cache utility functions
+  const getCachedReels = (): CachedReels | null => {
+    try {
+      const cached = localStorage.getItem(CACHE_KEY);
+      if (!cached) return null;
+      
+      const parsedCache: CachedReels = JSON.parse(cached);
+      const now = Date.now();
+      
+      // Check if cache is still valid
+      if (now - parsedCache.timestamp > MAX_CACHE_AGE) {
+        localStorage.removeItem(CACHE_KEY);
+        return null;
+      }
+      
+      return parsedCache;
+    } catch (error) {
+      console.error('Error reading cache:', error);
+      localStorage.removeItem(CACHE_KEY);
+      return null;
+    }
+  };
+
+  const setCachedReels = (data: FoodPost[]): void => {
+    try {
+      // Create a compressed version of the data with only essential fields
+      const compressedData = data.map(post => ({
+        id: post.id,
+        type: post.type,
+        creator: {
+          name: post.creator.name,
+          avatar: post.creator.avatar,
+          verified: post.creator.verified
+        },
+        content: {
+          title: post.content.title,
+          description: post.content.description,
+          video: post.content.video,
+          category: post.content.category
+        },
+        stats: {
+          likes: post.stats.likes,
+          comments: post.stats.comments
+        },
+        isLiked: post.isLiked,
+        // Only store essential type-specific data
+        ...(post.type === 'restaurant' && {
+          restaurant: {
+            rating: post.restaurant.rating,
+            reviews: post.restaurant.reviews,
+            location: post.restaurant.location,
+            deliveryTime: post.restaurant.deliveryTime,
+            price: post.restaurant.price
+          }
+        }),
+        ...(post.type === 'supermarket' && {
+          product: {
+            price: post.product.price,
+            originalPrice: post.product.originalPrice,
+            store: post.product.store,
+            inStock: post.product.inStock,
+            discount: post.product.discount
+          }
+        }),
+        ...(post.type === 'chef' && {
+          recipe: {
+            difficulty: post.recipe.difficulty,
+            cookTime: post.recipe.cookTime,
+            servings: post.recipe.servings,
+            youtubeChannel: post.recipe.youtubeChannel,
+            subscribers: post.recipe.subscribers
+          }
+        })
+      }));
+
+      const cacheData: CachedReels = {
+        data: compressedData as FoodPost[],
+        timestamp: Date.now(),
+        lastFetch: Date.now(),
+        version: '1.0'
+      };
+
+      const serialized = JSON.stringify(cacheData);
+      
+      // Check if data is too large for localStorage
+      if (serialized.length > 4 * 1024 * 1024) { // 4MB limit
+        console.warn('Cache data too large, skipping cache save');
+        return;
+      }
+
+      localStorage.setItem(CACHE_KEY, serialized);
+    } catch (error) {
+      if (error instanceof DOMException && error.name === 'QuotaExceededError') {
+        console.warn('localStorage quota exceeded, clearing old cache and retrying');
+        // Clear old cache and try again
+        try {
+          localStorage.removeItem(CACHE_KEY);
+          // Try with even more compressed data
+          const minimalData = data.slice(0, 10).map(post => ({
+            id: post.id,
+            type: post.type,
+            creator: { name: post.creator.name, avatar: post.creator.avatar, verified: post.creator.verified },
+            content: { title: post.content.title, description: post.content.description, video: post.content.video, category: post.content.category },
+            stats: { likes: post.stats.likes, comments: post.stats.comments },
+            isLiked: post.isLiked
+          }));
+          
+          const minimalCache: CachedReels = {
+            data: minimalData as FoodPost[],
+            timestamp: Date.now(),
+            lastFetch: Date.now(),
+            version: '1.0'
+          };
+          
+          localStorage.setItem(CACHE_KEY, JSON.stringify(minimalCache));
+        } catch (retryError) {
+          console.error('Failed to save even minimal cache:', retryError);
+        }
+      } else {
+        console.error('Error saving cache:', error);
+      }
+    }
+  };
+
+  const shouldRefreshCache = (cached: CachedReels): boolean => {
+    const now = Date.now();
+    return (now - cached.lastFetch) > CACHE_DURATION;
+  };
+
+  // Clean up old cache entries to free up space
+  const cleanupOldCache = (): void => {
+    try {
+      const keys = Object.keys(localStorage);
+      const cacheKeys = keys.filter(key => key.startsWith('reels_') || key.startsWith('cache_'));
+      
+      // Remove old cache entries (older than 1 hour)
+      cacheKeys.forEach(key => {
+        try {
+          const data = localStorage.getItem(key);
+          if (data) {
+            const parsed = JSON.parse(data);
+            if (parsed.timestamp && (Date.now() - parsed.timestamp) > 60 * 60 * 1000) {
+              localStorage.removeItem(key);
+            }
+          }
+        } catch (e) {
+          // Remove corrupted cache entries
+          localStorage.removeItem(key);
+        }
+      });
+    } catch (error) {
+      console.error('Error cleaning up cache:', error);
+    }
+  };
 
   // Convert database reel to FoodPost format with current user's like status
   const convertDatabaseReelToFoodPost = (dbReel: DatabaseReel): FoodPost => {
@@ -513,12 +682,46 @@ export default function FoodReelsApp() {
     }
   };
 
-  // Fetch reels from database
+  // Fetch reels from database with caching
   useEffect(() => {
-    const fetchReels = async () => {
+    const fetchReels = async (forceRefresh: boolean = false) => {
       try {
-        setLoading(true);
-        setError(null);
+        // Clean up old cache entries first
+        cleanupOldCache();
+        
+        // Check cache first
+        const cached = getCachedReels();
+        
+        if (cached && !forceRefresh) {
+          console.log('Loading reels from cache');
+          setPosts(cached.data);
+          setLoading(false);
+          
+          // Check if we need to refresh in background
+          if (shouldRefreshCache(cached)) {
+            console.log('Cache is stale, refreshing in background');
+            fetchReelsFromAPI(true); // Background refresh
+          }
+          return;
+        }
+
+        // No cache or force refresh - fetch from API
+        await fetchReelsFromAPI(false);
+      } catch (err) {
+        console.error("Error in fetchReels:", err);
+        setError(err instanceof Error ? err.message : "Failed to fetch reels");
+        setLoading(false);
+      }
+    };
+
+    const fetchReelsFromAPI = async (isBackgroundRefresh: boolean = false) => {
+      try {
+        if (!isBackgroundRefresh) {
+          setLoading(true);
+          setError(null);
+        } else {
+          setIsRefreshing(true);
+        }
 
         const response = await fetch("/api/queries/reels");
         if (!response.ok) {
@@ -530,17 +733,65 @@ export default function FoodReelsApp() {
           convertDatabaseReelToFoodPost(reel)
         );
 
+        // Update state first
         setPosts(convertedPosts);
+        
+        // Try to update cache, but don't fail if it doesn't work
+        try {
+          setCachedReels(convertedPosts);
+        } catch (cacheError) {
+          console.warn('Failed to update cache, continuing without cache:', cacheError);
+        }
+        
+        if (isBackgroundRefresh) {
+          console.log('Background refresh completed');
+        }
       } catch (err) {
-        console.error("Error fetching reels:", err);
-        setError(err instanceof Error ? err.message : "Failed to fetch reels");
+        console.error("Error fetching reels from API:", err);
+        if (!isBackgroundRefresh) {
+          setError(err instanceof Error ? err.message : "Failed to fetch reels");
+        }
       } finally {
         setLoading(false);
+        setIsRefreshing(false);
       }
     };
 
     fetchReels();
   }, [session?.user?.id]);
+
+  // Manual refresh function
+  const refreshReels = async () => {
+    try {
+      setIsRefreshing(true);
+      setError(null);
+
+      const response = await fetch("/api/queries/reels");
+      if (!response.ok) {
+        throw new Error("Failed to fetch reels");
+      }
+
+      const data = await response.json();
+      const convertedPosts = data.reels.map((reel: DatabaseReel) =>
+        convertDatabaseReelToFoodPost(reel)
+      );
+
+      // Update state first for immediate UI update
+      setPosts(convertedPosts);
+      
+      // Try to update cache, but don't fail if it doesn't work
+      try {
+        setCachedReels(convertedPosts);
+      } catch (cacheError) {
+        console.warn('Failed to update cache, continuing without cache:', cacheError);
+      }
+    } catch (err) {
+      console.error("Error refreshing reels:", err);
+      setError(err instanceof Error ? err.message : "Failed to refresh reels");
+    } finally {
+      setIsRefreshing(false);
+    }
+  };
 
   // Enhanced scroll handling for TikTok-style navigation
   useEffect(() => {
@@ -677,6 +928,14 @@ export default function FoodReelsApp() {
       const touchDuration = Date.now() - touchStartTime;
       const deltaY = touchStartY - touchEndY;
       const threshold = 30;
+      
+      // Check for pull-to-refresh (swipe down from top)
+      if (deltaY < -80 && visiblePostIndex === 0 && touchDuration > 200) {
+        // Pull to refresh triggered
+        refreshReels();
+        setPullToRefresh({ isPulling: false, startY: 0, currentY: 0 });
+        return;
+      }
       
       if (Math.abs(deltaY) > threshold && touchDuration < 500) {
         const currentIndex = visiblePostIndex;
@@ -1198,6 +1457,14 @@ export default function FoodReelsApp() {
   if (isMobile) {
     return (
       <div className={`min-h-screen transition-colors duration-200 `}>
+        {/* Refresh Indicator */}
+        {isRefreshing && (
+          <div className="fixed top-4 left-1/2 transform -translate-x-1/2 z-50 bg-black bg-opacity-75 text-white px-4 py-2 rounded-full text-sm flex items-center gap-2">
+            <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+            Refreshing...
+          </div>
+        )}
+        
         <div
           ref={containerRef}
           className="h-full w-full overflow-y-auto scrollbar-hide reels-container"
@@ -1251,6 +1518,14 @@ export default function FoodReelsApp() {
   return (
     <RootLayout>
       <div className="flex h-fit items-center justify-center">
+        {/* Refresh Indicator */}
+        {isRefreshing && (
+          <div className="fixed top-4 left-1/2 transform -translate-x-1/2 z-50 bg-black bg-opacity-75 text-white px-4 py-2 rounded-full text-sm flex items-center gap-2">
+            <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+            Refreshing...
+          </div>
+        )}
+        
         <div
           className={`container mx-auto h-full max-w-md transition-colors duration-200 md:h-[95vh] md:rounded-2xl md:shadow-2xl ${
             theme === "dark"
