@@ -1,12 +1,16 @@
 import React, { useState } from "react";
 import { Button, SelectPicker, Toggle } from "rsuite";
 import toast from "react-hot-toast";
-import { useTheme } from "@context/ThemeContext";
+import { useTheme } from "../../context/ThemeContext";
+import { signOut } from "next-auth/react";
+import { useRouter } from "next/router";
 
 export default function UserPreference() {
   const { theme, setTheme } = useTheme();
+  const router = useRouter();
   const [language, setLanguage] = useState("en");
   const [hasChanges, setHasChanges] = useState(false);
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
 
   const languages = [
     { label: "English", value: "en" },
@@ -53,17 +57,33 @@ export default function UserPreference() {
 
   const savePreferences = async () => {
     try {
-      // Here you would typically also save to backend
-      // await fetch('/api/user/preferences', {
-      //   method: 'PUT',
-      //   headers: { 'Content-Type': 'application/json' },
-      //   body: JSON.stringify({ theme, language })
-      // });
-
       setHasChanges(false);
       toast.success("Preferences saved successfully!");
     } catch (error) {
       toast.error("Failed to save preferences");
+    }
+  };
+
+  const handleLogout = async () => {
+    try {
+      setIsLoggingOut(true);
+      // Clear any custom cookies that might interfere
+      document.cookie = "role_changed=; Path=/; Max-Age=0; HttpOnly";
+      document.cookie = "new_role=; Path=/; Max-Age=0; HttpOnly";
+      document.cookie = "return_to=; Path=/; Max-Age=0; HttpOnly";
+      
+      // Use NextAuth signOut with redirect: false to handle redirect manually
+      await signOut({ redirect: false });
+      
+      // Manual redirect to avoid the custom signout route
+      window.location.href = "/Auth/Login";
+    } catch (error) {
+      console.error("Error signing out:", error);
+      toast.error("Failed to sign out");
+      // Fallback: force redirect even if signOut fails
+      window.location.href = "/Auth/Login";
+    } finally {
+      setIsLoggingOut(false);
     }
   };
 
@@ -117,6 +137,33 @@ export default function UserPreference() {
         >
           Save Changes
         </Button>
+      </div>
+
+      {/* Logout Section */}
+      <div className="mt-8">
+        <h3 className="mb-4 text-lg font-bold dark:text-white">
+          Account Actions
+        </h3>
+        
+        <div className="rounded-lg border border-red-200 bg-red-50 p-4 shadow-sm transition-colors duration-200 dark:border-red-800 dark:bg-red-900/20">
+          <div className="flex items-center justify-between">
+            <div>
+              <span className="font-medium text-red-800 dark:text-red-200">Sign Out</span>
+              <p className="text-sm text-red-600 dark:text-red-300">
+                Sign out of your account and return to the login page
+              </p>
+            </div>
+            <Button
+              appearance="primary"
+              color="red"
+              onClick={handleLogout}
+              loading={isLoggingOut}
+              className="dark:bg-red-600 dark:text-white"
+            >
+              {isLoggingOut ? "Signing Out..." : "Sign Out"}
+            </Button>
+          </div>
+        </div>
       </div>
     </div>
   );
