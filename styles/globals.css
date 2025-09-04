@@ -410,4 +410,12 @@ a:visited {
 .reels-container {
   scroll-behavior: smooth;
   -webkit-overflow-scrolling: touch; /* iOS momentum scrolling */
+  overscroll-behavior: none; /* Prevent bounce scrolling */
+  scroll-snap-type: y mandatory;
+}
+
+/* Ensure each video takes full height and snaps properly */
+.reels-container > div {
+  scroll-snap-align: start;
+  scroll-snap-stop: always;
 }
