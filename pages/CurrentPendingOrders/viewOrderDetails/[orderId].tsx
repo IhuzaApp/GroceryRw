@@ -14,8 +14,11 @@ export default function ViewOrderDetailsPage() {
   const [error, setError] = useState<string | null>(null);
   const [orderType, setOrderType] = useState<"regular" | "reel" | null>(null);
 
+
+
   useEffect(() => {
-    if (!orderId) return;
+    if (!orderId || !router.isReady) return;
+    
     async function fetchDetails() {
       try {
         setLoading(true);
@@ -33,9 +36,6 @@ export default function ViewOrderDetailsPage() {
           }
         } else if (res.status === 404) {
           // Silently handle 404 for regular orders - this is expected for reel orders
-          console.log(
-            "Order not found in regular orders, trying reel orders..."
-          );
         }
 
         // If not found as regular order, try as reel order
@@ -47,7 +47,7 @@ export default function ViewOrderDetailsPage() {
               "Order not found. Please check the order ID and try again."
             );
           }
-          const errorData = await res.json();
+          const errorData = await res.json().catch(() => ({}));
           throw new Error(errorData.error || "Failed to fetch order details");
         }
 

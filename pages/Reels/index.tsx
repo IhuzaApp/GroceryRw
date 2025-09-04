@@ -544,18 +544,39 @@ export default function FoodReelsApp() {
 
   // Enhanced scroll handling for TikTok-style navigation
   useEffect(() => {
-    if (!containerRef.current) return;
+    if (!containerRef.current || posts.length === 0) return;
 
     const container = containerRef.current;
     let isScrolling = false;
     let scrollTimeout: NodeJS.Timeout;
+    let lastScrollTime = 0;
+
+    const scrollToVideo = (index: number) => {
+      if (index < 0 || index >= posts.length) return;
+      
+      const targetElement = container.children[index] as HTMLElement;
+      if (targetElement) {
+        // Disable smooth scrolling temporarily for instant snap
+        container.style.scrollBehavior = 'auto';
+        targetElement.scrollIntoView({ behavior: 'auto' });
+        setVisiblePostIndex(index);
+        
+        // Re-enable smooth scrolling after a brief delay
+        setTimeout(() => {
+          container.style.scrollBehavior = 'smooth';
+        }, 100);
+      }
+    };
 
     const handleWheel = (e: WheelEvent) => {
       e.preventDefault();
       
-      if (isScrolling) return;
+      const now = Date.now();
+      if (isScrolling || now - lastScrollTime < 150) return; // Prevent rapid scrolling
       
       isScrolling = true;
+      lastScrollTime = now;
+      
       const currentIndex = visiblePostIndex;
       let nextIndex = currentIndex;
       
@@ -568,34 +589,34 @@ export default function FoodReelsApp() {
       }
       
       if (nextIndex !== currentIndex) {
-        const targetElement = container.children[nextIndex] as HTMLElement;
-        if (targetElement) {
-          targetElement.scrollIntoView({ behavior: 'smooth' });
-          setVisiblePostIndex(nextIndex);
-        }
+        scrollToVideo(nextIndex);
       }
       
       // Debounce scroll events
       clearTimeout(scrollTimeout);
       scrollTimeout = setTimeout(() => {
         isScrolling = false;
-      }, 300);
+      }, 200);
     };
 
     const handleTouchStart = (e: TouchEvent) => {
       const touch = e.touches[0];
       container.dataset.touchStartY = touch.clientY.toString();
+      container.dataset.touchStartTime = Date.now().toString();
     };
 
     const handleTouchEnd = (e: TouchEvent) => {
-      if (!container.dataset.touchStartY) return;
+      if (!container.dataset.touchStartY || !container.dataset.touchStartTime) return;
       
       const touchEndY = e.changedTouches[0].clientY;
       const touchStartY = parseInt(container.dataset.touchStartY);
+      const touchStartTime = parseInt(container.dataset.touchStartTime);
+      const touchDuration = Date.now() - touchStartTime;
       const deltaY = touchStartY - touchEndY;
-      const threshold = 50; // Minimum swipe distance
+      const threshold = 30; // Reduced threshold for more responsive swipes
       
-      if (Math.abs(deltaY) > threshold) {
+      // Only process if it's a quick swipe (not a long drag)
+      if (Math.abs(deltaY) > threshold && touchDuration < 500) {
         const currentIndex = visiblePostIndex;
         let nextIndex = currentIndex;
         
@@ -608,15 +629,12 @@ export default function FoodReelsApp() {
         }
         
         if (nextIndex !== currentIndex) {
-          const targetElement = container.children[nextIndex] as HTMLElement;
-          if (targetElement) {
-            targetElement.scrollIntoView({ behavior: 'smooth' });
-            setVisiblePostIndex(nextIndex);
-          }
+          scrollToVideo(nextIndex);
         }
       }
       
       delete container.dataset.touchStartY;
+      delete container.dataset.touchStartTime;
     };
 
     container.addEventListener('wheel', handleWheel, { passive: false });
@@ -725,6 +743,12 @@ export default function FoodReelsApp() {
   }, [posts.length, isMobile]); // Re-run when posts change or mobile state changes
 
   const toggleLike = async (postId: string) => {
+    // Check if user is logged in
+    if (!session?.user) {
+      alert("Please log in to like videos");
+      return;
+    }
+
     try {
       const currentPost = posts.find((post: FoodPost) => post.id === postId);
       if (!currentPost) return;
@@ -779,6 +803,12 @@ export default function FoodReelsApp() {
   };
 
   const toggleCommentLike = async (postId: string, commentId: string) => {
+    // Check if user is logged in
+    if (!session?.user) {
+      alert("Please log in to like comments");
+      return;
+    }
+
     try {
       const response = await fetch("/api/queries/reel-comments", {
         method: "PUT",
@@ -818,6 +848,12 @@ export default function FoodReelsApp() {
   };
 
   const addComment = async (postId: string, commentText: string) => {
+    // Check if user is logged in
+    if (!session?.user) {
+      alert("Please log in to add comments");
+      return;
+    }
+
     try {
       // Create optimistic comment for immediate UI update
       const optimisticComment: Comment = {
@@ -978,6 +1014,12 @@ export default function FoodReelsApp() {
 
   // Enhanced openComments function with comment refetching
   const openComments = async (postId: string) => {
+    // Check if user is logged in
+    if (!session?.user) {
+      alert("Please log in to view comments");
+      return;
+    }
+
     console.log("Opening comments for post:", postId);
     setActivePostId(postId);
     setShowComments(true);
@@ -1009,6 +1051,12 @@ export default function FoodReelsApp() {
   };
 
   const handleShare = (postId: string) => {
+    // Check if user is logged in
+    if (!session?.user) {
+      alert("Please log in to share videos");
+      return;
+    }
+
     console.log("Sharing post:", postId);
   };
 
@@ -1088,7 +1136,8 @@ export default function FoodReelsApp() {
           style={{ 
             height: "calc(100vh - 80px)",
             scrollSnapType: "y mandatory",
-            scrollBehavior: "smooth"
+            scrollBehavior: "smooth",
+            overscrollBehavior: "none"
           }}
         >
           {posts.map((post, index) => (
@@ -1101,6 +1150,7 @@ export default function FoodReelsApp() {
               <VideoReel
                 post={post}
                 isVisible={visiblePostIndex === index}
+                isAuthenticated={!!session?.user}
                 onLike={toggleLike}
                 onComment={openComments}
                 onShare={handleShare}
@@ -1145,7 +1195,8 @@ export default function FoodReelsApp() {
             className="h-full w-full overflow-y-auto scrollbar-hide reels-container"
             style={{ 
               scrollSnapType: "y mandatory",
-              scrollBehavior: "smooth"
+              scrollBehavior: "smooth",
+              overscrollBehavior: "none"
             }}
           >
             {posts.map((post, index) => (
@@ -1158,6 +1209,7 @@ export default function FoodReelsApp() {
                 <VideoReel
                   post={post}
                   isVisible={visiblePostIndex === index}
+                  isAuthenticated={!!session?.user}
                   onLike={toggleLike}
                   onComment={openComments}
                   onShare={handleShare}

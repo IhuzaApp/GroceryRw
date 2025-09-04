@@ -271,6 +271,7 @@ type FoodPost = RestaurantPost | SupermarketPost | ChefPost;
 interface VideoReelProps {
   post: FoodPost;
   isVisible: boolean;
+  isAuthenticated: boolean;
   onLike: (postId: string) => void;
   onComment: (postId: string) => void;
   onShare: (postId: string) => void;
@@ -279,6 +280,7 @@ interface VideoReelProps {
 export default function VideoReel({
   post,
   isVisible,
+  isAuthenticated,
   onLike,
   onComment,
   onShare,
@@ -368,11 +370,10 @@ export default function VideoReel({
 
   const handleVideoError = (error: any) => {
     if (!mountedRef.current) return;
-    toaster.push({
-      message: `Video error: ${(error as Error).message || 'Unknown error occurred'}`,
-      type: 'error',
-      duration: 4000
-    });
+    toaster.push(
+      `Video error: ${(error as Error).message || 'Unknown error occurred'}`,
+      { placement: "topEnd" }
+    );
     setVideoError(true);
     setVideoLoading(false);
   };
@@ -386,11 +387,10 @@ export default function VideoReel({
           await videoRef.current.play();
         } catch (error) {
           if (mountedRef.current && (error as Error).name !== "AbortError") {
-            toaster.push({
-              message: `Failed to play video: ${(error as Error).message || 'Unknown error occurred'}`,
-              type: 'error',
-              duration: 4000
-            });
+            toaster.push(
+              `Failed to play video: ${(error as Error).message || 'Unknown error occurred'}`,
+              { placement: "topEnd" }
+            );
           }
         }
       };
@@ -513,15 +513,19 @@ export default function VideoReel({
                 borderColor: "#166534",
                 color: "white",
                 border: "none",
-                cursor: "pointer",
+                cursor: isAuthenticated ? "pointer" : "not-allowed",
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "center",
+                opacity: isAuthenticated ? 1 : 0.5,
               }}
-              onClick={() => setShowOrderModal(true)}
+              onClick={isAuthenticated ? () => setShowOrderModal(true) : undefined}
+              disabled={!isAuthenticated}
             >
               <UtensilsIcon />
-              <span style={{ marginLeft: 8, whiteSpace: "nowrap" }}>Order Now</span>
+              <span style={{ marginLeft: 8, whiteSpace: "nowrap" }}>
+                {isAuthenticated ? "Order Now" : "Login to Order"}
+              </span>
             </button>
           </div>
         );
@@ -602,14 +606,19 @@ export default function VideoReel({
                   borderColor: "#2563eb",
                   color: "white",
                   border: "none",
-                  cursor: "pointer",
+                  cursor: isAuthenticated ? "pointer" : "not-allowed",
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "center",
+                  opacity: isAuthenticated ? 1 : 0.5,
                 }}
+                onClick={isAuthenticated ? undefined : undefined}
+                disabled={!isAuthenticated}
               >
                 <StoreIcon />
-                <span style={{ marginLeft: 8, whiteSpace: "nowrap" }}>Visit Store</span>
+                <span style={{ marginLeft: 8, whiteSpace: "nowrap" }}>
+                  {isAuthenticated ? "Visit Store" : "Login to Visit"}
+                </span>
               </button>
               <button
                 style={{
@@ -621,17 +630,19 @@ export default function VideoReel({
                   borderColor: "#166534",
                   color: "white",
                   border: "none",
-                  cursor: "pointer",
+                  cursor: isAuthenticated && supermarketPost.product.inStock ? "pointer" : "not-allowed",
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "center",
-                  opacity: supermarketPost.product.inStock ? 1 : 0.5,
+                  opacity: isAuthenticated && supermarketPost.product.inStock ? 1 : 0.5,
                 }}
-                onClick={() => setShowOrderModal(true)}
-                disabled={!supermarketPost.product.inStock}
+                onClick={isAuthenticated ? () => setShowOrderModal(true) : undefined}
+                disabled={!isAuthenticated || !supermarketPost.product.inStock}
               >
                 <ShoppingCartIcon />
-                <span style={{ marginLeft: 8, whiteSpace: "nowrap" }}>Order Now</span>
+                <span style={{ marginLeft: 8, whiteSpace: "nowrap" }}>
+                  {isAuthenticated ? "Order Now" : "Login to Order"}
+                </span>
               </button>
             </div>
           </div>
@@ -693,14 +704,19 @@ export default function VideoReel({
                   borderColor: "#dc2626",
                   color: "white",
                   border: "none",
-                  cursor: "pointer",
+                  cursor: isAuthenticated ? "pointer" : "not-allowed",
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "center",
+                  opacity: isAuthenticated ? 1 : 0.5,
                 }}
+                onClick={isAuthenticated ? undefined : undefined}
+                disabled={!isAuthenticated}
               >
                 <YoutubeIcon />
-                <span style={{ marginLeft: 8, whiteSpace: "nowrap" }}>YouTube</span>
+                <span style={{ marginLeft: 8, whiteSpace: "nowrap" }}>
+                  {isAuthenticated ? "YouTube" : "Login to Watch"}
+                </span>
               </button>
               <button
                 style={{
@@ -712,14 +728,19 @@ export default function VideoReel({
                   borderColor: "#7c3aed",
                   color: "white",
                   border: "none",
-                  cursor: "pointer",
+                  cursor: isAuthenticated ? "pointer" : "not-allowed",
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "center",
+                  opacity: isAuthenticated ? 1 : 0.5,
                 }}
+                onClick={isAuthenticated ? undefined : undefined}
+                disabled={!isAuthenticated}
               >
                 <BookOpenIcon />
-                <span style={{ marginLeft: 8, whiteSpace: "nowrap" }}>Get Recipe</span>
+                <span style={{ marginLeft: 8, whiteSpace: "nowrap" }}>
+                  {isAuthenticated ? "Get Recipe" : "Login to View"}
+                </span>
               </button>
             </div>
           </div>
@@ -927,8 +948,11 @@ export default function VideoReel({
                 border: post.isLiked ? "2px solid #ef4444" : "none",
                 color: "#fff",
                 transition: "all 0.2s ease",
+                opacity: isAuthenticated ? 1 : 0.5,
+                cursor: isAuthenticated ? "pointer" : "not-allowed",
               }}
-              onClick={() => onLike(post.id)}
+              onClick={isAuthenticated ? () => onLike(post.id) : undefined}
+              disabled={!isAuthenticated}
             >
               <HeartIcon filled={post.isLiked} />
             </Button>
@@ -964,8 +988,11 @@ export default function VideoReel({
                 backdropFilter: "blur(4px)",
                 border: "none",
                 color: "#fff",
+                opacity: isAuthenticated ? 1 : 0.5,
+                cursor: isAuthenticated ? "pointer" : "not-allowed",
               }}
-              onClick={() => onComment(post.id)}
+              onClick={isAuthenticated ? () => onComment(post.id) : undefined}
+              disabled={!isAuthenticated}
             >
               <MessageIcon />
             </Button>
@@ -999,8 +1026,11 @@ export default function VideoReel({
                 backdropFilter: "blur(4px)",
                 border: "none",
                 color: "#fff",
+                opacity: isAuthenticated ? 1 : 0.5,
+                cursor: isAuthenticated ? "pointer" : "not-allowed",
               }}
-              onClick={() => onShare(post.id)}
+              onClick={isAuthenticated ? () => onShare(post.id) : undefined}
+              disabled={!isAuthenticated}
             >
               <ShareIcon />
             </Button>

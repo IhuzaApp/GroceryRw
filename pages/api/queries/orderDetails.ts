@@ -5,7 +5,7 @@ import { gql } from "graphql-request";
 // GraphQL query to fetch a single order with nested details
 const GET_ORDER_DETAILS = gql`
   query GetOrderDetails($id: uuid!) {
-    Orders(where: { id: { _eq: $id } }, limit: 1) {
+    Orders(where: {id: {_eq: $id}}, limit: 1) {
       id
       OrderID
       placedAt: created_at
@@ -20,7 +20,7 @@ const GET_ORDER_DETAILS = gql`
       combinedOrderId: combined_order_id
       voucherCode: voucher_code
       shop_id
-      user: userByUserId {
+      user: User {
         id
         name
         email
@@ -44,18 +44,36 @@ const GET_ORDER_DETAILS = gql`
         price
         product: Product {
           id
-          name
-          image
           price
           final_price
-          description
           measurement_unit
           category
           quantity
-          barcode
           sku
+          image
+          productName_id
+          ProductName {
+            barcode
+            create_at
+            description
+            id
+            image
+            name
+            sku
+          }
+          created_at
+          is_active
+          reorder_point
+          shop_id
+          supplier
+          updated_at
         }
         order_id
+      }
+      assignedTo: User {
+        id
+        name
+        profile_picture
       }
       address: Address {
         id
@@ -66,16 +84,11 @@ const GET_ORDER_DETAILS = gql`
         longitude
         is_default
       }
-      assignedTo: User {
-        id
-        name
-        profile_picture
-        orders: Orders_aggregate {
-          aggregate {
-            count
-          }
-        }
-      }
+      delivery_address_id
+      found
+      shopper_id
+      updated_at
+      user_id
     }
   }
 `;
@@ -121,50 +134,11 @@ export default async function handler(
 
     const order = data.Orders[0];
 
-    // If shop data is missing or incomplete, fetch it separately
-    let shopData = order.shop;
 
-    if (
-      !shopData ||
-      !shopData.phone ||
-      !shopData.latitude ||
-      !shopData.longitude
-    ) {
-      if (order.shop_id) {
-        try {
-          const shopQuery = gql`
-            query GetShopById($id: uuid!) {
-              Shops_by_pk(id: $id) {
-                id
-                name
-                address
-                image
-                phone
-                latitude
-                longitude
-                operating_hours
-              }
-            }
-          `;
-
-          const shopResponse = await hasuraClient.request<{ Shops_by_pk: any }>(
-            shopQuery,
-            { id: order.shop_id }
-          );
-
-          if (shopResponse.Shops_by_pk) {
-            shopData = shopResponse.Shops_by_pk;
-          }
-        } catch (shopError) {
-          // Shop data fetch failed, continue with existing data
-        }
-      }
-    }
 
     // Format timestamps to human-readable strings
     const formattedOrder = {
       ...order,
-      shop: shopData,
       placedAt: new Date(order.placedAt).toLocaleString("en-US", {
         dateStyle: "medium",
         timeStyle: "short",
@@ -177,6 +151,10 @@ export default async function handler(
 
     res.status(200).json({ order: formattedOrder });
   } catch (error) {
-    res.status(500).json({ error: "Failed to fetch order details" });
+    console.error("Error in orderDetails API:", error);
+    res.status(500).json({ 
+      error: "Failed to fetch order details",
+      details: error instanceof Error ? error.message : "Unknown error"
+    });
   }
 }
