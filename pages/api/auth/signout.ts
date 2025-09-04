@@ -29,12 +29,21 @@ export default async function handler(
   // Check if this request is already coming from NextAuth signout
   // to prevent redirection loops
   const referer = req.headers.referer || "";
-  if (referer.includes("/api/auth/signout")) {
-    // If we're already in the signout process, redirect based on whether role switch completed
-    return res.redirect(isRoleSwitch ? "/" : "/Auth/Login");
+  const userAgent = req.headers["user-agent"] || "";
+  
+  // If this is a direct API call (not from browser navigation), handle it differently
+  if (req.headers["content-type"] === "application/json" || 
+      userAgent.includes("fetch") || 
+      referer.includes("/api/auth/signout")) {
+    // Return a JSON response instead of redirecting
+    return res.status(200).json({ 
+      success: true, 
+      message: "Sign out initiated",
+      redirectUrl: isRoleSwitch ? "/" : "/Auth/Login"
+    });
   }
 
-  // Redirect to the NextAuth signout endpoint with a callback URL
+  // For browser requests, redirect to the NextAuth signout endpoint with a callback URL
   // If role switch, go to dashboard, otherwise go to login
   const callbackUrl = isRoleSwitch ? "/" : "/Auth/Login";
   return res.redirect(
