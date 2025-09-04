@@ -419,3 +419,37 @@ a:visited {
   scroll-snap-align: start;
   scroll-snap-stop: always;
 }
+
+/* Desktop-specific scroll behavior */
+@media (min-width: 768px) {
+  .reels-container {
+    scroll-snap-type: y proximity; /* Less aggressive snapping on desktop */
+  }
+  
+  .reels-container > div {
+    scroll-snap-stop: normal; /* Allow scrolling past multiple items */
+  }
+}
+
+/* Mobile-specific scroll behavior */
+@media (max-width: 767px) {
+  .reels-container {
+    scroll-snap-type: y mandatory; /* Aggressive snapping on mobile */
+  }
+  
+  .reels-container > div {
+    scroll-snap-stop: always; /* Always stop at each video on mobile */
+  }
+}
+
+/* Desktop keyboard navigation focus */
+@media (min-width: 768px) {
+  .reels-container:focus {
+    outline: 2px solid #10b981; /* Green focus ring */
+    outline-offset: 2px;
+  }
+  
+  .reels-container:focus:not(:focus-visible) {
+    outline: none; /* Remove outline when not using keyboard */
+  }
+}

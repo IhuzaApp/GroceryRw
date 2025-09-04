@@ -551,85 +551,145 @@ export default function FoodReelsApp() {
     let scrollTimeout: NodeJS.Timeout;
     let lastScrollTime = 0;
 
-    const scrollToVideo = (index: number) => {
+    const scrollToVideo = (index: number, smooth: boolean = true) => {
       if (index < 0 || index >= posts.length) return;
       
       const targetElement = container.children[index] as HTMLElement;
       if (targetElement) {
-        // Disable smooth scrolling temporarily for instant snap
-        container.style.scrollBehavior = 'auto';
-        targetElement.scrollIntoView({ behavior: 'auto' });
+        if (smooth) {
+          // Smooth scrolling for desktop
+          targetElement.scrollIntoView({ behavior: 'smooth' });
+        } else {
+          // Instant snap for mobile
+          container.style.scrollBehavior = 'auto';
+          targetElement.scrollIntoView({ behavior: 'auto' });
+          setTimeout(() => {
+            container.style.scrollBehavior = 'smooth';
+          }, 100);
+        }
         setVisiblePostIndex(index);
-        
-        // Re-enable smooth scrolling after a brief delay
-        setTimeout(() => {
-          container.style.scrollBehavior = 'smooth';
-        }, 100);
       }
     };
 
     const handleWheel = (e: WheelEvent) => {
-      e.preventDefault();
-      
-      const now = Date.now();
-      if (isScrolling || now - lastScrollTime < 150) return; // Prevent rapid scrolling
-      
-      isScrolling = true;
-      lastScrollTime = now;
+      // Different behavior for mobile vs desktop
+      if (isMobile) {
+        // Mobile: TikTok-style behavior
+        e.preventDefault();
+        
+        const now = Date.now();
+        if (isScrolling || now - lastScrollTime < 150) return;
+        
+        isScrolling = true;
+        lastScrollTime = now;
+        
+        const currentIndex = visiblePostIndex;
+        let nextIndex = currentIndex;
+        
+        if (e.deltaY > 0 && currentIndex < posts.length - 1) {
+          nextIndex = currentIndex + 1;
+        } else if (e.deltaY < 0 && currentIndex > 0) {
+          nextIndex = currentIndex - 1;
+        }
+        
+        if (nextIndex !== currentIndex) {
+          scrollToVideo(nextIndex, false); // Instant snap for mobile
+        }
+        
+        clearTimeout(scrollTimeout);
+        scrollTimeout = setTimeout(() => {
+          isScrolling = false;
+        }, 200);
+      } else {
+        // Desktop: More natural scrolling with scroll-snap
+        const currentIndex = visiblePostIndex;
+        let nextIndex = currentIndex;
+        
+        // Only handle large scroll deltas to prevent over-sensitivity
+        if (Math.abs(e.deltaY) > 50) {
+          if (e.deltaY > 0 && currentIndex < posts.length - 1) {
+            nextIndex = currentIndex + 1;
+          } else if (e.deltaY < 0 && currentIndex > 0) {
+            nextIndex = currentIndex - 1;
+          }
+          
+          if (nextIndex !== currentIndex) {
+            scrollToVideo(nextIndex, true); // Smooth scrolling for desktop
+          }
+        }
+      }
+    };
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // Desktop keyboard navigation
+      if (isMobile) return;
       
       const currentIndex = visiblePostIndex;
       let nextIndex = currentIndex;
       
-      if (e.deltaY > 0 && currentIndex < posts.length - 1) {
-        // Scroll down - next video
-        nextIndex = currentIndex + 1;
-      } else if (e.deltaY < 0 && currentIndex > 0) {
-        // Scroll up - previous video
-        nextIndex = currentIndex - 1;
+      switch (e.key) {
+        case 'ArrowDown':
+        case 'PageDown':
+        case ' ': // Spacebar
+          e.preventDefault();
+          if (currentIndex < posts.length - 1) {
+            nextIndex = currentIndex + 1;
+          }
+          break;
+        case 'ArrowUp':
+        case 'PageUp':
+          e.preventDefault();
+          if (currentIndex > 0) {
+            nextIndex = currentIndex - 1;
+          }
+          break;
+        case 'Home':
+          e.preventDefault();
+          nextIndex = 0;
+          break;
+        case 'End':
+          e.preventDefault();
+          nextIndex = posts.length - 1;
+          break;
+        default:
+          return;
       }
       
       if (nextIndex !== currentIndex) {
-        scrollToVideo(nextIndex);
+        scrollToVideo(nextIndex, true);
       }
-      
-      // Debounce scroll events
-      clearTimeout(scrollTimeout);
-      scrollTimeout = setTimeout(() => {
-        isScrolling = false;
-      }, 200);
     };
 
     const handleTouchStart = (e: TouchEvent) => {
+      if (!isMobile) return;
+      
       const touch = e.touches[0];
       container.dataset.touchStartY = touch.clientY.toString();
       container.dataset.touchStartTime = Date.now().toString();
     };
 
     const handleTouchEnd = (e: TouchEvent) => {
-      if (!container.dataset.touchStartY || !container.dataset.touchStartTime) return;
+      if (!isMobile || !container.dataset.touchStartY || !container.dataset.touchStartTime) return;
       
       const touchEndY = e.changedTouches[0].clientY;
       const touchStartY = parseInt(container.dataset.touchStartY);
       const touchStartTime = parseInt(container.dataset.touchStartTime);
       const touchDuration = Date.now() - touchStartTime;
       const deltaY = touchStartY - touchEndY;
-      const threshold = 30; // Reduced threshold for more responsive swipes
+      const threshold = 30;
       
-      // Only process if it's a quick swipe (not a long drag)
       if (Math.abs(deltaY) > threshold && touchDuration < 500) {
         const currentIndex = visiblePostIndex;
         let nextIndex = currentIndex;
         
         if (deltaY > 0 && currentIndex < posts.length - 1) {
-          // Swipe up - next video
           nextIndex = currentIndex + 1;
         } else if (deltaY < 0 && currentIndex > 0) {
-          // Swipe down - previous video
           nextIndex = currentIndex - 1;
         }
         
         if (nextIndex !== currentIndex) {
-          scrollToVideo(nextIndex);
+          scrollToVideo(nextIndex, false);
         }
       }
       
@@ -637,17 +697,25 @@ export default function FoodReelsApp() {
       delete container.dataset.touchStartTime;
     };
 
+    // Add event listeners
     container.addEventListener('wheel', handleWheel, { passive: false });
     container.addEventListener('touchstart', handleTouchStart, { passive: true });
     container.addEventListener('touchend', handleTouchEnd, { passive: true });
+    
+    // Desktop keyboard navigation
+    if (!isMobile) {
+      container.addEventListener('keydown', handleKeyDown);
+      container.setAttribute('tabindex', '0'); // Make container focusable for keyboard events
+    }
 
     return () => {
       container.removeEventListener('wheel', handleWheel);
       container.removeEventListener('touchstart', handleTouchStart);
       container.removeEventListener('touchend', handleTouchEnd);
+      container.removeEventListener('keydown', handleKeyDown);
       clearTimeout(scrollTimeout);
     };
-  }, [posts.length, visiblePostIndex]);
+  }, [posts.length, visiblePostIndex, isMobile]);
 
   // Check if mobile on mount and resize with debouncing
   useEffect(() => {
