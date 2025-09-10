@@ -120,8 +120,8 @@ export default function ShopperSidebar() {
         localStorage.clear();
         sessionStorage.clear();
         
-        // Redirect to login page
-        window.location.href = '/Auth/Login';
+        // Redirect to home page
+        window.location.href = '/';
       } else {
         throw new Error('Logout failed');
       }

@@ -424,7 +424,7 @@ export default function UserProfile() {
                   toast.success("Logged out successfully");
 
                   // Redirect to login page
-                  router.push("/Auth/Login");
+                  router.push("/");
                 } else {
                   throw new Error("Logout failed");
                 }
