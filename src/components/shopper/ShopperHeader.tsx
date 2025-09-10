@@ -36,7 +36,7 @@ export default function ShopperHeader() {
               alt="Plas Logo"
               width={120}
               height={40}
-              className="h-8 w-auto"
+              className="h-8 w-auto ml-8"
               priority
             />
           </div>
@@ -44,7 +44,7 @@ export default function ShopperHeader() {
       </div>
 
       {/* Search Section */}
-      <div className="flex-1 max-w-md mx-4">
+      <div className="flex-1 max-w-md mx-8">
         <div className="relative">
           <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
             <svg
