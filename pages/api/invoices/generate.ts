@@ -4,7 +4,7 @@ import { authOptions } from "../auth/[...nextauth]";
 import { gql } from "graphql-request";
 import { hasuraClient } from "../../../src/lib/hasuraClient";
 
-// GraphQL query to get order details for invoice
+// GraphQL query to get regular order details for invoice
 const GET_ORDER_DETAILS_FOR_INVOICE = gql`
   query GetOrderDetailsForInvoice($order_id: uuid!) {
     Orders_by_pk(id: $order_id) {
@@ -41,6 +41,42 @@ const GET_ORDER_DETAILS_FOR_INVOICE = gql`
   }
 `;
 
+// GraphQL query to get reel order details for invoice
+const GET_REEL_ORDER_DETAILS_FOR_INVOICE = gql`
+  query GetReelOrderDetailsForInvoice($order_id: uuid!) {
+    reel_orders_by_pk(id: $order_id) {
+      id
+      OrderID
+      status
+      total
+      service_fee
+      delivery_fee
+      created_at
+      updated_at
+      User {
+        id
+        name
+        email
+      }
+      Reel {
+        id
+        title
+        description
+        Price
+        Product
+        type
+        video_url
+        Restaurant {
+          id
+          name
+          location
+        }
+      }
+      shopper_id
+    }
+  }
+`;
+
 // GraphQL mutation to insert invoice data into the Invoices table
 const ADD_INVOICE = gql`
   mutation addInvoiceDetails(
@@ -55,6 +91,7 @@ const ADD_INVOICE = gql`
     $subtotal: String = ""
     $tax: String = ""
     $total_amount: String = ""
+    $reel_order_id: uuid = ""
   ) {
     insert_Invoices(
       objects: {
@@ -69,6 +106,7 @@ const ADD_INVOICE = gql`
         subtotal: $subtotal
         tax: $tax
         total_amount: $total_amount
+        reel_order_id: $reel_order_id
       }
     ) {
       returning {
@@ -80,7 +118,7 @@ const ADD_INVOICE = gql`
   }
 `;
 
-// Type definition for order details
+// Type definition for regular order details
 interface OrderDetails {
   Orders_by_pk: {
     id: string;
@@ -115,6 +153,40 @@ interface OrderDetails {
   } | null;
 }
 
+// Type definition for reel order details
+interface ReelOrderDetails {
+  reel_orders_by_pk: {
+    id: string;
+    OrderID: string;
+    status: string;
+    total: number;
+    service_fee: string;
+    delivery_fee: string;
+    created_at: string;
+    updated_at: string;
+    User: {
+      id: string;
+      name: string;
+      email: string;
+    };
+    Reel: {
+      id: string;
+      title: string;
+      description: string;
+      Price: string;
+      Product: string;
+      type: string;
+      video_url: string;
+      Restaurant: {
+        id: string;
+        name: string;
+        location: string;
+      };
+    };
+    shopper_id: string;
+  } | null;
+}
+
 // GraphQL mutation return type
 interface AddInvoiceResult {
   insert_Invoices: {
@@ -143,7 +215,7 @@ export default async function handler(
       return res.status(401).json({ error: "Unauthorized" });
     }
 
-    const { orderId } = req.body;
+    const { orderId, orderType = "regular" } = req.body;
 
     // Validate required fields
     if (!orderId) {
@@ -155,39 +227,90 @@ export default async function handler(
       return res.status(500).json({ error: "Database client not available" });
     }
 
-    // Get order details for invoice
-    const orderDetails = await hasuraClient.request<OrderDetails>(
-      GET_ORDER_DETAILS_FOR_INVOICE,
-      {
-        order_id: orderId,
-      }
-    );
+    const isReelOrder = orderType === "reel";
 
-    if (!orderDetails.Orders_by_pk) {
-      return res.status(404).json({ error: "Order not found" });
+    // Get order details for invoice based on order type
+    let orderDetails: any;
+    if (isReelOrder) {
+      orderDetails = await hasuraClient.request<ReelOrderDetails>(
+        GET_REEL_ORDER_DETAILS_FOR_INVOICE,
+        {
+          order_id: orderId,
+        }
+      );
+    } else {
+      orderDetails = await hasuraClient.request<OrderDetails>(
+        GET_ORDER_DETAILS_FOR_INVOICE,
+        {
+          order_id: orderId,
+        }
+      );
     }
 
-    const order = orderDetails.Orders_by_pk;
+    const order = isReelOrder
+      ? orderDetails.reel_orders_by_pk
+      : orderDetails.Orders_by_pk;
+
+    if (!order) {
+      return res.status(404).json({ error: "Order not found" });
+    }
 
     // Verify the user is authorized to access this order (either as customer or shopper)
     if (
       order.shopper_id !== session.user.id &&
-      order.userByUserId.id !== session.user.id
+      (isReelOrder ? order.User.id : order.userByUserId.id) !== session.user.id
     ) {
       return res
         .status(403)
         .json({ error: "Not authorized to access this order" });
     }
 
-    // Calculate totals
-    // Use the actual items from the order and calculate based on quantities
-    const items = order.Order_Items;
-    // For the invoice, we want to show just the items that are in the order
-    // We'll calculate the total based on the quantities in the database
-    const itemsTotal = items.reduce((total, item) => {
-      // Use the item's price and quantity directly
-      return total + parseFloat(item.price) * item.quantity;
-    }, 0);
+    // Calculate totals based on order type
+    let itemsTotal: number;
+    let invoiceItems: any[];
+    let shopName: string;
+    let shopAddress: string;
+
+    if (isReelOrder) {
+      // For reel orders, use the reel price and product info
+      const reel = order.Reel;
+      itemsTotal = parseFloat(reel.Price);
+      shopName = reel.Restaurant.name;
+      shopAddress = reel.Restaurant.location;
+
+      // Create invoice items for reel orders
+      invoiceItems = [
+        {
+          id: reel.id,
+          name: reel.Product,
+          quantity: 1,
+          unit_price: parseFloat(reel.Price),
+          total: parseFloat(reel.Price),
+          unit: "item",
+          description: reel.description,
+          type: reel.type,
+        },
+      ];
+    } else {
+      // For regular orders, use the order items
+      const items = order.Order_Items;
+      itemsTotal = items.reduce((total: number, item: any) => {
+        return total + parseFloat(item.price) * item.quantity;
+      }, 0);
+
+      shopName = order.Shop.name;
+      shopAddress = order.Shop.address;
+
+      // Create invoice items for regular orders
+      invoiceItems = items.map((item: any) => ({
+        id: item.id,
+        name: item.Product.name,
+        quantity: item.quantity,
+        unit_price: parseFloat(item.price),
+        total: parseFloat(item.price) * item.quantity,
+        unit: item.Product.measurement_unit || "item",
+      }));
+    }
 
     const serviceFee = parseFloat(order.service_fee);
     const deliveryFee = parseFloat(order.delivery_fee);
@@ -196,16 +319,6 @@ export default async function handler(
     const invoiceNumber = `INV-${
       order.OrderID || order.id.slice(-8)
     }-${new Date().getTime().toString().slice(-6)}`;
-
-    // Prepare invoice items for storage in jsonb format
-    const invoiceItems = items.map((item) => ({
-      id: item.id,
-      name: item.Product.name,
-      quantity: item.quantity,
-      unit_price: parseFloat(item.price),
-      total: parseFloat(item.price) * item.quantity,
-      unit: item.Product.measurement_unit || "item",
-    }));
 
     // Format values for database storage
     const subtotalStr = itemsTotal.toFixed(2);
@@ -219,12 +332,13 @@ export default async function handler(
     const saveResult = await hasuraClient.request<AddInvoiceResult>(
       ADD_INVOICE,
       {
-        customer_id: order.userByUserId.id,
+        customer_id: isReelOrder ? order.User.id : order.userByUserId.id,
         delivery_fee: deliveryFeeStr,
         discount: discountStr,
         invoice_items: invoiceItems,
         invoice_number: invoiceNumber,
-        order_id: order.id,
+        order_id: isReelOrder ? null : order.id,
+        reel_order_id: isReelOrder ? order.id : null,
         service_fee: serviceFeeStr,
         status: "completed",
         subtotal: subtotalStr,
@@ -241,20 +355,14 @@ export default async function handler(
       invoiceNumber: invoiceNumber,
       orderId: order.id,
       orderNumber: order.OrderID || order.id.slice(-8),
-      customer: order.userByUserId.name,
-      customerEmail: order.userByUserId.email,
-      shop: order.Shop.name,
-      shopAddress: order.Shop.address,
+      customer: isReelOrder ? order.User.name : order.userByUserId.name,
+      customerEmail: isReelOrder ? order.User.email : order.userByUserId.email,
+      shop: shopName,
+      shopAddress: shopAddress,
       dateCreated: new Date(order.created_at).toLocaleString(),
       dateCompleted: new Date(order.updated_at).toLocaleString(),
       status: order.status,
-      items: items.map((item) => ({
-        name: item.Product.name,
-        quantity: item.quantity,
-        unitPrice: parseFloat(item.price),
-        total: parseFloat(item.price) * item.quantity,
-        unit: item.Product.measurement_unit || "item",
-      })),
+      items: invoiceItems,
       subtotal: itemsTotal,
       serviceFee,
       deliveryFee,
@@ -264,12 +372,14 @@ export default async function handler(
         order.status === "shopping"
           ? itemsTotal
           : itemsTotal + serviceFee + deliveryFee,
+      orderType: isReelOrder ? "reel" : "regular",
     };
 
     console.log("Generated invoice data:", {
       id: invoiceData.id,
       invoiceNumber: invoiceData.invoiceNumber,
       orderId: invoiceData.orderId,
+      orderType: invoiceData.orderType,
     });
 
     return res.status(200).json({

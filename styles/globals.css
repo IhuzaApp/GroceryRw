@@ -167,6 +167,29 @@
   background-color: rgba(192, 132, 252, 0.1) !important;
 }
 
+/* Force green styling for light mode RSuite buttons */
+.rs-btn-primary {
+  background-color: #10b981 !important; /* green-500 */
+  color: #ffffff !important;
+  border-color: #10b981 !important;
+}
+
+.rs-btn-primary:hover {
+  background-color: #059669 !important; /* green-600 */
+  border-color: #059669 !important;
+}
+
+.rs-btn-subtle {
+  background-color: #dcfce7 !important; /* green-100 */
+  color: #15803d !important; /* green-700 */
+  border-color: #dcfce7 !important;
+}
+
+.rs-btn-subtle:hover {
+  background-color: #bbf7d0 !important; /* green-200 */
+  color: #15803d !important; /* green-700 */
+}
+
 /* RSuite Input Styles */
 .rs-input,
 .rs-input-group,
@@ -371,4 +394,62 @@ a:visited {
 
 .logs-table ::-webkit-scrollbar-thumb:hover {
   background: var(--text-primary);
+}
+
+/* Hide scrollbars for TikTok-style scrolling */
+.scrollbar-hide {
+  -ms-overflow-style: none; /* Internet Explorer 10+ */
+  scrollbar-width: none; /* Firefox */
+}
+
+.scrollbar-hide::-webkit-scrollbar {
+  display: none; /* Safari and Chrome */
+}
+
+/* Smooth scrolling for reels */
+.reels-container {
+  scroll-behavior: smooth;
+  -webkit-overflow-scrolling: touch; /* iOS momentum scrolling */
+  overscroll-behavior: none; /* Prevent bounce scrolling */
+  scroll-snap-type: y mandatory;
+}
+
+/* Ensure each video takes full height and snaps properly */
+.reels-container > div {
+  scroll-snap-align: start;
+  scroll-snap-stop: always;
+}
+
+/* Desktop-specific scroll behavior */
+@media (min-width: 768px) {
+  .reels-container {
+    scroll-snap-type: y proximity; /* Less aggressive snapping on desktop */
+  }
+
+  .reels-container > div {
+    scroll-snap-stop: normal; /* Allow scrolling past multiple items */
+  }
+}
+
+/* Mobile-specific scroll behavior */
+@media (max-width: 767px) {
+  .reels-container {
+    scroll-snap-type: y mandatory; /* Aggressive snapping on mobile */
+  }
+
+  .reels-container > div {
+    scroll-snap-stop: always; /* Always stop at each video on mobile */
+  }
+}
+
+/* Desktop keyboard navigation focus */
+@media (min-width: 768px) {
+  .reels-container:focus {
+    outline: 2px solid #10b981; /* Green focus ring */
+    outline-offset: 2px;
+  }
+
+  .reels-container:focus:not(:focus-visible) {
+    outline: none; /* Remove outline when not using keyboard */
+  }
 }

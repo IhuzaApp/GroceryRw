@@ -1,8 +1,6 @@
 query GetProducts {
   Products {
     id
-    name
-    description
     shop_id
     price
     quantity
@@ -13,6 +11,7 @@ query GetProducts {
     created_at
     updated_at
     is_active
+    productName_id
     Shop {
       address
       category_id
@@ -43,6 +42,44 @@ query GetProducts {
       id
       created_at
       cart_id
+    }
+    ProductName {
+      barcode
+      create_at
+      description
+      id
+      image
+      name
+      sku
+    }
+  }
+}
+
+query getProducts {
+  Products {
+    category
+    created_at
+    final_price
+    id
+    image
+    is_active
+    measurement_unit
+    price
+    productName_id
+    quantity
+    reorder_point
+    shop_id
+    sku
+    supplier
+    updated_at
+    ProductName {
+      id
+      name
+      description
+      barcode
+      sku
+      image
+      create_at
     }
   }
 }

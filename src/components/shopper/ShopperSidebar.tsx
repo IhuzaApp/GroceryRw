@@ -11,6 +11,7 @@ import { useAuth } from "../../context/AuthContext";
 import { initiateRoleSwitch } from "../../lib/sessionRefresh";
 import { useTheme } from "../../context/ThemeContext";
 import { logger } from "../../utils/logger";
+import TelegramStatusButton from "./TelegramStatusButton";
 
 // Define interface for earnings response
 interface EarningsResponse {
@@ -108,7 +109,22 @@ export default function ShopperSidebar() {
 
   const handleLogout = async () => {
     try {
-      await signOut({ callbackUrl: "/auth/signin" });
+      // Use custom logout API to avoid redirect loops
+      const response = await fetch('/api/logout', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+      });
+
+      if (response.ok) {
+        // Clear client-side storage
+        localStorage.clear();
+        sessionStorage.clear();
+        
+        // Redirect to home page
+        window.location.href = '/';
+      } else {
+        throw new Error('Logout failed');
+      }
     } catch (error) {
       logger.error("Error signing out", "ShopperSidebar", error);
       toast.error("Failed to sign out");
@@ -161,7 +177,8 @@ export default function ShopperSidebar() {
         !isActive("/Plasa/active-batches") &&
         !isActive("/Plasa/Earnings") &&
         !isActive("/Plasa/Settings") &&
-        !isActive("/Plasa/ShopperProfile"),
+        !isActive("/Plasa/ShopperProfile") &&
+        !isActive("/Plasa/invoices"),
     },
     {
       path: "/Plasa/active-batches",
@@ -189,8 +206,26 @@ export default function ShopperSidebar() {
           stroke="currentColor"
           strokeWidth="2"
         >
-          <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+          <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 00-4 4v2" />
           <circle cx="12" cy="7" r="4" />
+        </svg>
+      ),
+    },
+    {
+      path: "/Plasa/invoices",
+      label: "Invoices",
+      icon: (
+        <svg
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="2"
+        >
+          <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+          <polyline points="14,2 14,8 20,8" />
+          <line x1="16" y1="13" x2="8" y2="13" />
+          <line x1="16" y1="17" x2="8" y2="17" />
+          <polyline points="10,9 9,9 8,9" />
         </svg>
       ),
     },
@@ -464,6 +499,34 @@ export default function ShopperSidebar() {
                   <span>My Profile</span>
                 </div>
               </Link>
+              <Link href="/Plasa/invoices" passHref>
+                <div
+                  className={`flex items-center rounded-lg px-4 py-3 ${
+                    isActive("/Plasa/invoices")
+                      ? theme === "dark"
+                        ? "bg-gray-800 text-white"
+                        : "bg-green-50 text-green-600"
+                      : theme === "dark"
+                      ? "text-gray-300 hover:bg-gray-800 hover:text-white"
+                      : "text-gray-700 hover:bg-gray-100"
+                  }`}
+                >
+                  <svg
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    className="mr-3 h-5 w-5"
+                  >
+                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                    <polyline points="14,2 14,8 20,8" />
+                    <line x1="16" y1="13" x2="8" y2="13" />
+                    <line x1="16" y1="17" x2="8" y2="17" />
+                    <polyline points="10,9 9,9 8,9" />
+                  </svg>
+                  <span>Invoices</span>
+                </div>
+              </Link>
             </nav>
           </div>
 
@@ -581,6 +644,14 @@ export default function ShopperSidebar() {
             }`}
           >
             <div className="mx-auto max-w-md space-y-2">
+              {/* Telegram Connect/Disconnect Button for mobile */}
+              <div className="mt-2">
+                <TelegramStatusButton
+                  className="w-full"
+                  size="md"
+                  variant="primary"
+                />
+              </div>
               {moreMenuItems.map((item) => (
                 <div
                   key={item.path}

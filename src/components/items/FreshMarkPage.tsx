@@ -8,7 +8,11 @@ import Cookies from "js-cookie";
 
 interface Product {
   id: string;
-  name: string;
+  name?: string; // Keep for backward compatibility
+  ProductName?: {
+    name: string;
+    description?: string;
+  };
   image: string;
   price: string;
   final_price: string;
@@ -25,6 +29,7 @@ interface Shop {
   name: string;
   description: string;
   image: string;
+  logo: string;
   address: string;
   latitude: string;
   longitude: string;
@@ -115,7 +120,7 @@ const FreshMarkPage: React.FC<FreshMarkPageProps> = ({ shop, products }) => {
     rating: 4.8,
     reviews: 1245,
     deliveryTime: dynamicDeliveryTime,
-    deliveryFee: "Free",
+    deliveryFee: "Charged", // This is where "Free" is set
     distance: dynamicDistance,
     products: products || [],
   };
@@ -125,54 +130,91 @@ const FreshMarkPage: React.FC<FreshMarkPageProps> = ({ shop, products }) => {
     activeCategory === "all"
       ? shopData.products
       : shopData.products.filter(
-          (product) => product.category === activeCategory
+          (product) =>
+            (product.ProductName?.name || product.name) &&
+            product.category === activeCategory
         );
 
-  const sanitizeSrc = (raw: string) => {
-    if (raw.startsWith("/")) return raw;
-    if (raw.startsWith("http")) return raw;
-    return "/assets/images/shop-placeholder.jpg";
+  const sanitizeSrc = (raw: string | null | undefined) => {
+    if (raw && raw.startsWith("/")) return raw;
+    if (raw && raw.startsWith("http")) return raw;
+    return "/images/shop-placeholder.jpg";
   };
 
   return (
     <RootLayout>
-      <div className="p-4 md:ml-16">
+      <div className="p-2 sm:p-4 md:ml-16">
         <div className="container mx-auto">
           {/* Shop Banner */}
-          <div className="relative h-48 bg-gray-200">
+          <div className="relative h-56 overflow-hidden rounded-lg bg-gray-200 dark:bg-gray-700 sm:h-48">
             <Image
               src={sanitizeSrc(shopData.image)}
               alt={shopData?.name}
               fill
               className="object-cover"
             />
-            <div className="absolute inset-0 flex items-end bg-black bg-opacity-30">
-              <div className="p-6 text-white">
-                <h1 className="text-3xl font-bold">{shopData.name}</h1>
-                <div className="mt-2 flex items-center">
-                  <div className="flex items-center">
+            <div className="absolute inset-0 flex items-center justify-center bg-gradient-to-t from-black/80 via-black/50 to-transparent text-center sm:items-end sm:justify-start sm:text-left">
+              <div className="w-full p-4 text-white sm:p-6">
+                <Image
+                  src={sanitizeSrc(shopData.logo)}
+                  alt={`${shopData.name} logo`}
+                  width={80}
+                  height={80}
+                  className="mx-auto mb-3 h-20 w-20 rounded-full border-4 border-white object-cover shadow-lg sm:mx-0 sm:h-24 sm:w-24"
+                />
+                <h1 className="text-3xl font-bold !text-white sm:text-4xl">
+                  {shopData.name}
+                </h1>
+                <div className="mt-3 flex flex-wrap justify-center gap-2 sm:justify-start">
+                  <div className="flex items-center rounded-full bg-white/25 px-3 py-1 text-xs font-semibold !text-white backdrop-blur-sm">
                     <svg
+                      className="-ml-1 mr-1.5 h-4 w-4 text-yellow-300"
                       viewBox="0 0 24 24"
                       fill="currentColor"
-                      className="h-5 w-5 text-yellow-400"
                     >
                       <path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z" />
                     </svg>
-                    <span className="ml-1 font-medium">{shopData.rating}</span>
-                    <span className="ml-1 text-sm">
-                      ({shopData.reviews} reviews)
+                    <span className="!text-white">
+                      {shopData.rating} ({shopData.reviews} reviews)
                     </span>
                   </div>
-                  <span className="mx-2">•</span>
-                  <span>{isMounted ? shopData.deliveryTime : "15-25 min"}</span>
-                  <span className="mx-2">•</span>
-                  <span>{shopData.deliveryFee} delivery</span>
+                  <div className="flex items-center rounded-full bg-white/25 px-3 py-1 text-xs font-semibold !text-white backdrop-blur-sm">
+                    <svg
+                      className="-ml-1 mr-1.5 h-4 w-4"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
+                      />
+                    </svg>
+                    <span className="!text-white">
+                      {isMounted ? shopData.deliveryTime : "15-25 min"}
+                    </span>
+                  </div>
+                  <div className="flex items-center rounded-full bg-white/25 px-3 py-1 text-xs font-semibold !text-white backdrop-blur-sm">
+                    <svg
+                      className="-ml-1 mr-1.5 h-4 w-4"
+                      viewBox="0 0 20 20"
+                      fill="currentColor"
+                    >
+                      <path d="M8 16.5a1.5 1.5 0 11-3 0 1.5 1.5 0 013 0zM15 16.5a1.5 1.5 0 11-3 0 1.5 1.5 0 013 0z" />
+                      <path d="M3 4a1 1 0 00-1 1v10a1 1 0 001 1h1.05a2.5 2.5 0 014.9 0H10a1 1 0 001-1V5a1 1 0 00-1-1H3zM14 7a1 1 0 00-1-1h-1a1 1 0 00-1 1v5a1 1 0 001 1h1a1 1 0 001-1V7z" />
+                    </svg>
+                    <span className="!text-white">
+                      {shopData.deliveryFee} delivery
+                    </span>
+                  </div>
                 </div>
               </div>
             </div>
             <Link
               href="/"
-              className="absolute left-4 top-4 rounded-full bg-white p-2"
+              className="absolute left-4 top-4 flex h-8 w-8 items-center justify-center rounded-full bg-white/80 p-1 backdrop-blur-sm transition-colors hover:bg-white dark:bg-gray-800/80 dark:text-white dark:hover:bg-gray-800"
             >
               <svg
                 viewBox="0 0 24 24"
@@ -187,8 +229,10 @@ const FreshMarkPage: React.FC<FreshMarkPageProps> = ({ shop, products }) => {
           </div>
 
           {/* Shop Description */}
-          <div className="border-b bg-white px-4 py-3">
-            <p className="text-gray-600">{shopData?.description}</p>
+          <div className="border-b bg-white px-4 py-3 dark:border-gray-700 dark:bg-gray-800">
+            <p className="text-sm text-gray-600 dark:text-gray-300">
+              {shopData?.description}
+            </p>
           </div>
           <ItemsSection
             activeCategory={activeCategory}

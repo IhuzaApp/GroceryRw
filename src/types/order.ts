@@ -6,11 +6,22 @@ export interface OrderItem {
     id: string;
     name: string;
     image: string;
-    price: number;
+    final_price: string;
     description?: string;
     measurement_unit?: string;
     category?: string;
     quantity?: number;
+    barcode?: string;
+    sku?: string;
+    ProductName?: {
+      id: string;
+      name: string;
+      description: string;
+      barcode: string;
+      sku: string;
+      image: string;
+      create_at: string;
+    };
   };
   found?: boolean;
   foundQuantity?: number;

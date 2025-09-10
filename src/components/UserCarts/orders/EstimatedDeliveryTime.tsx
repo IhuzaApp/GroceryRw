@@ -10,7 +10,11 @@ const EstimatedDeliveryTime: React.FC<EstimatedDeliveryTimeProps> = ({
   status,
 }) => {
   if (!estimatedDelivery) {
-    return <span className="text-gray-500">No delivery time available</span>;
+    return (
+      <span className="text-gray-500 dark:text-gray-400">
+        No delivery time available
+      </span>
+    );
   }
 
   const now = new Date();
@@ -31,7 +35,7 @@ const EstimatedDeliveryTime: React.FC<EstimatedDeliveryTimeProps> = ({
   // If order is already delivered, show Delivered label
   if (status === "delivered") {
     return (
-      <div className="flex items-center rounded-lg bg-green-50 p-3 text-green-700">
+      <div className="flex items-center rounded-lg bg-green-50 p-3 text-green-700 dark:bg-green-900/20 dark:text-green-300">
         <svg
           viewBox="0 0 24 24"
           fill="none"
@@ -71,7 +75,7 @@ const EstimatedDeliveryTime: React.FC<EstimatedDeliveryTimeProps> = ({
     }
 
     return (
-      <div className="flex items-center rounded-lg bg-blue-50 p-3 text-blue-700">
+      <div className="flex items-center rounded-lg bg-blue-50 p-3 text-blue-700 dark:bg-blue-900/20 dark:text-blue-300">
         <svg
           viewBox="0 0 24 24"
           fill="none"
@@ -108,7 +112,7 @@ const EstimatedDeliveryTime: React.FC<EstimatedDeliveryTimeProps> = ({
     }
 
     return (
-      <div className="flex items-center rounded-lg bg-red-50 p-3 text-red-700">
+      <div className="flex items-center rounded-lg bg-red-50 p-3 text-red-700 dark:bg-red-900/20 dark:text-red-300">
         <svg
           viewBox="0 0 24 24"
           fill="none"

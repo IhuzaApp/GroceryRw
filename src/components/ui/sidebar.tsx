@@ -79,7 +79,7 @@ export default function SideBar() {
         <div className="flex flex-col items-center gap-6 p-4">
           {/* Home */}
           <Link
-            className="rounded-full p-2 text-inherit transition-colors duration-200 hover:bg-gray-200 dark:hover:bg-gray-700"
+            className="rounded-full p-2 text-inherit transition-colors duration-200 hover:bg-gray-200 dark:hover:bg-green-700 dark:hover:text-white"
             href={"/"}
             passHref
           >
@@ -116,7 +116,7 @@ export default function SideBar() {
 
           {/* Profile */}
           <Link
-            className="rounded-full p-2 text-inherit transition-colors duration-200 hover:bg-gray-200 dark:hover:bg-gray-700"
+            className="rounded-full p-2 text-inherit transition-colors duration-200 hover:bg-gray-200 dark:hover:bg-green-700 dark:hover:text-white"
             href={"/Myprofile"}
             passHref
           >
@@ -154,7 +154,7 @@ export default function SideBar() {
 
           {/* Orders */}
           <Link
-            className="relative rounded-full p-2 text-inherit transition-colors duration-200 hover:bg-gray-200 dark:hover:bg-gray-700"
+            className="relative rounded-full p-2 text-inherit transition-colors duration-200 hover:bg-gray-200 dark:hover:bg-green-700 dark:hover:text-white"
             href={"/CurrentPendingOrders"}
             passHref
           >
@@ -162,11 +162,8 @@ export default function SideBar() {
               width="30px"
               height="30px"
               viewBox="0 0 24 24"
-              id="_24x24_On_Light_Recent"
-              data-name="24x24/On Light/Recent"
-              xmlns="http://www.w3.org/2000/svg"
               fill="none"
-              className="text-inherit"
+              xmlns="http://www.w3.org/2000/svg"
             >
               <g id="SVGRepo_bgCarrier" strokeWidth="0"></g>
               <g
@@ -175,49 +172,84 @@ export default function SideBar() {
                 strokeLinejoin="round"
               ></g>
               <g id="SVGRepo_iconCarrier">
-                <rect id="view-box" width="24" height="24" fill="none"></rect>
                 <path
-                  id="Shape"
-                  d="M9.682,18.75a.75.75,0,0,1,.75-.75,8.25,8.25,0,1,0-6.189-2.795V12.568a.75.75,0,0,1,1.5,0v4.243a.75.75,0,0,1-.751.75H.75a.75.75,0,0,1,0-1.5H3a9.75,9.75,0,1,1,7.433,3.44A.75.75,0,0,1,9.682,18.75Zm2.875-4.814L9.9,11.281a.754.754,0,0,1-.22-.531V5.55a.75.75,0,1,1,1.5,0v4.889l2.436,2.436a.75.75,0,1,1-1.061,1.06Z"
-                  transform="translate(1.568 2.25)"
-                  className="fill-current"
+                  d="M7.5 18C8.32843 18 9 18.6716 9 19.5C9 20.3284 8.32843 21 7.5 21C6.67157 21 6 20.3284 6 19.5C6 18.6716 6.67157 18 7.5 18Z"
+                  stroke="currentColor"
+                  strokeWidth="1.5"
+                ></path>
+                <path
+                  d="M16.5 18.0001C17.3284 18.0001 18 18.6716 18 19.5001C18 20.3285 17.3284 21.0001 16.5 21.0001C15.6716 21.0001 15 20.3285 15 19.5001C15 18.6716 15.6716 18.0001 16.5 18.0001Z"
+                  stroke="currentColor"
+                  strokeWidth="1.5"
+                ></path>
+                <path
+                  d="M11 10.8L12.1429 12L15 9"
+                  stroke="currentColor"
+                  strokeWidth="1.5"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                ></path>
+                <path
+                  d="M2 3L2.26121 3.09184C3.5628 3.54945 4.2136 3.77826 4.58584 4.32298C4.95808 4.86771 4.95808 5.59126 4.95808 7.03836V9.76C4.95808 12.7016 5.02132 13.6723 5.88772 14.5862C6.75412 15.5 8.14857 15.5 10.9375 15.5H12M16.2404 15.5C17.8014 15.5 18.5819 15.5 19.1336 15.0504C19.6853 14.6008 19.8429 13.8364 20.158 12.3075L20.6578 9.88275C21.0049 8.14369 21.1784 7.27417 20.7345 6.69708C20.2906 6.12 18.7738 6.12 17.0888 6.12H11.0235M4.95808 6.12H7"
+                  stroke="currentColor"
+                  strokeWidth="1.5"
+                  strokeLinecap="round"
                 ></path>
               </g>
             </svg>
             {pendingOrdersCount > 0 && (
-              <span className="absolute -right-1 -top-1 flex h-5 w-5 items-center justify-center rounded-full bg-purple-500 text-xs font-bold text-white dark:bg-purple-600">
-                {pendingOrdersCount}
+              <span className="absolute -right-1 -top-1 flex h-5 w-5 items-center justify-center rounded-full bg-red-500 text-xs font-bold text-white dark:bg-red-600">
+                {pendingOrdersCount > 9 ? "9+" : pendingOrdersCount}
               </span>
             )}
           </Link>
 
           {/* Recipes */}
           <Link
-            className="rounded-full p-2 text-inherit transition-colors duration-200 hover:bg-gray-200 dark:hover:bg-gray-700"
+            className="rounded-full p-2 text-inherit transition-colors duration-200 hover:bg-gray-200 dark:hover:bg-green-700 dark:hover:text-white"
             href={"/Recipes"}
             passHref
           >
             <svg
-              width="30px"
+              fill="currentColor"
               height="30px"
-              viewBox="0 0 24 24"
-              fill="none"
+              width="30px"
+              version="1.1"
+              id="Layer_1"
               xmlns="http://www.w3.org/2000/svg"
-              className="text-inherit"
+              xmlnsXlink="http://www.w3.org/1999/xlink"
+              viewBox="0 0 511.999 511.999"
+              xmlSpace="preserve"
             >
-              <path
-                d="M19 7V5H5v2m14 0v2H5V7m14 0H5m0 4v6a2 2 0 002 2h10a2 2 0 002-2v-6m-4 3h.01M12 14h.01M8 14h.01"
-                className="stroke-current"
-                strokeWidth="1.5"
+              <g id="SVGRepo_bgCarrier" strokeWidth="0"></g>
+              <g
+                id="SVGRepo_tracerCarrier"
                 strokeLinecap="round"
                 strokeLinejoin="round"
-              />
+              ></g>
+              <g id="SVGRepo_iconCarrier">
+                <g>
+                  <g>
+                    <path d="M324.799,68.799c-103.222,0-187.2,83.978-187.2,187.2s83.978,187.2,187.2,187.2s187.2-83.978,187.2-187.2 S428.022,68.799,324.799,68.799z M324.799,407.169c-83.354,0-151.168-67.814-151.168-151.168s67.814-151.17,151.168-151.17 s151.168,67.814,151.168,151.168S408.154,407.169,324.799,407.169z"></path>
+                  </g>
+                </g>
+                <g>
+                  <g>
+                    <path d="M324.799,148.019c-59.541,0-107.981,48.44-107.981,107.981s48.44,107.981,107.981,107.981S432.78,315.54,432.78,255.999 S384.34,148.019,324.799,148.019z M324.799,327.95c-39.673,0-71.949-32.276-71.949-71.949s32.276-71.949,71.949-71.949 c39.673,0,71.949,32.276,71.949,71.949S364.472,327.95,324.799,327.95z"></path>
+                  </g>
+                </g>
+                <g>
+                  <g>
+                    <path d="M110.491,68.799c-9.95,0-18.016,8.066-18.016,18.016v96.161H81.959V86.815c0-9.95-8.066-18.016-18.016-18.016 c-9.95,0-18.016,8.066-18.016,18.016v96.161h-9.896V86.815c0-9.95-8.066-18.016-18.016-18.016S0,76.866,0,86.815v99.764 c0,17.881,14.547,32.428,32.428,32.428h12.298v206.175c0,9.95,8.066,18.016,18.016,18.016s18.016-8.066,18.016-18.016V219.009 h15.321c17.881,0,32.428-14.547,32.428-32.428V86.815C128.507,76.866,120.441,68.799,110.491,68.799z"></path>
+                  </g>
+                </g>
+              </g>
             </svg>
           </Link>
 
           {/* Reels */}
           <Link
-            className="rounded-full p-2 text-inherit transition-colors duration-200 hover:bg-gray-200 dark:hover:bg-gray-700"
+            className="rounded-full p-2 text-inherit transition-colors duration-200 hover:bg-gray-200 dark:hover:bg-green-700 dark:hover:text-white"
             href={"/Reels"}
             passHref
           >
@@ -227,21 +259,42 @@ export default function SideBar() {
               viewBox="0 0 24 24"
               fill="none"
               xmlns="http://www.w3.org/2000/svg"
-              className="text-inherit"
             >
-              <path
-                d="M19 7V5H5v2m14 0v2H5V7m14 0H5m0 4v6a2 2 0 002 2h10a2 2 0 002-2v-6m-4 3h.01M12 14h.01M8 14h.01"
-                className="stroke-current"
-                strokeWidth="1.5"
+              <g id="SVGRepo_bgCarrier" strokeWidth="0"></g>
+              <g
+                id="SVGRepo_tracerCarrier"
                 strokeLinecap="round"
                 strokeLinejoin="round"
-              />
+              ></g>
+              <g id="SVGRepo_iconCarrier">
+                <path
+                  d="M19.5617 7C19.7904 5.69523 18.7863 4.5 17.4617 4.5H6.53788C5.21323 4.5 4.20922 5.69523 4.43784 7"
+                  stroke="currentColor"
+                  strokeWidth="1.5"
+                ></path>
+                <path
+                  d="M17.4999 4.5C17.5283 4.24092 17.5425 4.11135 17.5427 4.00435C17.545 2.98072 16.7739 2.12064 15.7561 2.01142C15.6497 2 15.5194 2 15.2588 2H8.74099C8.48035 2 8.35002 2 8.24362 2.01142C7.22584 2.12064 6.45481 2.98072 6.45704 4.00434C6.45727 4.11135 6.47146 4.2409 6.49983 4.5"
+                  stroke="currentColor"
+                  strokeWidth="1.5"
+                ></path>
+                <path
+                  d="M21.1935 16.793C20.8437 19.2739 20.6689 20.5143 19.7717 21.2572C18.8745 22 17.5512 22 14.9046 22H9.09536C6.44881 22 5.12553 22 4.22834 21.2572C3.33115 20.5143 3.15626 19.2739 2.80648 16.793L2.38351 13.793C1.93748 10.6294 1.71447 9.04765 2.66232 8.02383C3.61017 7 5.29758 7 8.67239 7H15.3276C18.7024 7 20.3898 7 21.3377 8.02383C22.0865 8.83268 22.1045 9.98979 21.8592 12"
+                  stroke="currentColor"
+                  strokeWidth="1.5"
+                  strokeLinecap="round"
+                ></path>
+                <path
+                  d="M14.5812 13.6159C15.1396 13.9621 15.1396 14.8582 14.5812 15.2044L11.2096 17.2945C10.6669 17.6309 10 17.1931 10 16.5003L10 12.32C10 11.6273 10.6669 11.1894 11.2096 11.5258L14.5812 13.6159Z"
+                  stroke="currentColor"
+                  strokeWidth="1.5"
+                ></path>
+              </g>
             </svg>
           </Link>
 
           {/* Chat */}
           <Link
-            className="relative rounded-full p-2 text-inherit transition-colors duration-200 hover:bg-gray-200 dark:hover:bg-gray-700"
+            className="relative rounded-full p-2 text-inherit transition-colors duration-200 hover:bg-gray-200 dark:hover:bg-green-700 dark:hover:text-white"
             href={"/Messages"}
             passHref
           >

@@ -1,13 +1,13 @@
 import Link from "next/link";
 import React, { useState } from "react";
-import { Input, InputGroup, Checkbox, Button } from "rsuite";
+import { Checkbox, Button } from "rsuite";
 import { signIn } from "next-auth/react";
 import { useRouter } from "next/router";
 import toast from "react-hot-toast";
 import { useAuth } from "../../../../context/AuthContext";
 
 export default function UserLogin() {
-  const [email, setEmail] = useState("");
+  const [identifier, setIdentifier] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [rememberMe, setRememberMe] = useState(false);
@@ -21,7 +21,7 @@ export default function UserLogin() {
     try {
       const res = await signIn("credentials", {
         redirect: false,
-        email,
+        identifier,
         password,
       });
       if (res?.error) {
@@ -39,37 +39,44 @@ export default function UserLogin() {
   return (
     <form onSubmit={handleLogin}>
       <div className="mb-4">
-        <label htmlFor="email" className="mb-2 block text-gray-700">
-          Email Address
+        <label
+          htmlFor="identifier"
+          className="mb-2 block text-gray-700 dark:text-gray-300"
+        >
+          Email, Username, or Phone Number
         </label>
-        <Input
-          id="email"
-          type="email"
-          placeholder="Enter your email"
-          value={email}
-          onChange={(value) => setEmail(value as string)}
-          className="w-full"
+        <input
+          id="identifier"
+          type="text"
+          placeholder="Enter your email, username, or phone number"
+          value={identifier}
+          onChange={(e) => setIdentifier(e.target.value)}
+          className="w-full rounded-none border border-gray-300 px-3 py-2 text-gray-900 focus:border-green-500 focus:outline-none focus:ring-1 focus:ring-green-500 dark:border-gray-600 dark:bg-gray-800 dark:text-white"
           required
         />
       </div>
 
       <div className="mb-6">
-        <label htmlFor="password" className="mb-2 block text-gray-700">
+        <label
+          htmlFor="password"
+          className="mb-2 block text-gray-700 dark:text-gray-300"
+        >
           Password
         </label>
-        <InputGroup inside>
-          <Input
+        <div className="relative">
+          <input
             id="password"
             type={showPassword ? "text" : "password"}
             placeholder="••••••••••••"
             value={password}
-            onChange={(value) => setPassword(value as string)}
-            className="w-full"
+            onChange={(e) => setPassword(e.target.value)}
+            className="w-full rounded-none border border-gray-300 px-3 py-2 pr-10 text-gray-900 focus:border-green-500 focus:outline-none focus:ring-1 focus:ring-green-500 dark:border-gray-600 dark:bg-gray-800 dark:text-white"
             required
           />
-          <InputGroup.Button
+          <button
+            type="button"
             onClick={() => setShowPassword(!showPassword)}
-            className="text-gray-500"
+            className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
           >
             {showPassword ? (
               <svg
@@ -95,8 +102,8 @@ export default function UserLogin() {
                 <circle cx="12" cy="12" r="3" />
               </svg>
             )}
-          </InputGroup.Button>
-        </InputGroup>
+          </button>
+        </div>
       </div>
 
       <div className="mb-6 flex items-center justify-between">
@@ -127,7 +134,7 @@ export default function UserLogin() {
 
       <Button
         appearance="default"
-        className="flex w-full items-center justify-center gap-2 rounded-md border py-3"
+        className="mt-3 flex w-full items-center justify-center gap-2 rounded-md border py-3"
       >
         <svg viewBox="0 0 24 24" width="18" height="18">
           <path

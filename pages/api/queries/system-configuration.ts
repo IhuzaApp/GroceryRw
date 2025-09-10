@@ -16,6 +16,9 @@ const GET_SYSTEM_CONFIGURATION = gql`
       extraUnits
       cappedDistanceFee
       distanceSurcharge
+      deliveryCommissionPercentage
+      productCommissionPercentage
+      tax
     }
   }
 `;
@@ -32,6 +35,9 @@ interface SystemConfigurationResponse {
     extraUnits: string;
     cappedDistanceFee: string;
     distanceSurcharge: string;
+    deliveryCommissionPercentage: string;
+    productCommissionPercentage: string;
+    tax: string;
   }>;
 }
 

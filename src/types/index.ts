@@ -12,6 +12,7 @@ export interface Data {
   deliveryIssues?: any[];
   notifications?: any[];
   platformSettings?: any[];
+  restaurants?: any[];
 }
 
 export interface UsersResponse {
@@ -42,6 +43,7 @@ export interface ShopsResponse {
     created_at: string;
     category_id: string;
     image: string;
+    logo?: string;
     is_active: boolean;
     latitude: string;
     longitude: string;
@@ -53,8 +55,10 @@ export interface ShopsResponse {
 export interface ProductsResponse {
   Products: Array<{
     id: string;
-    name: string;
-    description: string;
+    ProductName: {
+      name: string;
+      description: string;
+    };
     price: string;
     created_at: string;
   }>;
@@ -143,6 +147,21 @@ export interface PlatformSettingsResponse {
     id: string;
     key: string;
     value: string;
+    created_at: string;
+  }>;
+}
+
+export interface RestaurantsResponse {
+  Restaurants: Array<{
+    id: string;
+    name: string;
+    email: string;
+    phone: string;
+    location: string;
+    lat: string;
+    long: string;
+    profile: string;
+    verified: boolean;
     created_at: string;
   }>;
 }

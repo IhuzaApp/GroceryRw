@@ -3,7 +3,6 @@ import { getServerSession } from "next-auth/next";
 import { authOptions } from "./auth/[...nextauth]";
 import { hasuraClient } from "../../src/lib/hasuraClient";
 import { gql } from "graphql-request";
-import { RevenueCalculator } from "../../src/lib/revenueCalculator";
 
 interface CartItem {
   product_id: string;
@@ -134,17 +133,6 @@ const DELETE_CART = gql`
   }
 `;
 
-// Create revenue record
-const CREATE_REVENUE = gql`
-  mutation CreateRevenue($order_id: uuid!, $amount: String!) {
-    insert_Revenue_one(
-      object: { order_id: $order_id, amount: $amount, type: "commission" }
-    ) {
-      id
-    }
-  }
-`;
-
 export default async function handler(
   req: NextApiRequest,
   res: NextApiResponse
@@ -224,8 +212,11 @@ export default async function handler(
       }
     }
 
-    // Calculate revenue using the RevenueCalculator
-    const revenueData = RevenueCalculator.calculateRevenue(items);
+    // Calculate actual total (what we pay to shop) for order creation
+    const actualTotal = items.reduce((sum, item) => {
+      const price = parseFloat(item.Product.price);
+      return sum + price * item.quantity;
+    }, 0);
 
     // 4. Create order record
     if (!hasuraClient) {
@@ -237,7 +228,7 @@ export default async function handler(
       user_id,
       shop_id,
       delivery_address_id,
-      total: revenueData.actualTotal,
+      total: actualTotal.toFixed(2),
       status: "PENDING",
       service_fee,
       delivery_fee,
@@ -253,18 +244,15 @@ export default async function handler(
       order_id: orderId,
       product_id: i.product_id,
       quantity: i.quantity,
-      price: i.Product.final_price,
+      price: i.Product.price, // Store base price for shopper calculations
     }));
     if (!hasuraClient) {
       throw new Error("Hasura client is not initialized");
     }
     await hasuraClient.request(CREATE_ORDER_ITEMS, { objects: orderItems });
 
-    // Create revenue record
-    await hasuraClient.request(CREATE_REVENUE, {
-      order_id: orderId,
-      amount: revenueData.revenue,
-    });
+    // Note: Revenue records will be created when the order is completed (delivered)
+    // This matches the described trigger-based approach
 
     // 6. Archive the cart (no longer needed, we'll delete it instead)
     if (!hasuraClient) {

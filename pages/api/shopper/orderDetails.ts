@@ -31,7 +31,18 @@ interface OrderDetailsResponse {
       quantity: number;
       price: string;
       Product: {
-        name: string;
+        id: string;
+        image: string;
+        final_price: string;
+        ProductName: {
+          id: string;
+          name: string;
+          description: string;
+          barcode: string;
+          sku: string;
+          image: string;
+          create_at: string;
+        } | null;
       } | null;
     }>;
     Order_Items_aggregate: {
@@ -50,7 +61,7 @@ interface UserSession {
   };
 }
 
-// Query to fetch order details by ID
+// Query to fetch regular order details by ID
 const GET_ORDER_DETAILS = gql`
   query GetOrderDetails($orderId: uuid!) {
     Orders_by_pk(id: $orderId) {
@@ -78,13 +89,71 @@ const GET_ORDER_DETAILS = gql`
         quantity
         price
         Product {
-          name
+          id
+          image
+          final_price
+          ProductName {
+            id
+            name
+            description
+            barcode
+            sku
+            image
+            create_at
+          }
         }
       }
       Order_Items_aggregate {
         aggregate {
           count
         }
+      }
+    }
+  }
+`;
+
+// Query to fetch reel order details by ID
+const GET_REEL_ORDER_DETAILS = gql`
+  query GetReelOrderDetails($orderId: uuid!) {
+    reel_orders_by_pk(id: $orderId) {
+      id
+      created_at
+      updated_at
+      status
+      service_fee
+      delivery_fee
+      total
+      quantity
+      delivery_note
+      Reel {
+        id
+        title
+        description
+        Price
+        Product
+        type
+        video_url
+        Restaurant {
+          id
+          name
+          location
+          lat
+          long
+        }
+      }
+      user: User {
+        id
+        name
+        email
+        phone
+        profile_picture
+      }
+      address: Address {
+        latitude
+        longitude
+        street
+        city
+        postal_code
       }
     }
   }
@@ -128,68 +197,167 @@ export default async function handler(
       return;
     }
 
-    const data = await hasuraClient.request<OrderDetailsResponse>(
-      GET_ORDER_DETAILS,
-      {
-        orderId: id,
-      }
-    );
+    let orderData: any = null;
+    let orderType: "regular" | "reel" = "regular";
 
-    const orderData = data.Orders_by_pk;
+    try {
+      // First try to fetch as a regular order
+      const regularOrderData = await hasuraClient.request<OrderDetailsResponse>(
+        GET_ORDER_DETAILS,
+        {
+          orderId: id,
+        }
+      );
+
+      if (regularOrderData.Orders_by_pk) {
+        orderData = regularOrderData.Orders_by_pk;
+        orderType = "regular";
+      } else {
+        // If regular order not found, try reel order
+        try {
+          const reelOrderData = await hasuraClient.request<any>(
+            GET_REEL_ORDER_DETAILS,
+            {
+              orderId: id,
+            }
+          );
+
+          if (reelOrderData.reel_orders_by_pk) {
+            orderData = reelOrderData.reel_orders_by_pk;
+            orderType = "reel";
+          }
+        } catch (reelError) {
+          console.error("Error fetching reel order:", reelError);
+        }
+      }
+    } catch (error) {
+      // If regular order query fails, try reel order
+      console.error("Error fetching regular order:", error);
+      try {
+        const reelOrderData = await hasuraClient.request<any>(
+          GET_REEL_ORDER_DETAILS,
+          {
+            orderId: id,
+          }
+        );
+
+        if (reelOrderData.reel_orders_by_pk) {
+          orderData = reelOrderData.reel_orders_by_pk;
+          orderType = "reel";
+        }
+      } catch (reelError) {
+        console.error("Error fetching reel order:", reelError);
+      }
+    }
 
     if (!orderData) {
       res.status(404).json({ error: "Order not found" });
       return;
     }
 
-    // Format the order data for the frontend
-    const formattedOrderItems = orderData.Order_Items.map((item: any) => ({
-      id: item.id,
-      name: item.Product?.name || "Unknown Product",
-      quantity: item.quantity,
-      price: parseFloat(item.price) || 0,
-    }));
+    // Format the order data for the frontend based on order type
+    let formattedOrder: any;
 
-    // Calculate totals
-    const subTotal = formattedOrderItems.reduce(
-      (sum: number, item: any) => sum + item.price * item.quantity,
-      0
-    );
+    if (orderType === "regular") {
+      // Handle regular orders
+      const formattedOrderItems = orderData.Order_Items.map((item: any) => ({
+        id: item.id,
+        name: item.Product?.ProductName?.name || "Unknown Product",
+        quantity: item.quantity,
+        price: parseFloat(item.price) || 0,
+      }));
 
-    const serviceFee = parseFloat(orderData.service_fee || "0");
-    const deliveryFee = parseFloat(orderData.delivery_fee || "0");
-    const totalEarnings = serviceFee + deliveryFee;
+      // Calculate totals
+      const subTotal = formattedOrderItems.reduce(
+        (sum: number, item: any) => sum + item.price * item.quantity,
+        0
+      );
 
-    const formattedOrder = {
-      id: orderData.id,
-      createdAt: orderData.created_at,
-      updatedAt: orderData.updated_at,
-      status: orderData.status,
-      shopName: orderData.shop?.name || "Unknown Shop",
-      shopAddress: orderData.shop?.address || "No Address",
-      shopLatitude: orderData.shop?.latitude
-        ? parseFloat(orderData.shop.latitude)
-        : null,
-      shopLongitude: orderData.shop?.longitude
-        ? parseFloat(orderData.shop.longitude)
-        : null,
-      customerAddress: orderData.address
-        ? `${orderData.address.street || ""}, ${orderData.address.city || ""}`
-        : "No Address",
-      customerLatitude: orderData.address?.latitude
-        ? parseFloat(orderData.address.latitude)
-        : null,
-      customerLongitude: orderData.address?.longitude
-        ? parseFloat(orderData.address.longitude)
-        : null,
-      items: formattedOrderItems,
-      itemCount: orderData.Order_Items_aggregate?.aggregate?.count || 0,
-      subTotal,
-      serviceFee,
-      deliveryFee,
-      total: subTotal + serviceFee + deliveryFee,
-      estimatedEarnings: totalEarnings,
-    };
+      const serviceFee = parseFloat(orderData.service_fee || "0");
+      const deliveryFee = parseFloat(orderData.delivery_fee || "0");
+      const totalEarnings = serviceFee + deliveryFee;
+
+      formattedOrder = {
+        id: orderData.id,
+        createdAt: orderData.created_at,
+        updatedAt: orderData.updated_at,
+        status: orderData.status,
+        orderType: "regular",
+        shopName: orderData.shop?.name || "Unknown Shop",
+        shopAddress: orderData.shop?.address || "No Address",
+        shopLatitude: orderData.shop?.latitude
+          ? parseFloat(orderData.shop.latitude)
+          : null,
+        shopLongitude: orderData.shop?.longitude
+          ? parseFloat(orderData.shop.longitude)
+          : null,
+        customerAddress: orderData.address
+          ? `${orderData.address.street || ""}, ${orderData.address.city || ""}`
+          : "No Address",
+        customerLatitude: orderData.address?.latitude
+          ? parseFloat(orderData.address.latitude)
+          : null,
+        customerLongitude: orderData.address?.longitude
+          ? parseFloat(orderData.address.longitude)
+          : null,
+        items: formattedOrderItems,
+        itemCount: orderData.Order_Items_aggregate?.aggregate?.count || 0,
+        subTotal,
+        serviceFee,
+        deliveryFee,
+        total: subTotal + serviceFee + deliveryFee,
+        estimatedEarnings: totalEarnings,
+      };
+    } else {
+      // Handle reel orders
+      const serviceFee = parseFloat(orderData.service_fee || "0");
+      const deliveryFee = parseFloat(orderData.delivery_fee || "0");
+      const totalEarnings = serviceFee + deliveryFee;
+      const reelPrice = parseFloat(orderData.Reel?.Price || "0");
+      const quantity = parseInt(orderData.quantity || "1");
+      const subTotal = reelPrice * quantity;
+
+      formattedOrder = {
+        id: orderData.id,
+        createdAt: orderData.created_at,
+        updatedAt: orderData.updated_at,
+        status: orderData.status,
+        orderType: "reel",
+        shopName: orderData.Reel?.Restaurant?.name || "Reel Order",
+        shopAddress:
+          orderData.Reel?.Restaurant?.location || "From Reel Creator",
+        shopLatitude: orderData.Reel?.Restaurant?.lat || null,
+        shopLongitude: orderData.Reel?.Restaurant?.long || null,
+        customerAddress: orderData.address
+          ? `${orderData.address.street || ""}, ${orderData.address.city || ""}`
+          : "No Address",
+        customerLatitude: orderData.address?.latitude
+          ? parseFloat(orderData.address.latitude)
+          : null,
+        customerLongitude: orderData.address?.longitude
+          ? parseFloat(orderData.address.longitude)
+          : null,
+        items: [
+          {
+            id: orderData.Reel?.id || orderData.id,
+            name: orderData.Reel?.Product || "Reel Product",
+            quantity: quantity,
+            price: reelPrice,
+          },
+        ],
+        itemCount: 1,
+        subTotal,
+        serviceFee,
+        deliveryFee,
+        total: parseFloat(orderData.total || "0"),
+        estimatedEarnings: totalEarnings,
+        reel: orderData.Reel,
+        quantity: quantity,
+        deliveryNote: orderData.delivery_note,
+        customerName: orderData.user?.name,
+        customerPhone: orderData.user?.phone,
+      };
+    }
 
     res.status(200).json({
       success: true,

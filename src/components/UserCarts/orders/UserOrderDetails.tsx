@@ -267,23 +267,29 @@ export default function UserOrderDetails({ order }: UserOrderDetailsProps) {
                   <div className="h-16 w-16 flex-shrink-0">
                     <Image
                       src={
-                        item.product.image ??
-                        "https://media.istockphoto.com/id/171302954/photo/groceries.jpg?s=612x612&w=0&k=20&c=D3MmhT5DafwimcYyxCYXqXMxr1W25wZnyUf4PF1RYw8="
+                        (item.product.ProductName?.image ||
+                          item.product.image) ??
+                        "/images/groceryPlaceholder.png"
                       }
-                      alt={item.product.name}
+                      alt={item.product.ProductName?.name || "Product"}
                       width={60}
                       height={60}
                       className="rounded-md"
                     />
                   </div>
                   <div className="flex-grow">
-                    <h3 className="font-medium">{item.product.name}</h3>
-                    <div className="mt-1 flex justify-between text-sm text-gray-600">
+                    <h3 className="font-medium">
+                      {item.product.ProductName?.name || "Product"}
+                    </h3>
+                    <div className="mt-1 flex justify-between text-sm text-gray-600 dark:text-gray-400">
                       <span>
-                        {item.quantity} × {formatCurrency(item.price)}
+                        {item.quantity} ×{" "}
+                        {formatCurrency(parseFloat(item.product.final_price))}
                       </span>
                       <span className="font-bold">
-                        {formatCurrency(item.price * item.quantity)}
+                        {formatCurrency(
+                          parseFloat(item.product.final_price) * item.quantity
+                        )}
                       </span>
                     </div>
                   </div>
@@ -293,19 +299,32 @@ export default function UserOrderDetails({ order }: UserOrderDetailsProps) {
 
             <div className="mt-6 border-t pt-4">
               <div className="mb-2 flex justify-between">
-                <span className="text-gray-600">Subtotal</span>
+                <span className="text-gray-600 dark:text-gray-400">
+                  Subtotal
+                </span>
                 <span className="font-medium">
-                  {formatCurrency(order.total)}
+                  {formatCurrency(
+                    order.Order_Items?.reduce((sum: number, item: any) => {
+                      return (
+                        sum +
+                        parseFloat(item.product.final_price) * item.quantity
+                      );
+                    }, 0) || 0
+                  )}
                 </span>
               </div>
               <div className="mb-2 flex justify-between">
-                <span className="text-gray-600">Service Fee</span>
+                <span className="text-gray-600 dark:text-gray-400">
+                  Service Fee
+                </span>
                 <span className="font-medium">
                   {formatCurrency(order.serviceFee)}
                 </span>
               </div>
               <div className="mb-2 flex justify-between">
-                <span className="text-gray-600">Delivery Fee</span>
+                <span className="text-gray-600 dark:text-gray-400">
+                  Delivery Fee
+                </span>
                 <span className="font-medium">
                   {formatCurrency(order.deliveryFee)}
                 </span>
@@ -314,7 +333,12 @@ export default function UserOrderDetails({ order }: UserOrderDetailsProps) {
                 <span>Total</span>
                 <span>
                   {formatCurrency(
-                    (Number(order.total) || 0) +
+                    (order.Order_Items?.reduce((sum: number, item: any) => {
+                      return (
+                        sum +
+                        parseFloat(item.product.final_price) * item.quantity
+                      );
+                    }, 0) || 0) +
                       (Number(order.serviceFee) || 0) +
                       (Number(order.deliveryFee) || 0)
                   )}
@@ -353,7 +377,7 @@ export default function UserOrderDetails({ order }: UserOrderDetailsProps) {
                 </div>
                 <div>
                   <p className="font-medium">{order.address?.street}</p>
-                  <p className="text-gray-600">
+                  <p className="text-gray-600 dark:text-gray-400">
                     {order.address?.city}, {order.address?.postal_code}
                   </p>
                 </div>
@@ -364,7 +388,7 @@ export default function UserOrderDetails({ order }: UserOrderDetailsProps) {
             {order.deliveryNotes && (
               <div className="mt-6">
                 <h3 className="mb-2 font-semibold">Delivery Notes</h3>
-                <div className="rounded-lg bg-gray-50 p-3 text-gray-700">
+                <div className="rounded-lg bg-gray-50 p-3 text-gray-700 dark:bg-gray-800 dark:text-gray-300">
                   <p>{order.deliveryNotes}</p>
                 </div>
               </div>
@@ -415,11 +439,11 @@ export default function UserOrderDetails({ order }: UserOrderDetailsProps) {
                       </svg>
                     ))}
                   </div>
-                  <span className="ml-1 text-sm text-gray-600">
+                  <span className="ml-1 text-sm text-gray-600 dark:text-gray-400">
                     {order.assignedTo.rating}
                   </span>
                 </div>
-                <p className="mt-1 text-sm text-gray-500">
+                <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
                   {order.assignedTo.orders.aggregate.count} orders completed
                 </p>
                 <div className="mt-6 w-full space-y-3">
@@ -513,23 +537,18 @@ export default function UserOrderDetails({ order }: UserOrderDetailsProps) {
                   <path
                     strokeLinecap="round"
                     strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M5 13l4 4L19 7"
+                    strokeWidth="2"
+                    d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
                   />
                 </svg>
               </div>
-              <div>
-                <h3 className="text-lg font-bold text-gray-900 sm:text-xl">
-                  Rate Your Experience
-                </h3>
-                <p className="mt-1 text-sm text-gray-500">
-                  Your feedback helps us improve our service
-                </p>
-              </div>
+              <span className="text-lg font-semibold text-gray-900">
+                Rate Your Experience
+              </span>
             </div>
           </Modal.Title>
         </Modal.Header>
-        <Modal.Body className="px-4 py-5 sm:px-6">
+        <Modal.Body>
           {submitError && (
             <div className="mb-6 rounded-md bg-red-50 p-4">
               <div className="flex">
@@ -552,11 +571,10 @@ export default function UserOrderDetails({ order }: UserOrderDetailsProps) {
               </div>
             </div>
           )}
-
           <div className="space-y-6">
             {/* Rating Section */}
-            <div className="rounded-lg bg-gray-50 p-4 text-center sm:p-6">
-              <h4 className="mb-4 text-base font-medium text-gray-900 sm:text-lg">
+            <div className="rounded-lg bg-gray-50 p-6 text-center">
+              <h4 className="mb-4 text-lg font-medium text-gray-900">
                 How was your experience?
               </h4>
               <div className="flex justify-center">
@@ -564,9 +582,9 @@ export default function UserOrderDetails({ order }: UserOrderDetailsProps) {
                   defaultValue={0}
                   value={rating}
                   onChange={setRating}
-                  color="yellow"
+                  color={rating > 3 ? "green" : rating > 0 ? "yellow" : "gray"}
                   size="lg"
-                  className="text-2xl sm:text-3xl"
+                  className="text-3xl"
                 />
               </div>
               <p className="mt-2 text-sm text-gray-500">
@@ -578,30 +596,26 @@ export default function UserOrderDetails({ order }: UserOrderDetailsProps) {
                 {rating === 5 && "Excellent"}
               </p>
             </div>
-
-            {/* Detailed Ratings */}
-            <div className="space-y-4 rounded-lg border border-gray-200 p-4 sm:p-6">
-              <h4 className="text-base font-medium text-gray-900 sm:text-lg">
+            {/* Details Section */}
+            <div className="space-y-4 rounded-lg border border-gray-200 bg-white p-6">
+              <h4 className="text-lg font-medium text-gray-900">
                 Additional Feedback
               </h4>
-              <div className="space-y-4">
-                <div>
-                  <label className="mb-2 block text-sm font-medium text-gray-700">
-                    Share your thoughts
-                  </label>
-                  <textarea
-                    className="w-full rounded-md border border-gray-300 p-3 text-sm focus:border-green-500 focus:outline-none focus:ring-1 focus:ring-green-500"
-                    placeholder="Tell us what you liked or what we could improve..."
-                    rows={4}
-                    value={comment}
-                    onChange={(e) => setComment(e.target.value)}
-                  ></textarea>
-                </div>
+              <div>
+                <label className="mb-2 block text-sm font-medium text-gray-700">
+                  Share your thoughts
+                </label>
+                <textarea
+                  className="w-full rounded-md border border-gray-300 p-3 text-sm focus:border-green-500 focus:outline-none focus:ring-1 focus:ring-green-500"
+                  placeholder="Tell us what you liked or what we could improve..."
+                  rows={4}
+                  value={comment}
+                  onChange={(e) => setComment(e.target.value)}
+                ></textarea>
               </div>
             </div>
           </div>
         </Modal.Body>
-
         <Modal.Footer>
           <div className="flex w-full flex-col-reverse gap-3 border-t border-gray-200 px-4 py-4 sm:flex-row sm:justify-end sm:px-6">
             <button
@@ -646,7 +660,20 @@ export default function UserOrderDetails({ order }: UserOrderDetailsProps) {
                   Submitting...
                 </>
               ) : (
-                "Submit Feedback"
+                <>
+                  <svg
+                    className="mr-2 h-4 w-4"
+                    viewBox="0 0 20 20"
+                    fill="currentColor"
+                  >
+                    <path
+                      fillRule="evenodd"
+                      d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z"
+                      clipRule="evenodd"
+                    />
+                  </svg>
+                  Submit Feedback
+                </>
               )}
             </button>
           </div>

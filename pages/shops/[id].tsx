@@ -9,6 +9,7 @@ interface Shop {
   name: string;
   description: string;
   image: string;
+  logo: string;
   address: string;
   latitude: string;
   longitude: string;
@@ -41,6 +42,7 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
         name
         description
         image
+        logo
         address
         latitude
         longitude
@@ -55,8 +57,10 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
     query GetProductsByShop($shop_id: uuid!) {
       Products(where: { shop_id: { _eq: $shop_id } }) {
         id
-        name
-        description
+        ProductName {
+          name
+          description
+        }
         price
         final_price
         quantity

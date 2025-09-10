@@ -19,10 +19,12 @@ const GET_ORDER_DETAILS = gql`
       discount
       combinedOrderId: combined_order_id
       voucherCode: voucher_code
-      user: userByUserId {
+      shop_id
+      user: User {
         id
         name
         email
+        phone
         profile_picture
       }
       shop: Shop {
@@ -30,6 +32,10 @@ const GET_ORDER_DETAILS = gql`
         name
         address
         image
+        phone
+        latitude
+        longitude
+        operating_hours
       }
       Order_Items {
         id
@@ -38,15 +44,36 @@ const GET_ORDER_DETAILS = gql`
         price
         product: Product {
           id
-          name
-          image
           price
-          description
+          final_price
           measurement_unit
           category
           quantity
+          sku
+          image
+          productName_id
+          ProductName {
+            barcode
+            create_at
+            description
+            id
+            image
+            name
+            sku
+          }
+          created_at
+          is_active
+          reorder_point
+          shop_id
+          supplier
+          updated_at
         }
         order_id
+      }
+      assignedTo: User {
+        id
+        name
+        profile_picture
       }
       address: Address {
         id
@@ -57,16 +84,11 @@ const GET_ORDER_DETAILS = gql`
         longitude
         is_default
       }
-      assignedTo: User {
-        id
-        name
-        profile_picture
-        orders: Orders_aggregate {
-          aggregate {
-            count
-          }
-        }
-      }
+      delivery_address_id
+      found
+      shopper_id
+      updated_at
+      user_id
     }
   }
 `;
@@ -127,7 +149,10 @@ export default async function handler(
 
     res.status(200).json({ order: formattedOrder });
   } catch (error) {
-    console.error("Error fetching order details:", error);
-    res.status(500).json({ error: "Failed to fetch order details" });
+    console.error("Error in orderDetails API:", error);
+    res.status(500).json({
+      error: "Failed to fetch order details",
+      details: error instanceof Error ? error.message : "Unknown error",
+    });
   }
 }

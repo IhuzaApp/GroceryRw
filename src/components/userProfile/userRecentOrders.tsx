@@ -23,12 +23,24 @@ type Order = {
     name: string;
     address: string;
     image: string;
-  };
+  } | null;
   itemsCount: number;
   unitsCount: number;
   shopper_id: string | null;
   service_fee?: number;
   delivery_fee?: number;
+  orderType?: "regular" | "reel";
+  reel?: {
+    id: string;
+    title: string;
+    description: string;
+    Price: string;
+    Product: string;
+    type: string;
+    video_url: string;
+  };
+  quantity?: number;
+  delivery_note?: string;
 };
 
 // Props for the UserRecentOrders component
@@ -180,7 +192,7 @@ export default function UserRecentOrders({
             key={order.id}
             className="mb-4 rounded-xl border border-gray-200 bg-white p-4 shadow-md transition-colors duration-200 dark:border-gray-700 dark:bg-gray-800"
           >
-            {/* Shop Profile */}
+            {/* Shop Profile for Regular Orders */}
             {order.shop ? (
               <div className="mb-4 flex items-center gap-3">
                 <svg
@@ -203,6 +215,36 @@ export default function UserRecentOrders({
                   <div className="text-sm text-gray-500 dark:text-gray-400">
                     {order?.shop?.address}
                   </div>
+                </div>
+              </div>
+            ) : null}
+
+            {/* Reel Profile for Reel Orders */}
+            {order.orderType === "reel" && order.reel ? (
+              <div className="mb-4 flex items-center gap-3">
+                <svg
+                  className="text-purple-500 dark:text-purple-400"
+                  width="20px"
+                  height="20px"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                >
+                  <path d="M14.828 14.828a4 4 0 01-5.656 0M9 10h1m4 0h1m-6 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                <div>
+                  <div className="font-semibold text-gray-900 dark:text-white">
+                    {order.reel.title}
+                  </div>
+                  <div className="text-sm text-gray-500 dark:text-gray-400">
+                    {order.reel.description}
+                  </div>
+                  {order.delivery_note && (
+                    <div className="mt-1 text-xs text-gray-400 dark:text-gray-500">
+                      Note: {order.delivery_note}
+                    </div>
+                  )}
                 </div>
               </div>
             ) : null}
@@ -245,14 +287,12 @@ export default function UserRecentOrders({
 
             <div className="mb-3 flex justify-between text-sm">
               <span className="font-bold text-green-600 dark:text-green-400">
-                {order.itemsCount} items ({order.unitsCount} units)
+                {order.orderType === "reel"
+                  ? `${order.quantity || 1} quantity`
+                  : `${order.itemsCount} items (${order.unitsCount} units)`}
               </span>
               <span className="font-bold text-gray-900 dark:text-white">
-                {formatCurrency(
-                  order.total +
-                    (order.service_fee ?? 0) +
-                    (order.delivery_fee ?? 0)
-                )}
+                {formatCurrency(order.total)}
               </span>
             </div>
 
@@ -269,7 +309,11 @@ export default function UserRecentOrders({
             <div className="flex gap-2">
               <Link
                 href={`/CurrentPendingOrders/viewOrderDetails/${order.id}`}
-                className="inline-flex items-center rounded-lg bg-green-500 px-4 py-2 text-sm font-medium text-white transition duration-150 hover:bg-green-600 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 dark:bg-green-600 dark:hover:bg-green-700 dark:focus:ring-offset-gray-900"
+                className={`inline-flex items-center rounded-lg px-4 py-2 text-sm font-medium text-white transition duration-150 focus:outline-none focus:ring-2 focus:ring-offset-2 dark:focus:ring-offset-gray-900 ${
+                  order.orderType === "reel"
+                    ? "bg-purple-500 hover:bg-purple-600 focus:ring-purple-500 dark:bg-purple-600 dark:hover:bg-purple-700"
+                    : "bg-green-500 hover:bg-green-600 focus:ring-green-500 dark:bg-green-600 dark:hover:bg-green-700"
+                }`}
               >
                 View Details
               </Link>

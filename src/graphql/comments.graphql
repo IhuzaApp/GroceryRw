@@ -1,0 +1,72 @@
+mutation addReelComment(
+  $likes: String = ""
+  $reel_id: uuid = ""
+  $text: String = ""
+  $user_id: uuid = ""
+) {
+  insert_Reels_comments(
+    objects: {
+      isLiked: false
+      likes: $likes
+      reel_id: $reel_id
+      text: $text
+      user_id: $user_id
+    }
+  ) {
+    affected_rows
+  }
+}
+
+query GetComments {
+  Reels_comments {
+    user_id
+    text
+    reel_id
+    likes
+    isLiked
+    id
+    created_on
+    User {
+      email
+      gender
+      name
+      phone
+      profile_picture
+    }
+    Reel {
+      category
+      isLiked
+      likes
+      restaurant_id
+      title
+      id
+    }
+  }
+}
+
+query GetCommentsWhereReelID($reel_id: uuid = "") {
+  Reels_comments(where: { reel_id: { _eq: $reel_id } }) {
+    user_id
+    text
+    reel_id
+    likes
+    isLiked
+    id
+    created_on
+    User {
+      email
+      gender
+      name
+      phone
+      profile_picture
+    }
+    Reel {
+      category
+      isLiked
+      likes
+      restaurant_id
+      title
+      id
+    }
+  }
+}

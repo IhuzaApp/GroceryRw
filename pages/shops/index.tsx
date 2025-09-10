@@ -12,12 +12,14 @@ export default function ShopsList({
   return (
     <RootLayout>
       <div className="p-4">
-        <h1 className="mb-4 text-2xl font-bold">Shops</h1>
+        <h1 className="mb-4 text-2xl font-bold dark:text-white">Shops</h1>
         <ul className="space-y-2">
           {shops.map((shop) => (
             <li key={shop.id}>
               <Link href={`/shops/${shop.id}`}>
-                <a className="text-blue-600 hover:underline">{shop.name}</a>
+                <a className="text-blue-600 hover:underline dark:text-blue-400">
+                  {shop.name}
+                </a>
               </Link>
             </li>
           ))}

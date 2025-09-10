@@ -20,5 +20,34 @@ query GetCarts {
       role
       updated_at
     }
+    Cart_Items {
+      Product {
+        category
+        created_at
+        final_price
+        productName_id
+        quantity
+        is_active
+        measurement_unit
+        price
+        reorder_point
+        shop_id
+        sku
+        supplier
+        ProductName {
+          barcode
+          create_at
+          description
+          id
+          image
+          name
+          sku
+        }
+      }
+      updated_at
+      quantity
+      product_id
+      price
+    }
   }
 }

@@ -16,29 +16,88 @@ export const authOptions: NextAuthOptions = {
     CredentialsProvider({
       name: "Credentials",
       credentials: {
-        email: { label: "Email", type: "email" },
+        identifier: { label: "Email, Username, or Phone", type: "text" },
         password: { label: "Password", type: "password" },
       },
       authorize: async (credentials) => {
         if (!credentials) return null;
-        const { email, password } = credentials;
-        const query = gql`
-          query GetUserByEmail($email: String!) {
-            Users(where: { email: { _eq: $email }, is_active: { _eq: true } }) {
-              id
-              name
-              email
-              password_hash
-              phone
-              gender
-              role
-              created_at
-              is_active
-              profile_picture
-              updated_at
+        const { identifier, password } = credentials;
+
+        // Determine if identifier is email, phone, or username
+        const isEmail = identifier.includes("@");
+        const isPhone = /^\+?[\d\s\-\(\)]+$/.test(
+          identifier.replace(/\s/g, "")
+        );
+
+        let query;
+        let variables;
+
+        if (isEmail) {
+          query = gql`
+            query GetUserByEmail($email: String!) {
+              Users(
+                where: { email: { _eq: $email }, is_active: { _eq: true } }
+              ) {
+                id
+                name
+                email
+                password_hash
+                phone
+                gender
+                role
+                created_at
+                is_active
+                profile_picture
+                updated_at
+              }
             }
-          }
-        `;
+          `;
+          variables = { email: identifier };
+        } else if (isPhone) {
+          // Clean phone number for comparison
+          const cleanPhone = identifier.replace(/\D/g, "");
+          query = gql`
+            query GetUserByPhone($phone: String!) {
+              Users(
+                where: { phone: { _eq: $phone }, is_active: { _eq: true } }
+              ) {
+                id
+                name
+                email
+                password_hash
+                phone
+                gender
+                role
+                created_at
+                is_active
+                profile_picture
+                updated_at
+              }
+            }
+          `;
+          variables = { phone: cleanPhone };
+        } else {
+          // Assume it's a username
+          query = gql`
+            query GetUserByUsername($name: String!) {
+              Users(where: { name: { _eq: $name }, is_active: { _eq: true } }) {
+                id
+                name
+                email
+                password_hash
+                phone
+                gender
+                role
+                created_at
+                is_active
+                profile_picture
+                updated_at
+              }
+            }
+          `;
+          variables = { name: identifier };
+        }
+
         const res = await hasuraClient.request<{
           Users: Array<{
             id: string;
@@ -49,7 +108,7 @@ export const authOptions: NextAuthOptions = {
             gender: string;
             role: string;
           }>;
-        }>(query, { email });
+        }>(query, variables);
         const user = res.Users[0];
         if (!user) {
           throw new Error("No user found");
@@ -102,6 +161,10 @@ export const authOptions: NextAuthOptions = {
     },
   },
   useSecureCookies: process.env.NEXTAUTH_SECURE_COOKIES === "true",
+  pages: {
+    signIn: "/Auth/Login",
+    signOut: "/",
+  },
   callbacks: {
     async jwt({ token, user }) {
       if (user) {

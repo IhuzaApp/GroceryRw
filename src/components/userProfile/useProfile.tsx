@@ -15,7 +15,7 @@ import { initiateRoleSwitch } from "../../lib/sessionRefresh";
 
 export default function UserProfile() {
   const router = useRouter();
-  const { role, toggleRole } = useAuth();
+  const { role, toggleRole, logout } = useAuth();
   const [activeTab, setActiveTab] = useState("account");
   // User data state
   const [user, setUser] = useState<{
@@ -400,6 +400,56 @@ export default function UserProfile() {
             </div>
           )}
         </Panel>
+
+        {/* Logout Button Panel */}
+
+        <div className="p-4">
+          <button
+            className="flex w-full items-center justify-center rounded-md bg-red-500 px-4 py-2 text-sm text-white transition-colors duration-200 hover:bg-red-600 dark:bg-red-600 dark:hover:bg-red-700"
+            onClick={async () => {
+              try {
+                // Call our custom logout API
+                const response = await fetch("/api/logout", {
+                  method: "POST",
+                  headers: {
+                    "Content-Type": "application/json",
+                  },
+                });
+
+                if (response.ok) {
+                  // Clear local storage
+                  localStorage.clear();
+                  sessionStorage.clear();
+
+                  toast.success("Logged out successfully");
+
+                  // Redirect to login page
+                  router.push("/");
+                } else {
+                  throw new Error("Logout failed");
+                }
+              } catch (error) {
+                console.error("Logout error:", error);
+                toast.error("Failed to logout");
+              }
+            }}
+          >
+            <svg
+              className="mr-1 h-3 w-3"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"
+              />
+            </svg>
+            Logout
+          </button>
+        </div>
       </div>
 
       {/* Right Column - Tabs */}

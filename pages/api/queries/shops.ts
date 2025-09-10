@@ -12,6 +12,7 @@ const GET_SHOPS = gql`
       address
       category_id
       image
+      logo
       is_active
       latitude
       longitude
@@ -27,6 +28,15 @@ interface ShopsResponse {
     name: string;
     description: string;
     created_at: string;
+    address?: string;
+    category_id?: string;
+    image?: string;
+    logo?: string;
+    is_active?: boolean;
+    latitude?: string;
+    longitude?: string;
+    operating_hours?: string;
+    updated_at?: string;
   }>;
 }
 

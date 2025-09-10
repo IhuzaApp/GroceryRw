@@ -1,121 +1,147 @@
-import React, { useState } from "react";
-import { Button, SelectPicker, Toggle } from "rsuite";
+import React, { useState, useEffect } from "react";
+import { Button, Input, SelectPicker, Toggle } from "rsuite";
+import { useTheme } from "../../context/ThemeContext";
 import toast from "react-hot-toast";
-import { useTheme } from "@context/ThemeContext";
 
 export default function UserPreference() {
   const { theme, setTheme } = useTheme();
-  const [language, setLanguage] = useState("en");
-  const [hasChanges, setHasChanges] = useState(false);
+  const [preferences, setPreferences] = useState({
+    notifications: true,
+    emailUpdates: true,
+    smsUpdates: false,
+    language: "en",
+    currency: "USD",
+  });
+  const [loading, setLoading] = useState(false);
 
-  const languages = [
-    { label: "English", value: "en" },
-    { label: "French", value: "fr" },
-    { label: "Spanish", value: "es" },
-    { label: "German", value: "de" },
-    { label: "Chinese", value: "zh" },
-    { label: "Arabic", value: "ar" },
-  ];
-
-  // Load language preference on mount
-  React.useEffect(() => {
-    try {
-      const savedLanguage = localStorage.getItem("language");
-      if (savedLanguage) {
-        setLanguage(savedLanguage);
-      }
-    } catch (error) {
-      console.error("Error loading language preference:", error);
-    }
+  // Load user preferences on component mount
+  useEffect(() => {
+    // You can add logic here to load saved preferences from the backend
+    // For now, we'll use default values
   }, []);
 
-  const handleThemeChange = (checked: boolean) => {
-    try {
-      const newTheme = checked ? "dark" : "light";
-      setTheme(newTheme);
-      setHasChanges(true);
-    } catch (error) {
-      toast.error("Failed to update theme");
-    }
+  const handlePreferenceChange = (key: string, value: any) => {
+    setPreferences((prev) => ({
+      ...prev,
+      [key]: value,
+    }));
   };
 
-  const handleLanguageChange = (value: string | null) => {
-    if (value) {
-      try {
-        setLanguage(value);
-        localStorage.setItem("language", value);
-        setHasChanges(true);
-      } catch (error) {
-        toast.error("Failed to update language");
-      }
-    }
-  };
-
-  const savePreferences = async () => {
+  const handleSave = async () => {
+    setLoading(true);
     try {
-      // Here you would typically also save to backend
-      // await fetch('/api/user/preferences', {
-      //   method: 'PUT',
-      //   headers: { 'Content-Type': 'application/json' },
-      //   body: JSON.stringify({ theme, language })
-      // });
-
-      setHasChanges(false);
+      // Add API call to save preferences
+      // await fetch('/api/user/preferences', { ... });
       toast.success("Preferences saved successfully!");
     } catch (error) {
       toast.error("Failed to save preferences");
+    } finally {
+      setLoading(false);
     }
   };
 
   return (
-    <div className="transition-colors duration-200">
-      <h3 className="mb-4 text-lg font-bold dark:text-white">
-        Display Settings
-      </h3>
+    <div className="space-y-6">
+      <div>
+        <h3 className="mb-4 text-lg font-semibold text-gray-900 dark:text-white">
+          Theme Settings
+        </h3>
+        <div className="flex items-center justify-between">
+          <span className="text-gray-700 dark:text-gray-300">Dark Mode</span>
+          <Toggle
+            checked={theme === "dark"}
+            onChange={(checked) => setTheme(checked ? "dark" : "light")}
+          />
+        </div>
+      </div>
 
-      <div className="rounded-lg border border-gray-200 bg-white p-4 shadow-sm transition-colors duration-200 dark:border-gray-700 dark:bg-gray-800">
+      <div>
+        <h3 className="mb-4 text-lg font-semibold text-gray-900 dark:text-white">
+          Notification Preferences
+        </h3>
         <div className="space-y-4">
           <div className="flex items-center justify-between">
-            <div>
-              <span className="font-medium dark:text-white">Dark Mode</span>
-              <p className="text-sm text-gray-500 dark:text-gray-400">
-                Switch between light and dark themes
-              </p>
-            </div>
+            <span className="text-gray-700 dark:text-gray-300">
+              Push Notifications
+            </span>
             <Toggle
-              checked={theme === "dark"}
-              onChange={handleThemeChange}
-              size="md"
+              checked={preferences.notifications}
+              onChange={(checked) =>
+                handlePreferenceChange("notifications", checked)
+              }
             />
           </div>
           <div className="flex items-center justify-between">
-            <div>
-              <span className="font-medium dark:text-white">Language</span>
-              <p className="text-sm text-gray-500 dark:text-gray-400">
-                Choose your preferred language
-              </p>
-            </div>
-            <SelectPicker
-              data={languages}
-              value={language}
-              onChange={handleLanguageChange}
-              cleanable={false}
-              searchable={false}
-              className="w-40 dark:bg-gray-700"
+            <span className="text-gray-700 dark:text-gray-300">
+              Email Updates
+            </span>
+            <Toggle
+              checked={preferences.emailUpdates}
+              onChange={(checked) =>
+                handlePreferenceChange("emailUpdates", checked)
+              }
+            />
+          </div>
+          <div className="flex items-center justify-between">
+            <span className="text-gray-700 dark:text-gray-300">
+              SMS Updates
+            </span>
+            <Toggle
+              checked={preferences.smsUpdates}
+              onChange={(checked) =>
+                handlePreferenceChange("smsUpdates", checked)
+              }
             />
           </div>
         </div>
       </div>
 
-      <div className="mt-6 flex justify-end">
+      <div>
+        <h3 className="mb-4 text-lg font-semibold text-gray-900 dark:text-white">
+          Language & Currency
+        </h3>
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+          <div>
+            <label className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">
+              Language
+            </label>
+            <SelectPicker
+              data={[
+                { label: "English", value: "en" },
+                { label: "Spanish", value: "es" },
+                { label: "French", value: "fr" },
+              ]}
+              value={preferences.language}
+              onChange={(value) => handlePreferenceChange("language", value)}
+              className="w-full"
+            />
+          </div>
+          <div>
+            <label className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">
+              Currency
+            </label>
+            <SelectPicker
+              data={[
+                { label: "USD ($)", value: "USD" },
+                { label: "EUR (€)", value: "EUR" },
+                { label: "GBP (£)", value: "GBP" },
+              ]}
+              value={preferences.currency}
+              onChange={(value) => handlePreferenceChange("currency", value)}
+              className="w-full"
+            />
+          </div>
+        </div>
+      </div>
+
+      <div className="flex justify-end">
         <Button
           appearance="primary"
-          color="green"
-          onClick={savePreferences}
-          disabled={!hasChanges}
-          className="dark:bg-green-600 dark:text-white"
+          onClick={handleSave}
+          loading={loading}
+          className="bg-green-500 hover:bg-green-600"
         >
-          Save Changes
+          Save Preferences
         </Button>
       </div>
     </div>

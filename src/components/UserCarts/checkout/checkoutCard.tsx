@@ -5,6 +5,9 @@ import { formatCurrency } from "../../../lib/formatCurrency";
 import Cookies from "js-cookie";
 import { useRouter } from "next/router";
 import PaymentMethodSelector from "./PaymentMethodSelector";
+import { useTheme } from "../../../context/ThemeContext";
+import { useAuth } from "../../../context/AuthContext";
+import AddressManagementModal from "../../userProfile/AddressManagementModal";
 
 // Cookie name for system configuration cache
 const SYSTEM_CONFIG_COOKIE = "system_configuration";
@@ -40,6 +43,8 @@ interface SystemConfiguration {
   currency: string;
   discounts: boolean;
   id: string;
+  deliveryCommissionPercentage: string;
+  productCommissionPercentage: string;
 }
 
 // Add helper to compute distance between two coordinates
@@ -70,6 +75,7 @@ export default function CheckoutItems({
   shopAlt,
   shopId,
 }: CheckoutItemsProps) {
+  const { theme } = useTheme();
   const router = useRouter();
   // Re-render when the address cookie changes
   const [, setTick] = useState(0);
@@ -80,6 +86,8 @@ export default function CheckoutItems({
     null
   );
   const [configLoading, setConfigLoading] = useState(true);
+  // Address management modal state
+  const [showAddressModal, setShowAddressModal] = useState(false);
 
   // Fetch system configuration
   useEffect(() => {
@@ -481,7 +489,11 @@ export default function CheckoutItems({
           <div className="mr-2 flex items-center justify-center rounded bg-gray-400 p-2 text-xs text-white">
             LOADING
           </div>
-          <span>Loading payment method...</span>
+          <span
+            className={theme === "dark" ? "text-gray-300" : "text-gray-700"}
+          >
+            Loading payment method...
+          </span>
         </div>
       );
     }
@@ -492,7 +504,11 @@ export default function CheckoutItems({
           <div className="mr-2 flex items-center justify-center rounded bg-gray-400 p-2 text-xs text-white">
             NONE
           </div>
-          <span>No payment method selected</span>
+          <span
+            className={theme === "dark" ? "text-gray-300" : "text-gray-700"}
+          >
+            No payment method selected
+          </span>
         </div>
       );
     }
@@ -506,7 +522,7 @@ export default function CheckoutItems({
             ? "MOMO"
             : "VISA"}
         </div>
-        <span>
+        <span className={theme === "dark" ? "text-gray-300" : "text-gray-700"}>
           {selectedPaymentMethod.type === "refund"
             ? "Using Refund Balance"
             : selectedPaymentMethod.type === "momo"
@@ -545,29 +561,61 @@ export default function CheckoutItems({
   return (
     <>
       {/* Mobile View - Only visible on small devices */}
+      {/* Backdrop overlay when expanded */}
+      {isExpanded && (
+        <div
+          className="fixed inset-0 z-40 bg-black/80 backdrop-blur-lg transition-all duration-300 md:hidden"
+          onClick={toggleExpand}
+        />
+      )}
+
       <div
-        className="fixed bottom-0 left-0 right-0 z-50 w-full bg-white shadow-2xl transition-all duration-300 md:hidden"
+        className={`fixed bottom-16 left-0 right-0 z-50 w-full transition-all duration-300 md:hidden ${
+          theme === "dark" ? "bg-gray-800" : "bg-white"
+        } ${
+          isExpanded
+            ? "border-2 border-white/10 shadow-[0_25px_50px_-12px_rgba(0,0,0,0.8)] ring-4 ring-white/20"
+            : "shadow-2xl"
+        }`}
         style={{
-          maxHeight: isExpanded ? "90vh" : "160px",
+          maxHeight: isExpanded ? "calc(90vh - 64px)" : "160px",
           overflow: "hidden",
         }}
       >
         {/* Header with toggle button */}
         <div
-          className="flex items-center justify-between border-b p-4"
+          className={`flex items-center justify-between border-b p-4 ${
+            theme === "dark" ? "border-gray-700" : "border-gray-200"
+          }`}
           onClick={toggleExpand} // Make the entire header clickable to toggle
         >
           <div className="flex items-center">
-            <span className="text-lg font-bold">Order Summary</span>
-            <span className="ml-2 rounded-full bg-green-100 px-2 py-1 text-xs font-medium text-green-800">
+            <span
+              className={`text-lg font-bold ${
+                theme === "dark" ? "text-white" : "text-gray-900"
+              }`}
+            >
+              Order Summary
+            </span>
+            <span className="ml-2 rounded-full bg-green-100 px-2 py-1 text-xs font-medium text-green-800 dark:bg-green-900/20 dark:text-green-300">
               {totalUnits} items
             </span>
           </div>
           <div className="flex items-center">
-            <span className="mr-2 font-bold text-green-600">
+            <span
+              className={`mr-2 font-bold text-green-600 ${
+                theme === "dark" ? "text-green-400" : "text-green-600"
+              }`}
+            >
               {formatCurrency(finalTotal)}
             </span>
-            <button className="flex h-8 w-8 items-center justify-center rounded-full bg-gray-100">
+            <button
+              className={`flex h-8 w-8 items-center justify-center rounded-full ${
+                theme === "dark"
+                  ? "bg-gray-700 text-gray-300"
+                  : "bg-gray-100 text-gray-600"
+              }`}
+            >
               {isExpanded ? (
                 <svg
                   viewBox="0 0 24 24"
@@ -612,11 +660,17 @@ export default function CheckoutItems({
         {/* Expanded content */}
         <div
           className={`p-4 ${isExpanded ? "block" : "hidden"} overflow-y-auto`}
-          style={{ maxHeight: "calc(90vh - 60px)" }}
+          style={{ maxHeight: "calc(90vh - 124px)" }}
         >
           {discountsEnabled && (
             <div>
-              <p className="mb-2 text-gray-600">Do you have any promo code?</p>
+              <p
+                className={`mb-2 ${
+                  theme === "dark" ? "text-gray-300" : "text-gray-600"
+                }`}
+              >
+                Do you have any promo code?
+              </p>
               <div className="flex flex-wrap gap-2">
                 <Input
                   value={promoCode}
@@ -627,7 +681,7 @@ export default function CheckoutItems({
                 <Button
                   appearance="primary"
                   color="green"
-                  className="bg-green-100 font-medium text-green-600"
+                  className="bg-green-100 font-medium text-green-600 dark:bg-green-900/20 dark:text-green-300"
                   onClick={handleApplyPromo}
                 >
                   Apply
@@ -636,46 +690,180 @@ export default function CheckoutItems({
             </div>
           )}
 
-          <hr className="mt-4" />
+          <hr
+            className={`mt-4 ${
+              theme === "dark" ? "border-gray-700" : "border-gray-200"
+            }`}
+          />
 
           <div className="mt-6 flex flex-col gap-2">
             <div className="flex justify-between">
-              <span className="text-sm text-gray-600">Subtotal</span>
-              <span className="text-sm">{formatCurrency(Total)}</span>
+              <span
+                className={`text-sm ${
+                  theme === "dark" ? "text-gray-300" : "text-gray-600"
+                }`}
+              >
+                Subtotal
+              </span>
+              <span
+                className={`text-sm ${
+                  theme === "dark" ? "text-white" : "text-gray-900"
+                }`}
+              >
+                {formatCurrency(Total)}
+              </span>
             </div>
             {discount > 0 && (
-              <div className="flex justify-between text-green-600">
+              <div className="flex justify-between text-green-600 dark:text-green-400">
                 <span className="text-sm">Discount ({appliedPromo})</span>
                 <span className="text-sm">-{formatCurrency(discount)}</span>
               </div>
             )}
             <div className="flex justify-between">
-              <span className="text-sm text-gray-600">Units</span>
-              <span className="text-sm">{totalUnits}</span>
+              <span
+                className={`text-sm ${
+                  theme === "dark" ? "text-gray-300" : "text-gray-600"
+                }`}
+              >
+                Units
+              </span>
+              <span
+                className={`text-sm ${
+                  theme === "dark" ? "text-white" : "text-gray-900"
+                }`}
+              >
+                {totalUnits}
+              </span>
             </div>
             <div className="flex justify-between">
-              <span className="text-sm text-gray-600">Service Fee</span>
-              <span className="text-sm">{formatCurrency(serviceFee)}</span>
+              <span
+                className={`text-sm ${
+                  theme === "dark" ? "text-gray-300" : "text-gray-600"
+                }`}
+              >
+                Service Fee
+              </span>
+              <span
+                className={`text-sm ${
+                  theme === "dark" ? "text-white" : "text-gray-900"
+                }`}
+              >
+                {formatCurrency(serviceFee)}
+              </span>
             </div>
             <div className="flex justify-between">
-              <span className="text-sm text-gray-600">Delivery Fee</span>
-              <span className="text-sm">{formatCurrency(deliveryFee)}</span>
+              <span
+                className={`text-sm ${
+                  theme === "dark" ? "text-gray-300" : "text-gray-600"
+                }`}
+              >
+                Delivery Fee
+              </span>
+              <span
+                className={`text-sm ${
+                  theme === "dark" ? "text-white" : "text-gray-900"
+                }`}
+              >
+                {formatCurrency(deliveryFee)}
+              </span>
             </div>
             <div className="flex justify-between">
-              <span className="text-sm text-gray-600">Delivery Time</span>
-              <span className="text-sm font-medium text-green-600">
+              <span
+                className={`text-sm ${
+                  theme === "dark" ? "text-white" : "text-gray-900"
+                }`}
+              >
+                Delivery Time
+              </span>
+              <span
+                className={`text-sm font-medium text-green-600 dark:text-green-400`}
+              >
                 {deliveryTime}
               </span>
             </div>
+            <div className="flex justify-between">
+              <span
+                className={`text-sm ${
+                  theme === "dark" ? "text-white" : "text-gray-900"
+                }`}
+              >
+                Delivery Address
+              </span>
+              <div className="flex items-center gap-2">
+                <div className="text-right">
+                  {(() => {
+                    const cookieValue = Cookies.get("delivery_address");
+                    if (!cookieValue) {
+                      return (
+                        <span className="text-sm text-red-500">No address</span>
+                      );
+                    }
+                    try {
+                      const addressObj = JSON.parse(cookieValue);
+                      if (addressObj.street && addressObj.city) {
+                        return (
+                          <div className="text-right">
+                            <div className="text-sm font-medium text-gray-900 dark:text-white">
+                              {addressObj.street.length > 20
+                                ? `${addressObj.street.substring(0, 20)}...`
+                                : addressObj.street}
+                            </div>
+                            <div className="text-xs text-gray-600 dark:text-gray-400">
+                              {addressObj.city}
+                            </div>
+                          </div>
+                        );
+                      } else if (addressObj.latitude && addressObj.longitude) {
+                        return (
+                          <span className="text-sm text-gray-900 dark:text-white">
+                            Current Location
+                          </span>
+                        );
+                      } else {
+                        return (
+                          <span className="text-sm text-red-500">Invalid</span>
+                        );
+                      }
+                    } catch (err) {
+                      return (
+                        <span className="text-sm text-red-500">Error</span>
+                      );
+                    }
+                  })()}
+                </div>
+                <Button
+                  size="xs"
+                  appearance="ghost"
+                  className="px-2 py-1 text-green-600 hover:bg-green-50 hover:text-green-700 dark:text-green-400 dark:hover:bg-green-900/20"
+                  onClick={() => {
+                    setShowAddressModal(true);
+                  }}
+                >
+                  Change
+                </Button>
+              </div>
+            </div>
             <div className="mt-2 flex justify-between">
-              <span className="text-lg font-bold">Total</span>
-              <span className="text-lg font-bold text-green-500">
+              <span
+                className={`text-lg font-bold ${
+                  theme === "dark" ? "text-white" : "text-gray-900"
+                }`}
+              >
+                Total
+              </span>
+              <span className="text-lg font-bold text-green-500 dark:text-green-400">
                 {formatCurrency(finalTotal)}
               </span>
             </div>
             {/* Delivery Notes Input */}
             <div className="mt-2">
-              <h4 className="mb-1 font-medium">Add a Note</h4>
+              <h4
+                className={`mb-1 font-medium ${
+                  theme === "dark" ? "text-white" : "text-gray-900"
+                }`}
+              >
+                Add a Note
+              </h4>
               <Input
                 as="textarea"
                 rows={2}
@@ -708,52 +896,74 @@ export default function CheckoutItems({
           <Panel
             shaded
             bordered
-            className="overflow-hidden rounded-xl border-0 bg-white shadow-lg"
+            className={`overflow-hidden rounded-xl border-0 shadow-lg ${
+              theme === "dark" ? "bg-gray-800" : "bg-white"
+            }`}
             style={{
               boxShadow:
                 "0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1)",
             }}
           >
-            <div className="-mx-4 -mt-4 mb-6 bg-purple-800 p-4 text-white">
-              <h2 className="text-xl font-bold">Order Summary</h2>
+            <div
+              className={`-mx-4 -mt-4 mb-6 p-4 ${
+                theme === "dark" ? "bg-gray-700" : "bg-gray-50"
+              }`}
+            >
+              <h2
+                className={`text-xl font-bold ${
+                  theme === "dark" ? "text-white" : "text-gray-900"
+                }`}
+              >
+                Order Summary
+              </h2>
             </div>
 
             <div className="space-y-3">
               <div className="flex justify-between">
-                <span className="text-gray-600">Subtotal</span>
-                <span className="font-medium">{formatCurrency(Total)}</span>
+                <span className="text-gray-600 dark:text-gray-300">
+                  Subtotal
+                </span>
+                <span className="font-medium text-gray-900 dark:text-white">
+                  {formatCurrency(Total)}
+                </span>
               </div>
 
               {discount > 0 && (
-                <div className="flex justify-between text-green-600">
+                <div className="flex justify-between text-green-600 dark:text-green-400">
                   <span>Discount ({appliedPromo})</span>
                   <span>-{formatCurrency(discount)}</span>
                 </div>
               )}
 
               <div className="flex justify-between">
-                <span className="text-gray-600">Units</span>
-                <span className="font-medium">{totalUnits}</span>
+                <span className="text-gray-600 dark:text-gray-300">Units</span>
+                <span className="font-medium text-gray-900 dark:text-white">
+                  {totalUnits}
+                </span>
               </div>
 
               <div className="flex justify-between">
-                <span className="text-gray-600">Service Fee</span>
-                <span className="font-medium">
+                <span className="text-gray-600 dark:text-gray-300">
+                  Service Fee
+                </span>
+                <span className="font-medium text-gray-900 dark:text-white">
                   {formatCurrency(serviceFee)}
                 </span>
               </div>
 
               <div className="flex justify-between">
-                <span className="text-gray-600">Delivery Fee</span>
-                <span className="font-medium">
+                <span className="text-gray-600 dark:text-gray-300">
+                  Delivery Fee
+                </span>
+                <span className="font-medium text-gray-900 dark:text-white">
                   {formatCurrency(deliveryFee)}
                 </span>
               </div>
 
-              <div className="mt-3 border-t pt-3">
+              <div className="mt-3 border-t border-gray-200 pt-3 dark:border-gray-700">
                 <div className="flex justify-between text-lg font-bold">
-                  <span>Total</span>
-                  <span className="text-green-600">
+                  <span className="text-gray-900 dark:text-white">Total</span>
+                  <span className="text-green-600 dark:text-green-400">
                     {formatCurrency(finalTotal)}
                   </span>
                 </div>
@@ -761,8 +971,10 @@ export default function CheckoutItems({
             </div>
 
             <div className="mt-6">
-              <h4 className="mb-2 font-medium">Delivery Time</h4>
-              <div className="flex items-center rounded-lg bg-gray-50 p-3">
+              <h4 className="mb-2 font-medium text-gray-900 dark:text-white">
+                Delivery Time
+              </h4>
+              <div className="flex items-center rounded-lg bg-gray-50 p-3 dark:bg-gray-700">
                 <svg
                   viewBox="0 0 24 24"
                   fill="none"
@@ -773,15 +985,99 @@ export default function CheckoutItems({
                   <circle cx="12" cy="12" r="10" />
                   <polyline points="12 6 12 12 16 14" />
                 </svg>
-                <span className="font-medium text-green-600">
+                <span className="font-medium text-green-600 dark:text-green-400">
                   {deliveryTime}
                 </span>
               </div>
             </div>
 
             <div className="mt-6">
-              <h4 className="mb-2 font-medium">Payment Method</h4>
-              <div className="flex items-center justify-between rounded-lg bg-gray-50 p-3">
+              <h4 className="mb-2 font-medium text-gray-900 dark:text-white">
+                Delivery Address
+              </h4>
+              <div className="rounded-lg bg-gray-50 p-3 dark:bg-gray-700">
+                <div className="flex items-start justify-between">
+                  <div className="flex items-start gap-2">
+                    <svg
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      className="mt-0.5 h-4 w-4 text-green-500"
+                    >
+                      <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z" />
+                      <circle cx="12" cy="10" r="3" />
+                    </svg>
+                    <div className="min-w-0 flex-1">
+                      {(() => {
+                        const cookieValue = Cookies.get("delivery_address");
+                        if (!cookieValue) {
+                          return (
+                            <p className="text-sm text-red-500">
+                              No delivery address selected
+                            </p>
+                          );
+                        }
+                        try {
+                          const addressObj = JSON.parse(cookieValue);
+                          if (addressObj.street && addressObj.city) {
+                            return (
+                              <div>
+                                <p className="text-sm font-medium text-gray-900 dark:text-white">
+                                  {addressObj.street}
+                                </p>
+                                <p className="text-xs text-gray-600 dark:text-gray-400">
+                                  {addressObj.city}
+                                  {addressObj.postal_code &&
+                                    `, ${addressObj.postal_code}`}
+                                </p>
+                              </div>
+                            );
+                          } else if (
+                            addressObj.latitude &&
+                            addressObj.longitude
+                          ) {
+                            return (
+                              <p className="text-sm text-gray-900 dark:text-white">
+                                Current Location
+                              </p>
+                            );
+                          } else {
+                            return (
+                              <p className="text-sm text-red-500">
+                                Invalid address format
+                              </p>
+                            );
+                          }
+                        } catch (err) {
+                          return (
+                            <p className="text-sm text-red-500">
+                              Error reading address
+                            </p>
+                          );
+                        }
+                      })()}
+                    </div>
+                  </div>
+                  <Button
+                    size="sm"
+                    appearance="ghost"
+                    className="text-green-600 hover:bg-green-50 hover:text-green-700 dark:text-green-400 dark:hover:bg-green-900/20"
+                    onClick={() => {
+                      setShowAddressModal(true);
+                    }}
+                  >
+                    Change
+                  </Button>
+                </div>
+              </div>
+            </div>
+
+            <div className="mt-6">
+              <h4 className="mb-2 font-medium text-gray-900 dark:text-white">
+                Payment Method
+              </h4>
+              <div className="flex items-center justify-between rounded-lg bg-gray-50 p-3 dark:bg-gray-700">
                 {renderPaymentMethod()}
                 <PaymentMethodSelector
                   totalAmount={finalTotal}
@@ -794,7 +1090,9 @@ export default function CheckoutItems({
 
             {discountsEnabled && (
               <div className="mt-4">
-                <h4 className="mb-2 font-medium">Promo Code</h4>
+                <h4 className="mb-2 font-medium text-gray-900 dark:text-white">
+                  Promo Code
+                </h4>
                 <div className="flex gap-2">
                   <Input
                     value={promoCode}
@@ -804,7 +1102,7 @@ export default function CheckoutItems({
                   <Button
                     appearance="primary"
                     color="green"
-                    className="bg-green-100 font-medium text-green-600"
+                    className="bg-green-100 font-medium text-green-600 dark:bg-green-900/20 dark:text-green-300"
                     onClick={handleApplyPromo}
                   >
                     Apply
@@ -814,7 +1112,9 @@ export default function CheckoutItems({
             )}
 
             <div className="mt-4">
-              <h4 className="mb-2 font-medium">Add a Note</h4>
+              <h4 className="mb-2 font-medium text-gray-900 dark:text-white">
+                Add a Note
+              </h4>
               <Input
                 as="textarea"
                 rows={3}
@@ -836,19 +1136,36 @@ export default function CheckoutItems({
               Proceed to Checkout
             </Button>
 
-            <div className="mt-4 text-center text-sm text-gray-500">
+            <div className="mt-4 text-center text-sm text-gray-500 dark:text-gray-400">
               By placing your order, you agree to our{" "}
-              <Link href="/terms" className="text-green-600">
+              <Link
+                href="/terms"
+                className="text-green-600 dark:text-green-400"
+              >
                 Terms of Service
               </Link>{" "}
               and{" "}
-              <Link href="/privacy" className="text-green-600">
+              <Link
+                href="/privacy"
+                className="text-green-600 dark:text-green-400"
+              >
                 Privacy Policy
               </Link>
             </div>
           </Panel>
         </div>
       </div>
+
+      {/* Address Management Modal */}
+      <AddressManagementModal
+        open={showAddressModal}
+        onClose={() => setShowAddressModal(false)}
+        onSelect={(address) => {
+          Cookies.set("delivery_address", JSON.stringify(address));
+          setShowAddressModal(false);
+          setTick((t) => t + 1); // Force re-render to update address display
+        }}
+      />
     </>
   );
 }

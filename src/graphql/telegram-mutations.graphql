@@ -1,0 +1,60 @@
+# Mutation to update shopper's Telegram chat ID
+mutation UpdateShopperTelegramId($shopper_id: uuid!, $telegram_id: String!) {
+  update_shoppers_by_pk(
+    pk_columns: { id: $shopper_id }
+    _set: { telegram_id: $telegram_id }
+  ) {
+    id
+    telegram_id
+    full_name
+    status
+    active
+  }
+}
+
+# Mutation to update shopper's online/offline status
+mutation UpdateShopperStatus($shopper_id: uuid!, $status: String!) {
+  update_shoppers_by_pk(
+    pk_columns: { id: $shopper_id }
+    _set: { status: $status }
+  ) {
+    id
+    status
+    full_name
+    telegram_id
+  }
+}
+
+# Query to get shopper by Telegram chat ID
+query GetShopperByTelegramId($telegram_id: String!) {
+  shoppers(where: { telegram_id: { _eq: $telegram_id } }) {
+    id
+    full_name
+    status
+    active
+    telegram_id
+    user_id
+    phone_number
+    address
+    transport_mode
+    created_at
+    updated_at
+  }
+}
+
+# Query to get shopper by user ID
+query GetShopperByUserId($user_id: uuid!) {
+  shoppers(where: { user_id: { _eq: $user_id } }) {
+    id
+    full_name
+    status
+    active
+    telegram_id
+    user_id
+    phone_number
+    address
+    transport_mode
+    created_at
+    updated_at
+  }
+}

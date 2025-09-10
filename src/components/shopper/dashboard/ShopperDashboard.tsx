@@ -71,6 +71,21 @@ interface FormattedOrder {
   shopLongitude?: number;
   customerLatitude?: number;
   customerLongitude?: number;
+  // Add order type and reel-specific fields
+  orderType: "regular" | "reel";
+  reel?: {
+    id: string;
+    title: string;
+    description: string;
+    Price: string;
+    Product: string;
+    type: string;
+    video_url: string;
+  };
+  quantity?: number;
+  deliveryNote?: string;
+  customerName?: string;
+  customerPhone?: string;
 }
 
 export default function ShopperDashboard() {
@@ -121,11 +136,7 @@ export default function ShopperDashboard() {
   // Memoize the loadOrders function
   const loadOrders = useCallback(async () => {
     if (!currentLocation || !isOnline) {
-      console.log(
-        `Cannot load orders: ${
-          !currentLocation ? "No location" : "User offline"
-        }`
-      );
+      // Cannot load orders: no location or user offline
       setAvailableOrders([]);
       setSortedOrders([]);
       return;
@@ -163,6 +174,9 @@ export default function ShopperDashboard() {
               (Date.now() - createdAtDate.getTime()) / 60000
             );
 
+            // Handle both regular and reel orders
+            const isReelOrder = order.orderType === "reel";
+
             return {
               id: order.id,
               shopName: order.shopName || "Unknown Shop",
@@ -184,6 +198,13 @@ export default function ShopperDashboard() {
               customerLatitude: order.customerLatitude,
               customerLongitude: order.customerLongitude,
               travelTimeMinutes: order.travelTimeMinutes,
+              orderType: order.orderType || "regular",
+              // Reel-specific fields
+              reel: order.reel,
+              quantity: order.quantity,
+              deliveryNote: order.deliveryNote,
+              customerName: order.customerName,
+              customerPhone: order.customerPhone,
             };
           } catch (err) {
             console.error(`Error formatting order ${order.id}:`, err);
@@ -232,7 +253,7 @@ export default function ShopperDashboard() {
       }
 
       if (!showHistorical) {
-        sorted = sorted.filter((order) => order.minutesAgo >= 15);
+        sorted = sorted.filter((order) => order.minutesAgo >= 10);
       }
 
       return sorted;
@@ -466,7 +487,11 @@ export default function ShopperDashboard() {
       <div
         className={`${
           isMobile ? "relative h-full overflow-hidden" : "min-h-screen"
-        } bg-gray-50`}
+        } ${
+          theme === "dark"
+            ? "bg-gray-900 text-gray-100"
+            : "bg-gray-50 text-gray-900"
+        }`}
       >
         {/* Map Section */}
         <div className="w-full">
@@ -513,7 +538,7 @@ export default function ShopperDashboard() {
                 >
                   {showHistorical
                     ? "Showing All Pending"
-                    : "Showing Recent (15+ min)"}
+                    : "Showing Recent (10+ min)"}
                 </button>
                 <button
                   className="rounded bg-green-500 px-3 py-1.5 text-sm text-white hover:bg-green-600"
@@ -589,7 +614,7 @@ export default function ShopperDashboard() {
                   : `Sorting by ${sortBy}`}
                 {isOnline &&
                   !showHistorical &&
-                  " • Only batches pending for 15+ minutes"}
+                  " • Only batches pending for 10+ minutes"}
               </p>
             </div>
 
@@ -628,7 +653,11 @@ export default function ShopperDashboard() {
                 </Grid>
               </div>
             ) : !isOnline ? (
-              <div className="rounded-lg border bg-white p-8 text-center">
+              <div
+                className={`rounded-lg border p-8 text-center ${
+                  theme === "dark" ? "border-gray-700 bg-gray-800" : "bg-white"
+                }`}
+              >
                 <h3 className="mb-2 text-lg font-medium">
                   You&apos;re Currently Offline
                 </h3>
@@ -662,12 +691,16 @@ export default function ShopperDashboard() {
                 ))}
               </div>
             ) : (
-              <div className="rounded-lg border bg-white p-8 text-center">
+              <div
+                className={`rounded-lg border p-8 text-center ${
+                  theme === "dark" ? "border-gray-700 bg-gray-800" : "bg-white"
+                }`}
+              >
                 <h3 className="mb-2 text-lg font-medium">No Batches Nearby</h3>
                 <p className="mb-4 text-gray-500">
                   {showHistorical
                     ? "There are no pending batches in your area."
-                    : "There are no batches pending for 15+ minutes in your area."}
+                    : "There are no batches pending for 10+ minutes in your area."}
                 </p>
                 <Button
                   appearance="primary"
@@ -780,7 +813,7 @@ export default function ShopperDashboard() {
                           : "bg-gray-100 text-gray-700"
                       }`}
                     >
-                      {showHistorical ? "All Pending" : "15+ min"}
+                      {showHistorical ? "All Pending" : "10+ min"}
                     </button>
                     <button
                       className="rounded bg-green-500 px-3 py-1.5 text-sm text-white hover:bg-green-600"
@@ -866,7 +899,7 @@ export default function ShopperDashboard() {
                       : sortBy === "priority"
                       ? "Batches pending 1+ hours by priority"
                       : `Sorting by ${sortBy}`}
-                    {isOnline && !showHistorical && " • 15+ min pending"}
+                    {isOnline && !showHistorical && " • 10+ min pending"}
                   </p>
                 </div>
 
@@ -959,7 +992,7 @@ export default function ShopperDashboard() {
                     >
                       {showHistorical
                         ? "No pending batches available."
-                        : "No batches pending for 15+ minutes."}
+                        : "No batches pending for 10+ minutes."}
                     </p>
                   </div>
                 )}
