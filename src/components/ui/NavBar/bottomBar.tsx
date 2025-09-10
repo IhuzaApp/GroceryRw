@@ -4,7 +4,7 @@ import { useRouter } from "next/router";
 import { useCart } from "../../../context/CartContext";
 import { useTheme } from "../../../context/ThemeContext";
 import { Input, Modal, Button, Loader } from "rsuite";
-import { useSession } from "next-auth/react";
+import { useSession, signOut } from "next-auth/react";
 import MobileSearchModal from "../MobileSearchModal";
 
 interface NavItemProps {
@@ -930,12 +930,29 @@ export default function BottomBar() {
                   </svg>
                 }
                 label="Logout"
-                href="/api/auth/signout"
-                onClick={() => {
+                href="#"
+                onClick={async () => {
                   setMoreOpen(false);
-                  // Clear any local storage or cookies if needed
-                  localStorage.removeItem("cart");
+                  
+                  // Clear all localStorage data
+                  localStorage.clear();
+                  
+                  // Clear all sessionStorage data
                   sessionStorage.clear();
+                  
+                  // Clear NextAuth cookies manually
+                  document.cookie.split(";").forEach((c) => {
+                    const eqPos = c.indexOf("=");
+                    const name = eqPos > -1 ? c.substr(0, eqPos) : c;
+                    document.cookie = `${name.trim()}=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/`;
+                    document.cookie = `${name.trim()}=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/;domain=${window.location.hostname}`;
+                    document.cookie = `${name.trim()}=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/;domain=.${window.location.hostname}`;
+                  });
+                  
+                  // Use NextAuth signOut function with redirect
+                  await signOut({ 
+                    redirect: true 
+                  });
                 }}
               />
             </div>
