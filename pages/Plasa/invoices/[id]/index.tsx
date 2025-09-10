@@ -52,6 +52,7 @@ export default function InvoicePage({
   );
   const [loading, setLoading] = useState(!initialInvoiceData);
   const [errorMessage, setErrorMessage] = useState<string | null>(error);
+  const [orderType, setOrderType] = useState<string>("regular");
 
   useEffect(() => {
     // If we don't have invoice data, try to fetch it
@@ -60,7 +61,16 @@ export default function InvoicePage({
 
       try {
         setLoading(true);
-        const response = await fetch(`/api/invoices/${id}`, {
+        // Extract the actual ID from the URL (remove any hash fragments)
+        const actualId = typeof id === 'string' ? id.split('#')[0] : id;
+        
+        // Determine order type from hash fragment
+        if (typeof id === 'string' && id.includes('#')) {
+          const hash = id.split('#')[1];
+          setOrderType(hash === 'reel' ? 'reel' : 'regular');
+        }
+        
+        const response = await fetch(`/api/invoices/${actualId}`, {
           method: "GET",
           headers: {
             "Content-Type": "application/json",
@@ -399,6 +409,17 @@ export default function InvoicePage({
                     <p className="text-lg text-gray-600 dark:text-gray-400">
                       #{invoiceData.invoiceNumber}
                     </p>
+                    <div className="mt-2">
+                      <span
+                        className={`inline-flex items-center rounded-full px-3 py-1 text-sm font-medium ${
+                          orderType === "reel"
+                            ? "bg-purple-100 text-purple-800 dark:bg-purple-900/20 dark:text-purple-400"
+                            : "bg-blue-100 text-blue-800 dark:bg-blue-900/20 dark:text-blue-400"
+                        }`}
+                      >
+                        {orderType === "reel" ? "🎬 Reel Order" : "🛒 Regular Order"}
+                      </span>
+                    </div>
                     <div className="mt-2 flex items-center space-x-2">
                       <span
                         className={`inline-flex items-center rounded-full px-3 py-1 text-sm font-medium ${
