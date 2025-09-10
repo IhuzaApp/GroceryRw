@@ -26,20 +26,54 @@ export default function ShopperHeader() {
   }
 
   return (
-    <header className="sticky top-0 z-[100] flex items-center justify-between border-b border-gray-200 bg-white p-4 transition-colors duration-200 dark:border-gray-700 dark:bg-gray-800">
-      <div className="flex items-center gap-3">
-        <div className="flex h-10 w-10 items-center justify-center rounded-full bg-green-500">
-          <svg
-            viewBox="0 0 24 24"
-            className="h-6 w-6 text-white"
-            fill="currentColor"
-          >
-            <path d="M12 6.5a2 2 0 100-4 2 2 0 000 4zM8.5 8a2 2 0 100-4 2 2 0 000 4zM15.5 8a2 2 0 100-4 2 2 0 000 4zM18 9.5a2 2 0 100-4 2 2 0 000 4zM6 9.5a2 2 0 100-4 2 2 0 000 4zM18 14a2 2 0 100-4 2 2 0 000 4zM6 14a2 2 0 100-4 2 2 0 000 4zM15.5 16a2 2 0 100-4 2 2 0 000 4zM8.5 16a2 2 0 100-4 2 2 0 000 4zM12 17.5a2 2 0 100-4 2 2 0 000 4z" />
-          </svg>
-        </div>
-        <div></div>
+    <header className="sticky top-0 z-[100] flex items-center justify-between border-b border-gray-200 bg-white px-6 py-4 transition-colors duration-200 dark:border-gray-700 dark:bg-gray-800">
+      {/* Logo Section */}
+      <div className="flex items-center">
+        <Link href="/" className="flex items-center">
+          <div className={`transition-all duration-200 ${theme === "dark" ? "brightness-0 invert" : ""}`}>
+            <Image
+              src="/assets/logos/PlasLogo.svg"
+              alt="Plas Logo"
+              width={120}
+              height={40}
+              className="h-8 w-auto"
+              priority
+            />
+          </div>
+        </Link>
       </div>
 
+      {/* Search Section */}
+      <div className="flex-1 max-w-md mx-4">
+        <div className="relative">
+          <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+            <svg
+              className="h-5 w-5 text-gray-400"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+              />
+            </svg>
+          </div>
+          <input
+            type="text"
+            placeholder="Search orders, products..."
+            className={`block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg text-sm placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors ${
+              theme === "dark"
+                ? "bg-gray-700 border-gray-600 text-white placeholder-gray-400"
+                : "bg-white border-gray-300 text-gray-900 placeholder-gray-500"
+            }`}
+          />
+        </div>
+      </div>
+
+      {/* Right Section */}
       <div className="flex items-center gap-3">
         <div className="hidden items-center gap-2 md:flex">
           <TelegramStatusButton
