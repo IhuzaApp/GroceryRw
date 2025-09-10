@@ -12,6 +12,7 @@ import toast from "react-hot-toast";
 import { useRouter } from "next/router";
 import { useAuth } from "../../context/AuthContext";
 import { initiateRoleSwitch } from "../../lib/sessionRefresh";
+import { signOut } from "next-auth/react";
 
 export default function UserProfile() {
   const router = useRouter();
@@ -400,6 +401,42 @@ export default function UserProfile() {
             </div>
           )}
         </Panel>
+
+        {/* Logout Button Panel */}
+
+          <div className="flex justify-center p-4">
+            <button
+              className="flex items-center rounded-md border border-red-200 bg-white px-3 py-2 text-sm text-red-600 transition-colors duration-200 hover:bg-red-50 hover:border-red-300 dark:border-red-800 dark:bg-gray-800 dark:text-red-400 dark:hover:bg-red-900/20 dark:hover:border-red-700"
+              onClick={async () => {
+                try {
+                  await signOut({ 
+                    callbackUrl: "/Auth/Login",
+                    redirect: true 
+                  });
+                  toast.success("Logged out successfully");
+                } catch (error) {
+                  console.error("Logout error:", error);
+                  toast.error("Failed to logout");
+                }
+              }}
+            >
+              <svg
+                className="mr-1 h-3 w-3"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"
+                />
+              </svg>
+              Logout
+            </button>
+          </div>
+       
       </div>
 
       {/* Right Column - Tabs */}
