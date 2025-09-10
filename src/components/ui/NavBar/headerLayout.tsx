@@ -33,6 +33,11 @@ export default function HeaderLayout() {
   const [unreadMessages, setUnreadMessages] = useState<number>(0);
 
   useEffect(() => {
+    // Only fetch addresses if user is authenticated
+    if (!session?.user?.id) {
+      return;
+    }
+
     // Try loading the delivery address from cookie first
     const saved = Cookies.get("delivery_address");
     if (saved) {
@@ -105,7 +110,7 @@ export default function HeaderLayout() {
     };
     window.addEventListener("addressChanged", handleAddrChange);
     return () => window.removeEventListener("addressChanged", handleAddrChange);
-  }, []);
+  }, [session?.user?.id]);
 
   useEffect(() => {
     // Listen for unread messages if user is logged in
