@@ -7,8 +7,13 @@ const GET_PRODUCTS = gql`
     Products {
       id
       ProductName {
+        id
         name
         description
+        barcode
+        sku
+        image
+        create_at
       }
       price
       final_price
@@ -28,12 +33,24 @@ interface ProductsResponse {
   Products: Array<{
     id: string;
     ProductName: {
+      id: string;
       name: string;
       description: string;
+      barcode: string;
+      sku: string;
+      image: string;
+      create_at: string;
     };
     price: string;
     final_price: string;
     created_at: string;
+    category: string;
+    image: string;
+    is_active: boolean;
+    measurement_unit: string;
+    quantity: number;
+    shop_id: string;
+    updated_at: string;
   }>;
 }
 

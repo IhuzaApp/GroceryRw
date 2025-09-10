@@ -28,6 +28,15 @@ interface OrderItem {
     name: string;
     image: string;
     final_price: string;
+    ProductName?: {
+      id: string;
+      name: string;
+      description: string;
+      barcode: string;
+      sku: string;
+      image: string;
+      create_at: string;
+    };
   };
 }
 
