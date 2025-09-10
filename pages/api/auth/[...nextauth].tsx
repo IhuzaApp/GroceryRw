@@ -102,6 +102,10 @@ export const authOptions: NextAuthOptions = {
     },
   },
   useSecureCookies: process.env.NEXTAUTH_SECURE_COOKIES === "true",
+  pages: {
+    signIn: "/Auth/Login",
+    signOut: "/Auth/Login",
+  },
   callbacks: {
     async jwt({ token, user }) {
       if (user) {

@@ -12,13 +12,10 @@ import toast from "react-hot-toast";
 import { useRouter } from "next/router";
 import { useAuth } from "../../context/AuthContext";
 import { initiateRoleSwitch } from "../../lib/sessionRefresh";
-import { signOut } from "next-auth/react";
-import { useTheme } from "../../context/ThemeContext";
 
 export default function UserProfile() {
   const router = useRouter();
   const { role, toggleRole } = useAuth();
-  const { theme } = useTheme();
   const [activeTab, setActiveTab] = useState("account");
   // User data state
   const [user, setUser] = useState<{
@@ -136,31 +133,6 @@ export default function UserProfile() {
     } else {
       // If not a shopper, proceed to the application page
       router.push("/Myprofile/become-shopper");
-    }
-  };
-
-  // Handle sign out
-  const handleSignOut = async () => {
-    try {
-      // Clear any local storage/cookies if needed
-      Cookies.remove("delivery_address");
-      
-      // Clear any custom cookies that might interfere
-      document.cookie = "role_changed=; Path=/; Max-Age=0; HttpOnly";
-      document.cookie = "new_role=; Path=/; Max-Age=0; HttpOnly";
-      document.cookie = "return_to=; Path=/; Max-Age=0; HttpOnly";
-      
-      // Show a toast notification
-      toast.success("Signing out...", { duration: 2000 });
-      
-      // Use NextAuth signOut with redirect: false to handle redirect manually
-      await signOut({ redirect: false });
-      
-      // Manual redirect to avoid the custom signout route
-      window.location.href = "/";
-    } catch (error) {
-      console.error("Error signing out:", error);
-      toast.error("Failed to sign out. Please try again.");
     }
   };
 
@@ -349,8 +321,6 @@ export default function UserProfile() {
                     Become a Plasa
                   </Button>
                 )}
-
-          
 
                 {/* Default address under profile */}
                 <div className="mt-4 w-full text-center">
