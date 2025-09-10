@@ -404,9 +404,9 @@ export default function UserProfile() {
 
         {/* Logout Button Panel */}
 
-          <div className="flex justify-center p-4">
+          <div className="p-4">
             <button
-              className="flex items-center rounded-md border border-red-200 bg-white px-3 py-2 text-sm text-red-600 transition-colors duration-200 hover:bg-red-50 hover:border-red-300 dark:border-red-800 dark:bg-gray-800 dark:text-red-400 dark:hover:bg-red-900/20 dark:hover:border-red-700"
+              className="flex w-full items-center justify-center rounded-md bg-red-500 px-4 py-2 text-sm text-white transition-colors duration-200 hover:bg-red-600 dark:bg-red-600 dark:hover:bg-red-700"
               onClick={async () => {
                 try {
                   await signOut({ 
@@ -438,6 +438,7 @@ export default function UserProfile() {
           </div>
        
       </div>
+      
 
       {/* Right Column - Tabs */}
       <div className="w-full md:col-span-9">
