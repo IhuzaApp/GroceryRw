@@ -27,7 +27,8 @@ const errorLink = onError(({ graphQLErrors, networkError }) => {
 
 // Get the GraphQL endpoint URL from environment variables
 const graphqlUrl =
-  process.env.NEXT_PUBLIC_HASURA_GRAPHQL_URL ||
+  // process.env.NEXT_PUBLIC_HASURA_GRAPHQL_URL ||
+  process.env.HASURA_GRAPHQL_URL ||
   "http://localhost:8080/v1/graphql";
 
 // Log the GraphQL URL being used (helpful for debugging)
