@@ -10,6 +10,26 @@ import Link from "next/link";
 import Image from "next/image";
 import "rsuite/dist/rsuite.min.css";
 import UserLogin from "@components/ui/Auth/userAuth/UserLogin";
+import { ThemeProvider, useTheme } from "../../src/context/ThemeContext";
+
+// Logo component that changes color based on theme
+function ThemeAwareLogo() {
+  const { theme } = useTheme();
+  
+  return (
+    <div className="mb-8 flex justify-center">
+      <Image
+        src="/assets/logos/PlasLogo.svg"
+        alt="Plas Logo"
+        width={200}
+        height={90}
+        className={`h-20 w-auto transition-all duration-200 ${
+          theme === "dark" ? "brightness-0 invert" : ""
+        }`}
+      />
+    </div>
+  );
+}
 
 export default function LoginPage() {
   const router = useRouter();
@@ -31,23 +51,13 @@ export default function LoginPage() {
   }, [router]);
 
   return (
-    <div className="flex min-h-screen">
-      {/* Left Side - Login Form */}
-      <div className="flex w-full flex-col items-center justify-center p-8 lg:w-1/2 lg:p-16">
-        <div className="w-full max-w-md">
-          {/* Logo */}
-          <div className="mb-8 flex items-center">
-            <div className="mr-2 flex h-10 w-10 items-center justify-center rounded-full bg-green-500">
-              <svg
-                viewBox="0 0 24 24"
-                className="h-6 w-6 text-white"
-                fill="currentColor"
-              >
-                <path d="M12 6.5a2 2 0 100-4 2 2 0 000 4zM8.5 8a2 2 0 100-4 2 2 0 000 4zM15.5 8a2 2 0 100-4 2 2 0 000 4zM18 9.5a2 2 0 100-4 2 2 0 000 4zM6 9.5a2 2 0 100-4 2 2 0 000 4zM18 14a2 2 0 100-4 2 2 0 000 4zM6 14a2 2 0 100-4 2 2 0 000 4zM15.5 16a2 2 0 100-4 2 2 0 000 4zM8.5 16a2 2 0 100-4 2 2 0 000 4zM12 17.5a2 2 0 100-4 2 2 0 000 4z" />
-              </svg>
-            </div>
-            <span className="text-xl font-bold">GroceryApp</span>
-          </div>
+    <ThemeProvider>
+      <div className="flex min-h-screen bg-white text-gray-900 transition-colors duration-200 dark:bg-gray-900 dark:text-white">
+        {/* Left Side - Login Form */}
+        <div className="flex w-full flex-col items-center justify-center p-8 lg:w-1/2 lg:p-16">
+          <div className="w-full max-w-md">
+            {/* Logo */}
+            <ThemeAwareLogo />
 
           {/* Heading */}
           <h1 className="mb-2 text-3xl font-bold">Welcome back</h1>
@@ -75,7 +85,7 @@ export default function LoginPage() {
       <div className="relative hidden bg-gray-100 lg:block lg:w-1/2">
         <div className="absolute inset-0 bg-black bg-opacity-20"></div>
         <Image
-          src="https://img.freepik.com/free-photo/woman-shopping-vegetables-supermarket_1157-37860.jpg?t=st=1745879232~exp=1745882832~hmac=b93a660e0dde45d1ebdb87ef85e118e615455f1dcab63e1c676ff471a457a31c&w=2000"
+          src="/assets/images/shopping.jpg"
           alt="Grocery shopping"
           fill
           className="object-cover"
@@ -91,6 +101,7 @@ export default function LoginPage() {
           </p>
         </div>
       </div>
-    </div>
+      </div>
+    </ThemeProvider>
   );
 }
