@@ -12,11 +12,10 @@ import toast from "react-hot-toast";
 import { useRouter } from "next/router";
 import { useAuth } from "../../context/AuthContext";
 import { initiateRoleSwitch } from "../../lib/sessionRefresh";
-import { signOut } from "next-auth/react";
 
 export default function UserProfile() {
   const router = useRouter();
-  const { role, toggleRole } = useAuth();
+  const { role, toggleRole, logout } = useAuth();
   const [activeTab, setActiveTab] = useState("account");
   // User data state
   const [user, setUser] = useState<{
@@ -409,11 +408,26 @@ export default function UserProfile() {
               className="flex w-full items-center justify-center rounded-md bg-red-500 px-4 py-2 text-sm text-white transition-colors duration-200 hover:bg-red-600 dark:bg-red-600 dark:hover:bg-red-700"
               onClick={async () => {
                 try {
-                  await signOut({ 
-                    callbackUrl: "/Auth/Login",
-                    redirect: true 
+                  // Call our custom logout API
+                  const response = await fetch('/api/logout', {
+                    method: 'POST',
+                    headers: {
+                      'Content-Type': 'application/json',
+                    },
                   });
-                  toast.success("Logged out successfully");
+
+                  if (response.ok) {
+                    // Clear local storage
+                    localStorage.clear();
+                    sessionStorage.clear();
+                    
+                    toast.success("Logged out successfully");
+                    
+                    // Redirect to login page
+                    router.push("/Auth/Login");
+                  } else {
+                    throw new Error('Logout failed');
+                  }
                 } catch (error) {
                   console.error("Logout error:", error);
                   toast.error("Failed to logout");

@@ -157,7 +157,7 @@ export const authOptions: NextAuthOptions = {
   useSecureCookies: process.env.NEXTAUTH_SECURE_COOKIES === "true",
   pages: {
     signIn: "/Auth/Login",
-    signOut: "/Auth/Login",
+    signOut: "/",
   },
   callbacks: {
     async jwt({ token, user }) {
