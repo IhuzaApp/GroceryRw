@@ -39,7 +39,7 @@ export default function UserLogin() {
   return (
     <form onSubmit={handleLogin}>
       <div className="mb-4">
-        <label htmlFor="email" className="mb-2 block text-gray-700">
+        <label htmlFor="email" className="mb-2 block text-gray-700 dark:text-gray-300">
           Email Address
         </label>
         <input
@@ -48,13 +48,13 @@ export default function UserLogin() {
           placeholder="Enter your email"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
-          className="w-full rounded-none border border-gray-300 px-3 py-2 focus:border-green-500 focus:ring-1 focus:ring-green-500 focus:outline-none"
+          className="w-full rounded-none border border-gray-300 px-3 py-2 text-gray-900 focus:border-green-500 focus:ring-1 focus:ring-green-500 focus:outline-none dark:text-white dark:bg-gray-800 dark:border-gray-600"
           required
         />
       </div>
 
       <div className="mb-6">
-        <label htmlFor="password" className="mb-2 block text-gray-700">
+        <label htmlFor="password" className="mb-2 block text-gray-700 dark:text-gray-300">
           Password
         </label>
         <div className="relative">
@@ -64,13 +64,13 @@ export default function UserLogin() {
             placeholder="••••••••••••"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
-            className="w-full rounded-none border border-gray-300 px-3 py-2 pr-10 focus:border-green-500 focus:ring-1 focus:ring-green-500 focus:outline-none"
+            className="w-full rounded-none border border-gray-300 px-3 py-2 pr-10 text-gray-900 focus:border-green-500 focus:ring-1 focus:ring-green-500 focus:outline-none dark:text-white dark:bg-gray-800 dark:border-gray-600"
             required
           />
           <button
             type="button"
             onClick={() => setShowPassword(!showPassword)}
-            className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700"
+            className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
           >
             {showPassword ? (
               <svg
