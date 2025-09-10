@@ -6,6 +6,8 @@ import { useRouter } from "next/router";
 import { useSession } from "next-auth/react";
 import { collection, query, where, onSnapshot } from "firebase/firestore";
 import { db } from "../../lib/firebase";
+import PWAInstallGuide from "./PWAInstallGuide";
+import { Download } from "lucide-react";
 
 export default function SideBar() {
   const router = useRouter();
@@ -13,6 +15,7 @@ export default function SideBar() {
   const [unreadCount, setUnreadCount] = useState(0);
   const [pendingOrdersCount, setPendingOrdersCount] = useState(0);
   const [pendingOrders, setPendingOrders] = useState([]);
+  const [showInstallGuide, setShowInstallGuide] = useState(false);
 
   // Listen for unread messages
   useEffect(() => {
@@ -331,8 +334,23 @@ export default function SideBar() {
               </span>
             )}
           </Link>
+
+          {/* Install App */}
+          <button
+            onClick={() => setShowInstallGuide(true)}
+            className="rounded-full p-2 text-inherit transition-colors duration-200 hover:bg-gray-200 dark:hover:bg-green-700 dark:hover:text-white"
+            title="Install App"
+          >
+            <Download className="h-7 w-7" />
+          </button>
         </div>
       </div>
+
+      {/* Install Guide Modal */}
+      <PWAInstallGuide
+        isOpen={showInstallGuide}
+        onClose={() => setShowInstallGuide(false)}
+      />
     </>
   );
 }
