@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Image from "next/image";
 import React, { useState, useEffect } from "react";
 import { Input, InputGroup, Modal } from "rsuite";
 import { useCart } from "../../../context/CartContext";
@@ -145,14 +146,14 @@ export default function HeaderLayout() {
         <div className="flex items-center justify-between gap-4 px-2 sm:px-4">
           {/* Left section (address + icon) - Desktop only */}
           <div className="hidden items-center gap-3 md:flex">
-            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-green-500">
-              <svg
-                viewBox="0 0 24 24"
-                className="h-6 w-6 text-white"
-                fill="currentColor"
-              >
-                <path d="..." />
-              </svg>
+            <div className="flex h-12 w-12 items-center justify-center">
+              <Image
+                src="/assets/logos/PlasIcon.svg"
+                alt="Plas Logo"
+                width={48}
+                height={48}
+                className="h-12 w-12"
+              />
             </div>
             <div>
               <h6 className="font-medium text-inherit">
@@ -328,18 +329,14 @@ export default function HeaderLayout() {
         <div className="flex items-center justify-between px-3 pt-2 md:hidden">
           {/* Address Section - Mobile */}
           <div className="hidden flex-1 items-center gap-2 md:flex">
-            <div className="flex h-8 w-8 items-center justify-center rounded-full bg-green-500">
-              <svg
-                viewBox="0 0 24 24"
-                className="h-4 w-4 text-white"
-                fill="currentColor"
-              >
-                <path
-                  fillRule="evenodd"
-                  d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z"
-                  clipRule="evenodd"
-                />
-              </svg>
+            <div className="flex h-10 w-10 items-center justify-center">
+              <Image
+                src="/assets/logos/PlasIcon.svg"
+                alt="Plas Logo"
+                width={40}
+                height={40}
+                className="h-10 w-10"
+              />
             </div>
             <div className="min-w-0 flex-1">
               <h6 className="truncate text-sm font-medium text-inherit">
