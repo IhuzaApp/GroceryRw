@@ -22,7 +22,33 @@ export default function ShopperHeader() {
   }, []);
 
   if (isMobile) {
-    return null;
+    return (
+      <header className="sticky top-0 z-[100] flex items-center justify-between border-b border-gray-200 bg-white px-4 py-3 transition-colors duration-200 dark:border-gray-700 dark:bg-gray-800">
+        {/* Logo Section - Mobile */}
+        <div className="flex items-center">
+          <Link href="/" className="flex items-center">
+            <div
+              className={`transition-all duration-200 ${
+                theme === "dark" ? "brightness-0 invert" : ""
+              }`}
+            >
+              <Image
+                src="/assets/logos/PlasLogo.svg"
+                alt="Plas Logo"
+                width={80}
+                height={30}
+                className="h-8 w-auto"
+              />
+            </div>
+          </Link>
+        </div>
+
+        {/* Right actions - Mobile */}
+        <div className="flex items-center gap-2">
+          <TelegramStatusButton />
+        </div>
+      </header>
+    );
   }
 
   return (
