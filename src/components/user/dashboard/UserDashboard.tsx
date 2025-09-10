@@ -122,7 +122,7 @@ function getShopImageUrl(imageUrl: string | undefined): string {
   // If it's a relative path starting with /, it's likely a valid local image
   if (imageUrl.startsWith("/")) {
     console.log("Absolute path detected:", imageUrl);
-    
+
     // Check if the image exists in the expected location
     // Handle common cases where images might be in different directories
     const commonImageMappings: { [key: string]: string } = {
@@ -136,7 +136,7 @@ function getShopImageUrl(imageUrl: string | undefined): string {
       "shopsImage.jpg": "/assets/images/shopsImage.jpg",
       "superMarkets.jpg": "/assets/images/superMarkets.jpg",
     };
-    
+
     // Check if this is a known image that might be in the assets directory
     for (const [filename, correctPath] of Object.entries(commonImageMappings)) {
       if (imageUrl.includes(filename)) {
@@ -144,7 +144,7 @@ function getShopImageUrl(imageUrl: string | undefined): string {
         return correctPath;
       }
     }
-    
+
     return imageUrl;
   }
 

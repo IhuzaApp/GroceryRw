@@ -1,13 +1,13 @@
-'use client';
+"use client";
 
-import { useState, useEffect } from 'react';
-import { X, Download, Smartphone, Monitor } from 'lucide-react';
-import { isIOS, isStandalone, getInstallPrompt } from '../../lib/pwa';
+import { useState, useEffect } from "react";
+import { X, Download, Smartphone, Monitor } from "lucide-react";
+import { isIOS, isStandalone, getInstallPrompt } from "../../lib/pwa";
 
 interface BeforeInstallPromptEvent extends Event {
   readonly platforms: string[];
   readonly userChoice: Promise<{
-    outcome: 'accepted' | 'dismissed';
+    outcome: "accepted" | "dismissed";
     platform: string;
   }>;
   prompt(): Promise<void>;
@@ -18,8 +18,12 @@ interface InstallPromptProps {
   onDismiss?: () => void;
 }
 
-export default function InstallPrompt({ onInstall, onDismiss }: InstallPromptProps) {
-  const [deferredPrompt, setDeferredPrompt] = useState<BeforeInstallPromptEvent | null>(null);
+export default function InstallPrompt({
+  onInstall,
+  onDismiss,
+}: InstallPromptProps) {
+  const [deferredPrompt, setDeferredPrompt] =
+    useState<BeforeInstallPromptEvent | null>(null);
   const [showInstallPrompt, setShowInstallPrompt] = useState(false);
   const [isIOSDevice, setIsIOSDevice] = useState(false);
   const [isStandaloneMode, setIsStandaloneMode] = useState(false);
@@ -45,12 +49,15 @@ export default function InstallPrompt({ onInstall, onDismiss }: InstallPromptPro
       onInstall?.();
     };
 
-    window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
-    window.addEventListener('appinstalled', handleAppInstalled);
+    window.addEventListener("beforeinstallprompt", handleBeforeInstallPrompt);
+    window.addEventListener("appinstalled", handleAppInstalled);
 
     return () => {
-      window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
-      window.removeEventListener('appinstalled', handleAppInstalled);
+      window.removeEventListener(
+        "beforeinstallprompt",
+        handleBeforeInstallPrompt
+      );
+      window.removeEventListener("appinstalled", handleAppInstalled);
     };
   }, [onInstall]);
 
@@ -58,11 +65,11 @@ export default function InstallPrompt({ onInstall, onDismiss }: InstallPromptPro
     if (deferredPrompt) {
       deferredPrompt.prompt();
       const { outcome } = await deferredPrompt.userChoice;
-      
-      if (outcome === 'accepted') {
+
+      if (outcome === "accepted") {
         onInstall?.();
       }
-      
+
       setDeferredPrompt(null);
       setShowInstallPrompt(false);
     }
@@ -71,9 +78,9 @@ export default function InstallPrompt({ onInstall, onDismiss }: InstallPromptPro
   const handleDismiss = () => {
     setShowInstallPrompt(false);
     onDismiss?.();
-    
+
     // Store dismissal in localStorage to avoid showing too frequently
-    localStorage.setItem('install-prompt-dismissed', Date.now().toString());
+    localStorage.setItem("install-prompt-dismissed", Date.now().toString());
   };
 
   // Don't show custom prompt - let browser handle native install prompts

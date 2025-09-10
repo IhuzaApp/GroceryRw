@@ -1,16 +1,19 @@
-'use client';
+"use client";
 
-import { useState } from 'react';
-import { X, Smartphone, Monitor, Download, Share, Plus } from 'lucide-react';
-import { isIOS, isAndroid, isStandalone } from '../../lib/pwa';
+import { useState } from "react";
+import { X, Smartphone, Monitor, Download, Share, Plus } from "lucide-react";
+import { isIOS, isAndroid, isStandalone } from "../../lib/pwa";
 
 interface PWAInstallGuideProps {
   isOpen: boolean;
   onClose: () => void;
 }
 
-export default function PWAInstallGuide({ isOpen, onClose }: PWAInstallGuideProps) {
-  const [activeTab, setActiveTab] = useState<'mobile' | 'desktop'>('mobile');
+export default function PWAInstallGuide({
+  isOpen,
+  onClose,
+}: PWAInstallGuideProps) {
+  const [activeTab, setActiveTab] = useState<"mobile" | "desktop">("mobile");
 
   if (!isOpen) return null;
 
@@ -20,26 +23,26 @@ export default function PWAInstallGuide({ isOpen, onClose }: PWAInstallGuideProp
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
-      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto">
+      <div className="mx-4 max-h-[90vh] w-full max-w-2xl overflow-y-auto rounded-lg bg-white shadow-xl dark:bg-gray-800">
         <div className="p-6">
-          <div className="flex items-center justify-between mb-6">
+          <div className="mb-6 flex items-center justify-between">
             <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
               Install App
             </h2>
             <button
               onClick={onClose}
-              className="p-2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 transition-colors"
+              className="p-2 text-gray-400 transition-colors hover:text-gray-600 dark:hover:text-gray-200"
             >
               <X className="h-6 w-6" />
             </button>
           </div>
 
           {isStandaloneMode ? (
-            <div className="text-center py-8">
-              <div className="w-16 h-16 bg-green-100 dark:bg-green-900 rounded-full flex items-center justify-center mx-auto mb-4">
+            <div className="py-8 text-center">
+              <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-green-100 dark:bg-green-900">
                 <Download className="h-8 w-8 text-green-600 dark:text-green-400" />
               </div>
-              <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">
+              <h3 className="mb-2 text-xl font-semibold text-gray-900 dark:text-white">
                 App Already Installed
               </h3>
               <p className="text-gray-600 dark:text-gray-300">
@@ -49,24 +52,24 @@ export default function PWAInstallGuide({ isOpen, onClose }: PWAInstallGuideProp
           ) : (
             <>
               {/* Tab Navigation */}
-              <div className="flex space-x-1 mb-6 bg-gray-100 dark:bg-gray-700 rounded-lg p-1">
+              <div className="mb-6 flex space-x-1 rounded-lg bg-gray-100 p-1 dark:bg-gray-700">
                 <button
-                  onClick={() => setActiveTab('mobile')}
-                  className={`flex-1 flex items-center justify-center space-x-2 py-2 px-4 rounded-md transition-colors ${
-                    activeTab === 'mobile'
-                      ? 'bg-white dark:bg-gray-600 text-gray-900 dark:text-white shadow-sm'
-                      : 'text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white'
+                  onClick={() => setActiveTab("mobile")}
+                  className={`flex flex-1 items-center justify-center space-x-2 rounded-md px-4 py-2 transition-colors ${
+                    activeTab === "mobile"
+                      ? "bg-white text-gray-900 shadow-sm dark:bg-gray-600 dark:text-white"
+                      : "text-gray-600 hover:text-gray-900 dark:text-gray-300 dark:hover:text-white"
                   }`}
                 >
                   <Smartphone className="h-4 w-4" />
                   <span>Mobile</span>
                 </button>
                 <button
-                  onClick={() => setActiveTab('desktop')}
-                  className={`flex-1 flex items-center justify-center space-x-2 py-2 px-4 rounded-md transition-colors ${
-                    activeTab === 'desktop'
-                      ? 'bg-white dark:bg-gray-600 text-gray-900 dark:text-white shadow-sm'
-                      : 'text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white'
+                  onClick={() => setActiveTab("desktop")}
+                  className={`flex flex-1 items-center justify-center space-x-2 rounded-md px-4 py-2 transition-colors ${
+                    activeTab === "desktop"
+                      ? "bg-white text-gray-900 shadow-sm dark:bg-gray-600 dark:text-white"
+                      : "text-gray-600 hover:text-gray-900 dark:text-gray-300 dark:hover:text-white"
                   }`}
                 >
                   <Monitor className="h-4 w-4" />
@@ -75,42 +78,55 @@ export default function PWAInstallGuide({ isOpen, onClose }: PWAInstallGuideProp
               </div>
 
               {/* Mobile Instructions */}
-              {activeTab === 'mobile' && (
+              {activeTab === "mobile" && (
                 <div className="space-y-6">
                   {isIOSDevice ? (
                     <div>
-                      <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+                      <h3 className="mb-4 text-lg font-semibold text-gray-900 dark:text-white">
                         Install on iPhone/iPad
                       </h3>
                       <div className="space-y-4">
                         <div className="flex items-start space-x-3">
-                          <div className="w-8 h-8 bg-green-100 dark:bg-green-900 rounded-full flex items-center justify-center flex-shrink-0">
-                            <span className="text-sm font-semibold text-green-600 dark:text-green-400">1</span>
+                          <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-green-100 dark:bg-green-900">
+                            <span className="text-sm font-semibold text-green-600 dark:text-green-400">
+                              1
+                            </span>
                           </div>
                           <div>
-                            <p className="text-gray-900 dark:text-white font-medium">Tap the Share button</p>
+                            <p className="font-medium text-gray-900 dark:text-white">
+                              Tap the Share button
+                            </p>
                             <p className="text-sm text-gray-600 dark:text-gray-300">
-                              Look for the share icon at the bottom of your Safari browser
+                              Look for the share icon at the bottom of your
+                              Safari browser
                             </p>
                           </div>
                         </div>
                         <div className="flex items-start space-x-3">
-                          <div className="w-8 h-8 bg-green-100 dark:bg-green-900 rounded-full flex items-center justify-center flex-shrink-0">
-                            <span className="text-sm font-semibold text-green-600 dark:text-green-400">2</span>
+                          <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-green-100 dark:bg-green-900">
+                            <span className="text-sm font-semibold text-green-600 dark:text-green-400">
+                              2
+                            </span>
                           </div>
                           <div>
-                            <p className="text-gray-900 dark:text-white font-medium">Scroll down and tap "Add to Home Screen"</p>
+                            <p className="font-medium text-gray-900 dark:text-white">
+                              Scroll down and tap "Add to Home Screen"
+                            </p>
                             <p className="text-sm text-gray-600 dark:text-gray-300">
                               You'll see this option in the share menu
                             </p>
                           </div>
                         </div>
                         <div className="flex items-start space-x-3">
-                          <div className="w-8 h-8 bg-green-100 dark:bg-green-900 rounded-full flex items-center justify-center flex-shrink-0">
-                            <span className="text-sm font-semibold text-green-600 dark:text-green-400">3</span>
+                          <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-green-100 dark:bg-green-900">
+                            <span className="text-sm font-semibold text-green-600 dark:text-green-400">
+                              3
+                            </span>
                           </div>
                           <div>
-                            <p className="text-gray-900 dark:text-white font-medium">Tap "Add" to confirm</p>
+                            <p className="font-medium text-gray-900 dark:text-white">
+                              Tap "Add" to confirm
+                            </p>
                             <p className="text-sm text-gray-600 dark:text-gray-300">
                               The app will be added to your home screen
                             </p>
@@ -120,38 +136,51 @@ export default function PWAInstallGuide({ isOpen, onClose }: PWAInstallGuideProp
                     </div>
                   ) : isAndroidDevice ? (
                     <div>
-                      <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+                      <h3 className="mb-4 text-lg font-semibold text-gray-900 dark:text-white">
                         Install on Android
                       </h3>
                       <div className="space-y-4">
                         <div className="flex items-start space-x-3">
-                          <div className="w-8 h-8 bg-green-100 dark:bg-green-900 rounded-full flex items-center justify-center flex-shrink-0">
-                            <span className="text-sm font-semibold text-green-600 dark:text-green-400">1</span>
+                          <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-green-100 dark:bg-green-900">
+                            <span className="text-sm font-semibold text-green-600 dark:text-green-400">
+                              1
+                            </span>
                           </div>
                           <div>
-                            <p className="text-gray-900 dark:text-white font-medium">Look for the install banner</p>
+                            <p className="font-medium text-gray-900 dark:text-white">
+                              Look for the install banner
+                            </p>
                             <p className="text-sm text-gray-600 dark:text-gray-300">
-                              Chrome will show an "Add to Home screen" banner at the bottom
+                              Chrome will show an "Add to Home screen" banner at
+                              the bottom
                             </p>
                           </div>
                         </div>
                         <div className="flex items-start space-x-3">
-                          <div className="w-8 h-8 bg-green-100 dark:bg-green-900 rounded-full flex items-center justify-center flex-shrink-0">
-                            <span className="text-sm font-semibold text-green-600 dark:text-green-400">2</span>
+                          <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-green-100 dark:bg-green-900">
+                            <span className="text-sm font-semibold text-green-600 dark:text-green-400">
+                              2
+                            </span>
                           </div>
                           <div>
-                            <p className="text-gray-900 dark:text-white font-medium">Tap "Add" or "Install"</p>
+                            <p className="font-medium text-gray-900 dark:text-white">
+                              Tap "Add" or "Install"
+                            </p>
                             <p className="text-sm text-gray-600 dark:text-gray-300">
                               Confirm the installation when prompted
                             </p>
                           </div>
                         </div>
                         <div className="flex items-start space-x-3">
-                          <div className="w-8 h-8 bg-green-100 dark:bg-green-900 rounded-full flex items-center justify-center flex-shrink-0">
-                            <span className="text-sm font-semibold text-green-600 dark:text-green-400">3</span>
+                          <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-green-100 dark:bg-green-900">
+                            <span className="text-sm font-semibold text-green-600 dark:text-green-400">
+                              3
+                            </span>
                           </div>
                           <div>
-                            <p className="text-gray-900 dark:text-white font-medium">Access from home screen</p>
+                            <p className="font-medium text-gray-900 dark:text-white">
+                              Access from home screen
+                            </p>
                             <p className="text-sm text-gray-600 dark:text-gray-300">
                               The app icon will appear on your home screen
                             </p>
@@ -161,40 +190,55 @@ export default function PWAInstallGuide({ isOpen, onClose }: PWAInstallGuideProp
                     </div>
                   ) : (
                     <div>
-                      <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+                      <h3 className="mb-4 text-lg font-semibold text-gray-900 dark:text-white">
                         Install on Mobile
                       </h3>
                       <div className="space-y-4">
                         <div className="flex items-start space-x-3">
-                          <div className="w-8 h-8 bg-green-100 dark:bg-green-900 rounded-full flex items-center justify-center flex-shrink-0">
-                            <span className="text-sm font-semibold text-green-600 dark:text-green-400">1</span>
+                          <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-green-100 dark:bg-green-900">
+                            <span className="text-sm font-semibold text-green-600 dark:text-green-400">
+                              1
+                            </span>
                           </div>
                           <div>
-                            <p className="text-gray-900 dark:text-white font-medium">Open in your mobile browser</p>
+                            <p className="font-medium text-gray-900 dark:text-white">
+                              Open in your mobile browser
+                            </p>
                             <p className="text-sm text-gray-600 dark:text-gray-300">
-                              Use Chrome, Safari, or your preferred mobile browser
+                              Use Chrome, Safari, or your preferred mobile
+                              browser
                             </p>
                           </div>
                         </div>
                         <div className="flex items-start space-x-3">
-                          <div className="w-8 h-8 bg-green-100 dark:bg-green-900 rounded-full flex items-center justify-center flex-shrink-0">
-                            <span className="text-sm font-semibold text-green-600 dark:text-green-400">2</span>
+                          <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-green-100 dark:bg-green-900">
+                            <span className="text-sm font-semibold text-green-600 dark:text-green-400">
+                              2
+                            </span>
                           </div>
                           <div>
-                            <p className="text-gray-900 dark:text-white font-medium">Look for install option</p>
+                            <p className="font-medium text-gray-900 dark:text-white">
+                              Look for install option
+                            </p>
                             <p className="text-sm text-gray-600 dark:text-gray-300">
-                              Browser will show an install prompt or add to home screen option
+                              Browser will show an install prompt or add to home
+                              screen option
                             </p>
                           </div>
                         </div>
                         <div className="flex items-start space-x-3">
-                          <div className="w-8 h-8 bg-green-100 dark:bg-green-900 rounded-full flex items-center justify-center flex-shrink-0">
-                            <span className="text-sm font-semibold text-green-600 dark:text-green-400">3</span>
+                          <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-green-100 dark:bg-green-900">
+                            <span className="text-sm font-semibold text-green-600 dark:text-green-400">
+                              3
+                            </span>
                           </div>
                           <div>
-                            <p className="text-gray-900 dark:text-white font-medium">Follow browser instructions</p>
+                            <p className="font-medium text-gray-900 dark:text-white">
+                              Follow browser instructions
+                            </p>
                             <p className="text-sm text-gray-600 dark:text-gray-300">
-                              Complete the installation process as guided by your browser
+                              Complete the installation process as guided by
+                              your browser
                             </p>
                           </div>
                         </div>
@@ -205,42 +249,57 @@ export default function PWAInstallGuide({ isOpen, onClose }: PWAInstallGuideProp
               )}
 
               {/* Desktop Instructions */}
-              {activeTab === 'desktop' && (
+              {activeTab === "desktop" && (
                 <div>
-                  <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+                  <h3 className="mb-4 text-lg font-semibold text-gray-900 dark:text-white">
                     Install on Desktop
                   </h3>
                   <div className="space-y-4">
                     <div className="flex items-start space-x-3">
-                      <div className="w-8 h-8 bg-green-100 dark:bg-green-900 rounded-full flex items-center justify-center flex-shrink-0">
-                        <span className="text-sm font-semibold text-green-600 dark:text-green-400">1</span>
+                      <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-green-100 dark:bg-green-900">
+                        <span className="text-sm font-semibold text-green-600 dark:text-green-400">
+                          1
+                        </span>
                       </div>
                       <div>
-                        <p className="text-gray-900 dark:text-white font-medium">Look for the install button</p>
+                        <p className="font-medium text-gray-900 dark:text-white">
+                          Look for the install button
+                        </p>
                         <p className="text-sm text-gray-600 dark:text-gray-300">
-                          Chrome, Edge, or other Chromium-based browsers will show an install icon in the address bar
+                          Chrome, Edge, or other Chromium-based browsers will
+                          show an install icon in the address bar
                         </p>
                       </div>
                     </div>
                     <div className="flex items-start space-x-3">
-                      <div className="w-8 h-8 bg-green-100 dark:bg-green-900 rounded-full flex items-center justify-center flex-shrink-0">
-                        <span className="text-sm font-semibold text-green-600 dark:text-green-400">2</span>
+                      <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-green-100 dark:bg-green-900">
+                        <span className="text-sm font-semibold text-green-600 dark:text-green-400">
+                          2
+                        </span>
                       </div>
                       <div>
-                        <p className="text-gray-900 dark:text-white font-medium">Click "Install" when prompted</p>
+                        <p className="font-medium text-gray-900 dark:text-white">
+                          Click "Install" when prompted
+                        </p>
                         <p className="text-sm text-gray-600 dark:text-gray-300">
-                          A dialog will appear asking if you want to install the app
+                          A dialog will appear asking if you want to install the
+                          app
                         </p>
                       </div>
                     </div>
                     <div className="flex items-start space-x-3">
-                      <div className="w-8 h-8 bg-green-100 dark:bg-green-900 rounded-full flex items-center justify-center flex-shrink-0">
-                        <span className="text-sm font-semibold text-green-600 dark:text-green-400">3</span>
+                      <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-green-100 dark:bg-green-900">
+                        <span className="text-sm font-semibold text-green-600 dark:text-green-400">
+                          3
+                        </span>
                       </div>
                       <div>
-                        <p className="text-gray-900 dark:text-white font-medium">Access from desktop or taskbar</p>
+                        <p className="font-medium text-gray-900 dark:text-white">
+                          Access from desktop or taskbar
+                        </p>
                         <p className="text-sm text-gray-600 dark:text-gray-300">
-                          The app will be available in your applications menu and can be pinned to taskbar
+                          The app will be available in your applications menu
+                          and can be pinned to taskbar
                         </p>
                       </div>
                     </div>
@@ -249,11 +308,11 @@ export default function PWAInstallGuide({ isOpen, onClose }: PWAInstallGuideProp
               )}
 
               {/* Benefits */}
-              <div className="mt-8 p-4 bg-green-50 dark:bg-green-900/20 rounded-lg">
-                <h4 className="font-semibold text-green-900 dark:text-green-100 mb-2">
+              <div className="mt-8 rounded-lg bg-green-50 p-4 dark:bg-green-900/20">
+                <h4 className="mb-2 font-semibold text-green-900 dark:text-green-100">
                   Benefits of Installing
                 </h4>
-                <ul className="text-sm text-green-800 dark:text-green-200 space-y-1">
+                <ul className="space-y-1 text-sm text-green-800 dark:text-green-200">
                   <li>• Faster loading and better performance</li>
                   <li>• Works offline for basic functionality</li>
                   <li>• Native app-like experience</li>
@@ -267,9 +326,9 @@ export default function PWAInstallGuide({ isOpen, onClose }: PWAInstallGuideProp
           <div className="mt-6 flex justify-end">
             <button
               onClick={onClose}
-              className="px-4 py-2 bg-gray-600 hover:bg-gray-700 text-white rounded-lg transition-colors"
+              className="rounded-lg bg-gray-600 px-4 py-2 text-white transition-colors hover:bg-gray-700"
             >
-              {isStandaloneMode ? 'Close' : 'Got it'}
+              {isStandaloneMode ? "Close" : "Got it"}
             </button>
           </div>
         </div>
