@@ -327,41 +327,30 @@ export default function HeaderLayout() {
 
         {/* Mobile version */}
         <div className="flex items-center justify-between px-3 pt-2 md:hidden">
-          {/* Address Section - Mobile */}
-          <div className="hidden flex-1 items-center gap-2 md:flex">
-            <div className="flex h-10 w-10 items-center justify-center">
-              <Image
-                src="/assets/logos/PlasIcon.svg"
-                alt="Plas Logo"
-                width={40}
-                height={40}
-                className="h-10 w-10"
-              />
-            </div>
-            <div className="min-w-0 flex-1">
-              <h6 className="truncate text-sm font-medium text-inherit">
-                {defaultAddress
-                  ? defaultAddress.street && defaultAddress.city
-                    ? `${defaultAddress.street}, ${defaultAddress.city}`
-                    : defaultAddress.latitude && defaultAddress.longitude
-                    ? "Current Location"
-                    : "No address set"
-                  : "No address set"}
-              </h6>
-              <button
-                className="text-xs text-green-500 hover:underline dark:text-green-400"
-                onClick={() => setShowAddressModal(true)}
+          {/* Logo Section - Mobile */}
+          <div className="flex items-center">
+            <Link href="/" className="flex items-center">
+              <div
+                className={`transition-all duration-200 ${
+                  theme === "dark" ? "brightness-0 invert" : ""
+                }`}
               >
-                Change Address
-              </button>
-            </div>
+                <Image
+                  src="/assets/logos/PlasLogo.svg"
+                  alt="Plas Logo"
+                  width={80}
+                  height={30}
+                  className="h-8 w-auto"
+                />
+              </div>
+            </Link>
           </div>
 
           <div className="flex items-center gap-2">
-            {/* Messages Icon - Mobile only */}
+            {/* Messages Icon - Mobile */}
             <Link href="/Messages" passHref>
               <div className="relative flex items-center gap-1 rounded-md p-1.5 transition-colors duration-200 hover:cursor-pointer hover:bg-green-50 dark:hover:bg-green-900">
-                <div className="text-inherit">
+                <div className="text-gray-900 dark:text-white">
                   <svg
                     width="24px"
                     height="24px"

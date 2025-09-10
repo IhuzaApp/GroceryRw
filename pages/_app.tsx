@@ -8,6 +8,8 @@ import {
   clearRoleSwitchFlag,
 } from "../src/lib/sessionRefresh";
 import { ThemeProvider } from "../src/context/ThemeContext";
+import InstallPrompt from "../src/components/ui/InstallPrompt";
+import Head from "next/head";
 
 // Configure NProgress
 NProgress.configure({ showSpinner: false });
@@ -59,6 +61,39 @@ function SessionRefreshHandler({ children }: { children: React.ReactNode }) {
 export default function App({ Component, pageProps }: AppProps) {
   return (
     <ThemeProvider>
+      <Head>
+        <meta name="application-name" content="Grocery App" />
+        <meta name="apple-mobile-web-app-capable" content="yes" />
+        <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+        <meta name="apple-mobile-web-app-title" content="Grocery App" />
+        <meta name="description" content="Your convenient grocery shopping app" />
+        <meta name="format-detection" content="telephone=no" />
+        <meta name="mobile-web-app-capable" content="yes" />
+        <meta name="msapplication-config" content="/icons/browserconfig.xml" />
+        <meta name="msapplication-TileColor" content="#10b981" />
+        <meta name="msapplication-tap-highlight" content="no" />
+        <meta name="theme-color" content="#10b981" />
+
+        <link rel="apple-touch-icon" href="/app-icon.png" />
+        <link rel="icon" type="image/png" sizes="32x32" href="/app-icon.png" />
+        <link rel="icon" type="image/png" sizes="16x16" href="/app-icon.png" />
+        <link rel="manifest" href="/manifest.json" />
+        <link rel="mask-icon" href="/app-icon.png" color="#10b981" />
+        <link rel="shortcut icon" href="/favicon.ico" />
+
+        <meta name="twitter:card" content="summary" />
+        <meta name="twitter:url" content="https://your-app-domain.com" />
+        <meta name="twitter:title" content="Grocery App" />
+        <meta name="twitter:description" content="Your convenient grocery shopping app" />
+        <meta name="twitter:image" content="/app-icon.png" />
+        <meta name="twitter:creator" content="@yourusername" />
+        <meta property="og:type" content="website" />
+        <meta property="og:title" content="Grocery App" />
+        <meta property="og:description" content="Your convenient grocery shopping app" />
+        <meta property="og:site_name" content="Grocery App" />
+        <meta property="og:url" content="https://your-app-domain.com" />
+        <meta property="og:image" content="/app-icon.png" />
+      </Head>
       <SessionProvider
         session={(pageProps as any).session}
         basePath="/api/auth"
@@ -72,6 +107,7 @@ export default function App({ Component, pageProps }: AppProps) {
                   <SessionRefreshHandler>
                     <Toaster position="top-right" />
                     <Component {...pageProps} />
+                    <InstallPrompt />
                   </SessionRefreshHandler>
                 </GoogleMapProvider>
               </ChatProvider>
