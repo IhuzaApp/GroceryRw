@@ -6,7 +6,7 @@ import { formatCurrencySync } from "../../utils/formatCurrency";
 
 interface InvoicesTableProps {
   invoices: Invoice[];
-  onViewDetails: (invoiceId: string) => void;
+  onViewDetails: (invoiceId: string, orderType: string) => void;
   onUploadProof: (invoice: Invoice) => void;
   loading?: boolean;
 }
@@ -205,7 +205,7 @@ const InvoicesTable: React.FC<InvoicesTableProps> = ({
                     ? "bg-gray-800 hover:bg-gray-700"
                     : "bg-white hover:bg-gray-50"
                 } cursor-pointer transition-colors`}
-                onClick={() => onViewDetails(invoice.id)}
+                onClick={() => onViewDetails(invoice.id, invoice.order_type)}
               >
                 <td className="px-6 py-4 text-sm">
                   <span

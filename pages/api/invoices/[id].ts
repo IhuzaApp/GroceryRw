@@ -22,6 +22,9 @@ export default async function handler(
       return res.status(400).json({ message: "Invoice ID is required" });
     }
 
+    // Extract the actual UUID from the ID (remove prefixes like "reel-")
+    const actualId = id.replace(/^(reel-|order-)/, '');
+
     // GraphQL query to fetch invoice details
     const query = `
       query getInvoiceDetails($id: uuid!) {
@@ -62,13 +65,15 @@ export default async function handler(
               created_at
               Product {
                 id
-                name
-                description
                 price
                 final_price
                 measurement_unit
                 image
                 category
+                ProductName {
+                  name
+                  description
+                }
               }
             }
             Shop {
@@ -87,7 +92,7 @@ export default async function handler(
       }
     `;
 
-    const variables = { id };
+    const variables = { id: actualId };
 
     if (!hasuraClient) {
       return res
@@ -119,7 +124,7 @@ export default async function handler(
       customerEmail: invoice.User?.email || "Email not available",
       items:
         invoice.Order?.Order_Items?.map((item: any) => ({
-          name: item.Product?.name || "Unknown Product",
+          name: item.Product?.ProductName?.name || "Unknown Product",
           quantity: item.quantity,
           unitPrice: parseFloat(item.price) || 0,
           unit: item.Product?.measurement_unit || "unit",

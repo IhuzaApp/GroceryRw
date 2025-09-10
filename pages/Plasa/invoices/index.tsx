@@ -16,7 +16,7 @@ import {
   Invoice,
   InvoicesPageProps,
 } from "../../../src/components/invoices";
-import { formatCurrencySync } from "../../../src/lib/formatCurrency";
+import { formatCurrencySync } from "../../../src/utils/formatCurrency";
 
 const InvoicesPage: React.FC<InvoicesPageProps> = ({
   initialInvoices = [],
@@ -80,8 +80,9 @@ const InvoicesPage: React.FC<InvoicesPageProps> = ({
     setSelectedInvoice(null);
   };
 
-  const handleViewDetails = (invoiceId: string) => {
-    window.open(`/Plasa/invoices/${invoiceId}`, "_blank");
+  const handleViewDetails = (invoiceId: string, orderType: string) => {
+    const hash = orderType === "reel" ? "#reel" : "#regularOrder";
+    window.open(`/Plasa/invoices/${invoiceId}${hash}`, "_blank");
   };
 
   // Filter invoices based on search and filters
