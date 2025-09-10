@@ -90,12 +90,16 @@ export default function LoginPage() {
           fill
           className="object-cover"
           priority
+          quality={75}
+          sizes="(max-width: 768px) 0vw, 50vw"
+          placeholder="blur"
+          blurDataURL="data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAYEBQYFBAYGBQYHBwYIChAKCgkJChQODwwQFxQYGBcUFhYaHSUfGhsjHBYWICwgIyYnKSopGR8tMC0oMCUoKSj/2wBDAQcHBwoIChMKChMoGhYaKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCj/wAARCAABAAEDASIAAhEBAxEB/8QAFQABAQAAAAAAAAAAAAAAAAAAAAv/xAAUEAEAAAAAAAAAAAAAAAAAAAAA/8QAFQEBAQAAAAAAAAAAAAAAAAAAAAX/xAAUEQEAAAAAAAAAAAAAAAAAAAAA/9oADAMBAAIRAxEAPwCdABmX/9k="
         />
-        <div className="absolute bottom-8 left-8 max-w-md rounded-lg bg-white bg-opacity-90 p-6">
-          <h2 className="mb-2 text-xl font-bold">
+        <div className="absolute bottom-8 left-8 max-w-md rounded-lg bg-white bg-opacity-90 p-6 dark:bg-gray-800 dark:bg-opacity-90">
+          <h2 className="mb-2 text-xl font-bold text-gray-900 dark:text-white">
             Fresh groceries delivered to your door
           </h2>
-          <p className="text-gray-600">
+          <p className="text-gray-600 dark:text-gray-300">
             Shop from a wide selection of fresh produce, pantry essentials, and
             household items with fast delivery.
           </p>
