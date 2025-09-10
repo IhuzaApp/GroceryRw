@@ -266,10 +266,11 @@ export default function UserOrderDetails({ order }: UserOrderDetailsProps) {
                 >
                   <div className="h-16 w-16 flex-shrink-0">
                     <Image
-                                      src={
-                  (item.product.ProductName?.image || item.product.image) ??
-                  "/images/groceryPlaceholder.png"
-                }
+                      src={
+                        (item.product.ProductName?.image ||
+                          item.product.image) ??
+                        "/images/groceryPlaceholder.png"
+                      }
                       alt={item.product.ProductName?.name || "Product"}
                       width={60}
                       height={60}
@@ -277,7 +278,9 @@ export default function UserOrderDetails({ order }: UserOrderDetailsProps) {
                     />
                   </div>
                   <div className="flex-grow">
-                    <h3 className="font-medium">{item.product.ProductName?.name || "Product"}</h3>
+                    <h3 className="font-medium">
+                      {item.product.ProductName?.name || "Product"}
+                    </h3>
                     <div className="mt-1 flex justify-between text-sm text-gray-600 dark:text-gray-400">
                       <span>
                         {item.quantity} ×{" "}

@@ -105,8 +105,6 @@ const ClockIcon = () => (
   </svg>
 );
 
-
-
 const StoreIcon = () => (
   <svg
     width="24"
@@ -334,7 +332,6 @@ export default function VideoReel({
           try {
             // Check if component is still mounted and video exists
             if (!mountedRef.current || !videoRef.current) {
-        
               return;
             }
 
@@ -353,7 +350,6 @@ export default function VideoReel({
         };
         playVideo();
       } else {
-
         if (videoRef.current && mountedRef.current) {
           videoRef.current.pause();
           setIsPlaying(false);
@@ -371,7 +367,7 @@ export default function VideoReel({
   const handleVideoError = (error: any) => {
     if (!mountedRef.current) return;
     toaster.push(
-      `Video error: ${(error as Error).message || 'Unknown error occurred'}`,
+      `Video error: ${(error as Error).message || "Unknown error occurred"}`,
       { placement: "topEnd" }
     );
     setVideoError(true);
@@ -388,7 +384,9 @@ export default function VideoReel({
         } catch (error) {
           if (mountedRef.current && (error as Error).name !== "AbortError") {
             toaster.push(
-              `Failed to play video: ${(error as Error).message || 'Unknown error occurred'}`,
+              `Failed to play video: ${
+                (error as Error).message || "Unknown error occurred"
+              }`,
               { placement: "topEnd" }
             );
           }
@@ -470,7 +468,6 @@ export default function VideoReel({
                 </span>
               </div>
               <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
-        
                 <span
                   style={{
                     color: "#fff",
@@ -519,7 +516,9 @@ export default function VideoReel({
                 justifyContent: "center",
                 opacity: isAuthenticated ? 1 : 0.5,
               }}
-              onClick={isAuthenticated ? () => setShowOrderModal(true) : undefined}
+              onClick={
+                isAuthenticated ? () => setShowOrderModal(true) : undefined
+              }
               disabled={!isAuthenticated}
             >
               <UtensilsIcon />
@@ -630,13 +629,21 @@ export default function VideoReel({
                   borderColor: "#166534",
                   color: "white",
                   border: "none",
-                  cursor: isAuthenticated && supermarketPost.product.inStock ? "pointer" : "not-allowed",
+                  cursor:
+                    isAuthenticated && supermarketPost.product.inStock
+                      ? "pointer"
+                      : "not-allowed",
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "center",
-                  opacity: isAuthenticated && supermarketPost.product.inStock ? 1 : 0.5,
+                  opacity:
+                    isAuthenticated && supermarketPost.product.inStock
+                      ? 1
+                      : 0.5,
                 }}
-                onClick={isAuthenticated ? () => setShowOrderModal(true) : undefined}
+                onClick={
+                  isAuthenticated ? () => setShowOrderModal(true) : undefined
+                }
                 disabled={!isAuthenticated || !supermarketPost.product.inStock}
               >
                 <ShoppingCartIcon />

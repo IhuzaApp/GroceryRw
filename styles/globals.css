@@ -398,12 +398,12 @@ a:visited {
 
 /* Hide scrollbars for TikTok-style scrolling */
 .scrollbar-hide {
-  -ms-overflow-style: none;  /* Internet Explorer 10+ */
-  scrollbar-width: none;  /* Firefox */
+  -ms-overflow-style: none; /* Internet Explorer 10+ */
+  scrollbar-width: none; /* Firefox */
 }
 
 .scrollbar-hide::-webkit-scrollbar {
-  display: none;  /* Safari and Chrome */
+  display: none; /* Safari and Chrome */
 }
 
 /* Smooth scrolling for reels */
@@ -425,7 +425,7 @@ a:visited {
   .reels-container {
     scroll-snap-type: y proximity; /* Less aggressive snapping on desktop */
   }
-  
+
   .reels-container > div {
     scroll-snap-stop: normal; /* Allow scrolling past multiple items */
   }
@@ -436,7 +436,7 @@ a:visited {
   .reels-container {
     scroll-snap-type: y mandatory; /* Aggressive snapping on mobile */
   }
-  
+
   .reels-container > div {
     scroll-snap-stop: always; /* Always stop at each video on mobile */
   }
@@ -448,7 +448,7 @@ a:visited {
     outline: 2px solid #10b981; /* Green focus ring */
     outline-offset: 2px;
   }
-  
+
   .reels-container:focus:not(:focus-visible) {
     outline: none; /* Remove outline when not using keyboard */
   }

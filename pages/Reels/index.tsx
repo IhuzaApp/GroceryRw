@@ -401,7 +401,7 @@ const checkUserLikeStatus = (
 };
 
 // Cache configuration
-const CACHE_KEY = 'reels_cache';
+const CACHE_KEY = "reels_cache";
 const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes in milliseconds
 const MAX_CACHE_AGE = 30 * 60 * 1000; // 30 minutes maximum cache age
 
@@ -429,26 +429,30 @@ export default function FoodReelsApp() {
     [postId: string]: Comment[];
   }>({});
   const [isRefreshing, setIsRefreshing] = useState(false);
-  const [pullToRefresh, setPullToRefresh] = useState({ isPulling: false, startY: 0, currentY: 0 });
+  const [pullToRefresh, setPullToRefresh] = useState({
+    isPulling: false,
+    startY: 0,
+    currentY: 0,
+  });
 
   // Cache utility functions
   const getCachedReels = (): CachedReels | null => {
     try {
       const cached = localStorage.getItem(CACHE_KEY);
       if (!cached) return null;
-      
+
       const parsedCache: CachedReels = JSON.parse(cached);
       const now = Date.now();
-      
+
       // Check if cache is still valid
       if (now - parsedCache.timestamp > MAX_CACHE_AGE) {
         localStorage.removeItem(CACHE_KEY);
         return null;
       }
-      
+
       return parsedCache;
     } catch (error) {
-      console.error('Error reading cache:', error);
+      console.error("Error reading cache:", error);
       localStorage.removeItem(CACHE_KEY);
       return null;
     }
@@ -457,122 +461,142 @@ export default function FoodReelsApp() {
   const setCachedReels = (data: FoodPost[]): void => {
     try {
       // Create a compressed version of the data with only essential fields
-      const compressedData = data.map(post => ({
+      const compressedData = data.map((post) => ({
         id: post.id,
         type: post.type,
         creator: {
           name: post.creator.name,
           avatar: post.creator.avatar,
-          verified: post.creator.verified
+          verified: post.creator.verified,
         },
         content: {
           title: post.content.title,
           description: post.content.description,
           video: post.content.video,
-          category: post.content.category
+          category: post.content.category,
         },
         stats: {
           likes: post.stats.likes,
-          comments: post.stats.comments
+          comments: post.stats.comments,
         },
         isLiked: post.isLiked,
         // Only store essential type-specific data
-        ...(post.type === 'restaurant' && {
+        ...(post.type === "restaurant" && {
           restaurant: {
             rating: post.restaurant.rating,
             reviews: post.restaurant.reviews,
             location: post.restaurant.location,
             deliveryTime: post.restaurant.deliveryTime,
-            price: post.restaurant.price
-          }
+            price: post.restaurant.price,
+          },
         }),
-        ...(post.type === 'supermarket' && {
+        ...(post.type === "supermarket" && {
           product: {
             price: post.product.price,
             originalPrice: post.product.originalPrice,
             store: post.product.store,
             inStock: post.product.inStock,
-            discount: post.product.discount
-          }
+            discount: post.product.discount,
+          },
         }),
-        ...(post.type === 'chef' && {
+        ...(post.type === "chef" && {
           recipe: {
             difficulty: post.recipe.difficulty,
             cookTime: post.recipe.cookTime,
             servings: post.recipe.servings,
             youtubeChannel: post.recipe.youtubeChannel,
-            subscribers: post.recipe.subscribers
-          }
-        })
+            subscribers: post.recipe.subscribers,
+          },
+        }),
       }));
 
       const cacheData: CachedReels = {
         data: compressedData as FoodPost[],
         timestamp: Date.now(),
         lastFetch: Date.now(),
-        version: '1.0'
+        version: "1.0",
       };
 
       const serialized = JSON.stringify(cacheData);
-      
+
       // Check if data is too large for localStorage
-      if (serialized.length > 4 * 1024 * 1024) { // 4MB limit
-        console.warn('Cache data too large, skipping cache save');
+      if (serialized.length > 4 * 1024 * 1024) {
+        // 4MB limit
+        console.warn("Cache data too large, skipping cache save");
         return;
       }
 
       localStorage.setItem(CACHE_KEY, serialized);
     } catch (error) {
-      if (error instanceof DOMException && error.name === 'QuotaExceededError') {
-        console.warn('localStorage quota exceeded, clearing old cache and retrying');
+      if (
+        error instanceof DOMException &&
+        error.name === "QuotaExceededError"
+      ) {
+        console.warn(
+          "localStorage quota exceeded, clearing old cache and retrying"
+        );
         // Clear old cache and try again
         try {
           localStorage.removeItem(CACHE_KEY);
           // Try with even more compressed data
-          const minimalData = data.slice(0, 10).map(post => ({
+          const minimalData = data.slice(0, 10).map((post) => ({
             id: post.id,
             type: post.type,
-            creator: { name: post.creator.name, avatar: post.creator.avatar, verified: post.creator.verified },
-            content: { title: post.content.title, description: post.content.description, video: post.content.video, category: post.content.category },
+            creator: {
+              name: post.creator.name,
+              avatar: post.creator.avatar,
+              verified: post.creator.verified,
+            },
+            content: {
+              title: post.content.title,
+              description: post.content.description,
+              video: post.content.video,
+              category: post.content.category,
+            },
             stats: { likes: post.stats.likes, comments: post.stats.comments },
-            isLiked: post.isLiked
+            isLiked: post.isLiked,
           }));
-          
+
           const minimalCache: CachedReels = {
             data: minimalData as FoodPost[],
             timestamp: Date.now(),
             lastFetch: Date.now(),
-            version: '1.0'
+            version: "1.0",
           };
-          
+
           localStorage.setItem(CACHE_KEY, JSON.stringify(minimalCache));
         } catch (retryError) {
-          console.error('Failed to save even minimal cache:', retryError);
+          console.error("Failed to save even minimal cache:", retryError);
         }
       } else {
-        console.error('Error saving cache:', error);
+        console.error("Error saving cache:", error);
       }
     }
   };
 
   const shouldRefreshCache = (cached: CachedReels): boolean => {
     const now = Date.now();
-    return (now - cached.lastFetch) > CACHE_DURATION;
+    return now - cached.lastFetch > CACHE_DURATION;
   };
 
   // Clean up old cache entries to free up space
   const cleanupOldCache = (): void => {
     try {
       const keys = Object.keys(localStorage);
-      const cacheKeys = keys.filter(key => key.startsWith('reels_') || key.startsWith('cache_'));
-      
+      const cacheKeys = keys.filter(
+        (key) => key.startsWith("reels_") || key.startsWith("cache_")
+      );
+
       // Remove old cache entries (older than 1 hour)
-      cacheKeys.forEach(key => {
+      cacheKeys.forEach((key) => {
         try {
           const data = localStorage.getItem(key);
           if (data) {
             const parsed = JSON.parse(data);
-            if (parsed.timestamp && (Date.now() - parsed.timestamp) > 60 * 60 * 1000) {
+            if (
+              parsed.timestamp &&
+              Date.now() - parsed.timestamp > 60 * 60 * 1000
+            ) {
               localStorage.removeItem(key);
             }
           }
@@ -582,7 +606,7 @@ export default function FoodReelsApp() {
         }
       });
     } catch (error) {
-      console.error('Error cleaning up cache:', error);
+      console.error("Error cleaning up cache:", error);
     }
   };
 
@@ -599,9 +623,12 @@ export default function FoodReelsApp() {
       user: {
         name: comment.User?.name || "Plas Reel Agent",
         avatar:
-          comment.User?.profile_picture || "/placeholder.svg?height=32&width=32",
+          comment.User?.profile_picture ||
+          "/placeholder.svg?height=32&width=32",
         verified:
-          comment.User?.role === "admin" || comment.User?.role === "verified" || false,
+          comment.User?.role === "admin" ||
+          comment.User?.role === "verified" ||
+          false,
       },
       text: comment.text,
       timestamp: formatTimestamp(comment.created_on),
@@ -618,7 +645,9 @@ export default function FoodReelsApp() {
         avatar:
           dbReel.User?.profile_picture || "/placeholder.svg?height=40&width=40",
         verified:
-          dbReel.User?.role === "admin" || dbReel.User?.role === "verified" || false,
+          dbReel.User?.role === "admin" ||
+          dbReel.User?.role === "verified" ||
+          false,
       },
       content: {
         title: dbReel.title,
@@ -688,18 +717,18 @@ export default function FoodReelsApp() {
       try {
         // Clean up old cache entries first
         cleanupOldCache();
-        
+
         // Check cache first
         const cached = getCachedReels();
-        
+
         if (cached && !forceRefresh) {
-          console.log('Loading reels from cache');
+          console.log("Loading reels from cache");
           setPosts(cached.data);
           setLoading(false);
-          
+
           // Check if we need to refresh in background
           if (shouldRefreshCache(cached)) {
-            console.log('Cache is stale, refreshing in background');
+            console.log("Cache is stale, refreshing in background");
             fetchReelsFromAPI(true); // Background refresh
           }
           return;
@@ -735,21 +764,26 @@ export default function FoodReelsApp() {
 
         // Update state first
         setPosts(convertedPosts);
-        
+
         // Try to update cache, but don't fail if it doesn't work
         try {
           setCachedReels(convertedPosts);
         } catch (cacheError) {
-          console.warn('Failed to update cache, continuing without cache:', cacheError);
+          console.warn(
+            "Failed to update cache, continuing without cache:",
+            cacheError
+          );
         }
-        
+
         if (isBackgroundRefresh) {
-          console.log('Background refresh completed');
+          console.log("Background refresh completed");
         }
       } catch (err) {
         console.error("Error fetching reels from API:", err);
         if (!isBackgroundRefresh) {
-          setError(err instanceof Error ? err.message : "Failed to fetch reels");
+          setError(
+            err instanceof Error ? err.message : "Failed to fetch reels"
+          );
         }
       } finally {
         setLoading(false);
@@ -778,12 +812,15 @@ export default function FoodReelsApp() {
 
       // Update state first for immediate UI update
       setPosts(convertedPosts);
-      
+
       // Try to update cache, but don't fail if it doesn't work
       try {
         setCachedReels(convertedPosts);
       } catch (cacheError) {
-        console.warn('Failed to update cache, continuing without cache:', cacheError);
+        console.warn(
+          "Failed to update cache, continuing without cache:",
+          cacheError
+        );
       }
     } catch (err) {
       console.error("Error refreshing reels:", err);
@@ -804,18 +841,18 @@ export default function FoodReelsApp() {
 
     const scrollToVideo = (index: number, smooth: boolean = true) => {
       if (index < 0 || index >= posts.length) return;
-      
+
       const targetElement = container.children[index] as HTMLElement;
       if (targetElement) {
         if (smooth) {
           // Smooth scrolling for desktop
-          targetElement.scrollIntoView({ behavior: 'smooth' });
+          targetElement.scrollIntoView({ behavior: "smooth" });
         } else {
           // Instant snap for mobile
-          container.style.scrollBehavior = 'auto';
-          targetElement.scrollIntoView({ behavior: 'auto' });
+          container.style.scrollBehavior = "auto";
+          targetElement.scrollIntoView({ behavior: "auto" });
           setTimeout(() => {
-            container.style.scrollBehavior = 'smooth';
+            container.style.scrollBehavior = "smooth";
           }, 100);
         }
         setVisiblePostIndex(index);
@@ -827,26 +864,26 @@ export default function FoodReelsApp() {
       if (isMobile) {
         // Mobile: TikTok-style behavior
         e.preventDefault();
-        
+
         const now = Date.now();
         if (isScrolling || now - lastScrollTime < 150) return;
-        
+
         isScrolling = true;
         lastScrollTime = now;
-        
+
         const currentIndex = visiblePostIndex;
         let nextIndex = currentIndex;
-        
+
         if (e.deltaY > 0 && currentIndex < posts.length - 1) {
           nextIndex = currentIndex + 1;
         } else if (e.deltaY < 0 && currentIndex > 0) {
           nextIndex = currentIndex - 1;
         }
-        
+
         if (nextIndex !== currentIndex) {
           scrollToVideo(nextIndex, false); // Instant snap for mobile
         }
-        
+
         clearTimeout(scrollTimeout);
         scrollTimeout = setTimeout(() => {
           isScrolling = false;
@@ -855,7 +892,7 @@ export default function FoodReelsApp() {
         // Desktop: More natural scrolling with scroll-snap
         const currentIndex = visiblePostIndex;
         let nextIndex = currentIndex;
-        
+
         // Only handle large scroll deltas to prevent over-sensitivity
         if (Math.abs(e.deltaY) > 50) {
           if (e.deltaY > 0 && currentIndex < posts.length - 1) {
@@ -863,7 +900,7 @@ export default function FoodReelsApp() {
           } else if (e.deltaY < 0 && currentIndex > 0) {
             nextIndex = currentIndex - 1;
           }
-          
+
           if (nextIndex !== currentIndex) {
             scrollToVideo(nextIndex, true); // Smooth scrolling for desktop
           }
@@ -874,38 +911,38 @@ export default function FoodReelsApp() {
     const handleKeyDown = (e: KeyboardEvent) => {
       // Desktop keyboard navigation
       if (isMobile) return;
-      
+
       const currentIndex = visiblePostIndex;
       let nextIndex = currentIndex;
-      
+
       switch (e.key) {
-        case 'ArrowDown':
-        case 'PageDown':
-        case ' ': // Spacebar
+        case "ArrowDown":
+        case "PageDown":
+        case " ": // Spacebar
           e.preventDefault();
           if (currentIndex < posts.length - 1) {
             nextIndex = currentIndex + 1;
           }
           break;
-        case 'ArrowUp':
-        case 'PageUp':
+        case "ArrowUp":
+        case "PageUp":
           e.preventDefault();
           if (currentIndex > 0) {
             nextIndex = currentIndex - 1;
           }
           break;
-        case 'Home':
+        case "Home":
           e.preventDefault();
           nextIndex = 0;
           break;
-        case 'End':
+        case "End":
           e.preventDefault();
           nextIndex = posts.length - 1;
           break;
         default:
           return;
       }
-      
+
       if (nextIndex !== currentIndex) {
         scrollToVideo(nextIndex, true);
       }
@@ -913,22 +950,27 @@ export default function FoodReelsApp() {
 
     const handleTouchStart = (e: TouchEvent) => {
       if (!isMobile) return;
-      
+
       const touch = e.touches[0];
       container.dataset.touchStartY = touch.clientY.toString();
       container.dataset.touchStartTime = Date.now().toString();
     };
 
     const handleTouchEnd = (e: TouchEvent) => {
-      if (!isMobile || !container.dataset.touchStartY || !container.dataset.touchStartTime) return;
-      
+      if (
+        !isMobile ||
+        !container.dataset.touchStartY ||
+        !container.dataset.touchStartTime
+      )
+        return;
+
       const touchEndY = e.changedTouches[0].clientY;
       const touchStartY = parseInt(container.dataset.touchStartY);
       const touchStartTime = parseInt(container.dataset.touchStartTime);
       const touchDuration = Date.now() - touchStartTime;
       const deltaY = touchStartY - touchEndY;
       const threshold = 30;
-      
+
       // Check for pull-to-refresh (swipe down from top)
       if (deltaY < -80 && visiblePostIndex === 0 && touchDuration > 200) {
         // Pull to refresh triggered
@@ -936,42 +978,44 @@ export default function FoodReelsApp() {
         setPullToRefresh({ isPulling: false, startY: 0, currentY: 0 });
         return;
       }
-      
+
       if (Math.abs(deltaY) > threshold && touchDuration < 500) {
         const currentIndex = visiblePostIndex;
         let nextIndex = currentIndex;
-        
+
         if (deltaY > 0 && currentIndex < posts.length - 1) {
           nextIndex = currentIndex + 1;
         } else if (deltaY < 0 && currentIndex > 0) {
           nextIndex = currentIndex - 1;
         }
-        
+
         if (nextIndex !== currentIndex) {
           scrollToVideo(nextIndex, false);
         }
       }
-      
+
       delete container.dataset.touchStartY;
       delete container.dataset.touchStartTime;
     };
 
     // Add event listeners
-    container.addEventListener('wheel', handleWheel, { passive: false });
-    container.addEventListener('touchstart', handleTouchStart, { passive: true });
-    container.addEventListener('touchend', handleTouchEnd, { passive: true });
-    
+    container.addEventListener("wheel", handleWheel, { passive: false });
+    container.addEventListener("touchstart", handleTouchStart, {
+      passive: true,
+    });
+    container.addEventListener("touchend", handleTouchEnd, { passive: true });
+
     // Desktop keyboard navigation
     if (!isMobile) {
-      container.addEventListener('keydown', handleKeyDown);
-      container.setAttribute('tabindex', '0'); // Make container focusable for keyboard events
+      container.addEventListener("keydown", handleKeyDown);
+      container.setAttribute("tabindex", "0"); // Make container focusable for keyboard events
     }
 
     return () => {
-      container.removeEventListener('wheel', handleWheel);
-      container.removeEventListener('touchstart', handleTouchStart);
-      container.removeEventListener('touchend', handleTouchEnd);
-      container.removeEventListener('keydown', handleKeyDown);
+      container.removeEventListener("wheel", handleWheel);
+      container.removeEventListener("touchstart", handleTouchStart);
+      container.removeEventListener("touchend", handleTouchEnd);
+      container.removeEventListener("keydown", handleKeyDown);
       clearTimeout(scrollTimeout);
     };
   }, [posts.length, visiblePostIndex, isMobile]);
@@ -1459,20 +1503,20 @@ export default function FoodReelsApp() {
       <div className={`min-h-screen transition-colors duration-200 `}>
         {/* Refresh Indicator */}
         {isRefreshing && (
-          <div className="fixed top-4 left-1/2 transform -translate-x-1/2 z-50 bg-black bg-opacity-75 text-white px-4 py-2 rounded-full text-sm flex items-center gap-2">
-            <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+          <div className="fixed left-1/2 top-4 z-50 flex -translate-x-1/2 transform items-center gap-2 rounded-full bg-black bg-opacity-75 px-4 py-2 text-sm text-white">
+            <div className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent"></div>
             Refreshing...
           </div>
         )}
-        
+
         <div
           ref={containerRef}
-          className="h-full w-full overflow-y-auto scrollbar-hide reels-container"
-          style={{ 
+          className="scrollbar-hide reels-container h-full w-full overflow-y-auto"
+          style={{
             height: "calc(100vh - 80px)",
             scrollSnapType: "y mandatory",
             scrollBehavior: "smooth",
-            overscrollBehavior: "none"
+            overscrollBehavior: "none",
           }}
         >
           {posts.map((post, index) => (
@@ -1520,12 +1564,12 @@ export default function FoodReelsApp() {
       <div className="flex h-fit items-center justify-center">
         {/* Refresh Indicator */}
         {isRefreshing && (
-          <div className="fixed top-4 left-1/2 transform -translate-x-1/2 z-50 bg-black bg-opacity-75 text-white px-4 py-2 rounded-full text-sm flex items-center gap-2">
-            <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+          <div className="fixed left-1/2 top-4 z-50 flex -translate-x-1/2 transform items-center gap-2 rounded-full bg-black bg-opacity-75 px-4 py-2 text-sm text-white">
+            <div className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent"></div>
             Refreshing...
           </div>
         )}
-        
+
         <div
           className={`container mx-auto h-full max-w-md transition-colors duration-200 md:h-[95vh] md:rounded-2xl md:shadow-2xl ${
             theme === "dark"
@@ -1535,11 +1579,11 @@ export default function FoodReelsApp() {
         >
           <div
             ref={containerRef}
-            className="h-full w-full overflow-y-auto scrollbar-hide reels-container"
-            style={{ 
+            className="scrollbar-hide reels-container h-full w-full overflow-y-auto"
+            style={{
               scrollSnapType: "y mandatory",
               scrollBehavior: "smooth",
-              overscrollBehavior: "none"
+              overscrollBehavior: "none",
             }}
           >
             {posts.map((post, index) => (

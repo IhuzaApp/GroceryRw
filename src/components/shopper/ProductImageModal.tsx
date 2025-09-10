@@ -44,7 +44,8 @@ export default function ProductImageModal({
             <div className="space-y-4 text-left">
               {/* Product Name */}
               <h3 className="text-lg font-bold text-gray-800">
-                {currentOrderItem.product.ProductName?.name || 'Unknown Product'}
+                {currentOrderItem.product.ProductName?.name ||
+                  "Unknown Product"}
               </h3>
 
               {/* Description */}

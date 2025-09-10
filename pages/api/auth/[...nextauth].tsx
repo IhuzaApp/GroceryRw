@@ -22,18 +22,22 @@ export const authOptions: NextAuthOptions = {
       authorize: async (credentials) => {
         if (!credentials) return null;
         const { identifier, password } = credentials;
-        
+
         // Determine if identifier is email, phone, or username
-        const isEmail = identifier.includes('@');
-        const isPhone = /^\+?[\d\s\-\(\)]+$/.test(identifier.replace(/\s/g, ''));
-        
+        const isEmail = identifier.includes("@");
+        const isPhone = /^\+?[\d\s\-\(\)]+$/.test(
+          identifier.replace(/\s/g, "")
+        );
+
         let query;
         let variables;
-        
+
         if (isEmail) {
           query = gql`
             query GetUserByEmail($email: String!) {
-              Users(where: { email: { _eq: $email }, is_active: { _eq: true } }) {
+              Users(
+                where: { email: { _eq: $email }, is_active: { _eq: true } }
+              ) {
                 id
                 name
                 email
@@ -51,10 +55,12 @@ export const authOptions: NextAuthOptions = {
           variables = { email: identifier };
         } else if (isPhone) {
           // Clean phone number for comparison
-          const cleanPhone = identifier.replace(/\D/g, '');
+          const cleanPhone = identifier.replace(/\D/g, "");
           query = gql`
             query GetUserByPhone($phone: String!) {
-              Users(where: { phone: { _eq: $phone }, is_active: { _eq: true } }) {
+              Users(
+                where: { phone: { _eq: $phone }, is_active: { _eq: true } }
+              ) {
                 id
                 name
                 email
@@ -91,7 +97,7 @@ export const authOptions: NextAuthOptions = {
           `;
           variables = { name: identifier };
         }
-        
+
         const res = await hasuraClient.request<{
           Users: Array<{
             id: string;

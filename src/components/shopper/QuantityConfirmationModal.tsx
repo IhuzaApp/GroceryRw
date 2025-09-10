@@ -198,7 +198,8 @@ export default function QuantityConfirmationModal({
               theme === "dark" ? "text-gray-100" : "text-gray-900"
             }`}
           >
-            Confirm Found Quantity: {currentItem.product.ProductName?.name || 'Unknown Product'}
+            Confirm Found Quantity:{" "}
+            {currentItem.product.ProductName?.name || "Unknown Product"}
           </Modal.Title>
         </Modal.Header>
 

@@ -14,11 +14,9 @@ export default function ViewOrderDetailsPage() {
   const [error, setError] = useState<string | null>(null);
   const [orderType, setOrderType] = useState<"regular" | "reel" | null>(null);
 
-
-
   useEffect(() => {
     if (!orderId || !router.isReady) return;
-    
+
     async function fetchDetails() {
       try {
         setLoading(true);
