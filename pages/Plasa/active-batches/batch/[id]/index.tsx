@@ -261,13 +261,15 @@ export const getServerSideProps: GetServerSideProps<
           price
           product: Product {
             id
-            name
             image
-            description
             measurement_unit
             category
             quantity
             final_price
+            ProductName {
+              name
+              description
+            }
           }
           order_id
         }
