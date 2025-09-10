@@ -2,16 +2,57 @@ import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import { getToken } from "next-auth/jwt";
 
+/**
+ * AUTHENTICATION MIDDLEWARE - PRODUCTION FIXES
+ * 
+ * This middleware handles authentication for both page routes and API routes.
+ * 
+ * RECENT CHANGES (Production Fix):
+ * 1. Removed blanket API route bypass - previously all /api/* routes were allowed without auth
+ * 2. Added selective API authentication - only specific public API routes are allowed without auth
+ * 3. Removed fallback session cookie logic - was allowing access even when token verification failed
+ * 4. Made error handling stricter - redirects to login instead of allowing requests through
+ * 5. Updated matcher to include API routes for proper authentication checking
+ * 
+ * PUBLIC API ROUTES (no authentication required):
+ * - /api/auth/* - NextAuth authentication endpoints
+ * - /api/shopper/shops - Shop listings (public data)
+ * - /api/shopper/pendingOrders - Pending orders (public data)
+ * - /api/queries/createWallet - Wallet creation
+ * - /api/shopper/assignOrder - Order assignment
+ * - /api/shopper/todayCompletedEarnings - Earnings data
+ * 
+ * PROTECTED API ROUTES (authentication required):
+ * - /api/user - User profile data
+ * - /api/queries/addresses - User addresses
+ * - All other API routes not listed above
+ * 
+ * TO REVERT TO PREVIOUS BEHAVIOR:
+ * 1. Change line 44-73 back to: "if (pathname.startsWith("/api/")) { return NextResponse.next(); }"
+ * 2. Restore the fallback session cookie logic in lines 116-122
+ * 3. Change error handling back to: "return NextResponse.next();"
+ * 4. Update matcher back to: '["/((?!api|_next/static|_next/image|favicon.ico).*)"]'
+ */
+
 // Define public paths that don't require authentication
 const publicPaths = [
   "/",
   "/shops",
   "/Auth/Login",
   "/Auth/Register",
-  "/api", // All API routes are public
   "/_next",
   "/favicon.ico",
   "/static",
+];
+
+// Define public API routes that don't require authentication
+const publicApiPaths = [
+  "/api/auth",
+  "/api/shopper/shops",
+  "/api/shopper/pendingOrders",
+  "/api/queries/createWallet",
+  "/api/shopper/assignOrder",
+  "/api/shopper/todayCompletedEarnings",
 ];
 
 // Helper function to check if a path is public
@@ -21,12 +62,46 @@ const isPublicPath = (path: string) => {
   );
 };
 
+// Helper function to check if an API path is public
+const isPublicApiPath = (path: string) => {
+  return publicApiPaths.some(
+    (publicApiPath) => path === publicApiPath || path.startsWith(`${publicApiPath}/`)
+  );
+};
+
 export async function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl;
 
-  // Skip middleware for API routes entirely
+  // Handle API routes with authentication
   if (pathname.startsWith("/api/")) {
-    return NextResponse.next();
+    // Allow public API routes without authentication
+    if (isPublicApiPath(pathname)) {
+      return NextResponse.next();
+    }
+
+    // For protected API routes, check authentication
+    try {
+      const token = await getToken({
+        req,
+        secret: process.env.NEXTAUTH_SECRET,
+        secureCookie: process.env.NEXTAUTH_SECURE_COOKIES === "true",
+      });
+
+      if (!token) {
+        return NextResponse.json(
+          { error: "Unauthorized" },
+          { status: 401 }
+        );
+      }
+
+      return NextResponse.next();
+    } catch (error) {
+      console.error("API authentication error:", error);
+      return NextResponse.json(
+        { error: "Authentication failed" },
+        { status: 401 }
+      );
+    }
   }
 
   // Skip middleware for public paths
@@ -70,21 +145,8 @@ export async function middleware(req: NextRequest) {
       secureCookie: process.env.NEXTAUTH_SECURE_COOKIES === "true",
     });
 
-    // If no token is found, check for cookies before redirecting
+    // If no token is found, redirect to login
     if (!token) {
-      // Check for any auth-related cookies as a fallback
-      const sessionCookie =
-        req.cookies.get("next-auth.session-token") ||
-        req.cookies.get("__Secure-next-auth.session-token");
-
-      if (sessionCookie) {
-        console.log(
-          "Session cookie found but token verification failed, allowing access"
-        );
-        // If we have a session cookie but token verification failed, let the request through
-        return NextResponse.next();
-      }
-
       const url = req.nextUrl.clone();
       url.pathname = "/Auth/Login";
       url.search = `callbackUrl=${encodeURIComponent(req.url)}`;
@@ -131,12 +193,14 @@ export async function middleware(req: NextRequest) {
   } catch (error) {
     console.error("Authentication middleware error:", error);
 
-    // In case of any error, allow the request to proceed
-    // The pages themselves can handle authentication if needed
-    return NextResponse.next();
+    // In case of any error, redirect to login for security
+    const url = req.nextUrl.clone();
+    url.pathname = "/Auth/Login";
+    url.search = `callbackUrl=${encodeURIComponent(req.url)}`;
+    return NextResponse.redirect(url);
   }
 }
 
 export const config = {
-  matcher: ["/((?!api|_next/static|_next/image|favicon.ico).*)"],
+  matcher: ["/((?!_next/static|_next/image|favicon.ico).*)"],
 };
