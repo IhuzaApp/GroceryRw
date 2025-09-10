@@ -110,25 +110,58 @@ const MobileCategoryDropdown = ({
 function getShopImageUrl(imageUrl: string | undefined): string {
   if (!imageUrl) return "/images/shop-placeholder.jpg";
 
+  // Debug logging to see what URLs we're getting
+  console.log("Processing image URL:", imageUrl);
+
   // Handle relative paths (like "profile.png")
   if (imageUrl && !imageUrl.startsWith("/") && !imageUrl.startsWith("http")) {
+    console.log("Relative path detected, using placeholder");
     return "/images/shop-placeholder.jpg";
   }
 
-  const validExtensions = [".jpg", ".jpeg", ".png", ".webp", ".gif"];
-  const hasValidExtension = validExtensions.some((ext) =>
-    imageUrl.toLowerCase().endsWith(ext)
-  );
-
-  if (!hasValidExtension) {
-    return "/images/shop-placeholder.jpg";
+  // If it's a relative path starting with /, it's likely a valid local image
+  if (imageUrl.startsWith("/")) {
+    console.log("Absolute path detected:", imageUrl);
+    
+    // Check if the image exists in the expected location
+    // Handle common cases where images might be in different directories
+    const commonImageMappings: { [key: string]: string } = {
+      "publicMarket.jpg": "/assets/images/publicMarket.jpg",
+      "backeryImage.jpg": "/assets/images/backeryImage.jpg",
+      "Bakery.webp": "/assets/images/Bakery.webp",
+      "Butcher.webp": "/assets/images/Butcher.webp",
+      "delicatessen.jpeg": "/assets/images/delicatessen.jpeg",
+      "OrganicShop.jpg": "/assets/images/OrganicShop.jpg",
+      "shopping.jpg": "/assets/images/shopping.jpg",
+      "shopsImage.jpg": "/assets/images/shopsImage.jpg",
+      "superMarkets.jpg": "/assets/images/superMarkets.jpg",
+    };
+    
+    // Check if this is a known image that might be in the assets directory
+    for (const [filename, correctPath] of Object.entries(commonImageMappings)) {
+      if (imageUrl.includes(filename)) {
+        console.log(`Mapped ${filename} to ${correctPath}`);
+        return correctPath;
+      }
+    }
+    
+    return imageUrl;
   }
 
-  if (imageUrl.includes("example.com")) {
-    return "/images/shop-placeholder.jpg";
+  // For external URLs, check if they're valid
+  if (imageUrl.startsWith("http")) {
+    // Allow all external URLs except example.com
+    if (imageUrl.includes("example.com")) {
+      console.log("Example.com URL detected, using placeholder");
+      return "/images/shop-placeholder.jpg";
+    }
+    console.log("External URL detected:", imageUrl);
+    return imageUrl;
   }
 
-  return imageUrl;
+  // Fallback to placeholder
+  console.log("Fallback to placeholder");
+  return "/images/shop-placeholder.jpg";
 }
 
 function getDistanceFromLatLonInKm(
