@@ -110,20 +110,20 @@ export default function ShopperSidebar() {
   const handleLogout = async () => {
     try {
       // Use custom logout API to avoid redirect loops
-      const response = await fetch('/api/logout', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+      const response = await fetch("/api/logout", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
       });
 
       if (response.ok) {
         // Clear client-side storage
         localStorage.clear();
         sessionStorage.clear();
-        
+
         // Redirect to home page
-        window.location.href = '/';
+        window.location.href = "/";
       } else {
-        throw new Error('Logout failed');
+        throw new Error("Logout failed");
       }
     } catch (error) {
       logger.error("Error signing out", "ShopperSidebar", error);

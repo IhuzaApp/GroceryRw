@@ -66,7 +66,10 @@ export default function App({ Component, pageProps }: AppProps) {
         <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-status-bar-style" content="default" />
         <meta name="apple-mobile-web-app-title" content="Grocery App" />
-        <meta name="description" content="Your convenient grocery shopping app" />
+        <meta
+          name="description"
+          content="Your convenient grocery shopping app"
+        />
         <meta name="format-detection" content="telephone=no" />
         <meta name="mobile-web-app-capable" content="yes" />
         <meta name="msapplication-config" content="/icons/browserconfig.xml" />
@@ -84,12 +87,18 @@ export default function App({ Component, pageProps }: AppProps) {
         <meta name="twitter:card" content="summary" />
         <meta name="twitter:url" content="https://your-app-domain.com" />
         <meta name="twitter:title" content="Grocery App" />
-        <meta name="twitter:description" content="Your convenient grocery shopping app" />
+        <meta
+          name="twitter:description"
+          content="Your convenient grocery shopping app"
+        />
         <meta name="twitter:image" content="/app-icon.png" />
         <meta name="twitter:creator" content="@yourusername" />
         <meta property="og:type" content="website" />
         <meta property="og:title" content="Grocery App" />
-        <meta property="og:description" content="Your convenient grocery shopping app" />
+        <meta
+          property="og:description"
+          content="Your convenient grocery shopping app"
+        />
         <meta property="og:site_name" content="Grocery App" />
         <meta property="og:url" content="https://your-app-domain.com" />
         <meta property="og:image" content="/app-icon.png" />

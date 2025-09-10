@@ -1,21 +1,21 @@
-const fs = require('fs');
-const path = require('path');
+const fs = require("fs");
+const path = require("path");
 
 // This script creates placeholder icon files for PWA
 // In a real project, you would use a tool like sharp or imagemagick to resize images
 
 const iconSizes = [
-  { size: 72, name: 'icon-72x72.png' },
-  { size: 96, name: 'icon-96x96.png' },
-  { size: 128, name: 'icon-128x128.png' },
-  { size: 144, name: 'icon-144x144.png' },
-  { size: 152, name: 'icon-152x152.png' },
-  { size: 192, name: 'icon-192x192.png' },
-  { size: 384, name: 'icon-384x384.png' },
-  { size: 512, name: 'icon-512x512.png' }
+  { size: 72, name: "icon-72x72.png" },
+  { size: 96, name: "icon-96x96.png" },
+  { size: 128, name: "icon-128x128.png" },
+  { size: 144, name: "icon-144x144.png" },
+  { size: 152, name: "icon-152x152.png" },
+  { size: 192, name: "icon-192x192.png" },
+  { size: 384, name: "icon-384x384.png" },
+  { size: 512, name: "icon-512x512.png" },
 ];
 
-const publicDir = path.join(__dirname, '..', 'public');
+const publicDir = path.join(__dirname, "..", "public");
 
 // Create a simple SVG icon as a fallback
 const createSVGIcon = (size) => `
@@ -37,4 +37,6 @@ iconSizes.forEach(({ size, name }) => {
   }
 });
 
-console.log('Icon generation complete. Replace placeholders with actual resized images.');
+console.log(
+  "Icon generation complete. Replace placeholders with actual resized images."
+);
