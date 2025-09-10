@@ -7,7 +7,7 @@ import toast from "react-hot-toast";
 import { useAuth } from "../../../../context/AuthContext";
 
 export default function UserLogin() {
-  const [email, setEmail] = useState("");
+  const [identifier, setIdentifier] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [rememberMe, setRememberMe] = useState(false);
@@ -21,7 +21,7 @@ export default function UserLogin() {
     try {
       const res = await signIn("credentials", {
         redirect: false,
-        email,
+        identifier,
         password,
       });
       if (res?.error) {
@@ -39,15 +39,15 @@ export default function UserLogin() {
   return (
     <form onSubmit={handleLogin}>
       <div className="mb-4">
-        <label htmlFor="email" className="mb-2 block text-gray-700 dark:text-gray-300">
-          Email Address
+        <label htmlFor="identifier" className="mb-2 block text-gray-700 dark:text-gray-300">
+          Email, Username, or Phone Number
         </label>
         <input
-          id="email"
-          type="email"
-          placeholder="Enter your email"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
+          id="identifier"
+          type="text"
+          placeholder="Enter your email, username, or phone number"
+          value={identifier}
+          onChange={(e) => setIdentifier(e.target.value)}
           className="w-full rounded-none border border-gray-300 px-3 py-2 text-gray-900 focus:border-green-500 focus:ring-1 focus:ring-green-500 focus:outline-none dark:text-white dark:bg-gray-800 dark:border-gray-600"
           required
         />
