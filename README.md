@@ -1561,11 +1561,107 @@ Component Mount → API Call → Database Query → Data Conversion → UI Rende
 - User ID extracted from NextAuth session
 - Unauthorized requests return 401 status
 
-### 2. Authorization
+### 2. Login System
+
+#### Login Methods
+The system supports multiple login methods for enhanced user experience:
+
+- **Email Login**: Traditional email and password authentication
+- **Username Login**: Users can login with their username
+- **Phone Number Login**: Phone number-based authentication
+- **Google OAuth**: Social login integration
+
+#### Login Implementation
+```typescript
+// Login form supports multiple identifier types
+const handleLogin = async (identifier: string, password: string) => {
+  const res = await signIn("credentials", {
+    redirect: false,
+    identifier, // Can be email, username, or phone
+    password,
+  });
+};
+```
+
+#### Login Features
+- **Smart Identifier Detection**: Automatically detects if input is email, phone, or username
+- **Theme-Aware UI**: Login page adapts to light/dark themes
+- **Responsive Design**: Works seamlessly on desktop and mobile
+- **Form Validation**: Real-time validation with user feedback
+- **Remember Me**: Optional persistent login sessions
+
+### 3. Logout System
+
+#### Logout Implementation
+The logout system uses a custom API approach to avoid NextAuth redirect loops:
+
+```typescript
+// Custom logout API endpoint
+const handleLogout = async () => {
+  const response = await fetch('/api/logout', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+  });
+  
+  if (response.ok) {
+    localStorage.clear();
+    sessionStorage.clear();
+    router.push("/Auth/Login");
+  }
+};
+```
+
+#### Logout Features
+- **Complete Session Clearing**: Removes all authentication data
+- **Cookie Management**: Properly clears NextAuth cookies on server-side
+- **Local Storage Cleanup**: Clears all client-side stored data
+- **Safe Redirect**: Prevents redirect loops and ensures clean logout
+- **User Feedback**: Success/error notifications for logout status
+
+#### Logout API Endpoint
+```typescript
+// /api/logout.ts
+export default async function handler(req: NextApiRequest, res: NextApiResponse) {
+  // Clear NextAuth cookies using Set-Cookie headers
+  res.setHeader('Set-Cookie', [
+    'next-auth.session-token=; Path=/; Expires=Thu, 01 Jan 1970 00:00:00 GMT; HttpOnly; SameSite=Lax',
+    'next-auth.callback-url=; Path=/; Expires=Thu, 01 Jan 1970 00:00:00 GMT; HttpOnly; SameSite=Lax',
+    'next-auth.csrf-token=; Path=/; Expires=Thu, 01 Jan 1970 00:00:00 GMT; HttpOnly; SameSite=Lax',
+  ]);
+  
+  res.status(200).json({ success: true, message: 'Logged out successfully' });
+}
+```
+
+### 4. Session Management
+
+#### Session Context
+The application uses a custom AuthContext for session management:
+
+```typescript
+interface AuthContextType {
+  isLoggedIn: boolean;
+  authReady: boolean;
+  login: () => void;
+  logout: () => void;
+  role: "user" | "shopper";
+  toggleRole: () => void;
+  user: User | null;
+}
+```
+
+#### Session Features
+- **Role-Based Access**: Supports user and shopper roles
+- **Session Persistence**: Maintains login state across page refreshes
+- **Role Switching**: Users can switch between user and shopper modes
+- **Session Refresh**: Automatic session validation and refresh
+
+### 5. Authorization
 
 - Users can only delete their own comments
 - Admin users can delete any comment
 - Like operations tied to authenticated user
+- Role-based access control for different features
 
 ### 3. Input Validation
 
