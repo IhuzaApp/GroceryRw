@@ -25,6 +25,27 @@ interface OrderDetails {
   shopLongitude?: number;
   customerLatitude?: number;
   customerLongitude?: number;
+  orderType?: 'regular' | 'reel';
+  reel?: {
+    id: string;
+    title: string;
+    description: string;
+    Price: string;
+    Product: string;
+    type: string;
+    video_url: string;
+    Restaurant?: {
+      id: string;
+      name: string;
+      location: string;
+      lat: number;
+      long: number;
+    };
+  };
+  quantity?: number;
+  deliveryNote?: string;
+  customerName?: string;
+  customerPhone?: string;
 }
 
 export default function OrderDetailsPage() {
@@ -269,13 +290,20 @@ export default function OrderDetailsPage() {
               <div className="p-6">
                 <div className="mb-4 flex items-center justify-between">
                   <div>
-                    <h2
-                      className={`text-2xl font-bold ${
-                        theme === "dark" ? "text-gray-100" : "text-gray-900"
-                      }`}
-                    >
-                      Order #{orderDetails.id}
-                    </h2>
+                    <div className="flex items-center gap-2">
+                      <h2
+                        className={`text-2xl font-bold ${
+                          theme === "dark" ? "text-gray-100" : "text-gray-900"
+                        }`}
+                      >
+                        {orderDetails.orderType === 'reel' ? 'Reel Order' : 'Order'} #{orderDetails.id}
+                      </h2>
+                      {orderDetails.orderType === 'reel' && (
+                        <Tag color="violet" size="sm">
+                          Quick Batch
+                        </Tag>
+                      )}
+                    </div>
                     <p
                       className={`mt-1 ${
                         theme === "dark" ? "text-gray-400" : "text-gray-600"
@@ -333,6 +361,59 @@ export default function OrderDetailsPage() {
                     </span>
                   </div>
                 </div>
+
+                {/* Reel Order Specific Information */}
+                {orderDetails.orderType === 'reel' && orderDetails.reel && (
+                  <div
+                    className={`mb-6 rounded border p-4 ${
+                      theme === "dark"
+                        ? "border-purple-700 bg-purple-900/20"
+                        : "border-purple-200 bg-purple-50"
+                    }`}
+                  >
+                    <div className="mb-3 flex items-center gap-2">
+                      <span className="text-lg font-semibold text-purple-600 dark:text-purple-400">
+                        🎬 Reel Details
+                      </span>
+                    </div>
+                    <div className="space-y-2">
+                      <div>
+                        <span className="font-medium text-gray-700 dark:text-gray-300">
+                          Product: 
+                        </span>
+                        <span className="ml-2 text-gray-900 dark:text-gray-100">
+                          {orderDetails.reel.Product}
+                        </span>
+                      </div>
+                      <div>
+                        <span className="font-medium text-gray-700 dark:text-gray-300">
+                          Quantity: 
+                        </span>
+                        <span className="ml-2 text-gray-900 dark:text-gray-100">
+                          {orderDetails.quantity}
+                        </span>
+                      </div>
+                      <div>
+                        <span className="font-medium text-gray-700 dark:text-gray-300">
+                          Price per item: 
+                        </span>
+                        <span className="ml-2 text-gray-900 dark:text-gray-100">
+                          {formatCurrency(parseFloat(orderDetails.reel.Price))}
+                        </span>
+                      </div>
+                      {orderDetails.deliveryNote && (
+                        <div>
+                          <span className="font-medium text-gray-700 dark:text-gray-300">
+                            Delivery Note: 
+                          </span>
+                          <span className="ml-2 text-gray-900 dark:text-gray-100">
+                            {orderDetails.deliveryNote}
+                          </span>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
 
                 {orderDetails.status === "PENDING" && (
                   <div className="flex justify-end">

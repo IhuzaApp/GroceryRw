@@ -13,6 +13,15 @@ export interface OrderItem {
     quantity?: number;
     barcode?: string;
     sku?: string;
+    ProductName?: {
+      id: string;
+      name: string;
+      description: string;
+      barcode: string;
+      sku: string;
+      image: string;
+      create_at: string;
+    };
   };
   found?: boolean;
   foundQuantity?: number;

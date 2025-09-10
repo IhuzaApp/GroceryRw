@@ -107,6 +107,15 @@ interface OrderItem {
     name: string;
     image: string;
     final_price: string;
+    ProductName?: {
+      id: string;
+      name: string;
+      description: string;
+      barcode: string;
+      sku: string;
+      image: string;
+      create_at: string;
+    };
   };
   found?: boolean;
   foundQuantity?: number;
@@ -836,7 +845,7 @@ export default function BatchDetails({
   // Function to show product image in modal
   const showProductImage = (item: OrderItem) => {
     setSelectedImage(item.product.image);
-    setSelectedProductName(item.product.name);
+    setSelectedProductName(item.product.ProductName?.name || 'Unknown Product');
     setCurrentOrderItem(item);
     setShowImageModal(true);
   };
@@ -1785,7 +1794,7 @@ export default function BatchDetails({
                           {item.product.image ? (
                             <Image
                               src={item.product.image}
-                              alt={item.product.name}
+                              alt={item.product.ProductName?.name || 'Unknown Product'}
                               width={48}
                               height={48}
                               className="h-full w-full object-cover"
@@ -1807,7 +1816,7 @@ export default function BatchDetails({
 
                         <div className="min-w-0 flex-1">
                           <p className="truncate text-xs font-medium text-slate-900 dark:text-slate-100 sm:text-base sm:text-sm">
-                            {item.product.name}
+                            {item.product.ProductName?.name || 'Unknown Product'}
                           </p>
                           <p className="text-xs text-slate-500 dark:text-slate-400 sm:text-sm">
                             {formatCurrency(item.price)} × {item.quantity}
