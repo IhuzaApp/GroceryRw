@@ -198,7 +198,7 @@ export default async function handler(
     }
 
     let orderData: any = null;
-    let orderType: 'regular' | 'reel' = 'regular';
+    let orderType: "regular" | "reel" = "regular";
 
     try {
       // First try to fetch as a regular order
@@ -211,7 +211,7 @@ export default async function handler(
 
       if (regularOrderData.Orders_by_pk) {
         orderData = regularOrderData.Orders_by_pk;
-        orderType = 'regular';
+        orderType = "regular";
       } else {
         // If regular order not found, try reel order
         try {
@@ -224,7 +224,7 @@ export default async function handler(
 
           if (reelOrderData.reel_orders_by_pk) {
             orderData = reelOrderData.reel_orders_by_pk;
-            orderType = 'reel';
+            orderType = "reel";
           }
         } catch (reelError) {
           console.error("Error fetching reel order:", reelError);
@@ -243,7 +243,7 @@ export default async function handler(
 
         if (reelOrderData.reel_orders_by_pk) {
           orderData = reelOrderData.reel_orders_by_pk;
-          orderType = 'reel';
+          orderType = "reel";
         }
       } catch (reelError) {
         console.error("Error fetching reel order:", reelError);
@@ -258,7 +258,7 @@ export default async function handler(
     // Format the order data for the frontend based on order type
     let formattedOrder: any;
 
-    if (orderType === 'regular') {
+    if (orderType === "regular") {
       // Handle regular orders
       const formattedOrderItems = orderData.Order_Items.map((item: any) => ({
         id: item.id,
@@ -282,7 +282,7 @@ export default async function handler(
         createdAt: orderData.created_at,
         updatedAt: orderData.updated_at,
         status: orderData.status,
-        orderType: 'regular',
+        orderType: "regular",
         shopName: orderData.shop?.name || "Unknown Shop",
         shopAddress: orderData.shop?.address || "No Address",
         shopLatitude: orderData.shop?.latitude
@@ -322,9 +322,10 @@ export default async function handler(
         createdAt: orderData.created_at,
         updatedAt: orderData.updated_at,
         status: orderData.status,
-        orderType: 'reel',
+        orderType: "reel",
         shopName: orderData.Reel?.Restaurant?.name || "Reel Order",
-        shopAddress: orderData.Reel?.Restaurant?.location || "From Reel Creator",
+        shopAddress:
+          orderData.Reel?.Restaurant?.location || "From Reel Creator",
         shopLatitude: orderData.Reel?.Restaurant?.lat || null,
         shopLongitude: orderData.Reel?.Restaurant?.long || null,
         customerAddress: orderData.address
@@ -336,12 +337,14 @@ export default async function handler(
         customerLongitude: orderData.address?.longitude
           ? parseFloat(orderData.address.longitude)
           : null,
-        items: [{
-          id: orderData.Reel?.id || orderData.id,
-          name: orderData.Reel?.Product || "Reel Product",
-          quantity: quantity,
-          price: reelPrice,
-        }],
+        items: [
+          {
+            id: orderData.Reel?.id || orderData.id,
+            name: orderData.Reel?.Product || "Reel Product",
+            quantity: quantity,
+            price: reelPrice,
+          },
+        ],
         itemCount: 1,
         subTotal,
         serviceFee,

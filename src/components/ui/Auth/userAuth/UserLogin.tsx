@@ -39,7 +39,10 @@ export default function UserLogin() {
   return (
     <form onSubmit={handleLogin}>
       <div className="mb-4">
-        <label htmlFor="identifier" className="mb-2 block text-gray-700 dark:text-gray-300">
+        <label
+          htmlFor="identifier"
+          className="mb-2 block text-gray-700 dark:text-gray-300"
+        >
           Email, Username, or Phone Number
         </label>
         <input
@@ -48,13 +51,16 @@ export default function UserLogin() {
           placeholder="Enter your email, username, or phone number"
           value={identifier}
           onChange={(e) => setIdentifier(e.target.value)}
-          className="w-full rounded-none border border-gray-300 px-3 py-2 text-gray-900 focus:border-green-500 focus:ring-1 focus:ring-green-500 focus:outline-none dark:text-white dark:bg-gray-800 dark:border-gray-600"
+          className="w-full rounded-none border border-gray-300 px-3 py-2 text-gray-900 focus:border-green-500 focus:outline-none focus:ring-1 focus:ring-green-500 dark:border-gray-600 dark:bg-gray-800 dark:text-white"
           required
         />
       </div>
 
       <div className="mb-6">
-        <label htmlFor="password" className="mb-2 block text-gray-700 dark:text-gray-300">
+        <label
+          htmlFor="password"
+          className="mb-2 block text-gray-700 dark:text-gray-300"
+        >
           Password
         </label>
         <div className="relative">
@@ -64,7 +70,7 @@ export default function UserLogin() {
             placeholder="••••••••••••"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
-            className="w-full rounded-none border border-gray-300 px-3 py-2 pr-10 text-gray-900 focus:border-green-500 focus:ring-1 focus:ring-green-500 focus:outline-none dark:text-white dark:bg-gray-800 dark:border-gray-600"
+            className="w-full rounded-none border border-gray-300 px-3 py-2 pr-10 text-gray-900 focus:border-green-500 focus:outline-none focus:ring-1 focus:ring-green-500 dark:border-gray-600 dark:bg-gray-800 dark:text-white"
             required
           />
           <button
@@ -128,7 +134,7 @@ export default function UserLogin() {
 
       <Button
         appearance="default"
-        className="flex w-full items-center justify-center gap-2 mt-3 rounded-md border py-3"
+        className="mt-3 flex w-full items-center justify-center gap-2 rounded-md border py-3"
       >
         <svg viewBox="0 0 24 24" width="18" height="18">
           <path

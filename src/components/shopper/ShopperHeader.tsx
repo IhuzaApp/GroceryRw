@@ -30,13 +30,17 @@ export default function ShopperHeader() {
       {/* Logo Section */}
       <div className="flex items-center">
         <Link href="/" className="flex items-center">
-          <div className={`transition-all duration-200 ${theme === "dark" ? "brightness-0 invert" : ""}`}>
+          <div
+            className={`transition-all duration-200 ${
+              theme === "dark" ? "brightness-0 invert" : ""
+            }`}
+          >
             <Image
               src="/assets/logos/PlasLogo.svg"
               alt="Plas Logo"
               width={120}
               height={40}
-              className="h-8 w-auto ml-8"
+              className="ml-8 h-8 w-auto"
               priority
             />
           </div>
@@ -44,9 +48,9 @@ export default function ShopperHeader() {
       </div>
 
       {/* Search Section */}
-      <div className="flex-1 max-w-md mx-8">
+      <div className="mx-8 max-w-md flex-1">
         <div className="relative">
-          <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+          <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
             <svg
               className="h-5 w-5 text-gray-400"
               fill="none"
@@ -64,10 +68,10 @@ export default function ShopperHeader() {
           <input
             type="text"
             placeholder="Search orders, products..."
-            className={`block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg text-sm placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors ${
+            className={`block w-full rounded-lg border border-gray-300 py-2 pl-10 pr-3 text-sm placeholder-gray-500 transition-colors focus:border-transparent focus:outline-none focus:ring-2 focus:ring-blue-500 ${
               theme === "dark"
-                ? "bg-gray-700 border-gray-600 text-white placeholder-gray-400"
-                : "bg-white border-gray-300 text-gray-900 placeholder-gray-500"
+                ? "border-gray-600 bg-gray-700 text-white placeholder-gray-400"
+                : "border-gray-300 bg-white text-gray-900 placeholder-gray-500"
             }`}
           />
         </div>

@@ -5,7 +5,7 @@ import { gql } from "graphql-request";
 // GraphQL query to fetch a single order with nested details
 const GET_ORDER_DETAILS = gql`
   query GetOrderDetails($id: uuid!) {
-    Orders(where: {id: {_eq: $id}}, limit: 1) {
+    Orders(where: { id: { _eq: $id } }, limit: 1) {
       id
       OrderID
       placedAt: created_at
@@ -134,8 +134,6 @@ export default async function handler(
 
     const order = data.Orders[0];
 
-
-
     // Format timestamps to human-readable strings
     const formattedOrder = {
       ...order,
@@ -152,9 +150,9 @@ export default async function handler(
     res.status(200).json({ order: formattedOrder });
   } catch (error) {
     console.error("Error in orderDetails API:", error);
-    res.status(500).json({ 
+    res.status(500).json({
       error: "Failed to fetch order details",
-      details: error instanceof Error ? error.message : "Unknown error"
+      details: error instanceof Error ? error.message : "Unknown error",
     });
   }
 }

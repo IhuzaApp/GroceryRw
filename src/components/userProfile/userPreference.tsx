@@ -21,9 +21,9 @@ export default function UserPreference() {
   }, []);
 
   const handlePreferenceChange = (key: string, value: any) => {
-    setPreferences(prev => ({
+    setPreferences((prev) => ({
       ...prev,
-      [key]: value
+      [key]: value,
     }));
   };
 
@@ -61,24 +61,36 @@ export default function UserPreference() {
         </h3>
         <div className="space-y-4">
           <div className="flex items-center justify-between">
-            <span className="text-gray-700 dark:text-gray-300">Push Notifications</span>
+            <span className="text-gray-700 dark:text-gray-300">
+              Push Notifications
+            </span>
             <Toggle
               checked={preferences.notifications}
-              onChange={(checked) => handlePreferenceChange("notifications", checked)}
+              onChange={(checked) =>
+                handlePreferenceChange("notifications", checked)
+              }
             />
           </div>
           <div className="flex items-center justify-between">
-            <span className="text-gray-700 dark:text-gray-300">Email Updates</span>
+            <span className="text-gray-700 dark:text-gray-300">
+              Email Updates
+            </span>
             <Toggle
               checked={preferences.emailUpdates}
-              onChange={(checked) => handlePreferenceChange("emailUpdates", checked)}
+              onChange={(checked) =>
+                handlePreferenceChange("emailUpdates", checked)
+              }
             />
           </div>
           <div className="flex items-center justify-between">
-            <span className="text-gray-700 dark:text-gray-300">SMS Updates</span>
+            <span className="text-gray-700 dark:text-gray-300">
+              SMS Updates
+            </span>
             <Toggle
               checked={preferences.smsUpdates}
-              onChange={(checked) => handlePreferenceChange("smsUpdates", checked)}
+              onChange={(checked) =>
+                handlePreferenceChange("smsUpdates", checked)
+              }
             />
           </div>
         </div>

@@ -94,34 +94,38 @@ export default function OrderModal({
   // Theme-aware styling
   const isDark = theme === "dark";
   const themeStyles = {
-    container: isDark 
-      ? "bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 border-slate-700/50" 
+    container: isDark
+      ? "bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 border-slate-700/50"
       : "bg-gradient-to-br from-white via-gray-50 to-white border-gray-200/50",
-    header: isDark 
-      ? "bg-gradient-to-r from-emerald-600 to-teal-600" 
+    header: isDark
+      ? "bg-gradient-to-r from-emerald-600 to-teal-600"
       : "bg-gradient-to-r from-emerald-500 to-teal-500",
-    section: isDark 
-      ? "bg-gradient-to-r from-slate-800/50 to-slate-700/50 border-slate-600/30" 
+    section: isDark
+      ? "bg-gradient-to-r from-slate-800/50 to-slate-700/50 border-slate-600/30"
       : "bg-gradient-to-r from-gray-50/80 to-gray-100/80 border-gray-200/50",
-    sectionDark: isDark 
-      ? "bg-slate-800/50 border-slate-600/30" 
+    sectionDark: isDark
+      ? "bg-slate-800/50 border-slate-600/30"
       : "bg-gray-100/80 border-gray-200/50",
     textPrimary: isDark ? "text-white" : "text-gray-900",
     textSecondary: isDark ? "text-slate-300" : "text-gray-600",
     textMuted: isDark ? "text-slate-400" : "text-gray-500",
-    input: isDark 
-      ? { backgroundColor: '#1e293b', borderColor: '#475569', color: 'white' }
-      : { backgroundColor: '#ffffff', borderColor: '#d1d5db', color: '#111827' },
-    button: isDark 
-      ? "bg-slate-700 hover:bg-slate-600" 
+    input: isDark
+      ? { backgroundColor: "#1e293b", borderColor: "#475569", color: "white" }
+      : {
+          backgroundColor: "#ffffff",
+          borderColor: "#d1d5db",
+          color: "#111827",
+        },
+    button: isDark
+      ? "bg-slate-700 hover:bg-slate-600"
       : "bg-gray-200 hover:bg-gray-300",
-    footer: isDark 
-      ? "bg-slate-800/50 border-slate-700/50" 
+    footer: isDark
+      ? "bg-slate-800/50 border-slate-700/50"
       : "bg-gray-50/80 border-gray-200/50",
-    orderSummary: isDark 
-      ? "bg-gradient-to-r from-emerald-900/30 to-teal-900/30 border-emerald-500/30" 
+    orderSummary: isDark
+      ? "bg-gradient-to-r from-emerald-900/30 to-teal-900/30 border-emerald-500/30"
       : "bg-gradient-to-r from-emerald-50/80 to-teal-50/80 border-emerald-200/50",
-    skeleton: isDark ? "bg-slate-700" : "bg-gray-300"
+    skeleton: isDark ? "bg-slate-700" : "bg-gray-300",
   };
 
   // Fetch system configuration
@@ -382,8 +386,12 @@ export default function OrderModal({
     if (loadingPayment) {
       return (
         <div className="flex items-center">
-          <div className={`mr-3 h-8 w-12 animate-pulse rounded-lg ${themeStyles.skeleton}`}></div>
-          <div className={`h-4 w-32 animate-pulse rounded ${themeStyles.skeleton}`}></div>
+          <div
+            className={`mr-3 h-8 w-12 animate-pulse rounded-lg ${themeStyles.skeleton}`}
+          ></div>
+          <div
+            className={`h-4 w-32 animate-pulse rounded ${themeStyles.skeleton}`}
+          ></div>
         </div>
       );
     }
@@ -391,8 +399,18 @@ export default function OrderModal({
     if (!selectedPaymentMethod) {
       return (
         <div className={`text-sm ${themeStyles.textMuted} flex items-center`}>
-          <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+          <svg
+            className="mr-2 h-4 w-4"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+            />
           </svg>
           No payment method selected
         </div>
@@ -403,20 +421,50 @@ export default function OrderModal({
       switch (selectedPaymentMethod.type) {
         case "refund":
           return (
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1" />
+            <svg
+              className="h-4 w-4"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1"
+              />
             </svg>
           );
         case "momo":
           return (
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z" />
+            <svg
+              className="h-4 w-4"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z"
+              />
             </svg>
           );
         default:
           return (
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
+            <svg
+              className="h-4 w-4"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"
+              />
             </svg>
           );
       }
@@ -435,7 +483,9 @@ export default function OrderModal({
 
     return (
       <div className="flex items-center">
-        <div className={`mr-3 flex items-center justify-center rounded-lg ${getPaymentColor()} p-2 text-xs text-white`}>
+        <div
+          className={`mr-3 flex items-center justify-center rounded-lg ${getPaymentColor()} p-2 text-xs text-white`}
+        >
           {getPaymentIcon()}
         </div>
         <div className="flex-1">
@@ -459,102 +509,185 @@ export default function OrderModal({
   };
 
   return (
-    <Modal 
-      open={open} 
-      onClose={onClose} 
+    <Modal
+      open={open}
+      onClose={onClose}
       size="lg"
-        style={{
-          backgroundColor: 'transparent',
-        backdropFilter: 'blur(8px)'
-        }}
+      style={{
+        backgroundColor: "transparent",
+        backdropFilter: "blur(8px)",
+      }}
+    >
+      <div
+        className={`${themeStyles.container} overflow-hidden rounded-2xl border shadow-2xl`}
       >
-      <div className={`${themeStyles.container} rounded-2xl shadow-2xl border overflow-hidden`}>
         {/* Header */}
         <div className={`${themeStyles.header} px-6 py-4`}>
-        <div className="flex items-center justify-between">
+          <div className="flex items-center justify-between">
             <div className="flex items-center space-x-3">
-              <div className="w-8 h-8 bg-white/20 rounded-full flex items-center justify-center">
-                <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 3h2l.4 2M7 13h10l4-8H5.4m0 0L7 13m0 0l-2.5 5M7 13l2.5 5m6-5v6a2 2 0 01-2 2H9a2 2 0 01-2-2v-6m8 0V9a2 2 0 00-2-2H9a2 2 0 00-2 2v4.01" />
+              <div className="flex h-8 w-8 items-center justify-center rounded-full bg-white/20">
+                <svg
+                  className="h-5 w-5 text-white"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M3 3h2l.4 2M7 13h10l4-8H5.4m0 0L7 13m0 0l-2.5 5M7 13l2.5 5m6-5v6a2 2 0 01-2 2H9a2 2 0 01-2-2v-6m8 0V9a2 2 0 00-2-2H9a2 2 0 00-2 2v4.01"
+                  />
                 </svg>
               </div>
               <h2 className="text-xl font-bold text-white">Place Your Order</h2>
-          </div>
-          <button
-            onClick={onClose}
-              className="w-8 h-8 bg-white/20 hover:bg-white/30 rounded-full flex items-center justify-center transition-colors"
+            </div>
+            <button
+              onClick={onClose}
+              className="flex h-8 w-8 items-center justify-center rounded-full bg-white/20 transition-colors hover:bg-white/30"
             >
-              <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              <svg
+                className="h-5 w-5 text-white"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M6 18L18 6M6 6l12 12"
+                />
               </svg>
-          </button>
-        </div>
-        </div>
-      
-        {/* Body */}
-        <div className="p-6 max-h-[70vh] overflow-y-auto">
-        {configLoading ? (
-          <div className="space-y-6">
-              {/* Loading Skeletons */}
-            {[...Array(6)].map((_, i) => (
-                <div key={i} className={`${themeStyles.section} rounded-xl p-6 border backdrop-blur-sm`}>
-                  <div className={`mb-4 h-5 w-32 animate-pulse rounded ${themeStyles.skeleton}`}></div>
-                  <div className="space-y-3">
-                    <div className={`h-4 w-full animate-pulse rounded ${themeStyles.skeleton}`}></div>
-                    <div className={`h-4 w-3/4 animate-pulse rounded ${themeStyles.skeleton}`}></div>
-                  </div>
-              </div>
-            ))}
+            </button>
           </div>
-        ) : (
-          <div className="space-y-6">
+        </div>
+
+        {/* Body */}
+        <div className="max-h-[70vh] overflow-y-auto p-6">
+          {configLoading ? (
+            <div className="space-y-6">
+              {/* Loading Skeletons */}
+              {[...Array(6)].map((_, i) => (
+                <div
+                  key={i}
+                  className={`${themeStyles.section} rounded-xl border p-6 backdrop-blur-sm`}
+                >
+                  <div
+                    className={`mb-4 h-5 w-32 animate-pulse rounded ${themeStyles.skeleton}`}
+                  ></div>
+                  <div className="space-y-3">
+                    <div
+                      className={`h-4 w-full animate-pulse rounded ${themeStyles.skeleton}`}
+                    ></div>
+                    <div
+                      className={`h-4 w-3/4 animate-pulse rounded ${themeStyles.skeleton}`}
+                    ></div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="space-y-6">
               {/* Item Details */}
-              <div className={`${themeStyles.section} rounded-xl p-6 border backdrop-blur-sm`}>
-                <div className="flex items-center space-x-3 mb-4">
-                  <div className="w-6 h-6 bg-emerald-500 rounded-full flex items-center justify-center">
-                    <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
+              <div
+                className={`${themeStyles.section} rounded-xl border p-6 backdrop-blur-sm`}
+              >
+                <div className="mb-4 flex items-center space-x-3">
+                  <div className="flex h-6 w-6 items-center justify-center rounded-full bg-emerald-500">
+                    <svg
+                      className="h-4 w-4 text-white"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"
+                      />
                     </svg>
                   </div>
-                  <h3 className={`text-lg font-semibold ${themeStyles.textPrimary}`}>Item Details</h3>
+                  <h3
+                    className={`text-lg font-semibold ${themeStyles.textPrimary}`}
+                  >
+                    Item Details
+                  </h3>
                 </div>
                 <div className="flex items-center justify-between">
-                <div className="flex-1">
-                    <p className={`font-medium ${themeStyles.textPrimary} text-lg`}>
-                    {post.content?.title || "Item from reel"}
+                  <div className="flex-1">
+                    <p
+                      className={`font-medium ${themeStyles.textPrimary} text-lg`}
+                    >
+                      {post.content?.title || "Item from reel"}
                     </p>
                     <p className={`text-sm ${themeStyles.textSecondary} mt-1`}>
-                    {post.content?.description}
-                  </p>
+                      {post.content?.description}
+                    </p>
                   </div>
-                  <div className="text-right ml-4">
-                    <p className="text-2xl font-bold text-emerald-400">{formatCurrency(basePrice)}</p>
-                    <p className={`text-xs ${themeStyles.textMuted}`}>per item</p>
+                  <div className="ml-4 text-right">
+                    <p className="text-2xl font-bold text-emerald-400">
+                      {formatCurrency(basePrice)}
+                    </p>
+                    <p className={`text-xs ${themeStyles.textMuted}`}>
+                      per item
+                    </p>
+                  </div>
                 </div>
               </div>
-            </div>
 
-            {/* Quantity Selection */}
-              <div className={`${themeStyles.section} rounded-xl p-6 border backdrop-blur-sm`}>
-                <div className="flex items-center space-x-3 mb-4">
-                  <div className="w-6 h-6 bg-blue-500 rounded-full flex items-center justify-center">
-                    <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
+              {/* Quantity Selection */}
+              <div
+                className={`${themeStyles.section} rounded-xl border p-6 backdrop-blur-sm`}
+              >
+                <div className="mb-4 flex items-center space-x-3">
+                  <div className="flex h-6 w-6 items-center justify-center rounded-full bg-blue-500">
+                    <svg
+                      className="h-4 w-4 text-white"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"
+                      />
                     </svg>
                   </div>
-                  <h3 className={`text-lg font-semibold ${themeStyles.textPrimary}`}>Quantity</h3>
+                  <h3
+                    className={`text-lg font-semibold ${themeStyles.textPrimary}`}
+                  >
+                    Quantity
+                  </h3>
                 </div>
-              <div className="flex items-center space-x-4">
-                  <label className={`text-sm font-medium ${themeStyles.textSecondary}`}>Quantity:</label>
+                <div className="flex items-center space-x-4">
+                  <label
+                    className={`text-sm font-medium ${themeStyles.textSecondary}`}
+                  >
+                    Quantity:
+                  </label>
                   <div className="flex items-center space-x-2">
-                  <button
-                    onClick={() => setQuantity(Math.max(1, quantity - 1))}
-                      className={`w-8 h-8 ${themeStyles.button} rounded-lg flex items-center justify-center ${themeStyles.textPrimary} transition-colors`}
+                    <button
+                      onClick={() => setQuantity(Math.max(1, quantity - 1))}
+                      className={`h-8 w-8 ${themeStyles.button} flex items-center justify-center rounded-lg ${themeStyles.textPrimary} transition-colors`}
                     >
-                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 12H4" />
+                      <svg
+                        className="h-4 w-4"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M20 12H4"
+                        />
                       </svg>
-                  </button>
+                    </button>
                     <InputNumber
                       value={quantity}
                       onChange={(value) => {
@@ -571,177 +704,297 @@ export default function OrderModal({
                       min={1}
                       max={50}
                       size="sm"
-                    style={{
+                      style={{
                         ...themeStyles.input,
-                        width: '80px'
+                        width: "80px",
                       }}
                     />
-                  <button
-                    onClick={() => setQuantity(Math.min(50, quantity + 1))}
-                      className={`w-8 h-8 ${themeStyles.button} rounded-lg flex items-center justify-center ${themeStyles.textPrimary} transition-colors`}
+                    <button
+                      onClick={() => setQuantity(Math.min(50, quantity + 1))}
+                      className={`h-8 w-8 ${themeStyles.button} flex items-center justify-center rounded-lg ${themeStyles.textPrimary} transition-colors`}
                     >
-                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                      <svg
+                        className="h-4 w-4"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M12 6v6m0 0v6m0-6h6m-6 0H6"
+                        />
                       </svg>
-                  </button>
+                    </button>
+                  </div>
                 </div>
               </div>
-            </div>
 
               {/* Comments */}
-              <div className={`${themeStyles.section} rounded-xl p-6 border backdrop-blur-sm`}>
-                <div className="flex items-center space-x-3 mb-4">
-                  <div className="w-6 h-6 bg-purple-500 rounded-full flex items-center justify-center">
-                    <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+              <div
+                className={`${themeStyles.section} rounded-xl border p-6 backdrop-blur-sm`}
+              >
+                <div className="mb-4 flex items-center space-x-3">
+                  <div className="flex h-6 w-6 items-center justify-center rounded-full bg-purple-500">
+                    <svg
+                      className="h-4 w-4 text-white"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"
+                      />
                     </svg>
                   </div>
-                  <h3 className={`text-lg font-semibold ${themeStyles.textPrimary}`}>Special Instructions</h3>
+                  <h3
+                    className={`text-lg font-semibold ${themeStyles.textPrimary}`}
+                  >
+                    Special Instructions
+                  </h3>
                 </div>
                 <Input
                   as="textarea"
                   rows={3}
-                placeholder="Add any special instructions or comments..."
-                value={comments}
+                  placeholder="Add any special instructions or comments..."
+                  value={comments}
                   onChange={setComments}
-                style={{
+                  style={{
                     ...themeStyles.input,
-                    resize: 'none'
-                }}
-              />
-            </div>
+                    resize: "none",
+                  }}
+                />
+              </div>
 
-            {/* Promo Code */}
-              <div className={`${themeStyles.section} rounded-xl p-6 border backdrop-blur-sm`}>
-                <div className="flex items-center space-x-3 mb-4">
-                  <div className="w-6 h-6 bg-yellow-500 rounded-full flex items-center justify-center">
-                    <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
+              {/* Promo Code */}
+              <div
+                className={`${themeStyles.section} rounded-xl border p-6 backdrop-blur-sm`}
+              >
+                <div className="mb-4 flex items-center space-x-3">
+                  <div className="flex h-6 w-6 items-center justify-center rounded-full bg-yellow-500">
+                    <svg
+                      className="h-4 w-4 text-white"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"
+                      />
                     </svg>
                   </div>
-                  <h3 className={`text-lg font-semibold ${themeStyles.textPrimary}`}>Promo Code</h3>
+                  <h3
+                    className={`text-lg font-semibold ${themeStyles.textPrimary}`}
+                  >
+                    Promo Code
+                  </h3>
                 </div>
-              <div className="flex space-x-3">
+                <div className="flex space-x-3">
                   <Input
-                  placeholder="Enter promo code"
-                  value={promoCode}
+                    placeholder="Enter promo code"
+                    value={promoCode}
                     onChange={setPromoCode}
                     size="sm"
-                  style={{
+                    style={{
                       ...themeStyles.input,
-                      flex: 1
+                      flex: 1,
                     }}
                   />
-                  <Button 
-                    size="sm" 
-                  onClick={handleApplyPromo}
-                  style={{
-                      backgroundColor: '#f59e0b',
-                      borderColor: '#f59e0b',
-                      color: 'white',
-                      fontWeight: '600'
-                  }}
-                >
-                  Apply
+                  <Button
+                    size="sm"
+                    onClick={handleApplyPromo}
+                    style={{
+                      backgroundColor: "#f59e0b",
+                      borderColor: "#f59e0b",
+                      color: "white",
+                      fontWeight: "600",
+                    }}
+                  >
+                    Apply
                   </Button>
-              </div>
-              {appliedPromo && (
-                  <div className="mt-3 p-3 bg-green-900/30 border border-green-500/30 rounded-lg">
-                    <p className="text-sm text-green-400 flex items-center">
-                      <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                </div>
+                {appliedPromo && (
+                  <div className="mt-3 rounded-lg border border-green-500/30 bg-green-900/30 p-3">
+                    <p className="flex items-center text-sm text-green-400">
+                      <svg
+                        className="mr-2 h-4 w-4"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M5 13l4 4L19 7"
+                        />
                       </svg>
                       Promo code &quot;{appliedPromo}&quot; applied!
-                  </p>
-                </div>
-              )}
-            </div>
-
-            {/* Payment Method */}
-              <div className={`${themeStyles.section} rounded-xl p-6 border backdrop-blur-sm`}>
-                <div className="flex items-center space-x-3 mb-4">
-                  <div className="w-6 h-6 bg-indigo-500 rounded-full flex items-center justify-center">
-                    <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
-                    </svg>
-                  </div>
-                  <h3 className={`text-lg font-semibold ${themeStyles.textPrimary}`}>Payment Method</h3>
-                </div>
-                <div className={`${themeStyles.sectionDark} rounded-lg p-4 border`}>
-              {renderPaymentMethod()}
-                </div>
-            </div>
-
-            {/* Order Summary */}
-              <div className={`${themeStyles.orderSummary} rounded-xl p-6 border backdrop-blur-sm`}>
-                <div className="flex items-center space-x-3 mb-4">
-                  <div className="w-6 h-6 bg-emerald-500 rounded-full flex items-center justify-center">
-                    <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
-                    </svg>
-                </div>
-                  <h3 className={`text-lg font-semibold ${themeStyles.textPrimary}`}>Order Summary</h3>
-                </div>
-                <div className="space-y-3 text-sm">
-                  <div className="flex justify-between items-center py-2">
-                    <span className={themeStyles.textSecondary}>Subtotal ({quantity} items)</span>
-                    <span className={`${themeStyles.textPrimary} font-medium`}>{formatCurrency(subtotal)}</span>
-                  </div>
-                {discount > 0 && (
-                    <div className="flex justify-between items-center py-2">
-                      <span className="text-green-400">Discount</span>
-                      <span className="text-green-400 font-medium">-{formatCurrency(discount)}</span>
+                    </p>
                   </div>
                 )}
-                  <div className="flex justify-between items-center py-2">
-                    <span className={themeStyles.textSecondary}>Service Fee</span>
-                    <span className={`${themeStyles.textPrimary} font-medium`}>{formatCurrency(serviceFee)}</span>
+              </div>
+
+              {/* Payment Method */}
+              <div
+                className={`${themeStyles.section} rounded-xl border p-6 backdrop-blur-sm`}
+              >
+                <div className="mb-4 flex items-center space-x-3">
+                  <div className="flex h-6 w-6 items-center justify-center rounded-full bg-indigo-500">
+                    <svg
+                      className="h-4 w-4 text-white"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"
+                      />
+                    </svg>
+                  </div>
+                  <h3
+                    className={`text-lg font-semibold ${themeStyles.textPrimary}`}
+                  >
+                    Payment Method
+                  </h3>
                 </div>
-                  <div className="flex justify-between items-center py-2">
-                    <span className={themeStyles.textSecondary}>Delivery Fee</span>
-                    <span className={`${themeStyles.textPrimary} font-medium`}>{formatCurrency(deliveryFee)}</span>
+                <div
+                  className={`${themeStyles.sectionDark} rounded-lg border p-4`}
+                >
+                  {renderPaymentMethod()}
                 </div>
-                  <div className={`border-t ${isDark ? 'border-slate-600/50' : 'border-gray-300/50'} pt-3`}>
-                  <div className="flex justify-between items-center">
-                      <span className={`text-lg font-bold ${themeStyles.textPrimary}`}>Total</span>
-                      <span className="text-2xl font-bold text-emerald-400">{formatCurrency(finalTotal)}</span>
+              </div>
+
+              {/* Order Summary */}
+              <div
+                className={`${themeStyles.orderSummary} rounded-xl border p-6 backdrop-blur-sm`}
+              >
+                <div className="mb-4 flex items-center space-x-3">
+                  <div className="flex h-6 w-6 items-center justify-center rounded-full bg-emerald-500">
+                    <svg
+                      className="h-4 w-4 text-white"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z"
+                      />
+                    </svg>
+                  </div>
+                  <h3
+                    className={`text-lg font-semibold ${themeStyles.textPrimary}`}
+                  >
+                    Order Summary
+                  </h3>
+                </div>
+                <div className="space-y-3 text-sm">
+                  <div className="flex items-center justify-between py-2">
+                    <span className={themeStyles.textSecondary}>
+                      Subtotal ({quantity} items)
+                    </span>
+                    <span className={`${themeStyles.textPrimary} font-medium`}>
+                      {formatCurrency(subtotal)}
+                    </span>
+                  </div>
+                  {discount > 0 && (
+                    <div className="flex items-center justify-between py-2">
+                      <span className="text-green-400">Discount</span>
+                      <span className="font-medium text-green-400">
+                        -{formatCurrency(discount)}
+                      </span>
+                    </div>
+                  )}
+                  <div className="flex items-center justify-between py-2">
+                    <span className={themeStyles.textSecondary}>
+                      Service Fee
+                    </span>
+                    <span className={`${themeStyles.textPrimary} font-medium`}>
+                      {formatCurrency(serviceFee)}
+                    </span>
+                  </div>
+                  <div className="flex items-center justify-between py-2">
+                    <span className={themeStyles.textSecondary}>
+                      Delivery Fee
+                    </span>
+                    <span className={`${themeStyles.textPrimary} font-medium`}>
+                      {formatCurrency(deliveryFee)}
+                    </span>
+                  </div>
+                  <div
+                    className={`border-t ${
+                      isDark ? "border-slate-600/50" : "border-gray-300/50"
+                    } pt-3`}
+                  >
+                    <div className="flex items-center justify-between">
+                      <span
+                        className={`text-lg font-bold ${themeStyles.textPrimary}`}
+                      >
+                        Total
+                      </span>
+                      <span className="text-2xl font-bold text-emerald-400">
+                        {formatCurrency(finalTotal)}
+                      </span>
+                    </div>
                   </div>
                 </div>
               </div>
             </div>
-          </div>
-        )}
+          )}
         </div>
 
         {/* Footer */}
-        <div className={`${themeStyles.footer} px-6 py-4 border-t`}>
-        <div className="flex space-x-3">
-          <button
-            onClick={onClose}
-              className={`flex-1 px-6 py-3 ${themeStyles.button} ${themeStyles.textPrimary} font-medium rounded-xl transition-colors`}
-          >
-            Cancel
-          </button>
-          <button
-            onClick={handlePlaceOrder}
-            disabled={isOrderLoading || configLoading}
-              className="flex-1 px-6 py-3 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 disabled:from-slate-600 disabled:to-slate-600 disabled:cursor-not-allowed text-white font-semibold rounded-xl transition-all duration-200 flex items-center justify-center space-x-2"
+        <div className={`${themeStyles.footer} border-t px-6 py-4`}>
+          <div className="flex space-x-3">
+            <button
+              onClick={onClose}
+              className={`flex-1 px-6 py-3 ${themeStyles.button} ${themeStyles.textPrimary} rounded-xl font-medium transition-colors`}
+            >
+              Cancel
+            </button>
+            <button
+              onClick={handlePlaceOrder}
+              disabled={isOrderLoading || configLoading}
+              className="flex flex-1 items-center justify-center space-x-2 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 px-6 py-3 font-semibold text-white transition-all duration-200 hover:from-emerald-700 hover:to-teal-700 disabled:cursor-not-allowed disabled:from-slate-600 disabled:to-slate-600"
             >
               {isOrderLoading ? (
                 <>
-                  <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                  <div className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent"></div>
                   <span>Placing Order...</span>
                 </>
               ) : (
                 <>
-                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                  <svg
+                    className="h-5 w-5"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M5 13l4 4L19 7"
+                    />
                   </svg>
                   <span>Place Order</span>
                 </>
               )}
-          </button>
-        </div>
+            </button>
+          </div>
         </div>
       </div>
     </Modal>
