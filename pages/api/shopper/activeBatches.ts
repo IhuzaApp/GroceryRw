@@ -149,33 +149,33 @@ export default async function handler(
     // Fetch both regular and reel orders in parallel
     const [regularOrdersData, reelOrdersData] = await Promise.all([
       hasuraClient.request<{
-      Orders: Array<{
-        id: string;
-        created_at: string;
-        status: string;
-        service_fee: string | null;
-        delivery_fee: string | null;
-        total: number | null;
+        Orders: Array<{
+          id: string;
+          created_at: string;
+          status: string;
+          service_fee: string | null;
+          delivery_fee: string | null;
+          total: number | null;
           delivery_time: string | null;
-        Shop: {
-          name: string;
-          address: string;
-          latitude: string;
-          longitude: string;
-        };
-        User: { id: string; name: string };
-        Address: {
-          latitude: string;
-          longitude: string;
-          street: string;
-          city: string;
-        };
-        Order_Items_aggregate: {
-          aggregate: {
-            count: number | null;
-          } | null;
-        };
-      }>;
+          Shop: {
+            name: string;
+            address: string;
+            latitude: string;
+            longitude: string;
+          };
+          User: { id: string; name: string };
+          Address: {
+            latitude: string;
+            longitude: string;
+            street: string;
+            city: string;
+          };
+          Order_Items_aggregate: {
+            aggregate: {
+              count: number | null;
+            } | null;
+          };
+        }>;
       }>(GET_ACTIVE_ORDERS, { shopperId: userId }),
       hasuraClient.request<{
         reel_orders: Array<{

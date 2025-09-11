@@ -71,25 +71,22 @@ export default function InvoicePage({
         setLoading(true);
         // Extract the actual ID from the URL (remove any hash fragments and prefixes)
         const idString = Array.isArray(id) ? id[0] : id;
-        let actualId = idString ? idString.split('#')[0] : '';
+        let actualId = idString ? idString.split("#")[0] : "";
         // Remove common prefixes like "reel-" or "order-"
-        actualId = actualId.replace(/^(reel-|order-)/, '');
-        
-        
+        actualId = actualId.replace(/^(reel-|order-)/, "");
+
         // Determine order type from hash fragment
-        if (typeof id === 'string' && id.includes('#')) {
-          const hash = id.split('#')[1];
-          setOrderType(hash === 'reel' ? 'reel' : 'regular');
+        if (typeof id === "string" && id.includes("#")) {
+          const hash = id.split("#")[1];
+          setOrderType(hash === "reel" ? "reel" : "regular");
         }
-        
-        
+
         const response = await fetch(`/api/invoices/${actualId}`, {
           method: "GET",
           headers: {
             "Content-Type": "application/json",
           },
         });
-
 
         if (!response.ok) {
           const errorText = await response.text();
@@ -125,15 +122,15 @@ export default function InvoicePage({
     try {
       // Use server-side API route for PDF generation with logo and QR code
       const response = await fetch(`/api/invoices/${invoiceData.id}?pdf=true`);
-      
+
       if (!response.ok) {
-        throw new Error('Failed to generate PDF');
+        throw new Error("Failed to generate PDF");
       }
-      
+
       // Create blob and download
       const blob = await response.blob();
       const url = window.URL.createObjectURL(blob);
-      const link = document.createElement('a');
+      const link = document.createElement("a");
       link.href = url;
       link.download = `invoice-${invoiceData.invoiceNumber}.pdf`;
       document.body.appendChild(link);
@@ -450,7 +447,9 @@ export default function InvoicePage({
                             : "bg-blue-100 text-blue-800 dark:bg-blue-900/20 dark:text-blue-400"
                         }`}
                       >
-                        {orderType === "reel" ? "🎬 Reel Order" : "🛒 Regular Order"}
+                        {orderType === "reel"
+                          ? "🎬 Reel Order"
+                          : "🛒 Regular Order"}
                       </span>
                     </div>
                     <div className="mt-2 flex items-center space-x-2">

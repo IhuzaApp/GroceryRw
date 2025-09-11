@@ -36,17 +36,15 @@ const InvoicesPage: React.FC<InvoicesPageProps> = ({
 
   // Fetch invoices
   const fetchInvoices = async (page: number = 1) => {
-    
     setLoading(true);
     try {
       const response = await fetch(`/api/shopper/invoices?page=${page}`);
-      
+
       if (!response.ok) {
         throw new Error("Failed to fetch invoices");
       }
       const data = await response.json();
-      
-      
+
       setInvoices(data.invoices || []);
       setTotalPages(data.totalPages || 1);
       setError(null);
@@ -85,13 +83,15 @@ const InvoicesPage: React.FC<InvoicesPageProps> = ({
   };
 
   const handleViewDetails = (invoiceId: string, orderType: string) => {
-    
-    const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
-    const baseUrl = process.env.NODE_ENV === 'production' 
-      ? (process.env.NEXT_PUBLIC_APP_URL || 'https://plas.rw')
-      : window.location.origin;
-    
-    
+    const isMobile =
+      /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(
+        navigator.userAgent
+      );
+    const baseUrl =
+      process.env.NODE_ENV === "production"
+        ? process.env.NEXT_PUBLIC_APP_URL || "https://plas.rw"
+        : window.location.origin;
+
     if (isMobile) {
       // For mobile, open PDF directly
       const pdfUrl = `${baseUrl}/api/invoices/${invoiceId}?pdf=true`;
@@ -221,14 +221,12 @@ const InvoicesPage: React.FC<InvoicesPageProps> = ({
 export default InvoicesPage;
 
 export const getServerSideProps = async (context: any) => {
-  
   try {
     const session = await getServerSession(
       context.req,
       context.res,
       authOptions
     );
-
 
     if (!session) {
       return {
@@ -240,32 +238,33 @@ export const getServerSideProps = async (context: any) => {
     }
 
     // Fetch initial invoices data directly from the API handler
-    
+
     // Import the API handler directly instead of making HTTP request
-    const { default: invoicesHandler } = await import('../../api/shopper/invoices');
-    
+    const { default: invoicesHandler } = await import(
+      "../../api/shopper/invoices"
+    );
+
     // Create mock request and response objects
     const mockReq = {
-      method: 'GET',
-      query: { page: '1' }
+      method: "GET",
+      query: { page: "1" },
     } as any;
-    
+
     let responseData: any = null;
     const mockRes = {
       status: (code: number) => ({
         json: (data: any) => {
           responseData = data;
           return { statusCode: code, data };
-        }
+        },
       }),
       setHeader: () => {},
-      end: () => {}
+      end: () => {},
     } as any;
-    
+
     // Call the handler directly
     await invoicesHandler(mockReq, mockRes);
     const data = responseData;
-
 
     return {
       props: {

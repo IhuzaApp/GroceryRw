@@ -4,16 +4,16 @@ import { getToken } from "next-auth/jwt";
 
 /**
  * AUTHENTICATION MIDDLEWARE - PRODUCTION FIXES
- * 
+ *
  * This middleware handles authentication for both page routes and API routes.
- * 
+ *
  * RECENT CHANGES (Production Fix):
  * 1. Removed blanket API route bypass - previously all /api/* routes were allowed without auth
  * 2. Added selective API authentication - only specific public API routes are allowed without auth
  * 3. Removed fallback session cookie logic - was allowing access even when token verification failed
  * 4. Made error handling stricter - redirects to login instead of allowing requests through
  * 5. Updated matcher to include API routes for proper authentication checking
- * 
+ *
  * PUBLIC API ROUTES (no authentication required):
  * - /api/auth/* - NextAuth authentication endpoints
  * - /api/shopper/shops - Shop listings (public data)
@@ -21,12 +21,12 @@ import { getToken } from "next-auth/jwt";
  * - /api/queries/createWallet - Wallet creation
  * - /api/shopper/assignOrder - Order assignment
  * - /api/shopper/todayCompletedEarnings - Earnings data
- * 
+ *
  * PROTECTED API ROUTES (authentication required):
  * - /api/user - User profile data
  * - /api/queries/addresses - User addresses
  * - All other API routes not listed above
- * 
+ *
  * TO REVERT TO PREVIOUS BEHAVIOR:
  * 1. Change line 44-73 back to: "if (pathname.startsWith("/api/")) { return NextResponse.next(); }"
  * 2. Restore the fallback session cookie logic in lines 116-122
@@ -65,7 +65,8 @@ const isPublicPath = (path: string) => {
 // Helper function to check if an API path is public
 const isPublicApiPath = (path: string) => {
   return publicApiPaths.some(
-    (publicApiPath) => path === publicApiPath || path.startsWith(`${publicApiPath}/`)
+    (publicApiPath) =>
+      path === publicApiPath || path.startsWith(`${publicApiPath}/`)
   );
 };
 
@@ -88,10 +89,7 @@ export async function middleware(req: NextRequest) {
       });
 
       if (!token) {
-        return NextResponse.json(
-          { error: "Unauthorized" },
-          { status: 401 }
-        );
+        return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
       }
 
       return NextResponse.next();

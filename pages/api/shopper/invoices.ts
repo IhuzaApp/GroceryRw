@@ -205,7 +205,7 @@ export default async function handler(
     }
 
     // Fetch invoices from database
-    
+
     // First, let's check what invoices exist in the database using EXACT Invoices.graphql structure
     const allInvoicesCheck = await hasuraClient.request(`
       query getInvoiceDetials {
@@ -296,8 +296,7 @@ export default async function handler(
         }
       }
     `);
-    
-    
+
     const data = await hasuraClient.request<{
       Invoices: Array<{
         id: string;
@@ -379,12 +378,11 @@ export default async function handler(
       offset,
     });
 
-
     // Transform all invoices (both regular and reel orders)
-    
+
     const transformedInvoices = data.Invoices.map((invoice) => {
       const isReelOrder = !!invoice.reel_order_id;
-      
+
       if (isReelOrder) {
         // Handle reel order invoice
         return {
@@ -439,9 +437,9 @@ export default async function handler(
           customer_name: invoice.User.name,
           customer_email: invoice.User.email,
           customer_phone: invoice.User.phone,
-          customer_address: invoice.Order?.Address ? 
-            `${invoice.Order.Address.street}, ${invoice.Order.Address.city}` : 
-            "Address not available",
+          customer_address: invoice.Order?.Address
+            ? `${invoice.Order.Address.street}, ${invoice.Order.Address.city}`
+            : "Address not available",
           items_count: invoice.Order?.Order_Items?.length || 0,
           shop_name: invoice.Order?.Shop?.name || "Shop",
           shop_address: invoice.Order?.Shop?.address || "Address not available",
@@ -456,13 +454,13 @@ export default async function handler(
     });
 
     // Sort by creation date
-    const sortedInvoices = transformedInvoices.sort((a, b) => 
-      new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+    const sortedInvoices = transformedInvoices.sort(
+      (a, b) =>
+        new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
     );
 
     const totalCount = data.Invoices_aggregate.aggregate.count;
     const totalPages = Math.ceil(totalCount / limit);
-
 
     logger.info("Invoices fetched successfully", "ShopperInvoicesAPI", {
       shopperId,
