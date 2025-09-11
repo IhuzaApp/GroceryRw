@@ -27,6 +27,7 @@ import UpdateShopperDrawer from "./UpdateShopperDrawer";
 import { logger } from "../../../utils/logger";
 import { debounce } from "lodash";
 import VehicleManagement from "./VehicleManagement";
+import { authenticatedFetch } from "../../../lib/authenticatedFetch";
 
 // Type definitions for schedules
 interface TimeSlot {
@@ -155,12 +156,14 @@ export default function ShopperProfileComponent() {
         setLoading(true);
 
         // Fetch user data
-        const userRes = await fetch("/api/user", { signal: controller.signal });
+        const userRes = await authenticatedFetch("/api/user", {
+          signal: controller.signal,
+        });
         const userData = await userRes.json();
         if (isMounted) setUser(userData.user);
 
         // Fetch shopper stats
-        const statsRes = await fetch("/api/shopper/stats", {
+        const statsRes = await authenticatedFetch("/api/shopper/stats", {
           signal: controller.signal,
         });
         const statsData = await statsRes.json();
@@ -174,9 +177,12 @@ export default function ShopperProfileComponent() {
         }
 
         // Fetch shopper profile
-        const profileRes = await fetch("/api/queries/shopper-profile", {
-          signal: controller.signal,
-        });
+        const profileRes = await authenticatedFetch(
+          "/api/queries/shopper-profile",
+          {
+            signal: controller.signal,
+          }
+        );
         const profileData = await profileRes.json();
         if (isMounted && profileData.shopper) {
           setShopperData(profileData.shopper);

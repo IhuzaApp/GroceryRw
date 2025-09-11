@@ -48,6 +48,7 @@ const publicPaths = [
 // Define public API routes that don't require authentication
 const publicApiPaths = [
   "/api/auth",
+  "/api/logout", // Allow logout without authentication
   "/api/shopper/shops",
   "/api/shopper/pendingOrders",
   "/api/queries/createWallet",

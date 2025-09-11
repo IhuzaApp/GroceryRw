@@ -347,7 +347,6 @@ export default async function handler(
       }
     );
 
-
     // Generate invoice data for the response
     const invoiceData = {
       id: saveResult.insert_Invoices.returning[0]?.id || `inv_${Date.now()}`,
@@ -373,7 +372,6 @@ export default async function handler(
           : itemsTotal + serviceFee + deliveryFee,
       orderType: isReelOrder ? "reel" : "regular",
     };
-
 
     return res.status(200).json({
       success: true,

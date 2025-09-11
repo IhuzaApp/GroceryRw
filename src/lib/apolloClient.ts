@@ -26,9 +26,11 @@ const errorLink = onError(({ graphQLErrors, networkError }) => {
 });
 
 // Get the GraphQL endpoint URL from environment variables
+// Use NEXT_PUBLIC_ prefix for client-side access
 const graphqlUrl =
-  // process.env.NEXT_PUBLIC_HASURA_GRAPHQL_URL ||
-  process.env.HASURA_GRAPHQL_URL || "http://localhost:8080/v1/graphql";
+  process.env.NEXT_PUBLIC_HASURA_GRAPHQL_URL ||
+  process.env.HASURA_GRAPHQL_URL ||
+  "http://localhost:8080/v1/graphql";
 
 // Log the GraphQL URL being used (helpful for debugging)
 if (typeof window !== "undefined") {
@@ -42,9 +44,11 @@ const httpLink = new HttpLink({
   fetchOptions: {
     timeout: 30000, // 30 second timeout
   },
+  // Include credentials for session-based authentication
+  credentials: "include",
 });
 
-// Auth header link
+// Auth header link - Updated for proper Hasura authentication
 const authLink = setContext(async (_, { headers }) => {
   // Get the authentication token from session if it exists
   const session = await getSession();
@@ -53,9 +57,12 @@ const authLink = setContext(async (_, { headers }) => {
   return {
     headers: {
       ...headers,
-      // Use a simple authorization header or get it from your session management
-      authorization: session ? `Bearer ${session.user?.id || ""}` : "",
+      // Use proper Hasura authentication headers
+      "x-hasura-admin-secret":
+        process.env.NEXT_PUBLIC_HASURA_GRAPHQL_ADMIN_SECRET || "",
       "x-hasura-role": (session?.user as any)?.role || "anonymous",
+      // Include user ID for row-level security
+      ...(session?.user?.id && { "x-hasura-user-id": session.user.id }),
     },
   };
 });

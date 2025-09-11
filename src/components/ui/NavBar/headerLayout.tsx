@@ -16,6 +16,7 @@ import {
 } from "firebase/firestore";
 import { db } from "../../../lib/firebase";
 import SearchBar from "../SearchBar/SearchBar";
+import { authenticatedFetch } from "../../../lib/authenticatedFetch";
 
 export default function HeaderLayout() {
   const { count } = useCart();
@@ -60,7 +61,7 @@ export default function HeaderLayout() {
       } catch {}
     } else {
       // Fall back to default address from API
-      fetch("/api/queries/addresses")
+      authenticatedFetch("/api/queries/addresses")
         .then((res) => res.json())
         .then((data) => {
           const def = (data.addresses || []).find((a: any) => a.is_default);

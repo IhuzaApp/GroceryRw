@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from "react";
 import { Button, Panel, Tag, Modal, Form, Checkbox } from "rsuite";
 import { useGoogleMap } from "../../context/GoogleMapProvider";
 import Cookies from "js-cookie";
+import { authenticatedFetch } from "../../lib/authenticatedFetch";
 
 // Skeleton loader for address cards
 function AddressSkeleton() {
@@ -116,7 +117,7 @@ export default function UserAddress({ onSelect }: UserAddressProps) {
   const fetchAddresses = () => {
     setLoading(true);
     setError(null);
-    fetch("/api/queries/addresses")
+    authenticatedFetch("/api/queries/addresses")
       .then(async (res) => {
         if (!res.ok)
           throw new Error(`Failed to load addresses (${res.status})`);
@@ -134,7 +135,7 @@ export default function UserAddress({ onSelect }: UserAddressProps) {
   const handleSave = async () => {
     setSaving(true);
     try {
-      const res = await fetch("/api/queries/addresses", {
+      const res = await authenticatedFetch("/api/queries/addresses", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
