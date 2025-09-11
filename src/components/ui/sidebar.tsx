@@ -8,6 +8,7 @@ import { collection, query, where, onSnapshot } from "firebase/firestore";
 import { db } from "../../lib/firebase";
 import PWAInstallGuide from "./PWAInstallGuide";
 import { Download } from "lucide-react";
+import { authenticatedFetch } from "../../lib/authenticatedFetch";
 
 export default function SideBar() {
   const router = useRouter();
@@ -44,7 +45,7 @@ export default function SideBar() {
 
     const fetchPendingOrders = async () => {
       try {
-        const response = await fetch("/api/queries/orders");
+        const response = await authenticatedFetch("/api/queries/orders");
         if (!response.ok) {
           throw new Error(`HTTP error! status: ${response.status}`);
         }
