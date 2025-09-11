@@ -18,6 +18,7 @@ import {
 import { GetServerSideProps } from "next";
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "../../api/auth/[...nextauth]";
+import { authenticatedFetch } from "@lib/authenticatedFetch";
 
 // Interface for earnings stats
 interface EarningsStats {
@@ -128,7 +129,7 @@ const EarningsPage: React.FC = () => {
     const fetchEarningsStats = async () => {
       try {
         setLoading(true);
-        const response = await fetch("/api/shopper/earningsStats");
+        const response = await authenticatedFetch("/api/shopper/earningsStats");
         if (!response.ok) {
           throw new Error("Failed to fetch earnings stats");
         }
@@ -174,7 +175,7 @@ const EarningsPage: React.FC = () => {
   const fetchWalletData = async () => {
     try {
       setWalletLoading(true);
-      const response = await fetch("/api/shopper/walletHistory");
+      const response = await authenticatedFetch("/api/shopper/walletHistory");
       if (!response.ok) {
         throw new Error("Failed to fetch wallet data");
       }
@@ -201,7 +202,7 @@ const EarningsPage: React.FC = () => {
   const fetchDeliveryStats = async () => {
     try {
       setDeliveryStatsLoading(true);
-      const response = await fetch("/api/shopper/deliveryStats");
+      const response = await authenticatedFetch("/api/shopper/deliveryStats");
       if (!response.ok) {
         throw new Error("Failed to fetch delivery stats");
       }
