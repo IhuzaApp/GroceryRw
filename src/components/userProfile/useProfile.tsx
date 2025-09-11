@@ -12,7 +12,7 @@ import toast from "react-hot-toast";
 import { useRouter } from "next/router";
 import { useAuth } from "../../context/AuthContext";
 import { initiateRoleSwitch } from "../../lib/sessionRefresh";
-import { authenticatedFetch } from "../../lib/authenticatedFetch";
+import { authenticatedFetch } from "@lib/authenticatedFetch";
 
 export default function UserProfile() {
   const router = useRouter();

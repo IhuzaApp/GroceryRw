@@ -24,7 +24,8 @@
       "@assets/*": ["src/assets/*"],
       "@clients/*": ["src/clients/*"],
       "@config/*": ["src/config/*"],
-      "@utils/*": ["src/utils/*"]
+      "@utils/*": ["src/utils/*"],
+      "@lib/*": ["src/lib/*"]
     },
     "types": [],
     "plugins": [
