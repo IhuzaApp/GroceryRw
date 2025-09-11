@@ -172,10 +172,10 @@ export default function MapSection({
   // Cookie monitoring refs
   const cookieSnapshotRef = useRef<string>("");
 
-  // Map style URLs using better contrasted tiles
+  // Map style URLs using free OpenStreetMap tiles
   const mapStyles = {
-    light: "https://tiles.stadiamaps.com/tiles/osm_bright/{z}/{x}/{y}{r}.png",
-    dark: "https://tiles.stadiamaps.com/tiles/alidade_smooth_dark/{z}/{x}/{y}{r}.png",
+    light: "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
+    dark: "https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png",
   };
 
   // Function to update map style based on theme
@@ -1472,11 +1472,16 @@ export default function MapSection({
           // Store map instance
           mapInstanceRef.current = mapInstance;
 
-          // Add initial tile layer without attribution
+          // Add initial tile layer with proper subdomain configuration
           L.tileLayer(mapStyles[theme], {
             maxZoom: 19,
             minZoom: 3,
-            attribution: "",
+            attribution:
+              theme === "dark"
+                ? '&copy; <a href="https://carto.com/">CARTO</a>'
+                : '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
+            subdomains:
+              theme === "dark" ? ["a", "b", "c", "d"] : ["a", "b", "c"],
           }).addTo(mapInstance);
         }
 

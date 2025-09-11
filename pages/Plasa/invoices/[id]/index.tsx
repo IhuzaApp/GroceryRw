@@ -6,7 +6,7 @@ import { Panel, Button, Loader, Divider } from "rsuite";
 import ShopperLayout from "../../../../src/components/shopper/ShopperLayout";
 import { formatCurrency } from "../../../../src/lib/formatCurrency";
 import { useTheme } from "../../../../src/context/ThemeContext";
-import { downloadInvoiceAsPdf } from "../../../../src/lib/invoiceUtils";
+// Removed client-side PDF generation - using server-side API instead
 
 interface InvoiceItem {
   name: string;
@@ -21,6 +21,7 @@ interface InvoiceData {
   orderId: string;
   invoiceNumber: string;
   orderNumber: string;
+  orderType?: string;
   status: string;
   dateCreated: string;
   dateCompleted: string;
@@ -52,6 +53,14 @@ export default function InvoicePage({
   );
   const [loading, setLoading] = useState(!initialInvoiceData);
   const [errorMessage, setErrorMessage] = useState<string | null>(error);
+  const [orderType, setOrderType] = useState<string>("regular");
+
+  // Set order type from initial data if available
+  useEffect(() => {
+    if (initialInvoiceData?.orderType) {
+      setOrderType(initialInvoiceData.orderType);
+    }
+  }, [initialInvoiceData]);
 
   useEffect(() => {
     // If we don't have invoice data, try to fetch it
@@ -60,7 +69,19 @@ export default function InvoicePage({
 
       try {
         setLoading(true);
-        const response = await fetch(`/api/invoices/${id}`, {
+        // Extract the actual ID from the URL (remove any hash fragments and prefixes)
+        const idString = Array.isArray(id) ? id[0] : id;
+        let actualId = idString ? idString.split("#")[0] : "";
+        // Remove common prefixes like "reel-" or "order-"
+        actualId = actualId.replace(/^(reel-|order-)/, "");
+
+        // Determine order type from hash fragment
+        if (typeof id === "string" && id.includes("#")) {
+          const hash = id.split("#")[1];
+          setOrderType(hash === "reel" ? "reel" : "regular");
+        }
+
+        const response = await fetch(`/api/invoices/${actualId}`, {
           method: "GET",
           headers: {
             "Content-Type": "application/json",
@@ -68,6 +89,7 @@ export default function InvoicePage({
         });
 
         if (!response.ok) {
+          const errorText = await response.text();
           throw new Error(`Failed to fetch invoice: ${response.statusText}`);
         }
 
@@ -77,9 +99,12 @@ export default function InvoicePage({
         }
 
         setInvoiceData(data.invoice);
+        // Update order type from API response
+        if (data.invoice.orderType) {
+          setOrderType(data.invoice.orderType);
+        }
         setErrorMessage(null);
       } catch (error) {
-        console.error("Error fetching invoice:", error);
         setErrorMessage(
           error instanceof Error ? error.message : "Failed to load invoice"
         );
@@ -95,9 +120,24 @@ export default function InvoicePage({
     if (!invoiceData) return;
 
     try {
-      await downloadInvoiceAsPdf(invoiceData);
+      // Use server-side API route for PDF generation with logo and QR code
+      const response = await fetch(`/api/invoices/${invoiceData.id}?pdf=true`);
+
+      if (!response.ok) {
+        throw new Error("Failed to generate PDF");
+      }
+
+      // Create blob and download
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = `invoice-${invoiceData.invoiceNumber}.pdf`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(url);
     } catch (error) {
-      console.error("Error downloading invoice:", error);
       setErrorMessage(
         error instanceof Error
           ? `Failed to download invoice: ${error.message}`
@@ -399,6 +439,19 @@ export default function InvoicePage({
                     <p className="text-lg text-gray-600 dark:text-gray-400">
                       #{invoiceData.invoiceNumber}
                     </p>
+                    <div className="mt-2">
+                      <span
+                        className={`inline-flex items-center rounded-full px-3 py-1 text-sm font-medium ${
+                          orderType === "reel"
+                            ? "bg-purple-100 text-purple-800 dark:bg-purple-900/20 dark:text-purple-400"
+                            : "bg-blue-100 text-blue-800 dark:bg-blue-900/20 dark:text-blue-400"
+                        }`}
+                      >
+                        {orderType === "reel"
+                          ? "🎬 Reel Order"
+                          : "🛒 Regular Order"}
+                      </span>
+                    </div>
                     <div className="mt-2 flex items-center space-x-2">
                       <span
                         className={`inline-flex items-center rounded-full px-3 py-1 text-sm font-medium ${
@@ -704,7 +757,6 @@ export const getServerSideProps: GetServerSideProps<InvoicePageProps> = async (
       },
     };
   } catch (error) {
-    console.error("Error fetching invoice data:", error);
     return {
       props: {
         initialInvoiceData: null,

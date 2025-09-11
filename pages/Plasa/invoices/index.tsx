@@ -16,7 +16,7 @@ import {
   Invoice,
   InvoicesPageProps,
 } from "../../../src/components/invoices";
-import { formatCurrencySync } from "../../../src/lib/formatCurrency";
+import { formatCurrencySync } from "../../../src/utils/formatCurrency";
 
 const InvoicesPage: React.FC<InvoicesPageProps> = ({
   initialInvoices = [],
@@ -39,10 +39,12 @@ const InvoicesPage: React.FC<InvoicesPageProps> = ({
     setLoading(true);
     try {
       const response = await fetch(`/api/shopper/invoices?page=${page}`);
+
       if (!response.ok) {
         throw new Error("Failed to fetch invoices");
       }
       const data = await response.json();
+
       setInvoices(data.invoices || []);
       setTotalPages(data.totalPages || 1);
       setError(null);
@@ -80,8 +82,26 @@ const InvoicesPage: React.FC<InvoicesPageProps> = ({
     setSelectedInvoice(null);
   };
 
-  const handleViewDetails = (invoiceId: string) => {
-    window.open(`/Plasa/invoices/${invoiceId}`, "_blank");
+  const handleViewDetails = (invoiceId: string, orderType: string) => {
+    const isMobile =
+      /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(
+        navigator.userAgent
+      );
+    const baseUrl =
+      process.env.NODE_ENV === "production"
+        ? process.env.NEXT_PUBLIC_APP_URL || "https://plas.rw"
+        : window.location.origin;
+
+    if (isMobile) {
+      // For mobile, open PDF directly
+      const pdfUrl = `${baseUrl}/api/invoices/${invoiceId}?pdf=true`;
+      window.open(pdfUrl, "_blank");
+    } else {
+      // For desktop, open invoice page with hash
+      const hash = orderType === "reel" ? "#reel" : "#regularOrder";
+      const invoiceUrl = `${baseUrl}/Plasa/invoices/${invoiceId}${hash}`;
+      window.open(invoiceUrl, "_blank");
+    }
   };
 
   // Filter invoices based on search and filters
@@ -217,11 +237,34 @@ export const getServerSideProps = async (context: any) => {
       };
     }
 
-    // Fetch initial invoices data
-    const response = await fetch(
-      `${process.env.NEXTAUTH_URL}/api/shopper/invoices?page=1`
+    // Fetch initial invoices data directly from the API handler
+
+    // Import the API handler directly instead of making HTTP request
+    const { default: invoicesHandler } = await import(
+      "../../api/shopper/invoices"
     );
-    const data = await response.json();
+
+    // Create mock request and response objects
+    const mockReq = {
+      method: "GET",
+      query: { page: "1" },
+    } as any;
+
+    let responseData: any = null;
+    const mockRes = {
+      status: (code: number) => ({
+        json: (data: any) => {
+          responseData = data;
+          return { statusCode: code, data };
+        },
+      }),
+      setHeader: () => {},
+      end: () => {},
+    } as any;
+
+    // Call the handler directly
+    await invoicesHandler(mockReq, mockRes);
+    const data = responseData;
 
     return {
       props: {
