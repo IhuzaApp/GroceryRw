@@ -3,141 +3,375 @@ import { getServerSession } from "next-auth/next";
 import { authOptions } from "../auth/[...nextauth]";
 import { hasuraClient } from "../../../src/lib/hasuraClient";
 import { downloadInvoiceAsPdf, InvoiceData } from "../../../src/lib/invoiceUtils";
+import { formatCurrencySync } from "../../../src/utils/formatCurrency";
 import jsPDF from "jspdf";
 import fs from 'fs';
 import path from 'path';
+import QRCode from 'qrcode';
+
+// Function to load image as base64
+async function loadImageAsBase64(imagePath: string): Promise<string> {
+  try {
+    const fullPath = path.join(process.cwd(), 'public', imagePath);
+    const imageBuffer = fs.readFileSync(fullPath);
+    const base64 = imageBuffer.toString('base64');
+    const mimeType = imagePath.endsWith('.png') ? 'image/png' : 
+                    imagePath.endsWith('.jpg') || imagePath.endsWith('.jpeg') ? 'image/jpeg' : 
+                    imagePath.endsWith('.svg') ? 'image/svg+xml' : 'image/png';
+    return `data:${mimeType};base64,${base64}`;
+  } catch (error) {
+    console.error('❌ Error loading image:', error);
+    throw error;
+  }
+}
 
 // Function to generate PDF buffer
 async function generateInvoicePdf(invoiceData: any): Promise<Buffer> {
+  console.log('🎨 Starting PDF generation...');
   const doc = new jsPDF();
   
+  // Set initial position and page dimensions
+  let yPos = 20;
+  const pageWidth = doc.internal.pageSize.width;
+  const pageHeight = doc.internal.pageSize.height;
+  const margin = 20;
+  const contentWidth = pageWidth - margin * 2;
+
+  // Add watermark function
+  const addWatermark = () => {
+    // Set watermark properties
+    doc.setTextColor(200, 200, 200); // Light gray
+    doc.setFontSize(60);
+    doc.setFont("helvetica", "bold");
+
+    // Calculate center position
+    const text = "ORIGINAL";
+    const textWidth = doc.getTextWidth(text);
+    const centerX = (pageWidth - textWidth) / 2;
+    const centerY = pageHeight / 2;
+
+    // Add rotated watermark using text with angle
+    doc.text(text, centerX, centerY, { angle: -45 });
+
+    // Add additional security text
+    doc.setFontSize(20);
+    doc.text("PLAS", centerX - textWidth / 2, centerY + 40, { angle: -45 });
+    doc.text(
+      invoiceData.invoiceNumber,
+      centerX - textWidth / 2,
+      centerY + 60,
+      { angle: -45 }
+    );
+  };
+
+  // Add watermark to first page
+  addWatermark();
+  
+  // Load and add the actual logo image
   try {
-    // Debug current working directory
-    console.log('Current working directory:', process.cwd());
-    console.log('__dirname:', __dirname);
+    console.log('🎨 Loading logo image...');
+    const logoBase64 = await loadImageAsBase64('assets/logos/PlasLogoPNG.png');
     
-    // Try multiple possible paths for the PNG logo
-    const possiblePaths = [
-      path.join(process.cwd(), 'public', 'assets', 'logos', 'PlasLogoPNG.png'),
-      path.join(__dirname, '..', '..', '..', 'public', 'assets', 'logos', 'PlasLogoPNG.png'),
-      path.join(process.cwd(), '..', 'public', 'assets', 'logos', 'PlasLogoPNG.png'),
-      '/Users/apple/Documents/Projects/grocery/public/assets/logos/PlasLogoPNG.png'
-    ];
+    // Add logo to PDF (positioned at top left)
+    doc.addImage(logoBase64, 'PNG', margin, yPos - 10, 40, 20);
     
-    let logoPath = null;
-    for (const testPath of possiblePaths) {
-      console.log('Testing path:', testPath);
-      if (fs.existsSync(testPath)) {
-        logoPath = testPath;
-        console.log('Found logo at:', logoPath);
-        break;
-      }
-    }
-    
-    if (logoPath) {
-      const logoBuffer = fs.readFileSync(logoPath);
-      console.log('Logo file size:', logoBuffer.length, 'bytes');
-      
-      // Convert PNG to base64 for embedding
-      const base64Logo = logoBuffer.toString('base64');
-      const logoDataUrl = `data:image/png;base64,${base64Logo}`;
-      
-      console.log('Base64 data URL length:', logoDataUrl.length);
-      
-      // Add the logo (resize to fit)
-      doc.addImage(logoDataUrl, 'PNG', 20, 10, 60, 25);
-      console.log('PNG logo added to PDF successfully');
-    } else {
-      console.log('PNG logo file not found in any of the tested paths, using fallback text');
-      // Fallback: Add styled Plas text if logo file not found
-      doc.setFontSize(24);
-      doc.setTextColor(67, 175, 74); // Green color matching the logo
-      doc.setFont("helvetica", "bold");
-      doc.text('PLAS', 20, 30);
-    }
+    console.log('✅ Logo image added successfully');
   } catch (error) {
-    console.error('Error adding logo to PDF:', error);
+    console.error('❌ Error loading logo image:', error);
     // Fallback: Add styled Plas text
     doc.setFontSize(24);
     doc.setTextColor(67, 175, 74); // Green color matching the logo
     doc.setFont("helvetica", "bold");
-    doc.text('PLAS', 20, 30);
+    doc.text('PLAS', margin, yPos);
   }
   
-  // Add invoice title below the logo
-  doc.setFontSize(16);
-  doc.setTextColor(0, 0, 0); // Black color
-  doc.setFont("helvetica", "normal");
-  doc.text('Invoice', 20, 45);
-  
-  // Add invoice number
+  yPos += 15;
+
+  // Add invoice title
+  doc.setFontSize(18);
+  doc.setTextColor(0, 0, 0);
+  doc.setFont("helvetica", "bold");
+  doc.text("INVOICE", margin, yPos);
+
+  yPos += 10;
+
+  // Add invoice number and order number
   doc.setFontSize(12);
-  doc.text(`Invoice #: ${invoiceData.invoiceNumber}`, 20, 60);
-  doc.text(`Date: ${invoiceData.dateCreated}`, 20, 70);
-  
-  // Add order type
-  doc.text(`Order Type: ${invoiceData.orderType === 'reel' ? 'Reel Order' : 'Regular Order'}`, 20, 80);
-  
-  // Add customer info
-  doc.text('Customer:', 20, 100);
-  doc.text(invoiceData.customer, 20, 110);
-  doc.text(invoiceData.customerEmail, 20, 120);
-  
-  // Add shop/order info
-  if (invoiceData.orderType === 'reel') {
-    doc.text('Restaurant:', 20, 140);
-    doc.text(invoiceData.shop, 20, 150);
-    doc.text(invoiceData.shopAddress, 20, 160);
-    if (invoiceData.reel_title) {
-      doc.text(`Reel: ${invoiceData.reel_title}`, 20, 170);
-    }
-  } else {
-    doc.text('Shop:', 20, 140);
-    doc.text(invoiceData.shop, 20, 150);
-    doc.text(invoiceData.shopAddress, 20, 160);
-  }
-  
-  // Add items table
-  let yPosition = 190;
-  doc.text('Items:', 20, yPosition);
-  yPosition += 10;
+  doc.setFont("helvetica", "normal");
+  doc.text(`Invoice #: ${invoiceData.invoiceNumber}`, margin, yPos);
+  doc.text(
+    `Order #: ${invoiceData.orderType === 'reel' ? `REEL-${invoiceData.invoiceNumber}` : invoiceData.orderNumber || `INV-${invoiceData.invoiceNumber}`}`,
+    pageWidth - margin - 50,
+    yPos
+  );
+
+  yPos += 8;
+
+  // Add dates
+  doc.text(`Date Created: ${invoiceData.dateCreated}`, margin, yPos);
+  doc.text(
+    `Date Completed: ${invoiceData.dateCompleted}`,
+    pageWidth - margin - 70,
+    yPos
+  );
+
+  yPos += 8;
+
+  // Add status
+  doc.setFont("helvetica", "bold");
+  doc.setTextColor(67, 175, 74); // Green for status
+  doc.text(`Status: ${invoiceData.status.toUpperCase()}`, margin, yPos);
+
+  yPos += 20;
+
+  // Add shop and customer information
+  doc.setTextColor(0, 0, 0);
+  doc.setFont("helvetica", "bold");
+  doc.text(invoiceData.orderType === 'reel' ? "RESTAURANT DETAILS" : "SHOP DETAILS", margin, yPos);
+  doc.text("CUSTOMER DETAILS", pageWidth - margin - 60, yPos);
+
+  yPos += 8;
+
+  doc.setFont("helvetica", "normal");
+  doc.setFontSize(10);
+  doc.text(invoiceData.shop, margin, yPos);
+  doc.text(invoiceData.customer, pageWidth - margin - 60, yPos);
+
+  yPos += 5;
+
+  doc.text(invoiceData.shopAddress, margin, yPos);
+  doc.text(invoiceData.customerEmail, pageWidth - margin - 60, yPos);
+
+  yPos += 20;
+
+  // Add items table header
+  doc.setFont("helvetica", "bold");
+  doc.setFontSize(11);
+  doc.setTextColor(255, 255, 255);
+  doc.setFillColor(67, 175, 74); // Green background
+  doc.rect(margin, yPos - 5, contentWidth, 8, "F");
+
+  doc.text("Item", margin + 2, yPos);
+  doc.text("Qty", margin + 80, yPos);
+  doc.text("Unit Price", margin + 110, yPos);
+  doc.text("Total", margin + 150, yPos);
+
+  yPos += 10;
+
+  // Add items
+  doc.setFont("helvetica", "normal");
+  doc.setTextColor(0, 0, 0);
+  doc.setFontSize(10);
   
   invoiceData.items.forEach((item: any, index: number) => {
-    if (yPosition > 250) {
+    // Check if we need a new page
+    if (yPos > 250) {
       doc.addPage();
-      yPosition = 20;
+      yPos = 20;
+      // Add watermark to new page
+      addWatermark();
     }
+
+    const bgColor = index % 2 === 0 ? [248, 250, 252] : [255, 255, 255]; // Light gray alternating
+    doc.setFillColor(bgColor[0], bgColor[1], bgColor[2]);
+    doc.rect(margin, yPos - 3, contentWidth, 8, "F");
     
     if (invoiceData.orderType === 'reel') {
       // For reel orders, show name and description
-      doc.text(`${item.name}`, 20, yPosition);
+      const itemName = item.name.length > 25 ? item.name.substring(0, 22) + "..." : item.name;
+      doc.text(itemName, margin + 2, yPos);
+      
       if (item.description) {
-        doc.text(`Description: ${item.description}`, 20, yPosition + 8);
-        yPosition += 8;
+        doc.setFontSize(8);
+        doc.text(`Desc: ${item.description.substring(0, 40)}${item.description.length > 40 ? '...' : ''}`, margin + 2, yPos + 3);
+        doc.setFontSize(10);
       }
-      doc.text(`Quantity: ${item.quantity}`, 20, yPosition + 8);
-      doc.text(`$${item.total.toFixed(2)}`, 150, yPosition);
-      yPosition += 16;
+      
+      // Quantity
+      doc.text(item.quantity.toString(), margin + 80, yPos);
+
+      // Unit price
+      doc.text(formatCurrencySync(item.unitPrice), margin + 110, yPos);
+
+      // Total
+      doc.text(formatCurrencySync(item.total), margin + 150, yPos);
+
+      yPos += 12;
     } else {
       // For regular orders, show product details
-      doc.text(`${item.name} x${item.quantity}`, 20, yPosition);
-      doc.text(`$${item.total.toFixed(2)}`, 150, yPosition);
-      yPosition += 10;
+      const itemName = item.name.length > 25 ? item.name.substring(0, 22) + "..." : item.name;
+      doc.text(itemName, margin + 2, yPos);
+
+      // Quantity
+      doc.text(item.quantity.toString(), margin + 80, yPos);
+
+      // Unit price
+      doc.text(formatCurrencySync(item.unitPrice), margin + 110, yPos);
+
+      // Total
+      doc.text(formatCurrencySync(item.total), margin + 150, yPos);
+
+      yPos += 8;
     }
   });
+
+  yPos += 10;
+
+  // Add summary section
+  doc.setFont("helvetica", "bold");
+  doc.setFontSize(12);
+  doc.setTextColor(0, 0, 0);
+
+  // Draw summary box
+  const summaryY = yPos;
+  doc.setDrawColor(67, 175, 74);
+  doc.setLineWidth(0.5);
+  doc.rect(margin, summaryY - 5, contentWidth, 40, "S");
+
+  // Summary content
+  doc.text("SUMMARY", margin + 5, summaryY);
+
+  yPos += 8;
+
+  doc.setFont("helvetica", "normal");
+  doc.setFontSize(10);
+
+  // Subtotal
+  doc.text("Subtotal:", margin + 10, yPos);
+  doc.text(
+    formatCurrencySync(invoiceData.subtotal),
+    pageWidth - margin - 10,
+    yPos,
+    { align: "right" }
+  );
+
+  yPos += 6;
+
+  // Service Fee
+  doc.text("Service Fee:", margin + 10, yPos);
+  doc.text(
+    formatCurrencySync(invoiceData.serviceFee),
+    pageWidth - margin - 10,
+    yPos,
+    { align: "right" }
+  );
+
+  yPos += 6;
+
+  // Delivery Fee
+  doc.text("Delivery Fee:", margin + 10, yPos);
+  doc.text(
+    formatCurrencySync(invoiceData.deliveryFee),
+    pageWidth - margin - 10,
+    yPos,
+    { align: "right" }
+  );
+
+  yPos += 8;
+
+  // Total
+  doc.setFont("helvetica", "bold");
+  doc.setFontSize(12);
+  doc.setTextColor(67, 175, 94);
+  doc.text("TOTAL:", margin + 10, yPos);
+  doc.text(formatCurrencySync(invoiceData.total), pageWidth - margin - 10, yPos, {
+    align: "right",
+  });
+
+  yPos += 20;
+
+  // Add footer note
+  doc.setFont("helvetica", "normal");
+  doc.setFontSize(8);
+  doc.setTextColor(100, 100, 100);
+  doc.text(
+    "Note: Service fee and delivery fee were added to the shopper's available wallet balance.",
+    margin,
+    yPos
+  );
+  yPos += 4;
+  doc.text(
+    "The payment reflects only the value of found items.",
+    margin,
+    yPos
+  );
+
+  // Add security footer
+  yPos += 8;
+  doc.setFontSize(7);
+  doc.setTextColor(150, 150, 150);
+  const timestamp = new Date().toISOString();
+  doc.text(`Generated on: ${timestamp}`, margin, yPos);
+  yPos += 3;
+  doc.text(`Document ID: ${invoiceData.id}`, margin, yPos);
+  yPos += 3;
+  doc.text("This is an official document generated by PLAS", margin, yPos);
   
-  // Add totals
-  yPosition += 10;
-  doc.text(`Subtotal: $${invoiceData.subtotal.toFixed(2)}`, 120, yPosition);
-  yPosition += 10;
-  doc.text(`Service Fee: $${invoiceData.serviceFee.toFixed(2)}`, 120, yPosition);
-  yPosition += 10;
-  doc.text(`Delivery Fee: $${invoiceData.deliveryFee.toFixed(2)}`, 120, yPosition);
-  yPosition += 10;
-  doc.setFontSize(14);
-  doc.text(`Total: $${invoiceData.total.toFixed(2)}`, 120, yPosition);
+  // Add QR Code to the last page
+  try {
+    console.log('📱 Generating QR code...');
+    // Generate QR code data (invoice URL or invoice details)
+    const qrData = JSON.stringify({
+      invoiceId: invoiceData.id,
+      invoiceNumber: invoiceData.invoiceNumber,
+      total: invoiceData.total,
+      date: invoiceData.dateCreated,
+      type: invoiceData.orderType
+    });
+    
+    console.log('📱 QR code data:', qrData);
+    
+    // Generate QR code as base64
+    const qrCodeDataUrl = await QRCode.toDataURL(qrData, {
+      width: 100,
+      margin: 1,
+      color: {
+        dark: '#000000',
+        light: '#FFFFFF'
+      }
+    });
+    
+    console.log('📱 QR code generated, data URL length:', qrCodeDataUrl.length);
+    
+    // Calculate position for QR code (bottom right)
+    const pageHeight = doc.internal.pageSize.height;
+    const qrSize = 30;
+    const qrX = pageWidth - margin - qrSize;
+    const qrY = pageHeight - 50; // Position near bottom of page
+    
+    // Add QR code to PDF (positioned at bottom right)
+    doc.addImage(qrCodeDataUrl, 'PNG', qrX, qrY, qrSize, qrSize);
+    
+    // Add QR code label
+    doc.setFontSize(8);
+    doc.setTextColor(0, 0, 0);
+    doc.setFont("helvetica", "normal");
+    doc.text('Invoice QR Code', qrX, qrY + qrSize + 5);
+    
+    console.log('✅ QR code added to PDF successfully');
+  } catch (error) {
+    console.error('❌ Error adding QR code to PDF:', error);
+    console.error('❌ QR code error stack:', error instanceof Error ? error.stack : 'No stack trace');
+    // Continue without QR code if there's an error
+  }
+
+  // Add page number
+  const pageCount = doc.getNumberOfPages();
+  for (let i = 1; i <= pageCount; i++) {
+    doc.setPage(i);
+    doc.setFontSize(8);
+    doc.setTextColor(100, 100, 100);
+    doc.text(
+      `Page ${i} of ${pageCount}`,
+      pageWidth - margin - 30,
+      doc.internal.pageSize.height - 10
+    );
+  }
   
-  return Buffer.from(doc.output('arraybuffer'));
+  console.log('🎨 PDF generation completed, converting to buffer...');
+  const buffer = Buffer.from(doc.output('arraybuffer'));
+  console.log('🎨 PDF buffer created, size:', buffer.length, 'bytes');
+  return buffer;
 }
 
 export default async function handler(
@@ -280,7 +514,6 @@ export default async function handler(
           service_fee
           delivery_fee
           delivery_time
-          delivery_notes
           delivery_photo_url
           Reel {
             id
@@ -484,7 +717,16 @@ export default async function handler(
       // Generate PDF and return as file
       try {
         console.log('🔄 Generating PDF...');
+        console.log('📊 Invoice data for PDF:', {
+          id: transformedInvoice.id,
+          invoiceNumber: transformedInvoice.invoiceNumber,
+          orderType: transformedInvoice.orderType,
+          total: transformedInvoice.total
+        });
+        
         const pdfBuffer = await generateInvoicePdf(transformedInvoice);
+        
+        console.log('📄 PDF buffer size:', pdfBuffer.length, 'bytes');
         
         res.setHeader('Content-Type', 'application/pdf');
         res.setHeader('Content-Disposition', `attachment; filename="invoice-${transformedInvoice.invoiceNumber}.pdf"`);
@@ -494,7 +736,11 @@ export default async function handler(
         return res.status(200).send(pdfBuffer);
       } catch (error) {
         console.error('❌ Error generating PDF:', error);
-        return res.status(500).json({ error: 'Failed to generate PDF' });
+        console.error('❌ Error stack:', error instanceof Error ? error.stack : 'No stack trace');
+        return res.status(500).json({ 
+          error: 'Failed to generate PDF',
+          details: error instanceof Error ? error.message : 'Unknown error'
+        });
       }
     }
 
