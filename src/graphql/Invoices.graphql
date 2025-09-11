@@ -42,16 +42,13 @@ query getInvoiceDetials {
         product_id
         quantity
         Product {
-          barcode
           category
           created_at
-          description
           final_price
           id
           image
           is_active
           measurement_unit
-          name
           price
           quantity
           reorder_point
@@ -59,6 +56,16 @@ query getInvoiceDetials {
           sku
           supplier
           updated_at
+          productName_id
+          ProductName {
+            barcode
+            create_at
+            description
+            id
+            image
+            name
+            sku
+          }
         }
       }
       OrderID

@@ -5,131 +5,110 @@ import { hasuraClient } from "../../../src/lib/hasuraClient";
 import { gql } from "graphql-request";
 import { logger } from "../../../src/utils/logger";
 
-// GraphQL query to fetch shopper invoices for both regular and reel orders
+// GraphQL query to fetch shopper invoices - EXACT match to Invoices.graphql
 const GET_SHOPPER_INVOICES = gql`
-  query GetShopperInvoices($shopper_id: uuid!, $limit: Int!, $offset: Int!) {
-    # Regular order invoices
-    RegularOrderInvoices: Invoices(
+  query getInvoiceDetials($shopper_id: uuid!, $limit: Int!, $offset: Int!) {
+    Invoices(
       where: {
-        Order: {
-          shopper_id: { _eq: $shopper_id }
-          status: { _eq: "delivered" }
-        }
+        _or: [
+          { Order: { shopper_id: { _eq: $shopper_id } } }
+          { customer_id: { _eq: $shopper_id } }
+        ]
       }
       order_by: { created_at: desc }
       limit: $limit
       offset: $offset
     ) {
+      created_at
+      customer_id
+      delivery_fee
+      discount
       id
+      invoice_items
       invoice_number
+      Proof
       order_id
       reel_order_id
-      total_amount
-      subtotal
-      delivery_fee
       service_fee
-      tax
-      discount
       status
-      created_at
-      invoice_items
-      customer_id
-      Proof
-      # Customer details
-      User {
-        id
-        name
-        email
-        phone
-      }
-      # Regular order details
+      subtotal
+      tax
+      total_amount
       Order {
-        id
-        OrderID
-        total
-        service_fee
-        delivery_fee
+        combined_order_id
         created_at
-        status
-        delivery_time
+        delivery_address_id
+        delivery_fee
         delivery_notes
+        delivery_photo_url
+        delivery_time
+        discount
         found
+        id
+        service_fee
+        shop_id
         shopper_id
-        Shop {
+        status
+        total
+        updated_at
+        user_id
+        voucher_code
+        Order_Items {
+          created_at
           id
-          name
-          address
-        }
-        userByUserId {
-          id
-          name
-          email
-          phone
-        }
-        Address {
-          street
-          city
-          postal_code
-        }
-        Order_Items_aggregate {
-          aggregate {
-            count
+          order_id
+          price
+          product_id
+          quantity
+          Product {
+            category
+            created_at
+            final_price
+            id
+            image
+            is_active
+            measurement_unit
+            price
+            quantity
+            reorder_point
+            shop_id
+            sku
+            supplier
+            updated_at
+            productName_id
+            ProductName {
+              barcode
+              create_at
+              description
+              id
+              image
+              name
+              sku
+            }
           }
         }
-      }
-    }
-
-    # Get delivered reel orders for this shopper
-    DeliveredReelOrders: reel_orders(
-      where: { shopper_id: { _eq: $shopper_id }, status: { _eq: "delivered" } }
-    ) {
-      id
-      OrderID
-      total
-      service_fee
-      delivery_fee
-      created_at
-      status
-      delivery_time
-      delivery_note
-      found
-      shopper_id
-      quantity
-      delivery_photo_url
-      Reel {
-        id
-        title
-        description
-        Price
-        Product
-        type
-        video_url
-        Restaurant {
-          id
-          name
-          location
-        }
+        OrderID
       }
       User {
-        id
-        name
+        created_at
         email
+        gender
+        id
+        is_active
+        name
+        password_hash
         phone
-      }
-      Address {
-        street
-        city
-        postal_code
+        profile_picture
+        role
+        updated_at
       }
     }
-
-    # Count for regular order invoices
     Invoices_aggregate(
       where: {
-        Order: {
-          shopper_id: { _eq: $shopper_id }
-          status: { _eq: "delivered" }
-        }
+        _or: [
+          { Order: { shopper_id: { _eq: $shopper_id } } }
+          { customer_id: { _eq: $shopper_id } }
+        ]
       }
     ) {
       aggregate {
@@ -226,46 +205,195 @@ export default async function handler(
     }
 
     // Fetch invoices from database
+    console.log('=== SHOPPER INVOICES API - FETCHING DATA ===');
+    console.log('👤 Shopper ID:', shopperId);
+    console.log('📄 Page:', page, 'Limit:', limit, 'Offset:', offset);
+    
+    // First, let's check what invoices exist in the database using EXACT Invoices.graphql structure
+    console.log('🔍 Checking all invoices in database...');
+    const allInvoicesCheck = await hasuraClient.request(`
+      query getInvoiceDetials {
+        Invoices(limit: 10) {
+          created_at
+          customer_id
+          delivery_fee
+          discount
+          id
+          invoice_items
+          invoice_number
+          Proof
+          order_id
+          reel_order_id
+          service_fee
+          status
+          subtotal
+          tax
+          total_amount
+          Order {
+            combined_order_id
+            created_at
+            delivery_address_id
+            delivery_fee
+            delivery_notes
+            delivery_photo_url
+            delivery_time
+            discount
+            found
+            id
+            service_fee
+            shop_id
+            shopper_id
+            status
+            total
+            updated_at
+            user_id
+            voucher_code
+            Order_Items {
+              created_at
+              id
+              order_id
+              price
+              product_id
+              quantity
+              Product {
+                category
+                created_at
+                final_price
+                id
+                image
+                is_active
+                measurement_unit
+                price
+                quantity
+                reorder_point
+                shop_id
+                sku
+                supplier
+                updated_at
+                productName_id
+                ProductName {
+                  barcode
+                  create_at
+                  description
+                  id
+                  image
+                  name
+                  sku
+                }
+              }
+            }
+            OrderID
+          }
+          User {
+            created_at
+            email
+            gender
+            id
+            is_active
+            name
+            password_hash
+            phone
+            profile_picture
+            role
+            updated_at
+          }
+        }
+      }
+    `);
+    
+    console.log('📊 All Invoices in Database (EXACT Invoices.graphql structure):', {
+      count: (allInvoicesCheck as any).Invoices.length,
+      sample: (allInvoicesCheck as any).Invoices.map((inv: any) => ({
+        id: inv.id,
+        invoice_number: inv.invoice_number,
+        order_id: inv.order_id,
+        reel_order_id: inv.reel_order_id,
+        status: inv.status,
+        total_amount: inv.total_amount,
+        subtotal: inv.subtotal,
+        delivery_fee: inv.delivery_fee,
+        service_fee: inv.service_fee,
+        tax: inv.tax,
+        discount: inv.discount,
+        created_at: inv.created_at,
+        customer_id: inv.customer_id,
+        hasOrder: !!inv.Order,
+        hasUser: !!inv.User,
+        orderShopperId: inv.Order?.shopper_id,
+        orderStatus: inv.Order?.status,
+        userRole: inv.User?.role,
+        invoice_items: inv.invoice_items
+      }))
+    });
+    
     const data = await hasuraClient.request<{
-      RegularOrderInvoices: Invoice[];
-      DeliveredReelOrders: Array<{
+      Invoices: Array<{
         id: string;
-        OrderID: string;
-        total: string;
-        service_fee: string;
+        invoice_number: string;
+        order_id?: string;
+        reel_order_id?: string;
+        total_amount: string;
+        subtotal: string;
         delivery_fee: string;
-        created_at: string;
+        service_fee: string;
+        tax: string;
+        discount: string;
         status: string;
-        delivery_time: string;
-        delivery_note?: string;
-        found: boolean;
-        shopper_id: string;
-        quantity: string;
-        delivery_photo_url?: string;
-        Reel: {
+        created_at: string;
+        invoice_items: any;
+        customer_id: string;
+        Proof?: string;
+        Order?: {
           id: string;
-          title: string;
-          description: string;
-          Price: string;
-          Product: string;
-          type: string;
-          video_url: string;
-          Restaurant: {
+          OrderID: string;
+          total: string;
+          service_fee: string;
+          delivery_fee: string;
+          created_at: string;
+          status: string;
+          delivery_time: string;
+          delivery_notes?: string;
+          delivery_photo_url?: string;
+          found: boolean;
+          shopper_id: string;
+          Shop?: {
             id: string;
             name: string;
-            location: string;
+            address: string;
           };
+          userByUserId?: {
+            id: string;
+            name: string;
+            email: string;
+            phone: string;
+          };
+          Address?: {
+            street: string;
+            city: string;
+            postal_code: string;
+          };
+          Order_Items?: Array<{
+            id: string;
+            quantity: number;
+            price: string;
+            Product?: {
+              id: string;
+              name?: string;
+              final_price: string;
+              image?: string;
+              category?: string;
+              ProductName?: {
+                name: string;
+                description?: string;
+              };
+            };
+          }>;
         };
         User: {
           id: string;
           name: string;
           email: string;
           phone: string;
-        };
-        Address: {
-          street: string;
-          city: string;
-          postal_code: string;
         };
       }>;
       Invoices_aggregate: {
@@ -279,104 +407,120 @@ export default async function handler(
       offset,
     });
 
-    // Transform regular order invoices
-    const transformedRegularInvoices = data.RegularOrderInvoices.map(
-      (invoice) => {
-        if (invoice.Order) {
-          return {
-            id: invoice.id,
-            invoice_number: invoice.invoice_number,
-            order_id: invoice.order_id,
-            order_type: "regular" as const,
-            total_amount: invoice.total_amount,
-            subtotal: invoice.subtotal,
-            delivery_fee: invoice.delivery_fee,
-            service_fee: invoice.service_fee,
-            tax: invoice.tax,
-            discount: invoice.discount,
-            created_at: invoice.created_at,
-            status: invoice.status as "paid" | "pending" | "overdue",
-            customer_name: invoice.User.name,
-            customer_email: invoice.User.email,
-            customer_phone: invoice.User.phone,
-            customer_address: `${invoice.Order.Address.street}, ${invoice.Order.Address.city}`,
-            items_count: invoice.Order.Order_Items_aggregate.aggregate.count,
-            shop_name: invoice.Order.Shop.name,
-            shop_address: invoice.Order.Shop.address,
-            delivery_time: invoice.Order.delivery_time,
-            delivery_notes: invoice.Order.delivery_notes,
-            found: invoice.Order.found,
-            order_status: invoice.Order.status,
-            Proof: invoice.Proof,
-          };
-        }
-        return null;
-      }
-    ).filter(Boolean);
+    console.log('📊 Raw Database Response:', {
+      invoiceCount: data.Invoices.length,
+      totalInvoiceCount: data.Invoices_aggregate.aggregate.count,
+      sampleInvoices: data.Invoices.slice(0, 3).map(inv => ({
+        id: inv.id,
+        invoice_number: inv.invoice_number,
+        order_id: inv.order_id,
+        reel_order_id: inv.reel_order_id,
+        customer_name: inv.User.name,
+        hasOrder: !!inv.Order,
+        orderType: inv.order_id ? 'regular' : 'reel'
+      }))
+    });
 
-    // Transform reel orders to invoice format
-    const transformedReelInvoices = data.DeliveredReelOrders.map(
-      (reelOrder) => {
+    // Transform all invoices (both regular and reel orders)
+    console.log('🔄 Transforming invoices...');
+    
+    const transformedInvoices = data.Invoices.map((invoice) => {
+      const isReelOrder = !!invoice.reel_order_id;
+      
+      if (isReelOrder) {
+        // Handle reel order invoice
         return {
-          id: `reel-${reelOrder.id}`, // Generate a unique ID for reel orders
-          invoice_number: `REEL-${reelOrder.OrderID}`,
-          order_id: reelOrder.id,
+          id: invoice.id, // Use the actual invoice ID
+          invoice_number: invoice.invoice_number,
+          order_id: invoice.reel_order_id,
           order_type: "reel" as const,
-          total_amount: parseFloat(reelOrder.total),
-          subtotal:
-            parseFloat(reelOrder.total) -
-            parseFloat(reelOrder.service_fee) -
-            parseFloat(reelOrder.delivery_fee),
-          delivery_fee: parseFloat(reelOrder.delivery_fee),
-          service_fee: parseFloat(reelOrder.service_fee),
-          tax: 0, // Reel orders might not have tax
-          discount: 0,
-          created_at: reelOrder.created_at,
-          status: "paid" as const,
-          customer_name: reelOrder.User.name,
-          customer_email: reelOrder.User.email,
-          customer_phone: reelOrder.User.phone,
-          customer_address: `${reelOrder.Address.street}, ${reelOrder.Address.city}`,
-          items_count: 1, // Reel orders have 1 item (the reel)
-          shop_name: reelOrder.Reel.Restaurant.name,
-          shop_address: reelOrder.Reel.Restaurant.location,
-          delivery_time: reelOrder.delivery_time,
-          delivery_notes: reelOrder.delivery_note,
-          found: reelOrder.found,
-          order_status: reelOrder.status,
-          Proof: reelOrder.delivery_photo_url,
+          total_amount: parseFloat(invoice.total_amount),
+          subtotal: parseFloat(invoice.subtotal),
+          delivery_fee: parseFloat(invoice.delivery_fee),
+          service_fee: parseFloat(invoice.service_fee),
+          tax: parseFloat(invoice.tax),
+          discount: parseFloat(invoice.discount),
+          created_at: invoice.created_at,
+          status: invoice.status as "paid" | "pending" | "overdue",
+          customer_name: invoice.User.name,
+          customer_email: invoice.User.email,
+          customer_phone: invoice.User.phone,
+          customer_address: "Address not available", // Reel orders might not have address in invoice
+          items_count: invoice.invoice_items?.length || 1,
+          shop_name: "Reel Order", // Reel orders don't have shop
+          shop_address: "N/A",
+          delivery_time: null,
+          delivery_notes: null,
+          found: false,
+          order_status: "completed",
+          Proof: invoice.Proof,
+          delivery_photo_url: invoice.Order?.delivery_photo_url, // Add delivery photo URL for reel orders
+          reel_title: invoice.invoice_items?.[0]?.description || "Reel Order",
           reel_details: {
-            title: reelOrder.Reel.title,
-            description: reelOrder.Reel.description,
-            product: reelOrder.Reel.Product,
-            quantity: reelOrder.quantity,
+            title: invoice.invoice_items?.[0]?.description || "Reel Order",
+            description: invoice.invoice_items?.[0]?.description || "",
+            product: invoice.invoice_items?.[0]?.name || "Reel",
+            quantity: invoice.invoice_items?.[0]?.quantity || 1,
           },
         };
+      } else {
+        // Handle regular order invoice
+        return {
+          id: invoice.id,
+          invoice_number: invoice.invoice_number,
+          order_id: invoice.order_id,
+          order_type: "regular" as const,
+          total_amount: parseFloat(invoice.total_amount),
+          subtotal: parseFloat(invoice.subtotal),
+          delivery_fee: parseFloat(invoice.delivery_fee),
+          service_fee: parseFloat(invoice.service_fee),
+          tax: parseFloat(invoice.tax),
+          discount: parseFloat(invoice.discount),
+          created_at: invoice.created_at,
+          status: invoice.status as "paid" | "pending" | "overdue",
+          customer_name: invoice.User.name,
+          customer_email: invoice.User.email,
+          customer_phone: invoice.User.phone,
+          customer_address: invoice.Order?.Address ? 
+            `${invoice.Order.Address.street}, ${invoice.Order.Address.city}` : 
+            "Address not available",
+          items_count: invoice.Order?.Order_Items?.length || 0,
+          shop_name: invoice.Order?.Shop?.name || "Shop",
+          shop_address: invoice.Order?.Shop?.address || "Address not available",
+          delivery_time: invoice.Order?.delivery_time,
+          delivery_notes: invoice.Order?.delivery_notes,
+          found: invoice.Order?.found || false,
+          order_status: invoice.Order?.status || "unknown",
+          Proof: invoice.Proof,
+          delivery_photo_url: invoice.Order?.delivery_photo_url,
+        };
       }
+    });
+
+    // Sort by creation date
+    const sortedInvoices = transformedInvoices.sort((a, b) => 
+      new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
     );
 
-    // Combine and sort all invoices by creation date
-    const allInvoices = [
-      ...transformedRegularInvoices,
-      ...transformedReelInvoices,
-    ]
-      .sort((a, b) => {
-        if (!a || !b) return 0;
-        return (
-          new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
-        );
-      })
-      .slice(0, limit); // Ensure we don't exceed the limit
-
-    const totalCount =
-      data.Invoices_aggregate.aggregate.count + data.DeliveredReelOrders.length;
+    const totalCount = data.Invoices_aggregate.aggregate.count;
     const totalPages = Math.ceil(totalCount / limit);
+
+    console.log('✅ Final Invoice Results:', {
+      totalInvoices: sortedInvoices.length,
+      totalCount,
+      totalPages,
+      currentPage: page,
+      sampleFinalInvoices: sortedInvoices.slice(0, 3).map(inv => ({
+        id: inv.id,
+        invoice_number: inv.invoice_number,
+        order_type: inv.order_type,
+        customer_name: inv.customer_name
+      }))
+    });
 
     logger.info("Invoices fetched successfully", "ShopperInvoicesAPI", {
       shopperId,
-      count: allInvoices.length,
-      regularCount: transformedRegularInvoices.length,
-      reelCount: transformedReelInvoices.length,
+      count: sortedInvoices.length,
       totalCount,
       page,
       totalPages,
@@ -384,7 +528,7 @@ export default async function handler(
 
     return res.status(200).json({
       success: true,
-      invoices: allInvoices,
+      invoices: sortedInvoices,
       totalPages,
       currentPage: page,
       totalCount,

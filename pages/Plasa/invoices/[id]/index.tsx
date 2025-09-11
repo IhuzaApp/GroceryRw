@@ -21,6 +21,7 @@ interface InvoiceData {
   orderId: string;
   invoiceNumber: string;
   orderNumber: string;
+  orderType?: string;
   status: string;
   dateCreated: string;
   dateCompleted: string;
@@ -54,6 +55,13 @@ export default function InvoicePage({
   const [errorMessage, setErrorMessage] = useState<string | null>(error);
   const [orderType, setOrderType] = useState<string>("regular");
 
+  // Set order type from initial data if available
+  useEffect(() => {
+    if (initialInvoiceData?.orderType) {
+      setOrderType(initialInvoiceData.orderType);
+    }
+  }, [initialInvoiceData]);
+
   useEffect(() => {
     // If we don't have invoice data, try to fetch it
     const fetchInvoiceData = async () => {
@@ -61,14 +69,26 @@ export default function InvoicePage({
 
       try {
         setLoading(true);
-        // Extract the actual ID from the URL (remove any hash fragments)
-        const actualId = typeof id === 'string' ? id.split('#')[0] : id;
+        // Extract the actual ID from the URL (remove any hash fragments and prefixes)
+        const idString = Array.isArray(id) ? id[0] : id;
+        let actualId = idString ? idString.split('#')[0] : '';
+        // Remove common prefixes like "reel-" or "order-"
+        actualId = actualId.replace(/^(reel-|order-)/, '');
+        
+        console.log('Invoice Page Debug:', {
+          originalId: id,
+          idString,
+          actualId,
+          timestamp: new Date().toISOString()
+        });
         
         // Determine order type from hash fragment
         if (typeof id === 'string' && id.includes('#')) {
           const hash = id.split('#')[1];
           setOrderType(hash === 'reel' ? 'reel' : 'regular');
         }
+        
+        console.log('Making API request to:', `/api/invoices/${actualId}`);
         
         const response = await fetch(`/api/invoices/${actualId}`, {
           method: "GET",
@@ -77,7 +97,15 @@ export default function InvoicePage({
           },
         });
 
+        console.log('API Response:', {
+          status: response.status,
+          statusText: response.statusText,
+          ok: response.ok
+        });
+
         if (!response.ok) {
+          const errorText = await response.text();
+          console.log('API Error Response:', errorText);
           throw new Error(`Failed to fetch invoice: ${response.statusText}`);
         }
 
@@ -87,6 +115,10 @@ export default function InvoicePage({
         }
 
         setInvoiceData(data.invoice);
+        // Update order type from API response
+        if (data.invoice.orderType) {
+          setOrderType(data.invoice.orderType);
+        }
         setErrorMessage(null);
       } catch (error) {
         console.error("Error fetching invoice:", error);
