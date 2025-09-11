@@ -75,12 +75,6 @@ export default function InvoicePage({
         // Remove common prefixes like "reel-" or "order-"
         actualId = actualId.replace(/^(reel-|order-)/, '');
         
-        console.log('Invoice Page Debug:', {
-          originalId: id,
-          idString,
-          actualId,
-          timestamp: new Date().toISOString()
-        });
         
         // Determine order type from hash fragment
         if (typeof id === 'string' && id.includes('#')) {
@@ -88,7 +82,6 @@ export default function InvoicePage({
           setOrderType(hash === 'reel' ? 'reel' : 'regular');
         }
         
-        console.log('Making API request to:', `/api/invoices/${actualId}`);
         
         const response = await fetch(`/api/invoices/${actualId}`, {
           method: "GET",
@@ -97,15 +90,9 @@ export default function InvoicePage({
           },
         });
 
-        console.log('API Response:', {
-          status: response.status,
-          statusText: response.statusText,
-          ok: response.ok
-        });
 
         if (!response.ok) {
           const errorText = await response.text();
-          console.log('API Error Response:', errorText);
           throw new Error(`Failed to fetch invoice: ${response.statusText}`);
         }
 
@@ -121,7 +108,6 @@ export default function InvoicePage({
         }
         setErrorMessage(null);
       } catch (error) {
-        console.error("Error fetching invoice:", error);
         setErrorMessage(
           error instanceof Error ? error.message : "Failed to load invoice"
         );
@@ -155,7 +141,6 @@ export default function InvoicePage({
       document.body.removeChild(link);
       window.URL.revokeObjectURL(url);
     } catch (error) {
-      console.error("Error downloading invoice:", error);
       setErrorMessage(
         error instanceof Error
           ? `Failed to download invoice: ${error.message}`
@@ -773,7 +758,6 @@ export const getServerSideProps: GetServerSideProps<InvoicePageProps> = async (
       },
     };
   } catch (error) {
-    console.error("Error fetching invoice data:", error);
     return {
       props: {
         initialInvoiceData: null,
