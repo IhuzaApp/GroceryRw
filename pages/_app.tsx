@@ -47,10 +47,14 @@ function SessionRefreshHandler({ children }: { children: React.ReactNode }) {
     }
   }, [status]);
 
+  // Show loading state while session is being determined
   if (status === "loading") {
     return (
       <div className="flex h-screen w-screen items-center justify-center bg-white transition-colors duration-200 dark:bg-gray-900">
-        <div className="h-16 w-16 animate-spin rounded-full border-b-4 border-t-4 border-green-800"></div>
+        <div className="flex flex-col items-center space-y-4">
+          <div className="h-16 w-16 animate-spin rounded-full border-b-4 border-t-4 border-green-800"></div>
+          <p className="text-gray-600 dark:text-gray-400">Loading...</p>
+        </div>
       </div>
     );
   }
@@ -107,6 +111,8 @@ export default function App({ Component, pageProps }: AppProps) {
         session={(pageProps as any).session}
         basePath="/api/auth"
         refetchInterval={0} // Disable automatic refetching
+        refetchOnWindowFocus={false} // Disable refetch on window focus
+        refetchWhenOffline={false} // Disable refetch when offline
       >
         <ApolloProvider client={apolloClient}>
           <AuthProvider>

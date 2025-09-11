@@ -3,21 +3,77 @@
  * Ensures that session cookies are included in requests
  */
 
+import { logApiCall, logAuth } from "./debugAuth";
+
 export const authenticatedFetch = async (
   url: string,
   options: RequestInit = {}
 ): Promise<Response> => {
-  // Ensure credentials are included for session-based authentication
-  const fetchOptions: RequestInit = {
-    ...options,
-    credentials: "include", // This ensures cookies are sent with the request
-    headers: {
-      "Content-Type": "application/json",
-      ...options.headers,
-    },
-  };
+  const method = options.method || 'GET';
+  const startTime = Date.now();
 
-  return fetch(url, fetchOptions);
+  logAuth('AuthenticatedFetch', 'request_started', {
+    url,
+    method,
+    hasCredentials: true,
+    headers: options.headers,
+    body: options.body ? 'present' : 'none',
+    timestamp: Date.now(),
+  });
+
+  try {
+    // Ensure credentials are included for session-based authentication
+    const fetchOptions: RequestInit = {
+      ...options,
+      credentials: "include", // This ensures cookies are sent with the request
+      headers: {
+        "Content-Type": "application/json",
+        ...options.headers,
+      },
+    };
+
+    const response = await fetch(url, fetchOptions);
+    const duration = Date.now() - startTime;
+    
+    logApiCall(url, method, response.status, true);
+    
+    logAuth('AuthenticatedFetch', 'request_completed', {
+      url,
+      method,
+      status: response.status,
+      statusText: response.statusText,
+      duration,
+      success: response.ok,
+      timestamp: Date.now(),
+    });
+
+    // Log additional details for failed requests
+    if (!response.ok) {
+      logAuth('AuthenticatedFetch', 'request_failed', {
+        url,
+        method,
+        status: response.status,
+        statusText: response.statusText,
+        duration,
+        timestamp: Date.now(),
+      });
+    }
+
+    return response;
+  } catch (error) {
+    const duration = Date.now() - startTime;
+    
+    logAuth('AuthenticatedFetch', 'request_error', {
+      url,
+      method,
+      error: error instanceof Error ? error.message : String(error),
+      stack: error instanceof Error ? error.stack : undefined,
+      duration,
+      timestamp: Date.now(),
+    });
+
+    throw error;
+  }
 };
 
 /**
