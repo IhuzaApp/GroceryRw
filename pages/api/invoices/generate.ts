@@ -347,7 +347,6 @@ export default async function handler(
       }
     );
 
-    console.log("Invoice saved to database:", saveResult);
 
     // Generate invoice data for the response
     const invoiceData = {
@@ -375,12 +374,6 @@ export default async function handler(
       orderType: isReelOrder ? "reel" : "regular",
     };
 
-    console.log("Generated invoice data:", {
-      id: invoiceData.id,
-      invoiceNumber: invoiceData.invoiceNumber,
-      orderId: invoiceData.orderId,
-      orderType: invoiceData.orderType,
-    });
 
     return res.status(200).json({
       success: true,
@@ -388,7 +381,6 @@ export default async function handler(
       dbRecord: saveResult.insert_Invoices.returning[0] || null,
     });
   } catch (error) {
-    console.error("Error generating invoice:", error);
     return res.status(500).json({
       error:
         error instanceof Error ? error.message : "An unexpected error occurred",
