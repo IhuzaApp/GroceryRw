@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from "react";
 import { useSession } from "next-auth/react";
 import { Button } from "rsuite";
+import { authenticatedFetch } from "@lib/authenticatedFetch";
 
 interface Shopper {
   id: string;
@@ -43,7 +44,7 @@ export default function TelegramStatusButton({
 
     const fetchShopperDetails = async () => {
       try {
-        const response = await fetch("/api/telegram/bot-update", {
+        const response = await authenticatedFetch("/api/telegram/bot-update", {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
@@ -82,7 +83,7 @@ export default function TelegramStatusButton({
 
     try {
       // First, ensure the shopper record exists and get the shopper ID
-      const response = await fetch("/api/telegram/ensure-shopper", {
+      const response = await authenticatedFetch("/api/telegram/ensure-shopper", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -124,7 +125,7 @@ export default function TelegramStatusButton({
     setIsDisconnecting(true);
 
     try {
-      const response = await fetch("/api/telegram/bot-update", {
+      const response = await authenticatedFetch("/api/telegram/bot-update", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

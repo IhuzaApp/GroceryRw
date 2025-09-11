@@ -45,17 +45,6 @@ const publicPaths = [
   "/static",
 ];
 
-// Define public API routes that don't require authentication
-const publicApiPaths = [
-  "/api/auth",
-  "/api/logout", // Allow logout without authentication
-  "/api/shopper/shops",
-  "/api/shopper/pendingOrders",
-  "/api/queries/createWallet",
-  "/api/shopper/assignOrder",
-  "/api/shopper/todayCompletedEarnings",
-];
-
 // Helper function to check if a path is public
 const isPublicPath = (path: string) => {
   return publicPaths.some(
@@ -63,45 +52,10 @@ const isPublicPath = (path: string) => {
   );
 };
 
-// Helper function to check if an API path is public
-const isPublicApiPath = (path: string) => {
-  return publicApiPaths.some(
-    (publicApiPath) =>
-      path === publicApiPath || path.startsWith(`${publicApiPath}/`)
-  );
-};
-
 export async function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl;
 
-  // Handle API routes with authentication
-  if (pathname.startsWith("/api/")) {
-    // Allow public API routes without authentication
-    if (isPublicApiPath(pathname)) {
-      return NextResponse.next();
-    }
-
-    // For protected API routes, check authentication
-    try {
-      const token = await getToken({
-        req,
-        secret: process.env.NEXTAUTH_SECRET,
-        secureCookie: process.env.NEXTAUTH_SECURE_COOKIES === "true",
-      });
-
-      if (!token) {
-        return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-      }
-
-      return NextResponse.next();
-    } catch (error) {
-      console.error("API authentication error:", error);
-      return NextResponse.json(
-        { error: "Authentication failed" },
-        { status: 401 }
-      );
-    }
-  }
+  // API routes are excluded from middleware - they handle their own authentication
 
   // Skip middleware for public paths
   if (isPublicPath(pathname)) {
@@ -201,5 +155,5 @@ export async function middleware(req: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/((?!_next/static|_next/image|favicon.ico).*)"],
+  matcher: ["/((?!api|_next/static|_next/image|favicon.ico).*)"],
 };
