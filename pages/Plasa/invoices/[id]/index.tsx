@@ -6,7 +6,7 @@ import { Panel, Button, Loader, Divider } from "rsuite";
 import ShopperLayout from "../../../../src/components/shopper/ShopperLayout";
 import { formatCurrency } from "../../../../src/lib/formatCurrency";
 import { useTheme } from "../../../../src/context/ThemeContext";
-import { downloadInvoiceAsPdf } from "../../../../src/lib/invoiceUtils";
+// Removed client-side PDF generation - using server-side API instead
 
 interface InvoiceItem {
   name: string;
@@ -137,7 +137,23 @@ export default function InvoicePage({
     if (!invoiceData) return;
 
     try {
-      await downloadInvoiceAsPdf(invoiceData);
+      // Use server-side API route for PDF generation with logo and QR code
+      const response = await fetch(`/api/invoices/${invoiceData.id}?pdf=true`);
+      
+      if (!response.ok) {
+        throw new Error('Failed to generate PDF');
+      }
+      
+      // Create blob and download
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `invoice-${invoiceData.invoiceNumber}.pdf`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(url);
     } catch (error) {
       console.error("Error downloading invoice:", error);
       setErrorMessage(
