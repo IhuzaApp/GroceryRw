@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { GetServerSideProps } from "next";
-import { getSession } from "next-auth/react";
+import { getServerSession } from "next-auth/next";
+import { authOptions } from "../../../api/auth/[...nextauth]";
 import { useRouter } from "next/router";
 import { Panel, Button, Loader, Divider } from "rsuite";
 import ShopperLayout from "../../../../src/components/shopper/ShopperLayout";
@@ -728,7 +729,7 @@ export const getServerSideProps: GetServerSideProps<InvoicePageProps> = async (
   context
 ) => {
   const { id } = context.params || {};
-  const session = await getSession(context);
+  const session = await getServerSession(context.req, context.res, authOptions);
 
   if (!session?.user) {
     return {

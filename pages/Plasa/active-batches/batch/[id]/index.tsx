@@ -7,7 +7,8 @@ import BatchDetails from "@components/shopper/batchDetails";
 import { GetServerSideProps } from "next";
 import { hasuraClient } from "../../../../../src/lib/hasuraClient";
 import { gql } from "graphql-request";
-import { getSession } from "next-auth/react";
+import { getServerSession } from "next-auth/next";
+import { authOptions } from "../../../../api/auth/[...nextauth]";
 import {
   collection,
   query,
@@ -216,7 +217,7 @@ export const getServerSideProps: GetServerSideProps<
   BatchDetailsPageProps
 > = async (context) => {
   const { id } = context.params || {};
-  const session = await getSession(context);
+  const session = await getServerSession(context.req, context.res, authOptions);
 
   if (!id || typeof id !== "string") {
     return {

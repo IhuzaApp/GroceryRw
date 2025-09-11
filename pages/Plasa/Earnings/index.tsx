@@ -15,6 +15,9 @@ import {
   formatCurrencySync,
   getCurrencySymbol,
 } from "../../../src/utils/formatCurrency";
+import { GetServerSideProps } from "next";
+import { getServerSession } from "next-auth/next";
+import { authOptions } from "../../api/auth/[...nextauth]";
 
 // Interface for earnings stats
 interface EarningsStats {
@@ -755,3 +758,31 @@ const EarningsPage: React.FC = () => {
 };
 
 export default EarningsPage;
+
+export const getServerSideProps: GetServerSideProps = async (context) => {
+  const session = await getServerSession(context.req, context.res, authOptions);
+
+  if (!session?.user) {
+    return {
+      redirect: {
+        destination: "/Auth/Login?callbackUrl=/Plasa/Earnings",
+        permanent: false,
+      },
+    };
+  }
+
+  // Check if the user is a shopper
+  const userRole = (session as any)?.user?.role;
+  if (userRole !== "shopper") {
+    return {
+      redirect: {
+        destination: "/Auth/Login?callbackUrl=/Plasa/Earnings",
+        permanent: false,
+      },
+    };
+  }
+
+  return {
+    props: {},
+  };
+};

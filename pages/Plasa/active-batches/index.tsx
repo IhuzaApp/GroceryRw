@@ -4,7 +4,8 @@ import ActiveBatches from "@components/shopper/activeBatchesCard";
 import { GetServerSideProps } from "next";
 import { hasuraClient } from "../../../src/lib/hasuraClient";
 import { gql } from "graphql-request";
-import { getSession } from "next-auth/react";
+import { getServerSession } from "next-auth/next";
+import { authOptions } from "../../api/auth/[...nextauth]";
 
 interface Order {
   id: string;
@@ -59,7 +60,7 @@ export const getServerSideProps: GetServerSideProps<
   ActiveBatchesPageProps
 > = async (context) => {
   // Get session to identify the shopper
-  const session = await getSession(context);
+  const session = await getServerSession(context.req, context.res, authOptions);
   const userId = (session as any)?.user?.id;
 
   if (!userId) {
