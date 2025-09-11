@@ -41,6 +41,7 @@ export const refreshSession = async (): Promise<any> => {
       headers: {
         "Content-Type": "application/json",
       },
+      credentials: "include",
     });
 
     if (!response.ok) {
@@ -69,6 +70,7 @@ export const initiateRoleSwitch = async (
       headers: {
         "Content-Type": "application/json",
       },
+      credentials: "include",
       body: JSON.stringify({ role: nextRole }),
     });
 

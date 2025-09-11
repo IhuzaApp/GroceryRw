@@ -60,7 +60,7 @@ export default function ShopperSidebar() {
     const fetchDailyEarnings = async () => {
       setLoadingEarnings(true);
       try {
-        const response = await fetch("/api/shopper/dailyEarnings");
+        const response = await authenticatedFetch("/api/shopper/dailyEarnings");
         if (!response.ok) {
           throw new Error("Failed to fetch earnings data");
         }
