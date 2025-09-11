@@ -156,7 +156,9 @@ export default function ShopperProfileComponent() {
         setLoading(true);
 
         // Fetch user data
-        const userRes = await authenticatedFetch("/api/user", { signal: controller.signal });
+        const userRes = await authenticatedFetch("/api/user", {
+          signal: controller.signal,
+        });
         const userData = await userRes.json();
         if (isMounted) setUser(userData.user);
 
@@ -175,9 +177,12 @@ export default function ShopperProfileComponent() {
         }
 
         // Fetch shopper profile
-        const profileRes = await authenticatedFetch("/api/queries/shopper-profile", {
-          signal: controller.signal,
-        });
+        const profileRes = await authenticatedFetch(
+          "/api/queries/shopper-profile",
+          {
+            signal: controller.signal,
+          }
+        );
         const profileData = await profileRes.json();
         if (isMounted && profileData.shopper) {
           setShopperData(profileData.shopper);

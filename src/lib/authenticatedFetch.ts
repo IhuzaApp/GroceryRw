@@ -10,9 +10,9 @@ export const authenticatedFetch = async (
   // Ensure credentials are included for session-based authentication
   const fetchOptions: RequestInit = {
     ...options,
-    credentials: 'include', // This ensures cookies are sent with the request
+    credentials: "include", // This ensures cookies are sent with the request
     headers: {
-      'Content-Type': 'application/json',
+      "Content-Type": "application/json",
       ...options.headers,
     },
   };
@@ -28,11 +28,13 @@ export const fetchWithAuth = async <T = any>(
   options: RequestInit = {}
 ): Promise<T> => {
   const response = await authenticatedFetch(url, options);
-  
+
   if (!response.ok) {
     const errorText = await response.text();
-    throw new Error(`HTTP error! status: ${response.status}, message: ${errorText}`);
+    throw new Error(
+      `HTTP error! status: ${response.status}, message: ${errorText}`
+    );
   }
-  
+
   return response.json();
 };
