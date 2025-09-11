@@ -12,7 +12,7 @@ import { initiateRoleSwitch } from "../../lib/sessionRefresh";
 import { useTheme } from "../../context/ThemeContext";
 import { logger } from "../../utils/logger";
 import TelegramStatusButton from "./TelegramStatusButton";
-import { authenticatedFetch } from "../../lib/authenticatedFetch";
+import { authenticatedFetch } from "@lib/authenticatedFetch";
 
 // Define interface for earnings response
 interface EarningsResponse {
