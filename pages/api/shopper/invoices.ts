@@ -205,12 +205,8 @@ export default async function handler(
     }
 
     // Fetch invoices from database
-    console.log('=== SHOPPER INVOICES API - FETCHING DATA ===');
-    console.log('👤 Shopper ID:', shopperId);
-    console.log('📄 Page:', page, 'Limit:', limit, 'Offset:', offset);
     
     // First, let's check what invoices exist in the database using EXACT Invoices.graphql structure
-    console.log('🔍 Checking all invoices in database...');
     const allInvoicesCheck = await hasuraClient.request(`
       query getInvoiceDetials {
         Invoices(limit: 10) {
@@ -301,30 +297,6 @@ export default async function handler(
       }
     `);
     
-    console.log('📊 All Invoices in Database (EXACT Invoices.graphql structure):', {
-      count: (allInvoicesCheck as any).Invoices.length,
-      sample: (allInvoicesCheck as any).Invoices.map((inv: any) => ({
-        id: inv.id,
-        invoice_number: inv.invoice_number,
-        order_id: inv.order_id,
-        reel_order_id: inv.reel_order_id,
-        status: inv.status,
-        total_amount: inv.total_amount,
-        subtotal: inv.subtotal,
-        delivery_fee: inv.delivery_fee,
-        service_fee: inv.service_fee,
-        tax: inv.tax,
-        discount: inv.discount,
-        created_at: inv.created_at,
-        customer_id: inv.customer_id,
-        hasOrder: !!inv.Order,
-        hasUser: !!inv.User,
-        orderShopperId: inv.Order?.shopper_id,
-        orderStatus: inv.Order?.status,
-        userRole: inv.User?.role,
-        invoice_items: inv.invoice_items
-      }))
-    });
     
     const data = await hasuraClient.request<{
       Invoices: Array<{
@@ -407,22 +379,8 @@ export default async function handler(
       offset,
     });
 
-    console.log('📊 Raw Database Response:', {
-      invoiceCount: data.Invoices.length,
-      totalInvoiceCount: data.Invoices_aggregate.aggregate.count,
-      sampleInvoices: data.Invoices.slice(0, 3).map(inv => ({
-        id: inv.id,
-        invoice_number: inv.invoice_number,
-        order_id: inv.order_id,
-        reel_order_id: inv.reel_order_id,
-        customer_name: inv.User.name,
-        hasOrder: !!inv.Order,
-        orderType: inv.order_id ? 'regular' : 'reel'
-      }))
-    });
 
     // Transform all invoices (both regular and reel orders)
-    console.log('🔄 Transforming invoices...');
     
     const transformedInvoices = data.Invoices.map((invoice) => {
       const isReelOrder = !!invoice.reel_order_id;
@@ -505,18 +463,6 @@ export default async function handler(
     const totalCount = data.Invoices_aggregate.aggregate.count;
     const totalPages = Math.ceil(totalCount / limit);
 
-    console.log('✅ Final Invoice Results:', {
-      totalInvoices: sortedInvoices.length,
-      totalCount,
-      totalPages,
-      currentPage: page,
-      sampleFinalInvoices: sortedInvoices.slice(0, 3).map(inv => ({
-        id: inv.id,
-        invoice_number: inv.invoice_number,
-        order_type: inv.order_type,
-        customer_name: inv.customer_name
-      }))
-    });
 
     logger.info("Invoices fetched successfully", "ShopperInvoicesAPI", {
       shopperId,

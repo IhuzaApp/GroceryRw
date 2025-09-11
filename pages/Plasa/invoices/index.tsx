@@ -36,41 +36,21 @@ const InvoicesPage: React.FC<InvoicesPageProps> = ({
 
   // Fetch invoices
   const fetchInvoices = async (page: number = 1) => {
-    console.log('=== FETCHING INVOICES ===');
-    console.log('📄 Page:', page);
     
     setLoading(true);
     try {
       const response = await fetch(`/api/shopper/invoices?page=${page}`);
-      console.log('📡 API Response:', {
-        status: response.status,
-        ok: response.ok,
-        url: response.url
-      });
       
       if (!response.ok) {
         throw new Error("Failed to fetch invoices");
       }
       const data = await response.json();
       
-      console.log('📊 Invoices Data:', {
-        invoiceCount: data.invoices?.length || 0,
-        totalPages: data.totalPages,
-        currentPage: data.currentPage,
-        totalCount: data.totalCount,
-        sampleInvoices: data.invoices?.slice(0, 3).map((inv: any) => ({
-          id: inv.id,
-          invoice_number: inv.invoice_number,
-          order_type: inv.order_type,
-          customer_name: inv.customer_name
-        }))
-      });
       
       setInvoices(data.invoices || []);
       setTotalPages(data.totalPages || 1);
       setError(null);
     } catch (err) {
-      console.error('❌ Error fetching invoices:', err);
       logger.error("Error fetching invoices", "InvoicesPage", err);
       setError(err instanceof Error ? err.message : "Failed to fetch invoices");
     } finally {
@@ -105,35 +85,21 @@ const InvoicesPage: React.FC<InvoicesPageProps> = ({
   };
 
   const handleViewDetails = (invoiceId: string, orderType: string) => {
-    console.log('=== INVOICE PAGE - handleViewDetails CALLED ===');
-    console.log('📋 Invoice Details:', {
-      invoiceId,
-      orderType,
-      timestamp: new Date().toISOString()
-    });
     
     const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
     const baseUrl = process.env.NODE_ENV === 'production' 
       ? (process.env.NEXT_PUBLIC_APP_URL || 'https://plas.rw')
       : window.location.origin;
     
-    console.log('🔧 URL Generation:', {
-      isMobile,
-      baseUrl,
-      NODE_ENV: process.env.NODE_ENV,
-      NEXT_PUBLIC_APP_URL: process.env.NEXT_PUBLIC_APP_URL
-    });
     
     if (isMobile) {
       // For mobile, open PDF directly
       const pdfUrl = `${baseUrl}/api/invoices/${invoiceId}?pdf=true`;
-      console.log('📱 Mobile - Opening PDF URL:', pdfUrl);
       window.open(pdfUrl, "_blank");
     } else {
       // For desktop, open invoice page with hash
       const hash = orderType === "reel" ? "#reel" : "#regularOrder";
       const invoiceUrl = `${baseUrl}/Plasa/invoices/${invoiceId}${hash}`;
-      console.log('💻 Desktop - Opening invoice URL:', invoiceUrl);
       window.open(invoiceUrl, "_blank");
     }
   };
@@ -255,8 +221,6 @@ const InvoicesPage: React.FC<InvoicesPageProps> = ({
 export default InvoicesPage;
 
 export const getServerSideProps = async (context: any) => {
-  console.log('=== SERVER SIDE PROPS - INVOICES PAGE ===');
-  console.log('🌐 NEXTAUTH_URL:', process.env.NEXTAUTH_URL);
   
   try {
     const session = await getServerSession(
@@ -265,15 +229,8 @@ export const getServerSideProps = async (context: any) => {
       authOptions
     );
 
-    console.log('👤 Session:', {
-      hasSession: !!session,
-      userId: session?.user?.id,
-      userName: session?.user?.name,
-      userEmail: session?.user?.email
-    });
 
     if (!session) {
-      console.log('❌ No session - redirecting to login');
       return {
         redirect: {
           destination: "/Auth/Login",
@@ -283,7 +240,6 @@ export const getServerSideProps = async (context: any) => {
     }
 
     // Fetch initial invoices data directly from the API handler
-    console.log('📡 Fetching initial invoices directly from API handler');
     
     // Import the API handler directly instead of making HTTP request
     const { default: invoicesHandler } = await import('../../api/shopper/invoices');
@@ -310,16 +266,6 @@ export const getServerSideProps = async (context: any) => {
     await invoicesHandler(mockReq, mockRes);
     const data = responseData;
 
-    console.log('📊 Initial Invoices Data:', {
-      invoiceCount: data?.invoices?.length || 0,
-      totalPages: data?.totalPages,
-      sampleInvoices: data?.invoices?.slice(0, 3).map((inv: any) => ({
-        id: inv.id,
-        invoice_number: inv.invoice_number,
-        order_type: inv.order_type,
-        customer_name: inv.customer_name
-      }))
-    });
 
     return {
       props: {
@@ -328,7 +274,6 @@ export const getServerSideProps = async (context: any) => {
       },
     };
   } catch (error) {
-    console.error('❌ Error in getServerSideProps:', error);
     logger.error("Error in getServerSideProps", "InvoicesPage", error);
     return {
       props: {
