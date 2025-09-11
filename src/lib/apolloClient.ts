@@ -29,7 +29,7 @@ const errorLink = onError(({ graphQLErrors, networkError }) => {
 // Use NEXT_PUBLIC_ prefix for client-side access
 const graphqlUrl =
   process.env.NEXT_PUBLIC_HASURA_GRAPHQL_URL ||
-  process.env.HASURA_GRAPHQL_URL || 
+  process.env.HASURA_GRAPHQL_URL ||
   "http://localhost:8080/v1/graphql";
 
 // Log the GraphQL URL being used (helpful for debugging)
@@ -58,7 +58,8 @@ const authLink = setContext(async (_, { headers }) => {
     headers: {
       ...headers,
       // Use proper Hasura authentication headers
-      "x-hasura-admin-secret": process.env.NEXT_PUBLIC_HASURA_GRAPHQL_ADMIN_SECRET || "",
+      "x-hasura-admin-secret":
+        process.env.NEXT_PUBLIC_HASURA_GRAPHQL_ADMIN_SECRET || "",
       "x-hasura-role": (session?.user as any)?.role || "anonymous",
       // Include user ID for row-level security
       ...(session?.user?.id && { "x-hasura-user-id": session.user.id }),

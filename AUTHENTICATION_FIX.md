@@ -1,6 +1,7 @@
 # Authentication Fix for Production 401 Errors
 
 ## Problem Summary
+
 Users were experiencing 401 Unauthorized errors in production when trying to access protected API endpoints, even though they appeared to be logged in. The main issues were:
 
 1. **Missing Credentials in Fetch Requests**: Frontend fetch calls were not including session cookies
@@ -10,15 +11,18 @@ Users were experiencing 401 Unauthorized errors in production when trying to acc
 ## Root Cause Analysis
 
 ### Primary Issue: Missing Session Credentials
+
 The frontend was making `fetch()` calls to REST API endpoints without including the necessary credentials to maintain the session. In production, session cookies weren't being sent with these requests, causing 401 errors.
 
 ### Secondary Issues:
+
 1. **Apollo Client Misconfiguration**: Using wrong authentication method for GraphQL
 2. **Environment Variables**: Client-side code couldn't access server-side environment variables
 
 ## Solutions Implemented
 
 ### 1. Created Authenticated Fetch Utility
+
 **File**: `src/lib/authenticatedFetch.ts`
 
 ```typescript
@@ -28,9 +32,9 @@ export const authenticatedFetch = async (
 ): Promise<Response> => {
   const fetchOptions: RequestInit = {
     ...options,
-    credentials: 'include', // This ensures cookies are sent with the request
+    credentials: "include", // This ensures cookies are sent with the request
     headers: {
-      'Content-Type': 'application/json',
+      "Content-Type": "application/json",
       ...options.headers,
     },
   };
@@ -40,14 +44,17 @@ export const authenticatedFetch = async (
 ```
 
 ### 2. Updated Apollo Client Configuration
+
 **File**: `src/lib/apolloClient.ts`
 
 **Changes Made**:
+
 - Fixed environment variable access (added `NEXT_PUBLIC_` prefix)
 - Updated authentication headers for proper Hasura authentication
 - Added `credentials: 'include'` for session-based authentication
 
 ### 3. Updated Critical Fetch Calls
+
 Updated the following components to use `authenticatedFetch`:
 
 - `src/components/ui/sidebar.tsx` - Orders fetching
@@ -61,12 +68,15 @@ Updated the following components to use `authenticatedFetch`:
 - `middleware.ts` - Added logout endpoint to public API paths
 
 ### 4. Fixed Logout Functionality
+
 **Issues Fixed**:
+
 - Updated logout API calls to use `authenticatedFetch` for proper session handling
 - Added `/api/logout` to public API paths to prevent authentication blocking
 - Ensured logout works even when session is partially invalid
 
 **Files Modified**:
+
 - `src/components/userProfile/useProfile.tsx` - User profile logout
 - `src/components/shopper/ShopperSidebar.tsx` - Shopper logout
 - `middleware.ts` - Added logout to public API paths
@@ -74,6 +84,7 @@ Updated the following components to use `authenticatedFetch`:
 ## Environment Variables Required
 
 ### Production Environment Variables
+
 Ensure these are set in your Vercel deployment:
 
 ```bash
@@ -92,13 +103,15 @@ NEXT_PUBLIC_HASURA_GRAPHQL_ADMIN_SECRET=your-hasura-admin-secret
 ```
 
 ### Important Notes:
-1. **NEXT_PUBLIC_ prefix**: Required for client-side access to environment variables
+
+1. **NEXT*PUBLIC* prefix**: Required for client-side access to environment variables
 2. **NEXTAUTH_SECURE_COOKIES=true**: Required for production HTTPS
 3. **NEXTAUTH_URL**: Must match your production domain exactly
 
 ## Testing the Fix
 
 ### 1. Local Testing
+
 ```bash
 # Set environment variables
 export NEXTAUTH_SECRET="your-secret"
@@ -114,6 +127,7 @@ yarn dev
 ```
 
 ### 2. Production Testing
+
 1. Deploy with updated environment variables
 2. Test user login/logout functionality
 3. Verify API calls work without 401 errors
@@ -122,9 +136,11 @@ yarn dev
 ## Files Modified
 
 ### New Files:
+
 - `src/lib/authenticatedFetch.ts` - Authenticated fetch utility
 
 ### Modified Files:
+
 - `src/lib/apolloClient.ts` - Fixed authentication configuration
 - `src/components/ui/sidebar.tsx` - Updated fetch calls
 - `src/components/userProfile/useProfile.tsx` - Updated fetch calls
@@ -159,6 +175,7 @@ If issues persist, you can rollback by:
 ## Expected Results
 
 After implementing these fixes:
+
 - Users should be able to log in and stay logged in
 - API calls should work without 401 errors
 - Session cookies should be properly included in requests

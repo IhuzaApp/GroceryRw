@@ -75,7 +75,6 @@ async function generateInvoicePdf(invoiceData: any): Promise<Buffer> {
 
     // Add logo to PDF (positioned at top left)
     doc.addImage(logoBase64, "PNG", margin, yPos - 10, 40, 20);
-
   } catch (error) {
     // Fallback: Add styled Plas text
     doc.setFontSize(24);
@@ -334,7 +333,6 @@ async function generateInvoicePdf(invoiceData: any): Promise<Buffer> {
       type: invoiceData.orderType,
     });
 
-
     // Generate QR code as base64
     const qrCodeDataUrl = await QRCode.toDataURL(qrData, {
       width: 100,
@@ -344,7 +342,6 @@ async function generateInvoicePdf(invoiceData: any): Promise<Buffer> {
         light: "#FFFFFF",
       },
     });
-
 
     // Calculate position for QR code (bottom right)
     const pageHeight = doc.internal.pageSize.height;
@@ -360,7 +357,6 @@ async function generateInvoicePdf(invoiceData: any): Promise<Buffer> {
     doc.setTextColor(0, 0, 0);
     doc.setFont("helvetica", "normal");
     doc.text("Invoice QR Code", qrX, qrY + qrSize + 5);
-
   } catch (error) {
     // Continue without QR code if there's an error
   }
@@ -386,7 +382,6 @@ export default async function handler(
   req: NextApiRequest,
   res: NextApiResponse
 ) {
-
   if (req.method !== "GET") {
     return res.status(405).json({ message: "Method not allowed" });
   }
@@ -405,7 +400,6 @@ export default async function handler(
 
     // Use the invoice ID directly - no need to process prefixes
     const actualId = id;
-
 
     // GraphQL query to fetch invoice details - EXACT match to Invoices.graphql
     const getInvoiceDetailsQuery = `
@@ -536,7 +530,6 @@ export default async function handler(
 
     const variables = { id: actualId };
 
-
     if (!hasuraClient) {
       return res
         .status(500)
@@ -550,7 +543,6 @@ export default async function handler(
       variables
     )) as any;
     const invoices = response.Invoices;
-
 
     if (!invoices || invoices.length === 0) {
       return res.status(404).json({ message: "Invoice not found" });
@@ -579,7 +571,6 @@ export default async function handler(
       invoice.order_id === null && invoice.reel_order_id !== null;
     const isRegularOrder =
       invoice.reel_order_id === null && invoice.order_id !== null;
-
 
     // Transform the data based on order type
     let transformedInvoice;
@@ -708,9 +699,7 @@ export default async function handler(
     if (isPdfRequest) {
       // Generate PDF and return as file
       try {
-
         const pdfBuffer = await generateInvoicePdf(transformedInvoice);
-
 
         res.setHeader("Content-Type", "application/pdf");
         res.setHeader(
@@ -727,7 +716,6 @@ export default async function handler(
         });
       }
     }
-
 
     res.status(200).json({ invoice: transformedInvoice });
   } catch (error) {
