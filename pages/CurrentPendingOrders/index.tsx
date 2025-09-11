@@ -3,6 +3,7 @@ import UserRecentOrders from "@components/userProfile/userRecentOrders";
 import Link from "next/link";
 import React, { useState, useEffect, useCallback } from "react";
 import { useSession } from "next-auth/react";
+import { authenticatedFetch } from "@lib/authenticatedFetch";
 
 export default function CurrentOrdersPage() {
   const [filter, setFilter] = useState("pending");
@@ -14,7 +15,7 @@ export default function CurrentOrdersPage() {
     setLoading(true);
     try {
       const userId = session?.user?.id;
-      const res = await fetch(
+      const res = await authenticatedFetch(
         `/api/queries/all-orders${userId ? `?user_id=${userId}` : ""}`
       );
       const data = await res.json();

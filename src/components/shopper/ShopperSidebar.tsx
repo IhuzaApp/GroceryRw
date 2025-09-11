@@ -12,6 +12,7 @@ import { initiateRoleSwitch } from "../../lib/sessionRefresh";
 import { useTheme } from "../../context/ThemeContext";
 import { logger } from "../../utils/logger";
 import TelegramStatusButton from "./TelegramStatusButton";
+import { authenticatedFetch } from "../../lib/authenticatedFetch";
 
 // Define interface for earnings response
 interface EarningsResponse {
@@ -110,7 +111,7 @@ export default function ShopperSidebar() {
   const handleLogout = async () => {
     try {
       // Use custom logout API to avoid redirect loops
-      const response = await fetch("/api/logout", {
+      const response = await authenticatedFetch("/api/logout", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
       });

@@ -3,6 +3,7 @@ import { GetServerSideProps } from "next";
 import AddPaymentCard from "./AddPaymentCard";
 import CryptoJS from "crypto-js";
 import { formatCurrencySync } from "../../utils/formatCurrency";
+import { authenticatedFetch } from "../../lib/authenticatedFetch";
 
 // Encryption key - in production, this should be in environment variables
 const ENCRYPTION_KEY =
@@ -232,7 +233,7 @@ export default function UserPaymentCards({
     setLoading(true);
     Promise.all([
       // Fetch refunds
-      fetch("/api/queries/refunds", {
+      authenticatedFetch("/api/queries/refunds", {
         method: "GET",
         headers: {
           "Content-Type": "application/json",
@@ -240,7 +241,7 @@ export default function UserPaymentCards({
       }).then((res) => res.json()),
 
       // Check if user is a shopper
-      fetch("/api/queries/check-shopper-status", {
+      authenticatedFetch("/api/queries/check-shopper-status", {
         method: "GET",
         headers: {
           "Content-Type": "application/json",
@@ -248,7 +249,7 @@ export default function UserPaymentCards({
       }).then((res) => res.json()),
 
       // Fetch payment cards
-      fetch("/api/queries/payment-cards", {
+      authenticatedFetch("/api/queries/payment-cards", {
         method: "GET",
         headers: {
           "Content-Type": "application/json",
@@ -264,7 +265,7 @@ export default function UserPaymentCards({
 
         // If user is a shopper, fetch their wallet balance
         if (shopperData.shopper?.active) {
-          return fetch("/api/queries/wallet-balance", {
+          return authenticatedFetch("/api/queries/wallet-balance", {
             method: "GET",
             headers: {
               "Content-Type": "application/json",

@@ -12,6 +12,7 @@ import toast from "react-hot-toast";
 import { useRouter } from "next/router";
 import { useAuth } from "../../context/AuthContext";
 import { initiateRoleSwitch } from "../../lib/sessionRefresh";
+import { authenticatedFetch } from "../../lib/authenticatedFetch";
 
 export default function UserProfile() {
   const router = useRouter();
@@ -141,7 +142,7 @@ export default function UserProfile() {
     if (!user?.id) return; // Only load orders if we have a user ID
 
     setOrdersLoading(true);
-    fetch("/api/queries/orders")
+    authenticatedFetch("/api/queries/orders")
       .then((res) => {
         if (!res.ok) {
           throw new Error(`Failed to fetch orders: ${res.status}`);
@@ -166,7 +167,7 @@ export default function UserProfile() {
   // Load default address
   useEffect(() => {
     setLoadingAddr(true);
-    fetch("/api/queries/addresses")
+    authenticatedFetch("/api/queries/addresses")
       .then(async (res) => {
         if (!res.ok)
           throw new Error(`Failed to load addresses (${res.status})`);
@@ -189,7 +190,7 @@ export default function UserProfile() {
     if (!user?.id) return; // Only refresh if we have a user ID
 
     setOrdersLoading(true);
-    fetch("/api/queries/orders")
+    authenticatedFetch("/api/queries/orders")
       .then((res) => {
         if (!res.ok) {
           throw new Error(`Failed to fetch orders: ${res.status}`);
@@ -409,7 +410,7 @@ export default function UserProfile() {
             onClick={async () => {
               try {
                 // Call our custom logout API
-                const response = await fetch("/api/logout", {
+                const response = await authenticatedFetch("/api/logout", {
                   method: "POST",
                   headers: {
                     "Content-Type": "application/json",
