@@ -169,7 +169,6 @@ export default async function handler(
           : { id: invoice_id },
     });
   } catch (error) {
-    console.error("Error uploading proof:", error);
     res.status(500).json({
       error: "Failed to upload proof",
       message: error instanceof Error ? error.message : "Unknown error",

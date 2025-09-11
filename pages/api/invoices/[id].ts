@@ -345,7 +345,6 @@ async function generateInvoicePdf(invoiceData: any): Promise<Buffer> {
       },
     });
 
-    console.log("📱 QR code generated, data URL length:", qrCodeDataUrl.length);
 
     // Calculate position for QR code (bottom right)
     const pageHeight = doc.internal.pageSize.height;
@@ -362,13 +361,7 @@ async function generateInvoicePdf(invoiceData: any): Promise<Buffer> {
     doc.setFont("helvetica", "normal");
     doc.text("Invoice QR Code", qrX, qrY + qrSize + 5);
 
-    console.log("✅ QR code added to PDF successfully");
   } catch (error) {
-    console.error("❌ Error adding QR code to PDF:", error);
-    console.error(
-      "❌ QR code error stack:",
-      error instanceof Error ? error.stack : "No stack trace"
-    );
     // Continue without QR code if there's an error
   }
 
@@ -385,9 +378,7 @@ async function generateInvoicePdf(invoiceData: any): Promise<Buffer> {
     );
   }
 
-  console.log("🎨 PDF generation completed, converting to buffer...");
   const buffer = Buffer.from(doc.output("arraybuffer"));
-  console.log("🎨 PDF buffer created, size:", buffer.length, "bytes");
   return buffer;
 }
 
@@ -395,10 +386,6 @@ export default async function handler(
   req: NextApiRequest,
   res: NextApiResponse
 ) {
-  console.log("=== INVOICE API CALLED ===");
-  console.log("Request method:", req.method);
-  console.log("Request query:", req.query);
-  console.log("Request URL:", req.url);
 
   if (req.method !== "GET") {
     return res.status(405).json({ message: "Method not allowed" });
@@ -407,26 +394,18 @@ export default async function handler(
   try {
     const session = await getServerSession(req, res, authOptions);
     if (!session?.user) {
-      console.log("❌ Unauthorized - no session");
       return res.status(401).json({ message: "Unauthorized" });
     }
 
     const { id } = req.query;
-    console.log("🔍 Raw ID from query:", { id, type: typeof id });
 
     if (!id || typeof id !== "string") {
-      console.log("❌ Invalid ID:", id);
       return res.status(400).json({ message: "Invoice ID is required" });
     }
 
     // Use the invoice ID directly - no need to process prefixes
     const actualId = id;
 
-    console.log("🔧 ID Processing:", {
-      originalId: id,
-      actualId,
-      timestamp: new Date().toISOString(),
-    });
 
     // GraphQL query to fetch invoice details - EXACT match to Invoices.graphql
     const getInvoiceDetailsQuery = `
@@ -557,11 +536,6 @@ export default async function handler(
 
     const variables = { id: actualId };
 
-    console.log("📊 Query variables:", variables);
-    console.log(
-      "🎯 Will execute getInvoiceDetials query for invoice ID:",
-      actualId
-    );
 
     if (!hasuraClient) {
       return res
@@ -570,8 +544,6 @@ export default async function handler(
     }
 
     // Fetch invoice using the exact getInvoiceDetials query
-    console.log("🔍 FETCHING INVOICE:", { actualId, variables });
-    console.log("🔍 Query:", getInvoiceDetailsQuery);
 
     const response = (await hasuraClient.request(
       getInvoiceDetailsQuery,
@@ -579,14 +551,8 @@ export default async function handler(
     )) as any;
     const invoices = response.Invoices;
 
-    console.log("📦 Invoice response:", {
-      invoiceCount: invoices?.length || 0,
-      responseKeys: Object.keys(response),
-      fullResponse: response,
-    });
 
     if (!invoices || invoices.length === 0) {
-      console.log("❌ Invoice not found for ID:", actualId);
       return res.status(404).json({ message: "Invoice not found" });
     }
 
@@ -595,9 +561,6 @@ export default async function handler(
     // Fetch reel order details if it's a reel order
     let reelOrderDetails = null;
     if (invoice.reel_order_id) {
-      console.log("🔍 FETCHING REEL ORDER DETAILS:", {
-        reel_order_id: invoice.reel_order_id,
-      });
       try {
         const reelResponse = (await hasuraClient.request(
           getReelOrderDetailsQuery,
@@ -606,12 +569,7 @@ export default async function handler(
           }
         )) as any;
         reelOrderDetails = reelResponse.reel_orders?.[0] || null;
-        console.log("📦 Reel Order response:", {
-          reelOrderCount: reelResponse.reel_orders?.length || 0,
-          reelOrderDetails,
-        });
       } catch (error) {
-        console.error("❌ Error fetching reel order details:", error);
         // Continue without reel order details
       }
     }
@@ -622,12 +580,6 @@ export default async function handler(
     const isRegularOrder =
       invoice.reel_order_id === null && invoice.order_id !== null;
 
-    console.log("🔍 Order Type Detection:", {
-      order_id: invoice.order_id,
-      reel_order_id: invoice.reel_order_id,
-      isReelOrder,
-      isRegularOrder,
-    });
 
     // Transform the data based on order type
     let transformedInvoice;
@@ -752,22 +704,13 @@ export default async function handler(
 
     // Check if the request is for PDF download
     const isPdfRequest = req.query.pdf === "true";
-    console.log("📄 PDF Request:", isPdfRequest);
 
     if (isPdfRequest) {
       // Generate PDF and return as file
       try {
-        console.log("🔄 Generating PDF...");
-        console.log("📊 Invoice data for PDF:", {
-          id: transformedInvoice.id,
-          invoiceNumber: transformedInvoice.invoiceNumber,
-          orderType: transformedInvoice.orderType,
-          total: transformedInvoice.total,
-        });
 
         const pdfBuffer = await generateInvoicePdf(transformedInvoice);
 
-        console.log("📄 PDF buffer size:", pdfBuffer.length, "bytes");
 
         res.setHeader("Content-Type", "application/pdf");
         res.setHeader(
@@ -776,14 +719,8 @@ export default async function handler(
         );
         res.setHeader("Content-Length", pdfBuffer.length);
 
-        console.log("✅ PDF generated successfully");
         return res.status(200).send(pdfBuffer);
       } catch (error) {
-        console.error("❌ Error generating PDF:", error);
-        console.error(
-          "❌ Error stack:",
-          error instanceof Error ? error.stack : "No stack trace"
-        );
         return res.status(500).json({
           error: "Failed to generate PDF",
           details: error instanceof Error ? error.message : "Unknown error",
@@ -791,15 +728,9 @@ export default async function handler(
       }
     }
 
-    console.log("✅ Returning invoice data:", {
-      invoiceId: transformedInvoice.id,
-      invoiceNumber: transformedInvoice.invoiceNumber,
-      orderType: transformedInvoice.orderType,
-    });
 
     res.status(200).json({ invoice: transformedInvoice });
   } catch (error) {
-    console.error("Error fetching invoice:", error);
     res.status(500).json({
       message: "Failed to fetch invoice",
       error: error instanceof Error ? error.message : "Unknown error",
