@@ -276,6 +276,39 @@ const InvoicesTable: React.FC<InvoicesTableProps> = ({
                   <div className="flex justify-center space-x-1">
                     <Button
                       size="xs"
+                      appearance="default"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        // Download invoice functionality
+                        const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+                        const baseUrl = process.env.NODE_ENV === 'production' 
+                          ? (process.env.NEXT_PUBLIC_APP_URL || 'https://plas.rw')
+                          : window.location.origin;
+                        
+                        console.log('InvoicesTable Desktop Click:', {
+                          invoiceId: invoice.id,
+                          orderType: invoice.order_type,
+                          isMobile
+                        });
+                        
+                        if (isMobile) {
+                          // For mobile, open PDF directly
+                          const pdfUrl = `${baseUrl}/api/invoices/${invoice.id}?pdf=true`;
+                          console.log('Opening PDF URL:', pdfUrl);
+                          window.open(pdfUrl, "_blank");
+                        } else {
+                          // For desktop, open invoice page with hash
+                          const hash = invoice.order_type === "reel" ? "#reel" : "#regularOrder";
+                          const invoiceUrl = `${baseUrl}/Plasa/invoices/${invoice.id}${hash}`;
+                          console.log('Opening invoice URL:', invoiceUrl);
+                          window.open(invoiceUrl, "_blank");
+                        }
+                      }}
+                    >
+                      📄 View
+                    </Button>
+                    <Button
+                      size="xs"
                       appearance="primary"
                       onClick={(e) => {
                         e.stopPropagation();
@@ -404,7 +437,29 @@ const InvoicesTable: React.FC<InvoicesTableProps> = ({
                     onClick={(e) => {
                       e.stopPropagation();
                       // Download invoice functionality
-                      window.open(`/api/invoices/${invoice.id}`, "_blank");
+                      const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+                      const baseUrl = process.env.NODE_ENV === 'production' 
+                        ? (process.env.NEXT_PUBLIC_APP_URL || 'https://plas.rw')
+                        : window.location.origin;
+                      
+                      console.log('InvoicesTable Mobile Click:', {
+                        invoiceId: invoice.id,
+                        orderType: invoice.order_type,
+                        isMobile
+                      });
+                      
+                      if (isMobile) {
+                        // For mobile, open PDF directly
+                        const pdfUrl = `${baseUrl}/api/invoices/${invoice.id}?pdf=true`;
+                        console.log('Opening PDF URL:', pdfUrl);
+                        window.open(pdfUrl, "_blank");
+                      } else {
+                        // For desktop, open invoice page with hash
+                        const hash = invoice.order_type === "reel" ? "#reel" : "#regularOrder";
+                        const invoiceUrl = `${baseUrl}/Plasa/invoices/${invoice.id}${hash}`;
+                        console.log('Opening invoice URL:', invoiceUrl);
+                        window.open(invoiceUrl, "_blank");
+                      }
                     }}
                   >
                     📄 Download
