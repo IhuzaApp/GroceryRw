@@ -30,7 +30,6 @@ export interface InvoiceData {
   orderType?: string;
 }
 
-
 /**
  * Generate and download invoice as PDF
  * @param invoiceData The invoice data to convert
@@ -252,9 +251,14 @@ export const downloadInvoiceAsPdf = async (
     doc.setFontSize(12);
     doc.setTextColor(34, 197, 94);
     doc.text("TOTAL:", margin + 10, yPos);
-    doc.text(formatCurrencySync(invoiceData.total), pageWidth - margin - 10, yPos, {
-      align: "right",
-    });
+    doc.text(
+      formatCurrencySync(invoiceData.total),
+      pageWidth - margin - 10,
+      yPos,
+      {
+        align: "right",
+      }
+    );
 
     yPos += 20;
 

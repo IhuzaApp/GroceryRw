@@ -6250,6 +6250,7 @@ The Invoice Management System provides comprehensive invoice generation, viewing
 ## Key Features
 
 ### 1. Invoice Generation
+
 - **Professional PDF Design**: Clean, branded invoice layout with company logo
 - **Dynamic Currency**: Automatic currency formatting based on system configuration
 - **QR Code Integration**: Invoice verification QR codes with embedded data
@@ -6257,12 +6258,14 @@ The Invoice Management System provides comprehensive invoice generation, viewing
 - **Multi-Order Support**: Handles both regular orders and reel orders
 
 ### 2. Invoice Viewing
+
 - **Unified Interface**: Single interface for viewing all invoice types
 - **Order Type Detection**: Automatic detection of regular vs reel orders
 - **Real-time Data**: Live invoice data from database
 - **Mobile Responsive**: Optimized for both mobile and desktop viewing
 
 ### 3. PDF Download
+
 - **Server-Side Generation**: High-quality PDF generation on the server
 - **Client-Side Fallback**: Basic PDF generation for client-side compatibility
 - **Automatic Download**: Seamless download experience across devices
@@ -6273,6 +6276,7 @@ The Invoice Management System provides comprehensive invoice generation, viewing
 ### Database Schema
 
 #### Invoices Table
+
 ```sql
 Invoices {
   id: uuid (primary key)
@@ -6302,10 +6306,12 @@ Invoices {
 **Method**: `GET`
 
 **Query Parameters**:
+
 - `page`: Page number (default: 1)
 - `limit`: Items per page (default: 10)
 
 **Response**:
+
 ```json
 {
   "success": true,
@@ -6340,10 +6346,12 @@ Invoices {
 **Method**: `GET`
 
 **Query Parameters**:
+
 - `id`: Invoice ID
 - `pdf`: Set to `true` to download PDF
 
 **Response** (JSON):
+
 ```json
 {
   "invoice": {
@@ -6371,6 +6379,7 @@ Invoices {
 #### 1. Invoices List Page (`/pages/Plasa/invoices/index.tsx`)
 
 **Features**:
+
 - Paginated invoice listing
 - Search and filter functionality
 - Order type indicators
@@ -6379,6 +6388,7 @@ Invoices {
 - Desktop invoice viewing
 
 **Key Functions**:
+
 ```typescript
 // Fetch invoices with pagination
 const fetchInvoices = async (page: number = 1) => {
@@ -6388,8 +6398,11 @@ const fetchInvoices = async (page: number = 1) => {
 
 // Handle invoice viewing/download
 const handleViewDetails = (invoiceId: string, orderType: string) => {
-  const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
-  
+  const isMobile =
+    /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(
+      navigator.userAgent
+    );
+
   if (isMobile) {
     // Direct PDF download for mobile
     const pdfUrl = `${baseUrl}/api/invoices/${invoiceId}?pdf=true`;
@@ -6405,6 +6418,7 @@ const handleViewDetails = (invoiceId: string, orderType: string) => {
 #### 2. Invoice Details Page (`/pages/Plasa/invoices/[id]/index.tsx`)
 
 **Features**:
+
 - Detailed invoice information display
 - Order type-specific formatting
 - PDF download functionality
@@ -6412,6 +6426,7 @@ const handleViewDetails = (invoiceId: string, orderType: string) => {
 - Error handling and loading states
 
 **Key Functions**:
+
 ```typescript
 // Fetch invoice details
 const fetchInvoiceData = async () => {
@@ -6433,6 +6448,7 @@ const handleDownload = async () => {
 #### Server-Side PDF Generation (`/pages/api/invoices/[id].ts`)
 
 **Features**:
+
 - Professional invoice design
 - Logo image integration
 - QR code generation
@@ -6441,28 +6457,29 @@ const handleDownload = async () => {
 - Multi-page support
 
 **Key Functions**:
+
 ```typescript
 // Generate PDF with logo and QR code
 async function generateInvoicePdf(invoiceData: any): Promise<Buffer> {
   const doc = new jsPDF();
-  
+
   // Add logo image
-  const logoBase64 = await loadImageAsBase64('assets/logos/PlasLogoPNG.png');
-  doc.addImage(logoBase64, 'PNG', margin, yPos - 10, 40, 20);
-  
+  const logoBase64 = await loadImageAsBase64("assets/logos/PlasLogoPNG.png");
+  doc.addImage(logoBase64, "PNG", margin, yPos - 10, 40, 20);
+
   // Add invoice content with proper formatting
   // Add items table with alternating row colors
   // Add summary section with totals
   // Add QR code for verification
-  
-  return Buffer.from(doc.output('arraybuffer'));
+
+  return Buffer.from(doc.output("arraybuffer"));
 }
 
 // Load image as base64
 async function loadImageAsBase64(imagePath: string): Promise<string> {
-  const fullPath = path.join(process.cwd(), 'public', imagePath);
+  const fullPath = path.join(process.cwd(), "public", imagePath);
   const imageBuffer = fs.readFileSync(fullPath);
-  const base64 = imageBuffer.toString('base64');
+  const base64 = imageBuffer.toString("base64");
   return `data:image/png;base64,${base64}`;
 }
 ```
@@ -6470,6 +6487,7 @@ async function loadImageAsBase64(imagePath: string): Promise<string> {
 #### Client-Side PDF Generation (`/src/lib/invoiceUtils.ts`)
 
 **Features**:
+
 - Basic PDF generation for client-side compatibility
 - Text-based logo fallback
 - Professional formatting
@@ -6478,6 +6496,7 @@ async function loadImageAsBase64(imagePath: string): Promise<string> {
 ### QR Code Integration
 
 #### QR Code Data Structure
+
 ```json
 {
   "invoiceId": "uuid",
@@ -6489,6 +6508,7 @@ async function loadImageAsBase64(imagePath: string): Promise<string> {
 ```
 
 #### QR Code Generation
+
 ```typescript
 // Generate QR code with invoice data
 const qrData = JSON.stringify({
@@ -6496,25 +6516,26 @@ const qrData = JSON.stringify({
   invoiceNumber: invoiceData.invoiceNumber,
   total: invoiceData.total,
   date: invoiceData.dateCreated,
-  type: invoiceData.orderType
+  type: invoiceData.orderType,
 });
 
 const qrCodeDataUrl = await QRCode.toDataURL(qrData, {
   width: 100,
   margin: 1,
   color: {
-    dark: '#000000',
-    light: '#FFFFFF'
-  }
+    dark: "#000000",
+    light: "#FFFFFF",
+  },
 });
 ```
 
 ### Currency Formatting
 
 #### Dynamic Currency System
+
 ```typescript
 // Use formatCurrencySync for immediate formatting
-import { formatCurrencySync } from '../utils/formatCurrency';
+import { formatCurrencySync } from "../utils/formatCurrency";
 
 // Format currency values
 doc.text(formatCurrencySync(item.unitPrice), margin + 110, yPos);
@@ -6522,6 +6543,7 @@ doc.text(formatCurrencySync(invoiceData.total), pageWidth - margin - 10, yPos);
 ```
 
 #### Currency Configuration
+
 - **Default**: RWF (Rwandan Franc)
 - **Configurable**: System-wide currency setting
 - **Cached**: Performance-optimized currency formatting
@@ -6530,17 +6552,20 @@ doc.text(formatCurrencySync(invoiceData.total), pageWidth - margin - 10, yPos);
 ### Security Features
 
 #### 1. Authentication
+
 - **Session Validation**: All invoice endpoints require valid user session
 - **Authorization**: Users can only access their own invoices
 - **Role-based Access**: Different access levels for shoppers vs customers
 
 #### 2. Document Security
+
 - **Watermark**: "ORIGINAL" watermark on all PDFs
 - **QR Code Verification**: Embedded invoice data for verification
 - **Document ID**: Unique document identifier for tracking
 - **Timestamp**: Generation timestamp for audit trail
 
 #### 3. Error Handling
+
 - **Graceful Fallbacks**: Text-based logo if image loading fails
 - **Error Logging**: Comprehensive error logging through logger utility
 - **User Feedback**: Clear error messages for users
@@ -6549,16 +6574,19 @@ doc.text(formatCurrencySync(invoiceData.total), pageWidth - margin - 10, yPos);
 ### Performance Optimizations
 
 #### 1. Caching
+
 - **Currency Cache**: Cached currency configuration for 5 minutes
 - **Image Caching**: Logo images cached in memory
 - **Query Optimization**: Efficient database queries with proper indexing
 
 #### 2. Lazy Loading
+
 - **Pagination**: Large invoice lists loaded in pages
 - **On-demand PDF**: PDFs generated only when requested
 - **Progressive Loading**: Invoice details loaded as needed
 
 #### 3. Mobile Optimization
+
 - **Direct PDF Download**: Mobile users get direct PDF download
 - **Responsive Design**: Optimized for mobile viewing
 - **Touch-friendly**: Large buttons and touch targets
@@ -6566,6 +6594,7 @@ doc.text(formatCurrencySync(invoiceData.total), pageWidth - margin - 10, yPos);
 ### Error Handling
 
 #### Common Error Scenarios
+
 1. **Invoice Not Found**: 404 error with clear message
 2. **Unauthorized Access**: 401 error with redirect to login
 3. **PDF Generation Failure**: Fallback to basic PDF or error message
@@ -6573,6 +6602,7 @@ doc.text(formatCurrencySync(invoiceData.total), pageWidth - margin - 10, yPos);
 5. **Database Connection Issues**: Proper error logging and user feedback
 
 #### Error Recovery
+
 - **Automatic Retry**: Failed operations retry automatically
 - **Fallback Options**: Alternative approaches when primary methods fail
 - **User Guidance**: Clear instructions for resolving issues

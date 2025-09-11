@@ -2,34 +2,39 @@ import { NextApiRequest, NextApiResponse } from "next";
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "../auth/[...nextauth]";
 import { hasuraClient } from "../../../src/lib/hasuraClient";
-import { downloadInvoiceAsPdf, InvoiceData } from "../../../src/lib/invoiceUtils";
+import {
+  downloadInvoiceAsPdf,
+  InvoiceData,
+} from "../../../src/lib/invoiceUtils";
 import { formatCurrencySync } from "../../../src/utils/formatCurrency";
 import jsPDF from "jspdf";
-import fs from 'fs';
-import path from 'path';
-import QRCode from 'qrcode';
+import fs from "fs";
+import path from "path";
+import QRCode from "qrcode";
 
 // Function to load image as base64
 async function loadImageAsBase64(imagePath: string): Promise<string> {
   try {
-    const fullPath = path.join(process.cwd(), 'public', imagePath);
+    const fullPath = path.join(process.cwd(), "public", imagePath);
     const imageBuffer = fs.readFileSync(fullPath);
-    const base64 = imageBuffer.toString('base64');
-    const mimeType = imagePath.endsWith('.png') ? 'image/png' : 
-                    imagePath.endsWith('.jpg') || imagePath.endsWith('.jpeg') ? 'image/jpeg' : 
-                    imagePath.endsWith('.svg') ? 'image/svg+xml' : 'image/png';
+    const base64 = imageBuffer.toString("base64");
+    const mimeType = imagePath.endsWith(".png")
+      ? "image/png"
+      : imagePath.endsWith(".jpg") || imagePath.endsWith(".jpeg")
+      ? "image/jpeg"
+      : imagePath.endsWith(".svg")
+      ? "image/svg+xml"
+      : "image/png";
     return `data:${mimeType};base64,${base64}`;
   } catch (error) {
-    console.error('❌ Error loading image:', error);
     throw error;
   }
 }
 
 // Function to generate PDF buffer
 async function generateInvoicePdf(invoiceData: any): Promise<Buffer> {
-  console.log('🎨 Starting PDF generation...');
   const doc = new jsPDF();
-  
+
   // Set initial position and page dimensions
   let yPos = 20;
   const pageWidth = doc.internal.pageSize.width;
@@ -56,35 +61,29 @@ async function generateInvoicePdf(invoiceData: any): Promise<Buffer> {
     // Add additional security text
     doc.setFontSize(20);
     doc.text("PLAS", centerX - textWidth / 2, centerY + 40, { angle: -45 });
-    doc.text(
-      invoiceData.invoiceNumber,
-      centerX - textWidth / 2,
-      centerY + 60,
-      { angle: -45 }
-    );
+    doc.text(invoiceData.invoiceNumber, centerX - textWidth / 2, centerY + 60, {
+      angle: -45,
+    });
   };
 
   // Add watermark to first page
   addWatermark();
-  
+
   // Load and add the actual logo image
   try {
-    console.log('🎨 Loading logo image...');
-    const logoBase64 = await loadImageAsBase64('assets/logos/PlasLogoPNG.png');
-    
+    const logoBase64 = await loadImageAsBase64("assets/logos/PlasLogoPNG.png");
+
     // Add logo to PDF (positioned at top left)
-    doc.addImage(logoBase64, 'PNG', margin, yPos - 10, 40, 20);
-    
-    console.log('✅ Logo image added successfully');
+    doc.addImage(logoBase64, "PNG", margin, yPos - 10, 40, 20);
+
   } catch (error) {
-    console.error('❌ Error loading logo image:', error);
     // Fallback: Add styled Plas text
     doc.setFontSize(24);
     doc.setTextColor(67, 175, 74); // Green color matching the logo
     doc.setFont("helvetica", "bold");
-    doc.text('PLAS', margin, yPos);
+    doc.text("PLAS", margin, yPos);
   }
-  
+
   yPos += 15;
 
   // Add invoice title
@@ -100,7 +99,11 @@ async function generateInvoicePdf(invoiceData: any): Promise<Buffer> {
   doc.setFont("helvetica", "normal");
   doc.text(`Invoice #: ${invoiceData.invoiceNumber}`, margin, yPos);
   doc.text(
-    `Order #: ${invoiceData.orderType === 'reel' ? `REEL-${invoiceData.invoiceNumber}` : invoiceData.orderNumber || `INV-${invoiceData.invoiceNumber}`}`,
+    `Order #: ${
+      invoiceData.orderType === "reel"
+        ? `REEL-${invoiceData.invoiceNumber}`
+        : invoiceData.orderNumber || `INV-${invoiceData.invoiceNumber}`
+    }`,
     pageWidth - margin - 50,
     yPos
   );
@@ -127,7 +130,11 @@ async function generateInvoicePdf(invoiceData: any): Promise<Buffer> {
   // Add shop and customer information
   doc.setTextColor(0, 0, 0);
   doc.setFont("helvetica", "bold");
-  doc.text(invoiceData.orderType === 'reel' ? "RESTAURANT DETAILS" : "SHOP DETAILS", margin, yPos);
+  doc.text(
+    invoiceData.orderType === "reel" ? "RESTAURANT DETAILS" : "SHOP DETAILS",
+    margin,
+    yPos
+  );
   doc.text("CUSTOMER DETAILS", pageWidth - margin - 60, yPos);
 
   yPos += 8;
@@ -162,7 +169,7 @@ async function generateInvoicePdf(invoiceData: any): Promise<Buffer> {
   doc.setFont("helvetica", "normal");
   doc.setTextColor(0, 0, 0);
   doc.setFontSize(10);
-  
+
   invoiceData.items.forEach((item: any, index: number) => {
     // Check if we need a new page
     if (yPos > 250) {
@@ -175,18 +182,25 @@ async function generateInvoicePdf(invoiceData: any): Promise<Buffer> {
     const bgColor = index % 2 === 0 ? [248, 250, 252] : [255, 255, 255]; // Light gray alternating
     doc.setFillColor(bgColor[0], bgColor[1], bgColor[2]);
     doc.rect(margin, yPos - 3, contentWidth, 8, "F");
-    
-    if (invoiceData.orderType === 'reel') {
+
+    if (invoiceData.orderType === "reel") {
       // For reel orders, show name and description
-      const itemName = item.name.length > 25 ? item.name.substring(0, 22) + "..." : item.name;
+      const itemName =
+        item.name.length > 25 ? item.name.substring(0, 22) + "..." : item.name;
       doc.text(itemName, margin + 2, yPos);
-      
+
       if (item.description) {
         doc.setFontSize(8);
-        doc.text(`Desc: ${item.description.substring(0, 40)}${item.description.length > 40 ? '...' : ''}`, margin + 2, yPos + 3);
+        doc.text(
+          `Desc: ${item.description.substring(0, 40)}${
+            item.description.length > 40 ? "..." : ""
+          }`,
+          margin + 2,
+          yPos + 3
+        );
         doc.setFontSize(10);
       }
-      
+
       // Quantity
       doc.text(item.quantity.toString(), margin + 80, yPos);
 
@@ -199,7 +213,8 @@ async function generateInvoicePdf(invoiceData: any): Promise<Buffer> {
       yPos += 12;
     } else {
       // For regular orders, show product details
-      const itemName = item.name.length > 25 ? item.name.substring(0, 22) + "..." : item.name;
+      const itemName =
+        item.name.length > 25 ? item.name.substring(0, 22) + "..." : item.name;
       doc.text(itemName, margin + 2, yPos);
 
       // Quantity
@@ -274,9 +289,14 @@ async function generateInvoicePdf(invoiceData: any): Promise<Buffer> {
   doc.setFontSize(12);
   doc.setTextColor(67, 175, 94);
   doc.text("TOTAL:", margin + 10, yPos);
-  doc.text(formatCurrencySync(invoiceData.total), pageWidth - margin - 10, yPos, {
-    align: "right",
-  });
+  doc.text(
+    formatCurrencySync(invoiceData.total),
+    pageWidth - margin - 10,
+    yPos,
+    {
+      align: "right",
+    }
+  );
 
   yPos += 20;
 
@@ -290,11 +310,7 @@ async function generateInvoicePdf(invoiceData: any): Promise<Buffer> {
     yPos
   );
   yPos += 4;
-  doc.text(
-    "The payment reflects only the value of found items.",
-    margin,
-    yPos
-  );
+  doc.text("The payment reflects only the value of found items.", margin, yPos);
 
   // Add security footer
   yPos += 8;
@@ -306,52 +322,53 @@ async function generateInvoicePdf(invoiceData: any): Promise<Buffer> {
   doc.text(`Document ID: ${invoiceData.id}`, margin, yPos);
   yPos += 3;
   doc.text("This is an official document generated by PLAS", margin, yPos);
-  
+
   // Add QR Code to the last page
   try {
-    console.log('📱 Generating QR code...');
     // Generate QR code data (invoice URL or invoice details)
     const qrData = JSON.stringify({
       invoiceId: invoiceData.id,
       invoiceNumber: invoiceData.invoiceNumber,
       total: invoiceData.total,
       date: invoiceData.dateCreated,
-      type: invoiceData.orderType
+      type: invoiceData.orderType,
     });
-    
-    console.log('📱 QR code data:', qrData);
-    
+
+
     // Generate QR code as base64
     const qrCodeDataUrl = await QRCode.toDataURL(qrData, {
       width: 100,
       margin: 1,
       color: {
-        dark: '#000000',
-        light: '#FFFFFF'
-      }
+        dark: "#000000",
+        light: "#FFFFFF",
+      },
     });
-    
-    console.log('📱 QR code generated, data URL length:', qrCodeDataUrl.length);
-    
+
+    console.log("📱 QR code generated, data URL length:", qrCodeDataUrl.length);
+
     // Calculate position for QR code (bottom right)
     const pageHeight = doc.internal.pageSize.height;
     const qrSize = 30;
     const qrX = pageWidth - margin - qrSize;
     const qrY = pageHeight - 50; // Position near bottom of page
-    
+
     // Add QR code to PDF (positioned at bottom right)
-    doc.addImage(qrCodeDataUrl, 'PNG', qrX, qrY, qrSize, qrSize);
-    
+    doc.addImage(qrCodeDataUrl, "PNG", qrX, qrY, qrSize, qrSize);
+
     // Add QR code label
     doc.setFontSize(8);
     doc.setTextColor(0, 0, 0);
     doc.setFont("helvetica", "normal");
-    doc.text('Invoice QR Code', qrX, qrY + qrSize + 5);
-    
-    console.log('✅ QR code added to PDF successfully');
+    doc.text("Invoice QR Code", qrX, qrY + qrSize + 5);
+
+    console.log("✅ QR code added to PDF successfully");
   } catch (error) {
-    console.error('❌ Error adding QR code to PDF:', error);
-    console.error('❌ QR code error stack:', error instanceof Error ? error.stack : 'No stack trace');
+    console.error("❌ Error adding QR code to PDF:", error);
+    console.error(
+      "❌ QR code error stack:",
+      error instanceof Error ? error.stack : "No stack trace"
+    );
     // Continue without QR code if there's an error
   }
 
@@ -367,10 +384,10 @@ async function generateInvoicePdf(invoiceData: any): Promise<Buffer> {
       doc.internal.pageSize.height - 10
     );
   }
-  
-  console.log('🎨 PDF generation completed, converting to buffer...');
-  const buffer = Buffer.from(doc.output('arraybuffer'));
-  console.log('🎨 PDF buffer created, size:', buffer.length, 'bytes');
+
+  console.log("🎨 PDF generation completed, converting to buffer...");
+  const buffer = Buffer.from(doc.output("arraybuffer"));
+  console.log("🎨 PDF buffer created, size:", buffer.length, "bytes");
   return buffer;
 }
 
@@ -378,11 +395,11 @@ export default async function handler(
   req: NextApiRequest,
   res: NextApiResponse
 ) {
-  console.log('=== INVOICE API CALLED ===');
-  console.log('Request method:', req.method);
-  console.log('Request query:', req.query);
-  console.log('Request URL:', req.url);
-  
+  console.log("=== INVOICE API CALLED ===");
+  console.log("Request method:", req.method);
+  console.log("Request query:", req.query);
+  console.log("Request URL:", req.url);
+
   if (req.method !== "GET") {
     return res.status(405).json({ message: "Method not allowed" });
   }
@@ -390,25 +407,25 @@ export default async function handler(
   try {
     const session = await getServerSession(req, res, authOptions);
     if (!session?.user) {
-      console.log('❌ Unauthorized - no session');
+      console.log("❌ Unauthorized - no session");
       return res.status(401).json({ message: "Unauthorized" });
     }
 
     const { id } = req.query;
-    console.log('🔍 Raw ID from query:', { id, type: typeof id });
-    
+    console.log("🔍 Raw ID from query:", { id, type: typeof id });
+
     if (!id || typeof id !== "string") {
-      console.log('❌ Invalid ID:', id);
+      console.log("❌ Invalid ID:", id);
       return res.status(400).json({ message: "Invoice ID is required" });
     }
 
     // Use the invoice ID directly - no need to process prefixes
     const actualId = id;
-    
-    console.log('🔧 ID Processing:', {
+
+    console.log("🔧 ID Processing:", {
       originalId: id,
       actualId,
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toISOString(),
     });
 
     // GraphQL query to fetch invoice details - EXACT match to Invoices.graphql
@@ -538,11 +555,13 @@ export default async function handler(
       }
     `;
 
-
     const variables = { id: actualId };
-    
-    console.log('📊 Query variables:', variables);
-    console.log('🎯 Will execute getInvoiceDetials query for invoice ID:', actualId);
+
+    console.log("📊 Query variables:", variables);
+    console.log(
+      "🎯 Will execute getInvoiceDetials query for invoice ID:",
+      actualId
+    );
 
     if (!hasuraClient) {
       return res
@@ -551,20 +570,23 @@ export default async function handler(
     }
 
     // Fetch invoice using the exact getInvoiceDetials query
-    console.log('🔍 FETCHING INVOICE:', { actualId, variables });
-    console.log('🔍 Query:', getInvoiceDetailsQuery);
-    
-    const response = await hasuraClient.request(getInvoiceDetailsQuery, variables) as any;
+    console.log("🔍 FETCHING INVOICE:", { actualId, variables });
+    console.log("🔍 Query:", getInvoiceDetailsQuery);
+
+    const response = (await hasuraClient.request(
+      getInvoiceDetailsQuery,
+      variables
+    )) as any;
     const invoices = response.Invoices;
-    
-    console.log('📦 Invoice response:', { 
+
+    console.log("📦 Invoice response:", {
       invoiceCount: invoices?.length || 0,
       responseKeys: Object.keys(response),
-      fullResponse: response
+      fullResponse: response,
     });
-    
+
     if (!invoices || invoices.length === 0) {
-      console.log('❌ Invoice not found for ID:', actualId);
+      console.log("❌ Invoice not found for ID:", actualId);
       return res.status(404).json({ message: "Invoice not found" });
     }
 
@@ -573,36 +595,43 @@ export default async function handler(
     // Fetch reel order details if it's a reel order
     let reelOrderDetails = null;
     if (invoice.reel_order_id) {
-      console.log('🔍 FETCHING REEL ORDER DETAILS:', { reel_order_id: invoice.reel_order_id });
+      console.log("🔍 FETCHING REEL ORDER DETAILS:", {
+        reel_order_id: invoice.reel_order_id,
+      });
       try {
-        const reelResponse = await hasuraClient.request(getReelOrderDetailsQuery, { 
-          reel_order_id: invoice.reel_order_id 
-        }) as any;
+        const reelResponse = (await hasuraClient.request(
+          getReelOrderDetailsQuery,
+          {
+            reel_order_id: invoice.reel_order_id,
+          }
+        )) as any;
         reelOrderDetails = reelResponse.reel_orders?.[0] || null;
-        console.log('📦 Reel Order response:', { 
+        console.log("📦 Reel Order response:", {
           reelOrderCount: reelResponse.reel_orders?.length || 0,
-          reelOrderDetails
+          reelOrderDetails,
         });
       } catch (error) {
-        console.error('❌ Error fetching reel order details:', error);
+        console.error("❌ Error fetching reel order details:", error);
         // Continue without reel order details
       }
     }
 
     // Determine order type: if order_id is null, it's a reel order; if reel_order_id is null, it's a regular order
-    const isReelOrder = invoice.order_id === null && invoice.reel_order_id !== null;
-    const isRegularOrder = invoice.reel_order_id === null && invoice.order_id !== null;
+    const isReelOrder =
+      invoice.order_id === null && invoice.reel_order_id !== null;
+    const isRegularOrder =
+      invoice.reel_order_id === null && invoice.order_id !== null;
 
-    console.log('🔍 Order Type Detection:', {
+    console.log("🔍 Order Type Detection:", {
       order_id: invoice.order_id,
       reel_order_id: invoice.reel_order_id,
       isReelOrder,
-      isRegularOrder
+      isRegularOrder,
     });
 
     // Transform the data based on order type
     let transformedInvoice;
-    
+
     if (isReelOrder) {
       // Handle reel order invoice
       const restaurant = reelOrderDetails?.Reel?.Restaurant;
@@ -620,19 +649,20 @@ export default async function handler(
         customer: invoice.User?.name || "Unknown Customer",
         customerEmail: invoice.User?.email || "Email not available",
         // For reel orders, use invoice_items instead of Order_Items
-        items: invoice.invoice_items?.map((item: any) => ({
-          name: item.name || "Reel Item",
-          description: item.description || "",
-          quantity: item.quantity || 1,
-          unitPrice: parseFloat(item.unit_price) || 0,
-          unit: item.unit || "item",
-          total: parseFloat(item.total) || 0,
-        })) || [],
+        items:
+          invoice.invoice_items?.map((item: any) => ({
+            name: item.name || "Reel Item",
+            description: item.description || "",
+            quantity: item.quantity || 1,
+            unitPrice: parseFloat(item.unit_price) || 0,
+            unit: item.unit || "item",
+            total: parseFloat(item.total) || 0,
+          })) || [],
         subtotal: parseFloat(invoice.subtotal) || 0,
         serviceFee: parseFloat(invoice.service_fee) || 0,
         deliveryFee: parseFloat(invoice.delivery_fee) || 0,
         total: parseFloat(invoice.total_amount) || 0,
-        
+
         // Include ALL exact fields from Invoices.graphql structure
         created_at: invoice.created_at,
         customer_id: invoice.customer_id,
@@ -648,18 +678,28 @@ export default async function handler(
         Order: invoice.Order,
         User: invoice.User,
         // Reel-specific fields
-        reel_title: reelOrderDetails?.Reel?.title || invoice.invoice_items?.[0]?.description || "Reel Order",
-        reel_description: reelOrderDetails?.Reel?.description || invoice.invoice_items?.[0]?.description || "",
-        delivery_photo_url: reelOrderDetails?.delivery_photo_url || invoice.Order?.delivery_photo_url,
+        reel_title:
+          reelOrderDetails?.Reel?.title ||
+          invoice.invoice_items?.[0]?.description ||
+          "Reel Order",
+        reel_description:
+          reelOrderDetails?.Reel?.description ||
+          invoice.invoice_items?.[0]?.description ||
+          "",
+        delivery_photo_url:
+          reelOrderDetails?.delivery_photo_url ||
+          invoice.Order?.delivery_photo_url,
         // Restaurant details
-        restaurant: restaurant ? {
-          id: restaurant.id,
-          name: restaurant.name,
-          email: restaurant.email,
-          phone: restaurant.phone,
-          location: restaurant.location,
-          verified: restaurant.verified
-        } : null
+        restaurant: restaurant
+          ? {
+              id: restaurant.id,
+              name: restaurant.name,
+              email: restaurant.email,
+              phone: restaurant.phone,
+              location: restaurant.location,
+              verified: restaurant.verified,
+            }
+          : null,
       };
     } else {
       // Handle regular order invoice
@@ -679,18 +719,19 @@ export default async function handler(
         customer: invoice.User?.name || "Unknown Customer",
         customerEmail: invoice.User?.email || "Email not available",
         // For regular orders, use Order_Items
-        items: invoice.Order?.Order_Items?.map((item: any) => ({
-          name: item.Product?.ProductName?.name || "Unknown Product",
-          quantity: item.quantity,
-          unitPrice: parseFloat(item.price) || 0,
-          unit: item.Product?.measurement_unit || "unit",
-          total: (parseFloat(item.price) || 0) * (item.quantity || 0),
-        })) || [],
+        items:
+          invoice.Order?.Order_Items?.map((item: any) => ({
+            name: item.Product?.ProductName?.name || "Unknown Product",
+            quantity: item.quantity,
+            unitPrice: parseFloat(item.price) || 0,
+            unit: item.Product?.measurement_unit || "unit",
+            total: (parseFloat(item.price) || 0) * (item.quantity || 0),
+          })) || [],
         subtotal: parseFloat(invoice.subtotal) || 0,
         serviceFee: parseFloat(invoice.service_fee) || 0,
         deliveryFee: parseFloat(invoice.delivery_fee) || 0,
         total: parseFloat(invoice.total_amount) || 0,
-        
+
         // Include ALL exact fields from Invoices.graphql structure
         created_at: invoice.created_at,
         customer_id: invoice.customer_id,
@@ -705,49 +746,55 @@ export default async function handler(
         total_amount: invoice.total_amount,
         Order: invoice.Order,
         User: invoice.User,
-        delivery_photo_url: invoice.Order?.delivery_photo_url
+        delivery_photo_url: invoice.Order?.delivery_photo_url,
       };
     }
 
     // Check if the request is for PDF download
-    const isPdfRequest = req.query.pdf === 'true';
-    console.log('📄 PDF Request:', isPdfRequest);
-    
+    const isPdfRequest = req.query.pdf === "true";
+    console.log("📄 PDF Request:", isPdfRequest);
+
     if (isPdfRequest) {
       // Generate PDF and return as file
       try {
-        console.log('🔄 Generating PDF...');
-        console.log('📊 Invoice data for PDF:', {
+        console.log("🔄 Generating PDF...");
+        console.log("📊 Invoice data for PDF:", {
           id: transformedInvoice.id,
           invoiceNumber: transformedInvoice.invoiceNumber,
           orderType: transformedInvoice.orderType,
-          total: transformedInvoice.total
+          total: transformedInvoice.total,
         });
-        
+
         const pdfBuffer = await generateInvoicePdf(transformedInvoice);
-        
-        console.log('📄 PDF buffer size:', pdfBuffer.length, 'bytes');
-        
-        res.setHeader('Content-Type', 'application/pdf');
-        res.setHeader('Content-Disposition', `attachment; filename="invoice-${transformedInvoice.invoiceNumber}.pdf"`);
-        res.setHeader('Content-Length', pdfBuffer.length);
-        
-        console.log('✅ PDF generated successfully');
+
+        console.log("📄 PDF buffer size:", pdfBuffer.length, "bytes");
+
+        res.setHeader("Content-Type", "application/pdf");
+        res.setHeader(
+          "Content-Disposition",
+          `attachment; filename="invoice-${transformedInvoice.invoiceNumber}.pdf"`
+        );
+        res.setHeader("Content-Length", pdfBuffer.length);
+
+        console.log("✅ PDF generated successfully");
         return res.status(200).send(pdfBuffer);
       } catch (error) {
-        console.error('❌ Error generating PDF:', error);
-        console.error('❌ Error stack:', error instanceof Error ? error.stack : 'No stack trace');
-        return res.status(500).json({ 
-          error: 'Failed to generate PDF',
-          details: error instanceof Error ? error.message : 'Unknown error'
+        console.error("❌ Error generating PDF:", error);
+        console.error(
+          "❌ Error stack:",
+          error instanceof Error ? error.stack : "No stack trace"
+        );
+        return res.status(500).json({
+          error: "Failed to generate PDF",
+          details: error instanceof Error ? error.message : "Unknown error",
         });
       }
     }
 
-    console.log('✅ Returning invoice data:', {
+    console.log("✅ Returning invoice data:", {
       invoiceId: transformedInvoice.id,
       invoiceNumber: transformedInvoice.invoiceNumber,
-      orderType: transformedInvoice.orderType
+      orderType: transformedInvoice.orderType,
     });
 
     res.status(200).json({ invoice: transformedInvoice });
@@ -759,5 +806,3 @@ export default async function handler(
     });
   }
 }
-
-

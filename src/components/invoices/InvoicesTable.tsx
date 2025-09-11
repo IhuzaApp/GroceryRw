@@ -280,27 +280,35 @@ const InvoicesTable: React.FC<InvoicesTableProps> = ({
                       onClick={(e) => {
                         e.stopPropagation();
                         // Download invoice functionality
-                        const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
-                        const baseUrl = process.env.NODE_ENV === 'production' 
-                          ? (process.env.NEXT_PUBLIC_APP_URL || 'https://plas.rw')
-                          : window.location.origin;
-                        
-                        console.log('InvoicesTable Desktop Click:', {
+                        const isMobile =
+                          /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(
+                            navigator.userAgent
+                          );
+                        const baseUrl =
+                          process.env.NODE_ENV === "production"
+                            ? process.env.NEXT_PUBLIC_APP_URL ||
+                              "https://plas.rw"
+                            : window.location.origin;
+
+                        console.log("InvoicesTable Desktop Click:", {
                           invoiceId: invoice.id,
                           orderType: invoice.order_type,
-                          isMobile
+                          isMobile,
                         });
-                        
+
                         if (isMobile) {
                           // For mobile, open PDF directly
                           const pdfUrl = `${baseUrl}/api/invoices/${invoice.id}?pdf=true`;
-                          console.log('Opening PDF URL:', pdfUrl);
+                          console.log("Opening PDF URL:", pdfUrl);
                           window.open(pdfUrl, "_blank");
                         } else {
                           // For desktop, open invoice page with hash
-                          const hash = invoice.order_type === "reel" ? "#reel" : "#regularOrder";
+                          const hash =
+                            invoice.order_type === "reel"
+                              ? "#reel"
+                              : "#regularOrder";
                           const invoiceUrl = `${baseUrl}/Plasa/invoices/${invoice.id}${hash}`;
-                          console.log('Opening invoice URL:', invoiceUrl);
+                          console.log("Opening invoice URL:", invoiceUrl);
                           window.open(invoiceUrl, "_blank");
                         }
                       }}
@@ -437,27 +445,34 @@ const InvoicesTable: React.FC<InvoicesTableProps> = ({
                     onClick={(e) => {
                       e.stopPropagation();
                       // Download invoice functionality
-                      const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
-                      const baseUrl = process.env.NODE_ENV === 'production' 
-                        ? (process.env.NEXT_PUBLIC_APP_URL || 'https://plas.rw')
-                        : window.location.origin;
-                      
-                      console.log('InvoicesTable Mobile Click:', {
+                      const isMobile =
+                        /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(
+                          navigator.userAgent
+                        );
+                      const baseUrl =
+                        process.env.NODE_ENV === "production"
+                          ? process.env.NEXT_PUBLIC_APP_URL || "https://plas.rw"
+                          : window.location.origin;
+
+                      console.log("InvoicesTable Mobile Click:", {
                         invoiceId: invoice.id,
                         orderType: invoice.order_type,
-                        isMobile
+                        isMobile,
                       });
-                      
+
                       if (isMobile) {
                         // For mobile, open PDF directly
                         const pdfUrl = `${baseUrl}/api/invoices/${invoice.id}?pdf=true`;
-                        console.log('Opening PDF URL:', pdfUrl);
+                        console.log("Opening PDF URL:", pdfUrl);
                         window.open(pdfUrl, "_blank");
                       } else {
                         // For desktop, open invoice page with hash
-                        const hash = invoice.order_type === "reel" ? "#reel" : "#regularOrder";
+                        const hash =
+                          invoice.order_type === "reel"
+                            ? "#reel"
+                            : "#regularOrder";
                         const invoiceUrl = `${baseUrl}/Plasa/invoices/${invoice.id}${hash}`;
-                        console.log('Opening invoice URL:', invoiceUrl);
+                        console.log("Opening invoice URL:", invoiceUrl);
                         window.open(invoiceUrl, "_blank");
                       }
                     }}
