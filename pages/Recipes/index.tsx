@@ -4,7 +4,6 @@ import RootLayout from "@components/ui/layout";
 import { Input, Button, Panel, Loader } from "rsuite";
 import Link from "next/link";
 import Image from "next/image";
-import { withRouteProtection } from "../../src/context/RouteProtectionContext";
 
 // Define types for API responses
 interface Meal {
@@ -22,7 +21,7 @@ interface Category {
   strCategoryDescription: string;
 }
 
-function RecipesPage() {
+export default function RecipesPage() {
   const router = useRouter();
   const [searchTerm, setSearchTerm] = useState("");
   const [meals, setMeals] = useState<Meal[]>([]);
@@ -279,6 +278,3 @@ function RecipesPage() {
   );
 }
 
-export default withRouteProtection(RecipesPage, {
-  requireAuth: true
-});
