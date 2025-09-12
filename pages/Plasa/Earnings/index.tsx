@@ -15,7 +15,7 @@ import {
   formatCurrencySync,
   getCurrencySymbol,
 } from "../../../src/utils/formatCurrency";
-import { withRouteProtection } from "../../../src/context/RouteProtectionContext";
+import { AuthGuard } from "../../../src/components/AuthGuard";
 import { authenticatedFetch } from "@lib/authenticatedFetch";
 
 // Interface for earnings stats
@@ -420,7 +420,8 @@ const EarningsPage: React.FC = () => {
   };
 
   return (
-    <ShopperLayout>
+    <AuthGuard requireAuth={true} requireRole="shopper">
+      <ShopperLayout>
       <div className="container mx-auto h-full px-2 py-4 pb-24 sm:py-8 sm:pb-8">
         <div className="mx-auto h-full w-full">
           {/* Earnings Period Selector */}
@@ -761,11 +762,9 @@ const EarningsPage: React.FC = () => {
         </div>
       </div>
     </ShopperLayout>
+    </AuthGuard>
   );
 };
 
-export default withRouteProtection(EarningsPage, {
-  requireAuth: true,
-  requireRole: 'shopper'
-});
+export default EarningsPage;
 

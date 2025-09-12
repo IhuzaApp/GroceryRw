@@ -8,8 +8,7 @@ import { Panel, Nav } from "rsuite";
 import WorkScheduleTab from "../../../src/components/shopper/settings/WorkScheduleTab";
 import PaymentTab from "../../../src/components/shopper/settings/PaymentTab";
 import NotificationTab from "../../../src/components/shopper/settings/NotificationTab";
-import { withRouteProtection } from "../../../src/context/RouteProtectionContext";
-
+import { AuthGuard } from "../../../src/components/AuthGuard";
 
 function SettingsPage() {
   const router = useRouter();
@@ -70,7 +69,8 @@ function SettingsPage() {
   }, [router.query.tab]);
 
   return (
-    <ShopperLayout>
+    <AuthGuard requireAuth={true} requireRole="shopper">
+      <ShopperLayout>
       <div
         className={`container mx-auto px-2 py-4 pb-24 sm:px-4 sm:py-8 sm:pb-8 ${
           theme === "dark" ? "text-gray-100" : "text-gray-900"
@@ -118,11 +118,9 @@ function SettingsPage() {
         </Panel>
       </div>
     </ShopperLayout>
+    </AuthGuard>
   );
 }
 
-export default withRouteProtection(SettingsPage, {
-  requireAuth: true,
-  requireRole: 'shopper'
-});
+export default SettingsPage;
 

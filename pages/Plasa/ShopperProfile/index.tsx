@@ -2,12 +2,13 @@ import React from "react";
 import ShopperLayout from "@components/shopper/ShopperLayout";
 import Link from "next/link";
 import ShopperProfileComponent from "@components/shopper/profile/ShopperProfileComponent";
-import { withRouteProtection } from "../../../src/context/RouteProtectionContext";
+import { AuthGuard } from "../../../src/components/AuthGuard";
 
 
 function ShopperProfilePage() {
   return (
-    <ShopperLayout>
+    <AuthGuard requireAuth={true} requireRole="shopper">
+      <ShopperLayout>
       <div className="container mx-auto px-4 py-4 pb-24 sm:py-8 sm:pb-8">
         {/* Profile Header */}
         <div className="mb-4 flex flex-col gap-2 sm:mb-6 sm:flex-row sm:items-center sm:gap-0">
@@ -37,11 +38,9 @@ function ShopperProfilePage() {
         </div>
       </div>
     </ShopperLayout>
+    </AuthGuard>
   );
 }
 
 
-export default withRouteProtection(ShopperProfilePage, {
-  requireAuth: true,
-  requireRole: 'shopper'
-});
+export default ShopperProfilePage;

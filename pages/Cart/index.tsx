@@ -9,7 +9,7 @@ import ItemCartTable from "@components/UserCarts/cartsTable";
 import CheckoutItems from "@components/UserCarts/checkout/checkoutCard";
 import { useTheme } from "../../src/context/ThemeContext";
 import { useAuth } from "../../src/context/AuthContext";
-import { ProtectedCart, useCartProtection } from "../../src/components/auth/ProtectedCart";
+import { AuthGuard } from "../../src/components/AuthGuard";
 
 // Skeleton loader for shop selection cards
 function ShopSelectionSkeleton() {
@@ -398,7 +398,7 @@ export default function CartMainPage() {
                 {loadingItems ? (
                   <CheckoutSkeleton />
                 ) : (
-                  <ProtectedCart action="checkout">
+                  <AuthGuard requireAuth={true}>
                     <CheckoutItems
                       shopId={selectedCartId!}
                       Total={cartTotal}
@@ -407,7 +407,7 @@ export default function CartMainPage() {
                       shopLng={parseFloat(selectedShop.longitude)}
                       shopAlt={parseFloat((selectedShop as any).altitude || "0")}
                     />
-                  </ProtectedCart>
+                  </AuthGuard>
                 )}
               </>
             )}

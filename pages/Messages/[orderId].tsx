@@ -29,7 +29,7 @@ import {
 import { db, storage } from "../../src/lib/firebase";
 import { formatCurrency } from "../../src/lib/formatCurrency";
 import { getStorage, ref, uploadBytes, getDownloadURL } from "firebase/storage";
-import { withRouteProtection } from "../../src/context/RouteProtectionContext";
+import { AuthGuard } from "../../src/components/AuthGuard";
 
 // Helper to format date for messages
 function formatMessageDate(timestamp: any) {
@@ -452,7 +452,8 @@ function ChatPage() {
   };
 
   return (
-    <div className="fixed inset-0 flex flex-col overflow-hidden bg-gray-50 dark:bg-gray-900">
+    <AuthGuard requireAuth={true}>
+      <div className="fixed inset-0 flex flex-col overflow-hidden bg-gray-50 dark:bg-gray-900">
       {/* Chat Header */}
       <div className="flex items-center justify-between border-b border-gray-200 bg-white px-4 py-3 dark:border-gray-700 dark:bg-gray-800">
         <div className="flex items-center gap-3">
@@ -625,6 +626,7 @@ function ChatPage() {
         </div>
       </div>
     </div>
+    </AuthGuard>
   );
 }
 
@@ -633,6 +635,4 @@ ChatPage.getLayout = function getLayout(page: React.ReactElement) {
   return page;
 };
 
-export default withRouteProtection(ChatPage, {
-  requireAuth: true
-});
+export default ChatPage;

@@ -18,7 +18,7 @@ import {
   updateDoc,
 } from "firebase/firestore";
 import { db } from "../../../../../src/lib/firebase";
-import { withRouteProtection } from "../../../../../src/context/RouteProtectionContext";
+import { AuthGuard } from "../../../../../src/components/AuthGuard";
 
 // Define interfaces for the order data
 interface OrderItem {
@@ -428,7 +428,4 @@ export const getServerSideProps: GetServerSideProps<
   }
 };
 
-export default withRouteProtection(BatchDetailsPage, {
-  requireAuth: true,
-  requireRole: 'shopper'
-});
+export default BatchDetailsPage;

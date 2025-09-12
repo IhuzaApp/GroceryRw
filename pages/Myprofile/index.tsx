@@ -3,7 +3,7 @@ import React from "react";
 import Image from "next/image";
 import Link from "next/link";
 import UserProfile from "@components/userProfile/useProfile";
-import { withRouteProtection } from "../../src/context/RouteProtectionContext";
+import { AuthGuard } from "../../src/components/AuthGuard";
 
 function MyProfilePage() {
   // Add page debugging - DISABLED FOR PERFORMANCE
@@ -15,39 +15,39 @@ function MyProfilePage() {
   // });
 
   return (
-    <RootLayout>
-      <div className="p-4 md:ml-16">
-        {/* Adjust ml-* to match your sidebar width */}
-        <div className="container mx-auto">
-          {/* Profile Header */}
-          <div className="mb-6 flex items-center">
-            <Link
-              href="/"
-              className="flex items-center text-inherit transition-colors duration-200"
-            >
-              <svg
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth={2}
-                className="mr-2 h-5 w-5"
+    <AuthGuard requireAuth={true}>
+      <RootLayout>
+        <div className="p-4 md:ml-16">
+          {/* Adjust ml-* to match your sidebar width */}
+          <div className="container mx-auto">
+            {/* Profile Header */}
+            <div className="mb-6 flex items-center">
+              <Link
+                href="/"
+                className="flex items-center text-inherit transition-colors duration-200"
               >
-                <path d="M19 12H5M12 19l-7-7 7-7" />
-              </svg>
-              <span className="hover:underline">Back</span>
-            </Link>
-            <h1 className="ml-4 text-2xl font-bold text-inherit">My Profile</h1>
-          </div>
+                <svg
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth={2}
+                  className="mr-2 h-5 w-5"
+                >
+                  <path d="M19 12H5M12 19l-7-7 7-7" />
+                </svg>
+                <span className="hover:underline">Back</span>
+              </Link>
+              <h1 className="ml-4 text-2xl font-bold text-inherit">My Profile</h1>
+            </div>
 
-          {/* Profile Content */}
-          <UserProfile />
+            {/* Profile Content */}
+            <UserProfile />
+          </div>
         </div>
-      </div>
-    </RootLayout>
+      </RootLayout>
+    </AuthGuard>
   );
 }
 
 
-export default withRouteProtection(MyProfilePage, {
-  requireAuth: true
-});
+export default MyProfilePage;

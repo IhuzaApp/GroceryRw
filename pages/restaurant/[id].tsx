@@ -6,7 +6,7 @@ import { gql } from "graphql-request";
 import RootLayout from "@components/ui/layout";
 import Image from "next/image";
 import Link from "next/link";
-import { withRouteProtection } from "../../src/context/RouteProtectionContext";
+import { AuthGuard } from "../../src/components/AuthGuard";
 
 interface Restaurant {
   id: string;
@@ -311,6 +311,4 @@ export const getServerSideProps: GetServerSideProps = async ({ params }) => {
   }
 };
 
-export default withRouteProtection(RestaurantPage, {
-  requireAuth: true
-});
+export default RestaurantPage;
