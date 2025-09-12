@@ -83,15 +83,18 @@ export default function TelegramStatusButton({
 
     try {
       // First, ensure the shopper record exists and get the shopper ID
-      const response = await authenticatedFetch("/api/telegram/ensure-shopper", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          userId: userId,
-        }),
-      });
+      const response = await authenticatedFetch(
+        "/api/telegram/ensure-shopper",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            userId: userId,
+          }),
+        }
+      );
 
       const result = await response.json();
 

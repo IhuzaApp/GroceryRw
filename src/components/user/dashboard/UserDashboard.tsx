@@ -186,22 +186,24 @@ function getDistanceFromLatLonInKm(
 // Main Component
 export default function UserDashboard({ initialData }: { initialData: Data }) {
   const { role, authReady } = useAuth();
-  const [data, setData] = useState<Data>(initialData || {
-    users: [],
-    categories: [],
-    shops: [],
-    products: [],
-    addresses: [],
-    carts: [],
-    cartItems: [],
-    orders: [],
-    orderItems: [],
-    shopperAvailability: [],
-    deliveryIssues: [],
-    notifications: [],
-    platformSettings: [],
-    restaurants: [],
-  });
+  const [data, setData] = useState<Data>(
+    initialData || {
+      users: [],
+      categories: [],
+      shops: [],
+      products: [],
+      addresses: [],
+      carts: [],
+      cartItems: [],
+      orders: [],
+      orderItems: [],
+      shopperAvailability: [],
+      deliveryIssues: [],
+      notifications: [],
+      platformSettings: [],
+      restaurants: [],
+    }
+  );
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -751,7 +753,8 @@ export default function UserDashboard({ initialData }: { initialData: Data }) {
           <div className="mb-4 flex items-center justify-between">
             <h4 className="text-3xl font-bold text-gray-900 dark:text-white">
               {selectedCategory
-                ? data?.categories?.find((c) => c.id === selectedCategory)?.name || "Selected Category"
+                ? data?.categories?.find((c) => c.id === selectedCategory)
+                    ?.name || "Selected Category"
                 : "All Mart"}
             </h4>
             <div className="flex items-center gap-2">

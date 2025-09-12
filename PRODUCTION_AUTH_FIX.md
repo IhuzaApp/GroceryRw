@@ -3,6 +3,7 @@
 ## 🚨 Problem Summary
 
 **CRITICAL ISSUE**: Authenticated users are being redirected to login for ALL protected pages in production, even though:
+
 - ✅ API calls work (return 200 status)
 - ✅ Client-side authentication shows `status: 'authenticated'`
 - ✅ User data is loaded correctly
@@ -27,9 +28,10 @@ const token = await getToken({
   req,
   secret: process.env.NEXTAUTH_SECRET,
   secureCookie: process.env.NEXTAUTH_SECURE_COOKIES === "true",
-  cookieName: process.env.NEXTAUTH_SECURE_COOKIES === "true" 
-    ? "__Secure-next-auth.session-token" 
-    : "next-auth.session-token",
+  cookieName:
+    process.env.NEXTAUTH_SECURE_COOKIES === "true"
+      ? "__Secure-next-auth.session-token"
+      : "next-auth.session-token",
 });
 ```
 
@@ -53,6 +55,7 @@ const token = await getToken({
 ## 🧪 Testing the Fix
 
 ### 1. Deploy the Changes
+
 ```bash
 # Deploy to production
 git add .
@@ -61,22 +64,28 @@ git push origin main
 ```
 
 ### 2. Test Authentication Status
+
 Visit: `https://www.plas.rw/api/debug/auth-status`
 
 Check for:
+
 - ✅ `token.id` is present
 - ✅ `session.user` is present
 - ✅ `cookies.hasSessionCookie` is true
 - ✅ `environment.NEXTAUTH_SECURE_COOKIES` is "true"
 
 ### 3. Test Protected Pages
+
 Try accessing:
+
 - `https://www.plas.rw/Myprofile`
 - `https://www.plas.rw/Reels`
 - `https://www.plas.rw/debug/navigation-test`
 
 ### 4. Monitor Console Logs
+
 Look for these logs in production:
+
 ```
 [AUTH DEBUG] Middleware: authentication_check {authenticated: true, sessionInfo: {...}}
 [AUTH DEBUG] Middleware: middleware_success {pathname: "/Myprofile", userRole: "user"}
@@ -100,25 +109,29 @@ HASURA_GRAPHQL_ADMIN_SECRET=your-admin-secret
 ## 🚨 If Issues Persist
 
 ### 1. Check Cookie Domain
+
 The issue might be cookie domain mismatch. Check if cookies are being set for the correct domain.
 
 ### 2. Check HTTPS
+
 Ensure your production site is properly configured for HTTPS.
 
 ### 3. Check NextAuth Configuration
+
 Verify that NextAuth is using the correct cookie configuration for production.
 
 ### 4. Temporary Workaround
+
 If the issue persists, you can temporarily disable middleware for testing:
 
 ```typescript
 // In middleware.ts - TEMPORARY WORKAROUND
 export async function middleware(req: NextRequest) {
   // TEMPORARY: Skip middleware in production for testing
-  if (process.env.NODE_ENV === 'production') {
+  if (process.env.NODE_ENV === "production") {
     return NextResponse.next();
   }
-  
+
   // ... rest of middleware code
 }
 ```
@@ -134,12 +147,14 @@ export async function middleware(req: NextRequest) {
 ## 🔍 Debugging Commands
 
 ### Check Authentication Status
+
 ```bash
 curl -H "Cookie: $(curl -s https://www.plas.rw/api/debug/auth-status | jq -r '.cookies.allCookies')" \
      https://www.plas.rw/api/debug/auth-status
 ```
 
 ### Check Environment Variables
+
 ```bash
 # In your production environment
 echo $NEXTAUTH_SECRET
@@ -165,6 +180,7 @@ echo $NEXTAUTH_SECURE_COOKIES
 ## 📞 Support
 
 If issues persist after deploying this fix:
+
 1. Check the debug endpoint: `/api/debug/auth-status`
 2. Review production logs for middleware errors
 3. Verify environment variables are correct

@@ -9,7 +9,7 @@ export const authenticatedFetch = async (
   url: string,
   options: RequestInit = {}
 ): Promise<Response> => {
-  const method = options.method || 'GET';
+  const method = options.method || "GET";
   const startTime = Date.now();
 
   // logAuth('AuthenticatedFetch', 'request_started', {
@@ -34,9 +34,9 @@ export const authenticatedFetch = async (
 
     const response = await fetch(url, fetchOptions);
     const duration = Date.now() - startTime;
-    
+
     // logApiCall(url, method, response.status, true);
-    
+
     // logAuth('AuthenticatedFetch', 'request_completed', {
     //   url,
     //   method,
@@ -62,7 +62,7 @@ export const authenticatedFetch = async (
     return response;
   } catch (error) {
     const duration = Date.now() - startTime;
-    
+
     // logAuth('AuthenticatedFetch', 'request_error', {
     //   url,
     //   method,

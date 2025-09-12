@@ -7,7 +7,7 @@ import { useEffect, useState } from "react";
 
 /**
  * Higher-Order Component for protecting pages
- * 
+ *
  * This HOC ensures that pages are properly protected both on the server and client side.
  * It handles authentication checking, role-based access, and loading states.
  */
@@ -31,7 +31,9 @@ export function withAuth<P extends object>(
   const AuthenticatedComponent = (props: P) => {
     const { data: session, status } = useSession();
     const router = useRouter();
-    const [componentName] = useState(WrappedComponent.displayName || WrappedComponent.name || 'Unknown');
+    const [componentName] = useState(
+      WrappedComponent.displayName || WrappedComponent.name || "Unknown"
+    );
     const [isInitialized, setIsInitialized] = useState(false);
 
     // Log page access on mount
@@ -39,10 +41,10 @@ export function withAuth<P extends object>(
       const currentPath = router.asPath;
       const isAuthenticated = status === "authenticated";
       const userRole = (session?.user as any)?.role || "user";
-      
+
       // logPageAccess(componentName, isAuthenticated, userRole, session);
       // logAuthenticationCheck(componentName, isAuthenticated, userRole, session);
-      
+
       // logAuth('WithAuth', 'component_mounted', {
       //   componentName,
       //   requireAuth,
@@ -78,7 +80,7 @@ export function withAuth<P extends object>(
 
       if (requireAuth && status === "unauthenticated") {
         // logRedirect(currentPath, redirectTo, 'User not authenticated', false);
-        
+
         // logAuth('WithAuth', 'redirecting_to_login', {
         //   componentName,
         //   currentPath,
@@ -105,7 +107,7 @@ export function withAuth<P extends object>(
 
         if (!allowedRoles.includes(userRole)) {
           // logRedirect(currentPath, '/', 'Insufficient role permissions', true, userRole);
-          
+
           // logAuth('WithAuth', 'redirecting_due_to_role', {
           //   componentName,
           //   userRole,
@@ -129,7 +131,16 @@ export function withAuth<P extends object>(
         //   timestamp: Date.now(),
         // });
       }
-    }, [session, status, router, requireAuth, allowedRoles, redirectTo, isInitialized, componentName]);
+    }, [
+      session,
+      status,
+      router,
+      requireAuth,
+      allowedRoles,
+      redirectTo,
+      isInitialized,
+      componentName,
+    ]);
 
     // Show loading state while checking authentication
     if (requireAuth && status === "loading") {
@@ -153,7 +164,9 @@ export function withAuth<P extends object>(
   };
 
   // Set display name for debugging
-  AuthenticatedComponent.displayName = `withAuth(${WrappedComponent.displayName || WrappedComponent.name})`;
+  AuthenticatedComponent.displayName = `withAuth(${
+    WrappedComponent.displayName || WrappedComponent.name
+  })`;
 
   return AuthenticatedComponent;
 }
@@ -177,7 +190,9 @@ export function requireAuth(
     if (!session) {
       return {
         redirect: {
-          destination: `/Auth/Login?callbackUrl=${encodeURIComponent(context.resolvedUrl)}`,
+          destination: `/Auth/Login?callbackUrl=${encodeURIComponent(
+            context.resolvedUrl
+          )}`,
           permanent: false,
         },
       };
@@ -207,7 +222,8 @@ export function requireAuth(
  * Server-side authentication check for specific roles
  */
 export function requireRole(roles: string[]) {
-  return (context: GetServerSidePropsContext) => requireAuth(context, { allowedRoles: roles });
+  return (context: GetServerSidePropsContext) =>
+    requireAuth(context, { allowedRoles: roles });
 }
 
 /**
