@@ -72,6 +72,7 @@ export default function UserRegistration() {
           value={email}
           onChange={(value) => setEmail(value as string)}
           className="w-full"
+          autoComplete="email"
           required
         />
       </div>
@@ -87,6 +88,7 @@ export default function UserRegistration() {
             value={password}
             onChange={(value) => setPassword(value as string)}
             className="w-full"
+            autoComplete="new-password"
             required
           />
           <InputGroup.Button
@@ -135,6 +137,7 @@ export default function UserRegistration() {
           value={confirmPassword}
           onChange={(value) => setConfirmPassword(value as string)}
           className="w-full"
+          autoComplete="new-password"
           required
         />
       </div>
@@ -149,6 +152,7 @@ export default function UserRegistration() {
           value={phone}
           onChange={(value) => setPhone(value as string)}
           className="w-full"
+          autoComplete="tel"
           required
         />
       </div>

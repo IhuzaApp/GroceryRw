@@ -52,6 +52,7 @@ export default function UserLogin() {
           value={identifier}
           onChange={(e) => setIdentifier(e.target.value)}
           className="w-full rounded-none border border-gray-300 px-3 py-2 text-gray-900 focus:border-green-500 focus:outline-none focus:ring-1 focus:ring-green-500 dark:border-gray-600 dark:bg-gray-800 dark:text-white"
+          autoComplete="username"
           required
         />
       </div>
@@ -71,6 +72,7 @@ export default function UserLogin() {
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             className="w-full rounded-none border border-gray-300 px-3 py-2 pr-10 text-gray-900 focus:border-green-500 focus:outline-none focus:ring-1 focus:ring-green-500 dark:border-gray-600 dark:bg-gray-800 dark:text-white"
+            autoComplete="current-password"
             required
           />
           <button
