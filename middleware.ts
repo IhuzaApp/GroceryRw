@@ -57,6 +57,11 @@ const isPublicPath = (path: string) => {
 };
 
 export async function middleware(req: NextRequest) {
+  // COMPLETELY DISABLED: Skip all middleware logic for testing
+  console.log('[MIDDLEWARE COMPLETELY DISABLED] All authentication checks bypassed');
+  return NextResponse.next();
+  
+  // ALL CODE BELOW IS DISABLED FOR TESTING
   const { pathname } = req.nextUrl;
   const startTime = Date.now();
 

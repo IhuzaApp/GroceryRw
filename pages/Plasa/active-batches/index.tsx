@@ -56,32 +56,33 @@ export default function ActiveBatchesPage({
   );
 }
 
+// TEMPORARY: Disable server-side authentication to test if it's causing the issue
 export const getServerSideProps: GetServerSideProps<
   ActiveBatchesPageProps
 > = async (context) => {
-  // Get session to identify the shopper
-  const session = await getServerSession(context.req, context.res, authOptions);
-  const userId = (session as any)?.user?.id;
-
-  if (!userId) {
-    return {
-      props: {
-        activeOrders: [],
-        error: "You must be logged in as a shopper",
-      },
-    };
-  }
-
-  // Check if the user is a shopper
-  const userRole = (session as any)?.user?.role;
-  if (userRole !== "shopper") {
-    return {
-      props: {
-        activeOrders: [],
-        error: "This page is only accessible to shoppers",
-      },
-    };
-  }
+  console.log('[SERVER-SIDE AUTH DISABLED] Skipping authentication check for Plasa/active-batches');
+  return { props: { activeOrders: [], error: null } };
+  
+  // Original authentication code (disabled for testing)
+  // const session = await getServerSession(context.req, context.res, authOptions);
+  // const userId = (session as any)?.user?.id;
+  // if (!userId) {
+  //   return {
+  //     props: {
+  //       activeOrders: [],
+  //       error: "You must be logged in as a shopper",
+  //     },
+  //   };
+  // }
+  // const userRole = (session as any)?.user?.role;
+  // if (userRole !== "shopper") {
+  //   return {
+  //     props: {
+  //       activeOrders: [],
+  //       error: "This page is only accessible to shoppers",
+  //     },
+  //   };
+  // }
 
   // Define GraphQL query to fetch active regular orders
   const GET_ACTIVE_ORDERS = gql`

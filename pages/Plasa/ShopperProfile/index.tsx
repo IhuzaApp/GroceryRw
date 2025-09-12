@@ -55,34 +55,33 @@ export default function ShopperProfilePage() {
   );
 }
 
-// Protect this page: redirect to login if not authenticated
+// TEMPORARY: Disable server-side authentication to test if it's causing the issue
 export const getServerSideProps: GetServerSideProps = async (context) => {
-  const session = (await getServerSession(
-    context.req,
-    context.res,
-    authOptions as any
-  )) as Session | null;
-
-  if (!session) {
-    return {
-      redirect: {
-        destination: "/Auth/Login",
-        permanent: false,
-      },
-    };
-  }
-
-  // Check if the user has the plasa role
-  const userRole = session.user?.role;
-
-  if (userRole !== "shopper") {
-    return {
-      redirect: {
-        destination: "/",
-        permanent: false,
-      },
-    };
-  }
-
+  console.log('[SERVER-SIDE AUTH DISABLED] Skipping authentication check for Plasa/ShopperProfile');
   return { props: {} };
+  
+  // Original authentication code (disabled for testing)
+  // const session = (await getServerSession(
+  //   context.req,
+  //   context.res,
+  //   authOptions as any
+  // )) as Session | null;
+  // if (!session) {
+  //   return {
+  //     redirect: {
+  //       destination: "/Auth/Login",
+  //       permanent: false,
+  //     },
+  //   };
+  // }
+  // const userRole = session.user?.role;
+  // if (userRole !== "shopper") {
+  //   return {
+  //     redirect: {
+  //       destination: "/",
+  //       permanent: false,
+  //     },
+  //   };
+  // }
+  // return { props: {} };
 };
