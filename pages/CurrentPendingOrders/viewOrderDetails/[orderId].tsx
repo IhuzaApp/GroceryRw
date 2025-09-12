@@ -5,8 +5,9 @@ import UserOrderDetails from "@components/UserCarts/orders/UserOrderDetails";
 import UserReelOrderDetails from "@components/UserCarts/orders/UserReelOrderDetails";
 import { Button } from "rsuite";
 import Link from "next/link";
+import { withRouteProtection } from "../../../../src/context/RouteProtectionContext";
 
-export default function ViewOrderDetailsPage() {
+function ViewOrderDetailsPage() {
   const router = useRouter();
   const { orderId } = router.query;
   const [order, setOrder] = useState<any>(null);
@@ -175,3 +176,7 @@ export default function ViewOrderDetailsPage() {
     </RootLayout>
   );
 }
+
+export default withRouteProtection(ViewOrderDetailsPage, {
+  requireAuth: true
+});

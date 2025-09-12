@@ -3,6 +3,7 @@ import { useRouter } from "next/router";
 import RootLayout from "@components/ui/layout";
 import { Button, Panel, Loader } from "rsuite";
 import Link from "next/link";
+import { withRouteProtection } from "../../src/context/RouteProtectionContext";
 
 // Define types for API responses
 interface MealDetail {
@@ -17,7 +18,7 @@ interface MealDetail {
   [key: string]: string | null; // For dynamic ingredient and measure properties
 }
 
-export default function RecipeDetailPage() {
+function RecipeDetailPage() {
   const router = useRouter();
   const { id } = router.query;
   const [meal, setMeal] = useState<MealDetail | null>(null);
@@ -225,3 +226,7 @@ export default function RecipeDetailPage() {
     </RootLayout>
   );
 }
+
+export default withRouteProtection(RecipeDetailPage, {
+  requireAuth: true
+});

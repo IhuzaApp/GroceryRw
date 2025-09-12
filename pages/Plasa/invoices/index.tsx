@@ -17,6 +17,7 @@ import {
   InvoicesPageProps,
 } from "../../../src/components/invoices";
 import { formatCurrencySync } from "../../../src/utils/formatCurrency";
+import { withRouteProtection } from "../../../src/context/RouteProtectionContext";
 
 const InvoicesPage: React.FC<InvoicesPageProps> = ({
   initialInvoices = [],
@@ -218,7 +219,10 @@ const InvoicesPage: React.FC<InvoicesPageProps> = ({
   );
 };
 
-export default InvoicesPage;
+export default withRouteProtection(InvoicesPage, {
+  requireAuth: true,
+  requireRole: 'shopper'
+});
 
 // TEMPORARY: Disable server-side authentication to test if it's causing the issue
 export const getServerSideProps = async (context: any) => {

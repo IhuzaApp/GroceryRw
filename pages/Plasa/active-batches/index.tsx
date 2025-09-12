@@ -6,6 +6,7 @@ import { hasuraClient } from "../../../src/lib/hasuraClient";
 import { gql } from "graphql-request";
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "../../api/auth/[...nextauth]";
+import { withRouteProtection } from "../../../src/context/RouteProtectionContext";
 
 interface Order {
   id: string;
@@ -45,7 +46,7 @@ interface ActiveBatchesPageProps {
   error: string | null;
 }
 
-export default function ActiveBatchesPage({
+function ActiveBatchesPage({
   activeOrders,
   error,
 }: ActiveBatchesPageProps) {
@@ -55,6 +56,11 @@ export default function ActiveBatchesPage({
     </ShopperLayout>
   );
 }
+
+export default withRouteProtection(ActiveBatchesPage, {
+  requireAuth: true,
+  requireRole: 'shopper'
+});
 
 // TEMPORARY: Disable server-side authentication to test if it's causing the issue
 export const getServerSideProps: GetServerSideProps<

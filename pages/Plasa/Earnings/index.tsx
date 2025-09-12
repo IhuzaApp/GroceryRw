@@ -19,6 +19,7 @@ import { GetServerSideProps } from "next";
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "../../api/auth/[...nextauth]";
 import { authenticatedFetch } from "@lib/authenticatedFetch";
+import { withRouteProtection } from "../../../src/context/RouteProtectionContext";
 
 // Interface for earnings stats
 interface EarningsStats {
@@ -766,7 +767,10 @@ const EarningsPage: React.FC = () => {
   );
 };
 
-export default EarningsPage;
+export default withRouteProtection(EarningsPage, {
+  requireAuth: true,
+  requireRole: 'shopper'
+});
 
 // TEMPORARY: Disable server-side authentication to test if it's causing the issue
 export const getServerSideProps: GetServerSideProps = async (context) => {

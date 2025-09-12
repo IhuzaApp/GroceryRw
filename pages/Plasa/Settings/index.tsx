@@ -12,6 +12,7 @@ import { GetServerSideProps } from "next";
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "../../api/auth/[...nextauth]";
 import { Session } from "next-auth";
+import { withRouteProtection } from "../../../src/context/RouteProtectionContext";
 
 // Extend the Session type to include our custom fields
 interface CustomSession extends Session {
@@ -138,7 +139,10 @@ function SettingsPage({ sessionData }: SettingsPageProps) {
   );
 }
 
-export default SettingsPage;
+export default withRouteProtection(SettingsPage, {
+  requireAuth: true,
+  requireRole: 'shopper'
+});
 
 // TEMPORARY: Disable server-side authentication to test if it's causing the issue
 export const getServerSideProps: GetServerSideProps = async (context) => {

@@ -23,6 +23,7 @@ import { Button, Loader, Panel, Placeholder, Avatar, Input } from "rsuite";
 import { formatCurrency } from "../../src/lib/formatCurrency";
 import ChatDrawer from "../../src/components/chat/ChatDrawer";
 import { isMobileDevice } from "../../src/lib/formatters";
+import { withRouteProtection } from "../../src/context/RouteProtectionContext";
 
 // Helper to display timestamps as relative time ago
 function timeAgo(timestamp: any) {
@@ -80,7 +81,7 @@ interface Conversation {
   order?: any;
 }
 
-export default function MessagesPage() {
+function MessagesPage() {
   const router = useRouter();
   const { data: session, status } = useSession();
   const [conversations, setConversations] = useState<Conversation[]>([]);
@@ -641,3 +642,7 @@ export default function MessagesPage() {
     </RootLayout>
   );
 }
+
+export default withRouteProtection(MessagesPage, {
+  requireAuth: true
+});

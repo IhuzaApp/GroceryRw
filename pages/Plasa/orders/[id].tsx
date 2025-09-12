@@ -10,6 +10,7 @@ import { toast } from "react-hot-toast";
 import { useTheme } from "../../../src/context/ThemeContext";
 import { logger } from "../../../src/utils/logger";
 import VideoValidationModal from "../../../src/components/Reels/VideoValidationModal";
+import { withRouteProtection } from "../../../src/context/RouteProtectionContext";
 
 // Define interface for order data
 interface OrderDetails {
@@ -49,7 +50,7 @@ interface OrderDetails {
   customerPhone?: string;
 }
 
-export default function OrderDetailsPage() {
+function OrderDetailsPage() {
   const router = useRouter();
   const { id } = router.query;
   const { theme } = useTheme();
@@ -745,3 +746,8 @@ export default function OrderDetailsPage() {
     </ShopperLayout>
   );
 }
+
+export default withRouteProtection(OrderDetailsPage, {
+  requireAuth: true,
+  requireRole: 'shopper'
+});

@@ -23,6 +23,7 @@ import type { AppProps } from "next/app";
 import "rsuite/dist/rsuite-no-reset.min.css";
 import { SessionProvider } from "next-auth/react";
 import { AuthProvider } from "../src/context/AuthContext";
+import { RouteProtectionProvider } from "../src/context/RouteProtectionContext";
 import { CartProvider } from "../src/context/CartContext";
 import { ChatProvider } from "../src/context/ChatContext";
 import { Toaster } from "react-hot-toast";
@@ -116,17 +117,19 @@ export default function App({ Component, pageProps }: AppProps) {
       >
         <ApolloProvider client={apolloClient}>
           <AuthProvider>
-            <CartProvider>
-              <ChatProvider>
-                <GoogleMapProvider>
-                  <SessionRefreshHandler>
-                    <Toaster position="top-right" />
-                    <Component {...pageProps} />
-                    <InstallPrompt />
-                  </SessionRefreshHandler>
-                </GoogleMapProvider>
-              </ChatProvider>
-            </CartProvider>
+            <RouteProtectionProvider>
+              <CartProvider>
+                <ChatProvider>
+                  <GoogleMapProvider>
+                    <SessionRefreshHandler>
+                      <Toaster position="top-right" />
+                      <Component {...pageProps} />
+                      <InstallPrompt />
+                    </SessionRefreshHandler>
+                  </GoogleMapProvider>
+                </ChatProvider>
+              </CartProvider>
+            </RouteProtectionProvider>
           </AuthProvider>
         </ApolloProvider>
       </SessionProvider>

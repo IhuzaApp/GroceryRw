@@ -18,6 +18,7 @@ import {
   updateDoc,
 } from "firebase/firestore";
 import { db } from "../../../../../src/lib/firebase";
+import { withRouteProtection } from "../../../../../src/context/RouteProtectionContext";
 
 // Define interfaces for the order data
 interface OrderItem {
@@ -104,7 +105,7 @@ interface BatchDetailsPageProps {
   error: string | null;
 }
 
-export default function BatchDetailsPage({
+function BatchDetailsPage({
   orderData,
   error,
 }: BatchDetailsPageProps) {
@@ -426,3 +427,8 @@ export const getServerSideProps: GetServerSideProps<
     };
   }
 };
+
+export default withRouteProtection(BatchDetailsPage, {
+  requireAuth: true,
+  requireRole: 'shopper'
+});
