@@ -51,17 +51,17 @@ export default function WorkScheduleTab() {
   const formatTimeForDisplay = useCallback((time: string) => {
     // Handle different time formats from database
     let cleanTime = time;
-    
+
     // Remove timezone if present (handles both +00:00 and +00 formats)
     if (time.includes("+")) {
       cleanTime = time.split("+")[0];
     }
-    
+
     // Ensure we have seconds (HH:MM:SS format)
     if (cleanTime.split(":").length === 2) {
       cleanTime = `${cleanTime}:00`;
     }
-    
+
     // Return in the format expected by SelectPicker (HH:MM:SS+00)
     return `${cleanTime}+00`;
   }, []);
@@ -70,17 +70,17 @@ export default function WorkScheduleTab() {
   const formatTimeForAPI = useCallback((time: string) => {
     // Handle different time formats
     let cleanTime = time;
-    
+
     // Remove timezone if present (handles both +00:00 and +00 formats)
     if (time.includes("+")) {
       cleanTime = time.split("+")[0];
     }
-    
+
     // Ensure we have seconds (HH:MM:SS format)
     if (cleanTime.split(":").length === 2) {
       cleanTime = `${cleanTime}:00`;
     }
-    
+
     // Return in the format expected by PostgreSQL timetz (HH:MM:SS+00:00)
     return `${cleanTime}+00:00`;
   }, []);
