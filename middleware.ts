@@ -1,6 +1,10 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
-import { getMiddlewareSession, isAuthenticated, getUserRole } from "./src/lib/middlewareAuth";
+import {
+  getMiddlewareSession,
+  isAuthenticated,
+  getUserRole,
+} from "./src/lib/middlewareAuth";
 // import { logMiddlewareDecision, logAuth } from "./src/lib/debugAuth";
 
 /**
@@ -58,9 +62,11 @@ const isPublicPath = (path: string) => {
 
 export async function middleware(req: NextRequest) {
   // COMPLETELY DISABLED: Skip all middleware logic for testing
-  console.log('[MIDDLEWARE COMPLETELY DISABLED] All authentication checks bypassed');
+  console.log(
+    "[MIDDLEWARE COMPLETELY DISABLED] All authentication checks bypassed"
+  );
   return NextResponse.next();
-  
+
   // ALL CODE BELOW IS DISABLED FOR TESTING
   const { pathname } = req.nextUrl;
   const startTime = Date.now();
@@ -73,12 +79,12 @@ export async function middleware(req: NextRequest) {
   //   referer: req.headers.get('referer'),
   //   cookies: req.cookies.getAll().map(c => ({ name: c.name, value: c.value.substring(0, 20) + '...' })),
   //   hasSessionCookie: !!req.cookies.get('next-auth.session-token') || !!req.cookies.get('__Secure-next-auth.session-token'),
-  //   sessionCookieName: req.cookies.get('next-auth.session-token') ? 'next-auth.session-token' : 
+  //   sessionCookieName: req.cookies.get('next-auth.session-token') ? 'next-auth.session-token' :
   //                     req.cookies.get('__Secure-next-auth.session-token') ? '__Secure-next-auth.session-token' : 'none',
   // });
 
   // API routes are excluded from middleware - they handle their own authentication
-  if (pathname.startsWith('/api/')) {
+  if (pathname.startsWith("/api/")) {
     // logMiddlewareDecision(pathname, 'bypass', 'API route - handled by API authentication');
     return NextResponse.next();
   }
@@ -102,9 +108,9 @@ export async function middleware(req: NextRequest) {
   // Check if role has been changed (cookie set by updateRole API)
   const roleChanged = req.cookies.get("role_changed")?.value === "true";
   const newRole = req.cookies.get("new_role")?.value;
-  
-  // logAuth('Middleware', 'role_change_check', { 
-  //   roleChanged, 
+
+  // logAuth('Middleware', 'role_change_check', {
+  //   roleChanged,
   //   newRole,
   //   roleChangedCookie: req.cookies.get("role_changed")?.value,
   //   newRoleCookie: req.cookies.get("new_role")?.value,
@@ -113,7 +119,7 @@ export async function middleware(req: NextRequest) {
   // If role has been changed, redirect to auth/signout to force session refresh
   if (roleChanged && newRole && !pathname.includes("signout")) {
     // logMiddlewareDecision(pathname, 'redirect', `Role change detected - redirecting to signout. New role: ${newRole}`);
-    
+
     // Create response
     const response = NextResponse.redirect(
       new URL("/api/auth/signout", req.url)
@@ -133,10 +139,10 @@ export async function middleware(req: NextRequest) {
     const authStartTime = Date.now();
     const authenticated = await isAuthenticated(req);
     const authTime = Date.now() - authStartTime;
-    
+
     // Get detailed session info for debugging
     const sessionInfo = await getMiddlewareSession(req);
-    
+
     // logAuth('Middleware', 'authentication_check', {
     //   pathname,
     //   authenticated,
@@ -149,7 +155,7 @@ export async function middleware(req: NextRequest) {
     //   } : null,
     //   timestamp: Date.now(),
     // });
-    
+
     if (!authenticated) {
       // logMiddlewareDecision(pathname, 'redirect', 'User not authenticated - redirecting to login');
       const url = req.nextUrl.clone();
@@ -162,7 +168,7 @@ export async function middleware(req: NextRequest) {
     const roleStartTime = Date.now();
     const userRole = await getUserRole(req);
     const roleTime = Date.now() - roleStartTime;
-    
+
     // logAuth('Middleware', 'role_check', {
     //   pathname,
     //   userRole,
@@ -212,7 +218,7 @@ export async function middleware(req: NextRequest) {
     // User is authenticated, allow
     const totalTime = Date.now() - startTime;
     // logMiddlewareDecision(pathname, 'allow', `User authenticated with role ${userRole} - access granted`, userRole);
-    
+
     // logAuth('Middleware', 'middleware_success', {
     //   pathname,
     //   userRole,
@@ -220,7 +226,7 @@ export async function middleware(req: NextRequest) {
     //   authTimeMs: authTime,
     //   roleTimeMs: roleTime,
     // });
-    
+
     return NextResponse.next();
   } catch (error) {
     const totalTime = Date.now() - startTime;

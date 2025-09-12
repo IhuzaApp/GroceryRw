@@ -223,7 +223,7 @@ export default InvoicesPage;
 // TEMPORARY: Disable server-side authentication to test if it's causing the issue
 export const getServerSideProps = async (context: any) => {
   return { props: { initialInvoices: [], initialError: null } };
-  
+
   try {
     // Original authentication code (disabled for testing)
     // const session = await getServerSession(

@@ -1,6 +1,7 @@
 # 🚨 QUICK PRODUCTION FIX - Deploy Immediately
 
 ## 🚨 Critical Issue
+
 Authenticated users are being redirected to login for ALL protected pages in production.
 
 ## 🔧 Immediate Fix
@@ -44,10 +45,10 @@ Add this to the top of `middleware.ts`:
 ```typescript
 export async function middleware(req: NextRequest) {
   // TEMPORARY: Skip middleware in production for testing
-  if (process.env.NODE_ENV === 'production') {
+  if (process.env.NODE_ENV === "production") {
     return NextResponse.next();
   }
-  
+
   // ... rest of middleware code
 }
 ```
@@ -59,8 +60,8 @@ export async function middleware(req: NextRequest) {
 The main fix is in `src/lib/middlewareAuth.ts` where we now properly detect the secure cookie name:
 
 ```typescript
-cookieName: process.env.NEXTAUTH_SECURE_COOKIES === "true" 
-  ? "__Secure-next-auth.session-token" 
+cookieName: process.env.NEXTAUTH_SECURE_COOKIES === "true"
+  ? "__Secure-next-auth.session-token"
   : "next-auth.session-token",
 ```
 

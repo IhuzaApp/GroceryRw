@@ -219,7 +219,7 @@ export const getServerSideProps: GetServerSideProps<
 > = async (context) => {
   const { id } = context.params || {};
   return { props: { orderData: null, error: null } };
-  
+
   // Original authentication code (disabled for testing)
   // const session = await getServerSession(context.req, context.res, authOptions);
   // if (!id || typeof id !== "string") {

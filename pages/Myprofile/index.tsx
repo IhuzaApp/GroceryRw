@@ -52,7 +52,7 @@ export default function MyProfilePage() {
 // TEMPORARY: Disable server-side authentication to test if it's causing the issue
 export const getServerSideProps: GetServerSideProps = async (context) => {
   return { props: {} };
-  
+
   // Original authentication code (disabled for testing)
   // const session = await getServerSession(
   //   context.req,

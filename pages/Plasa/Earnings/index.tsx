@@ -97,7 +97,7 @@ interface EarningsComponent {
 
 const EarningsPage: React.FC = () => {
   const { theme } = useTheme();
-  
+
   // Add page debugging - DISABLED FOR PERFORMANCE
   // const { debugInfo, logCustomEvent, logError, logSuccess } = usePageDebug({
   //   pageName: 'PlasaEarnings',
@@ -771,7 +771,7 @@ export default EarningsPage;
 // TEMPORARY: Disable server-side authentication to test if it's causing the issue
 export const getServerSideProps: GetServerSideProps = async (context) => {
   return { props: {} };
-  
+
   // Original authentication code (disabled for testing)
   // const session = await getServerSession(context.req, context.res, authOptions);
   // if (!session?.user) {
