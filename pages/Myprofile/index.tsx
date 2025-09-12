@@ -6,7 +6,6 @@ import UserProfile from "@components/userProfile/useProfile";
 import { GetServerSideProps } from "next";
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "../api/auth/[...nextauth]";
-// import { usePageDebug } from "../../src/hooks/usePageDebug";
 
 export default function MyProfilePage() {
   // Add page debugging - DISABLED FOR PERFORMANCE
@@ -53,7 +52,7 @@ export default function MyProfilePage() {
 // TEMPORARY: Disable server-side authentication to test if it's causing the issue
 export const getServerSideProps: GetServerSideProps = async (context) => {
   return { props: {} };
-  
+
   // Original authentication code (disabled for testing)
   // const session = await getServerSession(
   //   context.req,

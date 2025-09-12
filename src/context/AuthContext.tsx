@@ -1,7 +1,7 @@
 import React, { createContext, useState, useContext, useEffect } from "react";
 import { useSession, signOut } from "next-auth/react";
 import { refreshSession } from "../lib/sessionRefresh";
-import { logAuthState, logAuth, logSessionRefresh, logRoleSwitch } from "../lib/debugAuth";
+// import { logAuthState, logAuth, logSessionRefresh, logRoleSwitch } from "../lib/debugAuth";
 
 interface User {
   id: string | null;
@@ -49,13 +49,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    logAuthState(session, status, 'AuthContext');
-    
+    // logAuthState(session, status, 'AuthContext');
+
     if (status === "loading") {
-      logAuth('AuthContext', 'loading_state', { 
-        previousState: { isLoggedIn, authReady, isLoading },
-        timestamp: Date.now() 
-      });
+      // logAuth('AuthContext', 'loading_state', {
+      //   previousState: { isLoggedIn, authReady, isLoading },
+      //   timestamp: Date.now()
+      // });
       setIsLoading(true);
       setAuthReady(false);
       return;
@@ -70,13 +70,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
         phone: (session.user as any)?.phone,
         image: session.user.image,
       };
-      
-      logAuth('AuthContext', 'user_authenticated', {
-        userData,
-        sessionExpires: session.expires,
-        timestamp: Date.now(),
-      });
-      
+
+      // logAuth('AuthContext', 'user_authenticated', {
+      //   userData,
+      //   sessionExpires: session.expires,
+      //   timestamp: Date.now(),
+      // });
+
       setIsLoggedIn(true);
       setUser({
         id: session.user.id || null,
@@ -88,42 +88,42 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
       // Safely set role with a fallback
       const userRole = (session.user as any)?.role || "user";
       setRole(userRole);
-      
-      logAuth('AuthContext', 'state_updated', {
-        isLoggedIn: true,
-        role: userRole,
-        hasUser: true,
-        timestamp: Date.now(),
-      });
+
+      // logAuth('AuthContext', 'state_updated', {
+      //   isLoggedIn: true,
+      //   role: userRole,
+      //   hasUser: true,
+      //   timestamp: Date.now(),
+      // });
     } else {
-      logAuth('AuthContext', 'user_not_authenticated', {
-        status,
-        hasSession: !!session,
-        hasUser: !!(session?.user),
-        timestamp: Date.now(),
-      });
-      
+      // logAuth('AuthContext', 'user_not_authenticated', {
+      //   status,
+      //   hasSession: !!session,
+      //   hasUser: !!(session?.user),
+      //   timestamp: Date.now(),
+      // });
+
       setIsLoggedIn(false);
       setUser(null);
       setRole("user");
-      
-      logAuth('AuthContext', 'state_cleared', {
-        isLoggedIn: false,
-        role: "user",
-        hasUser: false,
-        timestamp: Date.now(),
-      });
+
+      // logAuth('AuthContext', 'state_cleared', {
+      //   isLoggedIn: false,
+      //   role: "user",
+      //   hasUser: false,
+      //   timestamp: Date.now(),
+      // });
     }
-    
+
     setIsLoading(false);
     setAuthReady(true);
-    
-    logAuth('AuthContext', 'auth_ready', {
-      isLoggedIn: status === "authenticated",
-      authReady: true,
-      isLoading: false,
-      timestamp: Date.now(),
-    });
+
+    // logAuth('AuthContext', 'auth_ready', {
+    //   isLoggedIn: status === "authenticated",
+    //   authReady: true,
+    //   isLoading: false,
+    //   timestamp: Date.now(),
+    // });
   }, [session, status]);
 
   const login = () => {
@@ -132,24 +132,28 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
   };
 
   const logout = async () => {
-    logAuth('AuthContext', 'logout_started', {
-      currentState: { isLoggedIn, role, hasUser: !!user },
-      timestamp: Date.now(),
-    });
+    // logAuth('AuthContext', 'logout_started', {
+    //   currentState: { isLoggedIn, role, hasUser: !!user },
+    //   timestamp: Date.now(),
+    // });
 
     try {
       // Clear all localStorage data
       const localStorageKeys = Object.keys(localStorage);
       localStorage.clear();
-      logAuth('AuthContext', 'localStorage_cleared', { keys: localStorageKeys });
+      logAuth("AuthContext", "localStorage_cleared", {
+        keys: localStorageKeys,
+      });
 
       // Clear all sessionStorage data
       const sessionStorageKeys = Object.keys(sessionStorage);
       sessionStorage.clear();
-      logAuth('AuthContext', 'sessionStorage_cleared', { keys: sessionStorageKeys });
+      logAuth("AuthContext", "sessionStorage_cleared", {
+        keys: sessionStorageKeys,
+      });
 
       // Clear NextAuth cookies manually
-      const cookiesBefore = document.cookie.split(";").map(c => c.trim());
+      const cookiesBefore = document.cookie.split(";").map((c) => c.trim());
       document.cookie.split(";").forEach((c) => {
         const eqPos = c.indexOf("=");
         const name = eqPos > -1 ? c.substr(0, eqPos) : c;
@@ -161,16 +165,16 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
           window.location.hostname
         }`;
       });
-      logAuth('AuthContext', 'cookies_cleared', { 
+      logAuth("AuthContext", "cookies_cleared", {
         cookiesBefore,
-        cookiesAfter: document.cookie.split(";").map(c => c.trim()),
+        cookiesAfter: document.cookie.split(";").map((c) => c.trim()),
       });
 
       setIsLoggedIn(false);
       setUser(null);
       setRole("user");
-      
-      logAuth('AuthContext', 'state_cleared_for_logout', {
+
+      logAuth("AuthContext", "state_cleared_for_logout", {
         isLoggedIn: false,
         role: "user",
         hasUser: false,
@@ -178,13 +182,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
       });
 
       await signOut({ redirect: true });
-      
-      logAuth('AuthContext', 'logout_completed', {
+
+      logAuth("AuthContext", "logout_completed", {
         signOutCalled: true,
         timestamp: Date.now(),
       });
     } catch (error) {
-      logAuth('AuthContext', 'logout_error', {
+      logAuth("AuthContext", "logout_error", {
         error: error instanceof Error ? error.message : String(error),
         stack: error instanceof Error ? error.stack : undefined,
         timestamp: Date.now(),
@@ -200,7 +204,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
 
   // Function to refresh the role from the server
   const refreshRole = async () => {
-    logAuth('AuthContext', 'refresh_role_started', {
+    logAuth("AuthContext", "refresh_role_started", {
       currentRole: role,
       hasSession: !!session,
       timestamp: Date.now(),
@@ -208,11 +212,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
 
     try {
       const result = await refreshSession();
-      
+
       logSessionRefresh(1, result.success, result.error);
-      
+
       if (result.success && result.user) {
-        logAuth('AuthContext', 'refresh_role_success', {
+        logAuth("AuthContext", "refresh_role_success", {
           oldRole: role,
           newRole: result.user.role,
           userData: result.user,
@@ -230,24 +234,28 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
 
         // Update local state
         setRole(result.user.role);
-        
+
         logRoleSwitch(role, result.user.role, true);
       } else {
-        logAuth('AuthContext', 'refresh_role_failed', {
+        logAuth("AuthContext", "refresh_role_failed", {
           result,
           currentRole: role,
           timestamp: Date.now(),
         });
       }
     } catch (error) {
-      logAuth('AuthContext', 'refresh_role_error', {
+      logAuth("AuthContext", "refresh_role_error", {
         error: error instanceof Error ? error.message : String(error),
         stack: error instanceof Error ? error.stack : undefined,
         currentRole: role,
         timestamp: Date.now(),
       });
-      
-      logSessionRefresh(1, false, error instanceof Error ? error.message : String(error));
+
+      logSessionRefresh(
+        1,
+        false,
+        error instanceof Error ? error.message : String(error)
+      );
     }
   };
 

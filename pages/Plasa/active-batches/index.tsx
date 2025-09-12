@@ -61,7 +61,7 @@ export const getServerSideProps: GetServerSideProps<
   ActiveBatchesPageProps
 > = async (context) => {
   return { props: { activeOrders: [], error: null } };
-  
+
   // Original authentication code (disabled for testing)
   // const session = await getServerSession(context.req, context.res, authOptions);
   // const userId = (session as any)?.user?.id;

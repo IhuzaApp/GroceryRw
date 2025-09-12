@@ -1,19 +1,19 @@
 import { NextRequest } from "next/server";
 import { getToken } from "next-auth/jwt";
-import { logAuth } from "./debugAuth";
+// import { logAuth } from "./debugAuth";
 
 /**
  * Middleware Authentication Utility
- * 
+ *
  * This utility provides consistent authentication checking for middleware
  * by using the same JWT secret and configuration as the main NextAuth setup.
  */
 
 export async function getMiddlewareSession(req: NextRequest) {
   const startTime = Date.now();
-  
+
   try {
-    logAuth('MiddlewareAuth', 'token_check_started', {
+    logAuth("MiddlewareAuth", "token_check_started", {
       pathname: req.nextUrl.pathname,
       method: req.method,
       hasCookies: req.cookies.size > 0,
@@ -25,15 +25,16 @@ export async function getMiddlewareSession(req: NextRequest) {
       req,
       secret: process.env.NEXTAUTH_SECRET,
       secureCookie: process.env.NEXTAUTH_SECURE_COOKIES === "true",
-      cookieName: process.env.NEXTAUTH_SECURE_COOKIES === "true" 
-        ? "__Secure-next-auth.session-token" 
-        : "next-auth.session-token",
+      cookieName:
+        process.env.NEXTAUTH_SECURE_COOKIES === "true"
+          ? "__Secure-next-auth.session-token"
+          : "next-auth.session-token",
     });
 
     const duration = Date.now() - startTime;
 
     if (!token) {
-      logAuth('MiddlewareAuth', 'no_token_found', {
+      logAuth("MiddlewareAuth", "no_token_found", {
         pathname: req.nextUrl.pathname,
         duration,
         timestamp: Date.now(),
@@ -53,7 +54,7 @@ export async function getMiddlewareSession(req: NextRequest) {
       expires: token.exp ? new Date(token.exp * 1000).toISOString() : null,
     };
 
-    logAuth('MiddlewareAuth', 'token_found', {
+    logAuth("MiddlewareAuth", "token_found", {
       pathname: req.nextUrl.pathname,
       userId: token.sub,
       userRole: token.role || "user",
@@ -65,15 +66,15 @@ export async function getMiddlewareSession(req: NextRequest) {
     return sessionData;
   } catch (error) {
     const duration = Date.now() - startTime;
-    
-    logAuth('MiddlewareAuth', 'token_check_error', {
+
+    logAuth("MiddlewareAuth", "token_check_error", {
       pathname: req.nextUrl.pathname,
       error: error instanceof Error ? error.message : String(error),
       stack: error instanceof Error ? error.stack : undefined,
       duration,
       timestamp: Date.now(),
     });
-    
+
     return null;
   }
 }
