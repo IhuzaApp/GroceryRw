@@ -3,8 +3,9 @@ import { getServerSession } from "next-auth/next";
 import { authOptions } from "../../../pages/api/auth/[...nextauth]";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/router";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { logRouteNavigation, logAuth } from "../../lib/debugAuth";
+import { logPageAccess, logAuthenticationCheck, logRedirect } from "../../lib/navigationDebug";
 
 /**
  * Higher-Order Component for protecting pages
@@ -32,51 +33,86 @@ export function withAuth<P extends object>(
   const AuthenticatedComponent = (props: P) => {
     const { data: session, status } = useSession();
     const router = useRouter();
+    const [componentName] = useState(WrappedComponent.displayName || WrappedComponent.name || 'Unknown');
+    const [isInitialized, setIsInitialized] = useState(false);
 
+    // Log page access on mount
     useEffect(() => {
+      const currentPath = router.asPath;
+      const isAuthenticated = status === "authenticated";
+      const userRole = (session?.user as any)?.role || "user";
+      
+      logPageAccess(componentName, isAuthenticated, userRole, session);
+      logAuthenticationCheck(componentName, isAuthenticated, userRole, session);
+      
       logAuth('WithAuth', 'component_mounted', {
+        componentName,
         requireAuth,
         allowedRoles,
         redirectTo,
-        currentPath: router.asPath,
+        currentPath,
         status,
+        hasSession: !!session,
+        isAuthenticated,
+        userRole,
+        timestamp: Date.now(),
+      });
+
+      setIsInitialized(true);
+    }, []);
+
+    useEffect(() => {
+      if (!isInitialized) return;
+
+      const currentPath = router.asPath;
+      const isAuthenticated = status === "authenticated";
+      const userRole = (session?.user as any)?.role || "user";
+
+      logAuth('WithAuth', 'status_change', {
+        componentName,
+        currentPath,
+        status,
+        isAuthenticated,
+        userRole,
         hasSession: !!session,
         timestamp: Date.now(),
       });
 
       if (requireAuth && status === "unauthenticated") {
-        logRouteNavigation(router.asPath, redirectTo, false);
+        logRedirect(currentPath, redirectTo, 'User not authenticated', false);
         
         logAuth('WithAuth', 'redirecting_to_login', {
-          currentPath: router.asPath,
+          componentName,
+          currentPath,
           redirectTo,
           reason: 'User not authenticated',
+          status,
           timestamp: Date.now(),
         });
 
-        const callbackUrl = encodeURIComponent(router.asPath);
+        const callbackUrl = encodeURIComponent(currentPath);
         router.push(`${redirectTo}?callbackUrl=${callbackUrl}`);
         return;
       }
 
       if (requireAuth && session && allowedRoles.length > 0) {
-        const userRole = (session.user as any)?.role || "user";
-        
         logAuth('WithAuth', 'checking_role_access', {
+          componentName,
           userRole,
           allowedRoles,
           hasAccess: allowedRoles.includes(userRole),
-          currentPath: router.asPath,
+          currentPath,
           timestamp: Date.now(),
         });
 
         if (!allowedRoles.includes(userRole)) {
-          logRouteNavigation(router.asPath, '/', true, userRole);
+          logRedirect(currentPath, '/', 'Insufficient role permissions', true, userRole);
           
           logAuth('WithAuth', 'redirecting_due_to_role', {
+            componentName,
             userRole,
             allowedRoles,
-            currentPath: router.asPath,
+            currentPath,
             reason: 'Insufficient role permissions',
             timestamp: Date.now(),
           });
@@ -88,12 +124,14 @@ export function withAuth<P extends object>(
 
       if (requireAuth && status === "authenticated") {
         logAuth('WithAuth', 'access_granted', {
-          userRole: (session.user as any)?.role || "user",
-          currentPath: router.asPath,
+          componentName,
+          userRole,
+          currentPath,
+          hasSession: !!session,
           timestamp: Date.now(),
         });
       }
-    }, [session, status, router, requireAuth, allowedRoles, redirectTo]);
+    }, [session, status, router, requireAuth, allowedRoles, redirectTo, isInitialized, componentName]);
 
     // Show loading state while checking authentication
     if (requireAuth && status === "loading") {

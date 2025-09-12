@@ -6,8 +6,17 @@ import UserProfile from "@components/userProfile/useProfile";
 import { GetServerSideProps } from "next";
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "../api/auth/[...nextauth]";
+import { usePageDebug } from "../../src/hooks/usePageDebug";
 
 export default function MyProfilePage() {
+  // Add page debugging
+  const { debugInfo, logCustomEvent, logError, logSuccess } = usePageDebug({
+    pageName: 'MyProfile',
+    requireAuth: true,
+    allowedRoles: ['user', 'shopper'],
+    debugLevel: 'verbose'
+  });
+
   return (
     <RootLayout>
       <div className="p-4 md:ml-16">
