@@ -119,7 +119,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
     setAuthReady(true);
     
     logAuth('AuthContext', 'auth_ready', {
-      isLoggedIn,
+      isLoggedIn: status === "authenticated",
       authReady: true,
       isLoading: false,
       timestamp: Date.now(),
