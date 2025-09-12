@@ -10,7 +10,7 @@ import { toast } from "react-hot-toast";
 import { useTheme } from "../../../src/context/ThemeContext";
 import { logger } from "../../../src/utils/logger";
 import VideoValidationModal from "../../../src/components/Reels/VideoValidationModal";
-import { withRouteProtection } from "../../../src/context/RouteProtectionContext";
+import { AuthGuard } from "../../../src/components/AuthGuard";
 
 // Define interface for order data
 interface OrderDetails {
@@ -747,7 +747,4 @@ function OrderDetailsPage() {
   );
 }
 
-export default withRouteProtection(OrderDetailsPage, {
-  requireAuth: true,
-  requireRole: 'shopper'
-});
+export default OrderDetailsPage;

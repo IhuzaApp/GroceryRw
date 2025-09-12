@@ -15,7 +15,7 @@ import {
   InvoicesPageProps,
 } from "../../../src/components/invoices";
 import { formatCurrencySync } from "../../../src/utils/formatCurrency";
-import { withRouteProtection } from "../../../src/context/RouteProtectionContext";
+import { AuthGuard } from "../../../src/components/AuthGuard";
 
 const InvoicesPage: React.FC<InvoicesPageProps> = ({
   initialInvoices = [],
@@ -217,8 +217,5 @@ const InvoicesPage: React.FC<InvoicesPageProps> = ({
   );
 };
 
-export default withRouteProtection(InvoicesPage, {
-  requireAuth: true,
-  requireRole: 'shopper'
-});
+export default InvoicesPage;
 

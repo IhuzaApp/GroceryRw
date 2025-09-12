@@ -4,7 +4,7 @@ import Link from "next/link";
 import React, { useState, useEffect, useCallback } from "react";
 import { useSession } from "next-auth/react";
 import { authenticatedFetch } from "@lib/authenticatedFetch";
-import { withRouteProtection } from "../../src/context/RouteProtectionContext";
+import { AuthGuard } from "../../src/components/AuthGuard";
 
 function CurrentOrdersPage() {
   // Add page debugging - DISABLED FOR PERFORMANCE
@@ -79,7 +79,8 @@ function CurrentOrdersPage() {
   }
 
   return (
-    <RootLayout>
+    <AuthGuard requireAuth={true}>
+      <RootLayout>
       <div className="min-h-screen bg-gray-50 p-4 transition-colors duration-200 dark:bg-gray-900 md:ml-16">
         <div className="max-w-1xl container mx-auto">
           {/* Profile Header */}
@@ -178,9 +179,8 @@ function CurrentOrdersPage() {
         </div>
       </div>
     </RootLayout>
+    </AuthGuard>
   );
 }
 
-export default withRouteProtection(CurrentOrdersPage, {
-  requireAuth: true
-});
+export default CurrentOrdersPage;

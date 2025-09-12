@@ -23,7 +23,7 @@ import { Button, Loader, Panel, Placeholder, Avatar, Input } from "rsuite";
 import { formatCurrency } from "../../src/lib/formatCurrency";
 import ChatDrawer from "../../src/components/chat/ChatDrawer";
 import { isMobileDevice } from "../../src/lib/formatters";
-import { withRouteProtection } from "../../src/context/RouteProtectionContext";
+import { AuthGuard } from "../../src/components/AuthGuard";
 
 // Helper to display timestamps as relative time ago
 function timeAgo(timestamp: any) {
@@ -499,7 +499,8 @@ function MessagesPage() {
 
   // Render conversations with new UI
   return (
-    <RootLayout>
+    <AuthGuard requireAuth={true}>
+      <RootLayout>
       <div className="min-h-screen bg-gray-50 p-4 transition-colors duration-200 dark:bg-gray-900 md:ml-16">
         <div className="container mx-auto">
           {/* Header */}
@@ -640,9 +641,8 @@ function MessagesPage() {
         />
       )}
     </RootLayout>
+    </AuthGuard>
   );
 }
 
-export default withRouteProtection(MessagesPage, {
-  requireAuth: true
-});
+export default MessagesPage;

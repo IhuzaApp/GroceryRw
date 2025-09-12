@@ -13,7 +13,7 @@ import {
 } from "../../../src/lib/formatters";
 import { useAuth } from "../../../src/context/AuthContext";
 import { useTheme } from "../../../src/context/ThemeContext";
-import { withRouteProtection } from "../../../src/context/RouteProtectionContext";
+import { AuthGuard } from "../../../src/components/AuthGuard";
 import {
   collection,
   query,
@@ -780,7 +780,4 @@ function ChatPage() {
   );
 }
 
-export default withRouteProtection(ChatPage, {
-  requireAuth: true,
-  requireRole: 'shopper'
-});
+export default ChatPage;

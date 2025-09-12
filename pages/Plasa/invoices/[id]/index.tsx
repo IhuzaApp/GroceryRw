@@ -773,7 +773,4 @@ export const getServerSideProps: GetServerSideProps<InvoicePageProps> = async (
   }
 };
 
-export default withRouteProtection(InvoicePage, {
-  requireAuth: true,
-  requireRole: 'shopper'
-});
+export default InvoicePage;

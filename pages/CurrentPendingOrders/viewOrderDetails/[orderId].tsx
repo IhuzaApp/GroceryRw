@@ -5,7 +5,7 @@ import UserOrderDetails from "@components/UserCarts/orders/UserOrderDetails";
 import UserReelOrderDetails from "@components/UserCarts/orders/UserReelOrderDetails";
 import { Button } from "rsuite";
 import Link from "next/link";
-import { withRouteProtection } from "../../../../src/context/RouteProtectionContext";
+import { AuthGuard } from "@components/AuthGuard";
 
 function ViewOrderDetailsPage() {
   const router = useRouter();
@@ -163,20 +163,20 @@ function ViewOrderDetailsPage() {
   }
 
   return (
-    <RootLayout>
-      <div className="p-4 md:ml-16">
-        <div className="container mx-auto">
-          {orderType === "reel" ? (
-            <UserReelOrderDetails order={order} />
-          ) : (
-            <UserOrderDetails order={order} />
-          )}
+    <AuthGuard requireAuth={true}>
+      <RootLayout>
+        <div className="p-4 md:ml-16">
+          <div className="container mx-auto">
+            {orderType === "reel" ? (
+              <UserReelOrderDetails order={order} />
+            ) : (
+              <UserOrderDetails order={order} />
+            )}
+          </div>
         </div>
-      </div>
-    </RootLayout>
+      </RootLayout>
+    </AuthGuard>
   );
 }
 
-export default withRouteProtection(ViewOrderDetailsPage, {
-  requireAuth: true
-});
+export default ViewOrderDetailsPage;

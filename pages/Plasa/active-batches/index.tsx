@@ -1,7 +1,7 @@
 import React from "react";
 import ShopperLayout from "@components/shopper/ShopperLayout";
 import ActiveBatches from "@components/shopper/activeBatchesCard";
-import { withRouteProtection } from "../../../src/context/RouteProtectionContext";
+import { AuthGuard } from "../../../src/components/AuthGuard";
 
 interface Order {
   id: string;
@@ -52,10 +52,7 @@ function ActiveBatchesPage({
   );
 }
 
-export default withRouteProtection(ActiveBatchesPage, {
-  requireAuth: true,
-  requireRole: 'shopper'
-});
+export default ActiveBatchesPage;
 
 
 
