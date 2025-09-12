@@ -729,7 +729,6 @@ export default function InvoicePage({
 export const getServerSideProps: GetServerSideProps<InvoicePageProps> = async (
   context
 ) => {
-  console.log('[SERVER-SIDE AUTH DISABLED] Skipping authentication check for Plasa/invoices/[id]');
   const { id } = context.params || {};
   return { props: { initialInvoiceData: null, error: null } };
   
