@@ -43,6 +43,7 @@ const publicPaths = [
   "/Auth/Register",
   "/auth-test", // Allow access to auth test page
   "/debug-auth", // Allow access to debug auth page
+  "/debug", // Allow access to all debug pages
   "/_next",
   "/favicon.ico",
   "/static",
@@ -66,6 +67,9 @@ export async function middleware(req: NextRequest) {
     userAgent: req.headers.get('user-agent'),
     referer: req.headers.get('referer'),
     cookies: req.cookies.getAll().map(c => ({ name: c.name, value: c.value.substring(0, 20) + '...' })),
+    hasSessionCookie: !!req.cookies.get('next-auth.session-token') || !!req.cookies.get('__Secure-next-auth.session-token'),
+    sessionCookieName: req.cookies.get('next-auth.session-token') ? 'next-auth.session-token' : 
+                      req.cookies.get('__Secure-next-auth.session-token') ? '__Secure-next-auth.session-token' : 'none',
   });
 
   // API routes are excluded from middleware - they handle their own authentication
@@ -125,10 +129,19 @@ export async function middleware(req: NextRequest) {
     const authenticated = await isAuthenticated(req);
     const authTime = Date.now() - authStartTime;
     
+    // Get detailed session info for debugging
+    const sessionInfo = await getMiddlewareSession(req);
+    
     logAuth('Middleware', 'authentication_check', {
       pathname,
       authenticated,
       authTimeMs: authTime,
+      sessionInfo: sessionInfo ? {
+        hasSession: true,
+        userId: sessionInfo.user?.id,
+        userRole: sessionInfo.role,
+        expires: sessionInfo.expires,
+      } : null,
       timestamp: Date.now(),
     });
     
