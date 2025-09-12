@@ -62,9 +62,7 @@ const DELETE_EXISTING_SCHEDULE = gql`
 `;
 
 const INSERT_SCHEDULE = gql`
-  mutation InsertSchedule(
-    $schedules: [Shopper_Availability_insert_input!]!
-  ) {
+  mutation InsertSchedule($schedules: [Shopper_Availability_insert_input!]!) {
     insert_Shopper_Availability(objects: $schedules) {
       affected_rows
       returning {
@@ -83,7 +81,7 @@ export default async function handler(
   res: NextApiResponse
 ) {
   let session: any = null;
-  
+
   try {
     logger.info("Schedule API request received", "ScheduleAPI", {
       method: req.method,
@@ -132,7 +130,10 @@ export default async function handler(
       logger.info("Received schedule data:", "ScheduleAPI", {
         scheduleType: typeof schedule,
         scheduleLength: Array.isArray(schedule) ? schedule.length : "not array",
-        firstItem: Array.isArray(schedule) && schedule.length > 0 ? schedule[0] : "no items",
+        firstItem:
+          Array.isArray(schedule) && schedule.length > 0
+            ? schedule[0]
+            : "no items",
       });
 
       if (!Array.isArray(schedule)) {
@@ -168,7 +169,7 @@ export default async function handler(
 
       // First, delete existing schedule for this user
       logger.info("Deleting existing schedule", "ScheduleAPI", { userId });
-      
+
       const deleteResult = await hasuraClient.request<DeleteScheduleResponse>(
         DELETE_EXISTING_SCHEDULE,
         { userId }
@@ -206,17 +207,13 @@ export default async function handler(
     logger.warn("Method not allowed", "ScheduleAPI", { method: req.method });
     return res.status(405).json({ error: "Method not allowed" });
   } catch (error) {
-    logger.error(
-      "Error in schedule API:",
-      "ScheduleAPI",
-      {
-        error: error instanceof Error ? error.message : "Unknown error",
-        stack: error instanceof Error ? error.stack : undefined,
-        userId: session?.user?.id,
-        method: req.method,
-        body: req.body,
-      }
-    );
+    logger.error("Error in schedule API:", "ScheduleAPI", {
+      error: error instanceof Error ? error.message : "Unknown error",
+      stack: error instanceof Error ? error.stack : undefined,
+      userId: session?.user?.id,
+      method: req.method,
+      body: req.body,
+    });
     return res.status(500).json({
       error: "Failed to process schedule request",
       message: error instanceof Error ? error.message : "Unknown error",

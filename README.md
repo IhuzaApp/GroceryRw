@@ -7135,17 +7135,20 @@ This grocery app includes Progressive Web App capabilities, allowing users to in
 ### 3. Cross-Platform Support
 
 #### Desktop (Chrome, Edge, Firefox)
+
 - Install button appears in address bar
 - One-click installation
 - App appears in applications menu
 - Can be pinned to taskbar
 
 #### Mobile iOS (Safari)
+
 - Step-by-step instructions for "Add to Home Screen"
 - Share button → Add to Home Screen → Confirm
 - App icon appears on home screen
 
 #### Mobile Android (Chrome)
+
 - Automatic install banner appears
 - One-tap installation
 - App icon appears on home screen
@@ -7161,6 +7164,7 @@ This grocery app includes Progressive Web App capabilities, allowing users to in
 ## Files Added/Modified
 
 ### New Files
+
 - `src/components/ui/InstallPrompt.tsx` - Automatic install prompt component
 - `src/components/ui/PWAInstallGuide.tsx` - Manual install guide modal
 - `src/lib/pwa.ts` - PWA utility functions
@@ -7168,6 +7172,7 @@ This grocery app includes Progressive Web App capabilities, allowing users to in
 - `scripts/generate-icons.js` - Icon generation script
 
 ### Modified Files
+
 - `next.config.js` - Added PWA configuration with caching strategies
 - `pages/_app.tsx` - Added PWA meta tags and install prompt
 - `src/components/ui/sidebar.tsx` - Added install guide button
@@ -7283,25 +7288,30 @@ query GetShopperByTelegramId($telegram_id: String!) {
 ### New Commands Available
 
 #### `/start [shopperId]`
+
 - Connects shopper account to Telegram
 - Updates database with Telegram chat ID
 - Sends confirmation message
 
 #### `/online`
+
 - Sets shopper status to "online"
 - Updates database
 - Confirms status change
 
 #### `/offline`
+
 - Sets shopper status to "offline"
 - Updates database
 - Confirms status change
 
 #### `/status`
+
 - Shows current shopper information
 - Displays ID, name, status, transport mode, location
 
 #### `/help`
+
 - Shows all available commands
 
 ## Enhanced Telegram Service
@@ -7365,16 +7375,19 @@ Order assigned to shopper
 ## Security Features
 
 ### Authentication
+
 - ✅ User session validation
 - ✅ Shopper ID verification
 - ✅ Authorization checks
 
 ### Data Validation
+
 - ✅ Required field validation
 - ✅ UUID format validation
 - ✅ Status value validation
 
 ### Error Handling
+
 - ✅ Graceful error responses
 - ✅ Detailed error logging
 - ✅ Fallback mechanisms
@@ -7415,6 +7428,7 @@ The application uses a simple and reliable authentication system based on NextAu
 ```
 
 **Props:**
+
 - `requireAuth`: Boolean - Whether authentication is required
 - `requireRole`: 'user' | 'shopper' - Specific role requirement
 - `fallback`: React.ReactNode - Custom loading component
@@ -7422,16 +7436,19 @@ The application uses a simple and reliable authentication system based on NextAu
 ### 2. useAuth Hook
 
 ```typescript
-const { isLoggedIn, isLoading, user, role, requireAuth, requireRole } = useAuth();
+const { isLoggedIn, isLoading, user, role, requireAuth, requireRole } =
+  useAuth();
 ```
 
 **Methods:**
+
 - `requireAuth()`: Redirects to login if not authenticated
 - `requireRole(role)`: Redirects if user doesn't have required role
 
 ## Route Protection
 
 ### Public Routes
+
 - `/` - Home page (shows different content based on role)
 - `/Auth/Login` - Login page
 - `/Auth/Register` - Registration page
@@ -7440,6 +7457,7 @@ const { isLoggedIn, isLoading, user, role, requireAuth, requireRole } = useAuth(
 - `/shops` - Public shop browsing
 
 ### Protected Routes
+
 - `/Myprofile` - User profile (requires auth)
 - `/Cart` - Shopping cart (viewing public, checkout requires auth)
 - `/CurrentPendingOrders` - Order management (requires auth)
