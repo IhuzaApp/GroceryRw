@@ -88,8 +88,7 @@ export const initiateRoleSwitch = async (
 
     if (data.success) {
       // Redirect to the appropriate page
-      window.location.href =
-        data.redirectTo || (nextRole === "shopper" ? "/ShopperDashboard" : "/");
+      window.location.href = data.redirectTo || "/";
     } else {
       throw new Error(data.error || "Failed to update role");
     }
