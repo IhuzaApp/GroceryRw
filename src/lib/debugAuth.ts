@@ -29,45 +29,13 @@ class AuthDebugger {
   }
 
   private constructor() {
-    // Initialize debugger
-    this.log('AuthDebugger', 'initialized', {});
+    // Initialize debugger - DISABLED FOR PERFORMANCE
+    // this.log('AuthDebugger', 'initialized', {});
   }
 
   log(location: string, action: string, data: any, url?: string) {
-    const debugInfo: DebugInfo = {
-      timestamp: new Date().toISOString(),
-      location,
-      action,
-      data,
-      url: url || (typeof window !== 'undefined' ? window.location.href : 'server'),
-      userAgent: typeof window !== 'undefined' ? window.navigator.userAgent : 'server',
-      sessionId: this.getSessionId(),
-    };
-
-    this.logs.push(debugInfo);
-    
-    // Keep only last maxLogs entries
-    if (this.logs.length > this.maxLogs) {
-      this.logs = this.logs.slice(-this.maxLogs);
-    }
-
-    // Console logging with different levels
-    const logLevel = this.getLogLevel(action);
-    const message = `[AUTH DEBUG] ${location}: ${action}`;
-    
-    switch (logLevel) {
-      case 'error':
-        console.error(message, data);
-        break;
-      case 'warn':
-        console.warn(message, data);
-        break;
-      case 'info':
-        console.info(message, data);
-        break;
-      default:
-        console.log(message, data);
-    }
+    // COMPLETELY DISABLED FOR PERFORMANCE - No logging at all
+    return;
   }
 
   private getLogLevel(action: string): string {
