@@ -21,7 +21,7 @@ interface Session {
 }
 
 interface WorkScheduleTabProps {
-  initialSession: Session;
+  initialSession?: Session;
 }
 
 export default function WorkScheduleTab({

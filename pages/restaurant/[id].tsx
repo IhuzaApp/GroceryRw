@@ -6,6 +6,7 @@ import { gql } from "graphql-request";
 import RootLayout from "@components/ui/layout";
 import Image from "next/image";
 import Link from "next/link";
+import { AuthGuard } from "../../src/components/AuthGuard";
 
 interface Restaurant {
   id: string;
@@ -24,7 +25,7 @@ interface RestaurantPageProps {
   restaurant: Restaurant;
 }
 
-export default function RestaurantPage({ restaurant }: RestaurantPageProps) {
+function RestaurantPage({ restaurant }: RestaurantPageProps) {
   const router = useRouter();
   const { id } = router.query;
 
@@ -309,3 +310,5 @@ export const getServerSideProps: GetServerSideProps = async ({ params }) => {
     };
   }
 };
+
+export default RestaurantPage;

@@ -110,8 +110,8 @@ export default function App({ Component, pageProps }: AppProps) {
       <SessionProvider
         session={(pageProps as any).session}
         basePath="/api/auth"
-        refetchInterval={0}
-        refetchOnWindowFocus={false}
+        refetchInterval={5 * 60} // Refetch every 5 minutes
+        refetchOnWindowFocus={true} // Refetch when window gains focus
         refetchWhenOffline={false}
       >
         <ApolloProvider client={apolloClient}>

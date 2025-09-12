@@ -5,8 +5,9 @@ import UserOrderDetails from "@components/UserCarts/orders/UserOrderDetails";
 import UserReelOrderDetails from "@components/UserCarts/orders/UserReelOrderDetails";
 import { Button } from "rsuite";
 import Link from "next/link";
+import { AuthGuard } from "@components/AuthGuard";
 
-export default function ViewOrderDetailsPage() {
+function ViewOrderDetailsPage() {
   const router = useRouter();
   const { orderId } = router.query;
   const [order, setOrder] = useState<any>(null);
@@ -162,16 +163,20 @@ export default function ViewOrderDetailsPage() {
   }
 
   return (
-    <RootLayout>
-      <div className="p-4 md:ml-16">
-        <div className="container mx-auto">
-          {orderType === "reel" ? (
-            <UserReelOrderDetails order={order} />
-          ) : (
-            <UserOrderDetails order={order} />
-          )}
+    <AuthGuard requireAuth={true}>
+      <RootLayout>
+        <div className="p-4 md:ml-16">
+          <div className="container mx-auto">
+            {orderType === "reel" ? (
+              <UserReelOrderDetails order={order} />
+            ) : (
+              <UserOrderDetails order={order} />
+            )}
+          </div>
         </div>
-      </div>
-    </RootLayout>
+      </RootLayout>
+    </AuthGuard>
   );
 }
+
+export default ViewOrderDetailsPage;

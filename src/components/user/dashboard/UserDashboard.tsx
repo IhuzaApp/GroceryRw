@@ -110,19 +110,13 @@ const MobileCategoryDropdown = ({
 function getShopImageUrl(imageUrl: string | undefined): string {
   if (!imageUrl) return "/images/shop-placeholder.jpg";
 
-  // Debug logging to see what URLs we're getting
-  console.log("Processing image URL:", imageUrl);
-
   // Handle relative paths (like "profile.png")
   if (imageUrl && !imageUrl.startsWith("/") && !imageUrl.startsWith("http")) {
-    console.log("Relative path detected, using placeholder");
     return "/images/shop-placeholder.jpg";
   }
 
   // If it's a relative path starting with /, it's likely a valid local image
   if (imageUrl.startsWith("/")) {
-    console.log("Absolute path detected:", imageUrl);
-
     // Check if the image exists in the expected location
     // Handle common cases where images might be in different directories
     const commonImageMappings: { [key: string]: string } = {
@@ -140,7 +134,6 @@ function getShopImageUrl(imageUrl: string | undefined): string {
     // Check if this is a known image that might be in the assets directory
     for (const [filename, correctPath] of Object.entries(commonImageMappings)) {
       if (imageUrl.includes(filename)) {
-        console.log(`Mapped ${filename} to ${correctPath}`);
         return correctPath;
       }
     }
@@ -152,15 +145,12 @@ function getShopImageUrl(imageUrl: string | undefined): string {
   if (imageUrl.startsWith("http")) {
     // Allow all external URLs except example.com
     if (imageUrl.includes("example.com")) {
-      console.log("Example.com URL detected, using placeholder");
       return "/images/shop-placeholder.jpg";
     }
-    console.log("External URL detected:", imageUrl);
     return imageUrl;
   }
 
   // Fallback to placeholder
-  console.log("Fallback to placeholder");
   return "/images/shop-placeholder.jpg";
 }
 
@@ -230,26 +220,29 @@ export default function UserDashboard({ initialData }: { initialData: Data }) {
         setIsFetchingData(true);
         try {
           // Fetch shops and categories in parallel
-          const [shopsResponse, categoriesResponse, restaurantsResponse] = await Promise.all([
-            fetch('/api/queries/shops'),
-            fetch('/api/queries/categories'),
-            fetch('/api/queries/restaurants').catch(() => ({ json: () => ({ restaurants: [] }) })) // Handle restaurants gracefully
-          ]);
+          const [shopsResponse, categoriesResponse, restaurantsResponse] =
+            await Promise.all([
+              fetch("/api/queries/shops"),
+              fetch("/api/queries/categories"),
+              fetch("/api/queries/restaurants").catch(() => ({
+                json: () => ({ restaurants: [] }),
+              })), // Handle restaurants gracefully
+            ]);
 
           const shopsData = await shopsResponse.json();
           const categoriesData = await categoriesResponse.json();
           const restaurantsData = await restaurantsResponse.json();
 
-          setData(prevData => ({
+          setData((prevData) => ({
             ...prevData,
             shops: shopsData.shops || [],
             categories: categoriesData.categories || [],
             restaurants: restaurantsData.restaurants || [],
           }));
         } catch (error) {
-          console.error('Error fetching data:', error);
+          console.error("Error fetching data:", error);
           // Set empty arrays as fallback
-          setData(prevData => ({
+          setData((prevData) => ({
             ...prevData,
             shops: prevData.shops || [],
             categories: prevData.categories || [],
@@ -664,24 +657,27 @@ export default function UserDashboard({ initialData }: { initialData: Data }) {
     setIsFetchingData(true);
     try {
       // Fetch shops and categories in parallel
-      const [shopsResponse, categoriesResponse, restaurantsResponse] = await Promise.all([
-        fetch('/api/queries/shops'),
-        fetch('/api/queries/categories'),
-        fetch('/api/queries/restaurants').catch(() => ({ json: () => ({ restaurants: [] }) }))
-      ]);
+      const [shopsResponse, categoriesResponse, restaurantsResponse] =
+        await Promise.all([
+          fetch("/api/queries/shops"),
+          fetch("/api/queries/categories"),
+          fetch("/api/queries/restaurants").catch(() => ({
+            json: () => ({ restaurants: [] }),
+          })),
+        ]);
 
       const shopsData = await shopsResponse.json();
       const categoriesData = await categoriesResponse.json();
       const restaurantsData = await restaurantsResponse.json();
 
-      setData(prevData => ({
+      setData((prevData) => ({
         ...prevData,
         shops: shopsData.shops || [],
         categories: categoriesData.categories || [],
         restaurants: restaurantsData.restaurants || [],
       }));
     } catch (error) {
-      console.error('Error refreshing data:', error);
+      console.error("Error refreshing data:", error);
     } finally {
       setIsFetchingData(false);
     }
@@ -833,14 +829,14 @@ export default function UserDashboard({ initialData }: { initialData: Data }) {
                 : "All Mart"}
             </h4>
             <div className="flex items-center gap-2">
-              {/* Refresh Button */}
+              {/* Refresh Button - Hidden on mobile */}
               <button
                 onClick={handleRefreshData}
                 disabled={isFetchingData}
-                className="flex items-center gap-2 rounded-lg bg-blue-500 px-3 py-2 text-sm text-white transition-colors duration-200 hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed"
+                className="hidden items-center gap-2 rounded-lg bg-blue-500 px-3 py-2 text-sm text-white transition-colors duration-200 hover:bg-blue-600 disabled:cursor-not-allowed disabled:opacity-50 md:flex"
               >
                 <svg
-                  className={`h-4 w-4 ${isFetchingData ? 'animate-spin' : ''}`}
+                  className={`h-4 w-4 ${isFetchingData ? "animate-spin" : ""}`}
                   fill="none"
                   stroke="currentColor"
                   viewBox="0 0 24 24"
@@ -852,9 +848,9 @@ export default function UserDashboard({ initialData }: { initialData: Data }) {
                     d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
                   />
                 </svg>
-                {isFetchingData ? 'Refreshing...' : 'Refresh'}
+                {isFetchingData ? "Refreshing..." : "Refresh"}
               </button>
-              
+
               {/* Sort Dropdown */}
               <SortDropdown
                 sortBy={sortBy}
@@ -894,7 +890,9 @@ export default function UserDashboard({ initialData }: { initialData: Data }) {
                 })
               ) : (
                 <div className="col-span-full mt-8 text-center text-gray-500 dark:text-gray-400">
-                  {isFetchingData ? "Loading shops..." : "No shops found in this category"}
+                  {isFetchingData
+                    ? "Loading shops..."
+                    : "No shops found in this category"}
                 </div>
               )}
             </div>

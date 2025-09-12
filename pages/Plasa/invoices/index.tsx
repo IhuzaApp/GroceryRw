@@ -1,8 +1,6 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { getServerSession } from "next-auth/next";
-import { authOptions } from "../../api/auth/[...nextauth]";
 import ShopperLayout from "../../../src/components/shopper/ShopperLayout";
 import { Loader, Button } from "rsuite";
 import "rsuite/dist/rsuite.min.css";
@@ -17,6 +15,7 @@ import {
   InvoicesPageProps,
 } from "../../../src/components/invoices";
 import { formatCurrencySync } from "../../../src/utils/formatCurrency";
+import { AuthGuard } from "../../../src/components/AuthGuard";
 
 const InvoicesPage: React.FC<InvoicesPageProps> = ({
   initialInvoices = [],
@@ -219,69 +218,3 @@ const InvoicesPage: React.FC<InvoicesPageProps> = ({
 };
 
 export default InvoicesPage;
-
-// TEMPORARY: Disable server-side authentication to test if it's causing the issue
-export const getServerSideProps = async (context: any) => {
-  return { props: { initialInvoices: [], initialError: null } };
-
-  try {
-    // Original authentication code (disabled for testing)
-    // const session = await getServerSession(
-    //   context.req,
-    //   context.res,
-    //   authOptions
-    // );
-    // if (!session) {
-    //   return {
-    //     redirect: {
-    //       destination: "/Auth/Login",
-    //       permanent: false,
-    //     },
-    //   };
-    // }
-
-    // Fetch initial invoices data directly from the API handler
-
-    // Import the API handler directly instead of making HTTP request
-    const { default: invoicesHandler } = await import(
-      "../../api/shopper/invoices"
-    );
-
-    // Create mock request and response objects
-    const mockReq = {
-      method: "GET",
-      query: { page: "1" },
-    } as any;
-
-    let responseData: any = null;
-    const mockRes = {
-      status: (code: number) => ({
-        json: (data: any) => {
-          responseData = data;
-          return { statusCode: code, data };
-        },
-      }),
-      setHeader: () => {},
-      end: () => {},
-    } as any;
-
-    // Call the handler directly
-    await invoicesHandler(mockReq, mockRes);
-    const data = responseData;
-
-    return {
-      props: {
-        initialInvoices: data.invoices || [],
-        initialError: null,
-      },
-    };
-  } catch (error) {
-    logger.error("Error in getServerSideProps", "InvoicesPage", error);
-    return {
-      props: {
-        initialInvoices: [],
-        initialError: "Failed to load invoices",
-      },
-    };
-  }
-};

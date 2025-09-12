@@ -7,6 +7,7 @@ import { Panel, Button, Loader, Divider } from "rsuite";
 import ShopperLayout from "../../../../src/components/shopper/ShopperLayout";
 import { formatCurrency } from "../../../../src/lib/formatCurrency";
 import { useTheme } from "../../../../src/context/ThemeContext";
+import { withRouteProtection } from "../../../../src/context/RouteProtectionContext";
 // Removed client-side PDF generation - using server-side API instead
 
 interface InvoiceItem {
@@ -42,10 +43,7 @@ interface InvoicePageProps {
   error: string | null;
 }
 
-export default function InvoicePage({
-  initialInvoiceData,
-  error,
-}: InvoicePageProps) {
+function InvoicePage({ initialInvoiceData, error }: InvoicePageProps) {
   const router = useRouter();
   const { id } = router.query;
   const { theme } = useTheme();
@@ -771,3 +769,5 @@ export const getServerSideProps: GetServerSideProps<InvoicePageProps> = async (
     };
   }
 };
+
+export default InvoicePage;

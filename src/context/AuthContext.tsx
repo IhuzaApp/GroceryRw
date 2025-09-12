@@ -49,8 +49,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    // logAuthState(session, status, 'AuthContext');
-
     if (status === "loading") {
       // logAuth('AuthContext', 'loading_state', {
       //   previousState: { isLoggedIn, authReady, isLoading },

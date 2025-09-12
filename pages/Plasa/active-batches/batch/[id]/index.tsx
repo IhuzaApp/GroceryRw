@@ -18,6 +18,7 @@ import {
   updateDoc,
 } from "firebase/firestore";
 import { db } from "../../../../../src/lib/firebase";
+import { AuthGuard } from "../../../../../src/components/AuthGuard";
 
 // Define interfaces for the order data
 interface OrderItem {
@@ -104,10 +105,7 @@ interface BatchDetailsPageProps {
   error: string | null;
 }
 
-export default function BatchDetailsPage({
-  orderData,
-  error,
-}: BatchDetailsPageProps) {
+function BatchDetailsPage({ orderData, error }: BatchDetailsPageProps) {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
 
@@ -426,3 +424,5 @@ export const getServerSideProps: GetServerSideProps<
     };
   }
 };
+
+export default BatchDetailsPage;

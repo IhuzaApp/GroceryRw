@@ -8,6 +8,8 @@ import RootLayout from "@components/ui/layout";
 import ItemCartTable from "@components/UserCarts/cartsTable";
 import CheckoutItems from "@components/UserCarts/checkout/checkoutCard";
 import { useTheme } from "../../src/context/ThemeContext";
+import { useAuth } from "../../src/context/AuthContext";
+import { AuthGuard } from "../../src/components/AuthGuard";
 
 // Skeleton loader for shop selection cards
 function ShopSelectionSkeleton() {
@@ -67,6 +69,7 @@ function CheckoutSkeleton() {
 
 export default function CartMainPage() {
   const { theme } = useTheme();
+  const { isLoggedIn } = useAuth();
 
   // User's active shops (carts): id, name, and number of line items
   const [shops, setShops] = useState<
@@ -123,6 +126,109 @@ export default function CartMainPage() {
 
   // Find the selected shop to pass coordinates
   const selectedShop = shops.find((s) => s.id === selectedCartId);
+
+  // Show login prompt for guests
+  if (!isLoggedIn) {
+    return (
+      <RootLayout>
+        <div className="p-4 md:ml-16">
+          <div className="container mx-auto">
+            <div className="mb-6 flex items-center">
+              <Link
+                href="/"
+                className={`flex items-center ${
+                  theme === "dark" ? "text-gray-300" : "text-gray-700"
+                }`}
+              >
+                <svg
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  className="mr-2 h-5 w-5"
+                >
+                  <path d="M19 12H5M12 19l-7-7 7-7" />
+                </svg>
+              </Link>
+              <h1
+                className={`text-2xl font-bold ${
+                  theme === "dark" ? "text-white" : "text-gray-900"
+                }`}
+              >
+                Shopping Cart
+              </h1>
+            </div>
+
+            <div className="flex min-h-[60vh] flex-col items-center justify-center py-12 text-center">
+              <div
+                className={`rounded-lg p-8 shadow-lg transition-colors duration-200 ${
+                  theme === "dark" ? "bg-gray-800" : "bg-white"
+                }`}
+              >
+                <div className="mb-6 flex justify-center">
+                  <svg
+                    className="h-16 w-16 text-gray-400"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth="1"
+                      d="M3 3h2l.4 2M7 13h10l4-8H5.4m0 0L7 13m0 0l-2.5 5M7 13l2.5 5m6-5v6a2 2 0 01-2 2H9a2 2 0 01-2-2v-6m8 0V9a2 2 0 00-2-2H9a2 2 0 00-2 2v4.01"
+                    />
+                  </svg>
+                </div>
+                <h2
+                  className={`mb-4 text-2xl font-bold ${
+                    theme === "dark" ? "text-white" : "text-gray-900"
+                  }`}
+                >
+                  Sign In to View Your Cart
+                </h2>
+                <p
+                  className={`mb-6 ${
+                    theme === "dark" ? "text-gray-300" : "text-gray-600"
+                  }`}
+                >
+                  You need to be logged in to view and manage your shopping
+                  cart.
+                </p>
+                <div className="flex flex-col gap-3 sm:flex-row sm:justify-center">
+                  <Link
+                    href="/Auth/Login"
+                    className="inline-flex items-center justify-center rounded-md bg-green-500 px-6 py-2.5 text-sm font-medium text-white transition duration-150 hover:bg-green-600 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 dark:bg-green-600 dark:hover:bg-green-700 dark:focus:ring-offset-gray-900"
+                  >
+                    <svg
+                      className="mr-2 h-5 w-5"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth="2"
+                        d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1"
+                      />
+                    </svg>
+                    Sign In
+                  </Link>
+                  <Link
+                    href="/Auth/Register"
+                    className="inline-flex items-center justify-center rounded-md border border-gray-300 bg-white px-6 py-2.5 text-sm font-medium text-gray-700 transition duration-150 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-200 dark:hover:bg-gray-700 dark:focus:ring-offset-gray-900"
+                  >
+                    Create Account
+                  </Link>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </RootLayout>
+    );
+  }
 
   return (
     <RootLayout>
@@ -299,14 +405,18 @@ export default function CartMainPage() {
                 {loadingItems ? (
                   <CheckoutSkeleton />
                 ) : (
-                  <CheckoutItems
-                    shopId={selectedCartId!}
-                    Total={cartTotal}
-                    totalUnits={cartUnits}
-                    shopLat={parseFloat(selectedShop.latitude)}
-                    shopLng={parseFloat(selectedShop.longitude)}
-                    shopAlt={parseFloat((selectedShop as any).altitude || "0")}
-                  />
+                  <AuthGuard requireAuth={true}>
+                    <CheckoutItems
+                      shopId={selectedCartId!}
+                      Total={cartTotal}
+                      totalUnits={cartUnits}
+                      shopLat={parseFloat(selectedShop.latitude)}
+                      shopLng={parseFloat(selectedShop.longitude)}
+                      shopAlt={parseFloat(
+                        (selectedShop as any).altitude || "0"
+                      )}
+                    />
+                  </AuthGuard>
                 )}
               </>
             )}
