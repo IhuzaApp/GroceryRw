@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { useAuth } from "../src/context/AuthContext";
 import { useSession } from "next-auth/react";
 import { getAuthDebugInfo, authDebugger } from "../src/lib/debugAuth";
+import { getNavigationDebugInfo, navigationDebugger } from "../src/lib/navigationDebug";
 
 /**
  * Authentication Debug Page
@@ -14,12 +15,15 @@ function DebugAuthPage() {
   const { isLoggedIn, user, role, authReady, isLoading, session } = useAuth();
   const { data: nextAuthSession, status } = useSession();
   const [debugInfo, setDebugInfo] = useState<any>(null);
+  const [navigationInfo, setNavigationInfo] = useState<any>(null);
   const [autoRefresh, setAutoRefresh] = useState(true);
 
   useEffect(() => {
     const updateDebugInfo = () => {
-      const info = getAuthDebugInfo();
-      setDebugInfo(info);
+      const authInfo = getAuthDebugInfo();
+      const navInfo = getNavigationDebugInfo();
+      setDebugInfo(authInfo);
+      setNavigationInfo(navInfo);
     };
 
     updateDebugInfo();
@@ -208,6 +212,48 @@ function DebugAuthPage() {
             >
               Go to Auth Test Page
             </a>
+          </div>
+        </div>
+
+        {/* Navigation Debug */}
+        <div className="mb-8 rounded-lg bg-white p-6 shadow">
+          <h2 className="mb-4 text-xl font-semibold text-gray-900">
+            Navigation Debug ({navigationInfo?.recentNavigations?.length || 0} events)
+          </h2>
+          <div className="max-h-64 overflow-y-auto">
+            {navigationInfo?.recentNavigations?.length > 0 ? (
+              <div className="space-y-2">
+                {navigationInfo.recentNavigations.map((nav: any, index: number) => (
+                  <div
+                    key={index}
+                    className={`rounded p-3 text-sm ${
+                      nav.reason.includes('REDIRECT') || nav.reason.includes('redirect')
+                        ? 'bg-yellow-50 border-l-4 border-yellow-400'
+                        : 'bg-blue-50 border-l-4 border-blue-400'
+                    }`}
+                  >
+                    <div className="flex items-center justify-between">
+                      <span className="font-medium text-gray-900">
+                        [{new Date(nav.timestamp).toLocaleTimeString()}] {nav.from} → {nav.to}
+                      </span>
+                      <span className="text-xs text-gray-500">
+                        {nav.isAuthenticated ? '✅ Auth' : '❌ No Auth'}
+                      </span>
+                    </div>
+                    <div className="mt-1 text-xs text-gray-600">
+                      <strong>Reason:</strong> {nav.reason}
+                      {nav.userRole && (
+                        <span className="ml-2">
+                          <strong>Role:</strong> {nav.userRole}
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <p className="text-gray-500">No navigation events recorded</p>
+            )}
           </div>
         </div>
 

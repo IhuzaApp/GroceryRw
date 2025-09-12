@@ -4,8 +4,17 @@ import Link from "next/link";
 import React, { useState, useEffect, useCallback } from "react";
 import { useSession } from "next-auth/react";
 import { authenticatedFetch } from "@lib/authenticatedFetch";
+import { usePageDebug } from "../../src/hooks/usePageDebug";
 
 export default function CurrentOrdersPage() {
+  // Add page debugging
+  const { debugInfo, logCustomEvent, logError, logSuccess } = usePageDebug({
+    pageName: 'CurrentPendingOrders',
+    requireAuth: true,
+    allowedRoles: ['user', 'shopper'],
+    debugLevel: 'verbose'
+  });
+
   const [filter, setFilter] = useState("pending");
   const [orders, setOrders] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
