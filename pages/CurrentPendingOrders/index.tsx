@@ -4,7 +4,6 @@ import Link from "next/link";
 import React, { useState, useEffect, useCallback } from "react";
 import { useSession } from "next-auth/react";
 import { authenticatedFetch } from "@lib/authenticatedFetch";
-// import { usePageDebug } from "../../src/hooks/usePageDebug";
 
 export default function CurrentOrdersPage() {
   // Add page debugging - DISABLED FOR PERFORMANCE

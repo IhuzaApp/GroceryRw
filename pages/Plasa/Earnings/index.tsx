@@ -19,7 +19,6 @@ import { GetServerSideProps } from "next";
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "../../api/auth/[...nextauth]";
 import { authenticatedFetch } from "@lib/authenticatedFetch";
-// import { usePageDebug } from "../../../src/hooks/usePageDebug";
 
 // Interface for earnings stats
 interface EarningsStats {

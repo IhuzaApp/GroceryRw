@@ -6,7 +6,6 @@ import UserProfile from "@components/userProfile/useProfile";
 import { GetServerSideProps } from "next";
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "../api/auth/[...nextauth]";
-// import { usePageDebug } from "../../src/hooks/usePageDebug";
 
 export default function MyProfilePage() {
   // Add page debugging - DISABLED FOR PERFORMANCE
