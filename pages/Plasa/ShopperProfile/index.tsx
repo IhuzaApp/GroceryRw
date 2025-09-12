@@ -1,25 +1,9 @@
 import React from "react";
 import ShopperLayout from "@components/shopper/ShopperLayout";
 import Link from "next/link";
-import { GetServerSideProps } from "next";
-import { getServerSession } from "next-auth/next";
-import { authOptions } from "../../api/auth/[...nextauth]";
 import ShopperProfileComponent from "@components/shopper/profile/ShopperProfileComponent";
 import { withRouteProtection } from "../../../src/context/RouteProtectionContext";
 
-// Define a type for the session user with role
-interface SessionUser {
-  id: string;
-  name?: string;
-  email?: string;
-  role?: string;
-  image?: string;
-}
-
-interface Session {
-  user: SessionUser;
-  expires: string;
-}
 
 function ShopperProfilePage() {
   return (
@@ -56,35 +40,6 @@ function ShopperProfilePage() {
   );
 }
 
-// TEMPORARY: Disable server-side authentication to test if it's causing the issue
-export const getServerSideProps: GetServerSideProps = async (context) => {
-  return { props: {} };
-
-  // Original authentication code (disabled for testing)
-  // const session = (await getServerSession(
-  //   context.req,
-  //   context.res,
-  //   authOptions as any
-  // )) as Session | null;
-  // if (!session) {
-  //   return {
-  //     redirect: {
-  //       destination: "/Auth/Login",
-  //       permanent: false,
-  //     },
-  //   };
-  // }
-  // const userRole = session.user?.role;
-  // if (userRole !== "shopper") {
-  //   return {
-  //     redirect: {
-  //       destination: "/",
-  //       permanent: false,
-  //     },
-  //   };
-  // }
-  // return { props: {} };
-};
 
 export default withRouteProtection(ShopperProfilePage, {
   requireAuth: true,

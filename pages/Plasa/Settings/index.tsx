@@ -8,28 +8,10 @@ import { Panel, Nav } from "rsuite";
 import WorkScheduleTab from "../../../src/components/shopper/settings/WorkScheduleTab";
 import PaymentTab from "../../../src/components/shopper/settings/PaymentTab";
 import NotificationTab from "../../../src/components/shopper/settings/NotificationTab";
-import { GetServerSideProps } from "next";
-import { getServerSession } from "next-auth/next";
-import { authOptions } from "../../api/auth/[...nextauth]";
-import { Session } from "next-auth";
 import { withRouteProtection } from "../../../src/context/RouteProtectionContext";
 
-// Extend the Session type to include our custom fields
-interface CustomSession extends Session {
-  user: {
-    id: string;
-    name: string | null;
-    email: string | null;
-    role: string | null;
-    image: string | null;
-  };
-}
 
-interface SettingsPageProps {
-  sessionData: CustomSession;
-}
-
-function SettingsPage({ sessionData }: SettingsPageProps) {
+function SettingsPage() {
   const router = useRouter();
   const { theme } = useTheme();
   const [activeTab, setActiveTab] = useState("schedule");
@@ -51,7 +33,7 @@ function SettingsPage({ sessionData }: SettingsPageProps) {
     {
       key: "schedule",
       label: "Work Schedule",
-      component: <WorkScheduleTab initialSession={sessionData} />,
+      component: <WorkScheduleTab />,
     },
     { key: "payment", label: "Payment Info", component: <PaymentTab /> },
     {
@@ -144,33 +126,3 @@ export default withRouteProtection(SettingsPage, {
   requireRole: 'shopper'
 });
 
-// TEMPORARY: Disable server-side authentication to test if it's causing the issue
-export const getServerSideProps: GetServerSideProps = async (context) => {
-  return { props: {} };
-
-  // Original authentication code (disabled for testing)
-  // const session = await getServerSession(context.req, context.res, authOptions);
-  // if (!session) {
-  //   return {
-  //     redirect: {
-  //       destination: "/auth/signin",
-  //       permanent: false,
-  //     },
-  //   };
-  // }
-  // const sanitizedSession: CustomSession = {
-  //   user: {
-  //     id: session.user?.id || "",
-  //     name: session.user?.name || null,
-  //     email: session.user?.email || null,
-  //     role: (session.user as any)?.role || null,
-  //     image: session.user?.image || null,
-  //   },
-  //   expires: session.expires,
-  // };
-  // return {
-  //   props: {
-  //     sessionData: sanitizedSession,
-  //   },
-  // };
-};
