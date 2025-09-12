@@ -4,7 +4,7 @@ import { authOptions } from "../../../pages/api/auth/[...nextauth]";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/router";
 import { useEffect, useState } from "react";
-import { logRouteNavigation, logAuth } from "../../lib/debugAuth";
+// import { logRouteNavigation, logAuth } from "../../lib/debugAuth";
 // import { logPageAccess, logAuthenticationCheck, logRedirect } from "../../lib/navigationDebug";
 
 /**
@@ -45,18 +45,18 @@ export function withAuth<P extends object>(
       // logPageAccess(componentName, isAuthenticated, userRole, session);
       // logAuthenticationCheck(componentName, isAuthenticated, userRole, session);
       
-      logAuth('WithAuth', 'component_mounted', {
-        componentName,
-        requireAuth,
-        allowedRoles,
-        redirectTo,
-        currentPath,
-        status,
-        hasSession: !!session,
-        isAuthenticated,
-        userRole,
-        timestamp: Date.now(),
-      });
+      // logAuth('WithAuth', 'component_mounted', {
+      //   componentName,
+      //   requireAuth,
+      //   allowedRoles,
+      //   redirectTo,
+      //   currentPath,
+      //   status,
+      //   hasSession: !!session,
+      //   isAuthenticated,
+      //   userRole,
+      //   timestamp: Date.now(),
+      // });
 
       setIsInitialized(true);
     }, []);
@@ -68,27 +68,27 @@ export function withAuth<P extends object>(
       const isAuthenticated = status === "authenticated";
       const userRole = (session?.user as any)?.role || "user";
 
-      logAuth('WithAuth', 'status_change', {
-        componentName,
-        currentPath,
-        status,
-        isAuthenticated,
-        userRole,
-        hasSession: !!session,
-        timestamp: Date.now(),
-      });
+      // logAuth('WithAuth', 'status_change', {
+      //   componentName,
+      //   currentPath,
+      //   status,
+      //   isAuthenticated,
+      //   userRole,
+      //   hasSession: !!session,
+      //   timestamp: Date.now(),
+      // });
 
       if (requireAuth && status === "unauthenticated") {
         // logRedirect(currentPath, redirectTo, 'User not authenticated', false);
         
-        logAuth('WithAuth', 'redirecting_to_login', {
-          componentName,
-          currentPath,
-          redirectTo,
-          reason: 'User not authenticated',
-          status,
-          timestamp: Date.now(),
-        });
+        // logAuth('WithAuth', 'redirecting_to_login', {
+        //   componentName,
+        //   currentPath,
+        //   redirectTo,
+        //   reason: 'User not authenticated',
+        //   status,
+        //   timestamp: Date.now(),
+        // });
 
         const callbackUrl = encodeURIComponent(currentPath);
         router.push(`${redirectTo}?callbackUrl=${callbackUrl}`);
@@ -96,26 +96,26 @@ export function withAuth<P extends object>(
       }
 
       if (requireAuth && session && allowedRoles.length > 0) {
-        logAuth('WithAuth', 'checking_role_access', {
-          componentName,
-          userRole,
-          allowedRoles,
-          hasAccess: allowedRoles.includes(userRole),
-          currentPath,
-          timestamp: Date.now(),
-        });
+        // logAuth('WithAuth', 'checking_role_access', {
+        //   componentName,
+        //   userRole,
+        //   allowedRoles,
+        //   hasAccess: allowedRoles.includes(userRole),
+        //   currentPath,
+        //   timestamp: Date.now(),
+        // });
 
         if (!allowedRoles.includes(userRole)) {
           // logRedirect(currentPath, '/', 'Insufficient role permissions', true, userRole);
           
-          logAuth('WithAuth', 'redirecting_due_to_role', {
-            componentName,
-            userRole,
-            allowedRoles,
-            currentPath,
-            reason: 'Insufficient role permissions',
-            timestamp: Date.now(),
-          });
+          // logAuth('WithAuth', 'redirecting_due_to_role', {
+          //   componentName,
+          //   userRole,
+          //   allowedRoles,
+          //   currentPath,
+          //   reason: 'Insufficient role permissions',
+          //   timestamp: Date.now(),
+          // });
 
           router.push("/");
           return;
@@ -123,13 +123,13 @@ export function withAuth<P extends object>(
       }
 
       if (requireAuth && status === "authenticated") {
-        logAuth('WithAuth', 'access_granted', {
-          componentName,
-          userRole,
-          currentPath,
-          hasSession: !!session,
-          timestamp: Date.now(),
-        });
+        // logAuth('WithAuth', 'access_granted', {
+        //   componentName,
+        //   userRole,
+        //   currentPath,
+        //   hasSession: !!session,
+        //   timestamp: Date.now(),
+        // });
       }
     }, [session, status, router, requireAuth, allowedRoles, redirectTo, isInitialized, componentName]);
 
