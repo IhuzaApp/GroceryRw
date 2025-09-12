@@ -220,6 +220,49 @@ export default function UserDashboard({ initialData }: { initialData: Data }) {
     >
   >({});
   const [dataLoaded, setDataLoaded] = useState(false);
+  const [isFetchingData, setIsFetchingData] = useState(false);
+
+  // Fetch data if initialData is empty or missing
+  useEffect(() => {
+    const fetchData = async () => {
+      // Only fetch if we don't have shops data or if shops array is empty
+      if ((!data.shops || data.shops.length === 0) && !isFetchingData) {
+        setIsFetchingData(true);
+        try {
+          // Fetch shops and categories in parallel
+          const [shopsResponse, categoriesResponse, restaurantsResponse] = await Promise.all([
+            fetch('/api/queries/shops'),
+            fetch('/api/queries/categories'),
+            fetch('/api/queries/restaurants').catch(() => ({ json: () => ({ restaurants: [] }) })) // Handle restaurants gracefully
+          ]);
+
+          const shopsData = await shopsResponse.json();
+          const categoriesData = await categoriesResponse.json();
+          const restaurantsData = await restaurantsResponse.json();
+
+          setData(prevData => ({
+            ...prevData,
+            shops: shopsData.shops || [],
+            categories: categoriesData.categories || [],
+            restaurants: restaurantsData.restaurants || [],
+          }));
+        } catch (error) {
+          console.error('Error fetching data:', error);
+          // Set empty arrays as fallback
+          setData(prevData => ({
+            ...prevData,
+            shops: prevData.shops || [],
+            categories: prevData.categories || [],
+            restaurants: prevData.restaurants || [],
+          }));
+        } finally {
+          setIsFetchingData(false);
+        }
+      }
+    };
+
+    fetchData();
+  }, [data.shops, data.categories, data.restaurants, isFetchingData]);
 
   useEffect(() => {
     if (authReady) {
@@ -617,6 +660,33 @@ export default function UserDashboard({ initialData }: { initialData: Data }) {
     setSortBy(value);
   };
 
+  const handleRefreshData = async () => {
+    setIsFetchingData(true);
+    try {
+      // Fetch shops and categories in parallel
+      const [shopsResponse, categoriesResponse, restaurantsResponse] = await Promise.all([
+        fetch('/api/queries/shops'),
+        fetch('/api/queries/categories'),
+        fetch('/api/queries/restaurants').catch(() => ({ json: () => ({ restaurants: [] }) }))
+      ]);
+
+      const shopsData = await shopsResponse.json();
+      const categoriesData = await categoriesResponse.json();
+      const restaurantsData = await restaurantsResponse.json();
+
+      setData(prevData => ({
+        ...prevData,
+        shops: shopsData.shops || [],
+        categories: categoriesData.categories || [],
+        restaurants: restaurantsData.restaurants || [],
+      }));
+    } catch (error) {
+      console.error('Error refreshing data:', error);
+    } finally {
+      setIsFetchingData(false);
+    }
+  };
+
   // Helper function to display sort option names
   const getSortDisplayName = (key: string) => {
     switch (key) {
@@ -636,6 +706,11 @@ export default function UserDashboard({ initialData }: { initialData: Data }) {
   };
 
   if (!authReady || !dataLoaded) {
+    return <LoadingScreen />;
+  }
+
+  // Show loading state only if we're fetching data and have no shops at all
+  if (isFetchingData && (!data.shops || data.shops.length === 0)) {
     return <LoadingScreen />;
   }
 
@@ -758,6 +833,28 @@ export default function UserDashboard({ initialData }: { initialData: Data }) {
                 : "All Mart"}
             </h4>
             <div className="flex items-center gap-2">
+              {/* Refresh Button */}
+              <button
+                onClick={handleRefreshData}
+                disabled={isFetchingData}
+                className="flex items-center gap-2 rounded-lg bg-blue-500 px-3 py-2 text-sm text-white transition-colors duration-200 hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                <svg
+                  className={`h-4 w-4 ${isFetchingData ? 'animate-spin' : ''}`}
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
+                  />
+                </svg>
+                {isFetchingData ? 'Refreshing...' : 'Refresh'}
+              </button>
+              
               {/* Sort Dropdown */}
               <SortDropdown
                 sortBy={sortBy}
@@ -768,7 +865,7 @@ export default function UserDashboard({ initialData }: { initialData: Data }) {
             </div>
           </div>
 
-          {isLoading ? (
+          {isLoading || isFetchingData ? (
             <div className="grid grid-cols-2 gap-4 sm:gap-6 lg:grid-cols-6">
               {Array(6)
                 .fill(0)
@@ -797,7 +894,7 @@ export default function UserDashboard({ initialData }: { initialData: Data }) {
                 })
               ) : (
                 <div className="col-span-full mt-8 text-center text-gray-500 dark:text-gray-400">
-                  No shops found in this category
+                  {isFetchingData ? "Loading shops..." : "No shops found in this category"}
                 </div>
               )}
             </div>
