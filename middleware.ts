@@ -41,8 +41,11 @@ import {
 
 // Define public paths that don't require authentication
 const publicPaths = [
-  "/",
-  "/shops",
+  "/", // Home page - guest access allowed
+  "/shops", // Shops listing - guest access allowed
+  "/shops/[id]", // Individual shop pages - guest access allowed
+  "/Reels", // Reels page - guest access allowed
+  "/Cart", // Cart page - guest access allowed (auth required for actions)
   "/Auth/Login",
   "/Auth/Register",
   "/auth-test", // Allow access to auth test page
@@ -53,21 +56,71 @@ const publicPaths = [
   "/static",
 ];
 
+// Define conditional paths that allow guest view but require auth for actions
+const conditionalPaths = [
+  "/Cart", // Can view cart but need auth to add items
+];
+
+// Define shopper-only paths
+const shopperOnlyPaths = [
+  "/Plasa", // All Plasa routes require shopper role
+];
+
 // Helper function to check if a path is public
 const isPublicPath = (path: string) => {
-  return publicPaths.some(
-    (publicPath) => path === publicPath || path.startsWith(`${publicPath}/`)
-  );
+  return publicPaths.some((publicPath) => {
+    // Handle exact matches
+    if (path === publicPath) return true;
+    
+    // Handle dynamic routes like /shops/[id]
+    if (publicPath.includes("[id]")) {
+      const pattern = publicPath.replace("[id]", "[^/]+");
+      const regex = new RegExp(`^${pattern}(/.*)?$`);
+      return regex.test(path);
+    }
+    
+    // Handle prefix matches
+    return path.startsWith(`${publicPath}/`);
+  });
+};
+
+// Helper function to check if a path is conditional (guest view allowed)
+const isConditionalPath = (path: string) => {
+  return conditionalPaths.some((conditionalPath) => {
+    // Handle exact matches
+    if (path === conditionalPath) return true;
+    
+    // Handle dynamic routes
+    if (conditionalPath.includes("[id]")) {
+      const pattern = conditionalPath.replace("[id]", "[^/]+");
+      const regex = new RegExp(`^${pattern}(/.*)?$`);
+      return regex.test(path);
+    }
+    
+    // Handle prefix matches
+    return path.startsWith(`${conditionalPath}/`);
+  });
+};
+
+// Helper function to check if a path is shopper-only
+const isShopperOnlyPath = (path: string) => {
+  return shopperOnlyPaths.some((shopperPath) => {
+    // Handle exact matches
+    if (path === shopperPath) return true;
+    
+    // Handle dynamic routes
+    if (shopperPath.includes("[id]")) {
+      const pattern = shopperPath.replace("[id]", "[^/]+");
+      const regex = new RegExp(`^${pattern}(/.*)?$`);
+      return regex.test(path);
+    }
+    
+    // Handle prefix matches
+    return path.startsWith(`${shopperPath}/`);
+  });
 };
 
 export async function middleware(req: NextRequest) {
-  // COMPLETELY DISABLED: Skip all middleware logic for testing
-  console.log(
-    "[MIDDLEWARE COMPLETELY DISABLED] All authentication checks bypassed"
-  );
-  return NextResponse.next();
-
-  // ALL CODE BELOW IS DISABLED FOR TESTING
   const { pathname } = req.nextUrl;
   const startTime = Date.now();
 
@@ -92,6 +145,12 @@ export async function middleware(req: NextRequest) {
   // Skip middleware for public paths
   if (isPublicPath(pathname)) {
     // logMiddlewareDecision(pathname, 'allow', 'Public path');
+    return NextResponse.next();
+  }
+
+  // Allow conditional paths (like Cart) - they handle auth requirements in components
+  if (isConditionalPath(pathname)) {
+    // logMiddlewareDecision(pathname, 'allow', 'Conditional path - auth handled in component');
     return NextResponse.next();
   }
 
@@ -199,6 +258,16 @@ export async function middleware(req: NextRequest) {
       // If user is a customer and trying to access shopper routes, redirect to home
       if (pathname.startsWith("/Plasa") || pathname === "/ShopperDashboard") {
         // logMiddlewareDecision(pathname, 'redirect', `User trying to access shopper route - redirecting to home`);
+        const url = req.nextUrl.clone();
+        url.pathname = "/";
+        return NextResponse.redirect(url);
+      }
+    }
+
+    // Special handling for shopper-only paths
+    if (isShopperOnlyPath(pathname)) {
+      if (userRole !== "shopper") {
+        // logMiddlewareDecision(pathname, 'redirect', `Non-shopper trying to access shopper-only route - redirecting to home`);
         const url = req.nextUrl.clone();
         url.pathname = "/";
         return NextResponse.redirect(url);

@@ -4,8 +4,9 @@ import Link from "next/link";
 import React, { useState, useEffect, useCallback } from "react";
 import { useSession } from "next-auth/react";
 import { authenticatedFetch } from "@lib/authenticatedFetch";
+import { withRouteProtection } from "../../src/context/RouteProtectionContext";
 
-export default function CurrentOrdersPage() {
+function CurrentOrdersPage() {
   // Add page debugging - DISABLED FOR PERFORMANCE
   // const { debugInfo, logCustomEvent, logError, logSuccess } = usePageDebug({
   //   pageName: 'CurrentPendingOrders',
@@ -179,3 +180,7 @@ export default function CurrentOrdersPage() {
     </RootLayout>
   );
 }
+
+export default withRouteProtection(CurrentOrdersPage, {
+  requireAuth: true
+});

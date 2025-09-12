@@ -5,6 +5,7 @@ import { GetServerSideProps } from "next";
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "../../api/auth/[...nextauth]";
 import ShopperProfileComponent from "@components/shopper/profile/ShopperProfileComponent";
+import { withRouteProtection } from "../../../src/context/RouteProtectionContext";
 
 // Define a type for the session user with role
 interface SessionUser {
@@ -20,7 +21,7 @@ interface Session {
   expires: string;
 }
 
-export default function ShopperProfilePage() {
+function ShopperProfilePage() {
   return (
     <ShopperLayout>
       <div className="container mx-auto px-4 py-4 pb-24 sm:py-8 sm:pb-8">
@@ -84,3 +85,8 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
   // }
   // return { props: {} };
 };
+
+export default withRouteProtection(ShopperProfilePage, {
+  requireAuth: true,
+  requireRole: 'shopper'
+});

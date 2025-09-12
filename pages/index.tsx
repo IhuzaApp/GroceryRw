@@ -107,20 +107,22 @@ const CategoryIcon = ({ category }: { category: string }) => {
 };
 
 export default function Home({ initialData }: { initialData: Data }) {
-  const { role, authReady } = useAuth();
+  const { role, authReady, isLoggedIn } = useAuth();
   const [dataLoaded, setDataLoaded] = useState(false);
 
   useEffect(() => {
-    if (authReady) {
+    // Allow guest access - don't wait for auth to be ready
+    if (authReady || !isLoggedIn) {
       setDataLoaded(true);
     }
-  }, [authReady]);
+  }, [authReady, isLoggedIn]);
 
-  if (!authReady || !dataLoaded) {
+  if (!dataLoaded) {
     return <LoadingScreen />;
   }
 
-  if (role === "shopper") {
+  // Show shopper dashboard only for authenticated shoppers
+  if (isLoggedIn && role === "shopper") {
     return <ShopperDashboard />;
   }
 

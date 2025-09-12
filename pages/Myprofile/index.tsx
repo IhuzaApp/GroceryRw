@@ -6,8 +6,9 @@ import UserProfile from "@components/userProfile/useProfile";
 import { GetServerSideProps } from "next";
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "../api/auth/[...nextauth]";
+import { withRouteProtection } from "../../src/context/RouteProtectionContext";
 
-export default function MyProfilePage() {
+function MyProfilePage() {
   // Add page debugging - DISABLED FOR PERFORMANCE
   // const { debugInfo, logCustomEvent, logError, logSuccess } = usePageDebug({
   //   pageName: 'MyProfile',
@@ -69,3 +70,7 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
   // }
   // return { props: {} };
 };
+
+export default withRouteProtection(MyProfilePage, {
+  requireAuth: true
+});

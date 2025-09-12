@@ -29,6 +29,7 @@ import {
 import { db, storage } from "../../src/lib/firebase";
 import { formatCurrency } from "../../src/lib/formatCurrency";
 import { getStorage, ref, uploadBytes, getDownloadURL } from "firebase/storage";
+import { withRouteProtection } from "../../src/context/RouteProtectionContext";
 
 // Helper to format date for messages
 function formatMessageDate(timestamp: any) {
@@ -128,7 +129,7 @@ const Message: React.FC<MessageProps> = ({
 };
 
 // Chat page component
-export default function ChatPage() {
+function ChatPage() {
   const router = useRouter();
   const { orderId } = router.query;
   const { data: session, status } = useSession();
@@ -631,3 +632,7 @@ export default function ChatPage() {
 ChatPage.getLayout = function getLayout(page: React.ReactElement) {
   return page;
 };
+
+export default withRouteProtection(ChatPage, {
+  requireAuth: true
+});

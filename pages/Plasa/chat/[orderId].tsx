@@ -13,6 +13,7 @@ import {
 } from "../../../src/lib/formatters";
 import { useAuth } from "../../../src/context/AuthContext";
 import { useTheme } from "../../../src/context/ThemeContext";
+import { withRouteProtection } from "../../../src/context/RouteProtectionContext";
 import {
   collection,
   query,
@@ -53,7 +54,7 @@ function formatOrderID(id?: string | string[] | number): string {
   return s.length >= 4 ? s : s.padStart(4, "0");
 }
 
-export default function ChatPage() {
+function ChatPage() {
   const router = useRouter();
   const { orderId } = router.query;
   const { user } = useAuth();
@@ -778,3 +779,8 @@ export default function ChatPage() {
     </ShopperLayout>
   );
 }
+
+export default withRouteProtection(ChatPage, {
+  requireAuth: true,
+  requireRole: 'shopper'
+});
