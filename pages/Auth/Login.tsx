@@ -89,7 +89,6 @@ export default function LoginPage() {
             alt="Grocery shopping"
             fill
             className="object-cover"
-            priority
             quality={75}
             sizes="(max-width: 768px) 0vw, 50vw"
             placeholder="blur"
