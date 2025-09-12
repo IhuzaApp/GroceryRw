@@ -220,22 +220,26 @@ const InvoicesPage: React.FC<InvoicesPageProps> = ({
 
 export default InvoicesPage;
 
+// TEMPORARY: Disable server-side authentication to test if it's causing the issue
 export const getServerSideProps = async (context: any) => {
+  console.log('[SERVER-SIDE AUTH DISABLED] Skipping authentication check for Plasa/invoices');
+  return { props: { initialInvoices: [], initialError: null } };
+  
   try {
-    const session = await getServerSession(
-      context.req,
-      context.res,
-      authOptions
-    );
-
-    if (!session) {
-      return {
-        redirect: {
-          destination: "/Auth/Login",
-          permanent: false,
-        },
-      };
-    }
+    // Original authentication code (disabled for testing)
+    // const session = await getServerSession(
+    //   context.req,
+    //   context.res,
+    //   authOptions
+    // );
+    // if (!session) {
+    //   return {
+    //     redirect: {
+    //       destination: "/Auth/Login",
+    //       permanent: false,
+    //     },
+    //   };
+    // }
 
     // Fetch initial invoices data directly from the API handler
 

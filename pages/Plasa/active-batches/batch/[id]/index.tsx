@@ -213,20 +213,24 @@ export default function BatchDetailsPage({
   );
 }
 
+// TEMPORARY: Disable server-side authentication to test if it's causing the issue
 export const getServerSideProps: GetServerSideProps<
   BatchDetailsPageProps
 > = async (context) => {
+  console.log('[SERVER-SIDE AUTH DISABLED] Skipping authentication check for Plasa/active-batches/batch/[id]');
   const { id } = context.params || {};
-  const session = await getServerSession(context.req, context.res, authOptions);
-
-  if (!id || typeof id !== "string") {
-    return {
-      props: {
-        orderData: null,
-        error: "Order ID is required",
-      },
-    };
-  }
+  return { props: { orderData: null, error: null } };
+  
+  // Original authentication code (disabled for testing)
+  // const session = await getServerSession(context.req, context.res, authOptions);
+  // if (!id || typeof id !== "string") {
+  //   return {
+  //     props: {
+  //       orderData: null,
+  //       error: "Order ID is required",
+  //     },
+  //   };
+  // }
 
   // GraphQL query to fetch a single regular order with nested details
   const GET_ORDER_DETAILS = gql`
