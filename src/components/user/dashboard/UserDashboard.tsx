@@ -833,11 +833,11 @@ export default function UserDashboard({ initialData }: { initialData: Data }) {
                 : "All Mart"}
             </h4>
             <div className="flex items-center gap-2">
-              {/* Refresh Button */}
+              {/* Refresh Button - Hidden on mobile */}
               <button
                 onClick={handleRefreshData}
                 disabled={isFetchingData}
-                className="flex items-center gap-2 rounded-lg bg-blue-500 px-3 py-2 text-sm text-white transition-colors duration-200 hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed"
+                className="hidden md:flex items-center gap-2 rounded-lg bg-blue-500 px-3 py-2 text-sm text-white transition-colors duration-200 hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 <svg
                   className={`h-4 w-4 ${isFetchingData ? 'animate-spin' : ''}`}
