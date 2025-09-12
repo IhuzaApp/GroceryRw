@@ -124,10 +124,28 @@ export default function Home({ initialData }: { initialData: Data }) {
     return <ShopperDashboard />;
   }
 
+  // Ensure initialData is always defined with default values
+  const safeInitialData = initialData || {
+    users: [],
+    categories: [],
+    shops: [],
+    products: [],
+    addresses: [],
+    carts: [],
+    cartItems: [],
+    orders: [],
+    orderItems: [],
+    shopperAvailability: [],
+    deliveryIssues: [],
+    notifications: [],
+    platformSettings: [],
+    restaurants: [],
+  };
+
   return (
     <RootLayout>
       <MainBanners />
-      <UserDashboard initialData={initialData} />
+      <UserDashboard initialData={safeInitialData} />
     </RootLayout>
   );
 }

@@ -186,7 +186,22 @@ function getDistanceFromLatLonInKm(
 // Main Component
 export default function UserDashboard({ initialData }: { initialData: Data }) {
   const { role, authReady } = useAuth();
-  const [data, setData] = useState<Data>(initialData);
+  const [data, setData] = useState<Data>(initialData || {
+    users: [],
+    categories: [],
+    shops: [],
+    products: [],
+    addresses: [],
+    carts: [],
+    cartItems: [],
+    orders: [],
+    orderItems: [],
+    shopperAvailability: [],
+    deliveryIssues: [],
+    notifications: [],
+    platformSettings: [],
+    restaurants: [],
+  });
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -295,7 +310,7 @@ export default function UserDashboard({ initialData }: { initialData: Data }) {
   };
 
   const filteredShops = useMemo(() => {
-    if (!authReady || role === "shopper") return [];
+    if (!authReady || role === "shopper" || !data) return [];
 
     let shops = data.shops || [];
     let restaurants = data.restaurants || [];
@@ -398,7 +413,7 @@ export default function UserDashboard({ initialData }: { initialData: Data }) {
 
   // Separate useMemo for shops without dynamics to avoid circular dependency
   const shopsWithoutDynamics = useMemo(() => {
-    if (!authReady || role === "shopper") return [];
+    if (!authReady || role === "shopper" || !data) return [];
 
     let shops = data.shops || [];
     let restaurants = data.restaurants || [];
@@ -656,9 +671,9 @@ export default function UserDashboard({ initialData }: { initialData: Data }) {
             ) : (
               <MobileCategoryDropdown
                 categories={[
-                  ...(data.categories || []),
+                  ...(data?.categories || []),
                   // Add Restaurant category if restaurants exist
-                  ...(data.restaurants && data.restaurants.length > 0
+                  ...(data?.restaurants && data.restaurants.length > 0
                     ? [
                         {
                           id: "restaurant-category",
@@ -693,9 +708,9 @@ export default function UserDashboard({ initialData }: { initialData: Data }) {
                     </div>
                   ))
               : [
-                  ...(data.categories || []),
+                  ...(data?.categories || []),
                   // Add Restaurant category if restaurants exist
-                  ...(data.restaurants && data.restaurants.length > 0
+                  ...(data?.restaurants && data.restaurants.length > 0
                     ? [
                         {
                           id: "restaurant-category",
@@ -736,7 +751,7 @@ export default function UserDashboard({ initialData }: { initialData: Data }) {
           <div className="mb-4 flex items-center justify-between">
             <h4 className="text-3xl font-bold text-gray-900 dark:text-white">
               {selectedCategory
-                ? data.categories?.find((c) => c.id === selectedCategory)?.name
+                ? data?.categories?.find((c) => c.id === selectedCategory)?.name || "Selected Category"
                 : "All Mart"}
             </h4>
             <div className="flex items-center gap-2">
