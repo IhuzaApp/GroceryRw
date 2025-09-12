@@ -45,6 +45,8 @@ const publicPaths = [
   "/shops", // Shops listing - guest access allowed
   "/shops/[id]", // Individual shop pages - guest access allowed
   "/Reels", // Reels page - guest access allowed
+  "/Recipes", // Recipes page - guest access allowed
+  "/Recipes/[id]", // Recipe detail pages - guest access allowed
   "/Cart", // Cart page - guest access allowed (auth required for actions)
   "/Auth/Login",
   "/Auth/Register",
@@ -59,6 +61,7 @@ const publicPaths = [
 // Define conditional paths that allow guest view but require auth for actions
 const conditionalPaths = [
   "/Cart", // Can view cart but need auth to add items
+  "/Reels", // Can view reels but need auth for comments and orders
 ];
 
 // Define shopper-only paths

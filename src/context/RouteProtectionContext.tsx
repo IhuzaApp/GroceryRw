@@ -21,6 +21,8 @@ const ROUTE_PROTECTION_RULES: RouteProtectionRule[] = [
   // Public routes - no authentication required
   { path: '/', accessLevel: 'public' },
   { path: '/Reels', accessLevel: 'public' },
+  { path: '/Recipes', accessLevel: 'public' },
+  { path: '/Recipes/[id]', accessLevel: 'public' },
   { path: '/shops', accessLevel: 'public' },
   { path: '/shops/[id]', accessLevel: 'public' },
   { path: '/Auth/Login', accessLevel: 'public' },
@@ -32,6 +34,12 @@ const ROUTE_PROTECTION_RULES: RouteProtectionRule[] = [
     accessLevel: 'conditional',
     allowGuestView: true,
     requiresAuth: true // For adding items
+  },
+  { 
+    path: '/Reels', 
+    accessLevel: 'conditional',
+    allowGuestView: true,
+    requiresAuth: true // For comments and orders
   },
   
   // Shopper-only routes
