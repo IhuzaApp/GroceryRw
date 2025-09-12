@@ -60,7 +60,6 @@ export default function ActiveBatchesPage({
 export const getServerSideProps: GetServerSideProps<
   ActiveBatchesPageProps
 > = async (context) => {
-  console.log('[SERVER-SIDE AUTH DISABLED] Skipping authentication check for Plasa/active-batches');
   return { props: { activeOrders: [], error: null } };
   
   // Original authentication code (disabled for testing)
