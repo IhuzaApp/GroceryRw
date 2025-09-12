@@ -19,6 +19,7 @@ import { GetServerSideProps } from "next";
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "../../api/auth/[...nextauth]";
 import { authenticatedFetch } from "@lib/authenticatedFetch";
+import { usePageDebug } from "../../../src/hooks/usePageDebug";
 
 // Interface for earnings stats
 interface EarningsStats {
@@ -97,6 +98,14 @@ interface EarningsComponent {
 
 const EarningsPage: React.FC = () => {
   const { theme } = useTheme();
+  
+  // Add page debugging
+  const { debugInfo, logCustomEvent, logError, logSuccess } = usePageDebug({
+    pageName: 'PlasaEarnings',
+    requireAuth: true,
+    allowedRoles: ['shopper'],
+    debugLevel: 'verbose'
+  });
   const [period, setPeriod] = useState("this-week");
   const [activeTab, setActiveTab] = useState("earnings");
   const [loading, setLoading] = useState(true);
