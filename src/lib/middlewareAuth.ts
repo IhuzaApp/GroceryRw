@@ -1,6 +1,6 @@
 import { NextRequest } from "next/server";
 import { getToken } from "next-auth/jwt";
-import { logAuth } from "./debugAuth";
+// import { logAuth } from "./debugAuth";
 
 /**
  * Middleware Authentication Utility

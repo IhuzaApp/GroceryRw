@@ -1,7 +1,7 @@
 import React, { createContext, useState, useContext, useEffect } from "react";
 import { useSession, signOut } from "next-auth/react";
 import { refreshSession } from "../lib/sessionRefresh";
-import { logAuthState, logAuth, logSessionRefresh, logRoleSwitch } from "../lib/debugAuth";
+// import { logAuthState, logAuth, logSessionRefresh, logRoleSwitch } from "../lib/debugAuth";
 
 interface User {
   id: string | null;
@@ -49,13 +49,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    logAuthState(session, status, 'AuthContext');
+    // logAuthState(session, status, 'AuthContext');
     
     if (status === "loading") {
-      logAuth('AuthContext', 'loading_state', { 
-        previousState: { isLoggedIn, authReady, isLoading },
-        timestamp: Date.now() 
-      });
+      // logAuth('AuthContext', 'loading_state', { 
+      //   previousState: { isLoggedIn, authReady, isLoading },
+      //   timestamp: Date.now() 
+      // });
       setIsLoading(true);
       setAuthReady(false);
       return;
@@ -71,11 +71,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
         image: session.user.image,
       };
       
-      logAuth('AuthContext', 'user_authenticated', {
-        userData,
-        sessionExpires: session.expires,
-        timestamp: Date.now(),
-      });
+      // logAuth('AuthContext', 'user_authenticated', {
+      //   userData,
+      //   sessionExpires: session.expires,
+      //   timestamp: Date.now(),
+      // });
       
       setIsLoggedIn(true);
       setUser({
@@ -89,41 +89,41 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
       const userRole = (session.user as any)?.role || "user";
       setRole(userRole);
       
-      logAuth('AuthContext', 'state_updated', {
-        isLoggedIn: true,
-        role: userRole,
-        hasUser: true,
-        timestamp: Date.now(),
-      });
+      // logAuth('AuthContext', 'state_updated', {
+      //   isLoggedIn: true,
+      //   role: userRole,
+      //   hasUser: true,
+      //   timestamp: Date.now(),
+      // });
     } else {
-      logAuth('AuthContext', 'user_not_authenticated', {
-        status,
-        hasSession: !!session,
-        hasUser: !!(session?.user),
-        timestamp: Date.now(),
-      });
+      // logAuth('AuthContext', 'user_not_authenticated', {
+      //   status,
+      //   hasSession: !!session,
+      //   hasUser: !!(session?.user),
+      //   timestamp: Date.now(),
+      // });
       
       setIsLoggedIn(false);
       setUser(null);
       setRole("user");
       
-      logAuth('AuthContext', 'state_cleared', {
-        isLoggedIn: false,
-        role: "user",
-        hasUser: false,
-        timestamp: Date.now(),
-      });
+      // logAuth('AuthContext', 'state_cleared', {
+      //   isLoggedIn: false,
+      //   role: "user",
+      //   hasUser: false,
+      //   timestamp: Date.now(),
+      // });
     }
     
     setIsLoading(false);
     setAuthReady(true);
     
-    logAuth('AuthContext', 'auth_ready', {
-      isLoggedIn: status === "authenticated",
-      authReady: true,
-      isLoading: false,
-      timestamp: Date.now(),
-    });
+    // logAuth('AuthContext', 'auth_ready', {
+    //   isLoggedIn: status === "authenticated",
+    //   authReady: true,
+    //   isLoading: false,
+    //   timestamp: Date.now(),
+    // });
   }, [session, status]);
 
   const login = () => {
@@ -132,10 +132,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
   };
 
   const logout = async () => {
-    logAuth('AuthContext', 'logout_started', {
-      currentState: { isLoggedIn, role, hasUser: !!user },
-      timestamp: Date.now(),
-    });
+    // logAuth('AuthContext', 'logout_started', {
+    //   currentState: { isLoggedIn, role, hasUser: !!user },
+    //   timestamp: Date.now(),
+    // });
 
     try {
       // Clear all localStorage data
