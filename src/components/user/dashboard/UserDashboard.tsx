@@ -110,18 +110,14 @@ const MobileCategoryDropdown = ({
 function getShopImageUrl(imageUrl: string | undefined): string {
   if (!imageUrl) return "/images/shop-placeholder.jpg";
 
-  // Debug logging to see what URLs we're getting
-  console.log("Processing image URL:", imageUrl);
 
   // Handle relative paths (like "profile.png")
   if (imageUrl && !imageUrl.startsWith("/") && !imageUrl.startsWith("http")) {
-    console.log("Relative path detected, using placeholder");
     return "/images/shop-placeholder.jpg";
   }
 
   // If it's a relative path starting with /, it's likely a valid local image
   if (imageUrl.startsWith("/")) {
-    console.log("Absolute path detected:", imageUrl);
 
     // Check if the image exists in the expected location
     // Handle common cases where images might be in different directories
@@ -140,7 +136,6 @@ function getShopImageUrl(imageUrl: string | undefined): string {
     // Check if this is a known image that might be in the assets directory
     for (const [filename, correctPath] of Object.entries(commonImageMappings)) {
       if (imageUrl.includes(filename)) {
-        console.log(`Mapped ${filename} to ${correctPath}`);
         return correctPath;
       }
     }
@@ -152,15 +147,12 @@ function getShopImageUrl(imageUrl: string | undefined): string {
   if (imageUrl.startsWith("http")) {
     // Allow all external URLs except example.com
     if (imageUrl.includes("example.com")) {
-      console.log("Example.com URL detected, using placeholder");
       return "/images/shop-placeholder.jpg";
     }
-    console.log("External URL detected:", imageUrl);
     return imageUrl;
   }
 
   // Fallback to placeholder
-  console.log("Fallback to placeholder");
   return "/images/shop-placeholder.jpg";
 }
 
