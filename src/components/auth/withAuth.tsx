@@ -4,8 +4,6 @@ import { authOptions } from "../../../pages/api/auth/[...nextauth]";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/router";
 import { useEffect, useState } from "react";
-// import { logRouteNavigation, logAuth } from "../../lib/debugAuth";
-// import { logPageAccess, logAuthenticationCheck, logRedirect } from "../../lib/navigationDebug";
 
 /**
  * Higher-Order Component for protecting pages
