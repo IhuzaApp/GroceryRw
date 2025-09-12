@@ -3,9 +3,6 @@ import React from "react";
 import Image from "next/image";
 import Link from "next/link";
 import UserProfile from "@components/userProfile/useProfile";
-import { GetServerSideProps } from "next";
-import { getServerSession } from "next-auth/next";
-import { authOptions } from "../api/auth/[...nextauth]";
 import { withRouteProtection } from "../../src/context/RouteProtectionContext";
 
 function MyProfilePage() {
@@ -50,26 +47,6 @@ function MyProfilePage() {
   );
 }
 
-// TEMPORARY: Disable server-side authentication to test if it's causing the issue
-export const getServerSideProps: GetServerSideProps = async (context) => {
-  return { props: {} };
-
-  // Original authentication code (disabled for testing)
-  // const session = await getServerSession(
-  //   context.req,
-  //   context.res,
-  //   authOptions as any
-  // );
-  // if (!session) {
-  //   return {
-  //     redirect: {
-  //       destination: "/Auth/Login",
-  //       permanent: false,
-  //     },
-  //   };
-  // }
-  // return { props: {} };
-};
 
 export default withRouteProtection(MyProfilePage, {
   requireAuth: true

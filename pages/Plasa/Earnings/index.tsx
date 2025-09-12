@@ -15,11 +15,8 @@ import {
   formatCurrencySync,
   getCurrencySymbol,
 } from "../../../src/utils/formatCurrency";
-import { GetServerSideProps } from "next";
-import { getServerSession } from "next-auth/next";
-import { authOptions } from "../../api/auth/[...nextauth]";
-import { authenticatedFetch } from "@lib/authenticatedFetch";
 import { withRouteProtection } from "../../../src/context/RouteProtectionContext";
+import { authenticatedFetch } from "@lib/authenticatedFetch";
 
 // Interface for earnings stats
 interface EarningsStats {
@@ -772,28 +769,3 @@ export default withRouteProtection(EarningsPage, {
   requireRole: 'shopper'
 });
 
-// TEMPORARY: Disable server-side authentication to test if it's causing the issue
-export const getServerSideProps: GetServerSideProps = async (context) => {
-  return { props: {} };
-
-  // Original authentication code (disabled for testing)
-  // const session = await getServerSession(context.req, context.res, authOptions);
-  // if (!session?.user) {
-  //   return {
-  //     redirect: {
-  //       destination: "/Auth/Login?callbackUrl=/Plasa/Earnings",
-  //       permanent: false,
-  //     },
-  //   };
-  // }
-  // const userRole = (session as any)?.user?.role;
-  // if (userRole !== "shopper") {
-  //   return {
-  //     redirect: {
-  //       destination: "/Auth/Login?callbackUrl=/Plasa/Earnings",
-  //       permanent: false,
-  //     },
-  //   };
-  // }
-  // return { props: {} };
-};
