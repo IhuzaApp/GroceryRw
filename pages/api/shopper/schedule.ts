@@ -17,7 +17,13 @@ interface ScheduleResponse {
   }>;
 }
 
-interface UpsertScheduleResponse {
+interface DeleteScheduleResponse {
+  delete_Shopper_Availability: {
+    affected_rows: number;
+  };
+}
+
+interface InsertScheduleResponse {
   insert_Shopper_Availability: {
     affected_rows: number;
     returning: Array<{
@@ -47,17 +53,17 @@ const GET_SCHEDULE = gql`
   }
 `;
 
-const UPSERT_SCHEDULE = gql`
-  mutation UpsertShopperSchedule(
-    $schedules: [Shopper_Availability_insert_input!]!
-  ) {
-    insert_Shopper_Availability(
-      objects: $schedules
-      on_conflict: {
-        constraint: shopper_availability_user_id_day_of_week_key
-        update_columns: [start_time, end_time, is_available]
-      }
-    ) {
+const DELETE_EXISTING_SCHEDULE = gql`
+  mutation DeleteExistingSchedule($userId: uuid!) {
+    delete_Shopper_Availability(where: { user_id: { _eq: $userId } }) {
+      affected_rows
+    }
+  }
+`;
+
+const INSERT_SCHEDULE = gql`
+  mutation InsertSchedule($schedules: [Shopper_Availability_insert_input!]!) {
+    insert_Shopper_Availability(objects: $schedules) {
       affected_rows
       returning {
         id
@@ -74,12 +80,14 @@ export default async function handler(
   req: NextApiRequest,
   res: NextApiResponse
 ) {
+  let session: any = null;
+
   try {
     logger.info("Schedule API request received", "ScheduleAPI", {
       method: req.method,
     });
 
-    const session = await getServerSession(req, res, authOptions);
+    session = await getServerSession(req, res, authOptions);
 
     if (!session) {
       logger.error("No session found", "ScheduleAPI");
@@ -119,6 +127,15 @@ export default async function handler(
 
       const { schedule } = req.body;
 
+      logger.info("Received schedule data:", "ScheduleAPI", {
+        scheduleType: typeof schedule,
+        scheduleLength: Array.isArray(schedule) ? schedule.length : "not array",
+        firstItem:
+          Array.isArray(schedule) && schedule.length > 0
+            ? schedule[0]
+            : "no items",
+      });
+
       if (!Array.isArray(schedule)) {
         logger.error("Invalid schedule format", "ScheduleAPI", {
           receivedType: typeof schedule,
@@ -126,45 +143,77 @@ export default async function handler(
         return res.status(400).json({ error: "Invalid schedule format" });
       }
 
-      const scheduleInput = schedule.map((slot) => ({
-        user_id: userId,
-        day_of_week: slot.day_of_week,
-        start_time: slot.start_time,
-        end_time: slot.end_time,
-        is_available: slot.is_available,
-      }));
+      const scheduleInput = schedule.map((slot) => {
+        // Convert time format from HH:MM:SS+00:00 to HH:MM:SS+00 for PostgreSQL compatibility
+        const formatTimeForDB = (time: string) => {
+          if (time.includes("+00:00")) {
+            return time.replace("+00:00", "+00");
+          }
+          return time;
+        };
+
+        return {
+          user_id: userId,
+          day_of_week: slot.day_of_week,
+          start_time: formatTimeForDB(slot.start_time),
+          end_time: formatTimeForDB(slot.end_time),
+          is_available: slot.is_available,
+        };
+      });
 
       logger.info("Upserting schedule", "ScheduleAPI", {
         userId,
         scheduleCount: scheduleInput.length,
+        firstScheduleItem: scheduleInput[0],
       });
 
-      const result = await hasuraClient.request<UpsertScheduleResponse>(
-        UPSERT_SCHEDULE,
+      // First, delete existing schedule for this user
+      logger.info("Deleting existing schedule", "ScheduleAPI", { userId });
+
+      const deleteResult = await hasuraClient.request<DeleteScheduleResponse>(
+        DELETE_EXISTING_SCHEDULE,
+        { userId }
+      );
+
+      logger.info("Delete result:", "ScheduleAPI", {
+        userId,
+        deletedRows: deleteResult.delete_Shopper_Availability.affected_rows,
+      });
+
+      // Then insert the new schedule
+      logger.info("Inserting new schedule", "ScheduleAPI", {
+        userId,
+        scheduleCount: scheduleInput.length,
+      });
+
+      const insertResult = await hasuraClient.request<InsertScheduleResponse>(
+        INSERT_SCHEDULE,
         {
           schedules: scheduleInput,
         }
       );
 
-      logger.info("Schedule update result:", "ScheduleAPI", {
+      logger.info("Insert result:", "ScheduleAPI", {
         userId,
-        affectedRows: result.insert_Shopper_Availability.affected_rows,
+        insertedRows: insertResult.insert_Shopper_Availability.affected_rows,
       });
 
       return res.status(200).json({
         success: true,
-        affected_rows: result.insert_Shopper_Availability.affected_rows,
+        affected_rows: insertResult.insert_Shopper_Availability.affected_rows,
       });
     }
 
     logger.warn("Method not allowed", "ScheduleAPI", { method: req.method });
     return res.status(405).json({ error: "Method not allowed" });
   } catch (error) {
-    logger.error(
-      "Error in schedule API:",
-      "ScheduleAPI",
-      error instanceof Error ? error.message : "Unknown error"
-    );
+    logger.error("Error in schedule API:", "ScheduleAPI", {
+      error: error instanceof Error ? error.message : "Unknown error",
+      stack: error instanceof Error ? error.stack : undefined,
+      userId: session?.user?.id,
+      method: req.method,
+      body: req.body,
+    });
     return res.status(500).json({
       error: "Failed to process schedule request",
       message: error instanceof Error ? error.message : "Unknown error",
