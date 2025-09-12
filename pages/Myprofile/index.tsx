@@ -50,20 +50,24 @@ export default function MyProfilePage() {
   );
 }
 
-// Protect this page: redirect to login if not authenticated
+// TEMPORARY: Disable server-side authentication to test if it's causing the issue
 export const getServerSideProps: GetServerSideProps = async (context) => {
-  const session = await getServerSession(
-    context.req,
-    context.res,
-    authOptions as any
-  );
-  if (!session) {
-    return {
-      redirect: {
-        destination: "/Auth/Login",
-        permanent: false,
-      },
-    };
-  }
+  console.log('[SERVER-SIDE AUTH DISABLED] Skipping authentication check for MyProfile');
   return { props: {} };
+  
+  // Original authentication code (disabled for testing)
+  // const session = await getServerSession(
+  //   context.req,
+  //   context.res,
+  //   authOptions as any
+  // );
+  // if (!session) {
+  //   return {
+  //     redirect: {
+  //       destination: "/Auth/Login",
+  //       permanent: false,
+  //     },
+  //   };
+  // }
+  // return { props: {} };
 };

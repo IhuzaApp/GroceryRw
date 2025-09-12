@@ -769,30 +769,29 @@ const EarningsPage: React.FC = () => {
 
 export default EarningsPage;
 
+// TEMPORARY: Disable server-side authentication to test if it's causing the issue
 export const getServerSideProps: GetServerSideProps = async (context) => {
-  const session = await getServerSession(context.req, context.res, authOptions);
-
-  if (!session?.user) {
-    return {
-      redirect: {
-        destination: "/Auth/Login?callbackUrl=/Plasa/Earnings",
-        permanent: false,
-      },
-    };
-  }
-
-  // Check if the user is a shopper
-  const userRole = (session as any)?.user?.role;
-  if (userRole !== "shopper") {
-    return {
-      redirect: {
-        destination: "/Auth/Login?callbackUrl=/Plasa/Earnings",
-        permanent: false,
-      },
-    };
-  }
-
-  return {
-    props: {},
-  };
+  console.log('[SERVER-SIDE AUTH DISABLED] Skipping authentication check for Plasa/Earnings');
+  return { props: {} };
+  
+  // Original authentication code (disabled for testing)
+  // const session = await getServerSession(context.req, context.res, authOptions);
+  // if (!session?.user) {
+  //   return {
+  //     redirect: {
+  //       destination: "/Auth/Login?callbackUrl=/Plasa/Earnings",
+  //       permanent: false,
+  //     },
+  //   };
+  // }
+  // const userRole = (session as any)?.user?.role;
+  // if (userRole !== "shopper") {
+  //   return {
+  //     redirect: {
+  //       destination: "/Auth/Login?callbackUrl=/Plasa/Earnings",
+  //       permanent: false,
+  //     },
+  //   };
+  // }
+  // return { props: {} };
 };

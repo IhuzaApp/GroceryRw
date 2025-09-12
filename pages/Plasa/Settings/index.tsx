@@ -140,33 +140,34 @@ function SettingsPage({ sessionData }: SettingsPageProps) {
 
 export default SettingsPage;
 
+// TEMPORARY: Disable server-side authentication to test if it's causing the issue
 export const getServerSideProps: GetServerSideProps = async (context) => {
-  const session = await getServerSession(context.req, context.res, authOptions);
-
-  if (!session) {
-    return {
-      redirect: {
-        destination: "/auth/signin",
-        permanent: false,
-      },
-    };
-  }
-
-  // Sanitize the session data to ensure all fields are JSON-serializable
-  const sanitizedSession: CustomSession = {
-    user: {
-      id: session.user?.id || "",
-      name: session.user?.name || null,
-      email: session.user?.email || null,
-      role: (session.user as any)?.role || null,
-      image: session.user?.image || null,
-    },
-    expires: session.expires,
-  };
-
-  return {
-    props: {
-      sessionData: sanitizedSession,
-    },
-  };
+  console.log('[SERVER-SIDE AUTH DISABLED] Skipping authentication check for Plasa/Settings');
+  return { props: {} };
+  
+  // Original authentication code (disabled for testing)
+  // const session = await getServerSession(context.req, context.res, authOptions);
+  // if (!session) {
+  //   return {
+  //     redirect: {
+  //       destination: "/auth/signin",
+  //       permanent: false,
+  //     },
+  //   };
+  // }
+  // const sanitizedSession: CustomSession = {
+  //   user: {
+  //     id: session.user?.id || "",
+  //     name: session.user?.name || null,
+  //     email: session.user?.email || null,
+  //     role: (session.user as any)?.role || null,
+  //     image: session.user?.image || null,
+  //   },
+  //   expires: session.expires,
+  // };
+  // return {
+  //   props: {
+  //     sessionData: sanitizedSession,
+  //   },
+  // };
 };

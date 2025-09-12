@@ -725,29 +725,32 @@ export default function InvoicePage({
   );
 }
 
+// TEMPORARY: Disable server-side authentication to test if it's causing the issue
 export const getServerSideProps: GetServerSideProps<InvoicePageProps> = async (
   context
 ) => {
+  console.log('[SERVER-SIDE AUTH DISABLED] Skipping authentication check for Plasa/invoices/[id]');
   const { id } = context.params || {};
-  const session = await getServerSession(context.req, context.res, authOptions);
-
-  if (!session?.user) {
-    return {
-      redirect: {
-        destination: "/auth/signin?callbackUrl=/Plasa",
-        permanent: false,
-      },
-    };
-  }
-
-  if (!id || typeof id !== "string") {
-    return {
-      props: {
-        initialInvoiceData: null,
-        error: "Invoice ID is required",
-      },
-    };
-  }
+  return { props: { initialInvoiceData: null, error: null } };
+  
+  // Original authentication code (disabled for testing)
+  // const session = await getServerSession(context.req, context.res, authOptions);
+  // if (!session?.user) {
+  //   return {
+  //     redirect: {
+  //       destination: "/auth/signin?callbackUrl=/Plasa",
+  //       permanent: false,
+  //     },
+  //   };
+  // }
+  // if (!id || typeof id !== "string") {
+  //   return {
+  //     props: {
+  //       initialInvoiceData: null,
+  //       error: "Invoice ID is required",
+  //     },
+  //   };
+  // }
 
   try {
     // For now, we'll just return null and let the client fetch the data

@@ -27,20 +27,24 @@ export default function BecomeShopperPage() {
   );
 }
 
-// Protect this page: redirect to login if not authenticated
+// TEMPORARY: Disable server-side authentication to test if it's causing the issue
 export const getServerSideProps: GetServerSideProps = async (context) => {
-  const session = await getServerSession(
-    context.req,
-    context.res,
-    authOptions as any
-  );
-  if (!session) {
-    return {
-      redirect: {
-        destination: "/Auth/Login?callbackUrl=/Myprofile/become-shopper",
-        permanent: false,
-      },
-    };
-  }
+  console.log('[SERVER-SIDE AUTH DISABLED] Skipping authentication check for Myprofile/become-shopper');
   return { props: {} };
+  
+  // Original authentication code (disabled for testing)
+  // const session = await getServerSession(
+  //   context.req,
+  //   context.res,
+  //   authOptions as any
+  // );
+  // if (!session) {
+  //   return {
+  //     redirect: {
+  //       destination: "/Auth/Login?callbackUrl=/Myprofile/become-shopper",
+  //       permanent: false,
+  //     },
+  //   };
+  // }
+  // return { props: {} };
 };
