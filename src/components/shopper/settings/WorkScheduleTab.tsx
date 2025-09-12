@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback, useRef } from "react";
 import { useTheme } from "../../../context/ThemeContext";
+import { useAuth } from "../../../hooks/useAuth";
 import { Toggle, SelectPicker, Button, Message, Loader } from "rsuite";
 
 interface TimeSlot {
@@ -9,25 +10,9 @@ interface TimeSlot {
   available: boolean;
 }
 
-interface Session {
-  user: {
-    id: string;
-    name: string | null;
-    email: string | null;
-    role: string | null;
-    image: string | null;
-  };
-  expires: string;
-}
-
-interface WorkScheduleTabProps {
-  initialSession?: Session;
-}
-
-export default function WorkScheduleTab({
-  initialSession,
-}: WorkScheduleTabProps) {
+export default function WorkScheduleTab() {
   const { theme } = useTheme();
+  const { user, isLoggedIn } = useAuth();
   const [schedule, setSchedule] = useState<TimeSlot[]>([]);
   const [scheduleLoading, setScheduleLoading] = useState<boolean>(true);
   const [hasSchedule, setHasSchedule] = useState<boolean>(false);
@@ -64,22 +49,48 @@ export default function WorkScheduleTab({
 
   // Format time for display and comparison
   const formatTimeForDisplay = useCallback((time: string) => {
-    // Remove timezone if present and keep only the time part
-    return time.split("+")[0];
+    // Handle different time formats from database
+    let cleanTime = time;
+    
+    // Remove timezone if present (handles both +00:00 and +00 formats)
+    if (time.includes("+")) {
+      cleanTime = time.split("+")[0];
+    }
+    
+    // Ensure we have seconds (HH:MM:SS format)
+    if (cleanTime.split(":").length === 2) {
+      cleanTime = `${cleanTime}:00`;
+    }
+    
+    // Return in the format expected by SelectPicker (HH:MM:SS+00)
+    return `${cleanTime}+00`;
   }, []);
 
   // Format time for API
   const formatTimeForAPI = useCallback((time: string) => {
-    // Add timezone if not present
-    return time.includes("+") ? time : `${time}+00`;
+    // Handle different time formats
+    let cleanTime = time;
+    
+    // Remove timezone if present (handles both +00:00 and +00 formats)
+    if (time.includes("+")) {
+      cleanTime = time.split("+")[0];
+    }
+    
+    // Ensure we have seconds (HH:MM:SS format)
+    if (cleanTime.split(":").length === 2) {
+      cleanTime = `${cleanTime}:00`;
+    }
+    
+    // Return in the format expected by PostgreSQL timetz (HH:MM:SS+00:00)
+    return `${cleanTime}+00:00`;
   }, []);
 
   // Load schedule - only run once on mount
   useEffect(() => {
     const loadSchedule = async () => {
       // Skip if we've already fetched or don't have a user ID
-      if (initialFetchDone.current || !initialSession?.user?.id) {
-        if (!initialSession?.user?.id) {
+      if (initialFetchDone.current || !user?.id) {
+        if (!user?.id) {
           console.error("No user ID found in session");
           setLoadError("Please log in to view your schedule.");
           setScheduleLoading(false);
@@ -180,7 +191,7 @@ export default function WorkScheduleTab({
     };
 
     loadSchedule();
-  }, [days, initialSession?.user?.id, formatTimeForAPI]); // Added formatTimeForAPI to dependencies
+  }, [days, user?.id, formatTimeForAPI]); // Added formatTimeForAPI to dependencies
 
   // Handle availability toggle
   const handleAvailabilityToggle = useCallback(
@@ -208,7 +219,7 @@ export default function WorkScheduleTab({
 
   // Save schedule updates
   const saveScheduleUpdates = useCallback(async () => {
-    if (!initialSession?.user?.id) {
+    if (!user?.id) {
       setSaveMessage({
         type: "error",
         text: "Session error. Please try refreshing the page.",
@@ -256,7 +267,7 @@ export default function WorkScheduleTab({
         text: "Failed to update schedule. Please try again.",
       });
     }
-  }, [initialSession?.user?.id, schedule]);
+  }, [user?.id, schedule]);
 
   // Clear save message after 5 seconds
   useEffect(() => {
