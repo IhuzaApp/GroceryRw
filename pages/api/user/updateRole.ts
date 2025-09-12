@@ -104,7 +104,7 @@ export default async function handler(
     return res.status(200).json({
       success: true,
       role: role,
-      redirectTo: role === "shopper" ? "/ShopperDashboard" : "/",
+      redirectTo: "/", // Both user and shopper roles redirect to home page
     });
   } catch (error) {
     console.error("Error updating user role:", error);
