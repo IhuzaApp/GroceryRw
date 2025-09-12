@@ -6,7 +6,7 @@ import {
   downloadInvoiceAsPdf,
   InvoiceData,
 } from "../../../src/lib/invoiceUtils";
-import { formatCurrencySync } from "../../../src/utils/formatCurrency";
+import { formatCurrencySync, getCurrencySymbol } from "../../../src/utils/formatCurrency";
 import jsPDF from "jspdf";
 import fs from "fs";
 import path from "path";
@@ -324,13 +324,29 @@ async function generateInvoicePdf(invoiceData: any): Promise<Buffer> {
 
   // Add QR Code to the last page
   try {
-    // Generate QR code data (invoice URL or invoice details)
+    // Generate QR code data with required information:
+    // - created_at (date)
+    // - product names
+    // - total amount excluding service fee and delivery fee
+    const productNames = invoiceData.items.map((item: any) => item.name).join(", ");
+    const subtotalAmount = invoiceData.subtotal; // This is the amount excluding service and delivery fees
+    
+    // Get the system currency
+    const currency = getCurrencySymbol();
+    
+    // Create a more readable QR code data structure
     const qrData = JSON.stringify({
-      invoiceId: invoiceData.id,
-      invoiceNumber: invoiceData.invoiceNumber,
-      total: invoiceData.total,
-      date: invoiceData.dateCreated,
-      type: invoiceData.orderType,
+      invoice: {
+        id: invoiceData.id,
+        number: invoiceData.invoiceNumber,
+        created_at: invoiceData.dateCreated,
+        products: productNames,
+        subtotal: subtotalAmount,
+        currency: currency, // Use system configured currency
+        type: invoiceData.orderType,
+      },
+      // Add a human-readable summary for easy scanning
+      summary: `Invoice ${invoiceData.invoiceNumber} - ${productNames} - ${formatCurrencySync(subtotalAmount)} - ${invoiceData.dateCreated}`,
     });
 
     // Generate QR code as base64
