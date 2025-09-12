@@ -217,7 +217,6 @@ export default function BatchDetailsPage({
 export const getServerSideProps: GetServerSideProps<
   BatchDetailsPageProps
 > = async (context) => {
-  console.log('[SERVER-SIDE AUTH DISABLED] Skipping authentication check for Plasa/active-batches/batch/[id]');
   const { id } = context.params || {};
   return { props: { orderData: null, error: null } };
   

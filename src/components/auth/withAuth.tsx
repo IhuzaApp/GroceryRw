@@ -5,7 +5,7 @@ import { useSession } from "next-auth/react";
 import { useRouter } from "next/router";
 import { useEffect, useState } from "react";
 import { logRouteNavigation, logAuth } from "../../lib/debugAuth";
-import { logPageAccess, logAuthenticationCheck, logRedirect } from "../../lib/navigationDebug";
+// import { logPageAccess, logAuthenticationCheck, logRedirect } from "../../lib/navigationDebug";
 
 /**
  * Higher-Order Component for protecting pages
@@ -42,8 +42,8 @@ export function withAuth<P extends object>(
       const isAuthenticated = status === "authenticated";
       const userRole = (session?.user as any)?.role || "user";
       
-      logPageAccess(componentName, isAuthenticated, userRole, session);
-      logAuthenticationCheck(componentName, isAuthenticated, userRole, session);
+      // logPageAccess(componentName, isAuthenticated, userRole, session);
+      // logAuthenticationCheck(componentName, isAuthenticated, userRole, session);
       
       logAuth('WithAuth', 'component_mounted', {
         componentName,
@@ -79,7 +79,7 @@ export function withAuth<P extends object>(
       });
 
       if (requireAuth && status === "unauthenticated") {
-        logRedirect(currentPath, redirectTo, 'User not authenticated', false);
+        // logRedirect(currentPath, redirectTo, 'User not authenticated', false);
         
         logAuth('WithAuth', 'redirecting_to_login', {
           componentName,
@@ -106,7 +106,7 @@ export function withAuth<P extends object>(
         });
 
         if (!allowedRoles.includes(userRole)) {
-          logRedirect(currentPath, '/', 'Insufficient role permissions', true, userRole);
+          // logRedirect(currentPath, '/', 'Insufficient role permissions', true, userRole);
           
           logAuth('WithAuth', 'redirecting_due_to_role', {
             componentName,

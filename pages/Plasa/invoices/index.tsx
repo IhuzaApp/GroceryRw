@@ -222,7 +222,6 @@ export default InvoicesPage;
 
 // TEMPORARY: Disable server-side authentication to test if it's causing the issue
 export const getServerSideProps = async (context: any) => {
-  console.log('[SERVER-SIDE AUTH DISABLED] Skipping authentication check for Plasa/invoices');
   return { props: { initialInvoices: [], initialError: null } };
   
   try {

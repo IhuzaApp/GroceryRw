@@ -32,10 +32,10 @@ const graphqlUrl =
   process.env.HASURA_GRAPHQL_URL ||
   "http://localhost:8080/v1/graphql";
 
-// Log the GraphQL URL being used (helpful for debugging)
-if (typeof window !== "undefined") {
-  console.log(`Apollo Client using GraphQL endpoint: ${graphqlUrl}`);
-}
+// Log the GraphQL URL being used (helpful for debugging) - disabled for production
+// if (typeof window !== "undefined") {
+//   console.log(`Apollo Client using GraphQL endpoint: ${graphqlUrl}`);
+// }
 
 // HTTP link to your GraphQL API
 const httpLink = new HttpLink({
@@ -70,14 +70,33 @@ const authLink = setContext(async (_, { headers }) => {
 // Create Apollo Client instance
 const client = new ApolloClient({
   link: from([errorLink, authLink, httpLink]),
-  cache: new InMemoryCache(),
+  cache: new InMemoryCache({
+    typePolicies: {
+      Query: {
+        fields: {
+          // Cache user data for better performance
+          users: {
+            merge(existing = [], incoming) {
+              return incoming;
+            },
+          },
+          // Cache orders data
+          Orders: {
+            merge(existing = [], incoming) {
+              return incoming;
+            },
+          },
+        },
+      },
+    },
+  }),
   defaultOptions: {
     watchQuery: {
-      fetchPolicy: "network-only",
+      fetchPolicy: "cache-first",
       errorPolicy: "all",
     },
     query: {
-      fetchPolicy: "network-only",
+      fetchPolicy: "cache-first",
       errorPolicy: "all",
     },
     mutate: {

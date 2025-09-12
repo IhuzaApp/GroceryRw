@@ -29,8 +29,6 @@ import { Toaster } from "react-hot-toast";
 import { GoogleMapProvider } from "../src/context/GoogleMapProvider";
 import { ApolloProvider } from "@apollo/client";
 import apolloClient from "../src/lib/apolloClient";
-import "../src/lib/navigationDebugConsole"; // Initialize navigation debug console
-import DebugFloatingButton from "../src/components/debug/DebugFloatingButton";
 
 // Component to handle session refresh after role switching
 function SessionRefreshHandler({ children }: { children: React.ReactNode }) {
@@ -112,9 +110,9 @@ export default function App({ Component, pageProps }: AppProps) {
       <SessionProvider
         session={(pageProps as any).session}
         basePath="/api/auth"
-        refetchInterval={0} // Disable automatic refetching
-        refetchOnWindowFocus={false} // Disable refetch on window focus
-        refetchWhenOffline={false} // Disable refetch when offline
+        refetchInterval={0}
+        refetchOnWindowFocus={false}
+        refetchWhenOffline={false}
       >
         <ApolloProvider client={apolloClient}>
           <AuthProvider>
@@ -125,7 +123,6 @@ export default function App({ Component, pageProps }: AppProps) {
                     <Toaster position="top-right" />
                     <Component {...pageProps} />
                     <InstallPrompt />
-                    <DebugFloatingButton />
                   </SessionRefreshHandler>
                 </GoogleMapProvider>
               </ChatProvider>

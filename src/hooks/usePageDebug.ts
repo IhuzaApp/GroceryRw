@@ -9,7 +9,7 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/router';
 import { useSession } from 'next-auth/react';
 import { useAuth } from '../context/AuthContext';
-import { logPageAccess, logAuthenticationCheck, logRedirect } from '../lib/navigationDebug';
+// import { logPageAccess, logAuthenticationCheck, logRedirect } from '../lib/navigationDebug';
 import { logAuth } from '../lib/debugAuth';
 
 interface PageDebugOptions {
@@ -33,9 +33,9 @@ export const usePageDebug = (options: PageDebugOptions) => {
     const isAuthenticated = status === "authenticated";
     const userRole = (session?.user as any)?.role || "user";
 
-    // Log page access
-    logPageAccess(pageName, isAuthenticated, userRole, session);
-    logAuthenticationCheck(pageName, isAuthenticated, userRole, session);
+    // Log page access - disabled for performance
+    // logPageAccess(pageName, isAuthenticated, userRole, session);
+    // logAuthenticationCheck(pageName, isAuthenticated, userRole, session);
 
     // Log detailed debug info
     if (debugLevel === 'verbose') {
@@ -97,7 +97,7 @@ export const usePageDebug = (options: PageDebugOptions) => {
 
     // Check for authentication issues
     if (requireAuth && status === "unauthenticated" && isInitialized) {
-      logRedirect(currentPath, '/Auth/Login', 'User not authenticated on page', false);
+      // logRedirect(currentPath, '/Auth/Login', 'User not authenticated on page', false);
       
       logAuth('PageDebug', 'auth_issue_detected', {
         pageName,
@@ -115,7 +115,7 @@ export const usePageDebug = (options: PageDebugOptions) => {
       const hasAccess = allowedRoles.includes(userRole);
       
       if (!hasAccess) {
-        logRedirect(currentPath, '/', 'Insufficient role permissions on page', true, userRole);
+        // logRedirect(currentPath, '/', 'Insufficient role permissions on page', true, userRole);
         
         logAuth('PageDebug', 'role_issue_detected', {
           pageName,
