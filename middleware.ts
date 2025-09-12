@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import { getMiddlewareSession, isAuthenticated, getUserRole } from "./src/lib/middlewareAuth";
-import { logMiddlewareDecision, logAuth } from "./src/lib/debugAuth";
+// import { logMiddlewareDecision, logAuth } from "./src/lib/debugAuth";
 
 /**
  * AUTHENTICATION MIDDLEWARE - PRODUCTION FIXES
@@ -66,53 +66,53 @@ export async function middleware(req: NextRequest) {
   const startTime = Date.now();
 
   // Log middleware entry
-  logAuth('Middleware', 'middleware_entry', {
-    pathname,
-    method: req.method,
-    userAgent: req.headers.get('user-agent'),
-    referer: req.headers.get('referer'),
-    cookies: req.cookies.getAll().map(c => ({ name: c.name, value: c.value.substring(0, 20) + '...' })),
-    hasSessionCookie: !!req.cookies.get('next-auth.session-token') || !!req.cookies.get('__Secure-next-auth.session-token'),
-    sessionCookieName: req.cookies.get('next-auth.session-token') ? 'next-auth.session-token' : 
-                      req.cookies.get('__Secure-next-auth.session-token') ? '__Secure-next-auth.session-token' : 'none',
-  });
+  // logAuth('Middleware', 'middleware_entry', {
+  //   pathname,
+  //   method: req.method,
+  //   userAgent: req.headers.get('user-agent'),
+  //   referer: req.headers.get('referer'),
+  //   cookies: req.cookies.getAll().map(c => ({ name: c.name, value: c.value.substring(0, 20) + '...' })),
+  //   hasSessionCookie: !!req.cookies.get('next-auth.session-token') || !!req.cookies.get('__Secure-next-auth.session-token'),
+  //   sessionCookieName: req.cookies.get('next-auth.session-token') ? 'next-auth.session-token' : 
+  //                     req.cookies.get('__Secure-next-auth.session-token') ? '__Secure-next-auth.session-token' : 'none',
+  // });
 
   // API routes are excluded from middleware - they handle their own authentication
   if (pathname.startsWith('/api/')) {
-    logMiddlewareDecision(pathname, 'bypass', 'API route - handled by API authentication');
+    // logMiddlewareDecision(pathname, 'bypass', 'API route - handled by API authentication');
     return NextResponse.next();
   }
 
   // Skip middleware for public paths
   if (isPublicPath(pathname)) {
-    logMiddlewareDecision(pathname, 'allow', 'Public path');
+    // logMiddlewareDecision(pathname, 'allow', 'Public path');
     return NextResponse.next();
   }
 
   // Skip middleware for static files
   if (pathname.includes(".")) {
-    logMiddlewareDecision(pathname, 'allow', 'Static file');
+    // logMiddlewareDecision(pathname, 'allow', 'Static file');
     return NextResponse.next();
   }
 
   // Check if there's a refresh parameter in the URL, which indicates role switching
   const isRefreshing = req.nextUrl.searchParams.has("refresh");
-  logAuth('Middleware', 'role_switch_check', { isRefreshing });
+  // logAuth('Middleware', 'role_switch_check', { isRefreshing });
 
   // Check if role has been changed (cookie set by updateRole API)
   const roleChanged = req.cookies.get("role_changed")?.value === "true";
   const newRole = req.cookies.get("new_role")?.value;
   
-  logAuth('Middleware', 'role_change_check', { 
-    roleChanged, 
-    newRole,
-    roleChangedCookie: req.cookies.get("role_changed")?.value,
-    newRoleCookie: req.cookies.get("new_role")?.value,
-  });
+  // logAuth('Middleware', 'role_change_check', { 
+  //   roleChanged, 
+  //   newRole,
+  //   roleChangedCookie: req.cookies.get("role_changed")?.value,
+  //   newRoleCookie: req.cookies.get("new_role")?.value,
+  // });
 
   // If role has been changed, redirect to auth/signout to force session refresh
   if (roleChanged && newRole && !pathname.includes("signout")) {
-    logMiddlewareDecision(pathname, 'redirect', `Role change detected - redirecting to signout. New role: ${newRole}`);
+    // logMiddlewareDecision(pathname, 'redirect', `Role change detected - redirecting to signout. New role: ${newRole}`);
     
     // Create response
     const response = NextResponse.redirect(
@@ -137,21 +137,21 @@ export async function middleware(req: NextRequest) {
     // Get detailed session info for debugging
     const sessionInfo = await getMiddlewareSession(req);
     
-    logAuth('Middleware', 'authentication_check', {
-      pathname,
-      authenticated,
-      authTimeMs: authTime,
-      sessionInfo: sessionInfo ? {
-        hasSession: true,
-        userId: sessionInfo.user?.id,
-        userRole: sessionInfo.role,
-        expires: sessionInfo.expires,
-      } : null,
-      timestamp: Date.now(),
-    });
+    // logAuth('Middleware', 'authentication_check', {
+    //   pathname,
+    //   authenticated,
+    //   authTimeMs: authTime,
+    //   sessionInfo: sessionInfo ? {
+    //     hasSession: true,
+    //     userId: sessionInfo.user?.id,
+    //     userRole: sessionInfo.role,
+    //     expires: sessionInfo.expires,
+    //   } : null,
+    //   timestamp: Date.now(),
+    // });
     
     if (!authenticated) {
-      logMiddlewareDecision(pathname, 'redirect', 'User not authenticated - redirecting to login');
+      // logMiddlewareDecision(pathname, 'redirect', 'User not authenticated - redirecting to login');
       const url = req.nextUrl.clone();
       url.pathname = "/Auth/Login";
       url.search = `callbackUrl=${encodeURIComponent(req.url)}`;
@@ -163,12 +163,12 @@ export async function middleware(req: NextRequest) {
     const userRole = await getUserRole(req);
     const roleTime = Date.now() - roleStartTime;
     
-    logAuth('Middleware', 'role_check', {
-      pathname,
-      userRole,
-      roleTimeMs: roleTime,
-      timestamp: Date.now(),
-    });
+    // logAuth('Middleware', 'role_check', {
+    //   pathname,
+    //   userRole,
+    //   roleTimeMs: roleTime,
+    //   timestamp: Date.now(),
+    // });
 
     // Handle role-specific redirects
     if (userRole === "shopper") {
@@ -177,14 +177,14 @@ export async function middleware(req: NextRequest) {
         pathname.startsWith("/user") &&
         !pathname.startsWith("/user/profile")
       ) {
-        logMiddlewareDecision(pathname, 'redirect', `Shopper trying to access user route - redirecting to home`);
+        // logMiddlewareDecision(pathname, 'redirect', `Shopper trying to access user route - redirecting to home`);
         const url = req.nextUrl.clone();
         url.pathname = "/";
         return NextResponse.redirect(url);
       }
       // Redirect /ShopperDashboard to root
       if (pathname === "/ShopperDashboard") {
-        logMiddlewareDecision(pathname, 'redirect', 'Redirecting /ShopperDashboard to root');
+        // logMiddlewareDecision(pathname, 'redirect', 'Redirecting /ShopperDashboard to root');
         const url = req.nextUrl.clone();
         url.pathname = "/";
         return NextResponse.redirect(url);
@@ -192,7 +192,7 @@ export async function middleware(req: NextRequest) {
     } else if (userRole === "user") {
       // If user is a customer and trying to access shopper routes, redirect to home
       if (pathname.startsWith("/Plasa") || pathname === "/ShopperDashboard") {
-        logMiddlewareDecision(pathname, 'redirect', `User trying to access shopper route - redirecting to home`);
+        // logMiddlewareDecision(pathname, 'redirect', `User trying to access shopper route - redirecting to home`);
         const url = req.nextUrl.clone();
         url.pathname = "/";
         return NextResponse.redirect(url);
@@ -202,7 +202,7 @@ export async function middleware(req: NextRequest) {
     // Protect shopper routes
     if (pathname.startsWith("/shopper")) {
       if (userRole !== "shopper") {
-        logMiddlewareDecision(pathname, 'redirect', `Non-shopper trying to access shopper route - redirecting to home`);
+        // logMiddlewareDecision(pathname, 'redirect', `Non-shopper trying to access shopper route - redirecting to home`);
         const url = req.nextUrl.clone();
         url.pathname = "/";
         return NextResponse.redirect(url);
@@ -211,27 +211,27 @@ export async function middleware(req: NextRequest) {
 
     // User is authenticated, allow
     const totalTime = Date.now() - startTime;
-    logMiddlewareDecision(pathname, 'allow', `User authenticated with role ${userRole} - access granted`, userRole);
+    // logMiddlewareDecision(pathname, 'allow', `User authenticated with role ${userRole} - access granted`, userRole);
     
-    logAuth('Middleware', 'middleware_success', {
-      pathname,
-      userRole,
-      totalTimeMs: totalTime,
-      authTimeMs: authTime,
-      roleTimeMs: roleTime,
-    });
+    // logAuth('Middleware', 'middleware_success', {
+    //   pathname,
+    //   userRole,
+    //   totalTimeMs: totalTime,
+    //   authTimeMs: authTime,
+    //   roleTimeMs: roleTime,
+    // });
     
     return NextResponse.next();
   } catch (error) {
     const totalTime = Date.now() - startTime;
-    logAuth('Middleware', 'middleware_error', {
-      pathname,
-      error: error instanceof Error ? error.message : String(error),
-      stack: error instanceof Error ? error.stack : undefined,
-      totalTimeMs: totalTime,
-    });
+    // logAuth('Middleware', 'middleware_error', {
+    //   pathname,
+    //   error: error instanceof Error ? error.message : String(error),
+    //   stack: error instanceof Error ? error.stack : undefined,
+    //   totalTimeMs: totalTime,
+    // });
 
-    logMiddlewareDecision(pathname, 'redirect', `Authentication error - redirecting to login: ${error instanceof Error ? error.message : String(error)}`);
+    // logMiddlewareDecision(pathname, 'redirect', `Authentication error - redirecting to login: ${error instanceof Error ? error.message : String(error)}`);
 
     // In case of any error, redirect to login for security
     const url = req.nextUrl.clone();
