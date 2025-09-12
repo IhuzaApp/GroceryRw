@@ -5,21 +5,26 @@
 ### **Pages Cleaned Up**
 
 #### **Plasa Pages**
+
 1. **`/pages/Plasa/Earnings/index.tsx`** ✅
+
    - Removed: `getServerSideProps` function and all commented authentication code
    - Removed: Unused imports (`GetServerSideProps`, `getServerSession`, `authOptions`)
    - Kept: `authenticatedFetch` import (still needed for client-side API calls)
 
 2. **`/pages/Plasa/active-batches/index.tsx`** ✅
+
    - Removed: `getServerSideProps` function and all commented authentication code
    - Removed: Unused imports (`GetServerSideProps`, `hasuraClient`, `gql`, `getServerSession`, `authOptions`)
    - Removed: All commented GraphQL queries and data fetching logic
 
 3. **`/pages/Plasa/invoices/index.tsx`** ✅
+
    - Removed: `getServerSideProps` function and all commented authentication code
    - Removed: Unused imports (`getServerSession`, `authOptions`)
 
 4. **`/pages/Plasa/Settings/index.tsx`** ✅
+
    - Removed: `getServerSideProps` function and all commented authentication code
    - Removed: Unused imports (`GetServerSideProps`, `getServerSession`, `authOptions`, `Session`)
    - Removed: Unused interfaces (`CustomSession`, `SettingsPageProps`)
@@ -32,6 +37,7 @@
    - Removed: Unused interfaces (`SessionUser`, `Session`)
 
 #### **User Pages**
+
 6. **`/pages/Myprofile/index.tsx`** ✅
    - Removed: `getServerSideProps` function and all commented authentication code
    - Removed: Unused imports (`GetServerSideProps`, `getServerSession`, `authOptions`)
@@ -39,12 +45,14 @@
 ### **What Was Removed**
 
 #### **Server-Side Authentication Code**
+
 - All `getServerSideProps` functions that were disabled for testing
 - All commented authentication checks (`getServerSession`, role validation)
 - All commented redirect logic for unauthorized access
 - All commented data fetching logic in `getServerSideProps`
 
 #### **Unused Imports**
+
 - `GetServerSideProps` from "next"
 - `getServerSession` from "next-auth/next"
 - `authOptions` from auth configuration
@@ -53,6 +61,7 @@
 - Custom session interfaces that are no longer used
 
 #### **Unused Interfaces and Types**
+
 - `CustomSession` interfaces
 - `SessionUser` interfaces
 - `SettingsPageProps` interfaces
@@ -61,12 +70,14 @@
 ### **What Was Kept**
 
 #### **Client-Side Authentication**
+
 - All `withRouteProtection` HOC implementations
 - All client-side authentication context usage
 - All `authenticatedFetch` imports (still needed for API calls)
 - All component functionality and UI logic
 
 #### **Essential Imports**
+
 - `withRouteProtection` from RouteProtectionContext
 - `authenticatedFetch` for API calls
 - All UI component imports
@@ -75,6 +86,7 @@
 ### **Files Modified**
 
 #### **Pages Cleaned**
+
 - `pages/Plasa/Earnings/index.tsx`
 - `pages/Plasa/active-batches/index.tsx`
 - `pages/Plasa/invoices/index.tsx`
@@ -83,6 +95,7 @@
 - `pages/Myprofile/index.tsx`
 
 #### **Components Fixed**
+
 - `src/components/shopper/settings/WorkScheduleTab.tsx` - Made `initialSession` prop optional
 
 ### **Benefits of Cleanup**
@@ -105,13 +118,13 @@ export const getServerSideProps = async (context) => {
 
 export default withRouteProtection(PageComponent, {
   requireAuth: true,
-  requireRole: 'shopper'
+  requireRole: "shopper",
 });
 
 // After (Client-side only)
 export default withRouteProtection(PageComponent, {
   requireAuth: true,
-  requireRole: 'shopper'
+  requireRole: "shopper",
 });
 ```
 

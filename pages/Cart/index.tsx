@@ -158,11 +158,13 @@ export default function CartMainPage() {
                 Shopping Cart
               </h1>
             </div>
-            
+
             <div className="flex min-h-[60vh] flex-col items-center justify-center py-12 text-center">
-              <div className={`rounded-lg p-8 shadow-lg transition-colors duration-200 ${
-                theme === "dark" ? "bg-gray-800" : "bg-white"
-              }`}>
+              <div
+                className={`rounded-lg p-8 shadow-lg transition-colors duration-200 ${
+                  theme === "dark" ? "bg-gray-800" : "bg-white"
+                }`}
+              >
                 <div className="mb-6 flex justify-center">
                   <svg
                     className="h-16 w-16 text-gray-400"
@@ -178,15 +180,20 @@ export default function CartMainPage() {
                     />
                   </svg>
                 </div>
-                <h2 className={`mb-4 text-2xl font-bold ${
-                  theme === "dark" ? "text-white" : "text-gray-900"
-                }`}>
+                <h2
+                  className={`mb-4 text-2xl font-bold ${
+                    theme === "dark" ? "text-white" : "text-gray-900"
+                  }`}
+                >
                   Sign In to View Your Cart
                 </h2>
-                <p className={`mb-6 ${
-                  theme === "dark" ? "text-gray-300" : "text-gray-600"
-                }`}>
-                  You need to be logged in to view and manage your shopping cart.
+                <p
+                  className={`mb-6 ${
+                    theme === "dark" ? "text-gray-300" : "text-gray-600"
+                  }`}
+                >
+                  You need to be logged in to view and manage your shopping
+                  cart.
                 </p>
                 <div className="flex flex-col gap-3 sm:flex-row sm:justify-center">
                   <Link
@@ -405,7 +412,9 @@ export default function CartMainPage() {
                       totalUnits={cartUnits}
                       shopLat={parseFloat(selectedShop.latitude)}
                       shopLng={parseFloat(selectedShop.longitude)}
-                      shopAlt={parseFloat((selectedShop as any).altitude || "0")}
+                      shopAlt={parseFloat(
+                        (selectedShop as any).altitude || "0"
+                      )}
                     />
                   </AuthGuard>
                 )}

@@ -11,12 +11,14 @@ This document explains the comprehensive route protection system implemented for
 The main context that manages route access rules and provides protection utilities.
 
 **Key Features:**
+
 - Centralized route protection rules
 - Support for different access levels: `public`, `protected`, `shopper-only`, `conditional`
 - Automatic redirects for unauthorized access
 - Higher-order component for page protection
 
 **Access Levels:**
+
 - `public`: No authentication required (home, reels, shops)
 - `protected`: Authentication required (profile, messages, orders)
 - `shopper-only`: Shopper role required (Plasa pages)
@@ -27,6 +29,7 @@ The main context that manages route access rules and provides protection utiliti
 Updated middleware that works with the protection context to handle route-level protection.
 
 **Key Features:**
+
 - Public path bypassing
 - Conditional path handling
 - Shopper-only path protection
@@ -35,14 +38,17 @@ Updated middleware that works with the protection context to handle route-level 
 ### 3. Protection Components
 
 #### ProtectedCart (`src/components/auth/ProtectedCart.tsx`)
+
 Protects cart-related actions like adding items or checkout.
 
 #### ProtectedShopAction (`src/components/auth/ProtectedShopAction.tsx`)
+
 Protects shop-related actions like adding items to cart.
 
 ## Route Configuration
 
 ### Public Routes (No Authentication Required)
+
 - `/` - Home page
 - `/Reels` - Reels page
 - `/shops` - Shops listing
@@ -51,9 +57,11 @@ Protects shop-related actions like adding items to cart.
 - `/Auth/Register` - Registration page
 
 ### Conditional Routes (Guest View Allowed, Auth Required for Actions)
+
 - `/Cart` - Can view cart but need auth to add items or checkout
 
 ### Protected Routes (Authentication Required)
+
 - `/Myprofile` - User profile
 - `/Messages` - Messages
 - `/CurrentPendingOrders` - Current orders
@@ -61,6 +69,7 @@ Protects shop-related actions like adding items to cart.
 - `/restaurant` - Restaurant pages
 
 ### Shopper-Only Routes (Shopper Role Required)
+
 - `/Plasa/*` - All Plasa pages (shopper dashboard)
 
 ## Implementation Examples
@@ -76,7 +85,7 @@ function MyProtectedPage() {
 
 export default withRouteProtection(MyProtectedPage, {
   requireAuth: true,
-  requireRole: 'shopper' // optional
+  requireRole: "shopper", // optional
 });
 ```
 
@@ -120,12 +129,13 @@ function ShopPage() {
 import { useCartProtection } from "../../src/components/auth/ProtectedCart";
 
 function CartComponent() {
-  const { canPerform, requiresAuth, handleProtectedAction } = useCartProtection('addToCart');
+  const { canPerform, requiresAuth, handleProtectedAction } =
+    useCartProtection("addToCart");
 
   const handleAddToCart = () => {
     handleProtectedAction(() => {
       // Add to cart logic
-      console.log('Adding to cart...');
+      console.log("Adding to cart...");
     });
   };
 
@@ -140,7 +150,9 @@ function CartComponent() {
 ## User Experience Flow
 
 ### Guest User (Not Signed In)
+
 1. **Can Access:**
+
    - Home page (`/`)
    - Reels page (`/Reels`)
    - Shops listing (`/shops`)
@@ -148,6 +160,7 @@ function CartComponent() {
    - Cart page (`/Cart`) - view only
 
 2. **Cannot Access:**
+
    - Profile pages (`/Myprofile`)
    - Messages (`/Messages`)
    - Orders (`/CurrentPendingOrders`)
@@ -160,7 +173,9 @@ function CartComponent() {
    - Any cart modifications
 
 ### Signed-in User (Customer Role)
+
 1. **Can Access:**
+
    - All guest-accessible pages
    - Profile pages (`/Myprofile`)
    - Messages (`/Messages`)
@@ -169,6 +184,7 @@ function CartComponent() {
    - Restaurant pages (`/restaurant`)
 
 2. **Cannot Access:**
+
    - Plasa pages (`/Plasa/*`) - redirected to home
 
 3. **Can Perform:**
@@ -177,7 +193,9 @@ function CartComponent() {
    - Order management
 
 ### Signed-in Shopper
+
 1. **Can Access:**
+
    - All customer-accessible pages
    - All Plasa pages (`/Plasa/*`)
 
@@ -204,11 +222,13 @@ The middleware handles route protection at the server level:
 To test the route protection system:
 
 1. **Test as Guest:**
+
    - Visit public pages (should work)
    - Try to access protected pages (should redirect to login)
    - Try to add items to cart (should show auth prompt)
 
 2. **Test as Customer:**
+
    - Access customer pages (should work)
    - Try to access Plasa pages (should redirect to home)
    - Perform cart actions (should work)
@@ -223,7 +243,7 @@ To modify route protection rules, update the `ROUTE_PROTECTION_RULES` array in `
 
 ```tsx
 const ROUTE_PROTECTION_RULES: RouteProtectionRule[] = [
-  { path: '/new-route', accessLevel: 'protected', requiresAuth: true },
+  { path: "/new-route", accessLevel: "protected", requiresAuth: true },
   // ... other rules
 ];
 ```
@@ -248,6 +268,7 @@ const ROUTE_PROTECTION_RULES: RouteProtectionRule[] = [
 ### Debug Mode
 
 Enable debug logging by uncommenting the log statements in:
+
 - `middleware.ts`
 - `RouteProtectionContext.tsx`
 - `AuthContext.tsx`

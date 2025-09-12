@@ -41,10 +41,7 @@ interface ActiveBatchesPageProps {
   error: string | null;
 }
 
-function ActiveBatchesPage({
-  activeOrders,
-  error,
-}: ActiveBatchesPageProps) {
+function ActiveBatchesPage({ activeOrders, error }: ActiveBatchesPageProps) {
   return (
     <ShopperLayout>
       <ActiveBatches initialOrders={activeOrders} initialError={error} />
@@ -53,6 +50,3 @@ function ActiveBatchesPage({
 }
 
 export default ActiveBatchesPage;
-
-
-

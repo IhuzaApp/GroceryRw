@@ -71,56 +71,57 @@ function SettingsPage() {
   return (
     <AuthGuard requireAuth={true} requireRole="shopper">
       <ShopperLayout>
-      <div
-        className={`container mx-auto px-2 py-4 pb-24 sm:px-4 sm:py-8 sm:pb-8 ${
-          theme === "dark" ? "text-gray-100" : "text-gray-900"
-        }`}
-      >
-        <h1 className="mb-4 text-xl font-bold sm:mb-6 sm:text-2xl">Settings</h1>
-
-        <div className="scrollbar-hide -mx-2 mb-3 overflow-x-auto whitespace-nowrap px-2 sm:mx-0 sm:mb-4 sm:px-0">
-          <Nav
-            appearance="default"
-            activeKey={activeTab}
-            onSelect={handleTabChange}
-            className="flex min-w-max gap-1 sm:gap-2"
-          >
-            {tabs.map((tab) => (
-              <Nav.Item
-                key={tab.key}
-                eventKey={tab.key}
-                className={`!bg-transparent !px-3 !py-1.5 !text-xs hover:!bg-transparent sm:!px-4 sm:!py-2 sm:!text-sm ${
-                  activeTab === tab.key
-                    ? theme === "dark"
-                      ? "font-semibold !text-white"
-                      : "font-semibold !text-green-600"
-                    : theme === "dark"
-                    ? "!text-gray-300 hover:!text-white"
-                    : "!text-gray-700 hover:!text-green-600"
-                }`}
-              >
-                {tab.label}
-              </Nav.Item>
-            ))}
-          </Nav>
-        </div>
-
-        <Panel
-          shaded
-          bordered
-          className={`overflow-hidden rounded-lg ${
-            theme === "dark"
-              ? "border-gray-700 bg-gray-800"
-              : "border-gray-200 bg-white"
+        <div
+          className={`container mx-auto px-2 py-4 pb-24 sm:px-4 sm:py-8 sm:pb-8 ${
+            theme === "dark" ? "text-gray-100" : "text-gray-900"
           }`}
         >
-          {tabs.find((tab) => tab.key === activeTab)?.component}
-        </Panel>
-      </div>
-    </ShopperLayout>
+          <h1 className="mb-4 text-xl font-bold sm:mb-6 sm:text-2xl">
+            Settings
+          </h1>
+
+          <div className="scrollbar-hide -mx-2 mb-3 overflow-x-auto whitespace-nowrap px-2 sm:mx-0 sm:mb-4 sm:px-0">
+            <Nav
+              appearance="default"
+              activeKey={activeTab}
+              onSelect={handleTabChange}
+              className="flex min-w-max gap-1 sm:gap-2"
+            >
+              {tabs.map((tab) => (
+                <Nav.Item
+                  key={tab.key}
+                  eventKey={tab.key}
+                  className={`!bg-transparent !px-3 !py-1.5 !text-xs hover:!bg-transparent sm:!px-4 sm:!py-2 sm:!text-sm ${
+                    activeTab === tab.key
+                      ? theme === "dark"
+                        ? "font-semibold !text-white"
+                        : "font-semibold !text-green-600"
+                      : theme === "dark"
+                      ? "!text-gray-300 hover:!text-white"
+                      : "!text-gray-700 hover:!text-green-600"
+                  }`}
+                >
+                  {tab.label}
+                </Nav.Item>
+              ))}
+            </Nav>
+          </div>
+
+          <Panel
+            shaded
+            bordered
+            className={`overflow-hidden rounded-lg ${
+              theme === "dark"
+                ? "border-gray-700 bg-gray-800"
+                : "border-gray-200 bg-white"
+            }`}
+          >
+            {tabs.find((tab) => tab.key === activeTab)?.component}
+          </Panel>
+        </div>
+      </ShopperLayout>
     </AuthGuard>
   );
 }
 
 export default SettingsPage;
-

@@ -1,10 +1,10 @@
-import React from 'react';
-import { useAuth } from '../hooks/useAuth';
+import React from "react";
+import { useAuth } from "../hooks/useAuth";
 
 interface AuthGuardProps {
   children: React.ReactNode;
   requireAuth?: boolean;
-  requireRole?: 'user' | 'shopper';
+  requireRole?: "user" | "shopper";
   fallback?: React.ReactNode;
 }
 
@@ -21,7 +21,13 @@ export const AuthGuard: React.FC<AuthGuardProps> = ({
     </div>
   ),
 }) => {
-  const { isLoggedIn, isLoading, role, requireAuth: checkAuth, requireRole: checkRole } = useAuth();
+  const {
+    isLoggedIn,
+    isLoading,
+    role,
+    requireAuth: checkAuth,
+    requireRole: checkRole,
+  } = useAuth();
 
   // Show loading state
   if (isLoading) {

@@ -43,7 +43,9 @@ export default async function handler(
       throw new Error("Hasura client is not initialized");
     }
 
-    const data = await hasuraClient.request<RestaurantsResponse>(GET_RESTAURANTS);
+    const data = await hasuraClient.request<RestaurantsResponse>(
+      GET_RESTAURANTS
+    );
     res.status(200).json({ restaurants: data.Restaurants });
   } catch (error) {
     console.error("Error fetching restaurants:", error);

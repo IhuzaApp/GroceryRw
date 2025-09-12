@@ -218,4 +218,3 @@ const InvoicesPage: React.FC<InvoicesPageProps> = ({
 };
 
 export default InvoicesPage;
-
