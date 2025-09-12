@@ -62,8 +62,6 @@ function SessionRefreshHandler({ children }: { children: React.ReactNode }) {
   return <>{children}</>;
 }
 
-
-
 export default function App({ Component, pageProps }: AppProps) {
   return (
     <ThemeProvider>

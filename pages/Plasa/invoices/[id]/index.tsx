@@ -43,10 +43,7 @@ interface InvoicePageProps {
   error: string | null;
 }
 
-function InvoicePage({
-  initialInvoiceData,
-  error,
-}: InvoicePageProps) {
+function InvoicePage({ initialInvoiceData, error }: InvoicePageProps) {
   const router = useRouter();
   const { id } = router.query;
   const { theme } = useTheme();

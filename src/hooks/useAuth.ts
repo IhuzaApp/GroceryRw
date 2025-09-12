@@ -1,15 +1,15 @@
-import { useSession } from 'next-auth/react';
-import { useRouter } from 'next/router';
-import { useEffect } from 'react';
+import { useSession } from "next-auth/react";
+import { useRouter } from "next/router";
+import { useEffect } from "react";
 
 export const useAuth = () => {
   const { data: session, status } = useSession();
   const router = useRouter();
 
-  const isLoggedIn = status === 'authenticated' && !!session;
-  const isLoading = status === 'loading';
+  const isLoggedIn = status === "authenticated" && !!session;
+  const isLoading = status === "loading";
   const user = session?.user;
-  const role = (user as any)?.role || 'user';
+  const role = (user as any)?.role || "user";
 
   // Simple redirect function
   const requireAuth = (redirectTo?: string) => {
@@ -25,7 +25,7 @@ export const useAuth = () => {
   const requireRole = (requiredRole: string) => {
     if (!requireAuth()) return false;
     if (role !== requiredRole) {
-      router.push('/Auth/Login?error=insufficient_permissions');
+      router.push("/Auth/Login?error=insufficient_permissions");
       return false;
     }
     return true;

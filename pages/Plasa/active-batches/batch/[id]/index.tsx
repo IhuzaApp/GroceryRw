@@ -105,10 +105,7 @@ interface BatchDetailsPageProps {
   error: string | null;
 }
 
-function BatchDetailsPage({
-  orderData,
-  error,
-}: BatchDetailsPageProps) {
+function BatchDetailsPage({ orderData, error }: BatchDetailsPageProps) {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
 

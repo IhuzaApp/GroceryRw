@@ -37,7 +37,9 @@ function MyProfilePage() {
                 </svg>
                 <span className="hover:underline">Back</span>
               </Link>
-              <h1 className="ml-4 text-2xl font-bold text-inherit">My Profile</h1>
+              <h1 className="ml-4 text-2xl font-bold text-inherit">
+                My Profile
+              </h1>
             </div>
 
             {/* Profile Content */}
@@ -48,6 +50,5 @@ function MyProfilePage() {
     </AuthGuard>
   );
 }
-
 
 export default MyProfilePage;
