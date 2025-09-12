@@ -25,6 +25,9 @@ export async function getMiddlewareSession(req: NextRequest) {
       req,
       secret: process.env.NEXTAUTH_SECRET,
       secureCookie: process.env.NEXTAUTH_SECURE_COOKIES === "true",
+      cookieName: process.env.NEXTAUTH_SECURE_COOKIES === "true" 
+        ? "__Secure-next-auth.session-token" 
+        : "next-auth.session-token",
     });
 
     const duration = Date.now() - startTime;
