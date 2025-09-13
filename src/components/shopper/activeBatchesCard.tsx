@@ -111,18 +111,17 @@ export default function ActiveBatches({
     return () => clearInterval(timer);
   }, []);
 
-  // Only fetch orders client-side if we don't have them from server-side
+  // Fetch orders client-side - always fetch when component mounts or role changes
   useEffect(() => {
-    // Skip fetching if we already have data or already attempted a fetch
-    if (initialOrders.length > 0 || fetchedRef.current) {
-      return;
-    }
-
     // Skip if not a shopper
     if (role !== "shopper") {
       setIsLoading(false);
       return;
     }
+
+    // Always fetch fresh data when component mounts or role changes
+    // Reset the fetch flag to allow fresh data fetching
+    fetchedRef.current = false;
 
     // Set flag to prevent multiple fetches
     fetchedRef.current = true;
@@ -190,7 +189,7 @@ export default function ActiveBatches({
     return () => {
       controller.abort();
     };
-  }, [role, initialOrders.length]);
+  }, [role]);
 
   // Calculate countdown for delivery time
   const getDeliveryCountdown = (deliveryTime: string) => {
