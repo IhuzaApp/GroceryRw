@@ -1040,7 +1040,7 @@ export default function BatchDetails({
           <Button
             appearance="primary"
             color="green"
-            size="sm"
+            size="lg"
             block
             onClick={() => handleUpdateStatus("on_the_way")}
             loading={loading}
