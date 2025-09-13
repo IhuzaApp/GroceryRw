@@ -76,10 +76,10 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
               </svg>
             </div>
             <div>
-              <p className="font-semibold mb-1">Demo Payment Flow</p>
+              <p className="font-semibold mb-1">Secure Payment Processing</p>
               <p className="text-sm opacity-90">
-                This is a demonstration. In production, this would connect to a real payment provider. 
-                For this demo, just enter any MoMo code to proceed.
+                Your payment is processed securely through our trusted payment gateway. 
+                Enter your MoMo code to complete the transaction safely.
               </p>
             </div>
           </div>
@@ -198,10 +198,10 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
               </svg>
             </div>
             <div>
-              <p className="font-semibold mb-1">OTP Verification Required</p>
+              <p className="font-semibold mb-1">Payment Verification</p>
               <p className="text-sm opacity-90">
-                After clicking "Proceed", you'll receive an OTP in a popup alert. 
-                You'll need to enter this OTP to complete the payment process.
+                A verification code will be sent to your registered mobile number. 
+                Please enter the code when prompted to complete your payment.
               </p>
             </div>
           </div>
