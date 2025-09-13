@@ -139,21 +139,35 @@ export default function QuantityConfirmationModal({
     console.log("🔍 Item SKU from ProductName table:", itemSku);
     console.log("🔍 Scanned barcode:", scannedBarcode);
 
-    // If the item has a barcode or SKU in the database, it MUST match.
+    // Check if the item has a barcode or SKU in the database
     if (itemBarcode || itemSku) {
-      const isValid =
-        scannedBarcode === itemBarcode || scannedBarcode === itemSku;
+      let isValid = false;
+      let validationMessage = "";
+      
+      // Priority: Check barcode first, then SKU if barcode is null
+      if (itemBarcode) {
+        isValid = scannedBarcode === itemBarcode;
+        validationMessage = isValid 
+          ? "Barcode matches!" 
+          : "Scanned code does not match the product's barcode.";
+      } else if (itemSku) {
+        isValid = scannedBarcode === itemSku;
+        validationMessage = isValid 
+          ? "SKU matches!" 
+          : "Scanned code does not match the product's SKU.";
+      }
+      
       if (isValid) {
         setBarcodeValidation({
           isValid: true,
-          message: "Barcode/SKU matches!",
+          message: validationMessage,
           isWeightBased: false,
         });
         setShowBarcodeScanner(false);
       } else {
         setBarcodeValidation({
           isValid: false,
-          message: "Scanned code does not match the product's barcode/SKU.",
+          message: validationMessage,
           isWeightBased: false,
         });
       }
@@ -220,14 +234,22 @@ export default function QuantityConfirmationModal({
                       theme === "dark" ? "text-gray-300" : "text-gray-700"
                     }`}
                   >
-                    Scan Barcode or Enter SKU
+                    {currentItem?.product.ProductName?.barcode 
+                      ? "Scan Barcode" 
+                      : currentItem?.product.ProductName?.sku 
+                        ? "Enter SKU" 
+                        : "Scan Barcode or Enter SKU"}
                   </label>
                   <p
                     className={`text-xs ${
                       theme === "dark" ? "text-gray-400" : "text-gray-500"
                     } mt-1`}
                   >
-                    Scan the product barcode or enter the SKU manually
+                    {currentItem?.product.ProductName?.barcode 
+                      ? `Scan the product barcode: ${currentItem.product.ProductName.barcode}`
+                      : currentItem?.product.ProductName?.sku 
+                        ? `Enter the product SKU: ${currentItem.product.ProductName.sku}`
+                        : "This product has no barcode/SKU in our system"}
                   </p>
                 </div>
 
@@ -236,13 +258,17 @@ export default function QuantityConfirmationModal({
                   {/* Open Camera Scanner Card */}
                   <div
                     onClick={() => {
-                      setShowManualInput(false);
-                      setShowBarcodeScanner(true);
+                      if (currentItem?.product.ProductName?.barcode || currentItem?.product.ProductName?.sku) {
+                        setShowManualInput(false);
+                        setShowBarcodeScanner(true);
+                      }
                     }}
-                    className={`cursor-pointer rounded-lg border-2 p-4 transition-all ${
-                      showBarcodeScanner
-                        ? "border-purple-500 bg-purple-50 dark:bg-purple-900/20"
-                        : "border-gray-300 hover:border-purple-400 dark:border-gray-600 dark:hover:border-purple-500"
+                    className={`rounded-lg border-2 p-4 transition-all ${
+                      !currentItem?.product.ProductName?.barcode && !currentItem?.product.ProductName?.sku
+                        ? "cursor-not-allowed border-gray-200 bg-gray-50 dark:border-gray-700 dark:bg-gray-800"
+                        : showBarcodeScanner
+                        ? "cursor-pointer border-purple-500 bg-purple-50 dark:bg-purple-900/20"
+                        : "cursor-pointer border-gray-300 hover:border-purple-400 dark:border-gray-600 dark:hover:border-purple-500"
                     }`}
                   >
                     <div className="flex items-center">
@@ -272,13 +298,17 @@ export default function QuantityConfirmationModal({
                   {/* Manual Entry Card */}
                   <div
                     onClick={() => {
-                      setShowBarcodeScanner(false);
-                      setShowManualInput(true);
+                      if (currentItem?.product.ProductName?.barcode || currentItem?.product.ProductName?.sku) {
+                        setShowBarcodeScanner(false);
+                        setShowManualInput(true);
+                      }
                     }}
-                    className={`cursor-pointer rounded-lg border-2 p-4 transition-all ${
-                      showManualInput
-                        ? "border-green-500 bg-green-50 dark:bg-green-900/20"
-                        : "border-gray-300 hover:border-green-400 dark:border-gray-600 dark:hover:border-green-500"
+                    className={`rounded-lg border-2 p-4 transition-all ${
+                      !currentItem?.product.ProductName?.barcode && !currentItem?.product.ProductName?.sku
+                        ? "cursor-not-allowed border-gray-200 bg-gray-50 dark:border-gray-700 dark:bg-gray-800"
+                        : showManualInput
+                        ? "cursor-pointer border-green-500 bg-green-50 dark:bg-green-900/20"
+                        : "cursor-pointer border-gray-300 hover:border-green-400 dark:border-gray-600 dark:hover:border-green-500"
                     }`}
                   >
                     <div className="flex items-center">
@@ -317,7 +347,13 @@ export default function QuantityConfirmationModal({
                           type="text"
                           value={manualSku}
                           onChange={(e) => setManualSku(e.target.value)}
-                          placeholder="Enter SKU or barcode"
+                          placeholder={
+                            currentItem?.product.ProductName?.barcode 
+                              ? `Enter barcode: ${currentItem.product.ProductName.barcode}`
+                              : currentItem?.product.ProductName?.sku 
+                                ? `Enter SKU: ${currentItem.product.ProductName.sku}`
+                                : "Enter SKU or barcode"
+                          }
                           className={`flex-1 rounded-lg border px-3 py-2 ${
                             theme === "dark"
                               ? "border-gray-600 bg-gray-800"

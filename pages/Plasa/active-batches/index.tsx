@@ -47,9 +47,9 @@ interface ActiveBatchesPageProps {
 function ActiveBatchesPage({ activeOrders, error }: ActiveBatchesPageProps) {
   return (
     <AuthGuard requireAuth={true} requireRole="shopper">
-      <ShopperLayout>
-        <ActiveBatches initialOrders={activeOrders} initialError={error} />
-      </ShopperLayout>
+    <ShopperLayout>
+      <ActiveBatches initialOrders={activeOrders} initialError={error} />
+    </ShopperLayout>
     </AuthGuard>
   );
 }
@@ -58,13 +58,13 @@ export const getServerSideProps: GetServerSideProps<ActiveBatchesPageProps> = as
   // Check authentication
   const session = await getServerSession(context.req, context.res, authOptions);
   if (!session || !session.user) {
-    return {
+      return {
       redirect: {
         destination: "/Auth/Login",
         permanent: false,
-      },
-    };
-  }
+        },
+      };
+    }
 
   // Check if user is a shopper
   if ((session.user as any)?.role !== "shopper") {
@@ -78,12 +78,12 @@ export const getServerSideProps: GetServerSideProps<ActiveBatchesPageProps> = as
 
   // Return empty initial data - let the client component fetch fresh data
   // This ensures we always get the latest data when navigating to the page
-  return {
-    props: {
-      activeOrders: [],
+    return {
+      props: {
+        activeOrders: [],
       error: null,
-    },
-  };
+      },
+    };
 };
 
 export default ActiveBatchesPage;
