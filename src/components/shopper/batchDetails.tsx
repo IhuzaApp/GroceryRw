@@ -2150,9 +2150,7 @@ export default function BatchDetails({
             )}
 
             {/* Action Button */}
-            <div className="pt-2 sm:pt-4">
-              {getActionButton()}
-            </div>
+            <div className="pt-2 sm:pt-4">{getActionButton()}</div>
           </div>
         </div>
       </main>
