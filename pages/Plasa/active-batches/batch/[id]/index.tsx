@@ -215,7 +215,7 @@ export const getServerSideProps: GetServerSideProps<
   BatchDetailsPageProps
 > = async (context) => {
   const { id } = context.params || {};
-  
+
   // Check if order ID is provided
   if (!id || typeof id !== "string") {
     return {
@@ -403,7 +403,7 @@ export const getServerSideProps: GetServerSideProps<
     // User can view if they are assigned to the order or if they are the customer
     const isAssignedShopper = order.assignedTo?.id === session.user.id;
     const isCustomer = order.user?.id === session.user.id;
-    
+
     if (!isAssignedShopper && !isCustomer) {
       return {
         props: {
