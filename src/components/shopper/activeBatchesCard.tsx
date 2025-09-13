@@ -133,6 +133,10 @@ export default function ActiveBatches({
       setIsLoading(true);
       setError(null);
 
+      // Add minimum loading time to ensure skeleton is visible
+      const startTime = Date.now();
+      const minLoadingTime = 800; // 800ms minimum loading time
+
       try {
         const response = await fetch("/api/shopper/activeBatches", {
           signal,
@@ -180,7 +184,13 @@ export default function ActiveBatches({
           { placement: "topEnd" }
         );
       } finally {
-        setIsLoading(false);
+        // Ensure minimum loading time has passed
+        const elapsedTime = Date.now() - startTime;
+        const remainingTime = Math.max(0, minLoadingTime - elapsedTime);
+        
+        setTimeout(() => {
+          setIsLoading(false);
+        }, remainingTime);
       }
     }
 
@@ -351,12 +361,107 @@ export default function ActiveBatches({
         )}
 
         {isLoading ? (
-          <div
-            className={`flex justify-center py-12 ${
-              theme === "dark" ? "text-gray-300" : "text-gray-700"
-            }`}
-          >
-            <Loader content="Loading orders..." />
+          <div className="grid grid-cols-1 gap-4 sm:gap-6 lg:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
+            {/* Skeleton loading cards */}
+            {Array.from({ length: 4 }).map((_, index) => (
+              <div
+                key={index}
+                className={`rounded-xl border p-6 ${
+                  theme === "dark"
+                    ? "border-gray-700 bg-gray-800"
+                    : "border-gray-200 bg-white"
+                }`}
+              >
+                {/* Header skeleton */}
+                <div className="mb-4 flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <div
+                      className={`h-10 w-10 rounded-full ${
+                        theme === "dark" ? "bg-gray-700" : "bg-gray-200"
+                      } animate-pulse`}
+                    ></div>
+                    <div className="space-y-2">
+                      <div
+                        className={`h-4 w-24 rounded ${
+                          theme === "dark" ? "bg-gray-700" : "bg-gray-200"
+                        } animate-pulse`}
+                      ></div>
+                      <div
+                        className={`h-3 w-16 rounded ${
+                          theme === "dark" ? "bg-gray-700" : "bg-gray-200"
+                        } animate-pulse`}
+                      ></div>
+                    </div>
+                  </div>
+                  <div
+                    className={`h-6 w-16 rounded-full ${
+                      theme === "dark" ? "bg-gray-700" : "bg-gray-200"
+                    } animate-pulse`}
+                  ></div>
+                </div>
+
+                {/* Content skeleton */}
+                <div className="space-y-3">
+                  <div className="flex items-center gap-2">
+                    <div
+                      className={`h-4 w-4 rounded ${
+                        theme === "dark" ? "bg-gray-700" : "bg-gray-200"
+                      } animate-pulse`}
+                    ></div>
+                    <div
+                      className={`h-4 w-32 rounded ${
+                        theme === "dark" ? "bg-gray-700" : "bg-gray-200"
+                      } animate-pulse`}
+                    ></div>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <div
+                      className={`h-4 w-4 rounded ${
+                        theme === "dark" ? "bg-gray-700" : "bg-gray-200"
+                      } animate-pulse`}
+                    ></div>
+                    <div
+                      className={`h-4 w-28 rounded ${
+                        theme === "dark" ? "bg-gray-700" : "bg-gray-200"
+                      } animate-pulse`}
+                    ></div>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <div
+                      className={`h-4 w-4 rounded ${
+                        theme === "dark" ? "bg-gray-700" : "bg-gray-200"
+                      } animate-pulse`}
+                    ></div>
+                    <div
+                      className={`h-4 w-36 rounded ${
+                        theme === "dark" ? "bg-gray-700" : "bg-gray-200"
+                      } animate-pulse`}
+                    ></div>
+                  </div>
+                </div>
+
+                {/* Footer skeleton */}
+                <div className="mt-4 flex items-center justify-between">
+                  <div className="space-y-2">
+                    <div
+                      className={`h-3 w-20 rounded ${
+                        theme === "dark" ? "bg-gray-700" : "bg-gray-200"
+                      } animate-pulse`}
+                    ></div>
+                    <div
+                      className={`h-4 w-16 rounded ${
+                        theme === "dark" ? "bg-gray-700" : "bg-gray-200"
+                      } animate-pulse`}
+                    ></div>
+                  </div>
+                  <div
+                    className={`h-8 w-20 rounded ${
+                      theme === "dark" ? "bg-gray-700" : "bg-gray-200"
+                    } animate-pulse`}
+                  ></div>
+                </div>
+              </div>
+            ))}
           </div>
         ) : activeOrders.length > 0 ? (
           <div className="grid grid-cols-1 gap-4 sm:gap-6 lg:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
