@@ -132,12 +132,12 @@ export default function QuantityConfirmationModal({
       return;
     }
 
-    const itemBarcode = currentItem.product.barcode;
-    const itemSku = currentItem.product.sku;
+    const itemBarcode = currentItem.product.ProductName?.barcode;
+    const itemSku = currentItem.product.ProductName?.sku;
 
-    console.log("🔍 Item barcode from DB:", itemBarcode);
-    console.log("🔍 Item SKU from DB:", itemSku);
-    console.log("�� Scanned barcode:", scannedBarcode);
+    console.log("🔍 Item barcode from ProductName table:", itemBarcode);
+    console.log("🔍 Item SKU from ProductName table:", itemSku);
+    console.log("🔍 Scanned barcode:", scannedBarcode);
 
     // If the item has a barcode or SKU in the database, it MUST match.
     if (itemBarcode || itemSku) {
