@@ -126,44 +126,13 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
               Payment Summary
             </h4>
             <div
-              className={`flex justify-between ${
-                theme === "dark" ? "text-gray-300" : ""
-              }`}
-            >
-              <span>Value of Found Items:</span>
-              <span className="font-medium">
-                {formattedCurrency(orderAmount)}
-              </span>
-            </div>
-            <div
-              className={`flex justify-between ${
-                theme === "dark" ? "text-green-400" : "text-green-600"
-              }`}
-            >
-              <span>Service Fee (You Earn):</span>
-              <span className="font-medium">
-                {formattedCurrency(serviceFee)}
-              </span>
-            </div>
-            <div
-              className={`flex justify-between ${
-                theme === "dark" ? "text-green-400" : "text-green-600"
-              }`}
-            >
-              <span>Delivery Fee (You Earn):</span>
-              <span className="font-medium">
-                {formattedCurrency(deliveryFee)}
-              </span>
-            </div>
-            <Divider className={theme === "dark" ? "border-gray-700" : ""} />
-            <div
               className={`flex justify-between font-bold ${
                 theme === "dark" ? "text-gray-100" : ""
               }`}
             >
-              <span>Total Earnings:</span>
-              <span className={theme === "dark" ? "text-green-400" : ""}>
-                {formattedCurrency(serviceFee + deliveryFee)}
+              <span>Total Amount to be Paid:</span>
+              <span className={theme === "dark" ? "text-green-400" : "text-green-600"}>
+                {formattedCurrency(orderAmount)}
               </span>
             </div>
           </div>
