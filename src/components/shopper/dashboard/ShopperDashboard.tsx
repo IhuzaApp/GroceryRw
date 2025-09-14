@@ -675,13 +675,14 @@ export default function ShopperDashboard() {
                 </div>
               </div>
             ) : sortedOrders.length > 0 ? (
-              <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
+              <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
                 {sortedOrders.map((order) => (
+                  <div key={order.id} className="transform transition-all duration-200 hover:scale-[1.02]">
                   <OrderCard
-                    key={order.id}
                     order={order}
                     onOrderAccepted={loadOrders}
                   />
+                  </div>
                 ))}
               </div>
             ) : (
@@ -710,10 +711,10 @@ export default function ShopperDashboard() {
 
         {/* Mobile Bottom Sheet */}
         {isMobile && (
-            <div
-              className={`fixed bottom-16 left-0 right-0 z-[1000] rounded-t-2xl border-t-2 transition-all duration-300 ease-in-out ${
+          <div
+            className={`fixed bottom-16 left-0 right-0 z-[1000] rounded-t-2xl border-t-2 transition-all duration-300 ease-in-out ${
                 isExpanded ? "h-[calc(100%-16rem)]" : "h-[80px]"
-              } ${
+            } ${
               theme === "dark"
                 ? "border-gray-800 bg-gray-900 text-gray-100"
                 : "border-gray-200 bg-white text-gray-900"
@@ -735,14 +736,45 @@ export default function ShopperDashboard() {
 
             {isExpanded ? (
               <div className="h-full overflow-y-auto px-4 pb-4">
-                <div className="mb-4 flex items-center justify-between">
-                  <h2
-                    className={`text-lg font-semibold ${
+                <div className="mb-6 flex items-center justify-between pt-2">
+                  <div className="flex items-center">
+                    <div className={`mr-3 rounded-full p-2 ${
+                      theme === "dark" ? "bg-green-900/30" : "bg-green-100"
+                    }`}>
+                      <svg
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth={2}
+                        className={`h-5 w-5 ${
+                          theme === "dark" ? "text-green-400" : "text-green-600"
+                        }`}
+                      >
+                        <path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2" />
+                        <rect x="8" y="2" width="8" height="4" rx="1" ry="1" />
+                        <path d="M12 11h4" />
+                        <path d="M12 16h4" />
+                        <path d="M8 11h.01" />
+                        <path d="M8 16h.01" />
+                      </svg>
+                    </div>
+                    <div>
+                      <h2
+                        className={`text-xl font-bold ${
                       theme === "dark" ? "text-white" : "text-gray-900"
                     }`}
                   >
                     Available Batches
                   </h2>
+                      <p
+                        className={`text-sm ${
+                          theme === "dark" ? "text-gray-400" : "text-gray-500"
+                        }`}
+                      >
+                        {sortedOrders.length} batch{sortedOrders.length !== 1 ? 'es' : ''} found
+                      </p>
+                    </div>
+                  </div>
                   <div className="flex items-center space-x-2">
                     <span
                       className={`text-xs ${
@@ -788,63 +820,102 @@ export default function ShopperDashboard() {
                   </div>
                 </div>
 
-                <div className="mb-4 flex justify-start space-x-2">
+                <div className="mb-6 flex flex-wrap gap-2">
                   <button
                     onClick={() => handleSortChange("newest")}
-                    className={`rounded px-3 py-1 text-xs ${
+                    className={`flex items-center rounded-xl px-4 py-2 text-sm font-medium transition-all duration-200 ${
                       sortBy === "newest"
                         ? theme === "dark"
-                          ? "bg-green-600 text-white"
-                          : "bg-green-600 text-white"
+                          ? "bg-green-600 text-white shadow-lg shadow-green-500/30"
+                          : "bg-green-600 text-white shadow-lg shadow-green-500/30"
                         : theme === "dark"
-                        ? "bg-gray-800 text-gray-300"
-                        : "bg-gray-200 text-gray-800"
+                        ? "bg-gray-800 text-gray-300 hover:bg-gray-700"
+                        : "bg-gray-100 text-gray-700 hover:bg-gray-200"
                     }`}
                     title="Batches less than 1 hour old"
                   >
+                    <svg
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth={2}
+                      className="mr-1.5 h-4 w-4"
+                    >
+                      <circle cx="12" cy="12" r="10" />
+                      <polyline points="12 6 12 12 16 14" />
+                    </svg>
                     Recent (1h)
                   </button>
                   <button
                     onClick={() => handleSortChange("earnings")}
-                    className={`rounded px-3 py-1 text-xs ${
+                    className={`flex items-center rounded-xl px-4 py-2 text-sm font-medium transition-all duration-200 ${
                       sortBy === "earnings"
                         ? theme === "dark"
-                          ? "bg-green-600 text-white"
-                          : "bg-green-600 text-white"
+                          ? "bg-green-600 text-white shadow-lg shadow-green-500/30"
+                          : "bg-green-600 text-white shadow-lg shadow-green-500/30"
                         : theme === "dark"
-                        ? "bg-gray-800 text-gray-300"
-                        : "bg-gray-200 text-gray-800"
+                        ? "bg-gray-800 text-gray-300 hover:bg-gray-700"
+                        : "bg-gray-100 text-gray-700 hover:bg-gray-200"
                     }`}
                   >
+                    <svg
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth={2}
+                      className="mr-1.5 h-4 w-4"
+                    >
+                      <path d="M12 2v20M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6" />
+                    </svg>
                     Earnings
                   </button>
                   <button
                     onClick={() => handleSortChange("distance")}
-                    className={`rounded px-3 py-1 text-xs ${
+                    className={`flex items-center rounded-xl px-4 py-2 text-sm font-medium transition-all duration-200 ${
                       sortBy === "distance"
                         ? theme === "dark"
-                          ? "bg-green-600 text-white"
-                          : "bg-green-600 text-white"
+                          ? "bg-green-600 text-white shadow-lg shadow-green-500/30"
+                          : "bg-green-600 text-white shadow-lg shadow-green-500/30"
                         : theme === "dark"
-                        ? "bg-gray-800 text-gray-300"
-                        : "bg-gray-200 text-gray-800"
+                        ? "bg-gray-800 text-gray-300 hover:bg-gray-700"
+                        : "bg-gray-100 text-gray-700 hover:bg-gray-200"
                     }`}
                   >
+                    <svg
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth={2}
+                      className="mr-1.5 h-4 w-4"
+                    >
+                      <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z" />
+                      <circle cx="12" cy="10" r="3" />
+                    </svg>
                     Distance
                   </button>
                   <button
                     onClick={() => handleSortChange("priority")}
-                    className={`rounded px-3 py-1 text-xs ${
+                    className={`flex items-center rounded-xl px-4 py-2 text-sm font-medium transition-all duration-200 ${
                       sortBy === "priority"
                         ? theme === "dark"
-                          ? "bg-purple-600 text-white"
-                          : "bg-purple-600 text-white"
+                          ? "bg-purple-600 text-white shadow-lg shadow-purple-500/30"
+                          : "bg-purple-600 text-white shadow-lg shadow-purple-500/30"
                         : theme === "dark"
-                        ? "bg-gray-800 text-gray-300"
-                        : "bg-gray-200 text-gray-800"
+                        ? "bg-gray-800 text-gray-300 hover:bg-gray-700"
+                        : "bg-gray-100 text-gray-700 hover:bg-gray-200"
                     }`}
                     title="All batches by priority level, including older batches"
                   >
+                    <svg
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth={2}
+                      className="mr-1.5 h-4 w-4"
+                    >
+                      <path d="M9 12l2 2 4-4" />
+                      <path d="M21 12c0 4.97-4.03 9-9 9s-9-4.03-9-9 4.03-9 9-9c1.5 0 2.91.37 4.15 1.02" />
+                    </svg>
                     Priority
                   </button>
                 </div>
@@ -927,13 +998,14 @@ export default function ShopperDashboard() {
                     </p>
                   </div>
                 ) : sortedOrders.length > 0 ? (
-                  <div className="space-y-4 pb-16">
+                  <div className="space-y-4 pb-20">
                     {sortedOrders.map((order) => (
+                      <div key={order.id} className="transform transition-all duration-200 hover:scale-[1.02]">
                       <OrderCard
-                        key={order.id}
                         order={order}
                         onOrderAccepted={loadOrders}
                       />
+                      </div>
                     ))}
                   </div>
                 ) : (

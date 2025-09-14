@@ -183,172 +183,140 @@ export default function OrderCard({ order, onOrderAccepted }: OrderCardProps) {
   };
 
   return (
-    <Panel
-      shaded
-      bordered
-      bodyFill
-      className={`overflow-hidden ${
+    <div
+      className={`group relative overflow-hidden rounded-2xl border transition-all duration-300 hover:shadow-xl ${
         order.priorityLevel && order.priorityLevel >= 4
-          ? "border-2 border-red-500"
+          ? "border-red-500 bg-gradient-to-br from-red-50 to-white shadow-lg shadow-red-500/20"
           : isReelOrder
-          ? "border-2 border-purple-500"
-          : ""
+          ? "border-purple-500 bg-gradient-to-br from-purple-50 to-white shadow-lg shadow-purple-500/20"
+          : "border-gray-200 bg-white shadow-md hover:shadow-xl"
       }`}
     >
       {priorityInfo && (
         <div
-          className={`py-1 text-center text-xs font-bold ${priorityInfo.class}`}
+          className={`relative py-2 text-center text-xs font-bold ${priorityInfo.class}`}
         >
-          {priorityInfo.text}
+          <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent"></div>
+          <span className="relative z-10">{priorityInfo.text}</span>
         </div>
       )}
 
       {/* Reel order indicator */}
       {isReelOrder && (
-        <div className="bg-purple-100 py-1 text-center text-xs font-bold text-purple-800">
-          🎬 REEL ORDER
+        <div className="relative bg-gradient-to-r from-purple-500 to-purple-600 py-2 text-center text-xs font-bold text-white">
+          <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent"></div>
+          <span className="relative z-10">🎬 REEL ORDER</span>
         </div>
       )}
 
-      <div className="p-4">
-        <div className="mb-3 flex items-start justify-between">
-          <div>
-            <h3 className="text-lg font-bold">
+      <div className="p-5">
+        <div className="mb-4 flex items-start justify-between">
+          <div className="flex-1 pr-3">
+            <h3 className="text-xl font-bold text-gray-900 mb-1">
               {isReelOrder ? order.reel?.title || "Reel Order" : order.shopName}
             </h3>
-            <p className="text-sm text-gray-500">
+            <p className="text-sm text-gray-600">
               {isReelOrder
                 ? `From: ${order.customerName || "Reel Creator"}`
                 : order.shopAddress}
             </p>
-            {isReelOrder && order.reel?.description && (
-              <p className="mt-1 text-xs text-gray-400">
-                {order.reel.description}
-              </p>
-            )}
           </div>
-          <Badge
-            content={order.createdAt}
-            className={`rounded px-2 py-1 text-xs font-medium ${badgeColorClass}`}
-          />
+          <div className={`rounded-full px-3 py-1 text-xs font-semibold ${badgeColorClass}`}>
+            {order.createdAt}
+          </div>
         </div>
 
-        <div className="mb-3 flex items-center text-sm text-gray-600">
-          <svg
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth={2}
-            className="mr-1 h-4 w-4"
-          >
-            <circle cx="12" cy="12" r="10" />
-            <polyline points="12 6 12 12 16 14" />
-          </svg>
-          <span className="mr-3">Distance: {order.distance}</span>
-
-          {order.travelTimeMinutes !== undefined && (
-            <>
+        <div className="mb-4 flex items-center justify-between">
+          <div className="flex items-center space-x-4">
+            <div className="flex items-center text-sm text-gray-600">
               <svg
                 viewBox="0 0 24 24"
                 fill="none"
                 stroke="currentColor"
                 strokeWidth={2}
-                className="mr-1 h-4 w-4"
+                className="mr-1 h-4 w-4 text-blue-600"
               >
-                <path d="M12 2v2M12 8v4l3 3M2 12h2M20 12h2" />
-                <circle cx="12" cy="12" r="10" />
+                <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z" />
+                <circle cx="12" cy="10" r="3" />
               </svg>
-              <span className="mr-3">
-                Travel time: {order.travelTimeMinutes} min
+              <span className="font-semibold">{order.distance}</span>
+            </div>
+            
+            <div className="flex items-center text-sm text-gray-600">
+              <svg
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth={2}
+                className="mr-1 h-4 w-4 text-purple-600"
+              >
+                <path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z" />
+                <line x1="3" y1="6" x2="21" y2="6" />
+                <path d="M16 10a4 4 0 01-8 0" />
+              </svg>
+              <span className="font-semibold">
+                {isReelOrder ? order.quantity || 1 : order.items} {isReelOrder ? "item" : "items"}
               </span>
-            </>
-          )}
-
-          <svg
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth={2}
-            className="mr-1 h-4 w-4"
-          >
-            <path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z" />
-            <line x1="3" y1="6" x2="21" y2="6" />
-            <path d="M16 10a4 4 0 01-8 0" />
-          </svg>
-          <span>
-            {isReelOrder
-              ? `Quantity: ${order.quantity || 1}`
-              : `Items: ${order.items}`}
-          </span>
-        </div>
-
-        <div className="mb-4 flex items-center">
-          <svg
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth={2}
-            className="mr-1 h-4 w-4 text-gray-500"
-          >
-            <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z" />
-            <circle cx="12" cy="10" r="3" />
-          </svg>
-          <span className="text-sm text-gray-500">
-            Deliver to: {order.customerAddress}
-          </span>
-        </div>
-
-        {/* Show delivery note for reel orders */}
-        {isReelOrder && order.deliveryNote && (
-          <div className="mb-4 rounded border border-yellow-200 bg-yellow-50 p-2">
-            <p className="text-xs text-yellow-800">
-              <strong>Note:</strong> {order.deliveryNote}
-            </p>
+            </div>
           </div>
-        )}
+        </div>
 
-        <div className="flex items-center justify-between">
-          <div>
-            <p className="text-sm text-gray-500">Estimated Earnings</p>
-            <p
-              className={`text-lg font-bold ${
+        <div className="flex items-center justify-between pt-4 border-t border-gray-100">
+          <div className="flex items-center">
+            <svg
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth={2}
+              className={`mr-2 h-5 w-5 ${
                 isReelOrder ? "text-purple-600" : "text-green-600"
               }`}
             >
-              {order.estimatedEarnings}
-            </p>
-          </div>
-          <div className="flex gap-2">
-            <Link href={`/Plasa/orders/${order.id}`}>
-              <button
-                className={`rounded px-3 py-1.5 text-sm hover:bg-green-50 ${
+              <path d="M12 2v20M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6" />
+            </svg>
+            <div>
+              <p className="text-sm text-gray-500">Earnings</p>
+              <p
+                className={`text-2xl font-bold ${
                   isReelOrder ? "text-purple-600" : "text-green-600"
                 }`}
               >
-                View Details
-              </button>
-            </Link>
-            <button
-              className={`rounded px-3 py-1.5 text-sm text-white hover:bg-green-600 ${
-                isReelOrder
-                  ? "bg-purple-500 hover:bg-purple-600"
-                  : "bg-green-500"
-              }`}
-              onClick={handleAcceptOrder}
-              disabled={isAccepting}
-            >
-              {isAccepting ? (
-                <div className="flex items-center">
-                  <span className="mr-2 inline-block h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent"></span>
-                  Accepting...
-                </div>
-              ) : (
-                "Accept Batch"
-              )}
-            </button>
+                {order.estimatedEarnings}
+              </p>
+            </div>
           </div>
+          <button
+            className={`relative overflow-hidden rounded-xl px-8 py-3 text-sm font-bold text-white transition-all duration-200 hover:shadow-lg active:scale-95 ${
+              isReelOrder
+                ? "bg-gradient-to-r from-purple-500 to-purple-600 hover:from-purple-600 hover:to-purple-700"
+                : "bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700"
+            }`}
+            onClick={handleAcceptOrder}
+            disabled={isAccepting}
+          >
+            {isAccepting ? (
+              <div className="flex items-center">
+                <span className="mr-2 inline-block h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent"></span>
+                Accepting...
+              </div>
+            ) : (
+              <span className="flex items-center">
+                <svg
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth={2}
+                  className="mr-2 h-4 w-4"
+                >
+                  <path d="M9 12l2 2 4-4" />
+                  <path d="M21 12c0 4.97-4.03 9-9 9s-9-4.03-9-9 4.03-9 9-9c1.5 0 2.91.37 4.15 1.02" />
+                </svg>
+                Accept Batch
+              </span>
+            )}
+          </button>
         </div>
       </div>
-    </Panel>
+    </div>
   );
 }
