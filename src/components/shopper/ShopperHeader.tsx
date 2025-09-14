@@ -23,23 +23,21 @@ export default function ShopperHeader() {
 
   if (isMobile) {
     return (
-      <header className="sticky top-0 z-[100] flex items-center justify-between border-b border-gray-200 bg-white px-4 py-3 transition-colors duration-200 dark:border-gray-700 dark:bg-gray-800">
+      <header className={`sticky top-0 z-[100] flex items-center justify-between border-b px-4 py-3 ${
+        theme === "dark" 
+          ? "border-gray-800 bg-gray-900" 
+          : "border-gray-200 bg-white"
+      }`}>
         {/* Logo Section - Mobile */}
         <div className="flex items-center">
           <Link href="/" className="flex items-center">
-            <div
-              className={`transition-all duration-200 ${
-                theme === "dark" ? "brightness-0 invert" : ""
-              }`}
-            >
-              <Image
-                src="/assets/logos/PlasLogo.svg"
-                alt="Plas Logo"
-                width={80}
-                height={30}
-                className="h-8 w-auto"
-              />
-            </div>
+            <Image
+              src="/assets/logos/PlasLogo.svg"
+              alt="Plas Logo"
+              width={80}
+              height={30}
+              className="h-8 w-auto"
+            />
           </Link>
         </div>
 
@@ -52,24 +50,22 @@ export default function ShopperHeader() {
   }
 
   return (
-    <header className="sticky top-0 z-[100] flex items-center justify-between border-b border-gray-200 bg-white px-6 py-4 transition-colors duration-200 dark:border-gray-700 dark:bg-gray-800">
+    <header className={`sticky top-0 z-[100] flex items-center justify-between border-b px-6 py-4 ${
+      theme === "dark" 
+        ? "border-gray-800 bg-gray-900" 
+        : "border-gray-200 bg-white"
+    }`}>
       {/* Logo Section */}
       <div className="flex items-center">
         <Link href="/" className="flex items-center">
-          <div
-            className={`transition-all duration-200 ${
-              theme === "dark" ? "brightness-0 invert" : ""
-            }`}
-          >
-            <Image
-              src="/assets/logos/PlasLogo.svg"
-              alt="Plas Logo"
-              width={120}
-              height={40}
-              className="ml-8 h-8 w-auto"
-              priority
-            />
-          </div>
+          <Image
+            src="/assets/logos/PlasLogo.svg"
+            alt="Plas Logo"
+            width={120}
+            height={40}
+            className="ml-8 h-8 w-auto"
+            priority
+          />
         </Link>
       </div>
 
@@ -94,7 +90,7 @@ export default function ShopperHeader() {
           <input
             type="text"
             placeholder="Search orders, products..."
-            className={`block w-full rounded-lg border border-gray-300 py-2 pl-10 pr-3 text-sm placeholder-gray-500 transition-colors focus:border-transparent focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+            className={`block w-full rounded-lg border py-2 pl-10 pr-3 text-sm placeholder-gray-500 focus:border-transparent focus:outline-none focus:ring-2 focus:ring-blue-500 ${
               theme === "dark"
                 ? "border-gray-600 bg-gray-700 text-white placeholder-gray-400"
                 : "border-gray-300 bg-white text-gray-900 placeholder-gray-500"
