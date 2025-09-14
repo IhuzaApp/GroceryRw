@@ -666,15 +666,9 @@ export default function ShopperDashboard() {
                   your location.
                 </p>
                 <div className="flex flex-col space-y-3 md:flex-row md:justify-center md:space-x-3 md:space-y-0">
-                  <Button
-                    appearance="primary"
-                    className="bg-green-500 text-white"
-                    onClick={() =>
-                      window.dispatchEvent(new Event("toggleGoLive"))
-                    }
-                  >
-                    Go Online
-                  </Button>
+                  <p className="text-sm text-gray-500">
+                    Use the "Go Online" button in the top header to enable location and start receiving batches.
+                  </p>
                   <p className="mt-4 text-xs text-gray-400">
                     You&apos;ll be asked to allow location access
                   </p>
@@ -716,10 +710,10 @@ export default function ShopperDashboard() {
 
         {/* Mobile Bottom Sheet */}
         {isMobile && (
-          <div
-            className={`fixed bottom-16 left-0 right-0 z-[1000] rounded-t-2xl border-t-2 transition-all duration-300 ease-in-out ${
-              isExpanded ? "h-[calc(100%-4rem)]" : "h-[80px]"
-            } ${
+            <div
+              className={`fixed bottom-16 left-0 right-0 z-[1000] rounded-t-2xl border-t-2 transition-all duration-300 ease-in-out ${
+                isExpanded ? "h-[calc(100%-16rem)]" : "h-[80px]"
+              } ${
               theme === "dark"
                 ? "border-gray-800 bg-gray-900 text-gray-100"
                 : "border-gray-200 bg-white text-gray-900"
@@ -737,34 +731,16 @@ export default function ShopperDashboard() {
                   }`}
                 />
               </div>
-              {/* Start/Stop in sheet header on mobile when collapsed */}
+              {/* Status indicator in sheet header on mobile when collapsed */}
               {!isExpanded && (
                 <div className="absolute right-4 top-2 flex items-center">
                   {/* Status indicator dot */}
                   <span
-                    className={`mr-2 inline-block h-2 w-2 rounded-full ${
+                    className={`inline-block h-2 w-2 rounded-full ${
                       isOnline ? "animate-pulse bg-green-500" : "bg-gray-400"
                     }`}
                     title={isOnline ? "Online" : "Offline"}
                   />
-
-                  {/* Toggle button - RED means "Go Offline" when already online, GREEN means "Start Plas" when offline */}
-                  <button
-                    onClick={() =>
-                      window.dispatchEvent(new Event("toggleGoLive"))
-                    }
-                    className={`rounded px-3 py-1 font-bold shadow ${
-                      isOnline
-                        ? theme === "dark"
-                          ? "bg-red-600 text-white hover:bg-red-700"
-                          : "bg-red-500 text-white hover:bg-red-600"
-                        : theme === "dark"
-                        ? "bg-green-600 text-white hover:bg-green-700"
-                        : "bg-green-500 text-white hover:bg-green-600"
-                    }`}
-                  >
-                    {isOnline ? "Go Offline" : "Start Plas"}
-                  </button>
                 </div>
               )}
             </div>
@@ -947,20 +923,13 @@ export default function ShopperDashboard() {
                       To see available batches, please go online first by
                       enabling your location.
                     </p>
-                    <Button
-                      appearance="primary"
-                      className={`${
-                        theme === "dark"
-                          ? "bg-green-600 text-white hover:bg-green-700"
-                          : "bg-green-500 text-white"
+                    <p
+                      className={`text-sm ${
+                        theme === "dark" ? "text-gray-400" : "text-gray-500"
                       }`}
-                      onClick={() =>
-                        window.dispatchEvent(new Event("toggleGoLive"))
-                      }
-                      size="sm"
                     >
-                      Go Online
-                    </Button>
+                      Use the "Go Online" button in the top header to enable location and start receiving batches.
+                    </p>
                     <p
                       className={`mt-4 text-xs ${
                         theme === "dark" ? "text-gray-500" : "text-gray-400"
