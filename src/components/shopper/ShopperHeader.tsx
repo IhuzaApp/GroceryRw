@@ -11,6 +11,7 @@ import TelegramStatusButton from "./TelegramStatusButton";
 
 export default function ShopperHeader() {
   const [isMobile, setIsMobile] = useState(false);
+  const [isOnline, setIsOnline] = useState(false);
   const pathname = usePathname();
   const { theme, setTheme } = useTheme();
 
@@ -21,55 +22,157 @@ export default function ShopperHeader() {
     return () => window.removeEventListener("resize", checkIfMobile);
   }, []);
 
+  // Check location cookies and update online status
+  useEffect(() => {
+    const checkLocationCookies = () => {
+      const cookies = document.cookie
+        .split("; ")
+        .reduce((acc: Record<string, string>, cur) => {
+          const [k, v] = cur.split("=");
+          acc[k] = v;
+          return acc;
+        }, {} as Record<string, string>);
+
+      return Boolean(cookies["user_latitude"] && cookies["user_longitude"]);
+    };
+
+    const updateOnlineStatus = () => {
+      const hasLocationCookies = checkLocationCookies();
+      setIsOnline(hasLocationCookies);
+    };
+
+    updateOnlineStatus();
+    const handleCustomEvent = () => setTimeout(updateOnlineStatus, 300);
+    window.addEventListener("toggleGoLive", handleCustomEvent);
+    const intervalId = setInterval(updateOnlineStatus, 5000);
+
+    return () => {
+      window.removeEventListener("toggleGoLive", handleCustomEvent);
+      clearInterval(intervalId);
+    };
+  }, []);
+
   if (isMobile) {
     return (
-      <header className="sticky top-0 z-[100] flex items-center justify-between border-b border-gray-200 bg-white px-4 py-3 transition-colors duration-200 dark:border-gray-700 dark:bg-gray-800">
+      <header
+        className={`sticky top-0 z-[100] flex items-center justify-between border-b px-4 py-3 ${
+          theme === "dark"
+            ? "border-gray-800 bg-gray-900"
+            : "border-gray-200 bg-white"
+        }`}
+      >
         {/* Logo Section - Mobile */}
         <div className="flex items-center">
           <Link href="/" className="flex items-center">
-            <div
-              className={`transition-all duration-200 ${
-                theme === "dark" ? "brightness-0 invert" : ""
-              }`}
-            >
-              <Image
-                src="/assets/logos/PlasLogo.svg"
-                alt="Plas Logo"
-                width={80}
-                height={30}
-                className="h-8 w-auto"
-              />
-            </div>
+            <Image
+              src="/assets/logos/PlasLogo.svg"
+              alt="Plas Logo"
+              width={80}
+              height={30}
+              className="h-8 w-auto"
+            />
           </Link>
         </div>
 
         {/* Right actions - Mobile */}
         <div className="flex items-center gap-2">
-          <TelegramStatusButton />
+          {/* Status indicator dot */}
+          <span
+            className={`inline-block h-2 w-2 rounded-full ${
+              isOnline ? "animate-pulse bg-green-500" : "bg-gray-400"
+            }`}
+            title={isOnline ? "Online" : "Offline"}
+          />
+
+          {/* Toggle button */}
+          <button
+            onClick={() => window.dispatchEvent(new Event("toggleGoLive"))}
+            className={`relative overflow-hidden rounded-xl px-4 py-2 text-sm font-bold transition-all duration-300 active:scale-95 ${
+              isOnline
+                ? theme === "dark"
+                  ? "border border-red-400/20 bg-gradient-to-br from-red-500 via-red-600 to-red-700 text-white shadow-lg shadow-red-500/30 hover:shadow-red-500/40"
+                  : "border border-red-400/20 bg-gradient-to-br from-red-500 via-red-600 to-red-700 text-white shadow-lg shadow-red-500/30 hover:shadow-red-500/40"
+                : theme === "dark"
+                ? "border border-green-400/20 bg-gradient-to-br from-green-500 via-green-600 to-green-700 text-white shadow-lg shadow-green-500/30 hover:shadow-green-500/40"
+                : "border border-green-400/20 bg-gradient-to-br from-green-500 via-green-600 to-green-700 text-white shadow-lg shadow-green-500/30 hover:shadow-green-500/40"
+            }`}
+          >
+            {/* Background glow effect */}
+            <div
+              className={`absolute inset-0 rounded-xl blur-sm ${
+                isOnline ? "bg-red-500/20" : "bg-green-500/20"
+              }`}
+            />
+
+            {/* Content */}
+            <span className="relative z-10 flex items-center gap-1.5">
+              {isOnline ? (
+                <>
+                  <svg
+                    className="h-4 w-4"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2.5}
+                      d="M6 18L18 6M6 6l12 12"
+                    />
+                  </svg>
+                  Go Offline
+                </>
+              ) : (
+                <>
+                  <svg
+                    className="h-4 w-4"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2.5}
+                      d="M13 10V3L4 14h7v7l9-11h-7z"
+                    />
+                  </svg>
+                  Go Online
+                </>
+              )}
+            </span>
+
+            {/* Shimmer effect */}
+            <div className="absolute inset-0 -skew-x-12 bg-gradient-to-r from-transparent via-white/30 to-transparent opacity-0 transition-all duration-500 hover:translate-x-full hover:opacity-100" />
+
+            {/* Ripple effect on tap */}
+            <div className="absolute inset-0 scale-0 rounded-xl bg-white/20 transition-transform duration-200 active:scale-100" />
+          </button>
         </div>
       </header>
     );
   }
 
   return (
-    <header className="sticky top-0 z-[100] flex items-center justify-between border-b border-gray-200 bg-white px-6 py-4 transition-colors duration-200 dark:border-gray-700 dark:bg-gray-800">
+    <header
+      className={`sticky top-0 z-[100] flex items-center justify-between border-b px-6 py-4 ${
+        theme === "dark"
+          ? "border-gray-800 bg-gray-900"
+          : "border-gray-200 bg-white"
+      }`}
+    >
       {/* Logo Section */}
       <div className="flex items-center">
         <Link href="/" className="flex items-center">
-          <div
-            className={`transition-all duration-200 ${
-              theme === "dark" ? "brightness-0 invert" : ""
-            }`}
-          >
-            <Image
-              src="/assets/logos/PlasLogo.svg"
-              alt="Plas Logo"
-              width={120}
-              height={40}
-              className="ml-8 h-8 w-auto"
-              priority
-            />
-          </div>
+          <Image
+            src="/assets/logos/PlasLogo.svg"
+            alt="Plas Logo"
+            width={120}
+            height={40}
+            className="ml-8 h-8 w-auto"
+            priority
+          />
         </Link>
       </div>
 
@@ -94,7 +197,7 @@ export default function ShopperHeader() {
           <input
             type="text"
             placeholder="Search orders, products..."
-            className={`block w-full rounded-lg border border-gray-300 py-2 pl-10 pr-3 text-sm placeholder-gray-500 transition-colors focus:border-transparent focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+            className={`block w-full rounded-lg border py-2 pl-10 pr-3 text-sm placeholder-gray-500 focus:border-transparent focus:outline-none focus:ring-2 focus:ring-blue-500 ${
               theme === "dark"
                 ? "border-gray-600 bg-gray-700 text-white placeholder-gray-400"
                 : "border-gray-300 bg-white text-gray-900 placeholder-gray-500"

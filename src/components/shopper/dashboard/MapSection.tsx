@@ -1976,41 +1976,81 @@ export default function MapSection({
         <>
           <button
             onClick={handleGoLive}
-            className={`absolute bottom-5 left-1/2 z-[1000] hidden w-[90%] -translate-x-1/2 transform rounded-full py-2 font-bold shadow-lg backdrop-blur-lg md:block md:w-auto md:px-4 ${
+            className={`absolute bottom-5 left-1/2 z-[1000] hidden w-[90%] -translate-x-1/2 transform rounded-xl px-6 py-3 font-bold shadow-lg backdrop-blur-lg transition-all duration-200 hover:shadow-xl active:scale-95 md:block md:w-auto ${
               isOnline
                 ? theme === "dark"
-                  ? "bg-red-600/90 text-white hover:bg-red-700"
-                  : "bg-red-500/90 text-white hover:bg-red-600"
+                  ? "bg-gradient-to-r from-red-500 to-red-600 text-white shadow-red-500/30 hover:shadow-red-500/40"
+                  : "bg-gradient-to-r from-red-500 to-red-600 text-white shadow-red-500/30 hover:shadow-red-500/40"
                 : theme === "dark"
-                ? "bg-green-600/90 text-white hover:bg-green-700"
-                : "bg-green-500/90 text-white hover:bg-green-600"
+                ? "bg-gradient-to-r from-green-500 to-green-600 text-white shadow-green-500/30 hover:shadow-green-500/40"
+                : "bg-gradient-to-r from-green-500 to-green-600 text-white shadow-green-500/30 hover:shadow-green-500/40"
             }`}
           >
-            {isOnline ? "Go Offline" : "Start Plas"}
+            <span className="flex items-center justify-center gap-2">
+              {isOnline ? (
+                <>
+                  <svg
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth={2}
+                    className="h-4 w-4"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      d="M6 18L18 6M6 6l12 12"
+                    />
+                  </svg>
+                  Go Offline
+                </>
+              ) : (
+                <>
+                  <svg
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth={2}
+                    className="h-4 w-4"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      d="M13 10V3L4 14h7v7l9-11h-7z"
+                    />
+                  </svg>
+                  Start Plasa
+                </>
+              )}
+            </span>
           </button>
 
           {/* Add tracking mode indicator */}
           {isOnline && (
             <div
-              className={`absolute bottom-20 left-1/2 z-[1000] -translate-x-1/2 transform rounded-full px-3 py-1 text-sm font-semibold shadow-md backdrop-blur-lg ${
+              className={`absolute bottom-20 left-1/2 z-[1000] -translate-x-1/2 transform rounded-xl px-4 py-2 text-sm font-medium shadow-lg backdrop-blur-lg transition-all duration-200 ${
                 theme === "dark"
-                  ? "bg-gray-800/90 text-gray-100"
-                  : "bg-white/90 text-gray-900"
+                  ? "border border-gray-700/50 bg-gray-800/90 text-gray-100"
+                  : "border border-gray-200/50 bg-white/90 text-gray-900"
               }`}
             >
-              <div className="flex items-center">
-                <span
-                  className={`mr-2 inline-block h-3 w-3 rounded-full ${
-                    isActivelyTracking
-                      ? theme === "dark"
-                        ? "animate-pulse bg-green-400"
-                        : "animate-pulse bg-green-500"
-                      : theme === "dark"
-                      ? "bg-blue-400"
-                      : "bg-blue-500"
-                  }`}
-                ></span>
-                {isActivelyTracking ? "Live Tracking" : "Static Location"}
+              <div className="flex items-center gap-3">
+                <div className="flex items-center gap-2">
+                  <span
+                    className={`inline-block h-3 w-3 rounded-full ${
+                      isActivelyTracking
+                        ? theme === "dark"
+                          ? "animate-pulse bg-green-400"
+                          : "animate-pulse bg-green-500"
+                        : theme === "dark"
+                        ? "bg-blue-400"
+                        : "bg-blue-500"
+                    }`}
+                  ></span>
+                  <span className="font-semibold">
+                    {isActivelyTracking ? "Live Tracking" : "Static Location"}
+                  </span>
+                </div>
 
                 <button
                   onClick={() => {
@@ -2051,10 +2091,14 @@ export default function MapSection({
                       );
                     }
                   }}
-                  className={`ml-3 text-xs ${
-                    theme === "dark"
-                      ? "text-blue-400 hover:text-blue-300 hover:underline"
-                      : "text-blue-600 hover:text-blue-800 hover:underline"
+                  className={`rounded-lg px-3 py-1 text-xs font-medium transition-all duration-200 ${
+                    isActivelyTracking
+                      ? theme === "dark"
+                        ? "bg-red-600/20 text-red-400 hover:bg-red-600/30"
+                        : "bg-red-100 text-red-600 hover:bg-red-200"
+                      : theme === "dark"
+                      ? "bg-green-600/20 text-green-400 hover:bg-green-600/30"
+                      : "bg-green-100 text-green-600 hover:bg-green-200"
                   }`}
                 >
                   {isActivelyTracking ? "Disable" : "Enable"}
@@ -2068,41 +2112,44 @@ export default function MapSection({
             <button
               onClick={refreshLocation}
               disabled={isRefreshingLocation}
-              className={`absolute bottom-24 right-5 z-[1001] h-12 w-12 rounded-full p-3 shadow-lg backdrop-blur-lg md:bottom-5 md:h-10 md:w-10 md:p-2 ${
+              className={`absolute bottom-24 right-5 z-[1001] h-12 w-12 rounded-xl shadow-lg backdrop-blur-lg transition-all duration-200 hover:shadow-xl active:scale-95 md:bottom-5 md:h-10 md:w-10 ${
                 theme === "dark"
                   ? isRefreshingLocation
-                    ? "bg-blue-700/90 text-gray-300"
-                    : "bg-blue-600/90 text-white hover:bg-blue-700"
+                    ? "bg-gradient-to-r from-blue-700 to-blue-800 text-gray-300 shadow-blue-700/30"
+                    : "bg-gradient-to-r from-blue-500 to-blue-600 text-white shadow-blue-500/30 hover:shadow-blue-500/40"
                   : isRefreshingLocation
-                  ? "bg-blue-300/90 text-white"
-                  : "bg-blue-500/90 text-white hover:bg-blue-600"
+                  ? "bg-gradient-to-r from-blue-300 to-blue-400 text-white shadow-blue-300/30"
+                  : "bg-gradient-to-r from-blue-500 to-blue-600 text-white shadow-blue-500/30 hover:shadow-blue-500/40"
               }`}
               title="Refresh location"
             >
-              {isRefreshingLocation ? (
-                <span
-                  className={`inline-block h-full w-full animate-spin rounded-full border-2 ${
-                    theme === "dark"
-                      ? "border-gray-300 border-t-transparent"
-                      : "border-white border-t-transparent"
-                  }`}
-                ></span>
-              ) : (
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  className="h-full w-full"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
+              <div className="flex h-full w-full items-center justify-center p-2">
+                {isRefreshingLocation ? (
+                  <span
+                    className={`inline-block h-full w-full animate-spin rounded-full border-2 ${
+                      theme === "dark"
+                        ? "border-gray-300 border-t-transparent"
+                        : "border-white border-t-transparent"
+                    }`}
+                  ></span>
+                ) : (
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    className="h-full w-full"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
                     strokeWidth={2}
-                    d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
-                  />
-                </svg>
-              )}
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      d="M1 4v6h6M23 20v-6h-6"
+                    />
+                    <path d="M20.49 9A9 9 0 0 0 5.64 5.64L1 10m22 4l-4.64 4.36A9 9 0 0 1 3.51 15" />
+                  </svg>
+                )}
+              </div>
             </button>
           )}
         </>

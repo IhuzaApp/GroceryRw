@@ -508,42 +508,88 @@ export default function ShopperDashboard() {
           <div className="px-2 pb-2 md:block">
             <div className="flex items-center justify-between px-4 pt-4">
               <h1 className="text-2xl font-bold">Available Batches</h1>
-              <div className="flex items-center space-x-2">
-                <span className="text-xs text-gray-500">
-                  {lastRefreshed &&
-                    `Last updated: ${lastRefreshed.toLocaleTimeString()}`}
-                </span>
+              <div className="flex items-center space-x-4">
+                <div className="flex items-center space-x-2">
+                  <div className="rounded-full bg-gray-100 p-1.5">
+                    <svg
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth={2}
+                      className="h-3 w-3 text-gray-500"
+                    >
+                      <circle cx="12" cy="12" r="10" />
+                      <polyline points="12 6 12 12 16 14" />
+                    </svg>
+                  </div>
+                  <span className="text-xs font-medium text-gray-500">
+                    {lastRefreshed &&
+                      `Updated ${lastRefreshed.toLocaleTimeString()}`}
+                  </span>
+                </div>
+
+                <div className="flex items-center space-x-2">
+                  <button
+                    onClick={toggleAutoRefresh}
+                    className={`flex items-center rounded-xl px-3 py-1.5 text-xs font-medium transition-all duration-200 ${
+                      isAutoRefreshing
+                        ? "bg-green-600 text-white shadow-lg shadow-green-500/30"
+                        : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                    }`}
+                    title={
+                      isAutoRefreshing
+                        ? "Auto-refresh is on (30s)"
+                        : "Auto-refresh is off"
+                    }
+                  >
+                    <svg
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth={2}
+                      className="mr-1 h-3 w-3"
+                    >
+                      <path d="M1 4v6h6M23 20v-6h-6" />
+                      <path d="M20.49 9A9 9 0 0 0 5.64 5.64L1 10m22 4l-4.64 4.36A9 9 0 0 1 3.51 15" />
+                    </svg>
+                    {isAutoRefreshing ? "Auto" : "Manual"}
+                  </button>
+
+                  <button
+                    onClick={toggleHistorical}
+                    className={`flex items-center rounded-xl px-3 py-1.5 text-sm font-medium transition-all duration-200 ${
+                      showHistorical
+                        ? "bg-blue-600 text-white shadow-lg shadow-blue-500/30"
+                        : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                    }`}
+                  >
+                    <svg
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth={2}
+                      className="mr-1 h-3 w-3"
+                    >
+                      <path d="M3 6h18M3 12h18M3 18h18" />
+                    </svg>
+                    {showHistorical ? "All Pending" : "Recent (10+ min)"}
+                  </button>
+                </div>
+
                 <button
-                  onClick={toggleAutoRefresh}
-                  className={`rounded-md px-2 py-1 text-xs font-medium ${
-                    isAutoRefreshing
-                      ? "bg-green-100 text-green-700"
-                      : "bg-gray-100 text-gray-700"
-                  }`}
-                  title={
-                    isAutoRefreshing
-                      ? "Auto-refresh is on (30s)"
-                      : "Auto-refresh is off"
-                  }
-                >
-                  {isAutoRefreshing ? "Auto" : "Manual"}
-                </button>
-                <button
-                  onClick={toggleHistorical}
-                  className={`rounded-md px-3 py-1 text-sm font-medium ${
-                    showHistorical
-                      ? "bg-blue-100 text-blue-700"
-                      : "bg-gray-100 text-gray-700"
-                  }`}
-                >
-                  {showHistorical
-                    ? "Showing All Pending"
-                    : "Showing Recent (10+ min)"}
-                </button>
-                <button
-                  className="rounded bg-green-500 px-3 py-1.5 text-sm text-white hover:bg-green-600"
+                  className="flex items-center rounded-xl bg-gradient-to-r from-green-500 to-green-600 px-4 py-1.5 text-sm font-bold text-white shadow-lg shadow-green-500/30 transition-all duration-200 hover:shadow-green-500/40 active:scale-95"
                   onClick={loadOrders}
                 >
+                  <svg
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth={2}
+                    className="mr-1.5 h-4 w-4"
+                  >
+                    <path d="M1 4v6h6M23 20v-6h-6" />
+                    <path d="M20.49 9A9 9 0 0 0 5.64 5.64L1 10m22 4l-4.64 4.36A9 9 0 0 1 3.51 15" />
+                  </svg>
                   Refresh
                 </button>
               </div>
@@ -554,68 +600,158 @@ export default function ShopperDashboard() {
         {/* Orders List Section - Hidden on Mobile */}
         {!isMobile && (
           <div className="px-2">
-            <div className="mb-4 mt-2 flex items-center px-4">
-              <span className="mr-2 text-sm text-gray-500">Sort by:</span>
-              <div className="flex space-x-2">
+            <div className="mb-6 mt-4 flex items-center px-4">
+              <div className="mr-4 flex items-center">
+                <svg
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth={2}
+                  className="mr-2 h-4 w-4 text-gray-500"
+                >
+                  <path d="M3 6h18M3 12h18M3 18h18" />
+                </svg>
+                <span className="text-sm font-medium text-gray-500">
+                  Sort by:
+                </span>
+              </div>
+              <div className="flex space-x-3">
                 <button
                   onClick={() => handleSortChange("newest")}
-                  className={`rounded px-3 py-1 text-sm ${
+                  className={`flex items-center rounded-xl px-4 py-2 text-sm font-medium transition-all duration-200 ${
                     sortBy === "newest"
-                      ? "bg-green-600 text-white"
-                      : "bg-gray-200 text-gray-800 hover:bg-gray-300"
+                      ? "bg-green-600 text-white shadow-lg shadow-green-500/30"
+                      : "bg-gray-100 text-gray-700 hover:bg-gray-200"
                   }`}
                   title="Orders less than 1 hour old"
                 >
+                  <svg
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth={2}
+                    className="mr-1.5 h-4 w-4"
+                  >
+                    <circle cx="12" cy="12" r="10" />
+                    <polyline points="12 6 12 12 16 14" />
+                  </svg>
                   Newest (1h)
                 </button>
                 <button
                   onClick={() => handleSortChange("earnings")}
-                  className={`rounded px-3 py-1 text-sm ${
+                  className={`flex items-center rounded-xl px-4 py-2 text-sm font-medium transition-all duration-200 ${
                     sortBy === "earnings"
-                      ? "bg-green-600 text-white"
-                      : "bg-gray-200 text-gray-800 hover:bg-gray-300"
+                      ? "bg-green-600 text-white shadow-lg shadow-green-500/30"
+                      : "bg-gray-100 text-gray-700 hover:bg-gray-200"
                   }`}
                 >
+                  <svg
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth={2}
+                    className="mr-1.5 h-4 w-4"
+                  >
+                    <path d="M12 2v20M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6" />
+                  </svg>
                   Earnings
                 </button>
                 <button
                   onClick={() => handleSortChange("distance")}
-                  className={`rounded px-3 py-1 text-sm ${
+                  className={`flex items-center rounded-xl px-4 py-2 text-sm font-medium transition-all duration-200 ${
                     sortBy === "distance"
-                      ? "bg-green-600 text-white"
-                      : "bg-gray-200 text-gray-800 hover:bg-gray-300"
+                      ? "bg-green-600 text-white shadow-lg shadow-green-500/30"
+                      : "bg-gray-100 text-gray-700 hover:bg-gray-200"
                   }`}
                 >
+                  <svg
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth={2}
+                    className="mr-1.5 h-4 w-4"
+                  >
+                    <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z" />
+                    <circle cx="12" cy="10" r="3" />
+                  </svg>
                   Distance
                 </button>
                 <button
                   onClick={() => handleSortChange("priority")}
-                  className={`rounded px-3 py-1 text-sm ${
+                  className={`flex items-center rounded-xl px-4 py-2 text-sm font-medium transition-all duration-200 ${
                     sortBy === "priority"
-                      ? "bg-purple-600 text-white"
-                      : "bg-gray-200 text-gray-800 hover:bg-gray-300"
+                      ? "bg-purple-600 text-white shadow-lg shadow-purple-500/30"
+                      : "bg-gray-100 text-gray-700 hover:bg-gray-200"
                   }`}
                   title="All orders by priority level, including older orders"
                 >
+                  <svg
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth={2}
+                    className="mr-1.5 h-4 w-4"
+                  >
+                    <path d="M9 12l2 2 4-4" />
+                    <path d="M21 12c0 4.97-4.03 9-9 9s-9-4.03-9-9 4.03-9 9-9c1.5 0 2.91.37 4.15 1.02" />
+                  </svg>
                   Priority
                 </button>
               </div>
             </div>
 
             {/* Filtering info message */}
-            <div className="mb-4 px-4">
-              <p className="text-xs text-gray-500">
-                {!isOnline
-                  ? "Go online to see available batches"
-                  : sortBy === "newest"
-                  ? "Showing recent batches less than 1 hour old"
-                  : sortBy === "priority"
-                  ? "Showing batches pending for 1+ hours by priority level"
-                  : `Sorting by ${sortBy}`}
-                {isOnline &&
-                  !showHistorical &&
-                  " • Only batches pending for 10+ minutes"}
-              </p>
+            <div className="mb-6 px-4">
+              <div
+                className={`flex items-center rounded-lg px-4 py-3 ${
+                  !isOnline
+                    ? "border border-yellow-200 bg-yellow-50"
+                    : "border border-blue-200 bg-blue-50"
+                }`}
+              >
+                <div
+                  className={`mr-3 rounded-full p-1.5 ${
+                    !isOnline ? "bg-yellow-100" : "bg-blue-100"
+                  }`}
+                >
+                  <svg
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth={2}
+                    className={`h-4 w-4 ${
+                      !isOnline ? "text-yellow-600" : "text-blue-600"
+                    }`}
+                  >
+                    <circle cx="12" cy="12" r="10" />
+                    <path d="M12 6v6l4 2" />
+                  </svg>
+                </div>
+                <div>
+                  <p
+                    className={`text-sm font-medium ${
+                      !isOnline ? "text-yellow-800" : "text-blue-800"
+                    }`}
+                  >
+                    {!isOnline
+                      ? "Go online to see available batches"
+                      : sortBy === "newest"
+                      ? "Showing recent batches less than 1 hour old"
+                      : sortBy === "priority"
+                      ? "Showing batches pending for 1+ hours by priority level"
+                      : `Sorting by ${sortBy}`}
+                  </p>
+                  {isOnline && !showHistorical && (
+                    <p
+                      className={`text-xs ${
+                        !isOnline ? "text-yellow-600" : "text-blue-600"
+                      }`}
+                    >
+                      Only batches pending for 10+ minutes
+                    </p>
+                  )}
+                </div>
+              </div>
             </div>
 
             {isLoading ? (
@@ -666,28 +802,24 @@ export default function ShopperDashboard() {
                   your location.
                 </p>
                 <div className="flex flex-col space-y-3 md:flex-row md:justify-center md:space-x-3 md:space-y-0">
-                  <Button
-                    appearance="primary"
-                    className="bg-green-500 text-white"
-                    onClick={() =>
-                      window.dispatchEvent(new Event("toggleGoLive"))
-                    }
-                  >
-                    Go Online
-                  </Button>
+                  <p className="text-sm text-gray-500">
+                    Use the "Go Online" button in the top header to enable
+                    location and start receiving batches.
+                  </p>
                   <p className="mt-4 text-xs text-gray-400">
                     You&apos;ll be asked to allow location access
                   </p>
                 </div>
               </div>
             ) : sortedOrders.length > 0 ? (
-              <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
+              <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
                 {sortedOrders.map((order) => (
-                  <OrderCard
+                  <div
                     key={order.id}
-                    order={order}
-                    onOrderAccepted={loadOrders}
-                  />
+                    className="transform transition-all duration-200 hover:scale-[1.02]"
+                  >
+                    <OrderCard order={order} onOrderAccepted={loadOrders} />
+                  </div>
                 ))}
               </div>
             ) : (
@@ -718,7 +850,7 @@ export default function ShopperDashboard() {
         {isMobile && (
           <div
             className={`fixed bottom-16 left-0 right-0 z-[1000] rounded-t-2xl border-t-2 transition-all duration-300 ease-in-out ${
-              isExpanded ? "h-[calc(100%-4rem)]" : "h-[80px]"
+              isExpanded ? "h-[calc(100%-16rem)]" : "h-[80px]"
             } ${
               theme === "dark"
                 ? "border-gray-800 bg-gray-900 text-gray-100"
@@ -737,170 +869,316 @@ export default function ShopperDashboard() {
                   }`}
                 />
               </div>
-              {/* Start/Stop in sheet header on mobile when collapsed */}
-              {!isExpanded && (
-                <div className="absolute right-4 top-2 flex items-center">
-                  {/* Status indicator dot */}
-                  <span
-                    className={`mr-2 inline-block h-2 w-2 rounded-full ${
-                      isOnline ? "animate-pulse bg-green-500" : "bg-gray-400"
-                    }`}
-                    title={isOnline ? "Online" : "Offline"}
-                  />
-
-                  {/* Toggle button - RED means "Go Offline" when already online, GREEN means "Start Plas" when offline */}
-                  <button
-                    onClick={() =>
-                      window.dispatchEvent(new Event("toggleGoLive"))
-                    }
-                    className={`rounded px-3 py-1 font-bold shadow ${
-                      isOnline
-                        ? theme === "dark"
-                          ? "bg-red-600 text-white hover:bg-red-700"
-                          : "bg-red-500 text-white hover:bg-red-600"
-                        : theme === "dark"
-                        ? "bg-green-600 text-white hover:bg-green-700"
-                        : "bg-green-500 text-white hover:bg-green-600"
-                    }`}
-                  >
-                    {isOnline ? "Go Offline" : "Start Plas"}
-                  </button>
-                </div>
-              )}
             </div>
 
             {isExpanded ? (
               <div className="h-full overflow-y-auto px-4 pb-4">
-                <div className="mb-4 flex items-center justify-between">
-                  <h2
-                    className={`text-lg font-semibold ${
-                      theme === "dark" ? "text-white" : "text-gray-900"
-                    }`}
-                  >
-                    Available Batches
-                  </h2>
-                  <div className="flex items-center space-x-2">
-                    <span
-                      className={`text-xs ${
-                        theme === "dark" ? "text-gray-400" : "text-gray-500"
+                <div className="mb-6 flex items-center justify-between pt-2">
+                  <div className="flex items-center">
+                    <div
+                      className={`mr-3 rounded-full p-2 ${
+                        theme === "dark" ? "bg-green-900/30" : "bg-green-100"
                       }`}
                     >
-                      {lastRefreshed && `${lastRefreshed.toLocaleTimeString()}`}
-                    </span>
+                      <svg
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth={2}
+                        className={`h-5 w-5 ${
+                          theme === "dark" ? "text-green-400" : "text-green-600"
+                        }`}
+                      >
+                        <path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2" />
+                        <rect x="8" y="2" width="8" height="4" rx="1" ry="1" />
+                        <path d="M12 11h4" />
+                        <path d="M12 16h4" />
+                        <path d="M8 11h.01" />
+                        <path d="M8 16h.01" />
+                      </svg>
+                    </div>
+                    <div>
+                      <h2
+                        className={`text-xl font-bold ${
+                          theme === "dark" ? "text-white" : "text-gray-900"
+                        }`}
+                      >
+                        Available Batches
+                      </h2>
+                      <p
+                        className={`text-sm ${
+                          theme === "dark" ? "text-gray-400" : "text-gray-500"
+                        }`}
+                      >
+                        {sortedOrders.length} batch
+                        {sortedOrders.length !== 1 ? "es" : ""} found
+                      </p>
+                    </div>
+                  </div>
+                  <div className="flex items-center space-x-3">
+                    <div className="flex items-center space-x-2">
+                      <div
+                        className={`rounded-full p-1.5 ${
+                          theme === "dark" ? "bg-gray-800" : "bg-gray-100"
+                        }`}
+                      >
+                        <svg
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          stroke="currentColor"
+                          strokeWidth={2}
+                          className={`h-3 w-3 ${
+                            theme === "dark" ? "text-gray-400" : "text-gray-500"
+                          }`}
+                        >
+                          <circle cx="12" cy="12" r="10" />
+                          <polyline points="12 6 12 12 16 14" />
+                        </svg>
+                      </div>
+                      <span
+                        className={`text-xs font-medium ${
+                          theme === "dark" ? "text-gray-400" : "text-gray-500"
+                        }`}
+                      >
+                        {lastRefreshed &&
+                          `Updated ${lastRefreshed.toLocaleTimeString()}`}
+                      </span>
+                    </div>
+
+                    <div className="flex items-center space-x-2">
+                      <button
+                        onClick={toggleAutoRefresh}
+                        className={`flex items-center rounded-xl px-3 py-1.5 text-xs font-medium transition-all duration-200 ${
+                          isAutoRefreshing
+                            ? theme === "dark"
+                              ? "bg-green-600 text-white shadow-lg shadow-green-500/30"
+                              : "bg-green-600 text-white shadow-lg shadow-green-500/30"
+                            : theme === "dark"
+                            ? "bg-gray-800 text-gray-300 hover:bg-gray-700"
+                            : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                        }`}
+                      >
+                        <svg
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          stroke="currentColor"
+                          strokeWidth={2}
+                          className="mr-1 h-3 w-3"
+                        >
+                          <path d="M1 4v6h6M23 20v-6h-6" />
+                          <path d="M20.49 9A9 9 0 0 0 5.64 5.64L1 10m22 4l-4.64 4.36A9 9 0 0 1 3.51 15" />
+                        </svg>
+                        {isAutoRefreshing ? "Auto" : "Manual"}
+                      </button>
+
+                      <button
+                        onClick={toggleHistorical}
+                        className={`flex items-center rounded-xl px-3 py-1.5 text-xs font-medium transition-all duration-200 ${
+                          showHistorical
+                            ? theme === "dark"
+                              ? "bg-blue-600 text-white shadow-lg shadow-blue-500/30"
+                              : "bg-blue-600 text-white shadow-lg shadow-blue-500/30"
+                            : theme === "dark"
+                            ? "bg-gray-800 text-gray-300 hover:bg-gray-700"
+                            : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                        }`}
+                      >
+                        <svg
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          stroke="currentColor"
+                          strokeWidth={2}
+                          className="mr-1 h-3 w-3"
+                        >
+                          <path d="M3 6h18M3 12h18M3 18h18" />
+                        </svg>
+                        {showHistorical ? "All" : "Recent"}
+                      </button>
+                    </div>
+
                     <button
-                      onClick={toggleAutoRefresh}
-                      className={`rounded-md px-2 py-1 text-xs font-medium ${
-                        isAutoRefreshing
-                          ? theme === "dark"
-                            ? "bg-green-900/30 text-green-300"
-                            : "bg-green-100 text-green-700"
-                          : theme === "dark"
-                          ? "bg-gray-800 text-gray-300"
-                          : "bg-gray-100 text-gray-700"
-                      }`}
-                    >
-                      {isAutoRefreshing ? "A" : "M"}
-                    </button>
-                    <button
-                      onClick={toggleHistorical}
-                      className={`rounded-md px-2 py-1 text-xs font-medium ${
-                        showHistorical
-                          ? theme === "dark"
-                            ? "bg-blue-900/30 text-blue-300"
-                            : "bg-blue-100 text-blue-700"
-                          : theme === "dark"
-                          ? "bg-gray-800 text-gray-300"
-                          : "bg-gray-100 text-gray-700"
-                      }`}
-                    >
-                      {showHistorical ? "All Pending" : "10+ min"}
-                    </button>
-                    <button
-                      className="rounded bg-green-500 px-3 py-1.5 text-sm text-white hover:bg-green-600"
+                      className="flex items-center rounded-xl bg-gradient-to-r from-green-500 to-green-600 px-4 py-1.5 text-sm font-bold text-white shadow-lg shadow-green-500/30 transition-all duration-200 hover:shadow-green-500/40 active:scale-95"
                       onClick={loadOrders}
                     >
+                      <svg
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth={2}
+                        className="mr-1.5 h-4 w-4"
+                      >
+                        <path d="M1 4v6h6M23 20v-6h-6" />
+                        <path d="M20.49 9A9 9 0 0 0 5.64 5.64L1 10m22 4l-4.64 4.36A9 9 0 0 1 3.51 15" />
+                      </svg>
                       Refresh
                     </button>
                   </div>
                 </div>
 
-                <div className="mb-4 flex justify-start space-x-2">
+                <div className="mb-6 flex flex-wrap gap-2">
                   <button
                     onClick={() => handleSortChange("newest")}
-                    className={`rounded px-3 py-1 text-xs ${
+                    className={`flex items-center rounded-xl px-4 py-2 text-sm font-medium transition-all duration-200 ${
                       sortBy === "newest"
                         ? theme === "dark"
-                          ? "bg-green-600 text-white"
-                          : "bg-green-600 text-white"
+                          ? "bg-green-600 text-white shadow-lg shadow-green-500/30"
+                          : "bg-green-600 text-white shadow-lg shadow-green-500/30"
                         : theme === "dark"
-                        ? "bg-gray-800 text-gray-300"
-                        : "bg-gray-200 text-gray-800"
+                        ? "bg-gray-800 text-gray-300 hover:bg-gray-700"
+                        : "bg-gray-100 text-gray-700 hover:bg-gray-200"
                     }`}
                     title="Batches less than 1 hour old"
                   >
+                    <svg
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth={2}
+                      className="mr-1.5 h-4 w-4"
+                    >
+                      <circle cx="12" cy="12" r="10" />
+                      <polyline points="12 6 12 12 16 14" />
+                    </svg>
                     Recent (1h)
                   </button>
                   <button
                     onClick={() => handleSortChange("earnings")}
-                    className={`rounded px-3 py-1 text-xs ${
+                    className={`flex items-center rounded-xl px-4 py-2 text-sm font-medium transition-all duration-200 ${
                       sortBy === "earnings"
                         ? theme === "dark"
-                          ? "bg-green-600 text-white"
-                          : "bg-green-600 text-white"
+                          ? "bg-green-600 text-white shadow-lg shadow-green-500/30"
+                          : "bg-green-600 text-white shadow-lg shadow-green-500/30"
                         : theme === "dark"
-                        ? "bg-gray-800 text-gray-300"
-                        : "bg-gray-200 text-gray-800"
+                        ? "bg-gray-800 text-gray-300 hover:bg-gray-700"
+                        : "bg-gray-100 text-gray-700 hover:bg-gray-200"
                     }`}
                   >
+                    <svg
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth={2}
+                      className="mr-1.5 h-4 w-4"
+                    >
+                      <path d="M12 2v20M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6" />
+                    </svg>
                     Earnings
                   </button>
                   <button
                     onClick={() => handleSortChange("distance")}
-                    className={`rounded px-3 py-1 text-xs ${
+                    className={`flex items-center rounded-xl px-4 py-2 text-sm font-medium transition-all duration-200 ${
                       sortBy === "distance"
                         ? theme === "dark"
-                          ? "bg-green-600 text-white"
-                          : "bg-green-600 text-white"
+                          ? "bg-green-600 text-white shadow-lg shadow-green-500/30"
+                          : "bg-green-600 text-white shadow-lg shadow-green-500/30"
                         : theme === "dark"
-                        ? "bg-gray-800 text-gray-300"
-                        : "bg-gray-200 text-gray-800"
+                        ? "bg-gray-800 text-gray-300 hover:bg-gray-700"
+                        : "bg-gray-100 text-gray-700 hover:bg-gray-200"
                     }`}
                   >
+                    <svg
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth={2}
+                      className="mr-1.5 h-4 w-4"
+                    >
+                      <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z" />
+                      <circle cx="12" cy="10" r="3" />
+                    </svg>
                     Distance
                   </button>
                   <button
                     onClick={() => handleSortChange("priority")}
-                    className={`rounded px-3 py-1 text-xs ${
+                    className={`flex items-center rounded-xl px-4 py-2 text-sm font-medium transition-all duration-200 ${
                       sortBy === "priority"
                         ? theme === "dark"
-                          ? "bg-purple-600 text-white"
-                          : "bg-purple-600 text-white"
+                          ? "bg-purple-600 text-white shadow-lg shadow-purple-500/30"
+                          : "bg-purple-600 text-white shadow-lg shadow-purple-500/30"
                         : theme === "dark"
-                        ? "bg-gray-800 text-gray-300"
-                        : "bg-gray-200 text-gray-800"
+                        ? "bg-gray-800 text-gray-300 hover:bg-gray-700"
+                        : "bg-gray-100 text-gray-700 hover:bg-gray-200"
                     }`}
                     title="All batches by priority level, including older batches"
                   >
+                    <svg
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth={2}
+                      className="mr-1.5 h-4 w-4"
+                    >
+                      <path d="M9 12l2 2 4-4" />
+                      <path d="M21 12c0 4.97-4.03 9-9 9s-9-4.03-9-9 4.03-9 9-9c1.5 0 2.91.37 4.15 1.02" />
+                    </svg>
                     Priority
                   </button>
                 </div>
 
                 {/* Filtering info message */}
-                <div className="mb-4 px-4 md:hidden">
-                  <p
-                    className={`text-xs ${
-                      theme === "dark" ? "text-gray-400" : "text-gray-500"
+                <div className="mb-6 px-4 md:hidden">
+                  <div
+                    className={`flex items-center rounded-lg px-3 py-2 ${
+                      !isOnline
+                        ? theme === "dark"
+                          ? "border border-yellow-800 bg-yellow-900/20"
+                          : "border border-yellow-200 bg-yellow-50"
+                        : theme === "dark"
+                        ? "border border-blue-800 bg-blue-900/20"
+                        : "border border-blue-200 bg-blue-50"
                     }`}
                   >
-                    {!isOnline
-                      ? "Go online to see available batches"
-                      : sortBy === "newest"
-                      ? "Showing batches < 1 hour old"
-                      : sortBy === "priority"
-                      ? "Batches pending 1+ hours by priority"
-                      : `Sorting by ${sortBy}`}
-                    {isOnline && !showHistorical && " • 10+ min pending"}
-                  </p>
+                    <div
+                      className={`mr-2 rounded-full p-1 ${
+                        !isOnline
+                          ? theme === "dark"
+                            ? "bg-yellow-800"
+                            : "bg-yellow-100"
+                          : theme === "dark"
+                          ? "bg-blue-800"
+                          : "bg-blue-100"
+                      }`}
+                    >
+                      <svg
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth={2}
+                        className={`h-3 w-3 ${
+                          !isOnline
+                            ? theme === "dark"
+                              ? "text-yellow-400"
+                              : "text-yellow-600"
+                            : theme === "dark"
+                            ? "text-blue-400"
+                            : "text-blue-600"
+                        }`}
+                      >
+                        <circle cx="12" cy="12" r="10" />
+                        <path d="M12 6v6l4 2" />
+                      </svg>
+                    </div>
+                    <p
+                      className={`text-xs font-medium ${
+                        !isOnline
+                          ? theme === "dark"
+                            ? "text-yellow-300"
+                            : "text-yellow-800"
+                          : theme === "dark"
+                          ? "text-blue-300"
+                          : "text-blue-800"
+                      }`}
+                    >
+                      {!isOnline
+                        ? "Go online to see available batches"
+                        : sortBy === "newest"
+                        ? "Showing batches < 1 hour old"
+                        : sortBy === "priority"
+                        ? "Batches pending 1+ hours by priority"
+                        : `Sorting by ${sortBy}`}
+                      {isOnline && !showHistorical && " • 10+ min pending"}
+                    </p>
+                  </div>
                 </div>
 
                 {isLoading ? (
@@ -947,20 +1225,14 @@ export default function ShopperDashboard() {
                       To see available batches, please go online first by
                       enabling your location.
                     </p>
-                    <Button
-                      appearance="primary"
-                      className={`${
-                        theme === "dark"
-                          ? "bg-green-600 text-white hover:bg-green-700"
-                          : "bg-green-500 text-white"
+                    <p
+                      className={`text-sm ${
+                        theme === "dark" ? "text-gray-400" : "text-gray-500"
                       }`}
-                      onClick={() =>
-                        window.dispatchEvent(new Event("toggleGoLive"))
-                      }
-                      size="sm"
                     >
-                      Go Online
-                    </Button>
+                      Use the "Go Online" button in the top header to enable
+                      location and start receiving batches.
+                    </p>
                     <p
                       className={`mt-4 text-xs ${
                         theme === "dark" ? "text-gray-500" : "text-gray-400"
@@ -970,13 +1242,14 @@ export default function ShopperDashboard() {
                     </p>
                   </div>
                 ) : sortedOrders.length > 0 ? (
-                  <div className="space-y-4 pb-16">
+                  <div className="space-y-4 pb-20">
                     {sortedOrders.map((order) => (
-                      <OrderCard
+                      <div
                         key={order.id}
-                        order={order}
-                        onOrderAccepted={loadOrders}
-                      />
+                        className="transform transition-all duration-200 hover:scale-[1.02]"
+                      >
+                        <OrderCard order={order} onOrderAccepted={loadOrders} />
+                      </div>
                     ))}
                   </div>
                 ) : (
@@ -999,15 +1272,28 @@ export default function ShopperDashboard() {
               </div>
             ) : (
               <div className="flex items-center justify-between px-4">
-                <p
-                  className={`text-sm ${
-                    theme === "dark" ? "text-gray-400" : "text-gray-500"
-                  }`}
-                >
-                  {!isOnline
-                    ? "Go online to see available batches"
-                    : `Available Batches: ${sortedOrders.length}`}
-                </p>
+                <div className="flex w-full items-center justify-between">
+                  <span
+                    className={`text-lg font-semibold ${
+                      theme === "dark" ? "text-white" : "text-gray-900"
+                    }`}
+                  >
+                    {!isOnline ? "Available Batches" : "Available Batches"}
+                  </span>
+                  <span
+                    className={`text-xl font-bold ${
+                      !isOnline
+                        ? theme === "dark"
+                          ? "text-gray-500"
+                          : "text-gray-400"
+                        : theme === "dark"
+                        ? "text-green-400"
+                        : "text-green-600"
+                    }`}
+                  >
+                    {!isOnline ? "—" : sortedOrders.length}
+                  </span>
+                </div>
               </div>
             )}
           </div>

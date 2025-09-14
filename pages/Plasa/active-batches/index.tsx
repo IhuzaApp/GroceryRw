@@ -2,6 +2,9 @@ import React from "react";
 import ShopperLayout from "@components/shopper/ShopperLayout";
 import ActiveBatches from "@components/shopper/activeBatchesCard";
 import { AuthGuard } from "../../../src/components/AuthGuard";
+import { GetServerSideProps } from "next";
+import { getServerSession } from "next-auth/next";
+import { authOptions } from "../../api/auth/[...nextauth]";
 
 interface Order {
   id: string;
@@ -43,10 +46,46 @@ interface ActiveBatchesPageProps {
 
 function ActiveBatchesPage({ activeOrders, error }: ActiveBatchesPageProps) {
   return (
-    <ShopperLayout>
-      <ActiveBatches initialOrders={activeOrders} initialError={error} />
-    </ShopperLayout>
+    <AuthGuard requireAuth={true} requireRole="shopper">
+      <ShopperLayout>
+        <ActiveBatches initialOrders={activeOrders} initialError={error} />
+      </ShopperLayout>
+    </AuthGuard>
   );
 }
+
+export const getServerSideProps: GetServerSideProps<
+  ActiveBatchesPageProps
+> = async (context) => {
+  // Check authentication
+  const session = await getServerSession(context.req, context.res, authOptions);
+  if (!session || !session.user) {
+    return {
+      redirect: {
+        destination: "/Auth/Login",
+        permanent: false,
+      },
+    };
+  }
+
+  // Check if user is a shopper
+  if ((session.user as any)?.role !== "shopper") {
+    return {
+      redirect: {
+        destination: "/",
+        permanent: false,
+      },
+    };
+  }
+
+  // Return empty initial data - let the client component fetch fresh data
+  // This ensures we always get the latest data when navigating to the page
+  return {
+    props: {
+      activeOrders: [],
+      error: null,
+    },
+  };
+};
 
 export default ActiveBatchesPage;

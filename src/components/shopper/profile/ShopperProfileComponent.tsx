@@ -360,7 +360,10 @@ export default function ShopperProfileComponent() {
   // Configure schedule - add default schedule to database
   const configureSchedule = useCallback(() => {
     if (!session) {
-      logger.error("No session available. Please log in.");
+      logger.error(
+        "No session available. Please log in.",
+        "ShopperProfileComponent"
+      );
       setSaveMessage({
         type: "error",
         text: "Please log in to configure your schedule.",
@@ -493,7 +496,10 @@ export default function ShopperProfileComponent() {
           new google.maps.places.AutocompleteService();
         geocoderRef.current = new google.maps.Geocoder();
       } catch (error) {
-        logger.error("Error initializing Google Maps services:", error);
+        logger.error(
+          "Error initializing Google Maps services:",
+          error instanceof Error ? error.message : String(error)
+        );
       }
     }
   }, [isLoaded]);
@@ -515,7 +521,10 @@ export default function ShopperProfileComponent() {
           }
         );
       } catch (error) {
-        logger.error("Error getting place predictions:", error);
+        logger.error(
+          "Error getting place predictions:",
+          error instanceof Error ? error.message : String(error)
+        );
         setSuggestions([]);
       }
     } else {
@@ -611,7 +620,6 @@ export default function ShopperProfileComponent() {
       }
 
       const result = await response.json();
-      console.log("Update successful:", result);
 
       // Sign out without redirect
       await signOut({
@@ -651,7 +659,6 @@ export default function ShopperProfileComponent() {
 
     setLoadingVehicles(true);
     try {
-      console.log("Loading vehicles for user:", session.user.id);
       const response = await fetch(
         `/api/queries/get-shopper-vehicles?user_id=${session.user.id}`
       );
@@ -659,7 +666,6 @@ export default function ShopperProfileComponent() {
         throw new Error("Failed to load vehicles");
       }
       const data = await response.json();
-      console.log("Vehicles data:", data);
 
       // Update vehicles state with the data from the response
       setVehicles(data.data?.vehicles || []);
@@ -670,7 +676,10 @@ export default function ShopperProfileComponent() {
       }
     } catch (error) {
       console.error("Error loading vehicles:", error);
-      logger.error("Error loading vehicles:", error);
+      logger.error(
+        "Error loading vehicles:",
+        error instanceof Error ? error.message : String(error)
+      );
       toaster.push(
         <Message type="error" closable>
           Failed to load vehicles
@@ -687,154 +696,628 @@ export default function ShopperProfileComponent() {
     if (session?.user?.id) {
       loadVehicles();
     }
-  }, [session?.user?.id, loadVehicles]);
+  }, [session?.user?.id]);
 
   return (
-    <div className="grid grid-cols-1 gap-6 md:grid-cols-12">
-      {/* Left Column - User Info */}
-      <div className="w-full md:col-span-3">
-        <Panel
-          shaded
-          bordered
-          bodyFill
-          className="mx-auto max-w-md overflow-hidden sm:max-w-full"
-        >
-          <div className="flex flex-col items-center px-4 py-6 sm:py-8">
-            {loading ? (
-              <>
-                <div className="h-24 w-24 animate-pulse rounded-full bg-gray-200" />
-                <div className="mt-4 h-6 w-32 animate-pulse rounded bg-gray-200" />
-                <div className="mt-2 h-4 w-24 animate-pulse rounded bg-gray-200" />
-                <div className="mt-6 h-8 w-full animate-pulse rounded bg-gray-200" />
-              </>
-            ) : (
-              <>
-                <div className="h-24 w-24 overflow-hidden rounded-full border-4 border-white bg-white shadow-md">
-                  <Image
-                    src={user?.profile_picture || "/assets/images/profile.jpg"}
-                    alt="Profile"
-                    width={96}
-                    height={96}
-                    className="h-full w-full object-cover"
-                  />
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-green-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
+      <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
+        {/* Mobile Header */}
+        <div className="mb-8 lg:hidden">
+          <div className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-blue-600 to-green-600 p-8 text-white shadow-2xl">
+            <div className="absolute inset-0 bg-black/10"></div>
+            <div className="relative flex flex-col items-center">
+              {loading ? (
+                <>
+                  <div className="h-24 w-24 animate-pulse rounded-full bg-white/20" />
+                  <div className="mt-4 h-6 w-32 animate-pulse rounded bg-white/20" />
+                  <div className="mt-2 h-4 w-24 animate-pulse rounded bg-white/20" />
+                </>
+              ) : (
+                <>
+                  <div className="h-24 w-24 overflow-hidden rounded-full border-4 border-white shadow-2xl ring-4 ring-white/20">
+                    <Image
+                      src={
+                        user?.profile_picture || "/assets/images/profile.jpg"
+                      }
+                      alt="Profile"
+                      width={96}
+                      height={96}
+                      className="h-full w-full object-cover"
+                    />
+                  </div>
+                  <h2 className="mt-4 text-center text-xl font-bold">
+                    {user?.name}
+                  </h2>
+                  <p className="text-center text-sm opacity-90">
+                    Shopper since{" "}
+                    {user
+                      ? new Date(user.created_at).toLocaleString("default", {
+                          month: "long",
+                          year: "numeric",
+                        })
+                      : ""}
+                  </p>
+                  <div className="mt-4 flex flex-wrap justify-center gap-2">
+                    <span className="rounded-full bg-white/20 px-3 py-1 text-xs font-medium backdrop-blur-sm">
+                      Shopper
+                    </span>
+                    <span className="rounded-full bg-white/20 px-3 py-1 text-xs font-medium backdrop-blur-sm">
+                      {stats.averageRating.toFixed(1)} ★
+                    </span>
+                  </div>
+                </>
+              )}
+            </div>
+            {/* Decorative elements */}
+            <div className="absolute -right-4 -top-4 h-24 w-24 rounded-full bg-white/10"></div>
+            <div className="absolute -bottom-4 -left-4 h-16 w-16 rounded-full bg-white/10"></div>
+          </div>
+        </div>
+
+        {/* Desktop Layout */}
+        <div className="hidden lg:grid lg:grid-cols-12 lg:gap-8">
+          {/* Left Column - User Info & Stats */}
+          <div className="space-y-8 lg:col-span-4">
+            {/* Profile Card */}
+            <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-blue-600 to-green-600 p-8 text-white shadow-2xl">
+              <div className="absolute inset-0 bg-black/10"></div>
+              <div className="relative flex flex-col items-center">
+                {loading ? (
+                  <>
+                    <div className="h-28 w-28 animate-pulse rounded-full bg-white/20" />
+                    <div className="mt-6 h-6 w-40 animate-pulse rounded bg-white/20" />
+                    <div className="mt-3 h-4 w-32 animate-pulse rounded bg-white/20" />
+                  </>
+                ) : (
+                  <>
+                    <div className="h-28 w-28 overflow-hidden rounded-full border-4 border-white shadow-2xl ring-4 ring-white/20">
+                      <Image
+                        src={
+                          user?.profile_picture || "/assets/images/profile.jpg"
+                        }
+                        alt="Profile"
+                        width={112}
+                        height={112}
+                        className="h-full w-full object-cover"
+                      />
+                    </div>
+                    <h2 className="mt-6 text-center text-2xl font-bold">
+                      {user?.name}
+                    </h2>
+                    <p className="text-center text-sm opacity-90">
+                      Shopper since{" "}
+                      {user
+                        ? new Date(user.created_at).toLocaleString("default", {
+                            month: "long",
+                            year: "numeric",
+                          })
+                        : ""}
+                    </p>
+                    <div className="mt-6 flex flex-wrap justify-center gap-3">
+                      <span className="rounded-full bg-white/20 px-4 py-2 text-sm font-medium backdrop-blur-sm">
+                        Shopper
+                      </span>
+                      <span className="rounded-full bg-white/20 px-4 py-2 text-sm font-medium backdrop-blur-sm">
+                        {stats.averageRating.toFixed(1)} ★
+                      </span>
+                    </div>
+                  </>
+                )}
+              </div>
+              {/* Decorative elements */}
+              <div className="absolute -right-6 -top-6 h-32 w-32 rounded-full bg-white/10"></div>
+              <div className="absolute -bottom-6 -left-6 h-24 w-24 rounded-full bg-white/10"></div>
+            </div>
+
+            {/* Stats Card */}
+            <div className="rounded-3xl border border-white/20 bg-white/80 p-6 shadow-xl backdrop-blur-sm dark:border-gray-700/50 dark:bg-gray-800/80">
+              <h3 className="mb-6 flex items-center gap-2 text-lg font-bold text-gray-900 dark:text-white">
+                <span className="text-2xl">📊</span>
+                Performance Stats
+              </h3>
+              {loading ? (
+                <div className="grid grid-cols-2 gap-4">
+                  {Array(4)
+                    .fill(0)
+                    .map((_, idx) => (
+                      <div
+                        key={idx}
+                        className="h-20 animate-pulse rounded-2xl bg-gray-200 dark:bg-gray-700"
+                      />
+                    ))}
                 </div>
-
-                <h2 className="mt-3 text-center text-lg font-bold sm:text-xl">
-                  {user?.name}
-                </h2>
-                <p className="text-center text-sm text-gray-500">
-                  Shopper since{" "}
-                  {user
-                    ? new Date(user.created_at).toLocaleString("default", {
-                        month: "long",
-                        year: "numeric",
-                      })
-                    : ""}
-                </p>
-
-                <div className="mt-3 flex flex-wrap justify-center gap-2">
-                  <Tag className="border-blue-200 bg-blue-100 text-blue-600">
-                    Shopper
-                  </Tag>
-                  <Tag className="border-green-200 bg-green-100 text-green-600">
-                    {stats.averageRating.toFixed(1)} ★
-                  </Tag>
+              ) : (
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="rounded-2xl border border-blue-200/50 bg-gradient-to-br from-blue-50 to-blue-100 p-4 dark:border-blue-700/50 dark:from-blue-900/30 dark:to-blue-800/30">
+                    <div className="text-2xl font-bold text-blue-600 dark:text-blue-400">
+                      {stats.totalDeliveries}
+                    </div>
+                    <div className="text-sm font-medium text-blue-700 dark:text-blue-300">
+                      Deliveries
+                    </div>
+                  </div>
+                  <div className="rounded-2xl border border-green-200/50 bg-gradient-to-br from-green-50 to-green-100 p-4 dark:border-green-700/50 dark:from-green-900/30 dark:to-green-800/30">
+                    <div className="text-2xl font-bold text-green-600 dark:text-green-400">
+                      {stats.completionRate}%
+                    </div>
+                    <div className="text-sm font-medium text-green-700 dark:text-green-300">
+                      Completion
+                    </div>
+                  </div>
+                  <div className="rounded-2xl border border-yellow-200/50 bg-gradient-to-br from-yellow-50 to-yellow-100 p-4 dark:border-yellow-700/50 dark:from-yellow-900/30 dark:to-yellow-800/30">
+                    <div className="text-2xl font-bold text-yellow-600 dark:text-yellow-400">
+                      {stats.averageRating.toFixed(1)} ★
+                    </div>
+                    <div className="text-sm font-medium text-yellow-700 dark:text-yellow-300">
+                      Rating
+                    </div>
+                  </div>
+                  <div className="rounded-2xl border border-purple-200/50 bg-gradient-to-br from-purple-50 to-purple-100 p-4 dark:border-purple-700/50 dark:from-purple-900/30 dark:to-purple-800/30">
+                    <div className="text-2xl font-bold text-purple-600 dark:text-purple-400">
+                      {formatCurrency(stats.totalEarnings)}
+                    </div>
+                    <div className="text-sm font-medium text-purple-700 dark:text-purple-300">
+                      Earnings
+                    </div>
+                  </div>
                 </div>
+              )}
+            </div>
 
-                {/* Default address under profile */}
-                <div className="mt-4 w-full text-center">
-                  <h3 className="font-medium">Service Area</h3>
+            {/* Service Area Card */}
+            <div className="rounded-3xl border border-white/20 bg-white/80 p-6 shadow-xl backdrop-blur-sm dark:border-gray-700/50 dark:bg-gray-800/80">
+              <h3 className="mb-4 flex items-center gap-2 text-lg font-bold text-gray-900 dark:text-white">
+                <span className="text-2xl">📍</span>
+                Service Area
+              </h3>
+              {loading ? (
+                <div className="h-16 animate-pulse rounded-2xl bg-gray-200 dark:bg-gray-700" />
+              ) : (
+                <div>
+                  <p className="mb-4 text-gray-700 dark:text-gray-300">
+                    {shopperData?.address || "No service area selected"}
+                  </p>
+                  <Button
+                    size="sm"
+                    appearance="primary"
+                    color="blue"
+                    onClick={() => setShowAddressPopup(true)}
+                    className="w-full"
+                  >
+                    <span className="mr-2">✏️</span>
+                    Change Service Area
+                  </Button>
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Right Column - Content */}
+          <div className="lg:col-span-8">
+            <div className="mb-8">
+              <div className="rounded-2xl border border-white/20 bg-white/80 p-2 shadow-lg backdrop-blur-sm dark:border-gray-700/50 dark:bg-gray-800/80">
+                <nav className="flex space-x-2">
+                  {[
+                    { key: "account", label: "Account", icon: "👤" },
+                    ...(shouldShowVehicleTab()
+                      ? [{ key: "vehicles", label: "Vehicles", icon: "🚗" }]
+                      : []),
+                  ].map((tab) => (
+                    <button
+                      key={tab.key}
+                      onClick={() => setActiveTab(tab.key)}
+                      className={`${
+                        activeTab === tab.key
+                          ? "bg-gradient-to-r from-blue-500 to-green-500 text-white shadow-lg"
+                          : "text-gray-600 hover:bg-gray-100 hover:text-gray-900 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white"
+                      } flex flex-1 items-center justify-center gap-2 whitespace-nowrap rounded-xl px-4 py-3 text-sm font-medium transition-all duration-200`}
+                    >
+                      <span className="text-lg">{tab.icon}</span>
+                      {tab.label}
+                    </button>
+                  ))}
+                </nav>
+              </div>
+            </div>
+
+            {activeTab === "account" && (
+              <div className="overflow-hidden rounded-3xl border border-white/20 bg-white/80 shadow-xl backdrop-blur-sm dark:border-gray-700/50 dark:bg-gray-800/80">
+                <div className="bg-gradient-to-r from-blue-500 to-green-500 px-6 py-4 text-white">
+                  <h3 className="flex items-center gap-2 text-xl font-bold">
+                    <span className="text-2xl">👤</span>
+                    Account Information
+                  </h3>
+                </div>
+                <div className="p-8">
                   {loading ? (
-                    <div className="mx-auto h-4 w-32 animate-pulse rounded bg-gray-200" />
+                    <div className="space-y-6">
+                      {Array(3)
+                        .fill(0)
+                        .map((_, idx) => (
+                          <div
+                            key={`skeleton-${idx}`}
+                            className={`h-20 animate-pulse rounded-lg ${
+                              theme === "dark" ? "bg-gray-700" : "bg-gray-200"
+                            }`}
+                          />
+                        ))}
+                    </div>
                   ) : (
-                    <div>
-                      <p className="text-sm text-gray-600">
-                        {shopperData?.address || "No service area selected"}
-                      </p>
-                      <Button
-                        size="sm"
-                        appearance="link"
-                        onClick={() => setShowAddressPopup(true)}
-                      >
-                        Change Service Area
-                      </Button>
+                    <div className="space-y-6">
+                      {/* Personal Information */}
+                      <div className="rounded-2xl border border-blue-200/50 bg-gradient-to-br from-blue-50 to-blue-100 p-6 shadow-lg dark:border-blue-700/50 dark:from-blue-900/30 dark:to-blue-800/30">
+                        <div className="mb-6 flex items-center gap-3">
+                          <div className="rounded-xl bg-blue-500 p-3 text-white shadow-lg">
+                            <span className="text-xl">👤</span>
+                          </div>
+                          <h4 className="text-lg font-bold text-gray-900 dark:text-white">
+                            Personal Information
+                          </h4>
+                        </div>
+                        <div className="grid gap-6 sm:grid-cols-2">
+                          <div className="rounded-xl border border-white/50 bg-white/60 p-4 dark:border-gray-700/50 dark:bg-gray-800/60">
+                            <label className="mb-2 block text-sm font-medium text-blue-700 dark:text-blue-300">
+                              Full Name
+                            </label>
+                            <p className="text-lg font-semibold text-gray-900 dark:text-white">
+                              {shopperData?.full_name || user?.name}
+                            </p>
+                          </div>
+                          <div className="rounded-xl border border-white/50 bg-white/60 p-4 dark:border-gray-700/50 dark:bg-gray-800/60">
+                            <label className="mb-2 block text-sm font-medium text-blue-700 dark:text-blue-300">
+                              Email
+                            </label>
+                            <p className="text-lg font-semibold text-gray-900 dark:text-white">
+                              {user?.email}
+                            </p>
+                          </div>
+                          <div className="rounded-xl border border-white/50 bg-white/60 p-4 dark:border-gray-700/50 dark:bg-gray-800/60 sm:col-span-2">
+                            <label className="mb-2 block text-sm font-medium text-blue-700 dark:text-blue-300">
+                              Phone Number
+                            </label>
+                            <p className="text-lg font-semibold text-gray-900 dark:text-white">
+                              {shopperData?.phone_number ||
+                                user?.phone ||
+                                "Not provided"}
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Delivery Information */}
+                      <div className="rounded-2xl border border-green-200/50 bg-gradient-to-br from-green-50 to-green-100 p-6 shadow-lg dark:border-green-700/50 dark:from-green-900/30 dark:to-green-800/30">
+                        <div className="mb-6 flex items-center gap-3">
+                          <div className="rounded-xl bg-green-500 p-3 text-white shadow-lg">
+                            <span className="text-xl">🚚</span>
+                          </div>
+                          <h4 className="text-lg font-bold text-gray-900 dark:text-white">
+                            Delivery Information
+                          </h4>
+                        </div>
+                        <div className="grid gap-6 sm:grid-cols-2">
+                          <div className="rounded-xl border border-white/50 bg-white/60 p-4 dark:border-gray-700/50 dark:bg-gray-800/60">
+                            <label className="mb-2 block text-sm font-medium text-green-700 dark:text-green-300">
+                              Transport Mode
+                            </label>
+                            <p className="text-lg font-semibold text-gray-900 dark:text-white">
+                              {shopperData?.transport_mode
+                                ? shopperData.transport_mode
+                                    .charAt(0)
+                                    .toUpperCase() +
+                                  shopperData.transport_mode
+                                    .slice(1)
+                                    .replace("_", " ")
+                                : "Not set"}
+                            </p>
+                          </div>
+                          <div className="rounded-xl border border-white/50 bg-white/60 p-4 dark:border-gray-700/50 dark:bg-gray-800/60">
+                            <label className="mb-2 block text-sm font-medium text-green-700 dark:text-green-300">
+                              Address
+                            </label>
+                            <p className="text-lg font-semibold text-gray-900 dark:text-white">
+                              {shopperData?.address || "Not provided"}
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Account Status */}
+                      <div className="rounded-2xl border border-purple-200/50 bg-gradient-to-br from-purple-50 to-purple-100 p-6 shadow-lg dark:border-purple-700/50 dark:from-purple-900/30 dark:to-purple-800/30">
+                        <div className="mb-6 flex items-center gap-3">
+                          <div className="rounded-xl bg-purple-500 p-3 text-white shadow-lg">
+                            <span className="text-xl">📊</span>
+                          </div>
+                          <h4 className="text-lg font-bold text-gray-900 dark:text-white">
+                            Account Status
+                          </h4>
+                        </div>
+                        <div className="grid gap-6 sm:grid-cols-2">
+                          <div className="rounded-xl border border-white/50 bg-white/60 p-4 dark:border-gray-700/50 dark:bg-gray-800/60">
+                            <label className="mb-3 block text-sm font-medium text-purple-700 dark:text-purple-300">
+                              Status
+                            </label>
+                            <span
+                              className={`inline-flex items-center rounded-full px-4 py-2 text-sm font-medium ${
+                                shopperData?.status === "active"
+                                  ? "bg-green-100 text-green-800 dark:bg-green-900/50 dark:text-green-300"
+                                  : shopperData?.status === "pending"
+                                  ? "bg-yellow-100 text-yellow-800 dark:bg-yellow-900/50 dark:text-yellow-300"
+                                  : "bg-red-100 text-red-800 dark:bg-red-900/50 dark:text-red-300"
+                              }`}
+                            >
+                              {shopperData?.status
+                                ? shopperData.status.charAt(0).toUpperCase() +
+                                  shopperData.status.slice(1)
+                                : "Not registered"}
+                            </span>
+                          </div>
+                          <div className="rounded-xl border border-white/50 bg-white/60 p-4 dark:border-gray-700/50 dark:bg-gray-800/60">
+                            <label className="mb-3 block text-sm font-medium text-purple-700 dark:text-purple-300">
+                              Background Check
+                            </label>
+                            <span
+                              className={`inline-flex items-center rounded-full px-4 py-2 text-sm font-medium ${
+                                shopperData?.background_check_completed
+                                  ? "bg-green-100 text-green-800 dark:bg-green-900/50 dark:text-green-300"
+                                  : "bg-yellow-100 text-yellow-800 dark:bg-yellow-900/50 dark:text-yellow-300"
+                              }`}
+                            >
+                              {shopperData?.background_check_completed
+                                ? "Completed"
+                                : "Pending"}
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="flex justify-center pt-8">
+                        <Button
+                          appearance="primary"
+                          color="green"
+                          size="lg"
+                          onClick={() => setShowUpdateDrawer(true)}
+                          className="rounded-2xl bg-gradient-to-r from-green-500 to-green-600 px-12 py-4 text-lg font-semibold shadow-lg transition-all duration-200 hover:from-green-600 hover:to-green-700 hover:shadow-xl"
+                        >
+                          <span className="mr-2">✏️</span>
+                          Update Information
+                        </Button>
+                      </div>
                     </div>
                   )}
                 </div>
-              </>
+              </div>
+            )}
+
+            {activeTab === "vehicles" && shouldShowVehicleTab() && (
+              <div className="space-y-6">
+                {vehicles.length > 0 ? (
+                  <Panel
+                    shaded
+                    bordered
+                    className={`${
+                      theme === "dark"
+                        ? "border-gray-700 bg-gray-800"
+                        : "border-gray-200 bg-white"
+                    }`}
+                  >
+                    <div className="border-b border-gray-200 px-6 py-4 dark:border-gray-700">
+                      <div className="flex items-center justify-between">
+                        <h3
+                          className={`text-lg font-semibold ${
+                            theme === "dark" ? "text-white" : "text-gray-900"
+                          }`}
+                        >
+                          Your Vehicles
+                        </h3>
+                        <Button
+                          appearance="primary"
+                          color="blue"
+                          onClick={() => {
+                            toaster.push(
+                              <Message type="info" closable>
+                                Please contact support to make changes to your
+                                vehicle information
+                              </Message>,
+                              { placement: "topEnd", duration: 5000 }
+                            );
+                          }}
+                        >
+                          <i className="fas fa-ticket-alt mr-2" />
+                          Raise Ticket
+                        </Button>
+                      </div>
+                    </div>
+
+                    {loadingVehicles ? (
+                      <div className="flex justify-center p-8">
+                        <Loader size="md" />
+                      </div>
+                    ) : (
+                      <div className="p-6">
+                        <List>
+                          {vehicles.map((vehicle) => (
+                            <List.Item key={vehicle.id}>
+                              <div className="flex items-center space-x-4 p-4">
+                                <div className="h-20 w-20 overflow-hidden rounded-lg">
+                                  <img
+                                    src={vehicle.photo}
+                                    alt={`${vehicle.type} photo`}
+                                    className="h-full w-full object-cover"
+                                  />
+                                </div>
+                                <div className="flex-1">
+                                  <h4
+                                    className={`font-semibold ${
+                                      theme === "dark"
+                                        ? "text-white"
+                                        : "text-gray-900"
+                                    }`}
+                                  >
+                                    {vehicle.type.charAt(0).toUpperCase() +
+                                      vehicle.type.slice(1)}
+                                  </h4>
+                                  <p
+                                    className={`${
+                                      theme === "dark"
+                                        ? "text-gray-300"
+                                        : "text-gray-600"
+                                    }`}
+                                  >
+                                    Model: {vehicle.model}
+                                  </p>
+                                  <p
+                                    className={`${
+                                      theme === "dark"
+                                        ? "text-gray-300"
+                                        : "text-gray-600"
+                                    }`}
+                                  >
+                                    Plate: {vehicle.plate_number}
+                                  </p>
+                                </div>
+                              </div>
+                            </List.Item>
+                          ))}
+                        </List>
+                      </div>
+                    )}
+                  </Panel>
+                ) : (
+                  <VehicleManagement
+                    userId={session?.user?.id || ""}
+                    onVehicleAdded={() => {
+                      loadVehicles();
+                      toaster.push(
+                        <Message type="success" closable>
+                          Vehicle added successfully
+                        </Message>,
+                        { placement: "topEnd", duration: 5000 }
+                      );
+                    }}
+                  />
+                )}
+              </div>
             )}
           </div>
-        </Panel>
-
-        <Panel header="Shopper Stats" shaded bordered className="mt-4">
-          {loading ? (
-            <div className="space-y-4">
-              {Array(4)
-                .fill(0)
-                .map((_, idx) => (
-                  <div
-                    key={idx}
-                    className="h-4 animate-pulse rounded bg-gray-200"
-                  />
-                ))}
-            </div>
-          ) : (
-            <div className="space-y-4">
-              <div className="flex items-center justify-between">
-                <span className="text-gray-600">Total Deliveries</span>
-                <span className="font-bold">{stats.totalDeliveries}</span>
-              </div>
-              <div className="flex items-center justify-between">
-                <span className="text-gray-600">Completion Rate</span>
-                <span className="font-bold">{stats.completionRate}%</span>
-              </div>
-              <div className="flex items-center justify-between">
-                <span className="text-gray-600">Average Rating</span>
-                <span className="font-bold text-yellow-500">
-                  {stats.averageRating.toFixed(1)} ★
-                </span>
-              </div>
-              <div className="flex items-center justify-between">
-                <span className="text-gray-600">Total Earnings</span>
-                <span className="font-bold text-green-600">
-                  {formatCurrency(stats.totalEarnings)}
-                </span>
-              </div>
-            </div>
-          )}
-        </Panel>
+        </div>
       </div>
 
-      {/* Right Column - Tabs */}
-      <div className="w-full md:col-span-9">
-        <div className="scrollbar-hide mb-4 overflow-x-auto whitespace-nowrap">
-          <Nav
-            appearance="default"
-            activeKey={activeTab}
-            onSelect={setActiveTab}
-            className="flex min-w-max gap-2"
-          >
-            {[
-              { key: "account", label: "Account" },
-              ...(shouldShowVehicleTab()
-                ? [{ key: "vehicles", label: "Vehicles" }]
-                : []),
-            ].map((tab) => (
-              <Nav.Item
-                key={tab.key}
-                eventKey={tab.key}
-                className={`!bg-transparent !px-4 !py-2 !text-sm hover:!bg-transparent ${
-                  activeTab === tab.key
-                    ? "font-semibold !text-green-600"
-                    : "!text-black hover:!text-green-600"
-                }`}
-              >
-                {tab.label}
-              </Nav.Item>
-            ))}
-          </Nav>
+      {/* Mobile Layout */}
+      <div className="lg:hidden">
+        {/* Mobile Stats */}
+        <div className="mb-8">
+          <div className="rounded-3xl border border-white/20 bg-white/80 p-6 shadow-xl backdrop-blur-sm dark:border-gray-700/50 dark:bg-gray-800/80">
+            <h3 className="mb-6 flex items-center gap-2 text-lg font-bold text-gray-900 dark:text-white">
+              <span className="text-2xl">📊</span>
+              Performance Stats
+            </h3>
+            {loading ? (
+              <div className="grid grid-cols-2 gap-4">
+                {Array(4)
+                  .fill(0)
+                  .map((_, idx) => (
+                    <div
+                      key={idx}
+                      className="h-20 animate-pulse rounded-2xl bg-gray-200 dark:bg-gray-700"
+                    />
+                  ))}
+              </div>
+            ) : (
+              <div className="grid grid-cols-2 gap-4">
+                <div className="rounded-2xl border border-blue-200/50 bg-gradient-to-br from-blue-50 to-blue-100 p-4 text-center dark:border-blue-700/50 dark:from-blue-900/30 dark:to-blue-800/30">
+                  <div className="text-2xl font-bold text-blue-600 dark:text-blue-400">
+                    {stats.totalDeliveries}
+                  </div>
+                  <div className="text-sm font-medium text-blue-700 dark:text-blue-300">
+                    Deliveries
+                  </div>
+                </div>
+                <div className="rounded-2xl border border-green-200/50 bg-gradient-to-br from-green-50 to-green-100 p-4 text-center dark:border-green-700/50 dark:from-green-900/30 dark:to-green-800/30">
+                  <div className="text-2xl font-bold text-green-600 dark:text-green-400">
+                    {stats.completionRate}%
+                  </div>
+                  <div className="text-sm font-medium text-green-700 dark:text-green-300">
+                    Completion
+                  </div>
+                </div>
+                <div className="rounded-2xl border border-yellow-200/50 bg-gradient-to-br from-yellow-50 to-yellow-100 p-4 text-center dark:border-yellow-700/50 dark:from-yellow-900/30 dark:to-yellow-800/30">
+                  <div className="text-2xl font-bold text-yellow-600 dark:text-yellow-400">
+                    {stats.averageRating.toFixed(1)} ★
+                  </div>
+                  <div className="text-sm font-medium text-yellow-700 dark:text-yellow-300">
+                    Rating
+                  </div>
+                </div>
+                <div className="rounded-2xl border border-purple-200/50 bg-gradient-to-br from-purple-50 to-purple-100 p-4 text-center dark:border-purple-700/50 dark:from-purple-900/30 dark:to-purple-800/30">
+                  <div className="text-2xl font-bold text-purple-600 dark:text-purple-400">
+                    {formatCurrency(stats.totalEarnings)}
+                  </div>
+                  <div className="text-sm font-medium text-purple-700 dark:text-purple-300">
+                    Earnings
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
         </div>
 
+        {/* Mobile Service Area */}
+        <div className="mb-8">
+          <div className="rounded-3xl border border-white/20 bg-white/80 p-6 shadow-xl backdrop-blur-sm dark:border-gray-700/50 dark:bg-gray-800/80">
+            <h3 className="mb-4 flex items-center gap-2 text-lg font-bold text-gray-900 dark:text-white">
+              <span className="text-2xl">📍</span>
+              Service Area
+            </h3>
+            {loading ? (
+              <div className="h-16 animate-pulse rounded-2xl bg-gray-200 dark:bg-gray-700" />
+            ) : (
+              <div>
+                <p className="mb-4 text-gray-700 dark:text-gray-300">
+                  {shopperData?.address || "No service area selected"}
+                </p>
+                <Button
+                  size="sm"
+                  appearance="primary"
+                  color="blue"
+                  onClick={() => setShowAddressPopup(true)}
+                  className="w-full"
+                >
+                  <span className="mr-2">✏️</span>
+                  Change Service Area
+                </Button>
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Mobile Tabs */}
+        <div className="mb-8">
+          <div className="rounded-2xl border border-white/20 bg-white/80 p-2 shadow-lg backdrop-blur-sm dark:border-gray-700/50 dark:bg-gray-800/80">
+            <nav className="flex space-x-2">
+              {[
+                { key: "account", label: "Account", icon: "👤" },
+                ...(shouldShowVehicleTab()
+                  ? [{ key: "vehicles", label: "Vehicles", icon: "🚗" }]
+                  : []),
+              ].map((tab) => (
+                <button
+                  key={tab.key}
+                  onClick={() => setActiveTab(tab.key)}
+                  className={`${
+                    activeTab === tab.key
+                      ? "bg-gradient-to-r from-blue-500 to-green-500 text-white shadow-lg"
+                      : "text-gray-600 hover:bg-gray-100 hover:text-gray-900 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white"
+                  } flex flex-1 items-center justify-center gap-2 whitespace-nowrap rounded-xl px-4 py-3 text-sm font-medium transition-all duration-200`}
+                >
+                  <span className="text-lg">{tab.icon}</span>
+                  {tab.label}
+                </button>
+              ))}
+            </nav>
+          </div>
+        </div>
+
+        {/* Mobile Content */}
         {activeTab === "account" && (
           <Panel
             shaded
@@ -845,199 +1328,198 @@ export default function ShopperProfileComponent() {
                 : "border-gray-200 bg-white"
             }`}
           >
-            <h3
-              className={`mb-4 text-lg font-semibold ${
-                theme === "dark" ? "text-white" : "text-gray-900"
-              }`}
-            >
-              Account Information
-            </h3>
-            {loading ? (
-              <div className="space-y-4">
-                {Array(4)
-                  .fill(0)
-                  .map((_, idx) => (
-                    <div
-                      key={`skeleton-${idx}`}
-                      className={`h-4 animate-pulse rounded ${
-                        theme === "dark" ? "bg-gray-700" : "bg-gray-200"
-                      }`}
-                    />
-                  ))}
-              </div>
-            ) : (
-              <div className="space-y-6">
-                {/* Personal Information */}
-                <div
-                  className={`rounded-lg border p-4 ${
-                    theme === "dark" ? "border-gray-700" : "border-gray-200"
-                  }`}
-                >
-                  <h4
-                    className={`mb-4 font-medium ${
-                      theme === "dark" ? "text-white" : "text-gray-900"
+            <div className="border-b border-gray-200 px-4 py-4 dark:border-gray-700">
+              <h3
+                className={`text-lg font-semibold ${
+                  theme === "dark" ? "text-white" : "text-gray-900"
+                }`}
+              >
+                Account Information
+              </h3>
+            </div>
+            <div className="p-4">
+              {loading ? (
+                <div className="space-y-4">
+                  {Array(3)
+                    .fill(0)
+                    .map((_, idx) => (
+                      <div
+                        key={`skeleton-${idx}`}
+                        className={`h-16 animate-pulse rounded-lg ${
+                          theme === "dark" ? "bg-gray-700" : "bg-gray-200"
+                        }`}
+                      />
+                    ))}
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  {/* Personal Information */}
+                  <div
+                    className={`rounded-lg border p-4 ${
+                      theme === "dark"
+                        ? "border-gray-700 bg-gray-800/50"
+                        : "border-gray-200 bg-gray-50"
                     }`}
                   >
-                    Personal Information
-                  </h4>
-                  <div className="grid gap-4 md:grid-cols-2">
-                    <div>
-                      <label
-                        className={`block text-sm font-medium ${
-                          theme === "dark" ? "text-gray-300" : "text-gray-700"
+                    <div className="mb-4 flex items-center gap-2">
+                      <span className="text-lg">👤</span>
+                      <h4
+                        className={`font-medium ${
+                          theme === "dark" ? "text-white" : "text-gray-900"
                         }`}
                       >
-                        Full Name
-                      </label>
-                      <p
-                        className={`mt-1 ${
-                          theme === "dark" ? "text-gray-300" : "text-gray-900"
-                        }`}
-                      >
-                        {shopperData?.full_name || user?.name}
-                      </p>
+                        Personal Information
+                      </h4>
                     </div>
-                    <div>
-                      <label
-                        className={`block text-sm font-medium ${
-                          theme === "dark" ? "text-gray-300" : "text-gray-700"
-                        }`}
-                      >
-                        Email
-                      </label>
-                      <p
-                        className={`mt-1 ${
-                          theme === "dark" ? "text-gray-300" : "text-gray-900"
-                        }`}
-                      >
-                        {user?.email}
-                      </p>
-                    </div>
-                    <div>
-                      <label
-                        className={`block text-sm font-medium ${
-                          theme === "dark" ? "text-gray-300" : "text-gray-700"
-                        }`}
-                      >
-                        Phone Number
-                      </label>
-                      <p
-                        className={`mt-1 ${
-                          theme === "dark" ? "text-gray-300" : "text-gray-900"
-                        }`}
-                      >
-                        {shopperData?.phone_number ||
-                          user?.phone ||
-                          "Not provided"}
-                      </p>
-                    </div>
-                    <div>
-                      <label
-                        className={`block text-sm font-medium ${
-                          theme === "dark" ? "text-gray-300" : "text-gray-700"
-                        }`}
-                      >
-                        National ID
-                      </label>
-                      <p
-                        className={`mt-1 ${
-                          theme === "dark" ? "text-gray-300" : "text-gray-900"
-                        }`}
-                      >
-                        {shopperData?.national_id || "Not provided"}
-                      </p>
+                    <div className="space-y-3">
+                      <div>
+                        <label
+                          className={`block text-xs font-medium ${
+                            theme === "dark" ? "text-gray-300" : "text-gray-700"
+                          }`}
+                        >
+                          Full Name
+                        </label>
+                        <p
+                          className={`text-sm font-medium ${
+                            theme === "dark" ? "text-white" : "text-gray-900"
+                          }`}
+                        >
+                          {shopperData?.full_name || user?.name}
+                        </p>
+                      </div>
+                      <div>
+                        <label
+                          className={`block text-xs font-medium ${
+                            theme === "dark" ? "text-gray-300" : "text-gray-700"
+                          }`}
+                        >
+                          Email
+                        </label>
+                        <p
+                          className={`text-sm font-medium ${
+                            theme === "dark" ? "text-white" : "text-gray-900"
+                          }`}
+                        >
+                          {user?.email}
+                        </p>
+                      </div>
+                      <div>
+                        <label
+                          className={`block text-xs font-medium ${
+                            theme === "dark" ? "text-gray-300" : "text-gray-700"
+                          }`}
+                        >
+                          Phone Number
+                        </label>
+                        <p
+                          className={`text-sm font-medium ${
+                            theme === "dark" ? "text-white" : "text-gray-900"
+                          }`}
+                        >
+                          {shopperData?.phone_number ||
+                            user?.phone ||
+                            "Not provided"}
+                        </p>
+                      </div>
                     </div>
                   </div>
-                </div>
 
-                {/* Delivery Information */}
-                <div
-                  className={`rounded-lg border p-4 ${
-                    theme === "dark" ? "border-gray-700" : "border-gray-200"
-                  }`}
-                >
-                  <h4
-                    className={`mb-4 font-medium ${
-                      theme === "dark" ? "text-white" : "text-gray-900"
+                  {/* Delivery Information */}
+                  <div
+                    className={`rounded-lg border p-4 ${
+                      theme === "dark"
+                        ? "border-gray-700 bg-gray-800/50"
+                        : "border-gray-200 bg-gray-50"
                     }`}
                   >
-                    Delivery Information
-                  </h4>
-                  <div className="grid gap-4 md:grid-cols-2">
-                    <div>
-                      <label
-                        className={`block text-sm font-medium ${
-                          theme === "dark" ? "text-gray-300" : "text-gray-700"
+                    <div className="mb-4 flex items-center gap-2">
+                      <span className="text-lg">🚚</span>
+                      <h4
+                        className={`font-medium ${
+                          theme === "dark" ? "text-white" : "text-gray-900"
                         }`}
                       >
-                        Transport Mode
-                      </label>
-                      <p
-                        className={`mt-1 ${
-                          theme === "dark" ? "text-gray-300" : "text-gray-900"
-                        }`}
-                      >
-                        {shopperData?.transport_mode
-                          ? shopperData.transport_mode.charAt(0).toUpperCase() +
-                            shopperData.transport_mode
-                              .slice(1)
-                              .replace("_", " ")
-                          : "Not set"}
-                      </p>
+                        Delivery Information
+                      </h4>
                     </div>
-                    <div>
-                      <label
-                        className={`block text-sm font-medium ${
-                          theme === "dark" ? "text-gray-300" : "text-gray-700"
-                        }`}
-                      >
-                        Address
-                      </label>
-                      <p
-                        className={`mt-1 ${
-                          theme === "dark" ? "text-gray-300" : "text-gray-900"
-                        }`}
-                      >
-                        {shopperData?.address || "Not provided"}
-                      </p>
+                    <div className="space-y-3">
+                      <div>
+                        <label
+                          className={`block text-xs font-medium ${
+                            theme === "dark" ? "text-gray-300" : "text-gray-700"
+                          }`}
+                        >
+                          Transport Mode
+                        </label>
+                        <p
+                          className={`text-sm font-medium ${
+                            theme === "dark" ? "text-white" : "text-gray-900"
+                          }`}
+                        >
+                          {shopperData?.transport_mode
+                            ? shopperData.transport_mode
+                                .charAt(0)
+                                .toUpperCase() +
+                              shopperData.transport_mode
+                                .slice(1)
+                                .replace("_", " ")
+                            : "Not set"}
+                        </p>
+                      </div>
+                      <div>
+                        <label
+                          className={`block text-xs font-medium ${
+                            theme === "dark" ? "text-gray-300" : "text-gray-700"
+                          }`}
+                        >
+                          Address
+                        </label>
+                        <p
+                          className={`text-sm font-medium ${
+                            theme === "dark" ? "text-white" : "text-gray-900"
+                          }`}
+                        >
+                          {shopperData?.address || "Not provided"}
+                        </p>
+                      </div>
                     </div>
                   </div>
-                </div>
 
-                {/* Account Status */}
-                <div
-                  className={`rounded-lg border p-4 ${
-                    theme === "dark" ? "border-gray-700" : "border-gray-200"
-                  }`}
-                >
-                  <h4
-                    className={`mb-4 font-medium ${
-                      theme === "dark" ? "text-white" : "text-gray-900"
+                  {/* Account Status */}
+                  <div
+                    className={`rounded-lg border p-4 ${
+                      theme === "dark"
+                        ? "border-gray-700 bg-gray-800/50"
+                        : "border-gray-200 bg-gray-50"
                     }`}
                   >
-                    Account Status
-                  </h4>
-                  <div className="grid gap-4 md:grid-cols-2">
-                    <div>
-                      <label
-                        className={`block text-sm font-medium ${
-                          theme === "dark" ? "text-gray-300" : "text-gray-700"
+                    <div className="mb-4 flex items-center gap-2">
+                      <span className="text-lg">📊</span>
+                      <h4
+                        className={`font-medium ${
+                          theme === "dark" ? "text-white" : "text-gray-900"
                         }`}
                       >
-                        Status
-                      </label>
-                      <p
-                        className={`mt-1 ${
-                          theme === "dark" ? "text-gray-300" : "text-gray-900"
-                        }`}
-                      >
+                        Account Status
+                      </h4>
+                    </div>
+                    <div className="space-y-3">
+                      <div>
+                        <label
+                          className={`block text-xs font-medium ${
+                            theme === "dark" ? "text-gray-300" : "text-gray-700"
+                          }`}
+                        >
+                          Status
+                        </label>
                         <span
-                          className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${
+                          className={`inline-flex items-center rounded-full px-2 py-1 text-xs font-medium ${
                             shopperData?.status === "active"
-                              ? "bg-green-100 text-green-800"
+                              ? "bg-green-100 text-green-800 dark:bg-green-900/50 dark:text-green-300"
                               : shopperData?.status === "pending"
-                              ? "bg-yellow-100 text-yellow-800"
-                              : "bg-red-100 text-red-800"
+                              ? "bg-yellow-100 text-yellow-800 dark:bg-yellow-900/50 dark:text-yellow-300"
+                              : "bg-red-100 text-red-800 dark:bg-red-900/50 dark:text-red-300"
                           }`}
                         >
                           {shopperData?.status
@@ -1045,48 +1527,44 @@ export default function ShopperProfileComponent() {
                               shopperData.status.slice(1)
                             : "Not registered"}
                         </span>
-                      </p>
-                    </div>
-                    <div>
-                      <label
-                        className={`block text-sm font-medium ${
-                          theme === "dark" ? "text-gray-300" : "text-gray-700"
-                        }`}
-                      >
-                        Background Check
-                      </label>
-                      <p
-                        className={`mt-1 ${
-                          theme === "dark" ? "text-gray-300" : "text-gray-900"
-                        }`}
-                      >
+                      </div>
+                      <div>
+                        <label
+                          className={`block text-xs font-medium ${
+                            theme === "dark" ? "text-gray-300" : "text-gray-700"
+                          }`}
+                        >
+                          Background Check
+                        </label>
                         <span
-                          className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${
+                          className={`inline-flex items-center rounded-full px-2 py-1 text-xs font-medium ${
                             shopperData?.background_check_completed
-                              ? "bg-green-100 text-green-800"
-                              : "bg-yellow-100 text-yellow-800"
+                              ? "bg-green-100 text-green-800 dark:bg-green-900/50 dark:text-green-300"
+                              : "bg-yellow-100 text-yellow-800 dark:bg-yellow-900/50 dark:text-yellow-300"
                           }`}
                         >
                           {shopperData?.background_check_completed
                             ? "Completed"
                             : "Pending"}
                         </span>
-                      </p>
+                      </div>
                     </div>
                   </div>
-                </div>
 
-                <div className="flex justify-end space-x-4">
-                  <Button
-                    appearance="primary"
-                    color="green"
-                    onClick={() => setShowUpdateDrawer(true)}
-                  >
-                    Update Information
-                  </Button>
+                  <div className="flex justify-center pt-4">
+                    <Button
+                      appearance="primary"
+                      color="green"
+                      size="lg"
+                      onClick={() => setShowUpdateDrawer(true)}
+                      className="w-full"
+                    >
+                      Update Information
+                    </Button>
+                  </div>
                 </div>
-              </div>
-            )}
+              )}
+            </div>
           </Panel>
         )}
 
@@ -1102,7 +1580,7 @@ export default function ShopperProfileComponent() {
                     : "border-gray-200 bg-white"
                 }`}
               >
-                <div className="mb-4 flex items-center justify-between">
+                <div className="border-b border-gray-200 px-4 py-4 dark:border-gray-700">
                   <h3
                     className={`text-lg font-semibold ${
                       theme === "dark" ? "text-white" : "text-gray-900"
@@ -1110,74 +1588,51 @@ export default function ShopperProfileComponent() {
                   >
                     Your Vehicles
                   </h3>
-                  <Button
-                    appearance="primary"
-                    color="blue"
-                    onClick={() => {
-                      toaster.push(
-                        <Message type="info" closable>
-                          Please contact support to make changes to your vehicle
-                          information
-                        </Message>,
-                        { placement: "topEnd", duration: 5000 }
-                      );
-                    }}
-                  >
-                    <i className="fas fa-ticket-alt mr-2" />
-                    Raise Ticket
-                  </Button>
                 </div>
 
                 {loadingVehicles ? (
-                  <div className="flex justify-center p-4">
+                  <div className="flex justify-center p-8">
                     <Loader size="md" />
                   </div>
                 ) : (
-                  <List>
-                    {vehicles.map((vehicle) => (
-                      <List.Item key={vehicle.id}>
-                        <div className="flex items-center space-x-4 p-4">
-                          <div className="h-20 w-20 overflow-hidden rounded-lg">
-                            <img
-                              src={vehicle.photo}
-                              alt={`${vehicle.type} photo`}
-                              className="h-full w-full object-cover"
-                            />
+                  <div className="p-4">
+                    <List>
+                      {vehicles.map((vehicle) => (
+                        <List.Item key={vehicle.id}>
+                          <div className="flex items-center space-x-4 p-3">
+                            <div className="h-16 w-16 overflow-hidden rounded-lg">
+                              <img
+                                src={vehicle.photo}
+                                alt={`${vehicle.type} photo`}
+                                className="h-full w-full object-cover"
+                              />
+                            </div>
+                            <div className="flex-1">
+                              <h4
+                                className={`font-medium ${
+                                  theme === "dark"
+                                    ? "text-white"
+                                    : "text-gray-900"
+                                }`}
+                              >
+                                {vehicle.type.charAt(0).toUpperCase() +
+                                  vehicle.type.slice(1)}
+                              </h4>
+                              <p
+                                className={`text-sm ${
+                                  theme === "dark"
+                                    ? "text-gray-300"
+                                    : "text-gray-600"
+                                }`}
+                              >
+                                {vehicle.model} • {vehicle.plate_number}
+                              </p>
+                            </div>
                           </div>
-                          <div className="flex-1">
-                            <h4
-                              className={`font-semibold ${
-                                theme === "dark"
-                                  ? "text-white"
-                                  : "text-gray-900"
-                              }`}
-                            >
-                              {vehicle.type.charAt(0).toUpperCase() +
-                                vehicle.type.slice(1)}
-                            </h4>
-                            <p
-                              className={`${
-                                theme === "dark"
-                                  ? "text-gray-300"
-                                  : "text-gray-600"
-                              }`}
-                            >
-                              Model: {vehicle.model}
-                            </p>
-                            <p
-                              className={`${
-                                theme === "dark"
-                                  ? "text-gray-300"
-                                  : "text-gray-600"
-                              }`}
-                            >
-                              Plate: {vehicle.plate_number}
-                            </p>
-                          </div>
-                        </div>
-                      </List.Item>
-                    ))}
-                  </List>
+                        </List.Item>
+                      ))}
+                    </List>
+                  </div>
                 )}
               </Panel>
             ) : (
@@ -1220,10 +1675,11 @@ export default function ShopperProfileComponent() {
             driving_license: shopperData?.driving_license || "",
             transport_mode: shopperData?.transport_mode || "",
             profile_photo: shopperData?.profile_photo || "",
-            national_id_image: shopperData?.national_id_image || "",
-            driving_license_image: shopperData?.driving_license_image || "",
           }}
-          onUpdate={handleUpdateShopper}
+          onUpdate={async (data: any) => {
+            await handleUpdateShopper(data);
+            return { success: true, message: "Shopper updated successfully" };
+          }}
         />
       )}
     </div>

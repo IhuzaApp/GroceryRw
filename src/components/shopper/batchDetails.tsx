@@ -1005,9 +1005,11 @@ export default function BatchDetails({
           <Button
             appearance="primary"
             color="green"
+            size="sm"
             block
             onClick={() => handleUpdateStatus("shopping")}
             loading={loading}
+            className="rounded-lg py-2 text-lg font-bold sm:rounded-xl sm:py-4 sm:text-2xl sm:text-xl"
           >
             Start Shopping
           </Button>
@@ -1019,9 +1021,11 @@ export default function BatchDetails({
             <Button
               appearance="primary"
               color="green"
+              size="sm"
               block
               onClick={() => handleUpdateStatus("on_the_way")}
               loading={loading}
+              className="rounded-lg py-2 text-lg font-bold sm:rounded-xl sm:py-4 sm:text-2xl sm:text-xl"
             >
               Make Payment
             </Button>
@@ -1036,10 +1040,12 @@ export default function BatchDetails({
           <Button
             appearance="primary"
             color="green"
+            size="lg"
             block
             onClick={() => handleUpdateStatus("on_the_way")}
             loading={loading}
             disabled={!hasFoundItems}
+            className="rounded-lg py-2 text-lg font-bold sm:rounded-xl sm:py-4 sm:text-2xl sm:text-xl"
           >
             {hasFoundItems ? "Make Payment" : "Mark Items as Found to Continue"}
           </Button>
@@ -1050,9 +1056,11 @@ export default function BatchDetails({
           <Button
             appearance="primary"
             color="green"
+            size="sm"
             block
             onClick={() => handleUpdateStatus("delivered")}
             loading={loading}
+            className="rounded-lg py-2 text-lg font-bold sm:rounded-xl sm:py-4 sm:text-2xl sm:text-xl"
           >
             Confirm Delivery & Generate Invoice
           </Button>
@@ -2142,17 +2150,7 @@ export default function BatchDetails({
             )}
 
             {/* Action Button */}
-            <div className="pt-2 sm:pt-4">
-              <Button
-                appearance="primary"
-                color={order.orderType === "reel" ? "violet" : "green"}
-                size="sm"
-                block
-                className="rounded-lg py-2 text-lg font-bold sm:rounded-xl sm:py-4 sm:text-2xl sm:text-xl"
-              >
-                {getActionButton()}
-              </Button>
-            </div>
+            <div className="pt-2 sm:pt-4">{getActionButton()}</div>
           </div>
         </div>
       </main>

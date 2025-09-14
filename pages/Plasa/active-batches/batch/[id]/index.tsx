@@ -211,23 +211,31 @@ function BatchDetailsPage({ orderData, error }: BatchDetailsPageProps) {
   );
 }
 
-// TEMPORARY: Disable server-side authentication to test if it's causing the issue
 export const getServerSideProps: GetServerSideProps<
   BatchDetailsPageProps
 > = async (context) => {
   const { id } = context.params || {};
-  return { props: { orderData: null, error: null } };
 
-  // Original authentication code (disabled for testing)
-  // const session = await getServerSession(context.req, context.res, authOptions);
-  // if (!id || typeof id !== "string") {
-  //   return {
-  //     props: {
-  //       orderData: null,
-  //       error: "Order ID is required",
-  //     },
-  //   };
-  // }
+  // Check if order ID is provided
+  if (!id || typeof id !== "string") {
+    return {
+      props: {
+        orderData: null,
+        error: "Order ID is required",
+      },
+    };
+  }
+
+  // Check authentication
+  const session = await getServerSession(context.req, context.res, authOptions);
+  if (!session || !session.user) {
+    return {
+      redirect: {
+        destination: "/Auth/Login",
+        permanent: false,
+      },
+    };
+  }
 
   // GraphQL query to fetch a single regular order with nested details
   const GET_ORDER_DETAILS = gql`
@@ -387,6 +395,20 @@ export const getServerSideProps: GetServerSideProps<
         props: {
           orderData: null,
           error: "Order not found",
+        },
+      };
+    }
+
+    // Check if the user is authorized to view this order
+    // User can view if they are assigned to the order or if they are the customer
+    const isAssignedShopper = order.assignedTo?.id === session.user.id;
+    const isCustomer = order.user?.id === session.user.id;
+
+    if (!isAssignedShopper && !isCustomer) {
+      return {
+        props: {
+          orderData: null,
+          error: "You don't have permission to view this order",
         },
       };
     }

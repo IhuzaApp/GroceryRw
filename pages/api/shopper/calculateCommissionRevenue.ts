@@ -21,9 +21,11 @@ const GET_ORDER_WITH_ITEMS = gql`
         price
         Product {
           id
-          name
           price
           final_price
+          ProductName {
+            name
+          }
         }
       }
     }
@@ -133,9 +135,11 @@ export default async function handler(
           price: string;
           Product: {
             id: string;
-            name: string;
             price: string;
             final_price: string;
+            ProductName: {
+              name: string;
+            };
           };
         }>;
       };
@@ -152,7 +156,7 @@ export default async function handler(
       Product: {
         price: item.Product.price,
         final_price: item.Product.final_price,
-        name: item.Product.name,
+        name: item.Product.ProductName.name,
       },
     }));
 

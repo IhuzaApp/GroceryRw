@@ -1,5 +1,6 @@
 import { NextApiRequest, NextApiResponse } from "next";
-import { getSession } from "next-auth/react";
+import { getServerSession } from "next-auth";
+import { authOptions } from "../auth/[...nextauth]";
 import { gql } from "graphql-request";
 import { hasuraClient } from "../../../src/lib/hasuraClient";
 import { logger } from "../../../src/utils/logger";
@@ -16,7 +17,7 @@ export default async function handler(
   res: NextApiResponse
 ) {
   try {
-    const session = await getSession({ req });
+    const session = await getServerSession(req, res, authOptions);
     const userId = session?.user?.id;
 
     if (!userId) {
