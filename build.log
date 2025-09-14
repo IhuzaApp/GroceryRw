@@ -1,0 +1,183 @@
+yarn run v1.22.22
+$ next build
+   Creating an optimized production build ...
+> [PWA] Compile server
+> [PWA] Compile server
+> [PWA] Compile client (static)
+> [PWA] Auto register service worker with: /Users/apple/Documents/Projects/grocery/node_modules/next-pwa/register.js
+> [PWA] Service worker: /Users/apple/Documents/Projects/grocery/public/sw.js
+> [PWA]   url: /sw.js
+> [PWA]   scope: /
+(node:4141) [DEP_WEBPACK_MODULE_UPDATE_HASH] DeprecationWarning: Module.updateHash: Use new ChunkGraph API
+(Use `node --trace-deprecation ...` to show where the warning was created)
+ ✓ Compiled successfully
+   Skipping validation of types
+   Skipping linting
+   Collecting page data ...
+   Generating static pages (0/21) ...
+   Generating static pages (5/21) 
+   Generating static pages (10/21) 
+   Generating static pages (15/21) 
+ ✓ Generating static pages (21/21) 
+   Finalizing page optimization ...
+   Collecting build traces ...
+
+Route (pages)                                                  Size     First Load JS
+┌ λ /                                                          20.2 kB         486 kB
+├   /_app                                                      0 B             326 kB
+├ ○ /404                                                       184 B           326 kB
+├ λ /api/auth/[...nextauth]                                    0 B             326 kB
+├ λ /api/auth/refresh-session                                  0 B             326 kB
+├ λ /api/auth/register                                         0 B             326 kB
+├ λ /api/auth/signout                                          0 B             326 kB
+├ λ /api/cart-items                                            0 B             326 kB
+├ λ /api/carts                                                 0 B             326 kB
+├ λ /api/checkout                                              0 B             326 kB
+├ λ /api/invoices/[id]                                         0 B             326 kB
+├ λ /api/invoices/generate                                     0 B             326 kB
+├ λ /api/invoices/upload-proof                                 0 B             326 kB
+├ λ /api/logout                                                0 B             326 kB
+├ λ /api/logs/clear                                            0 B             326 kB
+├ λ /api/logs/read                                             0 B             326 kB
+├ λ /api/logs/write                                            0 B             326 kB
+├ λ /api/mutations/add-payment-card                            0 B             326 kB
+├ λ /api/mutations/shopper-notification-settings               0 B             326 kB
+├ λ /api/mutations/update-payment-card                         0 B             326 kB
+├ λ /api/queries/addresses                                     0 B             326 kB
+├ λ /api/queries/all-orders                                    0 B             326 kB
+├ λ /api/queries/cart-items                                    0 B             326 kB
+├ λ /api/queries/carts                                         0 B             326 kB
+├ λ /api/queries/categories                                    0 B             326 kB
+├ λ /api/queries/check-new-orders                              0 B             326 kB
+├ λ /api/queries/check-shopper-status                          0 B             326 kB
+├ λ /api/queries/checkRating                                   0 B             326 kB
+├ λ /api/queries/createWallet                                  0 B             326 kB
+├ λ /api/queries/delivery-issues                               0 B             326 kB
+├ λ /api/queries/get-shopper-vehicles                          0 B             326 kB
+├ λ /api/queries/hello                                         0 B             326 kB
+├ λ /api/queries/notifications                                 0 B             326 kB
+├ λ /api/queries/notify-nearby-dashers                         0 B             326 kB
+├ λ /api/queries/order-items                                   0 B             326 kB
+├ λ /api/queries/orderDetails                                  0 B             326 kB
+├ λ /api/queries/orders                                        0 B             326 kB
+├ λ /api/queries/payment-cards                                 0 B             326 kB
+├ λ /api/queries/payment-methods                               0 B             326 kB
+├ λ /api/queries/platform-settings                             0 B             326 kB
+├ λ /api/queries/products                                      0 B             326 kB
+├ λ /api/queries/reel-comments                                 0 B             326 kB
+├ λ /api/queries/reel-likes                                    0 B             326 kB
+├ λ /api/queries/reel-order-details                            0 B             326 kB
+├ λ /api/queries/reels                                         0 B             326 kB
+├ λ /api/queries/refunds                                       0 B             326 kB
+├ λ /api/queries/register-shopper                              0 B             326 kB
+├ λ /api/queries/restaurants                                   0 B             326 kB
+├ λ /api/queries/search                                        0 B             326 kB
+├ λ /api/queries/shopper-availability                          0 B             326 kB
+├ λ /api/queries/shopper-notification-settings                 0 B             326 kB
+├ λ /api/queries/shopper-profile                               0 B             326 kB
+├ λ /api/queries/shopper-vehicles                              0 B             326 kB
+├ λ /api/queries/shops                                         0 B             326 kB
+├ λ /api/queries/system-configuration                          0 B             326 kB
+├ λ /api/queries/system-logs                                   0 B             326 kB
+├ λ /api/queries/test-hasura                                   0 B             326 kB
+├ λ /api/queries/update-shopper                                0 B             326 kB
+├ λ /api/queries/update-shopper-address                        0 B             326 kB
+├ λ /api/queries/user-balances                                 0 B             326 kB
+├ λ /api/queries/users                                         0 B             326 kB
+├ λ /api/queries/wallet-balance                                0 B             326 kB
+├ λ /api/ratings/create                                        0 B             326 kB
+├ λ /api/reel-orders                                           0 B             326 kB
+├ λ /api/refunds/create                                        0 B             326 kB
+├ λ /api/refunds/pending                                       0 B             326 kB
+├ λ /api/revenue                                               0 B             326 kB
+├ λ /api/search                                                0 B             326 kB
+├ λ /api/shopper/activeBatches                                 0 B             326 kB
+├ λ /api/shopper/activeOrders                                  0 B             326 kB
+├ λ /api/shopper/activityHeatmap                               0 B             326 kB
+├ λ /api/shopper/assignOrder                                   0 B             326 kB
+├ λ /api/shopper/availableOrders                               0 B             326 kB
+├ λ /api/shopper/calculateCommissionRevenue                    0 B             326 kB
+├ λ /api/shopper/calculatePlasaFeeRevenue                      0 B             326 kB
+├ λ /api/shopper/calculateRevenue                              0 B             326 kB
+├ λ /api/shopper/check-notifications-with-settings             0 B             326 kB
+├ λ /api/shopper/cleanup-notification                          0 B             326 kB
+├ λ /api/shopper/dailyEarnings                                 0 B             326 kB
+├ λ /api/shopper/deliveryStats                                 0 B             326 kB
+├ λ /api/shopper/earningsStats                                 0 B             326 kB
+├ λ /api/shopper/earningsTips                                  0 B             326 kB
+├ λ /api/shopper/generateInvoice                               0 B             326 kB
+├ λ /api/shopper/invoices                                      0 B             326 kB
+├ λ /api/shopper/orderDetails                                  0 B             326 kB
+├ λ /api/shopper/pendingOrders                                 0 B             326 kB
+├ λ /api/shopper/processPayment                                0 B             326 kB
+├ λ /api/shopper/recentOrders                                  0 B             326 kB
+├ λ /api/shopper/recordTransaction                             0 B             326 kB
+├ λ /api/shopper/schedule                                      0 B             326 kB
+├ λ /api/shopper/shops                                         0 B             326 kB
+├ λ /api/shopper/stats                                         0 B             326 kB
+├ λ /api/shopper/todayCompletedEarnings                        0 B             326 kB
+├ λ /api/shopper/updateDeliveryPhoto                           0 B             326 kB
+├ λ /api/shopper/updateOrderStatus                             0 B             326 kB
+├ λ /api/shopper/uploadDeliveryPhoto                           0 B             326 kB
+├ λ /api/shopper/wallet                                        0 B             326 kB
+├ λ /api/shopper/walletHistory                                 0 B             326 kB
+├ λ /api/telegram/assigned-batches                             0 B             326 kB
+├ λ /api/telegram/available-orders                             0 B             326 kB
+├ λ /api/telegram/bot-update                                   0 B             326 kB
+├ λ /api/telegram/connect                                      0 B             326 kB
+├ λ /api/telegram/connections                                  0 B             326 kB
+├ λ /api/telegram/ensure-shopper                               0 B             326 kB
+├ λ /api/telegram/month-earnings                               0 B             326 kB
+├ λ /api/telegram/today-earnings                               0 B             326 kB
+├ λ /api/telegram/update-shopper                               0 B             326 kB
+├ λ /api/telegram/webhook                                      0 B             326 kB
+├ λ /api/telegram/week-earnings                                0 B             326 kB
+├ λ /api/test-connection                                       0 B             326 kB
+├ λ /api/test-revenue-calculation                              0 B             326 kB
+├ λ /api/test/check-orders-in-zone                             0 B             326 kB
+├ λ /api/test/check-shopper-availability                       0 B             326 kB
+├ λ /api/test/location-management-test                         0 B             326 kB
+├ λ /api/test/notification-settings-integration                0 B             326 kB
+├ λ /api/test/notification-test                                0 B             326 kB
+├ λ /api/user                                                  0 B             326 kB
+├ λ /api/user/change-password                                  0 B             326 kB
+├ λ /api/user/update                                           0 B             326 kB
+├ λ /api/user/updateRole                                       0 B             326 kB
+├ ○ /Auth/Login                                                5.46 kB         367 kB
+├ ○ /Auth/Register (822 ms)                                    7.57 kB         369 kB
+├ ○ /Cart                                                      14.2 kB         454 kB
+├ ○ /CurrentPendingOrders                                      1.58 kB         428 kB
+├ ○ /CurrentPendingOrders/viewOrderDetails/[orderId] (769 ms)  13 kB           442 kB
+├ λ /dev/logs                                                  21.1 kB         432 kB
+├ ○ /Messages (687 ms)                                         9.99 kB         430 kB
+├ ○ /Messages/[orderId] (603 ms)                               7.98 kB         405 kB
+├ ○ /Myprofile (897 ms)                                        38.5 kB         504 kB
+├ λ /Myprofile/become-shopper                                  9.8 kB          454 kB
+├ λ /Plasa/active-batches                                      12.8 kB         401 kB
+├ λ /Plasa/active-batches/batch/[id]                           143 kB          577 kB
+├ ○ /Plasa/chat/[orderId]                                      7.12 kB         391 kB
+├ ○ /Plasa/Earnings (386 ms)                                   110 kB          563 kB
+├ ○ /Plasa/invoices                                            11.1 kB         441 kB
+├ λ /Plasa/invoices/[id]                                       5.58 kB         389 kB
+├ ○ /Plasa/orders/[id]                                         7.35 kB         391 kB
+├ ○ /Plasa/Settings (660 ms)                                   7.13 kB         477 kB
+├ ○ /Plasa/ShopperProfile (363 ms)                             19.9 kB         475 kB
+├ ○ /Recipes                                                   4.85 kB         429 kB
+├ ○ /Recipes/[id]                                              4.8 kB          429 kB
+├ ○ /Reels                                                     20.1 kB         450 kB
+├ λ /restaurant/[id]                                           4.87 kB         425 kB
+├ λ /shops                                                     3.49 kB         423 kB
+├ λ /shops/[id]                                                10.7 kB         445 kB
+├ ○ /test-connection                                           10.2 kB         442 kB
+└ ○ /test-redirect                                             584 B           326 kB
++ First Load JS shared by all                                  395 kB
+  ├ chunks/framework-81e04675b2f7c5bf.js                       45.4 kB
+  ├ chunks/main-8357ff53e4b9d7f6.js                            35.4 kB
+  ├ chunks/pages/_app-d238eb714d744a53.js                      242 kB
+  ├ chunks/webpack-47658c8d58db6793.js                         2.31 kB
+  └ css/3b5a03f8a7443e95.css                                   69.7 kB
+
+λ  (Server)  server-side renders at runtime (uses getInitialProps or getServerSideProps)
+○  (Static)  automatically rendered as static HTML (uses no initial props)
+
+Done in 89.65s.
