@@ -508,42 +508,88 @@ export default function ShopperDashboard() {
           <div className="px-2 pb-2 md:block">
             <div className="flex items-center justify-between px-4 pt-4">
               <h1 className="text-2xl font-bold">Available Batches</h1>
-              <div className="flex items-center space-x-2">
-                <span className="text-xs text-gray-500">
-                  {lastRefreshed &&
-                    `Last updated: ${lastRefreshed.toLocaleTimeString()}`}
-                </span>
+              <div className="flex items-center space-x-4">
+                <div className="flex items-center space-x-2">
+                  <div className="rounded-full bg-gray-100 p-1.5">
+                    <svg
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth={2}
+                      className="h-3 w-3 text-gray-500"
+                    >
+                      <circle cx="12" cy="12" r="10" />
+                      <polyline points="12 6 12 12 16 14" />
+                    </svg>
+                  </div>
+                  <span className="text-xs font-medium text-gray-500">
+                    {lastRefreshed &&
+                      `Updated ${lastRefreshed.toLocaleTimeString()}`}
+                  </span>
+                </div>
+                
+                <div className="flex items-center space-x-2">
+                  <button
+                    onClick={toggleAutoRefresh}
+                    className={`flex items-center rounded-xl px-3 py-1.5 text-xs font-medium transition-all duration-200 ${
+                      isAutoRefreshing
+                        ? "bg-green-600 text-white shadow-lg shadow-green-500/30"
+                        : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                    }`}
+                    title={
+                      isAutoRefreshing
+                        ? "Auto-refresh is on (30s)"
+                        : "Auto-refresh is off"
+                    }
+                  >
+                    <svg
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth={2}
+                      className="mr-1 h-3 w-3"
+                    >
+                      <path d="M1 4v6h6M23 20v-6h-6" />
+                      <path d="M20.49 9A9 9 0 0 0 5.64 5.64L1 10m22 4l-4.64 4.36A9 9 0 0 1 3.51 15" />
+                    </svg>
+                    {isAutoRefreshing ? "Auto" : "Manual"}
+                  </button>
+                  
+                  <button
+                    onClick={toggleHistorical}
+                    className={`flex items-center rounded-xl px-3 py-1.5 text-sm font-medium transition-all duration-200 ${
+                      showHistorical
+                        ? "bg-blue-600 text-white shadow-lg shadow-blue-500/30"
+                        : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                    }`}
+                  >
+                    <svg
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth={2}
+                      className="mr-1 h-3 w-3"
+                    >
+                      <path d="M3 6h18M3 12h18M3 18h18" />
+                    </svg>
+                    {showHistorical ? "All Pending" : "Recent (10+ min)"}
+                  </button>
+                </div>
+                
                 <button
-                  onClick={toggleAutoRefresh}
-                  className={`rounded-md px-2 py-1 text-xs font-medium ${
-                    isAutoRefreshing
-                      ? "bg-green-100 text-green-700"
-                      : "bg-gray-100 text-gray-700"
-                  }`}
-                  title={
-                    isAutoRefreshing
-                      ? "Auto-refresh is on (30s)"
-                      : "Auto-refresh is off"
-                  }
-                >
-                  {isAutoRefreshing ? "Auto" : "Manual"}
-                </button>
-                <button
-                  onClick={toggleHistorical}
-                  className={`rounded-md px-3 py-1 text-sm font-medium ${
-                    showHistorical
-                      ? "bg-blue-100 text-blue-700"
-                      : "bg-gray-100 text-gray-700"
-                  }`}
-                >
-                  {showHistorical
-                    ? "Showing All Pending"
-                    : "Showing Recent (10+ min)"}
-                </button>
-                <button
-                  className="rounded bg-green-500 px-3 py-1.5 text-sm text-white hover:bg-green-600"
+                  className="flex items-center rounded-xl bg-gradient-to-r from-green-500 to-green-600 px-4 py-1.5 text-sm font-bold text-white shadow-lg shadow-green-500/30 transition-all duration-200 hover:shadow-green-500/40 active:scale-95"
                   onClick={loadOrders}
                 >
+                  <svg
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth={2}
+                    className="mr-1.5 h-4 w-4"
+                  >
+                    <path d="M1 4v6h6M23 20v-6h-6" />
+                    <path d="M20.49 9A9 9 0 0 0 5.64 5.64L1 10m22 4l-4.64 4.36A9 9 0 0 1 3.51 15" />
+                  </svg>
                   Refresh
                 </button>
               </div>
@@ -554,68 +600,156 @@ export default function ShopperDashboard() {
         {/* Orders List Section - Hidden on Mobile */}
         {!isMobile && (
           <div className="px-2">
-            <div className="mb-4 mt-2 flex items-center px-4">
-              <span className="mr-2 text-sm text-gray-500">Sort by:</span>
-              <div className="flex space-x-2">
+            <div className="mb-6 mt-4 flex items-center px-4">
+              <div className="flex items-center mr-4">
+                <svg
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth={2}
+                  className="mr-2 h-4 w-4 text-gray-500"
+                >
+                  <path d="M3 6h18M3 12h18M3 18h18" />
+                </svg>
+                <span className="text-sm font-medium text-gray-500">Sort by:</span>
+              </div>
+              <div className="flex space-x-3">
                 <button
                   onClick={() => handleSortChange("newest")}
-                  className={`rounded px-3 py-1 text-sm ${
+                  className={`flex items-center rounded-xl px-4 py-2 text-sm font-medium transition-all duration-200 ${
                     sortBy === "newest"
-                      ? "bg-green-600 text-white"
-                      : "bg-gray-200 text-gray-800 hover:bg-gray-300"
+                      ? "bg-green-600 text-white shadow-lg shadow-green-500/30"
+                      : "bg-gray-100 text-gray-700 hover:bg-gray-200"
                   }`}
                   title="Orders less than 1 hour old"
                 >
+                  <svg
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth={2}
+                    className="mr-1.5 h-4 w-4"
+                  >
+                    <circle cx="12" cy="12" r="10" />
+                    <polyline points="12 6 12 12 16 14" />
+                  </svg>
                   Newest (1h)
                 </button>
                 <button
                   onClick={() => handleSortChange("earnings")}
-                  className={`rounded px-3 py-1 text-sm ${
+                  className={`flex items-center rounded-xl px-4 py-2 text-sm font-medium transition-all duration-200 ${
                     sortBy === "earnings"
-                      ? "bg-green-600 text-white"
-                      : "bg-gray-200 text-gray-800 hover:bg-gray-300"
+                      ? "bg-green-600 text-white shadow-lg shadow-green-500/30"
+                      : "bg-gray-100 text-gray-700 hover:bg-gray-200"
                   }`}
                 >
+                  <svg
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth={2}
+                    className="mr-1.5 h-4 w-4"
+                  >
+                    <path d="M12 2v20M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6" />
+                  </svg>
                   Earnings
                 </button>
                 <button
                   onClick={() => handleSortChange("distance")}
-                  className={`rounded px-3 py-1 text-sm ${
+                  className={`flex items-center rounded-xl px-4 py-2 text-sm font-medium transition-all duration-200 ${
                     sortBy === "distance"
-                      ? "bg-green-600 text-white"
-                      : "bg-gray-200 text-gray-800 hover:bg-gray-300"
+                      ? "bg-green-600 text-white shadow-lg shadow-green-500/30"
+                      : "bg-gray-100 text-gray-700 hover:bg-gray-200"
                   }`}
                 >
+                  <svg
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth={2}
+                    className="mr-1.5 h-4 w-4"
+                  >
+                    <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z" />
+                    <circle cx="12" cy="10" r="3" />
+                  </svg>
                   Distance
                 </button>
                 <button
                   onClick={() => handleSortChange("priority")}
-                  className={`rounded px-3 py-1 text-sm ${
+                  className={`flex items-center rounded-xl px-4 py-2 text-sm font-medium transition-all duration-200 ${
                     sortBy === "priority"
-                      ? "bg-purple-600 text-white"
-                      : "bg-gray-200 text-gray-800 hover:bg-gray-300"
+                      ? "bg-purple-600 text-white shadow-lg shadow-purple-500/30"
+                      : "bg-gray-100 text-gray-700 hover:bg-gray-200"
                   }`}
                   title="All orders by priority level, including older orders"
                 >
+                  <svg
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth={2}
+                    className="mr-1.5 h-4 w-4"
+                  >
+                    <path d="M9 12l2 2 4-4" />
+                    <path d="M21 12c0 4.97-4.03 9-9 9s-9-4.03-9-9 4.03-9 9-9c1.5 0 2.91.37 4.15 1.02" />
+                  </svg>
                   Priority
                 </button>
               </div>
             </div>
 
             {/* Filtering info message */}
-            <div className="mb-4 px-4">
-              <p className="text-xs text-gray-500">
-                {!isOnline
-                  ? "Go online to see available batches"
-                  : sortBy === "newest"
-                  ? "Showing recent batches less than 1 hour old"
-                  : sortBy === "priority"
-                  ? "Showing batches pending for 1+ hours by priority level"
-                  : `Sorting by ${sortBy}`}
-                {isOnline &&
-                  !showHistorical &&
-                  " • Only batches pending for 10+ minutes"}
-              </p>
+            <div className="mb-6 px-4">
+              <div className={`flex items-center rounded-lg px-4 py-3 ${
+                !isOnline 
+                  ? "bg-yellow-50 border border-yellow-200" 
+                  : "bg-blue-50 border border-blue-200"
+              }`}>
+                <div className={`mr-3 rounded-full p-1.5 ${
+                  !isOnline 
+                    ? "bg-yellow-100" 
+                    : "bg-blue-100"
+                }`}>
+                  <svg
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth={2}
+                    className={`h-4 w-4 ${
+                      !isOnline 
+                        ? "text-yellow-600" 
+                        : "text-blue-600"
+                    }`}
+                  >
+                    <circle cx="12" cy="12" r="10" />
+                    <path d="M12 6v6l4 2" />
+                  </svg>
+                </div>
+                <div>
+                  <p className={`text-sm font-medium ${
+                    !isOnline 
+                      ? "text-yellow-800" 
+                      : "text-blue-800"
+                  }`}>
+                    {!isOnline
+                      ? "Go online to see available batches"
+                      : sortBy === "newest"
+                      ? "Showing recent batches less than 1 hour old"
+                      : sortBy === "priority"
+                      ? "Showing batches pending for 1+ hours by priority level"
+                      : `Sorting by ${sortBy}`}
+                  </p>
+                  {isOnline && !showHistorical && (
+                    <p className={`text-xs ${
+                      !isOnline 
+                        ? "text-yellow-600" 
+                        : "text-blue-600"
+                    }`}>
+                      Only batches pending for 10+ minutes
+                    </p>
+                  )}
+                </div>
+              </div>
             </div>
 
             {isLoading ? (
@@ -775,46 +909,98 @@ export default function ShopperDashboard() {
                       </p>
                     </div>
                   </div>
-                  <div className="flex items-center space-x-2">
-                    <span
-                      className={`text-xs ${
-                        theme === "dark" ? "text-gray-400" : "text-gray-500"
-                      }`}
-                    >
-                      {lastRefreshed && `${lastRefreshed.toLocaleTimeString()}`}
-                    </span>
+                  <div className="flex items-center space-x-3">
+                    <div className="flex items-center space-x-2">
+                      <div className={`rounded-full p-1.5 ${
+                        theme === "dark" ? "bg-gray-800" : "bg-gray-100"
+                      }`}>
+                        <svg
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          stroke="currentColor"
+                          strokeWidth={2}
+                          className={`h-3 w-3 ${
+                            theme === "dark" ? "text-gray-400" : "text-gray-500"
+                          }`}
+                        >
+                          <circle cx="12" cy="12" r="10" />
+                          <polyline points="12 6 12 12 16 14" />
+                        </svg>
+                      </div>
+                      <span
+                        className={`text-xs font-medium ${
+                          theme === "dark" ? "text-gray-400" : "text-gray-500"
+                        }`}
+                      >
+                        {lastRefreshed && `Updated ${lastRefreshed.toLocaleTimeString()}`}
+                      </span>
+                    </div>
+                    
+                    <div className="flex items-center space-x-2">
+                      <button
+                        onClick={toggleAutoRefresh}
+                        className={`flex items-center rounded-xl px-3 py-1.5 text-xs font-medium transition-all duration-200 ${
+                          isAutoRefreshing
+                            ? theme === "dark"
+                              ? "bg-green-600 text-white shadow-lg shadow-green-500/30"
+                              : "bg-green-600 text-white shadow-lg shadow-green-500/30"
+                            : theme === "dark"
+                            ? "bg-gray-800 text-gray-300 hover:bg-gray-700"
+                            : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                        }`}
+                      >
+                        <svg
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          stroke="currentColor"
+                          strokeWidth={2}
+                          className="mr-1 h-3 w-3"
+                        >
+                          <path d="M1 4v6h6M23 20v-6h-6" />
+                          <path d="M20.49 9A9 9 0 0 0 5.64 5.64L1 10m22 4l-4.64 4.36A9 9 0 0 1 3.51 15" />
+                        </svg>
+                        {isAutoRefreshing ? "Auto" : "Manual"}
+                      </button>
+                      
+                      <button
+                        onClick={toggleHistorical}
+                        className={`flex items-center rounded-xl px-3 py-1.5 text-xs font-medium transition-all duration-200 ${
+                          showHistorical
+                            ? theme === "dark"
+                              ? "bg-blue-600 text-white shadow-lg shadow-blue-500/30"
+                              : "bg-blue-600 text-white shadow-lg shadow-blue-500/30"
+                            : theme === "dark"
+                            ? "bg-gray-800 text-gray-300 hover:bg-gray-700"
+                            : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                        }`}
+                      >
+                        <svg
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          stroke="currentColor"
+                          strokeWidth={2}
+                          className="mr-1 h-3 w-3"
+                        >
+                          <path d="M3 6h18M3 12h18M3 18h18" />
+                        </svg>
+                        {showHistorical ? "All" : "Recent"}
+                      </button>
+                    </div>
+                    
                     <button
-                      onClick={toggleAutoRefresh}
-                      className={`rounded-md px-2 py-1 text-xs font-medium ${
-                        isAutoRefreshing
-                          ? theme === "dark"
-                            ? "bg-green-900/30 text-green-300"
-                            : "bg-green-100 text-green-700"
-                          : theme === "dark"
-                          ? "bg-gray-800 text-gray-300"
-                          : "bg-gray-100 text-gray-700"
-                      }`}
-                    >
-                      {isAutoRefreshing ? "A" : "M"}
-                    </button>
-                    <button
-                      onClick={toggleHistorical}
-                      className={`rounded-md px-2 py-1 text-xs font-medium ${
-                        showHistorical
-                          ? theme === "dark"
-                            ? "bg-blue-900/30 text-blue-300"
-                            : "bg-blue-100 text-blue-700"
-                          : theme === "dark"
-                          ? "bg-gray-800 text-gray-300"
-                          : "bg-gray-100 text-gray-700"
-                      }`}
-                    >
-                      {showHistorical ? "All Pending" : "10+ min"}
-                    </button>
-                    <button
-                      className="rounded bg-green-500 px-3 py-1.5 text-sm text-white hover:bg-green-600"
+                      className="flex items-center rounded-xl bg-gradient-to-r from-green-500 to-green-600 px-4 py-1.5 text-sm font-bold text-white shadow-lg shadow-green-500/30 transition-all duration-200 hover:shadow-green-500/40 active:scale-95"
                       onClick={loadOrders}
                     >
+                      <svg
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth={2}
+                        className="mr-1.5 h-4 w-4"
+                      >
+                        <path d="M1 4v6h6M23 20v-6h-6" />
+                        <path d="M20.49 9A9 9 0 0 0 5.64 5.64L1 10m22 4l-4.64 4.36A9 9 0 0 1 3.51 15" />
+                      </svg>
                       Refresh
                     </button>
                   </div>
@@ -921,21 +1107,63 @@ export default function ShopperDashboard() {
                 </div>
 
                 {/* Filtering info message */}
-                <div className="mb-4 px-4 md:hidden">
-                  <p
-                    className={`text-xs ${
-                      theme === "dark" ? "text-gray-400" : "text-gray-500"
-                    }`}
-                  >
-                    {!isOnline
-                      ? "Go online to see available batches"
-                      : sortBy === "newest"
-                      ? "Showing batches < 1 hour old"
-                      : sortBy === "priority"
-                      ? "Batches pending 1+ hours by priority"
-                      : `Sorting by ${sortBy}`}
-                    {isOnline && !showHistorical && " • 10+ min pending"}
-                  </p>
+                <div className="mb-6 px-4 md:hidden">
+                  <div className={`flex items-center rounded-lg px-3 py-2 ${
+                    !isOnline 
+                      ? theme === "dark" 
+                        ? "bg-yellow-900/20 border border-yellow-800" 
+                        : "bg-yellow-50 border border-yellow-200"
+                      : theme === "dark"
+                      ? "bg-blue-900/20 border border-blue-800"
+                      : "bg-blue-50 border border-blue-200"
+                  }`}>
+                    <div className={`mr-2 rounded-full p-1 ${
+                      !isOnline 
+                        ? theme === "dark"
+                          ? "bg-yellow-800"
+                          : "bg-yellow-100"
+                        : theme === "dark"
+                        ? "bg-blue-800"
+                        : "bg-blue-100"
+                    }`}>
+                      <svg
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth={2}
+                        className={`h-3 w-3 ${
+                          !isOnline 
+                            ? theme === "dark"
+                              ? "text-yellow-400"
+                              : "text-yellow-600"
+                            : theme === "dark"
+                            ? "text-blue-400"
+                            : "text-blue-600"
+                        }`}
+                      >
+                        <circle cx="12" cy="12" r="10" />
+                        <path d="M12 6v6l4 2" />
+                      </svg>
+                    </div>
+                    <p className={`text-xs font-medium ${
+                      !isOnline
+                        ? theme === "dark"
+                          ? "text-yellow-300"
+                          : "text-yellow-800"
+                        : theme === "dark"
+                        ? "text-blue-300"
+                        : "text-blue-800"
+                    }`}>
+                      {!isOnline
+                        ? "Go online to see available batches"
+                        : sortBy === "newest"
+                        ? "Showing batches < 1 hour old"
+                        : sortBy === "priority"
+                        ? "Batches pending 1+ hours by priority"
+                        : `Sorting by ${sortBy}`}
+                      {isOnline && !showHistorical && " • 10+ min pending"}
+                    </p>
+                  </div>
                 </div>
 
                 {isLoading ? (
