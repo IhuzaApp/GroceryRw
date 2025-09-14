@@ -360,7 +360,7 @@ export default function ShopperProfileComponent() {
   // Configure schedule - add default schedule to database
   const configureSchedule = useCallback(() => {
     if (!session) {
-      logger.error("No session available. Please log in.");
+      logger.error("No session available. Please log in.", "ShopperProfileComponent");
       setSaveMessage({
         type: "error",
         text: "Please log in to configure your schedule.",
@@ -493,7 +493,7 @@ export default function ShopperProfileComponent() {
           new google.maps.places.AutocompleteService();
         geocoderRef.current = new google.maps.Geocoder();
       } catch (error) {
-        logger.error("Error initializing Google Maps services:", error);
+        logger.error("Error initializing Google Maps services:", error instanceof Error ? error.message : String(error));
       }
     }
   }, [isLoaded]);
@@ -515,7 +515,7 @@ export default function ShopperProfileComponent() {
           }
         );
       } catch (error) {
-        logger.error("Error getting place predictions:", error);
+        logger.error("Error getting place predictions:", error instanceof Error ? error.message : String(error));
         setSuggestions([]);
       }
     } else {
@@ -651,7 +651,7 @@ export default function ShopperProfileComponent() {
 
     setLoadingVehicles(true);
     try {
-      console.log("Loading vehicles for user:", session.user.id);
+      console.log("Loading vehicles for user:", session.user.id as string);
       const response = await fetch(
         `/api/queries/get-shopper-vehicles?user_id=${session.user.id}`
       );
@@ -670,7 +670,7 @@ export default function ShopperProfileComponent() {
       }
     } catch (error) {
       console.error("Error loading vehicles:", error);
-      logger.error("Error loading vehicles:", error);
+      logger.error("Error loading vehicles:", error instanceof Error ? error.message : String(error));
       toaster.push(
         <Message type="error" closable>
           Failed to load vehicles
@@ -687,7 +687,7 @@ export default function ShopperProfileComponent() {
     if (session?.user?.id) {
       loadVehicles();
     }
-  }, [session?.user?.id, loadVehicles]);
+  }, [session?.user?.id]);
 
   return (
     <div className="grid grid-cols-1 gap-6 md:grid-cols-12">
@@ -929,22 +929,6 @@ export default function ShopperProfileComponent() {
                         {shopperData?.phone_number ||
                           user?.phone ||
                           "Not provided"}
-                      </p>
-                    </div>
-                    <div>
-                      <label
-                        className={`block text-sm font-medium ${
-                          theme === "dark" ? "text-gray-300" : "text-gray-700"
-                        }`}
-                      >
-                        National ID
-                      </label>
-                      <p
-                        className={`mt-1 ${
-                          theme === "dark" ? "text-gray-300" : "text-gray-900"
-                        }`}
-                      >
-                        {shopperData?.national_id || "Not provided"}
                       </p>
                     </div>
                   </div>
@@ -1220,10 +1204,11 @@ export default function ShopperProfileComponent() {
             driving_license: shopperData?.driving_license || "",
             transport_mode: shopperData?.transport_mode || "",
             profile_photo: shopperData?.profile_photo || "",
-            national_id_image: shopperData?.national_id_image || "",
-            driving_license_image: shopperData?.driving_license_image || "",
           }}
-          onUpdate={handleUpdateShopper}
+          onUpdate={async (data: any) => {
+            await handleUpdateShopper(data);
+            return { success: true, message: "Shopper updated successfully" };
+          }}
         />
       )}
     </div>
