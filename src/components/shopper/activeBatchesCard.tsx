@@ -189,7 +189,7 @@ export default function ActiveBatches({
         const remainingTime = Math.max(0, minLoadingTime - elapsedTime);
 
         setTimeout(() => {
-          setIsLoading(false);
+        setIsLoading(false);
         }, remainingTime);
       }
     }
@@ -733,8 +733,8 @@ function ActiveOrderCard({
     >
       {/* Batch Type Indicators */}
       <div className="mb-3 flex items-center justify-center gap-2">
-        {/* Quick Batch indicator */}
-        {isReelOrder && (
+      {/* Quick Batch indicator */}
+      {isReelOrder && (
           <div className="flex items-center gap-1 rounded-full bg-gradient-to-r from-indigo-600 to-purple-600 px-3 py-1 text-center text-xs font-bold text-white shadow-md">
             <svg
               className="h-3 w-3"
@@ -749,9 +749,9 @@ function ActiveOrderCard({
                 d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"
               />
             </svg>
-            Quick Batch
-          </div>
-        )}
+          Quick Batch
+        </div>
+      )}
 
         {/* Regular Batch Status Indicator */}
         {!isReelOrder && (
@@ -1004,24 +1004,24 @@ function ActiveOrderCard({
           <div className="text-center">
             <p
               className={`text-xl font-bold ${
-                isReelOrder
-                  ? theme === "dark"
-                    ? "text-indigo-400"
-                    : "text-indigo-600"
-                  : theme === "dark"
-                  ? "text-emerald-400"
-                  : "text-emerald-600"
-              }`}
-            >
-              {formatCurrencySync(order.estimatedEarnings || 0)}
-            </p>
-            <p
+              isReelOrder
+                ? theme === "dark"
+                  ? "text-indigo-400"
+                  : "text-indigo-600"
+                : theme === "dark"
+                ? "text-emerald-400"
+                : "text-emerald-600"
+            }`}
+          >
+            {formatCurrencySync(order.estimatedEarnings || 0)}
+          </p>
+          <p
               className={`text-xs font-medium ${
-                theme === "dark" ? "text-gray-400" : "text-gray-500"
-              }`}
-            >
+              theme === "dark" ? "text-gray-400" : "text-gray-500"
+            }`}
+          >
               Estimated Earnings
-            </p>
+          </p>
           </div>
         </div>
       </div>
