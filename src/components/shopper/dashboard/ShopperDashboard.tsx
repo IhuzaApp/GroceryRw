@@ -731,18 +731,6 @@ export default function ShopperDashboard() {
                   }`}
                 />
               </div>
-              {/* Status indicator in sheet header on mobile when collapsed */}
-              {!isExpanded && (
-                <div className="absolute right-4 top-2 flex items-center">
-                  {/* Status indicator dot */}
-                  <span
-                    className={`inline-block h-2 w-2 rounded-full ${
-                      isOnline ? "animate-pulse bg-green-500" : "bg-gray-400"
-                    }`}
-                    title={isOnline ? "Online" : "Offline"}
-                  />
-                </div>
-              )}
             </div>
 
             {isExpanded ? (
@@ -968,15 +956,24 @@ export default function ShopperDashboard() {
               </div>
             ) : (
               <div className="flex items-center justify-between px-4">
-                <p
-                  className={`text-sm ${
-                    theme === "dark" ? "text-gray-400" : "text-gray-500"
-                  }`}
-                >
-                  {!isOnline
-                    ? "Go online to see available batches"
-                    : `Available Batches: ${sortedOrders.length}`}
-                </p>
+                <div className="flex items-center justify-between w-full">
+                  <span
+                    className={`text-lg font-semibold ${
+                      theme === "dark" ? "text-white" : "text-gray-900"
+                    }`}
+                  >
+                    {!isOnline ? "Available Batches" : "Available Batches"}
+                  </span>
+                  <span
+                    className={`text-xl font-bold ${
+                      !isOnline
+                        ? theme === "dark" ? "text-gray-500" : "text-gray-400"
+                        : theme === "dark" ? "text-green-400" : "text-green-600"
+                    }`}
+                  >
+                    {!isOnline ? "—" : sortedOrders.length}
+                  </span>
+                </div>
               </div>
             )}
           </div>
