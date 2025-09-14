@@ -11,6 +11,7 @@ import TelegramStatusButton from "./TelegramStatusButton";
 
 export default function ShopperHeader() {
   const [isMobile, setIsMobile] = useState(false);
+  const [isOnline, setIsOnline] = useState(false);
   const pathname = usePathname();
   const { theme, setTheme } = useTheme();
 
@@ -19,6 +20,36 @@ export default function ShopperHeader() {
     checkIfMobile();
     window.addEventListener("resize", checkIfMobile);
     return () => window.removeEventListener("resize", checkIfMobile);
+  }, []);
+
+  // Check location cookies and update online status
+  useEffect(() => {
+    const checkLocationCookies = () => {
+      const cookies = document.cookie
+        .split("; ")
+        .reduce((acc: Record<string, string>, cur) => {
+          const [k, v] = cur.split("=");
+          acc[k] = v;
+          return acc;
+        }, {} as Record<string, string>);
+
+      return Boolean(cookies["user_latitude"] && cookies["user_longitude"]);
+    };
+
+    const updateOnlineStatus = () => {
+      const hasLocationCookies = checkLocationCookies();
+      setIsOnline(hasLocationCookies);
+    };
+
+    updateOnlineStatus();
+    const handleCustomEvent = () => setTimeout(updateOnlineStatus, 300);
+    window.addEventListener("toggleGoLive", handleCustomEvent);
+    const intervalId = setInterval(updateOnlineStatus, 5000);
+
+    return () => {
+      window.removeEventListener("toggleGoLive", handleCustomEvent);
+      clearInterval(intervalId);
+    };
   }, []);
 
   if (isMobile) {
@@ -43,7 +74,31 @@ export default function ShopperHeader() {
 
         {/* Right actions - Mobile */}
         <div className="flex items-center gap-2">
-          <TelegramStatusButton />
+          {/* Status indicator dot */}
+          <span
+            className={`inline-block h-2 w-2 rounded-full ${
+              isOnline ? "animate-pulse bg-green-500" : "bg-gray-400"
+            }`}
+            title={isOnline ? "Online" : "Offline"}
+          />
+          
+          {/* Toggle button */}
+          <button
+            onClick={() =>
+              window.dispatchEvent(new Event("toggleGoLive"))
+            }
+            className={`rounded px-3 py-1 text-sm font-bold shadow ${
+              isOnline
+                ? theme === "dark"
+                  ? "bg-red-600 text-white hover:bg-red-700"
+                  : "bg-red-500 text-white hover:bg-red-600"
+                : theme === "dark"
+                ? "bg-green-600 text-white hover:bg-green-700"
+                : "bg-green-500 text-white hover:bg-green-600"
+            }`}
+          >
+            {isOnline ? "Go Offline" : "Go Online"}
+          </button>
         </div>
       </header>
     );
