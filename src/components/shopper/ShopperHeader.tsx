@@ -54,11 +54,13 @@ export default function ShopperHeader() {
 
   if (isMobile) {
     return (
-      <header className={`sticky top-0 z-[100] flex items-center justify-between border-b px-4 py-3 ${
-        theme === "dark" 
-          ? "border-gray-800 bg-gray-900" 
-          : "border-gray-200 bg-white"
-      }`}>
+      <header
+        className={`sticky top-0 z-[100] flex items-center justify-between border-b px-4 py-3 ${
+          theme === "dark"
+            ? "border-gray-800 bg-gray-900"
+            : "border-gray-200 bg-white"
+        }`}
+      >
         {/* Logo Section - Mobile */}
         <div className="flex items-center">
           <Link href="/" className="flex items-center">
@@ -81,29 +83,27 @@ export default function ShopperHeader() {
             }`}
             title={isOnline ? "Online" : "Offline"}
           />
-          
+
           {/* Toggle button */}
           <button
-            onClick={() =>
-              window.dispatchEvent(new Event("toggleGoLive"))
-            }
+            onClick={() => window.dispatchEvent(new Event("toggleGoLive"))}
             className={`relative overflow-hidden rounded-xl px-4 py-2 text-sm font-bold transition-all duration-300 active:scale-95 ${
               isOnline
                 ? theme === "dark"
-                  ? "bg-gradient-to-br from-red-500 via-red-600 to-red-700 text-white shadow-lg shadow-red-500/30 border border-red-400/20 hover:shadow-red-500/40"
-                  : "bg-gradient-to-br from-red-500 via-red-600 to-red-700 text-white shadow-lg shadow-red-500/30 border border-red-400/20 hover:shadow-red-500/40"
+                  ? "border border-red-400/20 bg-gradient-to-br from-red-500 via-red-600 to-red-700 text-white shadow-lg shadow-red-500/30 hover:shadow-red-500/40"
+                  : "border border-red-400/20 bg-gradient-to-br from-red-500 via-red-600 to-red-700 text-white shadow-lg shadow-red-500/30 hover:shadow-red-500/40"
                 : theme === "dark"
-                ? "bg-gradient-to-br from-green-500 via-green-600 to-green-700 text-white shadow-lg shadow-green-500/30 border border-green-400/20 hover:shadow-green-500/40"
-                : "bg-gradient-to-br from-green-500 via-green-600 to-green-700 text-white shadow-lg shadow-green-500/30 border border-green-400/20 hover:shadow-green-500/40"
+                ? "border border-green-400/20 bg-gradient-to-br from-green-500 via-green-600 to-green-700 text-white shadow-lg shadow-green-500/30 hover:shadow-green-500/40"
+                : "border border-green-400/20 bg-gradient-to-br from-green-500 via-green-600 to-green-700 text-white shadow-lg shadow-green-500/30 hover:shadow-green-500/40"
             }`}
           >
             {/* Background glow effect */}
-            <div className={`absolute inset-0 rounded-xl blur-sm ${
-              isOnline 
-                ? "bg-red-500/20" 
-                : "bg-green-500/20"
-            }`} />
-            
+            <div
+              className={`absolute inset-0 rounded-xl blur-sm ${
+                isOnline ? "bg-red-500/20" : "bg-green-500/20"
+              }`}
+            />
+
             {/* Content */}
             <span className="relative z-10 flex items-center gap-1.5">
               {isOnline ? (
@@ -142,12 +142,12 @@ export default function ShopperHeader() {
                 </>
               )}
             </span>
-            
+
             {/* Shimmer effect */}
-            <div className="absolute inset-0 -skew-x-12 bg-gradient-to-r from-transparent via-white/30 to-transparent opacity-0 transition-all duration-500 hover:opacity-100 hover:translate-x-full" />
-            
+            <div className="absolute inset-0 -skew-x-12 bg-gradient-to-r from-transparent via-white/30 to-transparent opacity-0 transition-all duration-500 hover:translate-x-full hover:opacity-100" />
+
             {/* Ripple effect on tap */}
-            <div className="absolute inset-0 rounded-xl bg-white/20 scale-0 transition-transform duration-200 active:scale-100" />
+            <div className="absolute inset-0 scale-0 rounded-xl bg-white/20 transition-transform duration-200 active:scale-100" />
           </button>
         </div>
       </header>
@@ -155,11 +155,13 @@ export default function ShopperHeader() {
   }
 
   return (
-    <header className={`sticky top-0 z-[100] flex items-center justify-between border-b px-6 py-4 ${
-      theme === "dark" 
-        ? "border-gray-800 bg-gray-900" 
-        : "border-gray-200 bg-white"
-    }`}>
+    <header
+      className={`sticky top-0 z-[100] flex items-center justify-between border-b px-6 py-4 ${
+        theme === "dark"
+          ? "border-gray-800 bg-gray-900"
+          : "border-gray-200 bg-white"
+      }`}
+    >
       {/* Logo Section */}
       <div className="flex items-center">
         <Link href="/" className="flex items-center">
