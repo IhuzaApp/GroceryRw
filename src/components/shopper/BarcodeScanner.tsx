@@ -194,11 +194,11 @@ const BarcodeScanner: React.FC<BarcodeScannerProps> = ({
         {/* Video Scanner Section */}
         <div className="p-6">
           <div className="relative overflow-hidden rounded-xl bg-gray-900">
-          <video
-            ref={videoRef}
-            autoPlay
-            playsInline
-            muted
+            <video
+              ref={videoRef}
+              autoPlay
+              playsInline
+              muted
               className="h-64 w-full object-cover sm:h-80"
             />
 
@@ -215,7 +215,7 @@ const BarcodeScanner: React.FC<BarcodeScannerProps> = ({
                 <div className="absolute -bottom-1 -right-1 h-6 w-6 border-b-4 border-r-4 border-white opacity-90" />
 
                 {/* Scanning Line Animation */}
-          <div className="absolute inset-0 flex items-center justify-center">
+                <div className="absolute inset-0 flex items-center justify-center">
                   <div className="h-0.5 w-full animate-pulse bg-gradient-to-r from-transparent via-white to-transparent opacity-60" />
                 </div>
               </div>

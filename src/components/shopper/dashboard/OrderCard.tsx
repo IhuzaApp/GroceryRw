@@ -212,7 +212,7 @@ export default function OrderCard({ order, onOrderAccepted }: OrderCardProps) {
       <div className="p-5">
         <div className="mb-4 flex items-start justify-between">
           <div className="flex-1 pr-3">
-            <h3 className="text-xl font-bold text-gray-900 mb-1">
+            <h3 className="mb-1 text-xl font-bold text-gray-900">
               {isReelOrder ? order.reel?.title || "Reel Order" : order.shopName}
             </h3>
             <p className="text-sm text-gray-600">
@@ -221,7 +221,9 @@ export default function OrderCard({ order, onOrderAccepted }: OrderCardProps) {
                 : order.shopAddress}
             </p>
           </div>
-          <div className={`rounded-full px-3 py-1 text-xs font-semibold ${badgeColorClass}`}>
+          <div
+            className={`rounded-full px-3 py-1 text-xs font-semibold ${badgeColorClass}`}
+          >
             {order.createdAt}
           </div>
         </div>
@@ -241,7 +243,7 @@ export default function OrderCard({ order, onOrderAccepted }: OrderCardProps) {
               </svg>
               <span className="font-semibold">{order.distance}</span>
             </div>
-            
+
             <div className="flex items-center text-sm text-gray-600">
               <svg
                 viewBox="0 0 24 24"
@@ -255,13 +257,14 @@ export default function OrderCard({ order, onOrderAccepted }: OrderCardProps) {
                 <path d="M16 10a4 4 0 01-8 0" />
               </svg>
               <span className="font-semibold">
-                {isReelOrder ? order.quantity || 1 : order.items} {isReelOrder ? "item" : "items"}
+                {isReelOrder ? order.quantity || 1 : order.items}{" "}
+                {isReelOrder ? "item" : "items"}
               </span>
             </div>
           </div>
         </div>
 
-        <div className="flex items-center justify-between pt-4 border-t border-gray-100">
+        <div className="flex items-center justify-between border-t border-gray-100 pt-4">
           <div className="flex items-center">
             <svg
               viewBox="0 0 24 24"

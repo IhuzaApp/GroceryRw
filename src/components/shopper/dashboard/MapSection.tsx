@@ -2030,8 +2030,8 @@ export default function MapSection({
             <div
               className={`absolute bottom-20 left-1/2 z-[1000] -translate-x-1/2 transform rounded-xl px-4 py-2 text-sm font-medium shadow-lg backdrop-blur-lg transition-all duration-200 ${
                 theme === "dark"
-                  ? "bg-gray-800/90 text-gray-100 border border-gray-700/50"
-                  : "bg-white/90 text-gray-900 border border-gray-200/50"
+                  ? "border border-gray-700/50 bg-gray-800/90 text-gray-100"
+                  : "border border-gray-200/50 bg-white/90 text-gray-900"
               }`}
             >
               <div className="flex items-center gap-3">

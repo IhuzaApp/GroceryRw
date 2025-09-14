@@ -527,7 +527,7 @@ export default function ShopperDashboard() {
                       `Updated ${lastRefreshed.toLocaleTimeString()}`}
                   </span>
                 </div>
-                
+
                 <div className="flex items-center space-x-2">
                   <button
                     onClick={toggleAutoRefresh}
@@ -554,7 +554,7 @@ export default function ShopperDashboard() {
                     </svg>
                     {isAutoRefreshing ? "Auto" : "Manual"}
                   </button>
-                  
+
                   <button
                     onClick={toggleHistorical}
                     className={`flex items-center rounded-xl px-3 py-1.5 text-sm font-medium transition-all duration-200 ${
@@ -575,7 +575,7 @@ export default function ShopperDashboard() {
                     {showHistorical ? "All Pending" : "Recent (10+ min)"}
                   </button>
                 </div>
-                
+
                 <button
                   className="flex items-center rounded-xl bg-gradient-to-r from-green-500 to-green-600 px-4 py-1.5 text-sm font-bold text-white shadow-lg shadow-green-500/30 transition-all duration-200 hover:shadow-green-500/40 active:scale-95"
                   onClick={loadOrders}
@@ -601,7 +601,7 @@ export default function ShopperDashboard() {
         {!isMobile && (
           <div className="px-2">
             <div className="mb-6 mt-4 flex items-center px-4">
-              <div className="flex items-center mr-4">
+              <div className="mr-4 flex items-center">
                 <svg
                   viewBox="0 0 24 24"
                   fill="none"
@@ -611,7 +611,9 @@ export default function ShopperDashboard() {
                 >
                   <path d="M3 6h18M3 12h18M3 18h18" />
                 </svg>
-                <span className="text-sm font-medium text-gray-500">Sort by:</span>
+                <span className="text-sm font-medium text-gray-500">
+                  Sort by:
+                </span>
               </div>
               <div className="flex space-x-3">
                 <button
@@ -700,25 +702,25 @@ export default function ShopperDashboard() {
 
             {/* Filtering info message */}
             <div className="mb-6 px-4">
-              <div className={`flex items-center rounded-lg px-4 py-3 ${
-                !isOnline 
-                  ? "bg-yellow-50 border border-yellow-200" 
-                  : "bg-blue-50 border border-blue-200"
-              }`}>
-                <div className={`mr-3 rounded-full p-1.5 ${
-                  !isOnline 
-                    ? "bg-yellow-100" 
-                    : "bg-blue-100"
-                }`}>
+              <div
+                className={`flex items-center rounded-lg px-4 py-3 ${
+                  !isOnline
+                    ? "border border-yellow-200 bg-yellow-50"
+                    : "border border-blue-200 bg-blue-50"
+                }`}
+              >
+                <div
+                  className={`mr-3 rounded-full p-1.5 ${
+                    !isOnline ? "bg-yellow-100" : "bg-blue-100"
+                  }`}
+                >
                   <svg
                     viewBox="0 0 24 24"
                     fill="none"
                     stroke="currentColor"
                     strokeWidth={2}
                     className={`h-4 w-4 ${
-                      !isOnline 
-                        ? "text-yellow-600" 
-                        : "text-blue-600"
+                      !isOnline ? "text-yellow-600" : "text-blue-600"
                     }`}
                   >
                     <circle cx="12" cy="12" r="10" />
@@ -726,11 +728,11 @@ export default function ShopperDashboard() {
                   </svg>
                 </div>
                 <div>
-                  <p className={`text-sm font-medium ${
-                    !isOnline 
-                      ? "text-yellow-800" 
-                      : "text-blue-800"
-                  }`}>
+                  <p
+                    className={`text-sm font-medium ${
+                      !isOnline ? "text-yellow-800" : "text-blue-800"
+                    }`}
+                  >
                     {!isOnline
                       ? "Go online to see available batches"
                       : sortBy === "newest"
@@ -740,11 +742,11 @@ export default function ShopperDashboard() {
                       : `Sorting by ${sortBy}`}
                   </p>
                   {isOnline && !showHistorical && (
-                    <p className={`text-xs ${
-                      !isOnline 
-                        ? "text-yellow-600" 
-                        : "text-blue-600"
-                    }`}>
+                    <p
+                      className={`text-xs ${
+                        !isOnline ? "text-yellow-600" : "text-blue-600"
+                      }`}
+                    >
                       Only batches pending for 10+ minutes
                     </p>
                   )}
@@ -801,7 +803,8 @@ export default function ShopperDashboard() {
                 </p>
                 <div className="flex flex-col space-y-3 md:flex-row md:justify-center md:space-x-3 md:space-y-0">
                   <p className="text-sm text-gray-500">
-                    Use the "Go Online" button in the top header to enable location and start receiving batches.
+                    Use the "Go Online" button in the top header to enable
+                    location and start receiving batches.
                   </p>
                   <p className="mt-4 text-xs text-gray-400">
                     You&apos;ll be asked to allow location access
@@ -811,11 +814,11 @@ export default function ShopperDashboard() {
             ) : sortedOrders.length > 0 ? (
               <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
                 {sortedOrders.map((order) => (
-                  <div key={order.id} className="transform transition-all duration-200 hover:scale-[1.02]">
-                  <OrderCard
-                    order={order}
-                    onOrderAccepted={loadOrders}
-                  />
+                  <div
+                    key={order.id}
+                    className="transform transition-all duration-200 hover:scale-[1.02]"
+                  >
+                    <OrderCard order={order} onOrderAccepted={loadOrders} />
                   </div>
                 ))}
               </div>
@@ -847,7 +850,7 @@ export default function ShopperDashboard() {
         {isMobile && (
           <div
             className={`fixed bottom-16 left-0 right-0 z-[1000] rounded-t-2xl border-t-2 transition-all duration-300 ease-in-out ${
-                isExpanded ? "h-[calc(100%-16rem)]" : "h-[80px]"
+              isExpanded ? "h-[calc(100%-16rem)]" : "h-[80px]"
             } ${
               theme === "dark"
                 ? "border-gray-800 bg-gray-900 text-gray-100"
@@ -872,9 +875,11 @@ export default function ShopperDashboard() {
               <div className="h-full overflow-y-auto px-4 pb-4">
                 <div className="mb-6 flex items-center justify-between pt-2">
                   <div className="flex items-center">
-                    <div className={`mr-3 rounded-full p-2 ${
-                      theme === "dark" ? "bg-green-900/30" : "bg-green-100"
-                    }`}>
+                    <div
+                      className={`mr-3 rounded-full p-2 ${
+                        theme === "dark" ? "bg-green-900/30" : "bg-green-100"
+                      }`}
+                    >
                       <svg
                         viewBox="0 0 24 24"
                         fill="none"
@@ -895,25 +900,28 @@ export default function ShopperDashboard() {
                     <div>
                       <h2
                         className={`text-xl font-bold ${
-                      theme === "dark" ? "text-white" : "text-gray-900"
-                    }`}
-                  >
-                    Available Batches
-                  </h2>
+                          theme === "dark" ? "text-white" : "text-gray-900"
+                        }`}
+                      >
+                        Available Batches
+                      </h2>
                       <p
                         className={`text-sm ${
                           theme === "dark" ? "text-gray-400" : "text-gray-500"
                         }`}
                       >
-                        {sortedOrders.length} batch{sortedOrders.length !== 1 ? 'es' : ''} found
+                        {sortedOrders.length} batch
+                        {sortedOrders.length !== 1 ? "es" : ""} found
                       </p>
                     </div>
                   </div>
                   <div className="flex items-center space-x-3">
                     <div className="flex items-center space-x-2">
-                      <div className={`rounded-full p-1.5 ${
-                        theme === "dark" ? "bg-gray-800" : "bg-gray-100"
-                      }`}>
+                      <div
+                        className={`rounded-full p-1.5 ${
+                          theme === "dark" ? "bg-gray-800" : "bg-gray-100"
+                        }`}
+                      >
                         <svg
                           viewBox="0 0 24 24"
                           fill="none"
@@ -932,10 +940,11 @@ export default function ShopperDashboard() {
                           theme === "dark" ? "text-gray-400" : "text-gray-500"
                         }`}
                       >
-                        {lastRefreshed && `Updated ${lastRefreshed.toLocaleTimeString()}`}
+                        {lastRefreshed &&
+                          `Updated ${lastRefreshed.toLocaleTimeString()}`}
                       </span>
                     </div>
-                    
+
                     <div className="flex items-center space-x-2">
                       <button
                         onClick={toggleAutoRefresh}
@@ -961,7 +970,7 @@ export default function ShopperDashboard() {
                         </svg>
                         {isAutoRefreshing ? "Auto" : "Manual"}
                       </button>
-                      
+
                       <button
                         onClick={toggleHistorical}
                         className={`flex items-center rounded-xl px-3 py-1.5 text-xs font-medium transition-all duration-200 ${
@@ -986,7 +995,7 @@ export default function ShopperDashboard() {
                         {showHistorical ? "All" : "Recent"}
                       </button>
                     </div>
-                    
+
                     <button
                       className="flex items-center rounded-xl bg-gradient-to-r from-green-500 to-green-600 px-4 py-1.5 text-sm font-bold text-white shadow-lg shadow-green-500/30 transition-all duration-200 hover:shadow-green-500/40 active:scale-95"
                       onClick={loadOrders}
@@ -1108,31 +1117,35 @@ export default function ShopperDashboard() {
 
                 {/* Filtering info message */}
                 <div className="mb-6 px-4 md:hidden">
-                  <div className={`flex items-center rounded-lg px-3 py-2 ${
-                    !isOnline 
-                      ? theme === "dark" 
-                        ? "bg-yellow-900/20 border border-yellow-800" 
-                        : "bg-yellow-50 border border-yellow-200"
-                      : theme === "dark"
-                      ? "bg-blue-900/20 border border-blue-800"
-                      : "bg-blue-50 border border-blue-200"
-                  }`}>
-                    <div className={`mr-2 rounded-full p-1 ${
-                      !isOnline 
+                  <div
+                    className={`flex items-center rounded-lg px-3 py-2 ${
+                      !isOnline
                         ? theme === "dark"
-                          ? "bg-yellow-800"
-                          : "bg-yellow-100"
+                          ? "border border-yellow-800 bg-yellow-900/20"
+                          : "border border-yellow-200 bg-yellow-50"
                         : theme === "dark"
-                        ? "bg-blue-800"
-                        : "bg-blue-100"
-                    }`}>
+                        ? "border border-blue-800 bg-blue-900/20"
+                        : "border border-blue-200 bg-blue-50"
+                    }`}
+                  >
+                    <div
+                      className={`mr-2 rounded-full p-1 ${
+                        !isOnline
+                          ? theme === "dark"
+                            ? "bg-yellow-800"
+                            : "bg-yellow-100"
+                          : theme === "dark"
+                          ? "bg-blue-800"
+                          : "bg-blue-100"
+                      }`}
+                    >
                       <svg
                         viewBox="0 0 24 24"
                         fill="none"
                         stroke="currentColor"
                         strokeWidth={2}
                         className={`h-3 w-3 ${
-                          !isOnline 
+                          !isOnline
                             ? theme === "dark"
                               ? "text-yellow-400"
                               : "text-yellow-600"
@@ -1145,15 +1158,17 @@ export default function ShopperDashboard() {
                         <path d="M12 6v6l4 2" />
                       </svg>
                     </div>
-                    <p className={`text-xs font-medium ${
-                      !isOnline
-                        ? theme === "dark"
-                          ? "text-yellow-300"
-                          : "text-yellow-800"
-                        : theme === "dark"
-                        ? "text-blue-300"
-                        : "text-blue-800"
-                    }`}>
+                    <p
+                      className={`text-xs font-medium ${
+                        !isOnline
+                          ? theme === "dark"
+                            ? "text-yellow-300"
+                            : "text-yellow-800"
+                          : theme === "dark"
+                          ? "text-blue-300"
+                          : "text-blue-800"
+                      }`}
+                    >
                       {!isOnline
                         ? "Go online to see available batches"
                         : sortBy === "newest"
@@ -1215,7 +1230,8 @@ export default function ShopperDashboard() {
                         theme === "dark" ? "text-gray-400" : "text-gray-500"
                       }`}
                     >
-                      Use the "Go Online" button in the top header to enable location and start receiving batches.
+                      Use the "Go Online" button in the top header to enable
+                      location and start receiving batches.
                     </p>
                     <p
                       className={`mt-4 text-xs ${
@@ -1228,11 +1244,11 @@ export default function ShopperDashboard() {
                 ) : sortedOrders.length > 0 ? (
                   <div className="space-y-4 pb-20">
                     {sortedOrders.map((order) => (
-                      <div key={order.id} className="transform transition-all duration-200 hover:scale-[1.02]">
-                      <OrderCard
-                        order={order}
-                        onOrderAccepted={loadOrders}
-                      />
+                      <div
+                        key={order.id}
+                        className="transform transition-all duration-200 hover:scale-[1.02]"
+                      >
+                        <OrderCard order={order} onOrderAccepted={loadOrders} />
                       </div>
                     ))}
                   </div>
@@ -1256,7 +1272,7 @@ export default function ShopperDashboard() {
               </div>
             ) : (
               <div className="flex items-center justify-between px-4">
-                <div className="flex items-center justify-between w-full">
+                <div className="flex w-full items-center justify-between">
                   <span
                     className={`text-lg font-semibold ${
                       theme === "dark" ? "text-white" : "text-gray-900"
@@ -1267,8 +1283,12 @@ export default function ShopperDashboard() {
                   <span
                     className={`text-xl font-bold ${
                       !isOnline
-                        ? theme === "dark" ? "text-gray-500" : "text-gray-400"
-                        : theme === "dark" ? "text-green-400" : "text-green-600"
+                        ? theme === "dark"
+                          ? "text-gray-500"
+                          : "text-gray-400"
+                        : theme === "dark"
+                        ? "text-green-400"
+                        : "text-green-600"
                     }`}
                   >
                     {!isOnline ? "—" : sortedOrders.length}
