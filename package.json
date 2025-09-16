@@ -21,6 +21,7 @@
     "@types/cookie": "^1.0.0",
     "@types/date-fns": "^2.6.3",
     "@types/jsonwebtoken": "^9.0.9",
+    "@types/uuid": "^10.0.0",
     "@zxing/browser": "^0.1.5",
     "@zxing/library": "^0.21.3",
     "bcryptjs": "^3.0.2",
@@ -63,6 +64,7 @@
     "tailwind": "^4.0.0",
     "tailwindcss-animate": "^1.0.7",
     "tesseract.js": "^6.0.1",
+    "uuid": "^13.0.0",
     "zod": "^3.24.3"
   },
   "devDependencies": {
