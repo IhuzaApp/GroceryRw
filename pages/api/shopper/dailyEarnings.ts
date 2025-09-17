@@ -125,8 +125,9 @@ const formatEarningsData = (
 
     // Aggregate earnings by hour
     orders.forEach((order) => {
-      const orderDate = new Date(order.updated_at);
-      const hourIndex = orderDate.getHours();
+      // Use updated_at as delivery completion date since orders are filtered by status: "delivered"
+      const deliveryDate = new Date(order.updated_at);
+      const hourIndex = deliveryDate.getHours();
 
       const orderEarnings = calculateOrderEarnings(order);
 
@@ -158,8 +159,9 @@ const formatEarningsData = (
 
     // Aggregate earnings by day
     orders.forEach((order) => {
-      const orderDate = new Date(order.updated_at);
-      const dayIndex = orderDate.getDay(); // 0 = Sunday, 6 = Saturday
+      // Use updated_at as delivery completion date since orders are filtered by status: "delivered"
+      const deliveryDate = new Date(order.updated_at);
+      const dayIndex = deliveryDate.getDay(); // 0 = Sunday, 6 = Saturday
 
       const orderEarnings = calculateOrderEarnings(order);
 
@@ -208,8 +210,9 @@ const formatEarningsData = (
 
     // Aggregate earnings by week
     orders.forEach((order) => {
-      const orderDate = new Date(order.updated_at);
-      const weekIndex = Math.floor((orderDate.getDate() - 1) / 7);
+      // Use updated_at as delivery completion date since orders are filtered by status: "delivered"
+      const deliveryDate = new Date(order.updated_at);
+      const weekIndex = Math.floor((deliveryDate.getDate() - 1) / 7);
 
       const orderEarnings = calculateOrderEarnings(order);
 
