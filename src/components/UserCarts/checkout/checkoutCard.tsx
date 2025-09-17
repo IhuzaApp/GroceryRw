@@ -88,6 +88,8 @@ export default function CheckoutItems({
   const [configLoading, setConfigLoading] = useState(true);
   // Address management modal state
   const [showAddressModal, setShowAddressModal] = useState(false);
+  // Checkout loading state
+  const [isCheckoutLoading, setIsCheckoutLoading] = useState(false);
 
   // Fetch system configuration
   useEffect(() => {
@@ -228,10 +230,11 @@ export default function CheckoutItems({
       window.removeEventListener("addressChanged", handleAddressChange);
   }, []);
 
+  // No router event listeners needed since we're not redirecting
+
   const [promoCode, setPromoCode] = useState("");
   const [discount, setDiscount] = useState(0);
   const [appliedPromo, setAppliedPromo] = useState<string | null>(null);
-  const [isCheckoutLoading, setIsCheckoutLoading] = useState(false);
   const [deliveryNotes, setDeliveryNotes] = useState<string>("");
   const [selectedPaymentMethod, setSelectedPaymentMethod] =
     useState<PaymentMethod | null>(null);
@@ -384,8 +387,11 @@ export default function CheckoutItems({
   const finalTotal = Total - discount + serviceFee + deliveryFee;
 
   const handleProceedToCheckout = async () => {
+    console.log("🚀 Starting checkout process...");
+    
     // Validate cart has items
     if (totalUnits <= 0) {
+      console.log("❌ Cart is empty, cannot proceed");
       toaster.push(
         <Notification type="warning" header="Empty Cart">
           Your cart is empty.
@@ -394,9 +400,15 @@ export default function CheckoutItems({
       );
       return;
     }
+    
+    console.log("✅ Cart validation passed, totalUnits:", totalUnits);
+    
     // Get selected delivery address from cookie
     const cookieValue = Cookies.get("delivery_address");
+    console.log("📍 Delivery address cookie:", cookieValue ? "Found" : "Missing");
+    
     if (!cookieValue) {
+      console.log("❌ No delivery address found");
       toaster.push(
         <Notification type="error" header="Address Required">
           Please select a delivery address.
@@ -405,11 +417,13 @@ export default function CheckoutItems({
       );
       return;
     }
+    
     let addressObj;
     try {
       addressObj = JSON.parse(cookieValue);
+      console.log("✅ Address parsed successfully:", addressObj);
     } catch (err) {
-      console.error("Error parsing delivery_address cookie:", err);
+      console.error("❌ Error parsing delivery_address cookie:", err);
       toaster.push(
         <Notification type="error" header="Invalid Address">
           Invalid delivery address. Please select again.
@@ -418,8 +432,12 @@ export default function CheckoutItems({
       );
       return;
     }
+    
     const deliveryAddressId = addressObj.id;
+    console.log("📍 Delivery address ID:", deliveryAddressId);
+    
     if (!deliveryAddressId) {
+      console.log("❌ No delivery address ID found");
       toaster.push(
         <Notification type="error" header="Invalid Address">
           Please select a valid delivery address.
@@ -428,21 +446,18 @@ export default function CheckoutItems({
       );
       return;
     }
+    
+    console.log("🔄 Setting loading state to true");
     setIsCheckoutLoading(true);
     
-    // Show immediate feedback and redirect instantly
-    toaster.push(
-      <Notification type="success" header="Order Submitted">
-        Your order is being processed! Redirecting...
-      </Notification>,
-      { placement: "topEnd" }
-    );
+        // No immediate notification - will show after cart refresh completes
 
-    // Redirect immediately without waiting for API response
-    router.push("/CurrentPendingOrders");
+        // Cart refresh will happen after API call completes
+        // Loading overlay will be hidden after cart refresh completes
     
     // Process checkout in background
     try {
+      console.log("📦 Preparing checkout payload...");
       // Prepare checkout payload
       const payload = {
         shop_id: shopId,
@@ -455,26 +470,70 @@ export default function CheckoutItems({
         delivery_notes: deliveryNotes || null,
       };
       
+      console.log("📦 Checkout payload:", payload);
+      
       // Make API call in background (don't await)
+      console.log("🌐 Making API call to /api/checkout...");
       fetch("/api/checkout", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
-      }).then(async (res) => {
-        const data = await res.json();
-        if (!res.ok) {
-          console.error("Checkout error:", data.error || "Checkout failed");
-          // Could show error notification here if needed
-        } else {
-          console.log("Order processed successfully in background");
-        }
-      }).catch((err) => {
-        console.error("Checkout error:", err);
-      });
+           }).then(async (res) => {
+             console.log("📡 API response received:", res.status, res.statusText);
+             const data = await res.json();
+             if (!res.ok) {
+               console.error("❌ Checkout error:", data.error || "Checkout failed");
+               // Show error notification
+               toaster.push(
+                 <Notification type="error" header="Checkout Failed">
+                   {data.error || "There was an error processing your order. Please try again."}
+                 </Notification>,
+                 { placement: "topEnd", duration: 5000 }
+               );
+               setIsCheckoutLoading(false);
+             } else {
+               console.log("✅ Order processed successfully in background:", data);
+               
+               // Refresh cart data after successful checkout
+               console.log("🛒 Refreshing cart data after successful checkout");
+               setTimeout(() => {
+                 console.log("🔄 Dispatching cartChanged event with callback...");
+                 // Create custom event with callback to hide loading overlay and show success notification
+                 const cartChangedEvent = new CustomEvent("cartChanged", {
+                   detail: {
+                     hideLoadingCallback: () => {
+                       console.log("✅ Cart refresh completed, hiding loading overlay");
+                       setIsCheckoutLoading(false);
+                       
+                       // Show final success toast after overlay disappears
+                       setTimeout(() => {
+                         toaster.push(
+                           <Notification type="success" header="Order Completed Successfully!">
+                             Your order #{data.order_id?.slice(-8)} has been placed and is being prepared! You can view it in "Current Orders".
+                           </Notification>,
+                           { placement: "topEnd", duration: 5000 }
+                         );
+                       }, 100); // Small delay to ensure overlay is fully hidden
+                     }
+                   }
+                 });
+                 window.dispatchEvent(cartChangedEvent);
+               }, 1000); // Increased delay to ensure server processing is complete
+             }
+           }).catch((err) => {
+             console.error("❌ Checkout fetch error:", err);
+             toaster.push(
+               <Notification type="error" header="Network Error">
+                 Unable to process your order. Please check your connection and try again.
+               </Notification>,
+               { placement: "topEnd", duration: 5000 }
+             );
+             setIsCheckoutLoading(false);
+           });
       
     } catch (err: any) {
-      console.error("Checkout setup error:", err);
-    } finally {
+      console.error("❌ Checkout setup error:", err);
+      // Hide loading overlay on error
       setIsCheckoutLoading(false);
     }
   };
@@ -563,6 +622,35 @@ export default function CheckoutItems({
 
   return (
     <>
+      {/* Global Loading Overlay - Shows during checkout process */}
+      {isCheckoutLoading && (
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/50 backdrop-blur-sm">
+          <div className={`rounded-xl p-8 shadow-2xl ${theme === "dark" ? "bg-gray-800" : "bg-white"}`}>
+            <div className="flex flex-col items-center space-y-4">
+              {/* Spinner */}
+              <div className="h-12 w-12 animate-spin rounded-full border-4 border-t-4 border-gray-200 border-t-green-500"></div>
+              
+              {/* Loading Text */}
+              <div className="text-center">
+                <h3 className={`text-lg font-semibold ${theme === "dark" ? "text-white" : "text-gray-900"}`}>
+                  Processing Your Order
+                </h3>
+                 <p className={`mt-2 text-sm ${theme === "dark" ? "text-gray-300" : "text-gray-600"}`}>
+                   Please wait while we process your checkout and refresh your cart...
+                 </p>
+              </div>
+              
+              {/* Progress Steps */}
+              <div className="flex space-x-2">
+                <div className="h-2 w-2 rounded-full bg-green-500"></div>
+                <div className="h-2 w-2 rounded-full bg-green-500"></div>
+                <div className="h-2 w-2 rounded-full bg-gray-300 animate-pulse"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Mobile View - Only visible on small devices */}
       {/* Backdrop overlay when expanded */}
       {isExpanded && (
