@@ -1222,6 +1222,8 @@ export default function BatchDetails({
         serviceFee={parseFloat(order?.serviceFee || "0")}
         deliveryFee={parseFloat(order?.deliveryFee || "0")}
         paymentLoading={paymentLoading}
+        payerNumber={session?.user?.phone}
+        externalId={order?.id}
       />
 
       {/* OTP Verification Modal */}
