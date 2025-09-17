@@ -212,6 +212,8 @@ export default async function handler(
       orderAmount,
       originalOrderTotal,
       orderType,
+      momoReferenceId,
+      momoSuccess,
     } = req.body;
 
     // Validate required fields
@@ -393,6 +395,14 @@ export default async function handler(
     // Note: Wallet_Transactions table is designed for regular orders only
     // For reel orders, we skip creating wallet transactions to avoid foreign key constraint issues
     if (!isReelOrder) {
+      // Build description with MoMo payment details
+      let description = `Payment from reserved balance for found order items. MoMo Code: ${momoCode}`;
+      
+      if (momoReferenceId && momoSuccess !== undefined) {
+        const momoStatus = momoSuccess ? "SUCCESSFUL" : "FAILED";
+        description += ` | MoMo Payment: ${momoStatus} | Reference ID: ${momoReferenceId}`;
+      }
+
       const transactions = [
         {
           wallet_id: walletId,
@@ -400,7 +410,7 @@ export default async function handler(
           type: "payment",
           status: "completed",
           related_order_id: orderId,
-          description: `Payment from reserved balance for found order items. MoMo Code: ${momoCode}`,
+          description: description,
         },
       ];
 
