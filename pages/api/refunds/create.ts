@@ -161,14 +161,14 @@ export default async function handler(
         detailedReason += `Found items: ${foundItems
           .map(
             (item) =>
-              `${item.Product.name} (${item.foundQuantity || item.quantity})`
+              `${item.Product.ProductName?.name || 'Unknown Product'} (${item.foundQuantity || item.quantity})`
           )
           .join(", ")}. `;
       }
 
       if (notFoundItems.length > 0) {
         detailedReason += `Not found items: ${notFoundItems
-          .map((item) => `${item.Product.name} (${item.quantity})`)
+          .map((item) => `${item.Product.ProductName?.name || 'Unknown Product'} (${item.quantity})`)
           .join(", ")}.`;
       }
 

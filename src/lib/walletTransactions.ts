@@ -335,7 +335,7 @@ export const generateInvoice = async (orderId: string) => {
       dateCompleted: new Date(order.updated_at).toLocaleString(),
       status: order.status,
       items: items.map((item) => ({
-        name: item.Product.name,
+        name: item.Product.ProductName?.name || 'Unknown Product',
         quantity: item.quantity,
         unitPrice: item.price,
         total:

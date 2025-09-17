@@ -26,7 +26,9 @@ const GET_ORDER_DETAILS = gql`
         quantity
         price
         Product {
-          name
+          ProductName {
+            name
+          }
         }
       }
     }
@@ -133,7 +135,9 @@ interface OrderDetails {
       quantity: number;
       price: string;
       Product: {
-        name: string;
+        ProductName: {
+          name: string;
+        };
       };
     }>;
   } | null;
@@ -320,7 +324,7 @@ export default async function handler(
       } else {
         // List all order items for regular orders
         const allItems = orderData.Order_Items.map(
-          (item: any) => `${item.Product.name} (${item.quantity})`
+          (item: any) => `${item.Product.ProductName?.name || 'Unknown Product'} (${item.quantity})`
         ).join(", ");
         refundReason += `Order items: ${allItems}. `;
       }
