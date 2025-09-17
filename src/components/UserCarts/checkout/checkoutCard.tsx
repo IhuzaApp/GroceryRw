@@ -100,7 +100,6 @@ export default function CheckoutItems({
         const data = await response.json();
 
         if (data.success && data.config) {
-          console.log("Fetched system configuration from API:", data.config);
           setSystemConfig(data.config);
 
           // Store in cookie with expiration and timestamp
@@ -130,10 +129,6 @@ export default function CheckoutItems({
         const data = await response.json();
 
         if (data.success && data.config) {
-          console.log(
-            "Background refresh of system configuration successful:",
-            data.config
-          );
           setSystemConfig(data.config);
 
           // Update cache with new data and timestamp
@@ -170,28 +165,18 @@ export default function CheckoutItems({
             // Handle both old format (direct config object) and new format (with timestamp)
             if (parsedCache.config && parsedCache.timestamp) {
               // New format with timestamp
-              console.log(
-                "Found cached system configuration:",
-                parsedCache.config
-              );
               setSystemConfig(parsedCache.config);
 
               // Check if cache is stale and needs background refresh
               const cacheAge = Date.now() - parsedCache.timestamp;
               if (cacheAge > CACHE_REFRESH_MS) {
-                console.log("Cache is stale, refreshing in background");
                 refreshConfigInBackground();
               }
             } else {
               // Old format or unexpected structure - treat as config directly
-              console.log(
-                "Found cached system configuration (legacy format):",
-                parsedCache
-              );
               setSystemConfig(parsedCache);
 
               // Always refresh old format in background to update to new format
-              console.log("Updating cache format in background");
               refreshConfigInBackground();
             }
 
@@ -215,7 +200,6 @@ export default function CheckoutItems({
     if (typeof window !== "undefined") {
       (window as any).clearGrocerySystemConfigCache = () => {
         Cookies.remove(SYSTEM_CONFIG_COOKIE);
-        console.log("System configuration cache cleared");
         fetchConfigFromAPI();
       };
     }
@@ -387,11 +371,9 @@ export default function CheckoutItems({
   const finalTotal = Total - discount + serviceFee + deliveryFee;
 
   const handleProceedToCheckout = async () => {
-    console.log("🚀 Starting checkout process...");
     
     // Validate cart has items
     if (totalUnits <= 0) {
-      console.log("❌ Cart is empty, cannot proceed");
       toaster.push(
         <Notification type="warning" header="Empty Cart">
           Your cart is empty.
@@ -401,14 +383,11 @@ export default function CheckoutItems({
       return;
     }
     
-    console.log("✅ Cart validation passed, totalUnits:", totalUnits);
     
     // Get selected delivery address from cookie
     const cookieValue = Cookies.get("delivery_address");
-    console.log("📍 Delivery address cookie:", cookieValue ? "Found" : "Missing");
     
     if (!cookieValue) {
-      console.log("❌ No delivery address found");
       toaster.push(
         <Notification type="error" header="Address Required">
           Please select a delivery address.
@@ -421,7 +400,6 @@ export default function CheckoutItems({
     let addressObj;
     try {
       addressObj = JSON.parse(cookieValue);
-      console.log("✅ Address parsed successfully:", addressObj);
     } catch (err) {
       console.error("❌ Error parsing delivery_address cookie:", err);
       toaster.push(
@@ -434,10 +412,8 @@ export default function CheckoutItems({
     }
     
     const deliveryAddressId = addressObj.id;
-    console.log("📍 Delivery address ID:", deliveryAddressId);
     
     if (!deliveryAddressId) {
-      console.log("❌ No delivery address ID found");
       toaster.push(
         <Notification type="error" header="Invalid Address">
           Please select a valid delivery address.
@@ -447,7 +423,6 @@ export default function CheckoutItems({
       return;
     }
     
-    console.log("🔄 Setting loading state to true");
     setIsCheckoutLoading(true);
     
         // No immediate notification - will show after cart refresh completes
@@ -457,7 +432,6 @@ export default function CheckoutItems({
     
     // Process checkout in background
     try {
-      console.log("📦 Preparing checkout payload...");
       // Prepare checkout payload
       const payload = {
         shop_id: shopId,
@@ -470,16 +444,13 @@ export default function CheckoutItems({
         delivery_notes: deliveryNotes || null,
       };
       
-      console.log("📦 Checkout payload:", payload);
       
       // Make API call in background (don't await)
-      console.log("🌐 Making API call to /api/checkout...");
       fetch("/api/checkout", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
            }).then(async (res) => {
-             console.log("📡 API response received:", res.status, res.statusText);
              const data = await res.json();
              if (!res.ok) {
                console.error("❌ Checkout error:", data.error || "Checkout failed");
@@ -492,17 +463,13 @@ export default function CheckoutItems({
                );
                setIsCheckoutLoading(false);
              } else {
-               console.log("✅ Order processed successfully in background:", data);
                
                // Refresh cart data after successful checkout
-               console.log("🛒 Refreshing cart data after successful checkout");
                setTimeout(() => {
-                 console.log("🔄 Dispatching cartChanged event with callback...");
                  // Create custom event with callback to hide loading overlay and show success notification
                  const cartChangedEvent = new CustomEvent("cartChanged", {
                    detail: {
                      hideLoadingCallback: () => {
-                       console.log("✅ Cart refresh completed, hiding loading overlay");
                        setIsCheckoutLoading(false);
                        
                        // Show final success toast after overlay disappears

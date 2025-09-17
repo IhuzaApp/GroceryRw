@@ -90,7 +90,6 @@ export default function CartMainPage() {
 
   // Function to refresh cart data
   const refreshCartData = () => {
-    console.log("🔄 Starting cart data refresh...");
     setLoadingShops(true);
     fetch("/api/carts")
       .then(async (res) => {
@@ -111,7 +110,6 @@ export default function CartMainPage() {
             logo?: string;
           }>;
         }) => {
-          console.log("📊 Fresh cart data received:", data.carts);
           setShops(data.carts);
           if (data.carts.length > 0) {
             setSelectedCartId(data.carts[0].id);
@@ -126,13 +124,11 @@ export default function CartMainPage() {
       })
       .finally(() => {
         setLoadingShops(false);
-        console.log("✅ Cart data refresh completed");
       });
   };
 
   // Function to refresh cart data with callback (for checkout)
   const refreshCartDataWithCallback = (callback: () => void) => {
-    console.log("🔄 Starting cart data refresh with callback...");
     setLoadingShops(true);
     fetch("/api/carts")
       .then(async (res) => {
@@ -153,7 +149,6 @@ export default function CartMainPage() {
             logo?: string;
           }>;
         }) => {
-          console.log("📊 Fresh cart data received:", data.carts);
           setShops(data.carts);
           if (data.carts.length > 0) {
             setSelectedCartId(data.carts[0].id);
@@ -168,7 +163,6 @@ export default function CartMainPage() {
       })
       .finally(() => {
         setLoadingShops(false);
-        console.log("✅ Cart data refresh completed, calling callback");
         // Call the callback to hide loading overlay
         callback();
       });
@@ -182,14 +176,11 @@ export default function CartMainPage() {
   // Listen for cart changes (e.g., after checkout)
   useEffect(() => {
     const handleCartChanged = (event: any) => {
-      console.log("🛒 Cart changed event received, refreshing cart data...");
-      console.log("📊 Current shops before refresh:", shops);
       
       // Check if this is a custom event with callback
       const hideLoadingCallback = event.detail?.hideLoadingCallback;
       
       if (hideLoadingCallback) {
-        console.log("🔄 Cart refresh with loading callback detected");
         // Refresh cart data and call the callback when done
         refreshCartDataWithCallback(hideLoadingCallback);
       } else {
