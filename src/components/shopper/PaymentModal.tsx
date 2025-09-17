@@ -10,6 +10,7 @@ import {
 } from "rsuite";
 import { useTheme } from "../../context/ThemeContext";
 import { formatCurrencySync } from "../../utils/formatCurrency";
+import { momoTokenManager } from "../../lib/momoTokenManager";
 
 interface PaymentModalProps {
   open: boolean;
@@ -61,6 +62,10 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
     setStatusMessage('Initiating MoMo payment...');
 
     try {
+      // First, ensure we have a valid token
+      setStatusMessage('Getting payment authorization...');
+      await momoTokenManager.getValidToken();
+
       const response = await fetch('/api/momo/transfer', {
         method: 'POST',
         headers: {
@@ -86,11 +91,15 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
       } else {
         setStatusMessage(data.error || 'Payment initiation failed');
         setPaymentStatus('failed');
+        // Clear token cache on error to force regeneration
+        momoTokenManager.clearCachedToken();
       }
     } catch (error) {
       console.error('Payment initiation error:', error);
       setStatusMessage('Network error. Please try again.');
       setPaymentStatus('failed');
+      // Clear token cache on error to force regeneration
+      momoTokenManager.clearCachedToken();
     }
   };
 
@@ -101,6 +110,9 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
 
     const poll = async () => {
       try {
+        // Ensure we have a valid token for status check
+        await momoTokenManager.getValidToken();
+        
         const response = await fetch(`/api/momo/status?referenceId=${referenceId}`);
         const data = await response.json();
 
@@ -128,6 +140,8 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
         } else {
           setPaymentStatus('failed');
           setStatusMessage(data.error || 'Status check failed');
+          // Clear token cache on error to force regeneration
+          momoTokenManager.clearCachedToken();
         }
       } catch (error) {
         console.error('Status polling error:', error);
@@ -137,6 +151,8 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
         } else {
           setPaymentStatus('failed');
           setStatusMessage('Status check failed. Please try again.');
+          // Clear token cache on error to force regeneration
+          momoTokenManager.clearCachedToken();
         }
       }
     };
@@ -152,6 +168,20 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
       setStatusMessage('');
     }
   }, [open]);
+
+  // Debug log to check button state
+  useEffect(() => {
+    console.log('PaymentModal button state:', {
+      payerNumber,
+      paymentLoading,
+      paymentStatus,
+      isDisabled: !payerNumber || paymentStatus === 'processing' || paymentLoading
+    });
+    
+    // Debug token status
+    const tokenInfo = momoTokenManager.getTokenInfo();
+    console.log('MoMo Token status:', tokenInfo);
+  }, [payerNumber, paymentLoading, paymentStatus]);
 
   return (
     <Modal
