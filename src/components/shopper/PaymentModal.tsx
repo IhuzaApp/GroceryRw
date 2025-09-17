@@ -10,7 +10,6 @@ import {
 } from "rsuite";
 import { useTheme } from "../../context/ThemeContext";
 import { formatCurrencySync } from "../../utils/formatCurrency";
-import { momoTokenManager } from "../../lib/momoTokenManager";
 
 interface PaymentModalProps {
   open: boolean;
@@ -23,7 +22,6 @@ interface PaymentModalProps {
   serviceFee: number;
   deliveryFee: number;
   paymentLoading: boolean;
-  payerNumber?: string; // Shopper's phone number for MoMo payment
   externalId?: string; // Order or batch ID for reference
 }
 
@@ -38,7 +36,6 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
   serviceFee,
   deliveryFee,
   paymentLoading,
-  payerNumber,
   externalId,
 }) => {
   const { theme } = useTheme();
@@ -58,20 +55,12 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
       return;
     }
 
-    if (!payerNumber) {
-      setStatusMessage('Phone number is required for payment');
-      setPaymentStatus('failed');
-      return;
-    }
-
     // If validation passes, proceed to OTP verification
-    setPaymentStatus('success');
-    setStatusMessage('Payment details validated. Proceeding to OTP verification...');
+    setPaymentStatus('processing');
+    setStatusMessage('Validating payment details...');
     
-    // Call the original onSubmit to proceed to OTP
-            setTimeout(() => {
-              onSubmit();
-    }, 1000);
+    // Call the original onSubmit to proceed to OTP immediately
+    onSubmit();
   };
 
   // Reset status when modal opens
@@ -86,16 +75,12 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
   // Debug log to check button state
   useEffect(() => {
     console.log('PaymentModal button state:', {
-      payerNumber,
+      momoCode,
       paymentLoading,
       paymentStatus,
-      isDisabled: !payerNumber || paymentStatus === 'processing' || paymentLoading
+      isDisabled: !momoCode.trim() || paymentStatus === 'processing' || paymentLoading
     });
-    
-    // Debug token status
-    const tokenInfo = momoTokenManager.getTokenInfo();
-    console.log('MoMo Token status:', tokenInfo);
-  }, [payerNumber, paymentLoading, paymentStatus]);
+  }, [momoCode, paymentLoading, paymentStatus]);
 
   return (
     <Modal
@@ -353,14 +338,10 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
         </div>
 
         {/* Payment Status Display */}
-        {paymentStatus !== 'idle' && (
+        {paymentStatus !== 'idle' && paymentStatus !== 'success' && (
           <div
             className={`mt-6 rounded-xl border-l-4 p-4 ${
-              paymentStatus === 'success'
-                ? theme === "dark"
-                  ? "border-green-500 bg-green-900/20 text-green-300"
-                  : "border-green-500 bg-green-50 text-green-800"
-                : paymentStatus === 'failed'
+              paymentStatus === 'failed'
                 ? theme === "dark"
                   ? "border-red-500 bg-red-900/20 text-red-300"
                   : "border-red-500 bg-red-50 text-red-800"
@@ -372,30 +353,12 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
             <div className="flex items-start gap-3">
               <div
                 className={`rounded-full p-1 ${
-                  paymentStatus === 'success'
-                    ? theme === "dark" ? "bg-green-600" : "bg-green-100"
-                    : paymentStatus === 'failed'
+                  paymentStatus === 'failed'
                     ? theme === "dark" ? "bg-red-600" : "bg-red-100"
                     : theme === "dark" ? "bg-blue-600" : "bg-blue-100"
                 }`}
               >
-                {paymentStatus === 'success' ? (
-                  <svg
-                    className={`h-4 w-4 ${
-                      theme === "dark" ? "text-white" : "text-green-600"
-                    }`}
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M5 13l4 4L19 7"
-                    />
-                  </svg>
-                ) : paymentStatus === 'failed' ? (
+                {paymentStatus === 'failed' ? (
                   <svg
                     className={`h-4 w-4 ${
                       theme === "dark" ? "text-white" : "text-red-600"
@@ -437,18 +400,11 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
               </div>
               <div>
                 <p className="mb-1 font-semibold">
-                  {paymentStatus === 'success' ? 'Payment Successful' : 
-                   paymentStatus === 'failed' ? 'Payment Failed' : 
-                   'Payment Processing'}
+                  {paymentStatus === 'failed' ? 'Validation Failed' : 'Validating Payment Details'}
                 </p>
                 <p className="text-sm opacity-90">
                   {statusMessage}
                 </p>
-                {paymentReferenceId && (
-                  <p className="text-xs mt-2 opacity-75">
-                    Reference ID: {paymentReferenceId}
-                  </p>
-                )}
               </div>
             </div>
           </div>
@@ -502,44 +458,18 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
         } rounded-b-2xl px-6 py-4`}
       >
         <div className="flex w-full gap-3">
-          {paymentStatus === 'success' ? (
-            <button
-              onClick={onClose}
-              className={`flex flex-1 items-center justify-center gap-2 rounded-xl px-6 py-3 font-semibold text-white transition-all duration-200 ${
-                theme === "dark"
-                  ? "bg-green-600 shadow-lg hover:bg-green-700 hover:shadow-green-500/25"
-                  : "bg-green-600 shadow-lg hover:bg-green-700 hover:shadow-green-500/25"
-              }`}
-            >
-              <svg
-                className="h-4 w-4"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M5 13l4 4L19 7"
-                />
-              </svg>
-              Payment Complete - Close
-            </button>
-          ) : (
-            <>
           <button
-                onClick={handlePaymentSubmission}
-                disabled={!payerNumber || !momoCode.trim() || paymentStatus === 'processing' || paymentLoading}
+            onClick={handlePaymentSubmission}
+            disabled={!momoCode.trim() || paymentStatus === 'processing' || paymentLoading}
             className={`flex flex-1 items-center justify-center gap-2 rounded-xl px-6 py-3 font-semibold text-white transition-all duration-200 ${
-                  !payerNumber || !momoCode.trim() || paymentStatus === 'processing' || paymentLoading
+              !momoCode.trim() || paymentStatus === 'processing' || paymentLoading
                 ? "cursor-not-allowed bg-gray-400"
                 : theme === "dark"
                 ? "bg-green-600 shadow-lg hover:bg-green-700 hover:shadow-green-500/25"
                 : "bg-green-600 shadow-lg hover:bg-green-700 hover:shadow-green-500/25"
             }`}
           >
-                {paymentStatus === 'processing' || paymentLoading ? (
+            {paymentStatus === 'processing' || paymentLoading ? (
               <>
                 <svg
                   className="h-4 w-4 animate-spin"
@@ -560,7 +490,7 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
                     d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
                   ></path>
                 </svg>
-                    Processing...
+                Processing...
               </>
             ) : (
               <>
@@ -574,28 +504,26 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
                     strokeLinecap="round"
                     strokeLinejoin="round"
                     strokeWidth={2}
-                        d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
+                    d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
                   />
                 </svg>
-                    Verify & Proceed to OTP
+                Verify & Proceed to OTP
               </>
             )}
           </button>
           <button
             onClick={onClose}
-                disabled={paymentStatus === 'processing'}
+            disabled={paymentStatus === 'processing'}
             className={`rounded-xl px-6 py-3 font-semibold transition-all duration-200 ${
-                  paymentStatus === 'processing'
-                    ? "cursor-not-allowed border border-gray-400 text-gray-400"
-                    : theme === "dark"
+              paymentStatus === 'processing'
+                ? "cursor-not-allowed border border-gray-400 text-gray-400"
+                : theme === "dark"
                 ? "border border-gray-600 text-gray-300 hover:bg-gray-700"
                 : "border border-gray-300 text-gray-700 hover:bg-gray-100"
             }`}
           >
             Cancel
           </button>
-            </>
-          )}
         </div>
       </Modal.Footer>
     </Modal>

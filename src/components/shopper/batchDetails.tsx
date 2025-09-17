@@ -663,8 +663,8 @@ export default function BatchDetails({
           },
           body: JSON.stringify({
             amount: orderAmount,
-            currency: 'UGX',
-            payerNumber: (session?.user as any)?.phone,
+            currency: systemConfig?.currency || 'RWF',
+            payerNumber: momoCode,
             externalId: order.id || `SHOPPER-PAYMENT-${Date.now()}`,
             payerMessage: 'Payment for Shopper Items',
             payeeNote: 'Shopper payment confirmation',
@@ -679,7 +679,8 @@ export default function BatchDetails({
           let attempts = 0;
           let paymentCompleted = false;
 
-          const pollPaymentStatus = async () => {
+          // Poll for MoMo payment status
+          for (let attempt = 0; attempt < maxAttempts; attempt++) {
             try {
               await momoTokenManager.getValidToken();
               
@@ -689,19 +690,19 @@ export default function BatchDetails({
               if (statusResponse.ok) {
                 if (statusData.status === 'SUCCESSFUL') {
                   momoPaymentSuccess = true;
-                  paymentCompleted = true;
                   toaster.push(
                     <Notification type="success" header="MoMo Payment Successful" closable>
                       Payment completed successfully via MoMo!
                     </Notification>,
                     { placement: "topEnd" }
                   );
+                  break; // Exit the polling loop
                 } else if (statusData.status === 'FAILED') {
                   throw new Error('MoMo payment failed. Please try again.');
                 } else if (statusData.status === 'PENDING') {
-                  attempts++;
-                  if (attempts < maxAttempts) {
-                    setTimeout(pollPaymentStatus, 10000); // Poll every 10 seconds
+                  // Continue polling
+                  if (attempt < maxAttempts - 1) {
+                    await new Promise(resolve => setTimeout(resolve, 10000)); // Wait 10 seconds
                   } else {
                     throw new Error('MoMo payment timeout. Please check your phone or try again.');
                   }
@@ -711,21 +712,11 @@ export default function BatchDetails({
               }
             } catch (error) {
               console.error('MoMo status polling error:', error);
-              attempts++;
-              if (attempts < maxAttempts && !paymentCompleted) {
-                setTimeout(pollPaymentStatus, 10000);
-              } else {
-                throw error;
+              if (attempt === maxAttempts - 1) {
+                throw error; // Re-throw on last attempt
               }
+              await new Promise(resolve => setTimeout(resolve, 10000)); // Wait before retry
             }
-          };
-
-          // Start polling
-          await pollPaymentStatus();
-
-          // Wait for payment to complete
-          while (!paymentCompleted && attempts < maxAttempts) {
-            await new Promise(resolve => setTimeout(resolve, 1000));
           }
 
           if (!momoPaymentSuccess) {
@@ -823,19 +814,21 @@ export default function BatchDetails({
           // Update step
           setCurrentStep(2);
 
-          // Clear payment info
+          // Clear payment info and close payment modal
           setMomoCode("");
           setPrivateKey("");
           setOtp("");
           setGeneratedOtp("");
+          setShowPaymentModal(false); // Ensure payment modal is closed
 
           // Show success notification
           toaster.push(
-            <Notification type="success" header="Payment Processed" closable>
-              Payment has been processed successfully. Your reserved wallet
-              balance has been updated.
+            <Notification type="success" header="Payment Complete" closable>
+              ✅ MoMo payment successful<br/>
+              ✅ Wallet balance updated<br/>
+              ✅ Order status updated to "On The Way"
             </Notification>,
-            { placement: "topEnd" }
+            { placement: "topEnd", duration: 5000 }
           );
         } catch (updateError) {
           console.error("Error updating order status:", updateError);
@@ -1312,8 +1305,14 @@ export default function BatchDetails({
 
       {/* MoMo Payment Modal */}
       <PaymentModal
+        key={`payment-modal-${order?.id}-${showPaymentModal}`}
         open={showPaymentModal}
-        onClose={() => setShowPaymentModal(false)}
+        onClose={() => {
+          setShowPaymentModal(false);
+          // Reset payment state when modal is closed
+          setMomoCode("");
+          setPrivateKey("");
+        }}
         onSubmit={handlePaymentSubmit}
         momoCode={momoCode}
         setMomoCode={setMomoCode}
@@ -1322,7 +1321,6 @@ export default function BatchDetails({
         serviceFee={parseFloat(order?.serviceFee || "0")}
         deliveryFee={parseFloat(order?.deliveryFee || "0")}
         paymentLoading={paymentLoading}
-        payerNumber={(session?.user as any)?.phone || ""}
         externalId={order?.id}
       />
 
