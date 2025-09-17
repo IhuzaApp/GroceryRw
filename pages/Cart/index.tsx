@@ -88,14 +88,14 @@ export default function CartMainPage() {
   const [loadingShops, setLoadingShops] = useState<boolean>(true);
   const [loadingItems, setLoadingItems] = useState<boolean>(false);
 
-  // Load user's carts on mount
-  useEffect(() => {
+  // Function to refresh cart data
+  const refreshCartData = () => {
+    console.log("🔄 Starting cart data refresh...");
     setLoadingShops(true);
     fetch("/api/carts")
       .then(async (res) => {
         if (!res.ok) {
           console.error("Failed to load carts, status:", res.status);
-          // return empty carts to prevent undefined
           return { carts: [] };
         }
         return res.json();
@@ -108,19 +108,99 @@ export default function CartMainPage() {
             count?: number;
             latitude: string;
             longitude: string;
-            logo?: string; // Added logo property
+            logo?: string;
           }>;
         }) => {
+          console.log("📊 Fresh cart data received:", data.carts);
           setShops(data.carts);
-          if (data.carts.length > 0) setSelectedCartId(data.carts[0].id);
+          if (data.carts.length > 0) {
+            setSelectedCartId(data.carts[0].id);
+          } else {
+            setSelectedCartId(null);
+          }
         }
       )
       .catch((err) => {
         console.error("Failed to load carts:", err);
         setShops([]);
       })
-      .finally(() => setLoadingShops(false));
+      .finally(() => {
+        setLoadingShops(false);
+        console.log("✅ Cart data refresh completed");
+      });
+  };
+
+  // Function to refresh cart data with callback (for checkout)
+  const refreshCartDataWithCallback = (callback: () => void) => {
+    console.log("🔄 Starting cart data refresh with callback...");
+    setLoadingShops(true);
+    fetch("/api/carts")
+      .then(async (res) => {
+        if (!res.ok) {
+          console.error("Failed to load carts, status:", res.status);
+          return { carts: [] };
+        }
+        return res.json();
+      })
+      .then(
+        (data: {
+          carts: Array<{
+            id: string;
+            name: string;
+            count?: number;
+            latitude: string;
+            longitude: string;
+            logo?: string;
+          }>;
+        }) => {
+          console.log("📊 Fresh cart data received:", data.carts);
+          setShops(data.carts);
+          if (data.carts.length > 0) {
+            setSelectedCartId(data.carts[0].id);
+          } else {
+            setSelectedCartId(null);
+          }
+        }
+      )
+      .catch((err) => {
+        console.error("Failed to load carts:", err);
+        setShops([]);
+      })
+      .finally(() => {
+        setLoadingShops(false);
+        console.log("✅ Cart data refresh completed, calling callback");
+        // Call the callback to hide loading overlay
+        callback();
+      });
+  };
+
+  // Load user's carts on mount
+  useEffect(() => {
+    refreshCartData();
   }, []);
+
+  // Listen for cart changes (e.g., after checkout)
+  useEffect(() => {
+    const handleCartChanged = (event: any) => {
+      console.log("🛒 Cart changed event received, refreshing cart data...");
+      console.log("📊 Current shops before refresh:", shops);
+      
+      // Check if this is a custom event with callback
+      const hideLoadingCallback = event.detail?.hideLoadingCallback;
+      
+      if (hideLoadingCallback) {
+        console.log("🔄 Cart refresh with loading callback detected");
+        // Refresh cart data and call the callback when done
+        refreshCartDataWithCallback(hideLoadingCallback);
+      } else {
+        // Regular cart refresh without callback
+        refreshCartData();
+      }
+    };
+
+    window.addEventListener("cartChanged", handleCartChanged);
+    return () => window.removeEventListener("cartChanged", handleCartChanged);
+  }, [shops]);
 
   const handleSelectCart = (cartId: string) => setSelectedCartId(cartId);
 
@@ -274,7 +354,8 @@ export default function CartMainPage() {
                         .map((_, index) => (
                           <ShopSelectionSkeleton key={index} />
                         ))
-                    : shops.map((shop) => (
+                    : shops.length > 0
+                    ? shops.map((shop) => (
                         <div
                           key={shop.id}
                           onClick={() => handleSelectCart(shop.id)}
@@ -368,7 +449,47 @@ export default function CartMainPage() {
                             </div>
                           )}
                         </div>
-                      ))}
+                      ))
+                    : (
+                        // Empty shops state
+                        <div className="flex w-full flex-col items-center justify-center py-8">
+                          {/* Empty Cart Icon */}
+                          <div className="mb-4 flex justify-center">
+                            <svg
+                              className={`h-16 w-16 ${
+                                theme === "dark" ? "text-gray-600" : "text-gray-400"
+                              }`}
+                              fill="none"
+                              stroke="currentColor"
+                              viewBox="0 0 24 24"
+                            >
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth="1.5"
+                                d="M3 3h2l.4 2M7 13h10l4-8H5.4m0 0L7 13m0 0l-2.5 5M7 13l2.5 5m6-5v6a2 2 0 01-2 2H9a2 2 0 01-2-2v-6m8 0V9a2 2 0 00-2-2H9a2 2 0 00-2 2v4.01"
+                              />
+                            </svg>
+                          </div>
+                          
+                          {/* Empty Text */}
+                          <h3
+                            className={`text-lg font-semibold ${
+                              theme === "dark" ? "text-gray-300" : "text-gray-600"
+                            }`}
+                          >
+                            Empty
+                          </h3>
+                          
+                          <p
+                            className={`mt-1 text-sm ${
+                              theme === "dark" ? "text-gray-500" : "text-gray-500"
+                            }`}
+                          >
+                            Your cart is empty. Start shopping to add items!
+                          </p>
+                        </div>
+                      )}
                 </div>
               </div>
 
@@ -391,7 +512,7 @@ export default function CartMainPage() {
                 </>
               ) : (
                 <div
-                  className={`p-4 ${
+                  className={`p-4 text-center ${
                     theme === "dark" ? "text-gray-400" : "text-gray-500"
                   }`}
                 >
