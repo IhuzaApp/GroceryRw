@@ -88,7 +88,9 @@ export const recordPaymentTransactions = async (
   shopperId: string,
   orderId: string,
   orderAmount: number,
-  originalOrderTotal?: number
+  originalOrderTotal?: number,
+  momoReferenceId?: string,
+  momoSuccess?: boolean
 ) => {
   try {
     // On client-side, use the API route instead of direct Hasura access
@@ -110,6 +112,8 @@ export const recordPaymentTransactions = async (
           orderId,
           orderAmount: formattedOrderAmount,
           originalOrderTotal: originalOrderTotal,
+          momoReferenceId: momoReferenceId,
+          momoSuccess: momoSuccess,
         }),
       });
 
@@ -178,6 +182,14 @@ export const recordPaymentTransactions = async (
     });
 
     // Create wallet transaction records
+    // Build description with MoMo payment details
+    let description = "Payment for found order items (excluding service and delivery fees)";
+    
+    if (momoReferenceId && momoSuccess !== undefined) {
+      const momoStatus = momoSuccess ? "SUCCESSFUL" : "FAILED";
+      description += ` | MoMo Payment: ${momoStatus} | Reference ID: ${momoReferenceId}`;
+    }
+
     const transactions = [
       {
         wallet_id: walletId,
@@ -185,8 +197,7 @@ export const recordPaymentTransactions = async (
         type: "payment",
         status: "completed",
         related_order_id: orderId,
-        description:
-          "Payment for found order items (excluding service and delivery fees)",
+        description: description,
       },
     ];
 
@@ -335,7 +346,7 @@ export const generateInvoice = async (orderId: string) => {
       dateCompleted: new Date(order.updated_at).toLocaleString(),
       status: order.status,
       items: items.map((item) => ({
-        name: item.Product.ProductName?.name || 'Unknown Product',
+        name: item.Product.name || 'Unknown Product',
         quantity: item.quantity,
         unitPrice: item.price,
         total:

@@ -651,6 +651,7 @@ export default function BatchDetails({
 
       // Initiate MoMo payment after OTP verification
       let momoPaymentSuccess = false;
+      let momoReferenceId = '';
       try {
         // First, ensure we have a valid token
         const { momoTokenManager } = await import("../../lib/momoTokenManager");
@@ -672,6 +673,7 @@ export default function BatchDetails({
         });
 
         const momoData = await momoResponse.json();
+        momoReferenceId = momoData.referenceId;
 
         if (momoResponse.ok) {
           // Start polling for MoMo payment status
@@ -756,6 +758,8 @@ export default function BatchDetails({
             orderAmount: orderAmount, // Only the value of found items (no fees)
             originalOrderTotal: originalOrderTotal, // Original subtotal for refund calculation
             orderType: order.orderType || "regular", // Pass order type to API
+            momoReferenceId: momoReferenceId, // Pass MoMo reference ID
+            momoSuccess: momoPaymentSuccess, // Pass MoMo success status
           }),
         });
 
