@@ -80,7 +80,7 @@ export default function ActiveBatches({
   initialError = null,
 }: ActiveBatchesProps) {
   const { role } = useAuth();
-  const [isLoading, setIsLoading] = useState(!initialOrders.length);
+  const [isLoading, setIsLoading] = useState(true);
   const [isMobile, setIsMobile] = useState(false);
   const [activeOrders, setActiveOrders] = useState<Order[]>(initialOrders);
   const [error, setError] = useState<string | null>(initialError);
@@ -119,6 +119,10 @@ export default function ActiveBatches({
       return;
     }
 
+    // Always start with loading state
+    setIsLoading(true);
+    setError(null);
+
     // Always fetch fresh data when component mounts or role changes
     // Reset the fetch flag to allow fresh data fetching
     fetchedRef.current = false;
@@ -130,9 +134,6 @@ export default function ActiveBatches({
     const signal = controller.signal;
 
     async function fetchActiveBatches() {
-      setIsLoading(true);
-      setError(null);
-
       // Add minimum loading time to ensure skeleton is visible
       const startTime = Date.now();
       const minLoadingTime = 800; // 800ms minimum loading time
