@@ -50,114 +50,28 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
     return formatCurrencySync(amount);
   };
 
-  // Function to initiate MoMo payment
-  const initiateMoMoPayment = async () => {
-    if (!payerNumber) {
-      setStatusMessage('Phone number is required for MoMo payment');
+  // Function to handle payment submission (now just validates and proceeds to OTP)
+  const handlePaymentSubmission = async () => {
+    if (!momoCode.trim()) {
+      setStatusMessage('MoMo code is required');
       setPaymentStatus('failed');
       return;
     }
 
-    setPaymentStatus('processing');
-    setStatusMessage('Initiating MoMo payment...');
-
-    try {
-      // First, ensure we have a valid token
-      setStatusMessage('Getting payment authorization...');
-      await momoTokenManager.getValidToken();
-
-      const response = await fetch('/api/momo/transfer', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          amount: orderAmount,
-          currency: 'UGX',
-          payerNumber: payerNumber,
-          externalId: externalId || `SHOPPER-PAYMENT-${Date.now()}`,
-          payerMessage: 'Payment for Shopper Items',
-          payeeNote: 'Shopper payment confirmation',
-        }),
-      });
-
-      const data = await response.json();
-
-      if (response.ok) {
-        setPaymentReferenceId(data.referenceId);
-        setStatusMessage('Payment request sent. Please check your phone for MoMo prompt...');
-        // Start polling for status
-        pollPaymentStatus(data.referenceId);
-      } else {
-        setStatusMessage(data.error || 'Payment initiation failed');
-        setPaymentStatus('failed');
-        // Clear token cache on error to force regeneration
-        momoTokenManager.clearCachedToken();
-      }
-    } catch (error) {
-      console.error('Payment initiation error:', error);
-      setStatusMessage('Network error. Please try again.');
+    if (!payerNumber) {
+      setStatusMessage('Phone number is required for payment');
       setPaymentStatus('failed');
-      // Clear token cache on error to force regeneration
-      momoTokenManager.clearCachedToken();
+      return;
     }
-  };
 
-  // Function to poll payment status
-  const pollPaymentStatus = async (referenceId: string) => {
-    const maxAttempts = 30; // Poll for up to 5 minutes (30 * 10 seconds)
-    let attempts = 0;
-
-    const poll = async () => {
-      try {
-        // Ensure we have a valid token for status check
-        await momoTokenManager.getValidToken();
-        
-        const response = await fetch(`/api/momo/status?referenceId=${referenceId}`);
-        const data = await response.json();
-
-        if (response.ok) {
-          if (data.status === 'SUCCESSFUL') {
-            setPaymentStatus('success');
-            setStatusMessage('Payment completed successfully!');
-            // Call the original onSubmit after successful payment
+    // If validation passes, proceed to OTP verification
+    setPaymentStatus('success');
+    setStatusMessage('Payment details validated. Proceeding to OTP verification...');
+    
+    // Call the original onSubmit to proceed to OTP
             setTimeout(() => {
               onSubmit();
-            }, 2000);
-          } else if (data.status === 'FAILED') {
-            setPaymentStatus('failed');
-            setStatusMessage('Payment failed. Please try again.');
-          } else if (data.status === 'PENDING') {
-            attempts++;
-            if (attempts < maxAttempts) {
-              setStatusMessage(`Payment pending... Checking status (${attempts}/${maxAttempts})`);
-              setTimeout(poll, 10000); // Poll every 10 seconds
-            } else {
-              setPaymentStatus('failed');
-              setStatusMessage('Payment timeout. Please check your phone or try again.');
-            }
-          }
-        } else {
-          setPaymentStatus('failed');
-          setStatusMessage(data.error || 'Status check failed');
-          // Clear token cache on error to force regeneration
-          momoTokenManager.clearCachedToken();
-        }
-      } catch (error) {
-        console.error('Status polling error:', error);
-        attempts++;
-        if (attempts < maxAttempts) {
-          setTimeout(poll, 10000);
-        } else {
-          setPaymentStatus('failed');
-          setStatusMessage('Status check failed. Please try again.');
-          // Clear token cache on error to force regeneration
-          momoTokenManager.clearCachedToken();
-        }
-      }
-    };
-
-    poll();
+    }, 1000);
   };
 
   // Reset status when modal opens
@@ -571,10 +485,10 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
               </svg>
             </div>
             <div>
-              <p className="mb-1 font-semibold">MoMo Payment Instructions</p>
+              <p className="mb-1 font-semibold">Payment Instructions</p>
               <p className="text-sm opacity-90">
-                Click "Pay with MoMo" to initiate payment. You will receive a MoMo prompt on your phone. 
-                Enter your MoMo PIN to complete the payment. The system will automatically verify your payment.
+                Enter your MoMo code and click "Verify & Proceed to OTP" to continue. 
+                After OTP verification, the MoMo payment will be initiated automatically.
               </p>
             </div>
           </div>
@@ -615,10 +529,10 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
           ) : (
             <>
           <button
-                onClick={initiateMoMoPayment}
-                disabled={!payerNumber || paymentStatus === 'processing' || paymentLoading}
+                onClick={handlePaymentSubmission}
+                disabled={!payerNumber || !momoCode.trim() || paymentStatus === 'processing' || paymentLoading}
             className={`flex flex-1 items-center justify-center gap-2 rounded-xl px-6 py-3 font-semibold text-white transition-all duration-200 ${
-                  !payerNumber || paymentStatus === 'processing' || paymentLoading
+                  !payerNumber || !momoCode.trim() || paymentStatus === 'processing' || paymentLoading
                 ? "cursor-not-allowed bg-gray-400"
                 : theme === "dark"
                 ? "bg-green-600 shadow-lg hover:bg-green-700 hover:shadow-green-500/25"
@@ -646,7 +560,7 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
                     d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
                   ></path>
                 </svg>
-                    Processing Payment...
+                    Processing...
               </>
             ) : (
               <>
@@ -660,10 +574,10 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
                     strokeLinecap="round"
                     strokeLinejoin="round"
                     strokeWidth={2}
-                        d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"
+                        d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
                   />
                 </svg>
-                    Pay with MoMo
+                    Verify & Proceed to OTP
               </>
             )}
           </button>
