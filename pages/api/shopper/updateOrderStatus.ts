@@ -538,45 +538,75 @@ export default async function handler(
     // Special handling for "delivered" status - update wallet balances and calculate revenue
     if (status === "delivered") {
       try {
-        // Get order details with fees
-        if (!hasuraClient) {
-          throw new Error("Hasura client is not initialized");
-        }
+        // First check if the order is already delivered to prevent duplicate processing
+        const CHECK_CURRENT_STATUS = gql`
+          query CheckCurrentStatus($orderId: uuid!) {
+            Orders(where: { id: { _eq: $orderId } }) {
+              id
+              status
+            }
+            reel_orders(where: { id: { _eq: $orderId } }) {
+              id
+              status
+            }
+          }
+        `;
 
-        let orderDetails: any;
-        if (isReelOrder) {
-          orderDetails = await hasuraClient.request<{
-            reel_orders_by_pk: {
-              id: string;
-              total: string;
-              service_fee: string;
-              delivery_fee: string;
-              shopper_id: string;
-            };
-          }>(GET_REEL_ORDER_DETAILS, {
-            orderId,
-          });
+        const currentStatusCheck = await hasuraClient.request<{
+          Orders: Array<{ id: string; status: string }>;
+          reel_orders: Array<{ id: string; status: string }>;
+        }>(CHECK_CURRENT_STATUS, {
+          orderId,
+        });
+
+        const currentOrder = isReelOrder 
+          ? currentStatusCheck.reel_orders[0]
+          : currentStatusCheck.Orders[0];
+
+        // If order is already delivered, skip wallet processing to prevent duplicates
+        if (currentOrder && currentOrder.status === "delivered") {
+          console.log(`Order ${orderId} is already delivered, skipping wallet processing`);
+          // Still update the order status in the database below, but skip wallet processing
         } else {
-          orderDetails = await hasuraClient.request<{
-            Orders_by_pk: {
-              id: string;
-              total: string;
-              service_fee: string;
-              delivery_fee: string;
-              shopper_id: string;
-            };
-          }>(GET_ORDER_DETAILS, {
-            orderId,
-          });
-        }
+          // Get order details with fees
+          if (!hasuraClient) {
+            throw new Error("Hasura client is not initialized");
+          }
 
-        const order = isReelOrder
-          ? orderDetails.reel_orders_by_pk
-          : orderDetails.Orders_by_pk;
+          let orderDetails: any;
+          if (isReelOrder) {
+            orderDetails = await hasuraClient.request<{
+              reel_orders_by_pk: {
+                id: string;
+                total: string;
+                service_fee: string;
+                delivery_fee: string;
+                shopper_id: string;
+              };
+            }>(GET_REEL_ORDER_DETAILS, {
+              orderId,
+            });
+          } else {
+            orderDetails = await hasuraClient.request<{
+              Orders_by_pk: {
+                id: string;
+                total: string;
+                service_fee: string;
+                delivery_fee: string;
+                shopper_id: string;
+              };
+            }>(GET_ORDER_DETAILS, {
+              orderId,
+            });
+          }
 
-        if (!order) {
-          return res.status(404).json({ error: "Order not found" });
-        }
+          const order = isReelOrder
+            ? orderDetails.reel_orders_by_pk
+            : orderDetails.Orders_by_pk;
+
+          if (!order) {
+            return res.status(404).json({ error: "Order not found" });
+          }
 
         // Get system configuration for platform fee calculation
         const systemConfigResponse = await hasuraClient.request<{
@@ -638,6 +668,8 @@ export default async function handler(
         ).toFixed(2);
 
         // Update wallet balances (both available and reserved balance change)
+        // Only update if the order status is actually changing to "delivered"
+        // This prevents duplicate balance updates if the API is called multiple times
         await hasuraClient.request(UPDATE_WALLET_BALANCES, {
           wallet_id: wallet.id,
           available_balance: newAvailableBalance,
@@ -646,28 +678,55 @@ export default async function handler(
 
         // Create wallet transactions for delivered order (earnings and reserved balance deduction)
         if (!isReelOrder) {
-          const transactions = [
-            {
-              wallet_id: wallet.id,
-              amount: remainingEarnings.toFixed(2),
-              type: "earnings",
-              status: "completed",
-              related_order_id: orderId,
-              description: "Earnings after platform fee deduction",
-            },
-            {
-              wallet_id: wallet.id,
-              amount: orderTotal.toFixed(2),
-              type: "expense",
-              status: "completed",
-              related_order_id: orderId,
-              description: "Reserved balance used for order goods",
-            },
-          ];
+          // Check if earnings transaction already exists for this order to prevent duplicates
+          const CHECK_EXISTING_EARNINGS = gql`
+            query CheckExistingEarnings($wallet_id: uuid!, $order_id: uuid!) {
+              Wallet_Transactions(
+                where: {
+                  wallet_id: { _eq: $wallet_id }
+                  related_order_id: { _eq: $order_id }
+                  type: { _eq: "earnings" }
+                }
+              ) {
+                id
+              }
+            }
+          `;
 
-          await hasuraClient.request(CREATE_WALLET_TRANSACTIONS, {
-            transactions,
+          const existingEarnings = await hasuraClient.request<{
+            Wallet_Transactions: Array<{ id: string }>;
+          }>(CHECK_EXISTING_EARNINGS, {
+            wallet_id: wallet.id,
+            order_id: orderId,
           });
+
+          // Only create transactions if earnings transaction doesn't already exist
+          if (existingEarnings.Wallet_Transactions.length === 0) {
+            const transactions = [
+              {
+                wallet_id: wallet.id,
+                amount: remainingEarnings.toFixed(2),
+                type: "earnings",
+                status: "completed",
+                related_order_id: orderId,
+                description: "Earnings after platform fee deduction",
+              },
+              {
+                wallet_id: wallet.id,
+                amount: orderTotal.toFixed(2),
+                type: "expense",
+                status: "completed",
+                related_order_id: orderId,
+                description: "Reserved balance used for order goods",
+              },
+            ];
+
+            await hasuraClient.request(CREATE_WALLET_TRANSACTIONS, {
+              transactions,
+            });
+          } else {
+            console.log(`Earnings transaction already exists for order ${orderId}, skipping duplicate creation`);
+          }
         }
 
         // Add plasa fee revenue (platform earnings) when order is delivered
@@ -703,6 +762,7 @@ export default async function handler(
             // Don't fail the order status update if plasa fee revenue calculation fails
           }
         }
+        } // Close the else block for wallet processing
       } catch (walletError) {
         console.error(
           "Error updating wallet balances for delivered order:",

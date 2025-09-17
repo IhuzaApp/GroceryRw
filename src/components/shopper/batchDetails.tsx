@@ -870,7 +870,7 @@ export default function BatchDetails({
       return;
     }
 
-    if (!order?.id) return;
+    if (!order?.id || loading) return; // Prevent multiple calls while loading
 
     try {
       setLoading(true);
