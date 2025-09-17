@@ -329,23 +329,25 @@ export default async function handler(
 
     if (data.Orders && Array.isArray(data.Orders)) {
       data.Orders.forEach((order) => {
-        const orderDate = new Date(order.updated_at);
+        // Use updated_at as the delivery completion date since orders are filtered by status: "delivered"
+        // This ensures we're only counting orders that were actually completed
+        const deliveryDate = new Date(order.updated_at);
         const serviceFee = parseFloat(order.service_fee || "0");
         const deliveryFee = parseFloat(order.delivery_fee || "0");
         const orderTotal = serviceFee + deliveryFee;
 
         // Weekly earnings (this week: Sunday to Saturday)
-        if (orderDate >= weekStart && orderDate <= weekEnd) {
+        if (deliveryDate >= weekStart && deliveryDate <= weekEnd) {
           weeklyEarnings += orderTotal;
         }
 
         // Monthly earnings (current month)
-        if (orderDate >= currentMonth && orderDate < nextMonth) {
+        if (deliveryDate >= currentMonth && deliveryDate < nextMonth) {
           monthlyEarnings += orderTotal;
         }
 
         // Quarterly earnings (current quarter)
-        if (orderDate >= quarterStart && orderDate < quarterEnd) {
+        if (deliveryDate >= quarterStart && deliveryDate < quarterEnd) {
           quarterlyEarnings += orderTotal;
         }
       });

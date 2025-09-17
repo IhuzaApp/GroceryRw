@@ -629,19 +629,22 @@ export default async function handler(
 
         // Update wallet balances according to specifications:
         // 1. Add remaining earnings to available balance (platform fee is already deducted from total earnings)
-        // 2. Reserved balance was already used to pay for goods (no change needed)
+        // 2. Deduct order total from reserved balance (since that money was used to buy goods)
         const newAvailableBalance = (
           currentAvailableBalance + remainingEarnings
         ).toFixed(2);
+        const newReservedBalance = (
+          currentReservedBalance - orderTotal
+        ).toFixed(2);
 
-        // Update wallet balances (only available balance changes)
+        // Update wallet balances (both available and reserved balance change)
         await hasuraClient.request(UPDATE_WALLET_BALANCES, {
           wallet_id: wallet.id,
           available_balance: newAvailableBalance,
-          reserved_balance: wallet.reserved_balance, // No change to reserved balance
+          reserved_balance: newReservedBalance,
         });
 
-        // Create wallet transactions for delivered order (only earnings transaction)
+        // Create wallet transactions for delivered order (earnings and reserved balance deduction)
         if (!isReelOrder) {
           const transactions = [
             {
@@ -651,6 +654,14 @@ export default async function handler(
               status: "completed",
               related_order_id: orderId,
               description: "Earnings after platform fee deduction",
+            },
+            {
+              wallet_id: wallet.id,
+              amount: orderTotal.toFixed(2),
+              type: "expense",
+              status: "completed",
+              related_order_id: orderId,
+              description: "Reserved balance used for order goods",
             },
           ];
 
