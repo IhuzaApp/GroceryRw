@@ -649,6 +649,106 @@ export default function BatchDetails({
       // Get the original order total for refund calculation
       const originalOrderTotal = calculateOriginalSubtotal();
 
+      // Initiate MoMo payment after OTP verification
+      let momoPaymentSuccess = false;
+      try {
+        // First, ensure we have a valid token
+        const { momoTokenManager } = await import("../../lib/momoTokenManager");
+        await momoTokenManager.getValidToken();
+
+        const momoResponse = await fetch('/api/momo/transfer', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            amount: orderAmount,
+            currency: 'UGX',
+            payerNumber: (session?.user as any)?.phone,
+            externalId: order.id || `SHOPPER-PAYMENT-${Date.now()}`,
+            payerMessage: 'Payment for Shopper Items',
+            payeeNote: 'Shopper payment confirmation',
+          }),
+        });
+
+        const momoData = await momoResponse.json();
+
+        if (momoResponse.ok) {
+          // Start polling for MoMo payment status
+          const maxAttempts = 30; // Poll for up to 5 minutes (30 * 10 seconds)
+          let attempts = 0;
+          let paymentCompleted = false;
+
+          const pollPaymentStatus = async () => {
+            try {
+              await momoTokenManager.getValidToken();
+              
+              const statusResponse = await fetch(`/api/momo/status?referenceId=${momoData.referenceId}`);
+              const statusData = await statusResponse.json();
+
+              if (statusResponse.ok) {
+                if (statusData.status === 'SUCCESSFUL') {
+                  momoPaymentSuccess = true;
+                  paymentCompleted = true;
+                  toaster.push(
+                    <Notification type="success" header="MoMo Payment Successful" closable>
+                      Payment completed successfully via MoMo!
+                    </Notification>,
+                    { placement: "topEnd" }
+                  );
+                } else if (statusData.status === 'FAILED') {
+                  throw new Error('MoMo payment failed. Please try again.');
+                } else if (statusData.status === 'PENDING') {
+                  attempts++;
+                  if (attempts < maxAttempts) {
+                    setTimeout(pollPaymentStatus, 10000); // Poll every 10 seconds
+                  } else {
+                    throw new Error('MoMo payment timeout. Please check your phone or try again.');
+                  }
+                }
+              } else {
+                throw new Error(statusData.error || 'MoMo status check failed');
+              }
+            } catch (error) {
+              console.error('MoMo status polling error:', error);
+              attempts++;
+              if (attempts < maxAttempts && !paymentCompleted) {
+                setTimeout(pollPaymentStatus, 10000);
+              } else {
+                throw error;
+              }
+            }
+          };
+
+          // Start polling
+          await pollPaymentStatus();
+
+          // Wait for payment to complete
+          while (!paymentCompleted && attempts < maxAttempts) {
+            await new Promise(resolve => setTimeout(resolve, 1000));
+          }
+
+          if (!momoPaymentSuccess) {
+            throw new Error('MoMo payment did not complete successfully');
+          }
+        } else {
+          throw new Error(momoData.error || 'MoMo payment initiation failed');
+        }
+      } catch (momoError) {
+        console.error("MoMo payment error:", momoError);
+        toaster.push(
+          <Notification type="error" header="MoMo Payment Failed" closable>
+            {momoError instanceof Error
+              ? momoError.message
+              : "MoMo payment failed. Please try again."}
+          </Notification>,
+          { placement: "topEnd", duration: 5000 }
+        );
+        setOtpVerifyLoading(false);
+        setShowOtpModal(false); // Close OTP modal on error
+        return;
+      }
+
       // Make API request to update wallet balance and process payment
       let paymentSuccess = false;
       let walletUpdated = false;
@@ -1222,7 +1322,7 @@ export default function BatchDetails({
         serviceFee={parseFloat(order?.serviceFee || "0")}
         deliveryFee={parseFloat(order?.deliveryFee || "0")}
         paymentLoading={paymentLoading}
-        payerNumber={session?.user?.phone}
+        payerNumber={(session?.user as any)?.phone || ""}
         externalId={order?.id}
       />
 
