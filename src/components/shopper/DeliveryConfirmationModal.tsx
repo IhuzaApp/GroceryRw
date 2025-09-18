@@ -30,6 +30,7 @@ interface InvoiceData {
   serviceFee: number;
   deliveryFee: number;
   total: number;
+  isReelOrder?: boolean;
 }
 
 interface DeliveryConfirmationModalProps {
@@ -112,7 +113,28 @@ const DeliveryConfirmationModal: React.FC<DeliveryConfirmationModalProps> = ({
       setConfirmingDelivery(true);
       setForceOpen(true);
 
-      // Update order status to delivered
+      // Step 1: Process wallet operations first (before invoice generation)
+      const walletResponse = await fetch("/api/shopper/walletOperations", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          orderId: invoiceData.orderId,
+          operation: "delivered",
+          isReelOrder: invoiceData.isReelOrder || false,
+        }),
+      });
+
+      if (!walletResponse.ok) {
+        const walletErrorData = await walletResponse.json();
+        throw new Error(walletErrorData.error || "Failed to process wallet operations");
+      }
+
+      const walletResult = await walletResponse.json();
+      console.log("Wallet operations completed:", walletResult);
+
+      // Step 2: Update order status to delivered (after wallet operations)
       const response = await fetch("/api/shopper/updateOrderStatus", {
         method: "POST",
         headers: {
