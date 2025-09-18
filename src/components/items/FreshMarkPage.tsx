@@ -77,7 +77,7 @@ const FreshMarkPage: React.FC<FreshMarkPageProps> = ({ shop, products }) => {
   const [dynamicDeliveryTime, setDynamicDeliveryTime] = useState("15-25 min");
   // Track mount for hydration-safe rendering
   const [isMounted, setIsMounted] = useState(false);
-  
+
   useEffect(() => {
     setIsMounted(true);
   }, []);
@@ -85,7 +85,7 @@ const FreshMarkPage: React.FC<FreshMarkPageProps> = ({ shop, products }) => {
   // Handle highlighting and scrolling to specific product
   useEffect(() => {
     const { highlight } = router.query;
-    if (highlight && typeof highlight === 'string') {
+    if (highlight && typeof highlight === "string") {
       // Wait for products to load and then scroll to the highlighted product
       const timer = setTimeout(() => {
         const productElement = document.getElementById(`product-${highlight}`);
@@ -93,20 +93,32 @@ const FreshMarkPage: React.FC<FreshMarkPageProps> = ({ shop, products }) => {
           // Scroll to the product with some offset for better visibility
           const elementPosition = productElement.getBoundingClientRect().top;
           const offsetPosition = elementPosition + window.pageYOffset - 100; // 100px offset from top
-          
+
           window.scrollTo({
             top: offsetPosition,
-            behavior: 'smooth'
+            behavior: "smooth",
           });
-          
+
           // Add a temporary highlight effect with shadow
-          productElement.classList.add('shadow-2xl', 'shadow-purple-500/50', 'transform', 'scale-105', 'rounded-xl');
+          productElement.classList.add(
+            "shadow-2xl",
+            "shadow-purple-500/50",
+            "transform",
+            "scale-105",
+            "rounded-xl"
+          );
           setTimeout(() => {
-            productElement.classList.remove('shadow-2xl', 'shadow-purple-500/50', 'transform', 'scale-105', 'rounded-xl');
+            productElement.classList.remove(
+              "shadow-2xl",
+              "shadow-purple-500/50",
+              "transform",
+              "scale-105",
+              "rounded-xl"
+            );
           }, 3000);
         }
       }, 500); // Wait 500ms for products to render
-      
+
       return () => clearTimeout(timer);
     }
   }, [router.query, products]);
@@ -182,7 +194,7 @@ const FreshMarkPage: React.FC<FreshMarkPageProps> = ({ shop, products }) => {
     <RootLayout>
       <div className="min-h-screen bg-gray-50 dark:bg-gray-900 md:ml-20">
         {/* Desktop Banner - Hidden on mobile */}
-        <div className="hidden sm:block relative">
+        <div className="relative hidden sm:block">
           {/* Hero Banner */}
           <div className="relative h-40 overflow-hidden sm:h-48 lg:h-56">
             <Image
@@ -193,11 +205,11 @@ const FreshMarkPage: React.FC<FreshMarkPageProps> = ({ shop, products }) => {
             />
             {/* Gradient Overlay */}
             <div className="absolute inset-0 bg-gradient-to-br from-black/60 via-black/40 to-black/80" />
-            
+
             {/* Back Button */}
             <Link
               href="/"
-              className="absolute left-4 top-4 z-10 flex h-10 w-10 items-center justify-center rounded-full bg-white/90 backdrop-blur-sm transition-all duration-200 hover:bg-white hover:scale-105 dark:bg-gray-800/90 dark:text-white dark:hover:bg-gray-800"
+              className="absolute left-4 top-4 z-10 flex h-10 w-10 items-center justify-center rounded-full bg-white/90 backdrop-blur-sm transition-all duration-200 hover:scale-105 hover:bg-white dark:bg-gray-800/90 dark:text-white dark:hover:bg-gray-800"
             >
               <svg
                 viewBox="0 0 24 24"
@@ -237,12 +249,16 @@ const FreshMarkPage: React.FC<FreshMarkPageProps> = ({ shop, products }) => {
                     <p className="mt-2 text-sm opacity-90 sm:text-base">
                       {shopData?.description}
                     </p>
-                    
+
                     {/* Stats Row */}
                     <div className="mt-4 flex flex-wrap gap-3">
                       {/* Rating */}
                       <div className="flex items-center rounded-full bg-white/20 px-3 py-1.5 backdrop-blur-sm">
-                        <svg className="mr-1.5 h-4 w-4 text-yellow-300" viewBox="0 0 24 24" fill="currentColor">
+                        <svg
+                          className="mr-1.5 h-4 w-4 text-yellow-300"
+                          viewBox="0 0 24 24"
+                          fill="currentColor"
+                        >
                           <path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z" />
                         </svg>
                         <span className="text-sm font-semibold">
@@ -252,8 +268,18 @@ const FreshMarkPage: React.FC<FreshMarkPageProps> = ({ shop, products }) => {
 
                       {/* Delivery Time */}
                       <div className="flex items-center rounded-full bg-white/20 px-3 py-1.5 backdrop-blur-sm">
-                        <svg className="mr-1.5 h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        <svg
+                          className="mr-1.5 h-4 w-4"
+                          fill="none"
+                          viewBox="0 0 24 24"
+                          stroke="currentColor"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
+                          />
                         </svg>
                         <span className="text-sm font-semibold">
                           {isMounted ? shopData.deliveryTime : "15-25 min"}
@@ -262,9 +288,24 @@ const FreshMarkPage: React.FC<FreshMarkPageProps> = ({ shop, products }) => {
 
                       {/* Distance */}
                       <div className="flex items-center rounded-full bg-white/20 px-3 py-1.5 backdrop-blur-sm">
-                        <svg className="mr-1.5 h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                        <svg
+                          className="mr-1.5 h-4 w-4"
+                          fill="none"
+                          viewBox="0 0 24 24"
+                          stroke="currentColor"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"
+                          />
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"
+                          />
                         </svg>
                         <span className="text-sm font-semibold">
                           {shopData.distance}
@@ -273,7 +314,11 @@ const FreshMarkPage: React.FC<FreshMarkPageProps> = ({ shop, products }) => {
 
                       {/* Delivery Fee */}
                       <div className="flex items-center rounded-full bg-white/20 px-3 py-1.5 backdrop-blur-sm">
-                        <svg className="mr-1.5 h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+                        <svg
+                          className="mr-1.5 h-4 w-4"
+                          viewBox="0 0 20 20"
+                          fill="currentColor"
+                        >
                           <path d="M8 16.5a1.5 1.5 0 11-3 0 1.5 1.5 0 013 0zM15 16.5a1.5 1.5 0 11-3 0 1.5 1.5 0 013 0z" />
                           <path d="M3 4a1 1 0 00-1 1v10a1 1 0 001 1h1.05a2.5 2.5 0 014.9 0H10a1 1 0 001-1V5a1 1 0 00-1-1H3zM14 7a1 1 0 00-1-1h-1a1 1 0 00-1 1v5a1 1 0 001 1h1a1 1 0 001-1V7z" />
                         </svg>
@@ -289,14 +334,24 @@ const FreshMarkPage: React.FC<FreshMarkPageProps> = ({ shop, products }) => {
           </div>
 
           {/* Desktop Navigation & Search Section */}
-          <div className="relative -mt-8 mx-4 sm:mx-6 lg:mx-8">
+          <div className="relative mx-4 -mt-8 sm:mx-6 lg:mx-8">
             <div className="rounded-2xl bg-white p-4 shadow-xl dark:bg-gray-800 sm:p-6">
               {/* Search Bar */}
               <div className="mb-6">
                 <div className="relative">
                   <div className="absolute inset-y-0 left-0 flex items-center pl-3">
-                    <svg className="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                    <svg
+                      className="h-5 w-5 text-gray-400"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+                      />
                     </svg>
                   </div>
                   <input
@@ -309,16 +364,20 @@ const FreshMarkPage: React.FC<FreshMarkPageProps> = ({ shop, products }) => {
 
               {/* Category Navigation */}
               <div className="mb-4">
-                <h3 className="mb-3 text-sm font-semibold text-gray-700 dark:text-gray-300">Categories</h3>
+                <h3 className="mb-3 text-sm font-semibold text-gray-700 dark:text-gray-300">
+                  Categories
+                </h3>
                 <div className="flex gap-2 overflow-x-auto pb-2">
-                  {Array.from(new Set(shopData.products.map((p: any) => p.category))).map((category: string) => (
+                  {Array.from(
+                    new Set(shopData.products.map((p: any) => p.category))
+                  ).map((category: string) => (
                     <button
                       key={category}
                       onClick={() => setActiveCategory(category)}
                       className={`flex-shrink-0 rounded-full px-4 py-2 text-sm font-medium transition-all duration-200 ${
                         activeCategory === category
-                          ? 'bg-gradient-to-r from-green-500 to-emerald-500 text-white shadow-lg shadow-green-500/25'
-                          : 'bg-gray-100 text-gray-700 hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600'
+                          ? "bg-gradient-to-r from-green-500 to-emerald-500 text-white shadow-lg shadow-green-500/25"
+                          : "bg-gray-100 text-gray-700 hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600"
                       }`}
                     >
                       {category.charAt(0).toUpperCase() + category.slice(1)}
@@ -328,8 +387,8 @@ const FreshMarkPage: React.FC<FreshMarkPageProps> = ({ shop, products }) => {
                     onClick={() => setActiveCategory("all")}
                     className={`flex-shrink-0 rounded-full px-4 py-2 text-sm font-medium transition-all duration-200 ${
                       activeCategory === "all"
-                        ? 'bg-gradient-to-r from-green-500 to-emerald-500 text-white shadow-lg shadow-green-500/25'
-                        : 'bg-gray-100 text-gray-700 hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600'
+                        ? "bg-gradient-to-r from-green-500 to-emerald-500 text-white shadow-lg shadow-green-500/25"
+                        : "bg-gray-100 text-gray-700 hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600"
                     }`}
                   >
                     All Products
@@ -343,9 +402,11 @@ const FreshMarkPage: React.FC<FreshMarkPageProps> = ({ shop, products }) => {
                   {filteredProducts.length} products available
                 </span>
                 <div className="flex items-center gap-3">
-                  <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Sort by:</span>
+                  <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                    Sort by:
+                  </span>
                   <div className="relative">
-                    <select className="appearance-none rounded-xl border border-gray-200 bg-white px-4 py-2.5 pr-8 text-sm font-medium text-gray-700 shadow-sm transition-all duration-200 focus:border-green-500 focus:outline-none focus:ring-2 focus:ring-green-500/20 hover:border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-300 dark:focus:border-green-400 dark:focus:ring-green-400/20 dark:hover:border-gray-500">
+                    <select className="appearance-none rounded-xl border border-gray-200 bg-white px-4 py-2.5 pr-8 text-sm font-medium text-gray-700 shadow-sm transition-all duration-200 hover:border-gray-300 focus:border-green-500 focus:outline-none focus:ring-2 focus:ring-green-500/20 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-300 dark:hover:border-gray-500 dark:focus:border-green-400 dark:focus:ring-green-400/20">
                       <option value="price-low">Price: Low to High</option>
                       <option value="price-high">Price: High to Low</option>
                       <option value="name-asc">Name: A to Z</option>
@@ -353,8 +414,18 @@ const FreshMarkPage: React.FC<FreshMarkPageProps> = ({ shop, products }) => {
                     </select>
                     {/* Custom Dropdown Arrow */}
                     <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-3">
-                      <svg className="h-4 w-4 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                      <svg
+                        className="h-4 w-4 text-gray-400"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M19 9l-7 7-7-7"
+                        />
                       </svg>
                     </div>
                   </div>
@@ -367,7 +438,7 @@ const FreshMarkPage: React.FC<FreshMarkPageProps> = ({ shop, products }) => {
         {/* Mobile Layout - Simple header with back button */}
         <div className="sm:hidden">
           {/* Mobile Header */}
-          <div className="sticky top-0 z-50 bg-white border-b border-gray-200 dark:bg-gray-800 dark:border-gray-700">
+          <div className="sticky top-0 z-50 border-b border-gray-200 bg-white dark:border-gray-700 dark:bg-gray-800">
             <div className="flex items-center justify-between p-4">
               {/* Back Button */}
               <Link
@@ -384,23 +455,33 @@ const FreshMarkPage: React.FC<FreshMarkPageProps> = ({ shop, products }) => {
                   <path d="M19 12H5M12 19l-7-7 7-7" />
                 </svg>
               </Link>
-              
+
               {/* Shop Name */}
               <h1 className="text-lg font-bold text-gray-900 dark:text-white">
                 {shopData.name}
               </h1>
-              
+
               {/* Placeholder for balance */}
               <div className="h-10 w-10"></div>
             </div>
           </div>
 
           {/* Mobile Search */}
-          <div className="p-4 bg-white dark:bg-gray-800">
+          <div className="bg-white p-4 dark:bg-gray-800">
             <div className="relative">
               <div className="absolute inset-y-0 left-0 flex items-center pl-3">
-                <svg className="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                <svg
+                  className="h-5 w-5 text-gray-400"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+                  />
                 </svg>
               </div>
               <input
@@ -412,26 +493,28 @@ const FreshMarkPage: React.FC<FreshMarkPageProps> = ({ shop, products }) => {
           </div>
 
           {/* Mobile Categories */}
-          <div className="px-4 pb-4 bg-white dark:bg-gray-800">
+          <div className="bg-white px-4 pb-4 dark:bg-gray-800">
             <div className="flex gap-2 overflow-x-auto pb-2">
               <button
                 onClick={() => setActiveCategory("all")}
                 className={`flex-shrink-0 rounded-full px-4 py-2 text-sm font-medium transition-all duration-200 ${
                   activeCategory === "all"
-                    ? 'bg-gradient-to-r from-green-500 to-emerald-500 text-white shadow-lg shadow-green-500/25'
-                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600'
+                    ? "bg-gradient-to-r from-green-500 to-emerald-500 text-white shadow-lg shadow-green-500/25"
+                    : "bg-gray-100 text-gray-700 hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600"
                 }`}
               >
                 All Products
               </button>
-              {Array.from(new Set(shopData.products.map((p: any) => p.category))).map((category: string) => (
+              {Array.from(
+                new Set(shopData.products.map((p: any) => p.category))
+              ).map((category: string) => (
                 <button
                   key={category}
                   onClick={() => setActiveCategory(category)}
                   className={`flex-shrink-0 rounded-full px-4 py-2 text-sm font-medium transition-all duration-200 ${
                     activeCategory === category
-                      ? 'bg-gradient-to-r from-green-500 to-emerald-500 text-white shadow-lg shadow-green-500/25'
-                      : 'bg-gray-100 text-gray-700 hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600'
+                      ? "bg-gradient-to-r from-green-500 to-emerald-500 text-white shadow-lg shadow-green-500/25"
+                      : "bg-gray-100 text-gray-700 hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600"
                   }`}
                 >
                   {category.charAt(0).toUpperCase() + category.slice(1)}
@@ -442,7 +525,7 @@ const FreshMarkPage: React.FC<FreshMarkPageProps> = ({ shop, products }) => {
         </div>
 
         {/* Products Section */}
-        <div className="px-4 pt-4 sm:pt-8 sm:px-6 lg:px-8">
+        <div className="px-4 pt-4 sm:px-6 sm:pt-8 lg:px-8">
           <ItemsSection
             activeCategory={activeCategory}
             shop={shopData}
