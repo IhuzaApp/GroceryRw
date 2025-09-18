@@ -25,7 +25,6 @@ import { formatCurrency } from "../../lib/formatCurrency";
 import ProductImageModal from "./ProductImageModal";
 import QuantityConfirmationModal from "./QuantityConfirmationModal";
 import PaymentModal from "./PaymentModal";
-import OtpVerificationModal from "./OtpVerificationModal";
 import DeliveryConfirmationModal from "./DeliveryConfirmationModal";
 import { useChat } from "../../context/ChatContext";
 import { isMobileDevice } from "../../lib/formatters";
@@ -608,9 +607,7 @@ export default function BatchDetails({
       // If we have enough balance or couldn't check, proceed with OTP
       generateOtp();
 
-      // Close payment modal and show OTP modal
-      setShowPaymentModal(false);
-      setShowOtpModal(true);
+      // Keep payment modal open - it will handle OTP step internally
       setPaymentLoading(false);
     } catch (err) {
       console.error("Payment processing error:", err);
@@ -738,7 +735,7 @@ export default function BatchDetails({
           { placement: "topEnd", duration: 5000 }
         );
         setOtpVerifyLoading(false);
-        setShowOtpModal(false); // Close OTP modal on error
+        setShowPaymentModal(false); // Close payment modal on error
         return;
       }
 
@@ -795,12 +792,12 @@ export default function BatchDetails({
           { placement: "topEnd", duration: 5000 }
         );
         setOtpVerifyLoading(false);
-        setShowOtpModal(false); // Close OTP modal on error
+        setShowPaymentModal(false); // Close payment modal on error
         return;
       }
 
-      // Close OTP modal
-      setShowOtpModal(false);
+      // Close payment modal (which includes OTP step)
+      setShowPaymentModal(false);
 
       // Only proceed with status update if payment was successful
       if (paymentSuccess && walletUpdated) {
@@ -941,7 +938,11 @@ export default function BatchDetails({
 
   // Function to show product image in modal
   const showProductImage = (item: OrderItem) => {
-    setSelectedImage(item.product.image);
+    setSelectedImage(
+      item.product.ProductName?.image || 
+      item.product.image || 
+      "/images/groceryPlaceholder.png"
+    );
     setSelectedProductName(item.product.ProductName?.name || "Unknown Product");
     setCurrentOrderItem(item);
     setShowImageModal(true);
@@ -1102,11 +1103,11 @@ export default function BatchDetails({
           <Button
             appearance="primary"
             color="green"
-            size="sm"
+            size="lg"
             block
             onClick={() => handleUpdateStatus("shopping")}
             loading={loading}
-            className="rounded-lg py-2 text-lg font-bold sm:rounded-xl sm:py-4 sm:text-2xl sm:text-xl"
+            className="rounded-lg py-4 text-xl font-bold sm:rounded-xl sm:py-6 sm:text-3xl"
           >
             Start Shopping
           </Button>
@@ -1118,11 +1119,11 @@ export default function BatchDetails({
             <Button
               appearance="primary"
               color="green"
-              size="sm"
+              size="lg"
               block
               onClick={() => handleUpdateStatus("on_the_way")}
               loading={loading}
-              className="rounded-lg py-2 text-lg font-bold sm:rounded-xl sm:py-4 sm:text-2xl sm:text-xl"
+              className="rounded-lg py-4 text-xl font-bold sm:rounded-xl sm:py-6 sm:text-3xl"
             >
               Make Payment
             </Button>
@@ -1142,7 +1143,7 @@ export default function BatchDetails({
             onClick={() => handleUpdateStatus("on_the_way")}
             loading={loading}
             disabled={!hasFoundItems}
-            className="rounded-lg py-2 text-lg font-bold sm:rounded-xl sm:py-4 sm:text-2xl sm:text-xl"
+            className="rounded-lg py-4 text-xl font-bold sm:rounded-xl sm:py-6 sm:text-3xl"
           >
             {hasFoundItems ? "Make Payment" : "Mark Items as Found to Continue"}
           </Button>
@@ -1153,11 +1154,11 @@ export default function BatchDetails({
           <Button
             appearance="primary"
             color="green"
-            size="sm"
+            size="lg"
             block
             onClick={() => handleUpdateStatus("delivered")}
             loading={loading}
-            className="rounded-lg py-2 text-lg font-bold sm:rounded-xl sm:py-4 sm:text-2xl sm:text-xl"
+            className="rounded-lg py-4 text-xl font-bold sm:rounded-xl sm:py-6 sm:text-3xl"
           >
             Confirm Delivery & Generate Invoice
           </Button>
@@ -1307,7 +1308,7 @@ export default function BatchDetails({
         onConfirm={confirmFoundQuantity}
       />
 
-      {/* MoMo Payment Modal */}
+      {/* Integrated Payment & OTP Modal */}
       <PaymentModal
         key={`payment-modal-${order?.id}-${showPaymentModal}`}
         open={showPaymentModal}
@@ -1316,6 +1317,8 @@ export default function BatchDetails({
           // Reset payment state when modal is closed
           setMomoCode("");
           setPrivateKey("");
+          setOtp("");
+          setGeneratedOtp("");
         }}
         onSubmit={handlePaymentSubmit}
         momoCode={momoCode}
@@ -1326,16 +1329,11 @@ export default function BatchDetails({
         deliveryFee={parseFloat(order?.deliveryFee || "0")}
         paymentLoading={paymentLoading}
         externalId={order?.id}
-      />
-
-      {/* OTP Verification Modal */}
-      <OtpVerificationModal
-        open={showOtpModal}
-        onClose={() => setShowOtpModal(false)}
-        onVerify={handleVerifyOtp}
         otp={otp}
         setOtp={setOtp}
-        loading={otpVerifyLoading}
+        otpLoading={otpVerifyLoading}
+        onVerifyOtp={handleVerifyOtp}
+        generatedOtp={generatedOtp}
       />
 
       {/* Delivery Confirmation Modal */}
@@ -1669,7 +1667,7 @@ export default function BatchDetails({
                     {order.shop?.address && (
                       <div className="flex justify-center sm:justify-start">
                         <button
-                          className="flex items-center rounded-full border border-green-400 px-3 py-1 text-sm font-medium text-green-600 transition-colors hover:border-green-300 hover:bg-green-50 hover:text-green-700 dark:border-green-700 dark:text-green-400 dark:hover:border-green-600 dark:hover:bg-green-900/20 sm:text-base"
+                          className="flex items-center rounded-full border border-green-400 px-3 py-1.5 text-xs font-medium text-green-600 transition-colors hover:border-green-300 hover:bg-green-50 hover:text-green-700 dark:border-green-700 dark:text-green-400 dark:hover:border-green-600 dark:hover:bg-green-900/20 sm:text-sm"
                           onClick={() =>
                             handleDirectionsClick(order.shop?.address || "")
                           }
@@ -1765,7 +1763,7 @@ export default function BatchDetails({
 
                   <div className="flex flex-wrap justify-center gap-2 sm:justify-start">
                     <button
-                      className="flex items-center rounded-full border border-green-400 px-3 py-1 text-sm text-green-600 transition-colors hover:border-green-300 hover:bg-green-50 hover:text-green-700 dark:border-green-700 dark:text-green-400 dark:hover:border-green-600 dark:hover:bg-green-900/20 sm:text-base"
+                      className="flex items-center rounded-full border border-green-400 px-3 py-1.5 text-xs text-green-600 transition-colors hover:border-green-300 hover:bg-green-50 hover:text-green-700 dark:border-green-700 dark:text-green-400 dark:hover:border-green-600 dark:hover:bg-green-900/20 sm:text-sm"
                       onClick={() =>
                         handleDirectionsClick(
                           `${order.address.street}, ${order.address.city}${
@@ -1791,7 +1789,7 @@ export default function BatchDetails({
 
                     {order.user.phone && (
                       <button
-                        className="flex items-center rounded-full border border-green-400 px-3 py-1 text-sm text-green-600 transition-colors hover:border-green-300 hover:bg-green-50 hover:text-green-700 dark:border-green-700 dark:text-green-400 dark:hover:border-green-600 dark:hover:bg-green-900/20 sm:text-base"
+                        className="flex items-center rounded-full border border-green-400 px-3 py-1.5 text-xs text-green-600 transition-colors hover:border-green-300 hover:bg-green-50 hover:text-green-700 dark:border-green-700 dark:text-green-400 dark:hover:border-green-600 dark:hover:bg-green-900/20 sm:text-sm"
                         onClick={() =>
                           (window.location.href = `tel:${order.user.phone}`)
                         }
@@ -1811,7 +1809,7 @@ export default function BatchDetails({
 
                     {order.status !== "delivered" ? (
                       <button
-                        className="flex items-center rounded-full border border-green-400 px-3 py-1 text-sm text-green-600 transition-colors hover:border-green-300 hover:bg-green-50 hover:text-green-700 dark:border-green-700 dark:text-green-400 dark:hover:border-green-600 dark:hover:bg-green-900/20 sm:text-base"
+                        className="flex items-center rounded-full border border-green-400 px-3 py-1.5 text-xs text-green-600 transition-colors hover:border-green-300 hover:bg-green-50 hover:text-green-700 dark:border-green-700 dark:text-green-400 dark:hover:border-green-600 dark:hover:bg-green-900/20 sm:text-sm"
                         onClick={handleChatClick}
                       >
                         <svg
@@ -1827,7 +1825,7 @@ export default function BatchDetails({
                       </button>
                     ) : (
                       <button
-                        className="flex cursor-not-allowed items-center rounded-lg border border-slate-300 px-3 py-1 text-sm font-medium text-slate-400 dark:border-slate-600 sm:text-base"
+                        className="flex cursor-not-allowed items-center rounded-lg border border-slate-300 px-3 py-1.5 text-xs font-medium text-slate-400 dark:border-slate-600 sm:text-sm"
                         disabled
                       >
                         <svg
@@ -1900,33 +1898,27 @@ export default function BatchDetails({
                         className="flex items-center gap-2 rounded-lg border border-slate-200 bg-white p-2 dark:border-slate-600 dark:bg-slate-700 sm:gap-3 sm:p-4"
                       >
                         <div
-                          className="h-8 w-8 flex-shrink-0 cursor-pointer overflow-hidden rounded-lg bg-slate-200 sm:h-12 sm:w-12"
+                          className="h-8 w-8 flex-shrink-0 cursor-pointer overflow-hidden rounded-lg sm:h-12 sm:w-12"
                           onClick={() => showProductImage(item)}
                         >
-                          {item.product.image ? (
-                            <Image
-                              src={item.product.image}
-                              alt={
-                                item.product.ProductName?.name ||
-                                "Unknown Product"
-                              }
-                              width={48}
-                              height={48}
-                              className="h-full w-full object-cover"
-                            />
-                          ) : (
-                            <div className="flex h-full w-full items-center justify-center bg-slate-300 text-slate-400">
-                              <svg
-                                viewBox="0 0 24 24"
-                                fill="none"
-                                stroke="currentColor"
-                                strokeWidth="2"
-                                className="h-5 w-5 sm:h-6 sm:w-6"
-                              >
-                                <path d="M9 17h6M9 12h6M9 7h6" />
-                              </svg>
-                            </div>
-                          )}
+                          <Image
+                            src={
+                              item.product.ProductName?.image ||
+                              item.product.image ||
+                              "/images/groceryPlaceholder.png"
+                            }
+                            alt={
+                              item.product.ProductName?.name ||
+                              "Unknown Product"
+                            }
+                            width={48}
+                            height={48}
+                            className="h-full w-full object-cover"
+                            onError={(e) => {
+                              const target = e.target as HTMLImageElement;
+                              target.src = "/images/groceryPlaceholder.png";
+                            }}
+                          />
                         </div>
 
                         <div className="min-w-0 flex-1">
@@ -1935,7 +1927,7 @@ export default function BatchDetails({
                               "Unknown Product"}
                           </p>
                           <p className="text-xs text-slate-500 dark:text-slate-400 sm:text-sm">
-                            {formatCurrency(item.price)} × {item.quantity}
+                            {formatCurrency(item.price)} × {item.quantity} {(item.product as any).measurement_unit || "each"}
                           </p>
                           {item.found &&
                             item.foundQuantity &&
@@ -1953,21 +1945,26 @@ export default function BatchDetails({
                           {order.status === "shopping" && (
                             <button
                               onClick={() => toggleItemFound(item, !item.found)}
-                              className={`flex items-center gap-1 whitespace-nowrap rounded-lg px-2 py-1 text-xs font-medium transition-all duration-200 sm:gap-2 sm:px-3 sm:py-1.5 sm:text-sm ${
+                              className={`group relative flex items-center gap-1 whitespace-nowrap rounded-md px-2 py-1.5 text-xs font-medium transition-all duration-300 overflow-hidden sm:gap-1.5 sm:px-2.5 sm:py-1.5 sm:text-xs ${
                                 item.found
-                                  ? "border border-emerald-200 bg-emerald-100 text-emerald-800 hover:bg-emerald-200 dark:border-emerald-700 dark:bg-emerald-900/20 dark:text-emerald-300"
-                                  : "border border-slate-200 bg-slate-100 text-slate-700 hover:bg-slate-200 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-300 dark:hover:bg-slate-600"
+                                  ? "border-2 border-emerald-300 bg-gradient-to-r from-emerald-100 to-green-100 text-emerald-800 shadow-lg shadow-emerald-200/50 hover:shadow-emerald-300/60 hover:scale-105 dark:border-emerald-600 dark:from-emerald-900/30 dark:to-green-900/30 dark:text-emerald-200 dark:shadow-emerald-800/30"
+                                  : "border-2 border-slate-300 bg-gradient-to-r from-slate-50 to-gray-50 text-slate-700 shadow-md shadow-slate-200/30 hover:shadow-slate-300/50 hover:scale-105 hover:border-blue-300 hover:bg-gradient-to-r hover:from-blue-50 hover:to-indigo-50 hover:text-blue-700 dark:border-slate-600 dark:from-slate-700 dark:to-gray-700 dark:text-slate-300 dark:shadow-slate-800/30 dark:hover:border-blue-500 dark:hover:from-blue-900/30 dark:hover:to-indigo-900/30 dark:hover:text-blue-200"
                               }`}
                             >
+                              {/* Ripple effect overlay */}
+                              <div className="absolute inset-0 bg-white/20 dark:bg-white/10 opacity-0 group-active:opacity-100 transition-opacity duration-150 rounded-xl"></div>
+                              <div className={`relative transition-all duration-300 ${
+                                item.found ? "scale-110" : "scale-100 group-hover:scale-110"
+                              }`}>
                               <svg
                                 viewBox="0 0 24 24"
                                 fill="none"
                                 stroke="currentColor"
-                                strokeWidth="2"
-                                className={`h-3 w-3 sm:h-4 sm:w-4 ${
+                                  strokeWidth="1.5"
+                                  className={`h-2.5 w-2.5 sm:h-3 sm:w-3 transition-all duration-300 ${
                                   item.found
-                                    ? "text-emerald-600 dark:text-emerald-400"
-                                    : "text-slate-500 dark:text-slate-400"
+                                      ? "text-emerald-600 dark:text-emerald-300"
+                                      : "text-slate-500 dark:text-slate-400 group-hover:text-blue-600 dark:group-hover:text-blue-400"
                                 }`}
                               >
                                 {item.found ? (
@@ -1975,16 +1972,26 @@ export default function BatchDetails({
                                     strokeLinecap="round"
                                     strokeLinejoin="round"
                                     d="M5 13l4 4L19 7"
+                                      className="animate-pulse"
                                   />
                                 ) : (
                                   <path
                                     strokeLinecap="round"
                                     strokeLinejoin="round"
                                     d="M12 6v6m0 0v6m0-6h6m-6 0H6"
+                                      className="group-hover:animate-pulse"
                                   />
                                 )}
                               </svg>
-                              {item.found ? "Found" : "Mark Found"}
+                                {item.found && (
+                                  <div className="absolute inset-0 rounded-full bg-emerald-200/50 dark:bg-emerald-800/50 animate-ping"></div>
+                                )}
+                              </div>
+                              <span className={`relative z-10 transition-all duration-300 ${
+                                item.found ? "font-bold" : "font-semibold group-hover:font-bold"
+                              }`}>
+                                {item.found ? "✓ Found" : "Mark Found"}
+                              </span>
                             </button>
                           )}
                         </div>
