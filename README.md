@@ -7565,11 +7565,13 @@ POST /api/shopper/walletOperations
 **Purpose**: Reserve funds when shopper starts shopping
 
 **Actions**:
+
 - Reserved balance increases by order total
 - Commission revenue calculated and recorded
 - Wallet transaction created for reserved balance
 
 **Response Fields**:
+
 - `newReservedBalance`: Updated reserved balance
 - `reservedBalanceChange`: Amount added to reserved balance
 - `message`: "Reserved balance updated for shopping"
@@ -7579,6 +7581,7 @@ POST /api/shopper/walletOperations
 **Purpose**: Process earnings and handle reserved balance when order is delivered
 
 **Actions**:
+
 - Available balance updated with remaining earnings (after platform fee deduction)
 - Reserved balance properly handled (never goes negative)
 - Refund logic for excess reserved amounts
@@ -7586,6 +7589,7 @@ POST /api/shopper/walletOperations
 - Wallet transactions created for earnings, expenses, and refunds
 
 **Response Fields**:
+
 - `newAvailableBalance`: Updated available balance
 - `newReservedBalance`: Updated reserved balance
 - `earningsAdded`: Amount added to available balance
@@ -7598,11 +7602,13 @@ POST /api/shopper/walletOperations
 **Purpose**: Process refunds when order is cancelled
 
 **Actions**:
+
 - Reserved balance decreases by order total
 - Refund record created in Refunds table
 - Wallet transaction created for refund
 
 **Response Fields**:
+
 - `newReservedBalance`: Updated reserved balance
 - `refundAmount`: Refund amount processed
 - `message`: "Refund processed for cancelled order"

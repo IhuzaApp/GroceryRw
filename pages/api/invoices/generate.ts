@@ -306,7 +306,7 @@ export default async function handler(
       // Create invoice items for regular orders
       invoiceItems = items.map((item: any) => ({
         id: item.id,
-        name: item.Product.ProductName?.name || 'Unknown Product',
+        name: item.Product.ProductName?.name || "Unknown Product",
         quantity: item.quantity,
         unit_price: parseFloat(item.price),
         total: parseFloat(item.price) * item.quantity,

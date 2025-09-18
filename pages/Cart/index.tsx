@@ -176,10 +176,9 @@ export default function CartMainPage() {
   // Listen for cart changes (e.g., after checkout)
   useEffect(() => {
     const handleCartChanged = (event: any) => {
-      
       // Check if this is a custom event with callback
       const hideLoadingCallback = event.detail?.hideLoadingCallback;
-      
+
       if (hideLoadingCallback) {
         // Refresh cart data and call the callback when done
         refreshCartDataWithCallback(hideLoadingCallback);
@@ -339,148 +338,145 @@ export default function CartMainPage() {
               {/* Shop Selection */}
               <div className="mb-6">
                 <div className="mb-4 flex gap-3 overflow-x-auto pb-2">
-                  {loadingShops
-                    ? Array(5)
-                        .fill(0)
-                        .map((_, index) => (
-                          <ShopSelectionSkeleton key={index} />
-                        ))
-                    : shops.length > 0
-                    ? shops.map((shop) => (
-                        <div
-                          key={shop.id}
-                          onClick={() => handleSelectCart(shop.id)}
-                          className={`relative w-40 min-w-[10rem] flex-shrink-0 cursor-pointer rounded-lg border-2 p-2 transition-all ${
-                            selectedCartId === shop.id
-                              ? "border-green-500 bg-green-50 dark:bg-green-900/20"
-                              : theme === "dark"
-                              ? "border-gray-600 bg-gray-800 hover:border-green-400 hover:bg-gray-700"
-                              : "border-gray-200 bg-white hover:border-green-200 hover:bg-gray-50"
-                          }`}
-                        >
-                          <div className="flex items-center gap-2">
-                            <div className="flex-shrink-0">
-                              <div
-                                className={`flex h-8 w-8 items-center justify-center overflow-hidden rounded-full border ${
-                                  theme === "dark"
-                                    ? "border-gray-600 bg-gray-700"
-                                    : "border-gray-300 bg-white"
-                                }`}
-                              >
-                                {shop.logo ? (
-                                  <img
-                                    src={shop.logo}
-                                    alt={`${shop.name} logo`}
-                                    className="h-full w-full object-cover"
-                                    onError={(e) => {
-                                      const target =
-                                        e.target as HTMLImageElement;
-                                      target.style.display = "none";
-                                      target.nextElementSibling?.classList.remove(
-                                        "hidden"
-                                      );
-                                    }}
-                                  />
-                                ) : null}
-                                <svg
-                                  width="24"
-                                  height="24"
-                                  viewBox="0 0 24 24"
-                                  fill="none"
-                                  xmlns="http://www.w3.org/2000/svg"
-                                  className={`${
-                                    shop.logo ? "hidden" : ""
-                                  } h-5 w-5 text-gray-500`}
-                                >
-                                  <path
-                                    d="M3 7a2 2 0 012-2h14a2 2 0 012 2v10a2 2 0 01-2 2H5a2 2 0 01-2-2V7z"
-                                    stroke="currentColor"
-                                    strokeWidth="2"
-                                    strokeLinecap="round"
-                                    strokeLinejoin="round"
-                                  />
-                                  <path
-                                    d="M8 5a2 2 0 012-2h4a2 2 0 012 2v2H8V5z"
-                                    stroke="currentColor"
-                                    strokeWidth="2"
-                                    strokeLinecap="round"
-                                    strokeLinejoin="round"
-                                  />
-                                </svg>
-                              </div>
-                            </div>
-                            <div className="truncate">
-                              <h3
-                                className={`truncate text-sm font-medium ${
-                                  theme === "dark"
-                                    ? "text-white"
-                                    : "text-gray-900"
-                                }`}
-                              >
-                                {shop.name}
-                              </h3>
-                            </div>
-                          </div>
-                          {/* Show number of distinct items in this cart */}
-                          <Badge
-                            content={shop.count}
-                            className="absolute -right-2 bg-green-500 text-white"
-                          />
-                          {selectedCartId === shop.id && (
-                            <div className="absolute -right-2 top-1 flex h-4 w-4 items-center justify-center rounded-full bg-green-500">
+                  {loadingShops ? (
+                    Array(5)
+                      .fill(0)
+                      .map((_, index) => <ShopSelectionSkeleton key={index} />)
+                  ) : shops.length > 0 ? (
+                    shops.map((shop) => (
+                      <div
+                        key={shop.id}
+                        onClick={() => handleSelectCart(shop.id)}
+                        className={`relative w-40 min-w-[10rem] flex-shrink-0 cursor-pointer rounded-lg border-2 p-2 transition-all ${
+                          selectedCartId === shop.id
+                            ? "border-green-500 bg-green-50 dark:bg-green-900/20"
+                            : theme === "dark"
+                            ? "border-gray-600 bg-gray-800 hover:border-green-400 hover:bg-gray-700"
+                            : "border-gray-200 bg-white hover:border-green-200 hover:bg-gray-50"
+                        }`}
+                      >
+                        <div className="flex items-center gap-2">
+                          <div className="flex-shrink-0">
+                            <div
+                              className={`flex h-8 w-8 items-center justify-center overflow-hidden rounded-full border ${
+                                theme === "dark"
+                                  ? "border-gray-600 bg-gray-700"
+                                  : "border-gray-300 bg-white"
+                              }`}
+                            >
+                              {shop.logo ? (
+                                <img
+                                  src={shop.logo}
+                                  alt={`${shop.name} logo`}
+                                  className="h-full w-full object-cover"
+                                  onError={(e) => {
+                                    const target = e.target as HTMLImageElement;
+                                    target.style.display = "none";
+                                    target.nextElementSibling?.classList.remove(
+                                      "hidden"
+                                    );
+                                  }}
+                                />
+                              ) : null}
                               <svg
+                                width="24"
+                                height="24"
                                 viewBox="0 0 24 24"
                                 fill="none"
-                                stroke="white"
-                                strokeWidth="3"
-                                className="h-3 w-3"
+                                xmlns="http://www.w3.org/2000/svg"
+                                className={`${
+                                  shop.logo ? "hidden" : ""
+                                } h-5 w-5 text-gray-500`}
                               >
-                                <polyline points="20 6 9 17 4 12" />
+                                <path
+                                  d="M3 7a2 2 0 012-2h14a2 2 0 012 2v10a2 2 0 01-2 2H5a2 2 0 01-2-2V7z"
+                                  stroke="currentColor"
+                                  strokeWidth="2"
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                />
+                                <path
+                                  d="M8 5a2 2 0 012-2h4a2 2 0 012 2v2H8V5z"
+                                  stroke="currentColor"
+                                  strokeWidth="2"
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                />
                               </svg>
                             </div>
-                          )}
-                        </div>
-                      ))
-                    : (
-                        // Empty shops state
-                        <div className="flex w-full flex-col items-center justify-center py-8">
-                          {/* Empty Cart Icon */}
-                          <div className="mb-4 flex justify-center">
-                            <svg
-                              className={`h-16 w-16 ${
-                                theme === "dark" ? "text-gray-600" : "text-gray-400"
+                          </div>
+                          <div className="truncate">
+                            <h3
+                              className={`truncate text-sm font-medium ${
+                                theme === "dark"
+                                  ? "text-white"
+                                  : "text-gray-900"
                               }`}
-                              fill="none"
-                              stroke="currentColor"
-                              viewBox="0 0 24 24"
                             >
-                              <path
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                strokeWidth="1.5"
-                                d="M3 3h2l.4 2M7 13h10l4-8H5.4m0 0L7 13m0 0l-2.5 5M7 13l2.5 5m6-5v6a2 2 0 01-2 2H9a2 2 0 01-2-2v-6m8 0V9a2 2 0 00-2-2H9a2 2 0 00-2 2v4.01"
-                              />
+                              {shop.name}
+                            </h3>
+                          </div>
+                        </div>
+                        {/* Show number of distinct items in this cart */}
+                        <Badge
+                          content={shop.count}
+                          className="absolute -right-2 bg-green-500 text-white"
+                        />
+                        {selectedCartId === shop.id && (
+                          <div className="absolute -right-2 top-1 flex h-4 w-4 items-center justify-center rounded-full bg-green-500">
+                            <svg
+                              viewBox="0 0 24 24"
+                              fill="none"
+                              stroke="white"
+                              strokeWidth="3"
+                              className="h-3 w-3"
+                            >
+                              <polyline points="20 6 9 17 4 12" />
                             </svg>
                           </div>
-                          
-                          {/* Empty Text */}
-                          <h3
-                            className={`text-lg font-semibold ${
-                              theme === "dark" ? "text-gray-300" : "text-gray-600"
-                            }`}
-                          >
-                            Empty
-                          </h3>
-                          
-                          <p
-                            className={`mt-1 text-sm ${
-                              theme === "dark" ? "text-gray-500" : "text-gray-500"
-                            }`}
-                          >
-                            Your cart is empty. Start shopping to add items!
-                          </p>
-                        </div>
-                      )}
+                        )}
+                      </div>
+                    ))
+                  ) : (
+                    // Empty shops state
+                    <div className="flex w-full flex-col items-center justify-center py-8">
+                      {/* Empty Cart Icon */}
+                      <div className="mb-4 flex justify-center">
+                        <svg
+                          className={`h-16 w-16 ${
+                            theme === "dark" ? "text-gray-600" : "text-gray-400"
+                          }`}
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth="1.5"
+                            d="M3 3h2l.4 2M7 13h10l4-8H5.4m0 0L7 13m0 0l-2.5 5M7 13l2.5 5m6-5v6a2 2 0 01-2 2H9a2 2 0 01-2-2v-6m8 0V9a2 2 0 00-2-2H9a2 2 0 00-2 2v4.01"
+                          />
+                        </svg>
+                      </div>
+
+                      {/* Empty Text */}
+                      <h3
+                        className={`text-lg font-semibold ${
+                          theme === "dark" ? "text-gray-300" : "text-gray-600"
+                        }`}
+                      >
+                        Empty
+                      </h3>
+
+                      <p
+                        className={`mt-1 text-sm ${
+                          theme === "dark" ? "text-gray-500" : "text-gray-500"
+                        }`}
+                      >
+                        Your cart is empty. Start shopping to add items!
+                      </p>
+                    </div>
+                  )}
                 </div>
               </div>
 
