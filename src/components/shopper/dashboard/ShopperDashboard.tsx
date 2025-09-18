@@ -252,9 +252,9 @@ export default function ShopperDashboard() {
           break;
       }
 
-      if (!showHistorical) {
-        sorted = sorted.filter((order) => order.minutesAgo >= 10);
-      }
+      // Remove the 10-minute minimum filter to show all pending batches
+      // The showHistorical toggle now controls sorting preference rather than filtering
+      // All pending batches will be shown regardless of age
 
       return sorted;
     },
@@ -572,7 +572,7 @@ export default function ShopperDashboard() {
                     >
                       <path d="M3 6h18M3 12h18M3 18h18" />
                     </svg>
-                    {showHistorical ? "All Pending" : "Recent (10+ min)"}
+                    {showHistorical ? "Priority Sort" : "Time Sort"}
                   </button>
                 </div>
 
@@ -741,13 +741,15 @@ export default function ShopperDashboard() {
                       ? "Showing batches pending for 1+ hours by priority level"
                       : `Sorting by ${sortBy}`}
                   </p>
-                  {isOnline && !showHistorical && (
+                  {isOnline && (
                     <p
                       className={`text-xs ${
                         !isOnline ? "text-yellow-600" : "text-blue-600"
                       }`}
                     >
-                      Only batches pending for 10+ minutes
+                      {showHistorical 
+                        ? "Showing all batches sorted by priority level" 
+                        : "Showing all batches sorted by time"}
                     </p>
                   )}
                 </div>
@@ -830,9 +832,7 @@ export default function ShopperDashboard() {
               >
                 <h3 className="mb-2 text-lg font-medium">No Batches Nearby</h3>
                 <p className="mb-4 text-gray-500">
-                  {showHistorical
-                    ? "There are no pending batches in your area."
-                    : "There are no batches pending for 10+ minutes in your area."}
+                  There are no pending batches in your area.
                 </p>
                 <Button
                   appearance="primary"
@@ -915,10 +915,62 @@ export default function ShopperDashboard() {
                       </p>
                     </div>
                   </div>
-                  <div className="flex items-center space-x-3">
-                    <div className="flex items-center space-x-2">
+                  <div className="flex items-center space-x-2">
+                    {/* Combined Auto/Manual Refresh Button */}
+                    <button
+                      onClick={isAutoRefreshing ? toggleAutoRefresh : loadOrders}
+                      className={`flex items-center rounded-xl px-3 py-1.5 text-xs font-medium transition-all duration-200 ${
+                        isAutoRefreshing
+                          ? theme === "dark"
+                            ? "bg-green-600 text-white shadow-lg shadow-green-500/30"
+                            : "bg-green-600 text-white shadow-lg shadow-green-500/30"
+                          : theme === "dark"
+                          ? "bg-gray-800 text-gray-300 hover:bg-gray-700"
+                          : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                      }`}
+                    >
+                      <svg
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth={2}
+                        className="mr-1 h-3 w-3"
+                      >
+                        <path d="M1 4v6h6M23 20v-6h-6" />
+                        <path d="M20.49 9A9 9 0 0 0 5.64 5.64L1 10m22 4l-4.64 4.36A9 9 0 0 1 3.51 15" />
+                      </svg>
+                      {isAutoRefreshing ? "Auto" : "Refresh"}
+                    </button>
+
+                    {/* Sort Toggle Button */}
+                    <button
+                      onClick={toggleHistorical}
+                      className={`flex items-center rounded-xl px-3 py-1.5 text-xs font-medium transition-all duration-200 ${
+                        showHistorical
+                          ? theme === "dark"
+                            ? "bg-blue-600 text-white shadow-lg shadow-blue-500/30"
+                            : "bg-blue-600 text-white shadow-lg shadow-blue-500/30"
+                          : theme === "dark"
+                          ? "bg-gray-800 text-gray-300 hover:bg-gray-700"
+                          : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                      }`}
+                    >
+                      <svg
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth={2}
+                        className="mr-1 h-3 w-3"
+                      >
+                        <path d="M3 6h18M3 12h18M3 18h18" />
+                      </svg>
+                      {showHistorical ? "Priority" : "Time"}
+                    </button>
+
+                    {/* Last Updated Time */}
+                    <div className="flex items-center">
                       <div
-                        className={`rounded-full p-1.5 ${
+                        className={`rounded-full p-1 ${
                           theme === "dark" ? "bg-gray-800" : "bg-gray-100"
                         }`}
                       >
@@ -927,7 +979,7 @@ export default function ShopperDashboard() {
                           fill="none"
                           stroke="currentColor"
                           strokeWidth={2}
-                          className={`h-3 w-3 ${
+                          className={`h-2.5 w-2.5 ${
                             theme === "dark" ? "text-gray-400" : "text-gray-500"
                           }`}
                         >
@@ -936,89 +988,21 @@ export default function ShopperDashboard() {
                         </svg>
                       </div>
                       <span
-                        className={`text-xs font-medium ${
+                        className={`ml-1 text-xs font-medium ${
                           theme === "dark" ? "text-gray-400" : "text-gray-500"
                         }`}
                       >
                         {lastRefreshed &&
-                          `Updated ${lastRefreshed.toLocaleTimeString()}`}
+                          `${lastRefreshed.toLocaleTimeString().slice(0, 5)}`}
                       </span>
                     </div>
-
-                    <div className="flex items-center space-x-2">
-                      <button
-                        onClick={toggleAutoRefresh}
-                        className={`flex items-center rounded-xl px-3 py-1.5 text-xs font-medium transition-all duration-200 ${
-                          isAutoRefreshing
-                            ? theme === "dark"
-                              ? "bg-green-600 text-white shadow-lg shadow-green-500/30"
-                              : "bg-green-600 text-white shadow-lg shadow-green-500/30"
-                            : theme === "dark"
-                            ? "bg-gray-800 text-gray-300 hover:bg-gray-700"
-                            : "bg-gray-100 text-gray-700 hover:bg-gray-200"
-                        }`}
-                      >
-                        <svg
-                          viewBox="0 0 24 24"
-                          fill="none"
-                          stroke="currentColor"
-                          strokeWidth={2}
-                          className="mr-1 h-3 w-3"
-                        >
-                          <path d="M1 4v6h6M23 20v-6h-6" />
-                          <path d="M20.49 9A9 9 0 0 0 5.64 5.64L1 10m22 4l-4.64 4.36A9 9 0 0 1 3.51 15" />
-                        </svg>
-                        {isAutoRefreshing ? "Auto" : "Manual"}
-                      </button>
-
-                      <button
-                        onClick={toggleHistorical}
-                        className={`flex items-center rounded-xl px-3 py-1.5 text-xs font-medium transition-all duration-200 ${
-                          showHistorical
-                            ? theme === "dark"
-                              ? "bg-blue-600 text-white shadow-lg shadow-blue-500/30"
-                              : "bg-blue-600 text-white shadow-lg shadow-blue-500/30"
-                            : theme === "dark"
-                            ? "bg-gray-800 text-gray-300 hover:bg-gray-700"
-                            : "bg-gray-100 text-gray-700 hover:bg-gray-200"
-                        }`}
-                      >
-                        <svg
-                          viewBox="0 0 24 24"
-                          fill="none"
-                          stroke="currentColor"
-                          strokeWidth={2}
-                          className="mr-1 h-3 w-3"
-                        >
-                          <path d="M3 6h18M3 12h18M3 18h18" />
-                        </svg>
-                        {showHistorical ? "All" : "Recent"}
-                      </button>
-                    </div>
-
-                    <button
-                      className="flex items-center rounded-xl bg-gradient-to-r from-green-500 to-green-600 px-4 py-1.5 text-sm font-bold text-white shadow-lg shadow-green-500/30 transition-all duration-200 hover:shadow-green-500/40 active:scale-95"
-                      onClick={loadOrders}
-                    >
-                      <svg
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="currentColor"
-                        strokeWidth={2}
-                        className="mr-1.5 h-4 w-4"
-                      >
-                        <path d="M1 4v6h6M23 20v-6h-6" />
-                        <path d="M20.49 9A9 9 0 0 0 5.64 5.64L1 10m22 4l-4.64 4.36A9 9 0 0 1 3.51 15" />
-                      </svg>
-                      Refresh
-                    </button>
                   </div>
                 </div>
 
-                <div className="mb-6 flex flex-wrap gap-2">
+                <div className="mb-4 flex flex-wrap gap-1.5">
                   <button
                     onClick={() => handleSortChange("newest")}
-                    className={`flex items-center rounded-xl px-4 py-2 text-sm font-medium transition-all duration-200 ${
+                    className={`flex items-center rounded-lg px-3 py-1.5 text-xs font-medium transition-all duration-200 ${
                       sortBy === "newest"
                         ? theme === "dark"
                           ? "bg-green-600 text-white shadow-lg shadow-green-500/30"
@@ -1034,16 +1018,16 @@ export default function ShopperDashboard() {
                       fill="none"
                       stroke="currentColor"
                       strokeWidth={2}
-                      className="mr-1.5 h-4 w-4"
+                      className="mr-1 h-3 w-3"
                     >
                       <circle cx="12" cy="12" r="10" />
                       <polyline points="12 6 12 12 16 14" />
                     </svg>
-                    Recent (1h)
+                    Recent
                   </button>
                   <button
                     onClick={() => handleSortChange("earnings")}
-                    className={`flex items-center rounded-xl px-4 py-2 text-sm font-medium transition-all duration-200 ${
+                    className={`flex items-center rounded-lg px-3 py-1.5 text-xs font-medium transition-all duration-200 ${
                       sortBy === "earnings"
                         ? theme === "dark"
                           ? "bg-green-600 text-white shadow-lg shadow-green-500/30"
@@ -1058,7 +1042,7 @@ export default function ShopperDashboard() {
                       fill="none"
                       stroke="currentColor"
                       strokeWidth={2}
-                      className="mr-1.5 h-4 w-4"
+                      className="mr-1 h-3 w-3"
                     >
                       <path d="M12 2v20M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6" />
                     </svg>
@@ -1066,7 +1050,7 @@ export default function ShopperDashboard() {
                   </button>
                   <button
                     onClick={() => handleSortChange("distance")}
-                    className={`flex items-center rounded-xl px-4 py-2 text-sm font-medium transition-all duration-200 ${
+                    className={`flex items-center rounded-lg px-3 py-1.5 text-xs font-medium transition-all duration-200 ${
                       sortBy === "distance"
                         ? theme === "dark"
                           ? "bg-green-600 text-white shadow-lg shadow-green-500/30"
@@ -1081,7 +1065,7 @@ export default function ShopperDashboard() {
                       fill="none"
                       stroke="currentColor"
                       strokeWidth={2}
-                      className="mr-1.5 h-4 w-4"
+                      className="mr-1 h-3 w-3"
                     >
                       <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z" />
                       <circle cx="12" cy="10" r="3" />
@@ -1090,7 +1074,7 @@ export default function ShopperDashboard() {
                   </button>
                   <button
                     onClick={() => handleSortChange("priority")}
-                    className={`flex items-center rounded-xl px-4 py-2 text-sm font-medium transition-all duration-200 ${
+                    className={`flex items-center rounded-lg px-3 py-1.5 text-xs font-medium transition-all duration-200 ${
                       sortBy === "priority"
                         ? theme === "dark"
                           ? "bg-purple-600 text-white shadow-lg shadow-purple-500/30"
@@ -1106,7 +1090,7 @@ export default function ShopperDashboard() {
                       fill="none"
                       stroke="currentColor"
                       strokeWidth={2}
-                      className="mr-1.5 h-4 w-4"
+                      className="mr-1 h-3 w-3"
                     >
                       <path d="M9 12l2 2 4-4" />
                       <path d="M21 12c0 4.97-4.03 9-9 9s-9-4.03-9-9 4.03-9 9-9c1.5 0 2.91.37 4.15 1.02" />
@@ -1116,9 +1100,9 @@ export default function ShopperDashboard() {
                 </div>
 
                 {/* Filtering info message */}
-                <div className="mb-6 px-4 md:hidden">
+                <div className="mb-4 px-4 md:hidden">
                   <div
-                    className={`flex items-center rounded-lg px-3 py-2 ${
+                    className={`flex items-center rounded-lg px-2 py-1.5 ${
                       !isOnline
                         ? theme === "dark"
                           ? "border border-yellow-800 bg-yellow-900/20"
@@ -1176,7 +1160,7 @@ export default function ShopperDashboard() {
                         : sortBy === "priority"
                         ? "Batches pending 1+ hours by priority"
                         : `Sorting by ${sortBy}`}
-                      {isOnline && !showHistorical && " • 10+ min pending"}
+                      {isOnline && (showHistorical ? " • Priority sort" : " • Time sort")}
                     </p>
                   </div>
                 </div>
@@ -1263,9 +1247,7 @@ export default function ShopperDashboard() {
                         theme === "dark" ? "text-gray-400" : "text-gray-500"
                       }
                     >
-                      {showHistorical
-                        ? "No pending batches available."
-                        : "No batches pending for 10+ minutes."}
+                      No pending batches available.
                     </p>
                   </div>
                 )}
