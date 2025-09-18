@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import { useTheme } from "../../../context/ThemeContext";
 import { useRouter } from "next/navigation";
+import { formatCurrencySync } from "../../../utils/formatCurrency";
 
 interface SearchResult {
   id: string;
@@ -15,6 +16,14 @@ interface SearchResult {
   isOpen?: boolean;
   deliveryFee?: number;
   minimumOrder?: number;
+  // Product-specific fields
+  shopName?: string;
+  shopImage?: string;
+  category?: string;
+  inStock?: boolean;
+  quantity?: number;
+  measurementUnit?: string;
+  shopId?: string;
 }
 
 export default function SearchBar() {
@@ -86,9 +95,10 @@ export default function SearchBar() {
     setShowResults(false);
     setSearchTerm("");
     if (result.type === "product") {
-      router.push(`/product/${result.id}`);
+      // Redirect to the shop page for the product with product ID as query parameter
+      router.push(`/shops/${result.shopId}?highlight=${result.id}`);
     } else {
-      router.push(`/shop/${result.id}`);
+      router.push(`/shops/${result.id}`);
     }
   };
 
@@ -122,44 +132,143 @@ export default function SearchBar() {
 
       {/* Search Results Dropdown */}
       {showResults && results.length > 0 && (
-        <div className="absolute z-50 mt-2 w-full rounded-lg border border-gray-200 bg-white shadow-lg dark:border-gray-700 dark:bg-gray-800">
-          {results.map((result) => (
-            <button
-              key={`${result.type}-${result.id}`}
-              onClick={() => handleResultClick(result)}
-              className="flex w-full items-center gap-3 px-4 py-2 text-left hover:bg-gray-50 dark:hover:bg-gray-700"
-            >
-              <div className="h-8 w-8 overflow-hidden rounded-full">
-                <img
-                  src={result.type === "product" ? result.image : result.logo}
-                  alt={result.name}
-                  className="h-full w-full object-cover"
-                />
-              </div>
-              <div className="flex-1">
-                <div className="text-sm font-medium text-gray-900 dark:text-white">
-                  {result.name}
+        <div className="absolute z-50 mt-2 w-full max-w-md rounded-lg border border-gray-200 bg-white shadow-lg dark:border-gray-700 dark:bg-gray-800">
+          <div className="max-h-96 overflow-y-auto">
+            {results.map((result) => (
+              <button
+                key={`${result.type}-${result.id}`}
+                onClick={() => handleResultClick(result)}
+                className="flex w-full items-center gap-3 px-4 py-3 text-left hover:bg-gray-50 dark:hover:bg-gray-700 border-b border-gray-100 dark:border-gray-700 last:border-b-0"
+              >
+                {/* Product/Shop Image */}
+                <div className="h-12 w-12 overflow-hidden rounded-lg flex-shrink-0">
+                  <img
+                    src={result.type === "product" ? result.image : result.logo}
+                    alt={result.name}
+                    className="h-full w-full object-cover"
+                    onError={(e) => {
+                      const target = e.target as HTMLImageElement;
+                      target.src = '/assets/images/placeholder-product.png';
+                    }}
+                  />
                 </div>
-                <div className="flex items-center gap-2">
-                  <div className="text-xs text-gray-500 dark:text-gray-400">
-                    {result.type === "product" ? "Product" : "Shop"}
+                
+                <div className="flex-1 min-w-0">
+                  {/* Product/Shop Name */}
+                  <div className="text-sm font-medium text-gray-900 dark:text-white truncate">
+                    {result.name}
                   </div>
-                  {result.rating && (
-                    <div className="flex items-center gap-1 text-xs text-gray-500 dark:text-gray-400">
-                      <span>★</span>
-                      <span>{result.rating.toFixed(1)}</span>
-                      <span>({result.reviewCount})</span>
+                  
+                  {/* Product Details */}
+                  {result.type === "product" && (
+                    <div className="space-y-1">
+                      {/* Supermarket Name */}
+                      {result.shopName && (
+                        <div className="flex items-center gap-2">
+                          <div className="h-4 w-4 overflow-hidden rounded">
+                            <img
+                              src={result.shopImage}
+                              alt={result.shopName}
+                              className="h-full w-full object-cover"
+                              onError={(e) => {
+                                const target = e.target as HTMLImageElement;
+                                target.src = '/assets/images/placeholder-shop.png';
+                              }}
+                            />
+                          </div>
+                          <span className="text-xs text-gray-600 dark:text-gray-400 truncate">
+                            {result.shopName}
+                          </span>
+                        </div>
+                      )}
+                      
+                      {/* Price and Stock Status */}
+                      <div className="flex items-center justify-between">
+                        {result.price && (
+                          <div className="text-sm font-semibold text-green-600 dark:text-green-400">
+                            {formatCurrencySync(result.price)}
+                            {result.measurementUnit && (
+                              <span className="text-xs text-gray-500 dark:text-gray-400 ml-1">
+                                /{result.measurementUnit}
+                              </span>
+                            )}
+                          </div>
+                        )}
+                        
+                        {/* Action Buttons */}
+                        <div className="flex items-center gap-1">
+                          {result.inStock ? (
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                // Add to cart functionality would go here
+                                console.log('Add to cart:', result.id);
+                              }}
+                              className="text-xs bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 text-white px-3 py-1.5 rounded-full font-medium transition-all duration-200 shadow-lg shadow-green-500/25 hover:shadow-green-500/40 hover:scale-105"
+                            >
+                              Add to Cart
+                            </button>
+                          ) : (
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                // Navigate to supermarket page
+                                window.open(`/shops/${result.shopId}`, '_blank');
+                              }}
+                              className="text-xs bg-gradient-to-r from-purple-500 to-violet-500 hover:from-purple-600 hover:to-violet-600 text-white px-3 py-1.5 rounded-full font-medium transition-all duration-200 shadow-lg shadow-purple-500/25 hover:shadow-purple-500/40 hover:scale-105"
+                            >
+                              Check Supermarket
+                            </button>
+                          )}
+                        </div>
+                      </div>
+                      
+                      {/* Category */}
+                      {result.category && (
+                        <div className="text-xs text-gray-500 dark:text-gray-400">
+                          {result.category}
+                        </div>
+                      )}
+                    </div>
+                  )}
+                  
+                  {/* Shop Details */}
+                  {result.type === "shop" && (
+                    <div className="space-y-1">
+                      <div className="text-xs text-gray-500 dark:text-gray-400">
+                        {result.description}
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <span className={`text-xs px-2 py-1 rounded-full ${
+                          result.isOpen 
+                            ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200' 
+                            : 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200'
+                        }`}>
+                          {result.isOpen ? 'Open' : 'Closed'}
+                        </span>
+                        {result.rating && (
+                          <div className="flex items-center gap-1 text-xs text-gray-500 dark:text-gray-400">
+                            <span>★</span>
+                            <span>{result.rating.toFixed(1)}</span>
+                            <span>({result.reviewCount})</span>
+                          </div>
+                        )}
+                      </div>
                     </div>
                   )}
                 </div>
-                {result.type === "product" && result.price && (
-                  <div className="text-xs font-medium text-green-600 dark:text-green-400">
-                    ${result.price.toFixed(2)}
-                  </div>
-                )}
-              </div>
-            </button>
-          ))}
+              </button>
+            ))}
+          </div>
+          
+          {/* Show more results indicator */}
+          {results.length >= 10 && (
+            <div className="px-4 py-2 text-center border-t border-gray-100 dark:border-gray-700">
+              <span className="text-xs text-gray-500 dark:text-gray-400">
+                Showing top {results.length} results
+              </span>
+            </div>
+          )}
         </div>
       )}
     </div>

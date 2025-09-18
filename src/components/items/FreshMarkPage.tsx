@@ -2,6 +2,7 @@ import React from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { useState, useEffect } from "react";
+import { useRouter } from "next/router";
 import RootLayout from "@components/ui/layout";
 import ItemsSection from "@components/items/itemsSection";
 import Cookies from "js-cookie";
@@ -64,15 +65,46 @@ function getDistanceFromLatLonInKm(
 }
 
 const FreshMarkPage: React.FC<FreshMarkPageProps> = ({ shop, products }) => {
+  const router = useRouter();
   const [activeCategory, setActiveCategory] = useState("all");
   // State to hold dynamic distance/time for hydration
   const [dynamicDistance, setDynamicDistance] = useState("1.2 km");
   const [dynamicDeliveryTime, setDynamicDeliveryTime] = useState("15-25 min");
   // Track mount for hydration-safe rendering
   const [isMounted, setIsMounted] = useState(false);
+  
   useEffect(() => {
     setIsMounted(true);
   }, []);
+
+  // Handle highlighting and scrolling to specific product
+  useEffect(() => {
+    const { highlight } = router.query;
+    if (highlight && typeof highlight === 'string') {
+      // Wait for products to load and then scroll to the highlighted product
+      const timer = setTimeout(() => {
+        const productElement = document.getElementById(`product-${highlight}`);
+        if (productElement) {
+          // Scroll to the product with some offset for better visibility
+          const elementPosition = productElement.getBoundingClientRect().top;
+          const offsetPosition = elementPosition + window.pageYOffset - 100; // 100px offset from top
+          
+          window.scrollTo({
+            top: offsetPosition,
+            behavior: 'smooth'
+          });
+          
+          // Add a temporary highlight effect with shadow
+          productElement.classList.add('shadow-2xl', 'shadow-purple-500/50', 'transform', 'scale-105');
+          setTimeout(() => {
+            productElement.classList.remove('shadow-2xl', 'shadow-purple-500/50', 'transform', 'scale-105');
+          }, 3000);
+        }
+      }, 500); // Wait 500ms for products to render
+      
+      return () => clearTimeout(timer);
+    }
+  }, [router.query, products]);
 
   // Compute dynamic distance/time on client only to avoid hydration mismatch
   useEffect(() => {
@@ -239,6 +271,7 @@ const FreshMarkPage: React.FC<FreshMarkPageProps> = ({ shop, products }) => {
             shop={shopData}
             filteredProducts={filteredProducts}
             setActiveCategory={setActiveCategory}
+            highlightProductId={router.query.highlight as string}
           />
         </div>
       </div>

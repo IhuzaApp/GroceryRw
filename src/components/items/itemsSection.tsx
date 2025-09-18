@@ -7,6 +7,7 @@ export default function ItemsSection({
   shop,
   filteredProducts,
   setActiveCategory,
+  highlightProductId,
 }: any) {
   const [loadingProducts, setLoadingProducts] = useState<boolean>(false);
   const [searchQuery, setSearchQuery] = useState("");
@@ -175,19 +176,28 @@ export default function ItemsSection({
                   </div>
                 ))
             : paginatedProducts.map((product: any) => (
-                <ProductCard
+                <div
                   key={product.id}
-                  id={product.id}
-                  shopId={shop.id}
-                  name={product.ProductName?.name || product.name}
-                  image={product.image}
-                  final_price={product.final_price}
-                  unit={product.unit}
-                  sale={product.sale}
-                  originalPrice={product.originalPrice}
-                  measurement_unit={product.measurement_unit}
-                  quantity={product.quantity}
-                />
+                  id={`product-${product.id}`}
+                  className={`transition-all duration-300 ${
+                    highlightProductId === product.id 
+                      ? 'shadow-2xl shadow-yellow-500/50 transform scale-105' 
+                      : ''
+                  }`}
+                >
+                  <ProductCard
+                    id={product.id}
+                    shopId={shop.id}
+                    name={product.ProductName?.name || product.name}
+                    image={product.image}
+                    final_price={product.final_price}
+                    unit={product.unit}
+                    sale={product.sale}
+                    originalPrice={product.originalPrice}
+                    measurement_unit={product.measurement_unit}
+                    quantity={product.quantity}
+                  />
+                </div>
               ))}
         </div>
 
