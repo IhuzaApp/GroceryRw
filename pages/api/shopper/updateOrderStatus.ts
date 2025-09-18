@@ -145,21 +145,21 @@ export default async function handler(
       }
     }
 
-    // Special handling for "shopping" status - delegate to wallet operations API
+    // Handle shopping status - delegate to wallet operations API
     if (status === "shopping") {
       try {
         const walletResponse = await fetch(
-              `${
-                req.headers.host
-                  ? `http://${req.headers.host}`
-                  : "http://localhost:3000"
+          `${
+            req.headers.host
+              ? `http://${req.headers.host}`
+              : "http://localhost:3000"
           }/api/shopper/walletOperations`,
-              {
-                method: "POST",
-                headers: {
-                  "Content-Type": "application/json",
-                  Cookie: req.headers.cookie || "",
-                },
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              Cookie: req.headers.cookie || "",
+            },
             body: JSON.stringify({
               orderId,
               operation: "shopping",
@@ -169,7 +169,7 @@ export default async function handler(
         );
 
         if (!walletResponse.ok) {
-              console.error(
+          console.error(
             "Failed to process wallet operation for shopping:",
             await walletResponse.text()
           );
@@ -227,21 +227,21 @@ export default async function handler(
       ? updateResult.update_reel_orders_by_pk
       : updateResult.update_Orders_by_pk;
 
-    // Special handling for "cancelled" status - delegate to wallet operations API
+    // Handle cancelled status - delegate to wallet operations API
     if (status === "cancelled") {
       try {
         const walletResponse = await fetch(
-              `${
-                req.headers.host
-                  ? `http://${req.headers.host}`
-                  : "http://localhost:3000"
+          `${
+            req.headers.host
+              ? `http://${req.headers.host}`
+              : "http://localhost:3000"
           }/api/shopper/walletOperations`,
-              {
-                method: "POST",
-                headers: {
-                  "Content-Type": "application/json",
-                  Cookie: req.headers.cookie || "",
-                },
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              Cookie: req.headers.cookie || "",
+            },
             body: JSON.stringify({
               orderId,
               operation: "cancelled",
@@ -251,7 +251,7 @@ export default async function handler(
         );
 
         if (!walletResponse.ok) {
-              console.error(
+          console.error(
             "Failed to process wallet operation for cancelled:",
             await walletResponse.text()
           );
@@ -270,9 +270,8 @@ export default async function handler(
       }
     }
 
-    // Note: Wallet operations for "delivered" status are now handled separately
+    // Note: Wallet operations for "delivered" status are handled separately
     // in the DeliveryConfirmationModal before calling this API
-    // This ensures wallet operations happen before invoice generation
 
     return res.status(200).json({
       success: true,

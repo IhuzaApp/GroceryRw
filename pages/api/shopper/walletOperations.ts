@@ -252,11 +252,11 @@ async function handleShoppingOperation(
   // Update wallet balances (only reserved balance changes)
   await hasuraClient.request(UPDATE_WALLET_BALANCES, {
     wallet_id: wallet.id,
-    available_balance: wallet.available_balance, // No change to available balance
+    available_balance: wallet.available_balance,
     reserved_balance: newReservedBalance,
   });
 
-  // Create wallet transactions (only reserved balance transaction)
+  // Create wallet transactions
   if (!isReelOrder) {
     const transactions = [
       {
@@ -274,7 +274,7 @@ async function handleShoppingOperation(
     });
   }
 
-  // Add commission revenue (product profits) when shopping starts
+  // Add commission revenue when shopping starts
   if (!isReelOrder) {
     try {
       const commissionResponse = await fetch(
@@ -342,17 +342,12 @@ async function handleDeliveredOperation(
   const serviceFee = parseFloat(order.service_fee || "0");
   const deliveryFee = parseFloat(order.delivery_fee || "0");
   const totalEarnings = serviceFee + deliveryFee;
-
-  // Calculate platform fee (commission)
   const platformFee = (totalEarnings * deliveryCommissionPercentage) / 100;
   const remainingEarnings = totalEarnings - platformFee;
 
   const currentAvailableBalance = parseFloat(wallet.available_balance);
   const currentReservedBalance = parseFloat(wallet.reserved_balance);
 
-  // Update wallet balances according to specifications:
-  // 1. Add remaining earnings to available balance (platform fee is already deducted from total earnings)
-  // 2. Handle reserved balance: never go below 0, refund excess if any
   const newAvailableBalance = (
     currentAvailableBalance + remainingEarnings
   ).toFixed(2);
@@ -362,10 +357,8 @@ async function handleDeliveredOperation(
   let refundAmount = 0;
 
   if (currentReservedBalance >= orderTotal) {
-    // Normal case: reserved balance covers the order total
     newReservedBalance = (currentReservedBalance - orderTotal).toFixed(2);
   } else {
-    // Edge case: reserved balance is less than order total
     newReservedBalance = "0.00";
     refundAmount = orderTotal - currentReservedBalance;
   }
@@ -398,7 +391,6 @@ async function handleDeliveredOperation(
       },
     ];
 
-    // Add refund transaction if there's excess reserved balance
     if (refundAmount > 0) {
       transactions.push({
         wallet_id: wallet.id,
@@ -415,7 +407,7 @@ async function handleDeliveredOperation(
     });
   }
 
-  // Add plasa fee revenue (platform earnings) when order is delivered
+  // Add plasa fee revenue when order is delivered
   if (!isReelOrder) {
     try {
       const plasaFeeResponse = await fetch(
@@ -464,18 +456,16 @@ async function handleCancelledOperation(
   isReelOrder: boolean
 ) {
   const currentReservedBalance = parseFloat(wallet.reserved_balance);
-
-  // Decrease reserved balance by order total (refund the reserved amount)
   const newReservedBalance = (currentReservedBalance - orderTotal).toFixed(2);
 
   // Update wallet balances
   await hasuraClient.request(UPDATE_WALLET_BALANCES, {
     wallet_id: wallet.id,
-    available_balance: wallet.available_balance, // No change to available balance
+    available_balance: wallet.available_balance,
     reserved_balance: newReservedBalance,
   });
 
-  // Create refund record (not back to available balance, but to refund table)
+  // Create refund record
   const refundRecord = {
     order_id: orderId,
     amount: orderTotal.toString(),
