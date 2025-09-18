@@ -98,7 +98,7 @@ export default function ItemsSection({
           </div>
         </div>
         {/* Products Grid */}
-        <div className="grid grid-cols-4 gap-2 transition-all duration-300 sm:grid-cols-6 md:grid-cols-8 lg:grid-cols-10 xl:grid-cols-10">
+        <div className="grid grid-cols-2 gap-2 transition-all duration-300 sm:grid-cols-6 md:grid-cols-8 lg:grid-cols-10 xl:grid-cols-10">
           {loadingProducts
             ? Array(30)
                 .fill(0)
@@ -107,11 +107,11 @@ export default function ItemsSection({
                     key={idx}
                     className="animate-pulse overflow-hidden rounded-lg bg-white shadow-sm dark:bg-gray-700"
                   >
-                    <div className="h-40 bg-gray-200 dark:bg-gray-600" />
-                    <div className="space-y-2 p-3">
-                      <div className="h-4 w-3/4 rounded bg-gray-200 dark:bg-gray-600" />
-                      <div className="h-3 w-1/2 rounded bg-gray-200 dark:bg-gray-600" />
-                      <div className="h-6 w-1/2 rounded bg-gray-200 dark:bg-gray-600" />
+                    <div className="h-32 bg-gray-200 dark:bg-gray-600" />
+                    <div className="space-y-2 p-2">
+                      <div className="h-3 w-3/4 rounded bg-gray-200 dark:bg-gray-600" />
+                      <div className="h-2 w-1/2 rounded bg-gray-200 dark:bg-gray-600" />
+                      <div className="h-4 w-1/2 rounded bg-gray-200 dark:bg-gray-600" />
                     </div>
                   </div>
                 ))
