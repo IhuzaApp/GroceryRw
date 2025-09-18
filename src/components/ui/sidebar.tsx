@@ -6,8 +6,7 @@ import { useRouter } from "next/router";
 import { useSession } from "next-auth/react";
 import { collection, query, where, onSnapshot } from "firebase/firestore";
 import { db } from "../../lib/firebase";
-import PWAInstallGuide from "./PWAInstallGuide";
-import { Download } from "lucide-react";
+import { LogIn } from "lucide-react";
 import { authenticatedFetch } from "../../lib/authenticatedFetch";
 
 export default function SideBar() {
@@ -16,7 +15,6 @@ export default function SideBar() {
   const [unreadCount, setUnreadCount] = useState(0);
   const [pendingOrdersCount, setPendingOrdersCount] = useState(0);
   const [pendingOrders, setPendingOrders] = useState([]);
-  const [showInstallGuide, setShowInstallGuide] = useState(false);
 
   // Listen for unread messages
   useEffect(() => {
@@ -118,95 +116,99 @@ export default function SideBar() {
             </svg>
           </Link>
 
-          {/* Profile */}
-          <Link
-            className="rounded-full p-2 text-inherit transition-colors duration-200 hover:bg-gray-200 dark:hover:bg-green-700 dark:hover:text-white"
-            href={"/Myprofile"}
-            passHref
-          >
-            <svg
-              width="30px"
-              height="30px"
-              viewBox="0 0 24 24"
-              fill="none"
-              xmlns="http://www.w3.org/2000/svg"
-              className="text-inherit"
+          {/* Profile - Only show if user is signed in */}
+          {session?.user && (
+            <Link
+              className="rounded-full p-2 text-inherit transition-colors duration-200 hover:bg-gray-200 dark:hover:bg-green-700 dark:hover:text-white"
+              href={"/Myprofile"}
+              passHref
             >
-              <g id="SVGRepo_bgCarrier" strokeWidth="0"></g>
-              <g
-                id="SVGRepo_tracerCarrier"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              ></g>
-              <g id="SVGRepo_iconCarrier">
-                <circle
-                  cx="12"
-                  cy="6"
-                  r="4"
-                  className="stroke-current"
-                  strokeWidth="1.5"
-                ></circle>
-                <path
-                  d="M19.9975 18C20 17.8358 20 17.669 20 17.5C20 15.0147 16.4183 13 12 13C7.58172 13 4 15.0147 4 17.5C4 19.9853 4 22 12 22C14.231 22 15.8398 21.8433 17 21.5634"
-                  className="stroke-current"
-                  strokeWidth="1.5"
-                  strokeLinecap="round"
-                ></path>
-              </g>
-            </svg>
-          </Link>
-
-          {/* Orders */}
-          <Link
-            className="relative rounded-full p-2 text-inherit transition-colors duration-200 hover:bg-gray-200 dark:hover:bg-green-700 dark:hover:text-white"
-            href={"/CurrentPendingOrders"}
-            passHref
-          >
-            <svg
-              width="30px"
-              height="30px"
-              viewBox="0 0 24 24"
-              fill="none"
-              xmlns="http://www.w3.org/2000/svg"
-            >
-              <g id="SVGRepo_bgCarrier" strokeWidth="0"></g>
-              <g
-                id="SVGRepo_tracerCarrier"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              ></g>
-              <g id="SVGRepo_iconCarrier">
-                <path
-                  d="M7.5 18C8.32843 18 9 18.6716 9 19.5C9 20.3284 8.32843 21 7.5 21C6.67157 21 6 20.3284 6 19.5C6 18.6716 6.67157 18 7.5 18Z"
-                  stroke="currentColor"
-                  strokeWidth="1.5"
-                ></path>
-                <path
-                  d="M16.5 18.0001C17.3284 18.0001 18 18.6716 18 19.5001C18 20.3285 17.3284 21.0001 16.5 21.0001C15.6716 21.0001 15 20.3285 15 19.5001C15 18.6716 15.6716 18.0001 16.5 18.0001Z"
-                  stroke="currentColor"
-                  strokeWidth="1.5"
-                ></path>
-                <path
-                  d="M11 10.8L12.1429 12L15 9"
-                  stroke="currentColor"
-                  strokeWidth="1.5"
+              <svg
+                width="30px"
+                height="30px"
+                viewBox="0 0 24 24"
+                fill="none"
+                xmlns="http://www.w3.org/2000/svg"
+                className="text-inherit"
+              >
+                <g id="SVGRepo_bgCarrier" strokeWidth="0"></g>
+                <g
+                  id="SVGRepo_tracerCarrier"
                   strokeLinecap="round"
                   strokeLinejoin="round"
-                ></path>
-                <path
-                  d="M2 3L2.26121 3.09184C3.5628 3.54945 4.2136 3.77826 4.58584 4.32298C4.95808 4.86771 4.95808 5.59126 4.95808 7.03836V9.76C4.95808 12.7016 5.02132 13.6723 5.88772 14.5862C6.75412 15.5 8.14857 15.5 10.9375 15.5H12M16.2404 15.5C17.8014 15.5 18.5819 15.5 19.1336 15.0504C19.6853 14.6008 19.8429 13.8364 20.158 12.3075L20.6578 9.88275C21.0049 8.14369 21.1784 7.27417 20.7345 6.69708C20.2906 6.12 18.7738 6.12 17.0888 6.12H11.0235M4.95808 6.12H7"
-                  stroke="currentColor"
-                  strokeWidth="1.5"
+                ></g>
+                <g id="SVGRepo_iconCarrier">
+                  <circle
+                    cx="12"
+                    cy="6"
+                    r="4"
+                    className="stroke-current"
+                    strokeWidth="1.5"
+                  ></circle>
+                  <path
+                    d="M19.9975 18C20 17.8358 20 17.669 20 17.5C20 15.0147 16.4183 13 12 13C7.58172 13 4 15.0147 4 17.5C4 19.9853 4 22 12 22C14.231 22 15.8398 21.8433 17 21.5634"
+                    className="stroke-current"
+                    strokeWidth="1.5"
+                    strokeLinecap="round"
+                  ></path>
+                </g>
+              </svg>
+            </Link>
+          )}
+
+          {/* Orders - Only show if user is signed in */}
+          {session?.user && (
+            <Link
+              className="relative rounded-full p-2 text-inherit transition-colors duration-200 hover:bg-gray-200 dark:hover:bg-green-700 dark:hover:text-white"
+              href={"/CurrentPendingOrders"}
+              passHref
+            >
+              <svg
+                width="30px"
+                height="30px"
+                viewBox="0 0 24 24"
+                fill="none"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <g id="SVGRepo_bgCarrier" strokeWidth="0"></g>
+                <g
+                  id="SVGRepo_tracerCarrier"
                   strokeLinecap="round"
-                ></path>
-              </g>
-            </svg>
-            {pendingOrdersCount > 0 && (
-              <span className="absolute -right-1 -top-1 flex h-5 w-5 items-center justify-center rounded-full bg-red-500 text-xs font-bold text-white dark:bg-red-600">
-                {pendingOrdersCount > 9 ? "9+" : pendingOrdersCount}
-              </span>
-            )}
-          </Link>
+                  strokeLinejoin="round"
+                ></g>
+                <g id="SVGRepo_iconCarrier">
+                  <path
+                    d="M7.5 18C8.32843 18 9 18.6716 9 19.5C9 20.3284 8.32843 21 7.5 21C6.67157 21 6 20.3284 6 19.5C6 18.6716 6.67157 18 7.5 18Z"
+                    stroke="currentColor"
+                    strokeWidth="1.5"
+                  ></path>
+                  <path
+                    d="M16.5 18.0001C17.3284 18.0001 18 18.6716 18 19.5001C18 20.3285 17.3284 21.0001 16.5 21.0001C15.6716 21.0001 15 20.3285 15 19.5001C15 18.6716 15.6716 18.0001 16.5 18.0001Z"
+                    stroke="currentColor"
+                    strokeWidth="1.5"
+                  ></path>
+                  <path
+                    d="M11 10.8L12.1429 12L15 9"
+                    stroke="currentColor"
+                    strokeWidth="1.5"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  ></path>
+                  <path
+                    d="M2 3L2.26121 3.09184C3.5628 3.54945 4.2136 3.77826 4.58584 4.32298C4.95808 4.86771 4.95808 5.59126 4.95808 7.03836V9.76C4.95808 12.7016 5.02132 13.6723 5.88772 14.5862C6.75412 15.5 8.14857 15.5 10.9375 15.5H12M16.2404 15.5C17.8014 15.5 18.5819 15.5 19.1336 15.0504C19.6853 14.6008 19.8429 13.8364 20.158 12.3075L20.6578 9.88275C21.0049 8.14369 21.1784 7.27417 20.7345 6.69708C20.2906 6.12 18.7738 6.12 17.0888 6.12H11.0235M4.95808 6.12H7"
+                    stroke="currentColor"
+                    strokeWidth="1.5"
+                    strokeLinecap="round"
+                  ></path>
+                </g>
+              </svg>
+              {pendingOrdersCount > 0 && (
+                <span className="absolute -right-1 -top-1 flex h-5 w-5 items-center justify-center rounded-full bg-red-500 text-xs font-bold text-white dark:bg-red-600">
+                  {pendingOrdersCount > 9 ? "9+" : pendingOrdersCount}
+                </span>
+              )}
+            </Link>
+          )}
 
           {/* Recipes */}
           <Link
@@ -296,62 +298,61 @@ export default function SideBar() {
             </svg>
           </Link>
 
-          {/* Chat */}
-          <Link
-            className="relative rounded-full p-2 text-inherit transition-colors duration-200 hover:bg-gray-200 dark:hover:bg-green-700 dark:hover:text-white"
-            href={"/Messages"}
-            passHref
-          >
-            <svg
-              width="30px"
-              height="30px"
-              viewBox="0 0 24 24"
-              fill="none"
-              xmlns="http://www.w3.org/2000/svg"
-              className="text-inherit"
+          {/* Chat - Only show if user is signed in */}
+          {session?.user && (
+            <Link
+              className="relative rounded-full p-2 text-inherit transition-colors duration-200 hover:bg-gray-200 dark:hover:bg-green-700 dark:hover:text-white"
+              href={"/Messages"}
+              passHref
             >
-              <path
-                d="M8 10.5H16"
-                stroke="currentColor"
-                strokeWidth="1.5"
-                strokeLinecap="round"
-              />
-              <path
-                d="M8 14H13.5"
-                stroke="currentColor"
-                strokeWidth="1.5"
-                strokeLinecap="round"
-              />
-              <path
-                d="M17 3.33782C15.5291 2.48697 13.8214 2 12 2C6.47715 2 2 6.47715 2 12C2 13.5997 2.37562 15.1116 3.04346 16.4525C3.22094 16.8088 3.28001 17.2161 3.17712 17.6006L2.58151 19.8267C2.32295 20.793 3.20701 21.677 4.17335 21.4185L6.39939 20.8229C6.78393 20.72 7.19121 20.7791 7.54753 20.9565C8.88837 21.6244 10.4003 22 12 22C17.5228 22 22 17.5228 22 12C22 10.1786 21.513 8.47087 20.6622 7"
-                stroke="currentColor"
-                strokeWidth="1.5"
-                strokeLinecap="round"
-              />
-            </svg>
-            {unreadCount > 0 && (
-              <span className="absolute -right-1 -top-1 flex h-5 w-5 items-center justify-center rounded-full bg-green-500 text-xs font-bold text-white dark:bg-green-600">
-                {unreadCount}
-              </span>
-            )}
-          </Link>
+              <svg
+                width="30px"
+                height="30px"
+                viewBox="0 0 24 24"
+                fill="none"
+                xmlns="http://www.w3.org/2000/svg"
+                className="text-inherit"
+              >
+                <path
+                  d="M8 10.5H16"
+                  stroke="currentColor"
+                  strokeWidth="1.5"
+                  strokeLinecap="round"
+                />
+                <path
+                  d="M8 14H13.5"
+                  stroke="currentColor"
+                  strokeWidth="1.5"
+                  strokeLinecap="round"
+                />
+                <path
+                  d="M17 3.33782C15.5291 2.48697 13.8214 2 12 2C6.47715 2 2 6.47715 2 12C2 13.5997 2.37562 15.1116 3.04346 16.4525C3.22094 16.8088 3.28001 17.2161 3.17712 17.6006L2.58151 19.8267C2.32295 20.793 3.20701 21.677 4.17335 21.4185L6.39939 20.8229C6.78393 20.72 7.19121 20.7791 7.54753 20.9565C8.88837 21.6244 10.4003 22 12 22C17.5228 22 22 17.5228 22 12C22 10.1786 21.513 8.47087 20.6622 7"
+                  stroke="currentColor"
+                  strokeWidth="1.5"
+                  strokeLinecap="round"
+                />
+              </svg>
+              {unreadCount > 0 && (
+                <span className="absolute -right-1 -top-1 flex h-5 w-5 items-center justify-center rounded-full bg-green-500 text-xs font-bold text-white dark:bg-green-600">
+                  {unreadCount}
+                </span>
+              )}
+            </Link>
+          )}
 
-          {/* Install App */}
-          <button
-            onClick={() => setShowInstallGuide(true)}
-            className="rounded-full p-2 text-inherit transition-colors duration-200 hover:bg-gray-200 dark:hover:bg-green-700 dark:hover:text-white"
-            title="Install App"
-          >
-            <Download className="h-7 w-7" />
-          </button>
+          {/* Login - Only show if user is NOT signed in */}
+          {!session?.user && (
+            <Link
+              className="rounded-full p-2 text-inherit transition-colors duration-200 hover:bg-gray-200 dark:hover:bg-green-700 dark:hover:text-white"
+              href={"/Auth/Login"}
+              passHref
+              title="Login"
+            >
+              <LogIn className="h-7 w-7" />
+            </Link>
+          )}
         </div>
       </div>
-
-      {/* Install Guide Modal */}
-      <PWAInstallGuide
-        isOpen={showInstallGuide}
-        onClose={() => setShowInstallGuide(false)}
-      />
     </>
   );
 }

@@ -25,7 +25,6 @@ import { formatCurrency } from "../../lib/formatCurrency";
 import ProductImageModal from "./ProductImageModal";
 import QuantityConfirmationModal from "./QuantityConfirmationModal";
 import PaymentModal from "./PaymentModal";
-import OtpVerificationModal from "./OtpVerificationModal";
 import DeliveryConfirmationModal from "./DeliveryConfirmationModal";
 import { useChat } from "../../context/ChatContext";
 import { isMobileDevice } from "../../lib/formatters";
@@ -608,9 +607,7 @@ export default function BatchDetails({
       // If we have enough balance or couldn't check, proceed with OTP
       generateOtp();
 
-      // Close payment modal and show OTP modal
-      setShowPaymentModal(false);
-      setShowOtpModal(true);
+      // Keep payment modal open - it will handle OTP step internally
       setPaymentLoading(false);
     } catch (err) {
       console.error("Payment processing error:", err);
@@ -649,6 +646,107 @@ export default function BatchDetails({
       // Get the original order total for refund calculation
       const originalOrderTotal = calculateOriginalSubtotal();
 
+      // Initiate MoMo payment after OTP verification
+      let momoPaymentSuccess = false;
+      let momoReferenceId = "";
+      try {
+        // First, ensure we have a valid token
+        const { momoTokenManager } = await import("../../lib/momoTokenManager");
+        await momoTokenManager.getValidToken();
+
+        const momoResponse = await fetch("/api/momo/transfer", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            amount: orderAmount,
+            currency: systemConfig?.currency || "RWF",
+            payerNumber: momoCode,
+            externalId: order.id || `SHOPPER-PAYMENT-${Date.now()}`,
+            payerMessage: "Payment for Shopper Items",
+            payeeNote: "Shopper payment confirmation",
+          }),
+        });
+
+        const momoData = await momoResponse.json();
+        momoReferenceId = momoData.referenceId;
+
+        if (momoResponse.ok) {
+          // Start polling for MoMo payment status
+          const maxAttempts = 30; // Poll for up to 5 minutes (30 * 10 seconds)
+          let attempts = 0;
+          let paymentCompleted = false;
+
+          // Poll for MoMo payment status
+          for (let attempt = 0; attempt < maxAttempts; attempt++) {
+            try {
+              await momoTokenManager.getValidToken();
+
+              const statusResponse = await fetch(
+                `/api/momo/status?referenceId=${momoData.referenceId}`
+              );
+              const statusData = await statusResponse.json();
+
+              if (statusResponse.ok) {
+                if (statusData.status === "SUCCESSFUL") {
+                  momoPaymentSuccess = true;
+                  toaster.push(
+                    <Notification
+                      type="success"
+                      header="MoMo Payment Successful"
+                      closable
+                    >
+                      Payment completed successfully via MoMo!
+                    </Notification>,
+                    { placement: "topEnd" }
+                  );
+                  break; // Exit the polling loop
+                } else if (statusData.status === "FAILED") {
+                  throw new Error("MoMo payment failed. Please try again.");
+                } else if (statusData.status === "PENDING") {
+                  // Continue polling
+                  if (attempt < maxAttempts - 1) {
+                    await new Promise((resolve) => setTimeout(resolve, 10000)); // Wait 10 seconds
+                  } else {
+                    throw new Error(
+                      "MoMo payment timeout. Please check your phone or try again."
+                    );
+                  }
+                }
+              } else {
+                throw new Error(statusData.error || "MoMo status check failed");
+              }
+            } catch (error) {
+              console.error("MoMo status polling error:", error);
+              if (attempt === maxAttempts - 1) {
+                throw error; // Re-throw on last attempt
+              }
+              await new Promise((resolve) => setTimeout(resolve, 10000)); // Wait before retry
+            }
+          }
+
+          if (!momoPaymentSuccess) {
+            throw new Error("MoMo payment did not complete successfully");
+          }
+        } else {
+          throw new Error(momoData.error || "MoMo payment initiation failed");
+        }
+      } catch (momoError) {
+        console.error("MoMo payment error:", momoError);
+        toaster.push(
+          <Notification type="error" header="MoMo Payment Failed" closable>
+            {momoError instanceof Error
+              ? momoError.message
+              : "MoMo payment failed. Please try again."}
+          </Notification>,
+          { placement: "topEnd", duration: 5000 }
+        );
+        setOtpVerifyLoading(false);
+        setShowPaymentModal(false); // Close payment modal on error
+        return;
+      }
+
       // Make API request to update wallet balance and process payment
       let paymentSuccess = false;
       let walletUpdated = false;
@@ -665,6 +763,8 @@ export default function BatchDetails({
             orderAmount: orderAmount, // Only the value of found items (no fees)
             originalOrderTotal: originalOrderTotal, // Original subtotal for refund calculation
             orderType: order.orderType || "regular", // Pass order type to API
+            momoReferenceId: momoReferenceId, // Pass MoMo reference ID
+            momoSuccess: momoPaymentSuccess, // Pass MoMo success status
           }),
         });
 
@@ -700,12 +800,12 @@ export default function BatchDetails({
           { placement: "topEnd", duration: 5000 }
         );
         setOtpVerifyLoading(false);
-        setShowOtpModal(false); // Close OTP modal on error
+        setShowPaymentModal(false); // Close payment modal on error
         return;
       }
 
-      // Close OTP modal
-      setShowOtpModal(false);
+      // Close payment modal (which includes OTP step)
+      setShowPaymentModal(false);
 
       // Only proceed with status update if payment was successful
       if (paymentSuccess && walletUpdated) {
@@ -723,19 +823,22 @@ export default function BatchDetails({
           // Update step
           setCurrentStep(2);
 
-          // Clear payment info
+          // Clear payment info and close payment modal
           setMomoCode("");
           setPrivateKey("");
           setOtp("");
           setGeneratedOtp("");
+          setShowPaymentModal(false); // Ensure payment modal is closed
 
           // Show success notification
           toaster.push(
-            <Notification type="success" header="Payment Processed" closable>
-              Payment has been processed successfully. Your reserved wallet
-              balance has been updated.
+            <Notification type="success" header="Payment Complete" closable>
+              ✅ MoMo payment successful
+              <br />
+              ✅ Wallet balance updated
+              <br />✅ Order status updated to "On The Way"
             </Notification>,
-            { placement: "topEnd" }
+            { placement: "topEnd", duration: 5000 }
           );
         } catch (updateError) {
           console.error("Error updating order status:", updateError);
@@ -773,7 +876,7 @@ export default function BatchDetails({
       return;
     }
 
-    if (!order?.id) return;
+    if (!order?.id || loading) return; // Prevent multiple calls while loading
 
     try {
       setLoading(true);
@@ -844,7 +947,11 @@ export default function BatchDetails({
 
   // Function to show product image in modal
   const showProductImage = (item: OrderItem) => {
-    setSelectedImage(item.product.image);
+    setSelectedImage(
+      item.product.ProductName?.image ||
+        item.product.image ||
+        "/images/groceryPlaceholder.png"
+    );
     setSelectedProductName(item.product.ProductName?.name || "Unknown Product");
     setCurrentOrderItem(item);
     setShowImageModal(true);
@@ -1005,11 +1112,11 @@ export default function BatchDetails({
           <Button
             appearance="primary"
             color="green"
-            size="sm"
+            size="lg"
             block
             onClick={() => handleUpdateStatus("shopping")}
             loading={loading}
-            className="rounded-lg py-2 text-lg font-bold sm:rounded-xl sm:py-4 sm:text-2xl sm:text-xl"
+            className="rounded-lg py-4 text-xl font-bold sm:rounded-xl sm:py-6 sm:text-3xl"
           >
             Start Shopping
           </Button>
@@ -1021,11 +1128,11 @@ export default function BatchDetails({
             <Button
               appearance="primary"
               color="green"
-              size="sm"
+              size="lg"
               block
               onClick={() => handleUpdateStatus("on_the_way")}
               loading={loading}
-              className="rounded-lg py-2 text-lg font-bold sm:rounded-xl sm:py-4 sm:text-2xl sm:text-xl"
+              className="rounded-lg py-4 text-xl font-bold sm:rounded-xl sm:py-6 sm:text-3xl"
             >
               Make Payment
             </Button>
@@ -1045,7 +1152,7 @@ export default function BatchDetails({
             onClick={() => handleUpdateStatus("on_the_way")}
             loading={loading}
             disabled={!hasFoundItems}
-            className="rounded-lg py-2 text-lg font-bold sm:rounded-xl sm:py-4 sm:text-2xl sm:text-xl"
+            className="rounded-lg py-4 text-xl font-bold sm:rounded-xl sm:py-6 sm:text-3xl"
           >
             {hasFoundItems ? "Make Payment" : "Mark Items as Found to Continue"}
           </Button>
@@ -1056,11 +1163,11 @@ export default function BatchDetails({
           <Button
             appearance="primary"
             color="green"
-            size="sm"
+            size="lg"
             block
             onClick={() => handleUpdateStatus("delivered")}
             loading={loading}
-            className="rounded-lg py-2 text-lg font-bold sm:rounded-xl sm:py-4 sm:text-2xl sm:text-xl"
+            className="rounded-lg py-4 text-xl font-bold sm:rounded-xl sm:py-6 sm:text-3xl"
           >
             Confirm Delivery & Generate Invoice
           </Button>
@@ -1210,10 +1317,18 @@ export default function BatchDetails({
         onConfirm={confirmFoundQuantity}
       />
 
-      {/* MoMo Payment Modal */}
+      {/* Integrated Payment & OTP Modal */}
       <PaymentModal
+        key={`payment-modal-${order?.id}-${showPaymentModal}`}
         open={showPaymentModal}
-        onClose={() => setShowPaymentModal(false)}
+        onClose={() => {
+          setShowPaymentModal(false);
+          // Reset payment state when modal is closed
+          setMomoCode("");
+          setPrivateKey("");
+          setOtp("");
+          setGeneratedOtp("");
+        }}
         onSubmit={handlePaymentSubmit}
         momoCode={momoCode}
         setMomoCode={setMomoCode}
@@ -1222,16 +1337,12 @@ export default function BatchDetails({
         serviceFee={parseFloat(order?.serviceFee || "0")}
         deliveryFee={parseFloat(order?.deliveryFee || "0")}
         paymentLoading={paymentLoading}
-      />
-
-      {/* OTP Verification Modal */}
-      <OtpVerificationModal
-        open={showOtpModal}
-        onClose={() => setShowOtpModal(false)}
-        onVerify={handleVerifyOtp}
+        externalId={order?.id}
         otp={otp}
         setOtp={setOtp}
-        loading={otpVerifyLoading}
+        otpLoading={otpVerifyLoading}
+        onVerifyOtp={handleVerifyOtp}
+        generatedOtp={generatedOtp}
       />
 
       {/* Delivery Confirmation Modal */}
@@ -1565,7 +1676,7 @@ export default function BatchDetails({
                     {order.shop?.address && (
                       <div className="flex justify-center sm:justify-start">
                         <button
-                          className="flex items-center rounded-full border border-green-400 px-3 py-1 text-sm font-medium text-green-600 transition-colors hover:border-green-300 hover:bg-green-50 hover:text-green-700 dark:border-green-700 dark:text-green-400 dark:hover:border-green-600 dark:hover:bg-green-900/20 sm:text-base"
+                          className="flex items-center rounded-full border border-green-400 px-3 py-1.5 text-xs font-medium text-green-600 transition-colors hover:border-green-300 hover:bg-green-50 hover:text-green-700 dark:border-green-700 dark:text-green-400 dark:hover:border-green-600 dark:hover:bg-green-900/20 sm:text-sm"
                           onClick={() =>
                             handleDirectionsClick(order.shop?.address || "")
                           }
@@ -1661,7 +1772,7 @@ export default function BatchDetails({
 
                   <div className="flex flex-wrap justify-center gap-2 sm:justify-start">
                     <button
-                      className="flex items-center rounded-full border border-green-400 px-3 py-1 text-sm text-green-600 transition-colors hover:border-green-300 hover:bg-green-50 hover:text-green-700 dark:border-green-700 dark:text-green-400 dark:hover:border-green-600 dark:hover:bg-green-900/20 sm:text-base"
+                      className="flex items-center rounded-full border border-green-400 px-3 py-1.5 text-xs text-green-600 transition-colors hover:border-green-300 hover:bg-green-50 hover:text-green-700 dark:border-green-700 dark:text-green-400 dark:hover:border-green-600 dark:hover:bg-green-900/20 sm:text-sm"
                       onClick={() =>
                         handleDirectionsClick(
                           `${order.address.street}, ${order.address.city}${
@@ -1687,7 +1798,7 @@ export default function BatchDetails({
 
                     {order.user.phone && (
                       <button
-                        className="flex items-center rounded-full border border-green-400 px-3 py-1 text-sm text-green-600 transition-colors hover:border-green-300 hover:bg-green-50 hover:text-green-700 dark:border-green-700 dark:text-green-400 dark:hover:border-green-600 dark:hover:bg-green-900/20 sm:text-base"
+                        className="flex items-center rounded-full border border-green-400 px-3 py-1.5 text-xs text-green-600 transition-colors hover:border-green-300 hover:bg-green-50 hover:text-green-700 dark:border-green-700 dark:text-green-400 dark:hover:border-green-600 dark:hover:bg-green-900/20 sm:text-sm"
                         onClick={() =>
                           (window.location.href = `tel:${order.user.phone}`)
                         }
@@ -1707,7 +1818,7 @@ export default function BatchDetails({
 
                     {order.status !== "delivered" ? (
                       <button
-                        className="flex items-center rounded-full border border-green-400 px-3 py-1 text-sm text-green-600 transition-colors hover:border-green-300 hover:bg-green-50 hover:text-green-700 dark:border-green-700 dark:text-green-400 dark:hover:border-green-600 dark:hover:bg-green-900/20 sm:text-base"
+                        className="flex items-center rounded-full border border-green-400 px-3 py-1.5 text-xs text-green-600 transition-colors hover:border-green-300 hover:bg-green-50 hover:text-green-700 dark:border-green-700 dark:text-green-400 dark:hover:border-green-600 dark:hover:bg-green-900/20 sm:text-sm"
                         onClick={handleChatClick}
                       >
                         <svg
@@ -1723,7 +1834,7 @@ export default function BatchDetails({
                       </button>
                     ) : (
                       <button
-                        className="flex cursor-not-allowed items-center rounded-lg border border-slate-300 px-3 py-1 text-sm font-medium text-slate-400 dark:border-slate-600 sm:text-base"
+                        className="flex cursor-not-allowed items-center rounded-lg border border-slate-300 px-3 py-1.5 text-xs font-medium text-slate-400 dark:border-slate-600 sm:text-sm"
                         disabled
                       >
                         <svg
@@ -1796,33 +1907,27 @@ export default function BatchDetails({
                         className="flex items-center gap-2 rounded-lg border border-slate-200 bg-white p-2 dark:border-slate-600 dark:bg-slate-700 sm:gap-3 sm:p-4"
                       >
                         <div
-                          className="h-8 w-8 flex-shrink-0 cursor-pointer overflow-hidden rounded-lg bg-slate-200 sm:h-12 sm:w-12"
+                          className="h-8 w-8 flex-shrink-0 cursor-pointer overflow-hidden rounded-lg sm:h-12 sm:w-12"
                           onClick={() => showProductImage(item)}
                         >
-                          {item.product.image ? (
-                            <Image
-                              src={item.product.image}
-                              alt={
-                                item.product.ProductName?.name ||
-                                "Unknown Product"
-                              }
-                              width={48}
-                              height={48}
-                              className="h-full w-full object-cover"
-                            />
-                          ) : (
-                            <div className="flex h-full w-full items-center justify-center bg-slate-300 text-slate-400">
-                              <svg
-                                viewBox="0 0 24 24"
-                                fill="none"
-                                stroke="currentColor"
-                                strokeWidth="2"
-                                className="h-5 w-5 sm:h-6 sm:w-6"
-                              >
-                                <path d="M9 17h6M9 12h6M9 7h6" />
-                              </svg>
-                            </div>
-                          )}
+                          <Image
+                            src={
+                              item.product.ProductName?.image ||
+                              item.product.image ||
+                              "/images/groceryPlaceholder.png"
+                            }
+                            alt={
+                              item.product.ProductName?.name ||
+                              "Unknown Product"
+                            }
+                            width={48}
+                            height={48}
+                            className="h-full w-full object-cover"
+                            onError={(e) => {
+                              const target = e.target as HTMLImageElement;
+                              target.src = "/images/groceryPlaceholder.png";
+                            }}
+                          />
                         </div>
 
                         <div className="min-w-0 flex-1">
@@ -1831,7 +1936,8 @@ export default function BatchDetails({
                               "Unknown Product"}
                           </p>
                           <p className="text-xs text-slate-500 dark:text-slate-400 sm:text-sm">
-                            {formatCurrency(item.price)} × {item.quantity}
+                            {formatCurrency(item.price)} × {item.quantity}{" "}
+                            {(item.product as any).measurement_unit || "each"}
                           </p>
                           {item.found &&
                             item.foundQuantity &&
@@ -1849,38 +1955,61 @@ export default function BatchDetails({
                           {order.status === "shopping" && (
                             <button
                               onClick={() => toggleItemFound(item, !item.found)}
-                              className={`flex items-center gap-1 whitespace-nowrap rounded-lg px-2 py-1 text-xs font-medium transition-all duration-200 sm:gap-2 sm:px-3 sm:py-1.5 sm:text-sm ${
+                              className={`group relative flex items-center gap-1 overflow-hidden whitespace-nowrap rounded-md px-2 py-1.5 text-xs font-medium transition-all duration-300 sm:gap-1.5 sm:px-2.5 sm:py-1.5 sm:text-xs ${
                                 item.found
-                                  ? "border border-emerald-200 bg-emerald-100 text-emerald-800 hover:bg-emerald-200 dark:border-emerald-700 dark:bg-emerald-900/20 dark:text-emerald-300"
-                                  : "border border-slate-200 bg-slate-100 text-slate-700 hover:bg-slate-200 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-300 dark:hover:bg-slate-600"
+                                  ? "border-2 border-emerald-300 bg-gradient-to-r from-emerald-100 to-green-100 text-emerald-800 shadow-lg shadow-emerald-200/50 hover:scale-105 hover:shadow-emerald-300/60 dark:border-emerald-600 dark:from-emerald-900/30 dark:to-green-900/30 dark:text-emerald-200 dark:shadow-emerald-800/30"
+                                  : "border-2 border-slate-300 bg-gradient-to-r from-slate-50 to-gray-50 text-slate-700 shadow-md shadow-slate-200/30 hover:scale-105 hover:border-blue-300 hover:bg-gradient-to-r hover:from-blue-50 hover:to-indigo-50 hover:text-blue-700 hover:shadow-slate-300/50 dark:border-slate-600 dark:from-slate-700 dark:to-gray-700 dark:text-slate-300 dark:shadow-slate-800/30 dark:hover:border-blue-500 dark:hover:from-blue-900/30 dark:hover:to-indigo-900/30 dark:hover:text-blue-200"
                               }`}
                             >
-                              <svg
-                                viewBox="0 0 24 24"
-                                fill="none"
-                                stroke="currentColor"
-                                strokeWidth="2"
-                                className={`h-3 w-3 sm:h-4 sm:w-4 ${
+                              {/* Ripple effect overlay */}
+                              <div className="absolute inset-0 rounded-xl bg-white/20 opacity-0 transition-opacity duration-150 group-active:opacity-100 dark:bg-white/10"></div>
+                              <div
+                                className={`relative transition-all duration-300 ${
                                   item.found
-                                    ? "text-emerald-600 dark:text-emerald-400"
-                                    : "text-slate-500 dark:text-slate-400"
+                                    ? "scale-110"
+                                    : "scale-100 group-hover:scale-110"
                                 }`}
                               >
-                                {item.found ? (
-                                  <path
-                                    strokeLinecap="round"
-                                    strokeLinejoin="round"
-                                    d="M5 13l4 4L19 7"
-                                  />
-                                ) : (
-                                  <path
-                                    strokeLinecap="round"
-                                    strokeLinejoin="round"
-                                    d="M12 6v6m0 0v6m0-6h6m-6 0H6"
-                                  />
+                                <svg
+                                  viewBox="0 0 24 24"
+                                  fill="none"
+                                  stroke="currentColor"
+                                  strokeWidth="1.5"
+                                  className={`h-2.5 w-2.5 transition-all duration-300 sm:h-3 sm:w-3 ${
+                                    item.found
+                                      ? "text-emerald-600 dark:text-emerald-300"
+                                      : "text-slate-500 group-hover:text-blue-600 dark:text-slate-400 dark:group-hover:text-blue-400"
+                                  }`}
+                                >
+                                  {item.found ? (
+                                    <path
+                                      strokeLinecap="round"
+                                      strokeLinejoin="round"
+                                      d="M5 13l4 4L19 7"
+                                      className="animate-pulse"
+                                    />
+                                  ) : (
+                                    <path
+                                      strokeLinecap="round"
+                                      strokeLinejoin="round"
+                                      d="M12 6v6m0 0v6m0-6h6m-6 0H6"
+                                      className="group-hover:animate-pulse"
+                                    />
+                                  )}
+                                </svg>
+                                {item.found && (
+                                  <div className="absolute inset-0 animate-ping rounded-full bg-emerald-200/50 dark:bg-emerald-800/50"></div>
                                 )}
-                              </svg>
-                              {item.found ? "Found" : "Mark Found"}
+                              </div>
+                              <span
+                                className={`relative z-10 transition-all duration-300 ${
+                                  item.found
+                                    ? "font-bold"
+                                    : "font-semibold group-hover:font-bold"
+                                }`}
+                              >
+                                {item.found ? "✓ Found" : "Mark Found"}
+                              </span>
                             </button>
                           )}
                         </div>

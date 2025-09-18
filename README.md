@@ -7521,3 +7521,104 @@ NEXTAUTH_SECURE_COOKIES=false  # true for production
 - Network tab for authentication requests
 - Console logs for authentication flow
 - NextAuth.js debug mode (set `debug: true` in auth options)
+
+---
+
+# Wallet Operations API
+
+## Overview
+
+The Wallet Operations API (`/api/shopper/walletOperations`) is a dedicated endpoint that handles all wallet balance operations for specific order statuses. This API is called by the Order Status Update API to ensure proper wallet management.
+
+## API Endpoint
+
+### Wallet Operations API (`/api/shopper/walletOperations`)
+
+**POST** - Handle wallet balance operations for specific order statuses
+
+```typescript
+POST /api/shopper/walletOperations
+{
+  orderId: uuid,
+  operation: "shopping" | "delivered" | "cancelled",
+  isReelOrder: boolean
+}
+
+// Response
+{
+  success: true,
+  operation: string,
+  orderId: uuid,
+  newAvailableBalance?: string,
+  newReservedBalance: string,
+  earningsAdded?: number,
+  platformFeeDeducted?: number,
+  refundAmount?: number,
+  message: string
+}
+```
+
+## Operations
+
+### 1. "shopping" Operation
+
+**Purpose**: Reserve funds when shopper starts shopping
+
+**Actions**:
+
+- Reserved balance increases by order total
+- Commission revenue calculated and recorded
+- Wallet transaction created for reserved balance
+
+**Response Fields**:
+
+- `newReservedBalance`: Updated reserved balance
+- `reservedBalanceChange`: Amount added to reserved balance
+- `message`: "Reserved balance updated for shopping"
+
+### 2. "delivered" Operation
+
+**Purpose**: Process earnings and handle reserved balance when order is delivered
+
+**Actions**:
+
+- Available balance updated with remaining earnings (after platform fee deduction)
+- Reserved balance properly handled (never goes negative)
+- Refund logic for excess reserved amounts
+- Plasa fee revenue calculated and recorded
+- Wallet transactions created for earnings, expenses, and refunds
+
+**Response Fields**:
+
+- `newAvailableBalance`: Updated available balance
+- `newReservedBalance`: Updated reserved balance
+- `earningsAdded`: Amount added to available balance
+- `platformFeeDeducted`: Platform fee amount deducted
+- `refundAmount`: Refund amount if applicable
+- `message`: "Wallet updated for delivered order"
+
+### 3. "cancelled" Operation
+
+**Purpose**: Process refunds when order is cancelled
+
+**Actions**:
+
+- Reserved balance decreases by order total
+- Refund record created in Refunds table
+- Wallet transaction created for refund
+
+**Response Fields**:
+
+- `newReservedBalance`: Updated reserved balance
+- `refundAmount`: Refund amount processed
+- `message`: "Refund processed for cancelled order"
+
+## Integration with Order Status Updates
+
+The Wallet Operations API is automatically called by the Order Status Update API (`/api/shopper/updateOrderStatus`) for the following statuses:
+
+- **"shopping"**: Calls wallet operations with `operation: "shopping"`
+- **"delivered"**: Calls wallet operations with `operation: "delivered"`
+- **"cancelled"**: Calls wallet operations with `operation: "cancelled"`
+
+This ensures that wallet operations are properly handled whenever order status changes occur.

@@ -88,6 +88,8 @@ export default function CheckoutItems({
   const [configLoading, setConfigLoading] = useState(true);
   // Address management modal state
   const [showAddressModal, setShowAddressModal] = useState(false);
+  // Checkout loading state
+  const [isCheckoutLoading, setIsCheckoutLoading] = useState(false);
 
   // Fetch system configuration
   useEffect(() => {
@@ -98,7 +100,6 @@ export default function CheckoutItems({
         const data = await response.json();
 
         if (data.success && data.config) {
-          console.log("Fetched system configuration from API:", data.config);
           setSystemConfig(data.config);
 
           // Store in cookie with expiration and timestamp
@@ -128,10 +129,6 @@ export default function CheckoutItems({
         const data = await response.json();
 
         if (data.success && data.config) {
-          console.log(
-            "Background refresh of system configuration successful:",
-            data.config
-          );
           setSystemConfig(data.config);
 
           // Update cache with new data and timestamp
@@ -168,28 +165,18 @@ export default function CheckoutItems({
             // Handle both old format (direct config object) and new format (with timestamp)
             if (parsedCache.config && parsedCache.timestamp) {
               // New format with timestamp
-              console.log(
-                "Found cached system configuration:",
-                parsedCache.config
-              );
               setSystemConfig(parsedCache.config);
 
               // Check if cache is stale and needs background refresh
               const cacheAge = Date.now() - parsedCache.timestamp;
               if (cacheAge > CACHE_REFRESH_MS) {
-                console.log("Cache is stale, refreshing in background");
                 refreshConfigInBackground();
               }
             } else {
               // Old format or unexpected structure - treat as config directly
-              console.log(
-                "Found cached system configuration (legacy format):",
-                parsedCache
-              );
               setSystemConfig(parsedCache);
 
               // Always refresh old format in background to update to new format
-              console.log("Updating cache format in background");
               refreshConfigInBackground();
             }
 
@@ -213,7 +200,6 @@ export default function CheckoutItems({
     if (typeof window !== "undefined") {
       (window as any).clearGrocerySystemConfigCache = () => {
         Cookies.remove(SYSTEM_CONFIG_COOKIE);
-        console.log("System configuration cache cleared");
         fetchConfigFromAPI();
       };
     }
@@ -228,10 +214,11 @@ export default function CheckoutItems({
       window.removeEventListener("addressChanged", handleAddressChange);
   }, []);
 
+  // No router event listeners needed since we're not redirecting
+
   const [promoCode, setPromoCode] = useState("");
   const [discount, setDiscount] = useState(0);
   const [appliedPromo, setAppliedPromo] = useState<string | null>(null);
-  const [isCheckoutLoading, setIsCheckoutLoading] = useState(false);
   const [deliveryNotes, setDeliveryNotes] = useState<string>("");
   const [selectedPaymentMethod, setSelectedPaymentMethod] =
     useState<PaymentMethod | null>(null);
@@ -394,8 +381,10 @@ export default function CheckoutItems({
       );
       return;
     }
+
     // Get selected delivery address from cookie
     const cookieValue = Cookies.get("delivery_address");
+
     if (!cookieValue) {
       toaster.push(
         <Notification type="error" header="Address Required">
@@ -405,11 +394,12 @@ export default function CheckoutItems({
       );
       return;
     }
+
     let addressObj;
     try {
       addressObj = JSON.parse(cookieValue);
     } catch (err) {
-      console.error("Error parsing delivery_address cookie:", err);
+      console.error("❌ Error parsing delivery_address cookie:", err);
       toaster.push(
         <Notification type="error" header="Invalid Address">
           Invalid delivery address. Please select again.
@@ -418,7 +408,9 @@ export default function CheckoutItems({
       );
       return;
     }
+
     const deliveryAddressId = addressObj.id;
+
     if (!deliveryAddressId) {
       toaster.push(
         <Notification type="error" header="Invalid Address">
@@ -428,7 +420,15 @@ export default function CheckoutItems({
       );
       return;
     }
+
     setIsCheckoutLoading(true);
+
+    // No immediate notification - will show after cart refresh completes
+
+    // Cart refresh will happen after API call completes
+    // Loading overlay will be hidden after cart refresh completes
+
+    // Process checkout in background
     try {
       // Prepare checkout payload
       const payload = {
@@ -441,37 +441,73 @@ export default function CheckoutItems({
         delivery_time: deliveryTimestamp,
         delivery_notes: deliveryNotes || null,
       };
-      const res = await fetch("/api/checkout", {
+
+      // Make API call in background (don't await)
+      fetch("/api/checkout", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
-      });
-      const data = await res.json();
-      if (!res.ok) {
-        throw new Error(data.error || "Checkout failed");
-      }
+      })
+        .then(async (res) => {
+          const data = await res.json();
+          if (!res.ok) {
+            console.error(
+              "❌ Checkout error:",
+              data.error || "Checkout failed"
+            );
+            // Show error notification
+            toaster.push(
+              <Notification type="error" header="Checkout Failed">
+                {data.error ||
+                  "There was an error processing your order. Please try again."}
+              </Notification>,
+              { placement: "topEnd", duration: 5000 }
+            );
+            setIsCheckoutLoading(false);
+          } else {
+            // Refresh cart data after successful checkout
+            setTimeout(() => {
+              // Create custom event with callback to hide loading overlay and show success notification
+              const cartChangedEvent = new CustomEvent("cartChanged", {
+                detail: {
+                  hideLoadingCallback: () => {
+                    setIsCheckoutLoading(false);
 
-      // Show success toast instead of modal
-      toaster.push(
-        <Notification type="success" header="Order Confirmed">
-          Your order has been placed successfully!
-        </Notification>,
-        { placement: "topEnd" }
-      );
-
-      // Short delay before redirecting to give the user time to see the toast
-      setTimeout(() => {
-        router.push("/CurrentPendingOrders");
-      }, 1500);
+                    // Show final success toast after overlay disappears
+                    setTimeout(() => {
+                      toaster.push(
+                        <Notification
+                          type="success"
+                          header="Order Completed Successfully!"
+                        >
+                          Your order #{data.order_id?.slice(-8)} has been placed
+                          and is being prepared! You can view it in "Current
+                          Orders".
+                        </Notification>,
+                        { placement: "topEnd", duration: 5000 }
+                      );
+                    }, 100); // Small delay to ensure overlay is fully hidden
+                  },
+                },
+              });
+              window.dispatchEvent(cartChangedEvent);
+            }, 1000); // Increased delay to ensure server processing is complete
+          }
+        })
+        .catch((err) => {
+          console.error("❌ Checkout fetch error:", err);
+          toaster.push(
+            <Notification type="error" header="Network Error">
+              Unable to process your order. Please check your connection and try
+              again.
+            </Notification>,
+            { placement: "topEnd", duration: 5000 }
+          );
+          setIsCheckoutLoading(false);
+        });
     } catch (err: any) {
-      console.error("Checkout error:", err);
-      toaster.push(
-        <Notification type="error" header="Checkout Failed">
-          {err.message}
-        </Notification>,
-        { placement: "topEnd" }
-      );
-    } finally {
+      console.error("❌ Checkout setup error:", err);
+      // Hide loading overlay on error
       setIsCheckoutLoading(false);
     }
   };
@@ -560,6 +596,48 @@ export default function CheckoutItems({
 
   return (
     <>
+      {/* Global Loading Overlay - Shows during checkout process */}
+      {isCheckoutLoading && (
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/50 backdrop-blur-sm">
+          <div
+            className={`rounded-xl p-8 shadow-2xl ${
+              theme === "dark" ? "bg-gray-800" : "bg-white"
+            }`}
+          >
+            <div className="flex flex-col items-center space-y-4">
+              {/* Spinner */}
+              <div className="h-12 w-12 animate-spin rounded-full border-4 border-t-4 border-gray-200 border-t-green-500"></div>
+
+              {/* Loading Text */}
+              <div className="text-center">
+                <h3
+                  className={`text-lg font-semibold ${
+                    theme === "dark" ? "text-white" : "text-gray-900"
+                  }`}
+                >
+                  Processing Your Order
+                </h3>
+                <p
+                  className={`mt-2 text-sm ${
+                    theme === "dark" ? "text-gray-300" : "text-gray-600"
+                  }`}
+                >
+                  Please wait while we process your checkout and refresh your
+                  cart...
+                </p>
+              </div>
+
+              {/* Progress Steps */}
+              <div className="flex space-x-2">
+                <div className="h-2 w-2 rounded-full bg-green-500"></div>
+                <div className="h-2 w-2 rounded-full bg-green-500"></div>
+                <div className="h-2 w-2 animate-pulse rounded-full bg-gray-300"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Mobile View - Only visible on small devices */}
       {/* Backdrop overlay when expanded */}
       {isExpanded && (

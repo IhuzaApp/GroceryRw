@@ -30,6 +30,7 @@ interface InvoiceData {
   serviceFee: number;
   deliveryFee: number;
   total: number;
+  isReelOrder?: boolean;
 }
 
 interface DeliveryConfirmationModalProps {
@@ -112,7 +113,30 @@ const DeliveryConfirmationModal: React.FC<DeliveryConfirmationModalProps> = ({
       setConfirmingDelivery(true);
       setForceOpen(true);
 
-      // Update order status to delivered
+      // Step 1: Process wallet operations first (before invoice generation)
+      const walletResponse = await fetch("/api/shopper/walletOperations", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          orderId: invoiceData.orderId,
+          operation: "delivered",
+          isReelOrder: invoiceData.isReelOrder || false,
+        }),
+      });
+
+      if (!walletResponse.ok) {
+        const walletErrorData = await walletResponse.json();
+        throw new Error(
+          walletErrorData.error || "Failed to process wallet operations"
+        );
+      }
+
+      const walletResult = await walletResponse.json();
+      console.log("Wallet operations completed:", walletResult);
+
+      // Step 2: Update order status to delivered (after wallet operations)
       const response = await fetch("/api/shopper/updateOrderStatus", {
         method: "POST",
         headers: {
@@ -371,39 +395,73 @@ const DeliveryConfirmationModal: React.FC<DeliveryConfirmationModalProps> = ({
     <Modal
       open={isModalOpen}
       onClose={handleClose}
-      size="md"
+      size="sm"
       className={`${
         theme === "dark" ? "bg-gray-900 text-gray-100" : ""
-      } mx-auto w-full max-w-2xl`}
+      } rounded-2xl`}
       backdrop="static"
     >
       <Modal.Header
         className={`${
-          theme === "dark" ? "bg-gray-800 text-gray-100" : ""
-        } px-4 py-3 sm:px-6`}
+          theme === "dark"
+            ? "bg-gray-800 text-gray-100"
+            : "bg-gradient-to-r from-green-50 to-blue-50"
+        } rounded-t-2xl px-4 py-3`}
       >
-        <Modal.Title className="text-lg font-semibold sm:text-xl">
-          {photoUploading
-            ? "Uploading Delivery Photo..."
-            : confirmingDelivery
-            ? "Confirming Delivery..."
-            : deliveryConfirmed
-            ? "Delivery Confirmed!"
-            : "Delivery Confirmation"}
-        </Modal.Title>
+        <div className="flex items-center gap-3">
+          <div
+            className={`rounded-full p-2 ${
+              theme === "dark" ? "bg-green-600" : "bg-green-100"
+            }`}
+          >
+            <svg
+              className={`h-6 w-6 ${
+                theme === "dark" ? "text-white" : "text-green-600"
+              }`}
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
+              />
+            </svg>
+          </div>
+          <div>
+            <Modal.Title className="text-lg font-bold">
+              {photoUploading
+                ? "Uploading Delivery Photo..."
+                : confirmingDelivery
+                ? "Confirming Delivery..."
+                : deliveryConfirmed
+                ? "Delivery Confirmed!"
+                : "Delivery Confirmation"}
+            </Modal.Title>
+            <p
+              className={`text-sm ${
+                theme === "dark" ? "text-gray-300" : "text-gray-600"
+              }`}
+            >
+              Order #{invoiceData.orderNumber}
+            </p>
+          </div>
+        </div>
       </Modal.Header>
       <Modal.Body
         className={`${
-          theme === "dark" ? "bg-gray-900 text-gray-100" : ""
-        } p-4 sm:p-6`}
+          theme === "dark" ? "bg-gray-800 text-gray-100" : "bg-white"
+        } px-4 py-4`}
       >
-        <div className="space-y-4">
+        <div className="space-y-3">
           {/* Success message */}
           <div
-            className={`rounded-md p-4 text-center ${
+            className={`rounded-xl border-l-4 p-3 text-center ${
               theme === "dark"
-                ? "bg-green-900/20 text-green-300"
-                : "bg-green-50 text-green-800"
+                ? "border-green-500 bg-green-900/20 text-green-300"
+                : "border-green-500 bg-green-50 text-green-800"
             }`}
           >
             <div className="mb-2 flex justify-center">
@@ -438,13 +496,51 @@ const DeliveryConfirmationModal: React.FC<DeliveryConfirmationModalProps> = ({
 
           {/* Photo upload section */}
           <div
-            className={`rounded-lg border p-4 ${
-              theme === "dark" ? "border-gray-700 bg-gray-800" : "bg-white"
+            className={`rounded-xl border-2 p-4 ${
+              theme === "dark"
+                ? "border-blue-600 bg-blue-900/20"
+                : "border-blue-200 bg-blue-50"
             }`}
           >
-            <h3 className="mb-3 text-base font-semibold sm:text-lg">
-              Delivery Photo
-            </h3>
+            <div className="mb-3 flex items-center gap-3">
+              <div
+                className={`rounded-full p-2 ${
+                  theme === "dark" ? "bg-blue-600" : "bg-blue-100"
+                }`}
+              >
+                <svg
+                  className={`h-5 w-5 ${
+                    theme === "dark" ? "text-white" : "text-blue-600"
+                  }`}
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"
+                  />
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"
+                  />
+                </svg>
+              </div>
+              <div>
+                <h3 className="text-base font-bold">Delivery Photo</h3>
+                <p
+                  className={`text-sm ${
+                    theme === "dark" ? "text-gray-300" : "text-gray-600"
+                  }`}
+                >
+                  Take a photo as proof of delivery
+                </p>
+              </div>
+            </div>
             <p
               className={`mb-3 text-sm ${
                 theme === "dark" ? "text-gray-400" : "text-gray-600"
@@ -488,59 +584,108 @@ const DeliveryConfirmationModal: React.FC<DeliveryConfirmationModalProps> = ({
                 </div>
               </div>
             ) : (
-              <div className="mt-4 space-y-4">
-                {!photoUploaded && !photoUploading && !capturedImage && (
-                  <div className="mb-4 flex flex-col items-center justify-center">
-                    <div className="flex h-24 w-24 items-center justify-center rounded-lg border-2 border-dashed border-gray-300 bg-gray-100 dark:border-gray-600 dark:bg-gray-800">
-                      <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        className="h-12 w-12 text-gray-400 dark:text-gray-500"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                        stroke="currentColor"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M3 7h2l2-3h6l2 3h2a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9a2 2 0 012-2zm9 4a3 3 0 11-6 0 3 3 0 016 0z"
-                        />
-                      </svg>
+              <div className="mt-3 space-y-3">
+                {/* Camera View - Integrated */}
+                {showCamera && !showPreview ? (
+                  <div className="space-y-3">
+                    <div className="relative aspect-video w-full overflow-hidden rounded-xl border-2 border-gray-300 dark:border-gray-600">
+                      <video
+                        ref={videoRef}
+                        autoPlay
+                        playsInline
+                        muted
+                        className="h-full w-full object-cover"
+                      />
                     </div>
-                    <p className="mt-2 text-sm font-medium text-gray-500 dark:text-gray-400">
-                      No photo added yet
-                    </p>
-                    <p className="mt-1 text-xs text-red-500">
-                      * Delivery photo is required
-                    </p>
+                    <canvas ref={canvasRef} className="hidden" />
+                    <div className="flex flex-col space-y-2 sm:flex-row sm:space-x-3 sm:space-y-0">
+                      <Button
+                        appearance="primary"
+                        onClick={captureImage}
+                        className="w-full sm:w-auto"
+                        disabled={photoUploading}
+                      >
+                        📸 Capture Photo
+                      </Button>
+                      <Button
+                        appearance="subtle"
+                        onClick={stopCamera}
+                        className="w-full sm:w-auto"
+                        disabled={photoUploading}
+                      >
+                        ❌ Cancel
+                      </Button>
+                    </div>
                   </div>
+                ) : showPreview ? (
+                  <div className="space-y-3">
+                    <div className="relative aspect-video w-full overflow-hidden rounded-xl border-2 border-gray-300 dark:border-gray-600">
+                      <Image
+                        src={capturedImage || ""}
+                        alt="Captured delivery"
+                        fill
+                        className="object-cover"
+                      />
+                    </div>
+                    <div className="flex flex-col space-y-2 sm:flex-row sm:space-x-3 sm:space-y-0">
+                      <Button
+                        appearance="ghost"
+                        onClick={retakePhoto}
+                        className="w-full sm:w-auto"
+                        disabled={photoUploading}
+                      >
+                        🔄 Retake
+                      </Button>
+                      <Button
+                        appearance="primary"
+                        onClick={confirmPhoto}
+                        className="w-full sm:w-auto"
+                        disabled={photoUploading}
+                      >
+                        ✅ Use This Photo
+                      </Button>
+                    </div>
+                  </div>
+                ) : (
+                  <>
+                    {!photoUploaded && !photoUploading && !capturedImage && (
+                      <div className="mb-3 flex flex-col items-center justify-center">
+                        <div className="flex h-20 w-20 items-center justify-center rounded-lg border-2 border-dashed border-gray-300 bg-gray-100 dark:border-gray-600 dark:bg-gray-800">
+                          <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            className="h-10 w-10 text-gray-400 dark:text-gray-500"
+                            fill="none"
+                            viewBox="0 0 24 24"
+                            stroke="currentColor"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M3 7h2l2-3h6l2 3h2a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9a2 2 0 012-2zm9 4a3 3 0 11-6 0 3 3 0 016 0z"
+                            />
+                          </svg>
+                        </div>
+                        <p className="mt-2 text-sm font-medium text-gray-500 dark:text-gray-400">
+                          No photo added yet
+                        </p>
+                        <p className="mt-1 text-xs text-red-500">
+                          * Delivery photo is required
+                        </p>
+                      </div>
+                    )}
+                    <div className="flex justify-center">
+                      <Button
+                        onClick={startCamera}
+                        appearance="primary"
+                        className="w-full sm:w-auto"
+                        disabled={photoUploading}
+                      >
+                        📷 Take Photo
+                      </Button>
+                    </div>
+                  </>
                 )}
-                <div className="flex flex-col justify-center space-y-2 sm:flex-row sm:space-x-4 sm:space-y-0">
-                  <Button
-                    onClick={startCamera}
-                    appearance="primary"
-                    className="w-full sm:w-auto"
-                    disabled={photoUploading}
-                  >
-                    Take Photo
-                  </Button>
-                  <input
-                    ref={fileInputRef}
-                    type="file"
-                    accept="image/*"
-                    onChange={(e) => handleFileSelect(e.target.files)}
-                    className="hidden"
-                    disabled={photoUploading}
-                  />
-                  <Button
-                    onClick={() => fileInputRef.current?.click()}
-                    appearance="subtle"
-                    className="w-full sm:w-auto"
-                    disabled={photoUploading}
-                  >
-                    Upload Photo
-                  </Button>
-                </div>
                 {uploadError && (
                   <p
                     className={`mt-2 text-center text-sm ${
@@ -556,18 +701,18 @@ const DeliveryConfirmationModal: React.FC<DeliveryConfirmationModalProps> = ({
 
           {/* Confirm Delivery Button - Only show after photo is uploaded */}
           {photoUploaded && !deliveryConfirmed && (
-            <div className="mt-6 text-center">
+            <div className="mt-4 text-center">
               <Button
                 onClick={handleConfirmDelivery}
                 appearance="primary"
                 size="lg"
-                className="w-full"
+                className="w-full py-3 text-lg font-bold"
                 disabled={confirmingDelivery}
                 loading={confirmingDelivery}
               >
                 {confirmingDelivery
                   ? "Confirming Delivery..."
-                  : "Confirm Delivery"}
+                  : "✅ Confirm Delivery"}
               </Button>
               <p className="mt-2 text-sm text-gray-500">
                 This will mark the order as delivered and update your earnings
@@ -607,16 +752,20 @@ const DeliveryConfirmationModal: React.FC<DeliveryConfirmationModalProps> = ({
         </div>
       </Modal.Body>
       <Modal.Footer
-        className={`${theme === "dark" ? "bg-gray-800" : ""} px-4 py-3 sm:px-6`}
+        className={`${
+          theme === "dark"
+            ? "border-t border-gray-700 bg-gray-800"
+            : "border-t border-gray-200 bg-gray-50"
+        } rounded-b-2xl px-4 py-3`}
       >
-        <div className="flex flex-col justify-end space-y-2 sm:flex-row sm:space-x-2 sm:space-y-0">
+        <div className="flex flex-col justify-end space-y-2 sm:flex-row sm:space-x-3 sm:space-y-0">
           <Button
             onClick={handleViewInvoiceDetails}
             appearance="primary"
             className="w-full sm:w-auto"
             disabled={!photoUploaded || photoUploading || confirmingDelivery}
           >
-            View Invoice Details
+            📄 View Invoice Details
           </Button>
           <Button
             onClick={handleReturnToBatches}
@@ -624,92 +773,10 @@ const DeliveryConfirmationModal: React.FC<DeliveryConfirmationModalProps> = ({
             className="w-full sm:w-auto"
             disabled={photoUploading || confirmingDelivery}
           >
-            Return to Batches
+            ← Return to Batches
           </Button>
         </div>
       </Modal.Footer>
-
-      {/* Camera Modal */}
-      <Modal
-        open={showCamera}
-        onClose={photoUploading ? undefined : stopCamera}
-        size="md"
-        backdrop="static"
-        className="mx-auto w-full max-w-2xl"
-      >
-        <Modal.Header
-          className={theme === "dark" ? "bg-gray-800 text-gray-100" : ""}
-        >
-          <Modal.Title>Take Delivery Photo</Modal.Title>
-        </Modal.Header>
-        <Modal.Body
-          className={theme === "dark" ? "bg-gray-900 text-gray-100" : ""}
-        >
-          <div className="flex flex-col items-center">
-            {!showPreview ? (
-              <>
-                <div className="relative aspect-video w-full overflow-hidden rounded-lg">
-                  <video
-                    ref={videoRef}
-                    autoPlay
-                    playsInline
-                    muted
-                    className="h-full w-full object-cover"
-                  />
-                </div>
-                <canvas ref={canvasRef} className="hidden" />
-                <Button
-                  appearance="primary"
-                  onClick={captureImage}
-                  className="mt-4 w-full sm:w-auto"
-                  disabled={photoUploading}
-                >
-                  Capture Photo
-                </Button>
-              </>
-            ) : (
-              <>
-                <div className="relative aspect-video w-full overflow-hidden rounded-lg sm:w-96">
-                  <Image
-                    src={capturedImage || ""}
-                    alt="Captured delivery"
-                    fill
-                    className="object-cover"
-                  />
-                </div>
-                <div className="mt-4 flex flex-col space-y-2 sm:flex-row sm:space-x-4 sm:space-y-0">
-                  <Button
-                    appearance="ghost"
-                    onClick={retakePhoto}
-                    className="w-full sm:w-auto"
-                    disabled={photoUploading}
-                  >
-                    Retake
-                  </Button>
-                  <Button
-                    appearance="primary"
-                    onClick={confirmPhoto}
-                    className="w-full sm:w-auto"
-                    disabled={photoUploading}
-                  >
-                    Use This Photo
-                  </Button>
-                </div>
-              </>
-            )}
-          </div>
-        </Modal.Body>
-        <Modal.Footer className={theme === "dark" ? "bg-gray-800" : ""}>
-          <Button
-            onClick={stopCamera}
-            appearance="subtle"
-            className="w-full sm:w-auto"
-            disabled={photoUploading}
-          >
-            Cancel
-          </Button>
-        </Modal.Footer>
-      </Modal>
     </Modal>
   );
 };

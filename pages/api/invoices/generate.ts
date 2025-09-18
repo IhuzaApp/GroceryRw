@@ -31,7 +31,9 @@ const GET_ORDER_DETAILS_FOR_INVOICE = gql`
         price
         quantity
         Product {
-          name
+          ProductName {
+            name
+          }
           price
           measurement_unit
         }
@@ -304,7 +306,7 @@ export default async function handler(
       // Create invoice items for regular orders
       invoiceItems = items.map((item: any) => ({
         id: item.id,
-        name: item.Product.name,
+        name: item.Product.ProductName?.name || "Unknown Product",
         quantity: item.quantity,
         unit_price: parseFloat(item.price),
         total: parseFloat(item.price) * item.quantity,
