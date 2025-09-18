@@ -132,7 +132,7 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
     <Modal
       open={open}
       onClose={onClose}
-      size="md"
+      size="sm"
       className={`${theme === "dark" ? "dark-theme" : ""} rounded-2xl`}
     >
       <Modal.Header
@@ -140,7 +140,7 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
           theme === "dark"
             ? "border-b border-gray-700 bg-gray-800"
             : "border-b border-gray-200 bg-gradient-to-r from-green-50 to-blue-50"
-        } rounded-t-2xl`}
+        } rounded-t-2xl px-4 py-3`}
       >
         <div className="flex items-center gap-3">
           <div
@@ -176,18 +176,18 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
       <Modal.Body
         className={`${
           theme === "dark" ? "bg-gray-800 text-gray-100" : "bg-white"
-        } px-6 py-6`}
+        } px-4 py-4`}
       >
         {currentStep === 'momo' ? (
           <>
             {/* MoMo Step Content */}
-        <div
-          className={`mb-6 rounded-xl border-l-4 p-4 ${
-            theme === "dark"
-              ? "border-blue-500 bg-blue-900/20 text-blue-300"
-              : "border-blue-500 bg-blue-50 text-blue-800"
-          }`}
-        >
+            <div
+              className={`mb-4 rounded-xl border-l-4 p-3 ${
+                theme === "dark"
+                  ? "border-blue-500 bg-blue-900/20 text-blue-300"
+                  : "border-blue-500 bg-blue-50 text-blue-800"
+              }`}
+            >
           <div className="flex items-start gap-3">
             <div
               className={`rounded-full p-1 ${
@@ -221,7 +221,7 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
           </div>
         </div>
 
-        <div className="space-y-6">
+            <div className="space-y-4">
           {/* MoMo Code Input */}
           <div className="space-y-2">
             <label
@@ -317,8 +317,8 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
         </div>
 
         {/* Payment Summary */}
-        <div
-          className={`mt-8 rounded-2xl border-2 p-6 ${
+            <div
+              className={`mt-6 rounded-2xl border-2 p-4 ${
             theme === "dark"
               ? "border-green-600 bg-green-900/20"
               : "border-green-200 bg-green-50"
@@ -503,7 +503,7 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
           <>
             {/* OTP Step Content */}
             <div
-              className={`mb-6 rounded-xl border-l-4 p-4 ${
+              className={`mb-4 rounded-xl border-l-4 p-3 ${
                 theme === "dark"
                   ? "border-purple-500 bg-purple-900/20 text-purple-300"
                   : "border-purple-500 bg-purple-50 text-purple-800"
@@ -550,7 +550,7 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
                 Enter OTP Code
               </label>
               
-              <div className="flex justify-center gap-3">
+              <div className="flex justify-center gap-4">
                 {[0, 1, 2, 3, 4].map((index) => (
                   <input
                     key={index}
@@ -578,8 +578,33 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
                         prevInput?.focus();
                       }
                     }}
+                    onPaste={(e) => {
+                      e.preventDefault();
+                      const pastedData = e.clipboardData.getData('text').replace(/\D/g, ''); // Only digits
+                      
+                      if (pastedData.length === 5) {
+                        // Fill all fields with pasted data
+                        setOtp(pastedData);
+                        
+                        // Focus the last input
+                        const lastInput = document.getElementById(`otp-4`);
+                        lastInput?.focus();
+                      } else if (pastedData.length > 0) {
+                        // If pasted data is not exactly 5 digits, fill what we can
+                        const newOtp = otp.split('');
+                        for (let i = 0; i < Math.min(pastedData.length, 5); i++) {
+                          newOtp[i] = pastedData[i];
+                        }
+                        setOtp(newOtp.join(''));
+                        
+                        // Focus the next empty field or the last field
+                        const nextEmptyIndex = Math.min(pastedData.length, 4);
+                        const nextInput = document.getElementById(`otp-${nextEmptyIndex}`);
+                        nextInput?.focus();
+                      }
+                    }}
                     id={`otp-${index}`}
-                    className={`w-12 h-12 text-center text-xl font-bold rounded-lg border-2 transition-all focus:outline-none focus:ring-2 focus:ring-purple-500 ${
+                    className={`w-16 h-16 text-center text-2xl font-bold rounded-xl border-2 transition-all focus:outline-none focus:ring-2 focus:ring-purple-500 ${
                       theme === "dark"
                         ? "border-gray-600 bg-gray-700 text-gray-100 focus:border-purple-500"
                         : "border-gray-300 bg-white text-gray-900 focus:border-purple-500"
@@ -601,7 +626,7 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
             {/* OTP Status Display */}
             {paymentStatus !== 'idle' && paymentStatus !== 'success' && (
               <div
-                className={`mt-6 rounded-xl border-l-4 p-4 ${
+                className={`mt-4 rounded-xl border-l-4 p-3 ${
                   paymentStatus === 'failed'
                     ? theme === "dark"
                       ? "border-red-500 bg-red-900/20 text-red-300"
@@ -673,7 +698,7 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
 
             {/* OTP Instructions */}
             <div
-              className={`mt-6 rounded-xl border-l-4 p-4 ${
+              className={`mt-4 rounded-xl border-l-4 p-3 ${
                 theme === "dark"
                   ? "border-blue-500 bg-blue-900/20 text-blue-300"
                   : "border-blue-500 bg-blue-50 text-blue-800"
@@ -718,7 +743,7 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
           theme === "dark"
             ? "border-t border-gray-700 bg-gray-800"
             : "border-t border-gray-200 bg-gray-50"
-        } rounded-b-2xl px-6 py-4`}
+        } rounded-b-2xl px-4 py-3`}
       >
         <div className="flex w-full gap-3">
           {currentStep === 'momo' ? (

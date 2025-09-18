@@ -199,7 +199,7 @@ export default function QuantityConfirmationModal({
       <Modal
         open={open}
         onClose={onClose}
-        size="md"
+        size="sm"
         className={`${theme === "dark" ? "dark-theme" : ""} rounded-2xl`}
       >
         <Modal.Header
@@ -207,7 +207,7 @@ export default function QuantityConfirmationModal({
             theme === "dark"
               ? "border-b border-gray-700 bg-gray-800"
               : "border-b border-gray-200 bg-gradient-to-r from-blue-50 to-purple-50"
-          } rounded-t-2xl`}
+          } rounded-t-2xl px-4 py-3`}
         >
           <div className="flex items-center gap-3">
             <div
@@ -255,19 +255,19 @@ export default function QuantityConfirmationModal({
             theme === "dark"
               ? "bg-gray-800 text-gray-100"
               : "bg-white text-gray-900"
-          } px-6 py-6`}
+          } px-4 py-4`}
         >
-          <div className="space-y-6">
+          <div className="space-y-4">
             {/* Barcode Scanning Section - Only for non-weight-based items */}
             {!isWeightBased && (
               <div
-                className={`rounded-2xl border-2 p-6 ${
+                className={`rounded-2xl border-2 p-4 ${
                   theme === "dark"
                     ? "border-purple-600 bg-purple-900/20"
                     : "border-purple-200 bg-purple-50"
                 }`}
               >
-                <div className="mb-4 flex items-center gap-3">
+                <div className="mb-3 flex items-center gap-3">
                   <div
                     className={`rounded-full p-2 ${
                       theme === "dark" ? "bg-purple-600" : "bg-purple-100"
@@ -316,7 +316,7 @@ export default function QuantityConfirmationModal({
                 </div>
 
                 {/* Card-based selection */}
-                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                   {/* Open Camera Scanner Card */}
                   <div
                     onClick={() => {
@@ -328,7 +328,7 @@ export default function QuantityConfirmationModal({
                         setShowBarcodeScanner(true);
                       }
                     }}
-                    className={`rounded-xl border-2 p-5 transition-all duration-200 ${
+                    className={`rounded-xl border-2 p-4 transition-all duration-200 ${
                       !currentItem?.product.ProductName?.barcode &&
                       !currentItem?.product.ProductName?.sku
                         ? "cursor-not-allowed border-gray-200 bg-gray-50 dark:border-gray-700 dark:bg-gray-800"
@@ -398,7 +398,7 @@ export default function QuantityConfirmationModal({
                         setShowManualInput(true);
                       }
                     }}
-                    className={`rounded-xl border-2 p-5 transition-all duration-200 ${
+                    className={`rounded-xl border-2 p-4 transition-all duration-200 ${
                       !currentItem?.product.ProductName?.barcode &&
                       !currentItem?.product.ProductName?.sku
                         ? "cursor-not-allowed border-gray-200 bg-gray-50 dark:border-gray-700 dark:bg-gray-800"
@@ -452,7 +452,7 @@ export default function QuantityConfirmationModal({
                 {/* Manual SKU Input Form */}
                 {showManualInput && (
                   <div
-                    className={`mt-6 rounded-xl p-4 ${
+                    className={`mt-4 rounded-xl p-3 ${
                       theme === "dark" ? "bg-gray-700" : "bg-gray-50"
                     }`}
                   >
@@ -532,7 +532,7 @@ export default function QuantityConfirmationModal({
                 {/* Validation Status */}
                 {barcodeValidation.message && (
                   <div
-                    className={`mt-6 rounded-xl border-l-4 p-4 ${
+                    className={`mt-4 rounded-xl border-l-4 p-3 ${
                       barcodeValidation.isValid
                         ? theme === "dark"
                           ? "border-green-500 bg-green-900/20 text-green-300"
@@ -604,13 +604,13 @@ export default function QuantityConfirmationModal({
             {/* Quantity Input Section - Only show if barcode is valid or item is weight-based */}
             {(barcodeValidation.isValid || isWeightBased) && (
               <div
-                className={`rounded-2xl border-2 p-6 ${
+                className={`rounded-2xl border-2 p-4 ${
                   theme === "dark"
                     ? "border-blue-600 bg-blue-900/20"
                     : "border-blue-200 bg-blue-50"
                 }`}
               >
-                <div className="mb-4 flex items-center gap-3">
+                <div className="mb-3 flex items-center gap-3">
                   <div
                     className={`rounded-full p-2 ${
                       theme === "dark" ? "bg-blue-600" : "bg-blue-100"
@@ -655,7 +655,7 @@ export default function QuantityConfirmationModal({
                 </div>
 
                 <div
-                  className={`flex items-center gap-4 rounded-xl p-4 ${
+                  className={`flex items-center gap-3 rounded-xl p-3 ${
                     theme === "dark" ? "bg-gray-800" : "bg-white"
                   }`}
                 >
@@ -720,7 +720,7 @@ export default function QuantityConfirmationModal({
             {/* Status Indicator */}
             {(barcodeValidation.isValid || isWeightBased) && (
               <div
-                className={`rounded-2xl border-l-4 p-6 ${
+                className={`rounded-2xl border-l-4 p-4 ${
                   foundQuantity === 0
                     ? theme === "dark"
                       ? "border-red-500 bg-red-900/20 text-red-300"
@@ -881,7 +881,7 @@ export default function QuantityConfirmationModal({
             theme === "dark"
               ? "border-t border-gray-700 bg-gray-800"
               : "border-t border-gray-200 bg-gray-50"
-          } rounded-b-2xl px-6 py-4`}
+          } rounded-b-2xl px-4 py-3`}
         >
           <div className="flex w-full gap-3">
             <button
