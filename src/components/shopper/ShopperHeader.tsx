@@ -69,7 +69,9 @@ export default function ShopperHeader() {
               alt="Plas Logo"
               width={80}
               height={30}
-              className="h-8 w-auto"
+              className={`h-8 w-auto ${
+                theme === "dark" ? "brightness-0 invert" : ""
+              }`}
             />
           </Link>
         </div>
@@ -170,7 +172,9 @@ export default function ShopperHeader() {
             alt="Plas Logo"
             width={120}
             height={40}
-            className="ml-8 h-8 w-auto"
+            className={`ml-8 h-8 w-auto ${
+              theme === "dark" ? "brightness-0 invert" : ""
+            }`}
             priority
           />
         </Link>
