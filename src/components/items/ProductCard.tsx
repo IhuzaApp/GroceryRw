@@ -50,6 +50,7 @@ export default function ProductCard({
   const [showDetailsModal, setShowDetailsModal] = useState(false);
   const [selectedQuantity, setSelectedQuantity] = useState(1);
   const [isAdding, setIsAdding] = useState(false);
+  const [isModalTransitioning, setIsModalTransitioning] = useState(false);
 
   const handleQuickAdd = async (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -119,7 +120,12 @@ export default function ProductCard({
             ? 'shadow-2xl shadow-yellow-500/50 transform scale-105' 
             : ''
         }`}
-        onClick={() => setShowDetailsModal(true)}
+        onClick={(e) => {
+          // Only open details modal if not clicking on a button and not transitioning
+          if (!(e.target as HTMLElement).closest('button') && !isModalTransitioning) {
+            setShowDetailsModal(true);
+          }
+        }}
       >
         <div className="relative">
           <Image
@@ -260,38 +266,30 @@ export default function ProductCard({
             </div>
 
             <div className="my-6">
-              <div className="mb-4 flex items-center justify-between">
-                <span className="font-semibold text-gray-700 dark:text-gray-300">
-                  Quantity
+              <div className="mb-4 space-y-3">
+                <span className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                  Enter Quantity
                 </span>
-                <div className="flex items-center rounded-lg border border-gray-300 dark:border-gray-600">
-                  <button
-                    onClick={() =>
-                      setSelectedQuantity(Math.max(1, selectedQuantity - 1))
-                    }
-                    className="flex h-10 w-10 items-center justify-center rounded-l-lg text-gray-600 transition-colors hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-gray-700"
-                  >
-                    -
-                  </button>
+                <div className="relative">
                   <input
                     type="number"
                     min={1}
+                    max={999}
                     value={selectedQuantity}
-                    onChange={(e) =>
-                      setSelectedQuantity(
-                        Math.max(1, parseInt(e.target.value, 10) || 1)
-                      )
-                    }
-                    className="h-10 w-16 border-x border-gray-300 p-0 text-center font-semibold text-gray-800 focus:outline-none dark:border-gray-600 dark:bg-gray-700/50 dark:text-white"
+                    onChange={(e) => {
+                      const value = parseInt(e.target.value) || 1;
+                      setSelectedQuantity(Math.max(1, Math.min(999, value)));
+                    }}
+                    className="w-full rounded-lg border border-gray-200 bg-white px-4 py-3 text-center text-lg font-semibold text-gray-900 focus:border-green-500 focus:outline-none focus:ring-2 focus:ring-green-500/20 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:focus:border-green-400 dark:focus:ring-green-400/20"
+                    placeholder="1"
                     onFocus={(e) => e.target.select()}
                     autoFocus
                   />
-                  <button
-                    onClick={() => setSelectedQuantity(selectedQuantity + 1)}
-                    className="flex h-10 w-10 items-center justify-center rounded-r-lg text-gray-600 transition-colors hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-gray-700"
-                  >
-                    +
-                  </button>
+                  <div className="absolute inset-y-0 right-0 flex items-center pr-3">
+                    <span className="text-sm text-gray-500 dark:text-gray-400">
+                      {unit}
+                    </span>
+                  </div>
                 </div>
               </div>
 
@@ -314,14 +312,18 @@ export default function ProductCard({
             </div>
             <div className="grid grid-cols-2 gap-3">
               <button
-                onClick={() => setShowModal(false)}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setShowModal(false);
+                }}
                 className="rounded-lg bg-green-50 px-4 py-3 text-sm font-semibold text-green-700 transition-colors hover:bg-green-100 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600"
               >
                 Cancel
               </button>
               <button
                 id="add-to-cart-btn"
-                onClick={() => {
+                onClick={(e) => {
+                  e.stopPropagation();
                   if (status === "loading") return;
                   if (status === "unauthenticated") {
                     localStorage.setItem(
@@ -399,7 +401,10 @@ export default function ProductCard({
             <div className="flex items-center justify-between border-b border-gray-200 p-4 dark:border-gray-700">
               <h2 className="text-lg font-bold text-gray-900 dark:text-white">Product Details</h2>
               <button
-                onClick={() => setShowDetailsModal(false)}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setShowDetailsModal(false);
+                }}
                 className="flex h-8 w-8 items-center justify-center rounded-full bg-gray-100 text-gray-500 transition-colors hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-400 dark:hover:bg-gray-600"
               >
                 <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -502,10 +507,15 @@ export default function ProductCard({
                   {/* Action Buttons */}
                   <div className="flex gap-2 pt-3">
                     <button
-                      onClick={() => {
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setIsModalTransitioning(true);
                         setShowDetailsModal(false);
-                        setShowModal(true);
-                        setSelectedQuantity(1);
+                        setTimeout(() => {
+                          setShowModal(true);
+                          setSelectedQuantity(1);
+                          setIsModalTransitioning(false);
+                        }, 100);
                       }}
                       className="flex-1 rounded bg-green-600 px-3 py-2 text-white shadow-sm shadow-green-500/20 transition-colors hover:bg-green-700 flex items-center justify-center"
                       title="Add to Cart"
@@ -515,7 +525,10 @@ export default function ProductCard({
                       </svg>
                     </button>
                     <button
-                      onClick={handleQuickAdd}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleQuickAdd(e);
+                      }}
                       className="rounded border border-gray-300 bg-white px-3 py-2 text-gray-700 transition-colors hover:bg-gray-50 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600 flex items-center justify-center"
                       title="Quick Add"
                     >
