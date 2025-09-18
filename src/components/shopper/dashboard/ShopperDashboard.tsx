@@ -747,8 +747,8 @@ export default function ShopperDashboard() {
                         !isOnline ? "text-yellow-600" : "text-blue-600"
                       }`}
                     >
-                      {showHistorical 
-                        ? "Showing all batches sorted by priority level" 
+                      {showHistorical
+                        ? "Showing all batches sorted by priority level"
                         : "Showing all batches sorted by time"}
                     </p>
                   )}
@@ -918,7 +918,9 @@ export default function ShopperDashboard() {
                   <div className="flex items-center space-x-2">
                     {/* Combined Auto/Manual Refresh Button */}
                     <button
-                      onClick={isAutoRefreshing ? toggleAutoRefresh : loadOrders}
+                      onClick={
+                        isAutoRefreshing ? toggleAutoRefresh : loadOrders
+                      }
                       className={`flex items-center rounded-xl px-3 py-1.5 text-xs font-medium transition-all duration-200 ${
                         isAutoRefreshing
                           ? theme === "dark"
@@ -1160,7 +1162,8 @@ export default function ShopperDashboard() {
                         : sortBy === "priority"
                         ? "Batches pending 1+ hours by priority"
                         : `Sorting by ${sortBy}`}
-                      {isOnline && (showHistorical ? " • Priority sort" : " • Time sort")}
+                      {isOnline &&
+                        (showHistorical ? " • Priority sort" : " • Time sort")}
                     </p>
                   </div>
                 </div>

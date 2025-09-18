@@ -114,15 +114,18 @@ export default function ProductCard({
 
   return (
     <>
-      <div 
-        className={`overflow-hidden rounded-xl border border-gray-200 bg-white shadow-md shadow-black/5 transition-all duration-300 ease-in-out hover:-translate-y-1 hover:shadow-lg hover:shadow-black/10 dark:border-gray-700 dark:bg-gray-800 dark:shadow-gray-400/10 dark:hover:shadow-gray-300/15 cursor-pointer ${
-          highlighted 
-            ? 'shadow-2xl shadow-yellow-500/50 transform scale-105' 
-            : ''
+      <div
+        className={`cursor-pointer overflow-hidden rounded-xl border border-gray-200 bg-white shadow-md shadow-black/5 transition-all duration-300 ease-in-out hover:-translate-y-1 hover:shadow-lg hover:shadow-black/10 dark:border-gray-700 dark:bg-gray-800 dark:shadow-gray-400/10 dark:hover:shadow-gray-300/15 ${
+          highlighted
+            ? "scale-105 transform shadow-2xl shadow-yellow-500/50"
+            : ""
         }`}
         onClick={(e) => {
           // Only open details modal if not clicking on a button and not transitioning
-          if (!(e.target as HTMLElement).closest('button') && !isModalTransitioning) {
+          if (
+            !(e.target as HTMLElement).closest("button") &&
+            !isModalTransitioning
+          ) {
             setShowDetailsModal(true);
           }
         }}
@@ -150,7 +153,7 @@ export default function ProductCard({
           )}
         </div>
         <div className="p-2">
-          <h3 className="mb-1 text-sm font-medium text-gray-900 dark:text-gray-100 line-clamp-2">
+          <h3 className="mb-1 line-clamp-2 text-sm font-medium text-gray-900 dark:text-gray-100">
             {name}
           </h3>
           <p className="mb-2 text-xs text-gray-500 dark:text-gray-400">
@@ -399,7 +402,9 @@ export default function ProductCard({
           <div className="w-full max-w-2xl rounded-2xl border border-gray-200 bg-white shadow-xl dark:border-gray-700 dark:bg-gray-800">
             {/* Modal Header */}
             <div className="flex items-center justify-between border-b border-gray-200 p-4 dark:border-gray-700">
-              <h2 className="text-lg font-bold text-gray-900 dark:text-white">Product Details</h2>
+              <h2 className="text-lg font-bold text-gray-900 dark:text-white">
+                Product Details
+              </h2>
               <button
                 onClick={(e) => {
                   e.stopPropagation();
@@ -407,8 +412,18 @@ export default function ProductCard({
                 }}
                 className="flex h-8 w-8 items-center justify-center rounded-full bg-gray-100 text-gray-500 transition-colors hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-400 dark:hover:bg-gray-600"
               >
-                <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                <svg
+                  className="h-5 w-5"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M6 18L18 6M6 6l12 12"
+                  />
                 </svg>
               </button>
             </div>
@@ -441,8 +456,12 @@ export default function ProductCard({
                 <div className="space-y-4">
                   {/* Product Name */}
                   <div>
-                    <h3 className="text-xl font-bold text-gray-900 dark:text-white">{productName?.name || name}</h3>
-                    <p className="mt-1 text-sm text-gray-600 dark:text-gray-400">{unit}</p>
+                    <h3 className="text-xl font-bold text-gray-900 dark:text-white">
+                      {productName?.name || name}
+                    </h3>
+                    <p className="mt-1 text-sm text-gray-600 dark:text-gray-400">
+                      {unit}
+                    </p>
                   </div>
 
                   {/* Price */}
@@ -457,52 +476,76 @@ export default function ProductCard({
                     )}
                   </div>
 
-                    {/* Product Description */}
-                    {productName?.description && (
+                  {/* Product Description */}
+                  {productName?.description && (
+                    <div>
+                      <label className="text-sm font-medium text-gray-500 dark:text-gray-400">
+                        Description
+                      </label>
+                      <p className="mt-2 text-sm leading-relaxed text-gray-900 dark:text-white">
+                        {productName.description}
+                      </p>
+                    </div>
+                  )}
+
+                  {/* Product Details */}
+                  <div className="space-y-3">
+                    <div className="grid grid-cols-2 gap-3">
                       <div>
-                        <label className="text-sm font-medium text-gray-500 dark:text-gray-400">Description</label>
-                        <p className="mt-2 text-sm text-gray-900 dark:text-white leading-relaxed">
-                          {productName.description}
+                        <label className="text-xs font-medium text-gray-500 dark:text-gray-400">
+                          SKU
+                        </label>
+                        <p className="break-all text-xs text-gray-900 dark:text-white">
+                          {productName?.sku || "N/A"}
                         </p>
                       </div>
-                    )}
+                      <div>
+                        <label className="text-xs font-medium text-gray-500 dark:text-gray-400">
+                          Measurement Unit
+                        </label>
+                        <p className="text-xs text-gray-900 dark:text-white">
+                          {measurement_unit || "N/A"}
+                        </p>
+                      </div>
+                    </div>
 
-                    {/* Product Details */}
-                    <div className="space-y-3">
-                      <div className="grid grid-cols-2 gap-3">
-                        <div>
-                          <label className="text-xs font-medium text-gray-500 dark:text-gray-400">SKU</label>
-                          <p className="text-xs text-gray-900 dark:text-white break-all">{productName?.sku || 'N/A'}</p>
-                        </div>
-                        <div>
-                          <label className="text-xs font-medium text-gray-500 dark:text-gray-400">Measurement Unit</label>
-                          <p className="text-xs text-gray-900 dark:text-white">{measurement_unit || 'N/A'}</p>
+                    {/* Barcode Section */}
+                    {productName?.barcode && (
+                      <div>
+                        <label className="text-xs font-medium text-gray-500 dark:text-gray-400">
+                          Barcode
+                        </label>
+                        <div className="mt-1 flex items-center gap-2">
+                          <div className="flex-1 rounded border border-gray-200 bg-gray-50 p-2 text-center font-mono text-xs dark:border-gray-600 dark:bg-gray-700">
+                            {productName.barcode}
+                          </div>
+                          <button
+                            onClick={() => {
+                              navigator.clipboard.writeText(
+                                productName.barcode || ""
+                              );
+                              toast.success("Barcode copied to clipboard!");
+                            }}
+                            className="rounded bg-gray-100 p-2 text-gray-600 hover:bg-gray-200 dark:bg-gray-600 dark:text-gray-300 dark:hover:bg-gray-500"
+                          >
+                            <svg
+                              className="h-4 w-4"
+                              fill="none"
+                              viewBox="0 0 24 24"
+                              stroke="currentColor"
+                            >
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth={2}
+                                d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h2m8 0h2a2 2 0 012 2v8a2 2 0 01-2 2h-2m-8 0V8a2 2 0 012-2h2a2 2 0 012 2v8a2 2 0 01-2 2H8z"
+                              />
+                            </svg>
+                          </button>
                         </div>
                       </div>
-
-                      {/* Barcode Section */}
-                      {productName?.barcode && (
-                        <div>
-                          <label className="text-xs font-medium text-gray-500 dark:text-gray-400">Barcode</label>
-                          <div className="mt-1 flex items-center gap-2">
-                            <div className="flex-1 rounded border border-gray-200 bg-gray-50 p-2 text-center font-mono text-xs dark:border-gray-600 dark:bg-gray-700">
-                              {productName.barcode}
-                            </div>
-                            <button
-                              onClick={() => {
-                                navigator.clipboard.writeText(productName.barcode || '');
-                                toast.success('Barcode copied to clipboard!');
-                              }}
-                              className="rounded bg-gray-100 p-2 text-gray-600 hover:bg-gray-200 dark:bg-gray-600 dark:text-gray-300 dark:hover:bg-gray-500"
-                            >
-                              <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h2m8 0h2a2 2 0 012 2v8a2 2 0 01-2 2h-2m-8 0V8a2 2 0 012-2h2a2 2 0 012 2v8a2 2 0 01-2 2H8z" />
-                              </svg>
-                            </button>
-                          </div>
-                        </div>
-                      )}
-                    </div>
+                    )}
+                  </div>
 
                   {/* Action Buttons */}
                   <div className="flex gap-2 pt-3">
@@ -517,11 +560,21 @@ export default function ProductCard({
                           setIsModalTransitioning(false);
                         }, 100);
                       }}
-                      className="flex-1 rounded bg-green-600 px-3 py-2 text-white shadow-sm shadow-green-500/20 transition-colors hover:bg-green-700 flex items-center justify-center"
+                      className="flex flex-1 items-center justify-center rounded bg-green-600 px-3 py-2 text-white shadow-sm shadow-green-500/20 transition-colors hover:bg-green-700"
                       title="Add to Cart"
                     >
-                      <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 3h2l.4 2M7 13h10l4-8H5.4m0 0L7 13m0 0l-2.5 5M7 13l2.5 5m0 0L17 18m0 0l2.5-5M17 18H9" />
+                      <svg
+                        className="h-5 w-5"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M3 3h2l.4 2M7 13h10l4-8H5.4m0 0L7 13m0 0l-2.5 5M7 13l2.5 5m0 0L17 18m0 0l2.5-5M17 18H9"
+                        />
                       </svg>
                     </button>
                     <button
@@ -529,11 +582,21 @@ export default function ProductCard({
                         e.stopPropagation();
                         handleQuickAdd(e);
                       }}
-                      className="rounded border border-gray-300 bg-white px-3 py-2 text-gray-700 transition-colors hover:bg-gray-50 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600 flex items-center justify-center"
+                      className="flex items-center justify-center rounded border border-gray-300 bg-white px-3 py-2 text-gray-700 transition-colors hover:bg-gray-50 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600"
                       title="Quick Add"
                     >
-                      <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                      <svg
+                        className="h-5 w-5"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M12 6v6m0 0v6m0-6h6m-6 0H6"
+                        />
                       </svg>
                     </button>
                   </div>

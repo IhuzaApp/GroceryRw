@@ -93,7 +93,8 @@ export default function ItemsSection({
                 : "All Products"}
             </h2>
             <p className="mt-1 text-sm text-gray-600 dark:text-gray-400">
-              Showing {paginatedProducts.length} of {searchedProducts.length} products
+              Showing {paginatedProducts.length} of {searchedProducts.length}{" "}
+              products
             </p>
           </div>
         </div>
@@ -116,10 +117,7 @@ export default function ItemsSection({
                   </div>
                 ))
             : paginatedProducts.map((product: any) => (
-                <div
-                  key={product.id}
-                  id={`product-${product.id}`}
-                >
+                <div key={product.id} id={`product-${product.id}`}>
                   <ProductCard
                     id={product.id}
                     shopId={shop.id}
@@ -145,12 +143,27 @@ export default function ItemsSection({
               onClick={handleViewMore}
               className="flex items-center gap-2 rounded-xl bg-gradient-to-r from-green-500 to-emerald-500 px-6 py-3 text-sm font-medium text-white shadow-lg shadow-green-500/25 transition-all duration-300 hover:scale-105 hover:shadow-green-500/40 active:scale-95"
             >
-              <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+              <svg
+                className="h-4 w-4"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M12 6v6m0 0v6m0-6h6m-6 0H6"
+                />
               </svg>
               <span>Load More Products</span>
               <span className="text-xs opacity-75">
-                ({Math.min(productsPerPage, searchedProducts.length - displayedProducts)} more)
+                (
+                {Math.min(
+                  productsPerPage,
+                  searchedProducts.length - displayedProducts
+                )}{" "}
+                more)
               </span>
             </button>
           </div>

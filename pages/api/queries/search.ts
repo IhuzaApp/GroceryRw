@@ -5,9 +5,9 @@ import { gql } from "graphql-request";
 const SEARCH_ITEMS = gql`
   query SearchItems($searchTerm: String!) {
     Products(
-      where: { 
-        ProductName: { name: { _ilike: $searchTerm } },
-        is_active: { _eq: true },
+      where: {
+        ProductName: { name: { _ilike: $searchTerm } }
+        is_active: { _eq: true }
         quantity: { _gt: 0 }
       }
       limit: 20
@@ -35,10 +35,7 @@ const SEARCH_ITEMS = gql`
       }
     }
     Shops(
-      where: { 
-        name: { _ilike: $searchTerm },
-        is_active: { _eq: true }
-      }, 
+      where: { name: { _ilike: $searchTerm }, is_active: { _eq: true } }
       limit: 5
     ) {
       id
@@ -142,7 +139,7 @@ export default async function handler(
 
     // Group products by name to show all supermarkets selling the same product
     const productGroups = new Map<string, typeof products>();
-    products.forEach(product => {
+    products.forEach((product) => {
       const key = product.name.toLowerCase();
       if (!productGroups.has(key)) {
         productGroups.set(key, []);
@@ -151,7 +148,7 @@ export default async function handler(
     });
 
     // Sort products within each group by price (lowest first)
-    productGroups.forEach(group => {
+    productGroups.forEach((group) => {
       group.sort((a, b) => a.price! - b.price!);
     });
 
