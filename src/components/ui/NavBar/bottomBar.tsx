@@ -832,7 +832,7 @@ export default function BottomBar() {
                     </svg>
                   }
                   label="Login"
-                  href="/login"
+                  href="/Auth/Login"
                   onClick={() => setMoreOpen(false)}
                 />
               )}
