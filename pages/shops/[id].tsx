@@ -58,8 +58,13 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
       Products(where: { shop_id: { _eq: $shop_id } }) {
         id
         ProductName {
+          id
           name
           description
+          barcode
+          sku
+          image
+          create_at
         }
         price
         final_price

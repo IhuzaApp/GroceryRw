@@ -81,84 +81,24 @@ export default function ItemsSection({
 
   return (
     <>
-      {/* Sticky Navigation with Header and Search */}
-      <div
-        className={`${
-          isSticky ? "fixed left-0 right-0 top-12 z-50" : "relative"
-        } border-b bg-white shadow-sm transition-all duration-500 ease-in-out dark:border-gray-700 dark:bg-gray-800 ${
-          isSticky ? "shadow-lg backdrop-blur-sm" : ""
-        }`}
-      >
-        <div className="p-2 sm:p-4">
-          <div className="flex flex-col gap-4 md:flex-row md:items-baseline md:justify-between">
-            <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-4">
-              <h2 className="text-lg font-bold transition-all duration-300 sm:text-xl">
-                {activeCategory && activeCategory !== "all"
-                  ? String(activeCategory).charAt(0).toUpperCase() +
-                    String(activeCategory).slice(1)
-                  : "All Products"}
-              </h2>
-              <span className="text-xs text-gray-500 transition-all duration-300 dark:text-gray-400 sm:text-sm">
-                Showing {paginatedProducts.length} of {searchedProducts.length}{" "}
-                products
-              </span>
-            </div>
-            <div className="w-full md:w-72">
-              <InputGroup inside>
-                <Input
-                  placeholder="Search products..."
-                  value={searchQuery}
-                  onChange={handleSearchChange}
-                  className="text-sm sm:text-base"
-                />
-                <InputGroup.Addon>
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    className="h-4 w-4 sm:h-5 sm:w-5"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
-                    />
-                  </svg>
-                </InputGroup.Addon>
-              </InputGroup>
-            </div>
+      {/* Products Grid */}
+      <div className="space-y-6">
+        {/* Section Header */}
+        <div className="flex items-center justify-between">
+          <div>
+            <h2 className="text-xl font-bold text-gray-900 dark:text-white sm:text-2xl">
+              {activeCategory && activeCategory !== "all"
+                ? String(activeCategory).charAt(0).toUpperCase() +
+                  String(activeCategory).slice(1)
+                : "All Products"}
+            </h2>
+            <p className="mt-1 text-sm text-gray-600 dark:text-gray-400">
+              Showing {paginatedProducts.length} of {searchedProducts.length} products
+            </p>
           </div>
         </div>
-        <div className="overflow-x-auto px-2 sm:px-4">
-          <Nav
-            appearance="subtle"
-            activeKey={activeCategory}
-            onSelect={(value) => setActiveCategory(value as string)}
-            className="flex-nowrap"
-          >
-            {categories.map((category: string) => (
-              <Nav.Item
-                key={category}
-                eventKey={category}
-                className="whitespace-nowrap px-2 text-sm capitalize dark:text-gray-200 sm:px-4 sm:text-base"
-              >
-                {category}
-              </Nav.Item>
-            ))}
-          </Nav>
-        </div>
-      </div>
-
-      {/* Products Grid */}
-      <div
-        className={`p-2 transition-all duration-500 ease-in-out sm:p-4 ${
-          isSticky ? "pt-24" : "pt-0"
-        }`}
-      >
-        <div className="my-4 border-b dark:border-gray-700"></div>
-        <div className="grid grid-cols-2 gap-2 transition-all duration-300 sm:gap-4 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6">
+        {/* Products Grid */}
+        <div className="grid grid-cols-4 gap-2 transition-all duration-300 sm:grid-cols-6 md:grid-cols-8 lg:grid-cols-10 xl:grid-cols-10">
           {loadingProducts
             ? Array(30)
                 .fill(0)
@@ -181,7 +121,7 @@ export default function ItemsSection({
                   id={`product-${product.id}`}
                   className={`transition-all duration-300 ${
                     highlightProductId === product.id 
-                      ? 'shadow-2xl shadow-yellow-500/50 transform scale-105' 
+                      ? 'shadow-2xl shadow-yellow-500/50 transform scale-105 rounded-xl' 
                       : ''
                   }`}
                 >
@@ -196,6 +136,7 @@ export default function ItemsSection({
                     originalPrice={product.originalPrice}
                     measurement_unit={product.measurement_unit}
                     quantity={product.quantity}
+                    productName={product.ProductName}
                   />
                 </div>
               ))}
@@ -203,33 +144,17 @@ export default function ItemsSection({
 
         {/* View More Button */}
         {hasMoreProducts && (
-          <div className="mt-6 flex justify-center px-2 sm:mt-8 sm:px-0">
+          <div className="mt-8 flex justify-center">
             <button
               onClick={handleViewMore}
-              className="flex w-full items-center gap-2 rounded-lg bg-green-600 px-4 py-2 text-sm text-white shadow-sm shadow-green-500/20 transition-all duration-300 ease-in-out hover:scale-105 hover:bg-green-700 active:scale-95 dark:bg-green-600 dark:hover:bg-green-700 sm:w-auto sm:px-6 sm:py-3 sm:text-base"
+              className="flex items-center gap-2 rounded-xl bg-gradient-to-r from-green-500 to-emerald-500 px-6 py-3 text-sm font-medium text-white shadow-lg shadow-green-500/25 transition-all duration-300 hover:scale-105 hover:shadow-green-500/40 active:scale-95"
             >
-              <svg
-                className="h-4 w-4 sm:h-5 sm:w-5"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M19 9l-7 7-7-7"
-                />
+              <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
               </svg>
-              <span className="hidden sm:inline">View More</span>
-              <span className="sm:hidden">Load More</span>
-              <span className="text-xs sm:text-sm">
-                (
-                {Math.min(
-                  productsPerPage,
-                  searchedProducts.length - displayedProducts
-                )}{" "}
-                more)
+              <span>Load More Products</span>
+              <span className="text-xs opacity-75">
+                ({Math.min(productsPerPage, searchedProducts.length - displayedProducts)} more)
               </span>
             </button>
           </div>
