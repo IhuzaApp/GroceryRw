@@ -5,8 +5,13 @@ import { gql } from "graphql-request";
 const SEARCH_ITEMS = gql`
   query SearchItems($searchTerm: String!) {
     Products(
-      where: { ProductName: { name: { _ilike: $searchTerm } } }
-      limit: 10
+      where: { 
+        ProductName: { name: { _ilike: $searchTerm } },
+        is_active: { _eq: true },
+        quantity: { _gt: 0 }
+      }
+      limit: 20
+      order_by: { final_price: asc }
     ) {
       id
       ProductName {
@@ -22,12 +27,20 @@ const SEARCH_ITEMS = gql`
       quantity
       measurement_unit
       Shop {
+        id
         name
         image
         is_active
+        address
       }
     }
-    Shops(where: { name: { _ilike: $searchTerm } }, limit: 10) {
+    Shops(
+      where: { 
+        name: { _ilike: $searchTerm },
+        is_active: { _eq: true }
+      }, 
+      limit: 5
+    ) {
       id
       name
       description
@@ -96,7 +109,7 @@ export default async function handler(
       searchTerm: `%${searchTerm}%`,
     });
 
-    // Transform products
+    // Transform products with enhanced details
     const products = data.Products.map((product) => ({
       id: product.id,
       name: product.ProductName.name,
@@ -106,11 +119,12 @@ export default async function handler(
       description: product.ProductName.description,
       shopId: product.shop_id,
       category: product.category,
-      inStock: product.is_active,
+      inStock: product.is_active && product.quantity > 0,
       quantity: product.quantity,
       measurementUnit: product.measurement_unit,
       shopName: product.Shop?.name,
       shopImage: product.Shop?.image,
+      shopAddress: product.Shop?.address,
     }));
 
     // Transform shops
@@ -126,13 +140,33 @@ export default async function handler(
       operatingHours: shop.operating_hours,
     }));
 
-    // Combine and sort results by relevance
-    const results = [...products, ...shops].sort((a, b) => {
+    // Group products by name to show all supermarkets selling the same product
+    const productGroups = new Map<string, typeof products>();
+    products.forEach(product => {
+      const key = product.name.toLowerCase();
+      if (!productGroups.has(key)) {
+        productGroups.set(key, []);
+      }
+      productGroups.get(key)!.push(product);
+    });
+
+    // Sort products within each group by price (lowest first)
+    productGroups.forEach(group => {
+      group.sort((a, b) => a.price! - b.price!);
+    });
+
+    // Flatten grouped products and combine with shops
+    const sortedProducts = Array.from(productGroups.values()).flat();
+    const results = [...sortedProducts, ...shops].sort((a, b) => {
       // Exact matches first
       const aExactMatch = a.name.toLowerCase() === searchTerm.toLowerCase();
       const bExactMatch = b.name.toLowerCase() === searchTerm.toLowerCase();
       if (aExactMatch && !bExactMatch) return -1;
       if (!aExactMatch && bExactMatch) return 1;
+
+      // Products before shops
+      if (a.type === "product" && b.type === "shop") return -1;
+      if (a.type === "shop" && b.type === "product") return 1;
 
       // Then by name
       return a.name.localeCompare(b.name);
