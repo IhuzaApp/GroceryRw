@@ -344,7 +344,7 @@ export default function SideBar() {
           {!session?.user && (
             <Link
               className="rounded-full p-2 text-inherit transition-colors duration-200 hover:bg-gray-200 dark:hover:bg-green-700 dark:hover:text-white"
-              href={"/login"}
+              href={"/Auth/Login"}
               passHref
               title="Login"
             >
