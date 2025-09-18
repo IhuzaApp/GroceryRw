@@ -18,6 +18,7 @@ interface ProductCardProps {
   measurement_unit?: string;
   quantity?: number;
   shopId: string;
+  highlighted?: boolean;
   productName?: {
     id: string;
     name: string;
@@ -39,6 +40,7 @@ export default function ProductCard({
   originalPrice,
   measurement_unit,
   quantity,
+  highlighted,
   productName,
 }: ProductCardProps) {
   const { addItem } = useCart();
@@ -112,7 +114,11 @@ export default function ProductCard({
   return (
     <>
       <div 
-        className="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-md shadow-black/5 transition-all duration-300 ease-in-out hover:-translate-y-1 hover:shadow-lg hover:shadow-black/10 dark:border-gray-700 dark:bg-gray-800 dark:shadow-gray-400/10 dark:hover:shadow-gray-300/15 cursor-pointer"
+        className={`overflow-hidden rounded-xl border border-gray-200 bg-white shadow-md shadow-black/5 transition-all duration-300 ease-in-out hover:-translate-y-1 hover:shadow-lg hover:shadow-black/10 dark:border-gray-700 dark:bg-gray-800 dark:shadow-gray-400/10 dark:hover:shadow-gray-300/15 cursor-pointer ${
+          highlighted 
+            ? 'shadow-2xl shadow-yellow-500/50 transform scale-105' 
+            : ''
+        }`}
         onClick={() => setShowDetailsModal(true)}
       >
         <div className="relative">

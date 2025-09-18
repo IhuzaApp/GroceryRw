@@ -119,11 +119,6 @@ export default function ItemsSection({
                 <div
                   key={product.id}
                   id={`product-${product.id}`}
-                  className={`transition-all duration-300 ${
-                    highlightProductId === product.id 
-                      ? 'shadow-2xl shadow-yellow-500/50 transform scale-105 rounded-xl' 
-                      : ''
-                  }`}
                 >
                   <ProductCard
                     id={product.id}
@@ -137,6 +132,7 @@ export default function ItemsSection({
                     measurement_unit={product.measurement_unit}
                     quantity={product.quantity}
                     productName={product.ProductName}
+                    highlighted={highlightProductId === product.id}
                   />
                 </div>
               ))}
