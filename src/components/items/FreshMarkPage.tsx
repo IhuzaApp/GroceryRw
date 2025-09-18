@@ -181,8 +181,8 @@ const FreshMarkPage: React.FC<FreshMarkPageProps> = ({ shop, products }) => {
   return (
     <RootLayout>
       <div className="min-h-screen bg-gray-50 dark:bg-gray-900 md:ml-20">
-        {/* Modern Shop Header */}
-        <div className="relative">
+        {/* Desktop Banner - Hidden on mobile */}
+        <div className="hidden sm:block relative">
           {/* Hero Banner */}
           <div className="relative h-40 overflow-hidden sm:h-48 lg:h-56">
             <Image
@@ -288,7 +288,7 @@ const FreshMarkPage: React.FC<FreshMarkPageProps> = ({ shop, products }) => {
             </div>
           </div>
 
-          {/* Modern Navigation & Search Section */}
+          {/* Desktop Navigation & Search Section */}
           <div className="relative -mt-8 mx-4 sm:mx-6 lg:mx-8">
             <div className="rounded-2xl bg-white p-4 shadow-xl dark:bg-gray-800 sm:p-6">
               {/* Search Bar */}
@@ -337,7 +337,7 @@ const FreshMarkPage: React.FC<FreshMarkPageProps> = ({ shop, products }) => {
                 </div>
               </div>
 
-              {/* Product Count */}
+              {/* Product Count & Sort */}
               <div className="flex items-center justify-between">
                 <span className="text-sm text-gray-600 dark:text-gray-400">
                   {filteredProducts.length} products available
@@ -364,8 +364,85 @@ const FreshMarkPage: React.FC<FreshMarkPageProps> = ({ shop, products }) => {
           </div>
         </div>
 
+        {/* Mobile Layout - Simple header with back button */}
+        <div className="sm:hidden">
+          {/* Mobile Header */}
+          <div className="sticky top-0 z-50 bg-white border-b border-gray-200 dark:bg-gray-800 dark:border-gray-700">
+            <div className="flex items-center justify-between p-4">
+              {/* Back Button */}
+              <Link
+                href="/"
+                className="flex h-10 w-10 items-center justify-center rounded-full bg-gray-100 transition-all duration-200 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600"
+              >
+                <svg
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  className="h-5 w-5"
+                >
+                  <path d="M19 12H5M12 19l-7-7 7-7" />
+                </svg>
+              </Link>
+              
+              {/* Shop Name */}
+              <h1 className="text-lg font-bold text-gray-900 dark:text-white">
+                {shopData.name}
+              </h1>
+              
+              {/* Placeholder for balance */}
+              <div className="h-10 w-10"></div>
+            </div>
+          </div>
+
+          {/* Mobile Search */}
+          <div className="p-4 bg-white dark:bg-gray-800">
+            <div className="relative">
+              <div className="absolute inset-y-0 left-0 flex items-center pl-3">
+                <svg className="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                </svg>
+              </div>
+              <input
+                type="text"
+                placeholder="Search products..."
+                className="w-full rounded-xl border border-gray-200 bg-gray-50 py-3 pl-10 pr-4 text-sm transition-all duration-200 focus:border-green-500 focus:bg-white focus:outline-none focus:ring-2 focus:ring-green-500/20 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:focus:border-green-400 dark:focus:bg-gray-600"
+              />
+            </div>
+          </div>
+
+          {/* Mobile Categories */}
+          <div className="px-4 pb-4 bg-white dark:bg-gray-800">
+            <div className="flex gap-2 overflow-x-auto pb-2">
+              <button
+                onClick={() => setActiveCategory("all")}
+                className={`flex-shrink-0 rounded-full px-4 py-2 text-sm font-medium transition-all duration-200 ${
+                  activeCategory === "all"
+                    ? 'bg-gradient-to-r from-green-500 to-emerald-500 text-white shadow-lg shadow-green-500/25'
+                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600'
+                }`}
+              >
+                All Products
+              </button>
+              {Array.from(new Set(shopData.products.map((p: any) => p.category))).map((category: string) => (
+                <button
+                  key={category}
+                  onClick={() => setActiveCategory(category)}
+                  className={`flex-shrink-0 rounded-full px-4 py-2 text-sm font-medium transition-all duration-200 ${
+                    activeCategory === category
+                      ? 'bg-gradient-to-r from-green-500 to-emerald-500 text-white shadow-lg shadow-green-500/25'
+                      : 'bg-gray-100 text-gray-700 hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600'
+                  }`}
+                >
+                  {category.charAt(0).toUpperCase() + category.slice(1)}
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
+
         {/* Products Section */}
-        <div className="px-4 pt-8 sm:px-6 lg:px-8">
+        <div className="px-4 pt-4 sm:pt-8 sm:px-6 lg:px-8">
           <ItemsSection
             activeCategory={activeCategory}
             shop={shopData}
