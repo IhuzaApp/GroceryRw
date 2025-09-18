@@ -326,7 +326,10 @@ export default async function handler(
       } else {
         // List all order items for regular orders
         const allItems = orderData.Order_Items.map(
-          (item: any) => `${item.Product.ProductName?.name || 'Unknown Product'} (${item.quantity})`
+          (item: any) =>
+            `${item.Product.ProductName?.name || "Unknown Product"} (${
+              item.quantity
+            })`
         ).join(", ");
         refundReason += `Order items: ${allItems}. `;
       }
@@ -397,7 +400,7 @@ export default async function handler(
     if (!isReelOrder) {
       // Build description with MoMo payment details
       let description = `Payment from reserved balance for found order items. MoMo Code: ${momoCode}`;
-      
+
       if (momoReferenceId && momoSuccess !== undefined) {
         const momoStatus = momoSuccess ? "SUCCESSFUL" : "FAILED";
         description += ` | MoMo Payment: ${momoStatus} | Reference ID: ${momoReferenceId}`;

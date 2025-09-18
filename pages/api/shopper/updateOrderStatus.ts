@@ -40,7 +40,6 @@ const UPDATE_REEL_ORDER_STATUS = gql`
   }
 `;
 
-
 export default async function handler(
   req: NextApiRequest,
   res: NextApiResponse

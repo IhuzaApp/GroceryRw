@@ -371,7 +371,6 @@ export default function CheckoutItems({
   const finalTotal = Total - discount + serviceFee + deliveryFee;
 
   const handleProceedToCheckout = async () => {
-    
     // Validate cart has items
     if (totalUnits <= 0) {
       toaster.push(
@@ -382,11 +381,10 @@ export default function CheckoutItems({
       );
       return;
     }
-    
-    
+
     // Get selected delivery address from cookie
     const cookieValue = Cookies.get("delivery_address");
-    
+
     if (!cookieValue) {
       toaster.push(
         <Notification type="error" header="Address Required">
@@ -396,7 +394,7 @@ export default function CheckoutItems({
       );
       return;
     }
-    
+
     let addressObj;
     try {
       addressObj = JSON.parse(cookieValue);
@@ -410,9 +408,9 @@ export default function CheckoutItems({
       );
       return;
     }
-    
+
     const deliveryAddressId = addressObj.id;
-    
+
     if (!deliveryAddressId) {
       toaster.push(
         <Notification type="error" header="Invalid Address">
@@ -422,14 +420,14 @@ export default function CheckoutItems({
       );
       return;
     }
-    
-    setIsCheckoutLoading(true);
-    
-        // No immediate notification - will show after cart refresh completes
 
-        // Cart refresh will happen after API call completes
-        // Loading overlay will be hidden after cart refresh completes
-    
+    setIsCheckoutLoading(true);
+
+    // No immediate notification - will show after cart refresh completes
+
+    // Cart refresh will happen after API call completes
+    // Loading overlay will be hidden after cart refresh completes
+
     // Process checkout in background
     try {
       // Prepare checkout payload
@@ -443,61 +441,70 @@ export default function CheckoutItems({
         delivery_time: deliveryTimestamp,
         delivery_notes: deliveryNotes || null,
       };
-      
-      
+
       // Make API call in background (don't await)
       fetch("/api/checkout", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
-           }).then(async (res) => {
-             const data = await res.json();
-             if (!res.ok) {
-               console.error("❌ Checkout error:", data.error || "Checkout failed");
-               // Show error notification
-               toaster.push(
-                 <Notification type="error" header="Checkout Failed">
-                   {data.error || "There was an error processing your order. Please try again."}
-                 </Notification>,
-                 { placement: "topEnd", duration: 5000 }
-               );
-               setIsCheckoutLoading(false);
-             } else {
-               
-               // Refresh cart data after successful checkout
-               setTimeout(() => {
-                 // Create custom event with callback to hide loading overlay and show success notification
-                 const cartChangedEvent = new CustomEvent("cartChanged", {
-                   detail: {
-                     hideLoadingCallback: () => {
-                       setIsCheckoutLoading(false);
-                       
-                       // Show final success toast after overlay disappears
-                       setTimeout(() => {
-                         toaster.push(
-                           <Notification type="success" header="Order Completed Successfully!">
-                             Your order #{data.order_id?.slice(-8)} has been placed and is being prepared! You can view it in "Current Orders".
-                           </Notification>,
-                           { placement: "topEnd", duration: 5000 }
-                         );
-                       }, 100); // Small delay to ensure overlay is fully hidden
-                     }
-                   }
-                 });
-                 window.dispatchEvent(cartChangedEvent);
-               }, 1000); // Increased delay to ensure server processing is complete
-             }
-           }).catch((err) => {
-             console.error("❌ Checkout fetch error:", err);
-             toaster.push(
-               <Notification type="error" header="Network Error">
-                 Unable to process your order. Please check your connection and try again.
-               </Notification>,
-               { placement: "topEnd", duration: 5000 }
-             );
-             setIsCheckoutLoading(false);
-           });
-      
+      })
+        .then(async (res) => {
+          const data = await res.json();
+          if (!res.ok) {
+            console.error(
+              "❌ Checkout error:",
+              data.error || "Checkout failed"
+            );
+            // Show error notification
+            toaster.push(
+              <Notification type="error" header="Checkout Failed">
+                {data.error ||
+                  "There was an error processing your order. Please try again."}
+              </Notification>,
+              { placement: "topEnd", duration: 5000 }
+            );
+            setIsCheckoutLoading(false);
+          } else {
+            // Refresh cart data after successful checkout
+            setTimeout(() => {
+              // Create custom event with callback to hide loading overlay and show success notification
+              const cartChangedEvent = new CustomEvent("cartChanged", {
+                detail: {
+                  hideLoadingCallback: () => {
+                    setIsCheckoutLoading(false);
+
+                    // Show final success toast after overlay disappears
+                    setTimeout(() => {
+                      toaster.push(
+                        <Notification
+                          type="success"
+                          header="Order Completed Successfully!"
+                        >
+                          Your order #{data.order_id?.slice(-8)} has been placed
+                          and is being prepared! You can view it in "Current
+                          Orders".
+                        </Notification>,
+                        { placement: "topEnd", duration: 5000 }
+                      );
+                    }, 100); // Small delay to ensure overlay is fully hidden
+                  },
+                },
+              });
+              window.dispatchEvent(cartChangedEvent);
+            }, 1000); // Increased delay to ensure server processing is complete
+          }
+        })
+        .catch((err) => {
+          console.error("❌ Checkout fetch error:", err);
+          toaster.push(
+            <Notification type="error" header="Network Error">
+              Unable to process your order. Please check your connection and try
+              again.
+            </Notification>,
+            { placement: "topEnd", duration: 5000 }
+          );
+          setIsCheckoutLoading(false);
+        });
     } catch (err: any) {
       console.error("❌ Checkout setup error:", err);
       // Hide loading overlay on error
@@ -592,26 +599,39 @@ export default function CheckoutItems({
       {/* Global Loading Overlay - Shows during checkout process */}
       {isCheckoutLoading && (
         <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/50 backdrop-blur-sm">
-          <div className={`rounded-xl p-8 shadow-2xl ${theme === "dark" ? "bg-gray-800" : "bg-white"}`}>
+          <div
+            className={`rounded-xl p-8 shadow-2xl ${
+              theme === "dark" ? "bg-gray-800" : "bg-white"
+            }`}
+          >
             <div className="flex flex-col items-center space-y-4">
               {/* Spinner */}
               <div className="h-12 w-12 animate-spin rounded-full border-4 border-t-4 border-gray-200 border-t-green-500"></div>
-              
+
               {/* Loading Text */}
               <div className="text-center">
-                <h3 className={`text-lg font-semibold ${theme === "dark" ? "text-white" : "text-gray-900"}`}>
+                <h3
+                  className={`text-lg font-semibold ${
+                    theme === "dark" ? "text-white" : "text-gray-900"
+                  }`}
+                >
                   Processing Your Order
                 </h3>
-                 <p className={`mt-2 text-sm ${theme === "dark" ? "text-gray-300" : "text-gray-600"}`}>
-                   Please wait while we process your checkout and refresh your cart...
-                 </p>
+                <p
+                  className={`mt-2 text-sm ${
+                    theme === "dark" ? "text-gray-300" : "text-gray-600"
+                  }`}
+                >
+                  Please wait while we process your checkout and refresh your
+                  cart...
+                </p>
               </div>
-              
+
               {/* Progress Steps */}
               <div className="flex space-x-2">
                 <div className="h-2 w-2 rounded-full bg-green-500"></div>
                 <div className="h-2 w-2 rounded-full bg-green-500"></div>
-                <div className="h-2 w-2 rounded-full bg-gray-300 animate-pulse"></div>
+                <div className="h-2 w-2 animate-pulse rounded-full bg-gray-300"></div>
               </div>
             </div>
           </div>

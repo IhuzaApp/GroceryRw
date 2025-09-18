@@ -153,7 +153,14 @@ export default async function handler(
       return res.status(401).json({ error: "Unauthorized" });
     }
 
-    const { shopperId, orderId, orderAmount, originalOrderTotal, momoReferenceId, momoSuccess } = req.body;
+    const {
+      shopperId,
+      orderId,
+      orderAmount,
+      originalOrderTotal,
+      momoReferenceId,
+      momoSuccess,
+    } = req.body;
 
     // Validate required fields
     if (!shopperId || !orderId || orderAmount === undefined) {
@@ -302,8 +309,9 @@ export default async function handler(
 
     // Create wallet transaction records for payment
     // Build description with MoMo payment details
-    let description = "Payment for found order items (excluding service and delivery fees)";
-    
+    let description =
+      "Payment for found order items (excluding service and delivery fees)";
+
     if (momoReferenceId && momoSuccess !== undefined) {
       const momoStatus = momoSuccess ? "SUCCESSFUL" : "FAILED";
       description += ` | MoMo Payment: ${momoStatus} | Reference ID: ${momoReferenceId}`;

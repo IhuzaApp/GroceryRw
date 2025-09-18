@@ -183,8 +183,9 @@ export const recordPaymentTransactions = async (
 
     // Create wallet transaction records
     // Build description with MoMo payment details
-    let description = "Payment for found order items (excluding service and delivery fees)";
-    
+    let description =
+      "Payment for found order items (excluding service and delivery fees)";
+
     if (momoReferenceId && momoSuccess !== undefined) {
       const momoStatus = momoSuccess ? "SUCCESSFUL" : "FAILED";
       description += ` | MoMo Payment: ${momoStatus} | Reference ID: ${momoReferenceId}`;
@@ -346,7 +347,7 @@ export const generateInvoice = async (orderId: string) => {
       dateCompleted: new Date(order.updated_at).toLocaleString(),
       status: order.status,
       items: items.map((item) => ({
-        name: item.Product.name || 'Unknown Product',
+        name: item.Product.name || "Unknown Product",
         quantity: item.quantity,
         unitPrice: item.price,
         total:

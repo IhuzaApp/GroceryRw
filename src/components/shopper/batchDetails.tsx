@@ -648,24 +648,24 @@ export default function BatchDetails({
 
       // Initiate MoMo payment after OTP verification
       let momoPaymentSuccess = false;
-      let momoReferenceId = '';
+      let momoReferenceId = "";
       try {
         // First, ensure we have a valid token
         const { momoTokenManager } = await import("../../lib/momoTokenManager");
         await momoTokenManager.getValidToken();
 
-        const momoResponse = await fetch('/api/momo/transfer', {
-          method: 'POST',
+        const momoResponse = await fetch("/api/momo/transfer", {
+          method: "POST",
           headers: {
-            'Content-Type': 'application/json',
+            "Content-Type": "application/json",
           },
           body: JSON.stringify({
             amount: orderAmount,
-            currency: systemConfig?.currency || 'RWF',
+            currency: systemConfig?.currency || "RWF",
             payerNumber: momoCode,
             externalId: order.id || `SHOPPER-PAYMENT-${Date.now()}`,
-            payerMessage: 'Payment for Shopper Items',
-            payeeNote: 'Shopper payment confirmation',
+            payerMessage: "Payment for Shopper Items",
+            payeeNote: "Shopper payment confirmation",
           }),
         });
 
@@ -682,47 +682,55 @@ export default function BatchDetails({
           for (let attempt = 0; attempt < maxAttempts; attempt++) {
             try {
               await momoTokenManager.getValidToken();
-              
-              const statusResponse = await fetch(`/api/momo/status?referenceId=${momoData.referenceId}`);
+
+              const statusResponse = await fetch(
+                `/api/momo/status?referenceId=${momoData.referenceId}`
+              );
               const statusData = await statusResponse.json();
 
               if (statusResponse.ok) {
-                if (statusData.status === 'SUCCESSFUL') {
+                if (statusData.status === "SUCCESSFUL") {
                   momoPaymentSuccess = true;
                   toaster.push(
-                    <Notification type="success" header="MoMo Payment Successful" closable>
+                    <Notification
+                      type="success"
+                      header="MoMo Payment Successful"
+                      closable
+                    >
                       Payment completed successfully via MoMo!
                     </Notification>,
                     { placement: "topEnd" }
                   );
                   break; // Exit the polling loop
-                } else if (statusData.status === 'FAILED') {
-                  throw new Error('MoMo payment failed. Please try again.');
-                } else if (statusData.status === 'PENDING') {
+                } else if (statusData.status === "FAILED") {
+                  throw new Error("MoMo payment failed. Please try again.");
+                } else if (statusData.status === "PENDING") {
                   // Continue polling
                   if (attempt < maxAttempts - 1) {
-                    await new Promise(resolve => setTimeout(resolve, 10000)); // Wait 10 seconds
+                    await new Promise((resolve) => setTimeout(resolve, 10000)); // Wait 10 seconds
                   } else {
-                    throw new Error('MoMo payment timeout. Please check your phone or try again.');
+                    throw new Error(
+                      "MoMo payment timeout. Please check your phone or try again."
+                    );
                   }
                 }
               } else {
-                throw new Error(statusData.error || 'MoMo status check failed');
+                throw new Error(statusData.error || "MoMo status check failed");
               }
             } catch (error) {
-              console.error('MoMo status polling error:', error);
+              console.error("MoMo status polling error:", error);
               if (attempt === maxAttempts - 1) {
                 throw error; // Re-throw on last attempt
               }
-              await new Promise(resolve => setTimeout(resolve, 10000)); // Wait before retry
+              await new Promise((resolve) => setTimeout(resolve, 10000)); // Wait before retry
             }
           }
 
           if (!momoPaymentSuccess) {
-            throw new Error('MoMo payment did not complete successfully');
+            throw new Error("MoMo payment did not complete successfully");
           }
         } else {
-          throw new Error(momoData.error || 'MoMo payment initiation failed');
+          throw new Error(momoData.error || "MoMo payment initiation failed");
         }
       } catch (momoError) {
         console.error("MoMo payment error:", momoError);
@@ -825,9 +833,10 @@ export default function BatchDetails({
           // Show success notification
           toaster.push(
             <Notification type="success" header="Payment Complete" closable>
-              ✅ MoMo payment successful<br/>
-              ✅ Wallet balance updated<br/>
-              ✅ Order status updated to "On The Way"
+              ✅ MoMo payment successful
+              <br />
+              ✅ Wallet balance updated
+              <br />✅ Order status updated to "On The Way"
             </Notification>,
             { placement: "topEnd", duration: 5000 }
           );
@@ -939,9 +948,9 @@ export default function BatchDetails({
   // Function to show product image in modal
   const showProductImage = (item: OrderItem) => {
     setSelectedImage(
-      item.product.ProductName?.image || 
-      item.product.image || 
-      "/images/groceryPlaceholder.png"
+      item.product.ProductName?.image ||
+        item.product.image ||
+        "/images/groceryPlaceholder.png"
     );
     setSelectedProductName(item.product.ProductName?.name || "Unknown Product");
     setCurrentOrderItem(item);
@@ -1927,7 +1936,8 @@ export default function BatchDetails({
                               "Unknown Product"}
                           </p>
                           <p className="text-xs text-slate-500 dark:text-slate-400 sm:text-sm">
-                            {formatCurrency(item.price)} × {item.quantity} {(item.product as any).measurement_unit || "each"}
+                            {formatCurrency(item.price)} × {item.quantity}{" "}
+                            {(item.product as any).measurement_unit || "each"}
                           </p>
                           {item.found &&
                             item.foundQuantity &&
@@ -1945,51 +1955,59 @@ export default function BatchDetails({
                           {order.status === "shopping" && (
                             <button
                               onClick={() => toggleItemFound(item, !item.found)}
-                              className={`group relative flex items-center gap-1 whitespace-nowrap rounded-md px-2 py-1.5 text-xs font-medium transition-all duration-300 overflow-hidden sm:gap-1.5 sm:px-2.5 sm:py-1.5 sm:text-xs ${
+                              className={`group relative flex items-center gap-1 overflow-hidden whitespace-nowrap rounded-md px-2 py-1.5 text-xs font-medium transition-all duration-300 sm:gap-1.5 sm:px-2.5 sm:py-1.5 sm:text-xs ${
                                 item.found
-                                  ? "border-2 border-emerald-300 bg-gradient-to-r from-emerald-100 to-green-100 text-emerald-800 shadow-lg shadow-emerald-200/50 hover:shadow-emerald-300/60 hover:scale-105 dark:border-emerald-600 dark:from-emerald-900/30 dark:to-green-900/30 dark:text-emerald-200 dark:shadow-emerald-800/30"
-                                  : "border-2 border-slate-300 bg-gradient-to-r from-slate-50 to-gray-50 text-slate-700 shadow-md shadow-slate-200/30 hover:shadow-slate-300/50 hover:scale-105 hover:border-blue-300 hover:bg-gradient-to-r hover:from-blue-50 hover:to-indigo-50 hover:text-blue-700 dark:border-slate-600 dark:from-slate-700 dark:to-gray-700 dark:text-slate-300 dark:shadow-slate-800/30 dark:hover:border-blue-500 dark:hover:from-blue-900/30 dark:hover:to-indigo-900/30 dark:hover:text-blue-200"
+                                  ? "border-2 border-emerald-300 bg-gradient-to-r from-emerald-100 to-green-100 text-emerald-800 shadow-lg shadow-emerald-200/50 hover:scale-105 hover:shadow-emerald-300/60 dark:border-emerald-600 dark:from-emerald-900/30 dark:to-green-900/30 dark:text-emerald-200 dark:shadow-emerald-800/30"
+                                  : "border-2 border-slate-300 bg-gradient-to-r from-slate-50 to-gray-50 text-slate-700 shadow-md shadow-slate-200/30 hover:scale-105 hover:border-blue-300 hover:bg-gradient-to-r hover:from-blue-50 hover:to-indigo-50 hover:text-blue-700 hover:shadow-slate-300/50 dark:border-slate-600 dark:from-slate-700 dark:to-gray-700 dark:text-slate-300 dark:shadow-slate-800/30 dark:hover:border-blue-500 dark:hover:from-blue-900/30 dark:hover:to-indigo-900/30 dark:hover:text-blue-200"
                               }`}
                             >
                               {/* Ripple effect overlay */}
-                              <div className="absolute inset-0 bg-white/20 dark:bg-white/10 opacity-0 group-active:opacity-100 transition-opacity duration-150 rounded-xl"></div>
-                              <div className={`relative transition-all duration-300 ${
-                                item.found ? "scale-110" : "scale-100 group-hover:scale-110"
-                              }`}>
-                              <svg
-                                viewBox="0 0 24 24"
-                                fill="none"
-                                stroke="currentColor"
-                                  strokeWidth="1.5"
-                                  className={`h-2.5 w-2.5 sm:h-3 sm:w-3 transition-all duration-300 ${
+                              <div className="absolute inset-0 rounded-xl bg-white/20 opacity-0 transition-opacity duration-150 group-active:opacity-100 dark:bg-white/10"></div>
+                              <div
+                                className={`relative transition-all duration-300 ${
                                   item.found
-                                      ? "text-emerald-600 dark:text-emerald-300"
-                                      : "text-slate-500 dark:text-slate-400 group-hover:text-blue-600 dark:group-hover:text-blue-400"
+                                    ? "scale-110"
+                                    : "scale-100 group-hover:scale-110"
                                 }`}
                               >
-                                {item.found ? (
-                                  <path
-                                    strokeLinecap="round"
-                                    strokeLinejoin="round"
-                                    d="M5 13l4 4L19 7"
+                                <svg
+                                  viewBox="0 0 24 24"
+                                  fill="none"
+                                  stroke="currentColor"
+                                  strokeWidth="1.5"
+                                  className={`h-2.5 w-2.5 transition-all duration-300 sm:h-3 sm:w-3 ${
+                                    item.found
+                                      ? "text-emerald-600 dark:text-emerald-300"
+                                      : "text-slate-500 group-hover:text-blue-600 dark:text-slate-400 dark:group-hover:text-blue-400"
+                                  }`}
+                                >
+                                  {item.found ? (
+                                    <path
+                                      strokeLinecap="round"
+                                      strokeLinejoin="round"
+                                      d="M5 13l4 4L19 7"
                                       className="animate-pulse"
-                                  />
-                                ) : (
-                                  <path
-                                    strokeLinecap="round"
-                                    strokeLinejoin="round"
-                                    d="M12 6v6m0 0v6m0-6h6m-6 0H6"
+                                    />
+                                  ) : (
+                                    <path
+                                      strokeLinecap="round"
+                                      strokeLinejoin="round"
+                                      d="M12 6v6m0 0v6m0-6h6m-6 0H6"
                                       className="group-hover:animate-pulse"
-                                  />
-                                )}
-                              </svg>
+                                    />
+                                  )}
+                                </svg>
                                 {item.found && (
-                                  <div className="absolute inset-0 rounded-full bg-emerald-200/50 dark:bg-emerald-800/50 animate-ping"></div>
+                                  <div className="absolute inset-0 animate-ping rounded-full bg-emerald-200/50 dark:bg-emerald-800/50"></div>
                                 )}
                               </div>
-                              <span className={`relative z-10 transition-all duration-300 ${
-                                item.found ? "font-bold" : "font-semibold group-hover:font-bold"
-                              }`}>
+                              <span
+                                className={`relative z-10 transition-all duration-300 ${
+                                  item.found
+                                    ? "font-bold"
+                                    : "font-semibold group-hover:font-bold"
+                                }`}
+                              >
                                 {item.found ? "✓ Found" : "Mark Found"}
                               </span>
                             </button>

@@ -128,7 +128,9 @@ const DeliveryConfirmationModal: React.FC<DeliveryConfirmationModalProps> = ({
 
       if (!walletResponse.ok) {
         const walletErrorData = await walletResponse.json();
-        throw new Error(walletErrorData.error || "Failed to process wallet operations");
+        throw new Error(
+          walletErrorData.error || "Failed to process wallet operations"
+        );
       }
 
       const walletResult = await walletResponse.json();
@@ -401,7 +403,9 @@ const DeliveryConfirmationModal: React.FC<DeliveryConfirmationModalProps> = ({
     >
       <Modal.Header
         className={`${
-          theme === "dark" ? "bg-gray-800 text-gray-100" : "bg-gradient-to-r from-green-50 to-blue-50"
+          theme === "dark"
+            ? "bg-gray-800 text-gray-100"
+            : "bg-gradient-to-r from-green-50 to-blue-50"
         } rounded-t-2xl px-4 py-3`}
       >
         <div className="flex items-center gap-3">
@@ -493,7 +497,9 @@ const DeliveryConfirmationModal: React.FC<DeliveryConfirmationModalProps> = ({
           {/* Photo upload section */}
           <div
             className={`rounded-xl border-2 p-4 ${
-              theme === "dark" ? "border-blue-600 bg-blue-900/20" : "border-blue-200 bg-blue-50"
+              theme === "dark"
+                ? "border-blue-600 bg-blue-900/20"
+                : "border-blue-200 bg-blue-50"
             }`}
           >
             <div className="mb-3 flex items-center gap-3">
@@ -525,9 +531,7 @@ const DeliveryConfirmationModal: React.FC<DeliveryConfirmationModalProps> = ({
                 </svg>
               </div>
               <div>
-                <h3 className="text-base font-bold">
-                  Delivery Photo
-                </h3>
+                <h3 className="text-base font-bold">Delivery Photo</h3>
                 <p
                   className={`text-sm ${
                     theme === "dark" ? "text-gray-300" : "text-gray-600"
@@ -773,7 +777,6 @@ const DeliveryConfirmationModal: React.FC<DeliveryConfirmationModalProps> = ({
           </Button>
         </div>
       </Modal.Footer>
-
     </Modal>
   );
 };

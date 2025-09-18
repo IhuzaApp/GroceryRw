@@ -383,7 +383,9 @@ async function handleDeliveredOperation(
       },
       {
         wallet_id: wallet.id,
-        amount: (currentReservedBalance - parseFloat(newReservedBalance)).toFixed(2),
+        amount: (
+          currentReservedBalance - parseFloat(newReservedBalance)
+        ).toFixed(2),
         type: "expense",
         status: "completed",
         related_order_id: orderId,
