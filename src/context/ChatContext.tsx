@@ -149,17 +149,38 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({
         if (existingChatIndex === -1) {
           // Get or create the conversation in Firebase
           const shopperId = user.id;
+        console.log("🔍 [ChatContext] Creating conversation with:", {
+          orderId,
+          customerId,
+          shopperId,
+          userDetails: user
+        });
           const conversationId = await createConversation(
             orderId,
             customerId,
             shopperId
           );
 
+          // Create a new chat entry in our state first
+          const newChat: ChatData = {
+            orderId,
+            customerId,
+            customerName,
+            customerAvatar,
+            messages: [],
+            unreadCount: 0,
+          };
+
+          setActiveChats((prev) => [...prev, newChat]);
+
           // Set up a listener for messages in this conversation
           if (!messageListeners[conversationId]) {
             const unsubscribe = listenForMessages(
               conversationId,
               (fbMessages) => {
+                console.log("🔍 [ChatContext] Received messages:", fbMessages.length, "messages");
+                console.log("🔍 [ChatContext] Messages data:", fbMessages);
+                
                 // Convert Firebase messages to our format
                 const messages = fbMessages.map(convertFirebaseMessage);
 
@@ -191,18 +212,6 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({
               [conversationId]: unsubscribe,
             }));
           }
-
-          // Create a new chat entry in our state
-          const newChat: ChatData = {
-            orderId,
-            customerId,
-            customerName,
-            customerAvatar,
-            messages: [],
-            unreadCount: 0,
-          };
-
-          setActiveChats((prev) => [...prev, newChat]);
         }
 
         setCurrentChatId(orderId);
@@ -247,6 +256,13 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({
           throw new Error("Conversation not found");
         }
 
+        console.log("🔍 [ChatContext] Sending message:", {
+          conversationId: conversation.id,
+          text,
+          senderId: user.id,
+          senderType: "shopper"
+        });
+
         // Add message to Firebase
         await addFirebaseMessage(
           conversation.id,
@@ -255,6 +271,8 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({
           "shopper", // Assuming this context is for shoppers only
           image
         );
+
+        console.log("🔍 [ChatContext] Message sent successfully");
 
         // The message will be added to our state by the listener
       } catch (error) {

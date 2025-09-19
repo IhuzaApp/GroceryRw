@@ -50,6 +50,31 @@ interface OrderDetailsResponse {
         count: number;
       };
     };
+    user: {
+      id: string;
+      name: string;
+      email: string;
+      phone: string;
+      profile_picture: string;
+    } | null;
+    orderedBy: {
+      created_at: string;
+      email: string;
+      gender: string;
+      id: string;
+      is_active: boolean;
+      name: string;
+      password_hash: string;
+      phone: string;
+      profile_picture: string;
+      updated_at: string;
+      role: string;
+    } | null;
+    shop_id: string;
+    shopper_id: string | null;
+    total: string;
+    user_id: string;
+    voucher_code: string | null;
   } | null;
 }
 
@@ -108,6 +133,31 @@ const GET_ORDER_DETAILS = gql`
           count
         }
       }
+      user: User {
+        id
+        name
+        email
+        phone
+        profile_picture
+      }
+      orderedBy {
+        created_at
+        email
+        gender
+        id
+        is_active
+        name
+        password_hash
+        phone
+        profile_picture
+        updated_at
+        role
+      }
+      shop_id
+      shopper_id
+      total
+      user_id
+      voucher_code
     }
   }
 `;
@@ -291,6 +341,7 @@ export default async function handler(
         shopLongitude: orderData.shop?.longitude
           ? parseFloat(orderData.shop.longitude)
           : null,
+        address: orderData.address, // Include raw address object
         customerAddress: orderData.address
           ? `${orderData.address.street || ""}, ${orderData.address.city || ""}`
           : "No Address",
@@ -307,6 +358,9 @@ export default async function handler(
         deliveryFee,
         total: subTotal + serviceFee + deliveryFee,
         estimatedEarnings: totalEarnings,
+        user: orderData.user, // Include user data
+        orderedBy: orderData.orderedBy, // Include orderedBy data (actual customer)
+        customerId: orderData.orderedBy?.id, // Customer is ALWAYS from orderedBy
       };
     } else {
       // Handle reel orders
@@ -328,6 +382,7 @@ export default async function handler(
           orderData.Reel?.Restaurant?.location || "From Reel Creator",
         shopLatitude: orderData.Reel?.Restaurant?.lat || null,
         shopLongitude: orderData.Reel?.Restaurant?.long || null,
+        address: orderData.address, // Include raw address object
         customerAddress: orderData.address
           ? `${orderData.address.street || ""}, ${orderData.address.city || ""}`
           : "No Address",
@@ -356,6 +411,7 @@ export default async function handler(
         deliveryNote: orderData.delivery_note,
         customerName: orderData.user?.name,
         customerPhone: orderData.user?.phone,
+        user: orderData.user, // Include full user data
       };
     }
 

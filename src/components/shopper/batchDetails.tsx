@@ -139,6 +139,20 @@ interface OrderDetailsType {
     phone?: string;
     profile_picture: string;
   };
+  orderedBy?: {
+    created_at: string;
+    email: string;
+    gender: string;
+    id: string;
+    is_active: boolean;
+    name: string;
+    password_hash: string;
+    phone: string;
+    profile_picture: string;
+    updated_at: string;
+    role: string;
+  };
+  customerId?: string;
   shop?: {
     id: string;
     name: string;
@@ -1182,18 +1196,45 @@ export default function BatchDetails({
 
   // Function to handle chat button click
   const handleChatClick = () => {
-    if (!order?.user || !order.user.id) {
+    if (!order) return;
+    
+    // Type assertion to access the new fields
+    const orderWithNewFields = order as OrderDetailsType & {
+      customerId?: string;
+      orderedBy?: {
+        id: string;
+        name: string;
+        profile_picture: string;
+      };
+    };
+    
+    const customerId = orderWithNewFields.customerId || orderWithNewFields.orderedBy?.id;
+    if (!customerId) {
+      console.error("🔍 [Batch Details] Cannot start chat - missing customer data:", {
+        hasOrder: !!order,
+        customerId,
+        orderedBy: orderWithNewFields.orderedBy,
+        user: order.user,
+        orderId: order.id
+      });
       if (typeof window !== "undefined") {
-        alert("Cannot start chat: Customer ID is missing.");
+        alert("Cannot start chat: Customer information is missing. Please refresh the page and try again.");
       }
       return;
     }
 
+    console.log("🔍 [Batch Details] Opening chat with:", {
+      orderId: order.id,
+      customerId: orderWithNewFields.customerId || orderWithNewFields.orderedBy?.id,
+      customerName: orderWithNewFields.orderedBy?.name || order.user?.name,
+      shopperId: session?.user?.id
+    });
+
     openChat(
       order.id,
-      order.user.id,
-      order.user.name,
-      order.user.profile_picture
+      customerId, // We already validated this exists above
+      orderWithNewFields.orderedBy?.name || order.user?.name || "Customer",
+      orderWithNewFields.orderedBy?.profile_picture || order.user?.profile_picture
     );
 
     // If on mobile, navigate to chat page
@@ -1240,10 +1281,23 @@ export default function BatchDetails({
   // Fetch complete order data when component mounts
   useEffect(() => {
     if (order?.id) {
-      fetch(`/api/queries/orderDetails?id=${order.id}`)
+      fetch(`/api/shopper/orderDetails?id=${order.id}`)
         .then((res) => res.json())
         .then((data) => {
+          console.log("🔍 [Shopper Batch] Order details API response:", data);
           if (data.order) {
+            console.log("🔍 [Shopper Batch] Customer data in order:", {
+              userId: data.order.user?.id,
+              userName: data.order.user?.name,
+              userEmail: data.order.user?.email,
+              userPhone: data.order.user?.phone,
+              orderedById: data.order.orderedBy?.id,
+              orderedByName: data.order.orderedBy?.name,
+              orderedByEmail: data.order.orderedBy?.email,
+              orderedByPhone: data.order.orderedBy?.phone,
+              customerId: data.order.customerId,
+              shopperId: session?.user?.id
+            });
             setOrder(data.order);
           }
         })
@@ -1251,7 +1305,7 @@ export default function BatchDetails({
           console.error("Error fetching complete order data:", err);
         });
     }
-  }, [order?.id]);
+  }, [order?.id, session?.user?.id]);
 
   if (loading && !order) {
     return (
@@ -1724,10 +1778,10 @@ export default function BatchDetails({
 
                 <div className="mb-3 flex flex-col items-center gap-3 sm:mb-4 sm:flex-row sm:items-start">
                   <div className="h-8 w-8 overflow-hidden rounded-full bg-slate-200 sm:h-12 sm:w-12">
-                    {order.user.profile_picture ? (
+                    {(order as any).orderedBy?.profile_picture || order.user?.profile_picture ? (
                       <Image
-                        src={order.user.profile_picture}
-                        alt={order.user.name}
+                        src={(order as any).orderedBy?.profile_picture || order.user?.profile_picture}
+                        alt={(order as any).orderedBy?.name || order.user?.name || "Customer"}
                         width={48}
                         height={48}
                         className="h-full w-full object-cover"
@@ -1749,10 +1803,10 @@ export default function BatchDetails({
                   </div>
                   <div className="text-center sm:text-left">
                     <h4 className="text-base font-medium text-slate-900 dark:text-slate-100 sm:text-lg">
-                      {order.user.name}
+                      {(order as any).orderedBy?.name || order.user?.name || "Unknown Customer"}
                     </h4>
                     <p className="text-sm text-slate-500 dark:text-slate-400 sm:text-base">
-                      {order.user.phone || "N/A"}
+                      {(order as any).orderedBy?.phone || order.user?.phone || "N/A"}
                     </p>
                   </div>
                 </div>
@@ -1763,8 +1817,8 @@ export default function BatchDetails({
                       Delivery Address
                     </p>
                     <p className="text-sm text-slate-900 dark:text-slate-100 sm:text-base">
-                      {order.address.street}, {order.address.city}
-                      {order.address.postal_code
+                      {order.address?.street || "No street"}, {order.address?.city || "No city"}
+                      {order.address?.postal_code
                         ? `, ${order.address.postal_code}`
                         : ""}
                     </p>
@@ -1775,8 +1829,8 @@ export default function BatchDetails({
                       className="flex items-center rounded-full border border-green-400 px-3 py-1.5 text-xs text-green-600 transition-colors hover:border-green-300 hover:bg-green-50 hover:text-green-700 dark:border-green-700 dark:text-green-400 dark:hover:border-green-600 dark:hover:bg-green-900/20 sm:text-sm"
                       onClick={() =>
                         handleDirectionsClick(
-                          `${order.address.street}, ${order.address.city}${
-                            order.address.postal_code
+                          `${order.address?.street || "No street"}, ${order.address?.city || "No city"}${
+                            order.address?.postal_code
                               ? `, ${order.address.postal_code}`
                               : ""
                           }`
@@ -1796,11 +1850,11 @@ export default function BatchDetails({
                       Directions to Customer
                     </button>
 
-                    {order.user.phone && (
+                    {((order as any).orderedBy?.phone || order.user?.phone) && (
                       <button
                         className="flex items-center rounded-full border border-green-400 px-3 py-1.5 text-xs text-green-600 transition-colors hover:border-green-300 hover:bg-green-50 hover:text-green-700 dark:border-green-700 dark:text-green-400 dark:hover:border-green-600 dark:hover:bg-green-900/20 sm:text-sm"
                         onClick={() =>
-                          (window.location.href = `tel:${order.user.phone}`)
+                          (window.location.href = `tel:${(order as any).orderedBy?.phone || order.user?.phone}`)
                         }
                       >
                         <svg

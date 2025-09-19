@@ -76,11 +76,6 @@ const GET_ORDER_DETAILS = gql`
         email
         phone
         profile_picture
-        orders_aggregate {
-          aggregate {
-            count
-          }
-        }
         Ratings {
           created_at
           customer_id
@@ -216,11 +211,6 @@ export default async function handler(
           email: string;
           phone: string;
           profile_picture: string | null;
-          orders_aggregate: {
-            aggregate: {
-              count: number;
-            };
-          };
           Ratings: Array<{
             created_at: string;
             customer_id: string;
@@ -275,12 +265,17 @@ export default async function handler(
       estimatedDelivery: order.estimatedDelivery
         ? new Date(order.estimatedDelivery).toISOString()
         : null,
-      // Calculate average rating for assignedTo if available
+      // Calculate average rating and order count for assignedTo if available
       assignedTo: order.assignedTo ? {
         ...order.assignedTo,
         rating: order.assignedTo.Ratings.length > 0 
           ? order.assignedTo.Ratings.reduce((sum, rating) => sum + parseFloat(rating.rating), 0) / order.assignedTo.Ratings.length
           : 0,
+        orders_aggregate: {
+          aggregate: {
+            count: order.assignedTo.Ratings.length
+          }
+        }
       } : null,
     };
 
