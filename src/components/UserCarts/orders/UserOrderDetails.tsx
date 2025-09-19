@@ -318,7 +318,7 @@ export default function UserOrderDetails({ order }: UserOrderDetailsProps) {
                   Service Fee
                 </span>
                 <span className="font-medium">
-                  {formatCurrency(order.serviceFee)}
+                  {formatCurrency(order.serviceFee || 0)}
                 </span>
               </div>
               <div className="mb-2 flex justify-between">
@@ -326,7 +326,7 @@ export default function UserOrderDetails({ order }: UserOrderDetailsProps) {
                   Delivery Fee
                 </span>
                 <span className="font-medium">
-                  {formatCurrency(order.deliveryFee)}
+                  {formatCurrency(order.deliveryFee || 0)}
                 </span>
               </div>
               <div className="mt-4 flex justify-between text-lg font-bold">
@@ -376,9 +376,9 @@ export default function UserOrderDetails({ order }: UserOrderDetailsProps) {
                   </svg>
                 </div>
                 <div>
-                  <p className="font-medium">{order.address?.street}</p>
+                  <p className="font-medium">{order.address?.street || "Address not available"}</p>
                   <p className="text-gray-600 dark:text-gray-400">
-                    {order.address?.city}, {order.address?.postal_code}
+                    {order.address?.city || "City"}, {order.address?.postal_code || "Postal Code"}
                   </p>
                 </div>
               </div>
@@ -416,6 +416,9 @@ export default function UserOrderDetails({ order }: UserOrderDetailsProps) {
                   />
                 </div>
                 <h3 className="text-lg font-bold">{order.assignedTo.name}</h3>
+                <p className="mt-1 text-sm text-gray-600 dark:text-gray-400">
+                  {order.assignedTo.phone}
+                </p>
                 <div className="mt-1 flex items-center">
                   <div className="flex">
                     {[...Array(5)].map((_: any, i: number) => (
@@ -423,14 +426,14 @@ export default function UserOrderDetails({ order }: UserOrderDetailsProps) {
                         key={i}
                         viewBox="0 0 24 24"
                         fill={
-                          i < Math.floor(order.assignedTo.rating)
+                          i < Math.floor(order.assignedTo.rating || 0)
                             ? "currentColor"
                             : "none"
                         }
                         stroke="currentColor"
                         strokeWidth="2"
                         className={`h-4 w-4 ${
-                          i < Math.floor(order.assignedTo.rating)
+                          i < Math.floor(order.assignedTo.rating || 0)
                             ? "text-yellow-400"
                             : "text-gray-300"
                         }`}
@@ -440,11 +443,11 @@ export default function UserOrderDetails({ order }: UserOrderDetailsProps) {
                     ))}
                   </div>
                   <span className="ml-1 text-sm text-gray-600 dark:text-gray-400">
-                    {order.assignedTo.rating}
+                    {order.assignedTo.rating || 0}
                   </span>
                 </div>
                 <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
-                  {order.assignedTo.orders.aggregate.count} orders completed
+                  {order.assignedTo.orders_aggregate?.aggregate?.count || 0} orders completed
                 </p>
                 <div className="mt-6 w-full space-y-3">
                   <Button

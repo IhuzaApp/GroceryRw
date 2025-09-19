@@ -309,7 +309,7 @@ export default function UserReelOrderDetails({
                   Service Fee
                 </span>
                 <span className="font-medium">
-                  {formatCurrency(order.service_fee)}
+                  {formatCurrency(order.service_fee || 0)}
                 </span>
               </div>
               <div className="mb-2 flex justify-between">
@@ -317,7 +317,7 @@ export default function UserReelOrderDetails({
                   Delivery Fee
                 </span>
                 <span className="font-medium">
-                  {formatCurrency(order.delivery_fee)}
+                  {formatCurrency(order.delivery_fee || 0)}
                 </span>
               </div>
               {order.discount > 0 && (
@@ -392,10 +392,37 @@ export default function UserReelOrderDetails({
                   {order.assignedTo.name}
                 </h3>
                 <p className="mt-1 text-sm text-gray-600 dark:text-gray-400">
-                  {order.assignedTo.transport_mode}
-                </p>
-                <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
                   {order.assignedTo.phone}
+                </p>
+                <div className="mt-1 flex items-center">
+                  <div className="flex">
+                    {[...Array(5)].map((_: any, i: number) => (
+                      <svg
+                        key={i}
+                        viewBox="0 0 24 24"
+                        fill={
+                          i < Math.floor(order.assignedTo.rating || 0)
+                            ? "currentColor"
+                            : "none"
+                        }
+                        stroke="currentColor"
+                        strokeWidth="2"
+                        className={`h-4 w-4 ${
+                          i < Math.floor(order.assignedTo.rating || 0)
+                            ? "text-yellow-400"
+                            : "text-gray-300"
+                        }`}
+                      >
+                        <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
+                      </svg>
+                    ))}
+                  </div>
+                  <span className="ml-1 text-sm text-gray-600 dark:text-gray-400">
+                    {order.assignedTo.rating || 0}
+                  </span>
+                </div>
+                <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
+                  {order.assignedTo.orders_aggregate?.aggregate?.count || 0} orders completed
                 </p>
                 <div className="mt-6 w-full space-y-3">
                   <Button

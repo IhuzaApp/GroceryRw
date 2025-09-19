@@ -139,16 +139,16 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
       // Clear all localStorage data
       const localStorageKeys = Object.keys(localStorage);
       localStorage.clear();
-      logAuth("AuthContext", "localStorage_cleared", {
-        keys: localStorageKeys,
-      });
+      // logAuth("AuthContext", "localStorage_cleared", {
+      //   keys: localStorageKeys,
+      // });
 
       // Clear all sessionStorage data
       const sessionStorageKeys = Object.keys(sessionStorage);
       sessionStorage.clear();
-      logAuth("AuthContext", "sessionStorage_cleared", {
-        keys: sessionStorageKeys,
-      });
+      // logAuth("AuthContext", "sessionStorage_cleared", {
+      //   keys: sessionStorageKeys,
+      // });
 
       // Clear NextAuth cookies manually
       const cookiesBefore = document.cookie.split(";").map((c) => c.trim());
@@ -163,34 +163,35 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
           window.location.hostname
         }`;
       });
-      logAuth("AuthContext", "cookies_cleared", {
-        cookiesBefore,
-        cookiesAfter: document.cookie.split(";").map((c) => c.trim()),
-      });
+      // logAuth("AuthContext", "cookies_cleared", {
+      //   cookiesBefore,
+      //   cookiesAfter: document.cookie.split(";").map((c) => c.trim()),
+      // });
 
       setIsLoggedIn(false);
       setUser(null);
       setRole("user");
 
-      logAuth("AuthContext", "state_cleared_for_logout", {
-        isLoggedIn: false,
-        role: "user",
-        hasUser: false,
-        timestamp: Date.now(),
-      });
+      // logAuth("AuthContext", "state_cleared_for_logout", {
+      //   isLoggedIn: false,
+      //   role: "user",
+      //   hasUser: false,
+      //   timestamp: Date.now(),
+      // });
 
       await signOut({ redirect: true });
 
-      logAuth("AuthContext", "logout_completed", {
-        signOutCalled: true,
-        timestamp: Date.now(),
-      });
+      // logAuth("AuthContext", "logout_completed", {
+      //   signOutCalled: true,
+      //   timestamp: Date.now(),
+      // });
     } catch (error) {
-      logAuth("AuthContext", "logout_error", {
-        error: error instanceof Error ? error.message : String(error),
-        stack: error instanceof Error ? error.stack : undefined,
-        timestamp: Date.now(),
-      });
+      // logAuth("AuthContext", "logout_error", {
+      //   error: error instanceof Error ? error.message : String(error),
+      //   stack: error instanceof Error ? error.stack : undefined,
+      //   timestamp: Date.now(),
+      // });
+      console.error("Logout error:", error);
     }
   };
 
@@ -202,24 +203,24 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
 
   // Function to refresh the role from the server
   const refreshRole = async () => {
-    logAuth("AuthContext", "refresh_role_started", {
-      currentRole: role,
-      hasSession: !!session,
-      timestamp: Date.now(),
-    });
+    // logAuth("AuthContext", "refresh_role_started", {
+    //   currentRole: role,
+    //   hasSession: !!session,
+    //   timestamp: Date.now(),
+    // });
 
     try {
       const result = await refreshSession();
 
-      logSessionRefresh(1, result.success, result.error);
+      // logSessionRefresh(1, result.success, result.error);
 
       if (result.success && result.user) {
-        logAuth("AuthContext", "refresh_role_success", {
-          oldRole: role,
-          newRole: result.user.role,
-          userData: result.user,
-          timestamp: Date.now(),
-        });
+        // logAuth("AuthContext", "refresh_role_success", {
+        //   oldRole: role,
+        //   newRole: result.user.role,
+        //   userData: result.user,
+        //   timestamp: Date.now(),
+        // });
 
         // Update the session with the new user data
         await update({
@@ -233,27 +234,29 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
         // Update local state
         setRole(result.user.role);
 
-        logRoleSwitch(role, result.user.role, true);
+        // logRoleSwitch(role, result.user.role, true);
       } else {
-        logAuth("AuthContext", "refresh_role_failed", {
-          result,
-          currentRole: role,
-          timestamp: Date.now(),
-        });
+        // logAuth("AuthContext", "refresh_role_failed", {
+        //   result,
+        //   currentRole: role,
+        //   timestamp: Date.now(),
+        // });
+        console.error("Refresh role failed:", result);
       }
     } catch (error) {
-      logAuth("AuthContext", "refresh_role_error", {
-        error: error instanceof Error ? error.message : String(error),
-        stack: error instanceof Error ? error.stack : undefined,
-        currentRole: role,
-        timestamp: Date.now(),
-      });
+      // logAuth("AuthContext", "refresh_role_error", {
+      //   error: error instanceof Error ? error.message : String(error),
+      //   stack: error instanceof Error ? error.stack : undefined,
+      //   currentRole: role,
+      //   timestamp: Date.now(),
+      // });
 
-      logSessionRefresh(
-        1,
-        false,
-        error instanceof Error ? error.message : String(error)
-      );
+      // logSessionRefresh(
+      //   1,
+      //   false,
+      //   error instanceof Error ? error.message : String(error)
+      // );
+      console.error("Refresh role error:", error);
     }
   };
 
