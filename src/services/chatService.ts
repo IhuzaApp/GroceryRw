@@ -44,14 +44,26 @@ export const createConversation = async (
   shopperId: string
 ): Promise<string> => {
   try {
+    console.log("🔍 [Chat Service] Creating conversation:", {
+      orderId,
+      customerId,
+      shopperId
+    });
+
+    // Validate input parameters
+    if (!orderId || !customerId || !shopperId) {
+      throw new Error("Missing required parameters: orderId, customerId, or shopperId");
+    }
+
     // Check if conversation already exists
     const existingConv = await getConversationByOrderId(orderId);
     if (existingConv) {
+      console.log("🔍 [Chat Service] Conversation already exists:", existingConv.id);
       return existingConv.id as string;
     }
 
     // Create new conversation
-    const docRef = await addDoc(collection(db, "chat_conversations"), {
+    const conversationData = {
       orderId,
       customerId,
       shopperId,
@@ -59,12 +71,19 @@ export const createConversation = async (
       lastMessage: "",
       lastMessageTime: serverTimestamp(),
       unreadCount: 0,
-    });
+    };
+    
+    console.log("🔍 [Chat Service] Creating conversation with data:", conversationData);
+    const docRef = await addDoc(collection(db, "chat_conversations"), conversationData);
 
+    console.log("🔍 [Chat Service] Conversation created:", docRef.id);
     return docRef.id;
   } catch (error) {
-    console.error("Error creating conversation:", error);
-    throw error;
+    console.error("❌ [Chat Service] Error creating conversation:", error);
+    if (error instanceof Error) {
+      throw new Error(`Failed to create conversation: ${error.message}`);
+    }
+    throw new Error("Failed to create conversation: Unknown error");
   }
 };
 
@@ -107,12 +126,29 @@ export const addMessage = async (
   image?: string
 ): Promise<string> => {
   try {
+    console.log("🔍 [Chat Service] Adding message:", {
+      conversationId,
+      message,
+      senderId,
+      senderType,
+      image
+    });
+
+    // Validate input parameters
+    if (!conversationId || !message || !senderId || !senderType) {
+      throw new Error("Missing required parameters for message");
+    }
+
+    if (message.trim().length === 0 && !image) {
+      throw new Error("Message cannot be empty");
+    }
+
     // Check if conversation exists
     const convRef = doc(db, "chat_conversations", conversationId);
     const convSnap = await getDoc(convRef);
 
     if (!convSnap.exists()) {
-      throw new Error("Conversation not found");
+      throw new Error(`Conversation not found: ${conversationId}`);
     }
 
     // Add message to conversation
@@ -125,25 +161,29 @@ export const addMessage = async (
     const messageData = {
       senderId,
       senderType,
-      message,
+      message: message.trim(),
       timestamp: serverTimestamp(),
       isRead: false,
       ...(image && { image }),
     };
 
     const docRef = await addDoc(messagesRef, messageData);
+    console.log("🔍 [Chat Service] Message added with ID:", docRef.id);
 
     // Update conversation with last message
     await updateDoc(convRef, {
-      lastMessage: message,
+      lastMessage: message.trim(),
       lastMessageTime: serverTimestamp(),
       unreadCount: convSnap.data().unreadCount + 1,
     });
 
     return docRef.id;
   } catch (error) {
-    console.error("Error adding message:", error);
-    throw error;
+    console.error("❌ [Chat Service] Error adding message:", error);
+    if (error instanceof Error) {
+      throw new Error(`Failed to add message: ${error.message}`);
+    }
+    throw new Error("Failed to add message: Unknown error");
   }
 };
 

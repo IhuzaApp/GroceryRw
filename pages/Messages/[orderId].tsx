@@ -215,7 +215,7 @@ function ChatPage() {
       if (!querySnapshot.empty) {
         // Conversation exists
         const conversationDoc = querySnapshot.docs[0];
-        console.log("Found existing conversation:", conversationDoc.id);
+        console.log("🔍 [Individual Chat] Found existing conversation:", conversationDoc.id);
         setConversationId(conversationDoc.id);
       } else {
         // Create new conversation
@@ -229,9 +229,9 @@ function ChatPage() {
           unreadCount: 0,
         };
 
-        console.log("Creating new conversation:", newConversation);
+        console.log("🔍 [Individual Chat] Creating new conversation:", newConversation);
         const docRef = await addDoc(conversationsRef, newConversation);
-        console.log("Created conversation:", docRef.id);
+        console.log("🔍 [Individual Chat] Created conversation:", docRef.id);
         setConversationId(docRef.id);
       }
     } catch (error) {
@@ -261,7 +261,7 @@ function ChatPage() {
     const unsubscribe = onSnapshot(
       q,
       (snapshot) => {
-        console.log("Messages snapshot received, count:", snapshot.docs.length);
+        console.log("🔍 [Individual Chat] Messages snapshot received, count:", snapshot.docs.length);
 
         const messagesList = snapshot.docs.map((doc) => ({
           id: doc.id,
@@ -273,7 +273,7 @@ function ChatPage() {
               : doc.data().timestamp,
         })) as Message[];
 
-        console.log("Processed messages:", messagesList);
+        console.log("🔍 [Individual Chat] Processed messages:", messagesList);
         setMessages(messagesList);
 
         // Mark messages as read if they were sent to the current user

@@ -42,13 +42,13 @@ interface OrderItem {
   };
 }
 
-interface OrderDetailsType {
+interface BatchOrderDetailsType {
   id: string;
   OrderID: string;
   placedAt: string;
   estimatedDelivery: string;
   deliveryNotes: string;
-  total: number;
+  total: string;
   serviceFee: string;
   deliveryFee: string;
   status: string;
@@ -58,8 +58,26 @@ interface OrderDetailsType {
     id: string;
     name: string;
     email: string;
+    phone: string;
     profile_picture: string;
   };
+  orderedBy: {
+    created_at: string;
+    email: string;
+    gender: string;
+    id: string;
+    is_active: boolean;
+    name: string;
+    password_hash: string;
+    phone: string;
+    profile_picture: string;
+    updated_at: string;
+    role: string;
+  };
+  shop_id: string;
+  shopper_id: string | null;
+  user_id: string;
+  voucher_code: string | null;
   shop: {
     id: string;
     name: string;
@@ -101,7 +119,7 @@ interface OrderDetailsType {
 }
 
 interface BatchDetailsPageProps {
-  orderData: OrderDetailsType | null;
+  orderData: BatchOrderDetailsType | null;
   error: string | null;
 }
 
@@ -200,10 +218,18 @@ function BatchDetailsPage({ orderData, error }: BatchDetailsPageProps) {
     }
   };
 
+  // Transform the data to match BatchDetails expected format
+  const transformedOrderData = orderData ? {
+    ...orderData,
+    total: parseFloat(orderData.total), // Convert string to number
+    orderedBy: orderData.orderedBy,
+    customerId: orderData.orderedBy?.id, // Customer is ALWAYS from orderedBy
+  } : null;
+
   return (
     <ShopperLayout>
       <BatchDetails
-        orderData={orderData}
+        orderData={transformedOrderData as any}
         error={error}
         onUpdateStatus={handleUpdateStatus}
       />
@@ -252,12 +278,31 @@ export const getServerSideProps: GetServerSideProps<
         status
         deliveryPhotoUrl: delivery_photo_url
         discount
-        user: userByUserId {
+        user: User {
           id
           name
           email
+          phone
           profile_picture
         }
+        orderedBy {
+          created_at
+          email
+          gender
+          id
+          is_active
+          name
+          password_hash
+          phone
+          profile_picture
+          updated_at
+          role
+        }
+        shop_id
+        shopper_id
+        total
+        user_id
+        voucher_code
         shop: Shop {
           id
           name
@@ -402,7 +447,7 @@ export const getServerSideProps: GetServerSideProps<
     // Check if the user is authorized to view this order
     // User can view if they are assigned to the order or if they are the customer
     const isAssignedShopper = order.assignedTo?.id === session.user.id;
-    const isCustomer = order.user?.id === session.user.id;
+    const isCustomer = order.orderedBy?.id === session.user.id;
 
     if (!isAssignedShopper && !isCustomer) {
       return {
@@ -448,3 +493,5 @@ export const getServerSideProps: GetServerSideProps<
 };
 
 export default BatchDetailsPage;
+
+
