@@ -23,6 +23,7 @@ import {
   getDocs,
 } from "firebase/firestore";
 import { db } from "../../lib/firebase";
+import soundNotification from "../../utils/soundNotification";
 
 // Helper to format date for messages
 function formatMessageDate(timestamp: any) {
@@ -218,6 +219,22 @@ const ShopperChatDrawer: React.FC<ShopperChatDrawerProps> = ({
         })) as Message[];
 
         console.log("🔍 [Shopper Chat] Processed messages:", messagesList);
+        
+        // Check for new unread messages from customer and play sound
+        const previousMessageCount = messages.length;
+        const newMessages = messagesList.slice(previousMessageCount);
+        const newUnreadCustomerMessages = newMessages.filter(
+          (message) => 
+            message.senderType === "customer" && 
+            message.senderId !== session?.user?.id &&
+            !message.read
+        );
+        
+        if (newUnreadCustomerMessages.length > 0) {
+          console.log("🔊 [Shopper Chat] New unread message from customer, playing notification sound");
+          soundNotification.play();
+        }
+        
         setMessages(messagesList);
 
         // Mark messages as read if they were sent to the current user (shopper)
