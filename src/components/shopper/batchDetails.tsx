@@ -28,7 +28,7 @@ import PaymentModal from "./PaymentModal";
 import DeliveryConfirmationModal from "./DeliveryConfirmationModal";
 import { useChat } from "../../context/ChatContext";
 import { isMobileDevice } from "../../lib/formatters";
-import ChatDrawer from "../chat/ChatDrawer";
+import ShopperChatDrawer from "../chat/ShopperChatDrawer";
 import {
   recordPaymentTransactions,
   generateInvoice,
@@ -1408,21 +1408,20 @@ export default function BatchDetails({
         orderType={order?.orderType || "regular"}
       />
 
-      {/* Chat Drawer - will only show on desktop when chat is open */}
+      {/* Shopper Chat Drawer - will only show on desktop when chat is open */}
       {isDrawerOpen &&
         currentChatId === order?.id &&
         order.status !== "delivered" && (
-          <ChatDrawer
+          <ShopperChatDrawer
+            orderId={order.id}
+            customer={{
+              id: order.orderedBy?.id || order.customerId || "",
+              name: order.orderedBy?.name || order.user?.name || "Customer",
+              avatar: order.orderedBy?.profile_picture || order.user?.profile_picture || "/placeholder.svg",
+              phone: order.orderedBy?.phone || order.user?.phone
+            }}
             isOpen={isDrawerOpen}
             onClose={closeChat}
-            order={order}
-            shopper={session?.user}
-            messages={getMessages(order.id) as any}
-            newMessage={newMessage}
-            setNewMessage={setNewMessage}
-            handleSendMessage={handleSendMessage}
-            isSending={isSending}
-            currentUserId={session?.user?.id || ""}
           />
         )}
 
