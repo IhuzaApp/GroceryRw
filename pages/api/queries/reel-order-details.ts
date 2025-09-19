@@ -52,6 +52,29 @@ const GET_REEL_ORDER_DETAILS = gql`
         email
         phone
       }
+      Shoppers {
+        id
+        name
+        email
+        phone
+        Ratings {
+          created_at
+          customer_id
+          delivery_experience
+          id
+          order_id
+          packaging_quality
+          professionalism
+          rating
+          reel_order_id
+          review
+          reviewed_at
+          shopper_id
+          updated_at
+        }
+        gender
+        profile_picture
+      }
     }
   }
 `;
@@ -129,6 +152,29 @@ export default async function handler(
           email: string;
           phone: string;
         };
+        Shoppers: {
+          id: string;
+          name: string;
+          email: string;
+          phone: string;
+          gender: string | null;
+          profile_picture: string | null;
+          Ratings: Array<{
+            created_at: string;
+            customer_id: string;
+            delivery_experience: string;
+            id: string;
+            order_id: string | null;
+            packaging_quality: string;
+            professionalism: string;
+            rating: string;
+            reel_order_id: string | null;
+            review: string | null;
+            reviewed_at: string | null;
+            shopper_id: string;
+            updated_at: string;
+          }>;
+        } | null;
       } | null;
     }>(GET_REEL_ORDER_DETAILS, { order_id: id });
 
@@ -162,12 +208,22 @@ export default async function handler(
       found: orderData.found,
       orderType: "reel" as const,
       reel: orderData.Reel,
-      assignedTo: orderData.User
+      assignedTo: orderData.Shoppers
         ? {
-            id: orderData.User.id,
-            name: orderData.User.name,
-            phone: orderData.User.phone,
-            email: orderData.User.email,
+            id: orderData.Shoppers.id,
+            name: orderData.Shoppers.name,
+            phone: orderData.Shoppers.phone,
+            email: orderData.Shoppers.email,
+            profile_photo: orderData.Shoppers.profile_picture,
+            gender: orderData.Shoppers.gender,
+            rating: orderData.Shoppers.Ratings.length > 0 
+              ? orderData.Shoppers.Ratings.reduce((sum, rating) => sum + parseFloat(rating.rating), 0) / orderData.Shoppers.Ratings.length
+              : 0,
+            orders_aggregate: {
+              aggregate: {
+                count: orderData.Shoppers.Ratings.length
+              }
+            },
           }
         : null,
     };

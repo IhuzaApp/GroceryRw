@@ -11,6 +11,7 @@ export default function UserLogin() {
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [rememberMe, setRememberMe] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
   // capture redirect param if any
   const { redirect } = router.query as { redirect?: string };
@@ -18,22 +19,50 @@ export default function UserLogin() {
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    // Validation checks
+    if (!identifier.trim()) {
+      toast.error("Please enter your email, username, or phone number");
+      return;
+    }
+    if (!password.trim()) {
+      toast.error("Please enter your password");
+      return;
+    }
+    
+    setIsLoading(true);
     try {
       const res = await signIn("credentials", {
         redirect: false,
-        identifier,
-        password,
+        identifier: identifier.trim(),
+        password: password.trim(),
       });
+      
       if (res?.error) {
-        toast.error(res.error);
-      } else {
+        // Handle specific error messages
+        if (res.error === "CredentialsSignin") {
+          toast.error("Invalid email, username, phone, or password");
+        } else if (res.error === "No user found") {
+          toast.error("No account found with this information");
+        } else if (res.error === "Invalid credentials") {
+          toast.error("Invalid password");
+        } else {
+          toast.error(res.error);
+        }
+      } else if (res?.ok) {
         // mark as logged in in AuthContext
         login();
         toast.success("Logged in successfully!");
-        router.push(redirect || "/");
+        
+        // Redirect to the intended page or home
+        const redirectUrl = redirect || "/";
+        router.push(redirectUrl);
       }
-    } catch (err) {
-      toast.error("An unexpected error occurred.");
+    } catch (err: any) {
+      console.error("Login error:", err);
+      toast.error("An unexpected error occurred. Please try again.");
+    } finally {
+      setIsLoading(false);
     }
   };
   return (
@@ -119,7 +148,7 @@ export default function UserLogin() {
           </Checkbox>
         </div>
         <Link
-          href="/auth/forgot-password"
+          href="/Auth/ForgotPassword"
           className="text-sm text-green-600 hover:text-green-800"
         >
           Forgot password?
@@ -130,8 +159,10 @@ export default function UserLogin() {
         appearance="primary"
         type="submit"
         className="mb-4 w-full rounded-md bg-green-500 py-3 text-white hover:bg-green-600"
+        disabled={isLoading}
+        loading={isLoading}
       >
-        Sign in
+        {isLoading ? "Signing in..." : "Sign in"}
       </Button>
 
       <Button

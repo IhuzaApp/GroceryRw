@@ -5,7 +5,7 @@ import { gql } from "graphql-request";
 // GraphQL query to fetch a single order with nested details
 const GET_ORDER_DETAILS = gql`
   query GetOrderDetails($id: uuid!) {
-    Orders(where: { id: { _eq: $id } }, limit: 1) {
+    Orders(where: {id: {_eq: $id}}, limit: 1) {
       id
       OrderID
       placedAt: created_at
@@ -73,7 +73,29 @@ const GET_ORDER_DETAILS = gql`
       assignedTo: User {
         id
         name
+        email
+        phone
         profile_picture
+        orders_aggregate {
+          aggregate {
+            count
+          }
+        }
+        Ratings {
+          created_at
+          customer_id
+          delivery_experience
+          id
+          order_id
+          packaging_quality
+          professionalism
+          rating
+          reel_order_id
+          review
+          reviewed_at
+          shopper_id
+          updated_at
+        }
       }
       address: Address {
         id
@@ -122,7 +144,115 @@ export default async function handler(
       throw new Error("Hasura client is not initialized");
     }
 
-    const data = await hasuraClient.request<{ Orders: any[] }>(
+    const data = await hasuraClient.request<{ 
+      Orders: Array<{
+        id: string;
+        OrderID: string;
+        placedAt: string;
+        estimatedDelivery: string | null;
+        deliveryNotes: string | null;
+        total: string;
+        serviceFee: string;
+        deliveryFee: string;
+        status: string;
+        deliveryPhotoUrl: string | null;
+        discount: string | null;
+        combinedOrderId: string | null;
+        voucherCode: string | null;
+        shop_id: string;
+        user: {
+          id: string;
+          name: string;
+          email: string;
+          phone: string;
+          profile_picture: string | null;
+        };
+        shop: {
+          id: string;
+          name: string;
+          address: string;
+          image: string | null;
+          phone: string;
+          latitude: number;
+          longitude: number;
+          operating_hours: string | null;
+        };
+        Order_Items: Array<{
+          id: string;
+          product_id: string;
+          quantity: number;
+          price: string;
+          product: {
+            id: string;
+            price: string;
+            final_price: string;
+            measurement_unit: string;
+            category: string;
+            quantity: number;
+            sku: string;
+            image: string | null;
+            productName_id: string;
+            ProductName: {
+              barcode: string | null;
+              create_at: string;
+              description: string | null;
+              id: string;
+              image: string | null;
+              name: string;
+              sku: string | null;
+            };
+            created_at: string;
+            is_active: boolean;
+            reorder_point: number;
+            shop_id: string;
+            supplier: string | null;
+            updated_at: string;
+          };
+          order_id: string;
+        }>;
+        assignedTo: {
+          id: string;
+          name: string;
+          email: string;
+          phone: string;
+          profile_picture: string | null;
+          orders_aggregate: {
+            aggregate: {
+              count: number;
+            };
+          };
+          Ratings: Array<{
+            created_at: string;
+            customer_id: string;
+            delivery_experience: string;
+            id: string;
+            order_id: string | null;
+            packaging_quality: string;
+            professionalism: string;
+            rating: string;
+            reel_order_id: string | null;
+            review: string | null;
+            reviewed_at: string | null;
+            shopper_id: string;
+            updated_at: string;
+          }>;
+        } | null;
+        address: {
+          id: string;
+          street: string;
+          city: string;
+          postal_code: string;
+          latitude: number;
+          longitude: number;
+          is_default: boolean;
+        } | null;
+        delivery_address_id: string | null;
+        found: boolean;
+        shopper_id: string | null;
+        updated_at: string;
+        user_id: string;
+      }>;
+    }>(
       GET_ORDER_DETAILS,
       { id: orderId }
     );
@@ -145,6 +275,13 @@ export default async function handler(
       estimatedDelivery: order.estimatedDelivery
         ? new Date(order.estimatedDelivery).toISOString()
         : null,
+      // Calculate average rating for assignedTo if available
+      assignedTo: order.assignedTo ? {
+        ...order.assignedTo,
+        rating: order.assignedTo.Ratings.length > 0 
+          ? order.assignedTo.Ratings.reduce((sum, rating) => sum + parseFloat(rating.rating), 0) / order.assignedTo.Ratings.length
+          : 0,
+      } : null,
     };
 
     res.status(200).json({ order: formattedOrder });
