@@ -93,12 +93,12 @@ function ChatPage() {
         if (data.order) {
           setOrder(data.order);
 
-          // Set customer data - user data is in data.order.user object
+          // Set customer data - customer is ALWAYS from orderedBy
           const customerDataToSet = {
-            id: data.order.user?.id,
-            name: data.order.user?.name || "Customer",
+            id: data.order.orderedBy?.id,
+            name: data.order.orderedBy?.name || "Customer",
             avatar:
-              data.order.user?.profile_picture ||
+              data.order.orderedBy?.profile_picture ||
               "/placeholder.svg?height=80&width=80",
             lastSeen: "Online now",
           };

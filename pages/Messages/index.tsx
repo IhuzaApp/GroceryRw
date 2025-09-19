@@ -21,7 +21,7 @@ import { useRouter } from "next/router";
 import Link from "next/link";
 import { Button, Loader, Panel, Placeholder, Avatar, Input } from "rsuite";
 import { formatCurrency } from "../../src/lib/formatCurrency";
-import ChatDrawer from "../../src/components/chat/ChatDrawer";
+import CustomerChatDrawer from "../../src/components/chat/CustomerChatDrawer";
 import { isMobileDevice } from "../../src/lib/formatters";
 import { AuthGuard } from "../../src/components/AuthGuard";
 
@@ -108,14 +108,14 @@ function MessagesPage() {
         try {
           setLoading(true);
 
-          // Get conversations where the current user is the customer
+          // Get conversations where the current user is either the customer or shopper
           const conversationsRef = collection(db, "chat_conversations");
 
-          // Option 1: Remove the orderBy to avoid needing the composite index
+          // Query for conversations where user is either customer or shopper
           const q = query(
             conversationsRef,
             where("customerId", "==", userId)
-            // orderBy removed to avoid needing the composite index
+            // Note: We might need to also query for shopperId, but for now let's focus on customerId
           );
 
           console.log("🔍 [User Messages] Query setup:", {
@@ -354,14 +354,32 @@ function MessagesPage() {
           const shopperData = shopperDoc.data();
 
           // Set order with shopper data
-          const order = orders[orderId];
+          let order = orders[orderId];
+          
+          // If order doesn't have assignedTo data, fetch fresh data
+          if (!order?.assignedTo) {
+            try {
+              const res = await fetch(`/api/queries/orderDetails?id=${orderId}`);
+              if (res.ok) {
+                const data = await res.json();
+                order = data.order;
+              }
+            } catch (error) {
+              console.error("Error fetching fresh order data:", error);
+            }
+          }
+          
+          const shopperObject = {
+            id: conversationData.shopperId,
+            name: shopperData?.name || order?.assignedTo?.name || "Shopper",
+            avatar: shopperData?.avatar || order?.assignedTo?.profile_picture || null,
+            phone: shopperData?.phone || order?.assignedTo?.phone,
+          };
+          
+          
           setSelectedOrder({
             ...order,
-            shopper: {
-              id: conversationData.shopperId,
-              name: shopperData?.name || "Shopper",
-              avatar: shopperData?.avatar || null,
-            },
+            shopper: shopperObject,
           });
           setIsDrawerOpen(true);
         }
@@ -692,19 +710,18 @@ function MessagesPage() {
           </div>
         </div>
 
-        {/* Chat Drawer for Desktop */}
-        {selectedOrder && (
-          <ChatDrawer
+        {/* Customer Chat Drawer for Desktop */}
+        {selectedOrder && selectedOrder.shopper && (
+          <CustomerChatDrawer
+            orderId={selectedOrder.id}
+            shopper={{
+              id: selectedOrder.shopper.id,
+              name: selectedOrder.shopper.name,
+              avatar: selectedOrder.shopper.avatar,
+              phone: selectedOrder.shopper.phone
+            }}
             isOpen={isDrawerOpen}
             onClose={() => setIsDrawerOpen(false)}
-            order={selectedOrder}
-            shopper={selectedOrder.shopper}
-            messages={messages}
-            newMessage={newMessage}
-            setNewMessage={setNewMessage}
-            handleSendMessage={handleSendMessage}
-            isSending={isSending}
-            currentUserId={session?.user?.id}
           />
         )}
       </RootLayout>

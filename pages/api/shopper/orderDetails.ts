@@ -70,6 +70,13 @@ interface OrderDetailsResponse {
       updated_at: string;
       role: string;
     } | null;
+    assignedTo: {
+      id: string;
+      name: string;
+      email: string;
+      phone: string;
+      profile_picture: string;
+    } | null;
     shop_id: string;
     shopper_id: string | null;
     total: string;
@@ -153,6 +160,13 @@ const GET_ORDER_DETAILS = gql`
         updated_at
         role
       }
+      assignedTo: User {
+        id
+        name
+        email
+        phone
+        profile_picture
+      }
       shop_id
       shopper_id
       total
@@ -192,6 +206,13 @@ const GET_REEL_ORDER_DETAILS = gql`
         }
       }
       user: User {
+        id
+        name
+        email
+        phone
+        profile_picture
+      }
+      assignedTo: User {
         id
         name
         email
@@ -360,6 +381,7 @@ export default async function handler(
         estimatedEarnings: totalEarnings,
         user: orderData.user, // Include user data
         orderedBy: orderData.orderedBy, // Include orderedBy data (actual customer)
+        assignedTo: orderData.assignedTo, // Include assignedTo data (shopper)
         customerId: orderData.orderedBy?.id, // Customer is ALWAYS from orderedBy
       };
     } else {
@@ -412,6 +434,7 @@ export default async function handler(
         customerName: orderData.user?.name,
         customerPhone: orderData.user?.phone,
         user: orderData.user, // Include full user data
+        assignedTo: orderData.assignedTo, // Include assignedTo data (shopper)
       };
     }
 

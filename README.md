@@ -6650,7 +6650,7 @@ interface Message {
   - Customer address display in header
   - Bottom padding for mobile navigation
 
-### 2. Chat Drawer (`src/components/chat/ChatDrawer.tsx`)
+### 2. Chat Drawers (`src/components/chat/`)
 
 - **Purpose**: Slide-out chat interface for desktop
 - **Features**:
