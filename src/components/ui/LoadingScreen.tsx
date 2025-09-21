@@ -68,7 +68,7 @@ const LoadingScreen: React.FC<LoadingScreenProps> = ({
     <div className="flex h-screen flex-col items-center justify-center bg-gradient-to-br from-green-50 via-white to-green-100 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
       {/* Background Pattern */}
       <div className="absolute inset-0 overflow-hidden">
-        <div className="absolute -top-40 -right-40 h-80 w-80 rounded-full bg-green-200/20 dark:bg-green-800/20"></div>
+        <div className="absolute -right-40 -top-40 h-80 w-80 rounded-full bg-green-200/20 dark:bg-green-800/20"></div>
         <div className="absolute -bottom-40 -left-40 h-80 w-80 rounded-full bg-green-300/20 dark:bg-green-700/20"></div>
       </div>
 
@@ -76,9 +76,9 @@ const LoadingScreen: React.FC<LoadingScreenProps> = ({
       <div className="relative z-10 flex flex-col items-center">
         {/* Logo with Animation */}
         <div className="mb-8 transform transition-all duration-500 hover:scale-105">
-          <img 
-            src="/assets/logos/PlasLogo.svg" 
-            alt="Plasa Logo" 
+          <img
+            src="/assets/logos/PlasLogo.svg"
+            alt="Plasa Logo"
             className="h-20 w-auto drop-shadow-lg"
           />
         </div>
@@ -88,7 +88,7 @@ const LoadingScreen: React.FC<LoadingScreenProps> = ({
           {/* Animated Spinner */}
           <div className="relative">
             <div className="h-16 w-16 animate-spin rounded-full border-4 border-green-200 dark:border-green-800"></div>
-            <div className="absolute top-0 left-0 h-16 w-16 animate-spin rounded-full border-4 border-transparent border-t-green-500"></div>
+            <div className="absolute left-0 top-0 h-16 w-16 animate-spin rounded-full border-4 border-transparent border-t-green-500"></div>
           </div>
 
           {/* Text Content */}
@@ -96,7 +96,7 @@ const LoadingScreen: React.FC<LoadingScreenProps> = ({
             <h2 className="mb-3 text-2xl font-bold text-gray-800 dark:text-white">
               Setting up your experience
             </h2>
-            <p className="text-lg text-gray-600 dark:text-gray-300 animate-pulse">
+            <p className="animate-pulse text-lg text-gray-600 dark:text-gray-300">
               {loadingMessage}
             </p>
           </div>
@@ -113,7 +113,7 @@ const LoadingScreen: React.FC<LoadingScreenProps> = ({
                   className="h-full rounded-full bg-gradient-to-r from-green-400 to-green-600 shadow-lg transition-all duration-500 ease-out"
                   style={{ width: `${loadingProgress}%` }}
                 >
-                  <div className="h-full w-full bg-gradient-to-r from-transparent via-white/30 to-transparent animate-pulse"></div>
+                  <div className="h-full w-full animate-pulse bg-gradient-to-r from-transparent via-white/30 to-transparent"></div>
                 </div>
               </div>
             </div>
@@ -123,9 +123,18 @@ const LoadingScreen: React.FC<LoadingScreenProps> = ({
         {/* Loading Dots */}
         {showBouncingDots && (
           <div className="flex space-x-2">
-            <div className="h-2 w-2 animate-bounce rounded-full bg-green-500" style={{ animationDelay: '0ms' }}></div>
-            <div className="h-2 w-2 animate-bounce rounded-full bg-green-500" style={{ animationDelay: '150ms' }}></div>
-            <div className="h-2 w-2 animate-bounce rounded-full bg-green-500" style={{ animationDelay: '300ms' }}></div>
+            <div
+              className="h-2 w-2 animate-bounce rounded-full bg-green-500"
+              style={{ animationDelay: "0ms" }}
+            ></div>
+            <div
+              className="h-2 w-2 animate-bounce rounded-full bg-green-500"
+              style={{ animationDelay: "150ms" }}
+            ></div>
+            <div
+              className="h-2 w-2 animate-bounce rounded-full bg-green-500"
+              style={{ animationDelay: "300ms" }}
+            ></div>
           </div>
         )}
       </div>

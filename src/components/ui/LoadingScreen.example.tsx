@@ -9,10 +9,10 @@ const LoadingScreenExample = () => {
   const handleStartLoading = () => {
     setShowLoading(true);
     setProgress(0);
-    
+
     // Simulate progress
     const interval = setInterval(() => {
-      setProgress(prev => {
+      setProgress((prev) => {
         if (prev >= 100) {
           clearInterval(interval);
           setTimeout(() => setShowLoading(false), 1000);
