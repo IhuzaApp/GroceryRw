@@ -439,18 +439,7 @@ export default function ShopperSidebar() {
                       : "text-gray-700 hover:bg-gray-100 hover:shadow-md"
                   }`}
                 >
-                  <div
-                    className={`mr-3 rounded-md p-1.5 ${
-                      isActive("/") &&
-                      !isActive("/Plasa/active-batches") &&
-                      !isActive("/Plasa/Earnings") &&
-                      !isActive("/Plasa/Settings")
-                        ? "bg-white/20"
-                        : theme === "dark"
-                        ? "bg-gray-700"
-                        : "bg-gray-100"
-                    }`}
-                  >
+                  <div className="mr-3 p-1.5">
                     <svg
                       viewBox="0 0 24 24"
                       fill="none"
@@ -479,15 +468,7 @@ export default function ShopperSidebar() {
                       : "text-gray-700 hover:bg-gray-100 hover:shadow-md"
                   }`}
                 >
-                  <div
-                    className={`mr-3 rounded-md p-1.5 ${
-                      isActive("/Plasa/active-batches")
-                        ? "bg-white/20"
-                        : theme === "dark"
-                        ? "bg-gray-700"
-                        : "bg-gray-100"
-                    }`}
-                  >
+                  <div className="mr-3 p-1.5">
                     <svg
                       viewBox="0 0 24 24"
                       fill="none"
@@ -519,15 +500,7 @@ export default function ShopperSidebar() {
                   }`}
                 >
                   <div className="flex items-center">
-                    <div
-                      className={`mr-3 rounded-md p-1.5 ${
-                        isActive("/Plasa/Earnings")
-                          ? "bg-white/20"
-                          : theme === "dark"
-                          ? "bg-gray-700"
-                          : "bg-gray-100"
-                      }`}
-                    >
+                    <div className="mr-3 p-1.5">
                       <svg
                         viewBox="0 0 24 24"
                         fill="none"
@@ -581,15 +554,7 @@ export default function ShopperSidebar() {
                       : "text-gray-700 hover:bg-gray-100 hover:shadow-md"
                   }`}
                 >
-                  <div
-                    className={`mr-3 rounded-md p-1.5 relative ${
-                      isActive("/Plasa/chat")
-                        ? "bg-white/20"
-                        : theme === "dark"
-                        ? "bg-gray-700"
-                        : "bg-gray-100"
-                    }`}
-                  >
+                  <div className="mr-3 p-1.5 relative">
                     <svg
                       viewBox="0 0 24 24"
                       fill="none"
@@ -620,15 +585,7 @@ export default function ShopperSidebar() {
                       : "text-gray-700 hover:bg-gray-100 hover:shadow-md"
                   }`}
                 >
-                  <div
-                    className={`mr-3 rounded-md p-1.5 ${
-                      isActive("/Plasa/invoices")
-                        ? "bg-white/20"
-                        : theme === "dark"
-                        ? "bg-gray-700"
-                        : "bg-gray-100"
-                    }`}
-                  >
+                  <div className="mr-3 p-1.5">
                     <svg
                       viewBox="0 0 24 24"
                       fill="none"
@@ -667,15 +624,7 @@ export default function ShopperSidebar() {
                     : "text-gray-700 hover:bg-gray-100 hover:shadow-md"
                 }`}
               >
-                <div
-                  className={`mr-3 rounded-md p-1.5 ${
-                    isActive("/Plasa/ShopperProfile")
-                      ? "bg-white/20"
-                      : theme === "dark"
-                      ? "bg-gray-700"
-                      : "bg-gray-100"
-                  }`}
-                >
+                <div className="mr-3 p-1.5">
                   <svg
                     viewBox="0 0 24 24"
                     fill="none"
@@ -702,15 +651,7 @@ export default function ShopperSidebar() {
                     : "text-gray-700 hover:bg-gray-100 hover:shadow-md"
                 }`}
               >
-                <div
-                  className={`mr-3 rounded-md p-1.5 ${
-                    isActive("/Plasa/Settings")
-                      ? "bg-white/20"
-                      : theme === "dark"
-                      ? "bg-gray-700"
-                      : "bg-gray-100"
-                  }`}
-                >
+                <div className="mr-3 p-1.5">
                   <svg
                     viewBox="0 0 24 24"
                     fill="none"
@@ -733,11 +674,7 @@ export default function ShopperSidebar() {
                   : "text-gray-700 hover:bg-gray-100 hover:shadow-md"
               }`}
             >
-              <div
-                className={`mr-3 rounded-md p-1.5 ${
-                  theme === "dark" ? "bg-gray-700" : "bg-gray-100"
-                }`}
-              >
+              <div className="mr-3 p-1.5">
                 <svg
                   viewBox="0 0 24 24"
                   fill="none"
@@ -762,11 +699,7 @@ export default function ShopperSidebar() {
                   : "text-gray-700 hover:bg-red-50 hover:text-red-600 hover:shadow-md"
               }`}
             >
-              <div
-                className={`mr-3 rounded-md p-1.5 ${
-                  theme === "dark" ? "bg-gray-700" : "bg-gray-100"
-                }`}
-              >
+              <div className="mr-3 p-1.5">
                 <svg
                   viewBox="0 0 24 24"
                   fill="none"
@@ -817,12 +750,8 @@ export default function ShopperSidebar() {
                   ></div>
                 )}
 
-                {/* Icon with enhanced styling */}
-                <div
-                  className={`rounded-lg p-2 transition-all duration-300 ${
-                    theme === "dark" ? "bg-gray-800/50" : "bg-gray-100/50"
-                  }`}
-                >
+                {/* Icon */}
+                <div className="p-2">
                   {React.cloneElement(item.icon, {
                     className: `h-5 w-5 transition-all duration-300 ${
                       isActive(item.path) && item.condition
