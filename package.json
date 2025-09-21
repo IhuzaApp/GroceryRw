@@ -8,7 +8,9 @@
     "lint": "next lint",
     "codegen": "graphql-codegen --config codegen.yml -r dotenv/config",
     "telegram:setup": "node scripts/setup-telegram-webhook.js",
-    "dev:full": "node scripts/dev-with-telegram.js"
+    "dev:full": "node scripts/dev-with-telegram.js",
+    "cleanup:logs": "node scripts/cleanup-logs.js",
+    "cleanup:logs:prod": "API_BASE_URL=https://your-domain.vercel.app node scripts/cleanup-logs.js"
   },
   "dependencies": {
     "@apollo/client": "^3.13.8",
