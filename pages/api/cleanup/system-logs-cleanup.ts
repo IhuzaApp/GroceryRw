@@ -11,9 +11,7 @@ interface DeleteSystemLogsResponse {
 const DELETE_OLD_SYSTEM_LOGS = gql`
   mutation DeleteOldSystemLogs {
     delete_System_Logs(
-      where: {
-        time: { _lt: "now() - interval '24 hours'" }
-      }
+      where: { time: { _lt: "now() - interval '24 hours'" } }
     ) {
       affected_rows
     }
@@ -23,9 +21,7 @@ const DELETE_OLD_SYSTEM_LOGS = gql`
 const GET_OLD_LOGS_COUNT = gql`
   query GetOldLogsCount {
     System_Logs_aggregate(
-      where: {
-        time: { _lt: "now() - interval '24 hours'" }
-      }
+      where: { time: { _lt: "now() - interval '24 hours'" } }
     ) {
       aggregate {
         count
@@ -53,7 +49,7 @@ export async function cleanupOldSystemLogs() {
       return {
         success: true,
         deletedCount: 0,
-        message: "No old logs found to delete"
+        message: "No old logs found to delete",
       };
     }
 
@@ -67,14 +63,14 @@ export async function cleanupOldSystemLogs() {
     return {
       success: true,
       deletedCount,
-      message: `Successfully deleted ${deletedCount} logs older than 24 hours`
+      message: `Successfully deleted ${deletedCount} logs older than 24 hours`,
     };
   } catch (error) {
     console.error("Failed to cleanup old system logs:", error);
     return {
       success: false,
       deletedCount: 0,
-      error: error instanceof Error ? error.message : "Unknown error"
+      error: error instanceof Error ? error.message : "Unknown error",
     };
   }
 }
@@ -91,26 +87,26 @@ export default async function handler(
   // Optional: Add authentication/authorization here
   const authHeader = req.headers.authorization;
   const expectedToken = process.env.CLEANUP_API_TOKEN;
-  
+
   if (expectedToken && authHeader !== `Bearer ${expectedToken}`) {
     return res.status(401).json({ error: "Unauthorized" });
   }
 
   try {
     const result = await cleanupOldSystemLogs();
-    
+
     if (result.success) {
       return res.status(200).json({
         success: true,
         deletedCount: result.deletedCount,
         message: result.message,
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
       });
     } else {
       return res.status(500).json({
         success: false,
         error: result.error,
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
       });
     }
   } catch (error) {
@@ -118,7 +114,7 @@ export default async function handler(
       success: false,
       error: "Failed to cleanup system logs",
       details: error instanceof Error ? error.message : "Unknown error",
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toISOString(),
     });
   }
 }

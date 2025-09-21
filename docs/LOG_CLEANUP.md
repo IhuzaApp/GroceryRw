@@ -9,17 +9,20 @@ The system automatically deletes system logs older than 24 hours to maintain opt
 ## Components
 
 ### 1. API Endpoint
+
 - **File**: `pages/api/cleanup/system-logs-cleanup.ts`
 - **Method**: POST
 - **Purpose**: Deletes logs older than 24 hours
 - **Authentication**: Optional (via `CLEANUP_API_TOKEN`)
 
 ### 2. Cleanup Script
+
 - **File**: `scripts/cleanup-logs.js`
 - **Purpose**: Standalone script for manual cleanup
 - **Usage**: Can be run manually or scheduled as cron job
 
 ### 3. Vercel Cron Job
+
 - **Schedule**: Daily at 2:00 AM UTC (`0 2 * * *`)
 - **Purpose**: Automatic cleanup in production
 - **Configuration**: Defined in `vercel.json`
@@ -29,6 +32,7 @@ The system automatically deletes system logs older than 24 hours to maintain opt
 ### Manual Cleanup
 
 #### Local Development
+
 ```bash
 # Run cleanup script locally
 npm run cleanup:logs
@@ -38,6 +42,7 @@ API_BASE_URL=http://localhost:3000 npm run cleanup:logs
 ```
 
 #### Production
+
 ```bash
 # Run cleanup script against production
 npm run cleanup:logs:prod
@@ -49,6 +54,7 @@ API_BASE_URL=https://your-domain.vercel.app npm run cleanup:logs
 ### API Endpoint
 
 #### Direct API Call
+
 ```bash
 # Local
 curl -X POST http://localhost:3000/api/cleanup/system-logs-cleanup
@@ -59,6 +65,7 @@ curl -X POST https://your-domain.vercel.app/api/cleanup/system-logs-cleanup \
 ```
 
 #### Response Format
+
 ```json
 {
   "success": true,
@@ -72,10 +79,10 @@ curl -X POST https://your-domain.vercel.app/api/cleanup/system-logs-cleanup \
 
 ### Environment Variables
 
-| Variable | Description | Required | Default |
-|----------|-------------|----------|---------|
-| `CLEANUP_API_TOKEN` | Authentication token for API | No | None |
-| `API_BASE_URL` | Base URL for API calls | No | `http://localhost:3000` |
+| Variable            | Description                  | Required | Default                 |
+| ------------------- | ---------------------------- | -------- | ----------------------- |
+| `CLEANUP_API_TOKEN` | Authentication token for API | No       | None                    |
+| `API_BASE_URL`      | Base URL for API calls       | No       | `http://localhost:3000` |
 
 ### Vercel Configuration
 
@@ -119,11 +126,13 @@ The system handles various error scenarios:
 ## Database Impact
 
 ### Before Cleanup
+
 - **Logs Table**: Contains all logs (potentially millions)
 - **Query Performance**: Slower due to large dataset
 - **Storage Usage**: High due to accumulated logs
 
 ### After Cleanup
+
 - **Logs Table**: Only contains logs from last 24 hours
 - **Query Performance**: Improved due to smaller dataset
 - **Storage Usage**: Reduced significantly
@@ -131,15 +140,18 @@ The system handles various error scenarios:
 ## Security Considerations
 
 ### Authentication
+
 - Optional token-based authentication
 - Set `CLEANUP_API_TOKEN` environment variable
 - API validates token before processing
 
 ### Rate Limiting
+
 - Consider implementing rate limiting for production
 - Monitor API usage to prevent abuse
 
 ### Logging
+
 - All cleanup operations are logged
 - Failed operations include error details
 - Timestamps for audit trail
@@ -149,26 +161,33 @@ The system handles various error scenarios:
 ### Common Issues
 
 #### 1. Authentication Error
+
 ```
 Error: Unauthorized
 ```
+
 **Solution**: Set `CLEANUP_API_TOKEN` environment variable
 
 #### 2. Database Connection Error
+
 ```
 Error: Hasura client is not initialized
 ```
+
 **Solution**: Check database connection and environment variables
 
 #### 3. API Timeout
+
 ```
 Error: Request timeout
 ```
+
 **Solution**: Check network connectivity and API availability
 
 ### Debug Mode
 
 Enable debug logging by setting environment variable:
+
 ```bash
 DEBUG=true npm run cleanup:logs
 ```
@@ -176,12 +195,14 @@ DEBUG=true npm run cleanup:logs
 ## Maintenance
 
 ### Regular Tasks
+
 - Monitor cleanup job execution
 - Review deleted log counts
 - Adjust cleanup frequency if needed
 - Update authentication tokens
 
 ### Performance Monitoring
+
 - Track database size reduction
 - Monitor query performance improvements
 - Check API response times
@@ -189,6 +210,7 @@ DEBUG=true npm run cleanup:logs
 ## Future Enhancements
 
 ### Potential Improvements
+
 - **Retention Policies**: Configurable retention periods
 - **Selective Cleanup**: Clean specific log types
 - **Metrics**: Detailed cleanup statistics
@@ -196,6 +218,7 @@ DEBUG=true npm run cleanup:logs
 - **Backup**: Archive logs before deletion
 
 ### Configuration Options
+
 - **Retention Period**: Make 24-hour limit configurable
 - **Batch Size**: Process logs in smaller batches
 - **Schedule**: Multiple cleanup schedules
