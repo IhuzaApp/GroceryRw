@@ -18,14 +18,6 @@ export default async function handler(
       });
     }
 
-    console.log('🔍 [FCM API] Sending notification:', {
-      recipientId,
-      senderName,
-      message,
-      orderId,
-      conversationId
-    });
-
     await sendChatNotification(
       recipientId,
       senderName,
@@ -33,8 +25,6 @@ export default async function handler(
       orderId,
       conversationId
     );
-
-    console.log('✅ [FCM API] Notification sent successfully');
     return res.status(200).json({ success: true });
   } catch (error) {
     console.error('❌ [FCM API] Error sending notification:', error);
