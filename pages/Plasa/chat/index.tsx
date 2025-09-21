@@ -175,7 +175,7 @@ export default function ShopperChatPage() {
               orderId: data.orderId,
               customerId: data.customerId,
               customerName: orderData?.orderedBy?.name || orderData?.user?.name || data.customerName || "Customer",
-              customerAvatar: orderData?.orderedBy?.profile_picture || orderData?.user?.profile_picture || data.customerAvatar,
+              customerAvatar: orderData?.orderedBy?.profile_picture || orderData?.user?.profile_picture || data.customerAvatar || "/images/userProfile.png",
               lastMessage: data.lastMessage || "No messages yet",
               lastMessageTime: data.lastMessageTime,
               unreadCount: data.unreadCount || 0,
@@ -366,7 +366,7 @@ export default function ShopperChatPage() {
           customer={{
             id: selectedConversation.customerId,
             name: selectedConversation.customerName,
-            avatar: selectedConversation.customerAvatar || '/placeholder.svg?height=80&width=80',
+            avatar: selectedConversation.customerAvatar || '/images/userProfile.png',
             phone: undefined, // We don't have phone in conversation data
           }}
           isOpen={isDrawerOpen}

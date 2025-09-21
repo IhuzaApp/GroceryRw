@@ -179,7 +179,7 @@ function ChatPage() {
                 name: data.order.assignedTo?.name || "Shopper",
                 avatar:
                   data.order.assignedTo?.profile_picture ||
-                  "/placeholder.svg?height=80&width=80",
+                  "/images/ProfileImage.png",
                 phone: data.order.assignedTo?.phone,
               });
 

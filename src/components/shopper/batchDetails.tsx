@@ -1485,7 +1485,7 @@ export default function BatchDetails({
             customer={{
               id: order.orderedBy?.id || order.customerId || "",
               name: order.orderedBy?.name || order.user?.name || "Customer",
-              avatar: order.orderedBy?.profile_picture || order.user?.profile_picture || "/placeholder.svg",
+              avatar: order.orderedBy?.profile_picture || order.user?.profile_picture || "/images/userProfile.png",
               phone: order.orderedBy?.phone || order.user?.phone
             }}
             isOpen={isDrawerOpen}
@@ -1845,28 +1845,13 @@ export default function BatchDetails({
 
                 <div className="mb-3 flex flex-col items-center gap-3 sm:mb-4 sm:flex-row sm:items-start">
                   <div className="h-8 w-8 overflow-hidden rounded-full bg-slate-200 sm:h-12 sm:w-12">
-                    {(order as any).orderedBy?.profile_picture || order.user?.profile_picture ? (
-                      <Image
-                        src={(order as any).orderedBy?.profile_picture || order.user?.profile_picture}
-                        alt={(order as any).orderedBy?.name || order.user?.name || "Customer"}
-                        width={48}
-                        height={48}
-                        className="h-full w-full object-cover"
-                      />
-                    ) : (
-                      <div className="flex h-full w-full items-center justify-center bg-slate-200 text-slate-400">
-                        <svg
-                          viewBox="0 0 24 24"
-                          fill="none"
-                          stroke="currentColor"
-                          strokeWidth="2"
-                          className="h-5 w-5 sm:h-6 sm:w-6"
-                        >
-                          <circle cx="12" cy="8" r="4" />
-                          <path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2" />
-                        </svg>
-                      </div>
-                    )}
+                    <Image
+                      src={(order as any).orderedBy?.profile_picture || order.user?.profile_picture || "/images/userProfile.png"}
+                      alt={(order as any).orderedBy?.name || order.user?.name || "Customer"}
+                      width={48}
+                      height={48}
+                      className="h-full w-full object-cover"
+                    />
                   </div>
                   <div className="text-center sm:text-left">
                     <h4 className="text-base font-medium text-slate-900 dark:text-slate-100 sm:text-lg">

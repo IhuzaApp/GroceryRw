@@ -234,7 +234,7 @@ export default function UserProfile() {
               <>
                 <div className="h-24 w-24 overflow-hidden rounded-full border-4 border-white bg-white shadow-md">
                   <Image
-                    src={user?.profile_picture || "/assets/images/profile.jpg"}
+                    src={user?.profile_picture || (role === "shopper" ? "/images/ProfileImage.png" : "/assets/images/profile.jpg")}
                     alt="Profile"
                     width={96}
                     height={96}

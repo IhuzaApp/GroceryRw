@@ -104,7 +104,7 @@ function ChatPage() {
             name: data.order.orderedBy?.name || "Customer",
             avatar:
               data.order.orderedBy?.profile_picture ||
-              "/placeholder.svg?height=80&width=80",
+              "/images/userProfile.png",
             lastSeen: "Online now",
           };
 
@@ -562,7 +562,7 @@ function ChatPage() {
                 <div className="flex items-center space-x-3">
                   <div className="relative">
                     <img
-                      src={customerData?.avatar || "/placeholder.svg"}
+                      src={customerData?.avatar || "/images/userProfile.png"}
                       alt={customerData?.name || "Customer"}
                       className="h-10 w-10 rounded-full border-2 border-gray-200 object-cover dark:border-gray-600"
                     />
