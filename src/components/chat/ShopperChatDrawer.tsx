@@ -142,11 +142,6 @@ const ShopperChatDrawer: React.FC<ShopperChatDrawerProps> = ({
     if (!orderId || !session?.user?.id || !customer?.id) return;
 
     try {
-      console.log("🔍 [Shopper Chat] Creating conversation with:", {
-        orderId,
-        customerId: customer.id,
-        shopperId: session.user.id,
-      });
 
       // Check if conversation exists
       const conversationsRef = collection(db, "chat_conversations");
@@ -157,7 +152,6 @@ const ShopperChatDrawer: React.FC<ShopperChatDrawerProps> = ({
       if (!querySnapshot.empty) {
         // Conversation exists
         const conversationDoc = querySnapshot.docs[0];
-        console.log("🔍 [Shopper Chat] Found existing conversation:", conversationDoc.id);
         setConversationId(conversationDoc.id);
       } else {
         // Create new conversation
@@ -171,9 +165,7 @@ const ShopperChatDrawer: React.FC<ShopperChatDrawerProps> = ({
           unreadCount: 0,
         };
 
-        console.log("🔍 [Shopper Chat] Creating new conversation:", newConversation);
         const docRef = await addDoc(conversationsRef, newConversation);
-        console.log("🔍 [Shopper Chat] Created conversation:", docRef.id);
         setConversationId(docRef.id);
       }
     } catch (error) {
@@ -186,7 +178,6 @@ const ShopperChatDrawer: React.FC<ShopperChatDrawerProps> = ({
   useEffect(() => {
     if (!conversationId || !session?.user?.id) return;
 
-    console.log("🔍 [Shopper Chat] Setting up message listener for conversation:", conversationId);
 
     // Set up listener for messages in this conversation
     const messagesRef = collection(
@@ -200,7 +191,6 @@ const ShopperChatDrawer: React.FC<ShopperChatDrawerProps> = ({
     const unsubscribe = onSnapshot(
       q,
       (snapshot) => {
-        console.log("🔍 [Shopper Chat] Messages snapshot received, count:", snapshot.docs.length);
 
         const messagesList = snapshot.docs.map((doc) => ({
           id: doc.id,
@@ -212,7 +202,6 @@ const ShopperChatDrawer: React.FC<ShopperChatDrawerProps> = ({
               : doc.data().timestamp,
         })) as Message[];
 
-        console.log("🔍 [Shopper Chat] Processed messages:", messagesList);
         
         // Check for new unread messages from customer and play sound
         const previousMessageCount = messages.length;
@@ -225,7 +214,6 @@ const ShopperChatDrawer: React.FC<ShopperChatDrawerProps> = ({
         );
         
         if (newUnreadCustomerMessages.length > 0) {
-          console.log("🔊 [Shopper Chat] New unread message from customer, playing notification sound");
           soundNotification.play();
         }
         
@@ -285,25 +273,12 @@ const ShopperChatDrawer: React.FC<ShopperChatDrawerProps> = ({
       !conversationId ||
       !customer?.id
     ) {
-      console.log("Cannot send message, missing data:", {
-        hasMessage: !!newMessage.trim(),
-        hasUser: !!session?.user?.id,
-        hasConversation: !!conversationId,
-        hasCustomerId: !!customer?.id,
-      });
       return;
     }
 
     try {
       setIsSending(true);
 
-      console.log("🔍 [Shopper Chat] Sending message:", {
-        text: newMessage.trim(),
-        senderId: session.user.id,
-        senderName: session.user.name || "Shopper",
-        recipientId: customer.id,
-        senderType: "shopper",
-      });
 
       // Add new message to Firestore
       const messagesRef = collection(
@@ -348,9 +323,9 @@ const ShopperChatDrawer: React.FC<ShopperChatDrawerProps> = ({
         });
 
         if (response.ok) {
-          console.log('✅ [Shopper Chat Drawer] FCM notification sent to customer');
+          // FCM notification sent successfully
         } else {
-          console.log('⚠️ [Shopper Chat Drawer] FCM notification failed (non-critical)');
+          // FCM notification failed (non-critical)
         }
       } catch (fcmError) {
         console.error('⚠️ [Shopper Chat Drawer] FCM notification error (non-critical):', fcmError);
