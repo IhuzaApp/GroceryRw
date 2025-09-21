@@ -2,7 +2,6 @@
 
 import React, { useState, useEffect } from "react";
 import { useSession } from "next-auth/react";
-import Link from "next/link";
 import { useRouter } from "next/router";
 import {
   collection,
@@ -19,6 +18,7 @@ import { Button, Loader, Panel, Placeholder, Avatar } from "rsuite";
 import { formatCurrency } from "../../../src/lib/formatCurrency";
 import { AuthGuard } from "../../../src/components/AuthGuard";
 import ShopperLayout from "@components/shopper/ShopperLayout";
+import ShopperChatDrawer from "@components/chat/ShopperChatDrawer";
 
 // Define message interface
 interface Message {
@@ -116,6 +116,20 @@ export default function ShopperChatPage() {
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [isMobile, setIsMobile] = useState(false);
+  const [selectedConversation, setSelectedConversation] = useState<Conversation | null>(null);
+  const [isDrawerOpen, setIsDrawerOpen] = useState(false);
+
+  // Mobile detection
+  useEffect(() => {
+    const checkIfMobile = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+    
+    checkIfMobile();
+    window.addEventListener('resize', checkIfMobile);
+    return () => window.removeEventListener('resize', checkIfMobile);
+  }, []);
 
   // Fetch conversations for the current shopper
   useEffect(() => {
@@ -201,6 +215,24 @@ export default function ShopperChatPage() {
     };
   }, [session?.user?.id]);
 
+  // Handle conversation click
+  const handleConversationClick = (conversation: Conversation) => {
+    if (isMobile) {
+      // On mobile, navigate to the individual chat page
+      router.push(`/Plasa/chat/${conversation.orderId}`);
+    } else {
+      // On desktop, open the drawer
+      setSelectedConversation(conversation);
+      setIsDrawerOpen(true);
+    }
+  };
+
+  // Handle drawer close
+  const handleDrawerClose = () => {
+    setIsDrawerOpen(false);
+    setSelectedConversation(null);
+  };
+
   if (status === "loading" || loading) {
     return (
       <ShopperLayout>
@@ -268,66 +300,79 @@ export default function ShopperChatPage() {
         ) : (
           <div className="space-y-4">
             {conversations.map((conversation) => (
-              <Link
+              <div
                 key={conversation.id}
-                href={`/Plasa/chat/${conversation.orderId}`}
-                passHref
+                onClick={() => handleConversationClick(conversation)}
+                className="group cursor-pointer rounded-xl border border-gray-200 bg-white p-4 shadow-sm transition-all duration-200 hover:shadow-md dark:border-gray-700 dark:bg-gray-800"
               >
-                <div className="group cursor-pointer rounded-xl border border-gray-200 bg-white p-4 shadow-sm transition-all duration-200 hover:shadow-md dark:border-gray-700 dark:bg-gray-800">
-                  <div className="flex items-start space-x-4">
-                    <div className="relative">
-                      <Avatar
-                        src={conversation.customerAvatar}
-                        alt={conversation.customerName}
-                        circle
-                        size="lg"
-                      />
-                      {conversation.unreadCount > 0 && (
-                        <div className="absolute -top-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full bg-red-500 text-xs font-bold text-white">
-                          {conversation.unreadCount > 9 ? "9+" : conversation.unreadCount}
-                        </div>
-                      )}
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center justify-between">
-                        <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
-                          {conversation.customerName}
-                        </h3>
-                        <div className="flex flex-col items-end">
-                          <span className="text-sm text-gray-500 dark:text-gray-400">
-                            {timeAgo(conversation.lastMessageTime)}
-                          </span>
-                          {conversation.order && (
-                            <span className={`mt-1 inline-flex items-center rounded-full px-2 py-1 text-xs font-medium ${
-                              conversation.order.status === 'delivered' 
-                                ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200'
-                                : conversation.order.status === 'on_the_way'
-                                ? 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200'
-                                : conversation.order.status === 'at_customer'
-                                ? 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200'
-                                : conversation.order.status === 'pending'
-                                ? 'bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200'
-                                : 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-200'
-                            }`}>
-                              {conversation.order.status.replace('_', ' ').toUpperCase()}
-                            </span>
-                          )}
-                        </div>
+                <div className="flex items-start space-x-4">
+                  <div className="relative">
+                    <Avatar
+                      src={conversation.customerAvatar}
+                      alt={conversation.customerName}
+                      circle
+                      size="lg"
+                    />
+                    {conversation.unreadCount > 0 && (
+                      <div className="absolute -top-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full bg-red-500 text-xs font-bold text-white">
+                        {conversation.unreadCount > 9 ? "9+" : conversation.unreadCount}
                       </div>
-                      <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
-                        Order {formatOrderID(conversation.order?.OrderID || conversation.order?.id || conversation.orderId)}
-                      </p>
-                      <p className="mt-2 text-sm text-gray-600 dark:text-gray-300">
-                        {conversation.lastMessage}
-                      </p>
+                    )}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center justify-between">
+                      <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+                        {conversation.customerName}
+                      </h3>
+                      <div className="flex flex-col items-end">
+                        <span className="text-sm text-gray-500 dark:text-gray-400">
+                          {timeAgo(conversation.lastMessageTime)}
+                        </span>
+                        {conversation.order && (
+                          <span className={`mt-1 inline-flex items-center rounded-full px-2 py-1 text-xs font-medium ${
+                            conversation.order.status === 'delivered' 
+                              ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200'
+                              : conversation.order.status === 'on_the_way'
+                              ? 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200'
+                              : conversation.order.status === 'at_customer'
+                              ? 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200'
+                              : conversation.order.status === 'pending'
+                              ? 'bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200'
+                              : 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-200'
+                          }`}>
+                            {conversation.order.status.replace('_', ' ').toUpperCase()}
+                          </span>
+                        )}
+                      </div>
                     </div>
+                    <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
+                      Order {formatOrderID(conversation.order?.OrderID || conversation.order?.id || conversation.orderId)}
+                    </p>
+                    <p className="mt-2 text-sm text-gray-600 dark:text-gray-300">
+                      {conversation.lastMessage}
+                    </p>
                   </div>
                 </div>
-              </Link>
+              </div>
             ))}
           </div>
         )}
       </div>
+
+      {/* Desktop Chat Drawer */}
+      {selectedConversation && (
+        <ShopperChatDrawer
+          orderId={selectedConversation.orderId}
+          customer={{
+            id: selectedConversation.customerId,
+            name: selectedConversation.customerName,
+            avatar: selectedConversation.customerAvatar || '/placeholder.svg?height=80&width=80',
+            phone: undefined, // We don't have phone in conversation data
+          }}
+          isOpen={isDrawerOpen}
+          onClose={handleDrawerClose}
+        />
+      )}
     </ShopperLayout>
   );
 }
