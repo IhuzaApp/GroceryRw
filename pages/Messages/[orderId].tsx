@@ -31,6 +31,7 @@ import { formatCurrency } from "../../src/lib/formatCurrency";
 import { getStorage, ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import { AuthGuard } from "../../src/components/AuthGuard";
 import CustomerChatDrawer from "../../src/components/chat/CustomerChatDrawer";
+import soundNotification from "../../src/utils/soundNotification";
 
 // Helper to format date for messages
 function formatMessageDate(timestamp: any) {
@@ -146,11 +147,26 @@ function ChatPage() {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [conversationId, setConversationId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [isMobile, setIsMobile] = useState(false);
 
   // Scroll to bottom of messages
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   };
+
+  // Mobile detection
+  useEffect(() => {
+    const checkIfMobile = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+
+    checkIfMobile();
+    window.addEventListener("resize", checkIfMobile);
+
+    return () => {
+      window.removeEventListener("resize", checkIfMobile);
+    };
+  }, []);
 
   // Fetch order details
   useEffect(() => {
@@ -279,6 +295,22 @@ function ChatPage() {
         })) as Message[];
 
         console.log("🔍 [Individual Chat] Processed messages:", messagesList);
+        
+        // Check for new unread messages from shopper and play sound
+        const previousMessageCount = messages.length;
+        const newMessages = messagesList.slice(previousMessageCount);
+        const newUnreadShopperMessages = newMessages.filter(
+          (message) => 
+            message.senderType === "shopper" && 
+            message.senderId !== session?.user?.id &&
+            !message.read
+        );
+        
+        if (newUnreadShopperMessages.length > 0) {
+          console.log("🔊 [Individual Chat] New unread message from shopper, playing notification sound");
+          soundNotification.play();
+        }
+        
         setMessages(messagesList);
 
         // Mark messages as read if they were sent to the current user
@@ -459,12 +491,12 @@ function ChatPage() {
 
   return (
     <AuthGuard requireAuth={true}>
-      <div className="flex h-screen bg-gray-50 dark:bg-gray-900">
-        {/* Main Content Area */}
-        <div className="flex-1 overflow-hidden">
+      {isMobile ? (
+        // Mobile: Full-screen chat interface
+        <div className="flex h-screen flex-col bg-gray-50 dark:bg-gray-900">
           {shopper ? (
-            <div className="flex h-full flex-col">
-              {/* Header */}
+            <>
+              {/* Mobile Header */}
               <div className="flex items-center justify-between border-b border-gray-200 bg-white px-4 py-3 dark:border-gray-700 dark:bg-gray-800">
                 <div className="flex items-center gap-3">
                   <Link href="/Messages" className="text-gray-600 dark:text-gray-400">
@@ -480,38 +512,90 @@ function ChatPage() {
                     </div>
                   </div>
                 </div>
+                {shopper.phone && (
+                  <button
+                    onClick={() => window.open(`tel:${shopper.phone}`, '_self')}
+                    className="rounded-full bg-green-500 p-2 text-white hover:bg-green-600"
+                  >
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                      <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1 .45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z" />
+                    </svg>
+                  </button>
+                )}
               </div>
 
-              {/* Order Details */}
-              <div className="flex-1 overflow-y-auto bg-white px-4 py-3 dark:bg-gray-800">
-                <h2 className="mb-4 text-lg font-semibold text-gray-900 dark:text-white">Order Details</h2>
-                <div className="space-y-4">
-                  <div>
-                    <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400">Status</h3>
-                    <p className="text-gray-900 dark:text-white">
-                      {order?.status?.charAt(0).toUpperCase() + order?.status?.slice(1)}
-                    </p>
-                  </div>
-                  <div>
-                    <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400">Total</h3>
-                    <p className="text-gray-900 dark:text-white">{formatCurrency(order?.total)}</p>
-                  </div>
-                  <div>
-                    <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400">Delivery Address</h3>
-                    <p className="text-gray-900 dark:text-white">{order?.delivery_address}</p>
-                  </div>
-                  {shopper && (
-                    <div>
-                      <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400">Shopper</h3>
-                      <div className="mt-1 flex items-center gap-2">
-                        <Avatar src={shopper.avatar} alt={shopper.name} circle size="sm" />
-                        <span className="text-gray-900 dark:text-white">{shopper.name}</span>
-                      </div>
+              {/* Mobile Messages */}
+              <div className="flex-1 overflow-y-auto bg-gray-50 px-4 py-2 dark:bg-gray-900">
+                {messages.length === 0 ? (
+                  <div className="flex h-full items-center justify-center">
+                    <div className="text-center">
+                      <div className="mb-2 text-4xl">💬</div>
+                      <p className="text-sm text-gray-500 dark:text-gray-400">Start chatting with your shopper</p>
                     </div>
-                  )}
-                </div>
+                  </div>
+                ) : (
+                  messages.map((message) => (
+                    <Message
+                      key={message.id}
+                      message={message}
+                      isCurrentUser={message.senderId === session?.user?.id}
+                      senderName={message.senderType === "shopper" ? shopper.name : "You"}
+                    />
+                  ))
+                )}
+                <div ref={messagesEndRef} />
               </div>
-            </div>
+
+              {/* Mobile Input */}
+              <div className="border-t border-gray-200 bg-white px-4 py-3 dark:border-gray-700 dark:bg-gray-800">
+                <form onSubmit={handleSendMessage} className="flex items-end space-x-3">
+                  <button
+                    type="button"
+                    onClick={handleAttachmentClick}
+                    className="flex-shrink-0 rounded-full p-2 text-gray-500 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-gray-700"
+                  >
+                    <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13" />
+                    </svg>
+                  </button>
+                  <div className="flex-1">
+                    <input
+                      type="text"
+                      value={newMessage}
+                      onChange={(e) => setNewMessage(e.target.value)}
+                      onKeyPress={handleKeyPress}
+                      placeholder="Type your message..."
+                      className="w-full rounded-full border border-gray-300 bg-gray-50 px-4 py-3 text-sm focus:border-green-500 focus:bg-white focus:outline-none focus:ring-2 focus:ring-green-500/20 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:placeholder-gray-400 dark:focus:border-green-400 dark:focus:bg-gray-600"
+                    />
+                  </div>
+                  <button
+                    type="submit"
+                    disabled={isSending || !newMessage.trim()}
+                    className="flex-shrink-0 rounded-full bg-green-500 p-3 text-white shadow-lg transition-all duration-200 hover:bg-green-600 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 dark:focus:ring-offset-gray-800"
+                  >
+                    {isSending ? (
+                      <div className="flex items-center">
+                        <svg className="h-4 w-4 animate-spin" fill="none" viewBox="0 0 24 24">
+                          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                        </svg>
+                      </div>
+                    ) : (
+                      <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
+                      </svg>
+                    )}
+                  </button>
+                </form>
+                <input
+                  type="file"
+                  ref={fileInputRef}
+                  accept="image/*"
+                  onChange={handleImageUpload}
+                  className="hidden"
+                />
+              </div>
+            </>
           ) : (
             <div className="flex h-full items-center justify-center">
               <div className="text-center">
@@ -522,22 +606,88 @@ function ChatPage() {
             </div>
           )}
         </div>
+      ) : (
+        // Desktop: Sidebar layout with drawer
+        <div className="flex h-screen bg-gray-50 dark:bg-gray-900">
+          {/* Main Content Area */}
+          <div className="flex-1 overflow-hidden">
+            {shopper ? (
+              <div className="flex h-full flex-col">
+                {/* Header */}
+                <div className="flex items-center justify-between border-b border-gray-200 bg-white px-4 py-3 dark:border-gray-700 dark:bg-gray-800">
+                  <div className="flex items-center gap-3">
+                    <Link href="/Messages" className="text-gray-600 dark:text-gray-400">
+                      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                        <path d="M19 12H5M12 19l-7-7 7-7" />
+                      </svg>
+                    </Link>
+                    <div className="flex items-center gap-2">
+                      <Avatar src={shopper.avatar} alt={shopper.name} circle size="sm" />
+                      <div>
+                        <h2 className="text-sm font-medium text-gray-900 dark:text-white">{shopper.name}</h2>
+                        <p className="text-xs text-gray-500 dark:text-gray-400">Order #{formatOrderID(order?.OrderID)}</p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
 
-        {/* Chat Drawer */}
-        {shopper && (
-          <CustomerChatDrawer
-            orderId={orderId as string}
-            shopper={{
-              id: shopper.id,
-              name: shopper.name,
-              avatar: shopper.avatar,
-              phone: shopper.phone
-            }}
-            isOpen={true}
-            onClose={() => router.push('/Messages')}
-          />
-        )}
-      </div>
+                {/* Order Details */}
+                <div className="flex-1 overflow-y-auto bg-white px-4 py-3 dark:bg-gray-800">
+                  <h2 className="mb-4 text-lg font-semibold text-gray-900 dark:text-white">Order Details</h2>
+                  <div className="space-y-4">
+                    <div>
+                      <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400">Status</h3>
+                      <p className="text-gray-900 dark:text-white">
+                        {order?.status?.charAt(0).toUpperCase() + order?.status?.slice(1)}
+                      </p>
+                    </div>
+                    <div>
+                      <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400">Total</h3>
+                      <p className="text-gray-900 dark:text-white">{formatCurrency(order?.total)}</p>
+                    </div>
+                    <div>
+                      <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400">Delivery Address</h3>
+                      <p className="text-gray-900 dark:text-white">{order?.delivery_address}</p>
+                    </div>
+                    {shopper && (
+                      <div>
+                        <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400">Shopper</h3>
+                        <div className="mt-1 flex items-center gap-2">
+                          <Avatar src={shopper.avatar} alt={shopper.name} circle size="sm" />
+                          <span className="text-gray-900 dark:text-white">{shopper.name}</span>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+            ) : (
+              <div className="flex h-full items-center justify-center">
+                <div className="text-center">
+                  <div className="mb-4 text-6xl">⏳</div>
+                  <h3 className="mb-2 text-lg font-semibold text-gray-900 dark:text-white">Loading...</h3>
+                  <p className="text-gray-500 dark:text-gray-400">Setting up your chat</p>
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Chat Drawer - Desktop Only */}
+          {shopper && (
+            <CustomerChatDrawer
+              orderId={orderId as string}
+              shopper={{
+                id: shopper.id,
+                name: shopper.name,
+                avatar: shopper.avatar,
+                phone: shopper.phone
+              }}
+              isOpen={true}
+              onClose={() => router.push('/Messages')}
+            />
+          )}
+        </div>
+      )}
     </AuthGuard>
   );
 }
