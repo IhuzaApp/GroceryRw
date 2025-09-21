@@ -179,6 +179,16 @@ const nextConfig = {
     // your project has ESLint errors.
     ignoreDuringBuilds: true,
   },
+  // Suppress AbortError messages in development
+  webpack: (config, { dev }) => {
+    if (dev) {
+      config.ignoreWarnings = [
+        /AbortError/,
+        /upstream image response failed/,
+      ];
+    }
+    return config;
+  },
   images: {
     remotePatterns: [
       {
@@ -190,6 +200,13 @@ const nextConfig = {
         hostname: "**",
       },
     ],
+    unoptimized: process.env.NODE_ENV === "development",
+  },
+  onDemandEntries: {
+    // period (in ms) where the server will keep pages in the buffer
+    maxInactiveAge: 25 * 1000,
+    // number of pages that should be kept simultaneously without being disposed
+    pagesBufferLength: 2,
   },
 };
 
