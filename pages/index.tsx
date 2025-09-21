@@ -25,66 +25,9 @@ import {
 import ShopperDashboard from "@components/shopper/dashboard/ShopperDashboard";
 import UserDashboard from "@components/user/dashboard/UserDashboard";
 import MainBanners from "@components/ui/banners";
+import LoadingScreen from "@components/ui/LoadingScreen";
 
-// Enhanced Loading Component
-function LoadingScreen() {
-  const [loadingProgress, setLoadingProgress] = useState(0);
-  const [loadingMessage, setLoadingMessage] = useState("Initializing...");
-
-  // Simulate loading progress
-  useEffect(() => {
-    const messages = [
-      "Initializing...",
-      "Loading user data...",
-      "Setting up your dashboard...",
-      "Almost ready...",
-      "Finalizing...",
-    ];
-
-    let progress = 0;
-    const interval = setInterval(() => {
-      progress += Math.floor(Math.random() * 15) + 5;
-
-      if (progress >= 100) {
-        progress = 100;
-        clearInterval(interval);
-      }
-
-      setLoadingProgress(progress);
-
-      // Update message based on progress
-      const messageIndex = Math.min(
-        Math.floor(progress / 25),
-        messages.length - 1
-      );
-      setLoadingMessage(messages[messageIndex]);
-    }, 800);
-
-    return () => clearInterval(interval);
-  }, []);
-
-  return (
-    <div className="flex h-screen flex-col items-center justify-center bg-white dark:bg-gray-900">
-      <div className="mb-6 flex h-24 w-24 items-center justify-center">
-        <div className="h-12 w-12 animate-spin rounded-full border-4 border-green-500 border-t-transparent"></div>
-      </div>
-
-      <h2 className="mb-2 text-xl font-semibold text-gray-800 dark:text-white">
-        Setting up your experience
-      </h2>
-      <p className="mb-6 text-gray-500 dark:text-gray-400">{loadingMessage}</p>
-
-      <div className="w-64">
-        <div className="h-2 w-full overflow-hidden rounded-full bg-gray-200 dark:bg-gray-700">
-          <div
-            className="h-full rounded-full bg-green-500 transition-all duration-300"
-            style={{ width: `${loadingProgress}%` }}
-          ></div>
-        </div>
-      </div>
-    </div>
-  );
-}
+// Loading screen component is now imported from @components/ui/LoadingScreen
 
 // Add this new component for category icons
 const CategoryIcon = ({ category }: { category: string }) => {
