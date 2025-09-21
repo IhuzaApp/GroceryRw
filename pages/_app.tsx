@@ -32,7 +32,7 @@ NProgress.configure({ showSpinner: false });
 
 // Function to generate dynamic page titles
 const getPageTitle = (pathname: string, query: any = {}, names: { shopName?: string | null, restaurantName?: string | null } = {}) => {
-  const baseTitle = "Plasa";
+  const baseTitle = "Plas";
   
   // Handle dynamic routes and specific pages
   if (pathname === "/") {
@@ -191,7 +191,7 @@ function SessionRefreshHandler({ children }: { children: React.ReactNode }) {
 }
 
 export default function App({ Component, pageProps }: AppProps) {
-  const [pageTitle, setPageTitle] = useState("Plasa");
+  const [pageTitle, setPageTitle] = useState("Plas");
   const [shopName, setShopName] = useState<string | null>(null);
   const [restaurantName, setRestaurantName] = useState<string | null>(null);
   const router = Router.useRouter();
@@ -259,10 +259,10 @@ export default function App({ Component, pageProps }: AppProps) {
       <Head>
         <title>{pageTitle}</title>
         <link rel="manifest" href="/manifest.json" />
-        <meta name="application-name" content="Plasa" />
+        <meta name="application-name" content="Plas" />
         <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-status-bar-style" content="default" />
-        <meta name="apple-mobile-web-app-title" content="Plasa" />
+        <meta name="apple-mobile-web-app-title" content="Pla" />
         <meta
           name="description"
           content="Your convenient grocery shopping app"
@@ -296,8 +296,8 @@ export default function App({ Component, pageProps }: AppProps) {
           property="og:description"
           content="Your convenient grocery shopping app"
         />
-        <meta property="og:site_name" content="Plasa" />
-        <meta property="og:url" content="https://your-app-domain.com" />
+        <meta property="og:site_name" content="Plas" />
+        <meta property="og:url" content="https://plas.rw" />
         <meta property="og:image" content="/assets/logos/PlasIcon.png" />
       </Head>
       <SessionProvider
