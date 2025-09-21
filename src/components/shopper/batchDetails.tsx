@@ -1204,7 +1204,7 @@ export default function BatchDetails({
             loading={loading}
             className="rounded-lg py-4 text-xl font-bold sm:rounded-xl sm:py-6 sm:text-3xl"
           >
-            Confirm Delivery & Generate Invoice
+            Confirm Delivery
           </Button>
         );
       case "delivered":
