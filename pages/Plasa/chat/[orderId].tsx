@@ -28,8 +28,7 @@ import {
   getDoc,
   updateDoc,
 } from "firebase/firestore";
-import { db, storage } from "../../../src/lib/firebase";
-import { getStorage, ref, uploadBytes, getDownloadURL } from "firebase/storage";
+import { db } from "../../../src/lib/firebase";
 import { formatCurrency } from "../../../src/lib/formatCurrency";
 import soundNotification from "../../../src/utils/soundNotification";
 
@@ -43,7 +42,6 @@ interface Message {
   recipientId: string;
   timestamp: any;
   read: boolean;
-  image?: string;
 }
 
 // Helper to format order ID
@@ -65,8 +63,6 @@ function ChatPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [isSending, setIsSending] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
-  const [showAttachmentOptions, setShowAttachmentOptions] = useState(false);
-  const [uploadingImage, setUploadingImage] = useState(false);
   const [messages, setMessages] = useState<Message[]>([]);
   const [conversationId, setConversationId] = useState<string | null>(null);
   const [customerData, setCustomerData] = useState<{
@@ -358,65 +354,6 @@ function ChatPage() {
     }
   };
 
-  const handleAttachmentClick = () => {
-    setShowAttachmentOptions(!showAttachmentOptions);
-  };
-
-  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (
-      !e.target.files ||
-      !e.target.files[0] ||
-      !user?.id ||
-      !conversationId ||
-      !customerData?.id
-    )
-      return;
-
-    try {
-      setUploadingImage(true);
-      const file = e.target.files[0];
-
-      // Upload image to Firebase Storage
-      const storageRef = ref(
-        storage,
-        `chat_images/${orderId}/${Date.now()}_${file.name}`
-      );
-      const snapshot = await uploadBytes(storageRef, file);
-      const downloadURL = await getDownloadURL(snapshot.ref);
-
-      // Add message with image
-      const messagesRef = collection(
-        db,
-        "chat_conversations",
-        conversationId,
-        "messages"
-      );
-      await addDoc(messagesRef, {
-        text: "", // Use text field for consistency
-        message: "", // Also include message field for compatibility
-        senderId: user.id,
-        senderName: user.name || "Shopper",
-        senderType: "shopper",
-        recipientId: customerData.id,
-        timestamp: serverTimestamp(),
-        read: false,
-        image: downloadURL,
-      });
-
-      // Update conversation
-      const convRef = doc(db, "chat_conversations", conversationId);
-      await updateDoc(convRef, {
-        lastMessage: "📷 Image",
-        lastMessageTime: serverTimestamp(),
-      });
-
-      setShowAttachmentOptions(false);
-    } catch (error) {
-      console.error("Error uploading image:", error);
-    } finally {
-      setUploadingImage(false);
-    }
-  };
 
 
   // Group messages by date for better display
@@ -605,7 +542,7 @@ function ChatPage() {
             {/* Professional Header */}
             <div className="flex items-center justify-between border-b border-gray-200 bg-white px-4 py-3 shadow-sm dark:border-gray-700 dark:bg-gray-800">
               <div className="flex items-center space-x-3">
-                <Link href="/Plasa" className="flex items-center">
+                <Link href={`/Plasa/active-batches/batch/${orderId}`} className="flex items-center">
                   <button className="rounded-full p-2 text-gray-600 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-700">
                     <svg
                       className="h-5 w-5"
@@ -719,15 +656,6 @@ function ChatPage() {
                               : "bg-white text-gray-900 dark:bg-gray-800 dark:text-white"
                           }`}
                         >
-                          {msg.image && (
-                            <div className="mb-2">
-                              <img
-                                src={msg.image}
-                                alt="Message attachment"
-                                className="max-h-48 w-auto rounded-lg"
-                              />
-                            </div>
-                          )}
                           <p className="text-sm leading-relaxed">
                             {msg.text || msg.message}
                           </p>
@@ -764,25 +692,6 @@ function ChatPage() {
                 onSubmit={handleSendMessage}
                 className="flex items-end space-x-3"
               >
-                <button
-                  type="button"
-                  onClick={handleAttachmentClick}
-                  className="flex-shrink-0 rounded-full p-2 text-gray-500 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-gray-700"
-                >
-                  <svg
-                    className="h-5 w-5"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13"
-                    />
-                  </svg>
-                </button>
                 <div className="flex-1">
                   <input
                     type="text"
@@ -844,13 +753,6 @@ function ChatPage() {
                   )}
                 </button>
               </form>
-              <input
-                type="file"
-                ref={fileInputRef}
-                accept="image/*"
-                onChange={handleImageUpload}
-                className="hidden"
-              />
             </div>
           </div>
         )}
