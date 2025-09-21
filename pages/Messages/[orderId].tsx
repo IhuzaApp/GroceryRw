@@ -211,11 +211,6 @@ function ChatPage() {
     const actualCustomerId = customerId || session.user.id;
 
     try {
-      console.log("Creating conversation with:", {
-        orderId,
-        customerId: actualCustomerId,
-        shopperId,
-      });
 
       // Check if conversation exists
       const conversationsRef = collection(db, "chat_conversations");
@@ -226,7 +221,6 @@ function ChatPage() {
       if (!querySnapshot.empty) {
         // Conversation exists
         const conversationDoc = querySnapshot.docs[0];
-        console.log("🔍 [Individual Chat] Found existing conversation:", conversationDoc.id);
         setConversationId(conversationDoc.id);
       } else {
         // Create new conversation
@@ -240,9 +234,7 @@ function ChatPage() {
           unreadCount: 0,
         };
 
-        console.log("🔍 [Individual Chat] Creating new conversation:", newConversation);
         const docRef = await addDoc(conversationsRef, newConversation);
-        console.log("🔍 [Individual Chat] Created conversation:", docRef.id);
         setConversationId(docRef.id);
       }
     } catch (error) {
@@ -255,10 +247,6 @@ function ChatPage() {
   useEffect(() => {
     if (!conversationId || !session?.user?.id) return;
 
-    console.log(
-      "Setting up message listener for conversation:",
-      conversationId
-    );
 
     // Set up listener for messages in this conversation
     const messagesRef = collection(
@@ -272,7 +260,6 @@ function ChatPage() {
     const unsubscribe = onSnapshot(
       q,
       (snapshot) => {
-        console.log("🔍 [Individual Chat] Messages snapshot received, count:", snapshot.docs.length);
 
         const messagesList = snapshot.docs.map((doc) => ({
           id: doc.id,
@@ -284,7 +271,6 @@ function ChatPage() {
               : doc.data().timestamp,
         })) as Message[];
 
-        console.log("🔍 [Individual Chat] Processed messages:", messagesList);
         
         // Check for new unread messages from shopper and play sound
         const previousMessageCount = messages.length;
@@ -297,7 +283,6 @@ function ChatPage() {
         );
         
         if (newUnreadShopperMessages.length > 0) {
-          console.log("🔊 [Individual Chat] New unread message from shopper, playing notification sound");
           soundNotification.play();
         }
         
@@ -350,25 +335,12 @@ function ChatPage() {
       !conversationId ||
       !shopper?.id
     ) {
-      console.log("Cannot send message, missing data:", {
-        hasMessage: !!newMessage.trim(),
-        hasUser: !!session?.user?.id,
-        hasConversation: !!conversationId,
-        hasShopperId: !!shopper?.id,
-      });
       return;
     }
 
     try {
       setIsSending(true);
 
-      console.log("Sending message:", {
-        text: newMessage.trim(),
-        senderId: session.user.id,
-        senderName: session.user.name || "Customer",
-        recipientId: shopper.id,
-        senderType: "customer",
-      });
 
       // Add new message to Firestore
       const messagesRef = collection(
@@ -413,9 +385,9 @@ function ChatPage() {
         });
 
         if (response.ok) {
-          console.log('✅ [Customer Chat] FCM notification sent to shopper');
+          // FCM notification sent successfully
         } else {
-          console.log('⚠️ [Customer Chat] FCM notification failed (non-critical)');
+          // FCM notification failed (non-critical)
         }
       } catch (fcmError) {
         console.error('⚠️ [Customer Chat] FCM notification error (non-critical):', fcmError);
