@@ -8,6 +8,7 @@ import { authOptions } from "../auth/[...nextauth]";
 interface OrderDetailsResponse {
   Orders_by_pk: {
     id: string;
+    OrderID: string;
     created_at: string;
     updated_at: string;
     status: string;
@@ -98,6 +99,7 @@ const GET_ORDER_DETAILS = gql`
   query GetOrderDetails($orderId: uuid!) {
     Orders_by_pk(id: $orderId) {
       id
+      OrderID
       created_at
       updated_at
       status
@@ -181,6 +183,7 @@ const GET_REEL_ORDER_DETAILS = gql`
   query GetReelOrderDetails($orderId: uuid!) {
     reel_orders_by_pk(id: $orderId) {
       id
+      OrderID
       created_at
       updated_at
       status
@@ -348,8 +351,10 @@ export default async function handler(
       const deliveryFee = parseFloat(orderData.delivery_fee || "0");
       const totalEarnings = serviceFee + deliveryFee;
 
+
       formattedOrder = {
         id: orderData.id,
+        OrderID: orderData.OrderID || orderData.id, // Add OrderID field
         createdAt: orderData.created_at,
         updatedAt: orderData.updated_at,
         status: orderData.status,
@@ -395,6 +400,7 @@ export default async function handler(
 
       formattedOrder = {
         id: orderData.id,
+        OrderID: orderData.OrderID || orderData.id, // Add OrderID field
         createdAt: orderData.created_at,
         updatedAt: orderData.updated_at,
         status: orderData.status,
@@ -437,6 +443,7 @@ export default async function handler(
         assignedTo: orderData.assignedTo, // Include assignedTo data (shopper)
       };
     }
+
 
     res.status(200).json({
       success: true,
