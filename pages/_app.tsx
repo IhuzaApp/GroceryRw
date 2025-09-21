@@ -3,6 +3,20 @@ import NProgress from "nprogress";
 import "nprogress/nprogress.css";
 import { useEffect } from "react";
 import { signIn, useSession } from "next-auth/react";
+
+// Suppress AbortError messages in development
+if (process.env.NODE_ENV === 'development') {
+  const originalConsoleError = console.error;
+  console.error = (...args) => {
+    const message = args[0];
+    if (typeof message === 'string' && 
+        (message.includes('AbortError') || 
+         message.includes('upstream image response failed'))) {
+      return; // Suppress these specific errors
+    }
+    originalConsoleError.apply(console, args);
+  };
+}
 import {
   isRoleSwitchInProgress,
   clearRoleSwitchFlag,
