@@ -7634,27 +7634,32 @@ This section covers the integration with MTN Mobile Money (MoMo) API for payment
 ## 📌 MTN MoMo Wallet Types
 
 ### Collection Wallet
+
 - **Purpose**: Used by merchants/shops to collect money from customers (customer → you)
 - **Use Case**: Payment collection during checkout
 - **API Endpoint**: `/collection/v1_0/requesttopay`
 
 ### Disbursement Wallet
+
 - **Purpose**: Used by businesses to pay out money (you → customer/agent/supplier)
 - **Use Case**: Refunds, payouts to shoppers
 - **API Endpoint**: `/disbursement/v1_0/transfer`
 
 ### Remittance Wallet
+
 - **Purpose**: Used for cross-border transactions
 - **Use Case**: International money transfers
 
 ## 🚨 Important Notes
 
 ### Collection vs Disbursement
+
 - **To receive money from customers**: Use Collection API (`requesttopay`)
 - **To send money to users**: Use Disbursement API (`transfer`)
 - **You cannot use Disbursement API to receive money from customers**
 
 ### Disbursement API Only Supports:
+
 - `transfer` → send money to user (MSISDN)
 - `refund` → return money
 - `deposit` → put money into another wallet
@@ -7665,11 +7670,13 @@ This section covers the integration with MTN Mobile Money (MoMo) API for payment
 ### Use Collection API → RequestToPay Endpoint
 
 **Endpoint:**
+
 ```
 POST https://sandbox.momodeveloper.mtn.com/collection/v1_0/requesttopay
 ```
 
 **Headers:**
+
 ```
 Authorization: Bearer {{access_token}} (from collection/token/)
 X-Reference-Id: {{$guid}}
@@ -7679,6 +7686,7 @@ Content-Type: application/json
 ```
 
 **Request Body:**
+
 ```json
 {
   "amount": "500",
@@ -7694,9 +7702,11 @@ Content-Type: application/json
 ```
 
 **Response:**
+
 - `202 Accepted` - Request initiated, user will approve in MoMo app/USSD
 
 **Check Payment Status:**
+
 ```
 GET /collection/v1_0/requesttopay/{{referenceId}}
 ```
@@ -7704,17 +7714,21 @@ GET /collection/v1_0/requesttopay/{{referenceId}}
 ## 🔑 Token Management
 
 ### Collection Tokens (for receiving payments)
+
 ```
 POST /collection/token/
 ```
+
 - Use Collection wallet credentials
 - Only works with `/collection/...` endpoints
 
 ### Disbursement Tokens (for sending payments)
+
 ```
 POST /disbursement/token/
 ```
-- Use Disbursement wallet credentials  
+
+- Use Disbursement wallet credentials
 - Only works with `/disbursement/...` endpoints
 
 ## ⚠️ Critical Rules
@@ -7727,6 +7741,7 @@ POST /disbursement/token/
 ## Implementation in Grocery System
 
 ### Payment Collection Flow
+
 1. Customer initiates checkout
 2. System calls Collection API `requesttopay`
 3. Customer approves payment in MoMo app
@@ -7734,6 +7749,7 @@ POST /disbursement/token/
 5. Order confirmed upon successful payment
 
 ### Refund Flow
+
 1. Missing items detected during shopping
 2. System calculates refund amount
 3. System calls Disbursement API `transfer`

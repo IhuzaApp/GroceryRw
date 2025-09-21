@@ -846,21 +846,24 @@ export default function BatchDetails({
 
           // Notify customer that shopper is on the way
           try {
-            await fetch('/api/fcm/send-notification', {
-              method: 'POST',
+            await fetch("/api/fcm/send-notification", {
+              method: "POST",
               headers: {
-                'Content-Type': 'application/json',
+                "Content-Type": "application/json",
               },
               body: JSON.stringify({
                 recipientId: order.orderedBy?.id || order.customerId,
-                senderName: session?.user?.name || 'Your Shopper',
-                message: 'Plasa is on the way',
+                senderName: session?.user?.name || "Your Shopper",
+                message: "Plasa is on the way",
                 orderId: order.id,
                 conversationId: order.id,
               }),
             });
           } catch (notificationError) {
-            console.error('Error sending on-the-way notification:', notificationError);
+            console.error(
+              "Error sending on-the-way notification:",
+              notificationError
+            );
             // Don't show error to user as payment was successful
           }
 
@@ -1218,7 +1221,7 @@ export default function BatchDetails({
   // Function to handle chat button click
   const handleChatClick = () => {
     if (!order) return;
-    
+
     // Type assertion to access the new fields
     const orderWithNewFields = order as OrderDetailsType & {
       customerId?: string;
@@ -1228,34 +1231,42 @@ export default function BatchDetails({
         profile_picture: string;
       };
     };
-    
-    const customerId = orderWithNewFields.customerId || orderWithNewFields.orderedBy?.id;
+
+    const customerId =
+      orderWithNewFields.customerId || orderWithNewFields.orderedBy?.id;
     if (!customerId) {
-      console.error("🔍 [Batch Details] Cannot start chat - missing customer data:", {
-        hasOrder: !!order,
-        customerId,
-        orderedBy: orderWithNewFields.orderedBy,
-        user: order.user,
-        orderId: order.id
-      });
+      console.error(
+        "🔍 [Batch Details] Cannot start chat - missing customer data:",
+        {
+          hasOrder: !!order,
+          customerId,
+          orderedBy: orderWithNewFields.orderedBy,
+          user: order.user,
+          orderId: order.id,
+        }
+      );
       if (typeof window !== "undefined") {
-        alert("Cannot start chat: Customer information is missing. Please refresh the page and try again.");
+        alert(
+          "Cannot start chat: Customer information is missing. Please refresh the page and try again."
+        );
       }
       return;
     }
 
     console.log("🔍 [Batch Details] Opening chat with:", {
       orderId: order.id,
-      customerId: orderWithNewFields.customerId || orderWithNewFields.orderedBy?.id,
+      customerId:
+        orderWithNewFields.customerId || orderWithNewFields.orderedBy?.id,
       customerName: orderWithNewFields.orderedBy?.name || order.user?.name,
-      shopperId: session?.user?.id
+      shopperId: session?.user?.id,
     });
 
     openChat(
       order.id,
       customerId, // We already validated this exists above
       orderWithNewFields.orderedBy?.name || order.user?.name || "Customer",
-      orderWithNewFields.orderedBy?.profile_picture || order.user?.profile_picture
+      orderWithNewFields.orderedBy?.profile_picture ||
+        order.user?.profile_picture
     );
 
     // If on mobile, navigate to chat page
@@ -1286,24 +1297,24 @@ export default function BatchDetails({
 
     try {
       setLoading(true);
-      
+
       // Send notification to customer
-      const response = await fetch('/api/fcm/send-notification', {
-        method: 'POST',
+      const response = await fetch("/api/fcm/send-notification", {
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
         body: JSON.stringify({
           recipientId: order.orderedBy?.id || order.customerId,
-          senderName: session?.user?.name || 'Your Shopper',
-          message: 'Plasa has arrived',
+          senderName: session?.user?.name || "Your Shopper",
+          message: "Plasa has arrived",
           orderId: order.id,
           conversationId: order.id, // Using order ID as conversation ID
         }),
       });
 
       if (!response.ok) {
-        throw new Error('Failed to send notification');
+        throw new Error("Failed to send notification");
       }
 
       // Show success notification
@@ -1313,9 +1324,8 @@ export default function BatchDetails({
         </Notification>,
         { placement: "topEnd" }
       );
-
     } catch (error) {
-      console.error('Error sending shopper arrived notification:', error);
+      console.error("Error sending shopper arrived notification:", error);
       toaster.push(
         <Notification type="error" header="Notification Failed" closable>
           Failed to notify customer. Please try again.
@@ -1364,7 +1374,7 @@ export default function BatchDetails({
               orderedByEmail: data.order.orderedBy?.email,
               orderedByPhone: data.order.orderedBy?.phone,
               customerId: data.order.customerId,
-              shopperId: session?.user?.id
+              shopperId: session?.user?.id,
             });
             setOrder(data.order);
           }
@@ -1485,8 +1495,11 @@ export default function BatchDetails({
             customer={{
               id: order.orderedBy?.id || order.customerId || "",
               name: order.orderedBy?.name || order.user?.name || "Customer",
-              avatar: order.orderedBy?.profile_picture || order.user?.profile_picture || "/images/userProfile.png",
-              phone: order.orderedBy?.phone || order.user?.phone
+              avatar:
+                order.orderedBy?.profile_picture ||
+                order.user?.profile_picture ||
+                "/images/userProfile.png",
+              phone: order.orderedBy?.phone || order.user?.phone,
             }}
             isOpen={isDrawerOpen}
             onClose={closeChat}
@@ -1846,8 +1859,16 @@ export default function BatchDetails({
                 <div className="mb-3 flex flex-col items-center gap-3 sm:mb-4 sm:flex-row sm:items-start">
                   <div className="h-8 w-8 overflow-hidden rounded-full bg-slate-200 sm:h-12 sm:w-12">
                     <Image
-                      src={(order as any).orderedBy?.profile_picture || order.user?.profile_picture || "/images/userProfile.png"}
-                      alt={(order as any).orderedBy?.name || order.user?.name || "Customer"}
+                      src={
+                        (order as any).orderedBy?.profile_picture ||
+                        order.user?.profile_picture ||
+                        "/images/userProfile.png"
+                      }
+                      alt={
+                        (order as any).orderedBy?.name ||
+                        order.user?.name ||
+                        "Customer"
+                      }
                       width={48}
                       height={48}
                       className="h-full w-full object-cover"
@@ -1855,10 +1876,14 @@ export default function BatchDetails({
                   </div>
                   <div className="text-center sm:text-left">
                     <h4 className="text-base font-medium text-slate-900 dark:text-slate-100 sm:text-lg">
-                      {(order as any).orderedBy?.name || order.user?.name || "Unknown Customer"}
+                      {(order as any).orderedBy?.name ||
+                        order.user?.name ||
+                        "Unknown Customer"}
                     </h4>
                     <p className="text-sm text-slate-500 dark:text-slate-400 sm:text-base">
-                      {(order as any).orderedBy?.phone || order.user?.phone || "N/A"}
+                      {(order as any).orderedBy?.phone ||
+                        order.user?.phone ||
+                        "N/A"}
                     </p>
                   </div>
                 </div>
@@ -1869,7 +1894,8 @@ export default function BatchDetails({
                       Delivery Address
                     </p>
                     <p className="text-sm text-slate-900 dark:text-slate-100 sm:text-base">
-                      {order.address?.street || "No street"}, {order.address?.city || "No city"}
+                      {order.address?.street || "No street"},{" "}
+                      {order.address?.city || "No city"}
                       {order.address?.postal_code
                         ? `, ${order.address.postal_code}`
                         : ""}
@@ -1881,7 +1907,9 @@ export default function BatchDetails({
                       className="flex items-center rounded-full border border-green-400 px-3 py-1.5 text-xs text-green-600 transition-colors hover:border-green-300 hover:bg-green-50 hover:text-green-700 dark:border-green-700 dark:text-green-400 dark:hover:border-green-600 dark:hover:bg-green-900/20 sm:text-sm"
                       onClick={() =>
                         handleDirectionsClick(
-                          `${order.address?.street || "No street"}, ${order.address?.city || "No city"}${
+                          `${order.address?.street || "No street"}, ${
+                            order.address?.city || "No city"
+                          }${
                             order.address?.postal_code
                               ? `, ${order.address.postal_code}`
                               : ""
@@ -1906,7 +1934,9 @@ export default function BatchDetails({
                       <button
                         className="flex items-center rounded-full border border-green-400 px-3 py-1.5 text-xs text-green-600 transition-colors hover:border-green-300 hover:bg-green-50 hover:text-green-700 dark:border-green-700 dark:text-green-400 dark:hover:border-green-600 dark:hover:bg-green-900/20 sm:text-sm"
                         onClick={() =>
-                          (window.location.href = `tel:${(order as any).orderedBy?.phone || order.user?.phone}`)
+                          (window.location.href = `tel:${
+                            (order as any).orderedBy?.phone || order.user?.phone
+                          }`)
                         }
                       >
                         <svg
@@ -1957,7 +1987,8 @@ export default function BatchDetails({
                     )}
 
                     {/* Shopper Arrived Button - Only show when delivering */}
-                    {(order.status === "on_the_way" || order.status === "at_customer") && (
+                    {(order.status === "on_the_way" ||
+                      order.status === "at_customer") && (
                       <button
                         className="flex items-center rounded-full border border-blue-400 px-3 py-1.5 text-xs text-blue-600 transition-colors hover:border-blue-300 hover:bg-blue-50 hover:text-blue-700 dark:border-blue-700 dark:text-blue-400 dark:hover:border-blue-600 dark:hover:bg-blue-900/20 sm:text-sm"
                         onClick={handleShopperArrived}

@@ -31,7 +31,14 @@ export default async function handler(
         currency: !currency,
         payerNumber: !payerNumber,
       },
-      receivedData: { amount, currency, payerNumber, externalId, payerMessage, payeeNote },
+      receivedData: {
+        amount,
+        currency,
+        payerNumber,
+        externalId,
+        payerMessage,
+        payeeNote,
+      },
     });
     return res.status(400).json({
       error: "Missing required fields: amount, currency, payerNumber",
@@ -45,17 +52,31 @@ export default async function handler(
     // Check if we have valid MoMo credentials
     console.log("💰 [MoMo Transfer API] Checking credentials...");
     console.log("💰 [MoMo Transfer API] Environment:", process.env.NODE_ENV);
-    console.log("💰 [MoMo Transfer API] Sandbox URL:", process.env.MOMO_SANDBOX_URL);
-    console.log("💰 [MoMo Transfer API] Subscription Key configured:", !!process.env.MOMO_SUBSCRIPTION_KEY_SANDBOX);
-    console.log("💰 [MoMo Transfer API] API User configured:", !!process.env.MOMO_API_USER_SANDBOX);
-    console.log("💰 [MoMo Transfer API] API Key configured:", !!process.env.MOMO_API_KEY_SANDBOX);
+    console.log(
+      "💰 [MoMo Transfer API] Sandbox URL:",
+      process.env.MOMO_SANDBOX_URL
+    );
+    console.log(
+      "💰 [MoMo Transfer API] Subscription Key configured:",
+      !!process.env.MOMO_SUBSCRIPTION_KEY_SANDBOX
+    );
+    console.log(
+      "💰 [MoMo Transfer API] API User configured:",
+      !!process.env.MOMO_API_USER_SANDBOX
+    );
+    console.log(
+      "💰 [MoMo Transfer API] API Key configured:",
+      !!process.env.MOMO_API_KEY_SANDBOX
+    );
 
     if (
       !process.env.MOMO_SUBSCRIPTION_KEY_SANDBOX ||
       !process.env.MOMO_API_USER_SANDBOX ||
       !process.env.MOMO_API_KEY_SANDBOX
     ) {
-      console.log("🧪 [MoMo Transfer API] Credentials not configured, simulating payment for testing");
+      console.log(
+        "🧪 [MoMo Transfer API] Credentials not configured, simulating payment for testing"
+      );
       console.log("🧪 [MoMo Transfer API] Simulated Payment Details:", {
         referenceId,
         amount,
@@ -97,8 +118,14 @@ export default async function handler(
       headers: tokenHeaders,
     });
 
-    console.log("🔑 [MoMo Transfer API] Token Response Status:", tokenRes.status);
-    console.log("🔑 [MoMo Transfer API] Token Response Headers:", Object.fromEntries(tokenRes.headers.entries()));
+    console.log(
+      "🔑 [MoMo Transfer API] Token Response Status:",
+      tokenRes.status
+    );
+    console.log(
+      "🔑 [MoMo Transfer API] Token Response Headers:",
+      Object.fromEntries(tokenRes.headers.entries())
+    );
 
     if (!tokenRes.ok) {
       const errorText = await tokenRes.text();
@@ -110,19 +137,24 @@ export default async function handler(
 
       // If it's a credentials issue, simulate successful payment
       if (tokenRes.status === 401 || tokenRes.status === 403) {
-        console.log("🧪 [MoMo Transfer API] Credentials invalid, simulating payment for testing");
-        console.log("🧪 [MoMo Transfer API] Simulated Payment Details (Invalid Credentials):", {
-          referenceId,
-          amount,
-          currency,
-          payerNumber,
-          externalId,
-          payerMessage,
-          payeeNote,
-          status: "SUCCESSFUL",
-          reason: "Invalid credentials - testing mode",
-          timestamp: new Date().toISOString(),
-        });
+        console.log(
+          "🧪 [MoMo Transfer API] Credentials invalid, simulating payment for testing"
+        );
+        console.log(
+          "🧪 [MoMo Transfer API] Simulated Payment Details (Invalid Credentials):",
+          {
+            referenceId,
+            amount,
+            currency,
+            payerNumber,
+            externalId,
+            payerMessage,
+            payeeNote,
+            status: "SUCCESSFUL",
+            reason: "Invalid credentials - testing mode",
+            timestamp: new Date().toISOString(),
+          }
+        );
         return res.status(200).json({
           referenceId,
           message:
@@ -190,8 +222,14 @@ export default async function handler(
       body: JSON.stringify(transferPayload),
     });
 
-    console.log("💰 [MoMo Transfer API] Transfer Response Status:", transferRes.status);
-    console.log("💰 [MoMo Transfer API] Transfer Response Headers:", Object.fromEntries(transferRes.headers.entries()));
+    console.log(
+      "💰 [MoMo Transfer API] Transfer Response Status:",
+      transferRes.status
+    );
+    console.log(
+      "💰 [MoMo Transfer API] Transfer Response Headers:",
+      Object.fromEntries(transferRes.headers.entries())
+    );
 
     if (transferRes.status === 202) {
       console.log("✅ [MoMo Transfer API] Transfer Accepted:", {

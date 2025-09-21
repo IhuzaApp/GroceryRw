@@ -11,9 +11,18 @@ export default async function handler(
   console.log("🔑 [MoMo Token API] Starting token request...");
   console.log("🔑 [MoMo Token API] Environment:", process.env.NODE_ENV);
   console.log("🔑 [MoMo Token API] Sandbox URL:", process.env.MOMO_SANDBOX_URL);
-  console.log("🔑 [MoMo Token API] Subscription Key configured:", !!process.env.MOMO_SUBSCRIPTION_KEY_SANDBOX);
-  console.log("🔑 [MoMo Token API] API User configured:", !!process.env.MOMO_API_USER_SANDBOX);
-  console.log("🔑 [MoMo Token API] API Key configured:", !!process.env.MOMO_API_KEY_SANDBOX);
+  console.log(
+    "🔑 [MoMo Token API] Subscription Key configured:",
+    !!process.env.MOMO_SUBSCRIPTION_KEY_SANDBOX
+  );
+  console.log(
+    "🔑 [MoMo Token API] API User configured:",
+    !!process.env.MOMO_API_USER_SANDBOX
+  );
+  console.log(
+    "🔑 [MoMo Token API] API Key configured:",
+    !!process.env.MOMO_API_KEY_SANDBOX
+  );
 
   try {
     const requestHeaders = {
@@ -37,7 +46,10 @@ export default async function handler(
     });
 
     console.log("🔑 [MoMo Token API] Response Status:", response.status);
-    console.log("🔑 [MoMo Token API] Response Headers:", Object.fromEntries(response.headers.entries()));
+    console.log(
+      "🔑 [MoMo Token API] Response Headers:",
+      Object.fromEntries(response.headers.entries())
+    );
 
     if (!response.ok) {
       const errorText = await response.text();
@@ -56,7 +68,7 @@ export default async function handler(
       expires_in: data.expires_in,
       timestamp: new Date().toISOString(),
     });
-    
+
     res.status(200).json(data); // { access_token, token_type, expires_in }
   } catch (error) {
     console.error("💥 [MoMo Token API] Exception:", {

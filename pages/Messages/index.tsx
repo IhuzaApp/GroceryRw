@@ -101,7 +101,10 @@ function MessagesPage() {
     // Only fetch if user is authenticated
     if (status === "authenticated" && session?.user?.id) {
       const userId = session.user.id;
-      console.log("🔍 [User Messages] Fetching conversations for user:", userId);
+      console.log(
+        "🔍 [User Messages] Fetching conversations for user:",
+        userId
+      );
 
       const fetchConversationsAndOrders = async () => {
         try {
@@ -119,35 +122,47 @@ function MessagesPage() {
 
           console.log("🔍 [User Messages] Query setup:", {
             collection: "chat_conversations",
-            filter: "customerId == " + userId
+            filter: "customerId == " + userId,
           });
 
           // Temporary: Check ALL conversations in Firebase
           const allConversationsRef = collection(db, "chat_conversations");
           const allConversationsQuery = query(allConversationsRef);
           const allConversationsSnapshot = await getDocs(allConversationsQuery);
-          console.log("🔍 [User Messages] ALL conversations in Firebase:", allConversationsSnapshot.docs.map(doc => ({
-            id: doc.id,
-            data: doc.data()
-          })));
+          console.log(
+            "🔍 [User Messages] ALL conversations in Firebase:",
+            allConversationsSnapshot.docs.map((doc) => ({
+              id: doc.id,
+              data: doc.data(),
+            }))
+          );
 
           // Set up real-time listener for conversations
           const unsubscribe = onSnapshot(
             q,
             async (snapshot) => {
-              console.log("🔍 [User Messages] Conversations snapshot received, count:", snapshot.docs.length);
-              console.log("🔍 [User Messages] Snapshot docs:", snapshot.docs.map(doc => ({
-                id: doc.id,
-                data: doc.data()
-              })));
-              
-              // Check if any conversations have the current user as customerId
-              const userConversations = snapshot.docs.filter(doc => 
-                doc.data().customerId === userId
+              console.log(
+                "🔍 [User Messages] Conversations snapshot received, count:",
+                snapshot.docs.length
               );
-              console.log("🔍 [User Messages] Conversations for current user:", userConversations.length);
+              console.log(
+                "🔍 [User Messages] Snapshot docs:",
+                snapshot.docs.map((doc) => ({
+                  id: doc.id,
+                  data: doc.data(),
+                }))
+              );
+
+              // Check if any conversations have the current user as customerId
+              const userConversations = snapshot.docs.filter(
+                (doc) => doc.data().customerId === userId
+              );
+              console.log(
+                "🔍 [User Messages] Conversations for current user:",
+                userConversations.length
+              );
               console.log("🔍 [User Messages] User ID being searched:", userId);
-              
+
               // Get conversations and sort them in memory instead
               let conversationList = snapshot.docs.map((doc) => ({
                 id: doc.id,
@@ -159,8 +174,11 @@ function MessagesPage() {
                     : doc.data().lastMessageTime,
               })) as Conversation[];
 
-              console.log("🔍 [User Messages] Processed conversations:", conversationList);
-              
+              console.log(
+                "🔍 [User Messages] Processed conversations:",
+                conversationList
+              );
+
               // Log detailed conversation info
               conversationList.forEach((conv, index) => {
                 console.log(`🔍 [User Messages] Conversation ${index + 1}:`, {
@@ -170,7 +188,7 @@ function MessagesPage() {
                   shopperId: conv.shopperId,
                   lastMessage: conv.lastMessage,
                   lastMessageTime: conv.lastMessageTime,
-                  unreadCount: conv.unreadCount
+                  unreadCount: conv.unreadCount,
                 });
               });
 
@@ -185,18 +203,32 @@ function MessagesPage() {
                 return timeB - timeA; // descending order (newest first)
               });
 
-              console.log("🔍 [User Messages] Sorted conversations:", conversationList);
-              
+              console.log(
+                "🔍 [User Messages] Sorted conversations:",
+                conversationList
+              );
+
               // Check if the specific conversation from shopper side exists
               const shopperConversationId = "9pHJiDPXzspA7V6P5Mrp";
-              const foundConversation = conversationList.find(conv => conv.id === shopperConversationId);
+              const foundConversation = conversationList.find(
+                (conv) => conv.id === shopperConversationId
+              );
               if (foundConversation) {
-                console.log("🔍 [User Messages] ✅ Found shopper conversation:", foundConversation);
+                console.log(
+                  "🔍 [User Messages] ✅ Found shopper conversation:",
+                  foundConversation
+                );
               } else {
-                console.log("🔍 [User Messages] ❌ Shopper conversation NOT found. Looking for ID:", shopperConversationId);
-                console.log("🔍 [User Messages] Available conversation IDs:", conversationList.map(conv => conv.id));
+                console.log(
+                  "🔍 [User Messages] ❌ Shopper conversation NOT found. Looking for ID:",
+                  shopperConversationId
+                );
+                console.log(
+                  "🔍 [User Messages] Available conversation IDs:",
+                  conversationList.map((conv) => conv.id)
+                );
               }
-              
+
               setConversations(conversationList);
 
               // Fetch order details for each conversation
@@ -354,11 +386,13 @@ function MessagesPage() {
 
           // Set order with shopper data
           let order = orders[orderId];
-          
+
           // If order doesn't have assignedTo data, fetch fresh data
           if (!order?.assignedTo) {
             try {
-              const res = await fetch(`/api/queries/orderDetails?id=${orderId}`);
+              const res = await fetch(
+                `/api/queries/orderDetails?id=${orderId}`
+              );
               if (res.ok) {
                 const data = await res.json();
                 order = data.order;
@@ -367,15 +401,17 @@ function MessagesPage() {
               console.error("Error fetching fresh order data:", error);
             }
           }
-          
+
           const shopperObject = {
             id: conversationData.shopperId,
             name: shopperData?.name || order?.assignedTo?.name || "Shopper",
-            avatar: shopperData?.avatar || order?.assignedTo?.profile_picture || "/images/ProfileImage.png",
+            avatar:
+              shopperData?.avatar ||
+              order?.assignedTo?.profile_picture ||
+              "/images/ProfileImage.png",
             phone: shopperData?.phone || order?.assignedTo?.phone,
           };
-          
-          
+
           setSelectedOrder({
             ...order,
             shopper: shopperObject,
@@ -414,7 +450,11 @@ function MessagesPage() {
               : doc.data().timestamp,
         })) as Message[];
 
-        console.log("🔍 [Messages] Received messages:", messagesList.length, "messages");
+        console.log(
+          "🔍 [Messages] Received messages:",
+          messagesList.length,
+          "messages"
+        );
         console.log("🔍 [Messages] Messages data:", messagesList);
         setMessages(messagesList);
 
@@ -467,7 +507,7 @@ function MessagesPage() {
         text: newMessage.trim(),
         senderId: session.user.id,
         senderType: "customer",
-        recipientId: selectedOrder.shopper.id
+        recipientId: selectedOrder.shopper.id,
       });
 
       // Add new message to Firestore
@@ -529,11 +569,11 @@ function MessagesPage() {
             <h3 className="mb-2 text-lg font-semibold text-gray-900 dark:text-white">
               Authentication Required
             </h3>
-            <p className="mb-4 text-gray-500 dark:text-gray-400">Please sign in to view your messages.</p>
+            <p className="mb-4 text-gray-500 dark:text-gray-400">
+              Please sign in to view your messages.
+            </p>
             <Link href="/login" passHref>
-              <Button appearance="primary">
-                Sign In
-              </Button>
+              <Button appearance="primary">Sign In</Button>
             </Link>
           </div>
         </div>
@@ -570,7 +610,8 @@ function MessagesPage() {
               No conversations yet
             </h3>
             <p className="text-gray-500 dark:text-gray-400">
-              You'll see your chat conversations with shoppers here once you place orders.
+              You'll see your chat conversations with shoppers here once you
+              place orders.
             </p>
             <div className="mt-4">
               <Link href="/CurrentPendingOrders" passHref>
@@ -648,16 +689,21 @@ function MessagesPage() {
                 No conversations yet
               </h3>
               <p className="text-gray-500 dark:text-gray-400">
-                You'll see your chat conversations with shoppers here once you place orders.
+                You'll see your chat conversations with shoppers here once you
+                place orders.
               </p>
             </Panel>
           ) : (
             <div className="space-y-4">
               {filteredConversations.map((conversation) => {
                 const order = orders[conversation.orderId] || {};
-                const shopperName = order?.assignedTo?.name || order?.shopper?.name || "Shopper";
-                const shopperAvatar = order?.assignedTo?.profile_picture || order?.shopper?.avatar || "/images/ProfileImage.png";
-                
+                const shopperName =
+                  order?.assignedTo?.name || order?.shopper?.name || "Shopper";
+                const shopperAvatar =
+                  order?.assignedTo?.profile_picture ||
+                  order?.shopper?.avatar ||
+                  "/images/ProfileImage.png";
+
                 return (
                   <div
                     key={conversation.id}
@@ -673,12 +719,14 @@ function MessagesPage() {
                           size="lg"
                         />
                         {conversation.unreadCount > 0 && (
-                          <div className="absolute -top-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full bg-red-500 text-xs font-bold text-white">
-                            {conversation.unreadCount > 9 ? "9+" : conversation.unreadCount}
+                          <div className="absolute -right-1 -top-1 flex h-5 w-5 items-center justify-center rounded-full bg-red-500 text-xs font-bold text-white">
+                            {conversation.unreadCount > 9
+                              ? "9+"
+                              : conversation.unreadCount}
                           </div>
                         )}
                       </div>
-                      <div className="flex-1 min-w-0">
+                      <div className="min-w-0 flex-1">
                         <div className="flex items-center justify-between">
                           <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
                             {shopperName}
@@ -688,28 +736,33 @@ function MessagesPage() {
                               {timeAgo(conversation.lastMessageTime)}
                             </span>
                             {order && (
-                              <span className={`mt-1 inline-flex items-center rounded-full px-2 py-1 text-xs font-medium ${
-                                order.status === 'delivered' 
-                                  ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200'
-                                  : order.status === 'on_the_way'
-                                  ? 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200'
-                                  : order.status === 'at_customer'
-                                  ? 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200'
-                                  : order.status === 'pending'
-                                  ? 'bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200'
-                                  : 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-200'
-                              }`}>
-                                {order.status?.replace('_', ' ').toUpperCase() || 'PENDING'}
+                              <span
+                                className={`mt-1 inline-flex items-center rounded-full px-2 py-1 text-xs font-medium ${
+                                  order.status === "delivered"
+                                    ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200"
+                                    : order.status === "on_the_way"
+                                    ? "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200"
+                                    : order.status === "at_customer"
+                                    ? "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200"
+                                    : order.status === "pending"
+                                    ? "bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200"
+                                    : "bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-200"
+                                }`}
+                              >
+                                {order.status
+                                  ?.replace("_", " ")
+                                  .toUpperCase() || "PENDING"}
                               </span>
                             )}
                           </div>
                         </div>
                         <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
-                          Order {formatOrderID(order?.OrderID || order?.id || conversation.orderId)}
+                          Order{" "}
+                          {formatOrderID(
+                            order?.OrderID || order?.id || conversation.orderId
+                          )}
                           {order?.shop?.name && (
-                            <span className="ml-2">
-                              - {order.shop.name}
-                            </span>
+                            <span className="ml-2">- {order.shop.name}</span>
                           )}
                         </p>
                         <p className="mt-2 text-sm text-gray-600 dark:text-gray-300">
@@ -732,7 +785,7 @@ function MessagesPage() {
               id: selectedOrder.shopper.id,
               name: selectedOrder.shopper.name,
               avatar: selectedOrder.shopper.avatar,
-              phone: selectedOrder.shopper.phone
+              phone: selectedOrder.shopper.phone,
             }}
             isOpen={isDrawerOpen}
             onClose={() => setIsDrawerOpen(false)}

@@ -108,7 +108,10 @@ function ChatPage() {
             lastSeen: "Online now",
           };
 
-          console.log("🔍 [Shopper Chat] Customer data to set:", customerDataToSet);
+          console.log(
+            "🔍 [Shopper Chat] Customer data to set:",
+            customerDataToSet
+          );
           setCustomerData(customerDataToSet);
 
           // Get or create conversation
@@ -160,7 +163,6 @@ function ChatPage() {
     }
   };
 
-
   useEffect(() => {
     const checkIfMobile = () => {
       setIsMobile(window.innerWidth < 768);
@@ -202,14 +204,16 @@ function ChatPage() {
       const previousMessageCount = messages.length;
       const newMessages = messagesList.slice(previousMessageCount);
       const newUnreadCustomerMessages = newMessages.filter(
-        (message) => 
-          message.senderType === "customer" && 
+        (message) =>
+          message.senderType === "customer" &&
           message.senderId !== user?.id &&
           !message.read
       );
-      
+
       if (newUnreadCustomerMessages.length > 0) {
-        console.log("🔊 [Shopper Chat] New unread message from customer, playing notification sound");
+        console.log(
+          "🔊 [Shopper Chat] New unread message from customer, playing notification sound"
+        );
         soundNotification.play();
       }
 
@@ -268,19 +272,24 @@ function ChatPage() {
     });
 
     if (!message.trim() || !user?.id || !conversationId || !customerData?.id) {
-      console.log("❌ [Shopper Chat] Cannot send message, missing required data:", {
-        hasMessage: !!message.trim(),
-        hasUser: !!user?.id,
-        hasConversation: !!conversationId,
-        hasCustomerData: !!customerData?.id,
-      });
+      console.log(
+        "❌ [Shopper Chat] Cannot send message, missing required data:",
+        {
+          hasMessage: !!message.trim(),
+          hasUser: !!user?.id,
+          hasConversation: !!conversationId,
+          hasCustomerData: !!customerData?.id,
+        }
+      );
       return;
     }
 
     try {
       setIsSending(true);
 
-      console.log("✅ [Shopper Chat] All data available, proceeding to send message");
+      console.log(
+        "✅ [Shopper Chat] All data available, proceeding to send message"
+      );
 
       // Add new message to Firestore
       const messagesRef = collection(
@@ -309,14 +318,14 @@ function ChatPage() {
 
       // Send FCM notification to the customer
       try {
-        const response = await fetch('/api/fcm/send-notification', {
-          method: 'POST',
+        const response = await fetch("/api/fcm/send-notification", {
+          method: "POST",
           headers: {
-            'Content-Type': 'application/json',
+            "Content-Type": "application/json",
           },
           body: JSON.stringify({
             recipientId: customerData.id,
-            senderName: user.name || 'Shopper',
+            senderName: user.name || "Shopper",
             message: message.trim(),
             orderId: orderId,
             conversationId: conversationId,
@@ -324,22 +333,27 @@ function ChatPage() {
         });
 
         if (response.ok) {
-          console.log('✅ [Shopper Chat] FCM notification sent to customer');
+          console.log("✅ [Shopper Chat] FCM notification sent to customer");
         } else {
           const errorData = await response.json().catch(() => ({}));
-          console.log('⚠️ [Shopper Chat] FCM notification failed:', {
+          console.log("⚠️ [Shopper Chat] FCM notification failed:", {
             status: response.status,
             statusText: response.statusText,
-            error: errorData
+            error: errorData,
           });
         }
       } catch (fcmError) {
-        console.error('⚠️ [Shopper Chat] FCM notification error (non-critical):', fcmError);
+        console.error(
+          "⚠️ [Shopper Chat] FCM notification error (non-critical):",
+          fcmError
+        );
       }
 
       // Clear input
       setMessage("");
-      console.log("✅ [Shopper Chat] Message sent successfully and input cleared");
+      console.log(
+        "✅ [Shopper Chat] Message sent successfully and input cleared"
+      );
     } catch (error) {
       console.error("❌ [Shopper Chat] Error sending message:", error);
     } finally {
@@ -353,8 +367,6 @@ function ChatPage() {
       handleSendMessage();
     }
   };
-
-
 
   // Group messages by date for better display
   const groupMessagesByDate = () => {
@@ -401,43 +413,210 @@ function ChatPage() {
 
   return (
     <div className="h-screen w-screen overflow-hidden bg-gray-50 dark:bg-gray-900">
-        {isLoading ? (
-          <div className="flex h-full flex-col bg-white dark:bg-gray-900">
-            {/* Professional Header */}
-            <div className="flex items-center justify-between border-b border-gray-200 bg-white px-4 py-3 shadow-sm dark:border-gray-700 dark:bg-gray-800">
+      {isLoading ? (
+        <div className="flex h-full flex-col bg-white dark:bg-gray-900">
+          {/* Professional Header */}
+          <div className="flex items-center justify-between border-b border-gray-200 bg-white px-4 py-3 shadow-sm dark:border-gray-700 dark:bg-gray-800">
+            <div className="flex items-center space-x-3">
+              <Link href="/Plasa" className="flex items-center">
+                <button className="rounded-full p-2 text-gray-600 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-700">
+                  <svg
+                    className="h-5 w-5"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M15 19l-7-7 7-7"
+                    />
+                  </svg>
+                </button>
+              </Link>
               <div className="flex items-center space-x-3">
-                <Link href="/Plasa" className="flex items-center">
-                  <button className="rounded-full p-2 text-gray-600 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-700">
-                    <svg
-                      className="h-5 w-5"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M15 19l-7-7 7-7"
-                      />
-                    </svg>
-                  </button>
-                </Link>
-                <div className="flex items-center space-x-3">
-                  <div className="relative">
-                    <div className="h-10 w-10 animate-pulse rounded-full bg-gray-200 dark:bg-gray-600"></div>
-                  </div>
-                  <div>
-                    <div className="mb-1 h-5 w-32 animate-pulse rounded bg-gray-200 dark:bg-gray-600"></div>
-                    <div className="h-4 w-24 animate-pulse rounded bg-gray-200 dark:bg-gray-600"></div>
-                  </div>
+                <div className="relative">
+                  <div className="h-10 w-10 animate-pulse rounded-full bg-gray-200 dark:bg-gray-600"></div>
+                </div>
+                <div>
+                  <div className="mb-1 h-5 w-32 animate-pulse rounded bg-gray-200 dark:bg-gray-600"></div>
+                  <div className="h-4 w-24 animate-pulse rounded bg-gray-200 dark:bg-gray-600"></div>
                 </div>
               </div>
-              <div className="h-8 w-8 animate-pulse rounded-full bg-gray-200 dark:bg-gray-600"></div>
             </div>
+            <div className="h-8 w-8 animate-pulse rounded-full bg-gray-200 dark:bg-gray-600"></div>
+          </div>
 
-            {/* Messages Container */}
-            <div className="flex-1 overflow-y-auto bg-gray-50 px-4 py-4 dark:bg-gray-900">
+          {/* Messages Container */}
+          <div className="flex-1 overflow-y-auto bg-gray-50 px-4 py-4 dark:bg-gray-900">
+            <div className="flex h-full items-center justify-center">
+              <div className="text-center">
+                <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-gray-100 dark:bg-gray-800">
+                  <svg
+                    className="h-8 w-8 text-gray-400"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"
+                    />
+                  </svg>
+                </div>
+                <h3 className="text-lg font-medium text-gray-900 dark:text-white">
+                  Loading chat...
+                </h3>
+                <p className="text-gray-500 dark:text-gray-400">
+                  Please wait while we load the conversation
+                </p>
+              </div>
+            </div>
+          </div>
+
+          {/* Professional Message Input */}
+          <div className="border-t border-gray-200 bg-white px-4 py-3 dark:border-gray-700 dark:bg-gray-800">
+            <div className="flex items-end space-x-3">
+              <div className="flex-shrink-0 rounded-full p-2 text-gray-300 dark:text-gray-600">
+                <svg
+                  className="h-5 w-5"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13"
+                  />
+                </svg>
+              </div>
+              <div className="flex-1">
+                <div className="w-full rounded-full border border-gray-200 bg-gray-100 px-4 py-3 text-sm dark:border-gray-600 dark:bg-gray-700">
+                  <div className="h-4 w-32 animate-pulse rounded bg-gray-200 dark:bg-gray-600"></div>
+                </div>
+              </div>
+              <div className="flex-shrink-0 rounded-full bg-gray-300 p-3 text-gray-400 dark:bg-gray-600">
+                <svg
+                  className="h-4 w-4"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"
+                  />
+                </svg>
+              </div>
+            </div>
+          </div>
+        </div>
+      ) : !customerData ? (
+        <div className="mx-auto max-w-2xl">
+          <div className="rounded-md bg-red-50 p-4">
+            <h3 className="font-medium text-red-800">Error</h3>
+            <p className="mt-2 text-red-700">Error fetching customer data</p>
+            <Button
+              appearance="primary"
+              color="red"
+              className="mt-4"
+              onClick={() => router.push("/Plasa")}
+            >
+              Back to Dashboard
+            </Button>
+          </div>
+        </div>
+      ) : !user ? (
+        <div className="mx-auto max-w-3xl">
+          <div className="rounded-lg bg-blue-50 p-6 text-center">
+            <h2 className="mb-4 text-xl font-semibold text-blue-700">
+              Sign in Required
+            </h2>
+            <p className="mb-6 text-blue-600">
+              Please sign in to view messages.
+            </p>
+            <Link href="/login" passHref>
+              <Button appearance="primary" color="blue">
+                Sign In
+              </Button>
+            </Link>
+          </div>
+        </div>
+      ) : (
+        <div className="flex h-full flex-col bg-white dark:bg-gray-900">
+          {/* Professional Header */}
+          <div className="flex items-center justify-between border-b border-gray-200 bg-white px-4 py-3 shadow-sm dark:border-gray-700 dark:bg-gray-800">
+            <div className="flex items-center space-x-3">
+              <Link
+                href={`/Plasa/active-batches/batch/${orderId}`}
+                className="flex items-center"
+              >
+                <button className="rounded-full p-2 text-gray-600 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-700">
+                  <svg
+                    className="h-5 w-5"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M15 19l-7-7 7-7"
+                    />
+                  </svg>
+                </button>
+              </Link>
+              <div className="flex items-center space-x-3">
+                <div className="relative">
+                  <img
+                    src={customerData?.avatar || "/images/userProfile.png"}
+                    alt={customerData?.name || "Customer"}
+                    className="h-10 w-10 rounded-full border-2 border-gray-200 object-cover dark:border-gray-600"
+                  />
+                  <div className="absolute -bottom-1 -right-1 h-3 w-3 rounded-full border-2 border-white bg-green-500 dark:border-gray-800"></div>
+                </div>
+                <div>
+                  <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
+                    {customerData?.name || "Customer"}
+                  </h2>
+                  <p className="text-sm text-gray-500 dark:text-gray-400">
+                    {order?.address?.street && order?.address?.city
+                      ? `${order.address.street}, ${order.address.city}`
+                      : "Address not available"}
+                  </p>
+                </div>
+              </div>
+            </div>
+            <Link href={`/Plasa/orders/${orderId}`}>
+              <button className="rounded-full p-2 text-gray-600 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-700">
+                <svg
+                  className="h-5 w-5"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"
+                  />
+                </svg>
+              </button>
+            </Link>
+          </div>
+
+          {/* Messages Container */}
+          <div className="flex-1 overflow-y-auto bg-gray-50 px-4 py-4 dark:bg-gray-900">
+            {messages.length === 0 ? (
               <div className="flex h-full items-center justify-center">
                 <div className="text-center">
                   <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-gray-100 dark:bg-gray-800">
@@ -456,39 +635,123 @@ function ChatPage() {
                     </svg>
                   </div>
                   <h3 className="text-lg font-medium text-gray-900 dark:text-white">
-                    Loading chat...
+                    No messages yet
                   </h3>
                   <p className="text-gray-500 dark:text-gray-400">
-                    Please wait while we load the conversation
+                    Start the conversation with your customer
                   </p>
                 </div>
               </div>
-            </div>
-
-            {/* Professional Message Input */}
-            <div className="border-t border-gray-200 bg-white px-4 py-3 dark:border-gray-700 dark:bg-gray-800">
-              <div className="flex items-end space-x-3">
-                <div className="flex-shrink-0 rounded-full p-2 text-gray-300 dark:text-gray-600">
-                  <svg
-                    className="h-5 w-5"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
+            ) : (
+              <div className="space-y-4">
+                {messages.map((msg, index) => (
+                  <div
+                    key={msg.id}
+                    className={`flex ${
+                      msg.senderType === "shopper"
+                        ? "justify-end"
+                        : "justify-start"
+                    }`}
                   >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13"
-                    />
-                  </svg>
-                </div>
-                <div className="flex-1">
-                  <div className="w-full rounded-full border border-gray-200 bg-gray-100 px-4 py-3 text-sm dark:border-gray-600 dark:bg-gray-700">
-                    <div className="h-4 w-32 animate-pulse rounded bg-gray-200 dark:bg-gray-600"></div>
+                    <div className="max-w-[75%]">
+                      {msg.senderType !== "shopper" && (
+                        <div className="mb-1 flex items-center space-x-2">
+                          <span className="text-xs font-medium text-gray-600 dark:text-gray-400">
+                            {customerData?.name || "Customer"}
+                          </span>
+                          <span className="text-xs text-gray-400 dark:text-gray-500">
+                            {formatMessageTime(msg.timestamp)}
+                          </span>
+                        </div>
+                      )}
+                      <div
+                        className={`rounded-2xl px-4 py-3 shadow-sm ${
+                          msg.senderType === "shopper"
+                            ? "bg-green-500 text-white"
+                            : "bg-white text-gray-900 dark:bg-gray-800 dark:text-white"
+                        }`}
+                      >
+                        <p className="text-sm leading-relaxed">
+                          {msg.text || msg.message}
+                        </p>
+                        {msg.senderType === "shopper" && (
+                          <div className="mt-1 flex items-center justify-end space-x-1">
+                            <span className="text-xs text-green-100">
+                              {formatMessageTime(msg.timestamp)}
+                            </span>
+                            <svg
+                              className="h-3 w-3 text-green-100"
+                              fill="currentColor"
+                              viewBox="0 0 20 20"
+                            >
+                              <path
+                                fillRule="evenodd"
+                                d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                                clipRule="evenodd"
+                              />
+                            </svg>
+                          </div>
+                        )}
+                      </div>
+                    </div>
                   </div>
-                </div>
-                <div className="flex-shrink-0 rounded-full bg-gray-300 p-3 text-gray-400 dark:bg-gray-600">
+                ))}
+                <div ref={messagesEndRef} />
+              </div>
+            )}
+          </div>
+
+          {/* Professional Message Input */}
+          <div className="border-t border-gray-200 bg-white px-4 py-3 dark:border-gray-700 dark:bg-gray-800">
+            <form
+              onSubmit={handleSendMessage}
+              className="flex items-end space-x-3"
+            >
+              <div className="flex-1">
+                <input
+                  type="text"
+                  value={message}
+                  onChange={(e) => setMessage(e.target.value)}
+                  onKeyPress={handleKeyPress}
+                  placeholder="Type your message..."
+                  className="w-full rounded-full border border-gray-300 bg-gray-50 px-4 py-3 text-sm focus:border-green-500 focus:bg-white focus:outline-none focus:ring-2 focus:ring-green-500/20 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:placeholder-gray-400 dark:focus:border-green-400 dark:focus:bg-gray-600"
+                />
+              </div>
+              <button
+                type="submit"
+                disabled={isSending || !message.trim()}
+                onClick={() => {
+                  console.log("🔍 [Shopper Chat] Send button clicked:", {
+                    isSending,
+                    messageTrimmed: message.trim(),
+                    disabled: isSending || !message.trim(),
+                  });
+                }}
+                className="flex-shrink-0 rounded-full bg-green-500 p-3 text-white shadow-lg transition-all duration-200 hover:bg-green-600 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 dark:focus:ring-offset-gray-800"
+              >
+                {isSending ? (
+                  <div className="flex items-center">
+                    <svg
+                      className="h-4 w-4 animate-spin"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                    >
+                      <circle
+                        className="opacity-25"
+                        cx="12"
+                        cy="12"
+                        r="10"
+                        stroke="currentColor"
+                        strokeWidth="4"
+                      ></circle>
+                      <path
+                        className="opacity-75"
+                        fill="currentColor"
+                        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                      ></path>
+                    </svg>
+                  </div>
+                ) : (
                   <svg
                     className="h-4 w-4"
                     fill="none"
@@ -502,260 +765,12 @@ function ChatPage() {
                       d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"
                     />
                   </svg>
-                </div>
-              </div>
-            </div>
+                )}
+              </button>
+            </form>
           </div>
-        ) : !customerData ? (
-          <div className="mx-auto max-w-2xl">
-            <div className="rounded-md bg-red-50 p-4">
-              <h3 className="font-medium text-red-800">Error</h3>
-              <p className="mt-2 text-red-700">Error fetching customer data</p>
-              <Button
-                appearance="primary"
-                color="red"
-                className="mt-4"
-                onClick={() => router.push("/Plasa")}
-              >
-                Back to Dashboard
-              </Button>
-            </div>
-          </div>
-        ) : !user ? (
-          <div className="mx-auto max-w-3xl">
-            <div className="rounded-lg bg-blue-50 p-6 text-center">
-              <h2 className="mb-4 text-xl font-semibold text-blue-700">
-                Sign in Required
-              </h2>
-              <p className="mb-6 text-blue-600">
-                Please sign in to view messages.
-              </p>
-              <Link href="/login" passHref>
-                <Button appearance="primary" color="blue">
-                  Sign In
-                </Button>
-              </Link>
-            </div>
-          </div>
-        ) : (
-          <div className="flex h-full flex-col bg-white dark:bg-gray-900">
-            {/* Professional Header */}
-            <div className="flex items-center justify-between border-b border-gray-200 bg-white px-4 py-3 shadow-sm dark:border-gray-700 dark:bg-gray-800">
-              <div className="flex items-center space-x-3">
-                <Link href={`/Plasa/active-batches/batch/${orderId}`} className="flex items-center">
-                  <button className="rounded-full p-2 text-gray-600 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-700">
-                    <svg
-                      className="h-5 w-5"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M15 19l-7-7 7-7"
-                      />
-                    </svg>
-                  </button>
-                </Link>
-                <div className="flex items-center space-x-3">
-                  <div className="relative">
-                    <img
-                      src={customerData?.avatar || "/images/userProfile.png"}
-                      alt={customerData?.name || "Customer"}
-                      className="h-10 w-10 rounded-full border-2 border-gray-200 object-cover dark:border-gray-600"
-                    />
-                    <div className="absolute -bottom-1 -right-1 h-3 w-3 rounded-full border-2 border-white bg-green-500 dark:border-gray-800"></div>
-                  </div>
-                  <div>
-                    <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
-                      {customerData?.name || "Customer"}
-                    </h2>
-                    <p className="text-sm text-gray-500 dark:text-gray-400">
-                      {order?.address?.street && order?.address?.city
-                        ? `${order.address.street}, ${order.address.city}`
-                        : "Address not available"}
-                    </p>
-                  </div>
-                </div>
-              </div>
-              <Link href={`/Plasa/orders/${orderId}`}>
-                <button className="rounded-full p-2 text-gray-600 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-700">
-                  <svg
-                    className="h-5 w-5"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"
-                    />
-                  </svg>
-                </button>
-              </Link>
-            </div>
-
-            {/* Messages Container */}
-            <div className="flex-1 overflow-y-auto bg-gray-50 px-4 py-4 dark:bg-gray-900">
-              {messages.length === 0 ? (
-                <div className="flex h-full items-center justify-center">
-                  <div className="text-center">
-                    <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-gray-100 dark:bg-gray-800">
-                      <svg
-                        className="h-8 w-8 text-gray-400"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"
-                        />
-                      </svg>
-                    </div>
-                    <h3 className="text-lg font-medium text-gray-900 dark:text-white">
-                      No messages yet
-                    </h3>
-                    <p className="text-gray-500 dark:text-gray-400">
-                      Start the conversation with your customer
-                    </p>
-                  </div>
-                </div>
-              ) : (
-                <div className="space-y-4">
-                  {messages.map((msg, index) => (
-                    <div
-                      key={msg.id}
-                      className={`flex ${
-                        msg.senderType === "shopper"
-                          ? "justify-end"
-                          : "justify-start"
-                      }`}
-                    >
-                      <div className="max-w-[75%]">
-                        {msg.senderType !== "shopper" && (
-                          <div className="mb-1 flex items-center space-x-2">
-                            <span className="text-xs font-medium text-gray-600 dark:text-gray-400">
-                              {customerData?.name || "Customer"}
-                            </span>
-                            <span className="text-xs text-gray-400 dark:text-gray-500">
-                              {formatMessageTime(msg.timestamp)}
-                            </span>
-                          </div>
-                        )}
-                        <div
-                          className={`rounded-2xl px-4 py-3 shadow-sm ${
-                            msg.senderType === "shopper"
-                              ? "bg-green-500 text-white"
-                              : "bg-white text-gray-900 dark:bg-gray-800 dark:text-white"
-                          }`}
-                        >
-                          <p className="text-sm leading-relaxed">
-                            {msg.text || msg.message}
-                          </p>
-                          {msg.senderType === "shopper" && (
-                            <div className="mt-1 flex items-center justify-end space-x-1">
-                              <span className="text-xs text-green-100">
-                                {formatMessageTime(msg.timestamp)}
-                              </span>
-                              <svg
-                                className="h-3 w-3 text-green-100"
-                                fill="currentColor"
-                                viewBox="0 0 20 20"
-                              >
-                                <path
-                                  fillRule="evenodd"
-                                  d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
-                                  clipRule="evenodd"
-                                />
-                              </svg>
-                            </div>
-                          )}
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                  <div ref={messagesEndRef} />
-                </div>
-              )}
-            </div>
-
-            {/* Professional Message Input */}
-            <div className="border-t border-gray-200 bg-white px-4 py-3 dark:border-gray-700 dark:bg-gray-800">
-              <form
-                onSubmit={handleSendMessage}
-                className="flex items-end space-x-3"
-              >
-                <div className="flex-1">
-                  <input
-                    type="text"
-                    value={message}
-                    onChange={(e) => setMessage(e.target.value)}
-                    onKeyPress={handleKeyPress}
-                    placeholder="Type your message..."
-                    className="w-full rounded-full border border-gray-300 bg-gray-50 px-4 py-3 text-sm focus:border-green-500 focus:bg-white focus:outline-none focus:ring-2 focus:ring-green-500/20 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:placeholder-gray-400 dark:focus:border-green-400 dark:focus:bg-gray-600"
-                  />
-                </div>
-                <button
-                  type="submit"
-                  disabled={isSending || !message.trim()}
-                  onClick={() => {
-                    console.log("🔍 [Shopper Chat] Send button clicked:", {
-                      isSending,
-                      messageTrimmed: message.trim(),
-                      disabled: isSending || !message.trim()
-                    });
-                  }}
-                  className="flex-shrink-0 rounded-full bg-green-500 p-3 text-white shadow-lg transition-all duration-200 hover:bg-green-600 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 dark:focus:ring-offset-gray-800"
-                >
-                  {isSending ? (
-                    <div className="flex items-center">
-                      <svg
-                        className="h-4 w-4 animate-spin"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                      >
-                        <circle
-                          className="opacity-25"
-                          cx="12"
-                          cy="12"
-                          r="10"
-                          stroke="currentColor"
-                          strokeWidth="4"
-                        ></circle>
-                        <path
-                          className="opacity-75"
-                          fill="currentColor"
-                          d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                        ></path>
-                      </svg>
-                    </div>
-                  ) : (
-                    <svg
-                      className="h-4 w-4"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"
-                      />
-                    </svg>
-                  )}
-                </button>
-              </form>
-            </div>
-          </div>
-        )}
+        </div>
+      )}
     </div>
   );
 }

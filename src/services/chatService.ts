@@ -47,18 +47,23 @@ export const createConversation = async (
     console.log("🔍 [Chat Service] Creating conversation:", {
       orderId,
       customerId,
-      shopperId
+      shopperId,
     });
 
     // Validate input parameters
     if (!orderId || !customerId || !shopperId) {
-      throw new Error("Missing required parameters: orderId, customerId, or shopperId");
+      throw new Error(
+        "Missing required parameters: orderId, customerId, or shopperId"
+      );
     }
 
     // Check if conversation already exists
     const existingConv = await getConversationByOrderId(orderId);
     if (existingConv) {
-      console.log("🔍 [Chat Service] Conversation already exists:", existingConv.id);
+      console.log(
+        "🔍 [Chat Service] Conversation already exists:",
+        existingConv.id
+      );
       return existingConv.id as string;
     }
 
@@ -72,9 +77,15 @@ export const createConversation = async (
       lastMessageTime: serverTimestamp(),
       unreadCount: 0,
     };
-    
-    console.log("🔍 [Chat Service] Creating conversation with data:", conversationData);
-    const docRef = await addDoc(collection(db, "chat_conversations"), conversationData);
+
+    console.log(
+      "🔍 [Chat Service] Creating conversation with data:",
+      conversationData
+    );
+    const docRef = await addDoc(
+      collection(db, "chat_conversations"),
+      conversationData
+    );
 
     console.log("🔍 [Chat Service] Conversation created:", docRef.id);
     return docRef.id;
@@ -131,7 +142,7 @@ export const addMessage = async (
       message,
       senderId,
       senderType,
-      image
+      image,
     });
 
     // Validate input parameters

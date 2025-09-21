@@ -18,23 +18,25 @@ export default async function handler(
   }
 
   const { name, email, password, phone, gender } = req.body;
-  
+
   // Validate required fields
   if (!name || !email || !password || !phone || !gender) {
     return res.status(400).json({ error: "Missing required fields" });
   }
-  
+
   // Validate email format
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
   if (!emailRegex.test(email)) {
     return res.status(400).json({ error: "Invalid email format" });
   }
-  
+
   // Validate password strength
   if (password.length < 8) {
-    return res.status(400).json({ error: "Password must be at least 8 characters long" });
+    return res
+      .status(400)
+      .json({ error: "Password must be at least 8 characters long" });
   }
-  
+
   // Validate phone format (basic validation)
   const phoneRegex = /^[\+]?[1-9][\d]{0,15}$/;
   const cleanPhone = phone.replace(/\D/g, "");
@@ -48,10 +50,7 @@ export default async function handler(
       query CheckExistingUser($email: String!, $phone: String!) {
         Users(
           where: {
-            _or: [
-              { email: { _eq: $email } }
-              { phone: { _eq: $phone } }
-            ]
+            _or: [{ email: { _eq: $email } }, { phone: { _eq: $phone } }]
           }
         ) {
           id
@@ -60,21 +59,25 @@ export default async function handler(
         }
       }
     `;
-    
+
     const existingUsers = await hasuraClient.request<{
       Users: Array<{ id: string; email: string; phone: string }>;
     }>(checkUserQuery, { email, phone: cleanPhone });
-    
+
     if (existingUsers.Users.length > 0) {
       const existingUser = existingUsers.Users[0];
       if (existingUser.email === email) {
-        return res.status(400).json({ error: "An account with this email already exists" });
+        return res
+          .status(400)
+          .json({ error: "An account with this email already exists" });
       }
       if (existingUser.phone === cleanPhone) {
-        return res.status(400).json({ error: "An account with this phone number already exists" });
+        return res
+          .status(400)
+          .json({ error: "An account with this phone number already exists" });
       }
     }
-    
+
     const password_hash = await bcrypt.hash(password, 10);
     const mutation = gql`
       mutation RegisterUser(
@@ -108,12 +111,16 @@ export default async function handler(
     return res.status(200).json({ success: true, userId: newId });
   } catch (error: any) {
     console.error("Error registering user:", error);
-    
+
     // Handle specific Hasura errors
     if (error.message?.includes("duplicate key")) {
-      return res.status(400).json({ error: "An account with this email or phone already exists" });
+      return res
+        .status(400)
+        .json({ error: "An account with this email or phone already exists" });
     }
-    
-    return res.status(500).json({ error: "Registration failed. Please try again." });
+
+    return res
+      .status(500)
+      .json({ error: "Registration failed. Please try again." });
   }
 }

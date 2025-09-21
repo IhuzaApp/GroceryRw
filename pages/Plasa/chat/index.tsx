@@ -92,20 +92,20 @@ function formatOrderID(id?: string | string[] | number): string {
     id = id.toString();
   }
   if (!id || id === "undefined" || id === "null") return "N/A";
-  
+
   // Convert to string and pad with leading zeros
   const idStr = id.toString();
-  
+
   // If it's a UUID (long string), take the last 6 characters
   if (idStr.length > 6) {
     return `#${idStr.slice(-6).toUpperCase()}`;
   }
-  
+
   // If it's a number, pad with leading zeros to make it 4 digits
   if (/^\d+$/.test(idStr)) {
-    return `#${idStr.padStart(4, '0')}`;
+    return `#${idStr.padStart(4, "0")}`;
   }
-  
+
   // If it's already short, just add the # prefix
   return `#${idStr.toUpperCase()}`;
 }
@@ -117,7 +117,8 @@ export default function ShopperChatPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [isMobile, setIsMobile] = useState(false);
-  const [selectedConversation, setSelectedConversation] = useState<Conversation | null>(null);
+  const [selectedConversation, setSelectedConversation] =
+    useState<Conversation | null>(null);
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
 
   // Mobile detection
@@ -125,10 +126,10 @@ export default function ShopperChatPage() {
     const checkIfMobile = () => {
       setIsMobile(window.innerWidth < 768);
     };
-    
+
     checkIfMobile();
-    window.addEventListener('resize', checkIfMobile);
-    return () => window.removeEventListener('resize', checkIfMobile);
+    window.addEventListener("resize", checkIfMobile);
+    return () => window.removeEventListener("resize", checkIfMobile);
   }, []);
 
   // Fetch conversations for the current shopper
@@ -150,17 +151,20 @@ export default function ShopperChatPage() {
           where("shopperId", "==", session.user.id)
         );
 
-        unsubscribe = onSnapshot(q, 
+        unsubscribe = onSnapshot(
+          q,
           async (snapshot) => {
             const conversationsList: Conversation[] = [];
 
             for (const doc of snapshot.docs) {
               const data = doc.data();
-              
+
               // Fetch order details for each conversation
               let orderData = null;
               try {
-                const orderResponse = await fetch(`/api/shopper/orderDetails?id=${data.orderId}`);
+                const orderResponse = await fetch(
+                  `/api/shopper/orderDetails?id=${data.orderId}`
+                );
                 if (orderResponse.ok) {
                   const orderResult = await orderResponse.json();
                   orderData = orderResult.order;
@@ -169,24 +173,35 @@ export default function ShopperChatPage() {
                 console.error("Error fetching order details:", error);
               }
 
-
-            conversationsList.push({
-              id: doc.id,
-              orderId: data.orderId,
-              customerId: data.customerId,
-              customerName: orderData?.orderedBy?.name || orderData?.user?.name || data.customerName || "Customer",
-              customerAvatar: orderData?.orderedBy?.profile_picture || orderData?.user?.profile_picture || data.customerAvatar || "/images/userProfile.png",
-              lastMessage: data.lastMessage || "No messages yet",
-              lastMessageTime: data.lastMessageTime,
-              unreadCount: data.unreadCount || 0,
-              order: orderData,
-            });
+              conversationsList.push({
+                id: doc.id,
+                orderId: data.orderId,
+                customerId: data.customerId,
+                customerName:
+                  orderData?.orderedBy?.name ||
+                  orderData?.user?.name ||
+                  data.customerName ||
+                  "Customer",
+                customerAvatar:
+                  orderData?.orderedBy?.profile_picture ||
+                  orderData?.user?.profile_picture ||
+                  data.customerAvatar ||
+                  "/images/userProfile.png",
+                lastMessage: data.lastMessage || "No messages yet",
+                lastMessageTime: data.lastMessageTime,
+                unreadCount: data.unreadCount || 0,
+                order: orderData,
+              });
             }
 
             // Sort conversations by lastMessageTime on the client side
             conversationsList.sort((a, b) => {
-              const timeA = a.lastMessageTime?.toDate ? a.lastMessageTime.toDate() : new Date(a.lastMessageTime || 0);
-              const timeB = b.lastMessageTime?.toDate ? b.lastMessageTime.toDate() : new Date(b.lastMessageTime || 0);
+              const timeA = a.lastMessageTime?.toDate
+                ? a.lastMessageTime.toDate()
+                : new Date(a.lastMessageTime || 0);
+              const timeB = b.lastMessageTime?.toDate
+                ? b.lastMessageTime.toDate()
+                : new Date(b.lastMessageTime || 0);
               return timeB.getTime() - timeA.getTime();
             });
 
@@ -294,7 +309,8 @@ export default function ShopperChatPage() {
               No conversations yet
             </h3>
             <p className="text-gray-500 dark:text-gray-400">
-              You'll see your chat conversations with customers here once you start working on orders.
+              You'll see your chat conversations with customers here once you
+              start working on orders.
             </p>
           </Panel>
         ) : (
@@ -314,12 +330,14 @@ export default function ShopperChatPage() {
                       size="lg"
                     />
                     {conversation.unreadCount > 0 && (
-                      <div className="absolute -top-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full bg-red-500 text-xs font-bold text-white">
-                        {conversation.unreadCount > 9 ? "9+" : conversation.unreadCount}
+                      <div className="absolute -right-1 -top-1 flex h-5 w-5 items-center justify-center rounded-full bg-red-500 text-xs font-bold text-white">
+                        {conversation.unreadCount > 9
+                          ? "9+"
+                          : conversation.unreadCount}
                       </div>
                     )}
                   </div>
-                  <div className="flex-1 min-w-0">
+                  <div className="min-w-0 flex-1">
                     <div className="flex items-center justify-between">
                       <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
                         {conversation.customerName}
@@ -329,24 +347,33 @@ export default function ShopperChatPage() {
                           {timeAgo(conversation.lastMessageTime)}
                         </span>
                         {conversation.order && (
-                          <span className={`mt-1 inline-flex items-center rounded-full px-2 py-1 text-xs font-medium ${
-                            conversation.order.status === 'delivered' 
-                              ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200'
-                              : conversation.order.status === 'on_the_way'
-                              ? 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200'
-                              : conversation.order.status === 'at_customer'
-                              ? 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200'
-                              : conversation.order.status === 'pending'
-                              ? 'bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200'
-                              : 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-200'
-                          }`}>
-                            {conversation.order.status.replace('_', ' ').toUpperCase()}
+                          <span
+                            className={`mt-1 inline-flex items-center rounded-full px-2 py-1 text-xs font-medium ${
+                              conversation.order.status === "delivered"
+                                ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200"
+                                : conversation.order.status === "on_the_way"
+                                ? "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200"
+                                : conversation.order.status === "at_customer"
+                                ? "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200"
+                                : conversation.order.status === "pending"
+                                ? "bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200"
+                                : "bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-200"
+                            }`}
+                          >
+                            {conversation.order.status
+                              .replace("_", " ")
+                              .toUpperCase()}
                           </span>
                         )}
                       </div>
                     </div>
                     <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
-                      Order {formatOrderID(conversation.order?.OrderID || conversation.order?.id || conversation.orderId)}
+                      Order{" "}
+                      {formatOrderID(
+                        conversation.order?.OrderID ||
+                          conversation.order?.id ||
+                          conversation.orderId
+                      )}
                     </p>
                     <p className="mt-2 text-sm text-gray-600 dark:text-gray-300">
                       {conversation.lastMessage}
@@ -366,7 +393,8 @@ export default function ShopperChatPage() {
           customer={{
             id: selectedConversation.customerId,
             name: selectedConversation.customerName,
-            avatar: selectedConversation.customerAvatar || '/images/userProfile.png',
+            avatar:
+              selectedConversation.customerAvatar || "/images/userProfile.png",
             phone: undefined, // We don't have phone in conversation data
           }}
           isOpen={isDrawerOpen}

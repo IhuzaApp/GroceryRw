@@ -5,7 +5,7 @@ import { gql } from "graphql-request";
 // GraphQL query to fetch a single order with nested details
 const GET_ORDER_DETAILS = gql`
   query GetOrderDetails($id: uuid!) {
-    Orders(where: {id: {_eq: $id}}, limit: 1) {
+    Orders(where: { id: { _eq: $id } }, limit: 1) {
       id
       OrderID
       placedAt: created_at
@@ -139,7 +139,7 @@ export default async function handler(
       throw new Error("Hasura client is not initialized");
     }
 
-    const data = await hasuraClient.request<{ 
+    const data = await hasuraClient.request<{
       Orders: Array<{
         id: string;
         OrderID: string;
@@ -242,10 +242,7 @@ export default async function handler(
         updated_at: string;
         user_id: string;
       }>;
-    }>(
-      GET_ORDER_DETAILS,
-      { id: orderId }
-    );
+    }>(GET_ORDER_DETAILS, { id: orderId });
 
     // Check if order exists
     if (!data.Orders || data.Orders.length === 0) {
@@ -266,17 +263,23 @@ export default async function handler(
         ? new Date(order.estimatedDelivery).toISOString()
         : null,
       // Calculate average rating and order count for assignedTo if available
-      assignedTo: order.assignedTo ? {
-        ...order.assignedTo,
-        rating: order.assignedTo.Ratings.length > 0 
-          ? order.assignedTo.Ratings.reduce((sum, rating) => sum + parseFloat(rating.rating), 0) / order.assignedTo.Ratings.length
-          : 0,
-        orders_aggregate: {
-          aggregate: {
-            count: order.assignedTo.Ratings.length
+      assignedTo: order.assignedTo
+        ? {
+            ...order.assignedTo,
+            rating:
+              order.assignedTo.Ratings.length > 0
+                ? order.assignedTo.Ratings.reduce(
+                    (sum, rating) => sum + parseFloat(rating.rating),
+                    0
+                  ) / order.assignedTo.Ratings.length
+                : 0,
+            orders_aggregate: {
+              aggregate: {
+                count: order.assignedTo.Ratings.length,
+              },
+            },
           }
-        }
-      } : null,
+        : null,
     };
 
     res.status(200).json({ order: formattedOrder });
