@@ -98,12 +98,12 @@ export default function App({ Component, pageProps }: AppProps) {
         <meta name="msapplication-tap-highlight" content="no" />
         <meta name="theme-color" content="#10b981" />
 
-        <link rel="apple-touch-icon" href="/app-icon.png" />
-        <link rel="icon" type="image/png" sizes="32x32" href="/app-icon.png" />
-        <link rel="icon" type="image/png" sizes="16x16" href="/app-icon.png" />
+        <link rel="apple-touch-icon" href="/assets/logos/PlasIcon.png" />
+        <link rel="icon" type="image/png" sizes="32x32" href="/assets/logos/PlasIcon.png" />
+        <link rel="icon" type="image/png" sizes="16x16" href="/assets/logos/PlasIcon.png" />
         <link rel="manifest" href="/manifest.json" />
-        <link rel="mask-icon" href="/app-icon.png" color="#10b981" />
-        <link rel="shortcut icon" href="/favicon.ico" />
+        <link rel="mask-icon" href="/assets/logos/PlasIcon.png" color="#10b981" />
+        <link rel="shortcut icon" href="/assets/logos/PlasIcon.png" />
 
         <meta name="twitter:card" content="summary" />
         <meta name="twitter:url" content="https://your-app-domain.com" />
@@ -112,17 +112,17 @@ export default function App({ Component, pageProps }: AppProps) {
           name="twitter:description"
           content="Your convenient grocery shopping app"
         />
-        <meta name="twitter:image" content="/app-icon.png" />
+        <meta name="twitter:image" content="/assets/logos/PlasIcon.png" />
         <meta name="twitter:creator" content="@yourusername" />
         <meta property="og:type" content="website" />
-        <meta property="og:title" content="Grocery App" />
+        <meta property="og:title" content="Plasa - Grocery App" />
         <meta
           property="og:description"
           content="Your convenient grocery shopping app"
         />
-        <meta property="og:site_name" content="Grocery App" />
+        <meta property="og:site_name" content="Plasa" />
         <meta property="og:url" content="https://your-app-domain.com" />
-        <meta property="og:image" content="/app-icon.png" />
+        <meta property="og:image" content="/assets/logos/PlasIcon.png" />
       </Head>
       <SessionProvider
         session={(pageProps as any).session}

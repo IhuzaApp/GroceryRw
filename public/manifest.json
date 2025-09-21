@@ -1,16 +1,31 @@
 {
-  "name": "Grocery App",
-  "short_name": "Grocery",
-  "description": "Grocery shopping and delivery app",
+  "name": "Plasa - Grocery App",
+  "short_name": "Plasa",
+  "description": "Your convenient grocery shopping and delivery app",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#ffffff",
-  "theme_color": "#000000",
+  "theme_color": "#10b981",
   "icons": [
     {
-      "src": "/favicon.ico",
-      "sizes": "16x16 32x32 48x48",
-      "type": "image/x-icon"
+      "src": "/assets/logos/PlasIcon.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "/assets/logos/PlasIcon.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    },
+    {
+      "src": "/icon-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "/icon-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png"
     }
   ],
   "permissions": ["notifications"]
