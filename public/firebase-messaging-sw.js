@@ -19,45 +19,32 @@ const messaging = firebase.messaging();
 
 // Handle background messages
 messaging.onBackgroundMessage((payload) => {
-  console.log('🔔 [Service Worker] Received background message:', payload);
-  console.log('🔔 [Service Worker] Notification permission:', Notification.permission);
-
   const notificationTitle = payload.notification?.title || 'New Message';
   const notificationOptions = {
     body: payload.notification?.body || 'You have a new message',
-    icon: '/favicon.ico', // Use favicon as fallback
-    badge: '/favicon.ico', // Use favicon as fallback
+    icon: '/assets/logos/PlasIcon.png',
+    badge: '/assets/logos/PlasIcon.png',
     data: payload.data,
-    requireInteraction: true, // Keep notification visible until user interacts
+    requireInteraction: true,
     actions: [
       {
         action: 'open',
         title: 'Open Chat',
-        icon: '/favicon.ico'
+        icon: '/assets/logos/PlasIcon.png'
       },
       {
         action: 'close',
         title: 'Close',
-        icon: '/favicon.ico'
+        icon: '/assets/logos/PlasIcon.png'
       }
     ]
   };
-
-  console.log('🔔 [Service Worker] Showing notification:', notificationTitle, notificationOptions);
   
-  return self.registration.showNotification(notificationTitle, notificationOptions)
-    .then(() => {
-      console.log('✅ [Service Worker] Notification shown successfully');
-    })
-    .catch((error) => {
-      console.error('❌ [Service Worker] Failed to show notification:', error);
-    });
+  return self.registration.showNotification(notificationTitle, notificationOptions);
 });
 
 // Handle notification click
 self.addEventListener('notificationclick', (event) => {
-  console.log('🔔 [Service Worker] Notification clicked:', event);
-
   event.notification.close();
 
   if (event.action === 'open' || !event.action) {
@@ -90,6 +77,6 @@ self.addEventListener('notificationclick', (event) => {
 
 // Handle notification close
 self.addEventListener('notificationclose', (event) => {
-  console.log('🔔 [Service Worker] Notification closed:', event);
+  // Notification closed
 });
 
