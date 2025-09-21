@@ -66,6 +66,7 @@ export default function App({ Component, pageProps }: AppProps) {
   return (
     <ThemeProvider>
       <Head>
+        <link rel="manifest" href="/manifest.json" />
         <meta name="application-name" content="Grocery App" />
         <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-status-bar-style" content="default" />

@@ -338,6 +338,31 @@ const CustomerChatDrawer: React.FC<CustomerChatDrawerProps> = ({
         unreadCount: 1, // Increment unread count for shopper
       });
 
+      // Send FCM notification to the shopper
+      try {
+        const response = await fetch('/api/fcm/send-notification', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            recipientId: shopper.id,
+            senderName: session.user.name || 'Customer',
+            message: newMessage.trim(),
+            orderId: orderId,
+            conversationId: conversationId,
+          }),
+        });
+
+        if (response.ok) {
+          console.log('✅ [Customer Chat Drawer] FCM notification sent to shopper');
+        } else {
+          console.log('⚠️ [Customer Chat Drawer] FCM notification failed (non-critical)');
+        }
+      } catch (fcmError) {
+        console.error('⚠️ [Customer Chat Drawer] FCM notification error (non-critical):', fcmError);
+      }
+
       // Clear input
       setNewMessage("");
     } catch (error) {

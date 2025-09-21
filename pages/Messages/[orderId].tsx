@@ -406,6 +406,31 @@ function ChatPage() {
         unreadCount: 1, // Increment unread count for shopper
       });
 
+      // Send FCM notification to the shopper
+      try {
+        const response = await fetch('/api/fcm/send-notification', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            recipientId: shopper.id,
+            senderName: session.user.name || 'Customer',
+            message: newMessage.trim(),
+            orderId: orderId,
+            conversationId: conversationId,
+          }),
+        });
+
+        if (response.ok) {
+          console.log('✅ [Customer Chat] FCM notification sent to shopper');
+        } else {
+          console.log('⚠️ [Customer Chat] FCM notification failed (non-critical)');
+        }
+      } catch (fcmError) {
+        console.error('⚠️ [Customer Chat] FCM notification error (non-critical):', fcmError);
+      }
+
       // Clear input
       setNewMessage("");
     } catch (error) {
@@ -497,16 +522,16 @@ function ChatPage() {
           {shopper ? (
             <>
               {/* Mobile Header */}
-              <div className="flex items-center justify-between border-b border-gray-200 bg-white px-4 py-3 dark:border-gray-700 dark:bg-gray-800">
-                <div className="flex items-center gap-3">
-                  <Link href="/Messages" className="text-gray-600 dark:text-gray-400">
+        <div className="flex items-center justify-between border-b border-gray-200 bg-white px-4 py-3 dark:border-gray-700 dark:bg-gray-800">
+          <div className="flex items-center gap-3">
+            <Link href="/Messages" className="text-gray-600 dark:text-gray-400">
                     <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                      <path d="M19 12H5M12 19l-7-7 7-7" />
-                    </svg>
-                  </Link>
-                  <div className="flex items-center gap-2">
+                <path d="M19 12H5M12 19l-7-7 7-7" />
+              </svg>
+            </Link>
+              <div className="flex items-center gap-2">
                     <Avatar src={shopper.avatar} alt={shopper.name} circle size="sm" />
-                    <div>
+                <div>
                       <h2 className="text-sm font-medium text-gray-900 dark:text-white">{shopper.name}</h2>
                       <p className="text-xs text-gray-500 dark:text-gray-400">Order #{formatOrderID(order?.OrderID)}</p>
                     </div>
@@ -519,10 +544,10 @@ function ChatPage() {
                   >
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                       <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1 .45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z" />
-                    </svg>
+                  </svg>
                   </button>
                 )}
-              </div>
+        </div>
 
               {/* Mobile Messages */}
               <div className="flex-1 overflow-y-auto bg-gray-50 px-4 py-2 dark:bg-gray-900">
@@ -535,19 +560,19 @@ function ChatPage() {
                   </div>
                 ) : (
                   messages.map((message) => (
-                    <Message
-                      key={message.id}
-                      message={message}
-                      isCurrentUser={message.senderId === session?.user?.id}
+                <Message
+                  key={message.id}
+                  message={message}
+                  isCurrentUser={message.senderId === session?.user?.id}
                       senderName={message.senderType === "shopper" ? shopper.name : "You"}
                     />
                   ))
                 )}
                 <div ref={messagesEndRef} />
-              </div>
+            </div>
 
               {/* Mobile Input */}
-              <div className="border-t border-gray-200 bg-white px-4 py-3 dark:border-gray-700 dark:bg-gray-800">
+            <div className="border-t border-gray-200 bg-white px-4 py-3 dark:border-gray-700 dark:bg-gray-800">
                 <form onSubmit={handleSendMessage} className="flex items-end space-x-3">
                   <button
                     type="button"
@@ -561,7 +586,7 @@ function ChatPage() {
                   <div className="flex-1">
                     <input
                       type="text"
-                      value={newMessage}
+                  value={newMessage}
                       onChange={(e) => setNewMessage(e.target.value)}
                       onKeyPress={handleKeyPress}
                       placeholder="Type your message..."
@@ -569,7 +594,7 @@ function ChatPage() {
                     />
                   </div>
                   <button
-                    type="submit"
+                  type="submit"
                     disabled={isSending || !newMessage.trim()}
                     className="flex-shrink-0 rounded-full bg-green-500 p-3 text-white shadow-lg transition-all duration-200 hover:bg-green-600 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 dark:focus:ring-offset-gray-800"
                   >
@@ -586,7 +611,7 @@ function ChatPage() {
                       </svg>
                     )}
                   </button>
-                </form>
+              </form>
                 <input
                   type="file"
                   ref={fileInputRef}
@@ -605,7 +630,7 @@ function ChatPage() {
               </div>
             </div>
           )}
-        </div>
+          </div>
       ) : (
         // Desktop: Sidebar layout with drawer
         <div className="flex h-screen bg-gray-50 dark:bg-gray-900">
@@ -623,24 +648,24 @@ function ChatPage() {
                     </Link>
                     <div className="flex items-center gap-2">
                       <Avatar src={shopper.avatar} alt={shopper.name} circle size="sm" />
-                      <div>
+                  <div>
                         <h2 className="text-sm font-medium text-gray-900 dark:text-white">{shopper.name}</h2>
                         <p className="text-xs text-gray-500 dark:text-gray-400">Order #{formatOrderID(order?.OrderID)}</p>
                       </div>
                     </div>
                   </div>
-                </div>
+                  </div>
 
                 {/* Order Details */}
                 <div className="flex-1 overflow-y-auto bg-white px-4 py-3 dark:bg-gray-800">
                   <h2 className="mb-4 text-lg font-semibold text-gray-900 dark:text-white">Order Details</h2>
                   <div className="space-y-4">
-                    <div>
+                  <div>
                       <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400">Status</h3>
-                      <p className="text-gray-900 dark:text-white">
+                    <p className="text-gray-900 dark:text-white">
                         {order?.status?.charAt(0).toUpperCase() + order?.status?.slice(1)}
-                      </p>
-                    </div>
+                    </p>
+                  </div>
                     <div>
                       <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400">Total</h3>
                       <p className="text-gray-900 dark:text-white">{formatCurrency(order?.total)}</p>
@@ -652,15 +677,15 @@ function ChatPage() {
                     {shopper && (
                       <div>
                         <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400">Shopper</h3>
-                        <div className="mt-1 flex items-center gap-2">
+                      <div className="mt-1 flex items-center gap-2">
                           <Avatar src={shopper.avatar} alt={shopper.name} circle size="sm" />
                           <span className="text-gray-900 dark:text-white">{shopper.name}</span>
                         </div>
                       </div>
                     )}
                   </div>
-                </div>
-              </div>
+                      </div>
+                    </div>
             ) : (
               <div className="flex h-full items-center justify-center">
                 <div className="text-center">
