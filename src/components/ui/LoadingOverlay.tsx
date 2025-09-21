@@ -12,16 +12,19 @@ const LoadingOverlay: React.FC = () => {
           : "bg-white/75 backdrop-blur-sm"
       }`}
     >
-      <div className="flex flex-col items-center gap-3">
-        <div
-          className={`h-16 w-16 animate-spin rounded-full border-4 ${
-            theme === "dark"
-              ? "border-gray-700 border-t-green-400"
-              : "border-gray-200 border-t-green-500"
-          }`}
-        />
+      <div className="flex flex-col items-center gap-4">
+        {/* Logo with Animation */}
+        <div className="transform transition-all duration-500 hover:scale-105">
+          <img 
+            src="/assets/logos/PlasLogo.svg" 
+            alt="Plasa Logo" 
+            className="h-16 w-auto drop-shadow-lg"
+          />
+        </div>
+        
+        {/* Loading Text */}
         <span
-          className={`text-sm font-medium ${
+          className={`text-sm font-medium animate-pulse ${
             theme === "dark" ? "text-gray-300" : "text-gray-600"
           }`}
         >
