@@ -152,13 +152,13 @@ export default function HeaderLayout() {
         <div className="flex items-center justify-between gap-4 px-2 sm:px-4">
           {/* Left section (address + icon) - Desktop only */}
           <div className="hidden items-center gap-3 md:flex">
-            <div className="flex h-12 w-12 items-center justify-center">
+            <div className="flex h-8 w-8 items-center justify-center">
               <Image
-                src="/assets/logos/PlasIcon.svg"
+                src="/assets/logos/PlasIcon.png"
                 alt="Plas Logo"
-                width={48}
-                height={48}
-                className="h-12 w-12"
+                width={32}
+                height={32}
+                className="h-8 w-8"
               />
             </div>
             <div>
@@ -342,11 +342,11 @@ export default function HeaderLayout() {
                 }`}
               >
                 <Image
-                  src="/assets/logos/PlasLogo.svg"
+                  src="/assets/logos/PlasIcon.png"
                   alt="Plas Logo"
-                  width={80}
-                  height={30}
-                  className="h-8 w-auto"
+                  width={60}
+                  height={24}
+                  className="h-6 w-auto"
                 />
               </div>
             </Link>

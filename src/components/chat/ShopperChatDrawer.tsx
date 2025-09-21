@@ -351,7 +351,7 @@ const ShopperChatDrawer: React.FC<ShopperChatDrawerProps> = ({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed right-0 top-16 z-[1000] hidden h-[calc(100vh-4rem)] w-80 transform bg-white shadow-xl transition-transform duration-300 ease-in-out dark:bg-gray-800 md:block">
+    <div className="fixed right-0 top-16 z-[1000] hidden h-[calc(100vh-4rem)] w-[28rem] transform bg-white shadow-xl transition-transform duration-300 ease-in-out dark:bg-gray-800 md:block">
       {/* Compact Header */}
       <div className="flex items-center justify-between border-b border-gray-200 bg-white px-3 py-2 dark:border-gray-700 dark:bg-gray-800">
         <div className="flex items-center gap-2">

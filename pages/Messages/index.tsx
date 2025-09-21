@@ -545,7 +545,7 @@ function MessagesPage() {
   if (conversations.length === 0) {
     return (
       <RootLayout>
-        <div className="mx-auto max-w-4xl p-4">
+        <div className="mx-auto max-w-7xl p-4">
           <div className="mb-6">
             <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
               Messages
@@ -589,7 +589,7 @@ function MessagesPage() {
   return (
     <AuthGuard requireAuth={true}>
       <RootLayout>
-        <div className="mx-auto max-w-4xl p-4">
+        <div className="mx-auto max-w-7xl p-4">
           <div className="mb-6">
             <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
               Messages
