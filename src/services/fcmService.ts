@@ -65,8 +65,6 @@ export const saveFCMToken = async (
       return;
     }
 
-    console.log('🔍 [FCM Service] Saving token for user:', userId);
-    
     const tokenData: FCMToken = {
       userId,
       token,
@@ -76,7 +74,6 @@ export const saveFCMToken = async (
     };
 
     await db.collection('fcm_tokens').doc(token).set(tokenData);
-    console.log('✅ [FCM Service] Token saved successfully');
   } catch (error) {
     console.error('❌ [FCM Service] Error saving token:', error);
     throw error;
@@ -93,8 +90,6 @@ export const getFCMTokens = async (userId: string): Promise<FCMToken[]> => {
       return [];
     }
 
-    console.log('🔍 [FCM Service] Getting tokens for user:', userId);
-    
     const snapshot = await db
       .collection('fcm_tokens')
       .where('userId', '==', userId)
@@ -105,7 +100,6 @@ export const getFCMTokens = async (userId: string): Promise<FCMToken[]> => {
       tokens.push(doc.data() as FCMToken);
     });
 
-    console.log(`✅ [FCM Service] Found ${tokens.length} tokens for user`);
     return tokens;
   } catch (error) {
     console.error('❌ [FCM Service] Error getting tokens:', error);
@@ -123,10 +117,7 @@ export const removeFCMToken = async (token: string): Promise<void> => {
       return;
     }
 
-    console.log('🔍 [FCM Service] Removing token:', token);
-    
     await db.collection('fcm_tokens').doc(token).delete();
-    console.log('✅ [FCM Service] Token removed successfully');
   } catch (error) {
     console.error('❌ [FCM Service] Error removing token:', error);
     throw error;
@@ -146,12 +137,9 @@ export const sendNotificationToUser = async (
       return;
     }
 
-    console.log('🔍 [FCM Service] Sending notification to user:', userId);
-    
     const tokens = await getFCMTokens(userId);
     
     if (tokens.length === 0) {
-      console.log('⚠️ [FCM Service] No tokens found for user:', userId);
       return;
     }
 
@@ -182,10 +170,8 @@ export const sendNotificationToUser = async (
         
         await messaging.send(singleMessage);
         successCount++;
-        console.log('✅ [FCM Service] Notification sent to token:', token.substring(0, 20) + '...');
       } catch (error: any) {
         failureCount++;
-        console.error('❌ [FCM Service] Failed to send to token:', token.substring(0, 20) + '...', error.message);
         
         // Check if token is invalid
         if (error.code === 'messaging/invalid-registration-token' || 
@@ -195,14 +181,8 @@ export const sendNotificationToUser = async (
       }
     }
     
-    console.log('✅ [FCM Service] Notification sent:', {
-      successCount,
-      failureCount,
-    });
-
     // Remove invalid tokens
     if (invalidTokens.length > 0) {
-      console.log('🔍 [FCM Service] Removing invalid tokens:', invalidTokens.length);
       for (const token of invalidTokens) {
         await removeFCMToken(token);
       }
@@ -226,8 +206,6 @@ export const sendNotificationToUsers = async (
       return;
     }
 
-    console.log('🔍 [FCM Service] Sending notification to users:', userIds);
-    
     const allTokens: string[] = [];
     
     for (const userId of userIds) {
@@ -236,7 +214,6 @@ export const sendNotificationToUsers = async (
     }
 
     if (allTokens.length === 0) {
-      console.log('⚠️ [FCM Service] No tokens found for any user');
       return;
     }
 
@@ -278,13 +255,6 @@ export const sendChatNotification = async (
       return;
     }
 
-    console.log('🔍 [FCM Service] Sending chat notification:', {
-      recipientId,
-      senderName,
-      message,
-      orderId,
-      conversationId,
-    });
 
     const payload: NotificationPayload = {
       title: `New message from ${senderName}`,

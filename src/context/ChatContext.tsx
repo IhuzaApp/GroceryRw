@@ -129,16 +129,11 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({
     if (user?.id && !fcmToken) {
       const initFCM = async () => {
         try {
-          console.log('🔍 [ChatContext] Initializing FCM for user:', user.id);
-          
           const unsubscribe = await initializeFCM(
             user.id!,
             (payload) => {
-              console.log('🔔 [ChatContext] FCM message received:', payload);
-              
               // Handle different types of notifications
               if (payload.data?.type === 'chat_message') {
-                console.log('💬 [ChatContext] Chat message notification received');
                 // You can add custom handling here, like showing a toast
                 // or updating the UI to indicate a new message
               }
@@ -147,9 +142,7 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({
           
           setFcmUnsubscribe(() => unsubscribe);
           setFcmToken('initialized'); // Mark as initialized to prevent re-runs
-          console.log('✅ [ChatContext] FCM initialized successfully');
         } catch (error) {
-          console.error('❌ [ChatContext] Error initializing FCM:', error);
           setFcmToken('failed'); // Mark as failed to prevent re-runs
         }
       };

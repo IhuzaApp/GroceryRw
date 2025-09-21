@@ -39,10 +39,7 @@ export interface FCMTokenData {
  */
 export const requestNotificationPermission = async (): Promise<boolean> => {
   try {
-    console.log('🔍 [FCM Client] Requesting notification permission');
-    
     if (!('Notification' in window)) {
-      console.log('❌ [FCM Client] This browser does not support notifications');
       return false;
     }
 
@@ -59,28 +56,21 @@ export const requestNotificationPermission = async (): Promise<boolean> => {
           };
         });
       } catch (error) {
-        console.warn('⚠️ [FCM Client] Detected incognito mode - push notifications not supported');
-        console.warn('⚠️ [FCM Client] Please use a regular browser window to test notifications');
         return false;
       }
     }
 
     if (Notification.permission === 'granted') {
-      console.log('✅ [FCM Client] Notification permission already granted');
       return true;
     }
 
     if (Notification.permission === 'denied') {
-      console.log('❌ [FCM Client] Notification permission denied');
       return false;
     }
 
     const permission = await Notification.requestPermission();
-    console.log('🔍 [FCM Client] Permission result:', permission);
-    
     return permission === 'granted';
   } catch (error) {
-    console.error('❌ [FCM Client] Error requesting permission:', error);
     return false;
   }
 };
@@ -90,26 +80,21 @@ export const requestNotificationPermission = async (): Promise<boolean> => {
  */
 export const getFCMToken = async (): Promise<string | null> => {
   try {
-    console.log('🔍 [FCM Client] Getting FCM token');
-    
     if (!messaging) {
-      console.log('❌ [FCM Client] Messaging not available (SSR or unsupported browser)');
       return null;
     }
     
     const hasPermission = await requestNotificationPermission();
     if (!hasPermission) {
-      console.log('❌ [FCM Client] No notification permission');
       return null;
     }
 
     // Register service worker first
     if ('serviceWorker' in navigator) {
       try {
-        const registration = await navigator.serviceWorker.register('/firebase-messaging-sw.js');
-        console.log('✅ [FCM Client] Service worker registered:', registration);
+        await navigator.serviceWorker.register('/firebase-messaging-sw.js');
       } catch (error) {
-        console.error('❌ [FCM Client] Service worker registration failed:', error);
+        // Service worker registration failed
       }
     }
 
@@ -117,26 +102,17 @@ export const getFCMToken = async (): Promise<string | null> => {
       vapidKey: "BHlNUbElLjZwdCrqi9LxcPStpMhVtwpf1HRRUJA-iP1eqiXERJWSibJCiPwLJuOBOjRPT70RJL5n64EZxJgQfr4",
     });
 
-    if (token) {
-      console.log('✅ [FCM Client] FCM token obtained:', token.substring(0, 20) + '...');
-      return token;
-    } else {
-      console.log('❌ [FCM Client] No registration token available');
-      return null;
-    }
+    return token;
   } catch (error) {
     // Handle specific FCM errors more gracefully
     if (error instanceof Error) {
       if (error.name === 'AbortError' && error.message.includes('permission denied')) {
-        console.warn('⚠️ [FCM Client] FCM registration failed - permission denied. This is normal if notifications are blocked.');
         return null;
       }
       if (error.message.includes('unsupported-browser')) {
-        console.warn('⚠️ [FCM Client] FCM not supported in this browser');
         return null;
       }
     }
-    console.error('❌ [FCM Client] Error getting FCM token:', error);
     return null;
   }
 };
@@ -150,8 +126,6 @@ export const saveFCMTokenToServer = async (
   platform: 'web' | 'android' | 'ios' = 'web'
 ): Promise<void> => {
   try {
-    console.log('🔍 [FCM Client] Saving token to server:', { userId, token, platform });
-    
     const response = await fetch('/api/fcm/save-token', {
       method: 'POST',
       headers: {
@@ -167,10 +141,7 @@ export const saveFCMTokenToServer = async (
     if (!response.ok) {
       throw new Error(`Failed to save token: ${response.statusText}`);
     }
-
-    console.log('✅ [FCM Client] Token saved to server successfully');
   } catch (error) {
-    console.error('❌ [FCM Client] Error saving token to server:', error);
     throw error;
   }
 };
@@ -180,8 +151,6 @@ export const saveFCMTokenToServer = async (
  */
 export const removeFCMTokenFromServer = async (token: string): Promise<void> => {
   try {
-    console.log('🔍 [FCM Client] Removing token from server:', token);
-    
     const response = await fetch('/api/fcm/remove-token', {
       method: 'POST',
       headers: {
@@ -193,10 +162,7 @@ export const removeFCMTokenFromServer = async (token: string): Promise<void> => 
     if (!response.ok) {
       throw new Error(`Failed to remove token: ${response.statusText}`);
     }
-
-    console.log('✅ [FCM Client] Token removed from server successfully');
   } catch (error) {
-    console.error('❌ [FCM Client] Error removing token from server:', error);
     throw error;
   }
 };
@@ -208,22 +174,16 @@ export const setupFCMListener = (
   onMessageReceived: (payload: any) => void
 ): (() => void) => {
   try {
-    console.log('🔍 [FCM Client] Setting up FCM listener');
-    
     if (!messaging) {
-      console.log('❌ [FCM Client] Messaging not available (SSR or unsupported browser)');
       return () => {};
     }
     
     const unsubscribe = onMessage(messaging, (payload) => {
-      console.log('🔔 [FCM Client] Message received:', payload);
       onMessageReceived(payload);
     });
 
-    console.log('✅ [FCM Client] FCM listener set up successfully');
     return unsubscribe;
   } catch (error) {
-    console.error('❌ [FCM Client] Error setting up FCM listener:', error);
     return () => {};
   }
 };
@@ -236,12 +196,9 @@ export const initializeFCM = async (
   onMessageReceived: (payload: any) => void
 ): Promise<() => void> => {
   try {
-    console.log('🔍 [FCM Client] Initializing FCM for user:', userId);
-    
     // Get FCM token
     const token = await getFCMToken();
     if (!token) {
-      console.log('❌ [FCM Client] No FCM token available');
       return () => {};
     }
 
@@ -251,10 +208,8 @@ export const initializeFCM = async (
     // Set up message listener
     const unsubscribe = setupFCMListener(onMessageReceived);
 
-    console.log('✅ [FCM Client] FCM initialized successfully');
     return unsubscribe;
   } catch (error) {
-    console.error('❌ [FCM Client] Error initializing FCM:', error);
     return () => {};
   }
 };
@@ -264,11 +219,9 @@ export const initializeFCM = async (
  */
 export const cleanupFCM = async (token: string): Promise<void> => {
   try {
-    console.log('🔍 [FCM Client] Cleaning up FCM token');
     await removeFCMTokenFromServer(token);
-    console.log('✅ [FCM Client] FCM cleanup completed');
   } catch (error) {
-    console.error('❌ [FCM Client] Error cleaning up FCM:', error);
+    // Cleanup failed silently
   }
 };
 
