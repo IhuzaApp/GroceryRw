@@ -31,6 +31,7 @@ import {
 import { db, storage } from "../../../src/lib/firebase";
 import { getStorage, ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import { formatCurrency } from "../../../src/lib/formatCurrency";
+import soundNotification from "../../../src/utils/soundNotification";
 
 // Define message interface
 interface Message {
@@ -154,6 +155,7 @@ function ChatPage() {
     }
   };
 
+
   useEffect(() => {
     const checkIfMobile = () => {
       setIsMobile(window.innerWidth < 768);
@@ -190,6 +192,21 @@ function ChatPage() {
             ? doc.data().timestamp.toDate()
             : doc.data().timestamp,
       })) as Message[];
+
+      // Check for new unread messages from customer and play sound
+      const previousMessageCount = messages.length;
+      const newMessages = messagesList.slice(previousMessageCount);
+      const newUnreadCustomerMessages = newMessages.filter(
+        (message) => 
+          message.senderType === "customer" && 
+          message.senderId !== user?.id &&
+          !message.read
+      );
+      
+      if (newUnreadCustomerMessages.length > 0) {
+        console.log("🔊 [Shopper Chat] New unread message from customer, playing notification sound");
+        soundNotification.play();
+      }
 
       setMessages(messagesList);
 
@@ -234,12 +251,30 @@ function ChatPage() {
       e.preventDefault();
     }
 
+    console.log("🔍 [Shopper Chat] Attempting to send message:", {
+      message: message.trim(),
+      hasUser: !!user?.id,
+      userId: user?.id,
+      hasConversation: !!conversationId,
+      conversationId: conversationId,
+      hasCustomerData: !!customerData?.id,
+      customerId: customerData?.id,
+    });
+
     if (!message.trim() || !user?.id || !conversationId || !customerData?.id) {
+      console.log("❌ [Shopper Chat] Cannot send message, missing required data:", {
+        hasMessage: !!message.trim(),
+        hasUser: !!user?.id,
+        hasConversation: !!conversationId,
+        hasCustomerData: !!customerData?.id,
+      });
       return;
     }
 
     try {
       setIsSending(true);
+
+      console.log("✅ [Shopper Chat] All data available, proceeding to send message");
 
       // Add new message to Firestore
       const messagesRef = collection(
@@ -268,8 +303,9 @@ function ChatPage() {
 
       // Clear input
       setMessage("");
+      console.log("✅ [Shopper Chat] Message sent successfully and input cleared");
     } catch (error) {
-      console.error("Error sending message:", error);
+      console.error("❌ [Shopper Chat] Error sending message:", error);
     } finally {
       setIsSending(false);
     }
@@ -342,6 +378,7 @@ function ChatPage() {
     }
   };
 
+
   // Group messages by date for better display
   const groupMessagesByDate = () => {
     const groups: { date: string; messages: Message[] }[] = [];
@@ -386,14 +423,9 @@ function ChatPage() {
   }
 
   return (
-    <ShopperLayout>
-      <div
-        className={`min-h-screen ${
-          theme === "dark" ? "bg-gray-900" : "bg-gray-50"
-        }`}
-      >
+    <div className="h-screen w-screen overflow-hidden bg-gray-50 dark:bg-gray-900">
         {isLoading ? (
-          <div className="flex h-screen flex-col bg-white pb-20 dark:bg-gray-900">
+          <div className="flex h-full flex-col bg-white dark:bg-gray-900">
             {/* Professional Header */}
             <div className="flex items-center justify-between border-b border-gray-200 bg-white px-4 py-3 shadow-sm dark:border-gray-700 dark:bg-gray-800">
               <div className="flex items-center space-x-3">
@@ -529,7 +561,7 @@ function ChatPage() {
             </div>
           </div>
         ) : (
-          <div className="flex h-screen flex-col bg-white pb-20 dark:bg-gray-900">
+          <div className="flex h-full flex-col bg-white dark:bg-gray-900">
             {/* Professional Header */}
             <div className="flex items-center justify-between border-b border-gray-200 bg-white px-4 py-3 shadow-sm dark:border-gray-700 dark:bg-gray-800">
               <div className="flex items-center space-x-3">
@@ -724,6 +756,13 @@ function ChatPage() {
                 <button
                   type="submit"
                   disabled={isSending || !message.trim()}
+                  onClick={() => {
+                    console.log("🔍 [Shopper Chat] Send button clicked:", {
+                      isSending,
+                      messageTrimmed: message.trim(),
+                      disabled: isSending || !message.trim()
+                    });
+                  }}
                   className="flex-shrink-0 rounded-full bg-green-500 p-3 text-white shadow-lg transition-all duration-200 hover:bg-green-600 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 dark:focus:ring-offset-gray-800"
                 >
                   {isSending ? (
@@ -775,8 +814,7 @@ function ChatPage() {
             </div>
           </div>
         )}
-      </div>
-    </ShopperLayout>
+    </div>
   );
 }
 
