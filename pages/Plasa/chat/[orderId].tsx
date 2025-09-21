@@ -87,12 +87,20 @@ function ChatPage() {
     const fetchOrderAndCustomer = async () => {
       setIsLoading(true);
       try {
-        // Fetch order details
-        const res = await fetch(`/api/queries/orderDetails?id=${orderId}`);
+        // Fetch order details using shopper API
+        const res = await fetch(`/api/shopper/orderDetails?id=${orderId}`);
         const data = await res.json();
 
         if (data.order) {
           setOrder(data.order);
+
+          console.log("🔍 [Shopper Chat] Order data received:", {
+            orderId: data.order.id,
+            hasOrderedBy: !!data.order.orderedBy,
+            orderedBy: data.order.orderedBy,
+            hasUser: !!data.order.user,
+            user: data.order.user,
+          });
 
           // Set customer data - customer is ALWAYS from orderedBy
           const customerDataToSet = {
@@ -104,6 +112,7 @@ function ChatPage() {
             lastSeen: "Online now",
           };
 
+          console.log("🔍 [Shopper Chat] Customer data to set:", customerDataToSet);
           setCustomerData(customerDataToSet);
 
           // Get or create conversation
@@ -259,6 +268,7 @@ function ChatPage() {
       conversationId: conversationId,
       hasCustomerData: !!customerData?.id,
       customerId: customerData?.id,
+      customerData: customerData,
     });
 
     if (!message.trim() || !user?.id || !conversationId || !customerData?.id) {
@@ -300,6 +310,36 @@ function ChatPage() {
         lastMessage: message.trim(),
         lastMessageTime: serverTimestamp(),
       });
+
+      // Send FCM notification to the customer
+      try {
+        const response = await fetch('/api/fcm/send-notification', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            recipientId: customerData.id,
+            senderName: user.name || 'Shopper',
+            message: message.trim(),
+            orderId: orderId,
+            conversationId: conversationId,
+          }),
+        });
+
+        if (response.ok) {
+          console.log('✅ [Shopper Chat] FCM notification sent to customer');
+        } else {
+          const errorData = await response.json().catch(() => ({}));
+          console.log('⚠️ [Shopper Chat] FCM notification failed:', {
+            status: response.status,
+            statusText: response.statusText,
+            error: errorData
+          });
+        }
+      } catch (fcmError) {
+        console.error('⚠️ [Shopper Chat] FCM notification error (non-critical):', fcmError);
+      }
 
       // Clear input
       setMessage("");

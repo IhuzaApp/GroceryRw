@@ -1,0 +1,46 @@
+import { NextApiRequest, NextApiResponse } from 'next';
+import { sendChatNotification } from '../../../src/services/fcmService';
+
+export default async function handler(
+  req: NextApiRequest,
+  res: NextApiResponse
+) {
+  if (req.method !== 'POST') {
+    return res.status(405).json({ error: 'Method not allowed' });
+  }
+
+  try {
+    const { recipientId, senderName, message, orderId, conversationId } = req.body;
+
+    if (!recipientId || !senderName || !message || !orderId || !conversationId) {
+      return res.status(400).json({ 
+        error: 'Missing required fields: recipientId, senderName, message, orderId, conversationId' 
+      });
+    }
+
+    console.log('🔍 [FCM API] Sending notification:', {
+      recipientId,
+      senderName,
+      message,
+      orderId,
+      conversationId
+    });
+
+    await sendChatNotification(
+      recipientId,
+      senderName,
+      message,
+      orderId,
+      conversationId
+    );
+
+    console.log('✅ [FCM API] Notification sent successfully');
+    return res.status(200).json({ success: true });
+  } catch (error) {
+    console.error('❌ [FCM API] Error sending notification:', error);
+    return res.status(500).json({ 
+      error: 'Failed to send notification',
+      details: error instanceof Error ? error.message : 'Unknown error'
+    });
+  }
+}

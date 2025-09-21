@@ -1,1 +1,90 @@
-if(!self.define){let e,s={};const t=(t,i)=>(t=new URL(t+".js",i).href,s[t]||new Promise(s=>{if("document"in self){const e=document.createElement("script");e.src=t,e.onload=s,document.head.appendChild(e)}else e=t,importScripts(t),s()}).then(()=>{let e=s[t];if(!e)throw new Error(`Module ${t} didn’t register its module`);return e}));self.define=(i,a)=>{const n=e||("document"in self?document.currentScript.src:"")||location.href;if(s[n])return;let c={};const r=e=>t(e,n),E={module:{uri:n},exports:c,require:r};s[n]=Promise.all(i.map(e=>E[e]||r(e))).then(e=>(a(...e),c))}}define(["./workbox-1bb06f5e"],function(e){"use strict";importScripts(),self.skipWaiting(),e.clientsClaim(),e.precacheAndRoute([{url:"/_next/app-build-manifest.json",revision:"434af078512000203212119bf342c673"},{url:"/_next/static/USEzhItEUA0Fx0EjEMFeP/_buildManifest.js",revision:"d223c69b4fdb31f213b603da7a700258"},{url:"/_next/static/USEzhItEUA0Fx0EjEMFeP/_ssgManifest.js",revision:"b6652df95db52feb4daf4eca35380933"},{url:"/_next/static/chunks/0b7b90cd.b5852e5e503d071d.js",revision:"b5852e5e503d071d"},{url:"/_next/static/chunks/1133-c1c961c1f041a6ed.js",revision:"USEzhItEUA0Fx0EjEMFeP"},{url:"/_next/static/chunks/1392-4d764dd0b88bb962.js",revision:"USEzhItEUA0Fx0EjEMFeP"},{url:"/_next/static/chunks/1497-0732ea442399c63a.js",revision:"USEzhItEUA0Fx0EjEMFeP"},{url:"/_next/static/chunks/1607-8327018c054cba06.js",revision:"USEzhItEUA0Fx0EjEMFeP"},{url:"/_next/static/chunks/1664-b8b44184c8453caa.js",revision:"USEzhItEUA0Fx0EjEMFeP"},{url:"/_next/static/chunks/2367-990faba423466766.js",revision:"USEzhItEUA0Fx0EjEMFeP"},{url:"/_next/static/chunks/2662-1eb12f8a608a8741.js",revision:"USEzhItEUA0Fx0EjEMFeP"},{url:"/_next/static/chunks/2695.177da9691fb69904.js",revision:"177da9691fb69904"},{url:"/_next/static/chunks/3022-cd3aea7769717cdc.js",revision:"USEzhItEUA0Fx0EjEMFeP"},{url:"/_next/static/chunks/3038-1a6444230b309bee.js",revision:"USEzhItEUA0Fx0EjEMFeP"},{url:"/_next/static/chunks/3057-bf44bccd877ee23e.js",revision:"USEzhItEUA0Fx0EjEMFeP"},{url:"/_next/static/chunks/3337-dcaf8ce3d6cde985.js",revision:"USEzhItEUA0Fx0EjEMFeP"},{url:"/_next/static/chunks/3560-9bed04ce5e944de4.js",revision:"USEzhItEUA0Fx0EjEMFeP"},{url:"/_next/static/chunks/3823-7c4198ef127c8fba.js",revision:"USEzhItEUA0Fx0EjEMFeP"},{url:"/_next/static/chunks/3892-0c762955747252a4.js",revision:"USEzhItEUA0Fx0EjEMFeP"},{url:"/_next/static/chunks/4551-4b90c2051d6ff987.js",revision:"USEzhItEUA0Fx0EjEMFeP"},{url:"/_next/static/chunks/4596.f518ff10274a3aa3.js",revision:"f518ff10274a3aa3"},{url:"/_next/static/chunks/48-fe7baf7b7a866c58.js",revision:"USEzhItEUA0Fx0EjEMFeP"},{url:"/_next/static/chunks/4979-5ca72fa5559460a1.js",revision:"USEzhItEUA0Fx0EjEMFeP"},{url:"/_next/static/chunks/5182-1675603d91ceed1f.js",revision:"USEzhItEUA0Fx0EjEMFeP"},{url:"/_next/static/chunks/5324-5e9729cc258c0cd2.js",revision:"USEzhItEUA0Fx0EjEMFeP"},{url:"/_next/static/chunks/5675-0dd9af052764939d.js",revision:"USEzhItEUA0Fx0EjEMFeP"},{url:"/_next/static/chunks/5959-1f61f4e90a090e1f.js",revision:"USEzhItEUA0Fx0EjEMFeP"},{url:"/_next/static/chunks/6073-cff6a2c201e3fb20.js",revision:"USEzhItEUA0Fx0EjEMFeP"},{url:"/_next/static/chunks/6310-a373a718e4936b21.js",revision:"USEzhItEUA0Fx0EjEMFeP"},{url:"/_next/static/chunks/6408-2984162edf50d28e.js",revision:"USEzhItEUA0Fx0EjEMFeP"},{url:"/_next/static/chunks/698-96e225214d395f3e.js",revision:"USEzhItEUA0Fx0EjEMFeP"},{url:"/_next/static/chunks/700-7569d0303836eb1e.js",revision:"USEzhItEUA0Fx0EjEMFeP"},{url:"/_next/static/chunks/7220-81e031a36994f072.js",revision:"USEzhItEUA0Fx0EjEMFeP"},{url:"/_next/static/chunks/7378-4025496f0865abbd.js",revision:"USEzhItEUA0Fx0EjEMFeP"},{url:"/_next/static/chunks/7595-4db7e98381485c94.js",revision:"USEzhItEUA0Fx0EjEMFeP"},{url:"/_next/static/chunks/7675-a1b0cf51082b60a3.js",revision:"USEzhItEUA0Fx0EjEMFeP"},{url:"/_next/static/chunks/7762-57faa2a0346a58f1.js",revision:"USEzhItEUA0Fx0EjEMFeP"},{url:"/_next/static/chunks/8247-8f104a5754defb7f.js",revision:"USEzhItEUA0Fx0EjEMFeP"},{url:"/_next/static/chunks/9194-82977d8edda641fe.js",revision:"USEzhItEUA0Fx0EjEMFeP"},{url:"/_next/static/chunks/9476-1292073fb8fa6c22.js",revision:"USEzhItEUA0Fx0EjEMFeP"},{url:"/_next/static/chunks/9728-3ab4a48daa2dcd3c.js",revision:"USEzhItEUA0Fx0EjEMFeP"},{url:"/_next/static/chunks/9801-d19c764920bfadc8.js",revision:"USEzhItEUA0Fx0EjEMFeP"},{url:"/_next/static/chunks/9936-0ad3a0425184584d.js",revision:"USEzhItEUA0Fx0EjEMFeP"},{url:"/_next/static/chunks/fd9d1056-d2fc5e3717adf4eb.js",revision:"USEzhItEUA0Fx0EjEMFeP"},{url:"/_next/static/chunks/framework-81e04675b2f7c5bf.js",revision:"USEzhItEUA0Fx0EjEMFeP"},{url:"/_next/static/chunks/main-8357ff53e4b9d7f6.js",revision:"USEzhItEUA0Fx0EjEMFeP"},{url:"/_next/static/chunks/main-app-663d1c96165305b3.js",revision:"USEzhItEUA0Fx0EjEMFeP"},{url:"/_next/static/chunks/pages/Auth/Login-2ff694ad408d5edc.js",revision:"USEzhItEUA0Fx0EjEMFeP"},{url:"/_next/static/chunks/pages/Auth/Register-fbb7194d9b04699a.js",revision:"USEzhItEUA0Fx0EjEMFeP"},{url:"/_next/static/chunks/pages/Cart-572851911ed5c875.js",revision:"USEzhItEUA0Fx0EjEMFeP"},{url:"/_next/static/chunks/pages/CurrentPendingOrders-6d6438fd0ebe5486.js",revision:"USEzhItEUA0Fx0EjEMFeP"},{url:"/_next/static/chunks/pages/CurrentPendingOrders/viewOrderDetails/%5BorderId%5D-62e92aeb04eba0a6.js",revision:"USEzhItEUA0Fx0EjEMFeP"},{url:"/_next/static/chunks/pages/Messages-4be09416eb99653e.js",revision:"USEzhItEUA0Fx0EjEMFeP"},{url:"/_next/static/chunks/pages/Messages/%5BorderId%5D-f4589062b04a10f2.js",revision:"USEzhItEUA0Fx0EjEMFeP"},{url:"/_next/static/chunks/pages/Myprofile-3d6fc27d791c1d10.js",revision:"USEzhItEUA0Fx0EjEMFeP"},{url:"/_next/static/chunks/pages/Myprofile/become-shopper-86ca2539f9fa4fb8.js",revision:"USEzhItEUA0Fx0EjEMFeP"},{url:"/_next/static/chunks/pages/Plasa/Earnings-7e21d5c03d20d2c6.js",revision:"USEzhItEUA0Fx0EjEMFeP"},{url:"/_next/static/chunks/pages/Plasa/Settings-bd55f30055b4d3aa.js",revision:"USEzhItEUA0Fx0EjEMFeP"},{url:"/_next/static/chunks/pages/Plasa/ShopperProfile-1c6402d89b72ec76.js",revision:"USEzhItEUA0Fx0EjEMFeP"},{url:"/_next/static/chunks/pages/Plasa/active-batches-4eb160f43b80cb6d.js",revision:"USEzhItEUA0Fx0EjEMFeP"},{url:"/_next/static/chunks/pages/Plasa/active-batches/batch/%5Bid%5D-3d8b003a92a39770.js",revision:"USEzhItEUA0Fx0EjEMFeP"},{url:"/_next/static/chunks/pages/Plasa/chat/%5BorderId%5D-281d2634979f5957.js",revision:"USEzhItEUA0Fx0EjEMFeP"},{url:"/_next/static/chunks/pages/Plasa/invoices-8b59837475fbebff.js",revision:"USEzhItEUA0Fx0EjEMFeP"},{url:"/_next/static/chunks/pages/Plasa/invoices/%5Bid%5D-a8e8e4da1af70d00.js",revision:"USEzhItEUA0Fx0EjEMFeP"},{url:"/_next/static/chunks/pages/Plasa/orders/%5Bid%5D-7708dee4adedcbf9.js",revision:"USEzhItEUA0Fx0EjEMFeP"},{url:"/_next/static/chunks/pages/Recipes-8013cf2080a5639f.js",revision:"USEzhItEUA0Fx0EjEMFeP"},{url:"/_next/static/chunks/pages/Recipes/%5Bid%5D-00bb62ad271c93ac.js",revision:"USEzhItEUA0Fx0EjEMFeP"},{url:"/_next/static/chunks/pages/Reels-31c92655e45ac13c.js",revision:"USEzhItEUA0Fx0EjEMFeP"},{url:"/_next/static/chunks/pages/_app-e46032918140436c.js",revision:"USEzhItEUA0Fx0EjEMFeP"},{url:"/_next/static/chunks/pages/_error-8008506205ce3edf.js",revision:"USEzhItEUA0Fx0EjEMFeP"},{url:"/_next/static/chunks/pages/dev/logs-7e86be9b3b32a417.js",revision:"USEzhItEUA0Fx0EjEMFeP"},{url:"/_next/static/chunks/pages/index-497cfbb2781cd868.js",revision:"USEzhItEUA0Fx0EjEMFeP"},{url:"/_next/static/chunks/pages/restaurant/%5Bid%5D-a7fcec6da4e86ef3.js",revision:"USEzhItEUA0Fx0EjEMFeP"},{url:"/_next/static/chunks/pages/shops-c5597f28c57e5181.js",revision:"USEzhItEUA0Fx0EjEMFeP"},{url:"/_next/static/chunks/pages/shops/%5Bid%5D-d4ee918ba2cfc80e.js",revision:"USEzhItEUA0Fx0EjEMFeP"},{url:"/_next/static/chunks/pages/test-connection-c1f0ff8e50fa68f2.js",revision:"USEzhItEUA0Fx0EjEMFeP"},{url:"/_next/static/chunks/pages/test-redirect-207b7539088b175a.js",revision:"USEzhItEUA0Fx0EjEMFeP"},{url:"/_next/static/chunks/polyfills-c67a75d1b6f99dc8.js",revision:"837c0df77fd5009c9e46d446188ecfd0"},{url:"/_next/static/chunks/webpack-f84a0eb214d549b2.js",revision:"USEzhItEUA0Fx0EjEMFeP"},{url:"/_next/static/css/5742516f9157e1df.css",revision:"5742516f9157e1df"},{url:"/_next/static/css/f79f4077a8e4f560.css",revision:"f79f4077a8e4f560"},{url:"/_next/static/css/fc1c9daac70c093b.css",revision:"fc1c9daac70c093b"},{url:"/_next/static/media/layers-2x.9859cd12.png",revision:"9859cd12"},{url:"/_next/static/media/layers.ef6db872.png",revision:"ef6db872"},{url:"/_next/static/media/marker-icon.d577052a.png",revision:"d577052a"},{url:"/app-icon.png",revision:"e160019ffb8bbdd8cfaeba1f2ff03c7e"},{url:"/assets/Videos/coverr-shopping-for-fresh-fruits-1080p.mp4",revision:"02e1856ffe45b7bc9f445b27e43bd90f"},{url:"/assets/icons/Butchery.png",revision:"dc8d368bf62c4f17e4a10cc784db07db"},{url:"/assets/icons/bakery.png",revision:"ec7093da4af18d9a2ea40b2ddc3e6812"},{url:"/assets/icons/drinks.png",revision:"b16adaf988964af5a4c455fa98b47489"},{url:"/assets/icons/fruits.png",revision:"987e65a832170c9f03f3169181e0809a"},{url:"/assets/icons/hygien.png",revision:"d921cbd9d7470024b190343d8a6af097"},{url:"/assets/icons/pets.png",revision:"529c9e6c552d82239a42b6e616ad257b"},{url:"/assets/icons/shop.png",revision:"62299e7f6ca1c6be1c77c849eab9a39b"},{url:"/assets/icons/shopIcon.png",revision:"dddb5700034f7bdf5f5e02c5b066e239"},{url:"/assets/icons/snacks.png",revision:"e0f15da77bef891daf54ea62c3bff116"},{url:"/assets/icons/vegitables.png",revision:"30b1ee1ffe80437d9a192e5e80c18992"},{url:"/assets/images/Bakery.webp",revision:"c4257cc36f4c7a90cc6003d910c41426"},{url:"/assets/images/Butcher.webp",revision:"943dfb33e0d0bcbffef54b2fa3905573"},{url:"/assets/images/OrganicShop.jpg",revision:"e1e57a6715e36e21e54c6fc57b72e9e7"},{url:"/assets/images/backeryImage.jpg",revision:"b31765b2eafd30f2f7490bf30ab2014d"},{url:"/assets/images/chip.png",revision:"04b96cc01a3486a195b5c932e82eca12"},{url:"/assets/images/delicatessen.jpeg",revision:"54d354d3de5ceb996e24b6efc9764ef6"},{url:"/assets/images/profile.jpg",revision:"8ad924455c396fb81c6ac55fcdab41c0"},{url:"/assets/images/publicMarket.jpg",revision:"c99f0890a2abf84353b67e4e469cbad9"},{url:"/assets/images/shopping.jpg",revision:"bc3ce59176e588e6439608bcbb5a06e9"},{url:"/assets/images/shopsImage.jpg",revision:"cd7d8de97282a47bec0d5d2d8e125240"},{url:"/assets/images/superMarkets.jpg",revision:"8fd14e0ba308c44767dadc78dadf78e0"},{url:"/assets/logos/PlasIcon.svg",revision:"af151d0b5ab368c907ec25cad294124a"},{url:"/assets/logos/PlasLogo.svg",revision:"45249efd5eacaa9440cb3d7c8433240d"},{url:"/assets/logos/PlasLogoPNG.png",revision:"b57c84d411af7da0f4edfe488dcc062c"},{url:"/favicon.ico",revision:"c30c7d42707a47a3f4591831641e50dc"},{url:"/icon-128x128.png",revision:"810cf2910bbafb7dfb8b96e1ff73985a"},{url:"/icon-144x144.png",revision:"7970bce73b1f1b6a26c149df6f684467"},{url:"/icon-152x152.png",revision:"72a2fb327947435227fe720c46c96fc6"},{url:"/icon-192x192.png",revision:"be057baac45dbe078b8612ae2573d379"},{url:"/icon-384x384.png",revision:"6c656838f652fafa5c946d62040b842e"},{url:"/icon-512x512.png",revision:"43920cdd683277f0de811acee700b551"},{url:"/icon-72x72.png",revision:"1e0da8531c01e03cf2605f6a3b268c2c"},{url:"/icon-96x96.png",revision:"20154f98e9cf50b296cddc306bd30a22"},{url:"/images/groceryPlaceholder.png",revision:"36e3d1f5f0368395a225126f89ec975a"},{url:"/images/shop-placeholder.jpg",revision:"be733cb690aae457158b1c33a061e360"},{url:"/manifest.json",revision:"b42e04c21ab81f996aa75be6d04fb872"},{url:"/notifySound.mp3",revision:"8b27319049898514ea8031ce3a3f63ac"},{url:"/placeholder.svg",revision:"243098b109a59a642ae8465d67d4b24a"},{url:"/vercel.svg",revision:"4b4f1876502eb6721764637fe5c41702"}],{ignoreURLParametersMatching:[]}),e.cleanupOutdatedCaches(),e.registerRoute("/",new e.NetworkFirst({cacheName:"start-url",plugins:[{cacheWillUpdate:async({request:e,response:s,event:t,state:i})=>s&&"opaqueredirect"===s.type?new Response(s.body,{status:200,statusText:"OK",headers:s.headers}):s}]}),"GET"),e.registerRoute(/^https:\/\/fonts\.googleapis\.com\/.*/i,new e.CacheFirst({cacheName:"google-fonts",plugins:[new e.ExpirationPlugin({maxEntries:4,maxAgeSeconds:31536e3})]}),"GET"),e.registerRoute(/^https:\/\/fonts\.gstatic\.com\/.*/i,new e.CacheFirst({cacheName:"google-fonts-static",plugins:[new e.ExpirationPlugin({maxEntries:4,maxAgeSeconds:31536e3})]}),"GET"),e.registerRoute(/\.(?:eot|otf|ttc|ttf|woff|woff2|font.css)$/i,new e.StaleWhileRevalidate({cacheName:"static-font-assets",plugins:[new e.ExpirationPlugin({maxEntries:4,maxAgeSeconds:604800})]}),"GET"),e.registerRoute(/\.(?:jpg|jpeg|gif|png|svg|ico|webp)$/i,new e.StaleWhileRevalidate({cacheName:"static-image-assets",plugins:[new e.ExpirationPlugin({maxEntries:64,maxAgeSeconds:86400})]}),"GET"),e.registerRoute(/\/_next\/image\?url=.+$/i,new e.StaleWhileRevalidate({cacheName:"next-image",plugins:[new e.ExpirationPlugin({maxEntries:64,maxAgeSeconds:86400})]}),"GET"),e.registerRoute(/\.(?:mp3|wav|ogg)$/i,new e.CacheFirst({cacheName:"static-audio-assets",plugins:[new e.RangeRequestsPlugin,new e.ExpirationPlugin({maxEntries:32,maxAgeSeconds:86400})]}),"GET"),e.registerRoute(/\.(?:mp4)$/i,new e.CacheFirst({cacheName:"static-video-assets",plugins:[new e.RangeRequestsPlugin,new e.ExpirationPlugin({maxEntries:32,maxAgeSeconds:86400})]}),"GET"),e.registerRoute(/\.(?:js)$/i,new e.StaleWhileRevalidate({cacheName:"static-js-assets",plugins:[new e.ExpirationPlugin({maxEntries:48,maxAgeSeconds:86400})]}),"GET"),e.registerRoute(/\.(?:css|less)$/i,new e.StaleWhileRevalidate({cacheName:"static-style-assets",plugins:[new e.ExpirationPlugin({maxEntries:32,maxAgeSeconds:86400})]}),"GET"),e.registerRoute(/^https:\/\/.*\.(?:eot|otf|ttc|ttf|woff|woff2|font.css)$/i,new e.StaleWhileRevalidate({cacheName:"google-fonts-webfonts",plugins:[new e.ExpirationPlugin({maxEntries:4,maxAgeSeconds:604800})]}),"GET"),e.registerRoute(/^https:\/\/fonts\.googleapis\.com\/.*/i,new e.StaleWhileRevalidate({cacheName:"google-fonts-stylesheets",plugins:[new e.ExpirationPlugin({maxEntries:4,maxAgeSeconds:604800})]}),"GET"),e.registerRoute(/\/_next\/data\/.+\/.+\.json$/i,new e.StaleWhileRevalidate({cacheName:"next-data",plugins:[new e.ExpirationPlugin({maxEntries:32,maxAgeSeconds:86400})]}),"GET"),e.registerRoute(/\.(?:json|xml|csv)$/i,new e.NetworkFirst({cacheName:"static-data-assets",plugins:[new e.ExpirationPlugin({maxEntries:32,maxAgeSeconds:86400})]}),"GET"),e.registerRoute(/^https:\/\/.*\.(?:js|css|mjs)$/i,new e.StaleWhileRevalidate({cacheName:"external-js-css-assets",plugins:[new e.ExpirationPlugin({maxEntries:32,maxAgeSeconds:86400})]}),"GET")});
+// Service Worker for Push Notifications
+console.log('🔔 [SW] Service Worker loaded');
+
+// Push event - handle incoming push notifications
+self.addEventListener('push', (event) => {
+  console.log('🔔 [SW] Push event received:', event);
+
+  let notificationData = {
+    title: 'New Message',
+    body: 'You have a new message',
+    icon: '/icons/icon-192x192.png',
+    badge: '/icons/badge-72x72.png',
+    data: {
+      url: '/Messages'
+    }
+  };
+
+  // Parse push data if available
+  if (event.data) {
+    try {
+      const pushData = event.data.json();
+      notificationData = {
+        title: pushData.title || notificationData.title,
+        body: pushData.body || notificationData.body,
+        icon: pushData.icon || notificationData.icon,
+        badge: pushData.badge || notificationData.badge,
+        data: pushData.data || notificationData.data
+      };
+    } catch (error) {
+      console.error('❌ [SW] Error parsing push data:', error);
+    }
+  }
+
+  const options = {
+    body: notificationData.body,
+    icon: notificationData.icon,
+    badge: notificationData.badge,
+    data: notificationData.data,
+    actions: [
+      {
+        action: 'open',
+        title: 'Open Chat',
+        icon: '/icons/icon-192x192.png'
+      },
+      {
+        action: 'close',
+        title: 'Close',
+        icon: '/icons/icon-192x192.png'
+      }
+    ],
+    requireInteraction: true,
+    vibrate: [200, 100, 200],
+    tag: 'chat-notification'
+  };
+
+  event.waitUntil(
+    self.registration.showNotification(notificationData.title, options)
+  );
+});
+
+// Notification click event
+self.addEventListener('notificationclick', (event) => {
+  console.log('🔔 [SW] Notification clicked:', event);
+
+  event.notification.close();
+
+  if (event.action === 'close') {
+    return;
+  }
+
+  // Default action or 'open' action
+  const urlToOpen = event.notification.data?.url || '/Messages';
+  
+  event.waitUntil(
+    clients.matchAll({ type: 'window', includeUncontrolled: true })
+      .then((clientList) => {
+        // Check if there's already a window open with the target URL
+        for (const client of clientList) {
+          if (client.url.includes(urlToOpen) && 'focus' in client) {
+            return client.focus();
+          }
+        }
+        
+        // If no window is open, open a new one
+        if (clients.openWindow) {
+          return clients.openWindow(urlToOpen);
+        }
+      })
+  );
+});
