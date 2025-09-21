@@ -844,6 +844,26 @@ export default function BatchDetails({
           setGeneratedOtp("");
           setShowPaymentModal(false); // Ensure payment modal is closed
 
+          // Notify customer that shopper is on the way
+          try {
+            await fetch('/api/fcm/send-notification', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify({
+                recipientId: order.orderedBy?.id || order.customerId,
+                senderName: session?.user?.name || 'Your Shopper',
+                message: 'Plasa is on the way',
+                orderId: order.id,
+                conversationId: order.id,
+              }),
+            });
+          } catch (notificationError) {
+            console.error('Error sending on-the-way notification:', notificationError);
+            // Don't show error to user as payment was successful
+          }
+
           // Show success notification
           toaster.push(
             <Notification type="success" header="Payment Complete" closable>
@@ -851,6 +871,7 @@ export default function BatchDetails({
               <br />
               ✅ Wallet balance updated
               <br />✅ Order status updated to "On The Way"
+              <br />✅ Customer notified that you're on the way
             </Notification>,
             { placement: "topEnd", duration: 5000 }
           );
@@ -1256,6 +1277,53 @@ export default function BatchDetails({
       console.error("Error sending message:", error);
     } finally {
       setIsSending(false);
+    }
+  };
+
+  // Function to handle shopper arrived notification
+  const handleShopperArrived = async () => {
+    if (!order?.id || loading) return;
+
+    try {
+      setLoading(true);
+      
+      // Send notification to customer
+      const response = await fetch('/api/fcm/send-notification', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          recipientId: order.orderedBy?.id || order.customerId,
+          senderName: session?.user?.name || 'Your Shopper',
+          message: 'Plasa has arrived',
+          orderId: order.id,
+          conversationId: order.id, // Using order ID as conversation ID
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to send notification');
+      }
+
+      // Show success notification
+      toaster.push(
+        <Notification type="success" header="Customer Notified" closable>
+          Customer has been notified that you have arrived!
+        </Notification>,
+        { placement: "topEnd" }
+      );
+
+    } catch (error) {
+      console.error('Error sending shopper arrived notification:', error);
+      toaster.push(
+        <Notification type="error" header="Notification Failed" closable>
+          Failed to notify customer. Please try again.
+        </Notification>,
+        { placement: "topEnd" }
+      );
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -1900,6 +1968,26 @@ export default function BatchDetails({
                           <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
                         </svg>
                         Chat Closed
+                      </button>
+                    )}
+
+                    {/* Shopper Arrived Button - Only show when delivering */}
+                    {(order.status === "on_the_way" || order.status === "at_customer") && (
+                      <button
+                        className="flex items-center rounded-full border border-blue-400 px-3 py-1.5 text-xs text-blue-600 transition-colors hover:border-blue-300 hover:bg-blue-50 hover:text-blue-700 dark:border-blue-700 dark:text-blue-400 dark:hover:border-blue-600 dark:hover:bg-blue-900/20 sm:text-sm"
+                        onClick={handleShopperArrived}
+                        disabled={loading}
+                      >
+                        <svg
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          stroke="currentColor"
+                          strokeWidth="2"
+                          className="mr-1 h-4 w-4 sm:h-5 sm:w-5"
+                        >
+                          <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
+                        </svg>
+                        {loading ? "Notifying..." : "Notify the Customer"}
                       </button>
                     )}
                   </div>
