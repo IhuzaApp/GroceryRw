@@ -67,7 +67,6 @@ interface Message {
   recipientId: string;
   timestamp: any;
   read: boolean;
-  image?: string;
 }
 
 // Message component for customers
@@ -100,11 +99,6 @@ const CustomerMessage: React.FC<MessageProps> = ({
           </div>
         )}
         <div className="whitespace-pre-wrap text-sm">{messageContent}</div>
-        {message.image && (
-          <div className="mt-1">
-            <Avatar color="blue" circle size="xs" />
-          </div>
-        )}
       </div>
       {isCurrentUser && <Avatar color="green" circle size="xs" />}
     </div>
