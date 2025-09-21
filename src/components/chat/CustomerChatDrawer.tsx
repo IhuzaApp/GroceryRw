@@ -84,7 +84,9 @@ const CustomerMessage: React.FC<MessageProps> = ({
   const messageContent = message.text || message.message || "";
 
   return (
-    <div className={`mb-2 flex ${isCurrentUser ? "justify-end" : "justify-start"}`}>
+    <div
+      className={`mb-2 flex ${isCurrentUser ? "justify-end" : "justify-start"}`}
+    >
       {!isCurrentUser && <Avatar color="blue" circle size="xs" />}
       <div
         className={`max-w-[80%] ${
@@ -157,7 +159,10 @@ const CustomerChatDrawer: React.FC<CustomerChatDrawerProps> = ({
       if (!querySnapshot.empty) {
         // Conversation exists
         const conversationDoc = querySnapshot.docs[0];
-        console.log("🔍 [Customer Chat] Found existing conversation:", conversationDoc.id);
+        console.log(
+          "🔍 [Customer Chat] Found existing conversation:",
+          conversationDoc.id
+        );
         setConversationId(conversationDoc.id);
       } else {
         // Create new conversation
@@ -171,7 +176,10 @@ const CustomerChatDrawer: React.FC<CustomerChatDrawerProps> = ({
           unreadCount: 0,
         };
 
-        console.log("🔍 [Customer Chat] Creating new conversation:", newConversation);
+        console.log(
+          "🔍 [Customer Chat] Creating new conversation:",
+          newConversation
+        );
         const docRef = await addDoc(conversationsRef, newConversation);
         console.log("🔍 [Customer Chat] Created conversation:", docRef.id);
         setConversationId(docRef.id);
@@ -186,7 +194,10 @@ const CustomerChatDrawer: React.FC<CustomerChatDrawerProps> = ({
   useEffect(() => {
     if (!conversationId || !session?.user?.id) return;
 
-    console.log("🔍 [Customer Chat] Setting up message listener for conversation:", conversationId);
+    console.log(
+      "🔍 [Customer Chat] Setting up message listener for conversation:",
+      conversationId
+    );
 
     // Set up listener for messages in this conversation
     const messagesRef = collection(
@@ -200,7 +211,10 @@ const CustomerChatDrawer: React.FC<CustomerChatDrawerProps> = ({
     const unsubscribe = onSnapshot(
       q,
       (snapshot) => {
-        console.log("🔍 [Customer Chat] Messages snapshot received, count:", snapshot.docs.length);
+        console.log(
+          "🔍 [Customer Chat] Messages snapshot received, count:",
+          snapshot.docs.length
+        );
 
         const messagesList = snapshot.docs.map((doc) => ({
           id: doc.id,
@@ -213,22 +227,24 @@ const CustomerChatDrawer: React.FC<CustomerChatDrawerProps> = ({
         })) as Message[];
 
         console.log("🔍 [Customer Chat] Processed messages:", messagesList);
-        
+
         // Check for new unread messages from shopper and play sound
         const previousMessageCount = messages.length;
         const newMessages = messagesList.slice(previousMessageCount);
         const newUnreadShopperMessages = newMessages.filter(
-          (message) => 
-            message.senderType === "shopper" && 
+          (message) =>
+            message.senderType === "shopper" &&
             message.senderId !== session?.user?.id &&
             !message.read
         );
-        
+
         if (newUnreadShopperMessages.length > 0) {
-          console.log("🔊 [Customer Chat] New unread message from shopper, playing notification sound");
+          console.log(
+            "🔊 [Customer Chat] New unread message from shopper, playing notification sound"
+          );
           soundNotification.play();
         }
-        
+
         setMessages(messagesList);
 
         // Mark messages as read if they were sent to the current user (customer)
@@ -274,7 +290,6 @@ const CustomerChatDrawer: React.FC<CustomerChatDrawerProps> = ({
       getOrCreateConversation();
     }
   }, [isOpen, orderId, shopper?.id]);
-
 
   // Handle sending a new message
   const handleSendMessage = async (e?: React.FormEvent) => {
@@ -334,14 +349,14 @@ const CustomerChatDrawer: React.FC<CustomerChatDrawerProps> = ({
 
       // Send FCM notification to the shopper
       try {
-        const response = await fetch('/api/fcm/send-notification', {
-          method: 'POST',
+        const response = await fetch("/api/fcm/send-notification", {
+          method: "POST",
           headers: {
-            'Content-Type': 'application/json',
+            "Content-Type": "application/json",
           },
           body: JSON.stringify({
             recipientId: shopper.id,
-            senderName: session.user.name || 'Customer',
+            senderName: session.user.name || "Customer",
             message: newMessage.trim(),
             orderId: orderId,
             conversationId: conversationId,
@@ -349,12 +364,19 @@ const CustomerChatDrawer: React.FC<CustomerChatDrawerProps> = ({
         });
 
         if (response.ok) {
-          console.log('✅ [Customer Chat Drawer] FCM notification sent to shopper');
+          console.log(
+            "✅ [Customer Chat Drawer] FCM notification sent to shopper"
+          );
         } else {
-          console.log('⚠️ [Customer Chat Drawer] FCM notification failed (non-critical)');
+          console.log(
+            "⚠️ [Customer Chat Drawer] FCM notification failed (non-critical)"
+          );
         }
       } catch (fcmError) {
-        console.error('⚠️ [Customer Chat Drawer] FCM notification error (non-critical):', fcmError);
+        console.error(
+          "⚠️ [Customer Chat Drawer] FCM notification error (non-critical):",
+          fcmError
+        );
       }
 
       // Clear input
@@ -385,22 +407,40 @@ const CustomerChatDrawer: React.FC<CustomerChatDrawerProps> = ({
             onClick={onClose}
             className="rounded-full p-1 text-gray-600 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-700"
           >
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <svg
+              width="20"
+              height="20"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+            >
               <path d="M19 12H5M12 19l-7-7 7-7" />
             </svg>
           </button>
           <Avatar src={shopper.avatar} alt={shopper.name} circle size="xs" />
           <div>
-            <h3 className="text-sm font-medium text-gray-900 dark:text-white">{shopper.name}</h3>
-            <p className="text-xs text-gray-500 dark:text-gray-400">Your Shopper</p>
+            <h3 className="text-sm font-medium text-gray-900 dark:text-white">
+              {shopper.name}
+            </h3>
+            <p className="text-xs text-gray-500 dark:text-gray-400">
+              Your Shopper
+            </p>
           </div>
         </div>
         {shopper.phone && (
           <button
-            onClick={() => window.open(`tel:${shopper.phone}`, '_self')}
+            onClick={() => window.open(`tel:${shopper.phone}`, "_self")}
             className="rounded-full bg-green-500 p-1.5 text-white hover:bg-green-600"
           >
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <svg
+              width="14"
+              height="14"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+            >
               <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1 .45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z" />
             </svg>
           </button>
@@ -409,12 +449,17 @@ const CustomerChatDrawer: React.FC<CustomerChatDrawerProps> = ({
 
       {/* Messages */}
       <div className="flex h-[calc(100vh-8rem)] flex-col">
-        <div className="flex-1 overflow-y-auto bg-gray-50 px-3 py-2 dark:bg-gray-900" ref={messagesEndRef}>
+        <div
+          className="flex-1 overflow-y-auto bg-gray-50 px-3 py-2 dark:bg-gray-900"
+          ref={messagesEndRef}
+        >
           {messages.length === 0 ? (
             <div className="flex h-full items-center justify-center">
               <div className="text-center">
                 <div className="mb-2 text-4xl">💬</div>
-                <p className="text-sm text-gray-500 dark:text-gray-400">Start chatting with your shopper</p>
+                <p className="text-sm text-gray-500 dark:text-gray-400">
+                  Start chatting with your shopper
+                </p>
               </div>
             </div>
           ) : (
@@ -448,8 +493,18 @@ const CustomerChatDrawer: React.FC<CustomerChatDrawerProps> = ({
               {isSending ? (
                 <div className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent"></div>
               ) : (
-                <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
+                <svg
+                  className="h-4 w-4"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"
+                  />
                 </svg>
               )}
             </button>

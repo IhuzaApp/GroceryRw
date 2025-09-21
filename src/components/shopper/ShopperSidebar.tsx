@@ -239,7 +239,7 @@ export default function ShopperSidebar() {
             <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
           </svg>
           {unreadMessageCount > 0 && (
-            <div className="absolute -top-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full bg-red-500 text-xs font-bold text-white">
+            <div className="absolute -right-1 -top-1 flex h-5 w-5 items-center justify-center rounded-full bg-red-500 text-xs font-bold text-white">
               {unreadMessageCount > 9 ? "9+" : unreadMessageCount}
             </div>
           )}
@@ -554,7 +554,7 @@ export default function ShopperSidebar() {
                       : "text-gray-700 hover:bg-gray-100 hover:shadow-md"
                   }`}
                 >
-                  <div className="mr-3 p-1.5 relative">
+                  <div className="relative mr-3 p-1.5">
                     <svg
                       viewBox="0 0 24 24"
                       fill="none"
@@ -565,7 +565,7 @@ export default function ShopperSidebar() {
                       <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
                     </svg>
                     {unreadMessageCount > 0 && (
-                      <div className="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-red-500 text-xs font-bold text-white">
+                      <div className="absolute -right-1 -top-1 flex h-4 w-4 items-center justify-center rounded-full bg-red-500 text-xs font-bold text-white">
                         {unreadMessageCount > 9 ? "9+" : unreadMessageCount}
                       </div>
                     )}

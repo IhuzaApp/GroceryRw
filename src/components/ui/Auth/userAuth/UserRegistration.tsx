@@ -19,7 +19,7 @@ export default function UserRegistration() {
 
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     // Validation checks
     if (!name.trim()) {
       toast.error("Please enter your full name");

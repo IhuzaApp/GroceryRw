@@ -84,7 +84,9 @@ const ShopperMessage: React.FC<MessageProps> = ({
   const messageContent = message.text || message.message || "";
 
   return (
-    <div className={`mb-2 flex ${isCurrentUser ? "justify-end" : "justify-start"}`}>
+    <div
+      className={`mb-2 flex ${isCurrentUser ? "justify-end" : "justify-start"}`}
+    >
       {!isCurrentUser && <Avatar color="blue" circle size="xs" />}
       <div
         className={`max-w-[80%] ${
@@ -142,7 +144,6 @@ const ShopperChatDrawer: React.FC<ShopperChatDrawerProps> = ({
     if (!orderId || !session?.user?.id || !customer?.id) return;
 
     try {
-
       // Check if conversation exists
       const conversationsRef = collection(db, "chat_conversations");
       const q = query(conversationsRef, where("orderId", "==", orderId));
@@ -178,7 +179,6 @@ const ShopperChatDrawer: React.FC<ShopperChatDrawerProps> = ({
   useEffect(() => {
     if (!conversationId || !session?.user?.id) return;
 
-
     // Set up listener for messages in this conversation
     const messagesRef = collection(
       db,
@@ -191,7 +191,6 @@ const ShopperChatDrawer: React.FC<ShopperChatDrawerProps> = ({
     const unsubscribe = onSnapshot(
       q,
       (snapshot) => {
-
         const messagesList = snapshot.docs.map((doc) => ({
           id: doc.id,
           ...doc.data(),
@@ -202,21 +201,20 @@ const ShopperChatDrawer: React.FC<ShopperChatDrawerProps> = ({
               : doc.data().timestamp,
         })) as Message[];
 
-        
         // Check for new unread messages from customer and play sound
         const previousMessageCount = messages.length;
         const newMessages = messagesList.slice(previousMessageCount);
         const newUnreadCustomerMessages = newMessages.filter(
-          (message) => 
-            message.senderType === "customer" && 
+          (message) =>
+            message.senderType === "customer" &&
             message.senderId !== session?.user?.id &&
             !message.read
         );
-        
+
         if (newUnreadCustomerMessages.length > 0) {
           soundNotification.play();
         }
-        
+
         setMessages(messagesList);
 
         // Mark messages as read if they were sent to the current user (shopper)
@@ -279,7 +277,6 @@ const ShopperChatDrawer: React.FC<ShopperChatDrawerProps> = ({
     try {
       setIsSending(true);
 
-
       // Add new message to Firestore
       const messagesRef = collection(
         db,
@@ -308,14 +305,14 @@ const ShopperChatDrawer: React.FC<ShopperChatDrawerProps> = ({
 
       // Send FCM notification to the customer
       try {
-        const response = await fetch('/api/fcm/send-notification', {
-          method: 'POST',
+        const response = await fetch("/api/fcm/send-notification", {
+          method: "POST",
           headers: {
-            'Content-Type': 'application/json',
+            "Content-Type": "application/json",
           },
           body: JSON.stringify({
             recipientId: customer.id,
-            senderName: session.user.name || 'Shopper',
+            senderName: session.user.name || "Shopper",
             message: newMessage.trim(),
             orderId: orderId,
             conversationId: conversationId,
@@ -328,7 +325,10 @@ const ShopperChatDrawer: React.FC<ShopperChatDrawerProps> = ({
           // FCM notification failed (non-critical)
         }
       } catch (fcmError) {
-        console.error('⚠️ [Shopper Chat Drawer] FCM notification error (non-critical):', fcmError);
+        console.error(
+          "⚠️ [Shopper Chat Drawer] FCM notification error (non-critical):",
+          fcmError
+        );
       }
 
       // Clear input
@@ -359,22 +359,38 @@ const ShopperChatDrawer: React.FC<ShopperChatDrawerProps> = ({
             onClick={onClose}
             className="rounded-full p-1 text-gray-600 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-700"
           >
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <svg
+              width="20"
+              height="20"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+            >
               <path d="M19 12H5M12 19l-7-7 7-7" />
             </svg>
           </button>
           <Avatar src={customer.avatar} alt={customer.name} circle size="xs" />
           <div>
-            <h3 className="text-sm font-medium text-gray-900 dark:text-white">{customer.name}</h3>
+            <h3 className="text-sm font-medium text-gray-900 dark:text-white">
+              {customer.name}
+            </h3>
             <p className="text-xs text-gray-500 dark:text-gray-400">Customer</p>
           </div>
         </div>
         {customer.phone && (
           <button
-            onClick={() => window.open(`tel:${customer.phone}`, '_self')}
+            onClick={() => window.open(`tel:${customer.phone}`, "_self")}
             className="rounded-full bg-green-500 p-1.5 text-white hover:bg-green-600"
           >
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <svg
+              width="14"
+              height="14"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+            >
               <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1 .45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z" />
             </svg>
           </button>
@@ -383,12 +399,17 @@ const ShopperChatDrawer: React.FC<ShopperChatDrawerProps> = ({
 
       {/* Messages */}
       <div className="flex h-[calc(100vh-8rem)] flex-col">
-        <div className="flex-1 overflow-y-auto bg-gray-50 px-3 py-2 dark:bg-gray-900" ref={messagesEndRef}>
+        <div
+          className="flex-1 overflow-y-auto bg-gray-50 px-3 py-2 dark:bg-gray-900"
+          ref={messagesEndRef}
+        >
           {messages.length === 0 ? (
             <div className="flex h-full items-center justify-center">
               <div className="text-center">
                 <div className="mb-2 text-4xl">💬</div>
-                <p className="text-sm text-gray-500 dark:text-gray-400">Start chatting with your customer</p>
+                <p className="text-sm text-gray-500 dark:text-gray-400">
+                  Start chatting with your customer
+                </p>
               </div>
             </div>
           ) : (
@@ -422,8 +443,18 @@ const ShopperChatDrawer: React.FC<ShopperChatDrawerProps> = ({
               {isSending ? (
                 <div className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent"></div>
               ) : (
-                <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
+                <svg
+                  className="h-4 w-4"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"
+                  />
                 </svg>
               )}
             </button>

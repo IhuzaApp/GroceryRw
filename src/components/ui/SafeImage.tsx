@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import Image from 'next/image';
+import React, { useState } from "react";
+import Image from "next/image";
 
 interface SafeImageProps {
   src: string;
@@ -20,7 +20,7 @@ const SafeImage: React.FC<SafeImageProps> = ({
   height,
   className,
   fill = false,
-  fallback = '/images/shop-placeholder.jpg',
+  fallback = "/images/shop-placeholder.jpg",
   onError,
   ...props
 }) => {

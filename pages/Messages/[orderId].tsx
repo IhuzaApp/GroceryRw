@@ -204,14 +204,16 @@ function ChatPage() {
   }, [orderId, status, session?.user?.id]);
 
   // Get or create conversation
-  const getOrCreateConversation = async (shopperId: string, customerId?: string) => {
+  const getOrCreateConversation = async (
+    shopperId: string,
+    customerId?: string
+  ) => {
     if (!orderId || !session?.user?.id) return;
 
     // Use the actual customer ID from orderedBy, or fallback to session user ID
     const actualCustomerId = customerId || session.user.id;
 
     try {
-
       // Check if conversation exists
       const conversationsRef = collection(db, "chat_conversations");
       const q = query(conversationsRef, where("orderId", "==", orderId));
@@ -247,7 +249,6 @@ function ChatPage() {
   useEffect(() => {
     if (!conversationId || !session?.user?.id) return;
 
-
     // Set up listener for messages in this conversation
     const messagesRef = collection(
       db,
@@ -260,7 +261,6 @@ function ChatPage() {
     const unsubscribe = onSnapshot(
       q,
       (snapshot) => {
-
         const messagesList = snapshot.docs.map((doc) => ({
           id: doc.id,
           ...doc.data(),
@@ -271,21 +271,20 @@ function ChatPage() {
               : doc.data().timestamp,
         })) as Message[];
 
-        
         // Check for new unread messages from shopper and play sound
         const previousMessageCount = messages.length;
         const newMessages = messagesList.slice(previousMessageCount);
         const newUnreadShopperMessages = newMessages.filter(
-          (message) => 
-            message.senderType === "shopper" && 
+          (message) =>
+            message.senderType === "shopper" &&
             message.senderId !== session?.user?.id &&
             !message.read
         );
-        
+
         if (newUnreadShopperMessages.length > 0) {
           soundNotification.play();
         }
-        
+
         setMessages(messagesList);
 
         // Mark messages as read if they were sent to the current user
@@ -341,7 +340,6 @@ function ChatPage() {
     try {
       setIsSending(true);
 
-
       // Add new message to Firestore
       const messagesRef = collection(
         db,
@@ -370,14 +368,14 @@ function ChatPage() {
 
       // Send FCM notification to the shopper
       try {
-        const response = await fetch('/api/fcm/send-notification', {
-          method: 'POST',
+        const response = await fetch("/api/fcm/send-notification", {
+          method: "POST",
           headers: {
-            'Content-Type': 'application/json',
+            "Content-Type": "application/json",
           },
           body: JSON.stringify({
             recipientId: shopper.id,
-            senderName: session.user.name || 'Customer',
+            senderName: session.user.name || "Customer",
             message: newMessage.trim(),
             orderId: orderId,
             conversationId: conversationId,
@@ -390,7 +388,10 @@ function ChatPage() {
           // FCM notification failed (non-critical)
         }
       } catch (fcmError) {
-        console.error('⚠️ [Customer Chat] FCM notification error (non-critical):', fcmError);
+        console.error(
+          "⚠️ [Customer Chat] FCM notification error (non-critical):",
+          fcmError
+        );
       }
 
       // Clear input
@@ -410,7 +411,6 @@ function ChatPage() {
     }
   };
 
-
   return (
     <AuthGuard requireAuth={true}>
       {isMobile ? (
@@ -419,32 +419,58 @@ function ChatPage() {
           {shopper ? (
             <>
               {/* Mobile Header */}
-        <div className="flex items-center justify-between border-b border-gray-200 bg-white px-4 py-3 dark:border-gray-700 dark:bg-gray-800">
-          <div className="flex items-center gap-3">
-            <Link href="/Messages" className="text-gray-600 dark:text-gray-400">
-                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <path d="M19 12H5M12 19l-7-7 7-7" />
-              </svg>
-            </Link>
-              <div className="flex items-center gap-2">
-                    <Avatar src={shopper.avatar} alt={shopper.name} circle size="sm" />
-                <div>
-                      <h2 className="text-sm font-medium text-gray-900 dark:text-white">{shopper.name}</h2>
-                      <p className="text-xs text-gray-500 dark:text-gray-400">Order #{formatOrderID(order?.OrderID)}</p>
+              <div className="flex items-center justify-between border-b border-gray-200 bg-white px-4 py-3 dark:border-gray-700 dark:bg-gray-800">
+                <div className="flex items-center gap-3">
+                  <Link
+                    href="/Messages"
+                    className="text-gray-600 dark:text-gray-400"
+                  >
+                    <svg
+                      width="24"
+                      height="24"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                    >
+                      <path d="M19 12H5M12 19l-7-7 7-7" />
+                    </svg>
+                  </Link>
+                  <div className="flex items-center gap-2">
+                    <Avatar
+                      src={shopper.avatar}
+                      alt={shopper.name}
+                      circle
+                      size="sm"
+                    />
+                    <div>
+                      <h2 className="text-sm font-medium text-gray-900 dark:text-white">
+                        {shopper.name}
+                      </h2>
+                      <p className="text-xs text-gray-500 dark:text-gray-400">
+                        Order #{formatOrderID(order?.OrderID)}
+                      </p>
                     </div>
                   </div>
                 </div>
                 {shopper.phone && (
                   <button
-                    onClick={() => window.open(`tel:${shopper.phone}`, '_self')}
+                    onClick={() => window.open(`tel:${shopper.phone}`, "_self")}
                     className="rounded-full bg-green-500 p-2 text-white hover:bg-green-600"
                   >
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <svg
+                      width="16"
+                      height="16"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                    >
                       <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1 .45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z" />
-                  </svg>
+                    </svg>
                   </button>
                 )}
-        </div>
+              </div>
 
               {/* Mobile Messages */}
               <div className="flex-1 overflow-y-auto bg-gray-50 px-4 py-2 dark:bg-gray-900">
@@ -452,29 +478,36 @@ function ChatPage() {
                   <div className="flex h-full items-center justify-center">
                     <div className="text-center">
                       <div className="mb-2 text-4xl">💬</div>
-                      <p className="text-sm text-gray-500 dark:text-gray-400">Start chatting with your shopper</p>
+                      <p className="text-sm text-gray-500 dark:text-gray-400">
+                        Start chatting with your shopper
+                      </p>
                     </div>
                   </div>
                 ) : (
                   messages.map((message) => (
-                <Message
-                  key={message.id}
-                  message={message}
-                  isCurrentUser={message.senderId === session?.user?.id}
-                      senderName={message.senderType === "shopper" ? shopper.name : "You"}
+                    <Message
+                      key={message.id}
+                      message={message}
+                      isCurrentUser={message.senderId === session?.user?.id}
+                      senderName={
+                        message.senderType === "shopper" ? shopper.name : "You"
+                      }
                     />
                   ))
                 )}
                 <div ref={messagesEndRef} />
-            </div>
+              </div>
 
               {/* Mobile Input */}
-            <div className="border-t border-gray-200 bg-white px-4 py-3 dark:border-gray-700 dark:bg-gray-800">
-                <form onSubmit={handleSendMessage} className="flex items-end space-x-3">
+              <div className="border-t border-gray-200 bg-white px-4 py-3 dark:border-gray-700 dark:bg-gray-800">
+                <form
+                  onSubmit={handleSendMessage}
+                  className="flex items-end space-x-3"
+                >
                   <div className="flex-1">
                     <input
                       type="text"
-                  value={newMessage}
+                      value={newMessage}
                       onChange={(e) => setNewMessage(e.target.value)}
                       onKeyPress={handleKeyPress}
                       placeholder="Type your message..."
@@ -482,36 +515,65 @@ function ChatPage() {
                     />
                   </div>
                   <button
-                  type="submit"
+                    type="submit"
                     disabled={isSending || !newMessage.trim()}
                     className="flex-shrink-0 rounded-full bg-green-500 p-3 text-white shadow-lg transition-all duration-200 hover:bg-green-600 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 dark:focus:ring-offset-gray-800"
                   >
                     {isSending ? (
                       <div className="flex items-center">
-                        <svg className="h-4 w-4 animate-spin" fill="none" viewBox="0 0 24 24">
-                          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                        <svg
+                          className="h-4 w-4 animate-spin"
+                          fill="none"
+                          viewBox="0 0 24 24"
+                        >
+                          <circle
+                            className="opacity-25"
+                            cx="12"
+                            cy="12"
+                            r="10"
+                            stroke="currentColor"
+                            strokeWidth="4"
+                          ></circle>
+                          <path
+                            className="opacity-75"
+                            fill="currentColor"
+                            d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                          ></path>
                         </svg>
                       </div>
                     ) : (
-                      <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
+                      <svg
+                        className="h-4 w-4"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"
+                        />
                       </svg>
                     )}
                   </button>
-              </form>
+                </form>
               </div>
             </>
           ) : (
             <div className="flex h-full items-center justify-center">
               <div className="text-center">
                 <div className="mb-4 text-6xl">⏳</div>
-                <h3 className="mb-2 text-lg font-semibold text-gray-900 dark:text-white">Loading...</h3>
-                <p className="text-gray-500 dark:text-gray-400">Setting up your chat</p>
+                <h3 className="mb-2 text-lg font-semibold text-gray-900 dark:text-white">
+                  Loading...
+                </h3>
+                <p className="text-gray-500 dark:text-gray-400">
+                  Setting up your chat
+                </p>
               </div>
             </div>
           )}
-          </div>
+        </div>
       ) : (
         // Desktop: Sidebar layout with drawer
         <div className="flex h-screen bg-gray-50 dark:bg-gray-900">
@@ -522,57 +584,102 @@ function ChatPage() {
                 {/* Header */}
                 <div className="flex items-center justify-between border-b border-gray-200 bg-white px-4 py-3 dark:border-gray-700 dark:bg-gray-800">
                   <div className="flex items-center gap-3">
-                    <Link href="/Messages" className="text-gray-600 dark:text-gray-400">
-                      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <Link
+                      href="/Messages"
+                      className="text-gray-600 dark:text-gray-400"
+                    >
+                      <svg
+                        width="24"
+                        height="24"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                      >
                         <path d="M19 12H5M12 19l-7-7 7-7" />
                       </svg>
                     </Link>
                     <div className="flex items-center gap-2">
-                      <Avatar src={shopper.avatar} alt={shopper.name} circle size="sm" />
-                  <div>
-                        <h2 className="text-sm font-medium text-gray-900 dark:text-white">{shopper.name}</h2>
-                        <p className="text-xs text-gray-500 dark:text-gray-400">Order #{formatOrderID(order?.OrderID)}</p>
+                      <Avatar
+                        src={shopper.avatar}
+                        alt={shopper.name}
+                        circle
+                        size="sm"
+                      />
+                      <div>
+                        <h2 className="text-sm font-medium text-gray-900 dark:text-white">
+                          {shopper.name}
+                        </h2>
+                        <p className="text-xs text-gray-500 dark:text-gray-400">
+                          Order #{formatOrderID(order?.OrderID)}
+                        </p>
                       </div>
                     </div>
                   </div>
-                  </div>
+                </div>
 
                 {/* Order Details */}
                 <div className="flex-1 overflow-y-auto bg-white px-4 py-3 dark:bg-gray-800">
-                  <h2 className="mb-4 text-lg font-semibold text-gray-900 dark:text-white">Order Details</h2>
+                  <h2 className="mb-4 text-lg font-semibold text-gray-900 dark:text-white">
+                    Order Details
+                  </h2>
                   <div className="space-y-4">
-                  <div>
-                      <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400">Status</h3>
-                    <p className="text-gray-900 dark:text-white">
-                        {order?.status?.charAt(0).toUpperCase() + order?.status?.slice(1)}
-                    </p>
-                  </div>
                     <div>
-                      <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400">Total</h3>
-                      <p className="text-gray-900 dark:text-white">{formatCurrency(order?.total)}</p>
+                      <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400">
+                        Status
+                      </h3>
+                      <p className="text-gray-900 dark:text-white">
+                        {order?.status?.charAt(0).toUpperCase() +
+                          order?.status?.slice(1)}
+                      </p>
                     </div>
                     <div>
-                      <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400">Delivery Address</h3>
-                      <p className="text-gray-900 dark:text-white">{order?.delivery_address}</p>
+                      <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400">
+                        Total
+                      </h3>
+                      <p className="text-gray-900 dark:text-white">
+                        {formatCurrency(order?.total)}
+                      </p>
+                    </div>
+                    <div>
+                      <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400">
+                        Delivery Address
+                      </h3>
+                      <p className="text-gray-900 dark:text-white">
+                        {order?.delivery_address}
+                      </p>
                     </div>
                     {shopper && (
                       <div>
-                        <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400">Shopper</h3>
-                      <div className="mt-1 flex items-center gap-2">
-                          <Avatar src={shopper.avatar} alt={shopper.name} circle size="sm" />
-                          <span className="text-gray-900 dark:text-white">{shopper.name}</span>
+                        <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400">
+                          Shopper
+                        </h3>
+                        <div className="mt-1 flex items-center gap-2">
+                          <Avatar
+                            src={shopper.avatar}
+                            alt={shopper.name}
+                            circle
+                            size="sm"
+                          />
+                          <span className="text-gray-900 dark:text-white">
+                            {shopper.name}
+                          </span>
                         </div>
                       </div>
                     )}
                   </div>
-                      </div>
-                    </div>
+                </div>
+              </div>
             ) : (
               <div className="flex h-full items-center justify-center">
                 <div className="text-center">
                   <div className="mb-4 text-6xl">⏳</div>
-                  <h3 className="mb-2 text-lg font-semibold text-gray-900 dark:text-white">Loading...</h3>
-                  <p className="text-gray-500 dark:text-gray-400">Setting up your chat</p>
+                  <h3 className="mb-2 text-lg font-semibold text-gray-900 dark:text-white">
+                    Loading...
+                  </h3>
+                  <p className="text-gray-500 dark:text-gray-400">
+                    Setting up your chat
+                  </p>
                 </div>
               </div>
             )}
@@ -586,10 +693,10 @@ function ChatPage() {
                 id: shopper.id,
                 name: shopper.name,
                 avatar: shopper.avatar,
-                phone: shopper.phone
+                phone: shopper.phone,
               }}
               isOpen={true}
-              onClose={() => router.push('/Messages')}
+              onClose={() => router.push("/Messages")}
             />
           )}
         </div>

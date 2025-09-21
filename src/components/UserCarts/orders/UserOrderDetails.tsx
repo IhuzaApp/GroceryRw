@@ -376,9 +376,12 @@ export default function UserOrderDetails({ order }: UserOrderDetailsProps) {
                   </svg>
                 </div>
                 <div>
-                  <p className="font-medium">{order.address?.street || "Address not available"}</p>
+                  <p className="font-medium">
+                    {order.address?.street || "Address not available"}
+                  </p>
                   <p className="text-gray-600 dark:text-gray-400">
-                    {order.address?.city || "City"}, {order.address?.postal_code || "Postal Code"}
+                    {order.address?.city || "City"},{" "}
+                    {order.address?.postal_code || "Postal Code"}
                   </p>
                 </div>
               </div>
@@ -447,7 +450,8 @@ export default function UserOrderDetails({ order }: UserOrderDetailsProps) {
                   </span>
                 </div>
                 <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
-                  {order.assignedTo.orders_aggregate?.aggregate?.count || 0} orders completed
+                  {order.assignedTo.orders_aggregate?.aggregate?.count || 0}{" "}
+                  orders completed
                 </p>
                 <div className="mt-6 w-full space-y-3">
                   <Button

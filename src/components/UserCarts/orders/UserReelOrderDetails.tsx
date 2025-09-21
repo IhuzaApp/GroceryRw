@@ -422,7 +422,8 @@ export default function UserReelOrderDetails({
                   </span>
                 </div>
                 <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
-                  {order.assignedTo.orders_aggregate?.aggregate?.count || 0} orders completed
+                  {order.assignedTo.orders_aggregate?.aggregate?.count || 0}{" "}
+                  orders completed
                 </p>
                 <div className="mt-6 w-full space-y-3">
                   <Button

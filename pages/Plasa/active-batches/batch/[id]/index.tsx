@@ -219,12 +219,14 @@ function BatchDetailsPage({ orderData, error }: BatchDetailsPageProps) {
   };
 
   // Transform the data to match BatchDetails expected format
-  const transformedOrderData = orderData ? {
-    ...orderData,
-    total: parseFloat(orderData.total), // Convert string to number
-    orderedBy: orderData.orderedBy,
-    customerId: orderData.orderedBy?.id, // Customer is ALWAYS from orderedBy
-  } : null;
+  const transformedOrderData = orderData
+    ? {
+        ...orderData,
+        total: parseFloat(orderData.total), // Convert string to number
+        orderedBy: orderData.orderedBy,
+        customerId: orderData.orderedBy?.id, // Customer is ALWAYS from orderedBy
+      }
+    : null;
 
   return (
     <ShopperLayout>
@@ -493,5 +495,3 @@ export const getServerSideProps: GetServerSideProps<
 };
 
 export default BatchDetailsPage;
-
-

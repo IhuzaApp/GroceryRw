@@ -46,7 +46,7 @@ const firebaseConfig = {
   projectId: "YOUR_ACTUAL_PROJECT_ID",
   storageBucket: "YOUR_ACTUAL_STORAGE_BUCKET",
   messagingSenderId: "YOUR_ACTUAL_MESSAGING_SENDER_ID",
-  appId: "YOUR_ACTUAL_APP_ID"
+  appId: "YOUR_ACTUAL_APP_ID",
 };
 ```
 
@@ -95,4 +95,3 @@ const firebaseConfig = {
 - **Permission denied**: User needs to manually enable notifications in browser settings
 - **Token errors**: Check Firebase configuration and environment variables
 - **Service worker issues**: Ensure the service worker file is accessible at `/firebase-messaging-sw.js`
-

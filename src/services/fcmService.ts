@@ -1,6 +1,6 @@
-import { initializeApp, getApps, cert } from 'firebase-admin/app';
-import { getMessaging } from 'firebase-admin/messaging';
-import { getFirestore } from 'firebase-admin/firestore';
+import { initializeApp, getApps, cert } from "firebase-admin/app";
+import { getMessaging } from "firebase-admin/messaging";
+import { getFirestore } from "firebase-admin/firestore";
 
 // Check if Firebase credentials are available
 const hasFirebaseCredentials = () => {
@@ -22,24 +22,32 @@ if (hasFirebaseCredentials()) {
         credential: cert({
           projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
           clientEmail: process.env.NEXT_PUBLIC_FIREBASE_CLIENT_EMAIL,
-          privateKey: process.env.NEXT_PUBLIC_FIREBASE_PRIVATE_KEY?.replace(/\\n/g, '\n'),
+          privateKey: process.env.NEXT_PUBLIC_FIREBASE_PRIVATE_KEY?.replace(
+            /\\n/g,
+            "\n"
+          ),
         }),
       });
     }
     messaging = getMessaging();
     db = getFirestore();
-    console.log('✅ [FCM Service] Firebase Admin SDK initialized successfully');
+    console.log("✅ [FCM Service] Firebase Admin SDK initialized successfully");
   } catch (error) {
-    console.warn('⚠️ [FCM Service] Failed to initialize Firebase Admin SDK:', error);
+    console.warn(
+      "⚠️ [FCM Service] Failed to initialize Firebase Admin SDK:",
+      error
+    );
   }
 } else {
-  console.warn('⚠️ [FCM Service] Firebase credentials not found. FCM features will be disabled.');
+  console.warn(
+    "⚠️ [FCM Service] Firebase credentials not found. FCM features will be disabled."
+  );
 }
 
 export interface FCMToken {
   userId: string;
   token: string;
-  platform: 'web' | 'android' | 'ios';
+  platform: "web" | "android" | "ios";
   createdAt: Date;
   lastUsed: Date;
 }
@@ -57,11 +65,13 @@ export interface NotificationPayload {
 export const saveFCMToken = async (
   userId: string,
   token: string,
-  platform: 'web' | 'android' | 'ios' = 'web'
+  platform: "web" | "android" | "ios" = "web"
 ): Promise<void> => {
   try {
     if (!db) {
-      console.warn('⚠️ [FCM Service] Firebase not initialized. Skipping token save.');
+      console.warn(
+        "⚠️ [FCM Service] Firebase not initialized. Skipping token save."
+      );
       return;
     }
 
@@ -73,9 +83,9 @@ export const saveFCMToken = async (
       lastUsed: new Date(),
     };
 
-    await db.collection('fcm_tokens').doc(token).set(tokenData);
+    await db.collection("fcm_tokens").doc(token).set(tokenData);
   } catch (error) {
-    console.error('❌ [FCM Service] Error saving token:', error);
+    console.error("❌ [FCM Service] Error saving token:", error);
     throw error;
   }
 };
@@ -86,13 +96,15 @@ export const saveFCMToken = async (
 export const getFCMTokens = async (userId: string): Promise<FCMToken[]> => {
   try {
     if (!db) {
-      console.warn('⚠️ [FCM Service] Firebase not initialized. Returning empty tokens.');
+      console.warn(
+        "⚠️ [FCM Service] Firebase not initialized. Returning empty tokens."
+      );
       return [];
     }
 
     const snapshot = await db
-      .collection('fcm_tokens')
-      .where('userId', '==', userId)
+      .collection("fcm_tokens")
+      .where("userId", "==", userId)
       .get();
 
     const tokens: FCMToken[] = [];
@@ -102,7 +114,7 @@ export const getFCMTokens = async (userId: string): Promise<FCMToken[]> => {
 
     return tokens;
   } catch (error) {
-    console.error('❌ [FCM Service] Error getting tokens:', error);
+    console.error("❌ [FCM Service] Error getting tokens:", error);
     throw error;
   }
 };
@@ -113,13 +125,15 @@ export const getFCMTokens = async (userId: string): Promise<FCMToken[]> => {
 export const removeFCMToken = async (token: string): Promise<void> => {
   try {
     if (!db) {
-      console.warn('⚠️ [FCM Service] Firebase not initialized. Skipping token removal.');
+      console.warn(
+        "⚠️ [FCM Service] Firebase not initialized. Skipping token removal."
+      );
       return;
     }
 
-    await db.collection('fcm_tokens').doc(token).delete();
+    await db.collection("fcm_tokens").doc(token).delete();
   } catch (error) {
-    console.error('❌ [FCM Service] Error removing token:', error);
+    console.error("❌ [FCM Service] Error removing token:", error);
     throw error;
   }
 };
@@ -133,18 +147,20 @@ export const sendNotificationToUser = async (
 ): Promise<void> => {
   try {
     if (!messaging) {
-      console.warn('⚠️ [FCM Service] Firebase not initialized. Skipping notification.');
+      console.warn(
+        "⚠️ [FCM Service] Firebase not initialized. Skipping notification."
+      );
       return;
     }
 
     const tokens = await getFCMTokens(userId);
-    
+
     if (tokens.length === 0) {
       return;
     }
 
-    const fcmTokens = tokens.map(token => token.token);
-    
+    const fcmTokens = tokens.map((token) => token.token);
+
     const message = {
       notification: {
         title: payload.title,
@@ -159,7 +175,7 @@ export const sendNotificationToUser = async (
     let successCount = 0;
     let failureCount = 0;
     const invalidTokens: string[] = [];
-    
+
     for (const token of fcmTokens) {
       try {
         const singleMessage = {
@@ -167,20 +183,22 @@ export const sendNotificationToUser = async (
           data: message.data,
           token: token,
         };
-        
+
         await messaging.send(singleMessage);
         successCount++;
       } catch (error: any) {
         failureCount++;
-        
+
         // Check if token is invalid
-        if (error.code === 'messaging/invalid-registration-token' || 
-            error.code === 'messaging/registration-token-not-registered') {
+        if (
+          error.code === "messaging/invalid-registration-token" ||
+          error.code === "messaging/registration-token-not-registered"
+        ) {
           invalidTokens.push(token);
         }
       }
     }
-    
+
     // Remove invalid tokens
     if (invalidTokens.length > 0) {
       for (const token of invalidTokens) {
@@ -188,7 +206,7 @@ export const sendNotificationToUser = async (
       }
     }
   } catch (error) {
-    console.error('❌ [FCM Service] Error sending notification:', error);
+    console.error("❌ [FCM Service] Error sending notification:", error);
     throw error;
   }
 };
@@ -202,15 +220,17 @@ export const sendNotificationToUsers = async (
 ): Promise<void> => {
   try {
     if (!messaging) {
-      console.warn('⚠️ [FCM Service] Firebase not initialized. Skipping notification.');
+      console.warn(
+        "⚠️ [FCM Service] Firebase not initialized. Skipping notification."
+      );
       return;
     }
 
     const allTokens: string[] = [];
-    
+
     for (const userId of userIds) {
       const tokens = await getFCMTokens(userId);
-      allTokens.push(...tokens.map(token => token.token));
+      allTokens.push(...tokens.map((token) => token.token));
     }
 
     if (allTokens.length === 0) {
@@ -228,13 +248,13 @@ export const sendNotificationToUsers = async (
     };
 
     const response = await messaging.sendMulticast(message);
-    
-    console.log('✅ [FCM Service] Notification sent:', {
+
+    console.log("✅ [FCM Service] Notification sent:", {
       successCount: response.successCount,
       failureCount: response.failureCount,
     });
   } catch (error) {
-    console.error('❌ [FCM Service] Error sending notification:', error);
+    console.error("❌ [FCM Service] Error sending notification:", error);
     throw error;
   }
 };
@@ -251,16 +271,17 @@ export const sendChatNotification = async (
 ): Promise<void> => {
   try {
     if (!messaging) {
-      console.warn('⚠️ [FCM Service] Firebase not initialized. Skipping chat notification.');
+      console.warn(
+        "⚠️ [FCM Service] Firebase not initialized. Skipping chat notification."
+      );
       return;
     }
 
-
     const payload: NotificationPayload = {
       title: `New message from ${senderName}`,
-      body: message.length > 100 ? message.substring(0, 100) + '...' : message,
+      body: message.length > 100 ? message.substring(0, 100) + "..." : message,
       data: {
-        type: 'chat_message',
+        type: "chat_message",
         orderId,
         conversationId,
         senderName,
@@ -269,8 +290,7 @@ export const sendChatNotification = async (
 
     await sendNotificationToUser(recipientId, payload);
   } catch (error) {
-    console.error('❌ [FCM Service] Error sending chat notification:', error);
+    console.error("❌ [FCM Service] Error sending chat notification:", error);
     throw error;
   }
 };
-

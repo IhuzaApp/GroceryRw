@@ -19,7 +19,7 @@ export default function UserLogin() {
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     // Validation checks
     if (!identifier.trim()) {
       toast.error("Please enter your email, username, or phone number");
@@ -29,7 +29,7 @@ export default function UserLogin() {
       toast.error("Please enter your password");
       return;
     }
-    
+
     setIsLoading(true);
     try {
       const res = await signIn("credentials", {
@@ -37,7 +37,7 @@ export default function UserLogin() {
         identifier: identifier.trim(),
         password: password.trim(),
       });
-      
+
       if (res?.error) {
         // Handle specific error messages
         if (res.error === "CredentialsSignin") {
@@ -53,7 +53,7 @@ export default function UserLogin() {
         // mark as logged in in AuthContext
         login();
         toast.success("Logged in successfully!");
-        
+
         // Redirect to the intended page or home
         const redirectUrl = redirect || "/";
         router.push(redirectUrl);

@@ -101,7 +101,9 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({
     [key: string]: () => void;
   }>({});
   const [fcmToken, setFcmToken] = useState<string | null>(null);
-  const [fcmUnsubscribe, setFcmUnsubscribe] = useState<(() => void) | null>(null);
+  const [fcmUnsubscribe, setFcmUnsubscribe] = useState<(() => void) | null>(
+    null
+  );
 
   useEffect(() => {
     setIsMobile(isMobileDevice());
@@ -116,7 +118,7 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({
 
       // Clean up all message listeners
       Object.values(messageListeners).forEach((unsubscribe) => unsubscribe());
-      
+
       // Clean up FCM
       if (fcmUnsubscribe) {
         fcmUnsubscribe();
@@ -129,21 +131,18 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({
     if (user?.id && !fcmToken) {
       const initFCM = async () => {
         try {
-          const unsubscribe = await initializeFCM(
-            user.id!,
-            (payload) => {
-              // Handle different types of notifications
-              if (payload.data?.type === 'chat_message') {
-                // You can add custom handling here, like showing a toast
-                // or updating the UI to indicate a new message
-              }
+          const unsubscribe = await initializeFCM(user.id!, (payload) => {
+            // Handle different types of notifications
+            if (payload.data?.type === "chat_message") {
+              // You can add custom handling here, like showing a toast
+              // or updating the UI to indicate a new message
             }
-          );
-          
+          });
+
           setFcmUnsubscribe(() => unsubscribe);
-          setFcmToken('initialized'); // Mark as initialized to prevent re-runs
+          setFcmToken("initialized"); // Mark as initialized to prevent re-runs
         } catch (error) {
-          setFcmToken('failed'); // Mark as failed to prevent re-runs
+          setFcmToken("failed"); // Mark as failed to prevent re-runs
         }
       };
 
@@ -190,19 +189,19 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({
         );
 
         if (existingChatIndex === -1) {
-        // Get or create the conversation in Firebase
-        const shopperId = user.id;
-        console.log("🔍 [ChatContext] Creating conversation with:", {
-          orderId,
-          customerId,
-          shopperId,
-          userDetails: user
-        });
-        const conversationId = await createConversation(
-          orderId,
-          customerId,
-          shopperId
-        );
+          // Get or create the conversation in Firebase
+          const shopperId = user.id;
+          console.log("🔍 [ChatContext] Creating conversation with:", {
+            orderId,
+            customerId,
+            shopperId,
+            userDetails: user,
+          });
+          const conversationId = await createConversation(
+            orderId,
+            customerId,
+            shopperId
+          );
 
           // Create a new chat entry in our state first
           const newChat: ChatData = {
@@ -221,9 +220,13 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({
             const unsubscribe = listenForMessages(
               conversationId,
               (fbMessages) => {
-                console.log("🔍 [ChatContext] Received messages:", fbMessages.length, "messages");
+                console.log(
+                  "🔍 [ChatContext] Received messages:",
+                  fbMessages.length,
+                  "messages"
+                );
                 console.log("🔍 [ChatContext] Messages data:", fbMessages);
-                
+
                 // Convert Firebase messages to our format
                 const messages = fbMessages.map(convertFirebaseMessage);
 
@@ -233,8 +236,11 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({
                 );
 
                 if (newUnreadMessages.length > 0) {
-                  console.log('🔔 [ChatContext] New unread messages detected:', newUnreadMessages.length);
-                  
+                  console.log(
+                    "🔔 [ChatContext] New unread messages detected:",
+                    newUnreadMessages.length
+                  );
+
                   // Note: Push notifications are now handled server-side in chatService.ts
                   // This ensures notifications are sent even when the user is not actively using the app
                 }
@@ -306,10 +312,10 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({
     conversationId: string
   ) => {
     try {
-      const response = await fetch('/api/fcm/send-notification', {
-        method: 'POST',
+      const response = await fetch("/api/fcm/send-notification", {
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
         body: JSON.stringify({
           recipientId,
@@ -324,9 +330,12 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({
         throw new Error(`FCM API error: ${response.statusText}`);
       }
 
-      console.log('✅ [ChatContext] FCM notification sent successfully');
+      console.log("✅ [ChatContext] FCM notification sent successfully");
     } catch (error) {
-      console.error('⚠️ [ChatContext] FCM notification failed (non-critical):', error);
+      console.error(
+        "⚠️ [ChatContext] FCM notification failed (non-critical):",
+        error
+      );
       // Don't throw here as FCM failure shouldn't break message sending
     }
   };
@@ -349,7 +358,7 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({
           conversationId: conversation.id,
           text,
           senderId: user.id,
-          senderType: "shopper"
+          senderType: "shopper",
         });
 
         // Add message to Firebase
@@ -366,9 +375,9 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({
         // Send FCM notification to the recipient
         const conversationData = conversation;
         const recipientId = conversationData.customerId; // Always notify customer when shopper sends message
-        
-        const senderName = 'Shopper';
-        
+
+        const senderName = "Shopper";
+
         await sendFCMNotification(
           recipientId,
           senderName,
@@ -448,8 +457,6 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({
     },
     [user]
   );
-
-
 
   return (
     <ChatContext.Provider

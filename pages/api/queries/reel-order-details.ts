@@ -216,13 +216,17 @@ export default async function handler(
             email: orderData.Shoppers.email,
             profile_photo: orderData.Shoppers.profile_picture,
             gender: orderData.Shoppers.gender,
-            rating: orderData.Shoppers.Ratings.length > 0 
-              ? orderData.Shoppers.Ratings.reduce((sum, rating) => sum + parseFloat(rating.rating), 0) / orderData.Shoppers.Ratings.length
-              : 0,
+            rating:
+              orderData.Shoppers.Ratings.length > 0
+                ? orderData.Shoppers.Ratings.reduce(
+                    (sum, rating) => sum + parseFloat(rating.rating),
+                    0
+                  ) / orderData.Shoppers.Ratings.length
+                : 0,
             orders_aggregate: {
               aggregate: {
-                count: orderData.Shoppers.Ratings.length
-              }
+                count: orderData.Shoppers.Ratings.length,
+              },
             },
           }
         : null,

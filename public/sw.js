@@ -1,18 +1,18 @@
 // Service Worker for Push Notifications
-console.log('🔔 [SW] Service Worker loaded');
+console.log("🔔 [SW] Service Worker loaded");
 
 // Push event - handle incoming push notifications
-self.addEventListener('push', (event) => {
-  console.log('🔔 [SW] Push event received:', event);
+self.addEventListener("push", (event) => {
+  console.log("🔔 [SW] Push event received:", event);
 
   let notificationData = {
-    title: 'New Message',
-    body: 'You have a new message',
-    icon: '/icons/icon-192x192.png',
-    badge: '/icons/badge-72x72.png',
+    title: "New Message",
+    body: "You have a new message",
+    icon: "/icons/icon-192x192.png",
+    badge: "/icons/badge-72x72.png",
     data: {
-      url: '/Messages'
-    }
+      url: "/Messages",
+    },
   };
 
   // Parse push data if available
@@ -24,10 +24,10 @@ self.addEventListener('push', (event) => {
         body: pushData.body || notificationData.body,
         icon: pushData.icon || notificationData.icon,
         badge: pushData.badge || notificationData.badge,
-        data: pushData.data || notificationData.data
+        data: pushData.data || notificationData.data,
       };
     } catch (error) {
-      console.error('❌ [SW] Error parsing push data:', error);
+      console.error("❌ [SW] Error parsing push data:", error);
     }
   }
 
@@ -38,19 +38,19 @@ self.addEventListener('push', (event) => {
     data: notificationData.data,
     actions: [
       {
-        action: 'open',
-        title: 'Open Chat',
-        icon: '/icons/icon-192x192.png'
+        action: "open",
+        title: "Open Chat",
+        icon: "/icons/icon-192x192.png",
       },
       {
-        action: 'close',
-        title: 'Close',
-        icon: '/icons/icon-192x192.png'
-      }
+        action: "close",
+        title: "Close",
+        icon: "/icons/icon-192x192.png",
+      },
     ],
     requireInteraction: true,
     vibrate: [200, 100, 200],
-    tag: 'chat-notification'
+    tag: "chat-notification",
   };
 
   event.waitUntil(
@@ -59,28 +59,29 @@ self.addEventListener('push', (event) => {
 });
 
 // Notification click event
-self.addEventListener('notificationclick', (event) => {
-  console.log('🔔 [SW] Notification clicked:', event);
+self.addEventListener("notificationclick", (event) => {
+  console.log("🔔 [SW] Notification clicked:", event);
 
   event.notification.close();
 
-  if (event.action === 'close') {
+  if (event.action === "close") {
     return;
   }
 
   // Default action or 'open' action
-  const urlToOpen = event.notification.data?.url || '/Messages';
-  
+  const urlToOpen = event.notification.data?.url || "/Messages";
+
   event.waitUntil(
-    clients.matchAll({ type: 'window', includeUncontrolled: true })
+    clients
+      .matchAll({ type: "window", includeUncontrolled: true })
       .then((clientList) => {
         // Check if there's already a window open with the target URL
         for (const client of clientList) {
-          if (client.url.includes(urlToOpen) && 'focus' in client) {
+          if (client.url.includes(urlToOpen) && "focus" in client) {
             return client.focus();
           }
         }
-        
+
         // If no window is open, open a new one
         if (clients.openWindow) {
           return clients.openWindow(urlToOpen);

@@ -182,10 +182,7 @@ const nextConfig = {
   // Suppress AbortError messages in development
   webpack: (config, { dev }) => {
     if (dev) {
-      config.ignoreWarnings = [
-        /AbortError/,
-        /upstream image response failed/,
-      ];
+      config.ignoreWarnings = [/AbortError/, /upstream image response failed/];
     }
     return config;
   },

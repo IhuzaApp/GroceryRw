@@ -351,7 +351,6 @@ export default async function handler(
       const deliveryFee = parseFloat(orderData.delivery_fee || "0");
       const totalEarnings = serviceFee + deliveryFee;
 
-
       formattedOrder = {
         id: orderData.id,
         OrderID: orderData.OrderID || orderData.id, // Add OrderID field
@@ -443,7 +442,6 @@ export default async function handler(
         assignedTo: orderData.assignedTo, // Include assignedTo data (shopper)
       };
     }
-
 
     res.status(200).json({
       success: true,
