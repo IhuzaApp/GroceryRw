@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { useRouter } from "next/router";
 import { GetServerSideProps } from "next";
 import RootLayout from "@components/ui/layout";
@@ -10,6 +10,7 @@ import { useTheme } from "../../src/context/ThemeContext";
 import { formatCurrency } from "../../src/lib/formatCurrency";
 import { RestaurantSearchBar } from "../../src/components/restaurants/RestaurantSearchBar";
 import { RestaurantMenuItems } from "../../src/components/restaurants/RestaurantMenuItems";
+import { RestaurantBanner } from "../../src/components/restaurants/RestaurantBanner";
 
 interface Restaurant {
   id: string;
@@ -59,15 +60,32 @@ function RestaurantPage({ restaurant, dishes = [] }: RestaurantPageProps) {
   // Debug: Log dishes data
   // console.log('Restaurant dishes:', dishes);
 
-  // Scroll detection for sticky header
+  // Scroll detection for sticky header (mobile only)
   useEffect(() => {
     const handleScroll = () => {
       const scrollTop = window.scrollY;
-      setIsScrolled(scrollTop > 100);
+      const isMobile = window.innerWidth < 768; // md breakpoint
+      setIsScrolled(scrollTop > 100 && isMobile);
+    };
+
+    // Check on mount and resize
+    const handleResize = () => {
+      const isMobile = window.innerWidth < 768;
+      if (!isMobile) {
+        setIsScrolled(false);
+      }
     };
 
     window.addEventListener('scroll', handleScroll);
-    return () => window.removeEventListener('scroll', handleScroll);
+    window.addEventListener('resize', handleResize);
+    
+    // Initial check
+    handleResize();
+    
+    return () => {
+      window.removeEventListener('scroll', handleScroll);
+      window.removeEventListener('resize', handleResize);
+    };
   }, []);
 
   // Search handler
@@ -75,20 +93,6 @@ function RestaurantPage({ restaurant, dishes = [] }: RestaurantPageProps) {
     setSearchQuery(query);
   };
 
-  // Get unique categories from dishes with proper error handling
-  const categories = ["All", ...Array.from(new Set((dishes || []).map(dish => dish.category || "Other")))];
-  
-  // Filter dishes by selected category and search query
-  const filteredDishes = (dishes || []).filter(dish => {
-    const matchesCategory = selectedCategory === "All" || (dish.category || "Other") === selectedCategory;
-    const matchesSearch = !searchQuery || 
-      dish.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      dish.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      (dish.ingredients && typeof dish.ingredients === 'string' && 
-       dish.ingredients.toLowerCase().includes(searchQuery.toLowerCase()));
-    
-    return matchesCategory && matchesSearch;
-  });
 
   const handleAddToCart = async (dish: Dish) => {
     setIsLoading(true);
@@ -214,6 +218,35 @@ function RestaurantPage({ restaurant, dishes = [] }: RestaurantPageProps) {
     return 'promo';
   };
 
+  // Get unique categories and promo types from dishes
+  const categories = useMemo(() => {
+    const dishCategories = Array.from(new Set((dishes || []).map(dish => dish.category || "Other")));
+    const promoTypes = Array.from(new Set((dishes || []).map(dish => getPromoType(dish)).filter(Boolean)));
+    
+    return [
+      "All",
+      ...promoTypes.map(promo => `Promo: ${promo}`),
+      ...dishCategories
+    ];
+  }, [dishes]);
+  
+  // Filter dishes by selected category and search query
+  const filteredDishes = useMemo(() => {
+    return (dishes || []).filter(dish => {
+      const matchesCategory = selectedCategory === "All" || 
+        (dish.category || "Other") === selectedCategory ||
+        (selectedCategory.startsWith("Promo: ") && getPromoType(dish) === selectedCategory.replace("Promo: ", ""));
+      
+      const matchesSearch = !searchQuery || 
+        dish.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        dish.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        (dish.ingredients && typeof dish.ingredients === 'string' && 
+         dish.ingredients.toLowerCase().includes(searchQuery.toLowerCase()));
+      
+      return matchesCategory && matchesSearch;
+    });
+  }, [dishes, selectedCategory, searchQuery]);
+
   // Helper function to calculate happy hour pricing
   const getHappyHourPricing = (dish: Dish) => {
     if (dish.promo_type !== 'happyhour' || !dish.discount) {
@@ -299,6 +332,36 @@ function RestaurantPage({ restaurant, dishes = [] }: RestaurantPageProps) {
     }
   };
 
+  // Helper function to get promo button styling
+  const getPromoButtonStyle = (promoType: string | null, isSelected: boolean) => {
+    if (!promoType) return "";
+    
+    const baseClasses = "rounded-full px-4 py-2 text-sm font-medium transition-colors";
+    
+    switch (promoType) {
+      case 'bogo':
+        return isSelected
+          ? "bg-gradient-to-r from-orange-500 to-orange-600 !text-white shadow-lg"
+          : "bg-orange-100 text-orange-700 hover:bg-orange-200 dark:bg-orange-900/20 dark:text-orange-400 dark:hover:bg-orange-900/30";
+      case 'happyhour':
+        return isSelected
+          ? "bg-gradient-to-r from-purple-500 to-purple-600 !text-white shadow-lg"
+          : "bg-purple-100 text-purple-700 hover:bg-purple-200 dark:bg-purple-900/20 dark:text-purple-400 dark:hover:bg-purple-900/30";
+      case 'discount':
+        return isSelected
+          ? "bg-gradient-to-r from-red-500 to-red-600 !text-white shadow-lg"
+          : "bg-red-100 text-red-700 hover:bg-red-200 dark:bg-red-900/20 dark:text-red-400 dark:hover:bg-red-900/30";
+      case 'promo':
+        return isSelected
+          ? "bg-gradient-to-r from-blue-500 to-blue-600 !text-white shadow-lg"
+          : "bg-blue-100 text-blue-700 hover:bg-blue-200 dark:bg-blue-900/20 dark:text-blue-400 dark:hover:bg-blue-900/30";
+      default:
+        return isSelected
+          ? "bg-green-600 !text-white"
+          : "bg-gray-100 text-gray-700 hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600";
+    }
+  };
+
   if (!restaurant) {
     return (
       <RootLayout>
@@ -341,7 +404,7 @@ function RestaurantPage({ restaurant, dishes = [] }: RestaurantPageProps) {
               }`}>
                 <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-                </svg>
+                      </svg>
                 <span className="font-medium">Back</span>
               </Link>
 
@@ -352,7 +415,7 @@ function RestaurantPage({ restaurant, dishes = [] }: RestaurantPageProps) {
                   onSearch={handleSearch}
                   isSticky={true}
                 />
-              </div>
+                  </div>
 
               {/* Restaurant Name */}
               <div className={`font-semibold truncate max-w-32 ${
@@ -365,87 +428,61 @@ function RestaurantPage({ restaurant, dishes = [] }: RestaurantPageProps) {
         )}
 
         {/* Restaurant Header */}
-        <div className="relative">
-          <div className="h-56 w-full overflow-hidden">
-            <Image
-              src={restaurant.profile || "/assets/images/restaurantImage.webp"}
-              alt={restaurant.name}
-              fill
-              className="object-cover"
-              onError={(e) => {
-                console.log('Image failed to load, trying fallback');
-                const target = e.target as HTMLImageElement;
-                target.src = "/assets/images/restaurantImage.webp";
-              }}
-              onLoad={() => {
-                console.log('Restaurant image loaded successfully');
-              }}
-            />
-            <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent" />
-          </div>
-          
-          {/* Back Button */}
-          <Link
-            href="/"
-            className="absolute left-4 top-4 z-20 flex h-10 w-10 items-center justify-center rounded-full bg-white/90 backdrop-blur-sm transition-colors hover:bg-white"
-          >
-            <svg className="h-5 w-5 text-gray-800" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-            </svg>
-          </Link>
-
-          {/* Search Bar */}
-          <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-10 w-full max-w-md px-4">
-            <RestaurantSearchBar
-              placeholder="Search dishes..."
-              onSearch={handleSearch}
-              isSticky={false}
-            />
-          </div>
-
-          {/* Restaurant Info */}
-          <div className="absolute bottom-0 left-0 right-0 z-10 p-4 text-white">
-            <h1 className="text-2xl font-bold">{restaurant.name}</h1>
-            <div className="mt-2 flex flex-wrap items-center gap-4 text-sm">
-                  {restaurant.verified && (
-                <div className="flex items-center gap-1">
-                  <svg className="h-4 w-4 text-green-400" fill="currentColor" viewBox="0 0 20 20">
-                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-                      </svg>
-                      <span>Verified</span>
-                    </div>
-                  )}
-              <div className="flex items-center gap-1">
-                <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-                    </svg>
-                    <span>{restaurant.location}</span>
-                  </div>
-                </div>
-              </div>
-            </div>
+        <RestaurantBanner
+          restaurant={restaurant}
+          onSearch={handleSearch}
+        />
 
         {/* Main Content */}
-        <div className={`relative -mt-2 rounded-t-3xl bg-white dark:bg-gray-800 mx-4 sm:mx-6 lg:mx-8 z-0 transition-all duration-300 ${isScrolled ? 'pt-16' : ''}`}>
+        <div className={`relative -mt-2 rounded-t-3xl bg-white dark:bg-gray-800 z-0 transition-all duration-300 ${isScrolled ? 'pt-16' : ''}`}>
           {/* Category Tabs */}
           <div className="sticky top-0 z-10 border-b border-gray-200 bg-white dark:border-gray-700 dark:bg-gray-800">
             <div className="flex space-x-1 overflow-x-auto px-4 py-3">
-              {categories.map((category) => (
-                <button
-                  key={category}
-                  onClick={() => setSelectedCategory(category)}
-                  className={`whitespace-nowrap rounded-full px-4 py-2 text-sm font-medium transition-colors ${
-                    selectedCategory === category
-                      ? "bg-green-600 text-white"
-                      : "bg-gray-100 text-gray-700 hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600"
-                  }`}
-                >
-                  {category}
-                </button>
-              ))}
-            </div>
-          </div>
+              {categories.map((category) => {
+                const isPromo = category.startsWith("Promo: ");
+                const promoType = isPromo ? category.replace("Promo: ", "") : null;
+                
+                return (
+                  <button
+                    key={category}
+                    onClick={() => setSelectedCategory(category)}
+                    className={`whitespace-nowrap rounded-full px-4 py-2 text-sm font-medium transition-colors flex items-center gap-1 ${
+                      selectedCategory === category
+                        ? isPromo
+                          ? getPromoButtonStyle(promoType, true)
+                          : "bg-green-600 !text-white"
+                        : isPromo
+                          ? getPromoButtonStyle(promoType, false)
+                          : "bg-gray-100 text-gray-700 hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600"
+                    }`}
+                  >
+                    {isPromo && (
+                      <span className="text-xs">
+                        {promoType === 'bogo' ? (
+                          <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v13m0-13V6a2 2 0 112 2h-2zm0 0V5.5A2.5 2.5 0 109.5 8H12zm-7 4h14M5 12a2 2 0 110-4h14a2 2 0 110 4M5 12v7a2 2 0 002 2h10a2 2 0 002-2v-7" />
+                          </svg>
+                        ) : promoType === 'happyhour' ? (
+                          <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                          </svg>
+                        ) : promoType === 'discount' ? (
+                          <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1" />
+                          </svg>
+                        ) : (
+                          <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
+                  </svg>
+                        )}
+                  </span>
+                    )}
+                    {category}
+                  </button>
+                );
+              })}
+                </div>
+                </div>
 
           {/* Menu Items */}
           <RestaurantMenuItems
@@ -482,7 +519,7 @@ function RestaurantPage({ restaurant, dishes = [] }: RestaurantPageProps) {
                     <p className="text-sm text-gray-600 dark:text-gray-400">
                       {formatCurrency(getCartTotal())}
                     </p>
-                  </div>
+            </div>
                 </div>
                 <Link
                   href="/Cart"

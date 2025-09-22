@@ -75,7 +75,7 @@ export const RestaurantMenuItems: React.FC<RestaurantMenuItemsProps> = ({
             <div key={dish.id} className="flex gap-4 rounded-xl border border-gray-200 bg-white p-4 dark:border-gray-700 dark:bg-gray-700">
               <div className="relative h-20 w-20 flex-shrink-0 overflow-hidden rounded-lg">
                 <Image
-                  src={dish.image || "/images/groceryPlaceholder.png"}
+                  src={dish.image || "/images/restaurantDish.png"}
                   alt={dish.name}
                   width={80}
                   height={80}
@@ -130,17 +130,17 @@ export const RestaurantMenuItems: React.FC<RestaurantMenuItemsProps> = ({
                   <button
                     onClick={() => onAddToCart(dish)}
                     disabled={isLoading || !dish.is_active}
-                    className="rounded-full bg-green-600 p-2 text-white transition-colors hover:bg-green-700 disabled:bg-gray-400"
+                    className="rounded-full bg-green-600 p-2 !text-white transition-colors hover:bg-green-700 disabled:bg-gray-400"
                   >
                     {cartItems[dish.id] ? (
-                      <div className="flex items-center gap-1">
-                        <span className="text-xs font-bold">{cartItems[dish.id]}</span>
-                        <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <div className="flex items-center gap-1 !text-white">
+                        <span className="text-xs font-bold !text-white">{cartItems[dish.id]}</span>
+                        <svg className="h-4 w-4 !text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
                         </svg>
                       </div>
                     ) : (
-                      <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <svg className="h-4 w-4 !text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
                       </svg>
                     )}
