@@ -6,6 +6,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { AuthGuard } from "../../src/components/AuthGuard";
 import { useCart } from "../../src/context/CartContext";
+import { useTheme } from "../../src/context/ThemeContext";
 import { formatCurrency } from "../../src/lib/formatCurrency";
 
 interface Restaurant {
@@ -46,9 +47,25 @@ function RestaurantPage({ restaurant, dishes = [] }: RestaurantPageProps) {
   const router = useRouter();
   const { id } = router.query;
   const { addItem } = useCart();
+  const { theme } = useTheme();
   const [selectedCategory, setSelectedCategory] = useState<string>("All");
   const [cartItems, setCartItems] = useState<{ [key: string]: number }>({});
+  const [isScrolled, setIsScrolled] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+
+  // Debug: Log dishes data
+  console.log('Restaurant dishes:', dishes);
+
+  // Scroll detection for sticky header
+  useEffect(() => {
+    const handleScroll = () => {
+      const scrollTop = window.scrollY;
+      setIsScrolled(scrollTop > 100);
+    };
+
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
 
   // Get unique categories from dishes with proper error handling
   const categories = ["All", ...Array.from(new Set((dishes || []).map(dish => dish.category || "Other")))];
@@ -293,32 +310,110 @@ function RestaurantPage({ restaurant, dishes = [] }: RestaurantPageProps) {
   return (
     <RootLayout>
       <div className="min-h-screen bg-gray-50 dark:bg-gray-900 md:ml-20">
+        {/* Sticky Header */}
+        {isScrolled && (
+          <div className={`fixed top-0 left-0 right-0 z-50 backdrop-blur-md border-b shadow-lg md:ml-20 transition-all duration-300 ${
+            theme === 'dark' 
+              ? 'bg-gray-800/95 border-gray-700' 
+              : 'bg-white/95 border-gray-200'
+          }`}>
+            <div className="flex items-center justify-between px-4 py-3">
+              {/* Back Button */}
+              <Link href="/shops" className={`flex items-center gap-2 transition-colors ${
+                theme === 'dark' 
+                  ? 'text-gray-200 hover:text-white' 
+                  : 'text-gray-800 hover:text-gray-600'
+              }`}>
+                <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                </svg>
+                <span className="font-medium">Back</span>
+              </Link>
+
+              {/* Search Bar */}
+              <div className="flex-1 max-w-md mx-4">
+                <div className="relative">
+                  <div className="absolute inset-y-0 left-0 flex items-center pl-3 z-20">
+                    <svg className={`h-4 w-4 ${
+                      theme === 'dark' ? 'text-gray-400' : 'text-gray-600'
+                    }`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                    </svg>
+                  </div>
+                  <input
+                    type="text"
+                    placeholder="Search dishes..."
+                    className={`w-full rounded-xl py-2 pl-10 pr-4 text-sm transition-all duration-200 focus:outline-none focus:ring-2 ${
+                      theme === 'dark'
+                        ? 'border border-gray-600 bg-gray-700 text-gray-200 placeholder-gray-400 focus:border-blue-400 focus:bg-gray-600 focus:ring-blue-400/20'
+                        : 'border border-gray-300 bg-white text-gray-800 placeholder-gray-500 focus:border-blue-500 focus:bg-white focus:ring-blue-200'
+                    }`}
+                    style={{ textAlign: 'left' }}
+                  />
+                </div>
+              </div>
+
+              {/* Restaurant Name */}
+              <div className={`font-semibold truncate max-w-32 ${
+                theme === 'dark' ? 'text-gray-200' : 'text-gray-800'
+              }`}>
+                {restaurant.name}
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* Restaurant Header */}
         <div className="relative">
-          <div className="h-48 w-full overflow-hidden">
+          <div className="h-56 w-full overflow-hidden">
             <Image
-              src={restaurant.profile || "/images/shop-placeholder.jpg"}
+              src={restaurant.profile || "/assets/images/restaurantImage.webp"}
               alt={restaurant.name}
               fill
               className="object-cover"
+              onError={(e) => {
+                console.log('Image failed to load, trying fallback');
+                const target = e.target as HTMLImageElement;
+                target.src = "/assets/images/restaurantImage.webp";
+              }}
+              onLoad={() => {
+                console.log('Restaurant image loaded successfully');
+              }}
             />
-            <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent" />
+            <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent" />
           </div>
           
           {/* Back Button */}
           <Link
             href="/"
-            className="absolute left-4 top-4 flex h-10 w-10 items-center justify-center rounded-full bg-white/90 backdrop-blur-sm transition-colors hover:bg-white"
+            className="absolute left-4 top-4 z-20 flex h-10 w-10 items-center justify-center rounded-full bg-white/90 backdrop-blur-sm transition-colors hover:bg-white"
           >
             <svg className="h-5 w-5 text-gray-800" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
             </svg>
           </Link>
 
+          {/* Search Bar */}
+          <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-10 w-full max-w-md px-4">
+            <div className="relative">
+              <div className="absolute inset-y-0 left-0 flex items-center pl-4 z-20">
+                <svg className="h-5 w-5 text-white drop-shadow-lg" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                </svg>
+              </div>
+              <input
+                type="text"
+                placeholder="Search dishes..."
+                className="w-full rounded-2xl border border-white/30 bg-white/20 py-4 pl-12 pr-4 text-sm text-white placeholder-white/80 transition-all duration-200 focus:border-white/50 focus:bg-white/30 focus:outline-none focus:ring-2 focus:ring-white/30 backdrop-blur-md shadow-xl"
+                style={{ textAlign: 'left' }}
+              />
+            </div>
+          </div>
+
           {/* Restaurant Info */}
-          <div className="absolute bottom-4 left-4 right-4 text-white">
+          <div className="absolute bottom-0 left-0 right-0 z-10 p-4 text-white">
             <h1 className="text-2xl font-bold">{restaurant.name}</h1>
-            <div className="mt-2 flex items-center gap-4 text-sm">
+            <div className="mt-2 flex flex-wrap items-center gap-4 text-sm">
                   {restaurant.verified && (
                 <div className="flex items-center gap-1">
                   <svg className="h-4 w-4 text-green-400" fill="currentColor" viewBox="0 0 20 20">
@@ -339,7 +434,7 @@ function RestaurantPage({ restaurant, dishes = [] }: RestaurantPageProps) {
             </div>
 
         {/* Main Content */}
-        <div className="relative -mt-6 rounded-t-3xl bg-white dark:bg-gray-800 mx-4 sm:mx-6 lg:mx-8">
+        <div className={`relative -mt-2 rounded-t-3xl bg-white dark:bg-gray-800 mx-4 sm:mx-6 lg:mx-8 z-0 transition-all duration-300 ${isScrolled ? 'pt-16' : ''}`}>
           {/* Category Tabs */}
           <div className="sticky top-0 z-10 border-b border-gray-200 bg-white dark:border-gray-700 dark:bg-gray-800">
             <div className="flex space-x-1 overflow-x-auto px-4 py-3">
@@ -367,7 +462,7 @@ function RestaurantPage({ restaurant, dishes = [] }: RestaurantPageProps) {
                   <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-gray-100 dark:bg-gray-700">
                     <svg className="h-8 w-8 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
-                    </svg>
+                  </svg>
                   </div>
                   <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Menu Coming Soon</h3>
                   <p className="text-gray-600 dark:text-gray-400">
@@ -444,9 +539,20 @@ function RestaurantPage({ restaurant, dishes = [] }: RestaurantPageProps) {
                         <button
                           onClick={() => handleAddToCart(dish)}
                           disabled={isLoading || !dish.is_active}
-                          className="rounded-full bg-green-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-green-700 disabled:bg-gray-400"
+                          className="rounded-full bg-green-600 p-2 text-white transition-colors hover:bg-green-700 disabled:bg-gray-400"
                         >
-                          {cartItems[dish.id] ? `+${cartItems[dish.id]}` : "Add"}
+                          {cartItems[dish.id] ? (
+                            <div className="flex items-center gap-1">
+                              <span className="text-xs font-bold">{cartItems[dish.id]}</span>
+                              <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                              </svg>
+                            </div>
+                          ) : (
+                            <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                  </svg>
+                          )}
                         </button>
                       </div>
                 </div>
