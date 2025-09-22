@@ -298,7 +298,7 @@ function RestaurantPage({ restaurant, dishes = [] }: RestaurantPageProps) {
     switch (promoType) {
       case 'bogo':
         return (
-          <div className="absolute -top-1 -right-1 z-10 animate-pulse rounded-full bg-gradient-to-r from-orange-500 to-orange-600 px-2 py-1 text-xs font-bold text-white shadow-lg ring-2 ring-orange-200">
+          <div className="absolute -top-1 -right-1 z-10 animate-pulse rounded-full bg-gradient-to-r from-orange-500 to-orange-600 px-2 py-1 text-xs font-bold !text-white shadow-lg ring-2 ring-orange-200">
             BOGO
           </div>
         );
@@ -308,22 +308,22 @@ function RestaurantPage({ restaurant, dishes = [] }: RestaurantPageProps) {
           ? `${pricing.discountValue}% OFF`
           : `$${pricing.discountValue} OFF`;
         return (
-          <div className="absolute -top-1 -right-1 z-10 rounded-full bg-gradient-to-r from-purple-500 to-purple-600 px-2 py-1 text-xs font-bold text-white shadow-lg ring-2 ring-purple-200 animate-pulse">
+          <div className="absolute -top-1 -right-1 z-10 rounded-full bg-gradient-to-r from-purple-500 to-purple-600 px-2 py-1 text-xs font-bold !text-white shadow-lg ring-2 ring-purple-200 animate-pulse">
             <div className="text-center">
-              <div className="text-xs">HAPPY HOUR</div>
-              <div className="text-xs -mt-0.5">{discountText}</div>
+              <div className="text-xs !text-white">HAPPY HOUR</div>
+              <div className="text-xs -mt-0.5 !text-white">{discountText}</div>
             </div>
           </div>
         );
       case 'discount':
         return (
-          <div className="absolute -top-1 -right-1 z-10 rounded-full bg-gradient-to-r from-red-500 to-red-600 px-2 py-1 text-xs font-bold text-white shadow-lg ring-2 ring-red-200">
+          <div className="absolute -top-1 -right-1 z-10 rounded-full bg-gradient-to-r from-red-500 to-red-600 px-2 py-1 text-xs font-bold !text-white shadow-lg ring-2 ring-red-200">
             {dish.discount}% OFF
           </div>
         );
       case 'promo':
         return (
-          <div className="absolute -top-1 -right-1 z-10 rounded-full bg-gradient-to-r from-blue-500 to-blue-600 px-2 py-1 text-xs font-bold text-white shadow-lg ring-2 ring-blue-200">
+          <div className="absolute -top-1 -right-1 z-10 rounded-full bg-gradient-to-r from-blue-500 to-blue-600 px-2 py-1 text-xs font-bold !text-white shadow-lg ring-2 ring-blue-200">
             PROMO
           </div>
         );
