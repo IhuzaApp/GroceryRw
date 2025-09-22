@@ -46,26 +46,16 @@ export const RestaurantMenuItems: React.FC<RestaurantMenuItemsProps> = ({
 }) => {
   // Helper function to parse preparation time string from database
   const parsePreparationTime = (timeString?: string): number => {
-    console.log('🕒 Parsing preparation time:', { 
-      raw: timeString, 
-      type: typeof timeString,
-      isEmpty: !timeString || timeString.trim() === ''
-    });
-
     if (!timeString || timeString.trim() === '') {
-      console.log('  → Returning 0 (empty/ready now)');
       return 0; // Empty means immediately available
     }
     
     const cleanTime = timeString.toLowerCase().trim();
-    console.log('  → Cleaned time:', cleanTime);
     
     // Handle minutes format: "15min", "30min", etc.
     const minMatch = cleanTime.match(/^(\d+)min$/);
     if (minMatch) {
-      const minutes = parseInt(minMatch[1]);
-      console.log('  → Minutes match:', minutes);
-      return minutes;
+      return parseInt(minMatch[1]);
     }
     
     // Handle hours and minutes format: "2hr30min", "1hr15min", etc.
@@ -73,63 +63,45 @@ export const RestaurantMenuItems: React.FC<RestaurantMenuItemsProps> = ({
     if (hrMinMatch) {
       const hours = parseInt(hrMinMatch[1]);
       const mins = parseInt(hrMinMatch[2]);
-      const totalMinutes = (hours * 60) + mins;
-      console.log('  → Hours+Minutes match:', hours, 'hr', mins, 'min →', totalMinutes, 'minutes');
-      return totalMinutes;
+      return (hours * 60) + mins;
     }
 
     // Handle hours format: "1hr", "2hr", etc.
     const hrMatch = cleanTime.match(/^(\d+)hr$/);
     if (hrMatch) {
       const hours = parseInt(hrMatch[1]);
-      const minutes = hours * 60;
-      console.log('  → Hours match:', hours, '→', minutes, 'minutes');
-      return minutes;
+      return hours * 60;
     }
     
     // Handle just numbers (assume minutes): "15", "30"
     const numMatch = cleanTime.match(/^(\d+)$/);
     if (numMatch) {
-      const minutes = parseInt(numMatch[1]);
-      console.log('  → Number match:', minutes);
-      return minutes;
+      return parseInt(numMatch[1]);
     }
     
     // Default fallback
-    console.log('  → No match, returning 0 (fallback)');
     return 0;
   };
 
   // Helper function to format preparation time for display
   const formatPreparationTime = (timeString?: string) => {
-    console.log('🎨 Formatting preparation time for display:', { raw: timeString });
-    
     if (!timeString || timeString.trim() === '') {
-      console.log('  → Empty, returning "Ready now"');
       return 'Ready now';
     }
     
     const minutes = parsePreparationTime(timeString);
-    console.log('  → Parsed minutes:', minutes);
     
     if (minutes === 0) {
-      console.log('  → 0 minutes, returning "Ready now"');
       return 'Ready now';
     } else if (minutes < 60) {
-      const result = `${minutes} min`;
-      console.log('  → Less than 60min, returning:', result);
-      return result;
+      return `${minutes} min`;
     } else {
       const hours = Math.floor(minutes / 60);
       const remainingMinutes = minutes % 60;
-      let result;
       if (remainingMinutes === 0) {
-        result = `${hours}h`;
-      } else {
-        result = `${hours}h ${remainingMinutes}min`;
+        return `${hours}h`;
       }
-      console.log('  → 60+ minutes, returning:', result);
-      return result;
+      return `${hours}h ${remainingMinutes}min`;
     }
   };
   return (

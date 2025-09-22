@@ -52,19 +52,6 @@ function RestaurantPage({ restaurant, dishes = [] }: RestaurantPageProps) {
   const { id } = router.query;
   const { addItem, getRestaurantCart } = useFoodCart();
 
-  // Console log to see how dishes are received on the page
-  console.log('🍽️ Restaurant Page - Dishes received:');
-  console.log('Restaurant:', restaurant.name);
-  console.log('Total dishes:', dishes.length);
-  dishes.forEach((dish, index) => {
-    console.log(`Dish ${index + 1}:`, {
-      name: dish.name,
-      preparingTime: dish.preparingTime,
-      price: dish.price,
-      category: dish.category,
-      rawPreparingTime: dish.preparingTime
-    });
-  });
   const { theme } = useTheme();
   const [selectedCategory, setSelectedCategory] = useState<string>("All");
   const [cartItems, setCartItems] = useState<{ [key: string]: number }>({});
@@ -158,10 +145,6 @@ function RestaurantPage({ restaurant, dishes = [] }: RestaurantPageProps) {
   const renderIngredients = (ingredients: string | any) => {
     if (!ingredients) return null;
     
-    // Debug: Log the ingredients structure to understand the format
-    if (typeof ingredients === 'object') {
-      console.log('Ingredients structure:', ingredients);
-    }
     
     if (typeof ingredients === 'string') {
       return ingredients;

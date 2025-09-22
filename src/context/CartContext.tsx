@@ -25,10 +25,6 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({
   // Combined count from both shop and food carts
   const count = shopCartCount + foodCartCount;
   
-  // Debug logging
-  useEffect(() => {
-    console.log('Cart counts - Shop:', shopCartCount, 'Food:', foodCartCount, 'Total:', count);
-  }, [shopCartCount, foodCartCount, count]);
 
   const addItem = async (
     shopId: string,
@@ -102,11 +98,11 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({
       try {
         const foodCartData = JSON.parse(localStorage.getItem('foodCarts') || '{}');
         const foodCarts = foodCartData.restaurants || [];
+        
         const totalFoodItems = foodCarts.reduce((sum: number, restaurant: any) => {
           return sum + (restaurant.totalItems || 0);
         }, 0);
         setFoodCartCount(totalFoodItems);
-        console.log('Food cart count updated:', totalFoodItems, 'from restaurants:', foodCarts.length);
       } catch (error) {
         console.error('Error reading food cart from localStorage:', error);
         setFoodCartCount(0);

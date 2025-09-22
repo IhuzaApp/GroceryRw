@@ -109,18 +109,6 @@ export default async function handler(
       );
     }
 
-    // Console log to see the dishes data with preparingTime
-    console.log('📋 Restaurant Dishes API Response:');
-    console.log('Total dishes:', data.restaurant_dishes.length);
-    data.restaurant_dishes.forEach((dish, index) => {
-      console.log(`Dish ${index + 1}:`, {
-        name: dish.name,
-        preparingTime: dish.preparingTime,
-        price: dish.price,
-        category: dish.category
-      });
-    });
-
     res.status(200).json({ dishes: data.restaurant_dishes });
   } catch (error) {
     console.error("Error fetching restaurant dishes:", error);

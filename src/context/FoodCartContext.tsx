@@ -116,12 +116,6 @@ export const FoodCartProvider: React.FC<{ children: React.ReactNode }> = ({
     setRestaurants(prevRestaurants => {
       const existingRestaurantIndex = prevRestaurants.findIndex(r => r.id === restaurant.id);
       
-              console.log('🛒 Adding dish to food cart:', {
-                dishName: dish.name,
-                preparingTime: dish.preparingTime,
-                rawPreparingTime: dish.preparingTime,
-                type: typeof dish.preparingTime
-              });
 
               const newItem: FoodCartItem = {
                 id: dish.id,
@@ -190,8 +184,9 @@ export const FoodCartProvider: React.FC<{ children: React.ReactNode }> = ({
     });
     
     // Dispatch event to notify other components
-    console.log('Dispatching foodCartChanged event');
-    window.dispatchEvent(new Event('foodCartChanged'));
+    setTimeout(() => {
+      window.dispatchEvent(new Event('foodCartChanged'));
+    }, 10);
   };
 
   const removeItem = (restaurantId: string, dishId: string) => {
@@ -222,8 +217,9 @@ export const FoodCartProvider: React.FC<{ children: React.ReactNode }> = ({
     });
     
     // Dispatch event to notify other components
-    console.log('Dispatching foodCartChanged event');
-    window.dispatchEvent(new Event('foodCartChanged'));
+    setTimeout(() => {
+      window.dispatchEvent(new Event('foodCartChanged'));
+    }, 10);
   };
 
   const updateQuantity = (restaurantId: string, dishId: string, quantity: number) => {
@@ -254,15 +250,17 @@ export const FoodCartProvider: React.FC<{ children: React.ReactNode }> = ({
     });
     
     // Dispatch event to notify other components
-    console.log('Dispatching foodCartChanged event');
-    window.dispatchEvent(new Event('foodCartChanged'));
+    setTimeout(() => {
+      window.dispatchEvent(new Event('foodCartChanged'));
+    }, 10);
   };
 
   const clearCart = () => {
     setRestaurants([]);
     // Dispatch event to notify other components
-    console.log('Dispatching foodCartChanged event');
-    window.dispatchEvent(new Event('foodCartChanged'));
+    setTimeout(() => {
+      window.dispatchEvent(new Event('foodCartChanged'));
+    }, 10);
   };
 
   const clearRestaurant = (restaurantId: string) => {
@@ -270,8 +268,9 @@ export const FoodCartProvider: React.FC<{ children: React.ReactNode }> = ({
       prevRestaurants.filter(r => r.id !== restaurantId)
     );
     // Dispatch event to notify other components
-    console.log('Dispatching foodCartChanged event');
-    window.dispatchEvent(new Event('foodCartChanged'));
+    setTimeout(() => {
+      window.dispatchEvent(new Event('foodCartChanged'));
+    }, 10);
   };
 
   const getRestaurantCart = (restaurantId: string) => {
