@@ -21,6 +21,7 @@ const GET_RESTAURANT_DISHES = gql`
       updated_at
       promo
       promo_type
+      preparingTime
     }
   }
 `;
@@ -44,6 +45,7 @@ const GET_ALL_RESTAURANT_DISHES = gql`
       updated_at
       promo
       promo_type
+      preparingTime
     }
   }
 `;
@@ -66,6 +68,7 @@ interface RestaurantDishesResponse {
     updated_at: string;
     promo?: string;
     promo_type?: string;
+    preparingTime?: string; // Preparation time as string from database (e.g., "15min", "1hr", "")
   }>;
 }
 
@@ -105,6 +108,18 @@ export default async function handler(
         GET_ALL_RESTAURANT_DISHES
       );
     }
+
+    // Console log to see the dishes data with preparingTime
+    console.log('📋 Restaurant Dishes API Response:');
+    console.log('Total dishes:', data.restaurant_dishes.length);
+    data.restaurant_dishes.forEach((dish, index) => {
+      console.log(`Dish ${index + 1}:`, {
+        name: dish.name,
+        preparingTime: dish.preparingTime,
+        price: dish.price,
+        category: dish.category
+      });
+    });
 
     res.status(200).json({ dishes: data.restaurant_dishes });
   } catch (error) {

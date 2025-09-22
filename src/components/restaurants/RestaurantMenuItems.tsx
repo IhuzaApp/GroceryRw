@@ -16,6 +16,7 @@ interface Dish {
   category?: string;
   promo?: boolean;
   promo_type?: string;
+  preparingTime?: string; // Preparation time as string from database (e.g., "15min", "1hr", "")
 }
 
 interface RestaurantMenuItemsProps {
@@ -29,7 +30,6 @@ interface RestaurantMenuItemsProps {
   renderPromoSticker: (dish: Dish) => React.ReactNode;
   getPromoType: (dish: Dish) => string | null;
   getHappyHourPricing: (dish: Dish) => { originalPrice: number; discountedPrice: number; savings: number };
-  getCartItemCount: () => number;
 }
 
 export const RestaurantMenuItems: React.FC<RestaurantMenuItemsProps> = ({
@@ -42,11 +42,98 @@ export const RestaurantMenuItems: React.FC<RestaurantMenuItemsProps> = ({
   renderIngredients,
   renderPromoSticker,
   getPromoType,
-  getHappyHourPricing,
-  getCartItemCount
+  getHappyHourPricing
 }) => {
+  // Helper function to parse preparation time string from database
+  const parsePreparationTime = (timeString?: string): number => {
+    console.log('🕒 Parsing preparation time:', { 
+      raw: timeString, 
+      type: typeof timeString,
+      isEmpty: !timeString || timeString.trim() === ''
+    });
+
+    if (!timeString || timeString.trim() === '') {
+      console.log('  → Returning 0 (empty/ready now)');
+      return 0; // Empty means immediately available
+    }
+    
+    const cleanTime = timeString.toLowerCase().trim();
+    console.log('  → Cleaned time:', cleanTime);
+    
+    // Handle minutes format: "15min", "30min", etc.
+    const minMatch = cleanTime.match(/^(\d+)min$/);
+    if (minMatch) {
+      const minutes = parseInt(minMatch[1]);
+      console.log('  → Minutes match:', minutes);
+      return minutes;
+    }
+    
+    // Handle hours and minutes format: "2hr30min", "1hr15min", etc.
+    const hrMinMatch = cleanTime.match(/^(\d+)hr(\d+)min$/);
+    if (hrMinMatch) {
+      const hours = parseInt(hrMinMatch[1]);
+      const mins = parseInt(hrMinMatch[2]);
+      const totalMinutes = (hours * 60) + mins;
+      console.log('  → Hours+Minutes match:', hours, 'hr', mins, 'min →', totalMinutes, 'minutes');
+      return totalMinutes;
+    }
+
+    // Handle hours format: "1hr", "2hr", etc.
+    const hrMatch = cleanTime.match(/^(\d+)hr$/);
+    if (hrMatch) {
+      const hours = parseInt(hrMatch[1]);
+      const minutes = hours * 60;
+      console.log('  → Hours match:', hours, '→', minutes, 'minutes');
+      return minutes;
+    }
+    
+    // Handle just numbers (assume minutes): "15", "30"
+    const numMatch = cleanTime.match(/^(\d+)$/);
+    if (numMatch) {
+      const minutes = parseInt(numMatch[1]);
+      console.log('  → Number match:', minutes);
+      return minutes;
+    }
+    
+    // Default fallback
+    console.log('  → No match, returning 0 (fallback)');
+    return 0;
+  };
+
+  // Helper function to format preparation time for display
+  const formatPreparationTime = (timeString?: string) => {
+    console.log('🎨 Formatting preparation time for display:', { raw: timeString });
+    
+    if (!timeString || timeString.trim() === '') {
+      console.log('  → Empty, returning "Ready now"');
+      return 'Ready now';
+    }
+    
+    const minutes = parsePreparationTime(timeString);
+    console.log('  → Parsed minutes:', minutes);
+    
+    if (minutes === 0) {
+      console.log('  → 0 minutes, returning "Ready now"');
+      return 'Ready now';
+    } else if (minutes < 60) {
+      const result = `${minutes} min`;
+      console.log('  → Less than 60min, returning:', result);
+      return result;
+    } else {
+      const hours = Math.floor(minutes / 60);
+      const remainingMinutes = minutes % 60;
+      let result;
+      if (remainingMinutes === 0) {
+        result = `${hours}h`;
+      } else {
+        result = `${hours}h ${remainingMinutes}min`;
+      }
+      console.log('  → 60+ minutes, returning:', result);
+      return result;
+    }
+  };
   return (
-    <div className={`px-4 py-6 ${getCartItemCount() > 0 ? 'pb-24' : ''}`}>
+    <div className="px-4 py-6">
       <div className="space-y-4">
         {!dishes || dishes.length === 0 ? (
           <div className="text-center py-12">
@@ -94,6 +181,14 @@ export const RestaurantMenuItems: React.FC<RestaurantMenuItemsProps> = ({
                       Ingredients: {renderIngredients(dish.ingredients)}
                     </p>
                   )}
+                  <div className="mt-2 flex items-center gap-1">
+                    <svg className="h-4 w-4 text-orange-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                    <span className="text-xs text-orange-600 dark:text-orange-400 font-medium">
+                      Prep time: {formatPreparationTime(dish.preparingTime)}
+                    </span>
+                  </div>
                 </div>
                 <div className="mt-3 flex items-center justify-between">
                   <div className="flex items-center gap-2">

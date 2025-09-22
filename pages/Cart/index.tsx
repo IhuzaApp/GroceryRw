@@ -9,10 +9,11 @@ import ItemCartTable from "@components/UserCarts/cartsTable";
 import CheckoutItems from "@components/UserCarts/checkout/checkoutCard";
 import { useTheme } from "../../src/context/ThemeContext";
 import { useAuth } from "../../src/context/AuthContext";
+import { useFoodCart, FoodCartRestaurant } from "../../src/context/FoodCartContext";
 import { AuthGuard } from "../../src/components/AuthGuard";
 
-// Skeleton loader for shop selection cards
-function ShopSelectionSkeleton() {
+// Skeleton loader for restaurant selection cards
+function RestaurantSelectionSkeleton() {
   const { theme } = useTheme();
   return (
     <div
@@ -70,132 +71,24 @@ function CheckoutSkeleton() {
 export default function CartMainPage() {
   const { theme } = useTheme();
   const { isLoggedIn } = useAuth();
+  const { restaurants, totalItems, totalPrice } = useFoodCart();
 
-  // User's active shops (carts): id, name, and number of line items
-  const [shops, setShops] = useState<
-    {
-      id: string;
-      name: string;
-      count?: number;
-      latitude: string;
-      longitude: string;
-      logo?: string; // Added logo property
-    }[]
-  >([]);
-  const [selectedCartId, setSelectedCartId] = useState<string | null>(null);
+  const [selectedRestaurantId, setSelectedRestaurantId] = useState<string | null>(null);
   const [cartTotal, setCartTotal] = useState<number>(0);
   const [cartUnits, setCartUnits] = useState<number>(0);
-  const [loadingShops, setLoadingShops] = useState<boolean>(true);
   const [loadingItems, setLoadingItems] = useState<boolean>(false);
 
-  // Function to refresh cart data
-  const refreshCartData = () => {
-    setLoadingShops(true);
-    fetch("/api/carts")
-      .then(async (res) => {
-        if (!res.ok) {
-          console.error("Failed to load carts, status:", res.status);
-          return { carts: [] };
-        }
-        return res.json();
-      })
-      .then(
-        (data: {
-          carts: Array<{
-            id: string;
-            name: string;
-            count?: number;
-            latitude: string;
-            longitude: string;
-            logo?: string;
-          }>;
-        }) => {
-          setShops(data.carts);
-          if (data.carts.length > 0) {
-            setSelectedCartId(data.carts[0].id);
-          } else {
-            setSelectedCartId(null);
-          }
-        }
-      )
-      .catch((err) => {
-        console.error("Failed to load carts:", err);
-        setShops([]);
-      })
-      .finally(() => {
-        setLoadingShops(false);
-      });
-  };
-
-  // Function to refresh cart data with callback (for checkout)
-  const refreshCartDataWithCallback = (callback: () => void) => {
-    setLoadingShops(true);
-    fetch("/api/carts")
-      .then(async (res) => {
-        if (!res.ok) {
-          console.error("Failed to load carts, status:", res.status);
-          return { carts: [] };
-        }
-        return res.json();
-      })
-      .then(
-        (data: {
-          carts: Array<{
-            id: string;
-            name: string;
-            count?: number;
-            latitude: string;
-            longitude: string;
-            logo?: string;
-          }>;
-        }) => {
-          setShops(data.carts);
-          if (data.carts.length > 0) {
-            setSelectedCartId(data.carts[0].id);
-          } else {
-            setSelectedCartId(null);
-          }
-        }
-      )
-      .catch((err) => {
-        console.error("Failed to load carts:", err);
-        setShops([]);
-      })
-      .finally(() => {
-        setLoadingShops(false);
-        // Call the callback to hide loading overlay
-        callback();
-      });
-  };
-
-  // Load user's carts on mount
+  // Set initial selected restaurant
   useEffect(() => {
-    refreshCartData();
-  }, []);
+    if (restaurants.length > 0 && !selectedRestaurantId) {
+      setSelectedRestaurantId(restaurants[0].id);
+    }
+  }, [restaurants, selectedRestaurantId]);
 
-  // Listen for cart changes (e.g., after checkout)
-  useEffect(() => {
-    const handleCartChanged = (event: any) => {
-      // Check if this is a custom event with callback
-      const hideLoadingCallback = event.detail?.hideLoadingCallback;
+  const handleSelectRestaurant = (restaurantId: string) => setSelectedRestaurantId(restaurantId);
 
-      if (hideLoadingCallback) {
-        // Refresh cart data and call the callback when done
-        refreshCartDataWithCallback(hideLoadingCallback);
-      } else {
-        // Regular cart refresh without callback
-        refreshCartData();
-      }
-    };
-
-    window.addEventListener("cartChanged", handleCartChanged);
-    return () => window.removeEventListener("cartChanged", handleCartChanged);
-  }, [shops]);
-
-  const handleSelectCart = (cartId: string) => setSelectedCartId(cartId);
-
-  // Find the selected shop to pass coordinates
-  const selectedShop = shops.find((s) => s.id === selectedCartId);
+  // Find the selected restaurant
+  const selectedRestaurant = restaurants.find((r) => r.id === selectedRestaurantId);
 
   // Show login prompt for guests
   if (!isLoggedIn) {
@@ -225,7 +118,7 @@ export default function CartMainPage() {
                   theme === "dark" ? "text-white" : "text-gray-900"
                 }`}
               >
-                Shopping Cart
+                Cart
               </h1>
             </div>
 
@@ -262,8 +155,7 @@ export default function CartMainPage() {
                     theme === "dark" ? "text-gray-300" : "text-gray-600"
                   }`}
                 >
-                  You need to be logged in to view and manage your shopping
-                  cart.
+                  You need to be logged in to view and manage your cart.
                 </p>
                 <div className="flex flex-col gap-3 sm:flex-row sm:justify-center">
                   <Link
@@ -303,7 +195,6 @@ export default function CartMainPage() {
   return (
     <RootLayout>
       <div className="p-4 md:ml-16">
-        {/* Adjust ml-* to match your sidebar width */}
         <div className="container mx-auto">
           {/* Cart Selection */}
           <div className="mb-6 flex items-center">
@@ -328,27 +219,23 @@ export default function CartMainPage() {
                 theme === "dark" ? "text-white" : "text-gray-900"
               }`}
             >
-              My Shopping Carts
+              My Cart
             </h1>
           </div>
 
           <div className="flex flex-col gap-6 lg:flex-row">
-            {/* Cart Items Column - Shop Selection + Cart Table */}
+            {/* Cart Items Column - Restaurant Selection + Cart Table */}
             <div className="w-full lg:w-2/3">
-              {/* Shop Selection */}
+              {/* Restaurant Selection */}
               <div className="mb-6">
                 <div className="mb-4 flex gap-3 overflow-x-auto pb-2">
-                  {loadingShops ? (
-                    Array(5)
-                      .fill(0)
-                      .map((_, index) => <ShopSelectionSkeleton key={index} />)
-                  ) : shops.length > 0 ? (
-                    shops.map((shop) => (
+                  {restaurants.length > 0 ? (
+                    restaurants.map((restaurant) => (
                       <div
-                        key={shop.id}
-                        onClick={() => handleSelectCart(shop.id)}
+                        key={restaurant.id}
+                        onClick={() => handleSelectRestaurant(restaurant.id)}
                         className={`relative w-40 min-w-[10rem] flex-shrink-0 cursor-pointer rounded-lg border-2 p-2 transition-all ${
-                          selectedCartId === shop.id
+                          selectedRestaurantId === restaurant.id
                             ? "border-green-500 bg-green-50 dark:bg-green-900/20"
                             : theme === "dark"
                             ? "border-gray-600 bg-gray-800 hover:border-green-400 hover:bg-gray-700"
@@ -364,10 +251,10 @@ export default function CartMainPage() {
                                   : "border-gray-300 bg-white"
                               }`}
                             >
-                              {shop.logo ? (
+                              {restaurant.logo ? (
                                 <img
-                                  src={shop.logo}
-                                  alt={`${shop.name} logo`}
+                                  src={restaurant.logo}
+                                  alt={`${restaurant.name} logo`}
                                   className="h-full w-full object-cover"
                                   onError={(e) => {
                                     const target = e.target as HTMLImageElement;
@@ -385,7 +272,7 @@ export default function CartMainPage() {
                                 fill="none"
                                 xmlns="http://www.w3.org/2000/svg"
                                 className={`${
-                                  shop.logo ? "hidden" : ""
+                                  restaurant.logo ? "hidden" : ""
                                 } h-5 w-5 text-gray-500`}
                               >
                                 <path
@@ -413,16 +300,16 @@ export default function CartMainPage() {
                                   : "text-gray-900"
                               }`}
                             >
-                              {shop.name}
+                              {restaurant.name}
                             </h3>
                           </div>
                         </div>
                         {/* Show number of distinct items in this cart */}
                         <Badge
-                          content={shop.count}
+                          content={restaurant.totalItems}
                           className="absolute -right-2 bg-green-500 text-white"
                         />
-                        {selectedCartId === shop.id && (
+                        {selectedRestaurantId === restaurant.id && (
                           <div className="absolute -right-2 top-1 flex h-4 w-4 items-center justify-center rounded-full bg-green-500">
                             <svg
                               viewBox="0 0 24 24"
@@ -438,7 +325,7 @@ export default function CartMainPage() {
                       </div>
                     ))
                   ) : (
-                    // Empty shops state
+                    // Empty restaurants state
                     <div className="flex w-full flex-col items-center justify-center py-8">
                       {/* Empty Cart Icon */}
                       <div className="mb-4 flex justify-center">
@@ -465,7 +352,7 @@ export default function CartMainPage() {
                           theme === "dark" ? "text-gray-300" : "text-gray-600"
                         }`}
                       >
-                        Empty
+                        Your cart is empty
                       </h3>
 
                       <p
@@ -473,28 +360,37 @@ export default function CartMainPage() {
                           theme === "dark" ? "text-gray-500" : "text-gray-500"
                         }`}
                       >
-                        Your cart is empty. Start shopping to add items!
+                        Browse restaurants and add delicious dishes to your cart!
                       </p>
+
+                      <Link
+                        href="/shops"
+                        className="mt-4 inline-flex items-center justify-center rounded-md bg-green-500 px-6 py-2.5 text-sm font-medium text-white transition duration-150 hover:bg-green-600 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 dark:bg-green-600 dark:hover:bg-green-700 dark:focus:ring-offset-gray-900"
+                      >
+                        Browse Restaurants
+                      </Link>
                     </div>
                   )}
                 </div>
               </div>
 
               {/* Cart Table */}
-              {selectedCartId ? (
+              {selectedRestaurantId && selectedRestaurant ? (
                 <>
                   <h2
                     className={`mb-4 text-xl font-semibold ${
                       theme === "dark" ? "text-white" : "text-gray-900"
                     }`}
                   >
-                    {shops.find((s) => s.id === selectedCartId)?.name}
+                    {selectedRestaurant.name}
                   </h2>
                   <ItemCartTable
-                    shopId={selectedCartId}
+                    shopId={selectedRestaurantId}
                     onTotalChange={setCartTotal}
                     onUnitsChange={setCartUnits}
                     onLoadingChange={setLoadingItems}
+                    isFoodCart={true}
+                    restaurant={selectedRestaurant}
                   />
                 </>
               ) : (
@@ -503,26 +399,26 @@ export default function CartMainPage() {
                     theme === "dark" ? "text-gray-400" : "text-gray-500"
                   }`}
                 >
-                  Select a cart to view items.
+                  Select a restaurant to view items.
                 </div>
               )}
             </div>
             {/* Order Summary Column */}
-            {selectedCartId && selectedShop && (
+            {selectedRestaurantId && selectedRestaurant && (
               <>
                 {loadingItems ? (
                   <CheckoutSkeleton />
                 ) : (
                   <AuthGuard requireAuth={true}>
                     <CheckoutItems
-                      shopId={selectedCartId!}
+                      shopId={selectedRestaurantId!}
                       Total={cartTotal}
                       totalUnits={cartUnits}
-                      shopLat={parseFloat(selectedShop.latitude)}
-                      shopLng={parseFloat(selectedShop.longitude)}
-                      shopAlt={parseFloat(
-                        (selectedShop as any).altitude || "0"
-                      )}
+                      shopLat={parseFloat(selectedRestaurant.latitude)}
+                      shopLng={parseFloat(selectedRestaurant.longitude)}
+                      shopAlt={0}
+                      isFoodCart={true}
+                      restaurant={selectedRestaurant}
                     />
                   </AuthGuard>
                 )}

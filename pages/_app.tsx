@@ -1,4 +1,4 @@
-import Router from "next/router";
+import Router, { useRouter } from "next/router";
 import NProgress from "nprogress";
 import "nprogress/nprogress.css";
 import { useEffect, useState } from "react";
@@ -121,6 +121,10 @@ const getPageTitle = (
     return `${baseTitle} - Shopping Cart`;
   }
 
+  if (pathname.startsWith("/FoodCart")) {
+    return `${baseTitle} - Food Cart`;
+  }
+
   if (pathname.startsWith("/Myprofile")) {
     return `${baseTitle} - My Profile`;
   }
@@ -158,6 +162,7 @@ import "rsuite/dist/rsuite-no-reset.min.css";
 import { SessionProvider } from "next-auth/react";
 import { AuthProvider } from "../src/context/AuthContext";
 import { CartProvider } from "../src/context/CartContext";
+import { FoodCartProvider } from "../src/context/FoodCartContext";
 import { ChatProvider } from "../src/context/ChatContext";
 import { Toaster } from "react-hot-toast";
 import { GoogleMapProvider } from "../src/context/GoogleMapProvider";
@@ -200,7 +205,7 @@ export default function App({ Component, pageProps }: AppProps) {
   const [pageTitle, setPageTitle] = useState("Plas");
   const [shopName, setShopName] = useState<string | null>(null);
   const [restaurantName, setRestaurantName] = useState<string | null>(null);
-  const router = Router.useRouter();
+  const router = useRouter();
 
   // Fetch shop name when on shop page
   useEffect(() => {
@@ -335,15 +340,17 @@ export default function App({ Component, pageProps }: AppProps) {
         <ApolloProvider client={apolloClient}>
           <AuthProvider>
             <CartProvider>
-              <ChatProvider>
-                <GoogleMapProvider>
-                  <SessionRefreshHandler>
-                    <Toaster position="top-right" />
-                    <Component {...pageProps} />
-                    <InstallPrompt />
-                  </SessionRefreshHandler>
-                </GoogleMapProvider>
-              </ChatProvider>
+              <FoodCartProvider>
+                <ChatProvider>
+                  <GoogleMapProvider>
+                    <SessionRefreshHandler>
+                      <Toaster position="top-right" />
+                      <Component {...pageProps} />
+                      <InstallPrompt />
+                    </SessionRefreshHandler>
+                  </GoogleMapProvider>
+                </ChatProvider>
+              </FoodCartProvider>
             </CartProvider>
           </AuthProvider>
         </ApolloProvider>

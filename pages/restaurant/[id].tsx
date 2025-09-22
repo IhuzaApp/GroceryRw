@@ -5,7 +5,7 @@ import RootLayout from "@components/ui/layout";
 import Image from "next/image";
 import Link from "next/link";
 import { AuthGuard } from "../../src/components/AuthGuard";
-import { useCart } from "../../src/context/CartContext";
+import { useFoodCart } from "../../src/context/FoodCartContext";
 import { useTheme } from "../../src/context/ThemeContext";
 import { formatCurrency } from "../../src/lib/formatCurrency";
 import { RestaurantSearchBar } from "../../src/components/restaurants/RestaurantSearchBar";
@@ -39,6 +39,7 @@ interface Dish {
   category?: string;
   promo?: boolean;
   promo_type?: string;
+  preparingTime?: string; // Preparation time as string from database (e.g., "15min", "1hr", "")
 }
 
 interface RestaurantPageProps {
@@ -49,7 +50,21 @@ interface RestaurantPageProps {
 function RestaurantPage({ restaurant, dishes = [] }: RestaurantPageProps) {
   const router = useRouter();
   const { id } = router.query;
-  const { addItem } = useCart();
+  const { addItem, getRestaurantCart } = useFoodCart();
+
+  // Console log to see how dishes are received on the page
+  console.log('🍽️ Restaurant Page - Dishes received:');
+  console.log('Restaurant:', restaurant.name);
+  console.log('Total dishes:', dishes.length);
+  dishes.forEach((dish, index) => {
+    console.log(`Dish ${index + 1}:`, {
+      name: dish.name,
+      preparingTime: dish.preparingTime,
+      price: dish.price,
+      category: dish.category,
+      rawPreparingTime: dish.preparingTime
+    });
+  });
   const { theme } = useTheme();
   const [selectedCategory, setSelectedCategory] = useState<string>("All");
   const [cartItems, setCartItems] = useState<{ [key: string]: number }>({});
@@ -97,7 +112,7 @@ function RestaurantPage({ restaurant, dishes = [] }: RestaurantPageProps) {
   const handleAddToCart = async (dish: Dish) => {
     setIsLoading(true);
     try {
-      await addItem(restaurant.id, dish.id, 1);
+      addItem(restaurant, dish, 1);
       setCartItems(prev => ({
         ...prev,
         [dish.id]: (prev[dish.id] || 0) + 1
@@ -110,6 +125,12 @@ function RestaurantPage({ restaurant, dishes = [] }: RestaurantPageProps) {
   };
 
   const getCartTotal = () => {
+    const restaurantCart = getRestaurantCart(restaurant.id);
+    if (restaurantCart) {
+      return restaurantCart.totalPrice;
+    }
+    
+    // Fallback to local cart items calculation
     return (dishes || []).reduce((total, dish) => {
       const quantity = cartItems[dish.id] || 0;
       let price = parseFloat(dish.price);
@@ -124,6 +145,12 @@ function RestaurantPage({ restaurant, dishes = [] }: RestaurantPageProps) {
   };
 
   const getCartItemCount = () => {
+    const restaurantCart = getRestaurantCart(restaurant.id);
+    if (restaurantCart) {
+      return restaurantCart.totalItems;
+    }
+    
+    // Fallback to local cart items calculation
     return Object.values(cartItems).reduce((sum, count) => sum + count, 0);
   };
 
@@ -496,40 +523,7 @@ function RestaurantPage({ restaurant, dishes = [] }: RestaurantPageProps) {
             renderPromoSticker={renderPromoSticker}
             getPromoType={getPromoType}
             getHappyHourPricing={getHappyHourPricing}
-            getCartItemCount={getCartItemCount}
           />
-
-          {/* Cart Bottom Sheet */}
-          {getCartItemCount() > 0 && (
-            <div className="fixed bottom-0 left-0 right-0 z-20 border-t border-gray-200 bg-white p-4 dark:border-gray-700 dark:bg-gray-800">
-              <div className="mx-auto flex max-w-md items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <div className="relative">
-                    <svg className="h-8 w-8 text-gray-600 dark:text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 3h2l.4 2M7 13h10l4-8H5.4m0 0L7 13m0 0l-2.5 5M7 13l2.5 5m6-5v6a2 2 0 01-2 2H9a2 2 0 01-2-2v-6m8 0V9a2 2 0 00-2-2H9a2 2 0 00-2 2v4.01" />
-                  </svg>
-                    <span className="absolute -top-2 -right-2 flex h-5 w-5 items-center justify-center rounded-full bg-green-600 text-xs font-bold text-white">
-                      {getCartItemCount()}
-                  </span>
-                </div>
-                  <div>
-                    <p className="text-sm font-medium text-gray-900 dark:text-white">
-                      {getCartItemCount()} item{getCartItemCount() !== 1 ? 's' : ''}
-                    </p>
-                    <p className="text-sm text-gray-600 dark:text-gray-400">
-                      {formatCurrency(getCartTotal())}
-                    </p>
-            </div>
-                </div>
-                <Link
-                  href="/Cart"
-                  className="rounded-full bg-green-600 px-6 py-3 font-medium text-white transition-colors hover:bg-green-700"
-                >
-                  View Cart
-                </Link>
-              </div>
-            </div>
-          )}
         </div>
       </div>
     </RootLayout>
