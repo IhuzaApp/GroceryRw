@@ -8,6 +8,8 @@ import { AuthGuard } from "../../src/components/AuthGuard";
 import { useCart } from "../../src/context/CartContext";
 import { useTheme } from "../../src/context/ThemeContext";
 import { formatCurrency } from "../../src/lib/formatCurrency";
+import { RestaurantSearchBar } from "../../src/components/restaurants/RestaurantSearchBar";
+import { RestaurantMenuItems } from "../../src/components/restaurants/RestaurantMenuItems";
 
 interface Restaurant {
   id: string;
@@ -52,9 +54,10 @@ function RestaurantPage({ restaurant, dishes = [] }: RestaurantPageProps) {
   const [cartItems, setCartItems] = useState<{ [key: string]: number }>({});
   const [isScrolled, setIsScrolled] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [searchQuery, setSearchQuery] = useState<string>("");
 
   // Debug: Log dishes data
-  console.log('Restaurant dishes:', dishes);
+  // console.log('Restaurant dishes:', dishes);
 
   // Scroll detection for sticky header
   useEffect(() => {
@@ -67,13 +70,25 @@ function RestaurantPage({ restaurant, dishes = [] }: RestaurantPageProps) {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
+  // Search handler
+  const handleSearch = (query: string) => {
+    setSearchQuery(query);
+  };
+
   // Get unique categories from dishes with proper error handling
   const categories = ["All", ...Array.from(new Set((dishes || []).map(dish => dish.category || "Other")))];
   
-  // Filter dishes by selected category
-  const filteredDishes = selectedCategory === "All" 
-    ? (dishes || []) 
-    : (dishes || []).filter(dish => (dish.category || "Other") === selectedCategory);
+  // Filter dishes by selected category and search query
+  const filteredDishes = (dishes || []).filter(dish => {
+    const matchesCategory = selectedCategory === "All" || (dish.category || "Other") === selectedCategory;
+    const matchesSearch = !searchQuery || 
+      dish.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      dish.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      (dish.ingredients && typeof dish.ingredients === 'string' && 
+       dish.ingredients.toLowerCase().includes(searchQuery.toLowerCase()));
+    
+    return matchesCategory && matchesSearch;
+  });
 
   const handleAddToCart = async (dish: Dish) => {
     setIsLoading(true);
@@ -332,25 +347,11 @@ function RestaurantPage({ restaurant, dishes = [] }: RestaurantPageProps) {
 
               {/* Search Bar */}
               <div className="flex-1 max-w-md mx-4">
-                <div className="relative">
-                  <div className="absolute inset-y-0 left-0 flex items-center pl-3 z-20">
-                    <svg className={`h-4 w-4 ${
-                      theme === 'dark' ? 'text-gray-400' : 'text-gray-600'
-                    }`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                    </svg>
-                  </div>
-                  <input
-                    type="text"
-                    placeholder="Search dishes..."
-                    className={`w-full rounded-xl py-2 pl-10 pr-4 text-sm transition-all duration-200 focus:outline-none focus:ring-2 ${
-                      theme === 'dark'
-                        ? 'border border-gray-600 bg-gray-700 text-gray-200 placeholder-gray-400 focus:border-blue-400 focus:bg-gray-600 focus:ring-blue-400/20'
-                        : 'border border-gray-300 bg-white text-gray-800 placeholder-gray-500 focus:border-blue-500 focus:bg-white focus:ring-blue-200'
-                    }`}
-                    style={{ textAlign: 'left' }}
-                  />
-                </div>
+                <RestaurantSearchBar
+                  placeholder="Search dishes..."
+                  onSearch={handleSearch}
+                  isSticky={true}
+                />
               </div>
 
               {/* Restaurant Name */}
@@ -395,19 +396,11 @@ function RestaurantPage({ restaurant, dishes = [] }: RestaurantPageProps) {
 
           {/* Search Bar */}
           <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-10 w-full max-w-md px-4">
-            <div className="relative">
-              <div className="absolute inset-y-0 left-0 flex items-center pl-4 z-20">
-                <svg className="h-5 w-5 text-white drop-shadow-lg" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                </svg>
-              </div>
-              <input
-                type="text"
-                placeholder="Search dishes..."
-                className="w-full rounded-2xl border border-white/30 bg-white/20 py-4 pl-12 pr-4 text-sm text-white placeholder-white/80 transition-all duration-200 focus:border-white/50 focus:bg-white/30 focus:outline-none focus:ring-2 focus:ring-white/30 backdrop-blur-md shadow-xl"
-                style={{ textAlign: 'left' }}
-              />
-            </div>
+            <RestaurantSearchBar
+              placeholder="Search dishes..."
+              onSearch={handleSearch}
+              isSticky={false}
+            />
           </div>
 
           {/* Restaurant Info */}
@@ -455,112 +448,19 @@ function RestaurantPage({ restaurant, dishes = [] }: RestaurantPageProps) {
           </div>
 
           {/* Menu Items */}
-          <div className={`px-4 py-6 ${getCartItemCount() > 0 ? 'pb-24' : ''}`}>
-            <div className="space-y-4">
-              {!dishes || dishes.length === 0 ? (
-                <div className="text-center py-12">
-                  <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-gray-100 dark:bg-gray-700">
-                    <svg className="h-8 w-8 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
-                  </svg>
-                  </div>
-                  <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Menu Coming Soon</h3>
-                  <p className="text-gray-600 dark:text-gray-400">
-                    {restaurant?.name} is working on adding their menu. Check back soon!
-                  </p>
-                </div>
-              ) : filteredDishes.length === 0 ? (
-                <div className="text-center py-12">
-                  <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-gray-100 dark:bg-gray-700">
-                    <svg className="h-8 w-8 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
-                  </svg>
-                  </div>
-                  <h3 className="text-lg font-semibold text-gray-900 dark:text-white">No items found</h3>
-                  <p className="text-gray-600 dark:text-gray-400">No dishes available in this category.</p>
-                </div>
-              ) : (
-                filteredDishes.map((dish) => (
-                  <div key={dish.id} className="flex gap-4 rounded-xl border border-gray-200 bg-white p-4 dark:border-gray-700 dark:bg-gray-700">
-                    <div className="relative h-20 w-20 flex-shrink-0 overflow-hidden rounded-lg">
-                      <Image
-                        src={dish.image || "/images/groceryPlaceholder.png"}
-                        alt={dish.name}
-                        width={80}
-                        height={80}
-                        className="h-full w-full object-cover"
-                      />
-                      {renderPromoSticker(dish)}
-                    </div>
-                    <div className="flex flex-1 flex-col justify-between">
-                      <div>
-                        <h3 className="font-semibold text-gray-900 dark:text-white">{dish.name}</h3>
-                        <p className="mt-1 text-sm text-gray-600 dark:text-gray-400 line-clamp-2">
-                          {dish.description}
-                        </p>
-                        {dish.ingredients && (
-                          <p className="mt-1 text-xs text-gray-500 dark:text-gray-500">
-                            Ingredients: {renderIngredients(dish.ingredients)}
-                          </p>
-                        )}
-                      </div>
-                      <div className="mt-3 flex items-center justify-between">
-                        <div className="flex items-center gap-2">
-                          {getPromoType(dish) === 'happyhour' ? (
-                            <div className="flex flex-col gap-1">
-                              <div className="flex items-center gap-2">
-                                <span className="text-lg font-bold text-green-600 dark:text-green-400">
-                                  {formatCurrency(getHappyHourPricing(dish).discountedPrice)}
-                                </span>
-                                <span className="text-sm text-gray-500 line-through">
-                                  {formatCurrency(getHappyHourPricing(dish).originalPrice)}
-                                </span>
-                              </div>
-                              <div className="text-xs text-green-600 dark:text-green-400 font-medium">
-                                You save {formatCurrency(getHappyHourPricing(dish).savings)}!
-                              </div>
-                            </div>
-                          ) : (
-                            <span className="text-lg font-bold text-gray-900 dark:text-white">
-                              {formatCurrency(parseFloat(dish.price))}
-                            </span>
-                          )}
-                          {getPromoType(dish) === 'bogo' && (
-                            <span className="text-sm text-orange-600 dark:text-orange-400 font-medium">
-                              Buy 1 Get 1 Free
-                            </span>
-                          )}
-                          {getPromoType(dish) === 'happyhour' && (
-                            <span className="text-sm text-purple-600 dark:text-purple-400 font-medium">
-                              Happy Hour
-                            </span>
-                          )}
-                        </div>
-                        <button
-                          onClick={() => handleAddToCart(dish)}
-                          disabled={isLoading || !dish.is_active}
-                          className="rounded-full bg-green-600 p-2 text-white transition-colors hover:bg-green-700 disabled:bg-gray-400"
-                        >
-                          {cartItems[dish.id] ? (
-                            <div className="flex items-center gap-1">
-                              <span className="text-xs font-bold">{cartItems[dish.id]}</span>
-                              <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-                              </svg>
-                            </div>
-                          ) : (
-                            <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-                  </svg>
-                          )}
-                        </button>
-                      </div>
-                </div>
-                  </div>
-                ))
-              )}
-              </div>
-            </div>
+          <RestaurantMenuItems
+            dishes={dishes}
+            filteredDishes={filteredDishes}
+            cartItems={cartItems}
+            isLoading={isLoading}
+            restaurantName={restaurant.name}
+            onAddToCart={handleAddToCart}
+            renderIngredients={renderIngredients}
+            renderPromoSticker={renderPromoSticker}
+            getPromoType={getPromoType}
+            getHappyHourPricing={getHappyHourPricing}
+            getCartItemCount={getCartItemCount}
+          />
 
           {/* Cart Bottom Sheet */}
           {getCartItemCount() > 0 && (
