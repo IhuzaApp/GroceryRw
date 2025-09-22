@@ -1,0 +1,37 @@
+query getRestaurantDishes {
+  restaurant_dishes(order_by: {name: asc}) {
+    SKU
+    created_at
+    description
+    discount
+    id
+    ingredients
+    name
+    price
+    promo
+    promo_type
+    quantity
+    restaurant_id
+    updated_at
+  }
+}
+
+query getRestaurantDishesById($restaurant_id: uuid!) {
+  restaurant_dishes(where: { restaurant_id: { _eq: $restaurant_id } }, order_by: {name: asc}) {
+    SKU
+    created_at
+    description
+    discount
+    id
+    ingredients
+    name
+    price
+    promo
+    promo_type
+    quantity
+    restaurant_id
+    updated_at
+    category
+    is_active
+  }
+}

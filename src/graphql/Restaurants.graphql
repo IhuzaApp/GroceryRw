@@ -12,3 +12,18 @@ query getRestaurants {
     created_at
   }
 }
+
+query getRestaurant($id: uuid!) {
+  Restaurants(where: { id: { _eq: $id } }) {
+    verified
+    profile
+    phone
+    name
+    long
+    location
+    lat
+    id
+    email
+    created_at
+  }
+}
