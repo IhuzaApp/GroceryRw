@@ -3,16 +3,14 @@
 import Image from "next/image";
 import { Input, InputGroup, Button, Checkbox, Badge, Panel } from "rsuite";
 import Link from "next/link";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo, useCallback, useRef } from "react";
 import RootLayout from "@components/ui/layout";
 import ItemCartTable from "@components/UserCarts/cartsTable";
 import CheckoutItems from "@components/UserCarts/checkout/checkoutCard";
 import { useTheme } from "../../src/context/ThemeContext";
 import { useAuth } from "../../src/context/AuthContext";
-import {
-  useFoodCart,
-  FoodCartRestaurant,
-} from "../../src/context/FoodCartContext";
+import { useFoodCart, FoodCartRestaurant } from "../../src/context/FoodCartContext";
+import { useCart } from "../../src/context/CartContext";
 import { AuthGuard } from "../../src/components/AuthGuard";
 
 // Skeleton loader for restaurant selection cards
@@ -71,31 +69,416 @@ function CheckoutSkeleton() {
   );
 }
 
+// Main loading skeleton for initial cart loading
+function CartLoadingSkeleton() {
+  const { theme } = useTheme();
+  return (
+    <div className="flex flex-col gap-6 lg:flex-row">
+      {/* Cart Items Column Skeleton */}
+      <div className="w-full lg:w-2/3">
+        {/* Restaurant/Shop Selection Skeleton */}
+        <div className="mb-6">
+          <div className="mb-4 flex gap-3 overflow-x-auto pb-2">
+            {/* Show 3 skeleton cards */}
+            {[1, 2, 3].map((i) => (
+              <div
+                key={i}
+                className={`relative w-40 min-w-[10rem] flex-shrink-0 animate-pulse rounded-lg border-2 p-2 ${
+                  theme === "dark" ? "bg-gray-700 border-gray-600" : "bg-gray-200 border-gray-300"
+                }`}
+              >
+                <div className="flex items-center gap-2">
+                  <div
+                    className={`h-8 w-8 rounded-full ${
+                      theme === "dark" ? "bg-gray-600" : "bg-gray-300"
+                    }`}
+                  />
+                  <div
+                    className={`h-4 w-20 rounded ${
+                      theme === "dark" ? "bg-gray-600" : "bg-gray-300"
+                    }`}
+                  />
+                </div>
+                <div
+                  className={`absolute -right-2 top-1 h-6 w-6 rounded-full ${
+                    theme === "dark" ? "bg-gray-600" : "bg-gray-300"
+                  }`}
+                />
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Cart Table Skeleton */}
+        <div className={`rounded-lg border p-4 ${theme === "dark" ? "bg-gray-800 border-gray-700" : "bg-white border-gray-200"}`}>
+          <div
+            className={`mb-4 h-6 w-32 rounded ${
+              theme === "dark" ? "bg-gray-700" : "bg-gray-200"
+            }`}
+          />
+          <div className="space-y-3">
+            {[1, 2, 3].map((i) => (
+              <div key={i} className="flex items-center gap-4">
+                <div
+                  className={`h-16 w-16 rounded ${
+                    theme === "dark" ? "bg-gray-700" : "bg-gray-200"
+                  }`}
+                />
+                <div className="flex-1 space-y-2">
+                  <div
+                    className={`h-4 w-3/4 rounded ${
+                      theme === "dark" ? "bg-gray-700" : "bg-gray-200"
+                    }`}
+                  />
+                  <div
+                    className={`h-3 w-1/2 rounded ${
+                      theme === "dark" ? "bg-gray-700" : "bg-gray-200"
+                    }`}
+                  />
+                </div>
+                <div
+                  className={`h-8 w-16 rounded ${
+                    theme === "dark" ? "bg-gray-700" : "bg-gray-200"
+                  }`}
+                />
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {/* Order Summary Column Skeleton */}
+      <div className="w-full lg:w-1/3">
+        <CheckoutSkeleton />
+      </div>
+    </div>
+  );
+}
+
+interface ShopCart {
+  id: string;
+  name: string;
+  logo?: string;
+  count: number;
+}
+
 export default function CartMainPage() {
   const { theme } = useTheme();
   const { isLoggedIn } = useAuth();
-  const { restaurants, totalItems, totalPrice } = useFoodCart();
+  const { restaurants, totalItems, totalPrice, clearRestaurant } = useFoodCart();
+  const { count: cartCount } = useCart();
 
-  const [selectedRestaurantId, setSelectedRestaurantId] = useState<
-    string | null
-  >(null);
-  const [cartTotal, setCartTotal] = useState<number>(0);
-  const [cartUnits, setCartUnits] = useState<number>(0);
+  const [selectedRestaurantId, setSelectedRestaurantId] = useState<string | null>(null);
+  const [selectedShopId, setSelectedShopId] = useState<string | null>(null);
+  const [shopCarts, setShopCarts] = useState<ShopCart[]>([]);
   const [loadingItems, setLoadingItems] = useState<boolean>(false);
-
-  // Set initial selected restaurant
-  useEffect(() => {
-    if (restaurants.length > 0 && !selectedRestaurantId) {
-      setSelectedRestaurantId(restaurants[0].id);
+  const [loadingShops, setLoadingShops] = useState<boolean>(true);
+  const [isSwitchingTabs, setIsSwitchingTabs] = useState<boolean>(false);
+  const [isInitialLoading, setIsInitialLoading] = useState<boolean>(true);
+  
+  // Cache for cart data to prevent reloading
+  const [cartDataCache, setCartDataCache] = useState<{
+    [key: string]: {
+      total: number;
+      units: number;
+      lastUpdated: number;
     }
-  }, [restaurants, selectedRestaurantId]);
+  }>({});
 
-  const handleSelectRestaurant = (restaurantId: string) =>
+  // State to track current totals for shop carts (to avoid circular dependencies)
+  const [currentShopTotal, setCurrentShopTotal] = useState<number>(0);
+  const [currentShopUnits, setCurrentShopUnits] = useState<number>(0);
+  
+  // Refs to avoid dependency issues in callbacks
+  const currentShopTotalRef = useRef(0);
+  const currentShopUnitsRef = useRef(0);
+
+  // Fetch shop carts
+  useEffect(() => {
+    if (!isLoggedIn) {
+      setIsInitialLoading(false);
+      return;
+    }
+
+    const fetchShopCarts = async () => {
+      try {
+        setLoadingShops(true);
+        const response = await fetch("/api/carts");
+        const data = await response.json();
+        
+        if (response.ok && data.carts) {
+          setShopCarts(data.carts);
+        }
+      } catch (error) {
+        console.error("Failed to fetch shop carts:", error);
+      } finally {
+        setLoadingShops(false);
+        // Mark initial loading as complete once shop carts are loaded
+        setIsInitialLoading(false);
+      }
+    };
+
+    fetchShopCarts();
+  }, [isLoggedIn]);
+
+  // Set initial selected restaurant or shop
+  useEffect(() => {
+    // Only set initial selection if no selection exists
+    if (!selectedRestaurantId && !selectedShopId) {
+      // Priority: restaurants first, then shops
+      if (restaurants.length > 0) {
+        setSelectedRestaurantId(restaurants[0].id);
+        setSelectedShopId(null);
+      } else if (shopCarts.length > 0) {
+        setSelectedShopId(shopCarts[0].id);
+        setSelectedRestaurantId(null);
+      }
+    }
+  }, [restaurants, shopCarts]);
+
+  // Get cached cart data (use callback to avoid dependency issues)
+  const getCachedCartData = useCallback((cartId: string) => {
+    return cartDataCache[cartId] || { total: 0, units: 0, lastUpdated: 0 };
+  }, [cartDataCache]);
+
+  // Update cached cart data
+  const updateCachedCartData = useCallback((cartId: string, total: number, units: number) => {
+    setCartDataCache(prev => ({
+      ...prev,
+      [cartId]: {
+        total,
+        units,
+        lastUpdated: Date.now()
+      }
+    }));
+  }, []);
+
+  // Handle restaurant selection
+  const handleSelectRestaurant = (restaurantId: string) => {
     setSelectedRestaurantId(restaurantId);
+    setSelectedShopId(null); // Clear shop selection when selecting restaurant
+    
+    // Load cached data if available
+    const cachedData = getCachedCartData(`restaurant-${restaurantId}`);
+    // Don't reset to 0, use cached data instead
+  };
 
-  // Find the selected restaurant
-  const selectedRestaurant = restaurants.find(
-    (r) => r.id === selectedRestaurantId
+  // Handle shop selection  
+  const handleSelectShop = (shopId: string) => {
+    setSelectedShopId(shopId);
+    setSelectedRestaurantId(null); // Clear restaurant selection when selecting shop
+    
+    // Load cached data if available
+    const cachedData = getCachedCartData(`shop-${shopId}`);
+    // Don't reset to 0, use cached data instead
+  };
+
+  // Handle switching between any tab
+  const handleTabSwitch = (type: 'restaurant' | 'shop', id: string) => {
+    // Prevent multiple rapid clicks
+    if (isSwitchingTabs) return;
+    
+    setIsSwitchingTabs(true);
+    
+    // Immediate switch since we're using cached data
+    setTimeout(() => {
+      if (type === 'restaurant') {
+        handleSelectRestaurant(id);
+          } else {
+        handleSelectShop(id);
+      }
+      setIsSwitchingTabs(false);
+    }, 50); // Reduced delay since we're caching data
+  };
+
+  // Find the selected restaurant and shop (memoized)
+  const selectedRestaurant = useMemo(() => 
+    restaurants.find((r) => r.id === selectedRestaurantId),
+    [restaurants, selectedRestaurantId]
+  );
+  const selectedShop = useMemo(() => 
+    shopCarts.find((s) => s.id === selectedShopId),
+    [shopCarts, selectedShopId]
+  );
+
+  // Get current cart totals (memoized)
+  const getCurrentCartTotal = useCallback(() => {
+    if (selectedRestaurantId) {
+      // For food carts, use the actual total from food cart context
+      return totalPrice;
+    } else if (selectedShopId) {
+      // For shop carts, use the current state
+      console.log('🛒 getCurrentCartTotal returning currentShopTotal:', currentShopTotal, 'for shop:', selectedShopId);
+      return currentShopTotal;
+    }
+    return 0;
+  }, [selectedRestaurantId, selectedShopId, totalPrice, currentShopTotal]);
+
+  const getCurrentCartUnits = useCallback(() => {
+    if (selectedRestaurantId) {
+      // For food carts, use the actual total items from food cart context
+      return totalItems;
+    } else if (selectedShopId) {
+      // For shop carts, use the current state
+      return currentShopUnits;
+    }
+    return 0;
+  }, [selectedRestaurantId, selectedShopId, totalItems, currentShopUnits]);
+
+  // Initialize cache when switching to shop tabs
+  useEffect(() => {
+    if (selectedShopId) {
+      const cacheKey = `shop-${selectedShopId}`;
+      if (!cartDataCache[cacheKey]) {
+        // Initialize with default values if not cached
+        updateCachedCartData(cacheKey, 0, 0);
+      }
+    }
+  }, [selectedShopId, cartDataCache, updateCachedCartData]);
+
+  // Reset shop totals when switching shops
+  useEffect(() => {
+    if (selectedShopId) {
+      // Load cached data if available
+      const cached = getCachedCartData(`shop-${selectedShopId}`);
+      setCurrentShopTotal(cached.total);
+      setCurrentShopUnits(cached.units);
+      currentShopTotalRef.current = cached.total;
+      currentShopUnitsRef.current = cached.units;
+    } else {
+      // Reset when no shop is selected
+      setCurrentShopTotal(0);
+      setCurrentShopUnits(0);
+      currentShopTotalRef.current = 0;
+      currentShopUnitsRef.current = 0;
+    }
+  }, [selectedShopId, getCachedCartData]);
+
+  // Listen for cart changed events (from checkout completion)
+  useEffect(() => {
+    const handleCartChanged = (event: CustomEvent) => {
+      const { refetch, shop_id } = event.detail || {};
+      
+      if (refetch) {
+        console.log('🛒 Cart changed event received, refetching cart data...', { shop_id });
+        
+        // If it's a specific shop checkout, remove that shop tab and clear its cache
+        if (shop_id) {
+          console.log('🛒 Removing specific shop tab:', shop_id);
+          
+          // Clear cache for this specific shop
+          setCartDataCache(prev => {
+            const newCache = { ...prev };
+            delete newCache[`shop-${shop_id}`];
+            return newCache;
+          });
+          
+          // If this shop was selected, clear the selection
+          if (selectedShopId === shop_id) {
+            setSelectedShopId(null);
+            setCurrentShopTotal(0);
+            setCurrentShopUnits(0);
+            currentShopTotalRef.current = 0;
+            currentShopUnitsRef.current = 0;
+          }
+          
+          // Remove this shop from the shopCarts list immediately
+          setShopCarts(prev => prev.filter(shop => shop.id !== shop_id));
+          
+          // Refetch shop carts to get updated list from server
+          setLoadingShops(true);
+          fetch('/api/carts')
+            .then(res => res.json())
+            .then(data => {
+              if (data.success) {
+                const updatedCarts = data.carts || [];
+                setShopCarts(updatedCarts);
+                console.log('🛒 Updated shop carts after checkout:', updatedCarts.length, 'shops remaining');
+              }
+            })
+            .catch(err => console.error('Error refetching carts:', err))
+            .finally(() => {
+              setLoadingShops(false);
+            });
+        } else {
+          // General refetch (for food orders or general refresh)
+          console.log('🛒 General cart refetch...');
+          
+          // Clear current selections
+          setSelectedRestaurantId(null);
+          setSelectedShopId(null);
+          
+          // Clear cache
+          setCartDataCache({});
+          
+          // Reset totals
+          setCurrentShopTotal(0);
+          setCurrentShopUnits(0);
+          currentShopTotalRef.current = 0;
+          currentShopUnitsRef.current = 0;
+          
+          // Refetch shop carts
+          setLoadingShops(true);
+          fetch('/api/carts')
+            .then(res => res.json())
+            .then(data => {
+              if (data.success) {
+                setShopCarts(data.carts || []);
+              }
+            })
+            .catch(err => console.error('Error refetching carts:', err))
+            .finally(() => {
+              setLoadingShops(false);
+            });
+          
+          // Clear food cart if it was a food order
+          if (restaurants.length > 0) {
+            restaurants.forEach(restaurant => {
+              clearRestaurant(restaurant.id);
+            });
+          }
+        }
+      }
+    };
+
+    window.addEventListener('cartChanged', handleCartChanged as EventListener);
+    
+    return () => {
+      window.removeEventListener('cartChanged', handleCartChanged as EventListener);
+    };
+  }, [restaurants, clearRestaurant]);
+
+  // Memoized callback functions for ItemCartTable
+  const handleTotalChange = useCallback((total: number) => {
+    console.log('🛒 handleTotalChange called with:', total, 'for shop:', selectedShopId);
+    if (selectedShopId) {
+      setCurrentShopTotal(total);
+      currentShopTotalRef.current = total;
+      updateCachedCartData(`shop-${selectedShopId}`, total, currentShopUnitsRef.current);
+      console.log('🛒 Updated currentShopTotal to:', total);
+    }
+  }, [selectedShopId, updateCachedCartData]);
+
+  const handleUnitsChange = useCallback((units: number) => {
+    if (selectedShopId) {
+      setCurrentShopUnits(units);
+      currentShopUnitsRef.current = units;
+      updateCachedCartData(`shop-${selectedShopId}`, currentShopTotalRef.current, units);
+    }
+  }, [selectedShopId, updateCachedCartData]);
+
+  // Calculate total items across all cart types (memoized)
+  const totalFoodItems = useMemo(() => 
+    restaurants.reduce((sum, r) => sum + r.totalItems, 0), 
+    [restaurants]
+  );
+  const totalShopItems = useMemo(() => 
+    shopCarts.reduce((sum, s) => sum + s.count, 0), 
+    [shopCarts]
+  );
+  const hasAnyItems = useMemo(() => 
+    totalFoodItems > 0 || totalShopItems > 0, 
+    [totalFoodItems, totalShopItems]
   );
 
   // Show login prompt for guests
@@ -231,23 +614,131 @@ export default function CartMainPage() {
             </h1>
           </div>
 
+          {/* Show loading skeleton while waiting for initial data */}
+          {isInitialLoading ? (
+            <CartLoadingSkeleton />
+          ) : (
           <div className="flex flex-col gap-6 lg:flex-row">
-            {/* Cart Items Column - Restaurant Selection + Cart Table */}
+              {/* Cart Items Column - Restaurant/Shop Selection + Cart Table */}
             <div className="w-full lg:w-2/3">
-              {/* Restaurant Selection */}
+                {/* Restaurant/Shop Selection */}
               <div className="mb-6">
                 <div className="mb-4 flex gap-3 overflow-x-auto pb-2">
-                  {restaurants.length > 0 ? (
-                    restaurants.map((restaurant) => (
+                    {hasAnyItems ? (
+                    <>
+                      {/* Food Restaurants */}
+                      {restaurants.length > 0 &&
+                        restaurants.map((restaurant) => (
+                          <div
+                            key={restaurant.id}
+                            onClick={() => handleTabSwitch('restaurant', restaurant.id)}
+                            className={`relative w-40 min-w-[10rem] flex-shrink-0 cursor-pointer rounded-lg border-2 p-2 transition-all duration-200 ${
+                              selectedRestaurantId === restaurant.id
+                                ? "border-green-500 bg-green-50 dark:bg-green-900/20 shadow-lg scale-105"
+                                : isSwitchingTabs
+                                ? "opacity-75 cursor-not-allowed"
+                                : theme === "dark"
+                                ? "border-gray-600 bg-gray-800 hover:border-green-400 hover:bg-gray-700 hover:scale-102"
+                                : "border-gray-200 bg-white hover:border-green-200 hover:bg-gray-50 hover:scale-102"
+                            }`}
+                          >
+                            <div className="flex items-center gap-2">
+                              <div className="flex-shrink-0">
+                                <div
+                                  className={`flex h-8 w-8 items-center justify-center overflow-hidden rounded-full border ${
+                                    theme === "dark"
+                                      ? "border-gray-600 bg-gray-700"
+                                      : "border-gray-300 bg-white"
+                                  }`}
+                                >
+                                  {restaurant.logo ? (
+                                    <img
+                                      src={restaurant.logo}
+                                      alt={`${restaurant.name} logo`}
+                                      className="h-full w-full object-cover"
+                                      onError={(e) => {
+                                        const target = e.target as HTMLImageElement;
+                                        target.style.display = "none";
+                                        target.nextElementSibling?.classList.remove(
+                                          "hidden"
+                                        );
+                                      }}
+                                    />
+                                  ) : null}
+                                  <svg
+                                    width="24"
+                                    height="24"
+                                    viewBox="0 0 24 24"
+                                    fill="none"
+                                    xmlns="http://www.w3.org/2000/svg"
+                                    className={`${
+                                      restaurant.logo ? "hidden" : ""
+                                    } h-5 w-5 text-gray-500`}
+                                  >
+                                    <path
+                                      d="M3 7a2 2 0 012-2h14a2 2 0 012 2v10a2 2 0 01-2 2H5a2 2 0 01-2-2V7z"
+                                      stroke="currentColor"
+                                      strokeWidth="2"
+                                      strokeLinecap="round"
+                                      strokeLinejoin="round"
+                                    />
+                                    <path
+                                      d="M8 5a2 2 0 012-2h4a2 2 0 012 2v2H8V5z"
+                                      stroke="currentColor"
+                                      strokeWidth="2"
+                                      strokeLinecap="round"
+                                      strokeLinejoin="round"
+                                    />
+                                  </svg>
+                                </div>
+                              </div>
+                              <div className="truncate">
+                                <h3
+                                  className={`truncate text-sm font-medium ${
+                                    theme === "dark"
+                                      ? "text-white"
+                                      : "text-gray-900"
+                                  }`}
+                                >
+                                  {restaurant.name}
+                                </h3>
+                              </div>
+                            </div>
+                            {/* Show number of distinct items in this cart */}
+                            <Badge
+                              content={restaurant.totalItems}
+                              className="absolute -right-2 bg-green-500 text-white"
+                            />
+                            {selectedRestaurantId === restaurant.id && (
+                              <div className="absolute -right-2 top-1 flex h-4 w-4 items-center justify-center rounded-full bg-green-500">
+                                <svg
+                                  viewBox="0 0 24 24"
+                                  fill="none"
+                                  stroke="white"
+                                  strokeWidth="3"
+                                  className="h-3 w-3"
+                                >
+                                  <polyline points="20 6 9 17 4 12" />
+                                </svg>
+                              </div>
+                            )}
+                          </div>
+                        ))}
+
+                      {/* Shop Carts */}
+                      {shopCarts.length > 0 &&
+                        shopCarts.map((shop) => (
                       <div
-                        key={restaurant.id}
-                        onClick={() => handleSelectRestaurant(restaurant.id)}
-                        className={`relative w-40 min-w-[10rem] flex-shrink-0 cursor-pointer rounded-lg border-2 p-2 transition-all ${
-                          selectedRestaurantId === restaurant.id
-                            ? "border-green-500 bg-green-50 dark:bg-green-900/20"
+                        key={shop.id}
+                            onClick={() => handleTabSwitch('shop', shop.id)}
+                            className={`relative w-40 min-w-[10rem] flex-shrink-0 cursor-pointer rounded-lg border-2 p-2 transition-all duration-200 ${
+                              selectedShopId === shop.id
+                                ? "border-blue-500 bg-blue-50 dark:bg-blue-900/20 shadow-lg scale-105"
+                                : isSwitchingTabs
+                                ? "opacity-75 cursor-not-allowed"
                             : theme === "dark"
-                            ? "border-gray-600 bg-gray-800 hover:border-green-400 hover:bg-gray-700"
-                            : "border-gray-200 bg-white hover:border-green-200 hover:bg-gray-50"
+                                ? "border-gray-600 bg-gray-800 hover:border-blue-400 hover:bg-gray-700 hover:scale-102"
+                                : "border-gray-200 bg-white hover:border-blue-200 hover:bg-gray-50 hover:scale-102"
                         }`}
                       >
                         <div className="flex items-center gap-2">
@@ -259,10 +750,10 @@ export default function CartMainPage() {
                                   : "border-gray-300 bg-white"
                               }`}
                             >
-                              {restaurant.logo ? (
+                              {shop.logo ? (
                                 <img
-                                  src={restaurant.logo}
-                                  alt={`${restaurant.name} logo`}
+                                  src={shop.logo}
+                                  alt={`${shop.name} logo`}
                                   className="h-full w-full object-cover"
                                   onError={(e) => {
                                     const target = e.target as HTMLImageElement;
@@ -280,7 +771,7 @@ export default function CartMainPage() {
                                 fill="none"
                                 xmlns="http://www.w3.org/2000/svg"
                                 className={`${
-                                  restaurant.logo ? "hidden" : ""
+                                  shop.logo ? "hidden" : ""
                                 } h-5 w-5 text-gray-500`}
                               >
                                 <path
@@ -308,17 +799,17 @@ export default function CartMainPage() {
                                   : "text-gray-900"
                               }`}
                             >
-                              {restaurant.name}
+                              {shop.name}
                             </h3>
                           </div>
                         </div>
-                        {/* Show number of distinct items in this cart */}
+                            {/* Show number of items in this shop cart */}
                         <Badge
-                          content={restaurant.totalItems}
-                          className="absolute -right-2 bg-green-500 text-white"
+                          content={shop.count}
+                              className="absolute -right-2 bg-blue-500 text-white"
                         />
-                        {selectedRestaurantId === restaurant.id && (
-                          <div className="absolute -right-2 top-1 flex h-4 w-4 items-center justify-center rounded-full bg-green-500">
+                            {selectedShopId === shop.id && (
+                              <div className="absolute -right-2 top-1 flex h-4 w-4 items-center justify-center rounded-full bg-blue-500">
                             <svg
                               viewBox="0 0 24 24"
                               fill="none"
@@ -331,9 +822,10 @@ export default function CartMainPage() {
                           </div>
                         )}
                       </div>
-                    ))
+                        ))}
+                    </>
                   ) : (
-                    // Empty restaurants state
+                    // Empty state
                     <div className="flex w-full flex-col items-center justify-center py-8">
                       {/* Empty Cart Icon */}
                       <div className="mb-4 flex justify-center">
@@ -368,15 +860,14 @@ export default function CartMainPage() {
                           theme === "dark" ? "text-gray-500" : "text-gray-500"
                         }`}
                       >
-                        Browse restaurants and add delicious dishes to your
-                        cart!
+                        Browse restaurants and shops to add items to your cart!
                       </p>
 
                       <Link
                         href="/shops"
                         className="mt-4 inline-flex items-center justify-center rounded-md bg-green-500 px-6 py-2.5 text-sm font-medium text-white transition duration-150 hover:bg-green-600 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 dark:bg-green-600 dark:hover:bg-green-700 dark:focus:ring-offset-gray-900"
                       >
-                        Browse Restaurants
+                        Browse Shops
                       </Link>
                     </div>
                   )}
@@ -384,7 +875,16 @@ export default function CartMainPage() {
               </div>
 
               {/* Cart Table */}
-              {selectedRestaurantId && selectedRestaurant ? (
+              {isSwitchingTabs ? (
+                <div className="flex items-center justify-center py-8">
+                  <div className="flex items-center space-x-2">
+                    <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-green-500"></div>
+                    <span className={`text-sm ${theme === "dark" ? "text-gray-300" : "text-gray-600"}`}>
+                      Switching tab...
+                    </span>
+                  </div>
+                </div>
+              ) : selectedRestaurantId && selectedRestaurant ? (
                 <>
                   <h2
                     className={`mb-4 text-xl font-semibold ${
@@ -395,45 +895,83 @@ export default function CartMainPage() {
                   </h2>
                   <ItemCartTable
                     shopId={selectedRestaurantId}
-                    onTotalChange={setCartTotal}
-                    onUnitsChange={setCartUnits}
+                    onTotalChange={() => {}} // No need to update cache for food carts
+                    onUnitsChange={() => {}} // No need to update cache for food carts
                     onLoadingChange={setLoadingItems}
                     isFoodCart={true}
                     restaurant={selectedRestaurant}
                   />
                 </>
-              ) : (
+              ) : selectedShopId && selectedShop ? (
+                <>
+                  <h2
+                    className={`mb-4 text-xl font-semibold ${
+                      theme === "dark" ? "text-white" : "text-gray-900"
+                    }`}
+                  >
+                    {selectedShop.name}
+                  </h2>
+                  <ItemCartTable
+                    shopId={selectedShopId}
+                    onTotalChange={handleTotalChange}
+                    onUnitsChange={handleUnitsChange}
+                    onLoadingChange={setLoadingItems}
+                    isFoodCart={false}
+                  />
+                </>
+              ) : hasAnyItems ? (
                 <div
                   className={`p-4 text-center ${
                     theme === "dark" ? "text-gray-400" : "text-gray-500"
                   }`}
                 >
-                  Select a restaurant to view items.
+                  Select a restaurant or shop to view items.
                 </div>
-              )}
+              ) : null}
             </div>
             {/* Order Summary Column */}
-            {selectedRestaurantId && selectedRestaurant && (
+            {((selectedRestaurantId && selectedRestaurant) ||
+              (selectedShopId && selectedShop)) && (
               <>
                 {loadingItems ? (
                   <CheckoutSkeleton />
                 ) : (
                   <AuthGuard requireAuth={true}>
+                    {selectedRestaurant ? (
+                      <CheckoutItems
+                        shopId={selectedRestaurantId!}
+                        Total={getCurrentCartTotal()}
+                        totalUnits={getCurrentCartUnits()}
+                        shopLat={parseFloat(selectedRestaurant.latitude)}
+                        shopLng={parseFloat(selectedRestaurant.longitude)}
+                        shopAlt={0}
+                        isFoodCart={true}
+                        restaurant={selectedRestaurant}
+                      />
+                    ) : selectedShop ? (
+                      (() => {
+                        const total = getCurrentCartTotal();
+                        const units = getCurrentCartUnits();
+                        console.log('🛒 Rendering CheckoutItems for shop with Total:', total, 'Units:', units);
+                        return (
                     <CheckoutItems
-                      shopId={selectedRestaurantId!}
-                      Total={cartTotal}
-                      totalUnits={cartUnits}
-                      shopLat={parseFloat(selectedRestaurant.latitude)}
-                      shopLng={parseFloat(selectedRestaurant.longitude)}
-                      shopAlt={0}
-                      isFoodCart={true}
-                      restaurant={selectedRestaurant}
-                    />
+                            shopId={selectedShopId!}
+                            Total={total}
+                            totalUnits={units}
+                            shopLat={0} // Will need to fetch shop coordinates from API
+                            shopLng={0} // Will need to fetch shop coordinates from API
+                            shopAlt={0}
+                            isFoodCart={false}
+                          />
+                        );
+                      })()
+                    ) : null}
                   </AuthGuard>
                 )}
               </>
             )}
           </div>
+          )}
         </div>
       </div>
     </RootLayout>

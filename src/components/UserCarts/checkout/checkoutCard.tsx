@@ -100,7 +100,7 @@ export default function CheckoutItems({
   // Checkout loading state
   const [isCheckoutLoading, setIsCheckoutLoading] = useState(false);
 
-  // Fetch system configuration
+  // Fetch system configuration with memoization
   useEffect(() => {
     // Function to fetch config from API and update cache
     const fetchConfigFromAPI = async () => {
@@ -179,14 +179,15 @@ export default function CheckoutItems({
               // Check if cache is stale and needs background refresh
               const cacheAge = Date.now() - parsedCache.timestamp;
               if (cacheAge > CACHE_REFRESH_MS) {
-                refreshConfigInBackground();
+                // Don't block UI - refresh in background
+                setTimeout(refreshConfigInBackground, 0);
               }
             } else {
               // Old format or unexpected structure - treat as config directly
               setSystemConfig(parsedCache);
 
               // Always refresh old format in background to update to new format
-              refreshConfigInBackground();
+              setTimeout(refreshConfigInBackground, 0);
             }
 
             setConfigLoading(false);
@@ -213,8 +214,13 @@ export default function CheckoutItems({
       };
     }
 
+    // Only fetch if we don't have config yet
+    if (!systemConfig) {
     fetchSystemConfig();
-  }, []);
+    } else {
+      setConfigLoading(false);
+    }
+  }, [systemConfig]); // Add systemConfig as dependency to prevent unnecessary re-fetches
 
   useEffect(() => {
     const handleAddressChange = () => setTick((t) => t + 1);
@@ -463,16 +469,16 @@ export default function CheckoutItems({
     }
   } else {
     // For regular shop orders, show shopping + delivery time
-    if (days > 0) {
-      deliveryTime = `Will be delivered in ${days} day${days > 1 ? "s" : ""}${
-        hours > 0 ? ` ${hours}h` : ""
-      }`;
-    } else if (hours > 0) {
-      deliveryTime = `Will be delivered in ${hours}h${
-        mins > 0 ? ` ${mins}m` : ""
-      }`;
-    } else {
-      deliveryTime = `Will be delivered in ${mins} minutes`;
+  if (days > 0) {
+    deliveryTime = `Will be delivered in ${days} day${days > 1 ? "s" : ""}${
+      hours > 0 ? ` ${hours}h` : ""
+    }`;
+  } else if (hours > 0) {
+    deliveryTime = `Will be delivered in ${hours}h${
+      mins > 0 ? ` ${mins}m` : ""
+    }`;
+  } else {
+    deliveryTime = `Will be delivered in ${mins} minutes`;
     }
   }
 
@@ -569,10 +575,11 @@ export default function CheckoutItems({
 
     setIsCheckoutLoading(true);
 
-    // No immediate notification - will show after cart refresh completes
-
-    // Cart refresh will happen after API call completes
-    // Loading overlay will be hidden after cart refresh completes
+    // Set a timeout fallback to ensure loading state is always cleared
+    const loadingTimeout = setTimeout(() => {
+      console.warn("Checkout timeout - clearing loading state");
+      setIsCheckoutLoading(false);
+    }, 30000); // 30 second timeout
 
     // Process checkout in background
     try {
@@ -602,15 +609,15 @@ export default function CheckoutItems({
         // Regular shop cart checkout
         apiEndpoint = "/api/checkout";
         payload = {
-          shop_id: shopId,
-          delivery_address_id: deliveryAddressId,
-          service_fee: serviceFee.toString(),
-          delivery_fee: deliveryFee.toString(),
-          discount: discount > 0 ? discount.toString() : null,
-          voucher_code: appliedPromo,
-          delivery_time: deliveryTimestamp,
-          delivery_notes: deliveryNotes || null,
-        };
+        shop_id: shopId,
+        delivery_address_id: deliveryAddressId,
+        service_fee: serviceFee.toString(),
+        delivery_fee: deliveryFee.toString(),
+        discount: discount > 0 ? discount.toString() : null,
+        voucher_code: appliedPromo,
+        delivery_time: deliveryTimestamp,
+        delivery_notes: deliveryNotes || null,
+      };
       }
 
       // Make API call in background (don't await)
@@ -634,6 +641,7 @@ export default function CheckoutItems({
               </Notification>,
               { placement: "topEnd", duration: 5000 }
             );
+            clearTimeout(loadingTimeout);
             setIsCheckoutLoading(false);
           } else {
             if (isFoodCart && restaurant) {
@@ -649,40 +657,48 @@ export default function CheckoutItems({
                 </Notification>,
                 { placement: "topEnd", duration: 5000 }
               );
-              setTimeout(() => {
-                router.push("/CurrentPendingOrders");
-              }, 2000);
+              clearTimeout(loadingTimeout);
               setIsCheckoutLoading(false);
-            } else {
-              // Handle regular shop cart success
+              
+              // Trigger cart refetch to show cart is cleared
               setTimeout(() => {
                 const cartChangedEvent = new CustomEvent("cartChanged", {
-                  detail: {
-                    hideLoadingCallback: () => {
-                      setIsCheckoutLoading(false);
-                      setTimeout(() => {
-                        toaster.push(
-                          <Notification
-                            type="success"
-                            header="Order Completed Successfully!"
-                          >
-                            Your order #{data.order_id?.slice(-8)} has been
-                            placed and is being prepared! You can view it in
-                            "Current Orders".
-                          </Notification>,
-                          { placement: "topEnd", duration: 5000 }
-                        );
-                      }, 100);
-                    },
-                  },
+                  detail: { refetch: true }
                 });
                 window.dispatchEvent(cartChangedEvent);
-              }, 1000);
+              }, 500);
+            } else {
+              // Handle regular shop cart success
+              // Clear loading state immediately
+              clearTimeout(loadingTimeout);
+                    setIsCheckoutLoading(false);
+
+              // Show success notification
+                      toaster.push(
+                        <Notification
+                          type="success"
+                          header="Order Completed Successfully!"
+                        >
+                  Your order #{data.order_id?.slice(-8)} has been
+                  placed and is being prepared! You can view it in
+                  "Current Orders".
+                        </Notification>,
+                        { placement: "topEnd", duration: 5000 }
+                      );
+              
+              // Trigger cart refresh to show cart is cleared
+              setTimeout(() => {
+                const cartChangedEvent = new CustomEvent("cartChanged", {
+                  detail: { shop_id: shopId, refetch: true }
+                });
+                window.dispatchEvent(cartChangedEvent);
+              }, 500);
             }
           }
         })
         .catch((err) => {
           console.error("❌ Checkout fetch error:", err);
+          clearTimeout(loadingTimeout);
           toaster.push(
             <Notification type="error" header="Network Error">
               Unable to process your order. Please check your connection and try
@@ -695,6 +711,7 @@ export default function CheckoutItems({
     } catch (err: any) {
       console.error("❌ Checkout setup error:", err);
       // Hide loading overlay on error
+      clearTimeout(loadingTimeout);
       setIsCheckoutLoading(false);
     }
   };
