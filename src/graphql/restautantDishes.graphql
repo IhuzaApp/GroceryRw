@@ -13,6 +13,7 @@ query getRestaurantDishes {
     quantity
     restaurant_id
     updated_at
+    preparingTime
   }
 }
 
@@ -33,5 +34,6 @@ query getRestaurantDishesById($restaurant_id: uuid!) {
     updated_at
     category
     is_active
+    preparingTime
   }
 }

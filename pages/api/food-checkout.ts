@@ -1,9 +1,74 @@
 import { NextApiRequest, NextApiResponse } from "next";
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "./auth/[...nextauth]";
-import { PrismaClient } from "@prisma/client";
+import { hasuraClient } from "../../src/lib/hasuraClient";
+import { gql } from "graphql-request";
 
-const prisma = new PrismaClient();
+// Mutation to create a food order (using restaurant_orders table)
+const CREATE_FOOD_ORDER = gql`
+  mutation CreateFoodOrder(
+    $user_id: uuid!,
+    $restaurant_id: uuid!,
+    $delivery_address_id: uuid!,
+    $total: String!,
+    $delivery_fee: String!,
+    $discount: String,
+    $voucher_code: String,
+    $delivery_time: String!,
+    $delivery_notes: String,
+    $status: String = "PENDING"
+  ) {
+    insert_restaurant_orders(
+      objects: {
+        user_id: $user_id,
+        restaurant_id: $restaurant_id,
+        delivery_address_id: $delivery_address_id,
+        total: $total,
+        delivery_fee: $delivery_fee,
+        discount: $discount,
+        voucher_code: $voucher_code,
+        delivery_time: $delivery_time,
+        delivery_notes: $delivery_notes,
+        status: $status,
+        found: false,
+        shopper_id: null
+      }
+    ) {
+      affected_rows
+      returning {
+        id
+        total
+        status
+        created_at
+        delivery_time
+      }
+    }
+  }
+`;
+
+// Mutation to add dishes to a food order (using restaurant_dishe_orders table)
+const ADD_DISHES_TO_ORDER = gql`
+  mutation AddDishesToOrder(
+    $order_id: uuid!,
+    $dish_id: uuid!,
+    $quantity: String!,
+    $price: String!
+  ) {
+    insert_restaurant_dishe_orders(
+      objects: {
+        order_id: $order_id,
+        dish_id: $dish_id,
+        quantity: $quantity,
+        price: $price
+      }
+    ) {
+      affected_rows
+      returning {
+        id
+      }
+    }
+  }
+`;
 
 interface FoodCheckoutRequest {
   restaurant_id: string;
@@ -56,54 +121,11 @@ export default async function handler(
       });
     }
 
-    // Verify restaurant exists
-    const restaurant = await prisma.restaurants.findUnique({
-      where: { id: restaurant_id },
-    });
-
-    if (!restaurant) {
-      return res.status(404).json({ error: "Restaurant not found" });
-    }
-
-    // Verify delivery address exists and belongs to user
-    const deliveryAddress = await prisma.addresses.findFirst({
-      where: {
-        id: delivery_address_id,
-        user_id: session.user.id,
-      },
-    });
-
-    if (!deliveryAddress) {
-      return res.status(404).json({ error: "Delivery address not found" });
-    }
-
-    // Verify all dishes exist and belong to the restaurant
-    const dishIds = items.map(item => item.dish_id);
-    const dishes = await prisma.restaurantDishes.findMany({
-      where: {
-        id: { in: dishIds },
-        restaurant_id: restaurant_id,
-        is_active: true,
-      },
-    });
-
-    if (dishes.length !== dishIds.length) {
-      return res.status(400).json({ 
-        error: "Some dishes are not available or don't belong to this restaurant" 
-      });
-    }
-
-    // Create a map of dishes for quick lookup
-    const dishMap = new Map(dishes.map(dish => [dish.id, dish]));
+    // Use restaurant_id directly for restaurant_orders table
 
     // Calculate total amount
     let subtotal = 0;
-    const orderItems = items.map(item => {
-      const dish = dishMap.get(item.dish_id);
-      if (!dish) {
-        throw new Error(`Dish ${item.dish_id} not found`);
-      }
-
+    items.forEach(item => {
       let price = parseFloat(item.price);
       
       // Apply dish-level discount if provided
@@ -119,14 +141,6 @@ export default async function handler(
 
       const itemTotal = price * item.quantity;
       subtotal += itemTotal;
-
-      return {
-        dish_id: item.dish_id,
-        quantity: item.quantity,
-        unit_price: price.toString(),
-        total_price: itemTotal.toString(),
-        dish_name: dish.name,
-      };
     });
 
     const serviceFeeAmount = 0; // No service fee for food orders
@@ -135,61 +149,60 @@ export default async function handler(
     
     const totalAmount = subtotal + deliveryFeeAmount - discountAmount;
 
-    // Create the order using a transaction
-    const result = await prisma.$transaction(async (tx) => {
-      // Create the order
-      const order = await tx.orders.create({
-        data: {
-          user_id: session.user.id,
-          restaurant_id: restaurant_id,
-          delivery_address_id: delivery_address_id,
-          status: "pending",
-          total_amount: totalAmount.toString(),
-          subtotal: subtotal.toString(),
-          service_fee: "0", // No service fee for food orders
-          delivery_fee: delivery_fee,
-          discount: discountAmount > 0 ? discountAmount.toString() : null,
-          voucher_code: voucher_code,
-          delivery_time: new Date(delivery_time),
-          delivery_notes: delivery_notes,
-          created_at: new Date(),
-          updated_at: new Date(),
-        },
-      });
+    // Step 1: Create the food order using GraphQL mutation
+    const orderResponse = await hasuraClient.request(
+      CREATE_FOOD_ORDER,
+      {
+        user_id: session.user.id,
+        restaurant_id,
+        delivery_address_id,
+        total: totalAmount.toString(),
+        delivery_fee: delivery_fee,
+        discount: discount || null,
+        voucher_code: voucher_code || null,
+        delivery_time: delivery_time,
+        delivery_notes: delivery_notes || null,
+      }
+    );
 
-      // Create order items
-      await tx.orderItems.createMany({
-        data: orderItems.map(item => ({
-          order_id: order.id,
-          dish_id: item.dish_id,
-          quantity: item.quantity,
-          unit_price: item.unit_price,
-          total_price: item.total_price,
-          created_at: new Date(),
-          updated_at: new Date(),
-        })),
-      });
+    if (!orderResponse.insert_restaurant_orders || orderResponse.insert_restaurant_orders.affected_rows === 0) {
+      return res.status(500).json({ error: 'Failed to create food order' });
+    }
 
-      // Create order status history
-      await tx.orderStatusHistory.create({
-        data: {
-          order_id: order.id,
-          status: "pending",
-          timestamp: new Date(),
-          notes: "Order created",
-        },
-      });
+    const createdOrder = orderResponse.insert_restaurant_orders.returning[0];
+    const orderId = createdOrder.id;
 
-      return order;
-    });
+    // Step 2: Add dishes to the order
+    const dishPromises = items.map(item =>
+      hasuraClient.request(ADD_DISHES_TO_ORDER, {
+        order_id: orderId,
+        dish_id: item.dish_id,
+        quantity: item.quantity.toString(),
+        price: item.price,
+      })
+    );
+
+    const dishResults = await Promise.all(dishPromises);
+
+    // Check if all dishes were added successfully
+    const totalDishesAdded = dishResults.reduce(
+      (sum, result) => sum + result.insert_restaurant_dishe_orders.affected_rows,
+      0
+    );
+
+    if (totalDishesAdded !== items.length) {
+      console.error('Not all dishes were added to the order');
+    }
 
     // Return success response
     return res.status(200).json({
       success: true,
-      order_id: result.id,
+      order_id: createdOrder.id,
+      order_number: createdOrder.OrderID,
       message: "Food order created successfully",
       total_amount: totalAmount,
-      delivery_time: delivery_time,
+      delivery_time: createdOrder.delivery_time,
+      dishes_added: totalDishesAdded,
     });
 
   } catch (error) {
@@ -198,7 +211,5 @@ export default async function handler(
       error: "Internal server error",
       details: error instanceof Error ? error.message : "Unknown error",
     });
-  } finally {
-    await prisma.$disconnect();
   }
 }

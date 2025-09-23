@@ -310,7 +310,8 @@ export default function CheckoutItems({
   const shoppingTime = systemConfig ? parseInt(systemConfig.shoppingTime) : 0;
   const altKm = (shopAlt - userAlt) / 1000;
   const distance3D = Math.sqrt(distanceKm * distanceKm + altKm * altKm);
-  const travelTime = Math.ceil(distance3D); // assume 1 km ≈ 1 minute travel
+  // Cap travel time to reasonable maximum (2 hours = 120 minutes)
+  const travelTime = Math.min(Math.ceil(distance3D), 120); // assume 1 km ≈ 1 minute travel, max 2 hours
   
   // Helper function to parse preparation time string from database
   const parsePreparationTimeString = (timeString?: string): number => {
@@ -353,13 +354,47 @@ export default function CheckoutItems({
   // Calculate food preparation time for food orders
   let preparationTime = 0;
   if (isFoodCart && restaurant) {
-    // Find the maximum preparation time among all dishes in the cart
-    preparationTime = Math.max(...restaurant.items.map(item => {
+    // Calculate realistic preparation time - dishes are prepared simultaneously
+    // but the total time is closer to the longest dish time
+    const preparationTimes = restaurant.items.map(item => {
       // Parse the preparation time string from the dish data
       const parsedTime = parsePreparationTimeString(item.preparingTime);
       // If no preparation time or it's 0, use a default of 5 minutes
       return parsedTime || 5;
-    }));
+    });
+    
+    if (preparationTimes.length > 0) {
+      const maxTime = Math.max(...preparationTimes);
+      
+      if (preparationTimes.length === 1) {
+        // Single dish - use its preparation time
+        preparationTime = maxTime;
+      } else {
+        // Multiple dishes - find average of dishes with lower prep times
+        const lowerTimes = preparationTimes.filter(time => time < maxTime);
+        
+        if (lowerTimes.length > 0) {
+          // Average of dishes with lower prep times (can be prepared simultaneously)
+          const avgLowerTime = lowerTimes.reduce((sum, time) => sum + time, 0) / lowerTimes.length;
+          
+          // For longer prep times (>30min), use a more conservative approach
+          if (maxTime > 30) {
+            // Use 70% of the average of lower times to be more realistic
+            preparationTime = Math.round(maxTime + (avgLowerTime * 0.7));
+          } else {
+            // For shorter prep times, add full average
+            preparationTime = Math.round(maxTime + avgLowerTime);
+          }
+        } else {
+          // All dishes have the same prep time
+          preparationTime = maxTime;
+        }
+      }
+      
+      // Cap preparation time at 90 minutes maximum (1 hour 30 minutes)
+      // Dishes above 1 hour can have an exception but never exceed 1.5 hours
+      preparationTime = Math.min(preparationTime, 90);
+    }
   }
   
   // Use preparation time for food orders, shopping time for regular orders
@@ -377,21 +412,41 @@ export default function CheckoutItems({
   const hours = Math.floor((diffMs % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
   const mins = Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60));
 
+  // Helper function to format time in minutes to readable format
+  const formatTimeMinutes = (totalMinutes: number): string => {
+    if (totalMinutes < 60) {
+      return `${totalMinutes}min`;
+    } else if (totalMinutes < 1440) { // Less than 24 hours (1 day)
+      const hours = Math.floor(totalMinutes / 60);
+      const remainingMinutes = totalMinutes % 60;
+      return remainingMinutes > 0 ? `${hours}h ${remainingMinutes}min` : `${hours}h`;
+    } else if (totalMinutes < 43200) { // Less than 30 days (1 month)
+      const days = Math.floor(totalMinutes / 1440);
+      const remainingHours = Math.floor((totalMinutes % 1440) / 60);
+      return remainingHours > 0 ? `${days}d ${remainingHours}h` : `${days}d`;
+    } else {
+      const months = Math.floor(totalMinutes / 43200);
+      const remainingDays = Math.floor((totalMinutes % 43200) / 1440);
+      return remainingDays > 0 ? `${months}m ${remainingDays}d` : `${months}m`;
+    }
+  };
+
   // Create detailed delivery time message
   if (isFoodCart) {
     // For food orders, show preparation + delivery time breakdown
-    const prepText = preparationTime === 0 ? 'ready now' : `${preparationTime}min`;
+    const prepText = preparationTime === 0 ? 'ready now' : formatTimeMinutes(preparationTime);
+    const deliveryText = formatTimeMinutes(travelTime);
     
     if (days > 0) {
-      deliveryTime = `Estimated delivery: ${days} day${days > 1 ? "s" : ""}${
+      deliveryTime = `${days} day${days > 1 ? "s" : ""}${
         hours > 0 ? ` ${hours}h` : ""
-      } (prep: ${prepText} + delivery: ${travelTime}min)`;
+      } (prep: ${prepText} + delivery: ${deliveryText})`;
     } else if (hours > 0) {
-      deliveryTime = `Estimated delivery: ${hours}h${
+      deliveryTime = `${hours}h${
         mins > 0 ? ` ${mins}m` : ""
-      } (prep: ${prepText} + delivery: ${travelTime}min)`;
+      } (prep: ${prepText} + delivery: ${deliveryText})`;
     } else {
-      deliveryTime = `Estimated delivery: ${mins} minutes (prep: ${prepText} + delivery: ${travelTime}min)`;
+      deliveryTime = `${mins} minutes (prep: ${prepText} + delivery: ${deliveryText})`;
     }
   } else {
     // For regular shop orders, show shopping + delivery time
