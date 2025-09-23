@@ -308,7 +308,6 @@ export default function CartMainPage() {
       return totalPrice;
     } else if (selectedShopId) {
       // For shop carts, use the current state
-      console.log('🛒 getCurrentCartTotal returning currentShopTotal:', currentShopTotal, 'for shop:', selectedShopId);
       return currentShopTotal;
     }
     return 0;
@@ -354,17 +353,37 @@ export default function CartMainPage() {
     }
   }, [selectedShopId, getCachedCartData]);
 
+  // Function to auto-switch to next available tab after checkout
+  const autoSwitchToNextTab = useCallback((updatedCarts: ShopCart[]) => {
+    // Get current food cart restaurants (after potential clearing)
+    const currentRestaurants = restaurants.filter(r => r.items.length > 0);
+    
+    
+    // Priority: 1) Food carts, 2) Shop carts
+    if (currentRestaurants.length > 0) {
+      // Switch to first available food cart
+      const firstRestaurant = currentRestaurants[0];
+      setSelectedRestaurantId(firstRestaurant.id);
+      setSelectedShopId(null);
+    } else if (updatedCarts.length > 0) {
+      // Switch to first available shop cart
+      const firstShop = updatedCarts[0];
+      setSelectedShopId(firstShop.id);
+      setSelectedRestaurantId(null);
+    } else {
+      // No active carts - stay on empty state
+    }
+  }, [restaurants]);
+
   // Listen for cart changed events (from checkout completion)
   useEffect(() => {
     const handleCartChanged = (event: CustomEvent) => {
       const { refetch, shop_id } = event.detail || {};
       
       if (refetch) {
-        console.log('🛒 Cart changed event received, refetching cart data...', { shop_id });
         
         // If it's a specific shop checkout, remove that shop tab and clear its cache
         if (shop_id) {
-          console.log('🛒 Removing specific shop tab:', shop_id);
           
           // Clear cache for this specific shop
           setCartDataCache(prev => {
@@ -393,7 +412,11 @@ export default function CartMainPage() {
               if (data.success) {
                 const updatedCarts = data.carts || [];
                 setShopCarts(updatedCarts);
-                console.log('🛒 Updated shop carts after checkout:', updatedCarts.length, 'shops remaining');
+                
+                // Auto-switch to next available tab
+                setTimeout(() => {
+                  autoSwitchToNextTab(updatedCarts);
+                }, 100);
               }
             })
             .catch(err => console.error('Error refetching carts:', err))
@@ -402,7 +425,6 @@ export default function CartMainPage() {
             });
         } else {
           // General refetch (for food orders or general refresh)
-          console.log('🛒 General cart refetch...');
           
           // Clear current selections
           setSelectedRestaurantId(null);
@@ -423,7 +445,13 @@ export default function CartMainPage() {
             .then(res => res.json())
             .then(data => {
               if (data.success) {
-                setShopCarts(data.carts || []);
+                const updatedCarts = data.carts || [];
+                setShopCarts(updatedCarts);
+                
+                // Auto-switch to next available tab after food order
+                setTimeout(() => {
+                  autoSwitchToNextTab(updatedCarts);
+                }, 100);
               }
             })
             .catch(err => console.error('Error refetching carts:', err))
@@ -450,12 +478,10 @@ export default function CartMainPage() {
 
   // Memoized callback functions for ItemCartTable
   const handleTotalChange = useCallback((total: number) => {
-    console.log('🛒 handleTotalChange called with:', total, 'for shop:', selectedShopId);
     if (selectedShopId) {
       setCurrentShopTotal(total);
       currentShopTotalRef.current = total;
       updateCachedCartData(`shop-${selectedShopId}`, total, currentShopUnitsRef.current);
-      console.log('🛒 Updated currentShopTotal to:', total);
     }
   }, [selectedShopId, updateCachedCartData]);
 
@@ -952,7 +978,6 @@ export default function CartMainPage() {
                       (() => {
                         const total = getCurrentCartTotal();
                         const units = getCurrentCartUnits();
-                        console.log('🛒 Rendering CheckoutItems for shop with Total:', total, 'Units:', units);
                         return (
                     <CheckoutItems
                             shopId={selectedShopId!}
