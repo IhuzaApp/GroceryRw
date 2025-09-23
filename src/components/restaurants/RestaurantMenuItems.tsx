@@ -154,10 +154,10 @@ export const RestaurantMenuItems: React.FC<RestaurantMenuItemsProps> = ({
                     </p>
                   )}
                   <div className="mt-2 flex items-center gap-1">
-                    <svg className="h-4 w-4 text-orange-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <svg className="h-4 w-4 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                     </svg>
-                    <span className="text-xs text-orange-600 dark:text-orange-400 font-medium">
+                    <span className="text-xs font-medium !text-green-600 dark:!text-green-400">
                       Prep time: {formatPreparationTime(dish.preparingTime)}
                     </span>
                   </div>
