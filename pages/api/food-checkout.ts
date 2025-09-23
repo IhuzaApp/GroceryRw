@@ -16,7 +16,8 @@ const CREATE_FOOD_ORDER = gql`
     $voucher_code: String,
     $delivery_time: String!,
     $delivery_notes: String,
-    $status: String = "PENDING"
+    $status: String = "PENDING",
+    $OrderID: String!
   ) {
     insert_restaurant_orders(
       objects: {
@@ -31,12 +32,14 @@ const CREATE_FOOD_ORDER = gql`
         delivery_notes: $delivery_notes,
         status: $status,
         found: false,
-        shopper_id: null
+        shopper_id: null,
+        OrderID: $OrderID
       }
     ) {
       affected_rows
       returning {
         id
+        OrderID
         total
         status
         created_at
@@ -149,6 +152,9 @@ export default async function handler(
     
     const totalAmount = subtotal + deliveryFeeAmount - discountAmount;
 
+    // Generate OrderID for restaurant order
+    const OrderID = `R${Date.now()}${Math.random().toString(36).substr(2, 5).toUpperCase()}`;
+
     // Step 1: Create the food order using GraphQL mutation
     const orderResponse = await hasuraClient.request(
       CREATE_FOOD_ORDER,
@@ -162,6 +168,7 @@ export default async function handler(
         voucher_code: voucher_code || null,
         delivery_time: delivery_time,
         delivery_notes: delivery_notes || null,
+        OrderID: OrderID,
       }
     );
 

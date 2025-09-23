@@ -9,3 +9,75 @@ mutation addRestaurantOrders($delivery_address_id: uuid = "", $delivery_fee: Str
     affected_rows
   }
 }
+
+query GetRestaurantOrders($user_id: uuid!) {
+  restaurant_orders(where: {user_id: {_eq: $user_id}}, order_by: {created_at: desc}) {
+    id
+    OrderID
+    user_id
+    status
+    created_at
+    total
+    delivery_fee
+    restaurant_id
+    shopper_id
+    delivery_time
+    delivery_notes
+    discount
+    voucher_code
+    found
+    restaurant_dishe_orders {
+      quantity
+      price
+      dish_id
+      id
+      order_id
+      created_at
+    }
+    combined_order_id
+    delivery_address_id
+    delivery_photo_url
+    updated_at
+    orderedBy {
+      created_at
+      email
+      gender
+      id
+      is_active
+      name
+      phone
+      role
+      updated_at
+    }
+    Address {
+      city
+      created_at
+      id
+      is_default
+      latitude
+      longitude
+      postal_code
+      street
+      updated_at
+      user_id
+    }
+    Restaurant {
+      created_at
+      is_active
+      email
+      id
+      lat
+      location
+      logo
+      long
+      name
+      phone
+      profile
+      relatedTo
+      tin
+      ussd
+      verified
+    }
+  }
+}
+

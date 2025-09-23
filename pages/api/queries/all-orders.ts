@@ -75,6 +75,35 @@ const GET_REEL_ORDERS = gql`
   }
 `;
 
+// Fetch restaurant orders
+const GET_RESTAURANT_ORDERS = gql`
+  query GetRestaurantOrders($user_id: uuid!) {
+    restaurant_orders(
+      where: { user_id: { _eq: $user_id } }
+      order_by: { created_at: desc }
+    ) {
+      id
+      OrderID
+      user_id
+      status
+      created_at
+      total
+      delivery_fee
+      restaurant_id
+      shopper_id
+      delivery_time
+      delivery_notes
+      discount
+      voucher_code
+      found
+      restaurant_dishe_orders {
+        quantity
+        price
+      }
+    }
+  }
+`;
+
 // Fetch shop details by IDs
 const GET_SHOPS_BY_IDS = gql`
   query GetShopsByIds($ids: [uuid!]!) {
@@ -83,6 +112,18 @@ const GET_SHOPS_BY_IDS = gql`
       name
       address
       image
+    }
+  }
+`;
+
+// Fetch restaurant details by IDs
+const GET_RESTAURANTS_BY_IDS = gql`
+  query GetRestaurantsByIds($ids: [uuid!]!) {
+    Restaurants(where: { id: { _in: $ids } }) {
+      id
+      name
+      location
+      profile
     }
   }
 `;
@@ -144,6 +185,29 @@ interface ReelOrdersResponse {
   }>;
 }
 
+interface RestaurantOrdersResponse {
+  restaurant_orders: Array<{
+    id: string;
+    OrderID: string;
+    user_id: string;
+    status: string;
+    created_at: string;
+    total: string;
+    delivery_fee: string;
+    restaurant_id: string;
+    shopper_id: string | null;
+    delivery_time: string;
+    delivery_notes: string;
+    discount: string;
+    voucher_code: string;
+    found: boolean;
+    restaurant_dishe_orders: Array<{
+      quantity: string;
+      price: string;
+    }>;
+  }>;
+}
+
 export default async function handler(
   req: NextApiRequest,
   res: NextApiResponse
@@ -186,14 +250,23 @@ export default async function handler(
     );
     const reelOrders = reelOrdersData.reel_orders;
 
+    // 3. Fetch restaurant orders
+    const restaurantOrdersData = await hasuraClient.request<RestaurantOrdersResponse>(
+      GET_RESTAURANT_ORDERS,
+      {
+        user_id: userId,
+      }
+    );
+    const restaurantOrders = restaurantOrdersData.restaurant_orders;
+
     logger.info(
-      `Found ${orders?.length || 0} regular orders and ${
+      `Found ${orders?.length || 0} regular orders, ${
         reelOrders?.length || 0
-      } reel orders`,
+      } reel orders, and ${restaurantOrders?.length || 0} restaurant orders`,
       "AllOrdersAPI"
     );
 
-    // 3. Fetch shops for regular orders
+    // 4. Fetch shops for regular orders
     const shopIds = Array.from(new Set(orders.map((o) => o.shop_id))).filter(
       Boolean
     );
@@ -211,7 +284,25 @@ export default async function handler(
       shopMap = new Map(shopsData.Shops.map((s) => [s.id, s]));
     }
 
-    // 4. Enrich regular orders with shop details and item counts
+    // 5. Fetch restaurants for restaurant orders
+    const restaurantIds = Array.from(new Set(restaurantOrders.map((ro) => ro.restaurant_id))).filter(
+      Boolean
+    );
+
+    let restaurantMap = new Map();
+    if (restaurantIds.length > 0) {
+      const restaurantsData = await hasuraClient.request<{
+        Restaurants: Array<{
+          id: string;
+          name: string;
+          location: string;
+          profile: string;
+        }>;
+      }>(GET_RESTAURANTS_BY_IDS, { ids: restaurantIds });
+      restaurantMap = new Map(restaurantsData.Restaurants.map((r) => [r.id, r]));
+    }
+
+    // 6. Enrich regular orders with shop details and item counts
     const enrichedRegularOrders = orders.map((o) => {
       const agg = o.Order_Items_aggregate.aggregate;
       const itemsCount = agg?.count ?? 0;
@@ -247,7 +338,7 @@ export default async function handler(
       };
     });
 
-    // 5. Enrich reel orders
+    // 7. Enrich reel orders
     const enrichedReelOrders = reelOrders.map((ro) => {
       const baseTotal = parseFloat(ro.total || "0");
       const serviceFee = parseFloat(ro.service_fee || "0");
@@ -273,8 +364,45 @@ export default async function handler(
       };
     });
 
-    // 6. Combine and sort all orders by creation date (newest first)
-    const allOrders = [...enrichedRegularOrders, ...enrichedReelOrders].sort(
+    // 8. Enrich restaurant orders with restaurant details and item counts
+    const enrichedRestaurantOrders = restaurantOrders.map((ro) => {
+      // Calculate counts manually from the restaurant_dishe_orders array
+      const itemsCount = ro.restaurant_dishe_orders?.length ?? 0;
+      const unitsCount = ro.restaurant_dishe_orders?.reduce((sum, item) => {
+        return sum + parseInt(item.quantity || "0");
+      }, 0) ?? 0;
+
+      const baseTotal = parseFloat(ro.total || "0");
+      const deliveryFee = parseFloat(ro.delivery_fee || "0");
+      const discountAmount = parseFloat(ro.discount || "0");
+      const grandTotal = baseTotal + deliveryFee - discountAmount;
+
+      return {
+        id: ro.id,
+        OrderID: ro.OrderID || ro.id, // Use OrderID if available, otherwise fall back to id
+        user_id: ro.user_id,
+        status: ro.status,
+        created_at: ro.created_at,
+        delivery_time: ro.delivery_time,
+        total: grandTotal,
+        shopper_id: ro.shopper_id,
+        shop: restaurantMap.get(ro.restaurant_id) ? {
+          ...restaurantMap.get(ro.restaurant_id),
+          address: restaurantMap.get(ro.restaurant_id).location,
+          image: restaurantMap.get(ro.restaurant_id).profile
+        } : null, // Use restaurant as shop for compatibility
+        itemsCount,
+        unitsCount,
+        orderType: "restaurant" as const,
+        delivery_note: ro.delivery_notes,
+        discount: discountAmount,
+        voucher_code: ro.voucher_code,
+        found: ro.found,
+      };
+    });
+
+    // 9. Combine and sort all orders by creation date (newest first)
+    const allOrders = [...enrichedRegularOrders, ...enrichedReelOrders, ...enrichedRestaurantOrders].sort(
       (a, b) =>
         new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
     );
