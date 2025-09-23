@@ -1819,6 +1819,7 @@ Total Revenue: 19,932 RWF (27,330 - 7,398)
 Restaurant orders use a **single-price model** with **tax inclusion**:
 
 1. **Price Structure**:
+
    - `price`: Individual dish price (what customer pays per item)
    - `quantity`: Number of items ordered
    - `delivery_fee`: Fixed delivery fee
@@ -1849,7 +1850,7 @@ const subtotal = 18500 - 3330 = 15170
 
 // Final breakdown:
 // Subtotal (pre-tax): 15170 RWF
-// Tax (18%): 3330 RWF  
+// Tax (18%): 3330 RWF
 // Delivery Fee: 2500 RWF
 // Total (what customer paid): 21000 RWF
 
@@ -5168,6 +5169,7 @@ Preparation Time = Highest Dish Time + (Average of Lower Times × Efficiency Fac
 ## Calculation Examples
 
 ### Example 1: Pizza + Salad
+
 ```
 Pizza: 20min, Salad: 10min
 Highest: 20min, Lower times: [10min]
@@ -5177,6 +5179,7 @@ Total: 30min prep + 15min delivery = 45min total
 ```
 
 ### Example 2: Burger + Fries + Drink
+
 ```
 Burger: 25min, Fries: 15min, Drink: 5min
 Highest: 25min, Lower times: [15min, 5min]
@@ -5186,6 +5189,7 @@ Total: 35min prep + 15min delivery = 50min total
 ```
 
 ### Example 3: Long Preparation Times
+
 ```
 Steak: 75min, Pasta: 45min, Salad: 15min
 Highest: 75min, Lower times: [45min, 15min]
@@ -5208,7 +5212,7 @@ Total: 90min prep + 15min delivery = 105min total
 The system handles various time formats from the database:
 
 - **Minutes**: "15min", "30min" → 15, 30 minutes
-- **Hours**: "1hr", "2hr" → 60, 120 minutes  
+- **Hours**: "1hr", "2hr" → 60, 120 minutes
 - **Mixed**: "2hr30min", "1hr15min" → 150, 75 minutes
 - **Empty**: "" → 0 minutes (immediately available)
 - **Numbers**: "15", "30" → 15, 30 minutes
@@ -5222,11 +5226,13 @@ The system handles various time formats from the database:
 ## Delivery Time Display
 
 ### Food Orders
+
 ```
 "Estimated delivery: 45 minutes (prep: 30min + delivery: 15min)"
 ```
 
 ### Regular Shop Orders
+
 ```
 "Will be delivered in 45 minutes"
 ```

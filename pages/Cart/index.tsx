@@ -9,7 +9,10 @@ import ItemCartTable from "@components/UserCarts/cartsTable";
 import CheckoutItems from "@components/UserCarts/checkout/checkoutCard";
 import { useTheme } from "../../src/context/ThemeContext";
 import { useAuth } from "../../src/context/AuthContext";
-import { useFoodCart, FoodCartRestaurant } from "../../src/context/FoodCartContext";
+import {
+  useFoodCart,
+  FoodCartRestaurant,
+} from "../../src/context/FoodCartContext";
 import { AuthGuard } from "../../src/components/AuthGuard";
 
 // Skeleton loader for restaurant selection cards
@@ -73,7 +76,9 @@ export default function CartMainPage() {
   const { isLoggedIn } = useAuth();
   const { restaurants, totalItems, totalPrice } = useFoodCart();
 
-  const [selectedRestaurantId, setSelectedRestaurantId] = useState<string | null>(null);
+  const [selectedRestaurantId, setSelectedRestaurantId] = useState<
+    string | null
+  >(null);
   const [cartTotal, setCartTotal] = useState<number>(0);
   const [cartUnits, setCartUnits] = useState<number>(0);
   const [loadingItems, setLoadingItems] = useState<boolean>(false);
@@ -85,10 +90,13 @@ export default function CartMainPage() {
     }
   }, [restaurants, selectedRestaurantId]);
 
-  const handleSelectRestaurant = (restaurantId: string) => setSelectedRestaurantId(restaurantId);
+  const handleSelectRestaurant = (restaurantId: string) =>
+    setSelectedRestaurantId(restaurantId);
 
   // Find the selected restaurant
-  const selectedRestaurant = restaurants.find((r) => r.id === selectedRestaurantId);
+  const selectedRestaurant = restaurants.find(
+    (r) => r.id === selectedRestaurantId
+  );
 
   // Show login prompt for guests
   if (!isLoggedIn) {
@@ -360,7 +368,8 @@ export default function CartMainPage() {
                           theme === "dark" ? "text-gray-500" : "text-gray-500"
                         }`}
                       >
-                        Browse restaurants and add delicious dishes to your cart!
+                        Browse restaurants and add delicious dishes to your
+                        cart!
                       </p>
 
                       <Link

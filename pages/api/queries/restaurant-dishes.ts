@@ -4,7 +4,10 @@ import { gql } from "graphql-request";
 
 const GET_RESTAURANT_DISHES = gql`
   query GetRestaurantDishes($restaurant_id: uuid!) {
-    restaurant_dishes(where: { restaurant_id: { _eq: $restaurant_id } }, order_by: {name: asc}) {
+    restaurant_dishes(
+      where: { restaurant_id: { _eq: $restaurant_id } }
+      order_by: { name: asc }
+    ) {
       id
       name
       description
@@ -28,7 +31,7 @@ const GET_RESTAURANT_DISHES = gql`
 
 const GET_ALL_RESTAURANT_DISHES = gql`
   query GetAllRestaurantDishes {
-    restaurant_dishes(order_by: {name: asc}) {
+    restaurant_dishes(order_by: { name: asc }) {
       id
       name
       description
@@ -74,7 +77,8 @@ interface RestaurantDishesResponse {
 
 // Helper function to validate UUID format
 const isValidUUID = (uuid: string): boolean => {
-  const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+  const uuidRegex =
+    /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
   return uuidRegex.test(uuid);
 };
 
@@ -91,7 +95,11 @@ export default async function handler(
 
     let data: RestaurantDishesResponse;
 
-    if (restaurant_id && restaurant_id !== 'undefined' && isValidUUID(restaurant_id as string)) {
+    if (
+      restaurant_id &&
+      restaurant_id !== "undefined" &&
+      isValidUUID(restaurant_id as string)
+    ) {
       // Fetch dishes for a specific restaurant
       data = await hasuraClient.request<RestaurantDishesResponse>(
         GET_RESTAURANT_DISHES,
@@ -99,10 +107,12 @@ export default async function handler(
       );
     } else {
       // If restaurant_id is invalid, log the issue and return empty dishes
-      if (restaurant_id && restaurant_id !== 'undefined') {
-        console.warn(`Invalid restaurant_id provided: ${restaurant_id}. Expected valid UUID format.`);
+      if (restaurant_id && restaurant_id !== "undefined") {
+        console.warn(
+          `Invalid restaurant_id provided: ${restaurant_id}. Expected valid UUID format.`
+        );
       }
-      
+
       // Fetch all dishes if no valid restaurant_id provided
       data = await hasuraClient.request<RestaurantDishesResponse>(
         GET_ALL_RESTAURANT_DISHES

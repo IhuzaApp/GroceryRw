@@ -1,9 +1,9 @@
-import { GraphQLClient } from 'graphql-request';
-import { NextApiRequest, NextApiResponse } from 'next';
+import { GraphQLClient } from "graphql-request";
+import { NextApiRequest, NextApiResponse } from "next";
 
 const client = new GraphQLClient(process.env.HASURA_GRAPHQL_ENDPOINT!, {
   headers: {
-    'x-hasura-admin-secret': process.env.HASURA_GRAPHQL_ADMIN_SECRET!,
+    "x-hasura-admin-secret": process.env.HASURA_GRAPHQL_ADMIN_SECRET!,
   },
 });
 
@@ -190,8 +190,8 @@ export default async function handler(
   req: NextApiRequest,
   res: NextApiResponse
 ) {
-  if (req.method !== 'POST') {
-    return res.status(405).json({ error: 'Method not allowed' });
+  if (req.method !== "POST") {
+    return res.status(405).json({ error: "Method not allowed" });
   }
 
   try {
@@ -206,14 +206,30 @@ export default async function handler(
       voucher_code,
       delivery_time,
       delivery_notes,
-      items
+      items,
     }: RestaurantOrderInput = req.body;
 
     // Validate required fields
-    if (!restaurant_id || !user_id || !delivery_address_id || !total || !delivery_fee || !delivery_time || !items?.length) {
-      return res.status(400).json({ 
-        error: 'Missing required fields',
-        required: ['restaurant_id', 'user_id', 'delivery_address_id', 'total', 'delivery_fee', 'delivery_time', 'items']
+    if (
+      !restaurant_id ||
+      !user_id ||
+      !delivery_address_id ||
+      !total ||
+      !delivery_fee ||
+      !delivery_time ||
+      !items?.length
+    ) {
+      return res.status(400).json({
+        error: "Missing required fields",
+        required: [
+          "restaurant_id",
+          "user_id",
+          "delivery_address_id",
+          "total",
+          "delivery_fee",
+          "delivery_time",
+          "items",
+        ],
       });
     }
 
@@ -235,14 +251,16 @@ export default async function handler(
     );
 
     if (!orderResponse.insert_restaurant_orders.returning.length) {
-      return res.status(500).json({ error: 'Failed to create restaurant order' });
+      return res
+        .status(500)
+        .json({ error: "Failed to create restaurant order" });
     }
 
     const createdOrder = orderResponse.insert_restaurant_orders.returning[0];
     const orderId = createdOrder.id;
 
     // Step 2: Add dishes to the order
-    const dishPromises = items.map(item =>
+    const dishPromises = items.map((item) =>
       client.request<AddDishesResponse>(ADD_DISHES_TO_ORDER, {
         order_id: orderId,
         dish_id: item.dish_id,
@@ -261,12 +279,12 @@ export default async function handler(
     );
 
     if (totalDishesAdded !== items.length) {
-      console.error('Not all dishes were added to the order');
+      console.error("Not all dishes were added to the order");
     }
 
     // Step 3: Fetch the complete order details
     const orderDetails = await client.request(GET_RESTAURANT_ORDER, {
-      order_id: orderId
+      order_id: orderId,
     });
 
     return res.status(200).json({
@@ -277,21 +295,16 @@ export default async function handler(
       status: createdOrder.status,
       delivery_time: createdOrder.delivery_time,
       dishes_added: totalDishesAdded,
-      order_details: orderDetails.restaurant_orders[0]
+      order_details: orderDetails.restaurant_orders[0],
     });
-
   } catch (error) {
-    console.error('Error creating restaurant order:', error);
-    return res.status(500).json({ 
-      error: 'Failed to create restaurant order',
-      details: error instanceof Error ? error.message : 'Unknown error'
+    console.error("Error creating restaurant order:", error);
+    return res.status(500).json({
+      error: "Failed to create restaurant order",
+      details: error instanceof Error ? error.message : "Unknown error",
     });
   }
 }
 
 // Export the mutations for use in other files
-export {
-  CREATE_RESTAURANT_ORDER,
-  ADD_DISHES_TO_ORDER,
-  GET_RESTAURANT_ORDER
-};
+export { CREATE_RESTAURANT_ORDER, ADD_DISHES_TO_ORDER, GET_RESTAURANT_ORDER };

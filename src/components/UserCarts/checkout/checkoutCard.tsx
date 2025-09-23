@@ -7,7 +7,10 @@ import { useRouter } from "next/router";
 import PaymentMethodSelector from "./PaymentMethodSelector";
 import { useTheme } from "../../../context/ThemeContext";
 import { useAuth } from "../../../context/AuthContext";
-import { useFoodCart, FoodCartRestaurant } from "../../../context/FoodCartContext";
+import {
+  useFoodCart,
+  FoodCartRestaurant,
+} from "../../../context/FoodCartContext";
 import AddressManagementModal from "../../userProfile/AddressManagementModal";
 
 // Cookie name for system configuration cache
@@ -261,7 +264,11 @@ export default function CheckoutItems({
   }, []);
 
   // Service and Delivery Fee calculations
-  const serviceFee = isFoodCart ? 0 : (systemConfig ? parseInt(systemConfig.serviceFee) : 0);
+  const serviceFee = isFoodCart
+    ? 0
+    : systemConfig
+    ? parseInt(systemConfig.serviceFee)
+    : 0;
   const baseDeliveryFee = systemConfig
     ? parseInt(systemConfig.baseDeliveryFee)
     : 0;
@@ -312,27 +319,27 @@ export default function CheckoutItems({
   const distance3D = Math.sqrt(distanceKm * distanceKm + altKm * altKm);
   // Cap travel time to reasonable maximum (2 hours = 120 minutes)
   const travelTime = Math.min(Math.ceil(distance3D), 120); // assume 1 km ≈ 1 minute travel, max 2 hours
-  
+
   // Helper function to parse preparation time string from database
   const parsePreparationTimeString = (timeString?: string): number => {
-    if (!timeString || timeString.trim() === '') {
+    if (!timeString || timeString.trim() === "") {
       return 0; // Empty means immediately available
     }
-    
+
     const cleanTime = timeString.toLowerCase().trim();
-    
+
     // Handle minutes format: "15min", "30min", etc.
     const minMatch = cleanTime.match(/^(\d+)min$/);
     if (minMatch) {
       return parseInt(minMatch[1]);
     }
-    
+
     // Handle hours and minutes format: "2hr30min", "1hr15min", etc.
     const hrMinMatch = cleanTime.match(/^(\d+)hr(\d+)min$/);
     if (hrMinMatch) {
       const hours = parseInt(hrMinMatch[1]);
       const mins = parseInt(hrMinMatch[2]);
-      return (hours * 60) + mins;
+      return hours * 60 + mins;
     }
 
     // Handle hours format: "1hr", "2hr", etc.
@@ -340,13 +347,13 @@ export default function CheckoutItems({
     if (hrMatch) {
       return parseInt(hrMatch[1]) * 60; // Convert hours to minutes
     }
-    
+
     // Handle just numbers (assume minutes): "15", "30"
     const numMatch = cleanTime.match(/^(\d+)$/);
     if (numMatch) {
       return parseInt(numMatch[1]);
     }
-    
+
     // Default fallback
     return 0;
   };
@@ -356,31 +363,32 @@ export default function CheckoutItems({
   if (isFoodCart && restaurant) {
     // Calculate realistic preparation time - dishes are prepared simultaneously
     // but the total time is closer to the longest dish time
-    const preparationTimes = restaurant.items.map(item => {
+    const preparationTimes = restaurant.items.map((item) => {
       // Parse the preparation time string from the dish data
       const parsedTime = parsePreparationTimeString(item.preparingTime);
       // If no preparation time or it's 0, use a default of 5 minutes
       return parsedTime || 5;
     });
-    
+
     if (preparationTimes.length > 0) {
       const maxTime = Math.max(...preparationTimes);
-      
+
       if (preparationTimes.length === 1) {
         // Single dish - use its preparation time
         preparationTime = maxTime;
       } else {
         // Multiple dishes - find average of dishes with lower prep times
-        const lowerTimes = preparationTimes.filter(time => time < maxTime);
-        
+        const lowerTimes = preparationTimes.filter((time) => time < maxTime);
+
         if (lowerTimes.length > 0) {
           // Average of dishes with lower prep times (can be prepared simultaneously)
-          const avgLowerTime = lowerTimes.reduce((sum, time) => sum + time, 0) / lowerTimes.length;
-          
+          const avgLowerTime =
+            lowerTimes.reduce((sum, time) => sum + time, 0) / lowerTimes.length;
+
           // For longer prep times (>30min), use a more conservative approach
           if (maxTime > 30) {
             // Use 70% of the average of lower times to be more realistic
-            preparationTime = Math.round(maxTime + (avgLowerTime * 0.7));
+            preparationTime = Math.round(maxTime + avgLowerTime * 0.7);
           } else {
             // For shorter prep times, add full average
             preparationTime = Math.round(maxTime + avgLowerTime);
@@ -390,13 +398,13 @@ export default function CheckoutItems({
           preparationTime = maxTime;
         }
       }
-      
+
       // Cap preparation time at 90 minutes maximum (1 hour 30 minutes)
       // Dishes above 1 hour can have an exception but never exceed 1.5 hours
       preparationTime = Math.min(preparationTime, 90);
     }
   }
-  
+
   // Use preparation time for food orders, shopping time for regular orders
   const processingTime = isFoodCart ? preparationTime : shoppingTime;
   const totalTimeMinutes = travelTime + processingTime;
@@ -416,11 +424,15 @@ export default function CheckoutItems({
   const formatTimeMinutes = (totalMinutes: number): string => {
     if (totalMinutes < 60) {
       return `${totalMinutes}min`;
-    } else if (totalMinutes < 1440) { // Less than 24 hours (1 day)
+    } else if (totalMinutes < 1440) {
+      // Less than 24 hours (1 day)
       const hours = Math.floor(totalMinutes / 60);
       const remainingMinutes = totalMinutes % 60;
-      return remainingMinutes > 0 ? `${hours}h ${remainingMinutes}min` : `${hours}h`;
-    } else if (totalMinutes < 43200) { // Less than 30 days (1 month)
+      return remainingMinutes > 0
+        ? `${hours}h ${remainingMinutes}min`
+        : `${hours}h`;
+    } else if (totalMinutes < 43200) {
+      // Less than 30 days (1 month)
       const days = Math.floor(totalMinutes / 1440);
       const remainingHours = Math.floor((totalMinutes % 1440) / 60);
       return remainingHours > 0 ? `${days}d ${remainingHours}h` : `${days}d`;
@@ -434,9 +446,10 @@ export default function CheckoutItems({
   // Create detailed delivery time message
   if (isFoodCart) {
     // For food orders, show preparation + delivery time breakdown
-    const prepText = preparationTime === 0 ? 'ready now' : formatTimeMinutes(preparationTime);
+    const prepText =
+      preparationTime === 0 ? "ready now" : formatTimeMinutes(preparationTime);
     const deliveryText = formatTimeMinutes(travelTime);
-    
+
     if (days > 0) {
       deliveryTime = `${days} day${days > 1 ? "s" : ""}${
         hours > 0 ? ` ${hours}h` : ""
@@ -450,16 +463,16 @@ export default function CheckoutItems({
     }
   } else {
     // For regular shop orders, show shopping + delivery time
-  if (days > 0) {
-    deliveryTime = `Will be delivered in ${days} day${days > 1 ? "s" : ""}${
-      hours > 0 ? ` ${hours}h` : ""
-    }`;
-  } else if (hours > 0) {
-    deliveryTime = `Will be delivered in ${hours}h${
-      mins > 0 ? ` ${mins}m` : ""
-    }`;
-  } else {
-    deliveryTime = `Will be delivered in ${mins} minutes`;
+    if (days > 0) {
+      deliveryTime = `Will be delivered in ${days} day${days > 1 ? "s" : ""}${
+        hours > 0 ? ` ${hours}h` : ""
+      }`;
+    } else if (hours > 0) {
+      deliveryTime = `Will be delivered in ${hours}h${
+        mins > 0 ? ` ${mins}m` : ""
+      }`;
+    } else {
+      deliveryTime = `Will be delivered in ${mins} minutes`;
     }
   }
 
@@ -565,7 +578,7 @@ export default function CheckoutItems({
     try {
       let payload;
       let apiEndpoint;
-      
+
       if (isFoodCart && restaurant) {
         // Food cart checkout
         apiEndpoint = "/api/food-checkout";
@@ -578,7 +591,7 @@ export default function CheckoutItems({
           voucher_code: appliedPromo,
           delivery_time: deliveryTimestamp,
           delivery_notes: deliveryNotes || null,
-          items: restaurant.items.map(item => ({
+          items: restaurant.items.map((item) => ({
             dish_id: item.id,
             quantity: item.quantity,
             price: item.price,
@@ -589,15 +602,15 @@ export default function CheckoutItems({
         // Regular shop cart checkout
         apiEndpoint = "/api/checkout";
         payload = {
-        shop_id: shopId,
-        delivery_address_id: deliveryAddressId,
-        service_fee: serviceFee.toString(),
-        delivery_fee: deliveryFee.toString(),
-        discount: discount > 0 ? discount.toString() : null,
-        voucher_code: appliedPromo,
-        delivery_time: deliveryTimestamp,
-        delivery_notes: deliveryNotes || null,
-      };
+          shop_id: shopId,
+          delivery_address_id: deliveryAddressId,
+          service_fee: serviceFee.toString(),
+          delivery_fee: deliveryFee.toString(),
+          discount: discount > 0 ? discount.toString() : null,
+          voucher_code: appliedPromo,
+          delivery_time: deliveryTimestamp,
+          delivery_notes: deliveryNotes || null,
+        };
       }
 
       // Make API call in background (don't await)
@@ -636,34 +649,34 @@ export default function CheckoutItems({
                 </Notification>,
                 { placement: "topEnd", duration: 5000 }
               );
-            setTimeout(() => {
+              setTimeout(() => {
                 router.push("/CurrentPendingOrders");
               }, 2000);
               setIsCheckoutLoading(false);
             } else {
               // Handle regular shop cart success
               setTimeout(() => {
-              const cartChangedEvent = new CustomEvent("cartChanged", {
-                detail: {
-                  hideLoadingCallback: () => {
-                    setIsCheckoutLoading(false);
-                    setTimeout(() => {
-                      toaster.push(
-                        <Notification
-                          type="success"
-                          header="Order Completed Successfully!"
-                        >
-                          Your order #{data.order_id?.slice(-8)} has been placed
-                          and is being prepared! You can view it in "Current
-                          Orders".
-                        </Notification>,
-                        { placement: "topEnd", duration: 5000 }
-                      );
+                const cartChangedEvent = new CustomEvent("cartChanged", {
+                  detail: {
+                    hideLoadingCallback: () => {
+                      setIsCheckoutLoading(false);
+                      setTimeout(() => {
+                        toaster.push(
+                          <Notification
+                            type="success"
+                            header="Order Completed Successfully!"
+                          >
+                            Your order #{data.order_id?.slice(-8)} has been
+                            placed and is being prepared! You can view it in
+                            "Current Orders".
+                          </Notification>,
+                          { placement: "topEnd", duration: 5000 }
+                        );
                       }, 100);
+                    },
                   },
-                },
-              });
-              window.dispatchEvent(cartChangedEvent);
+                });
+                window.dispatchEvent(cartChangedEvent);
               }, 1000);
             }
           }

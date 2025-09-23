@@ -14,7 +14,9 @@ function ViewOrderDetailsPage() {
   const [order, setOrder] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [orderType, setOrderType] = useState<"regular" | "reel" | "restaurant" | null>(null);
+  const [orderType, setOrderType] = useState<
+    "regular" | "reel" | "restaurant" | null
+  >(null);
 
   useEffect(() => {
     if (!orderId || !router.isReady) return;
@@ -53,7 +55,9 @@ function ViewOrderDetailsPage() {
         }
 
         // If not found as reel order, try as restaurant order
-        res = await fetch(`/api/queries/restaurant-order-details?id=${orderId}`);
+        res = await fetch(
+          `/api/queries/restaurant-order-details?id=${orderId}`
+        );
 
         if (!res.ok) {
           if (res.status === 404) {

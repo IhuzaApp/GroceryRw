@@ -4,6 +4,7 @@ import { Message, Button } from "rsuite";
 import toast from "react-hot-toast";
 import { logger } from "../../utils/logger";
 import { formatCurrencySync } from "../../utils/formatCurrency";
+import { useTheme } from "../../context/ThemeContext";
 
 interface Order {
   id: string;
@@ -49,6 +50,7 @@ export default function NotificationSystem({
   onViewBatchDetails,
 }: NotificationSystemProps) {
   const { data: session } = useSession();
+  const { theme } = useTheme();
   const [isListening, setIsListening] = useState(false);
   const [notificationPermission, setNotificationPermission] =
     useState<NotificationPermission>("default");
@@ -174,6 +176,57 @@ export default function NotificationSystem({
     );
   };
 
+  const sendFirebaseNotification = async (
+    order: Order,
+    type: "batch" | "warning" = "batch"
+  ) => {
+    try {
+      if (!session?.user?.id) return;
+
+      const payload = {
+        shopperId: session.user.id,
+        orderId: order.id,
+        shopName: order.shopName,
+        customerAddress: order.customerAddress,
+        distance: order.distance,
+        itemsCount: order.itemsCount || 0,
+        estimatedEarnings: order.estimatedEarnings || 0,
+        orderType: order.orderType || "regular",
+        ...(type === "warning" && { timeRemaining: 20 }),
+      };
+
+      const endpoint = type === "warning" 
+        ? "/api/fcm/send-warning-notification"
+        : "/api/fcm/send-batch-notification";
+
+      const response = await fetch(endpoint, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(payload),
+      });
+
+      if (response.ok) {
+        logger.info(
+          `Firebase ${type} notification sent successfully for order ${order.id}`,
+          "NotificationSystem"
+        );
+      } else {
+        logger.warn(
+          `Failed to send Firebase ${type} notification: ${response.statusText}`,
+          "NotificationSystem"
+        );
+      }
+    } catch (error) {
+      logger.error(
+        `Error sending Firebase ${type} notification:`,
+        "NotificationSystem",
+        error
+      );
+    }
+  };
+
   const showToast = (
     order: Order,
     type: "info" | "success" | "warning" | "error" = "info"
@@ -190,59 +243,29 @@ export default function NotificationSystem({
         <div
           className={`${
             t.visible ? "animate-enter" : "animate-leave"
-          } pointer-events-auto flex w-full max-w-md rounded-lg bg-white shadow-lg ring-1 ring-black ring-opacity-5`}
+          } pointer-events-auto flex w-full max-w-md rounded-xl shadow-2xl backdrop-blur-lg ${
+            theme === "dark" 
+              ? "bg-gradient-to-r from-blue-600 to-purple-600 ring-1 ring-white ring-opacity-20" 
+              : "bg-gradient-to-r from-blue-500 to-purple-500 ring-1 ring-black ring-opacity-10"
+          }`}
+          style={{
+            background: theme === "dark" 
+              ? 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)' 
+              : 'linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%)',
+            backdropFilter: 'blur(10px)',
+            border: theme === "dark" 
+              ? '1px solid rgba(255,255,255,0.2)' 
+              : '1px solid rgba(0,0,0,0.1)',
+          }}
         >
           <div className="w-0 flex-1 p-4">
             <div className="flex items-start">
               <div className="flex-shrink-0">
-                {type === "success" && (
+                <div className={`flex h-12 w-12 items-center justify-center rounded-full backdrop-blur-sm ${
+                  theme === "dark" ? "bg-white/20" : "bg-white/30"
+                }`}>
                   <svg
-                    className="h-6 w-6 text-green-400"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth="2"
-                      d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
-                    />
-                  </svg>
-                )}
-                {type === "warning" && (
-                  <svg
-                    className="h-6 w-6 text-yellow-400"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth="2"
-                      d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z"
-                    />
-                  </svg>
-                )}
-                {type === "error" && (
-                  <svg
-                    className="h-6 w-6 text-red-400"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth="2"
-                      d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                    />
-                  </svg>
-                )}
-                {type === "info" && (
-                  <svg
-                    className="h-6 w-6 text-blue-400"
+                    className="h-6 w-6 text-white"
                     fill="none"
                     viewBox="0 0 24 24"
                     stroke="currentColor"
@@ -254,16 +277,16 @@ export default function NotificationSystem({
                       d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
                     />
                   </svg>
-                )}
+                </div>
               </div>
               <div className="ml-3 flex-1">
-                <p className="text-sm font-medium text-gray-900">New Batch!</p>
-                <div className="mt-1 text-sm text-gray-500">
-                  <div>{order.customerAddress}</div>
-                  <div>
+                <p className="text-sm font-bold text-white">🚀 New Batch Available!</p>
+                <div className="mt-1 text-sm text-white/90">
+                  <div className="font-medium">{order.customerAddress}</div>
+                  <div className="text-white/80">
                     {order.shopName} ({order.distance}km)
                   </div>
-                  <div className="mt-1 font-medium text-green-600">
+                  <div className="mt-1 font-bold text-white">
                     📦 {order.itemsCount || 0} items • 💰{" "}
                     {formatCurrencySync(order.estimatedEarnings || 0)}
                   </div>
@@ -275,9 +298,13 @@ export default function NotificationSystem({
                       onAcceptBatch?.(order.id);
                       toast.dismiss(t.id);
                     }}
-                    className="rounded bg-blue-600 px-3 py-1 text-sm text-white hover:bg-blue-700"
+                    className={`rounded-lg backdrop-blur-sm px-4 py-2 text-sm font-medium text-white focus:outline-none focus:ring-2 focus:ring-white/50 transition-all duration-200 ${
+                      theme === "dark" 
+                        ? "bg-white/20 hover:bg-white/30" 
+                        : "bg-white/25 hover:bg-white/35"
+                    }`}
                   >
-                    Accept Batch
+                    ✅ Accept Batch
                   </button>
                   <button
                     onClick={() => {
@@ -293,21 +320,25 @@ export default function NotificationSystem({
                         "NotificationSystem"
                       );
                     }}
-                    className="rounded bg-gray-300 px-3 py-1 text-sm text-gray-700 hover:bg-gray-400"
+                    className={`rounded-lg backdrop-blur-sm px-4 py-2 text-sm font-medium text-white/80 focus:outline-none focus:ring-2 focus:ring-white/50 transition-all duration-200 ${
+                      theme === "dark" 
+                        ? "bg-white/10 hover:bg-white/20" 
+                        : "bg-white/15 hover:bg-white/25"
+                    }`}
                   >
-                    Skip
+                    ⏭️ Skip
                   </button>
                 </div>
               </div>
             </div>
           </div>
-          <div className="flex border-l border-gray-200">
+          <div className="flex border-l border-white/20">
             <button
               onClick={() => {
                 removeToastForOrder(order.id);
                 toast.dismiss(t.id);
               }}
-              className="flex w-full items-center justify-center rounded-none rounded-r-lg border border-transparent p-4 text-sm font-medium text-gray-400 hover:text-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="flex w-full items-center justify-center rounded-none rounded-r-xl border border-transparent p-4 text-sm font-medium text-white/70 hover:text-white hover:bg-white/10 focus:outline-none focus:ring-2 focus:ring-white/50 transition-all duration-200"
             >
               <svg className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
                 <path
@@ -322,12 +353,24 @@ export default function NotificationSystem({
       ),
       {
         duration: Infinity, // Never auto-dismiss
-        position: "top-right",
+        position: "top-center",
+        style: {
+          background: 'transparent',
+          boxShadow: 'none',
+          maxWidth: '420px',
+          margin: '0 auto',
+        },
+        className: 'batch-notification-toast',
       }
     );
 
     // Store the toast key for this order
     activeToasts.current.set(order.id, toastKey);
+
+    // Send Firebase push notification for batch notifications
+    if (type === "info") {
+      sendFirebaseNotification(order, "batch");
+    }
 
     return toastKey;
   };
@@ -454,40 +497,57 @@ export default function NotificationSystem({
         <div
           className={`${
             t.visible ? "animate-enter" : "animate-leave"
-          } pointer-events-auto flex w-full max-w-md rounded-lg border-l-4 border-yellow-400 bg-white shadow-lg ring-1 ring-black ring-opacity-5`}
+          } pointer-events-auto flex w-full max-w-md rounded-xl shadow-2xl backdrop-blur-lg ${
+            theme === "dark" 
+              ? "bg-gradient-to-r from-orange-500 to-red-500 ring-1 ring-white ring-opacity-20" 
+              : "bg-gradient-to-r from-orange-400 to-red-400 ring-1 ring-black ring-opacity-10"
+          }`}
+          style={{
+            background: theme === "dark" 
+              ? 'linear-gradient(135deg, #f59e0b 0%, #ef4444 100%)' 
+              : 'linear-gradient(135deg, #fb923c 0%, #f87171 100%)',
+            backdropFilter: 'blur(10px)',
+            border: theme === "dark" 
+              ? '1px solid rgba(255,255,255,0.2)' 
+              : '1px solid rgba(0,0,0,0.1)',
+          }}
         >
           <div className="w-0 flex-1 p-4">
             <div className="flex items-start">
               <div className="flex-shrink-0">
-                <svg
-                  className="h-6 w-6 text-yellow-400"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth="2"
-                    d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z"
-                  />
-                </svg>
+                <div className={`flex h-12 w-12 items-center justify-center rounded-full backdrop-blur-sm ${
+                  theme === "dark" ? "bg-white/20" : "bg-white/30"
+                }`}>
+                  <svg
+                    className="h-6 w-6 text-white"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth="2"
+                      d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z"
+                    />
+                  </svg>
+                </div>
               </div>
               <div className="ml-3 flex-1">
-                <p className="text-sm font-medium text-gray-900">
+                <p className="text-sm font-bold text-white">
                   ⚠️ Batch Expiring Soon!
                 </p>
-                <div className="mt-1 text-sm text-gray-500">
-                  <div>{order.customerAddress}</div>
-                  <div>
+                <div className="mt-1 text-sm text-white/90">
+                  <div className="font-medium">{order.customerAddress}</div>
+                  <div className="text-white/80">
                     {order.shopName} ({order.distance}km)
                   </div>
-                  <div className="mt-1 font-medium text-green-600">
+                  <div className="mt-1 font-bold text-white">
                     📦 {order.itemsCount || 0} items • 💰{" "}
                     {formatCurrencySync(order.estimatedEarnings || 0)}
                   </div>
-                  <div className="mt-1 font-medium text-orange-600">
-                    ⚠️ This batch will be reassigned in 20 seconds!
+                  <div className="mt-1 font-bold text-white animate-pulse">
+                    ⏰ This batch will be reassigned in 20 seconds!
                   </div>
                 </div>
                 <div className="mt-3 flex gap-2">
@@ -497,9 +557,13 @@ export default function NotificationSystem({
                       onAcceptBatch?.(order.id);
                       toast.dismiss(t.id);
                     }}
-                    className="rounded bg-orange-600 px-3 py-1 text-sm text-white hover:bg-orange-700"
+                    className={`rounded-lg backdrop-blur-sm px-4 py-2 text-sm font-medium text-white focus:outline-none focus:ring-2 focus:ring-white/50 transition-all duration-200 animate-pulse ${
+                      theme === "dark" 
+                        ? "bg-white/20 hover:bg-white/30" 
+                        : "bg-white/25 hover:bg-white/35"
+                    }`}
                   >
-                    Accept Now
+                    🚀 Accept Now
                   </button>
                   <button
                     onClick={() => {
@@ -515,21 +579,25 @@ export default function NotificationSystem({
                         "NotificationSystem"
                       );
                     }}
-                    className="rounded bg-gray-300 px-3 py-1 text-sm text-gray-700 hover:bg-gray-400"
+                    className={`rounded-lg backdrop-blur-sm px-4 py-2 text-sm font-medium text-white/80 focus:outline-none focus:ring-2 focus:ring-white/50 transition-all duration-200 ${
+                      theme === "dark" 
+                        ? "bg-white/10 hover:bg-white/20" 
+                        : "bg-white/15 hover:bg-white/25"
+                    }`}
                   >
-                    Skip
+                    ⏭️ Skip
                   </button>
                 </div>
               </div>
             </div>
           </div>
-          <div className="flex border-l border-gray-200">
+          <div className="flex border-l border-white/20">
             <button
               onClick={() => {
                 removeToastForOrder(order.id);
                 toast.dismiss(t.id);
               }}
-              className="flex w-full items-center justify-center rounded-none rounded-r-lg border border-transparent p-4 text-sm font-medium text-gray-400 hover:text-gray-500 focus:outline-none focus:ring-2 focus:ring-orange-500"
+              className="flex w-full items-center justify-center rounded-none rounded-r-xl border border-transparent p-4 text-sm font-medium text-white/70 hover:text-white hover:bg-white/10 focus:outline-none focus:ring-2 focus:ring-white/50 transition-all duration-200"
             >
               <svg className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
                 <path
@@ -544,12 +612,22 @@ export default function NotificationSystem({
       ),
       {
         duration: Infinity, // Never auto-dismiss
-        position: "top-right",
+        position: "top-center",
+        style: {
+          background: 'transparent',
+          boxShadow: 'none',
+          maxWidth: '420px',
+          margin: '0 auto',
+        },
+        className: 'batch-warning-toast',
       }
     );
 
     // Store the warning toast key for this order
     activeToasts.current.set(order.id, warningToastKey);
+
+    // Send Firebase push notification for warning
+    sendFirebaseNotification(order, "warning");
 
     // Show warning desktop notification
     if (
@@ -818,6 +896,9 @@ export default function NotificationSystem({
             await playNotificationSound(data.settings?.sound_settings);
             showToast(orderForNotification);
             showDesktopNotification(orderForNotification);
+            
+            // Send Firebase push notification
+            sendFirebaseNotification(orderForNotification, "batch");
 
             // Set up warning notification after 40 seconds
             const warningTimeout = setTimeout(() => {
