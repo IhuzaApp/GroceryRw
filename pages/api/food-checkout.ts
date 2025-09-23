@@ -158,13 +158,16 @@ export default async function handler(
 
     const totalAmount = subtotal + deliveryFeeAmount - discountAmount;
 
-    // Generate OrderID for restaurant order
-    const OrderID = `R${Date.now()}${Math.random()
-      .toString(36)
-      .substr(2, 5)
-      .toUpperCase()}`;
+    // Generate OrderID for restaurant order (as string)
+    const timestamp = Date.now();
+    const random = Math.floor(Math.random() * 10000);
+    const OrderID = `R${timestamp}${random.toString().padStart(4, '0')}W${Math.random().toString(36).substring(2, 6).toUpperCase()}`;
 
     // Step 1: Create the food order using GraphQL mutation
+    if (!hasuraClient) {
+      return res.status(500).json({ error: "Database connection error" });
+    }
+
     const orderResponse = await hasuraClient.request(CREATE_FOOD_ORDER, {
       user_id: session.user.id,
       restaurant_id,
@@ -176,7 +179,7 @@ export default async function handler(
       delivery_time: delivery_time,
       delivery_notes: delivery_notes || null,
       OrderID: OrderID,
-    });
+    }) as any;
 
     if (
       !orderResponse.insert_restaurant_orders ||
@@ -190,7 +193,7 @@ export default async function handler(
 
     // Step 2: Add dishes to the order
     const dishPromises = items.map((item) =>
-      hasuraClient.request(ADD_DISHES_TO_ORDER, {
+      hasuraClient!.request(ADD_DISHES_TO_ORDER, {
         order_id: orderId,
         dish_id: item.dish_id,
         quantity: item.quantity.toString(),
@@ -198,7 +201,7 @@ export default async function handler(
       })
     );
 
-    const dishResults = await Promise.all(dishPromises);
+    const dishResults = await Promise.all(dishPromises) as any[];
 
     // Check if all dishes were added successfully
     const totalDishesAdded = dishResults.reduce(

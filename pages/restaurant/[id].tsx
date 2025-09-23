@@ -80,10 +80,10 @@ function RestaurantPage({ restaurant, dishes = [] }: RestaurantPageProps) {
 
     window.addEventListener("scroll", handleScroll);
     window.addEventListener("resize", handleResize);
-
+    
     // Initial check
     handleResize();
-
+    
     return () => {
       window.removeEventListener("scroll", handleScroll);
       window.removeEventListener("resize", handleResize);
@@ -120,12 +120,12 @@ function RestaurantPage({ restaurant, dishes = [] }: RestaurantPageProps) {
     return (dishes || []).reduce((total, dish) => {
       const quantity = cartItems[dish.id] || 0;
       let price = parseFloat(dish.price);
-
+      
       // Use happy hour pricing if applicable
       if (getPromoType(dish) === "happyhour") {
         price = getHappyHourPricing(dish).discountedPrice;
       }
-
+      
       return total + price * quantity;
     }, 0);
   };
@@ -143,47 +143,47 @@ function RestaurantPage({ restaurant, dishes = [] }: RestaurantPageProps) {
   // Helper function to render ingredients safely
   const renderIngredients = (ingredients: string | any) => {
     if (!ingredients) return null;
-
+    
     if (typeof ingredients === "string") {
       return ingredients;
     }
-
+    
     if (typeof ingredients === "object") {
       // If it's an array of ingredients
       if (Array.isArray(ingredients)) {
         return ingredients
           .map((ingredient) => {
-            // Handle each ingredient item
+          // Handle each ingredient item
             if (typeof ingredient === "string") {
-              return ingredient;
+            return ingredient;
             } else if (typeof ingredient === "object" && ingredient !== null) {
-              // Try to extract meaningful data from the object
-              if (ingredient.name) {
-                return ingredient.name;
-              } else if (ingredient.ingredient) {
-                return ingredient.ingredient;
-              } else if (ingredient.title) {
-                return ingredient.title;
-              } else if (ingredient.value) {
-                return ingredient.value;
-              } else {
-                // If it's an object but we don't know its structure, try to get the first string value
+            // Try to extract meaningful data from the object
+            if (ingredient.name) {
+              return ingredient.name;
+            } else if (ingredient.ingredient) {
+              return ingredient.ingredient;
+            } else if (ingredient.title) {
+              return ingredient.title;
+            } else if (ingredient.value) {
+              return ingredient.value;
+            } else {
+              // If it's an object but we don't know its structure, try to get the first string value
                 const values = Object.values(ingredient).filter(
                   (val) => typeof val === "string" && val.trim() !== ""
-                );
+              );
                 return values.length > 0 ? values[0] : "Unknown ingredient";
-              }
             }
-            return String(ingredient);
+          }
+          return String(ingredient);
           })
           .join(", ");
       }
-
+      
       // If it's a single object with a name property
       if (ingredients.name) {
         return ingredients.name;
       }
-
+      
       // If it's a single object, try to extract meaningful data
       if (typeof ingredients === "object" && ingredients !== null) {
         if (ingredients.ingredient) {
@@ -201,29 +201,29 @@ function RestaurantPage({ restaurant, dishes = [] }: RestaurantPageProps) {
         }
       }
     }
-
+    
     return String(ingredients);
   };
 
   // Helper function to detect promo type
   const getPromoType = (dish: Dish) => {
     if (!dish.promo) return null;
-
+    
     // Check for buy-one-get-one (BOGO) promo
     if (dish.promo_type === "bogo" || dish.promo_type === "plus one") {
       return "bogo";
     }
-
+    
     // Check for happy hour promo
     if (dish.promo_type === "happyhour") {
       return "happyhour";
     }
-
+    
     // Check for discount promo
     if (dish.discount && dish.discount !== "0" && dish.discount !== "0%") {
       return "discount";
     }
-
+    
     // Default promo (could be other types)
     return "promo";
   };
@@ -236,14 +236,14 @@ function RestaurantPage({ restaurant, dishes = [] }: RestaurantPageProps) {
     const promoTypes = Array.from(
       new Set((dishes || []).map((dish) => getPromoType(dish)).filter(Boolean))
     );
-
+    
     return [
       "All",
       ...promoTypes.map((promo) => `Promo: ${promo}`),
       ...dishCategories,
     ];
   }, [dishes]);
-
+  
   // Filter dishes by selected category and search query
   const filteredDishes = useMemo(() => {
     return (dishes || []).filter((dish) => {
@@ -252,15 +252,15 @@ function RestaurantPage({ restaurant, dishes = [] }: RestaurantPageProps) {
         (dish.category || "Other") === selectedCategory ||
         (selectedCategory.startsWith("Promo: ") &&
           getPromoType(dish) === selectedCategory.replace("Promo: ", ""));
-
+      
       const matchesSearch =
         !searchQuery ||
         dish.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
         dish.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
         (dish.ingredients &&
           typeof dish.ingredients === "string" &&
-          dish.ingredients.toLowerCase().includes(searchQuery.toLowerCase()));
-
+         dish.ingredients.toLowerCase().includes(searchQuery.toLowerCase()));
+      
       return matchesCategory && matchesSearch;
     });
   }, [dishes, selectedCategory, searchQuery]);
@@ -268,8 +268,8 @@ function RestaurantPage({ restaurant, dishes = [] }: RestaurantPageProps) {
   // Helper function to calculate happy hour pricing
   const getHappyHourPricing = (dish: Dish) => {
     if (dish.promo_type !== "happyhour" || !dish.discount) {
-      return {
-        originalPrice: parseFloat(dish.price),
+      return { 
+        originalPrice: parseFloat(dish.price), 
         discountedPrice: parseFloat(dish.price),
         discountType: "none",
         discountValue: 0,
@@ -285,8 +285,8 @@ function RestaurantPage({ restaurant, dishes = [] }: RestaurantPageProps) {
       const discountPercent = parseFloat(discount.replace("%", ""));
       const discountedPrice = originalPrice * (1 - discountPercent / 100);
       const savings = originalPrice - discountedPrice;
-      return {
-        originalPrice,
+      return { 
+        originalPrice, 
         discountedPrice,
         discountType: "percentage",
         discountValue: discountPercent,
@@ -297,8 +297,8 @@ function RestaurantPage({ restaurant, dishes = [] }: RestaurantPageProps) {
       const discountAmount = parseFloat(discount);
       const discountedPrice = Math.max(0, originalPrice - discountAmount);
       const savings = originalPrice - discountedPrice;
-      return {
-        originalPrice,
+      return { 
+        originalPrice, 
         discountedPrice,
         discountType: "fixed",
         discountValue: discountAmount,
@@ -310,9 +310,9 @@ function RestaurantPage({ restaurant, dishes = [] }: RestaurantPageProps) {
   // Helper function to render promo sticker
   const renderPromoSticker = (dish: Dish) => {
     const promoType = getPromoType(dish);
-
+    
     if (!promoType) return null;
-
+    
     switch (promoType) {
       case "bogo":
         return (
@@ -324,8 +324,8 @@ function RestaurantPage({ restaurant, dishes = [] }: RestaurantPageProps) {
         const pricing = getHappyHourPricing(dish);
         const discountText =
           pricing.discountType === "percentage"
-            ? `${pricing.discountValue}% OFF`
-            : `$${pricing.discountValue} OFF`;
+          ? `${pricing.discountValue}% OFF`
+          : `$${pricing.discountValue} OFF`;
         return (
           <div className="absolute -right-1 -top-1 z-10 animate-pulse rounded-full bg-gradient-to-r from-purple-500 to-purple-600 px-2 py-1 text-xs font-bold !text-white shadow-lg ring-2 ring-purple-200">
             <div className="text-center">
@@ -357,10 +357,10 @@ function RestaurantPage({ restaurant, dishes = [] }: RestaurantPageProps) {
     isSelected: boolean
   ) => {
     if (!promoType) return "";
-
+    
     const baseClasses =
       "rounded-full px-4 py-2 text-sm font-medium transition-colors";
-
+    
     switch (promoType) {
       case "bogo":
         return isSelected
@@ -442,7 +442,7 @@ function RestaurantPage({ restaurant, dishes = [] }: RestaurantPageProps) {
                     strokeWidth={2}
                     d="M15 19l-7-7 7-7"
                   />
-                </svg>
+                      </svg>
                 <span className="font-medium">Back</span>
               </Link>
 
@@ -453,7 +453,7 @@ function RestaurantPage({ restaurant, dishes = [] }: RestaurantPageProps) {
                   onSearch={handleSearch}
                   isSticky={true}
                 />
-              </div>
+                  </div>
 
               {/* Restaurant Name */}
               <div
@@ -484,7 +484,7 @@ function RestaurantPage({ restaurant, dishes = [] }: RestaurantPageProps) {
                 const promoType = isPromo
                   ? category.replace("Promo: ", "")
                   : null;
-
+                
                 return (
                   <button
                     key={category}
@@ -495,8 +495,8 @@ function RestaurantPage({ restaurant, dishes = [] }: RestaurantPageProps) {
                           ? getPromoButtonStyle(promoType, true)
                           : "bg-green-600 !text-white"
                         : isPromo
-                        ? getPromoButtonStyle(promoType, false)
-                        : "bg-gray-100 text-gray-700 hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600"
+                          ? getPromoButtonStyle(promoType, false)
+                          : "bg-gray-100 text-gray-700 hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600"
                     }`}
                   >
                     {isPromo && (
@@ -556,16 +556,16 @@ function RestaurantPage({ restaurant, dishes = [] }: RestaurantPageProps) {
                               strokeWidth={2}
                               d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"
                             />
-                          </svg>
+                  </svg>
                         )}
-                      </span>
+                  </span>
                     )}
                     {category}
                   </button>
                 );
               })}
-            </div>
-          </div>
+                </div>
+                </div>
 
           {/* Menu Items */}
           <RestaurantMenuItems

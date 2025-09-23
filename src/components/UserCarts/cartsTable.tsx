@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo, useRef } from "react";
 import { Input, Button, Checkbox } from "rsuite";
 import Image from "next/image";
 import CheckoutItems from "./checkout/checkoutCard";
@@ -206,9 +206,13 @@ export default function ItemCartTable({
   const [isLoadingItems, setIsLoadingItems] = useState<boolean>(true);
   const { removeItem: removeFoodItem, updateQuantity } = useFoodCart();
 
+  // Use ref to store the callback to avoid dependency issues
+  const onLoadingChangeRef = useRef(onLoadingChange);
+  onLoadingChangeRef.current = onLoadingChange;
+
   useEffect(() => {
     setIsLoadingItems(true);
-    onLoadingChange?.(true);
+    onLoadingChangeRef.current?.(true);
 
     if (isFoodCart && restaurant) {
       // Handle food cart items
@@ -226,27 +230,27 @@ export default function ItemCartTable({
       onLoadingChange?.(false);
     } else {
       // Handle regular shop cart items
-      fetch(`/api/cart-items?shop_id=${shopId}`)
-        .then((res) => res.json())
-        .then((data: { items?: ApiCartItem[] }) => {
-          const fetchedItems = data.items ?? [];
-          setCartItems(
+    fetch(`/api/cart-items?shop_id=${shopId}`)
+      .then((res) => res.json())
+      .then((data: { items?: ApiCartItem[] }) => {
+        const fetchedItems = data.items ?? [];
+        setCartItems(
             fetchedItems.map((item: ApiCartItem) => ({
               ...item,
               checked: true,
             }))
-          );
-        })
-        .catch((err) => {
-          logger.error("Failed to fetch cart items", "CartsTable", err);
-          setCartItems([]);
-        })
-        .finally(() => {
-          setIsLoadingItems(false);
-          onLoadingChange?.(false);
-        });
+        );
+      })
+      .catch((err) => {
+        logger.error("Failed to fetch cart items", "CartsTable", err);
+        setCartItems([]);
+      })
+      .finally(() => {
+        setIsLoadingItems(false);
+        onLoadingChangeRef.current?.(false);
+      });
     }
-  }, [shopId, onLoadingChange, isFoodCart, restaurant]);
+  }, [shopId, isFoodCart, restaurant]);
 
   const toggleCheck = (id: string) => {
     setCartItems((prev) =>
@@ -271,14 +275,14 @@ export default function ItemCartTable({
         );
       } else {
         // Handle regular shop cart quantity update
-        await fetch("/api/cart-items", {
-          method: "PUT",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ cart_item_id: id, quantity: newQty }),
-        });
-        setCartItems((prev) =>
-          prev.map((i) => (i.id === id ? { ...i, quantity: newQty } : i))
-        );
+      await fetch("/api/cart-items", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ cart_item_id: id, quantity: newQty }),
+      });
+      setCartItems((prev) =>
+        prev.map((i) => (i.id === id ? { ...i, quantity: newQty } : i))
+      );
       }
     } catch (err) {
       logger.error("Failed to increase quantity", "CartsTable", err);
@@ -306,14 +310,14 @@ export default function ItemCartTable({
         );
       } else {
         // Handle regular shop cart quantity update
-        await fetch("/api/cart-items", {
-          method: "PUT",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ cart_item_id: id, quantity: newQty }),
-        });
-        setCartItems((prev) =>
-          prev.map((i) => (i.id === id ? { ...i, quantity: newQty } : i))
-        );
+      await fetch("/api/cart-items", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ cart_item_id: id, quantity: newQty }),
+      });
+      setCartItems((prev) =>
+        prev.map((i) => (i.id === id ? { ...i, quantity: newQty } : i))
+      );
       }
     } catch (err) {
       logger.error("Failed to decrease quantity", "CartsTable", err);
@@ -335,12 +339,12 @@ export default function ItemCartTable({
         setCartItems((prev) => prev.filter((i) => i.id !== id));
       } else {
         // Handle regular shop cart item removal
-        await fetch("/api/cart-items", {
-          method: "DELETE",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ cart_item_id: id }),
-        });
-        setCartItems((prev) => prev.filter((i) => i.id !== id));
+      await fetch("/api/cart-items", {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ cart_item_id: id }),
+      });
+      setCartItems((prev) => prev.filter((i) => i.id !== id));
       }
     } catch (err) {
       logger.error("Failed to delete cart item", "CartsTable", err);
@@ -368,17 +372,21 @@ export default function ItemCartTable({
   // Calculate total units and notify parent
   const totalUnits = cartItems.reduce((sum, item) => sum + item.quantity, 0);
 
-  useEffect(() => {
-    if (onTotalChange) {
-      onTotalChange(totalNumber);
-    }
-  }, [totalNumber, onTotalChange]);
+  // Call callbacks directly when values change, but only for shop carts
+  // Use useRef to track previous values and avoid unnecessary calls
+  const prevTotalRef = useRef(totalNumber);
+  const prevUnitsRef = useRef(totalUnits);
 
-  useEffect(() => {
-    if (onUnitsChange) {
-      onUnitsChange(totalUnits);
-    }
-  }, [totalUnits, onUnitsChange]);
+  // Only call callbacks for regular shop carts when values actually change
+  if (!isFoodCart && onTotalChange && typeof onTotalChange === 'function' && prevTotalRef.current !== totalNumber) {
+    onTotalChange(totalNumber);
+    prevTotalRef.current = totalNumber;
+  }
+
+  if (!isFoodCart && onUnitsChange && typeof onUnitsChange === 'function' && prevUnitsRef.current !== totalUnits) {
+    onUnitsChange(totalUnits);
+    prevUnitsRef.current = totalUnits;
+  }
 
   return (
     <>
