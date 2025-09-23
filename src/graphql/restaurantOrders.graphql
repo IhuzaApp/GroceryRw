@@ -1,0 +1,11 @@
+mutation addOrderedDishes($quantity: String = "", $price: String = "", $order_id: uuid = "", $id: uuid = "", $dish_id: uuid = "") {
+  insert_restaurant_dishe_orders(objects: {quantity: $quantity, price: $price, order_id: $order_id, dish_id: $dish_id}) {
+    affected_rows
+  }
+}
+
+mutation addRestaurantOrders($delivery_address_id: uuid = "", $delivery_fee: String = "", $delivery_notes: String = "", $delivery_time: String = "", $discount: String = "", $status: String = "", $total: String = "", $user_id: uuid = "", $voucher_code: String = "") {
+  insert_restaurant_orders(objects: {delivery_address_id: $delivery_address_id, delivery_fee: $delivery_fee, delivery_notes: $delivery_notes, delivery_time: $delivery_time, discount: $discount, found: false, status: $status, total: $total, user_id: $user_id, voucher_code: $voucher_code}) {
+    affected_rows
+  }
+}

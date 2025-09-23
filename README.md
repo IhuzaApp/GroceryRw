@@ -5063,6 +5063,113 @@ useEffect(() => {
 
 ---
 
+# Food Cart Preparation Time System
+
+## Overview
+
+The Food Cart Preparation Time System calculates realistic preparation time estimates for restaurant orders by considering multiple dishes that are prepared simultaneously. The system uses a sophisticated algorithm that accounts for the longest dish (bottleneck) plus the efficiency gained from preparing other dishes at the same time.
+
+## Preparation Time Calculation Algorithm
+
+### Formula
+
+```
+Preparation Time = Highest Dish Time + (Average of Lower Times × Efficiency Factor)
+```
+
+### Efficiency Factors
+
+- **Short Preparation Times (≤30 minutes)**: 100% efficiency (full average added)
+- **Long Preparation Times (>30 minutes)**: 70% efficiency (conservative estimate)
+
+### Maximum Cap
+
+- **Preparation time is capped at 90 minutes (1.5 hours)**
+- **Dishes above 1 hour can have exceptions but never exceed 1.5 hours**
+
+## Calculation Examples
+
+### Example 1: Pizza + Salad
+```
+Pizza: 20min, Salad: 10min
+Highest: 20min, Lower times: [10min]
+Average of lower: 10min
+Since maxTime ≤ 30min: 20 + 10 = 30min
+Total: 30min prep + 15min delivery = 45min total
+```
+
+### Example 2: Burger + Fries + Drink
+```
+Burger: 25min, Fries: 15min, Drink: 5min
+Highest: 25min, Lower times: [15min, 5min]
+Average of lower: (15 + 5) ÷ 2 = 10min
+Since maxTime ≤ 30min: 25 + 10 = 35min
+Total: 35min prep + 15min delivery = 50min total
+```
+
+### Example 3: Long Preparation Times
+```
+Steak: 75min, Pasta: 45min, Salad: 15min
+Highest: 75min, Lower times: [45min, 15min]
+Average of lower: (45 + 15) ÷ 2 = 30min
+Since maxTime > 30min: 75 + (30 × 0.7) = 75 + 21 = 96min
+Capped at 90min: 90min (1.5 hours)
+Total: 90min prep + 15min delivery = 105min total
+```
+
+## Implementation Details
+
+### Core Components
+
+- **Location**: `src/components/UserCarts/checkout/checkoutCard.tsx`
+- **Function**: `parsePreparationTimeString()` - Parses time strings from database
+- **Logic**: Weighted calculation with efficiency factors
+
+### Time String Parsing
+
+The system handles various time formats from the database:
+
+- **Minutes**: "15min", "30min" → 15, 30 minutes
+- **Hours**: "1hr", "2hr" → 60, 120 minutes  
+- **Mixed**: "2hr30min", "1hr15min" → 150, 75 minutes
+- **Empty**: "" → 0 minutes (immediately available)
+- **Numbers**: "15", "30" → 15, 30 minutes
+
+### API Integration
+
+- **Endpoint**: `/api/food-checkout`
+- **Data**: Includes `preparingTime` for each dish
+- **Display**: Shows preparation + delivery time breakdown
+
+## Delivery Time Display
+
+### Food Orders
+```
+"Estimated delivery: 45 minutes (prep: 30min + delivery: 15min)"
+```
+
+### Regular Shop Orders
+```
+"Will be delivered in 45 minutes"
+```
+
+## Benefits
+
+1. **Realistic Estimates**: Accounts for simultaneous preparation
+2. **Bottleneck Awareness**: Never underestimates the longest dish
+3. **Efficiency Calculation**: Considers kitchen workflow optimization
+4. **User Experience**: Clear preparation time expectations
+5. **Scalable**: Works for any number of dishes
+
+## Future Enhancements
+
+1. **Restaurant-Specific Factors**: Different efficiency rates per restaurant
+2. **Time-of-Day Adjustments**: Rush hour vs. off-peak preparation times
+3. **Dish Complexity Scoring**: Weighted preparation times based on dish complexity
+4. **Historical Data**: Machine learning for more accurate estimates
+
+---
+
 # Revenue Management System
 
 ## Overview

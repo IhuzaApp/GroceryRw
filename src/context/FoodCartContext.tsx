@@ -38,6 +38,7 @@ interface FoodCartContextType {
   clearCart: () => void;
   clearRestaurant: (restaurantId: string) => void;
   getRestaurantCart: (restaurantId: string) => FoodCartRestaurant | null;
+  checkAndClearExpiredSession: () => void;
 }
 
 const FoodCartContext = createContext<FoodCartContextType>({
@@ -50,36 +51,55 @@ const FoodCartContext = createContext<FoodCartContextType>({
   clearCart: () => {},
   clearRestaurant: () => {},
   getRestaurantCart: () => null,
+  checkAndClearExpiredSession: () => {},
 });
 
 const FOOD_CART_STORAGE_KEY = "foodCarts";
+const FOOD_CART_SESSION_DURATION = 2 * 60 * 60 * 1000; // 2 hours in milliseconds
 
 export const FoodCartProvider: React.FC<{ children: React.ReactNode }> = ({
   children,
 }) => {
   const [restaurants, setRestaurants] = useState<FoodCartRestaurant[]>([]);
 
-  // Load cart from localStorage on mount
+  // Load cart from localStorage on mount with session expiration check
   useEffect(() => {
     const loadCart = () => {
       try {
         const savedCart = localStorage.getItem(FOOD_CART_STORAGE_KEY);
         if (savedCart) {
           const parsedCart = JSON.parse(savedCart);
+          
+          // Check if cart session has expired (2 hours)
+          if (parsedCart.timestamp && Date.now() - parsedCart.timestamp > FOOD_CART_SESSION_DURATION) {
+            // Session expired, clear the cart
+            localStorage.removeItem(FOOD_CART_STORAGE_KEY);
+            setRestaurants([]);
+            return;
+          }
+          
+          // Session is still valid, load the cart
           setRestaurants(parsedCart.restaurants || []);
         }
       } catch (error) {
         console.error("Error loading food cart from localStorage:", error);
+        // Clear corrupted data
+        localStorage.removeItem(FOOD_CART_STORAGE_KEY);
+        setRestaurants([]);
       }
     };
 
     loadCart();
   }, []);
 
-  // Save cart to localStorage whenever restaurants change
+  // Save cart to localStorage whenever restaurants change with timestamp
   useEffect(() => {
     try {
-      localStorage.setItem(FOOD_CART_STORAGE_KEY, JSON.stringify({ restaurants }));
+      const cartData = {
+        restaurants,
+        timestamp: Date.now(), // Add current timestamp for session tracking
+      };
+      localStorage.setItem(FOOD_CART_STORAGE_KEY, JSON.stringify(cartData));
     } catch (error) {
       console.error("Error saving food cart to localStorage:", error);
     }
@@ -257,6 +277,8 @@ export const FoodCartProvider: React.FC<{ children: React.ReactNode }> = ({
 
   const clearCart = () => {
     setRestaurants([]);
+    // Clear localStorage completely
+    localStorage.removeItem(FOOD_CART_STORAGE_KEY);
     // Dispatch event to notify other components
     setTimeout(() => {
       window.dispatchEvent(new Event('foodCartChanged'));
@@ -277,6 +299,30 @@ export const FoodCartProvider: React.FC<{ children: React.ReactNode }> = ({
     return restaurants.find(r => r.id === restaurantId) || null;
   };
 
+  const checkAndClearExpiredSession = () => {
+    try {
+      const savedCart = localStorage.getItem(FOOD_CART_STORAGE_KEY);
+      if (savedCart) {
+        const parsedCart = JSON.parse(savedCart);
+        
+        // Check if cart session has expired (2 hours)
+        if (parsedCart.timestamp && Date.now() - parsedCart.timestamp > FOOD_CART_SESSION_DURATION) {
+          // Session expired, clear the cart
+          localStorage.removeItem(FOOD_CART_STORAGE_KEY);
+          setRestaurants([]);
+          return true; // Session was expired and cleared
+        }
+      }
+      return false; // Session is still valid or no cart exists
+    } catch (error) {
+      console.error("Error checking session expiration:", error);
+      // Clear corrupted data
+      localStorage.removeItem(FOOD_CART_STORAGE_KEY);
+      setRestaurants([]);
+      return true; // Session was cleared due to error
+    }
+  };
+
   return (
     <FoodCartContext.Provider
       value={{
@@ -289,6 +335,7 @@ export const FoodCartProvider: React.FC<{ children: React.ReactNode }> = ({
         clearCart,
         clearRestaurant,
         getRestaurantCart,
+        checkAndClearExpiredSession,
       }}
     >
       {children}
