@@ -337,12 +337,13 @@ export default async function handler(
     const reelOrders = reelOrdersData.reel_orders;
 
     // 3. Fetch restaurant orders
-    const restaurantOrdersData = await hasuraClient.request<RestaurantOrdersResponse>(
-      GET_RESTAURANT_ORDERS,
-      {
-        user_id: userId,
-      }
-    );
+    const restaurantOrdersData =
+      await hasuraClient.request<RestaurantOrdersResponse>(
+        GET_RESTAURANT_ORDERS,
+        {
+          user_id: userId,
+        }
+      );
     const restaurantOrders = restaurantOrdersData.restaurant_orders;
 
     logger.info(
@@ -438,9 +439,10 @@ export default async function handler(
     const enrichedRestaurantOrders = restaurantOrders.map((ro) => {
       // Calculate counts manually from the restaurant_dishe_orders array
       const itemsCount = ro.restaurant_dishe_orders?.length ?? 0;
-      const unitsCount = ro.restaurant_dishe_orders?.reduce((sum, item) => {
-        return sum + parseInt(item.quantity || "0");
-      }, 0) ?? 0;
+      const unitsCount =
+        ro.restaurant_dishe_orders?.reduce((sum, item) => {
+          return sum + parseInt(item.quantity || "0");
+        }, 0) ?? 0;
 
       const baseTotal = parseFloat(ro.total || "0");
       const deliveryFee = parseFloat(ro.delivery_fee || "0");
@@ -456,12 +458,14 @@ export default async function handler(
         delivery_time: ro.delivery_time,
         total: grandTotal,
         shopper_id: ro.shopper_id,
-        shop: ro.Restaurant ? {
-          id: ro.Restaurant.id,
-          name: ro.Restaurant.name,
-          address: ro.Restaurant.location,
-          image: ro.Restaurant.profile
-        } : null, // Use restaurant as shop for compatibility
+        shop: ro.Restaurant
+          ? {
+              id: ro.Restaurant.id,
+              name: ro.Restaurant.name,
+              address: ro.Restaurant.location,
+              image: ro.Restaurant.profile,
+            }
+          : null, // Use restaurant as shop for compatibility
         itemsCount,
         unitsCount,
         orderType: "restaurant" as const,
@@ -480,7 +484,11 @@ export default async function handler(
     });
 
     // 9. Combine and sort all orders by creation date (newest first)
-    const allOrders = [...enrichedRegularOrders, ...enrichedReelOrders, ...enrichedRestaurantOrders].sort(
+    const allOrders = [
+      ...enrichedRegularOrders,
+      ...enrichedReelOrders,
+      ...enrichedRestaurantOrders,
+    ].sort(
       (a, b) =>
         new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
     );

@@ -9,9 +9,7 @@ import { logger } from "../../../src/utils/logger";
 // Fetch restaurant order details with all related data
 const GET_RESTAURANT_ORDER_DETAILS = gql`
   query GetRestaurantOrderDetails($order_id: uuid!) {
-    restaurant_orders(
-      where: { id: { _eq: $order_id } }
-    ) {
+    restaurant_orders(where: { id: { _eq: $order_id } }) {
       id
       OrderID
       user_id
@@ -205,13 +203,18 @@ export default async function handler(
       return res.status(400).json({ error: "Order ID is required" });
     }
 
-    logger.info("Fetching restaurant order details", "RestaurantOrderDetailsAPI", { orderId, userId });
+    logger.info(
+      "Fetching restaurant order details",
+      "RestaurantOrderDetailsAPI",
+      { orderId, userId }
+    );
 
     // Fetch restaurant order details
-    const orderData = await hasuraClient.request<RestaurantOrderDetailsResponse>(
-      GET_RESTAURANT_ORDER_DETAILS,
-      { order_id: orderId }
-    );
+    const orderData =
+      await hasuraClient.request<RestaurantOrderDetailsResponse>(
+        GET_RESTAURANT_ORDER_DETAILS,
+        { order_id: orderId }
+      );
 
     const restaurantOrder = orderData.restaurant_orders[0];
 
@@ -226,14 +229,15 @@ export default async function handler(
 
     // Enrich the order data
     const itemsCount = restaurantOrder.restaurant_dishe_orders?.length ?? 0;
-    const unitsCount = restaurantOrder.restaurant_dishe_orders?.reduce((sum, item) => {
-      return sum + parseInt(item.quantity || "0");
-    }, 0) ?? 0;
+    const unitsCount =
+      restaurantOrder.restaurant_dishe_orders?.reduce((sum, item) => {
+        return sum + parseInt(item.quantity || "0");
+      }, 0) ?? 0;
 
     const baseTotal = parseFloat(restaurantOrder.total || "0");
     const deliveryFee = parseFloat(restaurantOrder.delivery_fee || "0");
     const discountAmount = parseFloat(restaurantOrder.discount || "0");
-    
+
     // Calculate subtotal (dishes total excluding delivery fee)
     const dishesTotal = baseTotal - deliveryFee;
     // Calculate tax (18% of dishes total)
@@ -254,12 +258,14 @@ export default async function handler(
       subtotal: subtotal,
       tax: tax,
       shopper_id: restaurantOrder.shopper_id,
-      shop: restaurantOrder.Restaurant ? {
-        id: restaurantOrder.Restaurant.id,
-        name: restaurantOrder.Restaurant.name,
-        address: restaurantOrder.Restaurant.location,
-        image: restaurantOrder.Restaurant.profile
-      } : null,
+      shop: restaurantOrder.Restaurant
+        ? {
+            id: restaurantOrder.Restaurant.id,
+            name: restaurantOrder.Restaurant.name,
+            address: restaurantOrder.Restaurant.location,
+            image: restaurantOrder.Restaurant.profile,
+          }
+        : null,
       itemsCount,
       unitsCount,
       orderType: "restaurant" as const,
@@ -276,15 +282,21 @@ export default async function handler(
       Address: restaurantOrder.Address,
       Restaurant: restaurantOrder.Restaurant,
       // Include dish orders with dish details
-      restaurant_dishe_orders: restaurantOrder.restaurant_dishe_orders.map(item => ({
-        ...item,
-        dish: item.restaurant_dishes
-      }))
+      restaurant_dishe_orders: restaurantOrder.restaurant_dishe_orders.map(
+        (item) => ({
+          ...item,
+          dish: item.restaurant_dishes,
+        })
+      ),
     };
 
     res.status(200).json({ order: enrichedOrder });
   } catch (error) {
-    logger.error("Error fetching restaurant order details", "RestaurantOrderDetailsAPI", error);
+    logger.error(
+      "Error fetching restaurant order details",
+      "RestaurantOrderDetailsAPI",
+      error
+    );
     res.status(500).json({ error: "Failed to fetch restaurant order details" });
   }
 }

@@ -44,11 +44,11 @@ export default async function handler(
     // Validate status values
     const validStatuses = [
       "WAITING_FOR_CONFIRMATION",
-      "PENDING", 
+      "PENDING",
       "CONFIRMED",
       "READY",
       "OUT_FOR_DELIVERY",
-      "DELIVERED"
+      "DELIVERED",
     ];
 
     if (!validStatuses.includes(status)) {

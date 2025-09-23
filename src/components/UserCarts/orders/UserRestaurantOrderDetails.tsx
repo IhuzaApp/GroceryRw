@@ -46,7 +46,9 @@ interface UserRestaurantOrderDetailsProps {
   order: any;
 }
 
-export default function UserRestaurantOrderDetails({ order }: UserRestaurantOrderDetailsProps) {
+export default function UserRestaurantOrderDetails({
+  order,
+}: UserRestaurantOrderDetailsProps) {
   const [feedbackModal, setFeedbackModal] = useState(false);
   const [rating, setRating] = useState(0);
   const [comment, setComment] = useState("");
@@ -79,40 +81,43 @@ export default function UserRestaurantOrderDetails({ order }: UserRestaurantOrde
     if (order.status !== "CONFIRMED") return;
 
     // Calculate total preparation time from all dishes
-    const totalPrepTimeMinutes = order.restaurant_dishe_orders?.reduce((total, item) => {
-      const prepTime = item.dish?.preparingTime || "0min";
-      const minutes = parseInt(prepTime.replace(/[^\d]/g, '')) || 0;
-      return Math.max(total, minutes); // Use the longest preparation time
-    }, 0) || 0;
+    const totalPrepTimeMinutes =
+      order.restaurant_dishe_orders?.reduce((total, item) => {
+        const prepTime = item.dish?.preparingTime || "0min";
+        const minutes = parseInt(prepTime.replace(/[^\d]/g, "")) || 0;
+        return Math.max(total, minutes); // Use the longest preparation time
+      }, 0) || 0;
 
     if (totalPrepTimeMinutes === 0) return;
 
     // Calculate time elapsed since order was confirmed
     const orderCreatedTime = new Date(order.created_at).getTime();
     const currentTime = new Date().getTime();
-    const elapsedMinutes = Math.floor((currentTime - orderCreatedTime) / (1000 * 60));
+    const elapsedMinutes = Math.floor(
+      (currentTime - orderCreatedTime) / (1000 * 60)
+    );
 
     // If preparation time has elapsed, update status to READY
     if (elapsedMinutes >= totalPrepTimeMinutes) {
       try {
-        const response = await fetch('/api/restaurant/update-order-status', {
-          method: 'POST',
+        const response = await fetch("/api/restaurant/update-order-status", {
+          method: "POST",
           headers: {
-            'Content-Type': 'application/json',
+            "Content-Type": "application/json",
           },
           body: JSON.stringify({
             orderId: order.id,
-            status: 'READY'
+            status: "READY",
           }),
         });
 
         if (response.ok) {
           // Update the local order status
-          order.status = 'READY';
+          order.status = "READY";
           window.location.reload(); // Refresh to show updated status
         }
       } catch (error) {
-        console.error('Error updating order status:', error);
+        console.error("Error updating order status:", error);
       }
     }
   };
@@ -122,10 +127,10 @@ export default function UserRestaurantOrderDetails({ order }: UserRestaurantOrde
     if (order.status === "CONFIRMED") {
       // Check immediately
       checkAndUpdatePreparationStatus();
-      
+
       // Check every minute
       const interval = setInterval(checkAndUpdatePreparationStatus, 60000);
-      
+
       return () => clearInterval(interval);
     }
   }, [order.status, order.created_at]);
@@ -240,7 +245,7 @@ export default function UserRestaurantOrderDetails({ order }: UserRestaurantOrde
 
   const steps = [
     "Order Placed",
-    "Confirmed", 
+    "Confirmed",
     "Ready",
     "Out for Delivery",
     "Delivered",
@@ -259,7 +264,10 @@ export default function UserRestaurantOrderDetails({ order }: UserRestaurantOrde
           </p>
         </div>
         <Link href="/CurrentPendingOrders">
-          <Button appearance="ghost" className="text-green-500 hover:text-green-600">
+          <Button
+            appearance="ghost"
+            className="text-green-500 hover:text-green-600"
+          >
             ← Back to Orders
           </Button>
         </Link>
@@ -269,7 +277,6 @@ export default function UserRestaurantOrderDetails({ order }: UserRestaurantOrde
       {order.Restaurant && (
         <Panel className="border border-gray-200 dark:border-gray-700">
           <div className="flex items-center gap-4">
-
             <div className="flex-grow">
               <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
                 {order.Restaurant.name}
@@ -296,64 +303,131 @@ export default function UserRestaurantOrderDetails({ order }: UserRestaurantOrde
           <div className="mt-3 flex flex-col gap-3 sm:flex-row sm:items-center sm:gap-4">
             {/* Current Status Badge */}
             <div className="flex items-center gap-3">
-              <div className={`flex h-10 w-10 items-center justify-center rounded-full ${
-                order.status === "WAITING_FOR_CONFIRMATION" ? "bg-yellow-100 dark:bg-yellow-900/20" :
-                order.status === "PENDING" ? "bg-blue-100 dark:bg-blue-900/20" :
-                order.status === "CONFIRMED" ? "bg-blue-100 dark:bg-blue-900/20" :
-                order.status === "READY" ? "bg-green-100 dark:bg-green-900/20" :
-                order.status === "OUT_FOR_DELIVERY" ? "bg-purple-100 dark:bg-purple-900/20" :
-                order.status === "DELIVERED" ? "bg-green-100 dark:bg-green-900/20" :
-                "bg-gray-100 dark:bg-gray-900/20"
-              }`}>
-                <svg className={`h-5 w-5 ${
-                  order.status === "WAITING_FOR_CONFIRMATION" ? "text-yellow-600 dark:text-yellow-400" :
-                  order.status === "PENDING" ? "text-blue-600 dark:text-blue-400" :
-                  order.status === "CONFIRMED" ? "text-blue-600 dark:text-blue-400" :
-                  order.status === "READY" ? "text-green-600 dark:text-green-400" :
-                  order.status === "OUT_FOR_DELIVERY" ? "text-purple-600 dark:text-purple-400" :
-                  order.status === "DELIVERED" ? "text-green-600 dark:text-green-400" :
-                  "text-gray-600 dark:text-gray-400"
-                }`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <div
+                className={`flex h-10 w-10 items-center justify-center rounded-full ${
+                  order.status === "WAITING_FOR_CONFIRMATION"
+                    ? "bg-yellow-100 dark:bg-yellow-900/20"
+                    : order.status === "PENDING"
+                    ? "bg-blue-100 dark:bg-blue-900/20"
+                    : order.status === "CONFIRMED"
+                    ? "bg-blue-100 dark:bg-blue-900/20"
+                    : order.status === "READY"
+                    ? "bg-green-100 dark:bg-green-900/20"
+                    : order.status === "OUT_FOR_DELIVERY"
+                    ? "bg-purple-100 dark:bg-purple-900/20"
+                    : order.status === "DELIVERED"
+                    ? "bg-green-100 dark:bg-green-900/20"
+                    : "bg-gray-100 dark:bg-gray-900/20"
+                }`}
+              >
+                <svg
+                  className={`h-5 w-5 ${
+                    order.status === "WAITING_FOR_CONFIRMATION"
+                      ? "text-yellow-600 dark:text-yellow-400"
+                      : order.status === "PENDING"
+                      ? "text-blue-600 dark:text-blue-400"
+                      : order.status === "CONFIRMED"
+                      ? "text-blue-600 dark:text-blue-400"
+                      : order.status === "READY"
+                      ? "text-green-600 dark:text-green-400"
+                      : order.status === "OUT_FOR_DELIVERY"
+                      ? "text-purple-600 dark:text-purple-400"
+                      : order.status === "DELIVERED"
+                      ? "text-green-600 dark:text-green-400"
+                      : "text-gray-600 dark:text-gray-400"
+                  }`}
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
                   {order.status === "WAITING_FOR_CONFIRMATION" ? (
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth="2"
+                      d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
+                    />
                   ) : order.status === "PENDING" ? (
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth="2"
+                      d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
+                    />
                   ) : order.status === "CONFIRMED" ? (
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth="2"
+                      d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
+                    />
                   ) : order.status === "READY" ? (
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth="2"
+                      d="M5 13l4 4L19 7"
+                    />
                   ) : order.status === "OUT_FOR_DELIVERY" ? (
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth="2"
+                      d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                    />
                   ) : order.status === "DELIVERED" ? (
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth="2"
+                      d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
+                    />
                   ) : (
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth="2"
+                      d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                    />
                   )}
                 </svg>
               </div>
               <div className="flex-grow">
-                <span className={`inline-flex items-center rounded-full px-3 py-1 text-sm font-medium ${
-                  order.status === "WAITING_FOR_CONFIRMATION" ? "bg-yellow-100 text-yellow-800 dark:bg-yellow-900/20 dark:text-yellow-300" :
-                  order.status === "PENDING" ? "bg-blue-100 text-blue-800 dark:bg-blue-900/20 dark:text-blue-300" :
-                  order.status === "CONFIRMED" ? "bg-blue-100 text-blue-800 dark:bg-blue-900/20 dark:text-blue-300" :
-                  order.status === "READY" ? "bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-300" :
-                  order.status === "OUT_FOR_DELIVERY" ? "bg-purple-100 text-purple-800 dark:bg-purple-900/20 dark:text-purple-300" :
-                  order.status === "DELIVERED" ? "bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-300" :
-                  "bg-gray-100 text-gray-800 dark:bg-gray-900/20 dark:text-gray-300"
-                }`}>
+                <span
+                  className={`inline-flex items-center rounded-full px-3 py-1 text-sm font-medium ${
+                    order.status === "WAITING_FOR_CONFIRMATION"
+                      ? "bg-yellow-100 text-yellow-800 dark:bg-yellow-900/20 dark:text-yellow-300"
+                      : order.status === "PENDING"
+                      ? "bg-blue-100 text-blue-800 dark:bg-blue-900/20 dark:text-blue-300"
+                      : order.status === "CONFIRMED"
+                      ? "bg-blue-100 text-blue-800 dark:bg-blue-900/20 dark:text-blue-300"
+                      : order.status === "READY"
+                      ? "bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-300"
+                      : order.status === "OUT_FOR_DELIVERY"
+                      ? "bg-purple-100 text-purple-800 dark:bg-purple-900/20 dark:text-purple-300"
+                      : order.status === "DELIVERED"
+                      ? "bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-300"
+                      : "bg-gray-100 text-gray-800 dark:bg-gray-900/20 dark:text-gray-300"
+                  }`}
+                >
                   {getOrderStatus()}
                 </span>
               </div>
             </div>
-            
+
             {/* Status Description */}
             <div className="text-sm text-gray-600 dark:text-gray-400">
-              {order.status === "WAITING_FOR_CONFIRMATION" && "Restaurant is reviewing your order"}
-              {order.status === "PENDING" && "Order confirmed and being prepared"}
-              {order.status === "CONFIRMED" && "Restaurant is preparing your food"}
+              {order.status === "WAITING_FOR_CONFIRMATION" &&
+                "Restaurant is reviewing your order"}
+              {order.status === "PENDING" &&
+                "Order confirmed and being prepared"}
+              {order.status === "CONFIRMED" &&
+                "Restaurant is preparing your food"}
               {order.status === "READY" && "Your order is ready for pickup"}
-              {order.status === "OUT_FOR_DELIVERY" && "Your order is on the way"}
-              {order.status === "DELIVERED" && "Order has been delivered successfully"}
+              {order.status === "OUT_FOR_DELIVERY" &&
+                "Your order is on the way"}
+              {order.status === "DELIVERED" &&
+                "Order has been delivered successfully"}
             </div>
           </div>
         </div>
@@ -378,7 +452,8 @@ export default function UserRestaurantOrderDetails({ order }: UserRestaurantOrde
           {order.Address && (
             <div className="space-y-2">
               <p className="text-gray-900 dark:text-white">
-                <strong>Address:</strong> {order.Address.street}, {order.Address.city} {order.Address.postal_code}
+                <strong>Address:</strong> {order.Address.street},{" "}
+                {order.Address.city} {order.Address.postal_code}
               </p>
               {order.delivery_notes && (
                 <p className="text-gray-600 dark:text-gray-400">
@@ -434,20 +509,40 @@ export default function UserRestaurantOrderDetails({ order }: UserRestaurantOrde
                   </p>
                 </div>
               </div>
-              
+
               {/* Shopper Contact Information */}
               <div className="space-y-2">
                 <div className="flex items-center gap-2">
-                  <svg className="h-4 w-4 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
+                  <svg
+                    className="h-4 w-4 text-green-500"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth="2"
+                      d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"
+                    />
                   </svg>
                   <span className="text-sm text-gray-600 dark:text-gray-400">
                     📞 +250 788 123 456
                   </span>
                 </div>
                 <div className="flex items-center gap-2">
-                  <svg className="h-4 w-4 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+                  <svg
+                    className="h-4 w-4 text-blue-500"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth="2"
+                      d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"
+                    />
                   </svg>
                   <span className="text-sm text-gray-600 dark:text-gray-400">
                     💬 Message Shopper
@@ -459,24 +554,40 @@ export default function UserRestaurantOrderDetails({ order }: UserRestaurantOrde
               <div className="rounded-lg bg-gray-50 p-3 dark:bg-gray-700">
                 <div className="space-y-1">
                   <p className="text-sm">
-                    <span className="font-medium text-gray-900 dark:text-white">Name:</span>{" "}
-                    <span className="text-gray-600 dark:text-gray-400">John Doe</span>
+                    <span className="font-medium text-gray-900 dark:text-white">
+                      Name:
+                    </span>{" "}
+                    <span className="text-gray-600 dark:text-gray-400">
+                      John Doe
+                    </span>
                   </p>
                   <p className="text-sm">
-                    <span className="font-medium text-gray-900 dark:text-white">Gender:</span>{" "}
-                    <span className="text-gray-600 dark:text-gray-400">Male</span>
+                    <span className="font-medium text-gray-900 dark:text-white">
+                      Gender:
+                    </span>{" "}
+                    <span className="text-gray-600 dark:text-gray-400">
+                      Male
+                    </span>
                   </p>
                   <div className="flex items-center gap-2">
-                    <span className="text-sm font-medium text-gray-900 dark:text-white">Rating:</span>
+                    <span className="text-sm font-medium text-gray-900 dark:text-white">
+                      Rating:
+                    </span>
                     <div className="flex items-center">
                       <div className="flex text-yellow-400">
                         {[...Array(5)].map((_, i) => (
-                          <svg key={i} className="h-4 w-4 fill-current" viewBox="0 0 20 20">
+                          <svg
+                            key={i}
+                            className="h-4 w-4 fill-current"
+                            viewBox="0 0 20 20"
+                          >
                             <path d="M10 15l-5.878 3.09 1.123-6.545L.489 6.91l6.572-.955L10 0l2.939 5.955 6.572.955-4.756 4.635 1.123 6.545z" />
                           </svg>
                         ))}
                       </div>
-                      <span className="ml-1 text-sm text-gray-600 dark:text-gray-400">(4.8)</span>
+                      <span className="ml-1 text-sm text-gray-600 dark:text-gray-400">
+                        (4.8)
+                      </span>
                     </div>
                   </div>
                 </div>
@@ -492,8 +603,18 @@ export default function UserRestaurantOrderDetails({ order }: UserRestaurantOrde
             <div className="flex items-center justify-center py-8">
               <div className="text-center">
                 <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-gray-100 dark:bg-gray-800">
-                  <svg className="h-8 w-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  <svg
+                    className="h-8 w-8 text-gray-400"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth="2"
+                      d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
+                    />
                   </svg>
                 </div>
                 <p className="mt-2 text-sm text-gray-500 dark:text-gray-400">
@@ -512,7 +633,10 @@ export default function UserRestaurantOrderDetails({ order }: UserRestaurantOrde
         </h3>
         <div className="space-y-4">
           {order.restaurant_dishe_orders?.map((item: any, index: number) => (
-            <div key={index} className="flex flex-col gap-3 border-b border-gray-100 pb-4 last:border-b-0 last:pb-0 sm:flex-row sm:items-center sm:gap-4">
+            <div
+              key={index}
+              className="flex flex-col gap-3 border-b border-gray-100 pb-4 last:border-b-0 last:pb-0 sm:flex-row sm:items-center sm:gap-4"
+            >
               {/* Image */}
               <div className="flex-shrink-0 self-center sm:self-start">
                 <Image
@@ -523,39 +647,42 @@ export default function UserRestaurantOrderDetails({ order }: UserRestaurantOrde
                   className="rounded-lg object-cover"
                 />
               </div>
-              
+
               {/* Content */}
-              <div className="flex-grow min-w-0">
+              <div className="min-w-0 flex-grow">
                 <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
                   {/* Left side - Dish info */}
-                  <div className="flex-grow min-w-0">
-                    <h4 className="font-medium text-gray-900 dark:text-white text-sm sm:text-base">
+                  <div className="min-w-0 flex-grow">
+                    <h4 className="text-sm font-medium text-gray-900 dark:text-white sm:text-base">
                       {item.dish?.name || "Unknown Dish"}
                     </h4>
                     {item.dish?.description && (
-                      <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-400 mt-1 line-clamp-2">
+                      <p className="mt-1 line-clamp-2 text-xs text-gray-600 dark:text-gray-400 sm:text-sm">
                         {item.dish.description}
                       </p>
                     )}
                     {item.dish?.preparingTime && (
-                      <p className="text-xs text-green-600 dark:text-green-400 mt-1">
+                      <p className="mt-1 text-xs text-green-600 dark:text-green-400">
                         ⏱️ Prep time: {item.dish.preparingTime}
                       </p>
                     )}
                   </div>
-                  
+
                   {/* Right side - Quantity and price */}
-                  <div className="flex items-center justify-between sm:flex-col sm:items-end sm:gap-1 mt-2 sm:mt-0">
+                  <div className="mt-2 flex items-center justify-between sm:mt-0 sm:flex-col sm:items-end sm:gap-1">
                     <div className="flex items-center gap-2">
-                      <span className="text-xs sm:text-sm font-medium text-gray-500 dark:text-gray-400">
+                      <span className="text-xs font-medium text-gray-500 dark:text-gray-400 sm:text-sm">
                         Qty:
                       </span>
-                      <span className="text-sm sm:text-base font-medium text-gray-900 dark:text-white">
+                      <span className="text-sm font-medium text-gray-900 dark:text-white sm:text-base">
                         {item.quantity}
                       </span>
                     </div>
-                    <p className="text-sm sm:text-base font-semibold text-gray-900 dark:text-white">
-                      {formatCurrency(parseFloat(item.dish?.price || item.price) * parseInt(item.quantity))}
+                    <p className="text-sm font-semibold text-gray-900 dark:text-white sm:text-base">
+                      {formatCurrency(
+                        parseFloat(item.dish?.price || item.price) *
+                          parseInt(item.quantity)
+                      )}
                     </p>
                   </div>
                 </div>
@@ -584,14 +711,18 @@ export default function UserRestaurantOrderDetails({ order }: UserRestaurantOrde
             </span>
           </div>
           <div className="flex justify-between">
-            <span className="text-gray-600 dark:text-gray-400">Delivery Fee:</span>
+            <span className="text-gray-600 dark:text-gray-400">
+              Delivery Fee:
+            </span>
             <span className="text-gray-900 dark:text-white">
               {formatCurrency(parseFloat(order.delivery_fee || "0"))}
             </span>
           </div>
           {order.discount > 0 && (
             <div className="flex justify-between">
-              <span className="text-gray-600 dark:text-gray-400">Discount:</span>
+              <span className="text-gray-600 dark:text-gray-400">
+                Discount:
+              </span>
               <span className="text-red-600 dark:text-red-400">
                 -{formatCurrency(order.discount)}
               </span>
@@ -607,7 +738,9 @@ export default function UserRestaurantOrderDetails({ order }: UserRestaurantOrde
           )}
           <div className="border-t border-gray-200 pt-2 dark:border-gray-700">
             <div className="flex justify-between">
-              <span className="text-lg font-semibold text-gray-900 dark:text-white">Total:</span>
+              <span className="text-lg font-semibold text-gray-900 dark:text-white">
+                Total:
+              </span>
               <span className="text-lg font-semibold text-gray-900 dark:text-white">
                 {formatCurrency(order.total)}
               </span>
@@ -679,9 +812,7 @@ export default function UserRestaurantOrderDetails({ order }: UserRestaurantOrde
                 className="mt-1"
               />
             </div>
-            {submitError && (
-              <Message type="error" description={submitError} />
-            )}
+            {submitError && <Message type="error" description={submitError} />}
           </div>
         </Modal.Body>
         <Modal.Footer>

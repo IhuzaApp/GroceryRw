@@ -21,10 +21,9 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({
   const [shopCartCount, setShopCartCount] = useState(0);
   const [foodCartCount, setFoodCartCount] = useState(0);
   const { data: session, status } = useSession();
-  
+
   // Combined count from both shop and food carts
   const count = shopCartCount + foodCartCount;
-  
 
   const addItem = async (
     shopId: string,
@@ -96,15 +95,20 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({
     const handleFoodCartChanged = () => {
       // Get food cart count from localStorage
       try {
-        const foodCartData = JSON.parse(localStorage.getItem('foodCarts') || '{}');
+        const foodCartData = JSON.parse(
+          localStorage.getItem("foodCarts") || "{}"
+        );
         const foodCarts = foodCartData.restaurants || [];
-        
-        const totalFoodItems = foodCarts.reduce((sum: number, restaurant: any) => {
-          return sum + (restaurant.totalItems || 0);
-        }, 0);
+
+        const totalFoodItems = foodCarts.reduce(
+          (sum: number, restaurant: any) => {
+            return sum + (restaurant.totalItems || 0);
+          },
+          0
+        );
         setFoodCartCount(totalFoodItems);
       } catch (error) {
-        console.error('Error reading food cart from localStorage:', error);
+        console.error("Error reading food cart from localStorage:", error);
         setFoodCartCount(0);
       }
     };
@@ -113,12 +117,12 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({
     handleFoodCartChanged();
 
     // Listen for food cart changes
-    window.addEventListener('foodCartChanged', handleFoodCartChanged);
-    window.addEventListener('storage', handleFoodCartChanged);
+    window.addEventListener("foodCartChanged", handleFoodCartChanged);
+    window.addEventListener("storage", handleFoodCartChanged);
 
     return () => {
-      window.removeEventListener('foodCartChanged', handleFoodCartChanged);
-      window.removeEventListener('storage', handleFoodCartChanged);
+      window.removeEventListener("foodCartChanged", handleFoodCartChanged);
+      window.removeEventListener("storage", handleFoodCartChanged);
     };
   }, []);
 

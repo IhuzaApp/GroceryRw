@@ -1,5 +1,5 @@
 query getRestaurantDishes {
-  restaurant_dishes(order_by: {name: asc}) {
+  restaurant_dishes(order_by: { name: asc }) {
     SKU
     created_at
     description
@@ -18,7 +18,10 @@ query getRestaurantDishes {
 }
 
 query getRestaurantDishesById($restaurant_id: uuid!) {
-  restaurant_dishes(where: { restaurant_id: { _eq: $restaurant_id } }, order_by: {name: asc}) {
+  restaurant_dishes(
+    where: { restaurant_id: { _eq: $restaurant_id } }
+    order_by: { name: asc }
+  ) {
     SKU
     created_at
     description

@@ -209,10 +209,10 @@ export default function ItemCartTable({
   useEffect(() => {
     setIsLoadingItems(true);
     onLoadingChange?.(true);
-    
+
     if (isFoodCart && restaurant) {
       // Handle food cart items
-      const foodItems = restaurant.items.map(item => ({
+      const foodItems = restaurant.items.map((item) => ({
         id: item.id,
         image: item.image || "/images/restaurantDish.png",
         name: item.name,
@@ -231,7 +231,10 @@ export default function ItemCartTable({
         .then((data: { items?: ApiCartItem[] }) => {
           const fetchedItems = data.items ?? [];
           setCartItems(
-            fetchedItems.map((item: ApiCartItem) => ({ ...item, checked: true }))
+            fetchedItems.map((item: ApiCartItem) => ({
+              ...item,
+              checked: true,
+            }))
           );
         })
         .catch((err) => {
@@ -257,7 +260,7 @@ export default function ItemCartTable({
     const item = cartItems.find((i) => i.id === id);
     if (!item) return;
     const newQty = item.quantity + 1;
-    
+
     setLoadingIds((prev) => new Set(prev).add(id));
     try {
       if (isFoodCart && restaurant) {
@@ -292,7 +295,7 @@ export default function ItemCartTable({
     const item = cartItems.find((i) => i.id === id);
     if (!item || item.quantity <= 1) return;
     const newQty = item.quantity - 1;
-    
+
     setLoadingIds((prev) => new Set(prev).add(id));
     try {
       if (isFoodCart && restaurant) {
