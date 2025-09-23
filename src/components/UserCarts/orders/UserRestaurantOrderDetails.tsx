@@ -293,18 +293,79 @@ export default function UserRestaurantOrderDetails({ order }: UserRestaurantOrde
           <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
             Order Status
           </h3>
-          <div className="mt-2 flex items-center gap-2">
-            <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium bg-${getOrderStatusColor()}-100 text-${getOrderStatusColor()}-800`}>
-              {getOrderStatus()}
-            </span>
+          <div className="mt-3 flex flex-col gap-3 sm:flex-row sm:items-center sm:gap-4">
+            {/* Current Status Badge */}
+            <div className="flex items-center gap-3">
+              <div className={`flex h-10 w-10 items-center justify-center rounded-full ${
+                order.status === "WAITING_FOR_CONFIRMATION" ? "bg-yellow-100 dark:bg-yellow-900/20" :
+                order.status === "PENDING" ? "bg-blue-100 dark:bg-blue-900/20" :
+                order.status === "CONFIRMED" ? "bg-blue-100 dark:bg-blue-900/20" :
+                order.status === "READY" ? "bg-green-100 dark:bg-green-900/20" :
+                order.status === "OUT_FOR_DELIVERY" ? "bg-purple-100 dark:bg-purple-900/20" :
+                order.status === "DELIVERED" ? "bg-green-100 dark:bg-green-900/20" :
+                "bg-gray-100 dark:bg-gray-900/20"
+              }`}>
+                <svg className={`h-5 w-5 ${
+                  order.status === "WAITING_FOR_CONFIRMATION" ? "text-yellow-600 dark:text-yellow-400" :
+                  order.status === "PENDING" ? "text-blue-600 dark:text-blue-400" :
+                  order.status === "CONFIRMED" ? "text-blue-600 dark:text-blue-400" :
+                  order.status === "READY" ? "text-green-600 dark:text-green-400" :
+                  order.status === "OUT_FOR_DELIVERY" ? "text-purple-600 dark:text-purple-400" :
+                  order.status === "DELIVERED" ? "text-green-600 dark:text-green-400" :
+                  "text-gray-600 dark:text-gray-400"
+                }`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  {order.status === "WAITING_FOR_CONFIRMATION" ? (
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  ) : order.status === "PENDING" ? (
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  ) : order.status === "CONFIRMED" ? (
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  ) : order.status === "READY" ? (
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
+                  ) : order.status === "OUT_FOR_DELIVERY" ? (
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  ) : order.status === "DELIVERED" ? (
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  ) : (
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  )}
+                </svg>
+              </div>
+              <div className="flex-grow">
+                <span className={`inline-flex items-center rounded-full px-3 py-1 text-sm font-medium ${
+                  order.status === "WAITING_FOR_CONFIRMATION" ? "bg-yellow-100 text-yellow-800 dark:bg-yellow-900/20 dark:text-yellow-300" :
+                  order.status === "PENDING" ? "bg-blue-100 text-blue-800 dark:bg-blue-900/20 dark:text-blue-300" :
+                  order.status === "CONFIRMED" ? "bg-blue-100 text-blue-800 dark:bg-blue-900/20 dark:text-blue-300" :
+                  order.status === "READY" ? "bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-300" :
+                  order.status === "OUT_FOR_DELIVERY" ? "bg-purple-100 text-purple-800 dark:bg-purple-900/20 dark:text-purple-300" :
+                  order.status === "DELIVERED" ? "bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-300" :
+                  "bg-gray-100 text-gray-800 dark:bg-gray-900/20 dark:text-gray-300"
+                }`}>
+                  {getOrderStatus()}
+                </span>
+              </div>
+            </div>
+            
+            {/* Status Description */}
+            <div className="text-sm text-gray-600 dark:text-gray-400">
+              {order.status === "WAITING_FOR_CONFIRMATION" && "Restaurant is reviewing your order"}
+              {order.status === "PENDING" && "Order confirmed and being prepared"}
+              {order.status === "CONFIRMED" && "Restaurant is preparing your food"}
+              {order.status === "READY" && "Your order is ready for pickup"}
+              {order.status === "OUT_FOR_DELIVERY" && "Your order is on the way"}
+              {order.status === "DELIVERED" && "Order has been delivered successfully"}
+            </div>
           </div>
         </div>
 
-        <Steps current={getCurrentStep()} className="mt-4">
-          {steps.map((step, index) => (
-            <Steps.Item key={index} title={step} />
-          ))}
-        </Steps>
+        {/* Progress Steps - Desktop only */}
+        <div className="hidden sm:block">
+          <Steps current={getCurrentStep()} className="mt-4">
+            {steps.map((step, index) => (
+              <Steps.Item key={index} title={step} />
+            ))}
+          </Steps>
+        </div>
       </Panel>
 
       {/* Delivery & Shopper Information */}
@@ -451,38 +512,53 @@ export default function UserRestaurantOrderDetails({ order }: UserRestaurantOrde
         </h3>
         <div className="space-y-4">
           {order.restaurant_dishe_orders?.map((item: any, index: number) => (
-            <div key={index} className="flex items-center gap-4 border-b border-gray-100 pb-4 last:border-b-0 last:pb-0">
-              <div className="flex-shrink-0">
+            <div key={index} className="flex flex-col gap-3 border-b border-gray-100 pb-4 last:border-b-0 last:pb-0 sm:flex-row sm:items-center sm:gap-4">
+              {/* Image */}
+              <div className="flex-shrink-0 self-center sm:self-start">
                 <Image
                   src={item.dish?.image || "/images/restaurantDish.png"}
                   alt={item.dish?.name || "Dish"}
-                  width={64}
-                  height={64}
+                  width={isMobile ? 56 : 64}
+                  height={isMobile ? 56 : 64}
                   className="rounded-lg object-cover"
                 />
               </div>
-              <div className="flex-grow">
-                <h4 className="font-medium text-gray-900 dark:text-white">
-                  {item.dish?.name || "Unknown Dish"}
-                </h4>
-                {item.dish?.description && (
-                  <p className="text-sm text-gray-600 dark:text-gray-400">
-                    {item.dish.description}
-                  </p>
-                )}
-                {item.dish?.preparingTime && (
-                  <p className="text-xs text-green-600 dark:text-green-400">
-                    ⏱️ Prep time: {item.dish.preparingTime}
-                  </p>
-                )}
-              </div>
-              <div className="text-right">
-                <p className="font-medium text-gray-900 dark:text-white">
-                  Qty: {item.quantity}
-                </p>
-                <p className="text-sm text-gray-600 dark:text-gray-400">
-                  {formatCurrency(parseFloat(item.dish?.price || item.price) * parseInt(item.quantity))}
-                </p>
+              
+              {/* Content */}
+              <div className="flex-grow min-w-0">
+                <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
+                  {/* Left side - Dish info */}
+                  <div className="flex-grow min-w-0">
+                    <h4 className="font-medium text-gray-900 dark:text-white text-sm sm:text-base">
+                      {item.dish?.name || "Unknown Dish"}
+                    </h4>
+                    {item.dish?.description && (
+                      <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-400 mt-1 line-clamp-2">
+                        {item.dish.description}
+                      </p>
+                    )}
+                    {item.dish?.preparingTime && (
+                      <p className="text-xs text-green-600 dark:text-green-400 mt-1">
+                        ⏱️ Prep time: {item.dish.preparingTime}
+                      </p>
+                    )}
+                  </div>
+                  
+                  {/* Right side - Quantity and price */}
+                  <div className="flex items-center justify-between sm:flex-col sm:items-end sm:gap-1 mt-2 sm:mt-0">
+                    <div className="flex items-center gap-2">
+                      <span className="text-xs sm:text-sm font-medium text-gray-500 dark:text-gray-400">
+                        Qty:
+                      </span>
+                      <span className="text-sm sm:text-base font-medium text-gray-900 dark:text-white">
+                        {item.quantity}
+                      </span>
+                    </div>
+                    <p className="text-sm sm:text-base font-semibold text-gray-900 dark:text-white">
+                      {formatCurrency(parseFloat(item.dish?.price || item.price) * parseInt(item.quantity))}
+                    </p>
+                  </div>
+                </div>
               </div>
             </div>
           ))}
