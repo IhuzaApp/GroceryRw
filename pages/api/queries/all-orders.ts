@@ -99,6 +99,54 @@ const GET_RESTAURANT_ORDERS = gql`
       restaurant_dishe_orders {
         quantity
         price
+        dish_id
+        id
+        order_id
+        created_at
+      }
+      combined_order_id
+      delivery_address_id
+      delivery_photo_url
+      updated_at
+      orderedBy {
+        created_at
+        email
+        gender
+        id
+        is_active
+        name
+        phone
+        role
+        updated_at
+      }
+      Address {
+        city
+        created_at
+        id
+        is_default
+        latitude
+        longitude
+        postal_code
+        street
+        updated_at
+        user_id
+      }
+      Restaurant {
+        created_at
+        is_active
+        email
+        id
+        lat
+        location
+        logo
+        long
+        name
+        phone
+        profile
+        relatedTo
+        tin
+        ussd
+        verified
       }
     }
   }
@@ -116,17 +164,7 @@ const GET_SHOPS_BY_IDS = gql`
   }
 `;
 
-// Fetch restaurant details by IDs
-const GET_RESTAURANTS_BY_IDS = gql`
-  query GetRestaurantsByIds($ids: [uuid!]!) {
-    Restaurants(where: { id: { _in: $ids } }) {
-      id
-      name
-      location
-      profile
-    }
-  }
-`;
+// Restaurant details are now fetched directly in the restaurant orders query
 
 interface OrdersResponse {
   Orders: Array<{
@@ -204,7 +242,55 @@ interface RestaurantOrdersResponse {
     restaurant_dishe_orders: Array<{
       quantity: string;
       price: string;
+      dish_id: string;
+      id: string;
+      order_id: string;
+      created_at: string;
     }>;
+    combined_order_id: string | null;
+    delivery_address_id: string;
+    delivery_photo_url: string | null;
+    updated_at: string;
+    orderedBy: {
+      created_at: string;
+      email: string;
+      gender: string;
+      id: string;
+      is_active: boolean;
+      name: string;
+      phone: string;
+      role: string;
+      updated_at: string;
+    };
+    Address: {
+      city: string;
+      created_at: string;
+      id: string;
+      is_default: boolean;
+      latitude: string;
+      longitude: string;
+      postal_code: string;
+      street: string;
+      updated_at: string;
+      user_id: string;
+    };
+    Restaurant: {
+      created_at: string;
+      is_active: boolean;
+      email: string;
+      id: string;
+      lat: string;
+      location: string;
+      logo: string;
+      long: string;
+      name: string;
+      phone: string;
+      profile: string;
+      relatedTo: string;
+      tin: string;
+      ussd: string;
+      verified: boolean;
+    };
   }>;
 }
 
@@ -284,23 +370,7 @@ export default async function handler(
       shopMap = new Map(shopsData.Shops.map((s) => [s.id, s]));
     }
 
-    // 5. Fetch restaurants for restaurant orders
-    const restaurantIds = Array.from(new Set(restaurantOrders.map((ro) => ro.restaurant_id))).filter(
-      Boolean
-    );
-
-    let restaurantMap = new Map();
-    if (restaurantIds.length > 0) {
-      const restaurantsData = await hasuraClient.request<{
-        Restaurants: Array<{
-          id: string;
-          name: string;
-          location: string;
-          profile: string;
-        }>;
-      }>(GET_RESTAURANTS_BY_IDS, { ids: restaurantIds });
-      restaurantMap = new Map(restaurantsData.Restaurants.map((r) => [r.id, r]));
-    }
+    // 5. Restaurant data is already included in the restaurant orders query, no need for separate fetch
 
     // 6. Enrich regular orders with shop details and item counts
     const enrichedRegularOrders = orders.map((o) => {
@@ -386,10 +456,11 @@ export default async function handler(
         delivery_time: ro.delivery_time,
         total: grandTotal,
         shopper_id: ro.shopper_id,
-        shop: restaurantMap.get(ro.restaurant_id) ? {
-          ...restaurantMap.get(ro.restaurant_id),
-          address: restaurantMap.get(ro.restaurant_id).location,
-          image: restaurantMap.get(ro.restaurant_id).profile
+        shop: ro.Restaurant ? {
+          id: ro.Restaurant.id,
+          name: ro.Restaurant.name,
+          address: ro.Restaurant.location,
+          image: ro.Restaurant.profile
         } : null, // Use restaurant as shop for compatibility
         itemsCount,
         unitsCount,
@@ -398,6 +469,13 @@ export default async function handler(
         discount: discountAmount,
         voucher_code: ro.voucher_code,
         found: ro.found,
+        // Additional restaurant order specific fields
+        combined_order_id: ro.combined_order_id,
+        delivery_photo_url: ro.delivery_photo_url,
+        updated_at: ro.updated_at,
+        orderedBy: ro.orderedBy,
+        Address: ro.Address,
+        Restaurant: ro.Restaurant,
       };
     });
 
