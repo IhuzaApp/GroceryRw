@@ -1814,6 +1814,84 @@ Total Revenue: 19,932 RWF (27,330 - 7,398)
    - Shop receives their original price amount (stored in Orders table)
    - System calculates and records revenue when order is completed
 
+### Restaurant Order Calculation Logic
+
+Restaurant orders use a **single-price model** with **tax inclusion**:
+
+1. **Price Structure**:
+   - `price`: Individual dish price (what customer pays per item)
+   - `quantity`: Number of items ordered
+   - `delivery_fee`: Fixed delivery fee
+   - `total`: Final amount customer paid (includes dishes + tax + delivery fee)
+
+2. **Calculation Breakdown**:
+
+```typescript
+// Example Restaurant Order
+const orderData = {
+  total: "21000",        // What customer paid (final amount)
+  delivery_fee: "2500",  // Delivery fee
+  dishes: [
+    { price: "4000", quantity: "1" },  // Chocolate Lava Cake
+    { price: "4500", quantity: "2" },  // Classic Cheeseburger
+    { price: "6000", quantity: "1" }   // Beef Brochette
+  ]
+}
+
+// Step 1: Calculate dishes total (excluding delivery fee)
+const dishesTotal = 21000 - 2500 = 18500
+
+// Step 2: Calculate tax (18% of dishes total)
+const tax = 18500 * 0.18 = 3330
+
+// Step 3: Calculate pre-tax subtotal (dishes total - tax)
+const subtotal = 18500 - 3330 = 15170
+
+// Final breakdown:
+// Subtotal (pre-tax): 15170 RWF
+// Tax (18%): 3330 RWF  
+// Delivery Fee: 2500 RWF
+// Total (what customer paid): 21000 RWF
+
+// Verification: 15170 + 3330 + 2500 = 21000 ✅
+```
+
+3. **Order Summary Display**:
+
+```typescript
+// Order summary shows:
+{
+  subtotal: 15170,     // Pre-tax dishes amount
+  tax: 3330,           // 18% of dishes total
+  delivery_fee: 2500,  // Delivery fee
+  total: 21000         // Final amount (what customer paid)
+}
+```
+
+4. **Key Differences from Regular Orders**:
+
+   - **Single Price**: No markup model (restaurant sets final price)
+   - **Tax Inclusive**: Tax is calculated and included in total
+   - **Direct Payment**: Customer pays restaurant directly (no revenue sharing)
+   - **Fixed Structure**: Tax rate is always 18% of dishes total
+
+5. **API Implementation** (`pages/api/queries/restaurant-order-details.ts`):
+
+```typescript
+// Calculate order breakdown
+const baseTotal = parseFloat(restaurantOrder.total || "0");
+const deliveryFee = parseFloat(restaurantOrder.delivery_fee || "0");
+
+// Calculate subtotal (dishes total excluding delivery fee)
+const dishesTotal = baseTotal - deliveryFee;
+// Calculate tax (18% of dishes total)
+const tax = dishesTotal * 0.18;
+// Calculate pre-tax subtotal (dishes total - tax)
+const subtotal = dishesTotal - tax;
+// The total is what customer paid (already includes everything)
+const grandTotal = baseTotal;
+```
+
 ### Revenue Calculation Triggers
 
 #### 1. Order Status Update Trigger

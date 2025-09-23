@@ -16,7 +16,7 @@ const CREATE_FOOD_ORDER = gql`
     $voucher_code: String,
     $delivery_time: String!,
     $delivery_notes: String,
-    $status: String = "PENDING",
+                $status: String = "WAITING_FOR_CONFIRMATION",
     $OrderID: String!
   ) {
     insert_restaurant_orders(
