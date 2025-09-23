@@ -30,23 +30,20 @@ export default async function handler(
 
     // Format the warning notification message
     const title = `⚠️ Batch Expiring Soon!`;
-    const body = `${shopName} (${distance}km) • ${itemsCount} items • Expires in ${timeRemaining}s`;
+    const body = `${distance}km • ${itemsCount} units • ${estimatedEarnings ? `${estimatedEarnings} RWF` : 'Check details'} • ${timeRemaining}s left`;
     
-    // Create notification payload
+    // Create notification payload - simplified with only essential info
     const payload = {
       title,
       body,
       data: {
         type: "batch_warning",
         orderId,
-        shopName,
-        customerAddress,
+        OrderID: orderId, // For compatibility
         distance: distance?.toString() || "0",
-        itemsCount: itemsCount?.toString() || "0",
-        estimatedEarnings: estimatedEarnings?.toString() || "0",
-        orderType,
+        units: itemsCount?.toString() || "0",
+        earnings: estimatedEarnings?.toString() || "0",
         timeRemaining: timeRemaining?.toString() || "20",
-        timestamp: new Date().toISOString(),
         urgent: "true",
         click_action: "view_batch",
         action_url: `/shopper/batch/${orderId}/details`,
@@ -58,8 +55,9 @@ export default async function handler(
     console.log("🚨 [FCM API] Sending warning notification:", {
       shopperId,
       orderId,
-      shopName,
       distance,
+      units: itemsCount,
+      earnings: estimatedEarnings,
       timeRemaining,
     });
 

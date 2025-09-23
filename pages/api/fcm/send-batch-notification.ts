@@ -29,22 +29,19 @@ export default async function handler(
 
     // Format the notification message
     const title = `🚀 New Batch Available!`;
-    const body = `${shopName} (${distance}km) • ${itemsCount} items • ${estimatedEarnings ? `${estimatedEarnings} RWF` : 'Check details'}`;
+    const body = `${distance}km • ${itemsCount} units • ${estimatedEarnings ? `${estimatedEarnings} RWF` : 'Check details'}`;
     
-    // Create notification payload
+    // Create notification payload - simplified with only essential info
     const payload = {
       title,
       body,
       data: {
         type: "batch_notification",
         orderId,
-        shopName,
-        customerAddress,
+        OrderID: orderId, // For compatibility
         distance: distance?.toString() || "0",
-        itemsCount: itemsCount?.toString() || "0",
-        estimatedEarnings: estimatedEarnings?.toString() || "0",
-        orderType,
-        timestamp: new Date().toISOString(),
+        units: itemsCount?.toString() || "0",
+        earnings: estimatedEarnings?.toString() || "0",
         click_action: "view_batch",
         action_url: `/shopper/batch/${orderId}/details`,
         notification_id: `batch_${orderId}_${Date.now()}`,
@@ -55,10 +52,9 @@ export default async function handler(
     console.log("🔔 [FCM API] Sending batch notification:", {
       shopperId,
       orderId,
-      shopName,
       distance,
-      itemsCount,
-      estimatedEarnings,
+      units: itemsCount,
+      earnings: estimatedEarnings,
     });
 
     await sendNotificationToUser(shopperId, payload);
