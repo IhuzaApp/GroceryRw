@@ -30,6 +30,8 @@ interface OrderItem {
     name: string;
     image: string;
     final_price: string;
+    measurement_unit?: string;
+    category?: string;
     ProductName?: {
       id: string;
       name: string;
@@ -48,9 +50,9 @@ interface BatchOrderDetailsType {
   placedAt: string;
   estimatedDelivery: string;
   deliveryNotes: string;
-  total: number;
-  serviceFee: number;
-  deliveryFee: number;
+  total: string;
+  serviceFee: string;
+  deliveryFee: string;
   status: string;
   deliveryPhotoUrl: string;
   discount: number;
@@ -222,28 +224,11 @@ function BatchDetailsPage({ orderData, error }: BatchDetailsPageProps) {
   const transformedOrderData = orderData
     ? {
         ...orderData,
-        total: typeof orderData.total === 'string' ? parseFloat(orderData.total) : orderData.total, // Convert string to number
+        total: parseFloat(orderData.total), // Convert string to number
         orderedBy: orderData.orderedBy,
         customerId: orderData.orderedBy?.id, // Customer is ALWAYS from orderedBy
-        // Ensure Order_Items have proper price conversion
-        Order_Items: orderData.Order_Items?.map((item: any) => ({
-          ...item,
-          price: typeof item.price === 'string' ? parseFloat(item.price) : item.price
-        })) || []
       }
     : null;
-
-  // Debug logging
-  console.log("🔍 [Batch Page] Order data:", {
-    hasOrderData: !!orderData,
-    orderId: orderData?.id,
-    orderType: orderData?.orderType,
-    status: orderData?.status,
-    total: orderData?.total,
-    orderItemsCount: orderData?.Order_Items?.length || 0,
-    orderItems: orderData?.Order_Items,
-    subtotal: orderData?.Order_Items?.reduce((sum, item) => sum + (item.price * item.quantity), 0) || 0
-  });
 
   return (
     <ShopperLayout>
@@ -341,13 +326,8 @@ export const getServerSideProps: GetServerSideProps<
             quantity
             final_price
             ProductName {
-              id
               name
               description
-              barcode
-              sku
-              image
-              create_at
             }
           }
           order_id
@@ -482,13 +462,10 @@ export const getServerSideProps: GetServerSideProps<
       };
     }
 
-    // Format timestamps to human-readable strings and convert numeric fields
+    // Format timestamps to human-readable strings
     const formattedOrder = {
       ...order,
       orderType,
-      total: parseFloat(order.total), // Convert total to number
-      serviceFee: parseFloat(order.serviceFee || "0"), // Convert service fee to number
-      deliveryFee: parseFloat(order.deliveryFee || "0"), // Convert delivery fee to number
       placedAt: new Date(order.placedAt).toLocaleString("en-US", {
         dateStyle: "medium",
         timeStyle: "short",
@@ -499,11 +476,6 @@ export const getServerSideProps: GetServerSideProps<
             timeStyle: "short",
           })
         : null,
-      // Ensure Order_Items have proper price conversion
-      Order_Items: order.Order_Items?.map((item: any) => ({
-        ...item,
-        price: typeof item.price === 'string' ? parseFloat(item.price) : item.price
-      })) || []
     };
 
     return {
