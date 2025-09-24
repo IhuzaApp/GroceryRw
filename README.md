@@ -414,8 +414,8 @@ POST /api/shopper/updateOrderStatus
 Orders {
   id: uuid (primary key)
   OrderID: string
-  user_id: uuid (foreign key to Users)
-  shopper_id: uuid (foreign key to Users)
+  user_id: uuid (foreign key to Users) -- Customer who placed the order
+  shopper_id: uuid (foreign key to Users) -- Assigned shopper (NULL = unassigned)
   shop_id: uuid (foreign key to Shops)
   total: string
   service_fee: string
@@ -2376,6 +2376,10 @@ Before showing any notifications, the system checks:
 4. `/api/shopper/availableOrders`
    - Returns available orders for assignment
    - Includes location-based filtering
+   - **Filtering Logic:**
+     - Regular Orders: `status = "PENDING" AND shopper_id IS NULL`
+     - Reel Orders: `status = "PENDING" AND shopper_id IS NULL`
+     - **Note:** `user_id` is the customer who placed the order, `shopper_id` is the assigned shopper
    - Format: `Array<Order>`
 
 ### Key Interfaces
@@ -4989,7 +4993,7 @@ GET / api / queries / system - configuration;
 **GET** - Fetch orders with calculated travel times
 
 ```typescript
-GET /api/shopper/availableOrders?latitude=1.234&longitude=5.678
+GET /api/shopper/availableOrders?latitude=1.234&longitude=5.678&maxTravelTime=15
 
 // Response includes travel time calculations
 {
@@ -5001,6 +5005,24 @@ GET /api/shopper/availableOrders?latitude=1.234&longitude=5.678
   }]
 }
 ```
+
+**Database Query Logic:**
+- **Regular Orders:** `WHERE status = 'PENDING' AND shopper_id IS NULL`
+- **Reel Orders:** `WHERE status = 'PENDING' AND shopper_id IS NULL`
+- **Field Clarification:**
+  - `user_id`: Customer who placed the order (always present)
+  - `shopper_id`: Assigned shopper (NULL for unassigned orders)
+- **Location Filtering:** Orders filtered by travel time from shopper location to shop
+
+**⚠️ Common Mistake:**
+- **Incorrect:** `WHERE user_id IS NULL` (would find orders with no customer)
+- **Correct:** `WHERE shopper_id IS NULL` (finds orders with no assigned shopper)
+
+**Troubleshooting:**
+- **Issue:** "No orders showing on dashboard despite pending orders in database"
+- **Cause:** Querying for `user_id IS NULL` instead of `shopper_id IS NULL`
+- **Solution:** Update GraphQL query to use `shopper_id: { _is_null: true }`
+- **Verification:** Check that `user_id` is populated (customer) and `shopper_id` is NULL (unassigned)
 
 ## Database Schema
 
@@ -5648,8 +5670,8 @@ POST /api/shopper/updateOrderStatus
 Orders {
   id: uuid (primary key)
   OrderID: string
-  user_id: uuid (foreign key to Users)
-  shopper_id: uuid (foreign key to Users)
+  user_id: uuid (foreign key to Users) -- Customer who placed the order
+  shopper_id: uuid (foreign key to Users) -- Assigned shopper (NULL = unassigned)
   shop_id: uuid (foreign key to Shops)
   total: string
   service_fee: string
