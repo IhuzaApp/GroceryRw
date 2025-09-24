@@ -31,6 +31,7 @@ interface EarningsStats {
     onTimeDelivery: number;
     orderAccuracy: number;
     acceptanceRate: number;
+    performanceScore?: number;
   };
   goals?: {
     weekly: {
@@ -308,6 +309,12 @@ const EarningsPage: React.FC = () => {
         value: earningsStats.performance.acceptanceRate,
         max: 100,
         percentage: earningsStats.performance.acceptanceRate,
+      },
+      {
+        metric: "Overall Performance",
+        value: earningsStats.performance.performanceScore || 0,
+        max: 100,
+        percentage: earningsStats.performance.performanceScore || 0,
       },
     ];
   };
