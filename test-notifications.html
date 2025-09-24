@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test Desktop Notifications</title>
+</head>
+<body>
+    <h1>Test Desktop Notifications</h1>
+    <button onclick="testNotification()">Test Basic Notification</button>
+    <button onclick="testFCM()">Test FCM Service Worker</button>
+    <div id="status"></div>
+
+    <script>
+        function testNotification() {
+            if (!("Notification" in window)) {
+                document.getElementById('status').innerHTML = "Notifications not supported";
+                return;
+            }
+
+            if (Notification.permission === "granted") {
+                new Notification("Test Notification", {
+                    body: "This is a test notification",
+                    icon: "/assets/logos/PlasIcon.png"
+                });
+                document.getElementById('status').innerHTML = "Basic notification sent!";
+            } else if (Notification.permission !== "denied") {
+                Notification.requestPermission().then(permission => {
+                    if (permission === "granted") {
+                        new Notification("Test Notification", {
+                            body: "This is a test notification",
+                            icon: "/assets/logos/PlasIcon.png"
+                        });
+                        document.getElementById('status').innerHTML = "Basic notification sent after permission!";
+                    }
+                });
+            } else {
+                document.getElementById('status').innerHTML = "Notification permission denied";
+            }
+        }
+
+        function testFCM() {
+            fetch('/api/test-background-fcm', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({userId: 'test-user-456'})
+            })
+            .then(response => response.json())
+            .then(data => {
+                document.getElementById('status').innerHTML = "FCM test sent: " + JSON.stringify(data);
+            })
+            .catch(error => {
+                document.getElementById('status').innerHTML = "FCM test error: " + error;
+            });
+        }
+    </script>
+</body>
+</html>

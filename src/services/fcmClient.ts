@@ -221,7 +221,6 @@ export const initializeFCM = async (
   }
 };
 
-
 /**
  * Clean up FCM token when user logs out
  */
