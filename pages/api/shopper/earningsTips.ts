@@ -7,7 +7,7 @@ import { authOptions } from "../auth/[...nextauth]";
 // GraphQL query to fetch order patterns for analysis
 const GET_ORDER_PATTERNS = gql`
   query GetOrderPatterns($shopperId: uuid!) {
-    # Get all delivered orders for the shopper
+    # Get all delivered regular orders for the shopper
     Orders(
       where: { shopper_id: { _eq: $shopperId }, status: { _eq: "delivered" } }
       order_by: { created_at: desc }
@@ -24,11 +24,50 @@ const GET_ORDER_PATTERNS = gql`
       }
     }
 
-    # Get total orders count
+    # Get all delivered reel orders for the shopper
+    reel_orders(
+      where: { shopper_id: { _eq: $shopperId }, status: { _eq: "delivered" } }
+      order_by: { created_at: desc }
+    ) {
+      id
+      created_at
+      updated_at
+      service_fee
+      delivery_fee
+      Reel {
+        id
+        title
+        Restaurant {
+          id
+          name
+        }
+      }
+    }
+
+    # Get total regular orders count
     TotalOrders: Orders_aggregate(
       where: { shopper_id: { _eq: $shopperId }, status: { _eq: "delivered" } }
     ) {
       aggregate {
+        count
+      }
+    }
+
+    # Get total reel orders count
+    TotalReelOrders: reel_orders_aggregate(
+      where: { shopper_id: { _eq: $shopperId }, status: { _eq: "delivered" } }
+    ) {
+      aggregate {
+        count
+      }
+    }
+
+    # Get performance metrics for enhanced tips
+    Ratings_aggregate(where: { shopper_id: { _eq: $shopperId } }) {
+      aggregate {
+        avg {
+          rating
+        }
         count
       }
     }
@@ -48,10 +87,40 @@ interface Order {
   };
 }
 
+interface ReelOrder {
+  id: string;
+  created_at: string;
+  updated_at: string;
+  service_fee: string | null;
+  delivery_fee: string | null;
+  Reel: {
+    id: string;
+    title: string;
+    Restaurant: {
+      id: string;
+      name: string;
+    };
+  };
+}
+
 interface GraphQLResponse {
   Orders: Order[];
+  reel_orders: ReelOrder[];
   TotalOrders: {
     aggregate: {
+      count: number;
+    };
+  };
+  TotalReelOrders: {
+    aggregate: {
+      count: number;
+    };
+  };
+  Ratings_aggregate: {
+    aggregate: {
+      avg: {
+        rating: number;
+      };
       count: number;
     };
   };
@@ -115,7 +184,13 @@ export default async function handler(
       }
     );
 
-    if (!data.Orders || data.Orders.length === 0) {
+    const regularOrders = data.Orders || [];
+    const reelOrders = data.reel_orders || [];
+    const allOrders = [...regularOrders, ...reelOrders];
+    const totalOrderCount = (data.TotalOrders.aggregate.count || 0) + (data.TotalReelOrders.aggregate.count || 0);
+    const customerRating = data.Ratings_aggregate.aggregate.avg?.rating || 0;
+
+    if (allOrders.length === 0) {
       // Return default tips if no orders
       return res.status(200).json({
         success: true,
@@ -147,8 +222,8 @@ export default async function handler(
       "Saturday",
     ];
 
-    // Process each order
-    data.Orders.forEach((order) => {
+    // Process regular orders
+    regularOrders.forEach((order) => {
       const orderDate = new Date(order.created_at);
       const day = dayNames[orderDate.getDay()];
       const hour = orderDate.getHours();
@@ -157,7 +232,6 @@ export default async function handler(
         parseFloat(order.delivery_fee || "0");
 
       // Track time slots
-      const timeSlotKey = `${day}-${hour}`;
       const existingSlot = timeSlots.find(
         (slot) => slot.day === day && slot.hour === hour
       );
@@ -191,6 +265,49 @@ export default async function handler(
       }
     });
 
+    // Process reel orders
+    reelOrders.forEach((order) => {
+      const orderDate = new Date(order.created_at);
+      const day = dayNames[orderDate.getDay()];
+      const hour = orderDate.getHours();
+      const earnings =
+        parseFloat(order.service_fee || "0") +
+        parseFloat(order.delivery_fee || "0");
+
+      // Track time slots
+      const existingSlot = timeSlots.find(
+        (slot) => slot.day === day && slot.hour === hour
+      );
+
+      if (existingSlot) {
+        existingSlot.count++;
+        existingSlot.totalEarnings += earnings;
+      } else {
+        timeSlots.push({
+          day,
+          hour,
+          count: 1,
+          totalEarnings: earnings,
+        });
+      }
+
+      // Track restaurant performance (reel orders)
+      const restaurantName = order.Reel?.Restaurant?.name || "Unknown Restaurant";
+      if (storeMap.has(restaurantName)) {
+        const store = storeMap.get(restaurantName)!;
+        store.orderCount++;
+        store.totalEarnings += earnings;
+        store.avgEarnings = store.totalEarnings / store.orderCount;
+      } else {
+        storeMap.set(restaurantName, {
+          store: restaurantName,
+          orderCount: 1,
+          totalEarnings: earnings,
+          avgEarnings: earnings,
+        });
+      }
+    });
+
     // Find peak hours (top 3 time slots by order count)
     const peakHours = timeSlots
       .sort((a, b) => b.count - a.count)
@@ -207,8 +324,10 @@ export default async function handler(
       .sort((a, b) => b.avgEarnings - a.avgEarnings)
       .slice(0, 3);
 
-    // Calculate total orders count
-    const totalOrderCount = data.TotalOrders.aggregate.count || 0;
+    // Calculate combined order counts and performance metrics
+    const regularOrderCount = data.TotalOrders.aggregate.count || 0;
+    const reelOrderCount = data.TotalReelOrders.aggregate.count || 0;
+    const ratingCount = data.Ratings_aggregate.aggregate.count || 0;
 
     // Generate dynamic tips
     const tips: string[] = [];
@@ -263,22 +382,64 @@ export default async function handler(
       tips.push("Focus on stores you're familiar with to shop faster");
     }
 
-    // Tip 4: Performance-based tip
+    // Tip 4: Performance-based tips
+    if (customerRating > 0) {
+      if (customerRating >= 4.5) {
+        tips.push(
+          `⭐ Excellent rating (${customerRating.toFixed(1)}/5)! You'll get priority for new orders`
+        );
+      } else if (customerRating >= 4.0) {
+        tips.push(
+          `⭐ Good rating (${customerRating.toFixed(1)}/5)! Keep maintaining high quality service`
+        );
+      } else if (customerRating >= 3.5) {
+        tips.push(
+          `📈 Rating ${customerRating.toFixed(1)}/5 - focus on customer satisfaction to improve your score`
+        );
+      } else {
+        tips.push(
+          `📈 Rating ${customerRating.toFixed(1)}/5 - prioritize customer service to boost your reputation`
+        );
+      }
+    }
+
+    // Tip 5: Order type insights
+    if (regularOrderCount > 0 && reelOrderCount > 0) {
+      const regularPercentage = Math.round((regularOrderCount / totalOrderCount) * 100);
+      const reelPercentage = Math.round((reelOrderCount / totalOrderCount) * 100);
+      tips.push(
+        `📊 Order mix: ${regularPercentage}% grocery, ${reelPercentage}% food delivery - great diversification!`
+      );
+    } else if (regularOrderCount > 0 && reelOrderCount === 0) {
+      tips.push(
+        `🍽️ Try accepting reel orders (food delivery) to expand your earning opportunities`
+      );
+    } else if (regularOrderCount === 0 && reelOrderCount > 0) {
+      tips.push(
+        `🛒 Consider accepting regular grocery orders for more consistent work`
+      );
+    }
+
+    // Tip 6: Experience-based tips
     if (totalOrderCount < 5) {
       tips.push(
         "🚀 Complete more orders to unlock personalized performance insights"
       );
     } else if (totalOrderCount < 20) {
       tips.push(
-        "⭐ Maintain high ratings - you're building a great reputation!"
+        "⭐ You're building a great reputation! Keep maintaining high customer ratings"
+      );
+    } else if (totalOrderCount < 50) {
+      tips.push(
+        "⭐ Excellent progress! Experienced shoppers like you get priority for high-value orders"
       );
     } else {
       tips.push(
-        "⭐ Excellent order count! Keep maintaining high customer ratings for bonuses"
+        "⭐ Outstanding experience! Top performers like you get the best opportunities"
       );
     }
 
-    // Tip 5: Time-based tip
+    // Tip 7: Time-based tip
     const now = new Date();
     const currentHour = now.getHours();
     const currentDay = dayNames[now.getDay()];
@@ -297,6 +458,23 @@ export default async function handler(
       tips.push("🍽️ Lunch rush time (11am-2pm) - high demand for food orders");
     } else if (currentHour >= 17 && currentHour <= 20) {
       tips.push("🍽️ Dinner rush time (5pm-8pm) - peak delivery hours");
+    }
+
+    // Tip 8: Rating count insight
+    if (ratingCount > 0) {
+      if (ratingCount < 10) {
+        tips.push(
+          `📝 You have ${ratingCount} customer rating${ratingCount > 1 ? 's' : ''} - more ratings will help build your reputation`
+        );
+      } else if (ratingCount < 25) {
+        tips.push(
+          `📝 Great! ${ratingCount} customer ratings show you're building a solid reputation`
+        );
+      } else {
+        tips.push(
+          `📝 Excellent! ${ratingCount} customer ratings demonstrate your reliability and experience`
+        );
+      }
     }
 
     return res.status(200).json({
