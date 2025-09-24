@@ -176,46 +176,51 @@ export default function NotificationSystem({
     );
   };
 
-
-  // Send FCM notifications to nearby available shoppers for available batches
-  const sendBatchFCMToNearbyShoppers = async (order: Order) => {
+  const sendFirebaseNotification = async (
+    order: Order,
+    type: "batch" | "warning" = "batch"
+  ) => {
     try {
-      logger.info(
-        `Sending batch FCM notifications to nearby shoppers for order ${order.id}`,
-        "NotificationSystem"
-      );
+      if (!session?.user?.id) return;
 
-      const response = await fetch("/api/fcm/send-batch-to-nearby-shoppers", {
+      const payload = {
+        shopperId: session.user.id,
+        orderId: order.id,
+        shopName: order.shopName,
+        customerAddress: order.customerAddress,
+        distance: order.distance,
+        itemsCount: order.itemsCount || 0,
+        estimatedEarnings: order.estimatedEarnings || 0,
+        orderType: order.orderType || "regular",
+        ...(type === "warning" && { timeRemaining: 20 }),
+      };
+
+      const endpoint = type === "warning" 
+        ? "/api/fcm/send-warning-notification"
+        : "/api/fcm/send-batch-notification";
+
+      const response = await fetch(endpoint, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({
-          orderId: order.id,
-          shopName: order.shopName,
-          customerAddress: order.customerAddress,
-          distance: order.distance,
-          itemsCount: order.itemsCount || 0,
-          estimatedEarnings: order.estimatedEarnings || 0,
-          orderType: order.orderType || "regular",
-        }),
+        body: JSON.stringify(payload),
       });
 
       if (response.ok) {
-        const result = await response.json();
         logger.info(
-          `FCM notifications sent to ${result.notificationsSent || 0} nearby shoppers for order ${order.id}`,
+          `Firebase ${type} notification sent successfully for order ${order.id}`,
           "NotificationSystem"
         );
       } else {
         logger.warn(
-          `Failed to send FCM to nearby shoppers: ${response.statusText}`,
+          `Failed to send Firebase ${type} notification: ${response.statusText}`,
           "NotificationSystem"
         );
       }
     } catch (error) {
       logger.error(
-        `Error sending FCM to nearby shoppers:`,
+        `Error sending Firebase ${type} notification:`,
         "NotificationSystem",
         error
       );
@@ -362,7 +367,10 @@ export default function NotificationSystem({
     // Store the toast key for this order
     activeToasts.current.set(order.id, toastKey);
 
-    // Note: FCM notifications are handled by sendBatchFCMToNearbyShoppers
+    // Send Firebase push notification for batch notifications
+    if (type === "info") {
+      sendFirebaseNotification(order, "batch");
+    }
 
     return toastKey;
   };
@@ -464,7 +472,7 @@ export default function NotificationSystem({
     }
   };
 
-  const showWarningNotification = async (order: Order) => {
+  const showWarningNotification = (order: Order) => {
     // Check if assignment still exists and warning hasn't been shown
     const assignment = batchAssignments.current.find(
       (a) => a.orderId === order.id && a.shopperId === session?.user?.id
@@ -618,39 +626,8 @@ export default function NotificationSystem({
     // Store the warning toast key for this order
     activeToasts.current.set(order.id, warningToastKey);
 
-    // Send Firebase push notification for warning (individual notification)
-    try {
-      const response = await fetch("/api/fcm/send-warning-notification", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          shopperId: session?.user?.id,
-          orderId: order.id,
-          shopName: order.shopName,
-          customerAddress: order.customerAddress,
-          distance: order.distance,
-          itemsCount: order.itemsCount || 0,
-          estimatedEarnings: order.estimatedEarnings || 0,
-          orderType: order.orderType || "regular",
-          timeRemaining: 20,
-        }),
-      });
-
-      if (response.ok) {
-        logger.info(
-          `Firebase warning notification sent successfully for order ${order.id}`,
-          "NotificationSystem"
-        );
-      }
-    } catch (error) {
-      logger.error(
-        `Error sending Firebase warning notification:`,
-        "NotificationSystem",
-        error
-      );
-    }
+    // Send Firebase push notification for warning
+    sendFirebaseNotification(order, "warning");
 
     // Show warning desktop notification
     if (
@@ -920,13 +897,12 @@ export default function NotificationSystem({
             showToast(orderForNotification);
             showDesktopNotification(orderForNotification);
             
-            // Send FCM notifications to all nearby available shoppers (including current user)
-            // This handles both individual and mass notifications
-            sendBatchFCMToNearbyShoppers(orderForNotification);
+            // Send Firebase push notification
+            sendFirebaseNotification(orderForNotification, "batch");
 
             // Set up warning notification after 40 seconds
-            const warningTimeout = setTimeout(async () => {
-              await showWarningNotification(orderForNotification);
+            const warningTimeout = setTimeout(() => {
+              showWarningNotification(orderForNotification);
             }, 40000); // 40 seconds
 
             // Update assignment with warning timeout

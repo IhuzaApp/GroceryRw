@@ -234,6 +234,18 @@ export default function BatchDetails({
   const [loading, setLoading] = useState(false);
   const [order, setOrder] = useState<OrderDetailsType | null>(orderData);
   const [errorState, setErrorState] = useState<string | null>(error);
+
+  // Debug logging for initial order data
+  console.log("🔍 [Batch Details] Initial order data:", {
+    hasOrderData: !!orderData,
+    orderId: orderData?.id,
+    orderType: orderData?.orderType,
+    status: orderData?.status,
+    total: orderData?.total,
+    orderItemsCount: orderData?.Order_Items?.length || 0,
+    orderItems: orderData?.Order_Items,
+    subtotal: orderData?.Order_Items?.reduce((sum, item) => sum + (item.price * item.quantity), 0) || 0
+  });
   const [showImageModal, setShowImageModal] = useState(false);
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
   const [selectedProductName, setSelectedProductName] = useState<string | null>(
@@ -1136,8 +1148,8 @@ export default function BatchDetails({
     if (!order) return false;
     // For reel orders, always show details
     if (order.orderType === "reel") return true;
-    // For regular orders, show only during accepted or shopping status
-    return order.status === "accepted" || order.status === "shopping";
+    // For regular orders, show details for all statuses except delivered
+    return order.status !== "delivered";
   };
 
   // Function to get the right action button based on current status
@@ -1376,7 +1388,48 @@ export default function BatchDetails({
               customerId: data.order.customerId,
               shopperId: session?.user?.id,
             });
-            setOrder(data.order);
+            console.log("🔍 [Shopper Batch] Order items from API:", {
+              orderItemsCount: data.order.Order_Items?.length || 0,
+              orderItems: data.order.Order_Items,
+              itemsCount: data.order.items?.length || 0,
+              items: data.order.items,
+              subtotal: data.order.Order_Items?.reduce((sum: number, item: any) => sum + (item.price * item.quantity), 0) || 0,
+              itemsSubtotal: data.order.items?.reduce((sum: number, item: any) => sum + (item.price * item.quantity), 0) || 0
+            });
+            
+            // Transform the API response to match BatchDetails expected structure
+            const transformedOrder = {
+              ...data.order,
+              // Convert items array to Order_Items structure
+              Order_Items: data.order.items?.map((item: any) => ({
+                id: item.id,
+                quantity: item.quantity,
+                price: item.price,
+                product: {
+                  id: item.id, // Use item id as product id
+                  name: item.name,
+                  image: "/images/groceryPlaceholder.png", // Default image
+                  final_price: item.price.toString(),
+                  ProductName: {
+                    id: item.id,
+                    name: item.name,
+                    description: "",
+                    barcode: "",
+                    sku: "",
+                    image: "/images/groceryPlaceholder.png",
+                    create_at: new Date().toISOString()
+                  }
+                }
+              })) || []
+            };
+            
+            console.log("🔍 [Shopper Batch] Transformed order:", {
+              orderItemsCount: transformedOrder.Order_Items?.length || 0,
+              orderItems: transformedOrder.Order_Items,
+              subtotal: transformedOrder.Order_Items?.reduce((sum: number, item: any) => sum + (item.price * item.quantity), 0) || 0
+            });
+            
+            setOrder(transformedOrder);
           }
         })
         .catch((err) => {
