@@ -5024,6 +5024,197 @@ GET /api/shopper/availableOrders?latitude=1.234&longitude=5.678&maxTravelTime=15
 - **Solution:** Update GraphQL query to use `shopper_id: { _is_null: true }`
 - **Verification:** Check that `user_id` is populated (customer) and `shopper_id` is NULL (unassigned)
 
+### 3. Shopper Performance Metrics API (`/api/shopper/performance-metrics`)
+
+**GET** - Calculate comprehensive shopper performance metrics
+
+```typescript
+GET /api/shopper/performance-metrics?shopperId=uuid
+
+// Response includes comprehensive performance data
+{
+  customerRating: 4.5,           // 1-5 stars
+  ratingCount: 25,               // Number of ratings received
+  onTimeDelivery: 97,            // Percentage (0-100)
+  responseTime: 180,             // Average response time in seconds
+  acceptanceRate: 85,            // Percentage (0-100)
+  cancellationRate: 3,           // Percentage (0-100)
+  orderAccuracy: 99,             // Percentage (0-100)
+  totalOrders: 50,               // Total assigned orders
+  completedOrders: 42,           // Completed orders with delivery photos
+  performanceScore: 93,          // Overall performance score (0-100)
+  recentPerformance: {
+    last7Days: 8,                // Orders completed in last 7 days
+    last30Days: 35               // Orders completed in last 30 days
+  },
+  breakdown: {
+    deliveryExperience: 4.8,     // Delivery experience rating
+    packagingQuality: 4.6,       // Packaging quality rating
+    professionalism: 4.9         // Professionalism rating
+  }
+}
+```
+
+**Performance Calculation Logic:**
+
+The system calculates comprehensive performance metrics that include **both regular orders and reel orders**:
+
+#### **Overall Performance Score (0-100):**
+```typescript
+const weights = {
+  customerRating: 0.30,    // 30% weight
+  onTimeDelivery: 0.25,    // 25% weight
+  orderAccuracy: 0.20,     // 20% weight
+  acceptanceRate: 0.25,    // 25% weight
+};
+
+const score = 
+  (customerRating * 20) * 0.30 +      // 1-5 stars → 20-100 points
+  onTimeDelivery * 0.25 +             // 0-100%
+  orderAccuracy * 0.20 +              // 0-100%
+  acceptanceRate * 0.25;              // 0-100%
+```
+
+#### **Example Calculation:**
+```typescript
+// Shopper with these metrics:
+customerRating: 4.5/5 stars
+onTimeDelivery: 97%
+orderAccuracy: 99%
+acceptanceRate: 100%
+
+// Calculation:
+(4.5 * 20) * 0.30 +    // 90 * 0.30 = 27 points
+97 * 0.25 +            // 97 * 0.25 = 24.25 points
+99 * 0.20 +            // 99 * 0.20 = 19.8 points
+100 * 0.25             // 100 * 0.25 = 25 points
+= 96.05 → 96/100
+```
+
+#### **Key Metrics Explained:**
+
+1. **Customer Rating (1-5 stars)**
+   - Based on ratings from both regular and reel orders
+   - Weighted 30% in overall performance score
+
+2. **On-Time Delivery (0-100%)**
+   - **Regular Orders**: Compares `delivery_time` vs `updated_at` (within 15 minutes)
+   - **Reel Orders**: Assumes on-time if delivered (no delivery_time field)
+   - Weighted 25% in overall performance score
+
+3. **Order Accuracy (0-100%)**
+   - **Formula**: `(Completed Orders with Photos / Total Assigned Orders) × 100`
+   - **"Offered Orders"**: Orders with `delivery_photo_url IS NOT NULL`
+   - **Includes**: Both regular and reel orders with delivery photos
+   - Weighted 20% in overall performance score
+
+4. **Acceptance Rate (0-100%)**
+   - **Formula**: `(Completed Orders with Photos / Total Assigned Orders) × 100`
+   - **Purpose**: Measures reliability and commitment
+   - **Includes**: Both regular and reel orders with delivery photos
+   - Weighted 25% in overall performance score
+
+#### **Database Queries:**
+
+The API performs comprehensive queries to gather data from both order types:
+
+```sql
+-- Regular Orders
+SELECT * FROM Orders WHERE shopper_id = ?;
+
+-- Reel Orders  
+SELECT * FROM reel_orders WHERE shopper_id = ?;
+
+-- Completed Orders with Photos (Regular)
+SELECT COUNT(*) FROM Orders 
+WHERE shopper_id = ? AND status = 'delivered' 
+AND delivery_photo_url IS NOT NULL;
+
+-- Completed Orders with Photos (Reel)
+SELECT COUNT(*) FROM reel_orders 
+WHERE shopper_id = ? AND status = 'delivered' 
+AND delivery_photo_url IS NOT NULL;
+
+-- Ratings (covers both order types)
+SELECT AVG(rating), COUNT(*) FROM Ratings WHERE shopper_id = ?;
+```
+
+#### **Performance Score Interpretation:**
+
+| Score Range | Performance Level | Description |
+|-------------|------------------|-------------|
+| 90-100 | 🟢 Excellent | Top performers get priority in notifications |
+| 80-89 | 🟡 Good | Above average performance |
+| 70-79 | 🟡 Fair | Average performance |
+| 60-69 | 🔴 Poor | Below average, needs improvement |
+| 0-59 | 🔴 Critical | Poor performance, may need support |
+
+#### **Integration with Notification System:**
+
+High-performing shoppers (90+ score) receive **priority** for new order notifications:
+
+```typescript
+// Future notification system will sort like this:
+const sortedShoppers = shoppers.sort((a, b) => {
+  // Primary: Overall Performance Score (higher = better)
+  if (a.performanceScore !== b.performanceScore) {
+    return b.performanceScore - a.performanceScore;
+  }
+  
+  // Secondary: Distance (closer = better)
+  return a.distance - b.distance;
+});
+```
+
+### 4. Shopper Earnings Stats API (`/api/shopper/earningsStats`)
+
+**GET** - Fetch comprehensive earnings and performance statistics
+
+```typescript
+GET /api/shopper/earningsStats?shopperId=uuid
+
+// Response includes earnings data with performance metrics
+{
+  earnings: {
+    today: 4500,
+    thisWeek: 32000,
+    thisMonth: 125000,
+    total: 450000
+  },
+  performance: {
+    customerRating: 4.92,
+    onTimeDelivery: 97,
+    orderAccuracy: 99,
+    acceptanceRate: 85,
+    performanceScore: 96    // Overall performance score
+  },
+  orders: {
+    today: 3,
+    thisWeek: 18,
+    thisMonth: 72,
+    total: 285
+  },
+  goals: {
+    weekly: {
+      current: 32000,
+      target: 40000,
+      percentage: 80
+    },
+    monthly: {
+      current: 125000,
+      target: 150000,
+      percentage: 83
+    }
+  }
+}
+```
+
+**Key Features:**
+- **Combined Metrics**: Includes both regular and reel orders
+- **Performance Integration**: Uses the same calculation logic as performance-metrics API
+- **Real-time Updates**: Reflects current performance in earnings display
+- **Goal Tracking**: Weekly and monthly earnings targets
+
 ## Database Schema
 
 ### Orders Table
