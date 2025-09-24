@@ -106,6 +106,7 @@ interface OrderItem {
     name: string;
     image: string;
     final_price: string;
+    measurement_unit?: string;
     ProductName?: {
       id: string;
       name: string;
@@ -235,17 +236,6 @@ export default function BatchDetails({
   const [order, setOrder] = useState<OrderDetailsType | null>(orderData);
   const [errorState, setErrorState] = useState<string | null>(error);
 
-  // Debug logging for initial order data
-  console.log("🔍 [Batch Details] Initial order data:", {
-    hasOrderData: !!orderData,
-    orderId: orderData?.id,
-    orderType: orderData?.orderType,
-    status: orderData?.status,
-    total: orderData?.total,
-    orderItemsCount: orderData?.Order_Items?.length || 0,
-    orderItems: orderData?.Order_Items,
-    subtotal: orderData?.Order_Items?.reduce((sum, item) => sum + (item.price * item.quantity), 0) || 0
-  });
   const [showImageModal, setShowImageModal] = useState(false);
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
   const [selectedProductName, setSelectedProductName] = useState<string | null>(
@@ -550,6 +540,13 @@ export default function BatchDetails({
   const generateInvoiceAndRedirect = async (orderId: string) => {
     try {
       setInvoiceLoading(true);
+      
+      const requestData = {
+        orderId,
+        orderType: orderData?.orderType || "regular", // Pass order type to API
+      };
+      
+      console.log("🔍 [Batch Details] Generating invoice with data:", requestData);
 
       // Make API request to generate invoice and save to database
       const invoiceResponse = await fetch("/api/invoices/generate", {
@@ -557,19 +554,25 @@ export default function BatchDetails({
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({
-          orderId,
-          orderType: orderData?.orderType || "regular", // Pass order type to API
-        }),
+        body: JSON.stringify(requestData),
       });
 
+      console.log("🔍 [Batch Details] Invoice response status:", invoiceResponse.status);
+
       if (!invoiceResponse.ok) {
+        const errorText = await invoiceResponse.text();
+        console.error("❌ [Batch Details] Invoice generation failed:", {
+          status: invoiceResponse.status,
+          statusText: invoiceResponse.statusText,
+          errorText
+        });
         throw new Error(
           `Failed to generate invoice: ${invoiceResponse.statusText}`
         );
       }
 
       const invoiceResult = await invoiceResponse.json();
+      console.log("🔍 [Batch Details] Invoice result:", invoiceResult);
 
       if (invoiceResult.success && invoiceResult.invoice) {
         setInvoiceData(invoiceResult.invoice);
@@ -1374,28 +1377,7 @@ export default function BatchDetails({
       fetch(`/api/shopper/orderDetails?id=${order.id}`)
         .then((res) => res.json())
         .then((data) => {
-          console.log("🔍 [Shopper Batch] Order details API response:", data);
           if (data.order) {
-            console.log("🔍 [Shopper Batch] Customer data in order:", {
-              userId: data.order.user?.id,
-              userName: data.order.user?.name,
-              userEmail: data.order.user?.email,
-              userPhone: data.order.user?.phone,
-              orderedById: data.order.orderedBy?.id,
-              orderedByName: data.order.orderedBy?.name,
-              orderedByEmail: data.order.orderedBy?.email,
-              orderedByPhone: data.order.orderedBy?.phone,
-              customerId: data.order.customerId,
-              shopperId: session?.user?.id,
-            });
-            console.log("🔍 [Shopper Batch] Order items from API:", {
-              orderItemsCount: data.order.Order_Items?.length || 0,
-              orderItems: data.order.Order_Items,
-              itemsCount: data.order.items?.length || 0,
-              items: data.order.items,
-              subtotal: data.order.Order_Items?.reduce((sum: number, item: any) => sum + (item.price * item.quantity), 0) || 0,
-              itemsSubtotal: data.order.items?.reduce((sum: number, item: any) => sum + (item.price * item.quantity), 0) || 0
-            });
             
             // Transform the API response to match BatchDetails expected structure
             const transformedOrder = {
@@ -1408,32 +1390,27 @@ export default function BatchDetails({
                 product: {
                   id: item.id, // Use item id as product id
                   name: item.name,
-                  image: "/images/groceryPlaceholder.png", // Default image
+                  image: item.productImage || "/images/groceryPlaceholder.png",
                   final_price: item.price.toString(),
+                  measurement_unit: item.measurement_unit, // Add measurement_unit from API
                   ProductName: {
                     id: item.id,
                     name: item.name,
                     description: "",
-                    barcode: "",
-                    sku: "",
-                    image: "/images/groceryPlaceholder.png",
+                    barcode: item.barcode || "",
+                    sku: item.sku || "",
+                    image: item.productImage || "/images/groceryPlaceholder.png",
                     create_at: new Date().toISOString()
                   }
                 }
               })) || []
             };
             
-            console.log("🔍 [Shopper Batch] Transformed order:", {
-              orderItemsCount: transformedOrder.Order_Items?.length || 0,
-              orderItems: transformedOrder.Order_Items,
-              subtotal: transformedOrder.Order_Items?.reduce((sum: number, item: any) => sum + (item.price * item.quantity), 0) || 0
-            });
-            
             setOrder(transformedOrder);
           }
         })
         .catch((err) => {
-          console.error("Error fetching complete order data:", err);
+          // Handle error silently
         });
     }
   }, [order?.id, session?.user?.id]);

@@ -213,9 +213,9 @@ export default async function handler(
     }
 
     // Calculate actual total (what we pay to shop) for order creation
-    // Use item.price (price when added to cart) for consistency with frontend calculation
+    // Use Product.price (base price) for accurate cost tracking
     const actualTotal = items.reduce((sum, item) => {
-      const price = parseFloat(item.price);
+      const price = parseFloat(item.Product.price);
       return sum + price * item.quantity;
     }, 0);
 
@@ -245,7 +245,7 @@ export default async function handler(
       order_id: orderId,
       product_id: i.product_id,
       quantity: i.quantity,
-      price: i.price, // Use the same price that was used for total calculation
+      price: i.Product.price, // Use base price (what we pay to shop), not final_price
     }));
     if (!hasuraClient) {
       throw new Error("Hasura client is not initialized");

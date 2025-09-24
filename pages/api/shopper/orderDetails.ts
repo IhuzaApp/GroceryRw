@@ -126,6 +126,7 @@ const GET_ORDER_DETAILS = gql`
           id
           image
           final_price
+          measurement_unit
           ProductName {
             id
             name
@@ -334,12 +335,31 @@ export default async function handler(
 
     if (orderType === "regular") {
       // Handle regular orders
-      const formattedOrderItems = orderData.Order_Items.map((item: any) => ({
-        id: item.id,
-        name: item.Product?.ProductName?.name || "Unknown Product",
-        quantity: item.quantity,
-        price: parseFloat(item.price) || 0,
-      }));
+      console.log("🔍 [API] Raw Order_Items from database:", JSON.stringify(orderData.Order_Items, null, 2));
+      
+      const formattedOrderItems = orderData.Order_Items.map((item: any) => {
+        const formattedItem = {
+          id: item.id,
+          name: item.Product?.ProductName?.name || "Unknown Product",
+          quantity: item.quantity,
+          price: parseFloat(item.price) || 0,
+          measurement_unit: item.Product?.measurement_unit || null,
+          barcode: item.Product?.ProductName?.barcode || null,
+          sku: item.Product?.ProductName?.sku || null,
+          productImage: item.Product?.ProductName?.image || item.Product?.image || null,
+        };
+        
+        console.log("🔍 [API] Formatted item:", {
+          id: formattedItem.id,
+          name: formattedItem.name,
+          measurement_unit: formattedItem.measurement_unit,
+          barcode: formattedItem.barcode,
+          sku: formattedItem.sku,
+          rawProduct: item.Product
+        });
+        
+        return formattedItem;
+      });
 
       // Calculate totals
       const subTotal = formattedOrderItems.reduce(
