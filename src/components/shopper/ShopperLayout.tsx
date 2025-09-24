@@ -6,6 +6,7 @@ import NotificationSystem from "@components/shopper/NotificationSystem";
 import { useSession } from "next-auth/react";
 import { useTheme } from "@context/ThemeContext";
 import { logger } from "../../utils/logger";
+import { initializeFCM } from "../../services/fcmClient";
 
 interface ShopperLayoutProps {
   children: React.ReactNode;
@@ -20,6 +21,7 @@ export default function ShopperLayout({ children }: ShopperLayoutProps) {
     lng: number;
   } | null>(null);
   const [isOnline, setIsOnline] = useState(false);
+  const [batchFcmInitialized, setBatchFcmInitialized] = useState(false);
 
   useEffect(() => {
     const checkIfMobile = () => setIsMobile(window.innerWidth < 768);
@@ -27,6 +29,47 @@ export default function ShopperLayout({ children }: ShopperLayoutProps) {
     window.addEventListener("resize", checkIfMobile);
     return () => window.removeEventListener("resize", checkIfMobile);
   }, []);
+
+  // Initialize FCM for shoppers
+  useEffect(() => {
+    if (session?.user?.id && status === 'authenticated' && !batchFcmInitialized) {
+      const initFCM = async () => {
+        try {
+          logger.info("Initializing FCM for shopper", "ShopperLayout", {
+            userId: session.user.id,
+          });
+
+          const unsubscribe = await initializeFCM(session.user.id, (payload) => {
+            logger.info("Received FCM notification", "ShopperLayout", payload);
+            
+            // Handle batch notification
+            if (payload.data?.type === "batch_notification") {
+              // Dispatch custom event for batch notification
+              window.dispatchEvent(new CustomEvent("batchNotificationReceived", {
+                detail: payload
+              }));
+              
+              // Trigger new order handler
+              handleNewOrder();
+            }
+            // Handle chat notifications
+            else if (payload.data?.type === "chat_message") {
+              // You can add custom handling here for chat messages
+              logger.info("Received chat message notification", "ShopperLayout");
+            }
+          });
+
+          setBatchFcmInitialized(true);
+          logger.info("FCM initialized successfully", "ShopperLayout");
+        } catch (error) {
+          logger.error("Failed to initialize FCM", "ShopperLayout", error);
+          setBatchFcmInitialized(false);
+        }
+      };
+
+      initFCM();
+    }
+  }, [session, status, batchFcmInitialized]);
 
   // Check location cookies and update online status
   useEffect(() => {
