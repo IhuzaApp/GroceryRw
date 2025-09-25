@@ -1,0 +1,271 @@
+import { NextApiRequest, NextApiResponse } from "next";
+import { getActiveConnections, getLocationClusters, sendToShopper, sendToCluster } from "./connection";
+import { hasuraClient } from "../../../src/lib/hasuraClient";
+import { gql } from "graphql-request";
+import { logger } from "../../../src/utils/logger";
+
+// Use global WebSocket server instance
+declare global {
+  var io: any;
+}
+
+// GraphQL query to get available orders
+const GET_AVAILABLE_ORDERS = gql`
+  query GetAvailableOrders($current_time: timestamptz!) {
+    Orders(
+      where: {
+        status: { _eq: "PENDING" }
+        created_at: { _gt: $current_time }
+        shopper_id: { _is_null: true }
+      }
+      order_by: { created_at: asc }
+      limit: 10
+    ) {
+      id
+      created_at
+      shop_id
+      service_fee
+      delivery_fee
+      Shop {
+        name
+        latitude
+        longitude
+      }
+      Address {
+        latitude
+        longitude
+        street
+        city
+      }
+    }
+  }
+`;
+
+// GraphQL query to get available reel orders
+const GET_AVAILABLE_REEL_ORDERS = gql`
+  query GetAvailableReelOrders($current_time: timestamptz!) {
+    reel_orders(
+      where: {
+        status: { _eq: "PENDING" }
+        created_at: { _gt: $current_time }
+        shopper_id: { _is_null: true }
+      }
+      order_by: { created_at: asc }
+      limit: 10
+    ) {
+      id
+      created_at
+      service_fee
+      delivery_fee
+      Reel {
+        title
+        latitude
+        longitude
+      }
+      address {
+        latitude
+        longitude
+        street
+        city
+      }
+    }
+  }
+`;
+
+// Calculate distance between two points
+const calculateDistance = (lat1: number, lon1: number, lat2: number, lon2: number): number => {
+  const R = 6371; // Radius of the Earth in km
+  const dLat = (lat2 - lat1) * (Math.PI / 180);
+  const dLon = (lon2 - lon1) * (Math.PI / 180);
+  const a =
+    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+    Math.cos(lat1 * (Math.PI / 180)) *
+      Math.cos(lat2 * (Math.PI / 180)) *
+      Math.sin(dLon / 2) *
+      Math.sin(dLon / 2);
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  return R * c;
+};
+
+// Calculate shopper priority
+const calculateShopperPriority = (
+  shopperLocation: { lat: number; lng: number },
+  order: any,
+  performanceData: any
+): number => {
+  const distance = calculateDistance(
+    shopperLocation.lat,
+    shopperLocation.lng,
+    parseFloat(order.Address?.latitude || order.address?.latitude),
+    parseFloat(order.Address?.longitude || order.address?.longitude)
+  );
+
+  // Base priority is distance (lower is better)
+  let priority = distance;
+
+  // Add performance factors if available
+  if (performanceData?.Ratings_aggregate?.aggregate?.avg?.rating) {
+    const rating = performanceData.Ratings_aggregate.aggregate.avg.rating;
+    priority -= (rating - 3) * 0.5; // Higher rating = lower priority (better)
+  }
+
+  if (performanceData?.Orders_aggregate?.aggregate?.count) {
+    const orderCount = performanceData.Orders_aggregate.aggregate.count;
+    priority -= Math.min(orderCount * 0.1, 2); // More orders = lower priority (better)
+  }
+
+  // Add small random factor for fairness
+  priority += (Math.random() * 0.5);
+
+  return priority;
+};
+
+// Distribute orders to shoppers
+export const distributeOrders = async () => {
+  try {
+    console.log("🔄 Starting real-time order distribution...");
+
+    const activeConnections = getActiveConnections();
+    const locationClusters = getLocationClusters();
+
+    if (activeConnections.size === 0) {
+      console.log("ℹ️ No active shoppers connected");
+      return;
+    }
+
+    // Get orders created in the last 10 minutes
+    const tenMinutesAgo = new Date(Date.now() - 10 * 60 * 1000).toISOString();
+
+    // Fetch available orders
+    const [regularOrdersData, reelOrdersData] = await Promise.all([
+      hasuraClient.request(GET_AVAILABLE_ORDERS, {
+        current_time: tenMinutesAgo,
+      }) as any,
+      hasuraClient.request(GET_AVAILABLE_REEL_ORDERS, {
+        current_time: tenMinutesAgo,
+      }) as any,
+    ]);
+
+    const availableOrders = regularOrdersData.Orders || [];
+    const availableReelOrders = reelOrdersData.reel_orders || [];
+
+    // Combine all orders
+    const allOrders = [
+      ...availableOrders.map((order: any) => ({ ...order, orderType: "regular" })),
+      ...availableReelOrders.map((order: any) => ({ ...order, orderType: "reel" })),
+    ];
+
+    if (allOrders.length === 0) {
+      console.log("ℹ️ No available orders for distribution");
+      return;
+    }
+
+    console.log(`📦 Found ${allOrders.length} orders to distribute to ${activeConnections.size} shoppers`);
+
+    // Process each order
+    for (const order of allOrders) {
+      await distributeOrderToBestShopper(order, activeConnections);
+    }
+
+  } catch (error) {
+    console.error("💥 Error in order distribution:", error);
+    logger.error("Error in real-time order distribution", "DistributeOrder", error);
+  }
+};
+
+// Distribute single order to best shopper
+const distributeOrderToBestShopper = async (order: any, activeConnections: Map<string, any>) => {
+  try {
+    const orderLocation = {
+      lat: parseFloat(order.Address?.latitude || order.address?.latitude),
+      lng: parseFloat(order.Address?.longitude || order.address?.longitude)
+    };
+
+    // Find best shopper for this order
+    let bestShopper = null;
+    let bestPriority = Infinity;
+
+    for (const [userId, connection] of activeConnections.entries()) {
+      if (!connection.location) continue;
+
+      // Calculate priority for this shopper
+      const priority = calculateShopperPriority(connection.location, order, null);
+
+      if (priority < bestPriority) {
+        bestPriority = priority;
+        bestShopper = { userId, connection, priority };
+      }
+    }
+
+    if (!bestShopper) {
+      console.log(`⚠️ No suitable shopper found for order ${order.id}`);
+      return;
+    }
+
+    // Format order for notification
+    const orderForNotification = {
+      id: order.id,
+      shopName: order.Shop?.name || order.Reel?.title || "Unknown Shop",
+      distance: calculateDistance(
+        bestShopper.connection.location.lat,
+        bestShopper.connection.location.lng,
+        orderLocation.lat,
+        orderLocation.lng
+      ),
+      createdAt: order.created_at,
+      customerAddress: `${order.Address?.street || order.address?.street}, ${order.Address?.city || order.address?.city}`,
+      itemsCount: order.quantity || 1,
+      estimatedEarnings: parseFloat(order.service_fee || "0") + parseFloat(order.delivery_fee || "0"),
+      orderType: order.orderType,
+      priority: bestPriority
+    };
+
+    // Send real-time notification
+    const sent = sendToShopper(bestShopper.userId, 'new-order', {
+      order: orderForNotification,
+      expiresIn: 60000, // 60 seconds
+      timestamp: Date.now()
+    });
+
+    if (sent) {
+      console.log(`✅ Order ${order.id} sent to shopper ${bestShopper.userId} (priority: ${bestPriority.toFixed(2)})`);
+      
+      // Set up expiration timer
+      setTimeout(() => {
+        sendToShopper(bestShopper.userId, 'order-expired', {
+          orderId: order.id,
+          reason: 'timeout'
+        });
+        console.log(`⏰ Order ${order.id} expired for shopper ${bestShopper.userId}`);
+      }, 60000);
+    } else {
+      console.log(`❌ Failed to send order ${order.id} to shopper ${bestShopper.userId}`);
+    }
+
+  } catch (error) {
+    console.error(`💥 Error distributing order ${order.id}:`, error);
+  }
+};
+
+// API endpoint to trigger distribution
+export default async function handler(req: NextApiRequest, res: NextApiResponse) {
+  if (req.method !== "POST") {
+    return res.status(405).json({ error: "Method not allowed" });
+  }
+
+  try {
+    await distributeOrders();
+
+    res.status(200).json({
+      success: true,
+      message: "Order distribution completed"
+    });
+
+  } catch (error) {
+    console.error("💥 Error in distribute-order API:", error);
+    res.status(500).json({
+      error: "Failed to distribute orders",
+      details: error instanceof Error ? error.message : "Unknown error"
+    });
+  }
+}

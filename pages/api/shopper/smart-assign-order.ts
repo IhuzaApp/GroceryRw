@@ -156,30 +156,23 @@ export default async function handler(
     return res.status(405).json({ error: "Method not allowed" });
   }
 
-  try {
-    console.log("🚀 Smart order finder request received:", {
-      method: req.method,
-      body: req.body
-    });
+          try {
 
     const { current_location, user_id } = req.body;
 
     if (!user_id) {
-      console.error("❌ User ID is missing from request");
-      return res.status(400).json({ 
-        error: "User ID is required" 
+      return res.status(400).json({
+        error: "User ID is required"
       });
     }
 
     if (!current_location || !current_location.lat || !current_location.lng) {
-      console.error("❌ Current location is missing or invalid:", { current_location });
-      return res.status(400).json({ 
-        error: "Current location is required" 
+      return res.status(400).json({
+        error: "Current location is required"
       });
     }
 
     if (!hasuraClient) {
-      console.error("❌ Hasura client is not initialized");
       throw new Error("Hasura client is not initialized");
     }
 
@@ -187,8 +180,6 @@ export default async function handler(
     const tenMinutesAgo = new Date(Date.now() - 10 * 60 * 1000).toISOString();
 
     // Fetch both regular and reel orders in parallel
-    console.log("📡 Fetching available orders from Hasura:", { user_id, tenMinutesAgo });
-    
     const [regularOrdersData, reelOrdersData, performanceData] = await Promise.all([
       hasuraClient.request(GET_AVAILABLE_ORDERS, {
         current_time: tenMinutesAgo,
@@ -201,22 +192,8 @@ export default async function handler(
       }) as any,
     ]);
 
-    console.log("✅ Orders fetched successfully:", {
-      regularOrders: regularOrdersData?.Orders?.length || 0,
-      reelOrders: reelOrdersData?.reel_orders?.length || 0,
-      performanceData: !!performanceData
-    });
-
     const availableOrders = regularOrdersData.Orders || [];
     const availableReelOrders = reelOrdersData.reel_orders || [];
-
-    console.log("📊 Available orders breakdown:", {
-      regularOrders: availableOrders.length,
-      reelOrders: availableReelOrders.length,
-      regularOrdersData: regularOrdersData,
-      reelOrdersData: reelOrdersData,
-      performanceData: performanceData
-    });
 
     // Combine all orders with type information
     const allOrders = [
@@ -225,7 +202,6 @@ export default async function handler(
     ];
 
     if (allOrders.length === 0) {
-      console.log(`ℹ️ No available orders for shopper ${user_id}`);
       return res.status(200).json({
         success: false,
         message: "No available orders at the moment",
@@ -244,18 +220,6 @@ export default async function handler(
 
     // Get the best order for the shopper to see (don't assign yet)
     const bestOrder = ordersWithPriority[0];
-    
-    console.log(`🎯 Found best order ${bestOrder.id} for shopper ${user_id} to review:`, {
-      orderId: bestOrder.id,
-      orderType: bestOrder.orderType,
-      priority: bestOrder.priority,
-      distance: calculateDistanceKm(
-        current_location.lat,
-        current_location.lng,
-        parseFloat(bestOrder.Address?.latitude || bestOrder.address?.latitude),
-        parseFloat(bestOrder.Address?.longitude || bestOrder.address?.longitude)
-      )
-    });
 
     // Format order for notification (don't assign yet)
     const orderForNotification = {
@@ -275,8 +239,6 @@ export default async function handler(
       priority: bestOrder.priority
     };
 
-    console.log(`✅ Found suitable order ${bestOrder.id} for shopper ${user_id} - shopper can accept or skip`);
-
     return res.status(200).json({
       success: true,
       order: orderForNotification,
@@ -284,7 +246,6 @@ export default async function handler(
     });
 
   } catch (error) {
-    console.error("💥 Error in smart order finder:", error);
     return res.status(500).json({
       error: "Failed to find order",
       details: error instanceof Error ? error.message : "Unknown error",
