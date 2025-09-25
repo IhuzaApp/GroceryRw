@@ -305,16 +305,22 @@ export default function NotificationSystem({
               theme === "dark" ? "bg-gray-700/50" : "bg-gray-50"
             }`}>
               <div className="flex items-center justify-between text-sm">
-                <span className={`${theme === "dark" ? "text-gray-300" : "text-gray-600"}`}>
-                  📦 Items
+                <span className={`${theme === "dark" ? "text-gray-300" : "text-gray-600"} flex items-center gap-1`}>
+                  <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M20 12v6a2 2 0 01-2 2h-3m-6 0H6a2 2 0 01-2-2v-6m16-4l-8-4-8 4m16 0l-8 4-8-4m16 0v2m-16-2v2" />
+                  </svg>
+                  Items
                 </span>
                 <span className={`font-medium ${theme === "dark" ? "text-white" : "text-gray-900"}`}>
                   {order.itemsCount || 0}
                 </span>
               </div>
               <div className="flex items-center justify-between text-sm">
-                <span className={`${theme === "dark" ? "text-gray-300" : "text-gray-600"}`}>
-                  💰 Earnings
+                <span className={`${theme === "dark" ? "text-gray-300" : "text-gray-600"} flex items-center gap-1`}>
+                  <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-10V4m0 12v2m8-6a8 8 0 11-16 0 8 8 0 0116 0z" />
+                  </svg>
+                  Earnings
                 </span>
                 <span className={`font-semibold ${
                   theme === "dark" ? "text-green-400" : "text-green-600"
@@ -322,8 +328,11 @@ export default function NotificationSystem({
                   {formatCurrencySync(order.estimatedEarnings || 0)}
                 </span>
               </div>
-              <div className="text-xs text-gray-500 truncate">
-                📍 {order.customerAddress}
+              <div className="text-xs text-gray-500 truncate flex items-center gap-1">
+                <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 11c1.657 0 3-1.343 3-3S13.657 5 12 5 9 6.343 9 8s1.343 3 3 3zm0 0c-4 0-7 2.5-7 5v1h14v-1c0-2.5-3-5-7-5z" />
+                </svg>
+                {order.customerAddress}
               </div>
             </div>
 
@@ -539,17 +548,30 @@ export default function NotificationSystem({
                 </div>
               </div>
               <div className="ml-3 flex-1">
-                <p className="text-sm font-bold text-white">
-                  ⚠️ Order Expiring Soon!
+                <p className="text-sm font-bold text-white flex items-center gap-2">
+                  <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01M10.29 3.86l-7.6 13.15A2 2 0 004.29 20h15.42a2 2 0 001.71-2.99l-7.6-13.15a2 2 0 00-3.52 0z" />
+                  </svg>
+                  Order Expiring Soon!
                 </p>
                 <div className="mt-1 text-sm text-white/90">
                   <div className="font-medium">{order.customerAddress}</div>
                   <div className="text-white/80">
                     {order.shopName} ({order.distance}km)
                   </div>
-                  <div className="mt-1 font-bold text-white">
-                    📦 {order.itemsCount || 0} items • 💰{" "}
-                    {formatCurrencySync(order.estimatedEarnings || 0)}
+                  <div className="mt-2 grid grid-cols-2 gap-3">
+                    <div className="flex items-center gap-1 text-white/90 text-sm">
+                      <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M20 12v6a2 2 0 01-2 2h-3m-6 0H6a2 2 0 01-2-2v-6m16-4l-8-4-8 4m16 0l-8 4-8-4m16 0v2m-16-2v2" />
+                      </svg>
+                      {order.itemsCount || 0} items
+                    </div>
+                    <div className="flex items-center gap-1 text-white text-sm font-semibold">
+                      <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-10V4m0 12v2m8-6a8 8 0 11-16 0 8 8 0 0116 0z" />
+                      </svg>
+                      {formatCurrencySync(order.estimatedEarnings || 0)}
+                    </div>
                   </div>
                   <div className="mt-1 animate-pulse font-bold text-white">
                     ⏰ This batch will be reassigned in 20 seconds!
