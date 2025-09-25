@@ -20,6 +20,8 @@ A comprehensive grocery delivery platform with advanced revenue tracking, wallet
 
 ### 7. Smart Notification & Assignment System
 
+### 8. Firebase Cloud Messaging (FCM) System
+
 ---
 
 # Smart Notification & Assignment System
@@ -319,6 +321,258 @@ const ASSIGNMENT_CONFIG = {
 - Assignment attempts and results
 - Performance metrics and bottlenecks
 - Error tracking and debugging information
+
+---
+
+# Firebase Cloud Messaging (FCM) System
+
+## Overview
+
+The Firebase Cloud Messaging system provides push notifications for real-time communication between shoppers, customers, and the platform. It enables background notifications when the app is not active and supports multi-platform messaging.
+
+## Current Status
+
+✅ **Chat messaging is working**  
+✅ **Sound notifications are working**  
+✅ **Real-time WebSocket notifications are working**  
+❌ **Push notifications are disabled** (missing Firebase credentials)
+
+## Features Implemented
+
+- **FCM Token Management**: Save and manage user FCM tokens
+- **Push Notifications**: Send notifications when messages are received
+- **Background Notifications**: Handle notifications when app is not active
+- **Notification Actions**: Click to open chat or close notification
+- **Token Cleanup**: Remove invalid tokens automatically
+- **Multi-platform Support**: Support for web, Android, and iOS
+- **Real-time Chat**: WebSocket-based messaging with FCM fallback
+
+## Setup Guide
+
+### Step 1: Firebase Console Setup
+
+1. Go to [Firebase Console](https://console.firebase.google.com/)
+2. Select your project or create a new one
+3. Go to Project Settings > Cloud Messaging
+4. Generate a new Web Push certificate (VAPID key)
+5. Copy the VAPID key for later use
+
+### Step 2: Environment Variables
+
+Add these environment variables to your `.env.local` file:
+
+```bash
+# Firebase Configuration (Client-side)
+NEXT_PUBLIC_FIREBASE_API_KEY=your_api_key_here
+NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN=your_project_id.firebaseapp.com
+NEXT_PUBLIC_FIREBASE_PROJECT_ID=your_project_id
+NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET=your_project_id.appspot.com
+NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID=your_messaging_sender_id
+NEXT_PUBLIC_FIREBASE_APP_ID=your_app_id
+NEXT_PUBLIC_FIREBASE_VAPID_KEY=your_vapid_key_here
+
+# Firebase Admin SDK (Server-side)
+FIREBASE_PROJECT_ID=your_project_id
+FIREBASE_CLIENT_EMAIL=your_service_account_email
+FIREBASE_PRIVATE_KEY="-----BEGIN PRIVATE KEY-----\nyour_private_key_here\n-----END PRIVATE KEY-----\n"
+```
+
+### Step 3: Firebase Admin SDK Setup
+
+1. Go to Firebase Console > Project Settings > Service Accounts
+2. Click "Generate new private key"
+3. Download the JSON file
+4. Extract the values and add them to your environment variables
+
+### Step 4: Update Service Worker
+
+Update the `public/firebase-messaging-sw.js` file with your actual Firebase config:
+
+```javascript
+const firebaseConfig = {
+  apiKey: "YOUR_ACTUAL_API_KEY",
+  authDomain: "YOUR_ACTUAL_AUTH_DOMAIN",
+  projectId: "YOUR_ACTUAL_PROJECT_ID",
+  storageBucket: "YOUR_ACTUAL_STORAGE_BUCKET",
+  messagingSenderId: "YOUR_ACTUAL_MESSAGING_SENDER_ID",
+  appId: "YOUR_ACTUAL_APP_ID",
+};
+```
+
+### Step 5: Test the Setup
+
+1. Start your development server: `npm run dev`
+2. Open the browser console
+3. Look for FCM initialization logs
+4. Send a test message in the chat
+5. Check if notifications appear
+
+## System Architecture
+
+```mermaid
+graph TB
+    A[User Sends Message] --> B[WebSocket Server]
+    B --> C[Real-time Delivery]
+    C --> D[Recipient Online?]
+    D -->|Yes| E[WebSocket Notification]
+    D -->|No| F[FCM Push Notification]
+    
+    E --> G[Sound + Toast Notification]
+    F --> H[Background Push Notification]
+    
+    H --> I[User Clicks Notification]
+    I --> J[Open Chat Interface]
+    
+    G --> K[User Sees Message]
+    J --> K
+```
+
+## Components
+
+### 1. FCM Service (`src/services/fcmService.ts`)
+
+**Purpose**: Server-side FCM service for sending push notifications.
+
+**Key Features**:
+- Send notifications to specific users
+- Handle token management
+- Batch notification sending
+- Error handling and retry logic
+
+### 2. FCM Client (`src/services/fcmClient.ts`)
+
+**Purpose**: Client-side FCM service for managing tokens and permissions.
+
+**Key Features**:
+- Request notification permissions
+- Generate and manage FCM tokens
+- Handle notification clicks
+- Token cleanup on logout
+
+### 3. Service Worker (`public/firebase-messaging-sw.js`)
+
+**Purpose**: Handles background notifications when the app is not active.
+
+**Key Features**:
+- Background message handling
+- Notification display
+- Click action handling
+- Firebase configuration
+
+## API Endpoints
+
+### 1. Save FCM Token (`/api/fcm/save-token`)
+
+**POST** - Save user's FCM token for push notifications
+
+```typescript
+POST /api/fcm/save-token
+{
+  token: string,
+  userId: string
+}
+```
+
+### 2. Remove FCM Token (`/api/fcm/remove-token`)
+
+**POST** - Remove user's FCM token
+
+```typescript
+POST /api/fcm/remove-token
+{
+  token: string,
+  userId: string
+}
+```
+
+### 3. Send Notification (`/api/fcm/send-notification`)
+
+**POST** - Send push notification to user
+
+```typescript
+POST /api/fcm/send-notification
+{
+  userId: string,
+  title: string,
+  body: string,
+  data?: object
+}
+```
+
+## Integration Points
+
+### 1. Chat System Integration
+
+- **Real-time Messaging**: WebSocket for instant delivery
+- **FCM Fallback**: Push notifications when user is offline
+- **Sound Notifications**: Audio alerts for new messages
+- **Visual Indicators**: Toast notifications and UI updates
+
+### 2. Order Notifications
+
+- **New Order Alerts**: Notify shoppers of available orders
+- **Order Updates**: Status changes and assignments
+- **Batch Notifications**: Grouped order notifications
+- **Priority Alerts**: High-priority order notifications
+
+### 3. System Notifications
+
+- **Maintenance Alerts**: System downtime notifications
+- **Feature Updates**: New feature announcements
+- **Security Alerts**: Account security notifications
+- **Earnings Updates**: Payment and earnings notifications
+
+## Testing
+
+### 1. Permission Request
+- The app requests notification permission on first load
+- Users can enable/disable notifications in browser settings
+
+### 2. Token Generation
+- FCM tokens are automatically generated and saved
+- Tokens are refreshed when needed
+- Invalid tokens are automatically cleaned up
+
+### 3. Message Notifications
+- When a message is sent, the recipient gets a push notification
+- Notifications work even when the app is not active
+- Clicking notifications opens the relevant chat
+
+### 4. Background Notifications
+- Notifications appear in the system notification tray
+- Click actions open the app to the relevant screen
+- Notifications persist until user interaction
+
+## Troubleshooting
+
+### Common Issues
+
+- **No notifications**: Check browser console for errors
+- **Permission denied**: User needs to manually enable notifications in browser settings
+- **Token errors**: Check Firebase configuration and environment variables
+- **Service worker issues**: Ensure the service worker file is accessible at `/firebase-messaging-sw.js`
+
+### Debug Steps
+
+1. Check browser console for FCM initialization errors
+2. Verify environment variables are correctly set
+3. Test with a simple notification first
+4. Check Firebase console for delivery reports
+5. Verify service worker is registered correctly
+
+## Files Created/Modified
+
+- `src/services/fcmService.ts` - Server-side FCM service
+- `src/services/fcmClient.ts` - Client-side FCM service
+- `pages/api/fcm/save-token.ts` - API to save FCM tokens
+- `pages/api/fcm/remove-token.ts` - API to remove FCM tokens
+- `pages/api/fcm/send-notification.ts` - API to send FCM notifications
+- `public/firebase-messaging-sw.js` - Service worker for background notifications
+- `src/context/ChatContext.tsx` - Updated to initialize FCM and send notifications
+- `pages/Plasa/chat/[orderId].tsx` - Updated to send FCM notifications
+- `pages/Messages/[orderId].tsx` - Updated to send FCM notifications
+- `src/components/chat/CustomerChatDrawer.tsx` - Updated to send FCM notifications
+- `src/components/chat/ShopperChatDrawer.tsx` - Updated to send FCM notifications
 
 ---
 
