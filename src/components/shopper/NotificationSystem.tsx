@@ -5,6 +5,7 @@ import toast from "react-hot-toast";
 import { logger } from "../../utils/logger";
 import { formatCurrencySync } from "../../utils/formatCurrency";
 import { useTheme } from "../../context/ThemeContext";
+import { useWebSocket } from "../../hooks/useWebSocket";
 
 interface Order {
   id: string;
@@ -61,6 +62,103 @@ export default function NotificationSystem({
   const batchAssignments = useRef<BatchAssignment[]>([]);
   const lastOrderIds = useRef<Set<string>>(new Set());
   const activeToasts = useRef<Map<string, any>>(new Map()); // Track active toasts by order ID
+
+  // WebSocket integration
+  const { isConnected, sendLocation, acceptOrder, rejectOrder } = useWebSocket();
+  
+  // Show WebSocket connection status
+  useEffect(() => {
+    if (isConnected) {
+      logger.info("WebSocket connected - using real-time notifications", "NotificationSystem");
+    } else {
+      logger.info("WebSocket disconnected - using polling fallback", "NotificationSystem");
+    }
+  }, [isConnected]);
+
+  // Send location updates to WebSocket when location changes
+  useEffect(() => {
+    if (isConnected && currentLocation) {
+      sendLocation(currentLocation);
+      logger.info("Location sent to WebSocket", "NotificationSystem", currentLocation);
+    }
+  }, [isConnected, currentLocation, sendLocation]);
+
+  // WebSocket event listeners
+  useEffect(() => {
+    const handleWebSocketNewOrder = (event: CustomEvent) => {
+      const { order } = event.detail;
+      logger.info("WebSocket new order received", "NotificationSystem", order);
+      
+      // Convert to Order format and show notification
+      const orderForNotification: Order = {
+        id: order.id,
+        shopName: order.shopName,
+        distance: order.distance,
+        createdAt: order.createdAt,
+        customerAddress: order.customerAddress,
+        itemsCount: order.itemsCount || 0,
+        estimatedEarnings: order.estimatedEarnings || 0,
+        orderType: order.orderType || "regular",
+      };
+
+      // Show notification
+      showToast(orderForNotification);
+      showDesktopNotification(orderForNotification);
+      sendFirebaseNotification(orderForNotification, "batch");
+    };
+
+    const handleWebSocketBatchOrders = (event: CustomEvent) => {
+      const { orders } = event.detail;
+      logger.info("WebSocket batch orders received", "NotificationSystem", orders);
+      
+      // Show notifications for each order
+      orders.forEach((order: any) => {
+        const orderForNotification: Order = {
+          id: order.id,
+          shopName: order.shopName,
+          distance: order.distance,
+          createdAt: order.createdAt,
+          customerAddress: order.customerAddress,
+          itemsCount: order.itemsCount || 0,
+          estimatedEarnings: order.estimatedEarnings || 0,
+          orderType: order.orderType || "regular",
+        };
+
+        showToast(orderForNotification);
+        showDesktopNotification(orderForNotification);
+        sendFirebaseNotification(orderForNotification, "batch");
+      });
+    };
+
+    const handleWebSocketOrderExpired = (event: CustomEvent) => {
+      const { orderId } = event.detail;
+      logger.info("WebSocket order expired", "NotificationSystem", { orderId });
+      
+      // Remove expired order from active assignments
+      batchAssignments.current = batchAssignments.current.filter(
+        (assignment) => assignment.orderId !== orderId
+      );
+      
+      // Dismiss toast
+      const existingToast = activeToasts.current.get(orderId);
+      if (existingToast) {
+        toast.dismiss(existingToast);
+        activeToasts.current.delete(orderId);
+      }
+    };
+
+    // Add event listeners
+    window.addEventListener('websocket-new-order', handleWebSocketNewOrder as EventListener);
+    window.addEventListener('websocket-batch-orders', handleWebSocketBatchOrders as EventListener);
+    window.addEventListener('websocket-order-expired', handleWebSocketOrderExpired as EventListener);
+
+    // Cleanup
+    return () => {
+      window.removeEventListener('websocket-new-order', handleWebSocketNewOrder as EventListener);
+      window.removeEventListener('websocket-batch-orders', handleWebSocketBatchOrders as EventListener);
+      window.removeEventListener('websocket-order-expired', handleWebSocketOrderExpired as EventListener);
+    };
+  }, []);
 
   // Initialize audio immediately
   useEffect(() => {
@@ -270,10 +368,10 @@ export default function NotificationSystem({
               >
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                </svg>
+                  </svg>
               </button>
-            </div>
-          </div>
+                </div>
+              </div>
 
           {/* Content */}
           <div className="p-4">
@@ -297,7 +395,7 @@ export default function NotificationSystem({
                 }`}>
                   {order.distance}km away
                 </p>
-              </div>
+                  </div>
             </div>
 
             {/* Order Details */}
@@ -325,46 +423,56 @@ export default function NotificationSystem({
                 <span className={`font-semibold ${
                   theme === "dark" ? "text-green-400" : "text-green-600"
                 }`}>
-                  {formatCurrencySync(order.estimatedEarnings || 0)}
+                    {formatCurrencySync(order.estimatedEarnings || 0)}
                 </span>
-              </div>
+                  </div>
               <div className="text-xs text-gray-500 truncate flex items-center gap-1">
                 <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 11c1.657 0 3-1.343 3-3S13.657 5 12 5 9 6.343 9 8s1.343 3 3 3zm0 0c-4 0-7 2.5-7 5v1h14v-1c0-2.5-3-5-7-5z" />
                 </svg>
                 {order.customerAddress}
-              </div>
+                </div>
             </div>
 
             {/* Action Buttons */}
             <div className="flex space-x-2">
-              <button
-                onClick={() => {
-                  removeToastForOrder(order.id);
-                  onAcceptBatch?.(order.id);
-                  toast.dismiss(t.id);
-                }}
+                  <button
+                    onClick={() => {
+                      removeToastForOrder(order.id);
+                  // Use WebSocket if connected, otherwise fallback to API
+                  if (isConnected) {
+                    acceptOrder(order.id);
+                  } else {
+                      onAcceptBatch?.(order.id);
+                  }
+                      toast.dismiss(t.id);
+                    }}
                 className="flex-1 bg-green-500 hover:bg-green-600 text-white text-sm font-medium py-2.5 px-4 rounded-lg transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2"
               >
                 Accept Order
-              </button>
-              <button
-                onClick={() => {
-                  removeToastForOrder(order.id);
-                  batchAssignments.current = batchAssignments.current.filter(
-                    (assignment) => assignment.orderId !== order.id
-                  );
-                  toast.dismiss(t.id);
-                  logger.info(
-                    `Skipped order ${order.id} - allowing other shoppers`,
-                    "NotificationSystem"
-                  );
-                }}
+                  </button>
+                  <button
+                    onClick={() => {
+                      removeToastForOrder(order.id);
+                  // Use WebSocket if connected, otherwise fallback to local state
+                  if (isConnected) {
+                    rejectOrder(order.id);
+                  } else {
+                    batchAssignments.current = batchAssignments.current.filter(
+                          (assignment) => assignment.orderId !== order.id
+                        );
+                  }
+                      toast.dismiss(t.id);
+                      logger.info(
+                        `Skipped order ${order.id} - allowing other shoppers`,
+                        "NotificationSystem"
+                      );
+                    }}
                 className="flex-1 bg-gray-500 hover:bg-gray-600 text-white text-sm font-medium py-2.5 px-4 rounded-lg transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2"
               >
-                Skip
-              </button>
-            </div>
+                Skip Order
+                  </button>
+                </div>
           </div>
         </div>
       ),
@@ -570,7 +678,7 @@ export default function NotificationSystem({
                       <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-10V4m0 12v2m8-6a8 8 0 11-16 0 8 8 0 0116 0z" />
                       </svg>
-                      {formatCurrencySync(order.estimatedEarnings || 0)}
+                    {formatCurrencySync(order.estimatedEarnings || 0)}
                     </div>
                   </div>
                   <div className="mt-1 animate-pulse font-bold text-white">
@@ -581,7 +689,12 @@ export default function NotificationSystem({
                   <button
                     onClick={() => {
                       removeToastForOrder(order.id);
+                      // Use WebSocket if connected, otherwise fallback to API
+                      if (isConnected) {
+                        acceptOrder(order.id);
+                      } else {
                       onAcceptBatch?.(order.id);
+                      }
                       toast.dismiss(t.id);
                     }}
                     className={`animate-pulse rounded-lg px-4 py-2 text-sm font-medium text-white backdrop-blur-sm transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-white/50 ${
@@ -595,11 +708,15 @@ export default function NotificationSystem({
                   <button
                     onClick={() => {
                       removeToastForOrder(order.id);
-                      // Remove assignment to allow other shoppers to get this order
+                      // Use WebSocket if connected, otherwise fallback to local state
+                      if (isConnected) {
+                        rejectOrder(order.id);
+                      } else {
                       batchAssignments.current =
                         batchAssignments.current.filter(
                           (assignment) => assignment.orderId !== order.id
                         );
+                      }
                       toast.dismiss(t.id);
                       logger.info(
                         `Skipped expiring order ${order.id} - allowing other shoppers`,
@@ -801,22 +918,22 @@ export default function NotificationSystem({
       return;
     }
 
-      logger.info(
+    logger.info(
         "Using smart order finder system to find best order",
-        "NotificationSystem"
-      );
+      "NotificationSystem"
+    );
 
     try {
       // Use smart order finder API instead of polling
       const response = await fetch("/api/shopper/smart-assign-order", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          current_location: currentLocation,
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            current_location: currentLocation,
           user_id: session.user.id,
-        }),
+          }),
       });
 
       const data = await response.json();
@@ -852,24 +969,24 @@ export default function NotificationSystem({
         );
 
         // Check if user already has an active order review
-        const currentUserAssignment = batchAssignments.current.find(
-          (assignment) => assignment.shopperId === session.user.id
-        );
+          const currentUserAssignment = batchAssignments.current.find(
+            (assignment) => assignment.shopperId === session.user.id
+          );
 
-        if (!currentUserAssignment) {
+          if (!currentUserAssignment) {
           const order = data.order;
-          const newAssignment: BatchAssignment = {
-            shopperId: session.user.id,
+            const newAssignment: BatchAssignment = {
+              shopperId: session.user.id,
             orderId: order.id,
-            assignedAt: currentTime,
-            expiresAt: currentTime + 60000, // Expires in 1 minute
-            warningShown: false,
-            warningTimeout: null,
-          };
-          batchAssignments.current.push(newAssignment);
+              assignedAt: currentTime,
+              expiresAt: currentTime + 60000, // Expires in 1 minute
+              warningShown: false,
+              warningTimeout: null,
+            };
+            batchAssignments.current.push(newAssignment);
 
           // Convert to Order format for compatibility
-          const orderForNotification: Order = {
+            const orderForNotification: Order = {
             id: order.id,
             shopName: order.shopName,
             distance: order.distance,
@@ -881,22 +998,22 @@ export default function NotificationSystem({
           };
 
           await playNotificationSound({ enabled: true, volume: 0.7 });
-          showToast(orderForNotification);
-          showDesktopNotification(orderForNotification);
-          sendFirebaseNotification(orderForNotification, "batch");
+            showToast(orderForNotification);
+            showDesktopNotification(orderForNotification);
+            sendFirebaseNotification(orderForNotification, "batch");
 
-          // Set up warning notification after 40 seconds
-          const warningTimeout = setTimeout(() => {
-            showWarningNotification(orderForNotification);
+            // Set up warning notification after 40 seconds
+            const warningTimeout = setTimeout(() => {
+              showWarningNotification(orderForNotification);
           }, 40000);
 
-          newAssignment.warningTimeout = warningTimeout;
-          lastNotificationTime.current = currentTime;
+            newAssignment.warningTimeout = warningTimeout;
+            lastNotificationTime.current = currentTime;
 
-          logger.info(
+            logger.info(
             `Smart order finder: Order ${order.id} shown to shopper ${session.user.id} for review - priority: ${order.priority}`,
-            "NotificationSystem"
-          );
+              "NotificationSystem"
+            );
         } else {
           logger.debug(
             "User already has an active order review, skipping smart order finder",
@@ -938,15 +1055,11 @@ export default function NotificationSystem({
     // Initial check
     checkForNewOrders();
 
-    // Set up interval for checking
+    // Set up interval for checking (less frequent when WebSocket is connected)
+    const intervalTime = isConnected ? 120000 : 30000; // 2 minutes with WebSocket, 30 seconds without
     checkInterval.current = setInterval(() => {
-      const now = new Date();
-      logger.debug(
-        `Smart order finder interval triggered at ${now.toLocaleTimeString()}`,
-        "NotificationSystem"
-      );
       checkForNewOrders();
-        }, 30000); // Check every 30 seconds with smart order finder
+        }, intervalTime);
 
     setIsListening(true);
   };
@@ -1008,5 +1121,20 @@ export default function NotificationSystem({
   }, [session, currentLocation]);
 
   // The component doesn't render anything visible
+  // WebSocket connection status indicator (optional UI element)
+  if (process.env.NODE_ENV === 'development') {
+    return (
+      <div className="fixed top-4 right-4 z-50">
+        <div className={`px-3 py-2 rounded-lg text-xs font-medium ${
+          isConnected 
+            ? 'bg-green-100 text-green-800 border border-green-200' 
+            : 'bg-red-100 text-red-800 border border-red-200'
+        }`}>
+          {isConnected ? '🔌 WebSocket Connected' : '📡 Polling Mode'}
+        </div>
+      </div>
+    );
+  }
+
   return null;
 }

@@ -2,6 +2,7 @@ import { NextApiRequest, NextApiResponse } from "next";
 import { hasuraClient } from "../../../src/lib/hasuraClient";
 import { gql } from "graphql-request";
 import { logger } from "../../../src/utils/logger";
+import { getActiveConnections, getLocationClusters, sendToCluster } from "../websocket/connection";
 
 // GraphQL query to get available dashers
 const GET_AVAILABLE_DASHERS = gql`
@@ -226,6 +227,10 @@ export default async function handler(
       throw new Error("Hasura client is not initialized");
     }
 
+    // Get WebSocket connections
+    const activeConnections = getActiveConnections();
+    const locationClusters = getLocationClusters();
+
     // Get current time and day for schedule checking
     const now = new Date();
     const currentTime = now.toTimeString().split(" ")[0] + "+00:00";
@@ -252,42 +257,90 @@ export default async function handler(
     const availableOrders = regularOrdersData.Orders || [];
     const availableReelOrders = reelOrdersData.reel_orders || [];
 
-    logger.info(`Processing batch: ${availableDashers.length} dashers, ${availableOrders.length} regular orders, ${availableReelOrders.length} reel orders`);
-
-    // Group shoppers by location
-    const shopperClusters = groupShoppersByLocation(availableDashers, 2); // 2km cluster radius
+    // Use WebSocket clusters if available, otherwise fall back to database clusters
+    let shopperClusters;
+    if (locationClusters.size > 0) {
+      // Use real-time WebSocket clusters
+      shopperClusters = Array.from(locationClusters.values()).map(cluster => ({
+        id: cluster.center.lat + '_' + cluster.center.lng,
+        center: cluster.center,
+        shoppers: cluster.shoppers.map(userId => {
+          const conn = activeConnections.get(userId);
+          return conn ? {
+            user_id: userId,
+            last_known_latitude: conn.location?.lat,
+            last_known_longitude: conn.location?.lng
+          } : null;
+        }).filter(Boolean)
+      }));
+    } else {
+      // Fall back to database-based clustering
+      shopperClusters = groupShoppersByLocation(availableDashers, 2);
+    }
 
     // Group orders by location
     const regularOrderGroups = groupOrdersByLocation(availableOrders, "regular");
     const reelOrderGroups = groupOrdersByLocation(availableReelOrders, "reel");
-
     const allOrderGroups = [...regularOrderGroups, ...reelOrderGroups];
 
-    // Process each cluster
+    // Process each cluster with real-time notifications
     const clusterAssignments: Array<{
       clusterId: string;
       shopperCount: number;
       nearbyOrders: number;
       assignments: any[];
+      notificationsSent: number;
     }> = [];
+
+    // WebSocket instance is available globally
 
     for (const cluster of shopperClusters) {
       const nearbyOrders = findNearbyOrdersForCluster(cluster, allOrderGroups, 10);
+      
+      let notificationsSent = 0;
+      
+      // Send real-time notifications if WebSocket is available
+      if (nearbyOrders.length > 0) {
+        const clusterId = cluster.id;
+        const orderNotifications = nearbyOrders.map(order => ({
+          id: order.id,
+          shopName: order.Shops?.name || order.Reel?.title || "Unknown Shop",
+          distance: calculateDistanceKm(
+            cluster.center.lat,
+            cluster.center.lng,
+            parseFloat(order.Address?.latitude || order.address?.latitude),
+            parseFloat(order.Address?.longitude || order.address?.longitude)
+          ),
+          createdAt: order.created_at,
+          customerAddress: `${order.Address?.street || order.address?.street}, ${order.Address?.city || order.address?.city}`,
+          itemsCount: order.quantity || 1,
+          estimatedEarnings: parseFloat(order.service_fee || "0") + parseFloat(order.delivery_fee || "0"),
+          orderType: order.orderType || "regular"
+        }));
+
+        // Send batch notification to cluster
+        notificationsSent = sendToCluster(clusterId, 'batch-orders', {
+          orders: orderNotifications,
+          clusterId: clusterId,
+          expiresIn: 60000,
+          timestamp: Date.now()
+        });
+      }
 
       clusterAssignments.push({
         clusterId: cluster.id,
         shopperCount: cluster.shoppers.length,
         nearbyOrders: nearbyOrders.length,
-        assignments: nearbyOrders.slice(0, Math.min(cluster.shoppers.length, nearbyOrders.length))
+        assignments: nearbyOrders.slice(0, Math.min(cluster.shoppers.length, nearbyOrders.length)),
+        notificationsSent
       });
-
-      logger.info(`Cluster ${cluster.id}: ${cluster.shoppers.length} shoppers, ${nearbyOrders.length} nearby orders`);
     }
 
     // Calculate efficiency metrics
     const totalShoppers = availableDashers.length;
     const totalOrders = availableOrders.length + availableReelOrders.length;
     const totalClusters = shopperClusters.length;
+    const totalNotifications = clusterAssignments.reduce((sum, cluster) => sum + cluster.notificationsSent, 0);
     const avgShoppersPerCluster = totalShoppers / totalClusters;
     const avgOrdersPerCluster = totalOrders / totalClusters;
 
@@ -295,16 +348,16 @@ export default async function handler(
       totalShoppers,
       totalOrders,
       totalClusters,
+      totalNotifications,
       avgShoppersPerCluster: Math.round(avgShoppersPerCluster * 100) / 100,
       avgOrdersPerCluster: Math.round(avgOrdersPerCluster * 100) / 100,
-      clusterUtilization: Math.round((totalOrders / totalShoppers) * 100) / 100
+      clusterUtilization: Math.round((totalOrders / totalShoppers) * 100) / 100,
+      notificationRate: Math.round((totalNotifications / totalShoppers) * 100) / 100
     };
-
-    logger.info("Batch processing completed", efficiency);
 
     return res.status(200).json({
       success: true,
-      message: `Processed ${totalShoppers} shoppers and ${totalOrders} orders across ${totalClusters} clusters`,
+      message: `Processed ${totalShoppers} shoppers and ${totalOrders} orders across ${totalClusters} clusters with ${totalNotifications} real-time notifications`,
       data: {
         clusters: clusterAssignments,
         efficiency,
@@ -313,7 +366,9 @@ export default async function handler(
           reelOrders: availableReelOrders.length,
           totalOrders,
           totalShoppers,
-          totalClusters
+          totalClusters,
+          totalNotifications,
+          websocketConnections: activeConnections.size
         }
       }
     });
