@@ -230,25 +230,25 @@ export default function ItemCartTable({
       onLoadingChange?.(false);
     } else {
       // Handle regular shop cart items
-    fetch(`/api/cart-items?shop_id=${shopId}`)
-      .then((res) => res.json())
-      .then((data: { items?: ApiCartItem[] }) => {
-        const fetchedItems = data.items ?? [];
-        setCartItems(
+      fetch(`/api/cart-items?shop_id=${shopId}`)
+        .then((res) => res.json())
+        .then((data: { items?: ApiCartItem[] }) => {
+          const fetchedItems = data.items ?? [];
+          setCartItems(
             fetchedItems.map((item: ApiCartItem) => ({
               ...item,
               checked: true,
             }))
-        );
-      })
-      .catch((err) => {
-        logger.error("Failed to fetch cart items", "CartsTable", err);
-        setCartItems([]);
-      })
-      .finally(() => {
-        setIsLoadingItems(false);
-        onLoadingChangeRef.current?.(false);
-      });
+          );
+        })
+        .catch((err) => {
+          logger.error("Failed to fetch cart items", "CartsTable", err);
+          setCartItems([]);
+        })
+        .finally(() => {
+          setIsLoadingItems(false);
+          onLoadingChangeRef.current?.(false);
+        });
     }
   }, [shopId, isFoodCart, restaurant]);
 
@@ -275,14 +275,14 @@ export default function ItemCartTable({
         );
       } else {
         // Handle regular shop cart quantity update
-      await fetch("/api/cart-items", {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ cart_item_id: id, quantity: newQty }),
-      });
-      setCartItems((prev) =>
-        prev.map((i) => (i.id === id ? { ...i, quantity: newQty } : i))
-      );
+        await fetch("/api/cart-items", {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ cart_item_id: id, quantity: newQty }),
+        });
+        setCartItems((prev) =>
+          prev.map((i) => (i.id === id ? { ...i, quantity: newQty } : i))
+        );
       }
     } catch (err) {
       logger.error("Failed to increase quantity", "CartsTable", err);
@@ -310,14 +310,14 @@ export default function ItemCartTable({
         );
       } else {
         // Handle regular shop cart quantity update
-      await fetch("/api/cart-items", {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ cart_item_id: id, quantity: newQty }),
-      });
-      setCartItems((prev) =>
-        prev.map((i) => (i.id === id ? { ...i, quantity: newQty } : i))
-      );
+        await fetch("/api/cart-items", {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ cart_item_id: id, quantity: newQty }),
+        });
+        setCartItems((prev) =>
+          prev.map((i) => (i.id === id ? { ...i, quantity: newQty } : i))
+        );
       }
     } catch (err) {
       logger.error("Failed to decrease quantity", "CartsTable", err);
@@ -339,12 +339,12 @@ export default function ItemCartTable({
         setCartItems((prev) => prev.filter((i) => i.id !== id));
       } else {
         // Handle regular shop cart item removal
-      await fetch("/api/cart-items", {
-        method: "DELETE",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ cart_item_id: id }),
-      });
-      setCartItems((prev) => prev.filter((i) => i.id !== id));
+        await fetch("/api/cart-items", {
+          method: "DELETE",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ cart_item_id: id }),
+        });
+        setCartItems((prev) => prev.filter((i) => i.id !== id));
       }
     } catch (err) {
       logger.error("Failed to delete cart item", "CartsTable", err);
@@ -378,12 +378,22 @@ export default function ItemCartTable({
   const prevUnitsRef = useRef(totalUnits);
 
   // Only call callbacks for regular shop carts when values actually change
-  if (!isFoodCart && onTotalChange && typeof onTotalChange === 'function' && prevTotalRef.current !== totalNumber) {
+  if (
+    !isFoodCart &&
+    onTotalChange &&
+    typeof onTotalChange === "function" &&
+    prevTotalRef.current !== totalNumber
+  ) {
     onTotalChange(totalNumber);
     prevTotalRef.current = totalNumber;
   }
 
-  if (!isFoodCart && onUnitsChange && typeof onUnitsChange === 'function' && prevUnitsRef.current !== totalUnits) {
+  if (
+    !isFoodCart &&
+    onUnitsChange &&
+    typeof onUnitsChange === "function" &&
+    prevUnitsRef.current !== totalUnits
+  ) {
     onUnitsChange(totalUnits);
     prevUnitsRef.current = totalUnits;
   }

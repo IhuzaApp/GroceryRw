@@ -5007,6 +5007,7 @@ GET /api/shopper/availableOrders?latitude=1.234&longitude=5.678&maxTravelTime=15
 ```
 
 **Database Query Logic:**
+
 - **Regular Orders:** `WHERE status = 'PENDING' AND shopper_id IS NULL`
 - **Reel Orders:** `WHERE status = 'PENDING' AND shopper_id IS NULL`
 - **Field Clarification:**
@@ -5015,10 +5016,12 @@ GET /api/shopper/availableOrders?latitude=1.234&longitude=5.678&maxTravelTime=15
 - **Location Filtering:** Orders filtered by travel time from shopper location to shop
 
 **⚠️ Common Mistake:**
+
 - **Incorrect:** `WHERE user_id IS NULL` (would find orders with no customer)
 - **Correct:** `WHERE shopper_id IS NULL` (finds orders with no assigned shopper)
 
 **Troubleshooting:**
+
 - **Issue:** "No orders showing on dashboard despite pending orders in database"
 - **Cause:** Querying for `user_id IS NULL` instead of `shopper_id IS NULL`
 - **Solution:** Update GraphQL query to use `shopper_id: { _is_null: true }`
@@ -5060,22 +5063,24 @@ GET /api/shopper/performance-metrics?shopperId=uuid
 The system calculates comprehensive performance metrics that include **both regular orders and reel orders**:
 
 #### **Overall Performance Score (0-100):**
+
 ```typescript
 const weights = {
-  customerRating: 0.30,    // 30% weight
-  onTimeDelivery: 0.25,    // 25% weight
-  orderAccuracy: 0.20,     // 20% weight
-  acceptanceRate: 0.25,    // 25% weight
+  customerRating: 0.3, // 30% weight
+  onTimeDelivery: 0.25, // 25% weight
+  orderAccuracy: 0.2, // 20% weight
+  acceptanceRate: 0.25, // 25% weight
 };
 
-const score = 
-  (customerRating * 20) * 0.30 +      // 1-5 stars → 20-100 points
-  onTimeDelivery * 0.25 +             // 0-100%
-  orderAccuracy * 0.20 +              // 0-100%
-  acceptanceRate * 0.25;              // 0-100%
+const score =
+  customerRating * 20 * 0.3 + // 1-5 stars → 20-100 points
+  onTimeDelivery * 0.25 + // 0-100%
+  orderAccuracy * 0.2 + // 0-100%
+  acceptanceRate * 0.25; // 0-100%
 ```
 
 #### **Example Calculation:**
+
 ```typescript
 // Shopper with these metrics:
 customerRating: 4.5/5 stars
@@ -5094,15 +5099,18 @@ acceptanceRate: 100%
 #### **Key Metrics Explained:**
 
 1. **Customer Rating (1-5 stars)**
+
    - Based on ratings from both regular and reel orders
    - Weighted 30% in overall performance score
 
 2. **On-Time Delivery (0-100%)**
+
    - **Regular Orders**: Compares `delivery_time` vs `updated_at` (within 15 minutes)
    - **Reel Orders**: Assumes on-time if delivered (no delivery_time field)
    - Weighted 25% in overall performance score
 
 3. **Order Accuracy (0-100%)**
+
    - **Formula**: `(Completed Orders with Photos / Total Assigned Orders) × 100`
    - **"Offered Orders"**: Orders with `delivery_photo_url IS NOT NULL`
    - **Includes**: Both regular and reel orders with delivery photos
@@ -5122,17 +5130,17 @@ The API performs comprehensive queries to gather data from both order types:
 -- Regular Orders
 SELECT * FROM Orders WHERE shopper_id = ?;
 
--- Reel Orders  
+-- Reel Orders
 SELECT * FROM reel_orders WHERE shopper_id = ?;
 
 -- Completed Orders with Photos (Regular)
-SELECT COUNT(*) FROM Orders 
-WHERE shopper_id = ? AND status = 'delivered' 
+SELECT COUNT(*) FROM Orders
+WHERE shopper_id = ? AND status = 'delivered'
 AND delivery_photo_url IS NOT NULL;
 
 -- Completed Orders with Photos (Reel)
-SELECT COUNT(*) FROM reel_orders 
-WHERE shopper_id = ? AND status = 'delivered' 
+SELECT COUNT(*) FROM reel_orders
+WHERE shopper_id = ? AND status = 'delivered'
 AND delivery_photo_url IS NOT NULL;
 
 -- Ratings (covers both order types)
@@ -5141,13 +5149,13 @@ SELECT AVG(rating), COUNT(*) FROM Ratings WHERE shopper_id = ?;
 
 #### **Performance Score Interpretation:**
 
-| Score Range | Performance Level | Description |
-|-------------|------------------|-------------|
-| 90-100 | 🟢 Excellent | Top performers get priority in notifications |
-| 80-89 | 🟡 Good | Above average performance |
-| 70-79 | 🟡 Fair | Average performance |
-| 60-69 | 🔴 Poor | Below average, needs improvement |
-| 0-59 | 🔴 Critical | Poor performance, may need support |
+| Score Range | Performance Level | Description                                  |
+| ----------- | ----------------- | -------------------------------------------- |
+| 90-100      | 🟢 Excellent      | Top performers get priority in notifications |
+| 80-89       | 🟡 Good           | Above average performance                    |
+| 70-79       | 🟡 Fair           | Average performance                          |
+| 60-69       | 🔴 Poor           | Below average, needs improvement             |
+| 0-59        | 🔴 Critical       | Poor performance, may need support           |
 
 #### **Integration with Notification System:**
 
@@ -5160,7 +5168,7 @@ const sortedShoppers = shoppers.sort((a, b) => {
   if (a.performanceScore !== b.performanceScore) {
     return b.performanceScore - a.performanceScore;
   }
-  
+
   // Secondary: Distance (closer = better)
   return a.distance - b.distance;
 });
@@ -5210,6 +5218,7 @@ GET /api/shopper/earningsStats?shopperId=uuid
 ```
 
 **Key Features:**
+
 - **Combined Metrics**: Includes both regular and reel orders
 - **Performance Integration**: Uses the same calculation logic as performance-metrics API
 - **Real-time Updates**: Reflects current performance in earnings display

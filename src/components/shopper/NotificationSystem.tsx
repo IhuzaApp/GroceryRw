@@ -195,9 +195,10 @@ export default function NotificationSystem({
         ...(type === "warning" && { timeRemaining: 20 }),
       };
 
-      const endpoint = type === "warning" 
-        ? "/api/fcm/send-warning-notification"
-        : "/api/fcm/send-batch-notification";
+      const endpoint =
+        type === "warning"
+          ? "/api/fcm/send-warning-notification"
+          : "/api/fcm/send-batch-notification";
 
       const response = await fetch(endpoint, {
         method: "POST",
@@ -244,26 +245,30 @@ export default function NotificationSystem({
           className={`${
             t.visible ? "animate-enter" : "animate-leave"
           } pointer-events-auto flex w-full max-w-md rounded-xl shadow-2xl backdrop-blur-lg ${
-            theme === "dark" 
-              ? "bg-gradient-to-r from-blue-600 to-purple-600 ring-1 ring-white ring-opacity-20" 
+            theme === "dark"
+              ? "bg-gradient-to-r from-blue-600 to-purple-600 ring-1 ring-white ring-opacity-20"
               : "bg-gradient-to-r from-blue-500 to-purple-500 ring-1 ring-black ring-opacity-10"
           }`}
           style={{
-            background: theme === "dark" 
-              ? 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)' 
-              : 'linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%)',
-            backdropFilter: 'blur(10px)',
-            border: theme === "dark" 
-              ? '1px solid rgba(255,255,255,0.2)' 
-              : '1px solid rgba(0,0,0,0.1)',
+            background:
+              theme === "dark"
+                ? "linear-gradient(135deg, #667eea 0%, #764ba2 100%)"
+                : "linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%)",
+            backdropFilter: "blur(10px)",
+            border:
+              theme === "dark"
+                ? "1px solid rgba(255,255,255,0.2)"
+                : "1px solid rgba(0,0,0,0.1)",
           }}
         >
           <div className="w-0 flex-1 p-4">
             <div className="flex items-start">
               <div className="flex-shrink-0">
-                <div className={`flex h-12 w-12 items-center justify-center rounded-full backdrop-blur-sm ${
-                  theme === "dark" ? "bg-white/20" : "bg-white/30"
-                }`}>
+                <div
+                  className={`flex h-12 w-12 items-center justify-center rounded-full backdrop-blur-sm ${
+                    theme === "dark" ? "bg-white/20" : "bg-white/30"
+                  }`}
+                >
                   <svg
                     className="h-6 w-6 text-white"
                     fill="none"
@@ -280,7 +285,9 @@ export default function NotificationSystem({
                 </div>
               </div>
               <div className="ml-3 flex-1">
-                <p className="text-sm font-bold text-white">🚀 New Batch Available!</p>
+                <p className="text-sm font-bold text-white">
+                  🚀 New Batch Available!
+                </p>
                 <div className="mt-1 text-sm text-white/90">
                   <div className="font-medium">{order.customerAddress}</div>
                   <div className="text-white/80">
@@ -298,9 +305,9 @@ export default function NotificationSystem({
                       onAcceptBatch?.(order.id);
                       toast.dismiss(t.id);
                     }}
-                    className={`rounded-lg backdrop-blur-sm px-4 py-2 text-sm font-medium text-white focus:outline-none focus:ring-2 focus:ring-white/50 transition-all duration-200 ${
-                      theme === "dark" 
-                        ? "bg-white/20 hover:bg-white/30" 
+                    className={`rounded-lg px-4 py-2 text-sm font-medium text-white backdrop-blur-sm transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-white/50 ${
+                      theme === "dark"
+                        ? "bg-white/20 hover:bg-white/30"
                         : "bg-white/25 hover:bg-white/35"
                     }`}
                   >
@@ -320,9 +327,9 @@ export default function NotificationSystem({
                         "NotificationSystem"
                       );
                     }}
-                    className={`rounded-lg backdrop-blur-sm px-4 py-2 text-sm font-medium text-white/80 focus:outline-none focus:ring-2 focus:ring-white/50 transition-all duration-200 ${
-                      theme === "dark" 
-                        ? "bg-white/10 hover:bg-white/20" 
+                    className={`rounded-lg px-4 py-2 text-sm font-medium text-white/80 backdrop-blur-sm transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-white/50 ${
+                      theme === "dark"
+                        ? "bg-white/10 hover:bg-white/20"
                         : "bg-white/15 hover:bg-white/25"
                     }`}
                   >
@@ -338,7 +345,7 @@ export default function NotificationSystem({
                 removeToastForOrder(order.id);
                 toast.dismiss(t.id);
               }}
-              className="flex w-full items-center justify-center rounded-none rounded-r-xl border border-transparent p-4 text-sm font-medium text-white/70 hover:text-white hover:bg-white/10 focus:outline-none focus:ring-2 focus:ring-white/50 transition-all duration-200"
+              className="flex w-full items-center justify-center rounded-none rounded-r-xl border border-transparent p-4 text-sm font-medium text-white/70 transition-all duration-200 hover:bg-white/10 hover:text-white focus:outline-none focus:ring-2 focus:ring-white/50"
             >
               <svg className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
                 <path
@@ -355,12 +362,12 @@ export default function NotificationSystem({
         duration: Infinity, // Never auto-dismiss
         position: "top-center",
         style: {
-          background: 'transparent',
-          boxShadow: 'none',
-          maxWidth: '420px',
-          margin: '0 auto',
+          background: "transparent",
+          boxShadow: "none",
+          maxWidth: "420px",
+          margin: "0 auto",
         },
-        className: 'batch-notification-toast',
+        className: "batch-notification-toast",
       }
     );
 
@@ -498,26 +505,30 @@ export default function NotificationSystem({
           className={`${
             t.visible ? "animate-enter" : "animate-leave"
           } pointer-events-auto flex w-full max-w-md rounded-xl shadow-2xl backdrop-blur-lg ${
-            theme === "dark" 
-              ? "bg-gradient-to-r from-orange-500 to-red-500 ring-1 ring-white ring-opacity-20" 
+            theme === "dark"
+              ? "bg-gradient-to-r from-orange-500 to-red-500 ring-1 ring-white ring-opacity-20"
               : "bg-gradient-to-r from-orange-400 to-red-400 ring-1 ring-black ring-opacity-10"
           }`}
           style={{
-            background: theme === "dark" 
-              ? 'linear-gradient(135deg, #f59e0b 0%, #ef4444 100%)' 
-              : 'linear-gradient(135deg, #fb923c 0%, #f87171 100%)',
-            backdropFilter: 'blur(10px)',
-            border: theme === "dark" 
-              ? '1px solid rgba(255,255,255,0.2)' 
-              : '1px solid rgba(0,0,0,0.1)',
+            background:
+              theme === "dark"
+                ? "linear-gradient(135deg, #f59e0b 0%, #ef4444 100%)"
+                : "linear-gradient(135deg, #fb923c 0%, #f87171 100%)",
+            backdropFilter: "blur(10px)",
+            border:
+              theme === "dark"
+                ? "1px solid rgba(255,255,255,0.2)"
+                : "1px solid rgba(0,0,0,0.1)",
           }}
         >
           <div className="w-0 flex-1 p-4">
             <div className="flex items-start">
               <div className="flex-shrink-0">
-                <div className={`flex h-12 w-12 items-center justify-center rounded-full backdrop-blur-sm ${
-                  theme === "dark" ? "bg-white/20" : "bg-white/30"
-                }`}>
+                <div
+                  className={`flex h-12 w-12 items-center justify-center rounded-full backdrop-blur-sm ${
+                    theme === "dark" ? "bg-white/20" : "bg-white/30"
+                  }`}
+                >
                   <svg
                     className="h-6 w-6 text-white"
                     fill="none"
@@ -546,7 +557,7 @@ export default function NotificationSystem({
                     📦 {order.itemsCount || 0} items • 💰{" "}
                     {formatCurrencySync(order.estimatedEarnings || 0)}
                   </div>
-                  <div className="mt-1 font-bold text-white animate-pulse">
+                  <div className="mt-1 animate-pulse font-bold text-white">
                     ⏰ This batch will be reassigned in 20 seconds!
                   </div>
                 </div>
@@ -557,9 +568,9 @@ export default function NotificationSystem({
                       onAcceptBatch?.(order.id);
                       toast.dismiss(t.id);
                     }}
-                    className={`rounded-lg backdrop-blur-sm px-4 py-2 text-sm font-medium text-white focus:outline-none focus:ring-2 focus:ring-white/50 transition-all duration-200 animate-pulse ${
-                      theme === "dark" 
-                        ? "bg-white/20 hover:bg-white/30" 
+                    className={`animate-pulse rounded-lg px-4 py-2 text-sm font-medium text-white backdrop-blur-sm transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-white/50 ${
+                      theme === "dark"
+                        ? "bg-white/20 hover:bg-white/30"
                         : "bg-white/25 hover:bg-white/35"
                     }`}
                   >
@@ -579,9 +590,9 @@ export default function NotificationSystem({
                         "NotificationSystem"
                       );
                     }}
-                    className={`rounded-lg backdrop-blur-sm px-4 py-2 text-sm font-medium text-white/80 focus:outline-none focus:ring-2 focus:ring-white/50 transition-all duration-200 ${
-                      theme === "dark" 
-                        ? "bg-white/10 hover:bg-white/20" 
+                    className={`rounded-lg px-4 py-2 text-sm font-medium text-white/80 backdrop-blur-sm transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-white/50 ${
+                      theme === "dark"
+                        ? "bg-white/10 hover:bg-white/20"
                         : "bg-white/15 hover:bg-white/25"
                     }`}
                   >
@@ -597,7 +608,7 @@ export default function NotificationSystem({
                 removeToastForOrder(order.id);
                 toast.dismiss(t.id);
               }}
-              className="flex w-full items-center justify-center rounded-none rounded-r-xl border border-transparent p-4 text-sm font-medium text-white/70 hover:text-white hover:bg-white/10 focus:outline-none focus:ring-2 focus:ring-white/50 transition-all duration-200"
+              className="flex w-full items-center justify-center rounded-none rounded-r-xl border border-transparent p-4 text-sm font-medium text-white/70 transition-all duration-200 hover:bg-white/10 hover:text-white focus:outline-none focus:ring-2 focus:ring-white/50"
             >
               <svg className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
                 <path
@@ -614,12 +625,12 @@ export default function NotificationSystem({
         duration: Infinity, // Never auto-dismiss
         position: "top-center",
         style: {
-          background: 'transparent',
-          boxShadow: 'none',
-          maxWidth: '420px',
-          margin: '0 auto',
+          background: "transparent",
+          boxShadow: "none",
+          maxWidth: "420px",
+          margin: "0 auto",
         },
-        className: 'batch-warning-toast',
+        className: "batch-warning-toast",
       }
     );
 
@@ -896,7 +907,7 @@ export default function NotificationSystem({
             await playNotificationSound(data.settings?.sound_settings);
             showToast(orderForNotification);
             showDesktopNotification(orderForNotification);
-            
+
             // Send Firebase push notification
             sendFirebaseNotification(orderForNotification, "batch");
 

@@ -216,7 +216,7 @@ export default function CheckoutItems({
 
     // Only fetch if we don't have config yet
     if (!systemConfig) {
-    fetchSystemConfig();
+      fetchSystemConfig();
     } else {
       setConfigLoading(false);
     }
@@ -469,16 +469,16 @@ export default function CheckoutItems({
     }
   } else {
     // For regular shop orders, show shopping + delivery time
-  if (days > 0) {
-    deliveryTime = `Will be delivered in ${days} day${days > 1 ? "s" : ""}${
-      hours > 0 ? ` ${hours}h` : ""
-    }`;
-  } else if (hours > 0) {
-    deliveryTime = `Will be delivered in ${hours}h${
-      mins > 0 ? ` ${mins}m` : ""
-    }`;
-  } else {
-    deliveryTime = `Will be delivered in ${mins} minutes`;
+    if (days > 0) {
+      deliveryTime = `Will be delivered in ${days} day${days > 1 ? "s" : ""}${
+        hours > 0 ? ` ${hours}h` : ""
+      }`;
+    } else if (hours > 0) {
+      deliveryTime = `Will be delivered in ${hours}h${
+        mins > 0 ? ` ${mins}m` : ""
+      }`;
+    } else {
+      deliveryTime = `Will be delivered in ${mins} minutes`;
     }
   }
 
@@ -609,15 +609,15 @@ export default function CheckoutItems({
         // Regular shop cart checkout
         apiEndpoint = "/api/checkout";
         payload = {
-        shop_id: shopId,
-        delivery_address_id: deliveryAddressId,
-        service_fee: serviceFee.toString(),
-        delivery_fee: deliveryFee.toString(),
-        discount: discount > 0 ? discount.toString() : null,
-        voucher_code: appliedPromo,
-        delivery_time: deliveryTimestamp,
-        delivery_notes: deliveryNotes || null,
-      };
+          shop_id: shopId,
+          delivery_address_id: deliveryAddressId,
+          service_fee: serviceFee.toString(),
+          delivery_fee: deliveryFee.toString(),
+          discount: discount > 0 ? discount.toString() : null,
+          voucher_code: appliedPromo,
+          delivery_time: deliveryTimestamp,
+          delivery_notes: deliveryNotes || null,
+        };
       }
 
       // Make API call in background (don't await)
@@ -659,11 +659,11 @@ export default function CheckoutItems({
               );
               clearTimeout(loadingTimeout);
               setIsCheckoutLoading(false);
-              
+
               // Trigger cart refetch to show cart is cleared
               setTimeout(() => {
                 const cartChangedEvent = new CustomEvent("cartChanged", {
-                  detail: { refetch: true }
+                  detail: { refetch: true },
                 });
                 window.dispatchEvent(cartChangedEvent);
               }, 500);
@@ -671,25 +671,24 @@ export default function CheckoutItems({
               // Handle regular shop cart success
               // Clear loading state immediately
               clearTimeout(loadingTimeout);
-                    setIsCheckoutLoading(false);
+              setIsCheckoutLoading(false);
 
               // Show success notification
-                      toaster.push(
-                        <Notification
-                          type="success"
-                          header="Order Completed Successfully!"
-                        >
-                  Your order #{data.order_id?.slice(-8)} has been
-                  placed and is being prepared! You can view it in
-                  "Current Orders".
-                        </Notification>,
-                        { placement: "topEnd", duration: 5000 }
-                      );
-              
+              toaster.push(
+                <Notification
+                  type="success"
+                  header="Order Completed Successfully!"
+                >
+                  Your order #{data.order_id?.slice(-8)} has been placed and is
+                  being prepared! You can view it in "Current Orders".
+                </Notification>,
+                { placement: "topEnd", duration: 5000 }
+              );
+
               // Trigger cart refresh to show cart is cleared
               setTimeout(() => {
                 const cartChangedEvent = new CustomEvent("cartChanged", {
-                  detail: { shop_id: shopId, refetch: true }
+                  detail: { shop_id: shopId, refetch: true },
                 });
                 window.dispatchEvent(cartChangedEvent);
               }, 500);

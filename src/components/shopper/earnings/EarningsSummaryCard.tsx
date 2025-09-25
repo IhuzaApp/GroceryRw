@@ -39,9 +39,11 @@ const EarningsSummaryCard: React.FC<EarningsSummaryCardProps> = ({
   return (
     <Panel shaded bordered bodyFill className="p-4 sm:p-6">
       <div className="pb-3">
-        <div className="text-sm sm:text-base text-gray-500">{title}</div>
-        <div className="flex items-center text-xl sm:text-3xl font-bold">
-          <span className={`mr-2 h-5 w-5 sm:h-6 sm:w-6 ${iconColor}`}>{icon}</span>
+        <div className="text-sm text-gray-500 sm:text-base">{title}</div>
+        <div className="flex items-center text-xl font-bold sm:text-3xl">
+          <span className={`mr-2 h-5 w-5 sm:h-6 sm:w-6 ${iconColor}`}>
+            {icon}
+          </span>
           {displayAmount}
         </div>
       </div>

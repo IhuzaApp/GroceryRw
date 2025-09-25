@@ -163,7 +163,7 @@ export default async function handler(
       return res.status(500).json({ error: "Database connection error" });
     }
 
-    const orderResponse = await hasuraClient.request(CREATE_FOOD_ORDER, {
+    const orderResponse = (await hasuraClient.request(CREATE_FOOD_ORDER, {
       user_id: session.user.id,
       restaurant_id,
       delivery_address_id,
@@ -173,7 +173,7 @@ export default async function handler(
       voucher_code: voucher_code || null,
       delivery_time: delivery_time,
       delivery_notes: delivery_notes || null,
-    }) as any;
+    })) as any;
 
     if (
       !orderResponse.insert_restaurant_orders ||
@@ -195,7 +195,7 @@ export default async function handler(
       })
     );
 
-    const dishResults = await Promise.all(dishPromises) as any[];
+    const dishResults = (await Promise.all(dishPromises)) as any[];
 
     // Check if all dishes were added successfully
     const totalDishesAdded = dishResults.reduce(

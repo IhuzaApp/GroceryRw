@@ -540,13 +540,16 @@ export default function BatchDetails({
   const generateInvoiceAndRedirect = async (orderId: string) => {
     try {
       setInvoiceLoading(true);
-      
+
       const requestData = {
         orderId,
         orderType: orderData?.orderType || "regular", // Pass order type to API
       };
-      
-      console.log("🔍 [Batch Details] Generating invoice with data:", requestData);
+
+      console.log(
+        "🔍 [Batch Details] Generating invoice with data:",
+        requestData
+      );
 
       // Make API request to generate invoice and save to database
       const invoiceResponse = await fetch("/api/invoices/generate", {
@@ -557,14 +560,17 @@ export default function BatchDetails({
         body: JSON.stringify(requestData),
       });
 
-      console.log("🔍 [Batch Details] Invoice response status:", invoiceResponse.status);
+      console.log(
+        "🔍 [Batch Details] Invoice response status:",
+        invoiceResponse.status
+      );
 
       if (!invoiceResponse.ok) {
         const errorText = await invoiceResponse.text();
         console.error("❌ [Batch Details] Invoice generation failed:", {
           status: invoiceResponse.status,
           statusText: invoiceResponse.statusText,
-          errorText
+          errorText,
         });
         throw new Error(
           `Failed to generate invoice: ${invoiceResponse.statusText}`
@@ -1378,34 +1384,36 @@ export default function BatchDetails({
         .then((res) => res.json())
         .then((data) => {
           if (data.order) {
-            
             // Transform the API response to match BatchDetails expected structure
             const transformedOrder = {
               ...data.order,
               // Convert items array to Order_Items structure
-              Order_Items: data.order.items?.map((item: any) => ({
-                id: item.id,
-                quantity: item.quantity,
-                price: item.price,
-                product: {
-                  id: item.id, // Use item id as product id
-                  name: item.name,
-                  image: item.productImage || "/images/groceryPlaceholder.png",
-                  final_price: item.price.toString(),
-                  measurement_unit: item.measurement_unit, // Add measurement_unit from API
-                  ProductName: {
-                    id: item.id,
+              Order_Items:
+                data.order.items?.map((item: any) => ({
+                  id: item.id,
+                  quantity: item.quantity,
+                  price: item.price,
+                  product: {
+                    id: item.id, // Use item id as product id
                     name: item.name,
-                    description: "",
-                    barcode: item.barcode || "",
-                    sku: item.sku || "",
-                    image: item.productImage || "/images/groceryPlaceholder.png",
-                    create_at: new Date().toISOString()
-                  }
-                }
-              })) || []
+                    image:
+                      item.productImage || "/images/groceryPlaceholder.png",
+                    final_price: item.price.toString(),
+                    measurement_unit: item.measurement_unit, // Add measurement_unit from API
+                    ProductName: {
+                      id: item.id,
+                      name: item.name,
+                      description: "",
+                      barcode: item.barcode || "",
+                      sku: item.sku || "",
+                      image:
+                        item.productImage || "/images/groceryPlaceholder.png",
+                      create_at: new Date().toISOString(),
+                    },
+                  },
+                })) || [],
             };
-            
+
             setOrder(transformedOrder);
           }
         })

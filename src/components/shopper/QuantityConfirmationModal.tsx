@@ -53,12 +53,12 @@ export default function QuantityConfirmationModal({
     if (currentItem) {
       // Access measurement_unit from the correct path based on GraphQL schema
       let unit = "";
-      
+
       // The measurement_unit is at currentItem.product.measurement_unit according to the GraphQL schema
       if (currentItem.product.measurement_unit) {
         unit = currentItem.product.measurement_unit.toLowerCase().trim();
       }
-      
+
       const isWeight = [
         "kg",
         "g",
@@ -71,7 +71,7 @@ export default function QuantityConfirmationModal({
         "pound",
         "ounce",
       ].includes(unit);
-      
+
       setIsWeightBased(isWeight);
       setMeasurementUnit(unit);
 
@@ -259,7 +259,7 @@ export default function QuantityConfirmationModal({
         >
           <div className="space-y-4">
             {/* Debug info removed */}
-            
+
             {/* Barcode Scanning Section - Only for non-weight-based items */}
             {!isWeightBased && (
               <div

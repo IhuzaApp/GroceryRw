@@ -12,18 +12,18 @@ const calculatePerformanceScore = (metrics: {
   acceptanceRate: number;
 }): number => {
   const weights = {
-    customerRating: 0.30,    // 30%
-    onTimeDelivery: 0.25,    // 25%
-    orderAccuracy: 0.20,     // 20%
-    acceptanceRate: 0.25,    // 25%
+    customerRating: 0.3, // 30%
+    onTimeDelivery: 0.25, // 25%
+    orderAccuracy: 0.2, // 20%
+    acceptanceRate: 0.25, // 25%
   };
-  
-  const score = 
-    (metrics.customerRating * 20) * weights.customerRating +  // 1-5 → 20-100
-    metrics.onTimeDelivery * weights.onTimeDelivery +         // 0-100
-    metrics.orderAccuracy * weights.orderAccuracy +           // 0-100
-    metrics.acceptanceRate * weights.acceptanceRate;          // 0-100
-    
+
+  const score =
+    metrics.customerRating * 20 * weights.customerRating + // 1-5 → 20-100
+    metrics.onTimeDelivery * weights.onTimeDelivery + // 0-100
+    metrics.orderAccuracy * weights.orderAccuracy + // 0-100
+    metrics.acceptanceRate * weights.acceptanceRate; // 0-100
+
   return Math.min(100, Math.max(0, Math.round(score)));
 };
 
@@ -109,7 +109,7 @@ const GET_EARNINGS_STATS = gql`
 
     # Get completed regular orders with delivery photos (representing "offered and completed" orders)
     CompletedOrdersWithPhotos: Orders_aggregate(
-      where: { 
+      where: {
         shopper_id: { _eq: $shopperId }
         status: { _eq: "delivered" }
         delivery_photo_url: { _is_null: false }
@@ -122,7 +122,7 @@ const GET_EARNINGS_STATS = gql`
 
     # Get completed reel orders with delivery photos
     CompletedReelOrdersWithPhotos: reel_orders_aggregate(
-      where: { 
+      where: {
         shopper_id: { _eq: $shopperId }
         status: { _eq: "delivered" }
         delivery_photo_url: { _is_null: false }
@@ -334,19 +334,24 @@ export default async function handler(
     const assignedOrdersCount = data.AssignedOrders.aggregate.count || 0;
 
     // Get completed orders with delivery photos from both regular and reel orders
-    const completedRegularOrdersWithPhotos = data.CompletedOrdersWithPhotos?.aggregate?.count || 0;
-    const completedReelOrdersWithPhotos = (data as any).CompletedReelOrdersWithPhotos?.aggregate?.count || 0;
-    const completedOrdersWithPhotos = completedRegularOrdersWithPhotos + completedReelOrdersWithPhotos;
+    const completedRegularOrdersWithPhotos =
+      data.CompletedOrdersWithPhotos?.aggregate?.count || 0;
+    const completedReelOrdersWithPhotos =
+      (data as any).CompletedReelOrdersWithPhotos?.aggregate?.count || 0;
+    const completedOrdersWithPhotos =
+      completedRegularOrdersWithPhotos + completedReelOrdersWithPhotos;
 
     // Calculate acceptance rate using completed orders with photos as "offered orders"
-    const acceptanceRate = completedOrdersWithPhotos > 0 
-      ? Math.round((completedOrdersWithPhotos / assignedOrdersCount) * 100)
-      : 0;
+    const acceptanceRate =
+      completedOrdersWithPhotos > 0
+        ? Math.round((completedOrdersWithPhotos / assignedOrdersCount) * 100)
+        : 0;
 
     // Calculate order accuracy based on completed vs assigned orders
-    const orderAccuracy = assignedOrdersCount > 0 
-      ? Math.round((completedOrdersWithPhotos / assignedOrdersCount) * 100)
-      : 100;
+    const orderAccuracy =
+      assignedOrdersCount > 0
+        ? Math.round((completedOrdersWithPhotos / assignedOrdersCount) * 100)
+        : 100;
 
     // For now, use a placeholder for on-time delivery rate
     // This will be calculated properly in the new performance-metrics API

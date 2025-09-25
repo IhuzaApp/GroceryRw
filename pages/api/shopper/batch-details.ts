@@ -52,7 +52,7 @@ const GET_BATCH_DETAILS = gql`
         }
       }
     }
-    
+
     reel_orders(where: { id: { _eq: $orderId } }) {
       id
       OrderID
@@ -197,9 +197,12 @@ interface BatchDetailsResponse {
   }>;
 }
 
-export default async function handler(req: NextApiRequest, res: NextApiResponse) {
+export default async function handler(
+  req: NextApiRequest,
+  res: NextApiResponse
+) {
   const session = await getServerSession(req, res, authOptions);
-  
+
   if (!session) {
     return res.status(401).json({ error: "Unauthorized" });
   }
@@ -223,18 +226,18 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     // Check if it's a regular order
     if (response.Orders && response.Orders.length > 0) {
       const order = response.Orders[0];
-      
+
       // Check if order is already assigned to another shopper
       if (order.shopper_id && order.shopper_id !== session.user.id) {
-        return res.status(404).json({ 
-          error: "This batch has already been assigned to another shopper" 
+        return res.status(404).json({
+          error: "This batch has already been assigned to another shopper",
         });
       }
 
       // Check if order is in a valid state for assignment
       if (order.status !== "PENDING") {
-        return res.status(404).json({ 
-          error: "This batch is no longer available for assignment" 
+        return res.status(404).json({
+          error: "This batch is no longer available for assignment",
         });
       }
 
@@ -245,10 +248,11 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         customerAddress: `${order.Address.street}, ${order.Address.city} ${order.Address.postal_code}`,
         distance: 0, // This would need to be calculated based on shopper location
         itemsCount: order.order_items.length,
-        estimatedEarnings: parseFloat(order.delivery_fee) + parseFloat(order.service_fee),
+        estimatedEarnings:
+          parseFloat(order.delivery_fee) + parseFloat(order.service_fee),
         orderType: "regular" as const,
         createdAt: order.created_at,
-        items: order.order_items.map(item => ({
+        items: order.order_items.map((item) => ({
           name: item.product.name,
           quantity: item.quantity,
           price: parseFloat(item.price),
@@ -270,18 +274,18 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     // Check if it's a reel order
     if (response.reel_orders && response.reel_orders.length > 0) {
       const order = response.reel_orders[0];
-      
+
       // Check if order is already assigned to another shopper
       if (order.shopper_id && order.shopper_id !== session.user.id) {
-        return res.status(404).json({ 
-          error: "This batch has already been assigned to another shopper" 
+        return res.status(404).json({
+          error: "This batch has already been assigned to another shopper",
         });
       }
 
       // Check if order is in a valid state for assignment
       if (order.status !== "PENDING") {
-        return res.status(404).json({ 
-          error: "This batch is no longer available for assignment" 
+        return res.status(404).json({
+          error: "This batch is no longer available for assignment",
         });
       }
 
@@ -292,10 +296,11 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         customerAddress: `${order.Address.street}, ${order.Address.city} ${order.Address.postal_code}`,
         distance: 0, // This would need to be calculated based on shopper location
         itemsCount: order.reel_order_items.length,
-        estimatedEarnings: parseFloat(order.delivery_fee) + parseFloat(order.service_fee),
+        estimatedEarnings:
+          parseFloat(order.delivery_fee) + parseFloat(order.service_fee),
         orderType: "reel" as const,
         createdAt: order.created_at,
-        items: order.reel_order_items.map(item => ({
+        items: order.reel_order_items.map((item) => ({
           name: item.product.name,
           quantity: item.quantity,
           price: parseFloat(item.price),
@@ -315,15 +320,14 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     }
 
     // No order found
-    return res.status(404).json({ 
-      error: "Batch not found or no longer available" 
+    return res.status(404).json({
+      error: "Batch not found or no longer available",
     });
-
   } catch (error) {
     console.error("Error fetching batch details:", error);
-    return res.status(500).json({ 
+    return res.status(500).json({
       error: "Failed to fetch batch details",
-      details: error instanceof Error ? error.message : "Unknown error"
+      details: error instanceof Error ? error.message : "Unknown error",
     });
   }
 }

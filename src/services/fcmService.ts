@@ -166,7 +166,9 @@ export const sendNotificationToUser = async (
         title: payload.title,
         body: payload.body,
         ...(payload.imageUrl && { imageUrl: payload.imageUrl }),
-        ...(payload.data?.click_action && { click_action: payload.data.click_action }),
+        ...(payload.data?.click_action && {
+          click_action: payload.data.click_action,
+        }),
       },
       data: payload.data || {},
       tokens: fcmTokens,
@@ -182,7 +184,9 @@ export const sendNotificationToUser = async (
         const singleMessage = {
           notification: {
             ...message.notification,
-            ...(payload.data?.click_action && { click_action: payload.data.click_action }),
+            ...(payload.data?.click_action && {
+              click_action: payload.data.click_action,
+            }),
           },
           data: message.data,
           token: token,

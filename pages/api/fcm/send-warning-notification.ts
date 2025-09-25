@@ -10,28 +10,31 @@ export default async function handler(
   }
 
   try {
-    const { 
-      shopperId, 
-      orderId, 
-      shopName, 
-      customerAddress, 
-      distance, 
-      itemsCount, 
+    const {
+      shopperId,
+      orderId,
+      shopName,
+      customerAddress,
+      distance,
+      itemsCount,
       estimatedEarnings,
       orderType = "regular",
-      timeRemaining = 20
+      timeRemaining = 20,
     } = req.body;
 
     if (!shopperId || !orderId || !shopName || !customerAddress) {
       return res.status(400).json({
-        error: "Missing required fields: shopperId, orderId, shopName, customerAddress",
+        error:
+          "Missing required fields: shopperId, orderId, shopName, customerAddress",
       });
     }
 
     // Format the warning notification message
     const title = `⚠️ Batch Expiring Soon!`;
-    const body = `${distance}km • ${itemsCount} units • ${estimatedEarnings ? `${estimatedEarnings} RWF` : 'Check details'} • ${timeRemaining}s left`;
-    
+    const body = `${distance}km • ${itemsCount} units • ${
+      estimatedEarnings ? `${estimatedEarnings} RWF` : "Check details"
+    } • ${timeRemaining}s left`;
+
     // Create notification payload - simplified with only essential info
     const payload = {
       title,
@@ -63,9 +66,9 @@ export default async function handler(
 
     await sendNotificationToUser(shopperId, payload);
 
-    return res.status(200).json({ 
+    return res.status(200).json({
       success: true,
-      message: "Warning notification sent successfully"
+      message: "Warning notification sent successfully",
     });
   } catch (error) {
     console.error("❌ [FCM API] Error sending warning notification:", error);
