@@ -187,7 +187,9 @@ export default async function handler(
     const regularOrders = data.Orders || [];
     const reelOrders = data.reel_orders || [];
     const allOrders = [...regularOrders, ...reelOrders];
-    const totalOrderCount = (data.TotalOrders.aggregate.count || 0) + (data.TotalReelOrders.aggregate.count || 0);
+    const totalOrderCount =
+      (data.TotalOrders.aggregate.count || 0) +
+      (data.TotalReelOrders.aggregate.count || 0);
     const customerRating = data.Ratings_aggregate.aggregate.avg?.rating || 0;
 
     if (allOrders.length === 0) {
@@ -292,7 +294,8 @@ export default async function handler(
       }
 
       // Track restaurant performance (reel orders)
-      const restaurantName = order.Reel?.Restaurant?.name || "Unknown Restaurant";
+      const restaurantName =
+        order.Reel?.Restaurant?.name || "Unknown Restaurant";
       if (storeMap.has(restaurantName)) {
         const store = storeMap.get(restaurantName)!;
         store.orderCount++;
@@ -386,27 +389,39 @@ export default async function handler(
     if (customerRating > 0) {
       if (customerRating >= 4.5) {
         tips.push(
-          `⭐ Excellent rating (${customerRating.toFixed(1)}/5)! You'll get priority for new orders`
+          `⭐ Excellent rating (${customerRating.toFixed(
+            1
+          )}/5)! You'll get priority for new orders`
         );
       } else if (customerRating >= 4.0) {
         tips.push(
-          `⭐ Good rating (${customerRating.toFixed(1)}/5)! Keep maintaining high quality service`
+          `⭐ Good rating (${customerRating.toFixed(
+            1
+          )}/5)! Keep maintaining high quality service`
         );
       } else if (customerRating >= 3.5) {
         tips.push(
-          `📈 Rating ${customerRating.toFixed(1)}/5 - focus on customer satisfaction to improve your score`
+          `📈 Rating ${customerRating.toFixed(
+            1
+          )}/5 - focus on customer satisfaction to improve your score`
         );
       } else {
         tips.push(
-          `📈 Rating ${customerRating.toFixed(1)}/5 - prioritize customer service to boost your reputation`
+          `📈 Rating ${customerRating.toFixed(
+            1
+          )}/5 - prioritize customer service to boost your reputation`
         );
       }
     }
 
     // Tip 5: Order type insights
     if (regularOrderCount > 0 && reelOrderCount > 0) {
-      const regularPercentage = Math.round((regularOrderCount / totalOrderCount) * 100);
-      const reelPercentage = Math.round((reelOrderCount / totalOrderCount) * 100);
+      const regularPercentage = Math.round(
+        (regularOrderCount / totalOrderCount) * 100
+      );
+      const reelPercentage = Math.round(
+        (reelOrderCount / totalOrderCount) * 100
+      );
       tips.push(
         `📊 Order mix: ${regularPercentage}% grocery, ${reelPercentage}% food delivery - great diversification!`
       );
@@ -464,7 +479,9 @@ export default async function handler(
     if (ratingCount > 0) {
       if (ratingCount < 10) {
         tips.push(
-          `📝 You have ${ratingCount} customer rating${ratingCount > 1 ? 's' : ''} - more ratings will help build your reputation`
+          `📝 You have ${ratingCount} customer rating${
+            ratingCount > 1 ? "s" : ""
+          } - more ratings will help build your reputation`
         );
       } else if (ratingCount < 25) {
         tips.push(

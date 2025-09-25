@@ -335,8 +335,11 @@ export default async function handler(
 
     if (orderType === "regular") {
       // Handle regular orders
-      console.log("🔍 [API] Raw Order_Items from database:", JSON.stringify(orderData.Order_Items, null, 2));
-      
+      console.log(
+        "🔍 [API] Raw Order_Items from database:",
+        JSON.stringify(orderData.Order_Items, null, 2)
+      );
+
       const formattedOrderItems = orderData.Order_Items.map((item: any) => {
         const formattedItem = {
           id: item.id,
@@ -346,18 +349,19 @@ export default async function handler(
           measurement_unit: item.Product?.measurement_unit || null,
           barcode: item.Product?.ProductName?.barcode || null,
           sku: item.Product?.ProductName?.sku || null,
-          productImage: item.Product?.ProductName?.image || item.Product?.image || null,
+          productImage:
+            item.Product?.ProductName?.image || item.Product?.image || null,
         };
-        
+
         console.log("🔍 [API] Formatted item:", {
           id: formattedItem.id,
           name: formattedItem.name,
           measurement_unit: formattedItem.measurement_unit,
           barcode: formattedItem.barcode,
           sku: formattedItem.sku,
-          rawProduct: item.Product
+          rawProduct: item.Product,
         });
-        
+
         return formattedItem;
       });
 

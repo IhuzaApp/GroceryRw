@@ -204,7 +204,6 @@ export default async function handler(
   req: NextApiRequest,
   res: NextApiResponse
 ) {
-
   // Only allow POST method
   if (req.method !== "POST") {
     return res.status(405).json({ error: "Method not allowed" });
@@ -264,7 +263,9 @@ export default async function handler(
 
     // Verify the user is authorized to access this order (either as customer or shopper)
     const isShopper = order.shopper_id === session.user.id;
-    const isCustomer = isReelOrder ? order.User.id === session.user.id : order.orderedBy.id === session.user.id;
+    const isCustomer = isReelOrder
+      ? order.User.id === session.user.id
+      : order.orderedBy.id === session.user.id;
 
     if (!isShopper && !isCustomer) {
       return res
@@ -281,7 +282,7 @@ export default async function handler(
     if (isReelOrder) {
       // For reel orders, use the reel price and product info
       const reel = order.Reel;
-      
+
       itemsTotal = parseFloat(reel.Price);
       shopName = reel.Restaurant.name;
       shopAddress = reel.Restaurant.location;
@@ -302,7 +303,7 @@ export default async function handler(
     } else {
       // For regular orders, use the order items
       const items = order.Order_Items;
-      
+
       itemsTotal = items.reduce((total: number, item: any) => {
         return total + parseFloat(item.price) * item.quantity;
       }, 0);
@@ -340,25 +341,24 @@ export default async function handler(
     // Save invoice data to the database
     let saveResult;
     try {
-      saveResult = await hasuraClient.request<AddInvoiceResult>(
-        ADD_INVOICE,
-        {
-          customer_id: isReelOrder ? order.User.id : order.orderedBy.id,
-          delivery_fee: deliveryFeeStr,
-          discount: discountStr,
-          invoice_items: invoiceItems,
-          invoice_number: invoiceNumber,
-          order_id: isReelOrder ? null : order.id,
-          reel_order_id: isReelOrder ? order.id : null,
-          service_fee: serviceFeeStr,
-          status: "completed",
-          subtotal: subtotalStr,
-          tax: taxStr,
-          total_amount: totalAmount,
-        }
-      );
+      saveResult = await hasuraClient.request<AddInvoiceResult>(ADD_INVOICE, {
+        customer_id: isReelOrder ? order.User.id : order.orderedBy.id,
+        delivery_fee: deliveryFeeStr,
+        discount: discountStr,
+        invoice_items: invoiceItems,
+        invoice_number: invoiceNumber,
+        order_id: isReelOrder ? null : order.id,
+        reel_order_id: isReelOrder ? order.id : null,
+        service_fee: serviceFeeStr,
+        status: "completed",
+        subtotal: subtotalStr,
+        tax: taxStr,
+        total_amount: totalAmount,
+      });
     } catch (error) {
-      return res.status(500).json({ error: "Failed to save invoice to database" });
+      return res
+        .status(500)
+        .json({ error: "Failed to save invoice to database" });
     }
 
     // Generate invoice data for the response

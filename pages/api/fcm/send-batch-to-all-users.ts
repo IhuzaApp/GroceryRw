@@ -10,14 +10,14 @@ export default async function handler(
   }
 
   try {
-    const { 
-      orderId, 
-      shopName, 
-      customerAddress, 
-      distance, 
-      itemsCount, 
+    const {
+      orderId,
+      shopName,
+      customerAddress,
+      distance,
+      itemsCount,
       estimatedEarnings,
-      orderType = "regular"
+      orderType = "regular",
     } = req.body;
 
     if (!orderId || !shopName || !customerAddress) {
@@ -26,30 +26,41 @@ export default async function handler(
       });
     }
 
-    console.log("🔔 [FCM API] Sending batch notifications to all users with notifications enabled:", {
-      orderId,
-      shopName,
-      distance,
-      itemsCount,
-      earnings: estimatedEarnings,
-    });
+    console.log(
+      "🔔 [FCM API] Sending batch notifications to all users with notifications enabled:",
+      {
+        orderId,
+        shopName,
+        distance,
+        itemsCount,
+        earnings: estimatedEarnings,
+      }
+    );
 
     // Get all users with FCM tokens and notifications enabled
-    const allUsersResponse = await fetch(`${req.headers.origin || 'http://localhost:3000'}/api/queries/get-all-notification-users`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "Cookie": req.headers.cookie || "", // Pass cookies for authentication
-      },
-    });
+    const allUsersResponse = await fetch(
+      `${
+        req.headers.origin || "http://localhost:3000"
+      }/api/queries/get-all-notification-users`,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Cookie: req.headers.cookie || "", // Pass cookies for authentication
+        },
+      }
+    );
 
     if (!allUsersResponse.ok) {
-      console.warn("⚠️ [FCM API] Failed to get users with notifications:", allUsersResponse.statusText);
+      console.warn(
+        "⚠️ [FCM API] Failed to get users with notifications:",
+        allUsersResponse.statusText
+      );
       return res.status(200).json({
         success: true,
         message: "Batch notification processing completed",
         notificationsSent: 0,
-        error: "Could not fetch users with notifications"
+        error: "Could not fetch users with notifications",
       });
     }
 
@@ -67,8 +78,10 @@ export default async function handler(
 
     // Format the notification message
     const title = `🚀 New Batch Available!`;
-    const body = `${distance}km • ${itemsCount} items • ${estimatedEarnings ? `${estimatedEarnings} RWF` : 'Check details'}`;
-    
+    const body = `${distance}km • ${itemsCount} items • ${
+      estimatedEarnings ? `${estimatedEarnings} RWF` : "Check details"
+    }`;
+
     // Create notification payload
     const payload = {
       title,
@@ -93,34 +106,46 @@ export default async function handler(
     };
 
     // Send notifications to all users with notifications enabled
-    const notificationPromises = notificationUsers.map(async (user: { id: string }) => {
-      try {
-        await sendNotificationToUser(user.id, payload);
-        console.log(`✅ [FCM API] Sent batch notification to user ${user.id}`);
-        return { userId: user.id, success: true };
-      } catch (error) {
-        console.error(`❌ [FCM API] Failed to send notification to user ${user.id}:`, error);
-        return { userId: user.id, success: false, error };
+    const notificationPromises = notificationUsers.map(
+      async (user: { id: string }) => {
+        try {
+          await sendNotificationToUser(user.id, payload);
+          console.log(
+            `✅ [FCM API] Sent batch notification to user ${user.id}`
+          );
+          return { userId: user.id, success: true };
+        } catch (error) {
+          console.error(
+            `❌ [FCM API] Failed to send notification to user ${user.id}:`,
+            error
+          );
+          return { userId: user.id, success: false, error };
+        }
       }
-    });
+    );
 
     const results = await Promise.allSettled(notificationPromises);
-    const successful = results.filter(result => 
-      result.status === 'fulfilled' && result.value.success
+    const successful = results.filter(
+      (result) => result.status === "fulfilled" && result.value.success
     ).length;
 
-    console.log(`🔔 [FCM API] Batch notifications sent: ${successful}/${notificationUsers.length} successful`);
+    console.log(
+      `🔔 [FCM API] Batch notifications sent: ${successful}/${notificationUsers.length} successful`
+    );
 
     return res.status(200).json({
       success: true,
-      message: "Batch notifications sent to all users with notifications enabled",
+      message:
+        "Batch notifications sent to all users with notifications enabled",
       notificationsSent: successful,
       totalUsers: notificationUsers.length,
       orderId,
     });
-
   } catch (error) {
-    console.error("❌ [FCM API] Error sending batch notifications to all users:", error);
+    console.error(
+      "❌ [FCM API] Error sending batch notifications to all users:",
+      error
+    );
     return res.status(500).json({
       error: "Failed to send batch notifications to all users",
       details: error instanceof Error ? error.message : "Unknown error",

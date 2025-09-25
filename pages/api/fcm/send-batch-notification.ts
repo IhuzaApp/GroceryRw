@@ -10,27 +10,30 @@ export default async function handler(
   }
 
   try {
-    const { 
-      shopperId, 
-      orderId, 
-      shopName, 
-      customerAddress, 
-      distance, 
-      itemsCount, 
+    const {
+      shopperId,
+      orderId,
+      shopName,
+      customerAddress,
+      distance,
+      itemsCount,
       estimatedEarnings,
-      orderType = "regular"
+      orderType = "regular",
     } = req.body;
 
     if (!shopperId || !orderId || !shopName || !customerAddress) {
       return res.status(400).json({
-        error: "Missing required fields: shopperId, orderId, shopName, customerAddress",
+        error:
+          "Missing required fields: shopperId, orderId, shopName, customerAddress",
       });
     }
 
     // Format the notification message
     const title = `🚀 New Batch Available!`;
-    const body = `${distance}km • ${itemsCount} units • ${estimatedEarnings ? `${estimatedEarnings} RWF` : 'Check details'}`;
-    
+    const body = `${distance}km • ${itemsCount} units • ${
+      estimatedEarnings ? `${estimatedEarnings} RWF` : "Check details"
+    }`;
+
     // Create notification payload - simplified with only essential info
     const payload = {
       title,
@@ -59,9 +62,9 @@ export default async function handler(
 
     await sendNotificationToUser(shopperId, payload);
 
-    return res.status(200).json({ 
+    return res.status(200).json({
       success: true,
-      message: "Batch notification sent successfully"
+      message: "Batch notification sent successfully",
     });
   } catch (error) {
     console.error("❌ [FCM API] Error sending batch notification:", error);

@@ -8,11 +8,7 @@ const ACCEPT_BATCH_MUTATION = gql`
   mutation AcceptBatch($orderId: uuid!, $shopperId: uuid!) {
     update_Orders_by_pk(
       pk_columns: { id: $orderId }
-      _set: { 
-        shopper_id: $shopperId,
-        status: "ACCEPTED",
-        updated_at: "now()"
-      }
+      _set: { shopper_id: $shopperId, status: "ACCEPTED", updated_at: "now()" }
     ) {
       id
       status
@@ -26,11 +22,7 @@ const ACCEPT_REEL_BATCH_MUTATION = gql`
   mutation AcceptReelBatch($orderId: uuid!, $shopperId: uuid!) {
     update_reel_orders_by_pk(
       pk_columns: { id: $orderId }
-      _set: { 
-        shopper_id: $shopperId,
-        status: "ACCEPTED",
-        updated_at: "now()"
-      }
+      _set: { shopper_id: $shopperId, status: "ACCEPTED", updated_at: "now()" }
     ) {
       id
       status
@@ -47,7 +39,7 @@ const CHECK_ORDER_EXISTS = gql`
       status
       shopper_id
     }
-    
+
     reel_orders(where: { id: { _eq: $orderId } }) {
       id
       status
@@ -56,9 +48,12 @@ const CHECK_ORDER_EXISTS = gql`
   }
 `;
 
-export default async function handler(req: NextApiRequest, res: NextApiResponse) {
+export default async function handler(
+  req: NextApiRequest,
+  res: NextApiResponse
+) {
   const session = await getServerSession(req, res, authOptions);
-  
+
   if (!session) {
     return res.status(401).json({ error: "Unauthorized" });
   }
@@ -74,16 +69,20 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   }
 
   if (userId !== session.user.id) {
-    return res.status(403).json({ error: "You can only accept batches for yourself" });
+    return res
+      .status(403)
+      .json({ error: "You can only accept batches for yourself" });
   }
 
   try {
     // First, check if the order exists and is available
-    const checkResponse = await hasuraClient.request(CHECK_ORDER_EXISTS, { orderId });
-    
+    const checkResponse = await hasuraClient.request(CHECK_ORDER_EXISTS, {
+      orderId,
+    });
+
     const regularOrder = checkResponse.Orders?.[0];
     const reelOrder = checkResponse.reel_orders?.[0];
-    
+
     if (!regularOrder && !reelOrder) {
       return res.status(404).json({ error: "Order not found" });
     }
@@ -93,21 +92,21 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     // Check if order is already assigned
     if (order.shopper_id && order.shopper_id !== userId) {
-      return res.status(409).json({ 
-        error: "This batch has already been assigned to another shopper" 
+      return res.status(409).json({
+        error: "This batch has already been assigned to another shopper",
       });
     }
 
     // Check if order is in valid state for acceptance
     if (order.status !== "PENDING") {
-      return res.status(409).json({ 
-        error: "This batch is no longer available for assignment" 
+      return res.status(409).json({
+        error: "This batch is no longer available for assignment",
       });
     }
 
     // Accept the batch
     let acceptResponse;
-    
+
     if (isReelOrder) {
       acceptResponse = await hasuraClient.request(ACCEPT_REEL_BATCH_MUTATION, {
         orderId,
@@ -120,9 +119,12 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       });
     }
 
-    if (acceptResponse.update_Orders_by_pk || acceptResponse.update_reel_orders_by_pk) {
+    if (
+      acceptResponse.update_Orders_by_pk ||
+      acceptResponse.update_reel_orders_by_pk
+    ) {
       console.log(`✅ Batch ${orderId} accepted by shopper ${userId}`);
-      
+
       return res.status(200).json({
         success: true,
         message: "Batch accepted successfully",
@@ -133,12 +135,11 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     } else {
       return res.status(500).json({ error: "Failed to accept batch" });
     }
-
   } catch (error) {
     console.error("Error accepting batch:", error);
-    return res.status(500).json({ 
+    return res.status(500).json({
       error: "Failed to accept batch",
-      details: error instanceof Error ? error.message : "Unknown error"
+      details: error instanceof Error ? error.message : "Unknown error",
     });
   }
 }

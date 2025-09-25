@@ -9,9 +9,9 @@ const googleMapsClient = new GoogleMapsClient({});
 const GET_AVAILABLE_BATCHES = gql`
   query GetAvailableBatches($created_after: timestamptz!) {
     Orders(
-      where: { 
-        created_at: { _gt: $created_after }, 
-        status: { _eq: "PENDING" },
+      where: {
+        created_at: { _gt: $created_after }
+        status: { _eq: "PENDING" }
         shopper_id: { _is_null: true }
       }
     ) {
@@ -34,9 +34,9 @@ const GET_AVAILABLE_BATCHES = gql`
 const GET_AVAILABLE_REEL_BATCHES = gql`
   query GetAvailableReelBatches($created_after: timestamptz!) {
     reel_orders(
-      where: { 
-        created_at: { _gt: $created_after }, 
-        status: { _eq: "PENDING" },
+      where: {
+        created_at: { _gt: $created_after }
+        status: { _eq: "PENDING" }
         shopper_id: { _is_null: true }
       }
     ) {
