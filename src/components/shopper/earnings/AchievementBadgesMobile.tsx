@@ -188,18 +188,70 @@ const AchievementBadgesMobile: React.FC = () => {
 
   const getTypeIcon = (type: string) => {
     switch (type) {
-      case 'earnings': return '💰';
-      case 'orders': return '📦';
-      case 'ratings': return '⭐';
-      default: return '🏆';
+      case 'earnings': 
+        return (
+          <svg viewBox="0 0 24 24" fill="currentColor" className="h-4 w-4">
+            <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm.31-8.86c-1.77-.45-2.34-.94-2.34-1.67 0-.84.79-1.43 2.1-1.43 1.38 0 1.9.66 1.94 1.64h1.71c-.05-1.34-.87-2.57-2.49-2.97V5H10.9v1.69c-1.51.32-2.72 1.3-2.72 2.81 0 1.79 1.49 2.69 3.66 3.21 1.95.46 2.34 1.15 2.34 1.87 0 .53-.39 1.39-2.1 1.39-1.6 0-2.23-.72-2.32-1.64H8.04c.1 1.7 1.36 2.66 2.86 2.97V19h2.34v-1.67c1.52-.29 2.72-1.16 2.73-2.77-.01-2.2-1.9-2.96-3.66-3.42z" />
+          </svg>
+        );
+      case 'orders': 
+        return (
+          <svg viewBox="0 0 24 24" fill="currentColor" className="h-4 w-4">
+            <path d="M7 18c-1.1 0-1.99.9-1.99 2S5.9 22 7 22s2-.9 2-2-.9-2-2-2zM1 4h2l3.6 7.59-1.35 2.44C4.52 15.37 5.48 17 7 17h11c.55 0 1-.45 1-1s-.45-1-1-1H7l1.1-2h7.45c.75 0 1.41-.41 1.75-1.03l3.58-6.49c.37-.66-.11-1.48-.87-1.48H5.21l-.67-1.43c-.16-.35-.52-.57-.9-.57H2c-.55 0-1 .45-1 1s.45 1 1 1zm16 14c-1.1 0-1.99.9-1.99 2s.89 2 1.99 2 2-.9 2-2-.9-2-2-2z" />
+          </svg>
+        );
+      case 'ratings': 
+        return (
+          <svg viewBox="0 0 24 24" fill="currentColor" className="h-4 w-4">
+            <path d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z" />
+          </svg>
+        );
+      default: 
+        return (
+          <svg viewBox="0 0 24 24" fill="currentColor" className="h-4 w-4">
+            <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
+          </svg>
+        );
     }
   };
 
   const getStreakIcon = (streakCount: number) => {
-    if (streakCount >= 12) return '🔥👑';
-    if (streakCount >= 5) return '🔥⚡';
-    if (streakCount >= 3) return '🔥';
-    return '🔥';
+    if (streakCount >= 12) {
+      return (
+        <div className="flex items-center space-x-1">
+          <svg viewBox="0 0 24 24" fill="currentColor" className="h-3 w-3 text-orange-500">
+            <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
+          </svg>
+          <svg viewBox="0 0 24 24" fill="currentColor" className="h-3 w-3 text-yellow-500">
+            <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
+          </svg>
+        </div>
+      );
+    }
+    if (streakCount >= 5) {
+      return (
+        <div className="flex items-center space-x-1">
+          <svg viewBox="0 0 24 24" fill="currentColor" className="h-3 w-3 text-orange-500">
+            <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
+          </svg>
+          <svg viewBox="0 0 24 24" fill="currentColor" className="h-3 w-3 text-yellow-500">
+            <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" />
+          </svg>
+        </div>
+      );
+    }
+    if (streakCount >= 3) {
+      return (
+        <svg viewBox="0 0 24 24" fill="currentColor" className="h-3 w-3 text-orange-500">
+          <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
+        </svg>
+      );
+    }
+    return (
+      <svg viewBox="0 0 24 24" fill="currentColor" className="h-3 w-3 text-orange-500">
+        <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
+      </svg>
+    );
   };
 
   const formatCurrentValue = (achievement: Achievement) => {
@@ -372,7 +424,7 @@ const AchievementBadgesMobile: React.FC = () => {
                       </div>
                       <div className="min-w-0 flex-1">
                         <div className="flex items-center gap-1 mb-1">
-                          <span className="text-sm">{getTypeIcon(achievement.type)}</span>
+                          <span className="text-sm flex items-center">{getTypeIcon(achievement.type)}</span>
                           <Whisper
                             speaker={<Tooltip>{achievement.description}</Tooltip>}
                             placement="top"
@@ -400,7 +452,7 @@ const AchievementBadgesMobile: React.FC = () => {
                     <div className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium ${
                       theme === "dark" ? "bg-orange-500/20 text-orange-300" : "bg-orange-100 text-orange-600"
                     }`}>
-                      <span>{getStreakIcon(achievement.streakCount)}</span>
+                      <span className="flex items-center">{getStreakIcon(achievement.streakCount)}</span>
                       <span>Streak x{achievement.streakCount}</span>
                     </div>
                   )}
@@ -442,7 +494,7 @@ const AchievementBadgesMobile: React.FC = () => {
                       </div>
                       <div className="min-w-0 flex-1">
                         <div className="flex items-center gap-1 mb-1">
-                          <span className="text-sm">{getTypeIcon(achievement.type)}</span>
+                          <span className="text-sm flex items-center">{getTypeIcon(achievement.type)}</span>
                           <Whisper
                             speaker={<Tooltip>{achievement.description}</Tooltip>}
                             placement="top"

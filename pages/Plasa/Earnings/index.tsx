@@ -109,7 +109,7 @@ const EarningsPage: React.FC = () => {
   //   debugLevel: 'verbose'
   // });
   const [period, setPeriod] = useState("this-week");
-  const [activeTab, setActiveTab] = useState("earnings");
+  const [activeTab, setActiveTab] = useState("payouts");
   const [loading, setLoading] = useState(true);
   const [walletLoading, setWalletLoading] = useState(true);
   const [deliveryStatsLoading, setDeliveryStatsLoading] = useState(true);
@@ -169,6 +169,11 @@ const EarningsPage: React.FC = () => {
     };
 
     fetchEarningsStats();
+  }, []);
+
+  // Fetch wallet and transaction data on component mount
+  useEffect(() => {
+    fetchWalletData();
   }, []);
 
   // Fetch wallet and transaction data when the Payouts tab is selected
@@ -596,7 +601,17 @@ const EarningsPage: React.FC = () => {
                 onSelect={handleTabChange}
                 appearance="subtle"
               >
-                <Tabs.Tab eventKey="achievements" title="Achievements">
+                    <Tabs.Tab 
+                      eventKey="achievements" 
+                      title={
+                        <div className="flex items-center space-x-2">
+                          <svg viewBox="0 0 24 24" fill="currentColor" className="h-4 w-4">
+                            <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
+                          </svg>
+                          <span>Achievements</span>
+                        </div>
+                      }
+                    >
                   <Panel
                     shaded
                     bordered
@@ -610,7 +625,17 @@ const EarningsPage: React.FC = () => {
                   </Panel>
                 </Tabs.Tab>
 
-                <Tabs.Tab eventKey="earnings" title="Earnings">
+                    <Tabs.Tab 
+                      eventKey="earnings" 
+                      title={
+                        <div className="flex items-center space-x-2">
+                          <svg viewBox="0 0 24 24" fill="currentColor" className="h-4 w-4">
+                            <path d="M3 13h2v-2H3v2zm0 4h2v-2H3v2zm0-8h2V7H3v2zm4 4h14v-2H7v2zm0 4h14v-2H7v2zM7 7v2h14V7H7z" />
+                          </svg>
+                          <span>Earnings</span>
+                        </div>
+                      }
+                    >
                   <Panel
                     shaded
                     bordered
@@ -645,7 +670,17 @@ const EarningsPage: React.FC = () => {
                   </Panel>
                 </Tabs.Tab>
 
-                <Tabs.Tab eventKey="recent-orders" title="Recent Orders">
+                <Tabs.Tab 
+                  eventKey="recent-orders" 
+                  title={
+                    <div className="flex items-center space-x-2">
+                      <svg viewBox="0 0 24 24" fill="currentColor" className="h-4 w-4">
+                        <path d="M7 18c-1.1 0-1.99.9-1.99 2S5.9 22 7 22s2-.9 2-2-.9-2-2-2zM1 4h2l3.6 7.59-1.35 2.44C4.52 15.37 5.48 17 7 17h11c.55 0 1-.45 1-1s-.45-1-1-1H7l1.1-2h7.45c.75 0 1.41-.41 1.75-1.03l3.58-6.49c.37-.66-.11-1.48-.87-1.48H5.21l-.67-1.43c-.16-.35-.52-.57-.9-.57H2c-.55 0-1 .45-1 1s.45 1 1 1zm16 14c-1.1 0-1.99.9-1.99 2s.89 2 1.99 2 2-.9 2-2-.9-2-2-2z" />
+                      </svg>
+                      <span>Recent Orders</span>
+                    </div>
+                  }
+                >
                   <Panel
                     shaded
                     bordered
@@ -684,7 +719,18 @@ const EarningsPage: React.FC = () => {
                   </Panel>
                 </Tabs.Tab>
 
-                <Tabs.Tab eventKey="breakdown" title="Breakdown">
+                <Tabs.Tab 
+                  eventKey="breakdown" 
+                  title={
+                    <div className="flex items-center space-x-2">
+                      <svg viewBox="0 0 24 24" fill="currentColor" className="h-4 w-4">
+                        <path d="M3 13h2v-2H3v2zm0 4h2v-2H3v2zm0-8h2V7H3v2zm4 4h14v-2H7v2zm0 4h14v-2H7v2zM7 7v2h14V7H7z" />
+                        <path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-5 14H7v-2h7v2zm3-4H7v-2h10v2zm0-4H7V7h10v2z" />
+                      </svg>
+                      <span>Breakdown</span>
+                    </div>
+                  }
+                >
                   <Panel
                     shaded
                     bordered
@@ -749,7 +795,17 @@ const EarningsPage: React.FC = () => {
                   </Panel>
                 </Tabs.Tab>
 
-                <Tabs.Tab eventKey="payouts" title="Payouts">
+                <Tabs.Tab 
+                  eventKey="payouts" 
+                  title={
+                    <div className="flex items-center space-x-2">
+                      <svg viewBox="0 0 24 24" fill="currentColor" className="h-4 w-4">
+                        <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm.31-8.86c-1.77-.45-2.34-.94-2.34-1.67 0-.84.79-1.43 2.1-1.43 1.38 0 1.9.66 1.94 1.64h1.71c-.05-1.34-.87-2.57-2.49-2.97V5H10.9v1.69c-1.51.32-2.72 1.3-2.72 2.81 0 1.79 1.49 2.69 3.66 3.21 1.95.46 2.34 1.15 2.34 1.87 0 .53-.39 1.39-2.1 1.39-1.6 0-2.23-.72-2.32-1.64H8.04c.1 1.7 1.36 2.66 2.86 2.97V19h2.34v-1.67c1.52-.29 2.72-1.16 2.73-2.77-.01-2.2-1.9-2.96-3.66-3.42z" />
+                      </svg>
+                      <span>Payouts</span>
+                    </div>
+                  }
+                >
                   <Panel
                     shaded
                     bordered
@@ -1029,34 +1085,111 @@ const EarningsPage: React.FC = () => {
                     </div>
 
                     {/* Mobile Tab Navigation */}
-                    <div className="mb-4 flex space-x-1 overflow-x-auto">
-                      {[
-                        { key: "earnings", label: "Earnings", icon: "📊" },
-                        { key: "recent-orders", label: "Orders", icon: "📦" },
-                        { key: "breakdown", label: "Breakdown", icon: "📈" },
-                        { key: "payouts", label: "Payouts", icon: "💰" },
-                      ].map((tab) => (
-                        <button
-                          key={tab.key}
-                          onClick={() => setActiveTab(tab.key)}
-                          className={`flex items-center space-x-1 rounded-lg px-3 py-2 text-xs font-medium transition-all duration-200 whitespace-nowrap ${
-                            activeTab === tab.key
-                              ? theme === "dark"
-                                ? "bg-green-600 text-white shadow-lg shadow-green-500/30"
-                                : "bg-green-600 text-white shadow-lg shadow-green-500/30"
-                              : theme === "dark"
-                              ? "bg-gray-800 text-gray-300 hover:bg-gray-700"
-                              : "bg-gray-100 text-gray-700 hover:bg-gray-200"
-                          }`}
-                        >
-                          <span>{tab.icon}</span>
-                          <span>{tab.label}</span>
-                        </button>
-                      ))}
+                    <div className="mb-6">
+                      <div className="flex space-x-2 overflow-x-auto pb-2">
+                        {[
+                          { 
+                            key: "payouts", 
+                            label: "Payouts", 
+                            icon: (
+                              <svg viewBox="0 0 24 24" fill="currentColor" className="h-5 w-5">
+                                <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm.31-8.86c-1.77-.45-2.34-.94-2.34-1.67 0-.84.79-1.43 2.1-1.43 1.38 0 1.9.66 1.94 1.64h1.71c-.05-1.34-.87-2.57-2.49-2.97V5H10.9v1.69c-1.51.32-2.72 1.3-2.72 2.81 0 1.79 1.49 2.69 3.66 3.21 1.95.46 2.34 1.15 2.34 1.87 0 .53-.39 1.39-2.1 1.39-1.6 0-2.23-.72-2.32-1.64H8.04c.1 1.7 1.36 2.66 2.86 2.97V19h2.34v-1.67c1.52-.29 2.72-1.16 2.73-2.77-.01-2.2-1.9-2.96-3.66-3.42z" />
+                              </svg>
+                            )
+                          },
+                          { 
+                            key: "earnings", 
+                            label: "Earnings", 
+                            icon: (
+                              <svg viewBox="0 0 24 24" fill="currentColor" className="h-5 w-5">
+                                <path d="M3 13h2v-2H3v2zm0 4h2v-2H3v2zm0-8h2V7H3v2zm4 4h14v-2H7v2zm0 4h14v-2H7v2zM7 7v2h14V7H7z" />
+                              </svg>
+                            )
+                          },
+                          { 
+                            key: "recent-orders", 
+                            label: "Orders", 
+                            icon: (
+                              <svg viewBox="0 0 24 24" fill="currentColor" className="h-5 w-5">
+                                <path d="M7 18c-1.1 0-1.99.9-1.99 2S5.9 22 7 22s2-.9 2-2-.9-2-2-2zM1 4h2l3.6 7.59-1.35 2.44C4.52 15.37 5.48 17 7 17h11c.55 0 1-.45 1-1s-.45-1-1-1H7l1.1-2h7.45c.75 0 1.41-.41 1.75-1.03l3.58-6.49c.37-.66-.11-1.48-.87-1.48H5.21l-.67-1.43c-.16-.35-.52-.57-.9-.57H2c-.55 0-1 .45-1 1s.45 1 1 1zm16 14c-1.1 0-1.99.9-1.99 2s.89 2 1.99 2 2-.9 2-2-.9-2-2-2z" />
+                              </svg>
+                            )
+                          },
+                          { 
+                            key: "breakdown", 
+                            label: "Breakdown", 
+                            icon: (
+                              <svg viewBox="0 0 24 24" fill="currentColor" className="h-5 w-5">
+                                <path d="M3 13h2v-2H3v2zm0 4h2v-2H3v2zm0-8h2V7H3v2zm4 4h14v-2H7v2zm0 4h14v-2H7v2zM7 7v2h14V7H7z" />
+                                <path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-5 14H7v-2h7v2zm3-4H7v-2h10v2zm0-4H7V7h10v2z" />
+                              </svg>
+                            )
+                          },
+                        ].map((tab) => (
+                          <button
+                            key={tab.key}
+                            onClick={() => setActiveTab(tab.key)}
+                            className={`flex items-center space-x-2 rounded-xl px-4 py-3 text-sm font-semibold transition-all duration-300 whitespace-nowrap min-w-fit ${
+                              activeTab === tab.key
+                                ? theme === "dark"
+                                  ? "bg-gradient-to-r from-green-600 to-emerald-600 text-white shadow-lg shadow-green-500/40 transform scale-105"
+                                  : "bg-gradient-to-r from-green-600 to-emerald-600 text-white shadow-lg shadow-green-500/40 transform scale-105"
+                                : theme === "dark"
+                                ? "bg-gray-800/50 text-gray-300 hover:bg-gray-700/50 hover:text-white border border-gray-700"
+                                : "bg-white text-gray-600 hover:bg-gray-50 hover:text-gray-900 border border-gray-200 shadow-sm"
+                            }`}
+                          >
+                            <span className="flex-shrink-0">{tab.icon}</span>
+                            <span className="font-medium">{tab.label}</span>
+                            {activeTab === tab.key && (
+                              <div className="w-2 h-2 bg-white rounded-full animate-pulse"></div>
+                            )}
+                          </button>
+                        ))}
+                      </div>
                     </div>
 
                     {/* Mobile Tab Content */}
                     <div className="h-full">
+                      {activeTab === "payouts" && (
+                        <div className="h-full">
+                          <h3
+                            className={`mb-3 text-lg font-bold ${
+                              theme === "dark" ? "text-white" : "text-gray-800"
+                            }`}
+                          >
+                            Payment History
+                          </h3>
+                          <p
+                            className={`mb-4 text-sm ${
+                              theme === "dark" ? "text-gray-400" : "text-gray-500"
+                            }`}
+                          >
+                            Your recent payouts and upcoming payments
+                          </p>
+                          {walletLoading ? (
+                            <div
+                              className={`flex justify-center py-8 ${
+                                theme === "dark" ? "text-white" : ""
+                              }`}
+                            >
+                              <Loader size="md" content="Loading wallet data..." />
+                            </div>
+                          ) : (
+                            <div className="h-full flex-1">
+                              <PaymentHistory
+                                wallet={wallet}
+                                transactions={transactions}
+                                onViewAllPayments={() =>
+                                  console.log("View all payments clicked")
+                                }
+                                isLoading={walletLoading}
+                              />
+                            </div>
+                          )}
+                        </div>
+                      )}
+
                       {activeTab === "earnings" && (
                         <div className="h-full">
                           <h3
@@ -1167,67 +1300,54 @@ const EarningsPage: React.FC = () => {
                           )}
                         </div>
                       )}
-
-                      {activeTab === "payouts" && (
-                        <div className="h-full">
-                          <h3
-                            className={`mb-3 text-lg font-bold ${
-                              theme === "dark" ? "text-white" : "text-gray-800"
-                            }`}
-                          >
-                            Payment History
-                          </h3>
-                          <p
-                            className={`mb-4 text-sm ${
-                              theme === "dark" ? "text-gray-400" : "text-gray-500"
-                            }`}
-                          >
-                            Your recent payouts and upcoming payments
-                          </p>
-                          {walletLoading ? (
-                            <div
-                              className={`flex justify-center py-8 ${
-                                theme === "dark" ? "text-white" : ""
-                              }`}
-                            >
-                              <Loader size="md" content="Loading wallet data..." />
-                            </div>
-                          ) : (
-                            <div className="h-full flex-1">
-                              <PaymentHistory
-                                wallet={wallet}
-                                transactions={transactions}
-                                onViewAllPayments={() =>
-                                  console.log("View all payments clicked")
-                                }
-                                isLoading={walletLoading}
-                              />
-                            </div>
-                          )}
-                        </div>
-                      )}
                     </div>
                   </div>
-                ) : (
-                  <div className="flex items-center justify-between px-4">
-                    <div className="flex w-full items-center justify-between">
-                      <span
-                        className={`text-lg font-semibold ${
-                          theme === "dark" ? "text-white" : "text-gray-900"
-                        }`}
-                      >
-                        Earnings Details
-                      </span>
-                      <span
-                        className={`text-xl font-bold ${
-                          theme === "dark" ? "text-green-400" : "text-green-600"
-                        }`}
-                      >
-                        {formatCurrency(earningsStats.totalEarnings)}
-                      </span>
-                    </div>
-                  </div>
-                )}
+                 ) : (
+                   <div className="px-4 py-1">
+                     <div className="flex items-center justify-between mb-3">
+                       <div className="flex items-center space-x-3">
+                         <div className={`p-2 rounded-lg ${theme === "dark" ? "bg-green-500/20" : "bg-green-100"}`}>
+                           <svg viewBox="0 0 24 24" fill="currentColor" className="h-5 w-5 text-green-500">
+                             <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm.31-8.86c-1.77-.45-2.34-.94-2.34-1.67 0-.84.79-1.43 2.1-1.43 1.38 0 1.9.66 1.94 1.64h1.71c-.05-1.34-.87-2.57-2.49-2.97V5H10.9v1.69c-1.51.32-2.72 1.3-2.72 2.81 0 1.79 1.49 2.69 3.66 3.21 1.95.46 2.34 1.15 2.34 1.87 0 .53-.39 1.39-2.1 1.39-1.6 0-2.23-.72-2.32-1.64H8.04c.1 1.7 1.36 2.66 2.86 2.97V19h2.34v-1.67c1.52-.29 2.72-1.16 2.73-2.77-.01-2.2-1.9-2.96-3.66-3.42z" />
+                           </svg>
+                         </div>
+                         <div>
+                           <span
+                             className={`text-lg font-semibold ${
+                               theme === "dark" ? "text-white" : "text-gray-900"
+                             }`}
+                           >
+                             Request Payout
+                           </span>
+                           <p
+                             className={`text-xs ${
+                               theme === "dark" ? "text-gray-400" : "text-gray-500"
+                             }`}
+                           >
+                             Available balance
+                           </p>
+                         </div>
+                       </div>
+                       <div className="text-right">
+                         <span
+                           className={`text-xl font-bold ${
+                             theme === "dark" ? "text-green-400" : "text-green-600"
+                           }`}
+                         >
+                           {wallet ? formatCurrency(wallet.availableBalance) : formatCurrency(0)}
+                         </span>
+                         <p
+                           className={`text-xs ${
+                             theme === "dark" ? "text-gray-400" : "text-gray-500"
+                           }`}
+                         >
+                           Ready to withdraw
+                         </p>
+                       </div>
+                     </div>
+                     
+                   </div>
+                 )}
               </div>
             </div>
           )}
