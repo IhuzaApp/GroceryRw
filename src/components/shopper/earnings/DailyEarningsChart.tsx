@@ -26,12 +26,16 @@ interface DailyEarningsChartProps {
   data?: DailyEarning[];
   isLoading?: boolean;
   period?: string;
+  height?: string | number;
+  mobileHeight?: string | number;
 }
 
 const DailyEarningsChart: React.FC<DailyEarningsChartProps> = ({
   data = [],
   isLoading = false,
   period = "this-week",
+  height = "100%",
+  mobileHeight = "220px", // 13.75rem = 220px
 }) => {
   // Format currency in RWF
   const formatCurrency = (amount: number) => {
@@ -133,8 +137,10 @@ const DailyEarningsChart: React.FC<DailyEarningsChartProps> = ({
 
   return (
     <div
-      className="relative w-full"
-      style={{ aspectRatio: "2/1", minHeight: "300px" }}
+      className="relative w-full h-56 sm:h-64"
+      style={{ 
+        minHeight: "220px"
+      }}
     >
       <ResponsiveContainer width="100%" height="100%">
         <BarChart

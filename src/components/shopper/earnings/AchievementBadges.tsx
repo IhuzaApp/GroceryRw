@@ -358,8 +358,8 @@ const AchievementBadges: React.FC = () => {
           </div>
           <div>
             <h3 className={`text-lg sm:text-xl font-bold ${theme === "dark" ? "text-white" : "text-gray-900"}`}>
-              Achievement Badges
-            </h3>
+        Achievement Badges
+      </h3>
             <p className={`text-xs sm:text-sm ${theme === "dark" ? "text-gray-400" : "text-gray-500"}`}>
               Unlock rewards for your performance
             </p>
@@ -409,7 +409,7 @@ const AchievementBadges: React.FC = () => {
             </div>
             <h4 className={`text-base sm:text-lg font-bold ${theme === "dark" ? "text-green-400" : "text-green-600"}`}>
               Achieved This Month
-            </h4>
+          </h4>
           </div>
           <div className="space-y-3">
             {achieved.map((achievement, index) => (
@@ -428,22 +428,22 @@ const AchievementBadges: React.FC = () => {
                   <div className="flex items-center justify-between mb-3">
                     <div className="flex items-center gap-3 min-w-0 flex-1">
                       <div className="flex items-center justify-center w-12 h-12 sm:w-14 sm:h-14 flex-shrink-0 rounded-xl bg-white/10 backdrop-blur-sm">
-                        {getBadgeIcon(achievement.level)}
-                      </div>
+                      {getBadgeIcon(achievement.level)}
+                    </div>
                       <div className="min-w-0 flex-1">
                         <div className="flex items-center gap-2 mb-1">
                           <span className="text-xl flex items-center">{getTypeIcon(achievement.type)}</span>
-                          <Whisper
-                            speaker={<Tooltip>{achievement.description}</Tooltip>}
-                            placement="top"
-                          >
+                    <Whisper
+                      speaker={<Tooltip>{achievement.description}</Tooltip>}
+                      placement="top"
+                    >
                             <span className={`text-sm sm:text-base font-bold truncate ${
                               theme === "dark" ? "text-white" : "text-gray-900"
-                            }`}>
-                              {achievement.badgeName}
-                            </span>
-                          </Whisper>
-                        </div>
+                      }`}>
+                        {achievement.badgeName}
+                      </span>
+                    </Whisper>
+                  </div>
                         <div className={`text-xs ${theme === "dark" ? "text-green-300" : "text-green-600"}`}>
                           {formatCurrentValue(achievement)} / {formatTargetValue(achievement)}
                         </div>
@@ -454,16 +454,16 @@ const AchievementBadges: React.FC = () => {
                     }`}>
                       {achievement.level.toUpperCase()}
                     </div>
-                  </div>
-                  
-                  {achievement.streakCount && achievement.streakCount > 1 && (
+                </div>
+                
+                {achievement.streakCount && achievement.streakCount > 1 && (
                     <div className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium ${
                       theme === "dark" ? "bg-orange-500/20 text-orange-300" : "bg-orange-100 text-orange-600"
                     }`}>
                       <span className="flex items-center">{getStreakIcon(achievement.streakCount)}</span>
                       <span>Streak x{achievement.streakCount}</span>
-                    </div>
-                  )}
+                  </div>
+                )}
                 </div>
               </div>
             ))}
@@ -482,7 +482,7 @@ const AchievementBadges: React.FC = () => {
             </div>
             <h4 className={`text-base sm:text-lg font-bold ${theme === "dark" ? "text-blue-400" : "text-blue-600"}`}>
               Working Towards
-            </h4>
+          </h4>
           </div>
           <div className="space-y-3">
             {pending.slice(0, 6).map((achievement, index) => (
@@ -498,22 +498,22 @@ const AchievementBadges: React.FC = () => {
                   <div className="flex items-center justify-between mb-3">
                     <div className="flex items-center gap-3 min-w-0 flex-1">
                       <div className="flex items-center justify-center w-12 h-12 sm:w-14 sm:h-14 flex-shrink-0 rounded-xl bg-white/5 backdrop-blur-sm">
-                        {getBadgeIcon(achievement.level)}
-                      </div>
+                      {getBadgeIcon(achievement.level)}
+                    </div>
                       <div className="min-w-0 flex-1">
                         <div className="flex items-center gap-2 mb-1">
                           <span className="text-xl flex items-center">{getTypeIcon(achievement.type)}</span>
-                          <Whisper
-                            speaker={<Tooltip>{achievement.description}</Tooltip>}
-                            placement="top"
-                          >
+                    <Whisper
+                      speaker={<Tooltip>{achievement.description}</Tooltip>}
+                      placement="top"
+                    >
                             <span className={`text-sm sm:text-base font-bold truncate ${
                               theme === "dark" ? "text-white" : "text-gray-900"
-                            }`}>
-                              {achievement.badgeName}
-                            </span>
-                          </Whisper>
-                        </div>
+                      }`}>
+                        {achievement.badgeName}
+                      </span>
+                    </Whisper>
+                  </div>
                         <div className={`text-xs ${theme === "dark" ? "text-gray-400" : "text-gray-600"}`}>
                           {formatCurrentValue(achievement)} / {formatTargetValue(achievement)}
                         </div>
@@ -523,14 +523,14 @@ const AchievementBadges: React.FC = () => {
                       theme === "dark" ? "bg-gray-500/20 text-gray-300" : "bg-gray-100 text-gray-700"
                     }`}>
                       {achievement.level.toUpperCase()}
-                    </div>
-                  </div>
-                  
+                </div>
+                </div>
+                
                   {/* Modern Progress Bar */}
                   <div className="mb-3">
                     <div className={`flex justify-between items-center mb-2 ${
-                      theme === "dark" ? "text-gray-300" : "text-gray-600"
-                    }`}>
+                  theme === "dark" ? "text-gray-300" : "text-gray-600"
+                }`}>
                       <span className="text-xs font-medium">Progress</span>
                       <span className="text-xs font-bold">{achievement.progress}%</span>
                     </div>
