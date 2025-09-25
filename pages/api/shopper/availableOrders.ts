@@ -84,18 +84,18 @@ const GET_AVAILABLE_REEL_ORDERS = gql`
   }
 `;
 
-// Add query for available restaurant orders (updated within last 10 minutes or created if updated_at is null)
+// Add query for available restaurant orders (updated within last 29 minutes or created if updated_at is null)
 const GET_AVAILABLE_RESTAURANT_ORDERS = gql`
-  query GetAvailableRestaurantOrders($tenMinutesAgo: timestamptz!) {
+  query GetAvailableRestaurantOrders($twentyNineMinutesAgo: timestamptz!) {
     restaurant_orders(
       where: { 
         shopper_id: { _is_null: true }, 
         status: { _eq: "PENDING" },
         _or: [
-          { updated_at: { _gte: $tenMinutesAgo } },
+          { updated_at: { _gte: $twentyNineMinutesAgo } },
           { 
             updated_at: { _is_null: true },
-            created_at: { _gte: $tenMinutesAgo }
+            created_at: { _gte: $twentyNineMinutesAgo }
           }
         ]
       }
@@ -207,23 +207,16 @@ export default async function handler(
       throw new Error("Hasura client is not initialized");
     }
 
-    // Calculate timestamp for 30 minutes ago (for regular/reel orders)
+    // Calculate timestamp for 30 minutes ago (for aged orders on map)
     const thirtyMinutesAgo = new Date(Date.now() - 30 * 60 * 1000).toISOString();
-    // Calculate timestamp for 10 minutes ago (for restaurant orders)
-    const tenMinutesAgo = new Date(Date.now() - 10 * 60 * 1000).toISOString();
+    // Calculate timestamp for 29 minutes ago (for restaurant orders notifications)
+    const twentyNineMinutesAgo = new Date(Date.now() - 29 * 60 * 1000).toISOString();
 
-    logger.debug("Querying Hasura for orders", "AvailableOrders", {
-      thirtyMinutesAgo,
-      tenMinutesAgo
-    });
 
     // Debug: Test restaurant orders query first
     try {
-      const testRestaurantQuery = await hasuraClient.request(GET_AVAILABLE_RESTAURANT_ORDERS, { tenMinutesAgo });
-      logger.debug("Restaurant orders query test", "AvailableOrders", {
-        restaurantOrdersCount: testRestaurantQuery.restaurant_orders?.length || 0,
-        sampleOrder: testRestaurantQuery.restaurant_orders?.[0] || null
-      });
+      const testRestaurantQuery = await hasuraClient.request(GET_AVAILABLE_RESTAURANT_ORDERS, { twentyNineMinutesAgo });
+    
     } catch (error) {
       logger.error("Restaurant orders query failed", "AvailableOrders", error);
     }
@@ -325,7 +318,7 @@ export default async function handler(
             };
           }>;
         }>;
-      }>(GET_AVAILABLE_RESTAURANT_ORDERS, { tenMinutesAgo }),
+      }>(GET_AVAILABLE_RESTAURANT_ORDERS, { twentyNineMinutesAgo }),
     ]);
 
     const regularOrders = regularOrdersData.Orders;
@@ -486,9 +479,7 @@ export default async function handler(
         itemsCount: 1, // Reel orders have 1 item
         serviceFee: parseFloat(order.service_fee || "0"),
         deliveryFee: parseFloat(order.delivery_fee || "0"),
-        earnings:
-          parseFloat(order.service_fee || "0") +
-          parseFloat(order.delivery_fee || "0"),
+        earnings: parseFloat(order.service_fee || "0") + parseFloat(order.delivery_fee || "0"), // Service + delivery fee for reel orders
         pendingMinutes,
         priorityLevel,
         status: order.status,

@@ -40,6 +40,8 @@ The Smart Notification & Assignment System provides real-time order distribution
 - **Travel Time Display**: Shows estimated minutes away instead of raw distance
 - **Multi-Order Type Support**: Handles regular orders, reel orders, and restaurant orders
 - **Restaurant Order Workflow**: Special handling for restaurant confirmation process
+- **Smart Notification Timing**: Notifies shoppers for orders created within last 29 minutes
+- **Order-Specific Earnings**: Different calculation methods for regular, reel, and restaurant orders
 
 ## System Architecture
 
@@ -93,11 +95,13 @@ graph TB
 
 2. **Time Filtering**: 
    - Uses `updated_at` field instead of `created_at`
-   - Only orders updated within last 10 minutes are shown
+   - Only orders updated within last 29 minutes are shown for notifications
    - Falls back to `created_at` if `updated_at` is null
 
 3. **Earnings Calculation**:
-   - Only uses `delivery_fee` (no `service_fee`)
+   - **Regular Orders**: `service_fee + delivery_fee`
+   - **Reel Orders**: `service_fee + delivery_fee`
+   - **Restaurant Orders**: `delivery_fee` only (no `service_fee`)
    - Restaurant sets final price (no markup model)
 
 4. **UI Styling**:
@@ -113,11 +117,46 @@ SELECT * FROM restaurant_orders
 WHERE status = 'PENDING' 
   AND shopper_id IS NULL 
   AND (
-    updated_at >= NOW() - INTERVAL '10 minutes' 
-    OR (updated_at IS NULL AND created_at >= NOW() - INTERVAL '10 minutes')
+    updated_at >= NOW() - INTERVAL '29 minutes' 
+    OR (updated_at IS NULL AND created_at >= NOW() - INTERVAL '29 minutes')
   )
 ORDER BY updated_at DESC NULLS LAST, created_at DESC;
 ```
+
+### Earnings Calculation System
+
+The system uses different earnings calculation methods based on order type:
+
+1. **Regular Orders**: 
+   - **Formula**: `service_fee + delivery_fee`
+   - **Reason**: Platform charges both service and delivery fees
+   - **Example**: Service fee (RF 200) + Delivery fee (RF 300) = RF 500
+
+2. **Reel Orders**: 
+   - **Formula**: `service_fee + delivery_fee`
+   - **Reason**: Platform charges both service and delivery fees
+   - **Example**: Service fee (RF 200) + Delivery fee (RF 300) = RF 500
+
+3. **Restaurant Orders**: 
+   - **Formula**: `delivery_fee` only
+   - **Reason**: Restaurant sets final price, no platform service fee
+   - **Example**: Delivery fee (RF 250) = RF 250
+
+### Notification Timing System
+
+The system uses a two-tier timing approach:
+
+1. **Fresh Orders (0-29 minutes)**: 
+   - Shoppers receive real-time notifications
+   - Orders appear in smart assignment algorithm
+   - WebSocket notifications sent immediately
+   - Orders are actively distributed to shoppers
+
+2. **Aged Orders (30+ minutes)**:
+   - Orders appear on map for manual selection
+   - No active notifications sent
+   - Shoppers can manually accept from map
+   - Used for orders that need special attention
 
 ### API Integration
 

@@ -276,8 +276,8 @@ export default async function handler(
     const currentTime = now.toTimeString().split(" ")[0] + "+00:00";
     const currentDay = now.getDay() === 0 ? 7 : now.getDay();
 
-    // Get orders created in the last 10 minutes
-    const tenMinutesAgo = new Date(Date.now() - 10 * 60 * 1000).toISOString();
+    // Get orders created in the last 29 minutes
+    const twentyNineMinutesAgo = new Date(Date.now() - 29 * 60 * 1000).toISOString();
 
     // Fetch data in parallel
     const [dashersData, regularOrdersData, reelOrdersData, restaurantOrdersData] = await Promise.all([
@@ -286,13 +286,13 @@ export default async function handler(
         current_day: currentDay,
       }) as any,
       hasuraClient.request(GET_AVAILABLE_ORDERS, {
-        created_after: tenMinutesAgo,
+        created_after: twentyNineMinutesAgo,
       }) as any,
       hasuraClient.request(GET_AVAILABLE_REEL_ORDERS, {
-        created_after: tenMinutesAgo,
+        created_after: twentyNineMinutesAgo,
       }) as any,
       hasuraClient.request(GET_AVAILABLE_RESTAURANT_ORDERS, {
-        updated_after: tenMinutesAgo,
+        updated_after: twentyNineMinutesAgo,
       }) as any,
     ]);
 
@@ -370,7 +370,9 @@ export default async function handler(
             createdAt: order.created_at,
             customerAddress: `${order.Address?.street || order.address?.street}, ${order.Address?.city || order.address?.city}`,
             itemsCount: order.quantity || 1,
-            estimatedEarnings: parseFloat(order.delivery_fee || "0"), // Restaurant orders only have delivery fee
+            estimatedEarnings: order.orderType === "restaurant" 
+              ? parseFloat(order.delivery_fee || "0") // Restaurant orders: delivery only
+              : parseFloat(order.service_fee || "0") + parseFloat(order.delivery_fee || "0"), // Regular and reel orders: service + delivery
             orderType: order.orderType || "regular",
             // Add restaurant-specific fields
             ...(order.orderType === "restaurant" && {

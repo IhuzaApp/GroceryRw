@@ -170,8 +170,8 @@ export const distributeOrders = async () => {
       return;
     }
 
-    // Get orders created in the last 10 minutes
-    const tenMinutesAgo = new Date(Date.now() - 10 * 60 * 1000).toISOString();
+    // Get orders created in the last 29 minutes
+    const twentyNineMinutesAgo = new Date(Date.now() - 29 * 60 * 1000).toISOString();
 
     if (!hasuraClient) {
       console.log("ℹ️ Hasura client not available");
@@ -181,13 +181,13 @@ export const distributeOrders = async () => {
     // Fetch available orders
     const [regularOrdersData, reelOrdersData, restaurantOrdersData] = await Promise.all([
       hasuraClient.request(GET_AVAILABLE_ORDERS, {
-        current_time: tenMinutesAgo,
+        current_time: twentyNineMinutesAgo,
       }) as any,
       hasuraClient.request(GET_AVAILABLE_REEL_ORDERS, {
-        current_time: tenMinutesAgo,
+        current_time: twentyNineMinutesAgo,
       }) as any,
       hasuraClient.request(GET_AVAILABLE_RESTAURANT_ORDERS, {
-        current_time: tenMinutesAgo,
+        current_time: twentyNineMinutesAgo,
       }) as any,
     ]);
 
@@ -272,7 +272,9 @@ const distributeOrderToBestShopper = async (order: any, activeConnections: Map<s
       createdAt: order.created_at,
       customerAddress: `${order.Address?.street || order.address?.street}, ${order.Address?.city || order.address?.city}`,
       itemsCount: order.quantity || 1,
-      estimatedEarnings: parseFloat(order.delivery_fee || "0"), // Restaurant orders only have delivery fee
+      estimatedEarnings: order.orderType === "restaurant" 
+        ? parseFloat(order.delivery_fee || "0") // Restaurant orders: delivery only
+        : parseFloat(order.service_fee || "0") + parseFloat(order.delivery_fee || "0"), // Regular and reel orders: service + delivery
       orderType: order.orderType,
       priority: bestPriority,
       // Add restaurant-specific fields
