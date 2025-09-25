@@ -10,6 +10,7 @@ const ASSIGN_ORDER = gql`
     $id: uuid!
     $shopper_id: uuid!
     $updated_at: timestamptz!
+    $assigned_at: timestamptz!
   ) {
     update_Orders_by_pk(
       pk_columns: { id: $id }
@@ -17,12 +18,14 @@ const ASSIGN_ORDER = gql`
         shopper_id: $shopper_id
         status: "accepted"
         updated_at: $updated_at
+        assigned_at: $assigned_at
       }
     ) {
       id
       shopper_id
       status
       updated_at
+      assigned_at
     }
   }
 `;
@@ -33,6 +36,7 @@ const ASSIGN_REEL_ORDER = gql`
     $id: uuid!
     $shopper_id: uuid!
     $updated_at: timestamptz!
+    $assigned_at: timestamptz!
   ) {
     update_reel_orders_by_pk(
       pk_columns: { id: $id }
@@ -40,12 +44,14 @@ const ASSIGN_REEL_ORDER = gql`
         shopper_id: $shopper_id
         status: "accepted"
         updated_at: $updated_at
+        assigned_at: $assigned_at
       }
     ) {
       id
       shopper_id
       status
       updated_at
+      assigned_at
     }
   }
 `;
@@ -204,8 +210,9 @@ export default async function handler(
       return res.status(400).json({ error: "no_wallet" });
     }
 
-    // Get current timestamp for updated_at
+    // Get current timestamp for updated_at and assigned_at
     const currentTimestamp = new Date().toISOString();
+    const assignedAt = new Date().toISOString();
 
     let data: OrderResponse | ReelOrderResponse;
 
@@ -281,6 +288,7 @@ export default async function handler(
         id: orderId,
         shopper_id: userId,
         updated_at: currentTimestamp,
+        assigned_at: assignedAt,
       });
     } else {
       // Assign regular order (no wallet updates here, they happen during shopping status)
@@ -288,6 +296,7 @@ export default async function handler(
         id: orderId,
         shopper_id: userId,
         updated_at: currentTimestamp,
+        assigned_at: assignedAt,
       });
     }
 
