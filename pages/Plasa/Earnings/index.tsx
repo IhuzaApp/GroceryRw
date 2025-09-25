@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, SyntheticEvent, useEffect, useCallback } from "react";
+import Head from "next/head";
 import ShopperLayout from "@components/shopper/ShopperLayout";
 import { Panel, Button, SelectPicker, Nav, Tabs, Loader } from "rsuite";
 import { useTheme } from "../../../src/context/ThemeContext";
@@ -14,6 +15,7 @@ import EarningsGoals from "@components/shopper/earnings/EarningsGoals";
 import PaymentHistory from "@components/shopper/earnings/PaymentHistory";
 import AchievementBadges from "@components/shopper/earnings/AchievementBadges";
 import AchievementBadgesMobile from "@components/shopper/earnings/AchievementBadgesMobile";
+import EarningsTipsMobile from "@components/shopper/earnings/EarningsTipsMobile";
 import { logger } from "../../../src/utils/logger";
 import {
   formatCurrencySync,
@@ -115,6 +117,7 @@ const EarningsPage: React.FC = () => {
   const [deliveryStatsLoading, setDeliveryStatsLoading] = useState(true);
   const [isMobile, setIsMobile] = useState(false);
   const [isExpanded, setIsExpanded] = useState(false);
+  const [isInitialized, setIsInitialized] = useState(false);
   const [earningsStats, setEarningsStats] = useState<EarningsStats>({
     totalEarnings: 0,
     completedOrders: 0,
@@ -142,11 +145,16 @@ const EarningsPage: React.FC = () => {
 
   // Effect to handle mobile detection
   useEffect(() => {
-    const checkMobile = () => setIsMobile(window.innerWidth < 768);
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 768);
+      if (!isInitialized) {
+        setIsInitialized(true);
+      }
+    };
     checkMobile();
     window.addEventListener("resize", checkMobile);
     return () => window.removeEventListener("resize", checkMobile);
-  }, []);
+  }, [isInitialized]);
 
   // Fetch earnings stats
   useEffect(() => {
@@ -168,12 +176,16 @@ const EarningsPage: React.FC = () => {
       }
     };
 
-    fetchEarningsStats();
-  }, []);
+    // Add a small delay to prevent preload warnings
+    const timeoutId = setTimeout(fetchEarningsStats, 100);
+    return () => clearTimeout(timeoutId);
+  }, [period]);
 
   // Fetch wallet and transaction data on component mount
   useEffect(() => {
-    fetchWalletData();
+    // Add a small delay to prevent preload warnings
+    const timeoutId = setTimeout(fetchWalletData, 150);
+    return () => clearTimeout(timeoutId);
   }, []);
 
   // Fetch wallet and transaction data when the Payouts tab is selected
@@ -185,19 +197,25 @@ const EarningsPage: React.FC = () => {
 
   // Fetch delivery stats when the component loads
   useEffect(() => {
-    fetchDeliveryStats();
+    // Add a small delay to prevent preload warnings
+    const timeoutId = setTimeout(fetchDeliveryStats, 300);
+    return () => clearTimeout(timeoutId);
   }, []);
 
   // Fetch recent orders when the earnings tab is selected or on component load
   useEffect(() => {
     if (activeTab === "earnings") {
-      fetchRecentOrders();
+      // Add a small delay to prevent preload warnings
+      const timeoutId = setTimeout(fetchRecentOrders, 250);
+      return () => clearTimeout(timeoutId);
     }
   }, [activeTab]);
 
   // Add useEffect to fetch daily earnings
   useEffect(() => {
-    fetchDailyEarnings(period);
+    // Add a small delay to prevent preload warnings
+    const timeoutId = setTimeout(() => fetchDailyEarnings(period), 200);
+    return () => clearTimeout(timeoutId);
   }, [period]);
 
   // Function to fetch wallet and transaction data
@@ -450,6 +468,11 @@ const EarningsPage: React.FC = () => {
 
   return (
     <AuthGuard requireAuth={true} requireRole="shopper">
+      <Head>
+        <title>Plas - Earnings</title>
+        <meta name="description" content="View your earnings, achievements, and payout information" />
+        <meta name="robots" content="noindex, nofollow" />
+      </Head>
       <ShopperLayout>
         <div
           className={`${
@@ -460,8 +483,15 @@ const EarningsPage: React.FC = () => {
               : "bg-gray-50 text-gray-900"
           }`}
         >
+          {/* Loading State */}
+          {!isInitialized && (
+            <div className="flex items-center justify-center h-full">
+              <Loader size="lg" />
+            </div>
+          )}
+
           {/* Desktop Layout */}
-          {!isMobile && (
+          {!isMobile && isInitialized && (
         <div className="container mx-auto h-full px-0 py-0 pb-0 sm:px-4 sm:py-6 sm:pb-8 lg:px-6 lg:py-8">
           <div className="mx-auto h-full w-full">
             {/* Earnings Period Selector */}
@@ -875,7 +905,7 @@ const EarningsPage: React.FC = () => {
           )}
 
             {/* Mobile Layout */}
-            {isMobile && (
+            {isMobile && isInitialized && (
               <div className="h-full overflow-y-auto pb-24">
                 {/* Mobile Header */}
                 <div className="px-4 py-4">
@@ -1206,12 +1236,18 @@ const EarningsPage: React.FC = () => {
                           >
                             Your earnings for each day this week
                           </p>
-                          <div className="h-full flex-1">
+                          <div className="h-auto mb-6">
                             <DailyEarningsChart
                               data={dailyEarnings}
                               isLoading={dailyEarningsLoading}
                               period={period}
+                              mobileHeight="220px"
                             />
+                          </div>
+                          
+                          {/* Earnings Tips */}
+                          <div className="mb-6">
+                            <EarningsTipsMobile />
                           </div>
                         </div>
                       )}
