@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useRef, useState, useMemo } from "react";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 import { Loader, toaster, Message, Button } from "rsuite";
@@ -11,6 +11,7 @@ import {
 } from "../../../utils/formatCurrency";
 import { useTheme } from "../../../context/ThemeContext";
 import { logger } from "../../../utils/logger";
+import { useWebSocket } from "../../../hooks/useWebSocket";
 
 interface MapSectionProps {
   mapLoaded: boolean;
@@ -34,6 +35,7 @@ interface MapSectionProps {
     status?: string;
     // Add order type and reel-specific fields
     orderType?: "regular" | "reel";
+    shopper_id?: string | null; // null = unassigned
     reel?: {
       id: string;
       title: string;
@@ -108,6 +110,8 @@ export default function MapSection({
   isExpanded = false,
 }: MapSectionProps) {
   const { theme } = useTheme();
+  const { isConnected } = useWebSocket();
+  const [realTimeAgedOrders, setRealTimeAgedOrders] = useState<any[]>([]);
   const mapRef = useRef<HTMLDivElement | null>(null);
   const [shops, setShops] = useState<Shop[]>([]);
   const [pendingOrders, setPendingOrders] = useState<PendingOrder[]>([]);
@@ -171,6 +175,63 @@ export default function MapSection({
 
   // Cookie monitoring refs
   const cookieSnapshotRef = useRef<string>("");
+
+  // Filter aged unassigned orders (30+ minutes old, shopper_id is null)
+  const filterAgedUnassignedOrders = (orders: MapSectionProps["availableOrders"]) => {
+    const thirtyMinutesAgo = new Date(Date.now() - 30 * 60 * 1000);
+    
+    return orders.filter(order => {
+      // Check if order is 30+ minutes old
+      const orderCreatedAt = new Date(order.createdAt);
+      const isAged = orderCreatedAt <= thirtyMinutesAgo;
+      
+      // Check if order is unassigned (shopper_id is null)
+      const isUnassigned = !order.shopper_id || order.shopper_id === null;
+      
+      return isAged && isUnassigned;
+    });
+  };
+
+  // Use the filtered orders
+  const agedUnassignedOrders = useMemo(() => {
+    return filterAgedUnassignedOrders(availableOrders || []);
+  }, [availableOrders]);
+
+  // Combine props orders with real-time aged orders
+  const allAgedOrders = useMemo(() => {
+    return [...agedUnassignedOrders, ...realTimeAgedOrders];
+  }, [agedUnassignedOrders, realTimeAgedOrders]);
+
+  // Listen for WebSocket events
+  useEffect(() => {
+    const handleWebSocketNewOrder = (event: Event) => {
+      const customEvent = event as CustomEvent;
+      const { order } = customEvent.detail;
+      // Check if order is aged and unassigned
+      const thirtyMinutesAgo = new Date(Date.now() - 30 * 60 * 1000);
+      const orderCreatedAt = new Date(order.createdAt);
+      const isAged = orderCreatedAt <= thirtyMinutesAgo;
+      const isUnassigned = !order.shopper_id || order.shopper_id === null;
+      
+      if (isAged && isUnassigned) {
+        setRealTimeAgedOrders(prev => [...prev, order]);
+      }
+    };
+
+    const handleWebSocketOrderExpired = (event: Event) => {
+      const customEvent = event as CustomEvent;
+      const { orderId } = customEvent.detail;
+      setRealTimeAgedOrders(prev => prev.filter(order => order.id !== orderId));
+    };
+
+    window.addEventListener('websocket-new-order', handleWebSocketNewOrder);
+    window.addEventListener('websocket-order-expired', handleWebSocketOrderExpired);
+
+    return () => {
+      window.removeEventListener('websocket-new-order', handleWebSocketNewOrder);
+      window.removeEventListener('websocket-order-expired', handleWebSocketOrderExpired);
+    };
+  }, []);
 
   // Map style URLs using free OpenStreetMap tiles
   const mapStyles = {
@@ -1554,6 +1615,17 @@ export default function MapSection({
     };
   }, [mapLoaded, theme]);
 
+  // Re-render map when aged orders change
+  useEffect(() => {
+    if (mapInstanceRef.current && mapLoaded && isOnline) {
+      // Clear existing order markers
+      clearOrderMarkers();
+      
+      // Re-initialize map sequence with updated orders
+      initMapSequence(mapInstanceRef.current);
+    }
+  }, [allAgedOrders, mapLoaded, isOnline]);
+
   // Function to initialize map sequence
   const initMapSequence = async (map: L.Map) => {
     if (!map || !map.getContainer()) return;
@@ -1689,34 +1761,34 @@ export default function MapSection({
         });
       }
 
-      // Process available orders with grouping
+      // Process aged unassigned orders with grouping
       if (
         isOnline &&
-        availableOrders?.length > 0 &&
+        allAgedOrders?.length > 0 &&
         map &&
         map.getContainer()
       ) {
-        // Group available orders by location
-        const groupedAvailableOrders = new Map<
+        // Group aged orders by location
+        const groupedAgedOrders = new Map<
           string,
-          typeof availableOrders
+          typeof allAgedOrders
         >();
-        availableOrders.forEach((order) => {
+        allAgedOrders.forEach((order) => {
           if (!order.shopLatitude || !order.shopLongitude) return;
           const key = `${order.shopLatitude.toFixed(
             5
           )},${order.shopLongitude.toFixed(5)}`;
-          if (!groupedAvailableOrders.has(key)) {
-            groupedAvailableOrders.set(key, []);
+          if (!groupedAgedOrders.has(key)) {
+            groupedAgedOrders.set(key, []);
           }
-          groupedAvailableOrders.get(key)?.push(order);
+          groupedAgedOrders.get(key)?.push(order);
         });
 
         // Log grouped orders information
-        logger.info("Available orders grouped by location", "MapSection", {
-          totalOrders: availableOrders.length,
-          groupCount: groupedAvailableOrders.size,
-          groupSizes: Array.from(groupedAvailableOrders.entries()).map(
+        logger.info("Aged unassigned orders grouped by location", "MapSection", {
+          totalOrders: allAgedOrders.length,
+          groupCount: groupedAgedOrders.size,
+          groupSizes: Array.from(groupedAgedOrders.entries()).map(
             ([key, orders]) => ({
               location: key,
               orderCount: orders.length,
@@ -1726,7 +1798,7 @@ export default function MapSection({
         });
 
         // Process each group of orders
-        groupedAvailableOrders.forEach((orders, locationKey) => {
+        groupedAgedOrders.forEach((orders, locationKey) => {
           const [baseLat, baseLng] = locationKey.split(",").map(Number);
 
           orders.forEach((order, index) => {

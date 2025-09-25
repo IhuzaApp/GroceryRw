@@ -3,11 +3,15 @@ import { hasuraClient } from "../../../src/lib/hasuraClient";
 import { gql } from "graphql-request";
 import { logger } from "../../../src/utils/logger";
 
-// Modify the query to ensure we're only filtering by PENDING status, with no date filtering
+// Filter for orders 30+ minutes old and unassigned
 const GET_AVAILABLE_ORDERS = gql`
-  query GetAvailableOrders {
+  query GetAvailableOrders($thirtyMinutesAgo: timestamptz!) {
     Orders(
-      where: { shopper_id: { _is_null: true }, status: { _eq: "PENDING" } }
+      where: { 
+        shopper_id: { _is_null: true }, 
+        status: { _eq: "PENDING" },
+        created_at: { _lte: $thirtyMinutesAgo }
+      }
       order_by: { created_at: desc }
     ) {
       id
@@ -36,11 +40,15 @@ const GET_AVAILABLE_ORDERS = gql`
   }
 `;
 
-// Add query for available reel orders
+// Add query for available reel orders (30+ minutes old)
 const GET_AVAILABLE_REEL_ORDERS = gql`
-  query GetAvailableReelOrders {
+  query GetAvailableReelOrders($thirtyMinutesAgo: timestamptz!) {
     reel_orders(
-      where: { shopper_id: { _is_null: true }, status: { _eq: "PENDING" } }
+      where: { 
+        shopper_id: { _is_null: true }, 
+        status: { _eq: "PENDING" },
+        created_at: { _lte: $thirtyMinutesAgo }
+      }
       order_by: { created_at: desc }
     ) {
       id
@@ -141,7 +149,12 @@ export default async function handler(
       throw new Error("Hasura client is not initialized");
     }
 
-    logger.debug("Querying Hasura for all PENDING orders", "AvailableOrders");
+    // Calculate timestamp for 30 minutes ago
+    const thirtyMinutesAgo = new Date(Date.now() - 30 * 60 * 1000).toISOString();
+
+    logger.debug("Querying Hasura for aged PENDING orders (30+ minutes old)", "AvailableOrders", {
+      thirtyMinutesAgo
+    });
 
     // Fetch both regular orders and reel orders in parallel
     const [regularOrdersData, reelOrdersData] = await Promise.all([
@@ -166,7 +179,7 @@ export default async function handler(
           };
           Order_Items_aggregate: { aggregate: { count: number | null } | null };
         }>;
-      }>(GET_AVAILABLE_ORDERS),
+      }>(GET_AVAILABLE_ORDERS, { thirtyMinutesAgo }),
       hasuraClient.request<{
         reel_orders: Array<{
           id: string;
@@ -199,7 +212,7 @@ export default async function handler(
             city: string;
           };
         }>;
-      }>(GET_AVAILABLE_REEL_ORDERS),
+      }>(GET_AVAILABLE_REEL_ORDERS, { thirtyMinutesAgo }),
     ]);
 
     const regularOrders = regularOrdersData.Orders;
