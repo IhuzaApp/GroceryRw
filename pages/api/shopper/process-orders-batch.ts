@@ -302,21 +302,33 @@ export default async function handler(
       // Send real-time notifications if WebSocket is available
       if (nearbyOrders.length > 0) {
         const clusterId = cluster.id;
-        const orderNotifications = nearbyOrders.map(order => ({
-          id: order.id,
-          shopName: order.Shops?.name || order.Reel?.title || "Unknown Shop",
-          distance: calculateDistanceKm(
+        const orderNotifications = nearbyOrders.map(order => {
+          const distance = calculateDistanceKm(
             cluster.center.lat,
             cluster.center.lng,
             parseFloat(order.Address?.latitude || order.address?.latitude),
             parseFloat(order.Address?.longitude || order.address?.longitude)
-          ),
-          createdAt: order.created_at,
-          customerAddress: `${order.Address?.street || order.address?.street}, ${order.Address?.city || order.address?.city}`,
-          itemsCount: order.quantity || 1,
-          estimatedEarnings: parseFloat(order.service_fee || "0") + parseFloat(order.delivery_fee || "0"),
-          orderType: order.orderType || "regular"
-        }));
+          );
+          
+          // Calculate travel time in minutes (assuming 20 km/h average speed)
+          const calculateTravelTime = (distanceKm: number): number => {
+            const averageSpeedKmh = 20;
+            const travelTimeHours = distanceKm / averageSpeedKmh;
+            return Math.round(travelTimeHours * 60);
+          };
+
+          return {
+            id: order.id,
+            shopName: order.Shops?.name || order.Reel?.title || "Unknown Shop",
+            distance: distance,
+            travelTimeMinutes: calculateTravelTime(distance),
+            createdAt: order.created_at,
+            customerAddress: `${order.Address?.street || order.address?.street}, ${order.Address?.city || order.address?.city}`,
+            itemsCount: order.quantity || 1,
+            estimatedEarnings: parseFloat(order.service_fee || "0") + parseFloat(order.delivery_fee || "0"),
+            orderType: order.orderType || "regular"
+          };
+        });
 
         // Send batch notification to cluster
         notificationsSent = sendToCluster(clusterId, 'batch-orders', {

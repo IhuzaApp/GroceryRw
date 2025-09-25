@@ -221,16 +221,27 @@ export default async function handler(
     // Get the best order for the shopper to see (don't assign yet)
     const bestOrder = ordersWithPriority[0];
 
+    // Calculate distance and travel time
+    const distance = calculateDistanceKm(
+      current_location.lat,
+      current_location.lng,
+      parseFloat(bestOrder.Address?.latitude || bestOrder.address?.latitude),
+      parseFloat(bestOrder.Address?.longitude || bestOrder.address?.longitude)
+    );
+
+    // Calculate travel time in minutes (assuming 20 km/h average speed)
+    const calculateTravelTime = (distanceKm: number): number => {
+      const averageSpeedKmh = 20;
+      const travelTimeHours = distanceKm / averageSpeedKmh;
+      return Math.round(travelTimeHours * 60);
+    };
+
     // Format order for notification (don't assign yet)
     const orderForNotification = {
       id: bestOrder.id,
       shopName: bestOrder.Shop?.name || bestOrder.Reel?.title || "Unknown Shop",
-      distance: calculateDistanceKm(
-        current_location.lat,
-        current_location.lng,
-        parseFloat(bestOrder.Address?.latitude || bestOrder.address?.latitude),
-        parseFloat(bestOrder.Address?.longitude || bestOrder.address?.longitude)
-      ),
+      distance: distance,
+      travelTimeMinutes: calculateTravelTime(distance),
       createdAt: bestOrder.created_at,
       customerAddress: `${bestOrder.Address?.street || bestOrder.address?.street}, ${bestOrder.Address?.city || bestOrder.address?.city}`,
       itemsCount: bestOrder.quantity || 1,

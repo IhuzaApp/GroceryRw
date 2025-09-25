@@ -203,15 +203,25 @@ const distributeOrderToBestShopper = async (order: any, activeConnections: Map<s
     }
 
     // Format order for notification
+    const distance = calculateDistance(
+      bestShopper.connection.location.lat,
+      bestShopper.connection.location.lng,
+      orderLocation.lat,
+      orderLocation.lng
+    );
+
+    // Calculate travel time in minutes (assuming 20 km/h average speed)
+    const calculateTravelTime = (distanceKm: number): number => {
+      const averageSpeedKmh = 20;
+      const travelTimeHours = distanceKm / averageSpeedKmh;
+      return Math.round(travelTimeHours * 60);
+    };
+
     const orderForNotification = {
       id: order.id,
       shopName: order.Shop?.name || order.Reel?.title || "Unknown Shop",
-      distance: calculateDistance(
-        bestShopper.connection.location.lat,
-        bestShopper.connection.location.lng,
-        orderLocation.lat,
-        orderLocation.lng
-      ),
+      distance: distance,
+      travelTimeMinutes: calculateTravelTime(distance),
       createdAt: order.created_at,
       customerAddress: `${order.Address?.street || order.address?.street}, ${order.Address?.city || order.address?.city}`,
       itemsCount: order.quantity || 1,

@@ -11,6 +11,7 @@ interface Order {
   id: string;
   shopName: string;
   distance: number;
+  travelTimeMinutes?: number;
   createdAt: string;
   customerAddress: string;
   itemsCount?: number;
@@ -18,6 +19,15 @@ interface Order {
   orderType?: "regular" | "reel";
   // Add other order properties as needed
 }
+
+// Calculate estimated travel time in minutes
+const calculateTravelTime = (distanceKm: number): number => {
+  // Assuming average speed of 20 km/h for city driving
+  // This can be adjusted based on your city's traffic conditions
+  const averageSpeedKmh = 20;
+  const travelTimeHours = distanceKm / averageSpeedKmh;
+  return Math.round(travelTimeHours * 60); // Convert to minutes
+};
 
 interface BatchAssignment {
   shopperId: string;
@@ -390,11 +400,11 @@ export default function NotificationSystem({
                 }`}>
                   {order.shopName}
                 </p>
-                <p className={`text-xs ${
-                  theme === "dark" ? "text-gray-400" : "text-gray-500"
-                }`}>
-                  {order.distance}km away
-                </p>
+                      <p className={`text-xs ${
+                        theme === "dark" ? "text-gray-400" : "text-gray-500"
+                      }`}>
+                        {order.travelTimeMinutes || calculateTravelTime(order.distance)} min away
+                      </p>
                   </div>
             </div>
 
@@ -665,7 +675,7 @@ export default function NotificationSystem({
                 <div className="mt-1 text-sm text-white/90">
                   <div className="font-medium">{order.customerAddress}</div>
                   <div className="text-white/80">
-                    {order.shopName} ({order.distance}km)
+                    {order.shopName} ({order.travelTimeMinutes || calculateTravelTime(order.distance)} min)
                   </div>
                   <div className="mt-2 grid grid-cols-2 gap-3">
                     <div className="flex items-center gap-1 text-white/90 text-sm">
