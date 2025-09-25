@@ -244,130 +244,124 @@ export default function NotificationSystem({
         <div
           className={`${
             t.visible ? "animate-enter" : "animate-leave"
-          } pointer-events-auto flex w-full max-w-md rounded-xl shadow-2xl backdrop-blur-lg ${
+          } pointer-events-auto w-full max-w-sm rounded-2xl shadow-xl ${
             theme === "dark"
-              ? "bg-gradient-to-r from-blue-600 to-purple-600 ring-1 ring-white ring-opacity-20"
-              : "bg-gradient-to-r from-blue-500 to-purple-500 ring-1 ring-black ring-opacity-10"
+              ? "bg-gray-800 border border-gray-700"
+              : "bg-white border border-gray-200"
           }`}
-          style={{
-            background:
-              theme === "dark"
-                ? "linear-gradient(135deg, #667eea 0%, #764ba2 100%)"
-                : "linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%)",
-            backdropFilter: "blur(10px)",
-            border:
-              theme === "dark"
-                ? "1px solid rgba(255,255,255,0.2)"
-                : "1px solid rgba(0,0,0,0.1)",
-          }}
         >
-          <div className="w-0 flex-1 p-4">
-            <div className="flex items-start">
-              <div className="flex-shrink-0">
-                <div
-                  className={`flex h-12 w-12 items-center justify-center rounded-full backdrop-blur-sm ${
-                    theme === "dark" ? "bg-white/20" : "bg-white/30"
-                  }`}
-                >
-                  <svg
-                    className="h-6 w-6 text-white"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth="2"
-                      d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                    />
-                  </svg>
-                </div>
-              </div>
-              <div className="ml-3 flex-1">
-                <p className="text-sm font-bold text-white">
-                  🚀 New Batch Available!
+          {/* Header */}
+          <div className={`px-4 py-3 rounded-t-2xl ${
+            theme === "dark" ? "bg-green-600" : "bg-green-500"
+          }`}>
+            <div className="flex items-center justify-between">
+              <div className="flex items-center space-x-2">
+                <div className="w-2 h-2 bg-white rounded-full animate-pulse"></div>
+                <p className="text-sm font-semibold text-white">
+                  New Order Available
                 </p>
-                <div className="mt-1 text-sm text-white/90">
-                  <div className="font-medium">{order.customerAddress}</div>
-                  <div className="text-white/80">
-                    {order.shopName} ({order.distance}km)
-                  </div>
-                  <div className="mt-1 font-bold text-white">
-                    📦 {order.itemsCount || 0} items • 💰{" "}
-                    {formatCurrencySync(order.estimatedEarnings || 0)}
-                  </div>
-                </div>
-                <div className="mt-3 flex gap-2">
-                  <button
-                    onClick={() => {
-                      removeToastForOrder(order.id);
-                      onAcceptBatch?.(order.id);
-                      toast.dismiss(t.id);
-                    }}
-                    className={`rounded-lg px-4 py-2 text-sm font-medium text-white backdrop-blur-sm transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-white/50 ${
-                      theme === "dark"
-                        ? "bg-white/20 hover:bg-white/30"
-                        : "bg-white/25 hover:bg-white/35"
-                    }`}
-                  >
-                    ✅ Accept Batch
-                  </button>
-                  <button
-                    onClick={() => {
-                      removeToastForOrder(order.id);
-                      // Remove assignment to allow other shoppers to get this order
-                      batchAssignments.current =
-                        batchAssignments.current.filter(
-                          (assignment) => assignment.orderId !== order.id
-                        );
-                      toast.dismiss(t.id);
-                      logger.info(
-                        `Skipped order ${order.id} - allowing other shoppers`,
-                        "NotificationSystem"
-                      );
-                    }}
-                    className={`rounded-lg px-4 py-2 text-sm font-medium text-white/80 backdrop-blur-sm transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-white/50 ${
-                      theme === "dark"
-                        ? "bg-white/10 hover:bg-white/20"
-                        : "bg-white/15 hover:bg-white/25"
-                    }`}
-                  >
-                    ⏭️ Skip
-                  </button>
-                </div>
               </div>
+              <button
+                onClick={() => {
+                  removeToastForOrder(order.id);
+                  toast.dismiss(t.id);
+                }}
+                className="text-white/80 hover:text-white transition-colors"
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
             </div>
           </div>
-          <div className="flex border-l border-white/20">
-            <button
-              onClick={() => {
-                removeToastForOrder(order.id);
-                toast.dismiss(t.id);
-              }}
-              className="flex w-full items-center justify-center rounded-none rounded-r-xl border border-transparent p-4 text-sm font-medium text-white/70 transition-all duration-200 hover:bg-white/10 hover:text-white focus:outline-none focus:ring-2 focus:ring-white/50"
-            >
-              <svg className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                <path
-                  fillRule="evenodd"
-                  d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"
-                  clipRule="evenodd"
-                />
-              </svg>
-            </button>
+
+          {/* Content */}
+          <div className="p-4">
+            {/* Shop Info */}
+            <div className="flex items-start space-x-3 mb-3">
+              <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${
+                theme === "dark" ? "bg-gray-700" : "bg-gray-100"
+              }`}>
+                <svg className="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                </svg>
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className={`text-sm font-medium ${
+                  theme === "dark" ? "text-white" : "text-gray-900"
+                }`}>
+                  {order.shopName}
+                </p>
+                <p className={`text-xs ${
+                  theme === "dark" ? "text-gray-400" : "text-gray-500"
+                }`}>
+                  {order.distance}km away
+                </p>
+              </div>
+            </div>
+
+            {/* Order Details */}
+            <div className={`space-y-2 mb-4 p-3 rounded-lg ${
+              theme === "dark" ? "bg-gray-700/50" : "bg-gray-50"
+            }`}>
+              <div className="flex items-center justify-between text-sm">
+                <span className={`${theme === "dark" ? "text-gray-300" : "text-gray-600"}`}>
+                  📦 Items
+                </span>
+                <span className={`font-medium ${theme === "dark" ? "text-white" : "text-gray-900"}`}>
+                  {order.itemsCount || 0}
+                </span>
+              </div>
+              <div className="flex items-center justify-between text-sm">
+                <span className={`${theme === "dark" ? "text-gray-300" : "text-gray-600"}`}>
+                  💰 Earnings
+                </span>
+                <span className={`font-semibold ${
+                  theme === "dark" ? "text-green-400" : "text-green-600"
+                }`}>
+                  {formatCurrencySync(order.estimatedEarnings || 0)}
+                </span>
+              </div>
+              <div className="text-xs text-gray-500 truncate">
+                📍 {order.customerAddress}
+              </div>
+            </div>
+
+            {/* Action Buttons */}
+            <div className="flex space-x-2">
+              <button
+                onClick={() => {
+                  removeToastForOrder(order.id);
+                  onAcceptBatch?.(order.id);
+                  toast.dismiss(t.id);
+                }}
+                className="flex-1 bg-green-500 hover:bg-green-600 text-white text-sm font-medium py-2.5 px-4 rounded-lg transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2"
+              >
+                Accept Order
+              </button>
+              <button
+                onClick={() => {
+                  removeToastForOrder(order.id);
+                  batchAssignments.current = batchAssignments.current.filter(
+                    (assignment) => assignment.orderId !== order.id
+                  );
+                  toast.dismiss(t.id);
+                  logger.info(
+                    `Skipped order ${order.id} - allowing other shoppers`,
+                    "NotificationSystem"
+                  );
+                }}
+                className="flex-1 bg-gray-500 hover:bg-gray-600 text-white text-sm font-medium py-2.5 px-4 rounded-lg transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2"
+              >
+                Skip
+              </button>
+            </div>
           </div>
         </div>
       ),
       {
-        duration: Infinity, // Never auto-dismiss
-        position: "top-center",
-        style: {
-          background: "transparent",
-          boxShadow: "none",
-          maxWidth: "420px",
-          margin: "0 auto",
-        },
-        className: "batch-notification-toast",
+        duration: 60000, // 1 minute
+        position: "top-right",
       }
     );
 
@@ -546,7 +540,7 @@ export default function NotificationSystem({
               </div>
               <div className="ml-3 flex-1">
                 <p className="text-sm font-bold text-white">
-                  ⚠️ Batch Expiring Soon!
+                  ⚠️ Order Expiring Soon!
                 </p>
                 <div className="mt-1 text-sm text-white/90">
                   <div className="font-medium">{order.customerAddress}</div>
@@ -574,7 +568,7 @@ export default function NotificationSystem({
                         : "bg-white/25 hover:bg-white/35"
                     }`}
                   >
-                    🚀 Accept Now
+                    Accept Now
                   </button>
                   <button
                     onClick={() => {
@@ -596,7 +590,7 @@ export default function NotificationSystem({
                         : "bg-white/15 hover:bg-white/25"
                     }`}
                   >
-                    ⏭️ Skip
+                    ⏭️ Skip Order
                   </button>
                 </div>
               </div>
@@ -774,185 +768,128 @@ export default function NotificationSystem({
     const now = new Date();
     const currentTime = now.getTime();
 
-    // Check if we should skip this check (60-second cooldown)
-    if (currentTime - lastNotificationTime.current < 60000) {
+          // Check if we should skip this check (30-second cooldown for smart order finder)
+    if (currentTime - lastNotificationTime.current < 30000) {
       logger.debug(
-        `Skipping notification check - ${Math.floor(
-          (60000 - (currentTime - lastNotificationTime.current)) / 1000
+        `Skipping smart order finder check - ${Math.floor(
+          (30000 - (currentTime - lastNotificationTime.current)) / 1000
         )}s until next check`,
         "NotificationSystem"
       );
       return;
     }
 
-    logger.info(
-      "Checking for pending orders with settings (API handles all conditions)",
-      "NotificationSystem"
-    );
+      logger.info(
+        "Using smart order finder system to find best order",
+        "NotificationSystem"
+      );
 
     try {
-      // Use the new API that respects notification settings
-      const response = await fetch(
-        "/api/shopper/check-notifications-with-settings",
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            user_id: session.user.id,
-            current_location: currentLocation,
-          }),
-        }
-      );
+      // Use smart order finder API instead of polling
+      const response = await fetch("/api/shopper/smart-assign-order", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          current_location: currentLocation,
+          user_id: session.user.id,
+        }),
+      });
 
       const data = await response.json();
 
-      if (data.success && data.notifications && data.notifications.length > 0) {
+      if (!response.ok) {
+        logger.error(`Smart order finder API error: ${response.status} - ${data.error || 'Unknown error'}`, "NotificationSystem");
+        return;
+      }
+
+      if (data.success && data.order) {
         logger.info(
-          `Found ${data.notifications.length} notifications based on settings`,
+          `Smart order finder found order ${data.order.id} with priority ${data.order.priority}`,
           "NotificationSystem"
         );
 
-        // Clean up expired assignments and clear warning timeouts
+        // Clean up expired order reviews
         const oneMinuteAgo = currentTime - 60000;
         batchAssignments.current = batchAssignments.current.filter(
           (assignment) => {
             if (assignment.expiresAt <= currentTime) {
-              // Clear warning timeout if assignment is expired
               if (assignment.warningTimeout) {
                 clearTimeout(assignment.warningTimeout);
               }
-
-              // Remove toast for expired order
-              const existingToast = activeToasts.current.get(
-                assignment.orderId
-              );
+              const existingToast = activeToasts.current.get(assignment.orderId);
               if (existingToast) {
                 toast.dismiss(existingToast);
                 activeToasts.current.delete(assignment.orderId);
-                logger.info(
-                  `Removed toast for expired order ${assignment.orderId}`,
-                  "NotificationSystem"
-                );
               }
-
-              logger.info(
-                `Assignment expired for order ${assignment.orderId} - reassigning to next shopper`,
-                "NotificationSystem"
-              );
-              return false; // Remove expired assignment
+              return false;
             }
-            return true; // Keep active assignment
+            return true;
           }
         );
 
-        // Sort notifications by creation time (oldest first)
-        const sortedNotifications = [...data.notifications].sort(
-          (a, b) =>
-            new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
+        // Check if user already has an active order review
+        const currentUserAssignment = batchAssignments.current.find(
+          (assignment) => assignment.shopperId === session.user.id
         );
 
-        const assignedOrderIds = new Set(
-          batchAssignments.current.map((a) => a.orderId)
-        );
-        const availableNotifications = sortedNotifications.filter(
-          (notification) => !assignedOrderIds.has(notification.id)
-        );
+        if (!currentUserAssignment) {
+          const order = data.order;
+          const newAssignment: BatchAssignment = {
+            shopperId: session.user.id,
+            orderId: order.id,
+            assignedAt: currentTime,
+            expiresAt: currentTime + 60000, // Expires in 1 minute
+            warningShown: false,
+            warningTimeout: null,
+          };
+          batchAssignments.current.push(newAssignment);
 
-        if (availableNotifications.length > 0) {
-          const currentUserAssignment = batchAssignments.current.find(
-            (assignment) => assignment.shopperId === session.user.id
+          // Convert to Order format for compatibility
+          const orderForNotification: Order = {
+            id: order.id,
+            shopName: order.shopName,
+            distance: order.distance,
+            createdAt: order.createdAt,
+            customerAddress: order.customerAddress,
+            itemsCount: order.itemsCount || 0,
+            estimatedEarnings: order.estimatedEarnings || 0,
+            orderType: order.orderType || "regular",
+          };
+
+          await playNotificationSound({ enabled: true, volume: 0.7 });
+          showToast(orderForNotification);
+          showDesktopNotification(orderForNotification);
+          sendFirebaseNotification(orderForNotification, "batch");
+
+          // Set up warning notification after 40 seconds
+          const warningTimeout = setTimeout(() => {
+            showWarningNotification(orderForNotification);
+          }, 40000);
+
+          newAssignment.warningTimeout = warningTimeout;
+          lastNotificationTime.current = currentTime;
+
+          logger.info(
+            `Smart order finder: Order ${order.id} shown to shopper ${session.user.id} for review - priority: ${order.priority}`,
+            "NotificationSystem"
           );
-
-          if (!currentUserAssignment) {
-            const nextNotification = availableNotifications[0];
-
-            const newAssignment: BatchAssignment = {
-              shopperId: session.user.id,
-              orderId: nextNotification.id,
-              assignedAt: currentTime,
-              expiresAt: currentTime + 60000, // Expires in 1 minute
-              warningShown: false,
-              warningTimeout: null,
-            };
-            batchAssignments.current.push(newAssignment);
-
-            // Convert notification to Order format for compatibility
-            const orderForNotification: Order = {
-              id: nextNotification.id,
-              shopName: nextNotification.shopName,
-              distance: nextNotification.distance,
-              createdAt: nextNotification.createdAt,
-              customerAddress: nextNotification.customerAddress,
-              itemsCount:
-                nextNotification.itemCount ||
-                nextNotification.itemsCount ||
-                nextNotification.totalItems ||
-                nextNotification.quantity ||
-                0,
-              estimatedEarnings:
-                nextNotification.estimatedEarnings ||
-                nextNotification.totalEarnings ||
-                (nextNotification.serviceFee && nextNotification.deliveryFee
-                  ? parseFloat(nextNotification.serviceFee) +
-                    parseFloat(nextNotification.deliveryFee)
-                  : 0) ||
-                (nextNotification.total
-                  ? parseFloat(nextNotification.total)
-                  : 0),
-              orderType: nextNotification.type === "reel" ? "reel" : "regular",
-            };
-
-            await playNotificationSound(data.settings?.sound_settings);
-            showToast(orderForNotification);
-            showDesktopNotification(orderForNotification);
-
-            // Send Firebase push notification
-            sendFirebaseNotification(orderForNotification, "batch");
-
-            // Set up warning notification after 40 seconds
-            const warningTimeout = setTimeout(() => {
-              showWarningNotification(orderForNotification);
-            }, 40000); // 40 seconds
-
-            // Update assignment with warning timeout
-            newAssignment.warningTimeout = warningTimeout;
-
-            lastNotificationTime.current = currentTime;
-            logger.info(
-              `Showing initial notification for ${nextNotification.type} from ${nextNotification.shopName} (${nextNotification.locationName}) - warning in 40s, expires in 1 minute`,
-              "NotificationSystem",
-              nextNotification
-            );
-          } else {
-            logger.debug(
-              "User already has an active batch assignment, skipping notification",
-              "NotificationSystem"
-            );
-          }
         } else {
           logger.debug(
-            "No available notifications (all assigned or expired)",
+            "User already has an active order review, skipping smart order finder",
             "NotificationSystem"
           );
         }
-
-        // Don't call onNewOrder to prevent page refreshes
-        // The notification system should be independent
-        logger.info(
-          "Notification shown, not triggering page refresh",
-          "NotificationSystem"
-        );
       } else {
         logger.debug(
-          "No notifications found based on settings",
+          data.message || "No suitable orders available for review",
           "NotificationSystem"
         );
       }
     } catch (error) {
       logger.error(
-        "Error checking for notifications with settings",
+        "Error in smart order finder system",
         "NotificationSystem",
         error
       );
@@ -970,9 +907,9 @@ export default function NotificationSystem({
     // Reset notification state
     lastNotificationTime.current = 0;
 
-    logger.info("Starting notification system", "NotificationSystem");
+    logger.info("Starting smart notification system", "NotificationSystem");
     logger.info(
-      "Will check for pending orders every 60 seconds with 1-minute assignment timeout",
+      "Will use smart assignment every 30 seconds with 1-minute assignment timeout",
       "NotificationSystem"
     );
 
@@ -983,11 +920,11 @@ export default function NotificationSystem({
     checkInterval.current = setInterval(() => {
       const now = new Date();
       logger.debug(
-        `Interval triggered at ${now.toLocaleTimeString()}`,
+        `Smart order finder interval triggered at ${now.toLocaleTimeString()}`,
         "NotificationSystem"
       );
       checkForNewOrders();
-    }, 60000); // Check every 60 seconds
+        }, 30000); // Check every 30 seconds with smart order finder
 
     setIsListening(true);
   };
