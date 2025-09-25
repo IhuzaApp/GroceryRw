@@ -72,6 +72,43 @@ const GET_AVAILABLE_REEL_ORDERS = gql`
   }
 `;
 
+// GraphQL query to get available restaurant orders
+const GET_AVAILABLE_RESTAURANT_ORDERS = gql`
+  query GetAvailableRestaurantOrders($current_time: timestamptz!) {
+    restaurant_orders(
+      where: {
+        status: { _eq: "PENDING" }
+        shopper_id: { _is_null: true }
+        _or: [
+          { updated_at: { _gte: $current_time } },
+          { 
+            updated_at: { _is_null: true },
+            created_at: { _gte: $current_time }
+          }
+        ]
+      }
+      order_by: { updated_at: asc_nulls_last, created_at: asc }
+      limit: 10
+    ) {
+      id
+      created_at
+      delivery_fee
+      total
+      Restaurant {
+        name
+        lat
+        long
+      }
+      Address {
+        latitude
+        longitude
+        street
+        city
+      }
+    }
+  }
+`;
+
 // Calculate distance between two points
 const calculateDistance = (lat1: number, lon1: number, lat2: number, lon2: number): number => {
   const R = 6371; // Radius of the Earth in km
@@ -136,23 +173,33 @@ export const distributeOrders = async () => {
     // Get orders created in the last 10 minutes
     const tenMinutesAgo = new Date(Date.now() - 10 * 60 * 1000).toISOString();
 
+    if (!hasuraClient) {
+      console.log("ℹ️ Hasura client not available");
+      return;
+    }
+
     // Fetch available orders
-    const [regularOrdersData, reelOrdersData] = await Promise.all([
+    const [regularOrdersData, reelOrdersData, restaurantOrdersData] = await Promise.all([
       hasuraClient.request(GET_AVAILABLE_ORDERS, {
         current_time: tenMinutesAgo,
       }) as any,
       hasuraClient.request(GET_AVAILABLE_REEL_ORDERS, {
         current_time: tenMinutesAgo,
       }) as any,
+      hasuraClient.request(GET_AVAILABLE_RESTAURANT_ORDERS, {
+        current_time: tenMinutesAgo,
+      }) as any,
     ]);
 
     const availableOrders = regularOrdersData.Orders || [];
     const availableReelOrders = reelOrdersData.reel_orders || [];
+    const availableRestaurantOrders = restaurantOrdersData.restaurant_orders || [];
 
     // Combine all orders
     const allOrders = [
       ...availableOrders.map((order: any) => ({ ...order, orderType: "regular" })),
       ...availableReelOrders.map((order: any) => ({ ...order, orderType: "reel" })),
+      ...availableRestaurantOrders.map((order: any) => ({ ...order, orderType: "restaurant" })),
     ];
 
     if (allOrders.length === 0) {
@@ -185,7 +232,7 @@ const distributeOrderToBestShopper = async (order: any, activeConnections: Map<s
     let bestShopper = null;
     let bestPriority = Infinity;
 
-    for (const [userId, connection] of activeConnections.entries()) {
+    for (const [userId, connection] of Array.from(activeConnections.entries())) {
       if (!connection.location) continue;
 
       // Calculate priority for this shopper
@@ -219,15 +266,25 @@ const distributeOrderToBestShopper = async (order: any, activeConnections: Map<s
 
     const orderForNotification = {
       id: order.id,
-      shopName: order.Shop?.name || order.Reel?.title || "Unknown Shop",
+      shopName: order.Shop?.name || order.Reel?.title || order.Restaurant?.name || "Unknown Shop",
       distance: distance,
       travelTimeMinutes: calculateTravelTime(distance),
       createdAt: order.created_at,
       customerAddress: `${order.Address?.street || order.address?.street}, ${order.Address?.city || order.address?.city}`,
       itemsCount: order.quantity || 1,
-      estimatedEarnings: parseFloat(order.service_fee || "0") + parseFloat(order.delivery_fee || "0"),
+      estimatedEarnings: parseFloat(order.delivery_fee || "0"), // Restaurant orders only have delivery fee
       orderType: order.orderType,
-      priority: bestPriority
+      priority: bestPriority,
+      // Add restaurant-specific fields
+      ...(order.orderType === "restaurant" && {
+        restaurant: order.Restaurant,
+        total: parseFloat(order.total || "0"),
+        deliveryTime: order.delivery_time,
+      }),
+      // Add reel-specific fields
+      ...(order.orderType === "reel" && {
+        reel: order.Reel,
+      })
     };
 
     // Send real-time notification
