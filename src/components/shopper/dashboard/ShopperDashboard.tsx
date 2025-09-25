@@ -267,26 +267,6 @@ export default function ShopperDashboard() {
       setSortBy(newSortBy);
       const sorted = sortOrders(availableOrders, newSortBy);
       setSortedOrders(sorted);
-      
-      // Debug logging to verify sorting
-      if (sorted.length > 0) {
-        console.log(`🔄 Sorted by ${newSortBy}:`, {
-          firstOrder: {
-            id: sorted[0].id,
-            earnings: sorted[0].rawEarnings,
-            distance: sorted[0].rawDistance,
-            priority: sorted[0].priorityLevel,
-            minutesAgo: sorted[0].minutesAgo
-          },
-          lastOrder: {
-            id: sorted[sorted.length - 1].id,
-            earnings: sorted[sorted.length - 1].rawEarnings,
-            distance: sorted[sorted.length - 1].rawDistance,
-            priority: sorted[sorted.length - 1].priorityLevel,
-            minutesAgo: sorted[sorted.length - 1].minutesAgo
-          }
-        });
-      }
     },
     [availableOrders, sortOrders]
   );
