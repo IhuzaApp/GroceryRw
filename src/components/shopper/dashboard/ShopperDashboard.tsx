@@ -8,6 +8,7 @@ import { Button, Loader, Placeholder, Panel, Grid, Row, Col } from "rsuite";
 import "rsuite/dist/rsuite.min.css";
 import { useTheme } from "../../../context/ThemeContext";
 import { useRouter } from "next/router";
+import { useWebSocket } from "../../../hooks/useWebSocket";
 
 // Dynamically load MapSection only on client (disable SSR)
 const MapSection = dynamic(() => import("./MapSection"), {
@@ -91,6 +92,7 @@ interface FormattedOrder {
 export default function ShopperDashboard() {
   const router = useRouter();
   const { theme } = useTheme();
+  const { isConnected } = useWebSocket();
   const [isLoading, setIsLoading] = useState(true);
   const [isInitializing, setIsInitializing] = useState(true);
   const [availableOrders, setAvailableOrders] = useState<any[]>([]);
@@ -104,7 +106,7 @@ export default function ShopperDashboard() {
   const [isOnline, setIsOnline] = useState(false);
   const [sortBy, setSortBy] = useState<
     "newest" | "earnings" | "distance" | "priority"
-  >("newest");
+  >("priority");
   const [showHistorical, setShowHistorical] = useState(false);
   const [sortedOrders, setSortedOrders] = useState<any[]>([]);
   const [lastRefreshed, setLastRefreshed] = useState<Date>(new Date());
@@ -234,7 +236,8 @@ export default function ShopperDashboard() {
 
       switch (criteria) {
         case "newest":
-          sorted.sort((a, b) => b.rawCreatedAt - a.rawCreatedAt);
+          // For aged orders, sort by creation time (oldest first since they're all aged)
+          sorted.sort((a, b) => a.rawCreatedAt - b.rawCreatedAt);
           break;
         case "earnings":
           sorted.sort((a, b) => b.rawEarnings - a.rawEarnings);
@@ -247,18 +250,15 @@ export default function ShopperDashboard() {
             if (a.priorityLevel !== b.priorityLevel) {
               return b.priorityLevel - a.priorityLevel;
             }
-            return b.minutesAgo - a.minutesAgo;
+            // For same priority, sort by age (oldest first)
+            return a.minutesAgo - b.minutesAgo;
           });
           break;
       }
 
-      // Remove the 10-minute minimum filter to show all pending batches
-      // The showHistorical toggle now controls sorting preference rather than filtering
-      // All pending batches will be shown regardless of age
-
       return sorted;
     },
-    [showHistorical]
+    []
   );
 
   // Handle sort change with useCallback
@@ -281,7 +281,9 @@ export default function ShopperDashboard() {
     let intervalId: NodeJS.Timeout | null = null;
 
     if (isAutoRefreshing && currentLocation && isOnline) {
-      intervalId = setInterval(loadOrders, 30000);
+      // Use longer polling interval when WebSocket is connected for background updates
+      const pollingInterval = isConnected ? 120000 : 30000; // 2 minutes with WebSocket, 30 seconds without
+      intervalId = setInterval(loadOrders, pollingInterval);
     }
 
     return () => {
@@ -289,7 +291,7 @@ export default function ShopperDashboard() {
         clearInterval(intervalId);
       }
     };
-  }, [currentLocation, isAutoRefreshing, isOnline, loadOrders]);
+  }, [currentLocation, isAutoRefreshing, isOnline, loadOrders, isConnected]);
 
   // Add toggle for auto-refresh
   const toggleAutoRefresh = useCallback(() => {
@@ -396,6 +398,112 @@ export default function ShopperDashboard() {
     loadOrders();
     setLastRefreshed(new Date());
   }, [loadOrders]);
+
+  // WebSocket event listeners for seamless background updates
+  useEffect(() => {
+    const handleWebSocketNewOrder = (event: Event) => {
+      const customEvent = event as CustomEvent;
+      const { order } = customEvent.detail;
+      
+      // Check if order is aged (30+ minutes old)
+      const thirtyMinutesAgo = new Date(Date.now() - 30 * 60 * 1000);
+      const orderCreatedAt = new Date(order.createdAt);
+      const isAged = orderCreatedAt <= thirtyMinutesAgo;
+      
+      if (isAged) {
+        // Add new order to the list seamlessly
+        setAvailableOrders(prev => {
+          const exists = prev.some(existingOrder => existingOrder.id === order.id);
+          if (!exists) {
+            const newOrder = {
+              id: order.id,
+              shopName: order.shopName || "Unknown Shop",
+              shopAddress: order.shopAddress || "No address available",
+              customerAddress: order.customerAddress || "No address available",
+              distance: `${order.distance} km`,
+              items: order.itemsCount || 0,
+              total: `$${(order.earnings || 0).toFixed(2)}`,
+              estimatedEarnings: `$${(order.earnings || 0).toFixed(2)}`,
+              createdAt: relativeTime(order.createdAt),
+              status: order.status || "PENDING",
+              rawDistance: order.distance || 0,
+              rawEarnings: order.earnings || 0,
+              rawCreatedAt: orderCreatedAt.getTime(),
+              minutesAgo: Math.floor((Date.now() - orderCreatedAt.getTime()) / 60000),
+              priorityLevel: order.priorityLevel || 1,
+              shopLatitude: order.shopLatitude,
+              shopLongitude: order.shopLongitude,
+              customerLatitude: order.customerLatitude,
+              customerLongitude: order.customerLongitude,
+              travelTimeMinutes: order.travelTimeMinutes,
+              orderType: order.orderType || "regular",
+              reel: order.reel,
+              quantity: order.quantity,
+              deliveryNote: order.deliveryNote,
+              customerName: order.customerName,
+              customerPhone: order.customerPhone,
+            };
+            return [newOrder, ...prev];
+          }
+          return prev;
+        });
+        
+        // Update sorted orders
+        setSortedOrders(prev => {
+          const exists = prev.some(existingOrder => existingOrder.id === order.id);
+          if (!exists) {
+            const newOrder = {
+              id: order.id,
+              shopName: order.shopName || "Unknown Shop",
+              shopAddress: order.shopAddress || "No address available",
+              customerAddress: order.customerAddress || "No address available",
+              distance: `${order.distance} km`,
+              items: order.itemsCount || 0,
+              total: `$${(order.earnings || 0).toFixed(2)}`,
+              estimatedEarnings: `$${(order.earnings || 0).toFixed(2)}`,
+              createdAt: relativeTime(order.createdAt),
+              status: order.status || "PENDING",
+              rawDistance: order.distance || 0,
+              rawEarnings: order.earnings || 0,
+              rawCreatedAt: orderCreatedAt.getTime(),
+              minutesAgo: Math.floor((Date.now() - orderCreatedAt.getTime()) / 60000),
+              priorityLevel: order.priorityLevel || 1,
+              shopLatitude: order.shopLatitude,
+              shopLongitude: order.shopLongitude,
+              customerLatitude: order.customerLatitude,
+              customerLongitude: order.customerLongitude,
+              travelTimeMinutes: order.travelTimeMinutes,
+              orderType: order.orderType || "regular",
+              reel: order.reel,
+              quantity: order.quantity,
+              deliveryNote: order.deliveryNote,
+              customerName: order.customerName,
+              customerPhone: order.customerPhone,
+            };
+            return sortOrders([newOrder, ...prev], sortBy);
+          }
+          return prev;
+        });
+      }
+    };
+
+    const handleWebSocketOrderExpired = (event: Event) => {
+      const customEvent = event as CustomEvent;
+      const { orderId } = customEvent.detail;
+      
+      // Remove order from both lists seamlessly
+      setAvailableOrders(prev => prev.filter(order => order.id !== orderId));
+      setSortedOrders(prev => prev.filter(order => order.id !== orderId));
+    };
+
+    window.addEventListener('websocket-new-order', handleWebSocketNewOrder);
+    window.addEventListener('websocket-order-expired', handleWebSocketOrderExpired);
+
+    return () => {
+      window.removeEventListener('websocket-new-order', handleWebSocketNewOrder);
+      window.removeEventListener('websocket-order-expired', handleWebSocketOrderExpired);
+    };
+  }, [sortBy, sortOrders]);
 
   // Initializing loading screen
   if (isInitializing) {
@@ -538,7 +646,7 @@ export default function ShopperDashboard() {
                     }`}
                     title={
                       isAutoRefreshing
-                        ? "Auto-refresh is on (30s)"
+                        ? `Auto-refresh is on (${isConnected ? "2min" : "30s"})`
                         : "Auto-refresh is off"
                     }
                   >
@@ -623,7 +731,7 @@ export default function ShopperDashboard() {
                       ? "bg-green-600 text-white shadow-lg shadow-green-500/30"
                       : "bg-gray-100 text-gray-700 hover:bg-gray-200"
                   }`}
-                  title="Orders less than 1 hour old"
+                  title="Aged orders by creation time (oldest first)"
                 >
                   <svg
                     viewBox="0 0 24 24"
@@ -635,7 +743,7 @@ export default function ShopperDashboard() {
                     <circle cx="12" cy="12" r="10" />
                     <polyline points="12 6 12 12 16 14" />
                   </svg>
-                  Newest (1h)
+                  Oldest First
                 </button>
                 <button
                   onClick={() => handleSortChange("earnings")}
@@ -683,7 +791,7 @@ export default function ShopperDashboard() {
                       ? "bg-purple-600 text-white shadow-lg shadow-purple-500/30"
                       : "bg-gray-100 text-gray-700 hover:bg-gray-200"
                   }`}
-                  title="All orders by priority level, including older orders"
+                  title="Aged orders by priority level (highest priority first)"
                 >
                   <svg
                     viewBox="0 0 24 24"
@@ -736,10 +844,10 @@ export default function ShopperDashboard() {
                     {!isOnline
                       ? "Go online to see available batches"
                       : sortBy === "newest"
-                      ? "Showing recent batches less than 1 hour old"
+                      ? "Showing aged orders (30+ minutes old) by creation time"
                       : sortBy === "priority"
-                      ? "Showing batches pending for 1+ hours by priority level"
-                      : `Sorting by ${sortBy}`}
+                      ? "Showing aged orders by priority level"
+                      : `Sorting aged orders by ${sortBy}`}
                   </p>
                   {isOnline && (
                     <p
@@ -1013,7 +1121,7 @@ export default function ShopperDashboard() {
                         ? "bg-gray-800 text-gray-300 hover:bg-gray-700"
                         : "bg-gray-100 text-gray-700 hover:bg-gray-200"
                     }`}
-                    title="Batches less than 1 hour old"
+                    title="Aged orders by creation time (oldest first)"
                   >
                     <svg
                       viewBox="0 0 24 24"
@@ -1025,7 +1133,7 @@ export default function ShopperDashboard() {
                       <circle cx="12" cy="12" r="10" />
                       <polyline points="12 6 12 12 16 14" />
                     </svg>
-                    Recent
+                    Oldest
                   </button>
                   <button
                     onClick={() => handleSortChange("earnings")}
@@ -1085,7 +1193,7 @@ export default function ShopperDashboard() {
                         ? "bg-gray-800 text-gray-300 hover:bg-gray-700"
                         : "bg-gray-100 text-gray-700 hover:bg-gray-200"
                     }`}
-                    title="All batches by priority level, including older batches"
+                    title="Aged orders by priority level (highest priority first)"
                   >
                     <svg
                       viewBox="0 0 24 24"
@@ -1158,10 +1266,10 @@ export default function ShopperDashboard() {
                       {!isOnline
                         ? "Go online to see available batches"
                         : sortBy === "newest"
-                        ? "Showing batches < 1 hour old"
+                        ? "Showing aged orders (30+ min) by time"
                         : sortBy === "priority"
-                        ? "Batches pending 1+ hours by priority"
-                        : `Sorting by ${sortBy}`}
+                        ? "Aged orders by priority level"
+                        : `Sorting aged orders by ${sortBy}`}
                       {isOnline &&
                         (showHistorical ? " • Priority sort" : " • Time sort")}
                     </p>

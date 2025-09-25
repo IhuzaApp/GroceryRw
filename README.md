@@ -18,6 +18,308 @@ A comprehensive grocery delivery platform with advanced revenue tracking, wallet
 
 ### 6. Delivery Time Management System
 
+### 7. Smart Notification & Assignment System
+
+---
+
+# Smart Notification & Assignment System
+
+## Overview
+
+The Smart Notification & Assignment System provides real-time order distribution to shoppers using WebSocket technology, intelligent assignment algorithms, and optimized batch processing. The system ensures efficient order allocation while preventing conflicts and providing instant notifications.
+
+## Key Features
+
+- **Real-Time WebSocket Notifications**: Instant order updates instead of polling
+- **Smart Assignment Algorithm**: Prioritizes orders based on shopper performance and proximity
+- **Assignment Locking**: Prevents multiple shoppers from being assigned the same order
+- **Optimized Batch Processing**: Groups orders by location for efficient distribution
+- **Aged Order Filtering**: Shows only orders 30+ minutes old and unassigned on the map
+- **Travel Time Display**: Shows estimated minutes away instead of raw distance
+
+## System Architecture
+
+```mermaid
+graph TB
+    A[Order Created] --> B[Smart Assignment Algorithm]
+    B --> C{Order Age Check}
+    C -->|30+ minutes| D[Add to Aged Orders Map]
+    C -->|< 30 minutes| E[Regular Processing]
+    
+    B --> F[Calculate Priority Score]
+    F --> G[Find Best Shopper]
+    G --> H[Send WebSocket Notification]
+    H --> I[Shopper Receives Toast]
+    I --> J{Shopper Action}
+    J -->|Accept| K[Assign Order]
+    J -->|Skip| L[Find Next Shopper]
+    J -->|Timeout| M[Reassign to Others]
+    
+    D --> N[Map Section Display]
+    N --> O[WebSocket Updates]
+    O --> P[Real-time Map Updates]
+```
+
+## Components
+
+### 1. Notification System (`NotificationSystem.tsx`)
+
+**Purpose**: Frontend component that manages order notifications, batch assignments, and user interactions.
+
+**Key Features**:
+- WebSocket integration for real-time updates
+- Toast notifications with SVG icons
+- Travel time calculation and display
+- Batch acceptance/skipping functionality
+- Firebase push notifications
+
+**Flow**:
+```mermaid
+sequenceDiagram
+    participant NS as NotificationSystem
+    participant WS as WebSocket
+    participant API as Smart Assignment API
+    participant DB as Database
+    
+    NS->>WS: Connect to WebSocket
+    WS-->>NS: Connection established
+    NS->>API: Request smart assignment
+    API->>DB: Query available orders
+    DB-->>API: Return orders with priority scores
+    API-->>NS: Return best order for review
+    NS->>NS: Display toast notification
+    NS->>WS: Send location updates
+    WS-->>NS: Receive real-time order updates
+```
+
+### 2. Smart Assignment API (`/api/shopper/smart-assign-order`)
+
+**Purpose**: Implements the intelligent assignment algorithm that finds the best order for a shopper.
+
+**Algorithm**:
+1. **Fetch Available Orders**: Get unassigned orders from database
+2. **Calculate Priority Score**: For each order, calculate score based on:
+   - Shopper performance (rating, completion rate, response time)
+   - Distance from shopper location
+   - Order age and priority
+3. **Return Best Order**: Return the highest-scoring order for shopper review
+
+**Priority Score Calculation**:
+```typescript
+const priorityScore = (
+  performanceScore * 0.4 +      // 40% performance
+  distanceScore * 0.3 +         // 30% proximity
+  ageScore * 0.2 +              // 20% order age
+  orderPriority * 0.1           // 10% order priority
+);
+```
+
+### 3. WebSocket System
+
+**Components**:
+- **Server** (`server.js`): Custom Node.js server hosting both Next.js and Socket.IO
+- **Manager** (`websocketManager.ts`): Client-side connection management
+- **Hook** (`useWebSocket.ts`): React hook for WebSocket integration
+
+**Events**:
+- `shopper-register`: Shopper connects and registers
+- `location-update`: Real-time location tracking
+- `new-order`: New order available for assignment
+- `order-expired`: Order removed from available pool
+- `accept-order`: Shopper accepts an order
+- `reject-order`: Shopper skips an order
+
+### 4. Batch Processing (`/api/shopper/process-orders-batch`)
+
+**Purpose**: Optimized batch processing that groups shoppers and orders by location.
+
+**Process**:
+1. **Cluster Shoppers**: Group nearby shoppers by location
+2. **Find Nearby Orders**: For each cluster, find orders within radius
+3. **Send Batch Notifications**: Send grouped orders to shopper clusters
+4. **WebSocket Distribution**: Use WebSocket to notify clusters in real-time
+
+### 5. Map Integration (`MapSection.tsx`)
+
+**Purpose**: Displays aged, unassigned orders on an interactive map.
+
+**Features**:
+- **Aged Order Filtering**: Shows only orders 30+ minutes old with `shopper_id = null`
+- **WebSocket Integration**: Real-time updates when orders are added/removed
+- **Visual Markers**: Custom markers for different order types
+- **Interactive Popups**: Order details and acceptance buttons
+
+**Filtering Logic**:
+```typescript
+const filterAgedUnassignedOrders = (orders) => {
+  const thirtyMinutesAgo = new Date(Date.now() - 30 * 60 * 1000);
+  
+  return orders.filter(order => {
+    const orderCreatedAt = new Date(order.createdAt);
+    const isAged = orderCreatedAt <= thirtyMinutesAgo;
+    const isUnassigned = !order.shopper_id || order.shopper_id === null;
+    
+    return isAged && isUnassigned;
+  });
+};
+```
+
+## Assignment Flow
+
+### 1. Order Creation
+```mermaid
+flowchart TD
+    A[Order Created] --> B[Add to Available Orders]
+    B --> C[Trigger Smart Assignment]
+    C --> D[Calculate Priority Scores]
+    D --> E[Find Best Shopper]
+    E --> F[Send WebSocket Notification]
+```
+
+### 2. Shopper Response
+```mermaid
+flowchart TD
+    A[Shopper Receives Notification] --> B{Action}
+    B -->|Accept| C[Assign Order Atomically]
+    B -->|Skip| D[Find Next Best Shopper]
+    B -->|Timeout| E[Reassign to Others]
+    
+    C --> F[Update Order Status]
+    F --> G[Remove from Available Pool]
+    G --> H[Send Confirmation]
+    
+    D --> I[Send to Next Shopper]
+    E --> I
+```
+
+### 3. Real-time Updates
+```mermaid
+sequenceDiagram
+    participant O as Order System
+    participant WS as WebSocket Server
+    participant C1 as Shopper 1
+    participant C2 as Shopper 2
+    participant M as Map Section
+    
+    O->>WS: New order created
+    WS->>C1: Send notification
+    WS->>M: Update map display
+    
+    C1->>WS: Skip order
+    WS->>C2: Send to next shopper
+    WS->>M: Update map
+    
+    C2->>WS: Accept order
+    WS->>O: Confirm assignment
+    WS->>M: Remove from map
+```
+
+## Database Schema
+
+### Orders Table
+```sql
+CREATE TABLE Orders (
+  id UUID PRIMARY KEY,
+  shopper_id UUID NULL,           -- NULL = unassigned
+  assigned_at TIMESTAMP NULL,     -- When order was assigned
+  created_at TIMESTAMP,           -- Order creation time
+  status VARCHAR(50),             -- Order status
+  -- ... other fields
+);
+```
+
+### Reel Orders Table
+```sql
+CREATE TABLE reel_orders (
+  id UUID PRIMARY KEY,
+  shopper_id UUID NULL,           -- NULL = unassigned
+  assigned_at TIMESTAMP NULL,     -- When order was assigned
+  created_at TIMESTAMP,           -- Order creation time
+  -- ... other fields
+);
+```
+
+## Configuration
+
+### WebSocket Settings
+```typescript
+// Server configuration
+const io = new Server(server, {
+  cors: {
+    origin: ["http://localhost:3000", "http://127.0.0.1:3000"],
+    methods: ["GET", "POST"]
+  },
+  allowEIO3: true,
+  transports: ['polling', 'websocket']
+});
+
+// Client configuration
+const socket = io(process.env.NEXT_PUBLIC_WEBSOCKET_URL || 'http://localhost:3000', {
+  transports: ['polling', 'websocket'],
+  forceNew: false,
+  reconnectionAttempts: 5,
+  reconnectionDelay: 1000
+});
+```
+
+### Assignment Parameters
+```typescript
+const ASSIGNMENT_CONFIG = {
+  MAX_DISTANCE_KM: 10,           // Maximum distance for assignment
+  TIMEOUT_MINUTES: 2,            // Timeout for shopper response
+  BATCH_SIZE: 5,                 // Maximum orders per batch
+  CLUSTER_RADIUS_KM: 2,          // Radius for location clustering
+  AGED_ORDER_MINUTES: 30         // Age threshold for map display
+};
+```
+
+## Performance Optimizations
+
+### 1. Polling Reduction
+- **Before**: 30-second polling for all orders
+- **After**: WebSocket real-time updates + 2-minute fallback polling
+
+### 2. Batch Processing
+- Groups orders by location to reduce database queries
+- Sends notifications to shopper clusters instead of individuals
+- Reduces server load and improves response times
+
+### 3. Smart Caching
+- Caches shopper performance data
+- Reuses distance calculations
+- Optimizes database queries with proper indexing
+
+## Error Handling
+
+### WebSocket Connection Issues
+- Automatic reconnection with exponential backoff
+- Fallback to polling when WebSocket fails
+- Graceful degradation of real-time features
+
+### Assignment Conflicts
+- Atomic database operations prevent double-assignment
+- Locking mechanism ensures only one shopper can accept an order
+- Automatic cleanup of stale assignments
+
+### Network Failures
+- Retry logic for failed API calls
+- Offline mode with local state management
+- Queue system for pending operations
+
+## Monitoring & Analytics
+
+### Key Metrics
+- **Assignment Success Rate**: Percentage of successful order assignments
+- **Response Time**: Average time for shopper response
+- **WebSocket Uptime**: Connection stability metrics
+- **Order Age Distribution**: How long orders wait before assignment
+
+### Logging
+- WebSocket connection events
+- Assignment attempts and results
+- Performance metrics and bottlenecks
+- Error tracking and debugging information
+
 ---
 
 # Revenue Management System
