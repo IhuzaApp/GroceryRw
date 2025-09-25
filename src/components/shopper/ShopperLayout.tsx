@@ -257,7 +257,7 @@ export default function ShopperLayout({ children }: ShopperLayoutProps) {
             theme === "dark"
               ? "bg-gray-900 text-gray-100"
               : "bg-gray-50 text-gray-900"
-          } ${isMobile ? "p-0 pb-24" : "p-4 pl-64"}`}
+          } ${isMobile ? "p-3 pb-24" : "p-4 pl-64"}`}
         >
           <div className="relative z-0 h-full">{children}</div>
         </main>
