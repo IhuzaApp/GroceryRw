@@ -21,7 +21,7 @@ interface Order {
   priorityLevel?: number;
   travelTimeMinutes?: number;
   // Add order type and reel-specific fields
-  orderType?: "regular" | "reel";
+  orderType?: "regular" | "reel" | "restaurant";
   reel?: {
     id: string;
     title: string;
@@ -92,6 +92,7 @@ export default function OrderCard({ order, onOrderAccepted }: OrderCardProps) {
   const priorityInfo = getPriorityLabel(order.priorityLevel || 0);
   const [isAccepting, setIsAccepting] = useState(false);
   const isReelOrder = order.orderType === "reel";
+  const isRestaurantOrder = order.orderType === "restaurant";
 
   const handleAcceptOrder = async () => {
     setIsAccepting(true);
@@ -209,16 +210,30 @@ export default function OrderCard({ order, onOrderAccepted }: OrderCardProps) {
         </div>
       )}
 
+      {/* Restaurant order indicator */}
+      {isRestaurantOrder && (
+        <div className="relative bg-gradient-to-r from-orange-500 to-orange-600 py-2 text-center text-xs font-bold text-white">
+          <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent"></div>
+          <span className="relative z-10">🍽️ RESTAURANT ORDER</span>
+        </div>
+      )}
+
       <div className="p-5">
         <div className="mb-4 flex items-start justify-between">
           <div className="flex-1 pr-3">
             <h3 className="mb-1 text-xl font-bold text-gray-900">
-              {isReelOrder ? order.reel?.title || "Reel Order" : order.shopName}
+              {isReelOrder 
+                ? order.reel?.title || "Reel Order" 
+                : isRestaurantOrder 
+                  ? order.shopName || "Restaurant Order"
+                  : order.shopName}
             </h3>
             <p className="text-sm text-gray-600">
               {isReelOrder
                 ? `From: ${order.customerName || "Reel Creator"}`
-                : order.shopAddress}
+                : isRestaurantOrder
+                  ? order.shopAddress || "Restaurant Address"
+                  : order.shopAddress}
             </p>
           </div>
           <div
@@ -259,8 +274,11 @@ export default function OrderCard({ order, onOrderAccepted }: OrderCardProps) {
                 <path d="M16 10a4 4 0 01-8 0" />
               </svg>
               <span className="font-semibold">
-                {isReelOrder ? order.quantity || 1 : order.items}{" "}
-                {isReelOrder ? "item" : "items"}
+                {isReelOrder 
+                  ? `${order.quantity || 1} item`
+                  : isRestaurantOrder 
+                    ? `${order.items || 1} dishes`
+                    : `${order.items} items`}
               </span>
             </div>
           </div>
@@ -274,7 +292,11 @@ export default function OrderCard({ order, onOrderAccepted }: OrderCardProps) {
               stroke="currentColor"
               strokeWidth={2}
               className={`mr-2 h-5 w-5 ${
-                isReelOrder ? "text-purple-600" : "text-green-600"
+                isReelOrder 
+                  ? "text-purple-600" 
+                  : isRestaurantOrder 
+                    ? "text-orange-600"
+                    : "text-green-600"
               }`}
             >
               <path d="M12 2v20M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6" />
@@ -283,7 +305,11 @@ export default function OrderCard({ order, onOrderAccepted }: OrderCardProps) {
               <p className="text-sm text-gray-500">Earnings</p>
               <p
                 className={`text-2xl font-bold ${
-                  isReelOrder ? "text-purple-600" : "text-green-600"
+                  isReelOrder 
+                    ? "text-purple-600" 
+                    : isRestaurantOrder 
+                      ? "text-orange-600"
+                      : "text-green-600"
                 }`}
               >
                 {order.estimatedEarnings}
@@ -294,7 +320,9 @@ export default function OrderCard({ order, onOrderAccepted }: OrderCardProps) {
             className={`relative overflow-hidden rounded-xl px-8 py-3 text-sm font-bold text-white transition-all duration-200 hover:shadow-lg active:scale-95 ${
               isReelOrder
                 ? "bg-gradient-to-r from-purple-500 to-purple-600 hover:from-purple-600 hover:to-purple-700"
-                : "bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700"
+                : isRestaurantOrder
+                  ? "bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700"
+                  : "bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700"
             }`}
             onClick={handleAcceptOrder}
             disabled={isAccepting}

@@ -34,7 +34,7 @@ interface MapSectionProps {
     minutesAgo?: number;
     status?: string;
     // Add order type and reel-specific fields
-    orderType?: "regular" | "reel";
+    orderType?: "regular" | "reel" | "restaurant";
     shopper_id?: string | null; // null = unassigned
     reel?: {
       id: string;
@@ -642,7 +642,7 @@ export default function MapSection({
     marker: L.Marker,
     orderId: string,
     map: L.Map,
-    orderType: "regular" | "reel" = "regular"
+    orderType: "regular" | "reel" | "restaurant" = "regular"
   ) => {
     marker.on("popupopen", () => {
       const btn = document.getElementById(
@@ -918,7 +918,7 @@ export default function MapSection({
   // Helper function to create consistent marker icon
   const createOrderMarkerIcon = (
     earnings: string,
-    orderType: "regular" | "reel" = "regular"
+    orderType: "regular" | "reel" | "restaurant" = "regular"
   ) => {
     const simplifiedEarnings = formatEarningsDisplay(earnings);
     const bgColor =

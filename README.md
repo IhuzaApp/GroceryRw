@@ -2,7 +2,7 @@
 
 ## Overview
 
-A comprehensive grocery delivery platform with advanced revenue tracking, wallet management, order processing systems, and intelligent delivery time management. The system supports both regular orders and reel-based orders with sophisticated payment, revenue management, and real-time delivery tracking.
+A comprehensive grocery delivery platform with advanced revenue tracking, wallet management, order processing systems, and intelligent delivery time management. The system supports three order types: regular orders, reel-based orders, and restaurant orders with sophisticated payment, revenue management, and real-time delivery tracking.
 
 ## Key Systems
 
@@ -28,7 +28,7 @@ A comprehensive grocery delivery platform with advanced revenue tracking, wallet
 
 ## Overview
 
-The Smart Notification & Assignment System provides real-time order distribution to shoppers using WebSocket technology, intelligent assignment algorithms, and optimized batch processing. The system ensures efficient order allocation while preventing conflicts and providing instant notifications.
+The Smart Notification & Assignment System provides real-time order distribution to shoppers using WebSocket technology, intelligent assignment algorithms, and optimized batch processing. The system supports three order types: regular orders, reel orders, and restaurant orders, ensuring efficient order allocation while preventing conflicts and providing instant notifications.
 
 ## Key Features
 
@@ -38,6 +38,8 @@ The Smart Notification & Assignment System provides real-time order distribution
 - **Optimized Batch Processing**: Groups orders by location for efficient distribution
 - **Aged Order Filtering**: Shows only orders 30+ minutes old and unassigned on the map
 - **Travel Time Display**: Shows estimated minutes away instead of raw distance
+- **Multi-Order Type Support**: Handles regular orders, reel orders, and restaurant orders
+- **Restaurant Order Workflow**: Special handling for restaurant confirmation process
 
 ## System Architecture
 
@@ -61,6 +63,70 @@ graph TB
     N --> O[WebSocket Updates]
     O --> P[Real-time Map Updates]
 ```
+
+## Restaurant Orders Integration
+
+### Order Workflow
+
+Restaurant orders follow a unique workflow that differs from regular and reel orders:
+
+```mermaid
+graph TB
+    A[Customer Places Order] --> B[Status: WAITING_FOR_CONFIRMATION]
+    B --> C{Restaurant Accepts?}
+    C -->|Yes| D[Status: PENDING + updated_at set]
+    C -->|No| E[Order Remains Unavailable]
+    D --> F[Available for Shopper Assignment]
+    F --> G[WebSocket Notification Sent]
+    G --> H[Shopper Sees Order on Map/Dashboard]
+    H --> I{Shopper Action}
+    I -->|Accept| J[Order Assigned to Shopper]
+    I -->|Skip| K[Order Goes to Next Shopper]
+    J --> L[Status: shopping → delivered]
+```
+
+### Key Differences
+
+1. **Two-Phase Process**: 
+   - Phase 1: `WAITING_FOR_CONFIRMATION` (restaurant hasn't accepted)
+   - Phase 2: `PENDING` (restaurant accepted, available for shoppers)
+
+2. **Time Filtering**: 
+   - Uses `updated_at` field instead of `created_at`
+   - Only orders updated within last 10 minutes are shown
+   - Falls back to `created_at` if `updated_at` is null
+
+3. **Earnings Calculation**:
+   - Only uses `delivery_fee` (no `service_fee`)
+   - Restaurant sets final price (no markup model)
+
+4. **UI Styling**:
+   - Orange color scheme for restaurant orders
+   - "🍽️ RESTAURANT ORDER" indicator
+   - "X dishes" instead of "X items"
+
+### Database Queries
+
+```sql
+-- Get available restaurant orders
+SELECT * FROM restaurant_orders 
+WHERE status = 'PENDING' 
+  AND shopper_id IS NULL 
+  AND (
+    updated_at >= NOW() - INTERVAL '10 minutes' 
+    OR (updated_at IS NULL AND created_at >= NOW() - INTERVAL '10 minutes')
+  )
+ORDER BY updated_at DESC NULLS LAST, created_at DESC;
+```
+
+### API Integration
+
+All notification and assignment APIs support restaurant orders:
+
+- **`/api/shopper/availableOrders`**: Includes restaurant orders in aged order filtering
+- **`/api/shopper/smart-assign-order`**: Considers restaurant orders in assignment algorithm
+- **`/api/websocket/distribute-order`**: Sends restaurant orders via WebSocket
+- **`/api/shopper/process-orders-batch`**: Includes restaurant orders in batch processing
 
 ## Components
 
@@ -237,6 +303,27 @@ CREATE TABLE reel_orders (
   shopper_id UUID NULL,           -- NULL = unassigned
   assigned_at TIMESTAMP NULL,     -- When order was assigned
   created_at TIMESTAMP,           -- Order creation time
+  -- ... other fields
+);
+```
+
+### Restaurant Orders Table
+```sql
+CREATE TABLE restaurant_orders (
+  id UUID PRIMARY KEY,
+  OrderID INTEGER,
+  user_id UUID,                   -- Customer who placed the order
+  restaurant_id UUID,             -- Foreign key to Restaurants
+  shopper_id UUID NULL,           -- NULL = unassigned
+  assigned_at TIMESTAMP NULL,     -- When order was assigned
+  created_at TIMESTAMP,           -- Order creation time
+  updated_at TIMESTAMP NULL,      -- When restaurant accepted (used for filtering)
+  status VARCHAR(50),             -- "WAITING_FOR_CONFIRMATION" | "PENDING" | "shopping" | "delivered"
+  total STRING,                   -- Order total
+  delivery_fee STRING,            -- Delivery fee (no service_fee)
+  delivery_time TIMESTAMP,        -- Expected delivery time
+  delivery_notes TEXT,            -- Delivery instructions
+  delivery_address_id UUID,       -- Foreign key to Addresses
   -- ... other fields
 );
 ```
@@ -5360,7 +5447,7 @@ Response:
 
 ## Overview
 
-A comprehensive grocery delivery platform with advanced revenue tracking, wallet management, order processing systems, and intelligent delivery time management. The system supports both regular orders and reel-based orders with sophisticated payment, revenue management, and real-time delivery tracking.
+A comprehensive grocery delivery platform with advanced revenue tracking, wallet management, order processing systems, and intelligent delivery time management. The system supports three order types: regular orders, reel-based orders, and restaurant orders with sophisticated payment, revenue management, and real-time delivery tracking.
 
 ## Key Systems
 

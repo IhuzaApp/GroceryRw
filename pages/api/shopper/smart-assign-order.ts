@@ -70,6 +70,47 @@ const GET_AVAILABLE_REEL_ORDERS = gql`
   }
 `;
 
+// GraphQL query to get available restaurant orders for notification
+const GET_AVAILABLE_RESTAURANT_ORDERS = gql`
+  query GetAvailableRestaurantOrders($current_time: timestamptz!) {
+    restaurant_orders(
+      where: {
+        status: { _eq: "PENDING" }
+        shopper_id: { _is_null: true }
+        _or: [
+          { updated_at: { _gte: $current_time } },
+          { 
+            updated_at: { _is_null: true },
+            created_at: { _gte: $current_time }
+          }
+        ]
+      }
+      order_by: { updated_at: asc_nulls_last, created_at: asc }
+      limit: 20
+    ) {
+      id
+      created_at
+      delivery_fee
+      total
+      delivery_time
+      Restaurant {
+        name
+        lat
+        long
+      }
+      orderedBy {
+        name
+      }
+      Address {
+        latitude
+        longitude
+        street
+        city
+      }
+    }
+  }
+`;
+
 // GraphQL query to get shopper performance data
 const GET_SHOPPER_PERFORMANCE = gql`
   query GetShopperPerformance($shopper_id: uuid!) {
@@ -179,12 +220,15 @@ export default async function handler(
     // Get orders created in the last 10 minutes
     const tenMinutesAgo = new Date(Date.now() - 10 * 60 * 1000).toISOString();
 
-    // Fetch both regular and reel orders in parallel
-    const [regularOrdersData, reelOrdersData, performanceData] = await Promise.all([
+    // Fetch regular, reel, and restaurant orders in parallel
+    const [regularOrdersData, reelOrdersData, restaurantOrdersData, performanceData] = await Promise.all([
       hasuraClient.request(GET_AVAILABLE_ORDERS, {
         current_time: tenMinutesAgo,
       }) as any,
       hasuraClient.request(GET_AVAILABLE_REEL_ORDERS, {
+        current_time: tenMinutesAgo,
+      }) as any,
+      hasuraClient.request(GET_AVAILABLE_RESTAURANT_ORDERS, {
         current_time: tenMinutesAgo,
       }) as any,
       hasuraClient.request(GET_SHOPPER_PERFORMANCE, {
@@ -194,11 +238,13 @@ export default async function handler(
 
     const availableOrders = regularOrdersData.Orders || [];
     const availableReelOrders = reelOrdersData.reel_orders || [];
+    const availableRestaurantOrders = restaurantOrdersData.restaurant_orders || [];
 
     // Combine all orders with type information
     const allOrders = [
       ...availableOrders.map((order: any) => ({ ...order, orderType: "regular" })),
-      ...availableReelOrders.map((order: any) => ({ ...order, orderType: "reel" }))
+      ...availableReelOrders.map((order: any) => ({ ...order, orderType: "reel" })),
+      ...availableRestaurantOrders.map((order: any) => ({ ...order, orderType: "restaurant" }))
     ];
 
     if (allOrders.length === 0) {
@@ -239,15 +285,25 @@ export default async function handler(
     // Format order for notification (don't assign yet)
     const orderForNotification = {
       id: bestOrder.id,
-      shopName: bestOrder.Shop?.name || bestOrder.Reel?.title || "Unknown Shop",
+      shopName: bestOrder.Shop?.name || bestOrder.Reel?.title || bestOrder.Restaurant?.name || "Unknown Shop",
       distance: distance,
       travelTimeMinutes: calculateTravelTime(distance),
       createdAt: bestOrder.created_at,
       customerAddress: `${bestOrder.Address?.street || bestOrder.address?.street}, ${bestOrder.Address?.city || bestOrder.address?.city}`,
       itemsCount: bestOrder.quantity || 1,
-      estimatedEarnings: parseFloat(bestOrder.service_fee || "0") + parseFloat(bestOrder.delivery_fee || "0"),
+      estimatedEarnings: parseFloat(bestOrder.delivery_fee || "0"), // Restaurant orders only have delivery fee
       orderType: bestOrder.orderType,
-      priority: bestOrder.priority
+      priority: bestOrder.priority,
+      // Add restaurant-specific fields
+      ...(bestOrder.orderType === "restaurant" && {
+        restaurant: bestOrder.Restaurant,
+        total: parseFloat(bestOrder.total || "0"),
+        deliveryTime: bestOrder.delivery_time,
+      }),
+      // Add reel-specific fields
+      ...(bestOrder.orderType === "reel" && {
+        reel: bestOrder.Reel,
+      })
     };
 
     return res.status(200).json({

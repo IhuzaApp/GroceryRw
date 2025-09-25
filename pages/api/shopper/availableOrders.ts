@@ -84,6 +84,64 @@ const GET_AVAILABLE_REEL_ORDERS = gql`
   }
 `;
 
+// Add query for available restaurant orders (updated within last 10 minutes or created if updated_at is null)
+const GET_AVAILABLE_RESTAURANT_ORDERS = gql`
+  query GetAvailableRestaurantOrders($tenMinutesAgo: timestamptz!) {
+    restaurant_orders(
+      where: { 
+        shopper_id: { _is_null: true }, 
+        status: { _eq: "PENDING" },
+        _or: [
+          { updated_at: { _gte: $tenMinutesAgo } },
+          { 
+            updated_at: { _is_null: true },
+            created_at: { _gte: $tenMinutesAgo }
+          }
+        ]
+      }
+      order_by: { updated_at: desc_nulls_last, created_at: desc }
+    ) {
+      id
+      created_at
+      delivery_fee
+      total
+      delivery_time
+      delivery_notes
+      status
+      assigned_at
+      Restaurant {
+        id
+        name
+        logo
+        lat
+        long
+      }
+      orderedBy {
+        id
+        name
+        phone
+        email
+      }
+      Address {
+        latitude
+        longitude
+        street
+        city
+      }
+      restaurant_dishe_orders {
+        id
+        quantity
+        price
+        restaurant_dishes {
+          id
+          name
+          description
+        }
+      }
+    }
+  }
+`;
+
 // Haversine formula to calculate distance in kilometers between two coordinates
 function calculateDistanceKm(
   lat1: number,
@@ -149,15 +207,29 @@ export default async function handler(
       throw new Error("Hasura client is not initialized");
     }
 
-    // Calculate timestamp for 30 minutes ago
+    // Calculate timestamp for 30 minutes ago (for regular/reel orders)
     const thirtyMinutesAgo = new Date(Date.now() - 30 * 60 * 1000).toISOString();
+    // Calculate timestamp for 10 minutes ago (for restaurant orders)
+    const tenMinutesAgo = new Date(Date.now() - 10 * 60 * 1000).toISOString();
 
-    logger.debug("Querying Hasura for aged PENDING orders (30+ minutes old)", "AvailableOrders", {
-      thirtyMinutesAgo
+    logger.debug("Querying Hasura for orders", "AvailableOrders", {
+      thirtyMinutesAgo,
+      tenMinutesAgo
     });
 
-    // Fetch both regular orders and reel orders in parallel
-    const [regularOrdersData, reelOrdersData] = await Promise.all([
+    // Debug: Test restaurant orders query first
+    try {
+      const testRestaurantQuery = await hasuraClient.request(GET_AVAILABLE_RESTAURANT_ORDERS, { tenMinutesAgo });
+      logger.debug("Restaurant orders query test", "AvailableOrders", {
+        restaurantOrdersCount: testRestaurantQuery.restaurant_orders?.length || 0,
+        sampleOrder: testRestaurantQuery.restaurant_orders?.[0] || null
+      });
+    } catch (error) {
+      logger.error("Restaurant orders query failed", "AvailableOrders", error);
+    }
+
+    // Fetch regular orders, reel orders, and restaurant orders in parallel
+    const [regularOrdersData, reelOrdersData, restaurantOrdersData] = await Promise.all([
       hasuraClient.request<{
         Orders: Array<{
           id: string;
@@ -213,14 +285,57 @@ export default async function handler(
           };
         }>;
       }>(GET_AVAILABLE_REEL_ORDERS, { thirtyMinutesAgo }),
+      hasuraClient.request<{
+        restaurant_orders: Array<{
+          id: string;
+          created_at: string;
+          delivery_fee: string | null;
+          total: string;
+          delivery_time: string;
+          delivery_notes: string | null;
+          status: string;
+          assigned_at: string | null;
+          Restaurant: {
+            id: string;
+            name: string;
+            logo: string | null;
+            lat: string;
+            long: string;
+          };
+          orderedBy: {
+            id: string;
+            name: string;
+            phone: string;
+            email: string;
+          };
+          Address: {
+            latitude: string;
+            longitude: string;
+            street: string;
+            city: string;
+          };
+          restaurant_dishe_orders: Array<{
+            id: string;
+            quantity: number;
+            price: string;
+            restaurant_dishes: {
+              id: string;
+              name: string;
+              description: string;
+            };
+          }>;
+        }>;
+      }>(GET_AVAILABLE_RESTAURANT_ORDERS, { tenMinutesAgo }),
     ]);
 
     const regularOrders = regularOrdersData.Orders;
     const reelOrders = reelOrdersData.reel_orders;
+    const restaurantOrders = restaurantOrdersData.restaurant_orders;
 
     logger.info("Retrieved orders from database", "AvailableOrders", {
       regularOrderCount: regularOrders.length,
       reelOrderCount: reelOrders.length,
+      restaurantOrderCount: restaurantOrders.length,
     });
 
     // Transform regular orders to make it easier to use on the client
@@ -391,10 +506,103 @@ export default async function handler(
       };
     });
 
-    // Combine both types of orders
+    // Transform restaurant orders
+    const availableRestaurantOrders = restaurantOrders.map((order) => {
+      // Calculate metrics for sorting and filtering
+      const createdAt = new Date(order.created_at);
+      const pendingMinutes = Math.floor(
+        (Date.now() - createdAt.getTime()) / 60000
+      );
+
+      // Get coordinates from relationships
+      const restaurantLatitude = order.Restaurant?.lat ? parseFloat(order.Restaurant.lat) : 0;
+      const restaurantLongitude = order.Restaurant?.long ? parseFloat(order.Restaurant.long) : 0;
+      const customerLatitude = order.Address?.latitude ? parseFloat(order.Address.latitude) : 0;
+      const customerLongitude = order.Address?.longitude ? parseFloat(order.Address.longitude) : 0;
+
+      // Calculate distance from shopper to restaurant in kilometers
+      const distanceToRestaurantKm = calculateDistanceKm(
+        shopperLatitude,
+        shopperLongitude,
+        restaurantLatitude,
+        restaurantLongitude
+      );
+
+      // Calculate distance between restaurant and customer in kilometers
+      const restaurantToCustomerDistanceKm = calculateDistanceKm(
+        restaurantLatitude,
+        restaurantLongitude,
+        customerLatitude,
+        customerLongitude
+      );
+
+      // Calculate travel time from shopper to restaurant
+      const travelTimeMinutes = estimateTravelTimeMinutes(distanceToRestaurantKm);
+
+      // Round distances to 1 decimal place
+      const formattedDistanceToRestaurant = Math.round(distanceToRestaurantKm * 10) / 10;
+      const formattedRestaurantToCustomerDistance = Math.round(restaurantToCustomerDistanceKm * 10) / 10;
+
+      // Calculate priority level (1-5) for UI highlighting
+      let priorityLevel = 1;
+      if (pendingMinutes >= 24 * 60) {
+        priorityLevel = 5; // Critical - pending for 24+ hours
+      } else if (pendingMinutes >= 4 * 60) {
+        priorityLevel = 4; // High - pending for 4+ hours
+      } else if (pendingMinutes >= 60) {
+        priorityLevel = 3; // Medium - pending for 1+ hour
+      } else if (pendingMinutes >= 30) {
+        priorityLevel = 2; // Low - pending for 30+ minutes
+      }
+
+      // Calculate total items count from dish orders
+      const totalItems = order.restaurant_dishe_orders?.reduce(
+        (sum, dish) => sum + (dish.quantity || 0),
+        0
+      ) || 1;
+
+      return {
+        id: order.id,
+        createdAt: order.created_at,
+        shopName: order.Restaurant?.name || "Unknown Restaurant",
+        shopAddress: "Restaurant Location",
+        shopLatitude: restaurantLatitude,
+        shopLongitude: restaurantLongitude,
+        customerLatitude,
+        customerLongitude,
+        customerAddress: order.Address
+          ? `${order.Address.street || ""}, ${order.Address.city || ""}`
+          : "No Address",
+        itemsCount: totalItems,
+        serviceFee: 0, // Restaurant orders don't have service fee
+        deliveryFee: parseFloat(order.delivery_fee || "0"),
+        earnings: parseFloat(order.delivery_fee || "0"), // Only delivery fee for restaurant orders
+        pendingMinutes,
+        priorityLevel,
+        status: order.status,
+        // Add new fields for distance and travel time
+        distance: formattedDistanceToRestaurant,
+        shopToCustomerDistance: formattedRestaurantToCustomerDistance,
+        travelTimeMinutes: travelTimeMinutes,
+        orderType: "restaurant" as const,
+        // Add restaurant-specific fields
+        restaurant: order.Restaurant,
+        deliveryTime: order.delivery_time,
+        deliveryNotes: order.delivery_notes,
+        customerName: order.orderedBy?.name || "Unknown Customer",
+        customerPhone: order.orderedBy?.phone || "",
+        customerEmail: order.orderedBy?.email || "",
+        dishes: order.restaurant_dishe_orders || [],
+        total: parseFloat(order.total || "0"),
+        assignedAt: order.assigned_at,
+      };
+    });
+
+    // Combine all types of orders
     const allAvailableOrders = [
       ...availableRegularOrders,
       ...availableReelOrders,
+      ...availableRestaurantOrders,
     ];
 
     // Filter orders by travel time - only show orders within 15 minutes travel time
@@ -408,6 +616,8 @@ export default async function handler(
       regularOrderCount: filteredOrders.filter((o) => o.orderType === "regular")
         .length,
       reelOrderCount: filteredOrders.filter((o) => o.orderType === "reel")
+        .length,
+      restaurantOrderCount: filteredOrders.filter((o) => o.orderType === "restaurant")
         .length,
       maxTravelTime: `${maxTravelTime} minutes`,
     });

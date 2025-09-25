@@ -73,7 +73,7 @@ interface FormattedOrder {
   customerLatitude?: number;
   customerLongitude?: number;
   // Add order type and reel-specific fields
-  orderType: "regular" | "reel";
+  orderType: "regular" | "reel" | "restaurant";
   reel?: {
     id: string;
     title: string;
