@@ -78,18 +78,13 @@ export default function NotificationSystem({
   
   // Show WebSocket connection status
   useEffect(() => {
-    if (isConnected) {
-      logger.info("WebSocket connected - using real-time notifications", "NotificationSystem");
-    } else {
-      logger.info("WebSocket disconnected - using polling fallback", "NotificationSystem");
-    }
+    // WebSocket connection status changed - no logging needed
   }, [isConnected]);
 
   // Send location updates to WebSocket when location changes
   useEffect(() => {
     if (isConnected && currentLocation) {
       sendLocation(currentLocation);
-      logger.info("Location sent to WebSocket", "NotificationSystem", currentLocation);
     }
   }, [isConnected, currentLocation, sendLocation]);
 
@@ -97,7 +92,6 @@ export default function NotificationSystem({
   useEffect(() => {
     const handleWebSocketNewOrder = (event: CustomEvent) => {
       const { order } = event.detail;
-      logger.info("WebSocket new order received", "NotificationSystem", order);
       
       // Convert to Order format and show notification
       const orderForNotification: Order = {
@@ -119,7 +113,6 @@ export default function NotificationSystem({
 
     const handleWebSocketBatchOrders = (event: CustomEvent) => {
       const { orders } = event.detail;
-      logger.info("WebSocket batch orders received", "NotificationSystem", orders);
       
       // Show notifications for each order
       orders.forEach((order: any) => {
@@ -142,7 +135,6 @@ export default function NotificationSystem({
 
     const handleWebSocketOrderExpired = (event: CustomEvent) => {
       const { orderId } = event.detail;
-      logger.info("WebSocket order expired", "NotificationSystem", { orderId });
       
       // Remove expired order from active assignments
       batchAssignments.current = batchAssignments.current.filter(
@@ -174,7 +166,7 @@ export default function NotificationSystem({
   useEffect(() => {
     if (typeof window !== "undefined") {
       try {
-        logger.info("Initializing notification sound...", "NotificationSystem");
+        // Initializing notification sound
         const audio = new Audio("/notifySound.mp3");
 
         // Set audio properties
@@ -183,10 +175,7 @@ export default function NotificationSystem({
 
         // Add event listeners
         audio.addEventListener("canplaythrough", () => {
-          logger.info(
-            "Notification sound loaded successfully",
-            "NotificationSystem"
-          );
+        // Notification sound loaded successfully
           setAudioLoaded(true);
         });
 
@@ -272,10 +261,7 @@ export default function NotificationSystem({
     if (existingToast) {
       toast.dismiss(existingToast);
       activeToasts.current.delete(orderId);
-      logger.info(
-        `Removed toast for accepted order ${orderId}`,
-        "NotificationSystem"
-      );
+      // Removed toast for accepted order
     }
 
     // Also remove from batch assignments
@@ -317,10 +303,7 @@ export default function NotificationSystem({
       });
 
       if (response.ok) {
-        logger.info(
-          `Firebase ${type} notification sent successfully for order ${order.id}`,
-          "NotificationSystem"
-        );
+        // Firebase notification sent successfully
       } else {
         logger.warn(
           `Failed to send Firebase ${type} notification: ${response.statusText}`,
@@ -473,10 +456,7 @@ export default function NotificationSystem({
                         );
                   }
                       toast.dismiss(t.id);
-                      logger.info(
-                        `Skipped order ${order.id} - allowing other shoppers`,
-                        "NotificationSystem"
-                      );
+                      // Skipped order - allowing other shoppers
                     }}
                 className="flex-1 bg-gray-500 hover:bg-gray-600 text-white text-sm font-medium py-2.5 px-4 rounded-lg transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2"
               >
@@ -509,10 +489,7 @@ export default function NotificationSystem({
   }) => {
     // Check if sound is enabled in settings
     if (soundSettings && !soundSettings.enabled) {
-      logger.info(
-        "Sound notifications disabled in settings",
-        "NotificationSystem"
-      );
+      // Sound notifications disabled in settings
       return;
     }
 
@@ -533,10 +510,7 @@ export default function NotificationSystem({
       soundInstance.volume = soundSettings?.volume || 0.7;
 
       await soundInstance.play();
-      logger.info(
-        "Notification sound played successfully",
-        "NotificationSystem"
-      );
+      // Notification sound played successfully
 
       // Clean up after playing
       soundInstance.addEventListener("ended", () => {
@@ -589,7 +563,7 @@ export default function NotificationSystem({
           notification.close();
         }, 10000);
 
-        logger.info("Desktop notification shown", "NotificationSystem");
+        // Desktop notification shown
       } catch (error) {
         logger.error(
           "Error showing desktop notification",
@@ -728,10 +702,7 @@ export default function NotificationSystem({
                         );
                       }
                       toast.dismiss(t.id);
-                      logger.info(
-                        `Skipped expiring order ${order.id} - allowing other shoppers`,
-                        "NotificationSystem"
-                      );
+                      // Skipped expiring order - allowing other shoppers
                     }}
                     className={`rounded-lg px-4 py-2 text-sm font-medium text-white/80 backdrop-blur-sm transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-white/50 ${
                       theme === "dark"
@@ -810,7 +781,7 @@ export default function NotificationSystem({
           notification.close();
         }, 20000);
 
-        logger.info("Warning desktop notification shown", "NotificationSystem");
+        // Warning desktop notification shown
       } catch (error) {
         logger.error(
           "Error showing warning desktop notification",
@@ -823,10 +794,7 @@ export default function NotificationSystem({
     // Play warning sound
     playNotificationSound({ enabled: true, volume: 0.8 });
 
-    logger.info(
-      `Warning notification shown for order ${order.id} - expires in 20 seconds`,
-      "NotificationSystem"
-    );
+    // Warning notification shown for order - expires in 20 seconds
   };
 
   const isWithinSchedule = async (): Promise<boolean> => {
@@ -928,10 +896,7 @@ export default function NotificationSystem({
       return;
     }
 
-    logger.info(
-        "Using smart order finder system to find best order",
-      "NotificationSystem"
-    );
+      // Using smart order finder system to find best order
 
     try {
       // Use smart order finder API instead of polling
@@ -954,10 +919,7 @@ export default function NotificationSystem({
       }
 
       if (data.success && data.order) {
-        logger.info(
-          `Smart order finder found order ${data.order.id} with priority ${data.order.priority}`,
-          "NotificationSystem"
-        );
+        // Smart order finder found order
 
         // Clean up expired order reviews
         const oneMinuteAgo = currentTime - 60000;
@@ -1020,10 +982,7 @@ export default function NotificationSystem({
             newAssignment.warningTimeout = warningTimeout;
             lastNotificationTime.current = currentTime;
 
-            logger.info(
-            `Smart order finder: Order ${order.id} shown to shopper ${session.user.id} for review - priority: ${order.priority}`,
-              "NotificationSystem"
-            );
+            // Smart order finder: Order shown to shopper for review
         } else {
           logger.debug(
             "User already has an active order review, skipping smart order finder",
@@ -1056,11 +1015,7 @@ export default function NotificationSystem({
     // Reset notification state
     lastNotificationTime.current = 0;
 
-    logger.info("Starting smart notification system", "NotificationSystem");
-    logger.info(
-      "Will use smart assignment every 30 seconds with 1-minute assignment timeout",
-      "NotificationSystem"
-    );
+    // Starting smart notification system
 
     // Initial check
     checkForNewOrders();
@@ -1075,7 +1030,7 @@ export default function NotificationSystem({
   };
 
   const stopNotificationSystem = () => {
-    logger.info("Stopping notification system", "NotificationSystem");
+    // Stopping notification system
     if (checkInterval.current) {
       clearInterval(checkInterval.current);
       checkInterval.current = null;
@@ -1100,22 +1055,16 @@ export default function NotificationSystem({
   };
 
   useEffect(() => {
-    logger.info("NotificationSystem component mounted", "NotificationSystem");
+    // NotificationSystem component mounted
     return () => {
-      logger.info(
-        "NotificationSystem component unmounting",
-        "NotificationSystem"
-      );
+      // NotificationSystem component unmounting
       stopNotificationSystem();
     };
   }, []);
 
   useEffect(() => {
     if (session && currentLocation) {
-      logger.info(
-        "User logged in and location available, starting notification system",
-        "NotificationSystem"
-      );
+      // User logged in and location available, starting notification system
       startNotificationSystem();
     } else {
       logger.warn(

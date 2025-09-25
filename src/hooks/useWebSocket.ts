@@ -23,7 +23,7 @@ export const useWebSocket = (): WebSocketHook => {
 
     // Set up event listeners
     const handleRegistered = (data: any) => {
-      // Shopper registered
+      // Shopper registered - no logging needed
     };
 
     const handleNewOrder = (data: any) => {

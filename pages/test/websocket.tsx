@@ -67,7 +67,7 @@ export default function WebSocketTest() {
             ? 'bg-green-100 text-green-800' 
             : 'bg-red-100 text-red-800'
         }`}>
-          {isConnected ? '🔌 Connected' : '❌ Disconnected'}
+          {isConnected ? 'Connected' : 'Disconnected'}
         </div>
         <p className="text-sm text-gray-600 mt-2">
           User ID: {session.user?.id}
