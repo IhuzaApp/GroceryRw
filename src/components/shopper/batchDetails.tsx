@@ -199,6 +199,13 @@ interface OrderDetailsType {
       location: string;
       lat: number;
       long: number;
+      phone?: string;
+    };
+    Shops?: {
+      id: string;
+      name: string;
+      address: string;
+      phone?: string;
     };
   };
   quantity?: number;
@@ -1380,9 +1387,65 @@ export default function BatchDetails({
   // Fetch complete order data when component mounts
   useEffect(() => {
     if (order?.id) {
+      console.log("🔍 [BatchDetails] Initial order data from SSR:", {
+        orderId: order.id,
+        orderType: order.orderType,
+        hasShop: !!order.shop,
+        shopData: order.shop ? {
+          id: order.shop.id,
+          name: order.shop.name,
+          address: order.shop.address,
+          image: order.shop.image,
+          phone: order.shop.phone,
+          latitude: order.shop.latitude,
+          longitude: order.shop.longitude,
+          operating_hours: order.shop.operating_hours
+        } : null,
+        hasReel: !!order.reel,
+        reelData: order.reel ? {
+          id: order.reel.id,
+          title: order.reel.title,
+          hasRestaurant: !!order.reel.Restaurant,
+          hasShops: !!order.reel.Shops
+        } : null
+      });
+
+      console.log("🔍 [BatchDetails] Fetching order details for ID:", order.id);
+      
       fetch(`/api/shopper/orderDetails?id=${order.id}`)
-        .then((res) => res.json())
+        .then((res) => {
+          console.log("🔍 [BatchDetails] API response status:", res.status);
+          return res.json();
+        })
         .then((data) => {
+          console.log("🔍 [BatchDetails] API response data:", {
+            success: data.success,
+            hasOrder: !!data.order,
+            orderId: data.order?.id,
+            orderType: data.order?.orderType,
+            status: data.order?.status,
+            hasItems: !!data.order?.items,
+            itemsLength: data.order?.items?.length || 0,
+            hasShop: !!data.order?.shop,
+            shopData: data.order?.shop ? {
+              id: data.order.shop.id,
+              name: data.order.shop.name,
+              address: data.order.shop.address,
+              image: data.order.shop.image,
+              phone: data.order.shop.phone,
+              latitude: data.order.shop.latitude,
+              longitude: data.order.shop.longitude,
+              operating_hours: data.order.shop.operating_hours
+            } : null,
+            hasReel: !!data.order?.reel,
+            reelData: data.order?.reel ? {
+              id: data.order.reel.id,
+              title: data.order.reel.title,
+              hasRestaurant: !!data.order.reel.Restaurant,
+              hasShops: !!data.order.reel.Shops
+            } : null
+          });
+
           if (data.order) {
             // Transform the API response to match BatchDetails expected structure
             const transformedOrder = {
@@ -1414,11 +1477,56 @@ export default function BatchDetails({
                 })) || [],
             };
 
+            console.log("✅ [BatchDetails] Transformed order:", {
+              id: transformedOrder.id,
+              orderType: transformedOrder.orderType,
+              status: transformedOrder.status,
+              hasOrderItems: !!transformedOrder.Order_Items,
+              orderItemsLength: transformedOrder.Order_Items?.length || 0,
+              hasReel: !!transformedOrder.reel,
+              hasRestaurant: !!transformedOrder.reel?.Restaurant,
+              hasShop: !!transformedOrder.shop,
+              shopData: transformedOrder.shop ? {
+                id: transformedOrder.shop.id,
+                name: transformedOrder.shop.name,
+                address: transformedOrder.shop.address,
+                image: transformedOrder.shop.image,
+                phone: transformedOrder.shop.phone,
+                latitude: transformedOrder.shop.latitude,
+                longitude: transformedOrder.shop.longitude,
+                operating_hours: transformedOrder.shop.operating_hours
+              } : null,
+              reelData: transformedOrder.reel ? {
+                id: transformedOrder.reel.id,
+                title: transformedOrder.reel.title,
+                hasRestaurant: !!transformedOrder.reel.Restaurant,
+                hasShops: !!transformedOrder.reel.Shops,
+                restaurantData: transformedOrder.reel.Restaurant ? {
+                  id: transformedOrder.reel.Restaurant.id,
+                  name: transformedOrder.reel.Restaurant.name,
+                  location: transformedOrder.reel.Restaurant.location,
+                  phone: transformedOrder.reel.Restaurant.phone
+                } : null,
+                shopData: transformedOrder.reel.Shops ? {
+                  id: transformedOrder.reel.Shops.id,
+                  name: transformedOrder.reel.Shops.name,
+                  address: transformedOrder.reel.Shops.address,
+                  phone: transformedOrder.reel.Shops.phone
+                } : null
+              } : null
+            });
+
             setOrder(transformedOrder);
+          } else {
+            console.log("❌ [BatchDetails] No order data in response");
           }
         })
         .catch((err) => {
-          // Handle error silently
+          console.error("❌ [BatchDetails] Error fetching order details:", {
+            error: err,
+            message: err instanceof Error ? err.message : 'Unknown error',
+            orderId: order.id
+          });
         });
     }
   }, [order?.id, session?.user?.id]);
@@ -1726,14 +1834,39 @@ export default function BatchDetails({
                         </div>
                       </div>
                     </div>
-                    {order.reel?.Restaurant && (
+                    
+                    {/* Show Restaurant or Shop information based on what's available */}
+                    {(order.reel?.Restaurant || order.reel?.Shops) && (
                       <div className="rounded-lg border border-slate-200 bg-white p-3 dark:border-slate-600 dark:bg-slate-700">
-                        <p className="text-sm font-medium text-slate-900 dark:text-slate-100 sm:text-base">
-                          {order.reel.Restaurant.name}
-                        </p>
-                        <p className="text-xs text-slate-500 dark:text-slate-400">
-                          {order.reel.Restaurant.location}
-                        </p>
+                        {order.reel?.Restaurant ? (
+                          <>
+                            <p className="text-sm font-medium text-slate-900 dark:text-slate-100 sm:text-base">
+                              {order.reel.Restaurant.name}
+                            </p>
+                            <p className="text-xs text-slate-500 dark:text-slate-400">
+                              {order.reel.Restaurant.location}
+                            </p>
+                            {order.reel.Restaurant.phone && (
+                              <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
+                                📞 {order.reel.Restaurant.phone}
+                              </p>
+                            )}
+                          </>
+                        ) : order.reel?.Shops ? (
+                          <>
+                            <p className="text-sm font-medium text-slate-900 dark:text-slate-100 sm:text-base">
+                              {order.reel.Shops.name}
+                            </p>
+                            <p className="text-xs text-slate-500 dark:text-slate-400">
+                              {order.reel.Shops.address}
+                            </p>
+                            {order.reel.Shops.phone && (
+                              <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
+                                📞 {order.reel.Shops.phone}
+                              </p>
+                            )}
+                          </>
+                        ) : null}
                       </div>
                     )}
                   </div>

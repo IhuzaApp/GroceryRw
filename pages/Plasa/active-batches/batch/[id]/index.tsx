@@ -85,6 +85,10 @@ interface BatchOrderDetailsType {
     name: string;
     address: string;
     image: string;
+    phone?: string;
+    latitude?: string;
+    longitude?: string;
+    operating_hours?: any;
   };
   Order_Items: OrderItem[];
   address: {
@@ -312,6 +316,10 @@ export const getServerSideProps: GetServerSideProps<
           name
           address
           image
+          phone
+          latitude
+          longitude
+          operating_hours
         }
         Order_Items {
           id
@@ -370,10 +378,13 @@ export const getServerSideProps: GetServerSideProps<
         deliveryPhotoUrl: delivery_photo_url
         discount
         quantity
+        shopper_id
+        user_id
         user: User {
           id
           name
           email
+          phone
           profile_picture
         }
         reel: Reel {
@@ -384,12 +395,42 @@ export const getServerSideProps: GetServerSideProps<
           Product
           type
           video_url
+          restaurant_id
+          shop_id
           Restaurant {
             id
             name
             location
             lat
             long
+            created_at
+            email
+            is_active
+            phone
+            profile
+            relatedTo
+            tin
+            ussd
+            verified
+            logo
+          }
+          Shops {
+            id
+            name
+            address
+            image
+            latitude
+            longitude
+            phone
+            operating_hours
+            logo
+            category_id
+            description
+            created_at
+            updated_at
+            relatedTo
+            ssd
+            tin
           }
         }
         address: Address {
@@ -399,10 +440,16 @@ export const getServerSideProps: GetServerSideProps<
           postal_code
           latitude
           longitude
+          created_at
+          updated_at
+          user_id
+          is_default
         }
         assignedTo: User {
           id
           name
+          email
+          phone
           profile_picture
           orders: Orders_aggregate {
             aggregate {
@@ -420,20 +467,24 @@ export const getServerSideProps: GetServerSideProps<
     }
 
     // First try to fetch as a regular order
+    
     let data = await hasuraClient.request<{ Orders: any[] }>(
       GET_ORDER_DETAILS,
       { id }
     );
+
 
     let order = data.Orders[0];
     let orderType = "regular";
 
     // If no regular order found, try as a reel order
     if (!order) {
+      
       const reelData = await hasuraClient.request<{ reel_orders: any[] }>(
         GET_REEL_ORDER_DETAILS,
         { id }
       );
+
 
       order = reelData.reel_orders[0];
       orderType = "reel";
@@ -452,8 +503,15 @@ export const getServerSideProps: GetServerSideProps<
     // User can view if they are assigned to the order or if they are the customer
     const isAssignedShopper = order.assignedTo?.id === session.user.id;
     const isCustomer = order.orderedBy?.id === session.user.id;
+    
+    // For reel orders, also check if user is the customer via user field
+    const isReelCustomer = orderType === "reel" && order.user?.id === session.user.id;
+    
+    // For reel orders, also check if user is the assigned shopper via shopper_id field
+    const isReelShopper = orderType === "reel" && order.shopper_id === session.user.id;
 
-    if (!isAssignedShopper && !isCustomer) {
+
+    if (!isAssignedShopper && !isCustomer && !isReelCustomer && !isReelShopper) {
       return {
         props: {
           orderData: null,
@@ -477,6 +535,7 @@ export const getServerSideProps: GetServerSideProps<
           })
         : null,
     };
+
 
     return {
       props: {
