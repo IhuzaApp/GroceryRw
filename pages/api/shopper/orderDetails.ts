@@ -106,16 +106,26 @@ const GET_ORDER_DETAILS = gql`
       service_fee
       delivery_fee
       shop: Shop {
+        id
         name
         address
+        image
+        phone
         latitude
         longitude
+        operating_hours
       }
       address: Address {
+        id
         latitude
         longitude
         street
         city
+        postal_code
+        created_at
+        updated_at
+        user_id
+        is_default
       }
       Order_Items {
         id
@@ -182,7 +192,7 @@ const GET_ORDER_DETAILS = gql`
 // Query to fetch reel order details by ID
 const GET_REEL_ORDER_DETAILS = gql`
   query GetReelOrderDetails($orderId: uuid!) {
-    reel_orders_by_pk(id: $orderId) {
+    reel_orders(where: {id: {_eq: $orderId}}) {
       id
       OrderID
       created_at
@@ -207,7 +217,25 @@ const GET_REEL_ORDER_DETAILS = gql`
           location
           lat
           long
+          created_at
+          email
+          is_active
+          phone
+          profile
+          relatedTo
+          tin
+          ussd
+          verified
         }
+        category
+        created_on
+        delivery_time
+        isLiked
+        is_active
+        likes
+        restaurant_id
+        shop_id
+        user_id
       }
       user: User {
         id
@@ -229,7 +257,22 @@ const GET_REEL_ORDER_DETAILS = gql`
         street
         city
         postal_code
+        created_at
+        id
+        updated_at
+        user_id
       }
+      assigned_at
+      combined_order_id
+      delivery_address_id
+      delivery_photo_url
+      delivery_time
+      discount
+      found
+      reel_id
+      shopper_id
+      voucher_code
+      user_id
     }
   }
 `;
@@ -249,6 +292,7 @@ export default async function handler(
     // Get orderId from query params
     const { id } = req.query;
 
+
     if (!id || typeof id !== "string") {
       res.status(400).json({ error: "Missing or invalid order ID" });
       return;
@@ -261,6 +305,7 @@ export default async function handler(
       authOptions as any
     )) as UserSession | null;
 
+
     if (!session || !session.user) {
       res.status(401).json({ error: "Unauthorized" });
       return;
@@ -272,10 +317,12 @@ export default async function handler(
       return;
     }
 
+
     let orderData: any = null;
     let orderType: "regular" | "reel" = "regular";
 
     try {
+      
       // First try to fetch as a regular order
       const regularOrderData = await hasuraClient.request<OrderDetailsResponse>(
         GET_ORDER_DETAILS,
@@ -284,12 +331,14 @@ export default async function handler(
         }
       );
 
+
       if (regularOrderData.Orders_by_pk) {
         orderData = regularOrderData.Orders_by_pk;
         orderType = "regular";
       } else {
         // If regular order not found, try reel order
         try {
+          
           const reelOrderData = await hasuraClient.request<any>(
             GET_REEL_ORDER_DETAILS,
             {
@@ -297,18 +346,30 @@ export default async function handler(
             }
           );
 
-          if (reelOrderData.reel_orders_by_pk) {
-            orderData = reelOrderData.reel_orders_by_pk;
+
+          if (reelOrderData.reel_orders && reelOrderData.reel_orders.length > 0) {
+            orderData = reelOrderData.reel_orders[0];
             orderType = "reel";
+          } else {
           }
         } catch (reelError) {
-          console.error("Error fetching reel order:", reelError);
+          console.error("❌ [API] Error fetching reel order:", {
+            error: reelError,
+            message: reelError instanceof Error ? reelError.message : 'Unknown error',
+            orderId: id
+          });
         }
       }
     } catch (error) {
+      console.error("❌ [API] Error fetching regular order:", {
+        error: error,
+        message: error instanceof Error ? error.message : 'Unknown error',
+        orderId: id
+      });
+      
       // If regular order query fails, try reel order
-      console.error("Error fetching regular order:", error);
       try {
+        
         const reelOrderData = await hasuraClient.request<any>(
           GET_REEL_ORDER_DETAILS,
           {
@@ -316,25 +377,58 @@ export default async function handler(
           }
         );
 
-        if (reelOrderData.reel_orders_by_pk) {
-          orderData = reelOrderData.reel_orders_by_pk;
+
+        if (reelOrderData.reel_orders && reelOrderData.reel_orders.length > 0) {
+          orderData = reelOrderData.reel_orders[0];
           orderType = "reel";
+        } else {
         }
       } catch (reelError) {
-        console.error("Error fetching reel order:", reelError);
+        console.error("❌ [API] Error fetching reel order on retry:", {
+          error: reelError,
+          message: reelError instanceof Error ? reelError.message : 'Unknown error',
+          orderId: id
+        });
       }
     }
 
     if (!orderData) {
+      console.log("❌ [API] No order data found for ID:", { orderId: id });
       res.status(404).json({ error: "Order not found" });
       return;
     }
+
+    console.log("✅ [API] Order data found, formatting for frontend:", {
+      orderId: orderData.id,
+      orderType,
+      status: orderData.status,
+      hasReel: !!orderData.Reel,
+      hasRestaurant: !!orderData.Reel?.Restaurant,
+      hasUser: !!orderData.user
+    });
 
     // Format the order data for the frontend based on order type
     let formattedOrder: any;
 
     if (orderType === "regular") {
       // Handle regular orders
+      console.log("🔍 [API] Processing regular order data:", {
+        orderId: orderData.id,
+        hasShop: !!orderData.shop,
+        shopData: orderData.shop ? {
+          id: orderData.shop.id,
+          name: orderData.shop.name,
+          address: orderData.shop.address,
+          image: orderData.shop.image,
+          phone: orderData.shop.phone,
+          latitude: orderData.shop.latitude,
+          longitude: orderData.shop.longitude,
+          operating_hours: orderData.shop.operating_hours
+        } : null,
+        hasOrderItems: !!orderData.Order_Items,
+        orderItemsLength: orderData.Order_Items?.length || 0
+      });
+
       console.log(
         "🔍 [API] Raw Order_Items from database:",
         JSON.stringify(orderData.Order_Items, null, 2)
@@ -411,15 +505,50 @@ export default async function handler(
         orderedBy: orderData.orderedBy, // Include orderedBy data (actual customer)
         assignedTo: orderData.assignedTo, // Include assignedTo data (shopper)
         customerId: orderData.orderedBy?.id, // Customer is ALWAYS from orderedBy
+        shop: orderData.shop, // Include shop data
       };
     } else {
       // Handle reel orders
+      console.log("🔍 [API] Processing reel order data:", {
+        orderId: orderData.id,
+        serviceFee: orderData.service_fee,
+        deliveryFee: orderData.delivery_fee,
+        total: orderData.total,
+        quantity: orderData.quantity,
+        reelPrice: orderData.Reel?.Price,
+        hasReel: !!orderData.Reel,
+        hasRestaurant: !!orderData.Reel?.Restaurant,
+        hasShops: !!orderData.Reel?.Shops,
+        restaurantData: orderData.Reel?.Restaurant ? {
+          id: orderData.Reel.Restaurant.id,
+          name: orderData.Reel.Restaurant.name,
+          location: orderData.Reel.Restaurant.location,
+          phone: orderData.Reel.Restaurant.phone
+        } : null,
+        shopData: orderData.Reel?.Shops ? {
+          id: orderData.Reel.Shops.id,
+          name: orderData.Reel.Shops.name,
+          address: orderData.Reel.Shops.address,
+          phone: orderData.Reel.Shops.phone
+        } : null
+      });
+
       const serviceFee = parseFloat(orderData.service_fee || "0");
       const deliveryFee = parseFloat(orderData.delivery_fee || "0");
       const totalEarnings = serviceFee + deliveryFee;
       const reelPrice = parseFloat(orderData.Reel?.Price || "0");
       const quantity = parseInt(orderData.quantity || "1");
       const subTotal = reelPrice * quantity;
+
+      console.log("🔍 [API] Calculated reel order values:", {
+        serviceFee,
+        deliveryFee,
+        totalEarnings,
+        reelPrice,
+        quantity,
+        subTotal,
+        orderTotal: orderData.total
+      });
 
       formattedOrder = {
         id: orderData.id,
@@ -460,19 +589,46 @@ export default async function handler(
         reel: orderData.Reel,
         quantity: quantity,
         deliveryNote: orderData.delivery_note,
+        deliveryNotes: orderData.delivery_note, // Add deliveryNotes for compatibility
         customerName: orderData.user?.name,
         customerPhone: orderData.user?.phone,
         user: orderData.user, // Include full user data
+        orderedBy: orderData.user, // Add orderedBy for compatibility
         assignedTo: orderData.assignedTo, // Include assignedTo data (shopper)
+        customerId: orderData.user?.id, // Add customerId for compatibility
+        discount: orderData.discount || 0, // Add discount field
+        deliveryPhotoUrl: orderData.delivery_photo_url, // Add delivery photo URL
       };
+
+      console.log("✅ [API] Formatted reel order:", {
+        id: formattedOrder.id,
+        orderType: formattedOrder.orderType,
+        status: formattedOrder.status,
+        total: formattedOrder.total,
+        hasReel: !!formattedOrder.reel,
+        hasRestaurant: !!formattedOrder.reel?.Restaurant,
+        customerName: formattedOrder.customerName
+      });
     }
+
+    console.log("✅ [API] Sending response to frontend:", {
+      success: true,
+      orderId: formattedOrder.id,
+      orderType: formattedOrder.orderType || 'unknown',
+      status: formattedOrder.status
+    });
 
     res.status(200).json({
       success: true,
       order: formattedOrder,
     });
   } catch (error) {
-    console.error("Error fetching order details:", error);
+    console.error("❌ [API] Error fetching order details:", {
+      error: error,
+      message: error instanceof Error ? error.message : 'Unknown error',
+      stack: error instanceof Error ? error.stack : undefined,
+      orderId: req.query.id
+    });
     res.status(500).json({ error: "Failed to fetch order details" });
   }
 }
