@@ -1708,7 +1708,7 @@ export default function MapSection({
     };
   }, [mapLoaded, theme]);
 
-  // Re-render map when aged orders change
+  // Re-render map when aged orders change (only when online)
   useEffect(() => {
     if (mapInstanceRef.current && mapLoaded && isOnline) {
       // Clear existing order markers
@@ -1718,6 +1718,19 @@ export default function MapSection({
       initMapSequence(mapInstanceRef.current);
     }
   }, [allAgedOrders, mapLoaded, isOnline]);
+
+  // Re-render map when going online/offline to show/hide order markers
+  useEffect(() => {
+    if (mapInstanceRef.current && mapLoaded) {
+      // Clear existing order markers when going offline
+      if (!isOnline) {
+        clearOrderMarkers();
+      } else {
+        // Re-initialize map sequence when going online
+        initMapSequence(mapInstanceRef.current);
+      }
+    }
+  }, [isOnline, mapLoaded]);
 
   // Function to initialize map sequence
   const initMapSequence = async (map: L.Map) => {
@@ -1741,7 +1754,7 @@ export default function MapSection({
 
       const restaurants = restaurantsData.restaurants || [];
 
-      // Process shops
+      // Process shops (always visible regardless of online status)
       setShops(shops);
       if (map && map.getContainer()) {
         shops.forEach((shop: Shop) => {
@@ -1787,7 +1800,7 @@ export default function MapSection({
         });
       }
 
-      // Process restaurants
+      // Process restaurants (always visible regardless of online status)
       setRestaurants(restaurants);
       if (map && map.getContainer()) {
         restaurants.forEach((restaurant: Restaurant) => {
