@@ -180,7 +180,6 @@ export default function ShopperDashboard() {
             const isReelOrder = order.orderType === "reel";
             const isRestaurantOrder = order.orderType === "restaurant";
 
-
             return {
               id: order.id,
               shopName: order.shopName || "Unknown Shop",

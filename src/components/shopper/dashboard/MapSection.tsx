@@ -14,9 +14,13 @@ import { logger } from "../../../utils/logger";
 import { useWebSocket } from "../../../hooks/useWebSocket";
 
 // Helper function to create popup HTML with proper button styling
-const createPopupHTML = (order: any, theme: "light" | "dark", isPending: boolean = false) => {
+const createPopupHTML = (
+  order: any,
+  theme: "light" | "dark",
+  isPending: boolean = false
+) => {
   const isDark = theme === "dark";
-  
+
   if (isPending) {
     return `
       <div style="
@@ -25,9 +29,10 @@ const createPopupHTML = (order: any, theme: "light" | "dark", isPending: boolean
         background: ${isDark ? "#1f2937" : "#ffffff"};
         border-radius: 12px;
         overflow: hidden;
-        box-shadow: ${isDark 
-          ? "0 10px 25px rgba(0, 0, 0, 0.3), 0 0 0 1px rgba(75, 85, 99, 0.3)"
-          : "0 10px 25px rgba(0, 0, 0, 0.1), 0 0 0 1px rgba(229, 231, 235, 0.5)"
+        box-shadow: ${
+          isDark
+            ? "0 10px 25px rgba(0, 0, 0, 0.3), 0 0 0 1px rgba(75, 85, 99, 0.3)"
+            : "0 10px 25px rgba(0, 0, 0, 0.1), 0 0 0 1px rgba(229, 231, 235, 0.5)"
         };
       ">
         <!-- Header -->
@@ -154,8 +159,12 @@ const createPopupHTML = (order: any, theme: "light" | "dark", isPending: boolean
               justify-content: center;
               gap: 8px;
             "
-            onmouseover="this.style.background='${isDark ? "#059669" : "#047857"}'; this.style.transform='translateY(-1px)'"
-            onmouseout="this.style.background='${isDark ? "#10b981" : "#059669"}'; this.style.transform='translateY(0)'"
+            onmouseover="this.style.background='${
+              isDark ? "#059669" : "#047857"
+            }'; this.style.transform='translateY(-1px)'"
+            onmouseout="this.style.background='${
+              isDark ? "#10b981" : "#059669"
+            }'; this.style.transform='translateY(0)'"
           >
             <span>✓</span>
             Accept Batch
@@ -167,7 +176,7 @@ const createPopupHTML = (order: any, theme: "light" | "dark", isPending: boolean
     // Available order popup
     const isReelOrder = order.orderType === "reel";
     const isRestaurantOrder = order.orderType === "restaurant";
-    
+
     const getOrderTypeConfig = () => {
       if (isReelOrder) {
         return {
@@ -208,9 +217,10 @@ const createPopupHTML = (order: any, theme: "light" | "dark", isPending: boolean
         background: ${isDark ? "#1f2937" : "#ffffff"};
         border-radius: 12px;
         overflow: hidden;
-        box-shadow: ${isDark 
-          ? "0 10px 25px rgba(0, 0, 0, 0.3), 0 0 0 1px rgba(75, 85, 99, 0.3)"
-          : "0 10px 25px rgba(0, 0, 0, 0.1), 0 0 0 1px rgba(229, 231, 235, 0.5)"
+        box-shadow: ${
+          isDark
+            ? "0 10px 25px rgba(0, 0, 0, 0.3), 0 0 0 1px rgba(75, 85, 99, 0.3)"
+            : "0 10px 25px rgba(0, 0, 0, 0.1), 0 0 0 1px rgba(229, 231, 235, 0.5)"
         };
       ">
         <!-- Header -->
@@ -234,7 +244,9 @@ const createPopupHTML = (order: any, theme: "light" | "dark", isPending: boolean
               font-weight: 700;
               color: ${orderConfig.color};
             ">
-              ${formatCurrencySync(parseFloat(order.estimatedEarnings || order.total || '0'))}
+              ${formatCurrencySync(
+                parseFloat(order.estimatedEarnings || order.total || "0")
+              )}
             </span>
           </div>
           
@@ -269,9 +281,11 @@ const createPopupHTML = (order: any, theme: "light" | "dark", isPending: boolean
             font-size: 14px;
             color: ${isDark ? "#9ca3af" : "#6b7280"};
           ">
-            ${isReelOrder 
-              ? `From: ${order.customerName || "Reel Creator"}`
-              : order.shopAddress}
+            ${
+              isReelOrder
+                ? `From: ${order.customerName || "Reel Creator"}`
+                : order.shopAddress
+            }
           </div>
         </div>
 
@@ -338,7 +352,9 @@ const createPopupHTML = (order: any, theme: "light" | "dark", isPending: boolean
               </div>
             </div>
 
-            ${isReelOrder && order.deliveryNote ? `
+            ${
+              isReelOrder && order.deliveryNote
+                ? `
               <div style="display: flex; align-items: center; gap: 12px;">
                 <div style="
                   width: 32px;
@@ -368,7 +384,9 @@ const createPopupHTML = (order: any, theme: "light" | "dark", isPending: boolean
                   </div>
                 </div>
               </div>
-            ` : ""}
+            `
+                : ""
+            }
           </div>
 
           <!-- Accept Button -->
@@ -391,8 +409,12 @@ const createPopupHTML = (order: any, theme: "light" | "dark", isPending: boolean
               justify-content: center;
               gap: 8px;
             "
-            onmouseover="this.style.background='${orderConfig.buttonHover}'; this.style.transform='translateY(-1px)'"
-            onmouseout="this.style.background='${orderConfig.buttonColor}'; this.style.transform='translateY(0)'"
+            onmouseover="this.style.background='${
+              orderConfig.buttonHover
+            }'; this.style.transform='translateY(-1px)'"
+            onmouseout="this.style.background='${
+              orderConfig.buttonColor
+            }'; this.style.transform='translateY(0)'"
           >
             <span>✓</span>
             Accept Batch
@@ -405,13 +427,13 @@ const createPopupHTML = (order: any, theme: "light" | "dark", isPending: boolean
 
 // Add CSS for dark theme popup styling
 const addDarkThemePopupStyles = () => {
-  const existingStyle = document.getElementById('leaflet-dark-popup-styles');
+  const existingStyle = document.getElementById("leaflet-dark-popup-styles");
   if (existingStyle) {
     existingStyle.remove();
   }
 
-  const style = document.createElement('style');
-  style.id = 'leaflet-dark-popup-styles';
+  const style = document.createElement("style");
+  style.id = "leaflet-dark-popup-styles";
   style.textContent = `
     /* Override Leaflet's default popup styles with maximum specificity */
     .leaflet-popup-content-wrapper,
@@ -486,13 +508,13 @@ const addDarkThemePopupStyles = () => {
       transform: translateY(-1px) !important;
     }
   `;
-  
+
   // Insert at the end to ensure it has higher priority
   document.head.appendChild(style);
-  
+
   // Add additional global override for dark theme
-  const globalStyle = document.createElement('style');
-  globalStyle.id = 'leaflet-global-dark-override';
+  const globalStyle = document.createElement("style");
+  globalStyle.id = "leaflet-global-dark-override";
   globalStyle.textContent = `
     /* Global dark theme override for all Leaflet popups when dark theme is active */
     body.dark .leaflet-popup-content-wrapper {
@@ -539,72 +561,76 @@ const addDarkThemePopupStyles = () => {
 // Function to force apply dark theme styles to popup elements
 const forceApplyDarkThemeStyles = (popupElement: HTMLElement) => {
   if (!popupElement) return;
-  
-  const wrapper = popupElement.closest('.leaflet-popup-content-wrapper');
-  const tip = popupElement.closest('.leaflet-popup-tip');
-  const closeButton = popupElement.querySelector('.leaflet-popup-close-button');
-  const content = popupElement.querySelector('.leaflet-popup-content');
-  
+
+  const wrapper = popupElement.closest(".leaflet-popup-content-wrapper");
+  const tip = popupElement.closest(".leaflet-popup-tip");
+  const closeButton = popupElement.querySelector(".leaflet-popup-close-button");
+  const content = popupElement.querySelector(".leaflet-popup-content");
+
   // Apply to wrapper
   if (wrapper) {
-    wrapper.classList.add('dark-theme-popup');
+    wrapper.classList.add("dark-theme-popup");
     const wrapperEl = wrapper as HTMLElement;
-    wrapperEl.style.setProperty('background', '#1f2937', 'important');
-    wrapperEl.style.setProperty('color', '#f3f4f6', 'important');
-    wrapperEl.style.setProperty('border', '1px solid #4b5563', 'important');
-    wrapperEl.style.setProperty('box-shadow', '0 10px 25px rgba(0, 0, 0, 0.3), 0 0 0 1px rgba(75, 85, 99, 0.3)', 'important');
+    wrapperEl.style.setProperty("background", "#1f2937", "important");
+    wrapperEl.style.setProperty("color", "#f3f4f6", "important");
+    wrapperEl.style.setProperty("border", "1px solid #4b5563", "important");
+    wrapperEl.style.setProperty(
+      "box-shadow",
+      "0 10px 25px rgba(0, 0, 0, 0.3), 0 0 0 1px rgba(75, 85, 99, 0.3)",
+      "important"
+    );
   }
-  
+
   // Apply to content
   if (content) {
     const contentEl = content as HTMLElement;
-    contentEl.style.setProperty('background', 'transparent', 'important');
-    contentEl.style.setProperty('color', '#f3f4f6', 'important');
-    contentEl.style.setProperty('margin', '0', 'important');
-    
+    contentEl.style.setProperty("background", "transparent", "important");
+    contentEl.style.setProperty("color", "#f3f4f6", "important");
+    contentEl.style.setProperty("margin", "0", "important");
+
     // Apply to all child elements
-    const allElements = contentEl.querySelectorAll('*');
+    const allElements = contentEl.querySelectorAll("*");
     allElements.forEach((el) => {
       const element = el as HTMLElement;
-      if (!element.style.color || element.style.color === 'rgb(51, 51, 51)') {
-        element.style.setProperty('color', '#f3f4f6', 'important');
+      if (!element.style.color || element.style.color === "rgb(51, 51, 51)") {
+        element.style.setProperty("color", "#f3f4f6", "important");
       }
     });
-    
+
     // Force button styling
-    const buttons = contentEl.querySelectorAll('button');
+    const buttons = contentEl.querySelectorAll("button");
     buttons.forEach((btn) => {
       const button = btn as HTMLElement;
-      button.style.setProperty('background', '#10b981', 'important');
-      button.style.setProperty('color', 'white', 'important');
-      button.style.setProperty('border', 'none', 'important');
-      button.style.setProperty('border-radius', '8px', 'important');
-      button.style.setProperty('padding', '12px 16px', 'important');
-      button.style.setProperty('font-size', '14px', 'important');
-      button.style.setProperty('font-weight', '600', 'important');
-      button.style.setProperty('cursor', 'pointer', 'important');
-      button.style.setProperty('transition', 'all 0.2s ease', 'important');
-      button.style.setProperty('display', 'flex', 'important');
-      button.style.setProperty('align-items', 'center', 'important');
-      button.style.setProperty('justify-content', 'center', 'important');
-      button.style.setProperty('gap', '8px', 'important');
+      button.style.setProperty("background", "#10b981", "important");
+      button.style.setProperty("color", "white", "important");
+      button.style.setProperty("border", "none", "important");
+      button.style.setProperty("border-radius", "8px", "important");
+      button.style.setProperty("padding", "12px 16px", "important");
+      button.style.setProperty("font-size", "14px", "important");
+      button.style.setProperty("font-weight", "600", "important");
+      button.style.setProperty("cursor", "pointer", "important");
+      button.style.setProperty("transition", "all 0.2s ease", "important");
+      button.style.setProperty("display", "flex", "important");
+      button.style.setProperty("align-items", "center", "important");
+      button.style.setProperty("justify-content", "center", "important");
+      button.style.setProperty("gap", "8px", "important");
     });
   }
-  
+
   // Apply to tip
   if (tip) {
-    tip.classList.add('dark-theme-popup');
+    tip.classList.add("dark-theme-popup");
     const tipEl = tip as HTMLElement;
-    tipEl.style.setProperty('background', '#1f2937', 'important');
-    tipEl.style.setProperty('border', '1px solid #4b5563', 'important');
+    tipEl.style.setProperty("background", "#1f2937", "important");
+    tipEl.style.setProperty("border", "1px solid #4b5563", "important");
   }
-  
+
   // Apply to close button
   if (closeButton) {
-    closeButton.classList.add('dark-theme-popup');
+    closeButton.classList.add("dark-theme-popup");
     const closeBtn = closeButton as HTMLElement;
-    closeBtn.style.setProperty('color', '#9ca3af', 'important');
-    closeBtn.style.setProperty('background', 'transparent', 'important');
+    closeBtn.style.setProperty("color", "#9ca3af", "important");
+    closeBtn.style.setProperty("background", "transparent", "important");
   }
 };
 
@@ -794,38 +820,41 @@ export default function MapSection({
   ) => {
     const thirtyMinutesAgo = new Date(Date.now() - 30 * 60 * 1000);
 
-
     const filtered = orders.filter((order) => {
       // For restaurant orders, check updated_at; for others, check created_at
       let referenceTimestamp;
       if (order.orderType === "restaurant") {
         // Restaurant orders are aged based on updated_at, not created_at
         const updatedAt = (order as any).updatedAt;
-        referenceTimestamp = updatedAt && updatedAt !== "null" && updatedAt !== "" ? updatedAt : order.createdAt;
+        referenceTimestamp =
+          updatedAt && updatedAt !== "null" && updatedAt !== ""
+            ? updatedAt
+            : order.createdAt;
       } else {
         // Regular and reel orders are aged based on created_at (use raw timestamp)
         referenceTimestamp = (order as any).rawCreatedAt || order.createdAt;
       }
-      
+
       const orderTimestamp = new Date(referenceTimestamp);
-      
+
       // Check if the date is valid
       if (isNaN(orderTimestamp.getTime())) {
-        console.error(`❌ Invalid timestamp for order ${order.id}:`, referenceTimestamp);
+        console.error(
+          `❌ Invalid timestamp for order ${order.id}:`,
+          referenceTimestamp
+        );
         return false; // Skip orders with invalid timestamps
       }
-      
+
       const isAged = orderTimestamp <= thirtyMinutesAgo;
 
       // Check if order is unassigned (shopper_id is null)
       const isUnassigned = !order.shopper_id || order.shopper_id === null;
 
       const shouldInclude = isAged && isUnassigned;
-      
 
       return shouldInclude;
     });
-
 
     return filtered;
   };
@@ -847,7 +876,7 @@ export default function MapSection({
       const { order } = customEvent.detail;
       // Check if order is aged and unassigned
       const thirtyMinutesAgo = new Date(Date.now() - 30 * 60 * 1000);
-        const orderCreatedAt = new Date(order.createdAt);
+      const orderCreatedAt = new Date(order.createdAt);
       const isAged = orderCreatedAt <= thirtyMinutesAgo;
       const isUnassigned = !order.shopper_id || order.shopper_id === null;
 
@@ -1630,7 +1659,10 @@ export default function MapSection({
   };
 
   // Helper function to create shop marker icon
-  const createShopMarkerIcon = (isActive: boolean, shopName?: string | null) => {
+  const createShopMarkerIcon = (
+    isActive: boolean,
+    shopName?: string | null
+  ) => {
     return L.divIcon({
       html: `
         <div style="
@@ -1639,23 +1671,38 @@ export default function MapSection({
           gap: 6px;
           font-size: 14px;
           font-weight: 800;
-          color: ${isActive 
-            ? (theme === "dark" ? "#ffffff" : "#1f2937")
-            : (theme === "dark" ? "#9ca3af" : "#6b7280")
+          color: ${
+            isActive
+              ? theme === "dark"
+                ? "#ffffff"
+                : "#1f2937"
+              : theme === "dark"
+              ? "#9ca3af"
+              : "#6b7280"
           };
           opacity: 1;
           text-shadow: 
-            0 0 4px ${theme === "dark" ? "rgba(0,0,0,0.9)" : "rgba(255,255,255,0.9)"},
-            0 0 8px ${theme === "dark" ? "rgba(0,0,0,0.7)" : "rgba(255,255,255,0.7)"},
-            0 2px 4px ${theme === "dark" ? "rgba(0,0,0,0.8)" : "rgba(0,0,0,0.3)"};
+            0 0 4px ${
+              theme === "dark" ? "rgba(0,0,0,0.9)" : "rgba(255,255,255,0.9)"
+            },
+            0 0 8px ${
+              theme === "dark" ? "rgba(0,0,0,0.7)" : "rgba(255,255,255,0.7)"
+            },
+            0 2px 4px ${
+              theme === "dark" ? "rgba(0,0,0,0.8)" : "rgba(0,0,0,0.3)"
+            };
         ">
           <span style="
             font-size: 18px; 
-            filter: drop-shadow(0 0 4px ${theme === "dark" ? "rgba(0,0,0,0.9)" : "rgba(255,255,255,0.9)"});
+            filter: drop-shadow(0 0 4px ${
+              theme === "dark" ? "rgba(0,0,0,0.9)" : "rgba(255,255,255,0.9)"
+            });
             display: inline-block;
             margin-right: 4px;
           ">🛒</span>
-          <span style="text-shadow: inherit; font-weight: 800;">${shopName || "Shop"}</span>
+          <span style="text-shadow: inherit; font-weight: 800;">${
+            shopName || "Shop"
+          }</span>
         </div>
       `,
       className: "",
@@ -1665,7 +1712,10 @@ export default function MapSection({
   };
 
   // Helper function to create restaurant marker icon
-  const createRestaurantMarkerIcon = (isVerified: boolean, restaurantName?: string | null) => {
+  const createRestaurantMarkerIcon = (
+    isVerified: boolean,
+    restaurantName?: string | null
+  ) => {
     return L.divIcon({
       html: `
       <div style="
@@ -1674,23 +1724,38 @@ export default function MapSection({
           gap: 6px;
       font-size: 14px;
           font-weight: 800;
-          color: ${isVerified 
-            ? (theme === "dark" ? "#ffffff" : "#1f2937")
-            : (theme === "dark" ? "#9ca3af" : "#6b7280")
+          color: ${
+            isVerified
+              ? theme === "dark"
+                ? "#ffffff"
+                : "#1f2937"
+              : theme === "dark"
+              ? "#9ca3af"
+              : "#6b7280"
           };
           opacity: 1;
           text-shadow: 
-            0 0 4px ${theme === "dark" ? "rgba(0,0,0,0.9)" : "rgba(255,255,255,0.9)"},
-            0 0 8px ${theme === "dark" ? "rgba(0,0,0,0.7)" : "rgba(255,255,255,0.7)"},
-            0 2px 4px ${theme === "dark" ? "rgba(0,0,0,0.8)" : "rgba(0,0,0,0.3)"};
+            0 0 4px ${
+              theme === "dark" ? "rgba(0,0,0,0.9)" : "rgba(255,255,255,0.9)"
+            },
+            0 0 8px ${
+              theme === "dark" ? "rgba(0,0,0,0.7)" : "rgba(255,255,255,0.7)"
+            },
+            0 2px 4px ${
+              theme === "dark" ? "rgba(0,0,0,0.8)" : "rgba(0,0,0,0.3)"
+            };
         ">
           <span style="
             font-size: 18px; 
-            filter: drop-shadow(0 0 4px ${theme === "dark" ? "rgba(0,0,0,0.9)" : "rgba(255,255,255,0.9)"});
+            filter: drop-shadow(0 0 4px ${
+              theme === "dark" ? "rgba(0,0,0,0.9)" : "rgba(255,255,255,0.9)"
+            });
             display: inline-block;
             margin-right: 4px;
           ">🍽️</span>
-          <span style="text-shadow: inherit; font-weight: 800;">${restaurantName || "Restaurant"}</span>
+          <span style="text-shadow: inherit; font-weight: 800;">${
+            restaurantName || "Restaurant"
+          }</span>
         </div>
       `,
       className: "",
@@ -1699,7 +1764,6 @@ export default function MapSection({
     });
   };
 
-
   // Helper function to render a pending order marker
   const renderPendingOrderMarker = (order: PendingOrder, map: L.Map) => {
     try {
@@ -1707,7 +1771,10 @@ export default function MapSection({
       const lng = order.shopLng;
 
       const marker = L.marker([lat, lng], {
-        icon: createOrderMarkerIcon(formatCurrencySync(order.earnings), "regular"),
+        icon: createOrderMarkerIcon(
+          formatCurrencySync(order.earnings),
+          "regular"
+        ),
         zIndexOffset: 1000,
       });
 
@@ -1998,14 +2065,16 @@ export default function MapSection({
   // Add dark theme popup styles on mount
   useEffect(() => {
     addDarkThemePopupStyles();
-    
+
     // Add a global observer to catch any popups created dynamically
     const observer = new MutationObserver((mutations) => {
       mutations.forEach((mutation) => {
         mutation.addedNodes.forEach((node) => {
           if (node.nodeType === Node.ELEMENT_NODE) {
             const element = node as Element;
-            const popupWrapper = element.querySelector?.('.leaflet-popup-content-wrapper');
+            const popupWrapper = element.querySelector?.(
+              ".leaflet-popup-content-wrapper"
+            );
             if (popupWrapper && theme === "dark") {
               setTimeout(() => {
                 forceApplyDarkThemeStyles(popupWrapper as HTMLElement);
@@ -2015,12 +2084,12 @@ export default function MapSection({
         });
       });
     });
-    
+
     observer.observe(document.body, {
       childList: true,
-      subtree: true
+      subtree: true,
     });
-    
+
     return () => {
       observer.disconnect();
     };
@@ -2167,13 +2236,14 @@ export default function MapSection({
 
     try {
       // Load all data in parallel
-      const [shopsResponse, restaurantsResponse, pendingOrdersResponse] = await Promise.all([
-        fetch("/api/shopper/shops"),
-        fetch("/api/queries/restaurants"),
-        isOnline
-          ? fetch("/api/shopper/pendingOrders")
-          : Promise.resolve({ json: () => [] }),
-      ]);
+      const [shopsResponse, restaurantsResponse, pendingOrdersResponse] =
+        await Promise.all([
+          fetch("/api/shopper/shops"),
+          fetch("/api/queries/restaurants"),
+          isOnline
+            ? fetch("/api/shopper/pendingOrders")
+            : Promise.resolve({ json: () => [] }),
+        ]);
 
       const [shops, restaurantsData, pendingOrders] = await Promise.all([
         shopsResponse.json() as Promise<Shop[]>,
@@ -2219,14 +2289,17 @@ export default function MapSection({
                         : ""
                     }
                     </div>`,
-                  { 
+                  {
                     offset: [0, -10],
-                    className: theme === "dark" ? "dark-theme-popup" : "light-theme-popup"
+                    className:
+                      theme === "dark"
+                        ? "dark-theme-popup"
+                        : "light-theme-popup",
                   }
                 );
-                
+
                 // Apply dark theme class to popup wrapper for shop popups
-                marker.on('popupopen', () => {
+                marker.on("popupopen", () => {
                   if (marker) {
                     const popup = marker.getPopup();
                     if (popup) {
@@ -2254,7 +2327,9 @@ export default function MapSection({
         restaurants.forEach((restaurant: Restaurant) => {
           try {
             if (!restaurant.lat || !restaurant.long) {
-              console.warn(`Missing coordinates for restaurant ${restaurant.name}`);
+              console.warn(
+                `Missing coordinates for restaurant ${restaurant.name}`
+              );
               return;
             }
 
@@ -2262,19 +2337,24 @@ export default function MapSection({
             const lng = parseFloat(restaurant.long);
 
             if (isNaN(lat) || isNaN(lng)) {
-              console.warn(`Invalid coordinates for restaurant ${restaurant.name}`);
+              console.warn(
+                `Invalid coordinates for restaurant ${restaurant.name}`
+              );
               return;
             }
 
             if (map && map.getContainer()) {
               const marker = L.marker([lat, lng], {
-                icon: createRestaurantMarkerIcon(restaurant.verified || false, restaurant.name),
+                icon: createRestaurantMarkerIcon(
+                  restaurant.verified || false,
+                  restaurant.name
+                ),
                 zIndexOffset: 400,
               });
 
-                    if (safeAddMarker(marker, map, `restaurant ${restaurant.name}`)) {
-                      const popup = marker.bindPopup(
-                        `<div style="
+              if (safeAddMarker(marker, map, `restaurant ${restaurant.name}`)) {
+                const popup = marker.bindPopup(
+                  `<div style="
                           background: ${theme === "dark" ? "#1f2937" : "#fff"}; 
                           color: ${theme === "dark" ? "#e5e7eb" : "#111827"};
                             padding: 8px;
@@ -2294,31 +2374,37 @@ export default function MapSection({
                               : ""
                           }
                           </div>`,
-                        { 
-                          offset: [0, -10],
-                          className: theme === "dark" ? "dark-theme-popup" : "light-theme-popup"
-                        }
-                      );
-                      
-                      // Apply dark theme class to popup wrapper for restaurant popups
-                      marker.on('popupopen', () => {
-                        if (marker) {
-                          const popup = marker.getPopup();
-                          if (popup) {
-                            const popupElement = popup.getElement();
-                            if (popupElement && theme === "dark") {
-                              // Use setTimeout to ensure DOM is ready
-                              setTimeout(() => {
-                                forceApplyDarkThemeStyles(popupElement);
-                              }, 10);
-                            }
-                          }
-                        }
-                      });
+                  {
+                    offset: [0, -10],
+                    className:
+                      theme === "dark"
+                        ? "dark-theme-popup"
+                        : "light-theme-popup",
+                  }
+                );
+
+                // Apply dark theme class to popup wrapper for restaurant popups
+                marker.on("popupopen", () => {
+                  if (marker) {
+                    const popup = marker.getPopup();
+                    if (popup) {
+                      const popupElement = popup.getElement();
+                      if (popupElement && theme === "dark") {
+                        // Use setTimeout to ensure DOM is ready
+                        setTimeout(() => {
+                          forceApplyDarkThemeStyles(popupElement);
+                        }, 10);
+                      }
                     }
+                  }
+                });
+              }
             }
           } catch (error) {
-            console.error(`Error adding restaurant marker for ${restaurant.name}:`, error);
+            console.error(
+              `Error adding restaurant marker for ${restaurant.name}:`,
+              error
+            );
           }
         });
       }
@@ -2361,22 +2447,30 @@ export default function MapSection({
               const adjustedLng = baseLng + offset.lng;
 
               const marker = L.marker([adjustedLat, adjustedLng], {
-                icon: createOrderMarkerIcon(formatCurrencySync(order.earnings), "regular"),
+                icon: createOrderMarkerIcon(
+                  formatCurrencySync(order.earnings),
+                  "regular"
+                ),
                 zIndexOffset: 1000 + index,
               });
 
               if (safeAddMarker(marker, map, `pending order ${order.id}`)) {
-                const popup = marker.bindPopup(createOrderPopupContent(order, true), {
-                  maxWidth: 300,
-                  className: `${
-                    theme === "dark" ? "dark-theme-popup" : "light-theme-popup"
-                  }`,
-                  closeButton: true,
-                  closeOnClick: false,
-                });
-                
+                const popup = marker.bindPopup(
+                  createOrderPopupContent(order, true),
+                  {
+                    maxWidth: 300,
+                    className: `${
+                      theme === "dark"
+                        ? "dark-theme-popup"
+                        : "light-theme-popup"
+                    }`,
+                    closeButton: true,
+                    closeOnClick: false,
+                  }
+                );
+
                 // Apply dark theme class to popup wrapper
-                marker.on('popupopen', () => {
+                marker.on("popupopen", () => {
                   if (marker) {
                     const popup = marker.getPopup();
                     if (popup) {
@@ -2390,7 +2484,7 @@ export default function MapSection({
                     }
                   }
                 });
-                
+
                 attachAcceptHandler(marker, order.id, map, "regular"); // Pass "regular" for pending orders
               }
             } catch (error) {
@@ -2413,11 +2507,9 @@ export default function MapSection({
 
       // Process aged unassigned orders with grouping
       if (isOnline && allAgedOrders?.length > 0 && map && map.getContainer()) {
-        
         // Group aged orders by location
         const groupedAgedOrders = new Map<string, typeof allAgedOrders>();
         allAgedOrders.forEach((order) => {
-          
           if (!order.shopLatitude || !order.shopLongitude) {
             return;
           }
@@ -2458,7 +2550,6 @@ export default function MapSection({
               const adjustedLat = baseLat + offset.lat;
               const adjustedLng = baseLng + offset.lng;
 
-
               const marker = L.marker([adjustedLat, adjustedLng], {
                 icon: createOrderMarkerIcon(
                   order.estimatedEarnings || order.earnings || "0",
@@ -2481,9 +2572,9 @@ export default function MapSection({
                     closeOnClick: false,
                   }
                 );
-                
+
                 // Apply dark theme class to popup wrapper
-                marker.on('popupopen', () => {
+                marker.on("popupopen", () => {
                   if (marker) {
                     const popup = marker.getPopup();
                     if (popup) {
@@ -2497,7 +2588,7 @@ export default function MapSection({
                     }
                   }
                 });
-                
+
                 attachAcceptHandler(marker, order.id, map, order.orderType); // Pass orderType for available orders
                 orderMarkersRef.current.push(marker);
               }

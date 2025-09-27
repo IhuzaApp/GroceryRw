@@ -47,7 +47,10 @@ interface AvailableOrder {
 interface OrderPopupProps {
   order: PendingOrder | AvailableOrder;
   theme: "light" | "dark";
-  onAcceptOrder: (orderId: string, orderType?: "regular" | "reel" | "restaurant") => void;
+  onAcceptOrder: (
+    orderId: string,
+    orderType?: "regular" | "reel" | "restaurant"
+  ) => void;
   isPending?: boolean;
 }
 
@@ -63,7 +66,7 @@ export const PendingOrderPopup: React.FC<OrderPopupProps> = ({
   };
 
   const isDark = theme === "dark";
-  
+
   return (
     <div
       style={{
@@ -72,7 +75,7 @@ export const PendingOrderPopup: React.FC<OrderPopupProps> = ({
         background: isDark ? "#1f2937" : "#ffffff",
         borderRadius: "12px",
         overflow: "hidden",
-        boxShadow: isDark 
+        boxShadow: isDark
           ? "0 10px 25px rgba(0, 0, 0, 0.3), 0 0 0 1px rgba(75, 85, 99, 0.3)"
           : "0 10px 25px rgba(0, 0, 0, 0.1), 0 0 0 1px rgba(229, 231, 235, 0.5)",
       }}
@@ -85,7 +88,14 @@ export const PendingOrderPopup: React.FC<OrderPopupProps> = ({
           borderBottom: `1px solid ${isDark ? "#4b5563" : "#e5e7eb"}`,
         }}
       >
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "8px" }}>
+        <div
+          style={{
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+            marginBottom: "8px",
+          }}
+        >
           <span
             style={{
               fontSize: "12px",
@@ -254,7 +264,7 @@ export const AvailableOrderPopup: React.FC<OrderPopupProps> = ({
   };
 
   const isDark = theme === "dark";
-  
+
   // Get order type styling
   const getOrderTypeConfig = () => {
     if (isReelOrder) {
@@ -297,7 +307,7 @@ export const AvailableOrderPopup: React.FC<OrderPopupProps> = ({
         background: isDark ? "#1f2937" : "#ffffff",
         borderRadius: "12px",
         overflow: "hidden",
-        boxShadow: isDark 
+        boxShadow: isDark
           ? "0 10px 25px rgba(0, 0, 0, 0.3), 0 0 0 1px rgba(75, 85, 99, 0.3)"
           : "0 10px 25px rgba(0, 0, 0, 0.1), 0 0 0 1px rgba(229, 231, 235, 0.5)",
       }}
@@ -310,7 +320,14 @@ export const AvailableOrderPopup: React.FC<OrderPopupProps> = ({
           borderBottom: `1px solid ${isDark ? "#4b5563" : "#e5e7eb"}`,
         }}
       >
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "8px" }}>
+        <div
+          style={{
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+            marginBottom: "8px",
+          }}
+        >
           <span
             style={{
               fontSize: "12px",
@@ -332,7 +349,7 @@ export const AvailableOrderPopup: React.FC<OrderPopupProps> = ({
             {availableOrder.estimatedEarnings}
           </span>
         </div>
-        
+
         {/* Order Type Badge */}
         <div
           style={{
@@ -362,7 +379,9 @@ export const AvailableOrderPopup: React.FC<OrderPopupProps> = ({
             marginBottom: "4px",
           }}
         >
-          {isReelOrder ? availableOrder.reel?.title || "Reel Order" : availableOrder.shopName}
+          {isReelOrder
+            ? availableOrder.reel?.title || "Reel Order"
+            : availableOrder.shopName}
         </div>
         <div
           style={{
@@ -370,7 +389,7 @@ export const AvailableOrderPopup: React.FC<OrderPopupProps> = ({
             color: isDark ? "#9ca3af" : "#6b7280",
           }}
         >
-          {isReelOrder 
+          {isReelOrder
             ? `From: ${availableOrder.customerName || "Reel Creator"}`
             : availableOrder.shopAddress}
         </div>
