@@ -86,6 +86,20 @@ interface Shop {
   logo?: string | null;
 }
 
+// Restaurant data type
+interface Restaurant {
+  id: string;
+  name: string;
+  email?: string;
+  phone?: string;
+  location?: string;
+  lat?: string;
+  long?: string;
+  profile?: string;
+  verified?: boolean;
+  created_at: string;
+}
+
 // Pending order data type
 interface PendingOrder {
   id: string;
@@ -116,6 +130,7 @@ export default function MapSection({
   const [realTimeAgedOrders, setRealTimeAgedOrders] = useState<any[]>([]);
   const mapRef = useRef<HTMLDivElement | null>(null);
   const [shops, setShops] = useState<Shop[]>([]);
+  const [restaurants, setRestaurants] = useState<Restaurant[]>([]);
   const [pendingOrders, setPendingOrders] = useState<PendingOrder[]>([]);
   const watchIdRef = useRef<number | null>(null);
   const [isOnline, setIsOnline] = useState(false);
@@ -1049,6 +1064,41 @@ export default function MapSection({
     });
   };
 
+  // Helper function to create restaurant marker icon
+  const createRestaurantMarkerIcon = (isVerified: boolean, restaurantName?: string | null) => {
+    return L.divIcon({
+      html: `
+        <div style="
+          display: flex;
+          align-items: center;
+          gap: 6px;
+          font-size: 14px;
+          font-weight: 800;
+          color: ${isVerified 
+            ? (theme === "dark" ? "#ffffff" : "#1f2937")
+            : (theme === "dark" ? "#9ca3af" : "#6b7280")
+          };
+          opacity: 1;
+          text-shadow: 
+            0 0 4px ${theme === "dark" ? "rgba(0,0,0,0.9)" : "rgba(255,255,255,0.9)"},
+            0 0 8px ${theme === "dark" ? "rgba(0,0,0,0.7)" : "rgba(255,255,255,0.7)"},
+            0 2px 4px ${theme === "dark" ? "rgba(0,0,0,0.8)" : "rgba(0,0,0,0.3)"};
+        ">
+          <span style="
+            font-size: 18px; 
+            filter: drop-shadow(0 0 4px ${theme === "dark" ? "rgba(0,0,0,0.9)" : "rgba(255,255,255,0.9)"});
+            display: inline-block;
+            margin-right: 4px;
+          ">🍽️</span>
+          <span style="text-shadow: inherit; font-weight: 800;">${restaurantName || "Restaurant"}</span>
+        </div>
+      `,
+      className: "",
+      iconSize: [0, 0], // No fixed size, let content determine size
+      iconAnchor: [0, 0],
+    });
+  };
+
   // First popup template for pending orders
   const createPopupContent = (order: PendingOrder, theme: string) => `
     <div class="${
@@ -1675,17 +1725,21 @@ export default function MapSection({
 
     try {
       // Load all data in parallel
-      const [shopsResponse, pendingOrdersResponse] = await Promise.all([
+      const [shopsResponse, restaurantsResponse, pendingOrdersResponse] = await Promise.all([
         fetch("/api/shopper/shops"),
+        fetch("/api/queries/restaurants"),
         isOnline
           ? fetch("/api/shopper/pendingOrders")
           : Promise.resolve({ json: () => [] }),
       ]);
 
-      const [shops, pendingOrders] = await Promise.all([
+      const [shops, restaurantsData, pendingOrders] = await Promise.all([
         shopsResponse.json() as Promise<Shop[]>,
+        restaurantsResponse.json() as Promise<{ restaurants: Restaurant[] }>,
         pendingOrdersResponse.json() as Promise<PendingOrder[]>,
       ]);
+
+      const restaurants = restaurantsData.restaurants || [];
 
       // Process shops
       setShops(shops);
@@ -1729,6 +1783,62 @@ export default function MapSection({
             }
           } catch (error) {
             console.error(`Error adding shop marker for ${shop.name}:`, error);
+          }
+        });
+      }
+
+      // Process restaurants
+      setRestaurants(restaurants);
+      if (map && map.getContainer()) {
+        restaurants.forEach((restaurant: Restaurant) => {
+          try {
+            if (!restaurant.lat || !restaurant.long) {
+              console.warn(`Missing coordinates for restaurant ${restaurant.name}`);
+              return;
+            }
+
+            const lat = parseFloat(restaurant.lat);
+            const lng = parseFloat(restaurant.long);
+
+            if (isNaN(lat) || isNaN(lng)) {
+              console.warn(`Invalid coordinates for restaurant ${restaurant.name}`);
+              return;
+            }
+
+            if (map && map.getContainer()) {
+              const marker = L.marker([lat, lng], {
+                icon: createRestaurantMarkerIcon(restaurant.verified || false, restaurant.name),
+                zIndexOffset: 400,
+              });
+
+              if (safeAddMarker(marker, map, `restaurant ${restaurant.name}`)) {
+                marker.bindPopup(
+                  `<div style="
+                    background: ${theme === "dark" ? "#1f2937" : "#fff"}; 
+                    color: ${theme === "dark" ? "#e5e7eb" : "#111827"};
+                      padding: 8px;
+                      border-radius: 8px;
+                      min-width: 150px;
+                      text-align: center;
+                    ">
+                      <strong>🍽️ ${restaurant.name}</strong>
+                    ${
+                      restaurant.verified
+                        ? '<br><span style="color: #10b981;">✓ Verified</span>'
+                        : '<br><span style="color: #6b7280;">Unverified</span>'
+                    }
+                    ${
+                      restaurant.location
+                        ? `<br><span style="color: #6b7280; font-size: 12px;">${restaurant.location}</span>`
+                        : ""
+                    }
+                    </div>`,
+                  { offset: [0, -10] }
+                );
+              }
+            }
+          } catch (error) {
+            console.error(`Error adding restaurant marker for ${restaurant.name}:`, error);
           }
         });
       }
