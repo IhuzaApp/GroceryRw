@@ -1015,41 +1015,37 @@ export default function MapSection({
   };
 
   // Helper function to create shop marker icon
-  const createShopMarkerIcon = (isActive: boolean, logoUrl?: string | null) => {
-    const iconUrl = logoUrl || "/assets/icons/shopIcon.png";
+  const createShopMarkerIcon = (isActive: boolean, shopName?: string | null) => {
     return L.divIcon({
       html: `
         <div style="
-          background: ${
-            theme === "dark"
-              ? "rgba(31, 41, 55, 0.95)"
-              : "rgba(255, 255, 255, 0.95)"
-          };
-          border: 2px solid ${theme === "dark" ? "#374151" : "#d1d5db"};
-          border-radius: 50%;
-          width: 36px;
-          height: 36px;
           display: flex;
           align-items: center;
-          justify-content: center;
-          box-shadow: 0 2px 4px ${
-            theme === "dark" ? "rgba(0,0,0,0.3)" : "rgba(0,0,0,0.2)"
+          gap: 6px;
+          font-size: 14px;
+          font-weight: 800;
+          color: ${isActive 
+            ? (theme === "dark" ? "#ffffff" : "#1f2937")
+            : (theme === "dark" ? "#9ca3af" : "#6b7280")
           };
-          backdrop-filter: blur(8px);
+          opacity: 1;
+          text-shadow: 
+            0 0 4px ${theme === "dark" ? "rgba(0,0,0,0.9)" : "rgba(255,255,255,0.9)"},
+            0 0 8px ${theme === "dark" ? "rgba(0,0,0,0.7)" : "rgba(255,255,255,0.7)"},
+            0 2px 4px ${theme === "dark" ? "rgba(0,0,0,0.8)" : "rgba(0,0,0,0.3)"};
         ">
-          <img 
-            src="${iconUrl}" 
-            style="
-              width: 44px; 
-              height: 44px; 
-              filter: ${isActive ? "none" : "grayscale(100%)"};
-              opacity: ${isActive ? "1" : "0.6"};
-              object-fit: contain;
-            "
-          />
+          <span style="
+            font-size: 18px; 
+            filter: drop-shadow(0 0 4px ${theme === "dark" ? "rgba(0,0,0,0.9)" : "rgba(255,255,255,0.9)"});
+            display: inline-block;
+            margin-right: 4px;
+          ">🛒</span>
+          <span style="text-shadow: inherit; font-weight: 800;">${shopName || "Shop"}</span>
         </div>
       `,
       className: "",
+      iconSize: [0, 0], // No fixed size, let content determine size
+      iconAnchor: [0, 0],
     });
   };
 
@@ -1706,7 +1702,7 @@ export default function MapSection({
 
             if (map && map.getContainer()) {
               const marker = L.marker([lat, lng], {
-                icon: createShopMarkerIcon(shop.is_active, shop.logo),
+                icon: createShopMarkerIcon(shop.is_active, shop.name),
                 zIndexOffset: 500,
               });
 
