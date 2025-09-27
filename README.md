@@ -8889,3 +8889,204 @@ POST /disbursement/token/
 2. System calculates refund amount
 3. System calls Disbursement API `transfer`
 4. Refund sent to customer's MoMo account
+
+---
+
+# Order Types and Fetching Logic Documentation
+
+## Overview
+
+The grocery delivery system supports three distinct order types, each with different aging logic, fetching criteria, and visual representation. This documentation details the implementation differences and how each order type is handled throughout the system.
+
+## Order Types
+
+### 1. Regular Orders
+- **Database Table**: `Orders`
+- **Aging Logic**: Based on `created_at` timestamp
+- **Fetching Criteria**: Orders 30+ minutes old since creation
+- **Visual Representation**: Green markers on map (`#10b981`)
+- **Order Card Color**: Green background
+- **Query Filter**: `created_at <= thirtyMinutesAgo`
+- **Assignment**: Direct assignment to shoppers
+
+### 2. Reel Orders  
+- **Database Table**: `reel_orders`
+- **Aging Logic**: Based on `created_at` timestamp
+- **Fetching Criteria**: Orders 30+ minutes old since creation
+- **Visual Representation**: Purple markers on map (`#8b5cf6`)
+- **Order Card Color**: Purple background
+- **Query Filter**: `created_at <= thirtyMinutesAgo`
+- **Assignment**: Direct assignment to shoppers
+
+### 3. Restaurant Orders
+- **Database Table**: `restaurant_orders`
+- **Aging Logic**: Based on `updated_at` timestamp (NOT `created_at`)
+- **Fetching Criteria**: Orders 30+ minutes old since last update
+- **Visual Representation**: Orange markers on map (`#f97316`)
+- **Order Card Color**: Orange background
+- **Query Filter**: `updated_at <= thirtyMinutesAgo`
+- **Assignment**: Requires restaurant confirmation workflow
+
+## Key Implementation Differences
+
+### Database Queries
+
+#### Regular Orders Query
+```sql
+SELECT * FROM Orders 
+WHERE created_at <= thirtyMinutesAgo 
+AND shopper_id IS NULL 
+AND status = 'PENDING'
+ORDER BY created_at DESC
+```
+
+#### Reel Orders Query
+```sql
+SELECT * FROM reel_orders
+WHERE created_at <= thirtyMinutesAgo
+AND shopper_id IS NULL
+AND status = 'PENDING'
+ORDER BY created_at DESC
+```
+
+#### Restaurant Orders Query
+```sql
+SELECT * FROM restaurant_orders
+WHERE updated_at <= thirtyMinutesAgo  -- Different timestamp field!
+AND shopper_id IS NULL
+AND status = 'PENDING'
+AND assigned_at IS NULL  -- Additional check for restaurant orders
+ORDER BY updated_at DESC
+```
+
+### Frontend Filtering Logic
+
+The `MapSection.tsx` component uses different timestamp fields based on order type:
+
+```typescript
+// MapSection.tsx - filterAgedUnassignedOrders function
+const filtered = orders.filter((order) => {
+  let referenceTimestamp;
+  
+  if (order.orderType === "restaurant") {
+    // Restaurant orders use updatedAt for aging
+    const updatedAt = order.updatedAt;
+    referenceTimestamp = updatedAt && updatedAt !== "null" && updatedAt !== "" 
+      ? updatedAt 
+      : order.createdAt; // Fallback to createdAt if updatedAt is invalid
+  } else {
+    // Regular and reel orders use rawCreatedAt (ISO timestamp)
+    referenceTimestamp = order.rawCreatedAt || order.createdAt;
+  }
+  
+  const orderTimestamp = new Date(referenceTimestamp);
+  
+  // Check if the date is valid to prevent RangeError
+  if (isNaN(orderTimestamp.getTime())) {
+    console.error(`❌ Invalid timestamp for order ${order.id}:`, referenceTimestamp);
+    return false;
+  }
+  
+  const isAged = orderTimestamp <= thirtyMinutesAgo;
+  const isUnassigned = !order.shopper_id;
+  
+  return isAged && isUnassigned;
+});
+```
+
+### Data Pipeline
+
+#### 1. API Layer (`/api/shopper/availableOrders.ts`)
+- Fetches all three order types with different GraphQL queries
+- Transforms data to include `updatedAt` for restaurant orders
+- Returns unified format with `orderType` field
+- Handles timestamp validation and error logging
+
+#### 2. Dashboard Layer (`ShopperDashboard.tsx`)
+- Receives unified order data from API
+- Formats display properties (relative time, earnings, etc.)
+- Passes `rawCreatedAt` for regular/reel orders and `updatedAt` for restaurant orders
+- Ensures all required fields are available for map rendering
+
+#### 3. Map Layer (`MapSection.tsx`)
+- Uses different timestamp fields based on order type
+- Applies appropriate color coding for markers
+- Handles coordinate validation and marker creation
+- Implements fallback logic for invalid timestamps
+
+### Visual Distinctions
+
+| Order Type | Map Marker Color | Order Card Background | Icon | Hex Color |
+|------------|------------------|----------------------|------|-----------|
+| Regular | Green | Green gradient | Shopping bag | `#10b981` |
+| Reel | Purple | Purple gradient | Video reel | `#8b5cf6` |
+| Restaurant | Orange | Orange gradient | Restaurant | `#f97316` |
+
+### Marker Creation Implementation
+
+```typescript
+// MapSection.tsx - createOrderMarkerIcon function
+const createOrderMarkerIcon = (
+  earnings: string,
+  orderType: "regular" | "reel" | "restaurant" = "regular"
+) => {
+  const simplifiedEarnings = formatEarningsDisplay(earnings);
+  const bgColor =
+    orderType === "reel"
+      ? theme === "dark" ? "#7c3aed" : "#8b5cf6"
+      : orderType === "restaurant"
+      ? theme === "dark" ? "#ea580c" : "#f97316"  // Orange for restaurant
+      : theme === "dark" ? "#065f46" : "#10b981"; // Green for regular
+  
+  const borderColor =
+    orderType === "reel"
+      ? theme === "dark" ? "#6d28d9" : "#7c3aed"
+      : orderType === "restaurant"
+      ? theme === "dark" ? "#c2410c" : "#ea580c"  // Orange border
+      : theme === "dark" ? "#047857" : "#059669"; // Green border
+  
+  // Returns styled div icon with appropriate colors
+};
+```
+
+## Special Considerations
+
+### Restaurant Orders
+- **Critical Difference**: Use `updated_at` instead of `created_at` for aging logic
+- **Additional Field**: Require `assigned_at` to be null for unassigned status
+- **Timestamp Validation**: Must validate `updated_at` is a valid ISO string
+- **Fallback Logic**: Fall back to `created_at` if `updated_at` is invalid
+
+### Timestamp Validation
+- All timestamps must be valid ISO strings to prevent `RangeError: Invalid time value`
+- Implement validation checks before creating Date objects
+- Log errors for debugging invalid timestamp issues
+- Provide fallback mechanisms for invalid data
+
+### Assignment Workflow
+- **Regular/Reel Orders**: Direct assignment to shoppers
+- **Restaurant Orders**: May require restaurant confirmation process
+- All order types check for `shopper_id` being null for unassigned status
+
+### Error Handling
+- Implement comprehensive error logging for debugging
+- Handle invalid timestamps gracefully
+- Provide fallback mechanisms for missing data
+- Validate coordinates before marker creation
+
+## Debugging and Monitoring
+
+### Console Logs
+The system includes extensive logging for debugging:
+- API query results and parameters
+- Order processing in dashboard layer
+- Map filtering and marker creation
+- Timestamp validation and error handling
+
+### Key Log Messages
+- `🔍 Restaurant orders query result:` - API query debugging
+- `🍽️ Processing restaurant order:` - Dashboard processing
+- `🗺️ MapSection received orders:` - Map data reception
+- `❌ Invalid timestamp for order:` - Error handling
+
+This documentation ensures developers understand the differences between order types and can maintain the system effectively.

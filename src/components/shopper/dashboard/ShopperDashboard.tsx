@@ -178,6 +178,17 @@ export default function ShopperDashboard() {
 
             // Handle both regular and reel orders
             const isReelOrder = order.orderType === "reel";
+            const isRestaurantOrder = order.orderType === "restaurant";
+
+            // Debug restaurant orders
+            if (isRestaurantOrder) {
+              console.log(`🍽️ Processing restaurant order ${order.id}:`, {
+                createdAt: order.createdAt,
+                updatedAt: order.updatedAt,
+                updatedAtType: typeof order.updatedAt,
+                hasUpdatedAt: !!order.updatedAt
+              });
+            }
 
             return {
               id: order.id,
@@ -189,10 +200,12 @@ export default function ShopperDashboard() {
               total: `$${(order.earnings || 0).toFixed(2)}`,
               estimatedEarnings: `$${(order.earnings || 0).toFixed(2)}`,
               createdAt: relativeTime(order.createdAt),
+              rawCreatedAt: order.createdAt, // Keep raw ISO timestamp for filtering
+              updatedAt: order.updatedAt || null, // Pass through updatedAt for restaurant orders
               status: order.status || "PENDING",
               rawDistance: order.distance || 0,
               rawEarnings: order.earnings || 0,
-              rawCreatedAt: createdAtDate.getTime(),
+              rawCreatedAtTimestamp: createdAtDate.getTime(),
               minutesAgo: minutesAgo,
               priorityLevel: order.priorityLevel || 1,
               shopLatitude: order.shopLatitude,
