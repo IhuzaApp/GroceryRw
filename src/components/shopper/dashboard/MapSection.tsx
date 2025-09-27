@@ -25,6 +25,8 @@ interface MapSectionProps {
     total: string;
     estimatedEarnings: string;
     createdAt: string;
+    rawCreatedAt?: string; // Add raw ISO timestamp for filtering
+    updatedAt?: string; // Add updatedAt for restaurant orders
     // Additional properties
     shopLatitude?: number;
     shopLongitude?: number;
@@ -109,6 +111,16 @@ export default function MapSection({
   isInitializing = false,
   isExpanded = false,
 }: MapSectionProps) {
+  console.log("🗺️ MapSection received orders:", {
+    totalOrders: availableOrders?.length || 0,
+    orders: availableOrders?.map(order => ({
+      id: order.id,
+      orderType: order.orderType,
+      shopName: order.shopName,
+      shopper_id: order.shopper_id,
+      createdAt: order.createdAt
+    })) || []
+  });
   const { theme } = useTheme();
   const { isConnected } = useWebSocket();
   const [realTimeAgedOrders, setRealTimeAgedOrders] = useState<any[]>([]);
@@ -182,16 +194,75 @@ export default function MapSection({
   ) => {
     const thirtyMinutesAgo = new Date(Date.now() - 30 * 60 * 1000);
 
-    return orders.filter((order) => {
-      // Check if order is 30+ minutes old
-      const orderCreatedAt = new Date(order.createdAt);
-      const isAged = orderCreatedAt <= thirtyMinutesAgo;
+    console.log("🔍 Filtering aged orders:", {
+      totalOrders: orders.length,
+      thirtyMinutesAgo: thirtyMinutesAgo.toISOString(),
+      orders: orders.map(order => ({
+        id: order.id,
+        orderType: order.orderType,
+        createdAt: order.createdAt,
+        shopper_id: order.shopper_id,
+        isAged: new Date(order.createdAt) <= thirtyMinutesAgo,
+        isUnassigned: !order.shopper_id || order.shopper_id === null
+      }))
+    });
+
+    const filtered = orders.filter((order) => {
+      // For restaurant orders, check updated_at; for others, check created_at
+      let referenceTimestamp;
+      if (order.orderType === "restaurant") {
+        // Restaurant orders are aged based on updated_at, not created_at
+        const updatedAt = (order as any).updatedAt;
+        referenceTimestamp = updatedAt && updatedAt !== "null" && updatedAt !== "" ? updatedAt : order.createdAt;
+        console.log(`🍽️ Restaurant order ${order.id}:`, {
+          createdAt: order.createdAt,
+          updatedAt: updatedAt,
+          usingUpdatedAt: !!(updatedAt && updatedAt !== "null" && updatedAt !== "")
+        });
+      } else {
+        // Regular and reel orders are aged based on created_at (use raw timestamp)
+        referenceTimestamp = (order as any).rawCreatedAt || order.createdAt;
+      }
+      
+      const orderTimestamp = new Date(referenceTimestamp);
+      
+      // Check if the date is valid
+      if (isNaN(orderTimestamp.getTime())) {
+        console.error(`❌ Invalid timestamp for order ${order.id}:`, referenceTimestamp);
+        return false; // Skip orders with invalid timestamps
+      }
+      
+      const isAged = orderTimestamp <= thirtyMinutesAgo;
 
       // Check if order is unassigned (shopper_id is null)
       const isUnassigned = !order.shopper_id || order.shopper_id === null;
 
-      return isAged && isUnassigned;
+      const shouldInclude = isAged && isUnassigned;
+      
+      console.log(`📋 Order ${order.id} (${order.orderType}):`, {
+        isAged,
+        isUnassigned,
+        shouldInclude,
+        referenceTimestamp,
+        rawCreatedAt: (order as any).rawCreatedAt,
+        createdAt: order.createdAt,
+        orderTimestamp: orderTimestamp.toISOString(),
+        thirtyMinutesAgo: thirtyMinutesAgo.toISOString(),
+        shopper_id: order.shopper_id
+      });
+
+      return shouldInclude;
     });
+
+    console.log("✅ Filtered aged orders result:", {
+      filteredCount: filtered.length,
+      filtered: filtered.map(order => ({
+        id: order.id,
+        orderType: order.orderType
+      }))
+    });
+
+    return filtered;
   };
 
   // Use the filtered orders
@@ -939,6 +1010,10 @@ export default function MapSection({
         ? theme === "dark"
           ? "#7c3aed"
           : "#8b5cf6"
+        : orderType === "restaurant"
+        ? theme === "dark"
+          ? "#ea580c"
+          : "#f97316"
         : theme === "dark"
         ? "#065f46"
         : "#10b981";
@@ -947,6 +1022,10 @@ export default function MapSection({
         ? theme === "dark"
           ? "#6d28d9"
           : "#7c3aed"
+        : orderType === "restaurant"
+        ? theme === "dark"
+          ? "#c2410c"
+          : "#ea580c"
         : theme === "dark"
         ? "#047857"
         : "#059669";
@@ -1229,7 +1308,7 @@ export default function MapSection({
       const lng = order.shopLng;
 
       const marker = L.marker([lat, lng], {
-        icon: createOrderMarkerIcon(formatCurrencySync(order.earnings)),
+        icon: createOrderMarkerIcon(formatCurrencySync(order.earnings), "regular"),
         zIndexOffset: 1000,
       });
 
@@ -1741,7 +1820,7 @@ export default function MapSection({
               const adjustedLng = baseLng + offset.lng;
 
               const marker = L.marker([adjustedLat, adjustedLng], {
-                icon: createOrderMarkerIcon(formatCurrencySync(order.earnings)),
+                icon: createOrderMarkerIcon(formatCurrencySync(order.earnings), "regular"),
                 zIndexOffset: 1000 + index,
               });
 
@@ -1776,10 +1855,34 @@ export default function MapSection({
 
       // Process aged unassigned orders with grouping
       if (isOnline && allAgedOrders?.length > 0 && map && map.getContainer()) {
+        console.log("🗺️ Processing aged orders for map:", {
+          totalOrders: allAgedOrders.length,
+          orders: allAgedOrders.map(order => ({
+            id: order.id,
+            orderType: order.orderType,
+            shopName: order.shopName,
+            estimatedEarnings: order.estimatedEarnings,
+            earnings: order.earnings,
+            shopLatitude: order.shopLatitude,
+            shopLongitude: order.shopLongitude
+          }))
+        });
+        
         // Group aged orders by location
         const groupedAgedOrders = new Map<string, typeof allAgedOrders>();
         allAgedOrders.forEach((order) => {
-          if (!order.shopLatitude || !order.shopLongitude) return;
+          console.log("📍 Checking coordinates for order:", {
+            id: order.id,
+            orderType: order.orderType,
+            shopLatitude: order.shopLatitude,
+            shopLongitude: order.shopLongitude,
+            hasValidCoords: !!(order.shopLatitude && order.shopLongitude)
+          });
+          
+          if (!order.shopLatitude || !order.shopLongitude) {
+            console.log("❌ Skipping order due to missing coordinates:", order.id);
+            return;
+          }
           const key = `${order.shopLatitude.toFixed(
             5
           )},${order.shopLongitude.toFixed(5)}`;
@@ -1817,9 +1920,17 @@ export default function MapSection({
               const adjustedLat = baseLat + offset.lat;
               const adjustedLng = baseLng + offset.lng;
 
+              console.log("🎯 Creating marker for order:", {
+                id: order.id,
+                orderType: order.orderType,
+                estimatedEarnings: order.estimatedEarnings,
+                earnings: order.earnings,
+                coordinates: [adjustedLat, adjustedLng]
+              });
+              
               const marker = L.marker([adjustedLat, adjustedLng], {
                 icon: createOrderMarkerIcon(
-                  order.estimatedEarnings,
+                  order.estimatedEarnings || order.earnings || "0",
                   order.orderType
                 ),
                 zIndexOffset: 1000 + index,
