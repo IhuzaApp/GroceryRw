@@ -13,6 +13,601 @@ import { useTheme } from "../../../context/ThemeContext";
 import { logger } from "../../../utils/logger";
 import { useWebSocket } from "../../../hooks/useWebSocket";
 
+// Helper function to create popup HTML with proper button styling
+const createPopupHTML = (order: any, theme: "light" | "dark", isPending: boolean = false) => {
+  const isDark = theme === "dark";
+  
+  if (isPending) {
+    return `
+      <div style="
+        min-width: 280px;
+        max-width: 320px;
+        background: ${isDark ? "#1f2937" : "#ffffff"};
+        border-radius: 12px;
+        overflow: hidden;
+        box-shadow: ${isDark 
+          ? "0 10px 25px rgba(0, 0, 0, 0.3), 0 0 0 1px rgba(75, 85, 99, 0.3)"
+          : "0 10px 25px rgba(0, 0, 0, 0.1), 0 0 0 1px rgba(229, 231, 235, 0.5)"
+        };
+      ">
+        <!-- Header -->
+        <div style="
+          background: ${isDark ? "#374151" : "#f9fafb"};
+          padding: 16px;
+          border-bottom: 1px solid ${isDark ? "#4b5563" : "#e5e7eb"};
+        ">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+            <span style="
+              font-size: 12px;
+              font-weight: 500;
+              color: ${isDark ? "#9ca3af" : "#6b7280"};
+              text-transform: uppercase;
+              letter-spacing: 0.5px;
+            ">
+              Order #${order.id.slice(-6)}
+            </span>
+            <span style="
+              font-size: 18px;
+              font-weight: 700;
+              color: ${isDark ? "#10b981" : "#059669"};
+            ">
+              ${formatCurrencySync(order.earnings)}
+            </span>
+          </div>
+          <div style="
+            font-size: 16px;
+            font-weight: 600;
+            color: ${isDark ? "#f3f4f6" : "#111827"};
+            margin-bottom: 4px;
+          ">
+            ${order.shopName}
+          </div>
+          <div style="
+            font-size: 14px;
+            color: ${isDark ? "#9ca3af" : "#6b7280"};
+          ">
+            ${order.shopAddress}
+          </div>
+        </div>
+
+        <!-- Content -->
+        <div style="padding: 16px;">
+          <div style="display: flex; flex-direction: column; gap: 12px;">
+            <div style="display: flex; align-items: center; gap: 12px;">
+              <div style="
+                width: 32px;
+                height: 32px;
+                border-radius: 8px;
+                background: ${isDark ? "#374151" : "#f3f4f6"};
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                font-size: 16px;
+              ">
+                🛒
+              </div>
+              <div>
+                <div style="
+                  font-size: 14px;
+                  font-weight: 500;
+                  color: ${isDark ? "#f3f4f6" : "#111827"};
+                ">
+                  ${order.itemsCount} items
+                </div>
+                <div style="
+                  font-size: 12px;
+                  color: ${isDark ? "#9ca3af" : "#6b7280"};
+                ">
+                  ${order.createdAt}
+                </div>
+              </div>
+            </div>
+
+            <div style="display: flex; align-items: center; gap: 12px;">
+              <div style="
+                width: 32px;
+                height: 32px;
+                border-radius: 8px;
+                background: ${isDark ? "#374151" : "#f3f4f6"};
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                font-size: 16px;
+              ">
+                🚚
+              </div>
+              <div>
+                <div style="
+                  font-size: 14px;
+                  font-weight: 500;
+                  color: ${isDark ? "#f3f4f6" : "#111827"};
+                ">
+                  Delivery Address
+                </div>
+                <div style="
+                  font-size: 12px;
+                  color: ${isDark ? "#9ca3af" : "#6b7280"};
+                ">
+                  ${order.addressStreet}, ${order.addressCity}
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Accept Button -->
+          <button 
+            id="accept-batch-${order.id}" 
+            style="
+              width: 100%;
+              margin-top: 20px;
+              padding: 12px 16px;
+              background: ${isDark ? "#10b981" : "#059669"};
+              color: white;
+              border: none;
+              border-radius: 8px;
+              font-size: 14px;
+              font-weight: 600;
+              cursor: pointer;
+              transition: all 0.2s ease;
+              display: flex;
+              align-items: center;
+              justify-content: center;
+              gap: 8px;
+            "
+            onmouseover="this.style.background='${isDark ? "#059669" : "#047857"}'; this.style.transform='translateY(-1px)'"
+            onmouseout="this.style.background='${isDark ? "#10b981" : "#059669"}'; this.style.transform='translateY(0)'"
+          >
+            <span>✓</span>
+            Accept Batch
+          </button>
+        </div>
+      </div>
+    `;
+  } else {
+    // Available order popup
+    const isReelOrder = order.orderType === "reel";
+    const isRestaurantOrder = order.orderType === "restaurant";
+    
+    const getOrderTypeConfig = () => {
+      if (isReelOrder) {
+        return {
+          color: isDark ? "#8b5cf6" : "#7c3aed",
+          bgColor: isDark ? "#4c1d95" : "#ede9fe",
+          icon: "🎬",
+          label: "REEL ORDER",
+          buttonColor: isDark ? "#8b5cf6" : "#7c3aed",
+          buttonHover: isDark ? "#7c3aed" : "#6d28d9",
+        };
+      } else if (isRestaurantOrder) {
+        return {
+          color: isDark ? "#f97316" : "#ea580c",
+          bgColor: isDark ? "#9a3412" : "#fed7aa",
+          icon: "🍽️",
+          label: "RESTAURANT ORDER",
+          buttonColor: isDark ? "#f97316" : "#ea580c",
+          buttonHover: isDark ? "#ea580c" : "#c2410c",
+        };
+      } else {
+        return {
+          color: isDark ? "#10b981" : "#059669",
+          bgColor: isDark ? "#064e3b" : "#d1fae5",
+          icon: "🏪",
+          label: "REGULAR ORDER",
+          buttonColor: isDark ? "#10b981" : "#059669",
+          buttonHover: isDark ? "#059669" : "#047857",
+        };
+      }
+    };
+
+    const orderConfig = getOrderTypeConfig();
+
+    return `
+      <div style="
+        min-width: 280px;
+        max-width: 320px;
+        background: ${isDark ? "#1f2937" : "#ffffff"};
+        border-radius: 12px;
+        overflow: hidden;
+        box-shadow: ${isDark 
+          ? "0 10px 25px rgba(0, 0, 0, 0.3), 0 0 0 1px rgba(75, 85, 99, 0.3)"
+          : "0 10px 25px rgba(0, 0, 0, 0.1), 0 0 0 1px rgba(229, 231, 235, 0.5)"
+        };
+      ">
+        <!-- Header -->
+        <div style="
+          background: ${isDark ? "#374151" : "#f9fafb"};
+          padding: 16px;
+          border-bottom: 1px solid ${isDark ? "#4b5563" : "#e5e7eb"};
+        ">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+            <span style="
+              font-size: 12px;
+              font-weight: 500;
+              color: ${isDark ? "#9ca3af" : "#6b7280"};
+              text-transform: uppercase;
+              letter-spacing: 0.5px;
+            ">
+              Order #${order.id.slice(-6)}
+            </span>
+            <span style="
+              font-size: 18px;
+              font-weight: 700;
+              color: ${orderConfig.color};
+            ">
+              ${order.estimatedEarnings}
+            </span>
+          </div>
+          
+          <!-- Order Type Badge -->
+          <div style="
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 4px 8px;
+            border-radius: 6px;
+            background: ${orderConfig.bgColor};
+            color: ${orderConfig.color};
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 8px;
+          ">
+            <span>${orderConfig.icon}</span>
+            ${orderConfig.label}
+          </div>
+
+          <div style="
+            font-size: 16px;
+            font-weight: 600;
+            color: ${isDark ? "#f3f4f6" : "#111827"};
+            margin-bottom: 4px;
+          ">
+            ${isReelOrder ? order.reel?.title || "Reel Order" : order.shopName}
+          </div>
+          <div style="
+            font-size: 14px;
+            color: ${isDark ? "#9ca3af" : "#6b7280"};
+          ">
+            ${isReelOrder 
+              ? `From: ${order.customerName || "Reel Creator"}`
+              : order.shopAddress}
+          </div>
+        </div>
+
+        <!-- Content -->
+        <div style="padding: 16px;">
+          <div style="display: flex; flex-direction: column; gap: 12px;">
+            <div style="display: flex; align-items: center; gap: 12px;">
+              <div style="
+                width: 32px;
+                height: 32px;
+                border-radius: 8px;
+                background: ${isDark ? "#374151" : "#f3f4f6"};
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                font-size: 16px;
+              ">
+                ${orderConfig.icon}
+              </div>
+              <div>
+                <div style="
+                  font-size: 14px;
+                  font-weight: 500;
+                  color: ${isDark ? "#f3f4f6" : "#111827"};
+                ">
+                  ${order.items || "N/A"} items
+                </div>
+                <div style="
+                  font-size: 12px;
+                  color: ${isDark ? "#9ca3af" : "#6b7280"};
+                ">
+                  ${order.createdAt}
+                </div>
+              </div>
+            </div>
+
+            <div style="display: flex; align-items: center; gap: 12px;">
+              <div style="
+                width: 32px;
+                height: 32px;
+                border-radius: 8px;
+                background: ${isDark ? "#374151" : "#f3f4f6"};
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                font-size: 16px;
+              ">
+                🚚
+              </div>
+              <div>
+                <div style="
+                  font-size: 14px;
+                  font-weight: 500;
+                  color: ${isDark ? "#f3f4f6" : "#111827"};
+                ">
+                  Delivery Address
+                </div>
+                <div style="
+                  font-size: 12px;
+                  color: ${isDark ? "#9ca3af" : "#6b7280"};
+                ">
+                  ${order.customerAddress}
+                </div>
+              </div>
+            </div>
+
+            ${isReelOrder && order.deliveryNote ? `
+              <div style="display: flex; align-items: center; gap: 12px;">
+                <div style="
+                  width: 32px;
+                  height: 32px;
+                  border-radius: 8px;
+                  background: ${isDark ? "#374151" : "#f3f4f6"};
+                  display: flex;
+                  align-items: center;
+                  justify-content: center;
+                  font-size: 16px;
+                ">
+                  📝
+                </div>
+                <div>
+                  <div style="
+                    font-size: 14px;
+                    font-weight: 500;
+                    color: ${isDark ? "#f3f4f6" : "#111827"};
+                  ">
+                    Delivery Note
+                  </div>
+                  <div style="
+                    font-size: 12px;
+                    color: ${isDark ? "#9ca3af" : "#6b7280"};
+                  ">
+                    ${order.deliveryNote}
+                  </div>
+                </div>
+              </div>
+            ` : ""}
+          </div>
+
+          <!-- Accept Button -->
+          <button 
+            id="accept-batch-${order.id}" 
+            style="
+              width: 100%;
+              margin-top: 20px;
+              padding: 12px 16px;
+              background: ${orderConfig.buttonColor};
+              color: white;
+              border: none;
+              border-radius: 8px;
+              font-size: 14px;
+              font-weight: 600;
+              cursor: pointer;
+              transition: all 0.2s ease;
+              display: flex;
+              align-items: center;
+              justify-content: center;
+              gap: 8px;
+            "
+            onmouseover="this.style.background='${orderConfig.buttonHover}'; this.style.transform='translateY(-1px)'"
+            onmouseout="this.style.background='${orderConfig.buttonColor}'; this.style.transform='translateY(0)'"
+          >
+            <span>✓</span>
+            Accept Batch
+          </button>
+        </div>
+      </div>
+    `;
+  }
+};
+
+// Add CSS for dark theme popup styling
+const addDarkThemePopupStyles = () => {
+  const existingStyle = document.getElementById('leaflet-dark-popup-styles');
+  if (existingStyle) {
+    existingStyle.remove();
+  }
+
+  const style = document.createElement('style');
+  style.id = 'leaflet-dark-popup-styles';
+  style.textContent = `
+    /* Override Leaflet's default popup styles with maximum specificity */
+    .leaflet-popup-content-wrapper,
+    .leaflet-popup-content-wrapper.dark-theme-popup,
+    .leaflet-popup-content-wrapper.dark-theme-popup:before,
+    .leaflet-popup-content-wrapper.dark-theme-popup:after,
+    div.leaflet-popup-content-wrapper,
+    div.leaflet-popup-content-wrapper.dark-theme-popup {
+      background: #1f2937 !important;
+      color: #f3f4f6 !important;
+      border: 1px solid #4b5563 !important;
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3), 0 0 0 1px rgba(75, 85, 99, 0.3) !important;
+    }
+    
+    .leaflet-popup-content,
+    .leaflet-popup-content-wrapper.dark-theme-popup .leaflet-popup-content,
+    .leaflet-popup-content-wrapper.dark-theme-popup .leaflet-popup-content *,
+    div.leaflet-popup-content {
+      background: transparent !important;
+      color: #f3f4f6 !important;
+      margin: 0 !important;
+    }
+    
+    .leaflet-popup-tip,
+    .leaflet-popup-tip.dark-theme-popup,
+    .leaflet-popup-tip.dark-theme-popup:before,
+    .leaflet-popup-tip.dark-theme-popup:after,
+    div.leaflet-popup-tip,
+    div.leaflet-popup-tip.dark-theme-popup {
+      background: #1f2937 !important;
+      border: 1px solid #4b5563 !important;
+    }
+    
+    .leaflet-popup-close-button,
+    .leaflet-popup-close-button.dark-theme-popup {
+      color: #9ca3af !important;
+      font-size: 18px !important;
+      padding: 4px !important;
+      background: transparent !important;
+    }
+    
+    .leaflet-popup-close-button:hover,
+    .leaflet-popup-close-button.dark-theme-popup:hover {
+      color: #f3f4f6 !important;
+      background: rgba(75, 85, 99, 0.3) !important;
+    }
+
+    /* Ensure all popup content inherits dark theme */
+    .leaflet-popup-content-wrapper * {
+      color: inherit !important;
+    }
+    
+    /* Force button styling */
+    .leaflet-popup-content button {
+      background: #10b981 !important;
+      color: white !important;
+      border: none !important;
+      border-radius: 8px !important;
+      padding: 12px 16px !important;
+      font-size: 14px !important;
+      font-weight: 600 !important;
+      cursor: pointer !important;
+      transition: all 0.2s ease !important;
+      display: flex !important;
+      align-items: center !important;
+      justify-content: center !important;
+      gap: 8px !important;
+    }
+    
+    .leaflet-popup-content button:hover {
+      background: #059669 !important;
+      transform: translateY(-1px) !important;
+    }
+  `;
+  
+  // Insert at the end to ensure it has higher priority
+  document.head.appendChild(style);
+  
+  // Add additional global override for dark theme
+  const globalStyle = document.createElement('style');
+  globalStyle.id = 'leaflet-global-dark-override';
+  globalStyle.textContent = `
+    /* Global dark theme override for all Leaflet popups when dark theme is active */
+    body.dark .leaflet-popup-content-wrapper {
+      background: #1f2937 !important;
+      color: #f3f4f6 !important;
+      border: 1px solid #4b5563 !important;
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3), 0 0 0 1px rgba(75, 85, 99, 0.3) !important;
+    }
+    
+    body.dark .leaflet-popup-content {
+      background: transparent !important;
+      color: #f3f4f6 !important;
+    }
+    
+    body.dark .leaflet-popup-tip {
+      background: #1f2937 !important;
+      border: 1px solid #4b5563 !important;
+    }
+    
+    body.dark .leaflet-popup-content button {
+      background: #10b981 !important;
+      color: white !important;
+      border: none !important;
+      border-radius: 8px !important;
+      padding: 12px 16px !important;
+      font-size: 14px !important;
+      font-weight: 600 !important;
+      cursor: pointer !important;
+      transition: all 0.2s ease !important;
+      display: flex !important;
+      align-items: center !important;
+      justify-content: center !important;
+      gap: 8px !important;
+    }
+    
+    body.dark .leaflet-popup-content button:hover {
+      background: #059669 !important;
+      transform: translateY(-1px) !important;
+    }
+  `;
+  document.head.appendChild(globalStyle);
+};
+
+// Function to force apply dark theme styles to popup elements
+const forceApplyDarkThemeStyles = (popupElement: HTMLElement) => {
+  if (!popupElement) return;
+  
+  const wrapper = popupElement.closest('.leaflet-popup-content-wrapper');
+  const tip = popupElement.closest('.leaflet-popup-tip');
+  const closeButton = popupElement.querySelector('.leaflet-popup-close-button');
+  const content = popupElement.querySelector('.leaflet-popup-content');
+  
+  // Apply to wrapper
+  if (wrapper) {
+    wrapper.classList.add('dark-theme-popup');
+    const wrapperEl = wrapper as HTMLElement;
+    wrapperEl.style.setProperty('background', '#1f2937', 'important');
+    wrapperEl.style.setProperty('color', '#f3f4f6', 'important');
+    wrapperEl.style.setProperty('border', '1px solid #4b5563', 'important');
+    wrapperEl.style.setProperty('box-shadow', '0 10px 25px rgba(0, 0, 0, 0.3), 0 0 0 1px rgba(75, 85, 99, 0.3)', 'important');
+  }
+  
+  // Apply to content
+  if (content) {
+    const contentEl = content as HTMLElement;
+    contentEl.style.setProperty('background', 'transparent', 'important');
+    contentEl.style.setProperty('color', '#f3f4f6', 'important');
+    contentEl.style.setProperty('margin', '0', 'important');
+    
+    // Apply to all child elements
+    const allElements = contentEl.querySelectorAll('*');
+    allElements.forEach((el) => {
+      const element = el as HTMLElement;
+      if (!element.style.color || element.style.color === 'rgb(51, 51, 51)') {
+        element.style.setProperty('color', '#f3f4f6', 'important');
+      }
+    });
+    
+    // Force button styling
+    const buttons = contentEl.querySelectorAll('button');
+    buttons.forEach((btn) => {
+      const button = btn as HTMLElement;
+      button.style.setProperty('background', '#10b981', 'important');
+      button.style.setProperty('color', 'white', 'important');
+      button.style.setProperty('border', 'none', 'important');
+      button.style.setProperty('border-radius', '8px', 'important');
+      button.style.setProperty('padding', '12px 16px', 'important');
+      button.style.setProperty('font-size', '14px', 'important');
+      button.style.setProperty('font-weight', '600', 'important');
+      button.style.setProperty('cursor', 'pointer', 'important');
+      button.style.setProperty('transition', 'all 0.2s ease', 'important');
+      button.style.setProperty('display', 'flex', 'important');
+      button.style.setProperty('align-items', 'center', 'important');
+      button.style.setProperty('justify-content', 'center', 'important');
+      button.style.setProperty('gap', '8px', 'important');
+    });
+  }
+  
+  // Apply to tip
+  if (tip) {
+    tip.classList.add('dark-theme-popup');
+    const tipEl = tip as HTMLElement;
+    tipEl.style.setProperty('background', '#1f2937', 'important');
+    tipEl.style.setProperty('border', '1px solid #4b5563', 'important');
+  }
+  
+  // Apply to close button
+  if (closeButton) {
+    closeButton.classList.add('dark-theme-popup');
+    const closeBtn = closeButton as HTMLElement;
+    closeBtn.style.setProperty('color', '#9ca3af', 'important');
+    closeBtn.style.setProperty('background', 'transparent', 'important');
+  }
+};
+
 interface MapSectionProps {
   mapLoaded: boolean;
   availableOrders: Array<{
@@ -252,7 +847,7 @@ export default function MapSection({
       const { order } = customEvent.detail;
       // Check if order is aged and unassigned
       const thirtyMinutesAgo = new Date(Date.now() - 30 * 60 * 1000);
-      const orderCreatedAt = new Date(order.createdAt);
+        const orderCreatedAt = new Date(order.createdAt);
       const isAged = orderCreatedAt <= thirtyMinutesAgo;
       const isUnassigned = !order.shopper_id || order.shopper_id === null;
 
@@ -691,6 +1286,11 @@ export default function MapSection({
     }
   };
 
+  // Helper function to create popup content using the new HTML generator
+  const createOrderPopupContent = (order: any, isPending: boolean = false) => {
+    return createPopupHTML(order, theme, isPending);
+  };
+
   // Helper function to attach the accept order handler to markers
   const attachAcceptHandler = (
     marker: L.Marker,
@@ -1068,11 +1668,11 @@ export default function MapSection({
   const createRestaurantMarkerIcon = (isVerified: boolean, restaurantName?: string | null) => {
     return L.divIcon({
       html: `
-        <div style="
+      <div style="
           display: flex;
           align-items: center;
           gap: 6px;
-          font-size: 14px;
+      font-size: 14px;
           font-weight: 800;
           color: ${isVerified 
             ? (theme === "dark" ? "#ffffff" : "#1f2937")
@@ -1099,208 +1699,6 @@ export default function MapSection({
     });
   };
 
-  // First popup template for pending orders
-  const createPopupContent = (order: PendingOrder, theme: string) => `
-    <div class="${
-      theme === "dark" ? "dark-theme-popup" : "light-theme-popup"
-    }" style="
-      font-size: 14px;
-      line-height: 1.6;
-      min-width: 240px;
-      background: ${theme === "dark" ? "#1f2937" : "#ffffff"};
-      color: ${theme === "dark" ? "#e5e7eb" : "#111827"};
-      border-radius: 8px;
-      padding: 12px;
-    ">
-      <div style="
-        border-bottom: 1px solid ${theme === "dark" ? "#374151" : "#e5e7eb"};
-        padding-bottom: 8px;
-        margin-bottom: 8px;
-      ">
-        <div style="display: flex; align-items: center; gap: 6px; margin-bottom: 4px;">
-          <span style="font-size: 16px;">🆔</span>
-          <strong style="color: ${theme === "dark" ? "#60a5fa" : "#2563eb"};">${
-    order.id
-  }</strong>
-            </div>
-        <div style="display: flex; align-items: center; gap: 6px; margin-bottom: 4px;">
-          <span style="font-size: 16px;">💰</span>
-          <strong style="color: ${
-            theme === "dark" ? "#34d399" : "#059669"
-          };">${formatCurrencySync(order.earnings)}</strong>
-            </div>
-            </div>
-      
-      <div style="display: flex; flex-direction: column; gap: 6px;">
-        <div style="display: flex; align-items: center; gap: 6px;">
-          <span style="font-size: 16px;">🏪</span>
-          <span style="flex: 1;">${order.shopName}</span>
-            </div>
-        <div style="display: flex; align-items: center; gap: 6px;">
-          <span style="font-size: 16px;">📍</span>
-          <span style="flex: 1;">${order.shopAddress}</span>
-            </div>
-        <div style="display: flex; align-items: center; gap: 6px;">
-          <span style="font-size: 16px;">⏱️</span>
-          <span style="flex: 1;">${order.createdAt}</span>
-            </div>
-        <div style="display: flex; align-items: center; gap: 6px;">
-          <span style="font-size: 16px;">🛒</span>
-          <span style="flex: 1;">Items: ${order.itemsCount}</span>
-            </div>
-        <div style="display: flex; align-items: center; gap: 6px;">
-          <span style="font-size: 16px;">🚚</span>
-          <span style="flex: 1;">Deliver to: ${order.addressStreet}, ${
-    order.addressCity
-  }</span>
-            </div>
-      </div>
-
-      <button 
-        id="accept-batch-${order.id}" 
-        style="
-          width: 100%;
-          margin-top: 12px;
-          padding: 8px 16px;
-          background: ${theme === "dark" ? "#059669" : "#10b981"};
-          color: white;
-          border: none;
-          border-radius: 6px;
-          font-weight: 600;
-          cursor: pointer;
-          transition: all 0.2s;
-        "
-        onmouseover="this.style.background='${
-          theme === "dark" ? "#047857" : "#059669"
-        }'"
-        onmouseout="this.style.background='${
-          theme === "dark" ? "#059669" : "#10b981"
-        }'"
-      >
-              Accept Batch
-            </button>
-          </div>
-        `;
-
-  // Second popup template for available orders
-  const createAvailableOrderPopupContent = (
-    order: MapSectionProps["availableOrders"][0],
-    theme: string
-  ) => {
-    const isReelOrder = order.orderType === "reel";
-
-    return `
-    <div class="${
-      theme === "dark" ? "dark-theme-popup" : "light-theme-popup"
-    }" style="
-      font-size: 14px;
-      line-height: 1.6;
-      min-width: 240px;
-      background: ${theme === "dark" ? "#1f2937" : "#ffffff"};
-      color: ${theme === "dark" ? "#e5e7eb" : "#111827"};
-      border-radius: 8px;
-      padding: 12px;
-    ">
-      <div style="
-        border-bottom: 1px solid ${theme === "dark" ? "#374151" : "#e5e7eb"};
-        padding-bottom: 8px;
-        margin-bottom: 8px;
-      ">
-        <div style="display: flex; align-items: center; gap: 6px; margin-bottom: 4px;">
-          <span style="font-size: 16px;">🆔</span>
-          <strong style="color: ${theme === "dark" ? "#60a5fa" : "#2563eb"};">${
-      order.id
-    }</strong>
-        </div>
-        <div style="display: flex; align-items: center; gap: 6px; margin-bottom: 4px;">
-          <span style="font-size: 16px;">💰</span>
-          <strong style="color: ${theme === "dark" ? "#34d399" : "#059669"};">${
-      order.estimatedEarnings
-    }</strong>
-        </div>
-        ${
-          isReelOrder
-            ? '<div style="display: flex; align-items: center; gap: 6px; margin-bottom: 4px;"><span style="font-size: 16px;">🎬</span><strong style="color: #8b5cf6;">REEL ORDER</strong></div>'
-            : ""
-        }
-      </div>
-      
-      <div style="display: flex; flex-direction: column; gap: 6px;">
-        <div style="display: flex; align-items: center; gap: 6px;">
-          <span style="font-size: 16px;">${isReelOrder ? "🎬" : "🏪"}</span>
-          <span style="flex: 1;">${
-            isReelOrder ? order.reel?.title || "Reel Order" : order.shopName
-          }</span>
-        </div>
-        <div style="display: flex; align-items: center; gap: 6px;">
-          <span style="font-size: 16px;">📍</span>
-          <span style="flex: 1;">${
-            isReelOrder
-              ? `From: ${order.customerName || "Reel Creator"}`
-              : order.shopAddress
-          }</span>
-        </div>
-        <div style="display: flex; align-items: center; gap: 6px;">
-          <span style="font-size: 16px;">⏱️</span>
-          <span style="flex: 1;">${order.createdAt}</span>
-        </div>
-        <div style="display: flex; align-items: center; gap: 6px;">
-          <span style="font-size: 16px;">🚚</span>
-          <span style="flex: 1;">Deliver to: ${order.customerAddress}</span>
-        </div>
-        ${
-          isReelOrder && order.deliveryNote
-            ? `<div style="display: flex; align-items: center; gap: 6px;"><span style="font-size: 16px;">📝</span><span style="flex: 1;">Note: ${order.deliveryNote}</span></div>`
-            : ""
-        }
-      </div>
-
-      <button 
-        id="accept-batch-${order.id}" 
-        style="
-          width: 100%;
-          margin-top: 12px;
-          padding: 8px 16px;
-          background: ${
-            isReelOrder
-              ? theme === "dark"
-                ? "#7c3aed"
-                : "#8b5cf6"
-              : theme === "dark"
-              ? "#059669"
-              : "#10b981"
-          };
-          color: white;
-          border: none;
-          border-radius: 6px;
-          font-weight: 600;
-          cursor: pointer;
-          transition: all 0.2s;
-        "
-        onmouseover="this.style.background='${
-          isReelOrder
-            ? theme === "dark"
-              ? "#6d28d9"
-              : "#7c3aed"
-            : theme === "dark"
-            ? "#047857"
-            : "#059669"
-        }'"
-        onmouseout="this.style.background='${
-          isReelOrder
-            ? theme === "dark"
-              ? "#7c3aed"
-              : "#8b5cf6"
-            : theme === "dark"
-            ? "#059669"
-            : "#10b981"
-        }'"
-      >
-        Accept Batch
-      </button>
-    </div>
-  `;
-  };
 
   // Helper function to render a pending order marker
   const renderPendingOrderMarker = (order: PendingOrder, map: L.Map) => {
@@ -1314,7 +1712,7 @@ export default function MapSection({
       });
 
       if (safeAddMarker(marker, map, `pending order ${order.id}`)) {
-        marker.bindPopup(createPopupContent(order, theme), {
+        marker.bindPopup(createOrderPopupContent(order, false), {
           maxWidth: 300,
           className: `${
             theme === "dark" ? "dark-theme-popup" : "light-theme-popup"
@@ -1597,6 +1995,37 @@ export default function MapSection({
     return () => window.removeEventListener("toggleGoLive", onToggle);
   }, [handleGoLive]);
 
+  // Add dark theme popup styles on mount
+  useEffect(() => {
+    addDarkThemePopupStyles();
+    
+    // Add a global observer to catch any popups created dynamically
+    const observer = new MutationObserver((mutations) => {
+      mutations.forEach((mutation) => {
+        mutation.addedNodes.forEach((node) => {
+          if (node.nodeType === Node.ELEMENT_NODE) {
+            const element = node as Element;
+            const popupWrapper = element.querySelector?.('.leaflet-popup-content-wrapper');
+            if (popupWrapper && theme === "dark") {
+              setTimeout(() => {
+                forceApplyDarkThemeStyles(popupWrapper as HTMLElement);
+              }, 10);
+            }
+          }
+        });
+      });
+    });
+    
+    observer.observe(document.body, {
+      childList: true,
+      subtree: true
+    });
+    
+    return () => {
+      observer.disconnect();
+    };
+  }, [theme]);
+
   // Main map initialization effect
   useEffect(() => {
     if (!mapRef.current || !mapLoaded) return;
@@ -1774,7 +2203,7 @@ export default function MapSection({
               });
 
               if (safeAddMarker(marker, map, `shop ${shop.name}`)) {
-                marker.bindPopup(
+                const popup = marker.bindPopup(
                   `<div style="
                     background: ${theme === "dark" ? "#1f2937" : "#fff"}; 
                     color: ${theme === "dark" ? "#e5e7eb" : "#111827"};
@@ -1790,8 +2219,27 @@ export default function MapSection({
                         : ""
                     }
                     </div>`,
-                  { offset: [0, -10] }
+                  { 
+                    offset: [0, -10],
+                    className: theme === "dark" ? "dark-theme-popup" : "light-theme-popup"
+                  }
                 );
+                
+                // Apply dark theme class to popup wrapper for shop popups
+                marker.on('popupopen', () => {
+                  if (marker) {
+                    const popup = marker.getPopup();
+                    if (popup) {
+                      const popupElement = popup.getElement();
+                      if (popupElement && theme === "dark") {
+                        // Use setTimeout to ensure DOM is ready
+                        setTimeout(() => {
+                          forceApplyDarkThemeStyles(popupElement);
+                        }, 10);
+                      }
+                    }
+                  }
+                });
               }
             }
           } catch (error) {
@@ -1824,31 +2272,50 @@ export default function MapSection({
                 zIndexOffset: 400,
               });
 
-              if (safeAddMarker(marker, map, `restaurant ${restaurant.name}`)) {
-                marker.bindPopup(
-                  `<div style="
-                    background: ${theme === "dark" ? "#1f2937" : "#fff"}; 
-                    color: ${theme === "dark" ? "#e5e7eb" : "#111827"};
-                      padding: 8px;
-                      border-radius: 8px;
-                      min-width: 150px;
-                      text-align: center;
-                    ">
-                      <strong>🍽️ ${restaurant.name}</strong>
-                    ${
-                      restaurant.verified
-                        ? '<br><span style="color: #10b981;">✓ Verified</span>'
-                        : '<br><span style="color: #6b7280;">Unverified</span>'
+                    if (safeAddMarker(marker, map, `restaurant ${restaurant.name}`)) {
+                      const popup = marker.bindPopup(
+                        `<div style="
+                          background: ${theme === "dark" ? "#1f2937" : "#fff"}; 
+                          color: ${theme === "dark" ? "#e5e7eb" : "#111827"};
+                            padding: 8px;
+                            border-radius: 8px;
+                            min-width: 150px;
+                            text-align: center;
+                          ">
+                            <strong>🍽️ ${restaurant.name}</strong>
+                          ${
+                            restaurant.verified
+                              ? '<br><span style="color: #10b981;">✓ Verified</span>'
+                              : '<br><span style="color: #6b7280;">Unverified</span>'
+                          }
+                          ${
+                            restaurant.location
+                              ? `<br><span style="color: #6b7280; font-size: 12px;">${restaurant.location}</span>`
+                              : ""
+                          }
+                          </div>`,
+                        { 
+                          offset: [0, -10],
+                          className: theme === "dark" ? "dark-theme-popup" : "light-theme-popup"
+                        }
+                      );
+                      
+                      // Apply dark theme class to popup wrapper for restaurant popups
+                      marker.on('popupopen', () => {
+                        if (marker) {
+                          const popup = marker.getPopup();
+                          if (popup) {
+                            const popupElement = popup.getElement();
+                            if (popupElement && theme === "dark") {
+                              // Use setTimeout to ensure DOM is ready
+                              setTimeout(() => {
+                                forceApplyDarkThemeStyles(popupElement);
+                              }, 10);
+                            }
+                          }
+                        }
+                      });
                     }
-                    ${
-                      restaurant.location
-                        ? `<br><span style="color: #6b7280; font-size: 12px;">${restaurant.location}</span>`
-                        : ""
-                    }
-                    </div>`,
-                  { offset: [0, -10] }
-                );
-              }
             }
           } catch (error) {
             console.error(`Error adding restaurant marker for ${restaurant.name}:`, error);
@@ -1899,7 +2366,7 @@ export default function MapSection({
               });
 
               if (safeAddMarker(marker, map, `pending order ${order.id}`)) {
-                marker.bindPopup(createPopupContent(order, theme), {
+                const popup = marker.bindPopup(createOrderPopupContent(order, true), {
                   maxWidth: 300,
                   className: `${
                     theme === "dark" ? "dark-theme-popup" : "light-theme-popup"
@@ -1907,6 +2374,23 @@ export default function MapSection({
                   closeButton: true,
                   closeOnClick: false,
                 });
+                
+                // Apply dark theme class to popup wrapper
+                marker.on('popupopen', () => {
+                  if (marker) {
+                    const popup = marker.getPopup();
+                    if (popup) {
+                      const popupElement = popup.getElement();
+                      if (popupElement && theme === "dark") {
+                        // Use setTimeout to ensure DOM is ready
+                        setTimeout(() => {
+                          forceApplyDarkThemeStyles(popupElement);
+                        }, 10);
+                      }
+                    }
+                  }
+                });
+                
                 attachAcceptHandler(marker, order.id, map, "regular"); // Pass "regular" for pending orders
               }
             } catch (error) {
@@ -1974,7 +2458,7 @@ export default function MapSection({
               const adjustedLat = baseLat + offset.lat;
               const adjustedLng = baseLng + offset.lng;
 
-              
+
               const marker = L.marker([adjustedLat, adjustedLng], {
                 icon: createOrderMarkerIcon(
                   order.estimatedEarnings || order.earnings || "0",
@@ -1984,8 +2468,8 @@ export default function MapSection({
               });
 
               if (safeAddMarker(marker, map, `order ${order.id}`)) {
-                marker.bindPopup(
-                  createAvailableOrderPopupContent(order, theme),
+                const popup = marker.bindPopup(
+                  createOrderPopupContent(order, false),
                   {
                     maxWidth: 300,
                     className: `${
@@ -1997,6 +2481,23 @@ export default function MapSection({
                     closeOnClick: false,
                   }
                 );
+                
+                // Apply dark theme class to popup wrapper
+                marker.on('popupopen', () => {
+                  if (marker) {
+                    const popup = marker.getPopup();
+                    if (popup) {
+                      const popupElement = popup.getElement();
+                      if (popupElement && theme === "dark") {
+                        // Use setTimeout to ensure DOM is ready
+                        setTimeout(() => {
+                          forceApplyDarkThemeStyles(popupElement);
+                        }, 10);
+                      }
+                    }
+                  }
+                });
+                
                 attachAcceptHandler(marker, order.id, map, order.orderType); // Pass orderType for available orders
                 orderMarkersRef.current.push(marker);
               }
