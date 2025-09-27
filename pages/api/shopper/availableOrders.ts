@@ -222,7 +222,6 @@ export default async function handler(
           } | null;
         }>;
       }>(GET_AVAILABLE_RESTAURANT_ORDERS, { thirtyMinutesAgo });
-      
     } catch (error) {
       console.error("❌ Restaurant orders query failed:", error);
       logger.error("Restaurant orders query failed", "AvailableOrders", error);
@@ -335,7 +334,6 @@ export default async function handler(
     const regularOrders = regularOrdersData.Orders;
     const reelOrders = reelOrdersData.reel_orders;
     const restaurantOrders = restaurantOrdersData.restaurant_orders;
-
 
     logger.info("Retrieved orders from database", "AvailableOrders", {
       regularOrderCount: regularOrders.length,
@@ -515,7 +513,9 @@ export default async function handler(
     const availableRestaurantOrders = restaurantOrders.map((order) => {
       // Calculate metrics for sorting and filtering
       // For aged orders, use updated_at if available, otherwise created_at
-      const referenceDate = order.updated_at ? new Date(order.updated_at) : new Date(order.created_at);
+      const referenceDate = order.updated_at
+        ? new Date(order.updated_at)
+        : new Date(order.created_at);
       const pendingMinutes = Math.floor(
         (Date.now() - referenceDate.getTime()) / 60000
       );
@@ -580,7 +580,6 @@ export default async function handler(
           0
         ) || 1;
 
-
       return {
         id: order.id,
         createdAt: order.created_at,
@@ -619,7 +618,6 @@ export default async function handler(
       };
     });
 
-
     // Combine all types of orders
     const allAvailableOrders = [
       ...availableRegularOrders,
@@ -631,7 +629,6 @@ export default async function handler(
     const filteredOrders = allAvailableOrders.filter(
       (order) => order.travelTimeMinutes <= maxTravelTime
     );
-
 
     logger.info("Filtered orders", "AvailableOrders", {
       filteredOrderCount: filteredOrders.length,
