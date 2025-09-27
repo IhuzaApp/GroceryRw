@@ -188,8 +188,8 @@ export default function ShopperDashboard() {
               customerAddress: order.customerAddress || "No address available",
               distance: `${order.distance} km`,
               items: order.itemsCount || 0,
-              total: `$${(order.earnings || 0).toFixed(2)}`,
-              estimatedEarnings: `$${(order.earnings || 0).toFixed(2)}`,
+              total: (order.earnings || 0).toString(),
+              estimatedEarnings: (order.earnings || 0).toString(),
               createdAt: relativeTime(order.createdAt),
               rawCreatedAt: order.createdAt, // Keep raw ISO timestamp for filtering
               updatedAt: order.updatedAt || null, // Pass through updatedAt for restaurant orders
@@ -428,8 +428,8 @@ export default function ShopperDashboard() {
               customerAddress: order.customerAddress || "No address available",
               distance: `${order.distance} km`,
               items: order.itemsCount || 0,
-              total: `$${(order.earnings || 0).toFixed(2)}`,
-              estimatedEarnings: `$${(order.earnings || 0).toFixed(2)}`,
+              total: (order.earnings || 0).toString(),
+              estimatedEarnings: (order.earnings || 0).toString(),
               createdAt: relativeTime(order.createdAt),
               status: order.status || "PENDING",
               rawDistance:
@@ -475,8 +475,8 @@ export default function ShopperDashboard() {
               customerAddress: order.customerAddress || "No address available",
               distance: `${order.distance} km`,
               items: order.itemsCount || 0,
-              total: `$${(order.earnings || 0).toFixed(2)}`,
-              estimatedEarnings: `$${(order.earnings || 0).toFixed(2)}`,
+              total: (order.earnings || 0).toString(),
+              estimatedEarnings: (order.earnings || 0).toString(),
               createdAt: relativeTime(order.createdAt),
               status: order.status || "PENDING",
               rawDistance:
