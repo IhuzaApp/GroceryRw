@@ -111,16 +111,6 @@ export default function MapSection({
   isInitializing = false,
   isExpanded = false,
 }: MapSectionProps) {
-  console.log("🗺️ MapSection received orders:", {
-    totalOrders: availableOrders?.length || 0,
-    orders: availableOrders?.map(order => ({
-      id: order.id,
-      orderType: order.orderType,
-      shopName: order.shopName,
-      shopper_id: order.shopper_id,
-      createdAt: order.createdAt
-    })) || []
-  });
   const { theme } = useTheme();
   const { isConnected } = useWebSocket();
   const [realTimeAgedOrders, setRealTimeAgedOrders] = useState<any[]>([]);
@@ -194,18 +184,6 @@ export default function MapSection({
   ) => {
     const thirtyMinutesAgo = new Date(Date.now() - 30 * 60 * 1000);
 
-    console.log("🔍 Filtering aged orders:", {
-      totalOrders: orders.length,
-      thirtyMinutesAgo: thirtyMinutesAgo.toISOString(),
-      orders: orders.map(order => ({
-        id: order.id,
-        orderType: order.orderType,
-        createdAt: order.createdAt,
-        shopper_id: order.shopper_id,
-        isAged: new Date(order.createdAt) <= thirtyMinutesAgo,
-        isUnassigned: !order.shopper_id || order.shopper_id === null
-      }))
-    });
 
     const filtered = orders.filter((order) => {
       // For restaurant orders, check updated_at; for others, check created_at
@@ -214,11 +192,6 @@ export default function MapSection({
         // Restaurant orders are aged based on updated_at, not created_at
         const updatedAt = (order as any).updatedAt;
         referenceTimestamp = updatedAt && updatedAt !== "null" && updatedAt !== "" ? updatedAt : order.createdAt;
-        console.log(`🍽️ Restaurant order ${order.id}:`, {
-          createdAt: order.createdAt,
-          updatedAt: updatedAt,
-          usingUpdatedAt: !!(updatedAt && updatedAt !== "null" && updatedAt !== "")
-        });
       } else {
         // Regular and reel orders are aged based on created_at (use raw timestamp)
         referenceTimestamp = (order as any).rawCreatedAt || order.createdAt;
@@ -239,28 +212,10 @@ export default function MapSection({
 
       const shouldInclude = isAged && isUnassigned;
       
-      console.log(`📋 Order ${order.id} (${order.orderType}):`, {
-        isAged,
-        isUnassigned,
-        shouldInclude,
-        referenceTimestamp,
-        rawCreatedAt: (order as any).rawCreatedAt,
-        createdAt: order.createdAt,
-        orderTimestamp: orderTimestamp.toISOString(),
-        thirtyMinutesAgo: thirtyMinutesAgo.toISOString(),
-        shopper_id: order.shopper_id
-      });
 
       return shouldInclude;
     });
 
-    console.log("✅ Filtered aged orders result:", {
-      filteredCount: filtered.length,
-      filtered: filtered.map(order => ({
-        id: order.id,
-        orderType: order.orderType
-      }))
-    });
 
     return filtered;
   };
@@ -1855,32 +1810,12 @@ export default function MapSection({
 
       // Process aged unassigned orders with grouping
       if (isOnline && allAgedOrders?.length > 0 && map && map.getContainer()) {
-        console.log("🗺️ Processing aged orders for map:", {
-          totalOrders: allAgedOrders.length,
-          orders: allAgedOrders.map(order => ({
-            id: order.id,
-            orderType: order.orderType,
-            shopName: order.shopName,
-            estimatedEarnings: order.estimatedEarnings,
-            earnings: order.earnings,
-            shopLatitude: order.shopLatitude,
-            shopLongitude: order.shopLongitude
-          }))
-        });
         
         // Group aged orders by location
         const groupedAgedOrders = new Map<string, typeof allAgedOrders>();
         allAgedOrders.forEach((order) => {
-          console.log("📍 Checking coordinates for order:", {
-            id: order.id,
-            orderType: order.orderType,
-            shopLatitude: order.shopLatitude,
-            shopLongitude: order.shopLongitude,
-            hasValidCoords: !!(order.shopLatitude && order.shopLongitude)
-          });
           
           if (!order.shopLatitude || !order.shopLongitude) {
-            console.log("❌ Skipping order due to missing coordinates:", order.id);
             return;
           }
           const key = `${order.shopLatitude.toFixed(
@@ -1920,13 +1855,6 @@ export default function MapSection({
               const adjustedLat = baseLat + offset.lat;
               const adjustedLng = baseLng + offset.lng;
 
-              console.log("🎯 Creating marker for order:", {
-                id: order.id,
-                orderType: order.orderType,
-                estimatedEarnings: order.estimatedEarnings,
-                earnings: order.earnings,
-                coordinates: [adjustedLat, adjustedLng]
-              });
               
               const marker = L.marker([adjustedLat, adjustedLng], {
                 icon: createOrderMarkerIcon(

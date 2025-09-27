@@ -180,15 +180,6 @@ export default function ShopperDashboard() {
             const isReelOrder = order.orderType === "reel";
             const isRestaurantOrder = order.orderType === "restaurant";
 
-            // Debug restaurant orders
-            if (isRestaurantOrder) {
-              console.log(`🍽️ Processing restaurant order ${order.id}:`, {
-                createdAt: order.createdAt,
-                updatedAt: order.updatedAt,
-                updatedAtType: typeof order.updatedAt,
-                hasUpdatedAt: !!order.updatedAt
-              });
-            }
 
             return {
               id: order.id,
