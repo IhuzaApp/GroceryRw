@@ -222,18 +222,18 @@ export default function OrderCard({ order, onOrderAccepted }: OrderCardProps) {
         <div className="mb-4 flex items-start justify-between">
           <div className="flex-1 pr-3">
             <h3 className="mb-1 text-xl font-bold text-gray-900">
-              {isReelOrder 
-                ? order.reel?.title || "Reel Order" 
-                : isRestaurantOrder 
-                  ? order.shopName || "Restaurant Order"
-                  : order.shopName}
+              {isReelOrder
+                ? order.reel?.title || "Reel Order"
+                : isRestaurantOrder
+                ? order.shopName || "Restaurant Order"
+                : order.shopName}
             </h3>
             <p className="text-sm text-gray-600">
               {isReelOrder
                 ? `From: ${order.customerName || "Reel Creator"}`
                 : isRestaurantOrder
-                  ? order.shopAddress || "Restaurant Address"
-                  : order.shopAddress}
+                ? order.shopAddress || "Restaurant Address"
+                : order.shopAddress}
             </p>
           </div>
           <div
@@ -257,7 +257,9 @@ export default function OrderCard({ order, onOrderAccepted }: OrderCardProps) {
                 <circle cx="12" cy="10" r="3" />
               </svg>
               <span className="font-semibold">
-                {order.travelTimeMinutes ? `${order.travelTimeMinutes} min away` : order.distance}
+                {order.travelTimeMinutes
+                  ? `${order.travelTimeMinutes} min away`
+                  : order.distance}
               </span>
             </div>
 
@@ -274,11 +276,11 @@ export default function OrderCard({ order, onOrderAccepted }: OrderCardProps) {
                 <path d="M16 10a4 4 0 01-8 0" />
               </svg>
               <span className="font-semibold">
-                {isReelOrder 
+                {isReelOrder
                   ? `${order.quantity || 1} item`
-                  : isRestaurantOrder 
-                    ? `${order.items || 1} dishes`
-                    : `${order.items} items`}
+                  : isRestaurantOrder
+                  ? `${order.items || 1} dishes`
+                  : `${order.items} items`}
               </span>
             </div>
           </div>
@@ -292,11 +294,11 @@ export default function OrderCard({ order, onOrderAccepted }: OrderCardProps) {
               stroke="currentColor"
               strokeWidth={2}
               className={`mr-2 h-5 w-5 ${
-                isReelOrder 
-                  ? "text-purple-600" 
-                  : isRestaurantOrder 
-                    ? "text-orange-600"
-                    : "text-green-600"
+                isReelOrder
+                  ? "text-purple-600"
+                  : isRestaurantOrder
+                  ? "text-orange-600"
+                  : "text-green-600"
               }`}
             >
               <path d="M12 2v20M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6" />
@@ -305,11 +307,11 @@ export default function OrderCard({ order, onOrderAccepted }: OrderCardProps) {
               <p className="text-sm text-gray-500">Earnings</p>
               <p
                 className={`text-2xl font-bold ${
-                  isReelOrder 
-                    ? "text-purple-600" 
-                    : isRestaurantOrder 
-                      ? "text-orange-600"
-                      : "text-green-600"
+                  isReelOrder
+                    ? "text-purple-600"
+                    : isRestaurantOrder
+                    ? "text-orange-600"
+                    : "text-green-600"
                 }`}
               >
                 {order.estimatedEarnings}
@@ -321,8 +323,8 @@ export default function OrderCard({ order, onOrderAccepted }: OrderCardProps) {
               isReelOrder
                 ? "bg-gradient-to-r from-purple-500 to-purple-600 hover:from-purple-600 hover:to-purple-700"
                 : isRestaurantOrder
-                  ? "bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700"
-                  : "bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700"
+                ? "bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700"
+                : "bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700"
             }`}
             onClick={handleAcceptOrder}
             disabled={isAccepting}

@@ -1,5 +1,5 @@
-import { io, Socket } from 'socket.io-client';
-import { logger } from './logger';
+import { io, Socket } from "socket.io-client";
+import { logger } from "./logger";
 
 class WebSocketManager {
   private static instance: WebSocketManager;
@@ -33,67 +33,70 @@ class WebSocketManager {
 
       this.isConnecting = true;
 
-      this.socket = io(process.env.NODE_ENV === 'production' 
-        ? process.env.NEXT_PUBLIC_WEBSOCKET_URL || 'wss://your-domain.com'
-        : 'http://localhost:3000', {
-        path: '/api/websocket',
-        transports: ['polling', 'websocket'],
-        timeout: 10000,
-        forceNew: false,
-        reconnection: true,
-        reconnectionDelay: this.reconnectDelay,
-        reconnectionAttempts: this.maxReconnectAttempts,
-        autoConnect: true
-      });
+      this.socket = io(
+        process.env.NODE_ENV === "production"
+          ? process.env.NEXT_PUBLIC_WEBSOCKET_URL || "wss://your-domain.com"
+          : "http://localhost:3000",
+        {
+          path: "/api/websocket",
+          transports: ["polling", "websocket"],
+          timeout: 10000,
+          forceNew: false,
+          reconnection: true,
+          reconnectionDelay: this.reconnectDelay,
+          reconnectionAttempts: this.maxReconnectAttempts,
+          autoConnect: true,
+        }
+      );
 
-      this.socket.on('connect', () => {
+      this.socket.on("connect", () => {
         this.isConnecting = false;
         this.reconnectAttempts = 0;
-        
+
         // Register shopper
-        this.socket?.emit('shopper-register', {
+        this.socket?.emit("shopper-register", {
           userId,
-          location: null
+          location: null,
         });
-        
+
         resolve(true);
       });
 
-      this.socket.on('disconnect', (reason) => {
+      this.socket.on("disconnect", (reason) => {
         this.isConnecting = false;
-        
-        if (reason !== 'io client disconnect') {
+
+        if (reason !== "io client disconnect") {
           this.reconnectAttempts++;
         }
       });
 
-      this.socket.on('connect_error', (error) => {
+      this.socket.on("connect_error", (error) => {
         this.isConnecting = false;
         resolve(false);
       });
 
-      this.socket.on('registered', (data) => {
-        this.emit('registered', data);
+      this.socket.on("registered", (data) => {
+        this.emit("registered", data);
       });
 
-      this.socket.on('new-order', (data) => {
-        this.emit('new-order', data);
+      this.socket.on("new-order", (data) => {
+        this.emit("new-order", data);
       });
 
-      this.socket.on('batch-orders', (data) => {
-        this.emit('batch-orders', data);
+      this.socket.on("batch-orders", (data) => {
+        this.emit("batch-orders", data);
       });
 
-      this.socket.on('order-expired', (data) => {
-        this.emit('order-expired', data);
+      this.socket.on("order-expired", (data) => {
+        this.emit("order-expired", data);
       });
 
-      this.socket.on('order-accepted', (data) => {
-        this.emit('order-accepted', data);
+      this.socket.on("order-accepted", (data) => {
+        this.emit("order-accepted", data);
       });
 
-      this.socket.on('order-rejected', (data) => {
-        this.emit('order-rejected', data);
+      this.socket.on("order-rejected", (data) => {
+        this.emit("order-rejected", data);
       });
 
       // Timeout after 10 seconds
@@ -121,19 +124,19 @@ class WebSocketManager {
 
   sendLocation(location: { lat: number; lng: number }, userId: string): void {
     if (this.socket?.connected) {
-      this.socket.emit('location-update', { userId, location });
+      this.socket.emit("location-update", { userId, location });
     }
   }
 
   acceptOrder(orderId: string, userId: string): void {
     if (this.socket?.connected) {
-      this.socket.emit('accept-order', { orderId, userId });
+      this.socket.emit("accept-order", { orderId, userId });
     }
   }
 
   rejectOrder(orderId: string, userId: string): void {
     if (this.socket?.connected) {
-      this.socket.emit('reject-order', { orderId, userId });
+      this.socket.emit("reject-order", { orderId, userId });
     }
   }
 
@@ -157,7 +160,7 @@ class WebSocketManager {
   private emit(event: string, data: any): void {
     const callbacks = this.listeners.get(event);
     if (callbacks) {
-      callbacks.forEach(callback => callback(data));
+      callbacks.forEach((callback) => callback(data));
     }
   }
 }

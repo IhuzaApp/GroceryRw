@@ -404,16 +404,18 @@ export default function ShopperDashboard() {
     const handleWebSocketNewOrder = (event: Event) => {
       const customEvent = event as CustomEvent;
       const { order } = customEvent.detail;
-      
+
       // Check if order is aged (30+ minutes old)
       const thirtyMinutesAgo = new Date(Date.now() - 30 * 60 * 1000);
       const orderCreatedAt = new Date(order.createdAt);
       const isAged = orderCreatedAt <= thirtyMinutesAgo;
-      
+
       if (isAged) {
         // Add new order to the list seamlessly
-        setAvailableOrders(prev => {
-          const exists = prev.some(existingOrder => existingOrder.id === order.id);
+        setAvailableOrders((prev) => {
+          const exists = prev.some(
+            (existingOrder) => existingOrder.id === order.id
+          );
           if (!exists) {
             const newOrder = {
               id: order.id,
@@ -426,10 +428,18 @@ export default function ShopperDashboard() {
               estimatedEarnings: `$${(order.earnings || 0).toFixed(2)}`,
               createdAt: relativeTime(order.createdAt),
               status: order.status || "PENDING",
-              rawDistance: typeof order.distance === 'number' ? order.distance : parseFloat(order.distance) || 0,
-              rawEarnings: typeof order.earnings === 'number' ? order.earnings : parseFloat(order.earnings) || 0,
+              rawDistance:
+                typeof order.distance === "number"
+                  ? order.distance
+                  : parseFloat(order.distance) || 0,
+              rawEarnings:
+                typeof order.earnings === "number"
+                  ? order.earnings
+                  : parseFloat(order.earnings) || 0,
               rawCreatedAt: orderCreatedAt.getTime(),
-              minutesAgo: Math.floor((Date.now() - orderCreatedAt.getTime()) / 60000),
+              minutesAgo: Math.floor(
+                (Date.now() - orderCreatedAt.getTime()) / 60000
+              ),
               priorityLevel: order.priorityLevel || 1,
               shopLatitude: order.shopLatitude,
               shopLongitude: order.shopLongitude,
@@ -447,10 +457,12 @@ export default function ShopperDashboard() {
           }
           return prev;
         });
-        
+
         // Update sorted orders
-        setSortedOrders(prev => {
-          const exists = prev.some(existingOrder => existingOrder.id === order.id);
+        setSortedOrders((prev) => {
+          const exists = prev.some(
+            (existingOrder) => existingOrder.id === order.id
+          );
           if (!exists) {
             const newOrder = {
               id: order.id,
@@ -463,10 +475,18 @@ export default function ShopperDashboard() {
               estimatedEarnings: `$${(order.earnings || 0).toFixed(2)}`,
               createdAt: relativeTime(order.createdAt),
               status: order.status || "PENDING",
-              rawDistance: typeof order.distance === 'number' ? order.distance : parseFloat(order.distance) || 0,
-              rawEarnings: typeof order.earnings === 'number' ? order.earnings : parseFloat(order.earnings) || 0,
+              rawDistance:
+                typeof order.distance === "number"
+                  ? order.distance
+                  : parseFloat(order.distance) || 0,
+              rawEarnings:
+                typeof order.earnings === "number"
+                  ? order.earnings
+                  : parseFloat(order.earnings) || 0,
               rawCreatedAt: orderCreatedAt.getTime(),
-              minutesAgo: Math.floor((Date.now() - orderCreatedAt.getTime()) / 60000),
+              minutesAgo: Math.floor(
+                (Date.now() - orderCreatedAt.getTime()) / 60000
+              ),
               priorityLevel: order.priorityLevel || 1,
               shopLatitude: order.shopLatitude,
               shopLongitude: order.shopLongitude,
@@ -490,18 +510,29 @@ export default function ShopperDashboard() {
     const handleWebSocketOrderExpired = (event: Event) => {
       const customEvent = event as CustomEvent;
       const { orderId } = customEvent.detail;
-      
+
       // Remove order from both lists seamlessly
-      setAvailableOrders(prev => prev.filter(order => order.id !== orderId));
-      setSortedOrders(prev => prev.filter(order => order.id !== orderId));
+      setAvailableOrders((prev) =>
+        prev.filter((order) => order.id !== orderId)
+      );
+      setSortedOrders((prev) => prev.filter((order) => order.id !== orderId));
     };
 
-    window.addEventListener('websocket-new-order', handleWebSocketNewOrder);
-    window.addEventListener('websocket-order-expired', handleWebSocketOrderExpired);
+    window.addEventListener("websocket-new-order", handleWebSocketNewOrder);
+    window.addEventListener(
+      "websocket-order-expired",
+      handleWebSocketOrderExpired
+    );
 
     return () => {
-      window.removeEventListener('websocket-new-order', handleWebSocketNewOrder);
-      window.removeEventListener('websocket-order-expired', handleWebSocketOrderExpired);
+      window.removeEventListener(
+        "websocket-new-order",
+        handleWebSocketNewOrder
+      );
+      window.removeEventListener(
+        "websocket-order-expired",
+        handleWebSocketOrderExpired
+      );
     };
   }, [sortBy, sortOrders]);
 

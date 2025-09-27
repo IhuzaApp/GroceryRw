@@ -1,10 +1,10 @@
-const { createServer } = require('http');
-const { parse } = require('url');
-const next = require('next');
-const { Server } = require('socket.io');
+const { createServer } = require("http");
+const { parse } = require("url");
+const next = require("next");
+const { Server } = require("socket.io");
 
-const dev = process.env.NODE_ENV !== 'production';
-const hostname = 'localhost';
+const dev = process.env.NODE_ENV !== "production";
+const hostname = "localhost";
 const port = process.env.PORT || 3000;
 
 // Create Next.js app
@@ -17,13 +17,13 @@ const httpServer = createServer();
 // Create Socket.IO server
 const io = new Server(httpServer, {
   cors: {
-    origin: dev ? ['http://localhost:3000', 'http://127.0.0.1:3000'] : false,
-    methods: ['GET', 'POST'],
-    credentials: true
+    origin: dev ? ["http://localhost:3000", "http://127.0.0.1:3000"] : false,
+    methods: ["GET", "POST"],
+    credentials: true,
   },
-  path: '/api/websocket',
-  transports: ['polling', 'websocket'],
-  allowEIO3: true
+  path: "/api/websocket",
+  transports: ["polling", "websocket"],
+  allowEIO3: true,
 });
 
 // Store active connections
@@ -73,7 +73,7 @@ const updateLocationClusters = (userId, location) => {
     locationClusters.set(newClusterId, {
       center: location,
       shoppers: [userId],
-      lastUpdated: new Date()
+      lastUpdated: new Date(),
     });
   }
 };
@@ -81,12 +81,12 @@ const updateLocationClusters = (userId, location) => {
 // WebSocket event handlers
 const handleConnection = (socket) => {
   // Handle shopper registration
-  socket.on('shopper-register', (data) => {
+  socket.on("shopper-register", (data) => {
     activeConnections.set(data.userId, {
       socketId: socket.id,
       userId: data.userId,
       location: data.location,
-      lastSeen: new Date()
+      lastSeen: new Date(),
     });
 
     // Update location clusters
@@ -94,11 +94,11 @@ const handleConnection = (socket) => {
       updateLocationClusters(data.userId, data.location);
     }
 
-    socket.emit('registered', { success: true, userId: data.userId });
+    socket.emit("registered", { success: true, userId: data.userId });
   });
 
   // Handle location updates
-  socket.on('location-update', (data) => {
+  socket.on("location-update", (data) => {
     const connection = activeConnections.get(data.userId);
     if (connection) {
       connection.location = data.location;
@@ -108,19 +108,21 @@ const handleConnection = (socket) => {
   });
 
   // Handle order acceptance
-  socket.on('accept-order', (data) => {
-    socket.emit('order-accepted', { orderId: data.orderId, success: true });
+  socket.on("accept-order", (data) => {
+    socket.emit("order-accepted", { orderId: data.orderId, success: true });
   });
 
   // Handle order rejection
-  socket.on('reject-order', (data) => {
-    socket.emit('order-rejected', { orderId: data.orderId, success: true });
+  socket.on("reject-order", (data) => {
+    socket.emit("order-rejected", { orderId: data.orderId, success: true });
   });
 
   // Handle disconnection
-  socket.on('disconnect', () => {
+  socket.on("disconnect", () => {
     // Find and remove the connection
-    for (const [userId, connection] of Array.from(activeConnections.entries())) {
+    for (const [userId, connection] of Array.from(
+      activeConnections.entries()
+    )) {
       if (connection.socketId === socket.id) {
         activeConnections.delete(userId);
         break;
@@ -129,13 +131,13 @@ const handleConnection = (socket) => {
   });
 
   // Handle ping/pong for connection health
-  socket.on('ping', () => {
-    socket.emit('pong');
+  socket.on("ping", () => {
+    socket.emit("pong");
   });
 };
 
 // Set up Socket.IO
-io.on('connection', handleConnection);
+io.on("connection", handleConnection);
 
 // Make io available globally for API routes
 global.io = io;
@@ -143,19 +145,19 @@ global.activeConnections = activeConnections;
 global.locationClusters = locationClusters;
 
 // Handle Next.js requests
-httpServer.on('request', async (req, res) => {
+httpServer.on("request", async (req, res) => {
   try {
     // Skip Socket.IO requests
-    if (req.url.startsWith('/api/websocket')) {
+    if (req.url.startsWith("/api/websocket")) {
       return;
     }
-    
+
     const parsedUrl = parse(req.url, true);
     await handle(req, res, parsedUrl);
   } catch (err) {
-    console.error('Error occurred handling', req.url, err);
+    console.error("Error occurred handling", req.url, err);
     res.statusCode = 500;
-    res.end('internal server error');
+    res.end("internal server error");
   }
 });
 

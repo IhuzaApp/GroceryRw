@@ -5,13 +5,17 @@ import { hasuraClient } from "../../../src/lib/hasuraClient";
 import { gql } from "graphql-request";
 
 const ACCEPT_BATCH_MUTATION = gql`
-  mutation AcceptBatch($orderId: uuid!, $shopperId: uuid!, $assigned_at: timestamptz!) {
+  mutation AcceptBatch(
+    $orderId: uuid!
+    $shopperId: uuid!
+    $assigned_at: timestamptz!
+  ) {
     update_Orders_by_pk(
       pk_columns: { id: $orderId }
-      _set: { 
-        shopper_id: $shopperId, 
-        status: "ACCEPTED", 
-        updated_at: "now()",
+      _set: {
+        shopper_id: $shopperId
+        status: "ACCEPTED"
+        updated_at: "now()"
         assigned_at: $assigned_at
       }
     ) {
@@ -25,13 +29,17 @@ const ACCEPT_BATCH_MUTATION = gql`
 `;
 
 const ACCEPT_REEL_BATCH_MUTATION = gql`
-  mutation AcceptReelBatch($orderId: uuid!, $shopperId: uuid!, $assigned_at: timestamptz!) {
+  mutation AcceptReelBatch(
+    $orderId: uuid!
+    $shopperId: uuid!
+    $assigned_at: timestamptz!
+  ) {
     update_reel_orders_by_pk(
       pk_columns: { id: $orderId }
-      _set: { 
-        shopper_id: $shopperId, 
-        status: "ACCEPTED", 
-        updated_at: "now()",
+      _set: {
+        shopper_id: $shopperId
+        status: "ACCEPTED"
+        updated_at: "now()"
         assigned_at: $assigned_at
       }
     ) {
@@ -88,13 +96,15 @@ export default async function handler(
 
   try {
     if (!hasuraClient) {
-      return res.status(500).json({ error: "Database connection not available" });
+      return res
+        .status(500)
+        .json({ error: "Database connection not available" });
     }
 
     // First, check if the order exists and is available
-    const checkResponse = await hasuraClient.request(CHECK_ORDER_EXISTS, {
+    const checkResponse = (await hasuraClient.request(CHECK_ORDER_EXISTS, {
       orderId,
-    }) as any;
+    })) as any;
 
     const regularOrder = checkResponse.Orders?.[0];
     const reelOrder = checkResponse.reel_orders?.[0];
@@ -125,17 +135,17 @@ export default async function handler(
     let acceptResponse;
 
     if (isReelOrder) {
-      acceptResponse = await hasuraClient.request(ACCEPT_REEL_BATCH_MUTATION, {
+      acceptResponse = (await hasuraClient.request(ACCEPT_REEL_BATCH_MUTATION, {
         orderId,
         shopperId: userId,
         assigned_at: assignedAt,
-      }) as any;
+      })) as any;
     } else {
-      acceptResponse = await hasuraClient.request(ACCEPT_BATCH_MUTATION, {
+      acceptResponse = (await hasuraClient.request(ACCEPT_BATCH_MUTATION, {
         orderId,
         shopperId: userId,
         assigned_at: assignedAt,
-      }) as any;
+      })) as any;
     }
 
     if (

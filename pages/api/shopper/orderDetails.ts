@@ -192,7 +192,7 @@ const GET_ORDER_DETAILS = gql`
 // Query to fetch reel order details by ID
 const GET_REEL_ORDER_DETAILS = gql`
   query GetReelOrderDetails($orderId: uuid!) {
-    reel_orders(where: {id: {_eq: $orderId}}) {
+    reel_orders(where: { id: { _eq: $orderId } }) {
       id
       OrderID
       created_at
@@ -292,7 +292,6 @@ export default async function handler(
     // Get orderId from query params
     const { id } = req.query;
 
-
     if (!id || typeof id !== "string") {
       res.status(400).json({ error: "Missing or invalid order ID" });
       return;
@@ -305,7 +304,6 @@ export default async function handler(
       authOptions as any
     )) as UserSession | null;
 
-
     if (!session || !session.user) {
       res.status(401).json({ error: "Unauthorized" });
       return;
@@ -317,12 +315,10 @@ export default async function handler(
       return;
     }
 
-
     let orderData: any = null;
     let orderType: "regular" | "reel" = "regular";
 
     try {
-      
       // First try to fetch as a regular order
       const regularOrderData = await hasuraClient.request<OrderDetailsResponse>(
         GET_ORDER_DETAILS,
@@ -331,14 +327,12 @@ export default async function handler(
         }
       );
 
-
       if (regularOrderData.Orders_by_pk) {
         orderData = regularOrderData.Orders_by_pk;
         orderType = "regular";
       } else {
         // If regular order not found, try reel order
         try {
-          
           const reelOrderData = await hasuraClient.request<any>(
             GET_REEL_ORDER_DETAILS,
             {
@@ -346,8 +340,10 @@ export default async function handler(
             }
           );
 
-
-          if (reelOrderData.reel_orders && reelOrderData.reel_orders.length > 0) {
+          if (
+            reelOrderData.reel_orders &&
+            reelOrderData.reel_orders.length > 0
+          ) {
             orderData = reelOrderData.reel_orders[0];
             orderType = "reel";
           } else {
@@ -355,28 +351,27 @@ export default async function handler(
         } catch (reelError) {
           console.error("❌ [API] Error fetching reel order:", {
             error: reelError,
-            message: reelError instanceof Error ? reelError.message : 'Unknown error',
-            orderId: id
+            message:
+              reelError instanceof Error ? reelError.message : "Unknown error",
+            orderId: id,
           });
         }
       }
     } catch (error) {
       console.error("❌ [API] Error fetching regular order:", {
         error: error,
-        message: error instanceof Error ? error.message : 'Unknown error',
-        orderId: id
+        message: error instanceof Error ? error.message : "Unknown error",
+        orderId: id,
       });
-      
+
       // If regular order query fails, try reel order
       try {
-        
         const reelOrderData = await hasuraClient.request<any>(
           GET_REEL_ORDER_DETAILS,
           {
             orderId: id,
           }
         );
-
 
         if (reelOrderData.reel_orders && reelOrderData.reel_orders.length > 0) {
           orderData = reelOrderData.reel_orders[0];
@@ -386,8 +381,9 @@ export default async function handler(
       } catch (reelError) {
         console.error("❌ [API] Error fetching reel order on retry:", {
           error: reelError,
-          message: reelError instanceof Error ? reelError.message : 'Unknown error',
-          orderId: id
+          message:
+            reelError instanceof Error ? reelError.message : "Unknown error",
+          orderId: id,
         });
       }
     }
@@ -404,7 +400,7 @@ export default async function handler(
       status: orderData.status,
       hasReel: !!orderData.Reel,
       hasRestaurant: !!orderData.Reel?.Restaurant,
-      hasUser: !!orderData.user
+      hasUser: !!orderData.user,
     });
 
     // Format the order data for the frontend based on order type
@@ -415,18 +411,20 @@ export default async function handler(
       console.log("🔍 [API] Processing regular order data:", {
         orderId: orderData.id,
         hasShop: !!orderData.shop,
-        shopData: orderData.shop ? {
-          id: orderData.shop.id,
-          name: orderData.shop.name,
-          address: orderData.shop.address,
-          image: orderData.shop.image,
-          phone: orderData.shop.phone,
-          latitude: orderData.shop.latitude,
-          longitude: orderData.shop.longitude,
-          operating_hours: orderData.shop.operating_hours
-        } : null,
+        shopData: orderData.shop
+          ? {
+              id: orderData.shop.id,
+              name: orderData.shop.name,
+              address: orderData.shop.address,
+              image: orderData.shop.image,
+              phone: orderData.shop.phone,
+              latitude: orderData.shop.latitude,
+              longitude: orderData.shop.longitude,
+              operating_hours: orderData.shop.operating_hours,
+            }
+          : null,
         hasOrderItems: !!orderData.Order_Items,
-        orderItemsLength: orderData.Order_Items?.length || 0
+        orderItemsLength: orderData.Order_Items?.length || 0,
       });
 
       console.log(
@@ -519,18 +517,22 @@ export default async function handler(
         hasReel: !!orderData.Reel,
         hasRestaurant: !!orderData.Reel?.Restaurant,
         hasShops: !!orderData.Reel?.Shops,
-        restaurantData: orderData.Reel?.Restaurant ? {
-          id: orderData.Reel.Restaurant.id,
-          name: orderData.Reel.Restaurant.name,
-          location: orderData.Reel.Restaurant.location,
-          phone: orderData.Reel.Restaurant.phone
-        } : null,
-        shopData: orderData.Reel?.Shops ? {
-          id: orderData.Reel.Shops.id,
-          name: orderData.Reel.Shops.name,
-          address: orderData.Reel.Shops.address,
-          phone: orderData.Reel.Shops.phone
-        } : null
+        restaurantData: orderData.Reel?.Restaurant
+          ? {
+              id: orderData.Reel.Restaurant.id,
+              name: orderData.Reel.Restaurant.name,
+              location: orderData.Reel.Restaurant.location,
+              phone: orderData.Reel.Restaurant.phone,
+            }
+          : null,
+        shopData: orderData.Reel?.Shops
+          ? {
+              id: orderData.Reel.Shops.id,
+              name: orderData.Reel.Shops.name,
+              address: orderData.Reel.Shops.address,
+              phone: orderData.Reel.Shops.phone,
+            }
+          : null,
       });
 
       const serviceFee = parseFloat(orderData.service_fee || "0");
@@ -547,7 +549,7 @@ export default async function handler(
         reelPrice,
         quantity,
         subTotal,
-        orderTotal: orderData.total
+        orderTotal: orderData.total,
       });
 
       formattedOrder = {
@@ -607,15 +609,15 @@ export default async function handler(
         total: formattedOrder.total,
         hasReel: !!formattedOrder.reel,
         hasRestaurant: !!formattedOrder.reel?.Restaurant,
-        customerName: formattedOrder.customerName
+        customerName: formattedOrder.customerName,
       });
     }
 
     console.log("✅ [API] Sending response to frontend:", {
       success: true,
       orderId: formattedOrder.id,
-      orderType: formattedOrder.orderType || 'unknown',
-      status: formattedOrder.status
+      orderType: formattedOrder.orderType || "unknown",
+      status: formattedOrder.status,
     });
 
     res.status(200).json({
@@ -625,9 +627,9 @@ export default async function handler(
   } catch (error) {
     console.error("❌ [API] Error fetching order details:", {
       error: error,
-      message: error instanceof Error ? error.message : 'Unknown error',
+      message: error instanceof Error ? error.message : "Unknown error",
       stack: error instanceof Error ? error.stack : undefined,
-      orderId: req.query.id
+      orderId: req.query.id,
     });
     res.status(500).json({ error: "Failed to fetch order details" });
   }

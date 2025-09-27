@@ -120,7 +120,6 @@ query GetRestaurantOrders($user_id: uuid!) {
   }
 }
 
-
 query GetAllRestaurantOrders {
   restaurant_orders {
     id
