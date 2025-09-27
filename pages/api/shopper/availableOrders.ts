@@ -223,18 +223,6 @@ export default async function handler(
         }>;
       }>(GET_AVAILABLE_RESTAURANT_ORDERS, { thirtyMinutesAgo });
       
-      console.log("🔍 Restaurant orders query result:", {
-        queryParams: { thirtyMinutesAgo },
-        resultCount: testRestaurantQuery?.restaurant_orders?.length || 0,
-        orders: testRestaurantQuery?.restaurant_orders?.map((order: any) => ({
-          id: order.id,
-          updated_at: order.updated_at,
-          created_at: order.created_at,
-          assigned_at: order.assigned_at,
-          status: order.status,
-          restaurantName: order.Restaurant?.name
-        }))
-      });
     } catch (error) {
       console.error("❌ Restaurant orders query failed:", error);
       logger.error("Restaurant orders query failed", "AvailableOrders", error);
@@ -348,19 +336,6 @@ export default async function handler(
     const reelOrders = reelOrdersData.reel_orders;
     const restaurantOrders = restaurantOrdersData.restaurant_orders;
 
-    console.log("📊 Raw orders data:", {
-      regularOrders: regularOrders.length,
-      reelOrders: reelOrders.length,
-      restaurantOrders: restaurantOrders.length,
-      restaurantOrdersRaw: restaurantOrders.map((order: any) => ({
-        id: order.id,
-        updated_at: order.updated_at,
-        created_at: order.created_at,
-        assigned_at: order.assigned_at,
-        status: order.status,
-        restaurantName: order.Restaurant?.name
-      }))
-    });
 
     logger.info("Retrieved orders from database", "AvailableOrders", {
       regularOrderCount: regularOrders.length,
@@ -605,14 +580,6 @@ export default async function handler(
           0
         ) || 1;
 
-      // Debug the updated_at value
-      console.log(`🍽️ Restaurant order ${order.id} API response:`, {
-        created_at: order.created_at,
-        updated_at: order.updated_at,
-        updated_at_type: typeof order.updated_at,
-        updated_at_null: order.updated_at === null,
-        updated_at_undefined: order.updated_at === undefined
-      });
 
       return {
         id: order.id,
@@ -652,19 +619,6 @@ export default async function handler(
       };
     });
 
-    console.log("🍽️ Processed restaurant orders:", {
-      count: availableRestaurantOrders.length,
-      orders: availableRestaurantOrders.map(order => ({
-        id: order.id,
-        orderType: order.orderType,
-        shopName: order.shopName,
-        earnings: order.earnings,
-        pendingMinutes: order.pendingMinutes,
-        priorityLevel: order.priorityLevel,
-        distance: order.distance,
-        travelTimeMinutes: order.travelTimeMinutes
-      }))
-    });
 
     // Combine all types of orders
     const allAvailableOrders = [
@@ -678,23 +632,6 @@ export default async function handler(
       (order) => order.travelTimeMinutes <= maxTravelTime
     );
 
-    // Log the filtered orders
-    console.log("✅ Final filtered orders:", {
-      totalFiltered: filteredOrders.length,
-      regularOrders: filteredOrders.filter((o) => o.orderType === "regular").length,
-      reelOrders: filteredOrders.filter((o) => o.orderType === "reel").length,
-      restaurantOrders: filteredOrders.filter((o) => o.orderType === "restaurant").length,
-      maxTravelTime: `${maxTravelTime} minutes`,
-      restaurantOrdersDetails: filteredOrders
-        .filter((o) => o.orderType === "restaurant")
-        .map(order => ({
-          id: order.id,
-          shopName: order.shopName,
-          distance: order.distance,
-          travelTime: order.travelTimeMinutes,
-          maxTravelTime
-        }))
-    });
 
     logger.info("Filtered orders", "AvailableOrders", {
       filteredOrderCount: filteredOrders.length,
