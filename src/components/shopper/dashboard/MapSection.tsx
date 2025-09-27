@@ -234,7 +234,7 @@ const createPopupHTML = (order: any, theme: "light" | "dark", isPending: boolean
               font-weight: 700;
               color: ${orderConfig.color};
             ">
-              ${order.estimatedEarnings}
+              ${formatCurrencySync(parseFloat(order.estimatedEarnings || order.total || '0'))}
             </span>
           </div>
           
