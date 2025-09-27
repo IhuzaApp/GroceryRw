@@ -85,6 +85,7 @@ export default function ActiveBatches({
   const [activeOrders, setActiveOrders] = useState<Order[]>(initialOrders);
   const [error, setError] = useState<string | null>(initialError);
   const [fetchAttempted, setFetchAttempted] = useState(false);
+  const [fetchSuccess, setFetchSuccess] = useState(false);
   const fetchedRef = useRef(false);
   const { theme } = useTheme();
   const [currentTime, setCurrentTime] = useState(new Date());
@@ -122,6 +123,7 @@ export default function ActiveBatches({
     // Always start with loading state
     setIsLoading(true);
     setError(null);
+    setFetchSuccess(false);
 
     // Always fetch fresh data when component mounts or role changes
     // Reset the fetch flag to allow fresh data fetching
@@ -162,10 +164,13 @@ export default function ActiveBatches({
             message: data.message,
           });
           setActiveOrders([]);
+          setFetchSuccess(true);
+          setFetchAttempted(true);
           return;
         }
 
         setActiveOrders(data.batches);
+        setFetchSuccess(true);
         setFetchAttempted(true);
       } catch (err) {
         // Don't set error if it was canceled
@@ -177,6 +182,7 @@ export default function ActiveBatches({
         const errorMessage =
           err instanceof Error ? err.message : "An unknown error occurred";
         setError(errorMessage);
+        setFetchSuccess(false);
         setFetchAttempted(true);
         toaster.push(
           <Message showIcon type="error" header="Error">
@@ -313,55 +319,8 @@ export default function ActiveBatches({
           </div>
         )}
 
-        {error && (
-          <div
-            className={`mb-6 rounded-lg border p-4 ${
-              theme === "dark"
-                ? "border-red-500/20 bg-red-900/20"
-                : "border-red-200 bg-red-50"
-            }`}
-          >
-            <p
-              className={`text-base font-bold ${
-                theme === "dark" ? "text-red-300" : "text-red-800"
-              }`}
-            >
-              There was a problem loading your batches
-            </p>
-            <p
-              className={`mt-1 text-sm ${
-                theme === "dark" ? "text-red-200" : "text-red-600"
-              }`}
-            >
-              {error}
-            </p>
-            <div
-              className={`mt-3 text-sm ${
-                theme === "dark" ? "text-red-200" : "text-red-700"
-              }`}
-            >
-              <p>This might be because:</p>
-              <ul className="mt-1 list-inside list-disc">
-                <li>You are not logged in as a shopper</li>
-                <li>Your session may have expired (try refreshing)</li>
-                <li>There may be a network issue (check your connection)</li>
-                <li>The server might be temporarily unavailable</li>
-              </ul>
-            </div>
-            <button
-              onClick={() => window.location.reload()}
-              className={`mt-3 rounded px-4 py-2 text-sm font-medium ${
-                theme === "dark"
-                  ? "bg-red-500 text-white hover:bg-red-600"
-                  : "bg-red-600 text-white hover:bg-red-700"
-              }`}
-            >
-              Try Again
-            </button>
-          </div>
-        )}
-
-        {isLoading ? (
+        {/* Show skeleton loading while data is being fetched */}
+        {isLoading && (
           <div className="grid grid-cols-1 gap-4 sm:gap-6 lg:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
             {/* Skeleton loading cards */}
             {Array.from({ length: 4 }).map((_, index) => (
@@ -464,7 +423,10 @@ export default function ActiveBatches({
               </div>
             ))}
           </div>
-        ) : activeOrders.length > 0 ? (
+        )}
+
+        {/* Show orders when fetch is successful and we have data */}
+        {!isLoading && fetchSuccess && activeOrders.length > 0 && (
           <div className="grid grid-cols-1 gap-4 sm:gap-6 lg:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
             {activeOrders.map((order) => (
               <ActiveOrderCard
@@ -474,7 +436,10 @@ export default function ActiveBatches({
               />
             ))}
           </div>
-        ) : (
+        )}
+
+        {/* Show "No Active Orders" when fetch is successful but no data */}
+        {!isLoading && fetchSuccess && activeOrders.length === 0 && (
           <div
             className={`rounded-xl border p-8 text-center ${
               theme === "dark"
@@ -511,9 +476,9 @@ export default function ActiveBatches({
                 theme === "dark" ? "text-gray-400" : "text-gray-600"
               }`}
             >
-              {fetchAttempted || initialOrders !== undefined
-                ? "You don&apos;t have any active orders assigned to you at the moment. This includes orders in any state except &apos;PENDING&apos;, &apos;null&apos;, or &apos;delivered&apos;."
-                : "Unable to fetch your active orders. Please try again."}
+              You don&apos;t have any active orders assigned to you at the
+              moment. This includes orders in any state except
+              &apos;PENDING&apos;, &apos;null&apos;, or &apos;delivered&apos;.
             </p>
             <div className="flex flex-col items-center justify-center gap-3 sm:flex-row">
               <Link href="/Plasa">
@@ -521,18 +486,72 @@ export default function ActiveBatches({
                   Return to Dashboard
                 </button>
               </Link>
-              {!fetchAttempted && !initialOrders.length && (
+            </div>
+          </div>
+        )}
+
+        {/* Show error state when fetch fails */}
+        {!isLoading && !fetchSuccess && fetchAttempted && (
+          <div
+            className={`rounded-xl border p-8 text-center ${
+              theme === "dark"
+                ? "border-red-700 bg-red-900/20"
+                : "border-red-200 bg-red-50"
+            }`}
+          >
+            <div
+              className={`mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full ${
+                theme === "dark" ? "bg-red-700" : "bg-red-100"
+              }`}
+            >
+              <svg
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                className={`h-8 w-8 ${
+                  theme === "dark" ? "text-red-400" : "text-red-500"
+                }`}
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z"
+                />
+              </svg>
+            </div>
+            <p
+              className={`mb-2 text-lg font-bold sm:text-xl ${
+                theme === "dark" ? "text-red-300" : "text-red-800"
+              }`}
+            >
+              Something Went Wrong
+            </p>
+            <p
+              className={`mb-4 text-sm sm:text-base ${
+                theme === "dark" ? "text-red-200" : "text-red-600"
+              }`}
+            >
+              {error || "Failed to load your active orders. Please try again."}
+            </p>
+            <div className="flex flex-col items-center justify-center gap-3 sm:flex-row">
+              <button
+                onClick={() => window.location.reload()}
+                className="rounded-lg bg-red-600 px-4 py-2 font-medium text-white transition-colors hover:bg-red-700"
+              >
+                Try Again
+              </button>
+              <Link href="/Plasa">
                 <button
-                  onClick={() => window.location.reload()}
                   className={`rounded-lg border px-4 py-2 font-medium transition-colors ${
                     theme === "dark"
                       ? "border-gray-600 text-gray-300 hover:bg-gray-700"
                       : "border-gray-300 text-gray-700 hover:bg-gray-100"
                   }`}
                 >
-                  Retry Loading
+                  Return to Dashboard
                 </button>
-              )}
+              </Link>
             </div>
           </div>
         )}

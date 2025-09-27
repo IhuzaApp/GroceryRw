@@ -78,9 +78,9 @@ const GET_AVAILABLE_RESTAURANT_ORDERS = gql`
         status: { _eq: "PENDING" }
         shopper_id: { _is_null: true }
         _or: [
-          { updated_at: { _gte: $current_time } },
-          { 
-            updated_at: { _is_null: true },
+          { updated_at: { _gte: $current_time } }
+          {
+            updated_at: { _is_null: true }
             created_at: { _gte: $current_time }
           }
         ]
@@ -161,7 +161,7 @@ function calculateShopperPriority(
 ): number {
   const orderLocation = {
     lat: parseFloat(order.Address?.latitude || order.address?.latitude),
-    lng: parseFloat(order.Address?.longitude || order.address?.longitude)
+    lng: parseFloat(order.Address?.longitude || order.address?.longitude),
   };
 
   // Calculate distance
@@ -175,14 +175,15 @@ function calculateShopperPriority(
   // Get performance metrics
   const avgRating = performance.Ratings_aggregate?.aggregate?.avg?.rating || 0;
   const orderCount = performance.Orders_aggregate?.aggregate?.count || 0;
-  const completionRate = orderCount > 0 ? Math.min(100, (orderCount / 10) * 100) : 0; // Simplified completion rate
+  const completionRate =
+    orderCount > 0 ? Math.min(100, (orderCount / 10) * 100) : 0; // Simplified completion rate
 
   // Priority score calculation (lower is better)
-  const priorityScore = 
-    (distance * 0.4) +                    // Distance weight (40%)
-    ((5 - avgRating) * 2) +               // Rating weight (inverted, 20%)
-    ((100 - completionRate) * 0.01) +     // Completion rate weight (10%)
-    (Math.random() * 0.5);                // Small random factor (10%) for fairness
+  const priorityScore =
+    distance * 0.4 + // Distance weight (40%)
+    (5 - avgRating) * 2 + // Rating weight (inverted, 20%)
+    (100 - completionRate) * 0.01 + // Completion rate weight (10%)
+    Math.random() * 0.5; // Small random factor (10%) for fairness
 
   return priorityScore;
 }
@@ -197,19 +198,18 @@ export default async function handler(
     return res.status(405).json({ error: "Method not allowed" });
   }
 
-          try {
-
+  try {
     const { current_location, user_id } = req.body;
 
     if (!user_id) {
       return res.status(400).json({
-        error: "User ID is required"
+        error: "User ID is required",
       });
     }
 
     if (!current_location || !current_location.lat || !current_location.lng) {
       return res.status(400).json({
-        error: "Current location is required"
+        error: "Current location is required",
       });
     }
 
@@ -218,10 +218,17 @@ export default async function handler(
     }
 
     // Get orders created in the last 29 minutes
-    const twentyNineMinutesAgo = new Date(Date.now() - 29 * 60 * 1000).toISOString();
+    const twentyNineMinutesAgo = new Date(
+      Date.now() - 29 * 60 * 1000
+    ).toISOString();
 
     // Fetch regular, reel, and restaurant orders in parallel
-    const [regularOrdersData, reelOrdersData, restaurantOrdersData, performanceData] = await Promise.all([
+    const [
+      regularOrdersData,
+      reelOrdersData,
+      restaurantOrdersData,
+      performanceData,
+    ] = await Promise.all([
       hasuraClient.request(GET_AVAILABLE_ORDERS, {
         current_time: twentyNineMinutesAgo,
       }) as any,
@@ -238,27 +245,41 @@ export default async function handler(
 
     const availableOrders = regularOrdersData.Orders || [];
     const availableReelOrders = reelOrdersData.reel_orders || [];
-    const availableRestaurantOrders = restaurantOrdersData.restaurant_orders || [];
+    const availableRestaurantOrders =
+      restaurantOrdersData.restaurant_orders || [];
 
     // Combine all orders with type information
     const allOrders = [
-      ...availableOrders.map((order: any) => ({ ...order, orderType: "regular" })),
-      ...availableReelOrders.map((order: any) => ({ ...order, orderType: "reel" })),
-      ...availableRestaurantOrders.map((order: any) => ({ ...order, orderType: "restaurant" }))
+      ...availableOrders.map((order: any) => ({
+        ...order,
+        orderType: "regular",
+      })),
+      ...availableReelOrders.map((order: any) => ({
+        ...order,
+        orderType: "reel",
+      })),
+      ...availableRestaurantOrders.map((order: any) => ({
+        ...order,
+        orderType: "restaurant",
+      })),
     ];
 
     if (allOrders.length === 0) {
       return res.status(200).json({
         success: false,
         message: "No available orders at the moment",
-        orders: []
+        orders: [],
       });
     }
 
     // Calculate priority for each order
-    const ordersWithPriority = allOrders.map(order => ({
+    const ordersWithPriority = allOrders.map((order) => ({
       ...order,
-      priority: calculateShopperPriority(current_location, order, performanceData)
+      priority: calculateShopperPriority(
+        current_location,
+        order,
+        performanceData
+      ),
     }));
 
     // Sort by priority (lowest first)
@@ -285,15 +306,23 @@ export default async function handler(
     // Format order for notification (don't assign yet)
     const orderForNotification = {
       id: bestOrder.id,
-      shopName: bestOrder.Shop?.name || bestOrder.Reel?.title || bestOrder.Restaurant?.name || "Unknown Shop",
+      shopName:
+        bestOrder.Shop?.name ||
+        bestOrder.Reel?.title ||
+        bestOrder.Restaurant?.name ||
+        "Unknown Shop",
       distance: distance,
       travelTimeMinutes: calculateTravelTime(distance),
       createdAt: bestOrder.created_at,
-      customerAddress: `${bestOrder.Address?.street || bestOrder.address?.street}, ${bestOrder.Address?.city || bestOrder.address?.city}`,
+      customerAddress: `${
+        bestOrder.Address?.street || bestOrder.address?.street
+      }, ${bestOrder.Address?.city || bestOrder.address?.city}`,
       itemsCount: bestOrder.quantity || 1,
-      estimatedEarnings: bestOrder.orderType === "restaurant" 
-        ? parseFloat(bestOrder.delivery_fee || "0") // Restaurant orders: delivery only
-        : parseFloat(bestOrder.service_fee || "0") + parseFloat(bestOrder.delivery_fee || "0"), // Regular and reel orders: service + delivery
+      estimatedEarnings:
+        bestOrder.orderType === "restaurant"
+          ? parseFloat(bestOrder.delivery_fee || "0") // Restaurant orders: delivery only
+          : parseFloat(bestOrder.service_fee || "0") +
+            parseFloat(bestOrder.delivery_fee || "0"), // Regular and reel orders: service + delivery
       orderType: bestOrder.orderType,
       priority: bestOrder.priority,
       // Add restaurant-specific fields
@@ -305,20 +334,19 @@ export default async function handler(
       // Add reel-specific fields
       ...(bestOrder.orderType === "reel" && {
         reel: bestOrder.Reel,
-      })
+      }),
     };
 
     return res.status(200).json({
       success: true,
       order: orderForNotification,
-      message: "Order found - shopper can accept or skip"
+      message: "Order found - shopper can accept or skip",
     });
-
   } catch (error) {
     return res.status(500).json({
       error: "Failed to find order",
       details: error instanceof Error ? error.message : "Unknown error",
-      stack: error instanceof Error ? error.stack : undefined
+      stack: error instanceof Error ? error.stack : undefined,
     });
   }
 }

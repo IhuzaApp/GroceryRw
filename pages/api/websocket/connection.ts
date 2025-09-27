@@ -25,7 +25,7 @@ export const sendToShopper = (userId: string, event: string, data: any) => {
 // Send notification to multiple shoppers
 export const sendToShoppers = (userIds: string[], event: string, data: any) => {
   let sentCount = 0;
-  userIds.forEach(userId => {
+  userIds.forEach((userId) => {
     if (sendToShopper(userId, event, data)) {
       sentCount++;
     }
@@ -47,9 +47,9 @@ export const sendToCluster = (clusterId: string, event: string, data: any) => {
 export default function handler(req: NextApiRequest, res: NextApiResponse) {
   res.status(200).json({
     success: true,
-    message: 'WebSocket server is running',
+    message: "WebSocket server is running",
     connected: !!global.io,
     activeConnections: getActiveConnections().size,
-    clusters: getLocationClusters().size
+    clusters: getLocationClusters().size,
   });
 }

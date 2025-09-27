@@ -51,7 +51,7 @@ graph TB
     B --> C{Order Age Check}
     C -->|30+ minutes| D[Add to Aged Orders Map]
     C -->|< 30 minutes| E[Regular Processing]
-    
+
     B --> F[Calculate Priority Score]
     F --> G[Find Best Shopper]
     G --> H[Send WebSocket Notification]
@@ -60,7 +60,7 @@ graph TB
     J -->|Accept| K[Assign Order]
     J -->|Skip| L[Find Next Shopper]
     J -->|Timeout| M[Reassign to Others]
-    
+
     D --> N[Map Section Display]
     N --> O[WebSocket Updates]
     O --> P[Real-time Map Updates]
@@ -89,16 +89,19 @@ graph TB
 
 ### Key Differences
 
-1. **Two-Phase Process**: 
+1. **Two-Phase Process**:
+
    - Phase 1: `WAITING_FOR_CONFIRMATION` (restaurant hasn't accepted)
    - Phase 2: `PENDING` (restaurant accepted, available for shoppers)
 
-2. **Time Filtering**: 
+2. **Time Filtering**:
+
    - Uses `updated_at` field instead of `created_at`
    - Only orders updated within last 29 minutes are shown for notifications
    - Falls back to `created_at` if `updated_at` is null
 
 3. **Earnings Calculation**:
+
    - **Regular Orders**: `service_fee + delivery_fee`
    - **Reel Orders**: `service_fee + delivery_fee`
    - **Restaurant Orders**: `delivery_fee` only (no `service_fee`)
@@ -113,11 +116,11 @@ graph TB
 
 ```sql
 -- Get available restaurant orders
-SELECT * FROM restaurant_orders 
-WHERE status = 'PENDING' 
-  AND shopper_id IS NULL 
+SELECT * FROM restaurant_orders
+WHERE status = 'PENDING'
+  AND shopper_id IS NULL
   AND (
-    updated_at >= NOW() - INTERVAL '29 minutes' 
+    updated_at >= NOW() - INTERVAL '29 minutes'
     OR (updated_at IS NULL AND created_at >= NOW() - INTERVAL '29 minutes')
   )
 ORDER BY updated_at DESC NULLS LAST, created_at DESC;
@@ -127,17 +130,19 @@ ORDER BY updated_at DESC NULLS LAST, created_at DESC;
 
 The system uses different earnings calculation methods based on order type:
 
-1. **Regular Orders**: 
+1. **Regular Orders**:
+
    - **Formula**: `service_fee + delivery_fee`
    - **Reason**: Platform charges both service and delivery fees
    - **Example**: Service fee (RF 200) + Delivery fee (RF 300) = RF 500
 
-2. **Reel Orders**: 
+2. **Reel Orders**:
+
    - **Formula**: `service_fee + delivery_fee`
    - **Reason**: Platform charges both service and delivery fees
    - **Example**: Service fee (RF 200) + Delivery fee (RF 300) = RF 500
 
-3. **Restaurant Orders**: 
+3. **Restaurant Orders**:
    - **Formula**: `delivery_fee` only
    - **Reason**: Restaurant sets final price, no platform service fee
    - **Example**: Delivery fee (RF 250) = RF 250
@@ -146,7 +151,8 @@ The system uses different earnings calculation methods based on order type:
 
 The system uses a two-tier timing approach:
 
-1. **Fresh Orders (0-29 minutes)**: 
+1. **Fresh Orders (0-29 minutes)**:
+
    - Shoppers receive real-time notifications
    - Orders appear in smart assignment algorithm
    - WebSocket notifications sent immediately
@@ -174,6 +180,7 @@ All notification and assignment APIs support restaurant orders:
 **Purpose**: Frontend component that manages order notifications, batch assignments, and user interactions.
 
 **Key Features**:
+
 - WebSocket integration for real-time updates
 - Toast notifications with SVG icons
 - Travel time calculation and display
@@ -181,13 +188,14 @@ All notification and assignment APIs support restaurant orders:
 - Firebase push notifications
 
 **Flow**:
+
 ```mermaid
 sequenceDiagram
     participant NS as NotificationSystem
     participant WS as WebSocket
     participant API as Smart Assignment API
     participant DB as Database
-    
+
     NS->>WS: Connect to WebSocket
     WS-->>NS: Connection established
     NS->>API: Request smart assignment
@@ -204,6 +212,7 @@ sequenceDiagram
 **Purpose**: Implements the intelligent assignment algorithm that finds the best order for a shopper.
 
 **Algorithm**:
+
 1. **Fetch Available Orders**: Get unassigned orders from database
 2. **Calculate Priority Score**: For each order, calculate score based on:
    - Shopper performance (rating, completion rate, response time)
@@ -212,23 +221,25 @@ sequenceDiagram
 3. **Return Best Order**: Return the highest-scoring order for shopper review
 
 **Priority Score Calculation**:
+
 ```typescript
-const priorityScore = (
-  performanceScore * 0.4 +      // 40% performance
-  distanceScore * 0.3 +         // 30% proximity
-  ageScore * 0.2 +              // 20% order age
-  orderPriority * 0.1           // 10% order priority
-);
+const priorityScore =
+  performanceScore * 0.4 + // 40% performance
+  distanceScore * 0.3 + // 30% proximity
+  ageScore * 0.2 + // 20% order age
+  orderPriority * 0.1; // 10% order priority
 ```
 
 ### 3. WebSocket System
 
 **Components**:
+
 - **Server** (`server.js`): Custom Node.js server hosting both Next.js and Socket.IO
 - **Manager** (`websocketManager.ts`): Client-side connection management
 - **Hook** (`useWebSocket.ts`): React hook for WebSocket integration
 
 **Events**:
+
 - `shopper-register`: Shopper connects and registers
 - `location-update`: Real-time location tracking
 - `new-order`: New order available for assignment
@@ -241,6 +252,7 @@ const priorityScore = (
 **Purpose**: Optimized batch processing that groups shoppers and orders by location.
 
 **Process**:
+
 1. **Cluster Shoppers**: Group nearby shoppers by location
 2. **Find Nearby Orders**: For each cluster, find orders within radius
 3. **Send Batch Notifications**: Send grouped orders to shopper clusters
@@ -251,21 +263,23 @@ const priorityScore = (
 **Purpose**: Displays aged, unassigned orders on an interactive map.
 
 **Features**:
+
 - **Aged Order Filtering**: Shows only orders 30+ minutes old with `shopper_id = null`
 - **WebSocket Integration**: Real-time updates when orders are added/removed
 - **Visual Markers**: Custom markers for different order types
 - **Interactive Popups**: Order details and acceptance buttons
 
 **Filtering Logic**:
+
 ```typescript
 const filterAgedUnassignedOrders = (orders) => {
   const thirtyMinutesAgo = new Date(Date.now() - 30 * 60 * 1000);
-  
-  return orders.filter(order => {
+
+  return orders.filter((order) => {
     const orderCreatedAt = new Date(order.createdAt);
     const isAged = orderCreatedAt <= thirtyMinutesAgo;
     const isUnassigned = !order.shopper_id || order.shopper_id === null;
-    
+
     return isAged && isUnassigned;
   });
 };
@@ -274,6 +288,7 @@ const filterAgedUnassignedOrders = (orders) => {
 ## Assignment Flow
 
 ### 1. Order Creation
+
 ```mermaid
 flowchart TD
     A[Order Created] --> B[Add to Available Orders]
@@ -284,22 +299,24 @@ flowchart TD
 ```
 
 ### 2. Shopper Response
+
 ```mermaid
 flowchart TD
     A[Shopper Receives Notification] --> B{Action}
     B -->|Accept| C[Assign Order Atomically]
     B -->|Skip| D[Find Next Best Shopper]
     B -->|Timeout| E[Reassign to Others]
-    
+
     C --> F[Update Order Status]
     F --> G[Remove from Available Pool]
     G --> H[Send Confirmation]
-    
+
     D --> I[Send to Next Shopper]
     E --> I
 ```
 
 ### 3. Real-time Updates
+
 ```mermaid
 sequenceDiagram
     participant O as Order System
@@ -307,15 +324,15 @@ sequenceDiagram
     participant C1 as Shopper 1
     participant C2 as Shopper 2
     participant M as Map Section
-    
+
     O->>WS: New order created
     WS->>C1: Send notification
     WS->>M: Update map display
-    
+
     C1->>WS: Skip order
     WS->>C2: Send to next shopper
     WS->>M: Update map
-    
+
     C2->>WS: Accept order
     WS->>O: Confirm assignment
     WS->>M: Remove from map
@@ -324,6 +341,7 @@ sequenceDiagram
 ## Database Schema
 
 ### Orders Table
+
 ```sql
 CREATE TABLE Orders (
   id UUID PRIMARY KEY,
@@ -336,6 +354,7 @@ CREATE TABLE Orders (
 ```
 
 ### Reel Orders Table
+
 ```sql
 CREATE TABLE reel_orders (
   id UUID PRIMARY KEY,
@@ -347,6 +366,7 @@ CREATE TABLE reel_orders (
 ```
 
 ### Restaurant Orders Table
+
 ```sql
 CREATE TABLE restaurant_orders (
   id UUID PRIMARY KEY,
@@ -370,49 +390,57 @@ CREATE TABLE restaurant_orders (
 ## Configuration
 
 ### WebSocket Settings
+
 ```typescript
 // Server configuration
 const io = new Server(server, {
   cors: {
     origin: ["http://localhost:3000", "http://127.0.0.1:3000"],
-    methods: ["GET", "POST"]
+    methods: ["GET", "POST"],
   },
   allowEIO3: true,
-  transports: ['polling', 'websocket']
+  transports: ["polling", "websocket"],
 });
 
 // Client configuration
-const socket = io(process.env.NEXT_PUBLIC_WEBSOCKET_URL || 'http://localhost:3000', {
-  transports: ['polling', 'websocket'],
-  forceNew: false,
-  reconnectionAttempts: 5,
-  reconnectionDelay: 1000
-});
+const socket = io(
+  process.env.NEXT_PUBLIC_WEBSOCKET_URL || "http://localhost:3000",
+  {
+    transports: ["polling", "websocket"],
+    forceNew: false,
+    reconnectionAttempts: 5,
+    reconnectionDelay: 1000,
+  }
+);
 ```
 
 ### Assignment Parameters
+
 ```typescript
 const ASSIGNMENT_CONFIG = {
-  MAX_DISTANCE_KM: 10,           // Maximum distance for assignment
-  TIMEOUT_MINUTES: 2,            // Timeout for shopper response
-  BATCH_SIZE: 5,                 // Maximum orders per batch
-  CLUSTER_RADIUS_KM: 2,          // Radius for location clustering
-  AGED_ORDER_MINUTES: 30         // Age threshold for map display
+  MAX_DISTANCE_KM: 10, // Maximum distance for assignment
+  TIMEOUT_MINUTES: 2, // Timeout for shopper response
+  BATCH_SIZE: 5, // Maximum orders per batch
+  CLUSTER_RADIUS_KM: 2, // Radius for location clustering
+  AGED_ORDER_MINUTES: 30, // Age threshold for map display
 };
 ```
 
 ## Performance Optimizations
 
 ### 1. Polling Reduction
+
 - **Before**: 30-second polling for all orders
 - **After**: WebSocket real-time updates + 2-minute fallback polling
 
 ### 2. Batch Processing
+
 - Groups orders by location to reduce database queries
 - Sends notifications to shopper clusters instead of individuals
 - Reduces server load and improves response times
 
 ### 3. Smart Caching
+
 - Caches shopper performance data
 - Reuses distance calculations
 - Optimizes database queries with proper indexing
@@ -420,16 +448,19 @@ const ASSIGNMENT_CONFIG = {
 ## Error Handling
 
 ### WebSocket Connection Issues
+
 - Automatic reconnection with exponential backoff
 - Fallback to polling when WebSocket fails
 - Graceful degradation of real-time features
 
 ### Assignment Conflicts
+
 - Atomic database operations prevent double-assignment
 - Locking mechanism ensures only one shopper can accept an order
 - Automatic cleanup of stale assignments
 
 ### Network Failures
+
 - Retry logic for failed API calls
 - Offline mode with local state management
 - Queue system for pending operations
@@ -437,12 +468,14 @@ const ASSIGNMENT_CONFIG = {
 ## Monitoring & Analytics
 
 ### Key Metrics
+
 - **Assignment Success Rate**: Percentage of successful order assignments
 - **Response Time**: Average time for shopper response
 - **WebSocket Uptime**: Connection stability metrics
 - **Order Age Distribution**: How long orders wait before assignment
 
 ### Logging
+
 - WebSocket connection events
 - Assignment attempts and results
 - Performance metrics and bottlenecks
@@ -542,13 +575,13 @@ graph TB
     C --> D[Recipient Online?]
     D -->|Yes| E[WebSocket Notification]
     D -->|No| F[FCM Push Notification]
-    
+
     E --> G[Sound + Toast Notification]
     F --> H[Background Push Notification]
-    
+
     H --> I[User Clicks Notification]
     I --> J[Open Chat Interface]
-    
+
     G --> K[User Sees Message]
     J --> K
 ```
@@ -560,6 +593,7 @@ graph TB
 **Purpose**: Server-side FCM service for sending push notifications.
 
 **Key Features**:
+
 - Send notifications to specific users
 - Handle token management
 - Batch notification sending
@@ -570,6 +604,7 @@ graph TB
 **Purpose**: Client-side FCM service for managing tokens and permissions.
 
 **Key Features**:
+
 - Request notification permissions
 - Generate and manage FCM tokens
 - Handle notification clicks
@@ -580,6 +615,7 @@ graph TB
 **Purpose**: Handles background notifications when the app is not active.
 
 **Key Features**:
+
 - Background message handling
 - Notification display
 - Click action handling
@@ -651,20 +687,24 @@ POST /api/fcm/send-notification
 ## Testing
 
 ### 1. Permission Request
+
 - The app requests notification permission on first load
 - Users can enable/disable notifications in browser settings
 
 ### 2. Token Generation
+
 - FCM tokens are automatically generated and saved
 - Tokens are refreshed when needed
 - Invalid tokens are automatically cleaned up
 
 ### 3. Message Notifications
+
 - When a message is sent, the recipient gets a push notification
 - Notifications work even when the app is not active
 - Clicking notifications opens the relevant chat
 
 ### 4. Background Notifications
+
 - Notifications appear in the system notification tray
 - Click actions open the app to the relevant screen
 - Notifications persist until user interaction

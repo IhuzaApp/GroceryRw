@@ -7,9 +7,9 @@ import { logger } from "../../../src/utils/logger";
 const GET_AVAILABLE_ORDERS = gql`
   query GetAvailableOrders($thirtyMinutesAgo: timestamptz!) {
     Orders(
-      where: { 
-        shopper_id: { _is_null: true }, 
-        status: { _eq: "PENDING" },
+      where: {
+        shopper_id: { _is_null: true }
+        status: { _eq: "PENDING" }
         created_at: { _lte: $thirtyMinutesAgo }
       }
       order_by: { created_at: desc }
@@ -44,9 +44,9 @@ const GET_AVAILABLE_ORDERS = gql`
 const GET_AVAILABLE_REEL_ORDERS = gql`
   query GetAvailableReelOrders($thirtyMinutesAgo: timestamptz!) {
     reel_orders(
-      where: { 
-        shopper_id: { _is_null: true }, 
-        status: { _eq: "PENDING" },
+      where: {
+        shopper_id: { _is_null: true }
+        status: { _eq: "PENDING" }
         created_at: { _lte: $thirtyMinutesAgo }
       }
       order_by: { created_at: desc }
@@ -88,13 +88,13 @@ const GET_AVAILABLE_REEL_ORDERS = gql`
 const GET_AVAILABLE_RESTAURANT_ORDERS = gql`
   query GetAvailableRestaurantOrders($twentyNineMinutesAgo: timestamptz!) {
     restaurant_orders(
-      where: { 
-        shopper_id: { _is_null: true }, 
-        status: { _eq: "PENDING" },
+      where: {
+        shopper_id: { _is_null: true }
+        status: { _eq: "PENDING" }
         _or: [
-          { updated_at: { _gte: $twentyNineMinutesAgo } },
-          { 
-            updated_at: { _is_null: true },
+          { updated_at: { _gte: $twentyNineMinutesAgo } }
+          {
+            updated_at: { _is_null: true }
             created_at: { _gte: $twentyNineMinutesAgo }
           }
         ]
@@ -208,118 +208,126 @@ export default async function handler(
     }
 
     // Calculate timestamp for 30 minutes ago (for aged orders on map)
-    const thirtyMinutesAgo = new Date(Date.now() - 30 * 60 * 1000).toISOString();
+    const thirtyMinutesAgo = new Date(
+      Date.now() - 30 * 60 * 1000
+    ).toISOString();
     // Calculate timestamp for 29 minutes ago (for restaurant orders notifications)
-    const twentyNineMinutesAgo = new Date(Date.now() - 29 * 60 * 1000).toISOString();
-
+    const twentyNineMinutesAgo = new Date(
+      Date.now() - 29 * 60 * 1000
+    ).toISOString();
 
     // Debug: Test restaurant orders query first
     try {
-      const testRestaurantQuery = await hasuraClient.request(GET_AVAILABLE_RESTAURANT_ORDERS, { twentyNineMinutesAgo });
-    
+      const testRestaurantQuery = await hasuraClient.request(
+        GET_AVAILABLE_RESTAURANT_ORDERS,
+        { twentyNineMinutesAgo }
+      );
     } catch (error) {
       logger.error("Restaurant orders query failed", "AvailableOrders", error);
     }
 
     // Fetch regular orders, reel orders, and restaurant orders in parallel
-    const [regularOrdersData, reelOrdersData, restaurantOrdersData] = await Promise.all([
-      hasuraClient.request<{
-        Orders: Array<{
-          id: string;
-          created_at: string;
-          service_fee: string | null;
-          delivery_fee: string | null;
-          status: string;
-          shop: {
-            name: string;
-            address: string;
-            latitude: string;
-            longitude: string;
-          };
-          address: {
-            latitude: string;
-            longitude: string;
-            street: string;
-            city: string;
-          };
-          Order_Items_aggregate: { aggregate: { count: number | null } | null };
-        }>;
-      }>(GET_AVAILABLE_ORDERS, { thirtyMinutesAgo }),
-      hasuraClient.request<{
-        reel_orders: Array<{
-          id: string;
-          created_at: string;
-          service_fee: string | null;
-          delivery_fee: string | null;
-          total: string;
-          quantity: string;
-          delivery_note: string | null;
-          status: string;
-          Reel: {
+    const [regularOrdersData, reelOrdersData, restaurantOrdersData] =
+      await Promise.all([
+        hasuraClient.request<{
+          Orders: Array<{
             id: string;
-            title: string;
-            description: string;
-            Price: string;
-            Product: string;
-            type: string;
-            video_url: string;
-            user_id: string;
-          };
-          user: {
-            id: string;
-            name: string;
-            phone: string;
-          };
-          address: {
-            latitude: string;
-            longitude: string;
-            street: string;
-            city: string;
-          };
-        }>;
-      }>(GET_AVAILABLE_REEL_ORDERS, { thirtyMinutesAgo }),
-      hasuraClient.request<{
-        restaurant_orders: Array<{
-          id: string;
-          created_at: string;
-          delivery_fee: string | null;
-          total: string;
-          delivery_time: string;
-          delivery_notes: string | null;
-          status: string;
-          assigned_at: string | null;
-          Restaurant: {
-            id: string;
-            name: string;
-            logo: string | null;
-            lat: string;
-            long: string;
-          };
-          orderedBy: {
-            id: string;
-            name: string;
-            phone: string;
-            email: string;
-          };
-          Address: {
-            latitude: string;
-            longitude: string;
-            street: string;
-            city: string;
-          };
-          restaurant_dishe_orders: Array<{
-            id: string;
-            quantity: number;
-            price: string;
-            restaurant_dishes: {
-              id: string;
+            created_at: string;
+            service_fee: string | null;
+            delivery_fee: string | null;
+            status: string;
+            shop: {
               name: string;
-              description: string;
+              address: string;
+              latitude: string;
+              longitude: string;
+            };
+            address: {
+              latitude: string;
+              longitude: string;
+              street: string;
+              city: string;
+            };
+            Order_Items_aggregate: {
+              aggregate: { count: number | null } | null;
             };
           }>;
-        }>;
-      }>(GET_AVAILABLE_RESTAURANT_ORDERS, { twentyNineMinutesAgo }),
-    ]);
+        }>(GET_AVAILABLE_ORDERS, { thirtyMinutesAgo }),
+        hasuraClient.request<{
+          reel_orders: Array<{
+            id: string;
+            created_at: string;
+            service_fee: string | null;
+            delivery_fee: string | null;
+            total: string;
+            quantity: string;
+            delivery_note: string | null;
+            status: string;
+            Reel: {
+              id: string;
+              title: string;
+              description: string;
+              Price: string;
+              Product: string;
+              type: string;
+              video_url: string;
+              user_id: string;
+            };
+            user: {
+              id: string;
+              name: string;
+              phone: string;
+            };
+            address: {
+              latitude: string;
+              longitude: string;
+              street: string;
+              city: string;
+            };
+          }>;
+        }>(GET_AVAILABLE_REEL_ORDERS, { thirtyMinutesAgo }),
+        hasuraClient.request<{
+          restaurant_orders: Array<{
+            id: string;
+            created_at: string;
+            delivery_fee: string | null;
+            total: string;
+            delivery_time: string;
+            delivery_notes: string | null;
+            status: string;
+            assigned_at: string | null;
+            Restaurant: {
+              id: string;
+              name: string;
+              logo: string | null;
+              lat: string;
+              long: string;
+            };
+            orderedBy: {
+              id: string;
+              name: string;
+              phone: string;
+              email: string;
+            };
+            Address: {
+              latitude: string;
+              longitude: string;
+              street: string;
+              city: string;
+            };
+            restaurant_dishe_orders: Array<{
+              id: string;
+              quantity: number;
+              price: string;
+              restaurant_dishes: {
+                id: string;
+                name: string;
+                description: string;
+              };
+            }>;
+          }>;
+        }>(GET_AVAILABLE_RESTAURANT_ORDERS, { twentyNineMinutesAgo }),
+      ]);
 
     const regularOrders = regularOrdersData.Orders;
     const reelOrders = reelOrdersData.reel_orders;
@@ -479,7 +487,9 @@ export default async function handler(
         itemsCount: 1, // Reel orders have 1 item
         serviceFee: parseFloat(order.service_fee || "0"),
         deliveryFee: parseFloat(order.delivery_fee || "0"),
-        earnings: parseFloat(order.service_fee || "0") + parseFloat(order.delivery_fee || "0"), // Service + delivery fee for reel orders
+        earnings:
+          parseFloat(order.service_fee || "0") +
+          parseFloat(order.delivery_fee || "0"), // Service + delivery fee for reel orders
         pendingMinutes,
         priorityLevel,
         status: order.status,
@@ -506,10 +516,18 @@ export default async function handler(
       );
 
       // Get coordinates from relationships
-      const restaurantLatitude = order.Restaurant?.lat ? parseFloat(order.Restaurant.lat) : 0;
-      const restaurantLongitude = order.Restaurant?.long ? parseFloat(order.Restaurant.long) : 0;
-      const customerLatitude = order.Address?.latitude ? parseFloat(order.Address.latitude) : 0;
-      const customerLongitude = order.Address?.longitude ? parseFloat(order.Address.longitude) : 0;
+      const restaurantLatitude = order.Restaurant?.lat
+        ? parseFloat(order.Restaurant.lat)
+        : 0;
+      const restaurantLongitude = order.Restaurant?.long
+        ? parseFloat(order.Restaurant.long)
+        : 0;
+      const customerLatitude = order.Address?.latitude
+        ? parseFloat(order.Address.latitude)
+        : 0;
+      const customerLongitude = order.Address?.longitude
+        ? parseFloat(order.Address.longitude)
+        : 0;
 
       // Calculate distance from shopper to restaurant in kilometers
       const distanceToRestaurantKm = calculateDistanceKm(
@@ -528,11 +546,15 @@ export default async function handler(
       );
 
       // Calculate travel time from shopper to restaurant
-      const travelTimeMinutes = estimateTravelTimeMinutes(distanceToRestaurantKm);
+      const travelTimeMinutes = estimateTravelTimeMinutes(
+        distanceToRestaurantKm
+      );
 
       // Round distances to 1 decimal place
-      const formattedDistanceToRestaurant = Math.round(distanceToRestaurantKm * 10) / 10;
-      const formattedRestaurantToCustomerDistance = Math.round(restaurantToCustomerDistanceKm * 10) / 10;
+      const formattedDistanceToRestaurant =
+        Math.round(distanceToRestaurantKm * 10) / 10;
+      const formattedRestaurantToCustomerDistance =
+        Math.round(restaurantToCustomerDistanceKm * 10) / 10;
 
       // Calculate priority level (1-5) for UI highlighting
       let priorityLevel = 1;
@@ -547,10 +569,11 @@ export default async function handler(
       }
 
       // Calculate total items count from dish orders
-      const totalItems = order.restaurant_dishe_orders?.reduce(
-        (sum, dish) => sum + (dish.quantity || 0),
-        0
-      ) || 1;
+      const totalItems =
+        order.restaurant_dishe_orders?.reduce(
+          (sum, dish) => sum + (dish.quantity || 0),
+          0
+        ) || 1;
 
       return {
         id: order.id,
@@ -608,8 +631,9 @@ export default async function handler(
         .length,
       reelOrderCount: filteredOrders.filter((o) => o.orderType === "reel")
         .length,
-      restaurantOrderCount: filteredOrders.filter((o) => o.orderType === "restaurant")
-        .length,
+      restaurantOrderCount: filteredOrders.filter(
+        (o) => o.orderType === "restaurant"
+      ).length,
       maxTravelTime: `${maxTravelTime} minutes`,
     });
 

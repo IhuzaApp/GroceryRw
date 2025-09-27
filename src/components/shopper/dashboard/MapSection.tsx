@@ -177,17 +177,19 @@ export default function MapSection({
   const cookieSnapshotRef = useRef<string>("");
 
   // Filter aged unassigned orders (30+ minutes old, shopper_id is null)
-  const filterAgedUnassignedOrders = (orders: MapSectionProps["availableOrders"]) => {
+  const filterAgedUnassignedOrders = (
+    orders: MapSectionProps["availableOrders"]
+  ) => {
     const thirtyMinutesAgo = new Date(Date.now() - 30 * 60 * 1000);
-    
-    return orders.filter(order => {
+
+    return orders.filter((order) => {
       // Check if order is 30+ minutes old
       const orderCreatedAt = new Date(order.createdAt);
       const isAged = orderCreatedAt <= thirtyMinutesAgo;
-      
+
       // Check if order is unassigned (shopper_id is null)
       const isUnassigned = !order.shopper_id || order.shopper_id === null;
-      
+
       return isAged && isUnassigned;
     });
   };
@@ -212,24 +214,35 @@ export default function MapSection({
       const orderCreatedAt = new Date(order.createdAt);
       const isAged = orderCreatedAt <= thirtyMinutesAgo;
       const isUnassigned = !order.shopper_id || order.shopper_id === null;
-      
+
       if (isAged && isUnassigned) {
-        setRealTimeAgedOrders(prev => [...prev, order]);
+        setRealTimeAgedOrders((prev) => [...prev, order]);
       }
     };
 
     const handleWebSocketOrderExpired = (event: Event) => {
       const customEvent = event as CustomEvent;
       const { orderId } = customEvent.detail;
-      setRealTimeAgedOrders(prev => prev.filter(order => order.id !== orderId));
+      setRealTimeAgedOrders((prev) =>
+        prev.filter((order) => order.id !== orderId)
+      );
     };
 
-    window.addEventListener('websocket-new-order', handleWebSocketNewOrder);
-    window.addEventListener('websocket-order-expired', handleWebSocketOrderExpired);
+    window.addEventListener("websocket-new-order", handleWebSocketNewOrder);
+    window.addEventListener(
+      "websocket-order-expired",
+      handleWebSocketOrderExpired
+    );
 
     return () => {
-      window.removeEventListener('websocket-new-order', handleWebSocketNewOrder);
-      window.removeEventListener('websocket-order-expired', handleWebSocketOrderExpired);
+      window.removeEventListener(
+        "websocket-new-order",
+        handleWebSocketNewOrder
+      );
+      window.removeEventListener(
+        "websocket-order-expired",
+        handleWebSocketOrderExpired
+      );
     };
   }, []);
 
@@ -1620,7 +1633,7 @@ export default function MapSection({
     if (mapInstanceRef.current && mapLoaded && isOnline) {
       // Clear existing order markers
       clearOrderMarkers();
-      
+
       // Re-initialize map sequence with updated orders
       initMapSequence(mapInstanceRef.current);
     }
@@ -1762,17 +1775,9 @@ export default function MapSection({
       }
 
       // Process aged unassigned orders with grouping
-      if (
-        isOnline &&
-        allAgedOrders?.length > 0 &&
-        map &&
-        map.getContainer()
-      ) {
+      if (isOnline && allAgedOrders?.length > 0 && map && map.getContainer()) {
         // Group aged orders by location
-        const groupedAgedOrders = new Map<
-          string,
-          typeof allAgedOrders
-        >();
+        const groupedAgedOrders = new Map<string, typeof allAgedOrders>();
         allAgedOrders.forEach((order) => {
           if (!order.shopLatitude || !order.shopLongitude) return;
           const key = `${order.shopLatitude.toFixed(
@@ -1785,17 +1790,21 @@ export default function MapSection({
         });
 
         // Log grouped orders information
-        logger.info("Aged unassigned orders grouped by location", "MapSection", {
-          totalOrders: allAgedOrders.length,
-          groupCount: groupedAgedOrders.size,
-          groupSizes: Array.from(groupedAgedOrders.entries()).map(
-            ([key, orders]) => ({
-              location: key,
-              orderCount: orders.length,
-              orderIds: orders.map((o) => o.id),
-            })
-          ),
-        });
+        logger.info(
+          "Aged unassigned orders grouped by location",
+          "MapSection",
+          {
+            totalOrders: allAgedOrders.length,
+            groupCount: groupedAgedOrders.size,
+            groupSizes: Array.from(groupedAgedOrders.entries()).map(
+              ([key, orders]) => ({
+                location: key,
+                orderCount: orders.length,
+                orderIds: orders.map((o) => o.id),
+              })
+            ),
+          }
+        );
 
         // Process each group of orders
         groupedAgedOrders.forEach((orders, locationKey) => {

@@ -1,6 +1,6 @@
-import { useEffect, useRef, useState } from 'react';
-import { useSession } from 'next-auth/react';
-import { websocketManager } from '../utils/websocketManager';
+import { useEffect, useRef, useState } from "react";
+import { useSession } from "next-auth/react";
+import { websocketManager } from "../utils/websocketManager";
 
 interface WebSocketHook {
   isConnected: boolean;
@@ -27,32 +27,42 @@ export const useWebSocket = (): WebSocketHook => {
     };
 
     const handleNewOrder = (data: any) => {
-      window.dispatchEvent(new CustomEvent('websocket-new-order', { detail: data }));
+      window.dispatchEvent(
+        new CustomEvent("websocket-new-order", { detail: data })
+      );
     };
 
     const handleBatchOrders = (data: any) => {
-      window.dispatchEvent(new CustomEvent('websocket-batch-orders', { detail: data }));
+      window.dispatchEvent(
+        new CustomEvent("websocket-batch-orders", { detail: data })
+      );
     };
 
     const handleOrderExpired = (data: any) => {
-      window.dispatchEvent(new CustomEvent('websocket-order-expired', { detail: data }));
+      window.dispatchEvent(
+        new CustomEvent("websocket-order-expired", { detail: data })
+      );
     };
 
     const handleOrderAccepted = (data: any) => {
-      window.dispatchEvent(new CustomEvent('websocket-order-accepted', { detail: data }));
+      window.dispatchEvent(
+        new CustomEvent("websocket-order-accepted", { detail: data })
+      );
     };
 
     const handleOrderRejected = (data: any) => {
-      window.dispatchEvent(new CustomEvent('websocket-order-rejected', { detail: data }));
+      window.dispatchEvent(
+        new CustomEvent("websocket-order-rejected", { detail: data })
+      );
     };
 
     // Add event listeners
-    websocketManager.on('registered', handleRegistered);
-    websocketManager.on('new-order', handleNewOrder);
-    websocketManager.on('batch-orders', handleBatchOrders);
-    websocketManager.on('order-expired', handleOrderExpired);
-    websocketManager.on('order-accepted', handleOrderAccepted);
-    websocketManager.on('order-rejected', handleOrderRejected);
+    websocketManager.on("registered", handleRegistered);
+    websocketManager.on("new-order", handleNewOrder);
+    websocketManager.on("batch-orders", handleBatchOrders);
+    websocketManager.on("order-expired", handleOrderExpired);
+    websocketManager.on("order-accepted", handleOrderAccepted);
+    websocketManager.on("order-rejected", handleOrderRejected);
 
     // Update connection state periodically
     const interval = setInterval(() => {
@@ -62,12 +72,12 @@ export const useWebSocket = (): WebSocketHook => {
     // Cleanup
     return () => {
       clearInterval(interval);
-      websocketManager.off('registered', handleRegistered);
-      websocketManager.off('new-order', handleNewOrder);
-      websocketManager.off('batch-orders', handleBatchOrders);
-      websocketManager.off('order-expired', handleOrderExpired);
-      websocketManager.off('order-accepted', handleOrderAccepted);
-      websocketManager.off('order-rejected', handleOrderRejected);
+      websocketManager.off("registered", handleRegistered);
+      websocketManager.off("new-order", handleNewOrder);
+      websocketManager.off("batch-orders", handleBatchOrders);
+      websocketManager.off("order-expired", handleOrderExpired);
+      websocketManager.off("order-accepted", handleOrderAccepted);
+      websocketManager.off("order-rejected", handleOrderRejected);
     };
   }, [session?.user?.id]);
 
@@ -96,6 +106,6 @@ export const useWebSocket = (): WebSocketHook => {
     isConnected,
     sendLocation,
     acceptOrder,
-    rejectOrder
+    rejectOrder,
   };
 };

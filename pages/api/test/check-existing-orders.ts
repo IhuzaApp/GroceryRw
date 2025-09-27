@@ -6,10 +6,7 @@ import { gql } from "graphql-request";
 const GET_ALL_ORDERS = gql`
   query GetAllOrders {
     Orders(
-      where: {
-        status: { _eq: "PENDING" }
-        shopper_id: { _is_null: true }
-      }
+      where: { status: { _eq: "PENDING" }, shopper_id: { _is_null: true } }
       order_by: { created_at: desc }
       limit: 10
     ) {
@@ -37,10 +34,7 @@ const GET_ALL_ORDERS = gql`
 const GET_ALL_REEL_ORDERS = gql`
   query GetAllReelOrders {
     reel_orders(
-      where: {
-        status: { _eq: "PENDING" }
-        shopper_id: { _is_null: true }
-      }
+      where: { status: { _eq: "PENDING" }, shopper_id: { _is_null: true } }
       order_by: { created_at: desc }
       limit: 10
     ) {
@@ -88,7 +82,7 @@ export default async function handler(
       regularOrders: regularOrders.length,
       reelOrders: reelOrders.length,
       regularOrdersData: regularOrders,
-      reelOrdersData: reelOrders
+      reelOrdersData: reelOrders,
     });
 
     return res.status(200).json({
@@ -97,34 +91,33 @@ export default async function handler(
       results: {
         regularOrders: {
           count: regularOrders.length,
-          orders: regularOrders.map(order => ({
+          orders: regularOrders.map((order) => ({
             id: order.id,
             created_at: order.created_at,
             status: order.status,
             shopper_id: order.shopper_id,
             shopName: order.Shop?.name,
-            address: order.Address?.street + ", " + order.Address?.city
-          }))
+            address: order.Address?.street + ", " + order.Address?.city,
+          })),
         },
         reelOrders: {
           count: reelOrders.length,
-          orders: reelOrders.map(order => ({
+          orders: reelOrders.map((order) => ({
             id: order.id,
             created_at: order.created_at,
             status: order.status,
             shopper_id: order.shopper_id,
             reelTitle: order.Reel?.title,
-            address: order.address?.street + ", " + order.address?.city
-          }))
-        }
-      }
+            address: order.address?.street + ", " + order.address?.city,
+          })),
+        },
+      },
     });
-
   } catch (error) {
     console.error("💥 Error checking orders:", error);
     return res.status(500).json({
       error: "Failed to check orders",
-      details: error instanceof Error ? error.message : "Unknown error"
+      details: error instanceof Error ? error.message : "Unknown error",
     });
   }
 }

@@ -467,24 +467,21 @@ export const getServerSideProps: GetServerSideProps<
     }
 
     // First try to fetch as a regular order
-    
+
     let data = await hasuraClient.request<{ Orders: any[] }>(
       GET_ORDER_DETAILS,
       { id }
     );
-
 
     let order = data.Orders[0];
     let orderType = "regular";
 
     // If no regular order found, try as a reel order
     if (!order) {
-      
       const reelData = await hasuraClient.request<{ reel_orders: any[] }>(
         GET_REEL_ORDER_DETAILS,
         { id }
       );
-
 
       order = reelData.reel_orders[0];
       orderType = "reel";
@@ -503,15 +500,21 @@ export const getServerSideProps: GetServerSideProps<
     // User can view if they are assigned to the order or if they are the customer
     const isAssignedShopper = order.assignedTo?.id === session.user.id;
     const isCustomer = order.orderedBy?.id === session.user.id;
-    
+
     // For reel orders, also check if user is the customer via user field
-    const isReelCustomer = orderType === "reel" && order.user?.id === session.user.id;
-    
+    const isReelCustomer =
+      orderType === "reel" && order.user?.id === session.user.id;
+
     // For reel orders, also check if user is the assigned shopper via shopper_id field
-    const isReelShopper = orderType === "reel" && order.shopper_id === session.user.id;
+    const isReelShopper =
+      orderType === "reel" && order.shopper_id === session.user.id;
 
-
-    if (!isAssignedShopper && !isCustomer && !isReelCustomer && !isReelShopper) {
+    if (
+      !isAssignedShopper &&
+      !isCustomer &&
+      !isReelCustomer &&
+      !isReelShopper
+    ) {
       return {
         props: {
           orderData: null,
@@ -535,7 +538,6 @@ export const getServerSideProps: GetServerSideProps<
           })
         : null,
     };
-
 
     return {
       props: {
