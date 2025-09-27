@@ -5,6 +5,7 @@ import Link from "next/link";
 import { Button, Panel, Badge, Loader } from "rsuite";
 import "rsuite/dist/rsuite.min.css";
 import { toast } from "react-hot-toast";
+import { useTheme } from "../../../context/ThemeContext";
 
 interface Order {
   id: string;
@@ -88,6 +89,7 @@ function getPriorityLabel(
 }
 
 export default function OrderCard({ order, onOrderAccepted }: OrderCardProps) {
+  const { theme } = useTheme();
   const badgeColorClass = getBadgeColor(order);
   const priorityInfo = getPriorityLabel(order.priorityLevel || 0);
   const [isAccepting, setIsAccepting] = useState(false);
@@ -187,9 +189,15 @@ export default function OrderCard({ order, onOrderAccepted }: OrderCardProps) {
     <div
       className={`group relative overflow-hidden rounded-2xl border transition-all duration-300 hover:shadow-xl ${
         order.priorityLevel && order.priorityLevel >= 4
-          ? "border-red-500 bg-gradient-to-br from-red-50 to-white shadow-lg shadow-red-500/20"
+          ? theme === "dark"
+            ? "border-red-500 bg-gradient-to-br from-red-900/30 to-gray-800 shadow-lg shadow-red-500/20"
+            : "border-red-500 bg-gradient-to-br from-red-50 to-white shadow-lg shadow-red-500/20"
           : isReelOrder
-          ? "border-purple-500 bg-gradient-to-br from-purple-50 to-white shadow-lg shadow-purple-500/20"
+          ? theme === "dark"
+            ? "border-purple-500 bg-gradient-to-br from-purple-900/30 to-gray-800 shadow-lg shadow-purple-500/20"
+            : "border-purple-500 bg-gradient-to-br from-purple-50 to-white shadow-lg shadow-purple-500/20"
+          : theme === "dark"
+          ? "border-gray-600 bg-gray-800 shadow-md hover:shadow-xl"
           : "border-gray-200 bg-white shadow-md hover:shadow-xl"
       }`}
     >
@@ -221,14 +229,14 @@ export default function OrderCard({ order, onOrderAccepted }: OrderCardProps) {
       <div className="p-5">
         <div className="mb-4 flex items-start justify-between">
           <div className="flex-1 pr-3">
-            <h3 className="mb-1 text-xl font-bold text-gray-900">
+            <h3 className={`mb-1 text-xl font-bold ${theme === "dark" ? "text-gray-100" : "text-gray-900"}`}>
               {isReelOrder
                 ? order.reel?.title || "Reel Order"
                 : isRestaurantOrder
                 ? order.shopName || "Restaurant Order"
                 : order.shopName}
             </h3>
-            <p className="text-sm text-gray-600">
+            <p className={`text-sm ${theme === "dark" ? "text-gray-400" : "text-gray-600"}`}>
               {isReelOrder
                 ? `From: ${order.customerName || "Reel Creator"}`
                 : isRestaurantOrder
@@ -245,7 +253,7 @@ export default function OrderCard({ order, onOrderAccepted }: OrderCardProps) {
 
         <div className="mb-4 flex items-center justify-between">
           <div className="flex items-center space-x-4">
-            <div className="flex items-center text-sm text-gray-600">
+            <div className={`flex items-center text-sm ${theme === "dark" ? "text-gray-400" : "text-gray-600"}`}>
               <svg
                 viewBox="0 0 24 24"
                 fill="none"
@@ -263,7 +271,7 @@ export default function OrderCard({ order, onOrderAccepted }: OrderCardProps) {
               </span>
             </div>
 
-            <div className="flex items-center text-sm text-gray-600">
+            <div className={`flex items-center text-sm ${theme === "dark" ? "text-gray-400" : "text-gray-600"}`}>
               <svg
                 viewBox="0 0 24 24"
                 fill="none"
@@ -286,7 +294,7 @@ export default function OrderCard({ order, onOrderAccepted }: OrderCardProps) {
           </div>
         </div>
 
-        <div className="flex items-center justify-between border-t border-gray-100 pt-4">
+        <div className={`flex items-center justify-between border-t pt-4 ${theme === "dark" ? "border-gray-700" : "border-gray-100"}`}>
           <div className="flex items-center">
             <svg
               viewBox="0 0 24 24"
@@ -304,7 +312,7 @@ export default function OrderCard({ order, onOrderAccepted }: OrderCardProps) {
               <path d="M12 2v20M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6" />
             </svg>
             <div>
-              <p className="text-sm text-gray-500">Earnings</p>
+              <p className={`text-sm ${theme === "dark" ? "text-gray-400" : "text-gray-500"}`}>Earnings</p>
               <p
                 className={`text-2xl font-bold ${
                   isReelOrder
