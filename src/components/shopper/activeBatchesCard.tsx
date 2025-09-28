@@ -866,7 +866,8 @@ function ActiveOrderCard({
         )}
 
         {/* Priority Indicator for Regular Batches */}
-        {!isReelOrder && !isRestaurantOrder &&
+        {!isReelOrder &&
+          !isRestaurantOrder &&
           order.deliveryTime &&
           (() => {
             const countdown = getDeliveryCountdown(
@@ -938,7 +939,8 @@ function ActiveOrderCard({
         )}
 
         {/* Delivery Time Indicator for Regular Batches */}
-        {!isReelOrder && !isRestaurantOrder &&
+        {!isReelOrder &&
+          !isRestaurantOrder &&
           order.deliveryTime &&
           (() => {
             const countdown = getDeliveryCountdown(
@@ -1037,8 +1039,12 @@ function ActiveOrderCard({
                 theme === "dark" ? "text-gray-100" : "text-gray-900"
               }`}
             >
-              {isReelOrder ? "Quick Batch" : isRestaurantOrder ? "Restaurant Order" : "Batch"} #
-              {order.id.slice(0, 6).toUpperCase()}
+              {isReelOrder
+                ? "Quick Batch"
+                : isRestaurantOrder
+                ? "Restaurant Order"
+                : "Batch"}{" "}
+              #{order.id.slice(0, 6).toUpperCase()}
             </h3>
             <p
               className={`text-sm ${
@@ -1064,19 +1070,19 @@ function ActiveOrderCard({
         >
           <div className="text-center">
             <p
-            className={`text-xl font-bold ${
-              isReelOrder
-                ? theme === "dark"
-                  ? "text-indigo-400"
-                  : "text-indigo-600"
-                : isRestaurantOrder
-                ? theme === "dark"
-                  ? "text-orange-400"
-                  : "text-orange-600"
-                : theme === "dark"
-                ? "text-emerald-400"
-                : "text-emerald-600"
-            }`}
+              className={`text-xl font-bold ${
+                isReelOrder
+                  ? theme === "dark"
+                    ? "text-indigo-400"
+                    : "text-indigo-600"
+                  : isRestaurantOrder
+                  ? theme === "dark"
+                    ? "text-orange-400"
+                    : "text-orange-600"
+                  : theme === "dark"
+                  ? "text-emerald-400"
+                  : "text-emerald-600"
+              }`}
             >
               {formatCurrencySync(order.estimatedEarnings || 0)}
             </p>

@@ -222,10 +222,16 @@ export default async function handler(
     return res.status(400).json({ error: "Missing or invalid orderId" });
   }
 
-  if (orderType !== "regular" && orderType !== "reel" && orderType !== "restaurant") {
+  if (
+    orderType !== "regular" &&
+    orderType !== "reel" &&
+    orderType !== "restaurant"
+  ) {
     return res
       .status(400)
-      .json({ error: "Invalid orderType. Must be 'regular', 'reel', or 'restaurant'" });
+      .json({
+        error: "Invalid orderType. Must be 'regular', 'reel', or 'restaurant'",
+      });
   }
 
   try {
@@ -328,12 +334,15 @@ export default async function handler(
       });
     } else if (orderType === "restaurant") {
       // Assign restaurant order (no wallet updates here, they happen during delivery)
-      data = await hasuraClient.request<RestaurantOrderResponse>(ASSIGN_RESTAURANT_ORDER, {
-        id: orderId,
-        shopper_id: userId,
-        updated_at: currentTimestamp,
-        assigned_at: assignedAt,
-      });
+      data = await hasuraClient.request<RestaurantOrderResponse>(
+        ASSIGN_RESTAURANT_ORDER,
+        {
+          id: orderId,
+          shopper_id: userId,
+          updated_at: currentTimestamp,
+          assigned_at: assignedAt,
+        }
+      );
     } else {
       // Assign regular order (no wallet updates here, they happen during shopping status)
       data = await hasuraClient.request<OrderResponse>(ASSIGN_ORDER, {
