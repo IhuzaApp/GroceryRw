@@ -14,6 +14,18 @@ const REGISTER_SHOPPER = gql`
     $transport_mode: String!
     $profile_photo: String
     $user_id: uuid!
+    $Police_Clearance_Cert: String
+    $guarantor: String
+    $guarantorPhone: String
+    $guarantorRelationship: String
+    $latitude: String
+    $longitude: String
+    $mutual_StatusCertificate: String
+    $mutual_status: String
+    $national_id_photo_back: String
+    $national_id_photo_front: String
+    $proofOfResidency: String
+    $signature: String
   ) {
     insert_shoppers_one(
       object: {
@@ -29,12 +41,48 @@ const REGISTER_SHOPPER = gql`
         background_check_completed: false
         onboarding_step: "application_submitted"
         user_id: $user_id
+        Police_Clearance_Cert: $Police_Clearance_Cert
+        guarantor: $guarantor
+        guarantorPhone: $guarantorPhone
+        guarantorRelationship: $guarantorRelationship
+        latitude: $latitude
+        longitude: $longitude
+        mutual_StatusCertificate: $mutual_StatusCertificate
+        mutual_status: $mutual_status
+        national_id_photo_back: $national_id_photo_back
+        national_id_photo_front: $national_id_photo_front
+        proofOfResidency: $proofOfResidency
+        signature: $signature
       }
     ) {
       id
       status
       active
       onboarding_step
+      Employment_id
+      Police_Clearance_Cert
+      address
+      background_check_completed
+      created_at
+      driving_license
+      full_name
+      guarantor
+      guarantorPhone
+      guarantorRelationship
+      latitude
+      longitude
+      mutual_StatusCertificate
+      mutual_status
+      national_id
+      national_id_photo_back
+      national_id_photo_front
+      phone_number
+      profile_photo
+      proofOfResidency
+      signature
+      transport_mode
+      updated_at
+      user_id
     }
   }
 `;
@@ -50,6 +98,18 @@ const UPDATE_SHOPPER = gql`
     $driving_license: String
     $transport_mode: String!
     $profile_photo: String
+    $Police_Clearance_Cert: String
+    $guarantor: String
+    $guarantorPhone: String
+    $guarantorRelationship: String
+    $latitude: String
+    $longitude: String
+    $mutual_StatusCertificate: String
+    $mutual_status: String
+    $national_id_photo_back: String
+    $national_id_photo_front: String
+    $proofOfResidency: String
+    $signature: String
   ) {
     update_shoppers_by_pk(
       pk_columns: { id: $shopper_id }
@@ -61,6 +121,18 @@ const UPDATE_SHOPPER = gql`
         driving_license: $driving_license
         transport_mode: $transport_mode
         profile_photo: $profile_photo
+        Police_Clearance_Cert: $Police_Clearance_Cert
+        guarantor: $guarantor
+        guarantorPhone: $guarantorPhone
+        guarantorRelationship: $guarantorRelationship
+        latitude: $latitude
+        longitude: $longitude
+        mutual_StatusCertificate: $mutual_StatusCertificate
+        mutual_status: $mutual_status
+        national_id_photo_back: $national_id_photo_back
+        national_id_photo_front: $national_id_photo_front
+        proofOfResidency: $proofOfResidency
+        signature: $signature
         status: "pending"
         updated_at: "now()"
       }
@@ -100,6 +172,18 @@ interface RegisterShopperInput {
   profile_photo?: string;
   user_id: string;
   force_update?: boolean; // Optional parameter to force update even if already registered
+  Police_Clearance_Cert?: string;
+  guarantor?: string;
+  guarantorPhone?: string;
+  guarantorRelationship?: string;
+  latitude?: string;
+  longitude?: string;
+  mutual_StatusCertificate?: string;
+  mutual_status?: string;
+  national_id_photo_back?: string;
+  national_id_photo_front?: string;
+  proofOfResidency?: string;
+  signature?: string;
 }
 
 interface RegisterShopperResponse {
@@ -195,6 +279,18 @@ export default async function handler(
       profile_photo,
       user_id,
       force_update = false, // Default to false if not provided
+      Police_Clearance_Cert,
+      guarantor,
+      guarantorPhone,
+      guarantorRelationship,
+      latitude,
+      longitude,
+      mutual_StatusCertificate,
+      mutual_status,
+      national_id_photo_back,
+      national_id_photo_front,
+      proofOfResidency,
+      signature,
     } = req.body as RegisterShopperInput;
 
     // Validate required fields
@@ -246,6 +342,18 @@ export default async function handler(
             driving_license,
             transport_mode,
             profile_photo,
+            Police_Clearance_Cert,
+            guarantor,
+            guarantorPhone,
+            guarantorRelationship,
+            latitude,
+            longitude,
+            mutual_StatusCertificate,
+            mutual_status,
+            national_id_photo_back,
+            national_id_photo_front,
+            proofOfResidency,
+            signature,
           }
         );
 
@@ -283,6 +391,18 @@ export default async function handler(
         transport_mode,
         profile_photo,
         user_id,
+        Police_Clearance_Cert,
+        guarantor,
+        guarantorPhone,
+        guarantorRelationship,
+        latitude,
+        longitude,
+        mutual_StatusCertificate,
+        mutual_status,
+        national_id_photo_back,
+        national_id_photo_front,
+        proofOfResidency,
+        signature,
       }
     );
 
