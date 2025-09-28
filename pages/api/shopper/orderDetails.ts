@@ -277,6 +277,120 @@ const GET_REEL_ORDER_DETAILS = gql`
   }
 `;
 
+// Query to fetch restaurant order details by ID
+const GET_RESTAURANT_ORDER_DETAILS = gql`
+  query GetRestaurantOrderDetails($orderId: uuid!) {
+    restaurant_orders(where: { id: { _eq: $orderId } }) {
+      id
+      OrderID
+      created_at
+      updated_at
+      status
+      delivery_fee
+      total
+      delivery_time
+      delivery_notes
+      discount
+      found
+      restaurant_id
+      shopper_id
+      user_id
+      voucher_code
+      assigned_at
+      combined_order_id
+      delivery_address_id
+      delivery_photo_url
+      Restaurant {
+        id
+        name
+        location
+        lat
+        long
+        phone
+        logo
+        email
+        is_active
+        tin
+        ussd
+        verified
+        profile
+        relatedTo
+        created_at
+      }
+      orderedBy {
+        id
+        name
+        phone
+        email
+        profile_picture
+        gender
+        password_hash
+        updated_at
+        created_at
+        is_active
+        role
+      }
+      address: Address {
+        id
+        street
+        city
+        postal_code
+        latitude
+        longitude
+        created_at
+        updated_at
+        user_id
+        is_default
+      }
+      restaurant_dishe_orders {
+        id
+        quantity
+        price
+        dish_id
+        order_id
+        created_at
+        restaurant_dishes {
+          id
+          name
+          description
+          image
+          price
+          SKU
+          category
+          created_at
+          discount
+          ingredients
+          is_active
+          preparingTime
+          promo
+          promo_type
+          quantity
+          restaurant_id
+          updated_at
+        }
+      }
+      shopper {
+        id
+        name
+        profile_picture
+        email
+        phone
+        gender
+        is_active
+        password_hash
+        role
+        created_at
+        updated_at
+        orders: Orders_aggregate {
+          aggregate {
+            count
+          }
+        }
+      }
+    }
+  }
+`;
+
 export default async function handler(
   req: NextApiRequest,
   res: NextApiResponse
@@ -316,7 +430,7 @@ export default async function handler(
     }
 
     let orderData: any = null;
-    let orderType: "regular" | "reel" = "regular";
+    let orderType: "regular" | "reel" | "restaurant" = "regular";
 
     try {
       // First try to fetch as a regular order
@@ -347,6 +461,30 @@ export default async function handler(
             orderData = reelOrderData.reel_orders[0];
             orderType = "reel";
           } else {
+            // If reel order not found, try restaurant order
+            try {
+              const restaurantOrderData = await hasuraClient.request<any>(
+                GET_RESTAURANT_ORDER_DETAILS,
+                {
+                  orderId: id,
+                }
+              );
+
+              if (
+                restaurantOrderData.restaurant_orders &&
+                restaurantOrderData.restaurant_orders.length > 0
+              ) {
+                orderData = restaurantOrderData.restaurant_orders[0];
+                orderType = "restaurant";
+              }
+            } catch (restaurantError) {
+              console.error("❌ [API] Error fetching restaurant order:", {
+                error: restaurantError,
+                message:
+                  restaurantError instanceof Error ? restaurantError.message : "Unknown error",
+                orderId: id,
+              });
+            }
           }
         } catch (reelError) {
           console.error("❌ [API] Error fetching reel order:", {
@@ -377,6 +515,30 @@ export default async function handler(
           orderData = reelOrderData.reel_orders[0];
           orderType = "reel";
         } else {
+          // If reel order not found, try restaurant order
+          try {
+            const restaurantOrderData = await hasuraClient.request<any>(
+              GET_RESTAURANT_ORDER_DETAILS,
+              {
+                orderId: id,
+              }
+            );
+
+            if (
+              restaurantOrderData.restaurant_orders &&
+              restaurantOrderData.restaurant_orders.length > 0
+            ) {
+              orderData = restaurantOrderData.restaurant_orders[0];
+              orderType = "restaurant";
+            }
+          } catch (restaurantError) {
+            console.error("❌ [API] Error fetching restaurant order on retry:", {
+              error: restaurantError,
+              message:
+                restaurantError instanceof Error ? restaurantError.message : "Unknown error",
+              orderId: id,
+            });
+          }
         }
       } catch (reelError) {
         console.error("❌ [API] Error fetching reel order on retry:", {
@@ -505,7 +667,7 @@ export default async function handler(
         customerId: orderData.orderedBy?.id, // Customer is ALWAYS from orderedBy
         shop: orderData.shop, // Include shop data
       };
-    } else {
+    } else if (orderType === "reel") {
       // Handle reel orders
       console.log("🔍 [API] Processing reel order data:", {
         orderId: orderData.id,
@@ -610,6 +772,92 @@ export default async function handler(
         hasReel: !!formattedOrder.reel,
         hasRestaurant: !!formattedOrder.reel?.Restaurant,
         customerName: formattedOrder.customerName,
+      });
+    } else if (orderType === "restaurant") {
+      // Handle restaurant orders
+      console.log("🔍 [API] Processing restaurant order data:", {
+        orderId: orderData.id,
+        deliveryFee: orderData.delivery_fee,
+        total: orderData.total,
+        hasRestaurant: !!orderData.Restaurant,
+        hasOrderedBy: !!orderData.orderedBy,
+        hasAddress: !!orderData.address,
+        hasDishes: !!orderData.restaurant_dishe_orders,
+        dishesCount: orderData.restaurant_dishe_orders?.length || 0,
+      });
+
+      const deliveryFee = parseFloat(orderData.delivery_fee || "0");
+      const totalEarnings = deliveryFee; // Restaurant orders don't have service fee
+
+      // Format dish items
+      const formattedDishItems = orderData.restaurant_dishe_orders.map((dishOrder: any) => ({
+        id: dishOrder.id,
+        name: dishOrder.restaurant_dishes?.name || "Unknown Dish",
+        quantity: dishOrder.quantity,
+        price: parseFloat(dishOrder.price) || 0,
+        description: dishOrder.restaurant_dishes?.description || null,
+        image: dishOrder.restaurant_dishes?.image || null,
+        category: dishOrder.restaurant_dishes?.category || null,
+        ingredients: dishOrder.restaurant_dishes?.ingredients || null,
+        preparingTime: dishOrder.restaurant_dishes?.preparingTime || null,
+      }));
+
+      // Calculate subtotal from dish orders
+      const subTotal = formattedDishItems.reduce(
+        (sum: number, item: any) => sum + item.price * item.quantity,
+        0
+      );
+
+      formattedOrder = {
+        id: orderData.id,
+        OrderID: orderData.OrderID || orderData.id,
+        createdAt: orderData.created_at,
+        updatedAt: orderData.updated_at,
+        status: orderData.status,
+        orderType: "restaurant",
+        shopName: orderData.Restaurant?.name || "Unknown Restaurant",
+        shopAddress: orderData.Restaurant?.location || "No Address",
+        shopLatitude: orderData.Restaurant?.lat ? parseFloat(orderData.Restaurant.lat) : null,
+        shopLongitude: orderData.Restaurant?.long ? parseFloat(orderData.Restaurant.long) : null,
+        address: orderData.address,
+        customerAddress: orderData.address
+          ? `${orderData.address.street || ""}, ${orderData.address.city || ""}`
+          : "No Address",
+        customerLatitude: orderData.address?.latitude
+          ? parseFloat(orderData.address.latitude)
+          : null,
+        customerLongitude: orderData.address?.longitude
+          ? parseFloat(orderData.address.longitude)
+          : null,
+        items: formattedDishItems,
+        itemCount: formattedDishItems.length,
+        subTotal,
+        serviceFee: 0, // Restaurant orders don't have service fee
+        deliveryFee,
+        total: parseFloat(orderData.total || "0"),
+        estimatedEarnings: totalEarnings,
+        restaurant: orderData.Restaurant,
+        deliveryNote: orderData.delivery_notes,
+        deliveryNotes: orderData.delivery_notes,
+        customerName: orderData.orderedBy?.name,
+        customerPhone: orderData.orderedBy?.phone,
+        user: orderData.orderedBy,
+        orderedBy: orderData.orderedBy,
+        assignedTo: orderData.shopper,
+        customerId: orderData.orderedBy?.id,
+        discount: orderData.discount || 0,
+        deliveryPhotoUrl: orderData.delivery_photo_url,
+        deliveryTime: orderData.delivery_time,
+      };
+
+      console.log("✅ [API] Formatted restaurant order:", {
+        id: formattedOrder.id,
+        orderType: formattedOrder.orderType,
+        status: formattedOrder.status,
+        total: formattedOrder.total,
+        hasRestaurant: !!formattedOrder.restaurant,
+        customerName: formattedOrder.customerName,
+        dishesCount: formattedOrder.itemCount,
       });
     }
 
