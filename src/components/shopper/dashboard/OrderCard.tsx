@@ -229,14 +229,22 @@ export default function OrderCard({ order, onOrderAccepted }: OrderCardProps) {
       <div className="p-5">
         <div className="mb-4 flex items-start justify-between">
           <div className="flex-1 pr-3">
-            <h3 className={`mb-1 text-xl font-bold ${theme === "dark" ? "text-gray-100" : "text-gray-900"}`}>
+            <h3
+              className={`mb-1 text-xl font-bold ${
+                theme === "dark" ? "text-gray-100" : "text-gray-900"
+              }`}
+            >
               {isReelOrder
                 ? order.reel?.title || "Reel Order"
                 : isRestaurantOrder
                 ? order.shopName || "Restaurant Order"
                 : order.shopName}
             </h3>
-            <p className={`text-sm ${theme === "dark" ? "text-gray-400" : "text-gray-600"}`}>
+            <p
+              className={`text-sm ${
+                theme === "dark" ? "text-gray-400" : "text-gray-600"
+              }`}
+            >
               {isReelOrder
                 ? `From: ${order.customerName || "Reel Creator"}`
                 : isRestaurantOrder
@@ -253,7 +261,11 @@ export default function OrderCard({ order, onOrderAccepted }: OrderCardProps) {
 
         <div className="mb-4 flex items-center justify-between">
           <div className="flex items-center space-x-4">
-            <div className={`flex items-center text-sm ${theme === "dark" ? "text-gray-400" : "text-gray-600"}`}>
+            <div
+              className={`flex items-center text-sm ${
+                theme === "dark" ? "text-gray-400" : "text-gray-600"
+              }`}
+            >
               <svg
                 viewBox="0 0 24 24"
                 fill="none"
@@ -271,7 +283,11 @@ export default function OrderCard({ order, onOrderAccepted }: OrderCardProps) {
               </span>
             </div>
 
-            <div className={`flex items-center text-sm ${theme === "dark" ? "text-gray-400" : "text-gray-600"}`}>
+            <div
+              className={`flex items-center text-sm ${
+                theme === "dark" ? "text-gray-400" : "text-gray-600"
+              }`}
+            >
               <svg
                 viewBox="0 0 24 24"
                 fill="none"
@@ -294,7 +310,11 @@ export default function OrderCard({ order, onOrderAccepted }: OrderCardProps) {
           </div>
         </div>
 
-        <div className={`flex items-center justify-between border-t pt-4 ${theme === "dark" ? "border-gray-700" : "border-gray-100"}`}>
+        <div
+          className={`flex items-center justify-between border-t pt-4 ${
+            theme === "dark" ? "border-gray-700" : "border-gray-100"
+          }`}
+        >
           <div className="flex items-center">
             <svg
               viewBox="0 0 24 24"
@@ -312,7 +332,13 @@ export default function OrderCard({ order, onOrderAccepted }: OrderCardProps) {
               <path d="M12 2v20M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6" />
             </svg>
             <div>
-              <p className={`text-sm ${theme === "dark" ? "text-gray-400" : "text-gray-500"}`}>Earnings</p>
+              <p
+                className={`text-sm ${
+                  theme === "dark" ? "text-gray-400" : "text-gray-500"
+                }`}
+              >
+                Earnings
+              </p>
               <p
                 className={`text-2xl font-bold ${
                   isReelOrder

@@ -194,107 +194,112 @@ export default async function handler(
 
     // Fetch regular, reel, and restaurant orders in parallel
     let regularOrdersData, reelOrdersData, restaurantOrdersData;
-    
+
     try {
-      [regularOrdersData, reelOrdersData, restaurantOrdersData] = await Promise.all([
-      hasuraClient.request<{
-        Orders: Array<{
-          id: string;
-          created_at: string;
-          status: string;
-          service_fee: string | null;
-          delivery_fee: string | null;
-          total: number | null;
-          delivery_time: string | null;
-          Shop: {
-            name: string;
-            address: string;
-            latitude: string;
-            longitude: string;
-          };
-          User: { id: string; name: string };
-          Address: {
-            latitude: string;
-            longitude: string;
-            street: string;
-            city: string;
-          };
-          Order_Items_aggregate: {
-            aggregate: {
-              count: number | null;
-            } | null;
-          };
-        }>;
-      }>(GET_ACTIVE_ORDERS, { shopperId: userId }),
-      hasuraClient.request<{
-        reel_orders: Array<{
-          id: string;
-          created_at: string;
-          status: string;
-          service_fee: string | null;
-          delivery_fee: string | null;
-          total: string;
-          delivery_time: string | null;
-          quantity: string;
-          delivery_note: string | null;
-          Reel: {
-            id: string;
-            title: string;
-            description: string;
-            Price: string;
-            Product: string;
-            type: string;
-            video_url: string;
-          };
-          user: {
-            id: string;
-            name: string;
-            phone: string;
-          };
-          Address: {
-            latitude: string;
-            longitude: string;
-            street: string;
-            city: string;
-          };
-        }>;
-      }>(GET_ACTIVE_REEL_ORDERS, { shopperId: userId }),
-      hasuraClient.request<{
-        restaurant_orders: Array<{
-          id: string;
-          created_at: string;
-          status: string;
-          delivery_fee: string | null;
-          total: string;
-          delivery_time: string | null;
-          delivery_notes: string | null;
-          Restaurant: {
-            id: string;
-            name: string;
-            location: string;
-            lat: string;
-            long: string;
-          };
-          orderedBy: {
-            id: string;
-            name: string;
-            phone: string;
-          };
-          Address: {
-            latitude: string;
-            longitude: string;
-            street: string;
-            city: string;
-          };
-          restaurant_dishe_orders: Array<{
-            id: string;
-            quantity: string;
-          }>;
-        }>;
-      }>(GET_ACTIVE_RESTAURANT_ORDERS, { shopperId: userId }),
-    ]);
+      [regularOrdersData, reelOrdersData, restaurantOrdersData] =
+        await Promise.all([
+          hasuraClient.request<{
+            Orders: Array<{
+              id: string;
+              created_at: string;
+              status: string;
+              service_fee: string | null;
+              delivery_fee: string | null;
+              total: number | null;
+              delivery_time: string | null;
+              Shop: {
+                name: string;
+                address: string;
+                latitude: string;
+                longitude: string;
+              };
+              User: { id: string; name: string };
+              Address: {
+                latitude: string;
+                longitude: string;
+                street: string;
+                city: string;
+              };
+              Order_Items_aggregate: {
+                aggregate: {
+                  count: number | null;
+                } | null;
+              };
+            }>;
+          }>(GET_ACTIVE_ORDERS, { shopperId: userId }),
+          hasuraClient.request<{
+            reel_orders: Array<{
+              id: string;
+              created_at: string;
+              status: string;
+              service_fee: string | null;
+              delivery_fee: string | null;
+              total: string;
+              delivery_time: string | null;
+              quantity: string;
+              delivery_note: string | null;
+              Reel: {
+                id: string;
+                title: string;
+                description: string;
+                Price: string;
+                Product: string;
+                type: string;
+                video_url: string;
+              };
+              user: {
+                id: string;
+                name: string;
+                phone: string;
+              };
+              Address: {
+                latitude: string;
+                longitude: string;
+                street: string;
+                city: string;
+              };
+            }>;
+          }>(GET_ACTIVE_REEL_ORDERS, { shopperId: userId }),
+          hasuraClient.request<{
+            restaurant_orders: Array<{
+              id: string;
+              created_at: string;
+              status: string;
+              delivery_fee: string | null;
+              total: string;
+              delivery_time: string | null;
+              delivery_notes: string | null;
+              Restaurant: {
+                id: string;
+                name: string;
+                location: string;
+                lat: string;
+                long: string;
+              };
+              orderedBy: {
+                id: string;
+                name: string;
+                phone: string;
+              };
+              Address: {
+                latitude: string;
+                longitude: string;
+                street: string;
+                city: string;
+              };
+              restaurant_dishe_orders: Array<{
+                id: string;
+                quantity: string;
+              }>;
+            }>;
+          }>(GET_ACTIVE_RESTAURANT_ORDERS, { shopperId: userId }),
+        ]);
     } catch (fetchError) {
-      throw new Error(`Failed to fetch orders: ${fetchError instanceof Error ? fetchError.message : String(fetchError)}`);
+      throw new Error(
+        `Failed to fetch orders: ${
+          fetchError instanceof Error ? fetchError.message : String(fetchError)
+        }`
+      );
     }
 
     const regularOrders = regularOrdersData.Orders;
@@ -306,7 +311,8 @@ export default async function handler(
       regularOrdersCount: regularOrders.length,
       reelOrdersCount: reelOrders.length,
       restaurantOrdersCount: restaurantOrders.length,
-      totalOrders: regularOrders.length + reelOrders.length + restaurantOrders.length,
+      totalOrders:
+        regularOrders.length + reelOrders.length + restaurantOrders.length,
     });
 
     // Transform regular orders
@@ -376,9 +382,7 @@ export default async function handler(
       customerLng: parseFloat(o.Address.longitude),
       items: o.restaurant_dishe_orders.length, // Count of dish orders
       total: parseFloat(o.total || "0"),
-      estimatedEarnings: (
-        parseFloat(o.delivery_fee || "0")
-      ).toFixed(2),
+      estimatedEarnings: parseFloat(o.delivery_fee || "0").toFixed(2),
       orderType: "restaurant" as const,
       deliveryNote: o.delivery_notes,
       customerPhone: o.orderedBy.phone,

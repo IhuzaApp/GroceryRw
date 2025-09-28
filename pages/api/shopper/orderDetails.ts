@@ -481,7 +481,9 @@ export default async function handler(
               console.error("❌ [API] Error fetching restaurant order:", {
                 error: restaurantError,
                 message:
-                  restaurantError instanceof Error ? restaurantError.message : "Unknown error",
+                  restaurantError instanceof Error
+                    ? restaurantError.message
+                    : "Unknown error",
                 orderId: id,
               });
             }
@@ -532,12 +534,17 @@ export default async function handler(
               orderType = "restaurant";
             }
           } catch (restaurantError) {
-            console.error("❌ [API] Error fetching restaurant order on retry:", {
-              error: restaurantError,
-              message:
-                restaurantError instanceof Error ? restaurantError.message : "Unknown error",
-              orderId: id,
-            });
+            console.error(
+              "❌ [API] Error fetching restaurant order on retry:",
+              {
+                error: restaurantError,
+                message:
+                  restaurantError instanceof Error
+                    ? restaurantError.message
+                    : "Unknown error",
+                orderId: id,
+              }
+            );
           }
         }
       } catch (reelError) {
@@ -790,17 +797,19 @@ export default async function handler(
       const totalEarnings = deliveryFee; // Restaurant orders don't have service fee
 
       // Format dish items
-      const formattedDishItems = orderData.restaurant_dishe_orders.map((dishOrder: any) => ({
-        id: dishOrder.id,
-        name: dishOrder.restaurant_dishes?.name || "Unknown Dish",
-        quantity: dishOrder.quantity,
-        price: parseFloat(dishOrder.price) || 0,
-        description: dishOrder.restaurant_dishes?.description || null,
-        image: dishOrder.restaurant_dishes?.image || null,
-        category: dishOrder.restaurant_dishes?.category || null,
-        ingredients: dishOrder.restaurant_dishes?.ingredients || null,
-        preparingTime: dishOrder.restaurant_dishes?.preparingTime || null,
-      }));
+      const formattedDishItems = orderData.restaurant_dishe_orders.map(
+        (dishOrder: any) => ({
+          id: dishOrder.id,
+          name: dishOrder.restaurant_dishes?.name || "Unknown Dish",
+          quantity: dishOrder.quantity,
+          price: parseFloat(dishOrder.price) || 0,
+          description: dishOrder.restaurant_dishes?.description || null,
+          image: dishOrder.restaurant_dishes?.image || null,
+          category: dishOrder.restaurant_dishes?.category || null,
+          ingredients: dishOrder.restaurant_dishes?.ingredients || null,
+          preparingTime: dishOrder.restaurant_dishes?.preparingTime || null,
+        })
+      );
 
       // Calculate subtotal from dish orders
       const subTotal = formattedDishItems.reduce(
@@ -817,8 +826,12 @@ export default async function handler(
         orderType: "restaurant",
         shopName: orderData.Restaurant?.name || "Unknown Restaurant",
         shopAddress: orderData.Restaurant?.location || "No Address",
-        shopLatitude: orderData.Restaurant?.lat ? parseFloat(orderData.Restaurant.lat) : null,
-        shopLongitude: orderData.Restaurant?.long ? parseFloat(orderData.Restaurant.long) : null,
+        shopLatitude: orderData.Restaurant?.lat
+          ? parseFloat(orderData.Restaurant.lat)
+          : null,
+        shopLongitude: orderData.Restaurant?.long
+          ? parseFloat(orderData.Restaurant.long)
+          : null,
         address: orderData.address,
         customerAddress: orderData.address
           ? `${orderData.address.street || ""}, ${orderData.address.city || ""}`

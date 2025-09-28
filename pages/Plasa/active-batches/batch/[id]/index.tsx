@@ -463,7 +463,7 @@ export const getServerSideProps: GetServerSideProps<
 
   try {
     console.log("🔍 Starting batch details fetch for ID:", id);
-    
+
     if (!hasuraClient) {
       throw new Error("Hasura client is not initialized");
     }
@@ -477,7 +477,10 @@ export const getServerSideProps: GetServerSideProps<
 
     let order = data.Orders[0];
     let orderType = "regular";
-    console.log("📊 Regular order result:", { found: !!order, count: data.Orders.length });
+    console.log("📊 Regular order result:", {
+      found: !!order,
+      count: data.Orders.length,
+    });
 
     // If no regular order found, try as a reel order
     if (!order) {
@@ -489,7 +492,10 @@ export const getServerSideProps: GetServerSideProps<
 
       order = reelData.reel_orders[0];
       orderType = "reel";
-      console.log("📊 Reel order result:", { found: !!order, count: reelData.reel_orders.length });
+      console.log("📊 Reel order result:", {
+        found: !!order,
+        count: reelData.reel_orders.length,
+      });
     }
 
     // If still no order found, try as a restaurant order
@@ -561,14 +567,16 @@ export const getServerSideProps: GetServerSideProps<
         }
       `;
 
-      const restaurantData = await hasuraClient.request<{ restaurant_orders: any[] }>(
-        GET_RESTAURANT_ORDER_DETAILS,
-        { id }
-      );
+      const restaurantData = await hasuraClient.request<{
+        restaurant_orders: any[];
+      }>(GET_RESTAURANT_ORDER_DETAILS, { id });
 
       order = restaurantData.restaurant_orders[0];
       orderType = "restaurant";
-      console.log("📊 Restaurant order result:", { found: !!order, count: restaurantData.restaurant_orders.length });
+      console.log("📊 Restaurant order result:", {
+        found: !!order,
+        count: restaurantData.restaurant_orders.length,
+      });
     }
 
     if (!order) {
@@ -585,7 +593,9 @@ export const getServerSideProps: GetServerSideProps<
 
     // Check if the user is authorized to view this order
     // User can view if they are assigned to the order or if they are the customer
-    const isAssignedShopper = order.assignedTo?.id === session.user.id || order.shopper?.id === session.user.id;
+    const isAssignedShopper =
+      order.assignedTo?.id === session.user.id ||
+      order.shopper?.id === session.user.id;
     const isCustomer = order.orderedBy?.id === session.user.id;
 
     // For reel orders, also check if user is the customer via user field
@@ -614,7 +624,7 @@ export const getServerSideProps: GetServerSideProps<
       orderType,
       assignedToId: order.assignedTo?.id,
       shopperId: order.shopper?.id,
-      sessionUserId: session.user.id
+      sessionUserId: session.user.id,
     });
 
     if (
@@ -651,7 +661,10 @@ export const getServerSideProps: GetServerSideProps<
         : null,
     };
 
-    console.log("✅ Successfully formatted order:", { orderType, orderId: formattedOrder.id });
+    console.log("✅ Successfully formatted order:", {
+      orderType,
+      orderId: formattedOrder.id,
+    });
     return {
       props: {
         orderData: formattedOrder,
