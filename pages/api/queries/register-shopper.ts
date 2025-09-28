@@ -237,8 +237,13 @@ export default async function handler(
   req: NextApiRequest,
   res: NextApiResponse
 ) {
+  console.log("=== REGISTER SHOPPER API CALLED ===");
+  console.log("Request method:", req.method);
+  console.log("Request body size:", JSON.stringify(req.body).length, "characters");
+  
   // Only allow POST requests
   if (req.method !== "POST") {
+    console.log("Method not allowed:", req.method);
     return res.status(405).json({ error: "Method not allowed" });
   }
 
@@ -293,6 +298,40 @@ export default async function handler(
       signature,
     } = req.body as RegisterShopperInput;
 
+    console.log("Request data summary:", {
+      full_name: full_name ? "✓" : "✗",
+      address: address ? "✓" : "✗", 
+      phone_number: phone_number ? "✓" : "✗",
+      national_id: national_id ? "✓" : "✗",
+      driving_license: driving_license ? "✓" : "✗",
+      transport_mode: transport_mode ? "✓" : "✗",
+      profile_photo: profile_photo ? `✓ (${Math.round(profile_photo.length / 1024)}KB)` : "✗",
+      Police_Clearance_Cert: Police_Clearance_Cert ? "✓" : "✗",
+      guarantor: guarantor ? "✓" : "✗",
+      guarantorPhone: guarantorPhone ? "✓" : "✗",
+      guarantorRelationship: guarantorRelationship ? "✓" : "✗",
+      latitude: latitude ? "✓" : "✗",
+      longitude: longitude ? "✓" : "✗",
+      mutual_StatusCertificate: mutual_StatusCertificate ? "✓" : "✗",
+      mutual_status: mutual_status ? "✓" : "✗",
+      national_id_photo_back: national_id_photo_back ? `✓ (${Math.round(national_id_photo_back.length / 1024)}KB)` : "✗",
+      national_id_photo_front: national_id_photo_front ? `✓ (${Math.round(national_id_photo_front.length / 1024)}KB)` : "✗",
+      proofOfResidency: proofOfResidency ? "✓" : "✗",
+      signature: signature ? `✓ (${Math.round(signature.length / 1024)}KB)` : "✗",
+      force_update: force_update
+    });
+
+    // Check for problematic values
+    const problematicFields = [];
+    if (profile_photo && profile_photo.length > 1000000) problematicFields.push(`profile_photo (${Math.round(profile_photo.length / 1024)}KB)`);
+    if (national_id_photo_front && national_id_photo_front.length > 1000000) problematicFields.push(`national_id_photo_front (${Math.round(national_id_photo_front.length / 1024)}KB)`);
+    if (national_id_photo_back && national_id_photo_back.length > 1000000) problematicFields.push(`national_id_photo_back (${Math.round(national_id_photo_back.length / 1024)}KB)`);
+    if (signature && signature.length > 1000000) problematicFields.push(`signature (${Math.round(signature.length / 1024)}KB)`);
+    
+    if (problematicFields.length > 0) {
+      console.log("Warning: Large fields detected:", problematicFields);
+    }
+
     // Validate required fields
     if (
       !full_name ||
@@ -300,9 +339,22 @@ export default async function handler(
       !phone_number ||
       !national_id ||
       !transport_mode ||
+      !profile_photo ||
       !user_id
     ) {
-      return res.status(400).json({ error: "Missing required fields" });
+      console.log("Missing required fields:", {
+        full_name: !!full_name,
+        address: !!address,
+        phone_number: !!phone_number,
+        national_id: !!national_id,
+        transport_mode: !!transport_mode,
+        profile_photo: !!profile_photo,
+        user_id: !!user_id
+      });
+      return res.status(400).json({ 
+        error: "Missing required fields",
+        message: "All required fields including profile_photo must be provided"
+      });
     }
 
     // Verify the user ID in the request matches the authenticated user
@@ -317,10 +369,12 @@ export default async function handler(
     }
 
     // Check if the user is already registered as a shopper
+    console.log("Checking if shopper already exists for user:", user_id);
     const existingShopperData =
       await hasuraClient.request<CheckShopperResponse>(CHECK_SHOPPER_EXISTS, {
         user_id,
       });
+    console.log("Existing shopper check result:", existingShopperData);
 
     if (existingShopperData.shoppers.length > 0) {
       const existingShopper = existingShopperData.shoppers[0];
@@ -380,6 +434,54 @@ export default async function handler(
       user_id,
     });
 
+    // Try minimal mutation first to isolate the issue
+    const minimalMutation = gql`
+      mutation RegisterShopperMinimal(
+        $full_name: String!
+        $address: String!
+        $phone_number: String!
+        $national_id: String!
+        $transport_mode: String!
+        $profile_photo: String!
+        $user_id: uuid!
+      ) {
+        insert_shoppers_one(
+          object: {
+            full_name: $full_name
+            address: $address
+            phone_number: $phone_number
+            national_id: $national_id
+            transport_mode: $transport_mode
+            profile_photo: $profile_photo
+            status: "pending"
+            active: false
+            background_check_completed: false
+            onboarding_step: "application_submitted"
+            user_id: $user_id
+          }
+        ) {
+          id
+          status
+          active
+          onboarding_step
+        }
+      }
+    `;
+    
+    console.log("Trying minimal mutation first...");
+    const minimalData = await hasuraClient.request(minimalMutation, {
+      full_name,
+      address,
+      phone_number,
+      national_id,
+      transport_mode,
+      profile_photo,
+      user_id,
+    });
+    console.log("Minimal mutation successful:", minimalData);
+    
+    // If minimal works, try the full mutation
+    console.log("Making full GraphQL request to register new shopper...");
     const data = await hasuraClient.request<RegisterShopperResponse>(
       REGISTER_SHOPPER,
       {
@@ -405,6 +507,7 @@ export default async function handler(
         signature,
       }
     );
+    console.log("Full GraphQL request successful, response:", data);
 
     console.log(
       "Shopper registration successful:",
@@ -412,12 +515,20 @@ export default async function handler(
     );
     res.status(200).json({ shopper: data.insert_shoppers_one });
   } catch (error: any) {
-    console.error("Error registering shopper:", error);
+    console.error("=== ERROR REGISTERING SHOPPER ===");
+    console.error("Error object:", error);
+    console.error("Error message:", error.message);
+    console.error("Error stack:", error.stack);
+    console.error("Error name:", error.name);
+    console.error("GraphQL errors:", error.response?.errors);
+    console.error("Response data:", error.response?.data);
+    
     // Return a more detailed error message
     res.status(500).json({
       error: "Failed to register shopper",
       message: error.message,
       details: error.response?.errors || "No additional details available",
+      stack: process.env.NODE_ENV === 'development' ? error.stack : undefined
     });
   }
 }

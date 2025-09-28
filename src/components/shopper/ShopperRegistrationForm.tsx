@@ -114,6 +114,120 @@ const CustomInput = memo(({
 
 CustomInput.displayName = 'CustomInput';
 
+// File Upload Component for Irembo documents
+const FileUploadInput = memo(({
+  label,
+  name,
+  file,
+  onChange,
+  onRemove,
+  error = "",
+  description = "Upload document from Irembo site (PDF, JPEG, PNG)"
+}: {
+  label: string;
+  name: string;
+  file: File | null;
+  onChange: (event: React.ChangeEvent<HTMLInputElement>) => void;
+  onRemove: () => void;
+  error?: string;
+  description?: string;
+}) => {
+  const { theme } = useTheme();
+  
+  return (
+    <div className="space-y-2">
+      <label className={`block text-sm font-medium ${
+        theme === "dark" ? "text-gray-300" : "text-gray-700"
+      }`}>
+        {label}
+      </label>
+      
+      <p className={`text-xs ${
+        theme === "dark" ? "text-gray-400" : "text-gray-500"
+      }`}>
+        {description}
+      </p>
+
+      {file ? (
+        <div className={`p-4 rounded-lg border ${
+          theme === "dark" 
+            ? "border-gray-600 bg-gray-700" 
+            : "border-gray-300 bg-gray-50"
+        }`}>
+          <div className="flex items-center justify-between">
+            <div className="flex items-center">
+              <svg className="w-5 h-5 text-green-600 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              <span className={`text-sm ${
+                theme === "dark" ? "text-gray-200" : "text-gray-700"
+              }`}>
+                {file.name}
+              </span>
+              <span className={`text-xs ml-2 ${
+                theme === "dark" ? "text-gray-400" : "text-gray-500"
+              }`}>
+                ({(file.size / 1024 / 1024).toFixed(1)} MB)
+              </span>
+            </div>
+            <button
+              onClick={onRemove}
+              className={`p-1 rounded hover:bg-red-100 dark:hover:bg-red-900/20 transition-colors`}
+            >
+              <svg className="w-4 h-4 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+          </div>
+        </div>
+      ) : (
+        <div className="relative">
+          <input
+            type="file"
+            id={name}
+            name={name}
+            onChange={onChange}
+            accept=".pdf,.jpg,.jpeg,.png"
+            className="hidden"
+          />
+          <label
+            htmlFor={name}
+            className={`flex flex-col items-center justify-center w-full h-32 border-2 border-dashed rounded-lg cursor-pointer transition-colors ${
+              error
+                ? "border-red-300 bg-red-50 dark:border-red-600 dark:bg-red-900/20"
+                : theme === "dark"
+                ? "border-gray-600 bg-gray-700 hover:bg-gray-600"
+                : "border-gray-300 bg-gray-50 hover:bg-gray-100"
+            }`}
+          >
+            <div className="flex flex-col items-center justify-center pt-5 pb-6">
+              <svg className="w-8 h-8 mb-2 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+              </svg>
+              <p className={`text-sm ${
+                theme === "dark" ? "text-gray-400" : "text-gray-500"
+              }`}>
+                <span className="font-semibold">Click to upload</span> or drag and drop
+              </p>
+              <p className={`text-xs ${
+                theme === "dark" ? "text-gray-500" : "text-gray-400"
+              }`}>
+                PDF, PNG, JPG (MAX. 5MB)
+              </p>
+            </div>
+          </label>
+        </div>
+      )}
+
+      {error && (
+        <p className="text-sm text-red-600 dark:text-red-400">{error}</p>
+      )}
+    </div>
+  );
+});
+
+FileUploadInput.displayName = 'FileUploadInput';
+
 // Form validation functions
 const validateField = (name: string, value: string): string | null => {
   switch (name) {
@@ -225,10 +339,19 @@ export default function ShopperRegistrationForm() {
   const [capturedPoliceClearance, setCapturedPoliceClearance] = useState<string>("");
   const [capturedProofOfResidency, setCapturedProofOfResidency] = useState<string>("");
   const [capturedMutualStatus, setCapturedMutualStatus] = useState<string>("");
+  
+  // File upload states for documents from Irembo
+  const [policeClearanceFile, setPoliceClearanceFile] = useState<File | null>(null);
+  const [proofOfResidencyFile, setProofOfResidencyFile] = useState<File | null>(null);
+  const [maritalStatusFile, setMaritalStatusFile] = useState<File | null>(null);
   const [capturedSignature, setCapturedSignature] = useState<string>("");
   const [photoFile, setPhotoFile] = useState<File | null>(null);
   const [licenseFile, setLicenseFile] = useState<File | null>(null);
-  const [captureMode, setCaptureMode] = useState<"profile" | "license" | "national_id_front" | "national_id_back" | "police_clearance" | "proof_of_residency" | "mutual_status" | "signature">(
+  
+  // Signature pad states
+  const [showSignaturePad, setShowSignaturePad] = useState(false);
+  const [isDrawing, setIsDrawing] = useState(false);
+  const [captureMode, setCaptureMode] = useState<"profile" | "license" | "national_id_front" | "national_id_back">(
     "profile"
   );
   const [showCamera, setShowCamera] = useState(false);
@@ -248,6 +371,7 @@ export default function ShopperRegistrationForm() {
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const locationInputRef = useRef<HTMLInputElement>(null);
+  const signatureCanvasRef = useRef<HTMLCanvasElement>(null);
 
   // Auto-save form data to localStorage only when step changes
   useEffect(() => {
@@ -425,12 +549,35 @@ export default function ShopperRegistrationForm() {
     }
   }, [session]);
 
+  // Initialize signature canvas when signature pad is shown
+  useEffect(() => {
+    if (showSignaturePad && signatureCanvasRef.current) {
+      const canvas = signatureCanvasRef.current;
+      const ctx = canvas.getContext('2d');
+      
+      if (ctx) {
+        // Set canvas size
+        canvas.width = 400;
+        canvas.height = 200;
+        
+        // Set drawing style
+        ctx.strokeStyle = '#000000';
+        ctx.lineWidth = 2;
+        ctx.lineCap = 'round';
+        ctx.lineJoin = 'round';
+        
+        // Clear canvas
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+      }
+    }
+  }, [showSignaturePad]);
+
   // Function to start camera for profile or license
-  const startCamera = async (mode: "profile" | "license" | "national_id_front" | "national_id_back" | "police_clearance" | "proof_of_residency" | "mutual_status" | "signature") => {
+  const startCamera = async (mode: "profile" | "license" | "national_id_front" | "national_id_back") => {
     try {
       const stream = await navigator.mediaDevices.getUserMedia({
         video: { 
-          facingMode: (mode === "license" || mode === "national_id_front" || mode === "national_id_back" || mode === "police_clearance" || mode === "proof_of_residency" || mode === "mutual_status" || mode === "signature") ? "environment" : "user" 
+          facingMode: (mode === "license" || mode === "national_id_front" || mode === "national_id_back") ? "environment" : "user" 
         },
         audio: false,
       });
@@ -490,22 +637,6 @@ export default function ShopperRegistrationForm() {
                 setCapturedNationalIdBack(compressedImage);
                 console.log("National ID back captured and compressed");
                 break;
-              case "police_clearance":
-                setCapturedPoliceClearance(compressedImage);
-                console.log("Police clearance captured and compressed");
-                break;
-              case "proof_of_residency":
-                setCapturedProofOfResidency(compressedImage);
-                console.log("Proof of residency captured and compressed");
-                break;
-              case "mutual_status":
-                setCapturedMutualStatus(compressedImage);
-                console.log("Mutual status captured and compressed");
-                break;
-              case "signature":
-                setCapturedSignature(compressedImage);
-                console.log("Signature captured and compressed");
-                break;
             }
 
             // Switch to preview mode
@@ -543,18 +674,6 @@ export default function ShopperRegistrationForm() {
       case "national_id_back":
         setCapturedNationalIdBack("");
         break;
-      case "police_clearance":
-        setCapturedPoliceClearance("");
-        break;
-      case "proof_of_residency":
-        setCapturedProofOfResidency("");
-        break;
-      case "mutual_status":
-        setCapturedMutualStatus("");
-        break;
-      case "signature":
-        setCapturedSignature("");
-        break;
     }
   };
 
@@ -574,14 +693,6 @@ export default function ShopperRegistrationForm() {
         return capturedNationalIdFront;
       case "national_id_back":
         return capturedNationalIdBack;
-      case "police_clearance":
-        return capturedPoliceClearance;
-      case "proof_of_residency":
-        return capturedProofOfResidency;
-      case "mutual_status":
-        return capturedMutualStatus;
-      case "signature":
-        return capturedSignature;
       default:
         return "";
     }
@@ -708,6 +819,154 @@ export default function ShopperRegistrationForm() {
     }
   };
 
+  // File upload handlers for Irembo documents
+  const handleFileUpload = (type: 'police_clearance' | 'proof_of_residency' | 'marital_status', file: File) => {
+    // Validate file type
+    const allowedTypes = ['application/pdf', 'image/jpeg', 'image/jpg', 'image/png'];
+    if (!allowedTypes.includes(file.type)) {
+      toast.error('Please upload a PDF, JPEG, JPG, or PNG file');
+      return;
+    }
+
+    // Validate file size (5MB max)
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error('File size must be less than 5MB');
+      return;
+    }
+
+    // Set the file
+    switch (type) {
+      case 'police_clearance':
+        setPoliceClearanceFile(file);
+        break;
+      case 'proof_of_residency':
+        setProofOfResidencyFile(file);
+        break;
+      case 'marital_status':
+        setMaritalStatusFile(file);
+        break;
+    }
+
+    // Clear any related errors
+    setErrors(prev => {
+      const newErrors = { ...prev };
+      delete newErrors[type];
+      return newErrors;
+    });
+
+    toast.success(`${type.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase())} uploaded successfully`);
+  };
+
+  const handleFileChange = (type: 'police_clearance' | 'proof_of_residency' | 'marital_status', event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      handleFileUpload(type, file);
+    }
+  };
+
+  const removeFile = (type: 'police_clearance' | 'proof_of_residency' | 'marital_status') => {
+    switch (type) {
+      case 'police_clearance':
+        setPoliceClearanceFile(null);
+        break;
+      case 'proof_of_residency':
+        setProofOfResidencyFile(null);
+        break;
+      case 'marital_status':
+        setMaritalStatusFile(null);
+        break;
+    }
+    toast.success('File removed');
+  };
+
+  // Signature pad functions
+  const startSignaturePad = () => {
+    setShowSignaturePad(true);
+  };
+
+  const closeSignaturePad = () => {
+    setShowSignaturePad(false);
+    setIsDrawing(false);
+  };
+
+  const clearSignature = () => {
+    const canvas = signatureCanvasRef.current;
+    if (canvas) {
+      const ctx = canvas.getContext('2d');
+      if (ctx) {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+      }
+    }
+  };
+
+  const saveSignature = () => {
+    const canvas = signatureCanvasRef.current;
+    if (canvas) {
+      const dataURL = canvas.toDataURL('image/png');
+      setCapturedSignature(dataURL);
+      setShowSignaturePad(false);
+      setIsDrawing(false);
+      toast.success('Signature saved successfully');
+    }
+  };
+
+  // Signature drawing functions
+  const getMousePos = (e: React.MouseEvent<HTMLCanvasElement>) => {
+    const canvas = signatureCanvasRef.current;
+    if (!canvas) return { x: 0, y: 0 };
+    
+    const rect = canvas.getBoundingClientRect();
+    return {
+      x: e.clientX - rect.left,
+      y: e.clientY - rect.top
+    };
+  };
+
+  const getTouchPos = (e: React.TouchEvent<HTMLCanvasElement>) => {
+    const canvas = signatureCanvasRef.current;
+    if (!canvas) return { x: 0, y: 0 };
+    
+    const rect = canvas.getBoundingClientRect();
+    const touch = e.touches[0];
+    return {
+      x: touch.clientX - rect.left,
+      y: touch.clientY - rect.top
+    };
+  };
+
+  const startDrawing = (e: React.MouseEvent<HTMLCanvasElement> | React.TouchEvent<HTMLCanvasElement>) => {
+    setIsDrawing(true);
+    const canvas = signatureCanvasRef.current;
+    if (!canvas) return;
+    
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+    
+    const pos = 'touches' in e ? getTouchPos(e) : getMousePos(e);
+    
+    ctx.beginPath();
+    ctx.moveTo(pos.x, pos.y);
+  };
+
+  const draw = (e: React.MouseEvent<HTMLCanvasElement> | React.TouchEvent<HTMLCanvasElement>) => {
+    if (!isDrawing) return;
+    
+    const canvas = signatureCanvasRef.current;
+    if (!canvas) return;
+    
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+    
+    const pos = 'touches' in e ? getTouchPos(e) : getMousePos(e);
+    
+    ctx.lineTo(pos.x, pos.y);
+    ctx.stroke();
+  };
+
+  const stopDrawing = () => {
+    setIsDrawing(false);
+  };
+
   // Clear any API errors
   const clearApiError = () => {
     setApiError(null);
@@ -765,6 +1024,20 @@ export default function ShopperRegistrationForm() {
         return;
       }
 
+      // Convert files to base64 for API submission
+      const convertFileToBase64 = (file: File | null): Promise<string> => {
+        return new Promise((resolve, reject) => {
+          if (!file) {
+            resolve("");
+            return;
+          }
+          const reader = new FileReader();
+          reader.onload = () => resolve(reader.result as string);
+          reader.onerror = reject;
+          reader.readAsDataURL(file);
+        });
+      };
+
       // Prepare the data for submission
       const shopperData = {
         ...formValue,
@@ -772,27 +1045,29 @@ export default function ShopperRegistrationForm() {
         driving_license: capturedLicense || "",
         national_id_photo_front: capturedNationalIdFront || "",
         national_id_photo_back: capturedNationalIdBack || "",
-        Police_Clearance_Cert: capturedPoliceClearance || "",
-        proofOfResidency: capturedProofOfResidency || "",
-        mutual_StatusCertificate: capturedMutualStatus || "",
+        Police_Clearance_Cert: await convertFileToBase64(policeClearanceFile),
+        proofOfResidency: await convertFileToBase64(proofOfResidencyFile),
+        mutual_StatusCertificate: await convertFileToBase64(maritalStatusFile),
         signature: capturedSignature || "",
         user_id: userId,
         force_update: isUpdating, // Set force_update to true if we're updating an existing application
       };
 
       console.log("Submitting shopper registration with user ID:", userId);
-      console.log(
-        "Profile photo size:",
-        capturedPhoto ? `${Math.round(capturedPhoto.length / 1024)}KB` : "None"
-      );
-      console.log(
-        "License photo size:",
-        capturedLicense
-          ? `${Math.round(capturedLicense.length / 1024)}KB`
-          : "None"
-      );
+      console.log("Shopper data being submitted:", {
+        ...shopperData,
+        profile_photo: capturedPhoto ? `${Math.round(capturedPhoto.length / 1024)}KB` : "None",
+        driving_license: capturedLicense ? `${Math.round(capturedLicense.length / 1024)}KB` : "None",
+        national_id_photo_front: capturedNationalIdFront ? `${Math.round(capturedNationalIdFront.length / 1024)}KB` : "None",
+        national_id_photo_back: capturedNationalIdBack ? `${Math.round(capturedNationalIdBack.length / 1024)}KB` : "None",
+        Police_Clearance_Cert: policeClearanceFile ? `${policeClearanceFile.name} (${(policeClearanceFile.size / 1024 / 1024).toFixed(1)}MB)` : "None",
+        proofOfResidency: proofOfResidencyFile ? `${proofOfResidencyFile.name} (${(proofOfResidencyFile.size / 1024 / 1024).toFixed(1)}MB)` : "None",
+        mutual_StatusCertificate: maritalStatusFile ? `${maritalStatusFile.name} (${(maritalStatusFile.size / 1024 / 1024).toFixed(1)}MB)` : "None",
+        signature: capturedSignature ? `${Math.round(capturedSignature.length / 1024)}KB` : "None"
+      });
 
       // Submit data to our API endpoint
+      console.log("Making API request to /api/queries/register-shopper");
       const response = await fetch("/api/queries/register-shopper", {
         method: "POST",
         headers: {
@@ -801,7 +1076,11 @@ export default function ShopperRegistrationForm() {
         body: JSON.stringify(shopperData),
       });
 
+      console.log("API Response status:", response.status);
+      console.log("API Response headers:", Object.fromEntries(response.headers.entries()));
+
       const data = await response.json();
+      console.log("API Response data:", data);
 
       if (!response.ok) {
         // Handle specific error cases
@@ -846,11 +1125,25 @@ export default function ShopperRegistrationForm() {
       }
     } catch (error: any) {
       console.error("Error submitting shopper application:", error);
+      console.error("Error details:", {
+        message: error.message,
+        stack: error.stack,
+        name: error.name,
+        cause: error.cause
+      });
+      
+      // Check if it's a network error or API error
+      if (error.name === 'TypeError' && error.message.includes('fetch')) {
+        console.error("Network error - check if API endpoint is running");
+        toast.error("Network error: Unable to connect to server");
+      } else {
       toast.error(`Failed to submit application: ${error.message}`);
+      }
 
       setApiError({
         title: "Registration Failed",
         message: error.message || "An unknown error occurred",
+        details: error.stack
       });
     } finally {
       setLoading(false);
@@ -1212,7 +1505,7 @@ export default function ShopperRegistrationForm() {
             error={errors.guarantorRelationship}
             options={guarantorRelationshipOptions}
           />
-        </div>
+          </div>
       </div>
     </div>
     );
@@ -1282,8 +1575,14 @@ export default function ShopperRegistrationForm() {
           )}
         </div>
 
-        {/* National ID Photos */}
-        <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+        {/* Row 1: Camera Photos - Front ID, Back ID, Driving License */}
+        <div className="mb-8">
+          <h4 className={`text-md font-semibold mb-4 ${
+            theme === "dark" ? "text-white" : "text-gray-900"
+          }`}>
+            Photo Documents (Take with Camera)
+          </h4>
+          <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
           <div>
             <label className={`block text-sm font-medium mb-2 ${
               theme === "dark" ? "text-gray-300" : "text-gray-700"
@@ -1302,7 +1601,7 @@ export default function ShopperRegistrationForm() {
                 </div>
                 <button
                   onClick={() => startCamera("national_id_front")}
-                  className="mt-2 inline-flex items-center px-3 py-1.5 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors text-sm"
+                  className="mt-2 inline-flex items-center px-3 py-1.5 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors text-sm w-full justify-center"
                 >
                   <svg className="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
@@ -1313,7 +1612,7 @@ export default function ShopperRegistrationForm() {
             ) : (
               <button
                 onClick={() => startCamera("national_id_front")}
-                className="mt-2 inline-flex items-center px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
+                className="mt-2 inline-flex items-center px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors w-full justify-center"
               >
                 <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
@@ -1344,7 +1643,7 @@ export default function ShopperRegistrationForm() {
                 </div>
                 <button
                   onClick={() => startCamera("national_id_back")}
-                  className="mt-2 inline-flex items-center px-3 py-1.5 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors text-sm"
+                  className="mt-2 inline-flex items-center px-3 py-1.5 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors text-sm w-full justify-center"
                 >
                   <svg className="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
@@ -1355,7 +1654,7 @@ export default function ShopperRegistrationForm() {
             ) : (
               <button
                 onClick={() => startCamera("national_id_back")}
-                className="mt-2 inline-flex items-center px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
+                className="mt-2 inline-flex items-center px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors w-full justify-center"
               >
                 <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
@@ -1367,219 +1666,140 @@ export default function ShopperRegistrationForm() {
               <p className="text-sm text-red-600 dark:text-red-400 mt-2">{errors.national_id_back}</p>
             )}
           </div>
-        </div>
 
-        {/* Optional Documents */}
-        <div className="mt-8">
-          <h4 className={`text-md font-semibold mb-4 ${
-            theme === "dark" ? "text-white" : "text-gray-900"
-          }`}>
-            Optional Documents
-          </h4>
-          <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
-            <div>
-              <label className={`block text-sm font-medium mb-2 ${
-                theme === "dark" ? "text-gray-300" : "text-gray-700"
-              }`}>
-                Driving License Photo
-              </label>
-              {capturedLicense ? (
-                <div className="mt-2">
-                  <div className="relative h-48 w-full overflow-hidden rounded-lg border border-gray-300 dark:border-gray-600">
-                    <Image
-                      src={capturedLicense}
-                      alt="Driving License"
-                      fill
-                      className="object-cover"
-                    />
-                  </div>
-                  <button
-                      onClick={() => startCamera("license")}
-                    className="mt-2 inline-flex items-center px-3 py-1.5 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors text-sm"
-                  >
-                    <svg className="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
-                    </svg>
-                    Retake
-                  </button>
-                </div>
-              ) : (
-                <button
-                    onClick={() => startCamera("license")}
-                  className={`mt-2 inline-flex items-center px-4 py-2 rounded-lg transition-colors ${
-                    theme === "dark"
-                      ? "bg-gray-700 text-gray-300 hover:bg-gray-600"
-                      : "bg-gray-100 text-gray-700 hover:bg-gray-200"
-                  }`}
-                >
-                  <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
-                  </svg>
-                  Take Photo
-                </button>
-              )}
-                </div>
-
-            <div>
-              <label className={`block text-sm font-medium mb-2 ${
-                theme === "dark" ? "text-gray-300" : "text-gray-700"
-              }`}>
-                Police Clearance Certificate
-              </label>
-              {capturedPoliceClearance ? (
-                <div className="mt-2">
-                  <div className="relative h-48 w-full overflow-hidden rounded-lg border border-gray-300 dark:border-gray-600">
-                    <Image
-                      src={capturedPoliceClearance}
-                      alt="Police Clearance"
-                      fill
-                      className="object-cover"
-                    />
-                  </div>
-                  <button
-                    onClick={() => startCamera("police_clearance")}
-                    className="mt-2 inline-flex items-center px-3 py-1.5 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors text-sm"
-                  >
-                    <svg className="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
-                    </svg>
-                    Retake
-                  </button>
-                </div>
-              ) : (
-                <button
-                  onClick={() => startCamera("police_clearance")}
-                  className={`mt-2 inline-flex items-center px-4 py-2 rounded-lg transition-colors ${
-                    theme === "dark"
-                      ? "bg-gray-700 text-gray-300 hover:bg-gray-600"
-                      : "bg-gray-100 text-gray-700 hover:bg-gray-200"
-                  }`}
-                >
-                  <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
-                  </svg>
-                  Take Photo
-                </button>
-              )}
-          </div>
-
-            <div>
-              <label className={`block text-sm font-medium mb-2 ${
-                theme === "dark" ? "text-gray-300" : "text-gray-700"
-              }`}>
-                Proof of Residency
-              </label>
-              {capturedProofOfResidency ? (
-                <div className="mt-2">
-                  <div className="relative h-48 w-full overflow-hidden rounded-lg border border-gray-300 dark:border-gray-600">
-                    <Image
-                      src={capturedProofOfResidency}
-                      alt="Proof of Residency"
-                      fill
-                      className="object-cover"
-                    />
-                  </div>
-                  <button
-                    onClick={() => startCamera("proof_of_residency")}
-                    className="mt-2 inline-flex items-center px-3 py-1.5 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors text-sm"
-                  >
-                    <svg className="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
-                    </svg>
-                    Retake
-                  </button>
-                </div>
-              ) : (
-                <button
-                  onClick={() => startCamera("proof_of_residency")}
-                  className={`mt-2 inline-flex items-center px-4 py-2 rounded-lg transition-colors ${
-                    theme === "dark"
-                      ? "bg-gray-700 text-gray-300 hover:bg-gray-600"
-                      : "bg-gray-100 text-gray-700 hover:bg-gray-200"
-                  }`}
-                >
-                  <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
-                  </svg>
-                  Take Photo
-                </button>
-              )}
-            </div>
-
-            <div>
-              <label className={`block text-sm font-medium mb-2 ${
-                theme === "dark" ? "text-gray-300" : "text-gray-700"
-              }`}>
-                Marital Status Certificate
-              </label>
-              {capturedMutualStatus ? (
-                <div className="mt-2">
-                  <div className="relative h-48 w-full overflow-hidden rounded-lg border border-gray-300 dark:border-gray-600">
-                    <Image
-                      src={capturedMutualStatus}
-                      alt="Marital Status Certificate"
-                      fill
-                      className="object-cover"
-                    />
-                  </div>
-                  <button
-                    onClick={() => startCamera("mutual_status")}
-                    className="mt-2 inline-flex items-center px-3 py-1.5 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors text-sm"
-                  >
-                    <svg className="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
-                    </svg>
-                    Retake
-                  </button>
-                </div>
-              ) : (
-                <button
-                  onClick={() => startCamera("mutual_status")}
-                  className={`mt-2 inline-flex items-center px-4 py-2 rounded-lg transition-colors ${
-                    theme === "dark"
-                      ? "bg-gray-700 text-gray-300 hover:bg-gray-600"
-                      : "bg-gray-100 text-gray-700 hover:bg-gray-200"
-                  }`}
-                >
-                  <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
-                  </svg>
-                  Take Photo
-                </button>
-              )}
-            </div>
-          </div>
-
-          {/* Signature */}
-          <div className="mt-6">
+          {/* Driving License - Third column */}
+          <div>
             <label className={`block text-sm font-medium mb-2 ${
               theme === "dark" ? "text-gray-300" : "text-gray-700"
             }`}>
-              Digital Signature
+              Driving License Photo
             </label>
-            {capturedSignature ? (
+              {capturedLicense ? (
               <div className="mt-2">
-                <div className="relative h-32 w-full overflow-hidden rounded-lg border border-gray-300 dark:border-gray-600">
-                  <Image
-                    src={capturedSignature}
-                    alt="Signature"
-                    fill
-                    className="object-cover"
-                  />
-                </div>
+                <div className="relative h-48 w-full overflow-hidden rounded-lg border border-gray-300 dark:border-gray-600">
+                    <Image
+                      src={capturedLicense}
+                    alt="Driving License"
+                      fill
+                      className="object-cover"
+                    />
+                  </div>
                 <button
-                  onClick={() => startCamera("signature")}
-                  className="mt-2 inline-flex items-center px-3 py-1.5 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors text-sm"
+                      onClick={() => startCamera("license")}
+                  className="mt-2 inline-flex items-center px-3 py-1.5 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors text-sm w-full justify-center"
                 >
                   <svg className="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
                   </svg>
                   Retake
                 </button>
+                </div>
+              ) : (
+              <button
+                    onClick={() => startCamera("license")}
+                className={`mt-2 inline-flex items-center px-4 py-2 rounded-lg transition-colors w-full justify-center ${
+                  theme === "dark"
+                    ? "bg-gray-700 text-gray-300 hover:bg-gray-600"
+                    : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                }`}
+              >
+                <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
+                </svg>
+                Take Photo
+              </button>
+            )}
+                </div>
+        </div>
+
+        {/* Row 2: File Uploads - Police Clearance, Proof of Residency, Marital Status Certificate */}
+        <div className="mb-8">
+          <h4 className={`text-md font-semibold mb-4 ${
+            theme === "dark" ? "text-white" : "text-gray-900"
+          }`}>
+            Official Documents (Upload from Irembo)
+          </h4>
+          <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
+
+            <FileUploadInput
+              label="Police Clearance Certificate"
+              name="police_clearance"
+              file={policeClearanceFile}
+              onChange={(e) => handleFileChange('police_clearance', e)}
+              onRemove={() => removeFile('police_clearance')}
+              error={errors.police_clearance}
+              description="Upload Police Clearance Certificate from Irembo site (PDF, JPEG, PNG)"
+            />
+
+            <FileUploadInput
+              label="Proof of Residency"
+              name="proof_of_residency"
+              file={proofOfResidencyFile}
+              onChange={(e) => handleFileChange('proof_of_residency', e)}
+              onRemove={() => removeFile('proof_of_residency')}
+              error={errors.proof_of_residency}
+              description="Upload Proof of Residency from Irembo site (PDF, JPEG, PNG)"
+            />
+
+            <FileUploadInput
+              label="Marital Status Certificate"
+              name="marital_status"
+              file={maritalStatusFile}
+              onChange={(e) => handleFileChange('marital_status', e)}
+              onRemove={() => removeFile('marital_status')}
+              error={errors.marital_status}
+              description="Upload Marital Status Certificate from Irembo site (PDF, JPEG, PNG)"
+            />
+          </div>
+        </div>
+
+        {/* Digital Signature */}
+          <div className="mt-6">
+            <label className={`block text-sm font-medium mb-2 ${
+              theme === "dark" ? "text-gray-300" : "text-gray-700"
+            }`}>
+              Digital Signature
+            </label>
+            <p className={`text-sm mb-3 ${
+              theme === "dark" ? "text-gray-400" : "text-gray-600"
+            }`}>
+              Sign in the box below using your mouse or touch
+            </p>
+            
+            {capturedSignature ? (
+              <div className="mt-2">
+                <div className="relative h-32 w-full overflow-hidden rounded-lg border border-gray-300 dark:border-gray-600">
+                  <Image
+                    src={capturedSignature}
+                    alt="Digital Signature"
+                    fill
+                    className="object-cover"
+                  />
+                </div>
+                <div className="flex gap-2 mt-2">
+                  <button
+                    onClick={startSignaturePad}
+                    className="inline-flex items-center px-3 py-1.5 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors text-sm"
+                  >
+                    <svg className="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+                    </svg>
+                    Sign Again
+                  </button>
+                  <button
+                    onClick={() => setCapturedSignature("")}
+                    className="inline-flex items-center px-3 py-1.5 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors text-sm"
+                  >
+                    <svg className="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                    Clear
+                  </button>
+                </div>
               </div>
             ) : (
               <button
-                onClick={() => startCamera("signature")}
+                onClick={startSignaturePad}
                 className={`mt-2 inline-flex items-center px-4 py-2 rounded-lg transition-colors ${
                   theme === "dark"
                     ? "bg-gray-700 text-gray-300 hover:bg-gray-600"
@@ -1589,7 +1809,7 @@ export default function ShopperRegistrationForm() {
                 <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
                 </svg>
-                Capture Signature
+                Sign Here
               </button>
             )}
           </div>
@@ -1642,8 +1862,9 @@ export default function ShopperRegistrationForm() {
               <p>✅ National ID Front: {capturedNationalIdFront ? "Uploaded" : "Missing"}</p>
               <p>✅ National ID Back: {capturedNationalIdBack ? "Uploaded" : "Missing"}</p>
               <p>📄 Driving License: {capturedLicense ? "Uploaded" : "Not provided"}</p>
-              <p>📄 Police Clearance: {capturedPoliceClearance ? "Uploaded" : "Not provided"}</p>
-              <p>📄 Proof of Residency: {capturedProofOfResidency ? "Uploaded" : "Not provided"}</p>
+              <p>📄 Police Clearance: {policeClearanceFile ? `Uploaded (${policeClearanceFile.name})` : "Not provided"}</p>
+              <p>📄 Proof of Residency: {proofOfResidencyFile ? `Uploaded (${proofOfResidencyFile.name})` : "Not provided"}</p>
+              <p>📄 Marital Status Certificate: {maritalStatusFile ? `Uploaded (${maritalStatusFile.name})` : "Not provided"}</p>
             </div>
           </div>
         </div>
@@ -1916,14 +2137,10 @@ export default function ShopperRegistrationForm() {
                 <h3 className={`text-lg font-semibold ${
                   theme === "dark" ? "text-white" : "text-gray-900"
                 }`}>
-                  {captureMode === "profile" ? "Take Profile Photo" :
+                  {                   captureMode === "profile" ? "Take Profile Photo" :
                    captureMode === "license" ? "Take License Photo" :
                    captureMode === "national_id_front" ? "Take National ID Front Photo" :
-                   captureMode === "national_id_back" ? "Take National ID Back Photo" :
-                   captureMode === "police_clearance" ? "Take Police Clearance Photo" :
-                   captureMode === "proof_of_residency" ? "Take Proof of Residency Photo" :
-                   captureMode === "mutual_status" ? "Take Marital Status Certificate Photo" :
-                   captureMode === "signature" ? "Capture Signature" : "Take Photo"}
+                   captureMode === "national_id_back" ? "Take National ID Back Photo" : "Take Photo"}
                 </h3>
                 <button
                   onClick={stopCamera}
@@ -1955,12 +2172,12 @@ export default function ShopperRegistrationForm() {
                       <button
                   onClick={capturePhoto}
                         className="mt-4 inline-flex items-center px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors font-medium"
-                      >
+                >
                         <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
                         </svg>
-                        {captureMode === "signature" ? "Capture Signature" : "Capture Photo"}
+                  Capture Photo
                       </button>
                 {captureMode === "license" && (
                         <p className={`mt-3 text-sm text-center ${
@@ -1974,13 +2191,6 @@ export default function ShopperRegistrationForm() {
                           theme === "dark" ? "text-gray-400" : "text-gray-600"
                         }`}>
                           Ensure all text and details are clearly readable
-                        </p>
-                      )}
-                      {captureMode === "signature" && (
-                        <p className={`mt-3 text-sm text-center ${
-                          theme === "dark" ? "text-gray-400" : "text-gray-600"
-                        }`}>
-                          Sign clearly on a white paper with a dark pen
                   </p>
                 )}
               </>
@@ -2011,11 +2221,11 @@ export default function ShopperRegistrationForm() {
                         <button
                     onClick={confirmPhoto}
                           className="inline-flex items-center px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors font-medium"
-                        >
+                  >
                           <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                           </svg>
-                          Use This {captureMode === "signature" ? "Signature" : "Photo"}
+                    Use This Photo
                         </button>
                 </div>
               </>
@@ -2036,6 +2246,93 @@ export default function ShopperRegistrationForm() {
                   }`}
                 >
             Cancel
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Signature Pad Modal */}
+      {showSignaturePad && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className={`rounded-2xl max-w-md w-full max-h-[90vh] overflow-y-auto ${
+            theme === "dark" ? "bg-gray-800" : "bg-white"
+          }`}>
+            {/* Header */}
+            <div className={`flex items-center justify-between p-6 border-b ${
+              theme === "dark" ? "border-gray-700" : "border-gray-200"
+            }`}>
+              <h3 className={`text-lg font-semibold ${
+                theme === "dark" ? "text-white" : "text-gray-900"
+              }`}>
+                Digital Signature
+              </h3>
+              <button
+                onClick={closeSignaturePad}
+                className={`p-2 rounded-lg transition-colors ${
+                  theme === "dark"
+                    ? "hover:bg-gray-700 text-gray-400 hover:text-gray-200"
+                    : "hover:bg-gray-100 text-gray-500 hover:text-gray-700"
+                }`}
+              >
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+
+            {/* Content */}
+            <div className="p-6">
+              <p className={`text-sm mb-4 ${
+                theme === "dark" ? "text-gray-400" : "text-gray-600"
+              }`}>
+                Please sign in the box below using your mouse or touch device.
+              </p>
+              
+              {/* Signature Canvas */}
+              <div className={`border-2 border-dashed rounded-lg p-4 mb-4 ${
+                theme === "dark" 
+                  ? "border-gray-600 bg-gray-700" 
+                  : "border-gray-300 bg-gray-50"
+              }`}>
+                <canvas
+                  ref={signatureCanvasRef}
+                  className="w-full h-48 cursor-crosshair"
+                  onMouseDown={startDrawing}
+                  onMouseMove={draw}
+                  onMouseUp={stopDrawing}
+                  onMouseLeave={stopDrawing}
+                  onTouchStart={startDrawing}
+                  onTouchMove={draw}
+                  onTouchEnd={stopDrawing}
+                  style={{ touchAction: 'none' }}
+                />
+              </div>
+
+              {/* Controls */}
+              <div className="flex gap-2">
+                <button
+                  onClick={clearSignature}
+                  className={`flex-1 inline-flex items-center justify-center px-4 py-2 rounded-lg transition-colors ${
+                    theme === "dark"
+                      ? "bg-gray-700 text-gray-300 hover:bg-gray-600"
+                      : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                  }`}
+                >
+                  <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                  </svg>
+                  Clear
+                </button>
+                <button
+                  onClick={saveSignature}
+                  className="flex-1 inline-flex items-center justify-center px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
+                >
+                  <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                  </svg>
+                  Save Signature
                 </button>
               </div>
             </div>
