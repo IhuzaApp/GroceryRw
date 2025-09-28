@@ -188,17 +188,11 @@ export default async function handler(
   }
 
   try {
-    console.log("🔍 Starting activeBatches API processing", { userId, userRole });
-    
     if (!hasuraClient) {
-      console.error("❌ Hasura client not initialized");
       throw new Error("Hasura client is not initialized");
     }
 
-    console.log("✅ Hasura client initialized, fetching orders");
-
     // Fetch regular, reel, and restaurant orders in parallel
-    console.log("🔄 Starting parallel data fetch...");
     let regularOrdersData, reelOrdersData, restaurantOrdersData;
     
     try {
@@ -300,24 +294,12 @@ export default async function handler(
       }>(GET_ACTIVE_RESTAURANT_ORDERS, { shopperId: userId }),
     ]);
     } catch (fetchError) {
-      console.error("❌ Error during data fetching:", fetchError);
       throw new Error(`Failed to fetch orders: ${fetchError instanceof Error ? fetchError.message : String(fetchError)}`);
     }
-
-    console.log("📊 Data fetching completed, processing results");
-    console.log("Regular orders data:", regularOrdersData);
-    console.log("Reel orders data:", reelOrdersData);
-    console.log("Restaurant orders data:", restaurantOrdersData);
 
     const regularOrders = regularOrdersData.Orders;
     const reelOrders = reelOrdersData.reel_orders;
     const restaurantOrders = restaurantOrdersData.restaurant_orders;
-
-    console.log("📈 Order counts:", {
-      regularOrders: regularOrders?.length || 0,
-      reelOrders: reelOrders?.length || 0,
-      restaurantOrders: restaurantOrders?.length || 0
-    });
 
     logger.info("Active batches query results", "ActiveBatchesAPI", {
       userId,
@@ -328,9 +310,6 @@ export default async function handler(
     });
 
     // Transform regular orders
-    console.log("🔄 Starting order transformations");
-    console.log("Transforming regular orders:", regularOrders.length);
-    
     const transformedRegularOrders = regularOrders.map((o) => ({
       id: o.id,
       OrderID: o.id,
@@ -354,8 +333,6 @@ export default async function handler(
     }));
 
     // Transform reel orders
-    console.log("Transforming reel orders:", reelOrders.length);
-    
     const transformedReelOrders = reelOrders.map((o) => ({
       id: o.id,
       OrderID: o.id,
@@ -383,8 +360,6 @@ export default async function handler(
     }));
 
     // Transform restaurant orders
-    console.log("Transforming restaurant orders:", restaurantOrders.length);
-    
     const transformedRestaurantOrders = restaurantOrders.map((o) => ({
       id: o.id,
       OrderID: o.id,
@@ -410,24 +385,14 @@ export default async function handler(
     }));
 
     // Combine all types of orders
-    console.log("🔗 Combining all order types");
-    console.log("Transformed counts:", {
-      regular: transformedRegularOrders.length,
-      reel: transformedReelOrders.length,
-      restaurant: transformedRestaurantOrders.length
-    });
-    
     const allActiveOrders = [
       ...transformedRegularOrders,
       ...transformedReelOrders,
       ...transformedRestaurantOrders,
     ];
 
-    console.log("✅ All orders combined successfully. Total:", allActiveOrders.length);
-
     // If no orders were found, return a specific message but with 200 status code
     if (allActiveOrders.length === 0) {
-      console.log("ℹ️ No active orders found");
       return res.status(200).json({
         batches: [],
         message: "No active batches found",
@@ -435,21 +400,11 @@ export default async function handler(
       });
     }
 
-    console.log("🎉 Returning active orders successfully:", allActiveOrders.length);
     res.status(200).json({
       batches: allActiveOrders,
       message: `Found ${allActiveOrders.length} active batches`,
     });
   } catch (error) {
-    console.error("❌ Error in activeBatches API:", error);
-    console.error("Error details:", {
-      name: error instanceof Error ? error.name : 'Unknown',
-      message: error instanceof Error ? error.message : String(error),
-      stack: error instanceof Error ? error.stack : undefined,
-      userId,
-      userRole
-    });
-
     logger.error("Error fetching active batches", "ActiveBatchesAPI", {
       userId,
       error: error instanceof Error ? error.message : String(error),
