@@ -9122,3 +9122,167 @@ The system includes extensive logging for debugging:
 - `❌ Invalid timestamp for order:` - Error handling
 
 This documentation ensures developers understand the differences between order types and can maintain the system effectively.
+
+## Restaurant Order Management System
+
+### 1. Restaurant Order Assignment (`pages/api/shopper/assignOrder.ts`)
+
+**Features:**
+
+- Support for restaurant order assignment to shoppers
+- Validation for restaurant order types
+- GraphQL mutations for restaurant order updates
+- Proper error handling and response formatting
+
+**API Endpoint:**
+- Accepts POST requests to `/api/shopper/assignOrder`
+- Requires orderId, orderType set to "restaurant", and shopperId
+- Returns success status with complete order information including restaurant details and dish list
+
+**Order Type Validation:**
+- Validates that orderType is one of: "regular", "reel", or "restaurant"
+- Returns 400 error for invalid order types
+- Ensures proper restaurant order assignment flow
+
+### 2. Restaurant Order Display (`src/components/shopper/activeBatchesCard.tsx`)
+
+**Features:**
+
+- Visual distinction for restaurant orders
+- Restaurant-specific styling and icons
+- Dish count and restaurant information display
+- Orange/red gradient styling for restaurant orders
+
+**Restaurant Order Styling:**
+- Orange and red gradient badge with restaurant icon to identify restaurant orders
+- Special card styling with orange borders and gradient backgrounds
+- Visual distinction from regular and reel orders
+- Restaurant icon and "Restaurant Order" text indicator
+
+### 3. Restaurant Order Details (`pages/Plasa/active-batches/batch/[id]/index.tsx`)
+
+**Features:**
+
+- Complete restaurant order information display
+- Restaurant and customer details
+- Dish-by-dish breakdown
+- Delivery instructions and timing
+- Shopper assignment information
+
+**Restaurant Order Data Structure:**
+- Order ID and type identification
+- Complete restaurant information including name, location, phone, and logo
+- Customer details with name, phone, and delivery address
+- Array of dishes with individual quantities, prices, descriptions, and images
+- Delivery fee, total amount, and estimated delivery time
+- Delivery notes and special instructions
+- Order status tracking from pending to delivered
+
+### 4. Restaurant Order API (`pages/api/shopper/orderDetails.ts`)
+
+**Features:**
+
+- Complete restaurant order fetching
+- Restaurant-specific GraphQL queries
+- Proper data formatting for frontend
+- Support for all restaurant order fields
+
+**GraphQL Query:**
+- Fetches complete restaurant order details by order ID
+- Retrieves restaurant information, customer details, and delivery address
+- Includes all dish orders with individual dish information
+- Returns assigned shopper details and order status
+- Handles all restaurant-specific fields and relationships
+
+### 5. Map Integration for Restaurant Orders
+
+**Features:**
+
+- Restaurant orders appear on shopper map
+- Restaurant location markers
+- Customer delivery location markers
+- Route optimization for restaurant deliveries
+- Real-time order status updates
+
+**Map Component Integration:**
+- Restaurant orders appear as special markers on the shopper map
+- Each marker shows restaurant location with custom restaurant icon
+- Popup displays restaurant name, dish count, and potential earnings
+- One-click order acceptance directly from map interface
+- Real-time updates when orders are accepted or completed
+
+### 6. Restaurant Order Workflow
+
+**Complete Flow:**
+
+1. **Order Creation**: Customer places restaurant order
+2. **Shopper Assignment**: Order appears on shopper dashboard and map
+3. **Order Acceptance**: Shopper accepts restaurant order
+4. **Restaurant Pickup**: Shopper goes to restaurant location
+5. **Order Collection**: Shopper collects prepared dishes
+6. **Delivery**: Shopper delivers to customer
+7. **Completion**: Order marked as delivered
+
+**Status Progression:**
+- PENDING: Order created and waiting for shopper assignment
+- shopping: Shopper accepted and heading to restaurant
+- packing: Restaurant preparing the order
+- on_the_way: Shopper collected order and en route to customer
+- delivered: Order successfully delivered to customer
+
+### 7. Restaurant Order Benefits
+
+**For Shoppers:**
+- Additional earning opportunities
+- Restaurant-specific delivery experience
+- Higher delivery fees (no service fee deduction)
+- Clear restaurant and customer information
+
+**For Customers:**
+- Access to restaurant food delivery
+- Real-time order tracking
+- Professional delivery service
+- Contact with assigned shopper
+
+**For Restaurants:**
+- Expanded delivery reach
+- Professional delivery service
+- Real-time order tracking
+- Customer feedback system
+
+### 8. Database Schema for Restaurant Orders
+
+**Restaurant Orders Table:**
+- Primary key with unique order ID
+- Links to user who placed the order and restaurant
+- Stores delivery fee, total amount, and delivery timing
+- Tracks order status and assigned shopper
+- Includes delivery notes and timestamps
+
+**Restaurant Dishes Orders Table:**
+- Links each dish to specific restaurant orders
+- Tracks quantity and individual dish pricing
+- Maintains relationship between orders and restaurant menu items
+- Stores creation timestamps for order tracking
+
+### 9. Implementation Status
+
+**✅ Completed Features:**
+- Restaurant order assignment API
+- Restaurant order display in active batches
+- Restaurant order details page
+- Restaurant order API for fetching details
+- Visual styling and indicators
+- GraphQL queries and mutations
+- Error handling and validation
+
+**🔄 In Progress:**
+- Map integration for restaurant orders
+- Real-time status updates
+- Notification system for restaurant orders
+
+**📋 Planned Features:**
+- Restaurant order analytics
+- Performance metrics for restaurant deliveries
+- Advanced filtering and search
+- Restaurant order history and reporting
