@@ -96,6 +96,52 @@ const GET_ACTIVE_REEL_ORDERS = gql`
   }
 `;
 
+// Fetch active restaurant orders for a specific shopper
+const GET_ACTIVE_RESTAURANT_ORDERS = gql`
+  query GetActiveRestaurantOrders($shopperId: uuid!) {
+    restaurant_orders(
+      where: {
+        shopper_id: { _eq: $shopperId }
+        _and: [
+          { status: { _nin: ["null", "PENDING", "delivered"] } }
+          { status: { _is_null: false } }
+        ]
+      }
+      order_by: { created_at: desc }
+    ) {
+      id
+      created_at
+      status
+      delivery_fee
+      total
+      delivery_time
+      delivery_notes
+      Restaurant {
+        id
+        name
+        location
+        lat
+        long
+      }
+      orderedBy {
+        id
+        name
+        phone
+      }
+      Address {
+        latitude
+        longitude
+        street
+        city
+      }
+      restaurant_dishe_orders {
+        id
+        quantity
+      }
+    }
+  }
+`;
+
 export default async function handler(
   req: NextApiRequest,
   res: NextApiResponse
@@ -142,12 +188,21 @@ export default async function handler(
   }
 
   try {
+    console.log("🔍 Starting activeBatches API processing", { userId, userRole });
+    
     if (!hasuraClient) {
+      console.error("❌ Hasura client not initialized");
       throw new Error("Hasura client is not initialized");
     }
 
-    // Fetch both regular and reel orders in parallel
-    const [regularOrdersData, reelOrdersData] = await Promise.all([
+    console.log("✅ Hasura client initialized, fetching orders");
+
+    // Fetch regular, reel, and restaurant orders in parallel
+    console.log("🔄 Starting parallel data fetch...");
+    let regularOrdersData, reelOrdersData, restaurantOrdersData;
+    
+    try {
+      [regularOrdersData, reelOrdersData, restaurantOrdersData] = await Promise.all([
       hasuraClient.request<{
         Orders: Array<{
           id: string;
@@ -210,19 +265,72 @@ export default async function handler(
           };
         }>;
       }>(GET_ACTIVE_REEL_ORDERS, { shopperId: userId }),
+      hasuraClient.request<{
+        restaurant_orders: Array<{
+          id: string;
+          created_at: string;
+          status: string;
+          delivery_fee: string | null;
+          total: string;
+          delivery_time: string | null;
+          delivery_notes: string | null;
+          Restaurant: {
+            id: string;
+            name: string;
+            location: string;
+            lat: string;
+            long: string;
+          };
+          orderedBy: {
+            id: string;
+            name: string;
+            phone: string;
+          };
+          Address: {
+            latitude: string;
+            longitude: string;
+            street: string;
+            city: string;
+          };
+          restaurant_dishe_orders: Array<{
+            id: string;
+            quantity: string;
+          }>;
+        }>;
+      }>(GET_ACTIVE_RESTAURANT_ORDERS, { shopperId: userId }),
     ]);
+    } catch (fetchError) {
+      console.error("❌ Error during data fetching:", fetchError);
+      throw new Error(`Failed to fetch orders: ${fetchError instanceof Error ? fetchError.message : String(fetchError)}`);
+    }
+
+    console.log("📊 Data fetching completed, processing results");
+    console.log("Regular orders data:", regularOrdersData);
+    console.log("Reel orders data:", reelOrdersData);
+    console.log("Restaurant orders data:", restaurantOrdersData);
 
     const regularOrders = regularOrdersData.Orders;
     const reelOrders = reelOrdersData.reel_orders;
+    const restaurantOrders = restaurantOrdersData.restaurant_orders;
+
+    console.log("📈 Order counts:", {
+      regularOrders: regularOrders?.length || 0,
+      reelOrders: reelOrders?.length || 0,
+      restaurantOrders: restaurantOrders?.length || 0
+    });
 
     logger.info("Active batches query results", "ActiveBatchesAPI", {
       userId,
       regularOrdersCount: regularOrders.length,
       reelOrdersCount: reelOrders.length,
-      totalOrders: regularOrders.length + reelOrders.length,
+      restaurantOrdersCount: restaurantOrders.length,
+      totalOrders: regularOrders.length + reelOrders.length + restaurantOrders.length,
     });
 
     // Transform regular orders
+    console.log("🔄 Starting order transformations");
+    console.log("Transforming regular orders:", regularOrders.length);
+    
     const transformedRegularOrders = regularOrders.map((o) => ({
       id: o.id,
       OrderID: o.id,
@@ -246,6 +354,8 @@ export default async function handler(
     }));
 
     // Transform reel orders
+    console.log("Transforming reel orders:", reelOrders.length);
+    
     const transformedReelOrders = reelOrders.map((o) => ({
       id: o.id,
       OrderID: o.id,
@@ -272,14 +382,52 @@ export default async function handler(
       customerPhone: o.user.phone,
     }));
 
-    // Combine both types of orders
+    // Transform restaurant orders
+    console.log("Transforming restaurant orders:", restaurantOrders.length);
+    
+    const transformedRestaurantOrders = restaurantOrders.map((o) => ({
+      id: o.id,
+      OrderID: o.id,
+      status: o.status,
+      createdAt: o.created_at,
+      deliveryTime: o.delivery_time || undefined,
+      shopName: o.Restaurant.name,
+      shopAddress: o.Restaurant.location,
+      shopLat: parseFloat(o.Restaurant.lat),
+      shopLng: parseFloat(o.Restaurant.long),
+      customerName: o.orderedBy.name,
+      customerAddress: `${o.Address.street}, ${o.Address.city}`,
+      customerLat: parseFloat(o.Address.latitude),
+      customerLng: parseFloat(o.Address.longitude),
+      items: o.restaurant_dishe_orders.length, // Count of dish orders
+      total: parseFloat(o.total || "0"),
+      estimatedEarnings: (
+        parseFloat(o.delivery_fee || "0")
+      ).toFixed(2),
+      orderType: "restaurant" as const,
+      deliveryNote: o.delivery_notes,
+      customerPhone: o.orderedBy.phone,
+    }));
+
+    // Combine all types of orders
+    console.log("🔗 Combining all order types");
+    console.log("Transformed counts:", {
+      regular: transformedRegularOrders.length,
+      reel: transformedReelOrders.length,
+      restaurant: transformedRestaurantOrders.length
+    });
+    
     const allActiveOrders = [
       ...transformedRegularOrders,
       ...transformedReelOrders,
+      ...transformedRestaurantOrders,
     ];
+
+    console.log("✅ All orders combined successfully. Total:", allActiveOrders.length);
 
     // If no orders were found, return a specific message but with 200 status code
     if (allActiveOrders.length === 0) {
+      console.log("ℹ️ No active orders found");
       return res.status(200).json({
         batches: [],
         message: "No active batches found",
@@ -287,11 +435,21 @@ export default async function handler(
       });
     }
 
+    console.log("🎉 Returning active orders successfully:", allActiveOrders.length);
     res.status(200).json({
       batches: allActiveOrders,
       message: `Found ${allActiveOrders.length} active batches`,
     });
   } catch (error) {
+    console.error("❌ Error in activeBatches API:", error);
+    console.error("Error details:", {
+      name: error instanceof Error ? error.name : 'Unknown',
+      message: error instanceof Error ? error.message : String(error),
+      stack: error instanceof Error ? error.stack : undefined,
+      userId,
+      userRole
+    });
+
     logger.error("Error fetching active batches", "ActiveBatchesAPI", {
       userId,
       error: error instanceof Error ? error.message : String(error),
