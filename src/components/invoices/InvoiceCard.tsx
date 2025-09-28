@@ -87,7 +87,7 @@ const InvoiceCard: React.FC<InvoiceCardProps> = ({
         <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
           {/* Customer & Order Info */}
           <div className="space-y-4">
-            <div>
+          <div>
               <h4 className={`text-sm font-semibold uppercase tracking-wide ${theme === "dark" ? "text-gray-300" : "text-gray-700"}`}>
                 Customer
               </h4>
@@ -96,34 +96,34 @@ const InvoiceCard: React.FC<InvoiceCardProps> = ({
                   {invoice.customer_name}
                 </p>
                 <p className={`text-xs ${theme === "dark" ? "text-gray-400" : "text-gray-500"}`}>
-                  {invoice.customer_email}
-                </p>
-              </div>
+              {invoice.customer_email}
+            </p>
+          </div>
             </div>
 
-            {invoice.shop_name && (
-              <div>
+          {invoice.shop_name && (
+            <div>
                 <h4 className={`text-sm font-semibold uppercase tracking-wide ${theme === "dark" ? "text-gray-300" : "text-gray-700"}`}>
                   Shop
                 </h4>
                 <p className={`mt-2 text-sm ${theme === "dark" ? "text-gray-100" : "text-gray-900"}`}>
                   {invoice.shop_name}
                 </p>
-              </div>
-            )}
-          </div>
+            </div>
+          )}
+        </div>
 
           {/* Order Details */}
           <div className="space-y-4">
-            <div>
+          <div>
               <h4 className={`text-sm font-semibold uppercase tracking-wide ${theme === "dark" ? "text-gray-300" : "text-gray-700"}`}>
                 Order Details
               </h4>
               <div className="mt-2 space-y-2">
                 <div className="flex justify-between">
                   <span className={`text-sm ${theme === "dark" ? "text-gray-400" : "text-gray-500"}`}>
-                    Items:
-                  </span>
+              Items:
+            </span>
                   <span className={`text-sm font-medium ${theme === "dark" ? "text-gray-100" : "text-gray-900"}`}>
                     {invoice.items_count}
                   </span>
@@ -137,17 +137,17 @@ const InvoiceCard: React.FC<InvoiceCardProps> = ({
                   </span>
                 </div>
               </div>
-            </div>
+          </div>
 
-            <div>
+          <div>
               <h4 className={`text-sm font-semibold uppercase tracking-wide ${theme === "dark" ? "text-gray-300" : "text-gray-700"}`}>
                 Total Amount
               </h4>
               <p className={`mt-2 text-2xl font-bold ${theme === "dark" ? "text-green-400" : "text-green-600"}`}>
-                {formatCurrencySync(invoice.total_amount)}
-              </p>
-            </div>
+              {formatCurrencySync(invoice.total_amount)}
+            </p>
           </div>
+        </div>
 
           {/* Proof Status */}
           <div className="space-y-4">
@@ -171,8 +171,8 @@ const InvoiceCard: React.FC<InvoiceCardProps> = ({
                         Delivery confirmed
                       </p>
                     </div>
-                  </div>
-                ) : (
+            </div>
+          ) : (
                   <div className="flex items-center">
                     <div className="flex h-8 w-8 items-center justify-center rounded-full bg-red-100 dark:bg-red-900/30 mr-3">
                       <svg className="h-4 w-4 text-red-600 dark:text-red-400" fill="currentColor" viewBox="0 0 20 20">
@@ -187,28 +187,28 @@ const InvoiceCard: React.FC<InvoiceCardProps> = ({
                         Upload delivery photo
                       </p>
                     </div>
-                  </div>
-                )}
+            </div>
+          )}
               </div>
             </div>
-          </div>
         </div>
+      </div>
 
         {/* Actions */}
         <div className="mt-6 flex flex-col space-y-3 sm:flex-row sm:space-x-3 sm:space-y-0">
           <button
-            onClick={() => onViewDetails(invoice.id)}
+          onClick={() => onViewDetails(invoice.id)}
             className={`flex-1 inline-flex items-center justify-center rounded-lg px-4 py-3 text-sm font-medium transition-colors ${
               theme === "dark"
                 ? "bg-gray-700 text-gray-300 hover:bg-gray-600"
                 : "bg-gray-100 text-gray-700 hover:bg-gray-200"
             }`}
-          >
+        >
             <svg className="mr-2 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
             </svg>
-            View Details
+          View Details
           </button>
           <button
             onClick={() => onUploadProof(invoice)}

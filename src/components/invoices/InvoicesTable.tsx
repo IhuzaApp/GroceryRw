@@ -106,11 +106,11 @@ const InvoicesTable: React.FC<InvoicesTableProps> = ({
             </svg>
           </div>
           <h3 className={`text-lg font-semibold ${theme === "dark" ? "text-gray-100" : "text-gray-900"}`}>
-            No invoices found
-          </h3>
+              No invoices found
+            </h3>
           <p className={`mt-2 text-sm ${theme === "dark" ? "text-gray-400" : "text-gray-500"}`}>
-            You haven't completed any orders yet
-          </p>
+              You haven't completed any orders yet
+            </p>
         </div>
       </div>
     );
@@ -163,8 +163,8 @@ const InvoicesTable: React.FC<InvoicesTableProps> = ({
                 <td className="px-6 py-4">
                   <div className="flex items-center">
                     <span className={`text-sm font-semibold ${theme === "dark" ? "text-white" : "text-gray-900"}`}>
-                      #{invoice.invoice_number}
-                    </span>
+                    #{invoice.invoice_number}
+                  </span>
                   </div>
                 </td>
                 <td className="px-6 py-4">
@@ -189,7 +189,7 @@ const InvoicesTable: React.FC<InvoicesTableProps> = ({
                 </td>
                 <td className="px-6 py-4">
                   <span className={`text-sm ${theme === "dark" ? "text-gray-300" : "text-gray-600"}`}>
-                    {formatDate(invoice.created_at)}
+                  {formatDate(invoice.created_at)}
                   </span>
                 </td>
                 <td className="px-6 py-4">
@@ -345,8 +345,8 @@ const InvoicesTable: React.FC<InvoicesTableProps> = ({
               <div className="mb-4 flex items-center justify-between">
                 <span className={`text-sm font-medium ${theme === "dark" ? "text-gray-300" : "text-gray-700"}`}>
                   Proof Status
-                </span>
-                {hasProof(invoice) ? (
+                  </span>
+                  {hasProof(invoice) ? (
                   <div className="flex items-center">
                     <div className="flex h-5 w-5 items-center justify-center rounded-full bg-green-100 dark:bg-green-900/30 mr-2">
                       <svg className="h-3 w-3 text-green-600 dark:text-green-400" fill="currentColor" viewBox="0 0 20 20">
@@ -368,14 +368,14 @@ const InvoicesTable: React.FC<InvoicesTableProps> = ({
                       Pending
                     </span>
                   </div>
-                )}
-              </div>
+                  )}
+                </div>
 
               {/* Actions */}
               <div className="flex space-x-3">
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
                     downloadInvoice(invoice);
                   }}
                   className={`flex-1 inline-flex items-center justify-center rounded-lg px-4 py-2.5 text-sm font-medium transition-colors ${
@@ -388,13 +388,13 @@ const InvoicesTable: React.FC<InvoicesTableProps> = ({
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                   </svg>
                   View Invoice
-                </button>
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    onUploadProof(invoice);
-                  }}
-                  disabled={hasProof(invoice)}
+                  </button>
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onUploadProof(invoice);
+                    }}
+                    disabled={hasProof(invoice)}
                   className={`flex-1 inline-flex items-center justify-center rounded-lg px-4 py-2.5 text-sm font-medium transition-colors ${
                     hasProof(invoice)
                       ? "cursor-not-allowed bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400"
@@ -419,7 +419,7 @@ const InvoicesTable: React.FC<InvoicesTableProps> = ({
                       Upload Proof
                     </>
                   )}
-                </button>
+                  </button>
               </div>
             </div>
           </div>
