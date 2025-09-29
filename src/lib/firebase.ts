@@ -15,15 +15,12 @@ const firebaseConfig = {
 };
 
 // Initialize Firebase with proper guards to prevent duplicate apps
-// Only initialize on client side to prevent server-side conflicts
-let app = null;
-if (typeof window !== "undefined") {
-  try {
-    app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApps()[0];
-  } catch (error) {
-    console.warn("Firebase initialization failed:", error);
-    app = null;
-  }
+let app;
+try {
+  app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApps()[0];
+} catch (error) {
+  console.warn("Firebase initialization failed:", error);
+  app = null;
 }
 
 // Initialize Firestore
@@ -49,6 +46,4 @@ export const authenticateWithFirebase = async (customToken: string) => {
   }
 };
 
-// Export the app instance for use in other modules
-export { app };
 export default app;
