@@ -116,6 +116,12 @@ export default function UserProfile() {
 
   // Handle click on "Become a Plasa" button
   const handleBecomePlasa = (e: React.MouseEvent) => {
+    // If button is disabled (under review), don't do anything
+    if (shopperStatus?.status === "pending" || shopperStatus?.status === "under_review") {
+      e.preventDefault();
+      return;
+    }
+
     if (shopperStatus) {
       // If needCollection is true, allow editing the application
       if (shopperStatus.needCollection) {
@@ -479,9 +485,12 @@ export default function UserProfile() {
               className={`flex w-full items-center justify-center rounded-md px-4 py-2 text-sm text-white transition-colors duration-200 ${
                 shopperStatus?.needCollection
                   ? "bg-orange-500 hover:bg-orange-600 dark:bg-orange-600 dark:hover:bg-orange-700"
+                  : shopperStatus?.status === "pending" || shopperStatus?.status === "under_review"
+                  ? "bg-blue-500 cursor-not-allowed opacity-75 dark:bg-blue-600"
                   : "bg-green-500 hover:bg-green-600 dark:bg-green-600 dark:hover:bg-green-700"
               }`}
               onClick={handleBecomePlasa}
+              disabled={shopperStatus?.status === "pending" || shopperStatus?.status === "under_review"}
             >
               <svg
                 className="mr-2 h-4 w-4"
@@ -496,6 +505,13 @@ export default function UserProfile() {
                     strokeWidth={2}
                     d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
                   />
+                ) : (shopperStatus?.status === "pending" || shopperStatus?.status === "under_review") ? (
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
+                  />
                 ) : (
                   <path
                     strokeLinecap="round"
@@ -505,7 +521,12 @@ export default function UserProfile() {
                   />
                 )}
               </svg>
-              {shopperStatus?.needCollection ? "Update Application" : "Become a Shopper"}
+              {shopperStatus?.needCollection 
+                ? "Update Application" 
+                : (shopperStatus?.status === "pending" || shopperStatus?.status === "under_review")
+                ? `Application ${shopperStatus.status === "pending" ? "Pending" : "Under Review"}`
+                : "Become a Shopper"
+              }
             </button>
           )}
 
