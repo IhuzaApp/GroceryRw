@@ -336,9 +336,9 @@ export default function UserPayment() {
           <Button onClick={() => setShowModal(false)} appearance="subtle">
             Cancel
           </Button>
-          <Button 
-            onClick={handleSave} 
-            appearance="primary" 
+          <Button
+            onClick={handleSave}
+            appearance="primary"
             color="green"
             className="dark:!bg-green-600 dark:!text-white dark:hover:!bg-green-700"
           >

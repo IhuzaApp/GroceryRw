@@ -105,7 +105,9 @@ export default async function handler(
     if (!session || !session.user) {
       return res
         .status(401)
-        .json({ error: "You must be authenticated to get shopper application" });
+        .json({
+          error: "You must be authenticated to get shopper application",
+        });
     }
 
     if (!hasuraClient) {
@@ -120,10 +122,11 @@ export default async function handler(
     const user_id = session.user.id;
 
     // Get the full shopper application data
-    const shopperData = await hasuraClient.request<GetShopperApplicationResponse>(
-      GET_SHOPPER_APPLICATION,
-      { user_id }
-    );
+    const shopperData =
+      await hasuraClient.request<GetShopperApplicationResponse>(
+        GET_SHOPPER_APPLICATION,
+        { user_id }
+      );
 
     if (shopperData.shoppers.length > 0) {
       const shopper = shopperData.shoppers[0];
