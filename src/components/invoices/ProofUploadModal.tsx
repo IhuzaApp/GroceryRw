@@ -1,5 +1,4 @@
 import React, { useState, useRef, useEffect } from "react";
-import { Modal, Button, Loader, toaster } from "rsuite";
 import { useTheme } from "../../context/ThemeContext";
 import { Invoice } from "./types";
 
@@ -122,6 +121,24 @@ const ProofUploadModal: React.FC<ProofUploadModalProps> = ({
     }
   };
 
+  const showToast = (message: string, type: "success" | "error") => {
+    // Create a simple toast notification
+    const toast = document.createElement("div");
+    toast.className = `fixed top-4 right-4 z-50 px-6 py-3 rounded-lg shadow-lg transition-all duration-300 ${
+      type === "success"
+        ? "bg-green-100 text-green-800 border border-green-200"
+        : "bg-red-100 text-red-800 border border-red-200"
+    }`;
+    toast.textContent = message;
+    document.body.appendChild(toast);
+
+    setTimeout(() => {
+      toast.style.opacity = "0";
+      toast.style.transform = "translateX(100%)";
+      setTimeout(() => document.body.removeChild(toast), 300);
+    }, 3000);
+  };
+
   const handleUploadProof = async () => {
     if (!invoice || !proofImage) return;
 
@@ -151,14 +168,9 @@ const ProofUploadModal: React.FC<ProofUploadModalProps> = ({
       onUploadSuccess(invoice.id, proofImage);
 
       // Show success toast
-      toaster.push(
-        <div className="text-green-800">
-          Proof uploaded successfully for invoice #{invoice.invoice_number}
-        </div>,
-        {
-          duration: 3000,
-          placement: "topCenter",
-        }
+      showToast(
+        `Proof uploaded successfully for invoice #${invoice.invoice_number}`,
+        "success"
       );
 
       onClose();
@@ -169,13 +181,7 @@ const ProofUploadModal: React.FC<ProofUploadModalProps> = ({
       setError(errorMessage);
 
       // Show error toast
-      toaster.push(
-        <div className="text-red-800">Upload failed: {errorMessage}</div>,
-        {
-          duration: 5000,
-          placement: "topCenter",
-        }
-      );
+      showToast(`Upload failed: ${errorMessage}`, "error");
     } finally {
       setUploadingProof(false);
     }
@@ -198,146 +204,427 @@ const ProofUploadModal: React.FC<ProofUploadModalProps> = ({
     };
   }, []);
 
+  if (!open) return null;
+
   return (
     <>
-      <Modal
-        open={open}
-        onClose={handleClose}
-        size="lg"
-        className={theme === "dark" ? "rs-modal-dark" : ""}
-        backdrop="static"
-      >
-        <Modal.Header>
-          <Modal.Title>Upload Proof of Delivery</Modal.Title>
-        </Modal.Header>
-        <Modal.Body>
-          <div className="space-y-4">
-            <p className="mb-4 text-sm text-gray-600">
+      {/* Backdrop */}
+      <div
+        className="fixed inset-0 z-40 bg-black bg-opacity-50 transition-opacity"
+        onClick={handleClose}
+      />
+
+      {/* Modal */}
+      <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+        <div
+          className={`relative w-full max-w-2xl rounded-2xl border ${
+            theme === "dark"
+              ? "border-gray-700 bg-gray-800"
+              : "border-gray-200 bg-white"
+          } shadow-2xl`}
+        >
+          {/* Header */}
+          <div className="border-b border-gray-200 px-6 py-4 dark:border-gray-700">
+            <div className="flex items-center justify-between">
+              <h2
+                className={`text-xl font-bold ${
+                  theme === "dark" ? "text-white" : "text-gray-900"
+                }`}
+              >
+                Upload Proof of Delivery
+              </h2>
+              <button
+                onClick={handleClose}
+                disabled={uploadingProof}
+                className={`rounded-lg p-2 transition-colors ${
+                  theme === "dark"
+                    ? "text-gray-400 hover:bg-gray-700 hover:text-gray-200"
+                    : "text-gray-400 hover:bg-gray-100 hover:text-gray-600"
+                } ${uploadingProof ? "cursor-not-allowed opacity-50" : ""}`}
+              >
+                <svg
+                  className="h-5 w-5"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M6 18L18 6M6 6l12 12"
+                  />
+                </svg>
+              </button>
+            </div>
+            <p
+              className={`mt-2 text-sm ${
+                theme === "dark" ? "text-gray-400" : "text-gray-600"
+              }`}
+            >
               Please upload a photo showing the delivered goods for invoice #
               {invoice?.invoice_number}
             </p>
+          </div>
 
+          {/* Body */}
+          <div className="px-6 py-6">
             {/* Error Message */}
             {error && (
-              <div className="mb-4 rounded-lg border border-red-200 bg-red-50 p-3">
-                <p className="text-sm text-red-800">
-                  ⚠️ <strong>Error:</strong> {error}
-                </p>
+              <div className="mb-6 rounded-lg border border-red-200 bg-red-50 p-4 dark:border-red-800 dark:bg-red-900/20">
+                <div className="flex">
+                  <svg
+                    className="mr-2 h-5 w-5 text-red-400"
+                    fill="currentColor"
+                    viewBox="0 0 20 20"
+                  >
+                    <path
+                      fillRule="evenodd"
+                      d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z"
+                      clipRule="evenodd"
+                    />
+                  </svg>
+                  <div>
+                    <p className="text-sm font-medium text-red-800 dark:text-red-200">
+                      Error
+                    </p>
+                    <p className="text-sm text-red-700 dark:text-red-300">
+                      {error}
+                    </p>
+                  </div>
+                </div>
               </div>
             )}
 
-            <div className="mb-4 rounded-lg border border-blue-200 bg-blue-50 p-3">
-              <p className="text-sm text-blue-800">
-                💡 <strong>Tip:</strong> Make sure the photo clearly shows the
-                delivered items and any relevant details like packaging or
-                receipts.
-              </p>
+            {/* Tip */}
+            <div className="mb-6 rounded-lg border border-blue-200 bg-blue-50 p-4 dark:border-blue-800 dark:bg-blue-900/20">
+              <div className="flex">
+                <svg
+                  className="mr-2 h-5 w-5 text-blue-400"
+                  fill="currentColor"
+                  viewBox="0 0 20 20"
+                >
+                  <path
+                    fillRule="evenodd"
+                    d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z"
+                    clipRule="evenodd"
+                  />
+                </svg>
+                <div>
+                  <p className="text-sm font-medium text-blue-800 dark:text-blue-200">
+                    Tip
+                  </p>
+                  <p className="text-sm text-blue-700 dark:text-blue-300">
+                    Make sure the photo clearly shows the delivered items and
+                    any relevant details like packaging or receipts.
+                  </p>
+                </div>
+              </div>
             </div>
 
             {!proofImage ? (
-              <div className="space-y-4">
+              <div className="space-y-6">
                 {/* Camera Section */}
-                <div className="rounded-lg border-2 border-dashed border-gray-300 p-4">
+                <div
+                  className={`rounded-xl border-2 border-dashed p-6 ${
+                    theme === "dark"
+                      ? "border-gray-600 bg-gray-700/50"
+                      : "border-gray-300 bg-gray-50"
+                  }`}
+                >
                   <div className="text-center">
-                    <h4 className="mb-2 font-medium">Take Photo</h4>
-                    {!cameraActive ? (
-                      <Button
-                        appearance="primary"
-                        onClick={startCamera}
-                        className="mb-2"
+                    <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-blue-100 dark:bg-blue-900/30">
+                      <svg
+                        className="h-6 w-6 text-blue-600 dark:text-blue-400"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
                       >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"
+                        />
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"
+                        />
+                      </svg>
+                    </div>
+                    <h4
+                      className={`mb-2 text-lg font-semibold ${
+                        theme === "dark" ? "text-white" : "text-gray-900"
+                      }`}
+                    >
+                      Take Photo
+                    </h4>
+                    {!cameraActive ? (
+                      <button
+                        onClick={startCamera}
+                        className="inline-flex items-center rounded-lg bg-blue-600 px-6 py-3 text-white transition-colors hover:bg-blue-700"
+                      >
+                        <svg
+                          className="mr-2 h-5 w-5"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"
+                          />
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"
+                          />
+                        </svg>
                         Open Camera
-                      </Button>
+                      </button>
                     ) : (
-                      <div className="space-y-2">
-                        <div className="relative mx-auto aspect-video w-full max-w-md overflow-hidden rounded-lg">
+                      <div className="space-y-4">
+                        <div className="relative mx-auto aspect-video w-full max-w-md overflow-hidden rounded-xl bg-gray-900">
                           <video
                             ref={videoRef}
                             autoPlay
                             playsInline
                             muted
                             className="h-full w-full object-cover"
-                            style={{ transform: "scaleX(-1)" }} // Mirror the camera
+                            style={{ transform: "scaleX(-1)" }}
                           />
                           <div className="absolute inset-0 flex items-center justify-center">
-                            <div className="rounded-full bg-black bg-opacity-50 px-3 py-1 text-sm text-white">
+                            <div className="rounded-full bg-black bg-opacity-50 px-4 py-2 text-sm text-white">
                               📷 Camera Active
                             </div>
                           </div>
                         </div>
-                        <div className="flex justify-center space-x-2">
-                          <Button
-                            appearance="primary"
+                        <div className="flex justify-center space-x-3">
+                          <button
                             onClick={capturePhoto}
-                            size="lg"
+                            className="inline-flex items-center rounded-lg bg-blue-600 px-6 py-3 text-white transition-colors hover:bg-blue-700"
                           >
-                            📸 Capture Photo
-                          </Button>
-                          <Button appearance="ghost" onClick={stopCamera}>
-                            ❌ Cancel
-                          </Button>
+                            <svg
+                              className="mr-2 h-5 w-5"
+                              fill="none"
+                              stroke="currentColor"
+                              viewBox="0 0 24 24"
+                            >
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth={2}
+                                d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"
+                              />
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth={2}
+                                d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"
+                              />
+                            </svg>
+                            Capture Photo
+                          </button>
+                          <button
+                            onClick={stopCamera}
+                            className="inline-flex items-center rounded-lg bg-gray-600 px-6 py-3 text-white transition-colors hover:bg-gray-700"
+                          >
+                            <svg
+                              className="mr-2 h-5 w-5"
+                              fill="none"
+                              stroke="currentColor"
+                              viewBox="0 0 24 24"
+                            >
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth={2}
+                                d="M6 18L18 6M6 6l12 12"
+                              />
+                            </svg>
+                            Cancel
+                          </button>
                         </div>
                       </div>
                     )}
                   </div>
                 </div>
 
+                {/* Divider */}
+                <div className="relative">
+                  <div className="absolute inset-0 flex items-center">
+                    <div
+                      className={`w-full border-t ${
+                        theme === "dark" ? "border-gray-600" : "border-gray-300"
+                      }`}
+                    />
+                  </div>
+                  <div className="relative flex justify-center text-sm">
+                    <span
+                      className={`px-2 ${
+                        theme === "dark"
+                          ? "bg-gray-800 text-gray-400"
+                          : "bg-white text-gray-500"
+                      }`}
+                    >
+                      or
+                    </span>
+                  </div>
+                </div>
+
                 {/* File Upload Section */}
-                <div className="rounded-lg border-2 border-dashed border-gray-300 p-4">
+                <div
+                  className={`rounded-xl border-2 border-dashed p-6 ${
+                    theme === "dark"
+                      ? "border-gray-600 bg-gray-700/50"
+                      : "border-gray-300 bg-gray-50"
+                  }`}
+                >
                   <div className="text-center">
-                    <h4 className="mb-2 font-medium">Or Upload from Gallery</h4>
+                    <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-green-100 dark:bg-green-900/30">
+                      <svg
+                        className="h-6 w-6 text-green-600 dark:text-green-400"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"
+                        />
+                      </svg>
+                    </div>
+                    <h4
+                      className={`mb-2 text-lg font-semibold ${
+                        theme === "dark" ? "text-white" : "text-gray-900"
+                      }`}
+                    >
+                      Upload from Gallery
+                    </h4>
                     <input
                       type="file"
                       accept="image/*"
                       onChange={handleFileUpload}
-                      className="block w-full text-sm text-gray-500 file:mr-4 file:rounded-full file:border-0 file:bg-green-50 file:px-4 file:py-2 file:text-sm file:font-semibold file:text-green-700 hover:file:bg-green-100"
+                      className={`block w-full text-sm ${
+                        theme === "dark" ? "text-gray-400" : "text-gray-500"
+                      } transition-colors file:mr-4 file:rounded-lg file:border-0 file:bg-blue-600 file:px-4 file:py-2 file:text-sm file:font-semibold file:text-white hover:file:bg-blue-700`}
                     />
                   </div>
                 </div>
               </div>
             ) : (
-              <div className="space-y-4">
+              <div className="space-y-6">
                 <div className="text-center">
-                  <h4 className="mb-2 font-medium">Preview</h4>
+                  <h4
+                    className={`mb-4 text-lg font-semibold ${
+                      theme === "dark" ? "text-white" : "text-gray-900"
+                    }`}
+                  >
+                    Preview
+                  </h4>
                   <img
                     src={proofImage}
                     alt="Proof of delivery"
-                    className="mx-auto w-full max-w-md rounded-lg shadow-md"
+                    className="mx-auto w-full max-w-md rounded-xl shadow-lg"
                   />
                 </div>
-                <div className="flex justify-center space-x-2">
-                  <Button
-                    appearance="ghost"
+                <div className="flex justify-center">
+                  <button
                     onClick={() => {
                       setProofImage(null);
                       setError(null);
                     }}
+                    className="inline-flex items-center px-4 py-2 text-sm font-medium text-gray-700 transition-colors hover:text-gray-900 dark:text-gray-300 dark:hover:text-white"
                   >
-                    📷 Take New Photo
-                  </Button>
+                    <svg
+                      className="mr-2 h-4 w-4"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"
+                      />
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"
+                      />
+                    </svg>
+                    Take New Photo
+                  </button>
                 </div>
               </div>
             )}
           </div>
-        </Modal.Body>
-        <Modal.Footer>
-          <Button
-            appearance="ghost"
-            onClick={handleClose}
-            disabled={uploadingProof}
-          >
-            Cancel
-          </Button>
-          <Button
-            appearance="primary"
-            onClick={handleUploadProof}
-            disabled={!proofImage || uploadingProof}
-            loading={uploadingProof}
-          >
-            {uploadingProof ? "Uploading..." : "Upload Proof"}
-          </Button>
-        </Modal.Footer>
-      </Modal>
+
+          {/* Footer */}
+          <div className="border-t border-gray-200 px-6 py-4 dark:border-gray-700">
+            <div className="flex justify-end space-x-3">
+              <button
+                onClick={handleClose}
+                disabled={uploadingProof}
+                className={`rounded-lg px-6 py-2 text-sm font-medium transition-colors ${
+                  theme === "dark"
+                    ? "bg-gray-700 text-gray-300 hover:bg-gray-600"
+                    : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                } ${uploadingProof ? "cursor-not-allowed opacity-50" : ""}`}
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleUploadProof}
+                disabled={!proofImage || uploadingProof}
+                className={`rounded-lg px-6 py-2 text-sm font-medium transition-colors ${
+                  !proofImage || uploadingProof
+                    ? "cursor-not-allowed bg-gray-300 text-gray-500"
+                    : theme === "dark"
+                    ? "bg-blue-600 text-white hover:bg-blue-700"
+                    : "bg-blue-600 text-white hover:bg-blue-700"
+                }`}
+              >
+                {uploadingProof ? (
+                  <div className="flex items-center">
+                    <svg
+                      className="-ml-1 mr-2 h-4 w-4 animate-spin text-white"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                    >
+                      <circle
+                        className="opacity-25"
+                        cx="12"
+                        cy="12"
+                        r="10"
+                        stroke="currentColor"
+                        strokeWidth="4"
+                      ></circle>
+                      <path
+                        className="opacity-75"
+                        fill="currentColor"
+                        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                      ></path>
+                    </svg>
+                    Uploading...
+                  </div>
+                ) : (
+                  "Upload Proof"
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
 
       {/* Hidden canvas for photo capture */}
       <canvas ref={canvasRef} className="hidden" />

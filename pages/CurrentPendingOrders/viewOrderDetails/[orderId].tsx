@@ -3,6 +3,7 @@ import React, { useState, useEffect } from "react";
 import { useRouter } from "next/router";
 import UserOrderDetails from "@components/UserCarts/orders/UserOrderDetails";
 import UserReelOrderDetails from "@components/UserCarts/orders/UserReelOrderDetails";
+import UserRestaurantOrderDetails from "@components/UserCarts/orders/UserRestaurantOrderDetails";
 import { Button } from "rsuite";
 import Link from "next/link";
 import { AuthGuard } from "@components/AuthGuard";
@@ -13,7 +14,9 @@ function ViewOrderDetailsPage() {
   const [order, setOrder] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [orderType, setOrderType] = useState<"regular" | "reel" | null>(null);
+  const [orderType, setOrderType] = useState<
+    "regular" | "reel" | "restaurant" | null
+  >(null);
 
   useEffect(() => {
     if (!orderId || !router.isReady) return;
@@ -40,6 +43,22 @@ function ViewOrderDetailsPage() {
         // If not found as regular order, try as reel order
         res = await fetch(`/api/queries/reel-order-details?id=${orderId}`);
 
+        if (res.ok) {
+          const data = await res.json();
+          if (data.order) {
+            setOrder(data.order);
+            setOrderType("reel");
+            return;
+          }
+        } else if (res.status === 404) {
+          // Silently handle 404 for reel orders - this is expected for restaurant orders
+        }
+
+        // If not found as reel order, try as restaurant order
+        res = await fetch(
+          `/api/queries/restaurant-order-details?id=${orderId}`
+        );
+
         if (!res.ok) {
           if (res.status === 404) {
             throw new Error(
@@ -58,7 +77,7 @@ function ViewOrderDetailsPage() {
         }
 
         setOrder(data.order);
-        setOrderType("reel");
+        setOrderType("restaurant");
       } catch (err) {
         console.error("Error fetching order details:", err);
         setError(
@@ -169,6 +188,8 @@ function ViewOrderDetailsPage() {
           <div className="container mx-auto">
             {orderType === "reel" ? (
               <UserReelOrderDetails order={order} />
+            ) : orderType === "restaurant" ? (
+              <UserRestaurantOrderDetails order={order} />
             ) : (
               <UserOrderDetails order={order} />
             )}

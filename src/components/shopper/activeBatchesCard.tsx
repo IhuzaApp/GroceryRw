@@ -39,7 +39,7 @@ interface Order {
   service_fee?: string;
   delivery_fee?: string;
   // Add order type and reel-specific fields
-  orderType?: "regular" | "reel";
+  orderType?: "regular" | "reel" | "restaurant";
   reel?: {
     id: string;
     title: string;
@@ -85,6 +85,7 @@ export default function ActiveBatches({
   const [activeOrders, setActiveOrders] = useState<Order[]>(initialOrders);
   const [error, setError] = useState<string | null>(initialError);
   const [fetchAttempted, setFetchAttempted] = useState(false);
+  const [fetchSuccess, setFetchSuccess] = useState(false);
   const fetchedRef = useRef(false);
   const { theme } = useTheme();
   const [currentTime, setCurrentTime] = useState(new Date());
@@ -122,6 +123,7 @@ export default function ActiveBatches({
     // Always start with loading state
     setIsLoading(true);
     setError(null);
+    setFetchSuccess(false);
 
     // Always fetch fresh data when component mounts or role changes
     // Reset the fetch flag to allow fresh data fetching
@@ -162,10 +164,13 @@ export default function ActiveBatches({
             message: data.message,
           });
           setActiveOrders([]);
+          setFetchSuccess(true);
+          setFetchAttempted(true);
           return;
         }
 
         setActiveOrders(data.batches);
+        setFetchSuccess(true);
         setFetchAttempted(true);
       } catch (err) {
         // Don't set error if it was canceled
@@ -177,6 +182,7 @@ export default function ActiveBatches({
         const errorMessage =
           err instanceof Error ? err.message : "An unknown error occurred";
         setError(errorMessage);
+        setFetchSuccess(false);
         setFetchAttempted(true);
         toaster.push(
           <Message showIcon type="error" header="Error">
@@ -313,55 +319,8 @@ export default function ActiveBatches({
           </div>
         )}
 
-        {error && (
-          <div
-            className={`mb-6 rounded-lg border p-4 ${
-              theme === "dark"
-                ? "border-red-500/20 bg-red-900/20"
-                : "border-red-200 bg-red-50"
-            }`}
-          >
-            <p
-              className={`text-base font-bold ${
-                theme === "dark" ? "text-red-300" : "text-red-800"
-              }`}
-            >
-              There was a problem loading your batches
-            </p>
-            <p
-              className={`mt-1 text-sm ${
-                theme === "dark" ? "text-red-200" : "text-red-600"
-              }`}
-            >
-              {error}
-            </p>
-            <div
-              className={`mt-3 text-sm ${
-                theme === "dark" ? "text-red-200" : "text-red-700"
-              }`}
-            >
-              <p>This might be because:</p>
-              <ul className="mt-1 list-inside list-disc">
-                <li>You are not logged in as a shopper</li>
-                <li>Your session may have expired (try refreshing)</li>
-                <li>There may be a network issue (check your connection)</li>
-                <li>The server might be temporarily unavailable</li>
-              </ul>
-            </div>
-            <button
-              onClick={() => window.location.reload()}
-              className={`mt-3 rounded px-4 py-2 text-sm font-medium ${
-                theme === "dark"
-                  ? "bg-red-500 text-white hover:bg-red-600"
-                  : "bg-red-600 text-white hover:bg-red-700"
-              }`}
-            >
-              Try Again
-            </button>
-          </div>
-        )}
-
-        {isLoading ? (
+        {/* Show skeleton loading while data is being fetched */}
+        {isLoading && (
           <div className="grid grid-cols-1 gap-4 sm:gap-6 lg:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
             {/* Skeleton loading cards */}
             {Array.from({ length: 4 }).map((_, index) => (
@@ -464,7 +423,10 @@ export default function ActiveBatches({
               </div>
             ))}
           </div>
-        ) : activeOrders.length > 0 ? (
+        )}
+
+        {/* Show orders when fetch is successful and we have data */}
+        {!isLoading && fetchSuccess && activeOrders.length > 0 && (
           <div className="grid grid-cols-1 gap-4 sm:gap-6 lg:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
             {activeOrders.map((order) => (
               <ActiveOrderCard
@@ -474,7 +436,10 @@ export default function ActiveBatches({
               />
             ))}
           </div>
-        ) : (
+        )}
+
+        {/* Show "No Active Orders" when fetch is successful but no data */}
+        {!isLoading && fetchSuccess && activeOrders.length === 0 && (
           <div
             className={`rounded-xl border p-8 text-center ${
               theme === "dark"
@@ -511,9 +476,9 @@ export default function ActiveBatches({
                 theme === "dark" ? "text-gray-400" : "text-gray-600"
               }`}
             >
-              {fetchAttempted || initialOrders !== undefined
-                ? "You don&apos;t have any active orders assigned to you at the moment. This includes orders in any state except &apos;PENDING&apos;, &apos;null&apos;, or &apos;delivered&apos;."
-                : "Unable to fetch your active orders. Please try again."}
+              You don&apos;t have any active orders assigned to you at the
+              moment. This includes orders in any state except
+              &apos;PENDING&apos;, &apos;null&apos;, or &apos;delivered&apos;.
             </p>
             <div className="flex flex-col items-center justify-center gap-3 sm:flex-row">
               <Link href="/Plasa">
@@ -521,18 +486,72 @@ export default function ActiveBatches({
                   Return to Dashboard
                 </button>
               </Link>
-              {!fetchAttempted && !initialOrders.length && (
+            </div>
+          </div>
+        )}
+
+        {/* Show error state when fetch fails */}
+        {!isLoading && !fetchSuccess && fetchAttempted && (
+          <div
+            className={`rounded-xl border p-8 text-center ${
+              theme === "dark"
+                ? "border-red-700 bg-red-900/20"
+                : "border-red-200 bg-red-50"
+            }`}
+          >
+            <div
+              className={`mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full ${
+                theme === "dark" ? "bg-red-700" : "bg-red-100"
+              }`}
+            >
+              <svg
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                className={`h-8 w-8 ${
+                  theme === "dark" ? "text-red-400" : "text-red-500"
+                }`}
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z"
+                />
+              </svg>
+            </div>
+            <p
+              className={`mb-2 text-lg font-bold sm:text-xl ${
+                theme === "dark" ? "text-red-300" : "text-red-800"
+              }`}
+            >
+              Something Went Wrong
+            </p>
+            <p
+              className={`mb-4 text-sm sm:text-base ${
+                theme === "dark" ? "text-red-200" : "text-red-600"
+              }`}
+            >
+              {error || "Failed to load your active orders. Please try again."}
+            </p>
+            <div className="flex flex-col items-center justify-center gap-3 sm:flex-row">
+              <button
+                onClick={() => window.location.reload()}
+                className="rounded-lg bg-red-600 px-4 py-2 font-medium text-white transition-colors hover:bg-red-700"
+              >
+                Try Again
+              </button>
+              <Link href="/Plasa">
                 <button
-                  onClick={() => window.location.reload()}
                   className={`rounded-lg border px-4 py-2 font-medium transition-colors ${
                     theme === "dark"
                       ? "border-gray-600 text-gray-300 hover:bg-gray-700"
                       : "border-gray-300 text-gray-700 hover:bg-gray-100"
                   }`}
                 >
-                  Retry Loading
+                  Return to Dashboard
                 </button>
-              )}
+              </Link>
             </div>
           </div>
         )}
@@ -550,6 +569,7 @@ function ActiveOrderCard({
 }) {
   const { theme } = useTheme();
   const isReelOrder = order.orderType === "reel";
+  const isRestaurantOrder = order.orderType === "restaurant";
 
   const getStatusBadge = (status: string) => {
     switch (status) {
@@ -616,6 +636,8 @@ function ActiveOrderCard({
   const getNextActionButton = (status: string) => {
     const buttonClass = isReelOrder
       ? "rounded-lg bg-gradient-to-r from-indigo-600 to-purple-600 px-4 py-2 text-xs font-semibold text-white transition-all duration-200 hover:from-indigo-700 hover:to-purple-700 shadow-md hover:shadow-indigo-500/25 flex items-center gap-1"
+      : isRestaurantOrder
+      ? "rounded-lg bg-gradient-to-r from-orange-600 to-red-600 px-4 py-2 text-xs font-semibold text-white transition-all duration-200 hover:from-orange-700 hover:to-red-700 shadow-md hover:shadow-orange-500/25 flex items-center gap-1"
       : "rounded-lg bg-gradient-to-r from-emerald-600 to-green-600 px-4 py-2 text-xs font-semibold text-white transition-all duration-200 hover:from-emerald-700 hover:to-green-700 shadow-md hover:shadow-emerald-500/25 flex items-center gap-1";
 
     switch (status) {
@@ -726,9 +748,13 @@ function ActiveOrderCard({
         theme === "dark"
           ? isReelOrder
             ? "border-purple-600 bg-gradient-to-br from-gray-800 to-purple-900/20 text-gray-100 hover:border-purple-500 hover:shadow-purple-500/25"
+            : isRestaurantOrder
+            ? "border-orange-600 bg-gradient-to-br from-gray-800 to-orange-900/20 text-gray-100 hover:border-orange-500 hover:shadow-orange-500/25"
             : "border-emerald-600 bg-gradient-to-br from-gray-800 to-emerald-900/20 text-gray-100 hover:border-emerald-500 hover:shadow-emerald-500/25"
           : isReelOrder
           ? "border-purple-200 bg-gradient-to-br from-white to-purple-50 text-gray-900 hover:border-purple-300 hover:shadow-purple-500/25"
+          : isRestaurantOrder
+          ? "border-orange-200 bg-gradient-to-br from-white to-orange-50 text-gray-900 hover:border-orange-300 hover:shadow-orange-500/25"
           : "border-emerald-200 bg-gradient-to-br from-white to-emerald-50 text-gray-900 hover:border-emerald-300 hover:shadow-emerald-500/25"
       }`}
     >
@@ -754,8 +780,28 @@ function ActiveOrderCard({
           </div>
         )}
 
+        {/* Restaurant Order indicator */}
+        {isRestaurantOrder && (
+          <div className="flex items-center gap-1 rounded-full bg-gradient-to-r from-orange-600 to-red-600 px-3 py-1 text-center text-xs font-bold text-white shadow-md">
+            <svg
+              className="h-3 w-3"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M3 3h2l.4 2M7 13h10l4-8H5.4m0 0L7 13m0 0l-2.5 5M7 13l2.5 5m6-5v6a2 2 0 01-2 2H9a2 2 0 01-2-2v-6m8 0V9a2 2 0 00-2-2H9a2 2 0 00-2 2v4.01"
+              />
+            </svg>
+            Restaurant Order
+          </div>
+        )}
+
         {/* Regular Batch Status Indicator */}
-        {!isReelOrder && (
+        {!isReelOrder && !isRestaurantOrder && (
           <div
             className={`flex items-center gap-1 rounded-full px-3 py-1 text-center text-xs font-bold shadow-md ${
               order.status === "ACCEPTED"
@@ -821,6 +867,7 @@ function ActiveOrderCard({
 
         {/* Priority Indicator for Regular Batches */}
         {!isReelOrder &&
+          !isRestaurantOrder &&
           order.deliveryTime &&
           (() => {
             const countdown = getDeliveryCountdown(
@@ -870,7 +917,7 @@ function ActiveOrderCard({
           })()}
 
         {/* Distance Indicator for Regular Batches */}
-        {!isReelOrder && (order as any).distance && (
+        {!isReelOrder && !isRestaurantOrder && (order as any).distance && (
           <div className="flex items-center gap-1 rounded-full bg-gradient-to-r from-violet-600 to-purple-600 px-3 py-1 text-center text-xs font-bold text-white shadow-md">
             <svg
               className="h-3 w-3"
@@ -893,6 +940,7 @@ function ActiveOrderCard({
 
         {/* Delivery Time Indicator for Regular Batches */}
         {!isReelOrder &&
+          !isRestaurantOrder &&
           order.deliveryTime &&
           (() => {
             const countdown = getDeliveryCountdown(
@@ -943,6 +991,10 @@ function ActiveOrderCard({
                 ? theme === "dark"
                   ? "bg-gradient-to-br from-indigo-500 to-purple-600"
                   : "bg-gradient-to-br from-indigo-400 to-purple-500"
+                : isRestaurantOrder
+                ? theme === "dark"
+                  ? "bg-gradient-to-br from-orange-500 to-red-600"
+                  : "bg-gradient-to-br from-orange-400 to-red-500"
                 : theme === "dark"
                 ? "bg-gradient-to-br from-emerald-500 to-green-600"
                 : "bg-gradient-to-br from-emerald-400 to-green-500"
@@ -962,6 +1014,14 @@ function ActiveOrderCard({
                   strokeWidth={2}
                   d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"
                 />
+              ) : isRestaurantOrder ? (
+                // Restaurant/food icon for Restaurant Orders
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M3 3h2l.4 2M7 13h10l4-8H5.4m0 0L7 13m0 0l-2.5 5M7 13l2.5 5m6-5v6a2 2 0 01-2 2H9a2 2 0 01-2-2v-6m8 0V9a2 2 0 00-2-2H9a2 2 0 00-2 2v4.01"
+                />
               ) : (
                 // Clipboard icon for regular orders
                 <path
@@ -979,8 +1039,12 @@ function ActiveOrderCard({
                 theme === "dark" ? "text-gray-100" : "text-gray-900"
               }`}
             >
-              {isReelOrder ? "Quick Batch" : "Batch"} #
-              {order.id.slice(0, 6).toUpperCase()}
+              {isReelOrder
+                ? "Quick Batch"
+                : isRestaurantOrder
+                ? "Restaurant Order"
+                : "Batch"}{" "}
+              #{order.id.slice(0, 6).toUpperCase()}
             </h3>
             <p
               className={`text-sm ${
@@ -991,6 +1055,8 @@ function ActiveOrderCard({
                 ? `${order.quantity || 1} quantity • ${
                     order.reel?.title || "Quick Batch"
                   }`
+                : isRestaurantOrder
+                ? `${order.items} dishes • ${order.shopName}`
                 : `${order.items} items`}
             </p>
           </div>
@@ -1009,6 +1075,10 @@ function ActiveOrderCard({
                   ? theme === "dark"
                     ? "text-indigo-400"
                     : "text-indigo-600"
+                  : isRestaurantOrder
+                  ? theme === "dark"
+                    ? "text-orange-400"
+                    : "text-orange-600"
                   : theme === "dark"
                   ? "text-emerald-400"
                   : "text-emerald-600"
@@ -1074,6 +1144,8 @@ function ActiveOrderCard({
               >
                 {isReelOrder
                   ? `From: ${order.customerName || "Reel Creator"}`
+                  : isRestaurantOrder
+                  ? `From: ${order.shopName} • To: ${order.customerName}`
                   : `${order.shopName}, ${order.shopAddress}`}
               </p>
             </div>

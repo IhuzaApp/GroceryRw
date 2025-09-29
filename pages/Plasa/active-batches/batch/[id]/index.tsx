@@ -30,6 +30,8 @@ interface OrderItem {
     name: string;
     image: string;
     final_price: string;
+    measurement_unit?: string;
+    category?: string;
     ProductName?: {
       id: string;
       name: string;
@@ -42,13 +44,13 @@ interface OrderItem {
   };
 }
 
-interface OrderDetailsType {
+interface BatchOrderDetailsType {
   id: string;
   OrderID: string;
   placedAt: string;
   estimatedDelivery: string;
   deliveryNotes: string;
-  total: number;
+  total: string;
   serviceFee: string;
   deliveryFee: string;
   status: string;
@@ -58,13 +60,35 @@ interface OrderDetailsType {
     id: string;
     name: string;
     email: string;
+    phone: string;
     profile_picture: string;
   };
+  orderedBy: {
+    created_at: string;
+    email: string;
+    gender: string;
+    id: string;
+    is_active: boolean;
+    name: string;
+    password_hash: string;
+    phone: string;
+    profile_picture: string;
+    updated_at: string;
+    role: string;
+  };
+  shop_id: string;
+  shopper_id: string | null;
+  user_id: string;
+  voucher_code: string | null;
   shop: {
     id: string;
     name: string;
     address: string;
     image: string;
+    phone?: string;
+    latitude?: string;
+    longitude?: string;
+    operating_hours?: any;
   };
   Order_Items: OrderItem[];
   address: {
@@ -86,7 +110,7 @@ interface OrderDetailsType {
     };
   };
   // Add order type and reel-specific fields
-  orderType?: "regular" | "reel";
+  orderType?: "regular" | "reel" | "restaurant";
   reel?: {
     id: string;
     title: string;
@@ -101,7 +125,7 @@ interface OrderDetailsType {
 }
 
 interface BatchDetailsPageProps {
-  orderData: OrderDetailsType | null;
+  orderData: BatchOrderDetailsType | null;
   error: string | null;
 }
 
@@ -200,10 +224,20 @@ function BatchDetailsPage({ orderData, error }: BatchDetailsPageProps) {
     }
   };
 
+  // Transform the data to match BatchDetails expected format
+  const transformedOrderData = orderData
+    ? {
+        ...orderData,
+        total: parseFloat(orderData.total), // Convert string to number
+        orderedBy: orderData.orderedBy,
+        customerId: orderData.orderedBy?.id, // Customer is ALWAYS from orderedBy
+      }
+    : null;
+
   return (
     <ShopperLayout>
       <BatchDetails
-        orderData={orderData}
+        orderData={transformedOrderData as any}
         error={error}
         onUpdateStatus={handleUpdateStatus}
       />
@@ -252,17 +286,40 @@ export const getServerSideProps: GetServerSideProps<
         status
         deliveryPhotoUrl: delivery_photo_url
         discount
-        user: userByUserId {
+        user: User {
           id
           name
           email
+          phone
           profile_picture
         }
+        orderedBy {
+          created_at
+          email
+          gender
+          id
+          is_active
+          name
+          password_hash
+          phone
+          profile_picture
+          updated_at
+          role
+        }
+        shop_id
+        shopper_id
+        total
+        user_id
+        voucher_code
         shop: Shop {
           id
           name
           address
           image
+          phone
+          latitude
+          longitude
+          operating_hours
         }
         Order_Items {
           id
@@ -321,10 +378,13 @@ export const getServerSideProps: GetServerSideProps<
         deliveryPhotoUrl: delivery_photo_url
         discount
         quantity
+        shopper_id
+        user_id
         user: User {
           id
           name
           email
+          phone
           profile_picture
         }
         reel: Reel {
@@ -335,12 +395,42 @@ export const getServerSideProps: GetServerSideProps<
           Product
           type
           video_url
+          restaurant_id
+          shop_id
           Restaurant {
             id
             name
             location
             lat
             long
+            created_at
+            email
+            is_active
+            phone
+            profile
+            relatedTo
+            tin
+            ussd
+            verified
+            logo
+          }
+          Shops {
+            id
+            name
+            address
+            image
+            latitude
+            longitude
+            phone
+            operating_hours
+            logo
+            category_id
+            description
+            created_at
+            updated_at
+            relatedTo
+            ssd
+            tin
           }
         }
         address: Address {
@@ -350,10 +440,16 @@ export const getServerSideProps: GetServerSideProps<
           postal_code
           latitude
           longitude
+          created_at
+          updated_at
+          user_id
+          is_default
         }
         assignedTo: User {
           id
           name
+          email
+          phone
           profile_picture
           orders: Orders_aggregate {
             aggregate {
@@ -366,11 +462,14 @@ export const getServerSideProps: GetServerSideProps<
   `;
 
   try {
+    console.log("🔍 Starting batch details fetch for ID:", id);
+
     if (!hasuraClient) {
       throw new Error("Hasura client is not initialized");
     }
 
     // First try to fetch as a regular order
+    console.log("🔄 Trying regular order query...");
     let data = await hasuraClient.request<{ Orders: any[] }>(
       GET_ORDER_DETAILS,
       { id }
@@ -378,9 +477,14 @@ export const getServerSideProps: GetServerSideProps<
 
     let order = data.Orders[0];
     let orderType = "regular";
+    console.log("📊 Regular order result:", {
+      found: !!order,
+      count: data.Orders.length,
+    });
 
     // If no regular order found, try as a reel order
     if (!order) {
+      console.log("🔄 Trying reel order query...");
       const reelData = await hasuraClient.request<{ reel_orders: any[] }>(
         GET_REEL_ORDER_DETAILS,
         { id }
@@ -388,9 +492,95 @@ export const getServerSideProps: GetServerSideProps<
 
       order = reelData.reel_orders[0];
       orderType = "reel";
+      console.log("📊 Reel order result:", {
+        found: !!order,
+        count: reelData.reel_orders.length,
+      });
+    }
+
+    // If still no order found, try as a restaurant order
+    if (!order) {
+      console.log("🔄 Trying restaurant order query...");
+      const GET_RESTAURANT_ORDER_DETAILS = gql`
+        query GetRestaurantOrderDetails($id: uuid!) {
+          restaurant_orders(where: { id: { _eq: $id } }, limit: 1) {
+            id
+            OrderID
+            placedAt: created_at
+            estimatedDelivery: delivery_time
+            deliveryNotes: delivery_notes
+            total
+            deliveryFee: delivery_fee
+            status
+            deliveryPhotoUrl: delivery_photo_url
+            discount
+            shopper_id
+            user_id
+            restaurant_id
+            Restaurant {
+              id
+              name
+              location
+              lat
+              long
+              phone
+              logo
+            }
+            orderedBy {
+              id
+              name
+              phone
+              email
+              profile_picture
+            }
+            address: Address {
+              id
+              street
+              city
+              postal_code
+              latitude
+              longitude
+            }
+            restaurant_dishe_orders {
+              id
+              quantity
+              price
+              restaurant_dishes {
+                id
+                name
+                description
+                image
+                price
+              }
+            }
+            shopper {
+              id
+              name
+              profile_picture
+              orders: Orders_aggregate {
+                aggregate {
+                  count
+                }
+              }
+            }
+          }
+        }
+      `;
+
+      const restaurantData = await hasuraClient.request<{
+        restaurant_orders: any[];
+      }>(GET_RESTAURANT_ORDER_DETAILS, { id });
+
+      order = restaurantData.restaurant_orders[0];
+      orderType = "restaurant";
+      console.log("📊 Restaurant order result:", {
+        found: !!order,
+        count: restaurantData.restaurant_orders.length,
+      });
     }
 
     if (!order) {
+      console.log("❌ No order found for ID:", id);
       return {
         props: {
           orderData: null,
@@ -399,12 +589,53 @@ export const getServerSideProps: GetServerSideProps<
       };
     }
 
+    console.log("✅ Order found:", { orderType, orderId: order.id });
+
     // Check if the user is authorized to view this order
     // User can view if they are assigned to the order or if they are the customer
-    const isAssignedShopper = order.assignedTo?.id === session.user.id;
-    const isCustomer = order.user?.id === session.user.id;
+    const isAssignedShopper =
+      order.assignedTo?.id === session.user.id ||
+      order.shopper?.id === session.user.id;
+    const isCustomer = order.orderedBy?.id === session.user.id;
 
-    if (!isAssignedShopper && !isCustomer) {
+    // For reel orders, also check if user is the customer via user field
+    const isReelCustomer =
+      orderType === "reel" && order.user?.id === session.user.id;
+
+    // For reel orders, also check if user is the assigned shopper via shopper_id field
+    const isReelShopper =
+      orderType === "reel" && order.shopper_id === session.user.id;
+
+    // For restaurant orders, check if user is the assigned shopper via shopper_id field
+    const isRestaurantShopper =
+      orderType === "restaurant" && order.shopper_id === session.user.id;
+
+    // For restaurant orders, check if user is the customer via user_id field
+    const isRestaurantCustomer =
+      orderType === "restaurant" && order.user_id === session.user.id;
+
+    console.log("🔐 Authorization check:", {
+      isAssignedShopper,
+      isCustomer,
+      isReelCustomer,
+      isReelShopper,
+      isRestaurantShopper,
+      isRestaurantCustomer,
+      orderType,
+      assignedToId: order.assignedTo?.id,
+      shopperId: order.shopper?.id,
+      sessionUserId: session.user.id,
+    });
+
+    if (
+      !isAssignedShopper &&
+      !isCustomer &&
+      !isReelCustomer &&
+      !isReelShopper &&
+      !isRestaurantShopper &&
+      !isRestaurantCustomer
+    ) {
+      console.log("❌ User not authorized to view this order");
       return {
         props: {
           orderData: null,
@@ -414,6 +645,7 @@ export const getServerSideProps: GetServerSideProps<
     }
 
     // Format timestamps to human-readable strings
+    console.log("🔄 Formatting order data...");
     const formattedOrder = {
       ...order,
       orderType,
@@ -429,6 +661,10 @@ export const getServerSideProps: GetServerSideProps<
         : null,
     };
 
+    console.log("✅ Successfully formatted order:", {
+      orderType,
+      orderId: formattedOrder.id,
+    });
     return {
       props: {
         orderData: formattedOrder,

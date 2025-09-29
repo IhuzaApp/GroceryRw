@@ -96,6 +96,52 @@ const GET_ACTIVE_REEL_ORDERS = gql`
   }
 `;
 
+// Fetch active restaurant orders for a specific shopper
+const GET_ACTIVE_RESTAURANT_ORDERS = gql`
+  query GetActiveRestaurantOrders($shopperId: uuid!) {
+    restaurant_orders(
+      where: {
+        shopper_id: { _eq: $shopperId }
+        _and: [
+          { status: { _nin: ["null", "PENDING", "delivered"] } }
+          { status: { _is_null: false } }
+        ]
+      }
+      order_by: { created_at: desc }
+    ) {
+      id
+      created_at
+      status
+      delivery_fee
+      total
+      delivery_time
+      delivery_notes
+      Restaurant {
+        id
+        name
+        location
+        lat
+        long
+      }
+      orderedBy {
+        id
+        name
+        phone
+      }
+      Address {
+        latitude
+        longitude
+        street
+        city
+      }
+      restaurant_dishe_orders {
+        id
+        quantity
+      }
+    }
+  }
+`;
+
 export default async function handler(
   req: NextApiRequest,
   res: NextApiResponse
@@ -146,80 +192,127 @@ export default async function handler(
       throw new Error("Hasura client is not initialized");
     }
 
-    // Fetch both regular and reel orders in parallel
-    const [regularOrdersData, reelOrdersData] = await Promise.all([
-      hasuraClient.request<{
-        Orders: Array<{
-          id: string;
-          created_at: string;
-          status: string;
-          service_fee: string | null;
-          delivery_fee: string | null;
-          total: number | null;
-          delivery_time: string | null;
-          Shop: {
-            name: string;
-            address: string;
-            latitude: string;
-            longitude: string;
-          };
-          User: { id: string; name: string };
-          Address: {
-            latitude: string;
-            longitude: string;
-            street: string;
-            city: string;
-          };
-          Order_Items_aggregate: {
-            aggregate: {
-              count: number | null;
-            } | null;
-          };
-        }>;
-      }>(GET_ACTIVE_ORDERS, { shopperId: userId }),
-      hasuraClient.request<{
-        reel_orders: Array<{
-          id: string;
-          created_at: string;
-          status: string;
-          service_fee: string | null;
-          delivery_fee: string | null;
-          total: string;
-          delivery_time: string | null;
-          quantity: string;
-          delivery_note: string | null;
-          Reel: {
-            id: string;
-            title: string;
-            description: string;
-            Price: string;
-            Product: string;
-            type: string;
-            video_url: string;
-          };
-          user: {
-            id: string;
-            name: string;
-            phone: string;
-          };
-          Address: {
-            latitude: string;
-            longitude: string;
-            street: string;
-            city: string;
-          };
-        }>;
-      }>(GET_ACTIVE_REEL_ORDERS, { shopperId: userId }),
-    ]);
+    // Fetch regular, reel, and restaurant orders in parallel
+    let regularOrdersData, reelOrdersData, restaurantOrdersData;
+
+    try {
+      [regularOrdersData, reelOrdersData, restaurantOrdersData] =
+        await Promise.all([
+          hasuraClient.request<{
+            Orders: Array<{
+              id: string;
+              created_at: string;
+              status: string;
+              service_fee: string | null;
+              delivery_fee: string | null;
+              total: number | null;
+              delivery_time: string | null;
+              Shop: {
+                name: string;
+                address: string;
+                latitude: string;
+                longitude: string;
+              };
+              User: { id: string; name: string };
+              Address: {
+                latitude: string;
+                longitude: string;
+                street: string;
+                city: string;
+              };
+              Order_Items_aggregate: {
+                aggregate: {
+                  count: number | null;
+                } | null;
+              };
+            }>;
+          }>(GET_ACTIVE_ORDERS, { shopperId: userId }),
+          hasuraClient.request<{
+            reel_orders: Array<{
+              id: string;
+              created_at: string;
+              status: string;
+              service_fee: string | null;
+              delivery_fee: string | null;
+              total: string;
+              delivery_time: string | null;
+              quantity: string;
+              delivery_note: string | null;
+              Reel: {
+                id: string;
+                title: string;
+                description: string;
+                Price: string;
+                Product: string;
+                type: string;
+                video_url: string;
+              };
+              user: {
+                id: string;
+                name: string;
+                phone: string;
+              };
+              Address: {
+                latitude: string;
+                longitude: string;
+                street: string;
+                city: string;
+              };
+            }>;
+          }>(GET_ACTIVE_REEL_ORDERS, { shopperId: userId }),
+          hasuraClient.request<{
+            restaurant_orders: Array<{
+              id: string;
+              created_at: string;
+              status: string;
+              delivery_fee: string | null;
+              total: string;
+              delivery_time: string | null;
+              delivery_notes: string | null;
+              Restaurant: {
+                id: string;
+                name: string;
+                location: string;
+                lat: string;
+                long: string;
+              };
+              orderedBy: {
+                id: string;
+                name: string;
+                phone: string;
+              };
+              Address: {
+                latitude: string;
+                longitude: string;
+                street: string;
+                city: string;
+              };
+              restaurant_dishe_orders: Array<{
+                id: string;
+                quantity: string;
+              }>;
+            }>;
+          }>(GET_ACTIVE_RESTAURANT_ORDERS, { shopperId: userId }),
+        ]);
+    } catch (fetchError) {
+      throw new Error(
+        `Failed to fetch orders: ${
+          fetchError instanceof Error ? fetchError.message : String(fetchError)
+        }`
+      );
+    }
 
     const regularOrders = regularOrdersData.Orders;
     const reelOrders = reelOrdersData.reel_orders;
+    const restaurantOrders = restaurantOrdersData.restaurant_orders;
 
     logger.info("Active batches query results", "ActiveBatchesAPI", {
       userId,
       regularOrdersCount: regularOrders.length,
       reelOrdersCount: reelOrders.length,
-      totalOrders: regularOrders.length + reelOrders.length,
+      restaurantOrdersCount: restaurantOrders.length,
+      totalOrders:
+        regularOrders.length + reelOrders.length + restaurantOrders.length,
     });
 
     // Transform regular orders
@@ -272,10 +365,34 @@ export default async function handler(
       customerPhone: o.user.phone,
     }));
 
-    // Combine both types of orders
+    // Transform restaurant orders
+    const transformedRestaurantOrders = restaurantOrders.map((o) => ({
+      id: o.id,
+      OrderID: o.id,
+      status: o.status,
+      createdAt: o.created_at,
+      deliveryTime: o.delivery_time || undefined,
+      shopName: o.Restaurant.name,
+      shopAddress: o.Restaurant.location,
+      shopLat: parseFloat(o.Restaurant.lat),
+      shopLng: parseFloat(o.Restaurant.long),
+      customerName: o.orderedBy.name,
+      customerAddress: `${o.Address.street}, ${o.Address.city}`,
+      customerLat: parseFloat(o.Address.latitude),
+      customerLng: parseFloat(o.Address.longitude),
+      items: o.restaurant_dishe_orders.length, // Count of dish orders
+      total: parseFloat(o.total || "0"),
+      estimatedEarnings: parseFloat(o.delivery_fee || "0").toFixed(2),
+      orderType: "restaurant" as const,
+      deliveryNote: o.delivery_notes,
+      customerPhone: o.orderedBy.phone,
+    }));
+
+    // Combine all types of orders
     const allActiveOrders = [
       ...transformedRegularOrders,
       ...transformedReelOrders,
+      ...transformedRestaurantOrders,
     ];
 
     // If no orders were found, return a specific message but with 200 status code

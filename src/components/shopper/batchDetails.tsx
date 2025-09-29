@@ -28,7 +28,7 @@ import PaymentModal from "./PaymentModal";
 import DeliveryConfirmationModal from "./DeliveryConfirmationModal";
 import { useChat } from "../../context/ChatContext";
 import { isMobileDevice } from "../../lib/formatters";
-import ChatDrawer from "../chat/ChatDrawer";
+import ShopperChatDrawer from "../chat/ShopperChatDrawer";
 import {
   recordPaymentTransactions,
   generateInvoice,
@@ -106,6 +106,7 @@ interface OrderItem {
     name: string;
     image: string;
     final_price: string;
+    measurement_unit?: string;
     ProductName?: {
       id: string;
       name: string;
@@ -139,6 +140,20 @@ interface OrderDetailsType {
     phone?: string;
     profile_picture: string;
   };
+  orderedBy?: {
+    created_at: string;
+    email: string;
+    gender: string;
+    id: string;
+    is_active: boolean;
+    name: string;
+    password_hash: string;
+    phone: string;
+    profile_picture: string;
+    updated_at: string;
+    role: string;
+  };
+  customerId?: string;
   shop?: {
     id: string;
     name: string;
@@ -184,6 +199,13 @@ interface OrderDetailsType {
       location: string;
       lat: number;
       long: number;
+      phone?: string;
+    };
+    Shops?: {
+      id: string;
+      name: string;
+      address: string;
+      phone?: string;
     };
   };
   quantity?: number;
@@ -220,6 +242,7 @@ export default function BatchDetails({
   const [loading, setLoading] = useState(false);
   const [order, setOrder] = useState<OrderDetailsType | null>(orderData);
   const [errorState, setErrorState] = useState<string | null>(error);
+
   const [showImageModal, setShowImageModal] = useState(false);
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
   const [selectedProductName, setSelectedProductName] = useState<string | null>(
@@ -525,25 +548,44 @@ export default function BatchDetails({
     try {
       setInvoiceLoading(true);
 
+      const requestData = {
+        orderId,
+        orderType: orderData?.orderType || "regular", // Pass order type to API
+      };
+
+      console.log(
+        "🔍 [Batch Details] Generating invoice with data:",
+        requestData
+      );
+
       // Make API request to generate invoice and save to database
       const invoiceResponse = await fetch("/api/invoices/generate", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({
-          orderId,
-          orderType: orderData?.orderType || "regular", // Pass order type to API
-        }),
+        body: JSON.stringify(requestData),
       });
 
+      console.log(
+        "🔍 [Batch Details] Invoice response status:",
+        invoiceResponse.status
+      );
+
       if (!invoiceResponse.ok) {
+        const errorText = await invoiceResponse.text();
+        console.error("❌ [Batch Details] Invoice generation failed:", {
+          status: invoiceResponse.status,
+          statusText: invoiceResponse.statusText,
+          errorText,
+        });
         throw new Error(
           `Failed to generate invoice: ${invoiceResponse.statusText}`
         );
       }
 
       const invoiceResult = await invoiceResponse.json();
+      console.log("🔍 [Batch Details] Invoice result:", invoiceResult);
 
       if (invoiceResult.success && invoiceResult.invoice) {
         setInvoiceData(invoiceResult.invoice);
@@ -830,6 +872,29 @@ export default function BatchDetails({
           setGeneratedOtp("");
           setShowPaymentModal(false); // Ensure payment modal is closed
 
+          // Notify customer that shopper is on the way
+          try {
+            await fetch("/api/fcm/send-notification", {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify({
+                recipientId: order.orderedBy?.id || order.customerId,
+                senderName: session?.user?.name || "Your Shopper",
+                message: "Plasa is on the way",
+                orderId: order.id,
+                conversationId: order.id,
+              }),
+            });
+          } catch (notificationError) {
+            console.error(
+              "Error sending on-the-way notification:",
+              notificationError
+            );
+            // Don't show error to user as payment was successful
+          }
+
           // Show success notification
           toaster.push(
             <Notification type="success" header="Payment Complete" closable>
@@ -837,6 +902,7 @@ export default function BatchDetails({
               <br />
               ✅ Wallet balance updated
               <br />✅ Order status updated to "On The Way"
+              <br />✅ Customer notified that you're on the way
             </Notification>,
             { placement: "topEnd", duration: 5000 }
           );
@@ -1098,8 +1164,8 @@ export default function BatchDetails({
     if (!order) return false;
     // For reel orders, always show details
     if (order.orderType === "reel") return true;
-    // For regular orders, show only during accepted or shopping status
-    return order.status === "accepted" || order.status === "shopping";
+    // For regular orders, show details for all statuses except delivered
+    return order.status !== "delivered";
   };
 
   // Function to get the right action button based on current status
@@ -1169,7 +1235,7 @@ export default function BatchDetails({
             loading={loading}
             className="rounded-lg py-4 text-xl font-bold sm:rounded-xl sm:py-6 sm:text-3xl"
           >
-            Confirm Delivery & Generate Invoice
+            Confirm Delivery
           </Button>
         );
       case "delivered":
@@ -1182,18 +1248,53 @@ export default function BatchDetails({
 
   // Function to handle chat button click
   const handleChatClick = () => {
-    if (!order?.user || !order.user.id) {
+    if (!order) return;
+
+    // Type assertion to access the new fields
+    const orderWithNewFields = order as OrderDetailsType & {
+      customerId?: string;
+      orderedBy?: {
+        id: string;
+        name: string;
+        profile_picture: string;
+      };
+    };
+
+    const customerId =
+      orderWithNewFields.customerId || orderWithNewFields.orderedBy?.id;
+    if (!customerId) {
+      console.error(
+        "🔍 [Batch Details] Cannot start chat - missing customer data:",
+        {
+          hasOrder: !!order,
+          customerId,
+          orderedBy: orderWithNewFields.orderedBy,
+          user: order.user,
+          orderId: order.id,
+        }
+      );
       if (typeof window !== "undefined") {
-        alert("Cannot start chat: Customer ID is missing.");
+        alert(
+          "Cannot start chat: Customer information is missing. Please refresh the page and try again."
+        );
       }
       return;
     }
 
+    console.log("🔍 [Batch Details] Opening chat with:", {
+      orderId: order.id,
+      customerId:
+        orderWithNewFields.customerId || orderWithNewFields.orderedBy?.id,
+      customerName: orderWithNewFields.orderedBy?.name || order.user?.name,
+      shopperId: session?.user?.id,
+    });
+
     openChat(
       order.id,
-      order.user.id,
-      order.user.name,
-      order.user.profile_picture
+      customerId, // We already validated this exists above
+      orderWithNewFields.orderedBy?.name || order.user?.name || "Customer",
+      orderWithNewFields.orderedBy?.profile_picture ||
+        order.user?.profile_picture
     );
 
     // If on mobile, navigate to chat page
@@ -1215,6 +1316,52 @@ export default function BatchDetails({
       console.error("Error sending message:", error);
     } finally {
       setIsSending(false);
+    }
+  };
+
+  // Function to handle shopper arrived notification
+  const handleShopperArrived = async () => {
+    if (!order?.id || loading) return;
+
+    try {
+      setLoading(true);
+
+      // Send notification to customer
+      const response = await fetch("/api/fcm/send-notification", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          recipientId: order.orderedBy?.id || order.customerId,
+          senderName: session?.user?.name || "Your Shopper",
+          message: "Plasa has arrived",
+          orderId: order.id,
+          conversationId: order.id, // Using order ID as conversation ID
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to send notification");
+      }
+
+      // Show success notification
+      toaster.push(
+        <Notification type="success" header="Customer Notified" closable>
+          Customer has been notified that you have arrived!
+        </Notification>,
+        { placement: "topEnd" }
+      );
+    } catch (error) {
+      console.error("Error sending shopper arrived notification:", error);
+      toaster.push(
+        <Notification type="error" header="Notification Failed" closable>
+          Failed to notify customer. Please try again.
+        </Notification>,
+        { placement: "topEnd" }
+      );
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -1240,18 +1387,165 @@ export default function BatchDetails({
   // Fetch complete order data when component mounts
   useEffect(() => {
     if (order?.id) {
-      fetch(`/api/queries/orderDetails?id=${order.id}`)
-        .then((res) => res.json())
+      console.log("🔍 [BatchDetails] Initial order data from SSR:", {
+        orderId: order.id,
+        orderType: order.orderType,
+        hasShop: !!order.shop,
+        shopData: order.shop
+          ? {
+              id: order.shop.id,
+              name: order.shop.name,
+              address: order.shop.address,
+              image: order.shop.image,
+              phone: order.shop.phone,
+              latitude: order.shop.latitude,
+              longitude: order.shop.longitude,
+              operating_hours: order.shop.operating_hours,
+            }
+          : null,
+        hasReel: !!order.reel,
+        reelData: order.reel
+          ? {
+              id: order.reel.id,
+              title: order.reel.title,
+              hasRestaurant: !!order.reel.Restaurant,
+              hasShops: !!order.reel.Shops,
+            }
+          : null,
+      });
+
+      console.log("🔍 [BatchDetails] Fetching order details for ID:", order.id);
+
+      fetch(`/api/shopper/orderDetails?id=${order.id}`)
+        .then((res) => {
+          console.log("🔍 [BatchDetails] API response status:", res.status);
+          return res.json();
+        })
         .then((data) => {
+          console.log("🔍 [BatchDetails] API response data:", {
+            success: data.success,
+            hasOrder: !!data.order,
+            orderId: data.order?.id,
+            orderType: data.order?.orderType,
+            status: data.order?.status,
+            hasItems: !!data.order?.items,
+            itemsLength: data.order?.items?.length || 0,
+            hasShop: !!data.order?.shop,
+            shopData: data.order?.shop
+              ? {
+                  id: data.order.shop.id,
+                  name: data.order.shop.name,
+                  address: data.order.shop.address,
+                  image: data.order.shop.image,
+                  phone: data.order.shop.phone,
+                  latitude: data.order.shop.latitude,
+                  longitude: data.order.shop.longitude,
+                  operating_hours: data.order.shop.operating_hours,
+                }
+              : null,
+            hasReel: !!data.order?.reel,
+            reelData: data.order?.reel
+              ? {
+                  id: data.order.reel.id,
+                  title: data.order.reel.title,
+                  hasRestaurant: !!data.order.reel.Restaurant,
+                  hasShops: !!data.order.reel.Shops,
+                }
+              : null,
+          });
+
           if (data.order) {
-            setOrder(data.order);
+            // Transform the API response to match BatchDetails expected structure
+            const transformedOrder = {
+              ...data.order,
+              // Convert items array to Order_Items structure
+              Order_Items:
+                data.order.items?.map((item: any) => ({
+                  id: item.id,
+                  quantity: item.quantity,
+                  price: item.price,
+                  product: {
+                    id: item.id, // Use item id as product id
+                    name: item.name,
+                    image:
+                      item.productImage || "/images/groceryPlaceholder.png",
+                    final_price: item.price.toString(),
+                    measurement_unit: item.measurement_unit, // Add measurement_unit from API
+                    ProductName: {
+                      id: item.id,
+                      name: item.name,
+                      description: "",
+                      barcode: item.barcode || "",
+                      sku: item.sku || "",
+                      image:
+                        item.productImage || "/images/groceryPlaceholder.png",
+                      create_at: new Date().toISOString(),
+                    },
+                  },
+                })) || [],
+            };
+
+            console.log("✅ [BatchDetails] Transformed order:", {
+              id: transformedOrder.id,
+              orderType: transformedOrder.orderType,
+              status: transformedOrder.status,
+              hasOrderItems: !!transformedOrder.Order_Items,
+              orderItemsLength: transformedOrder.Order_Items?.length || 0,
+              hasReel: !!transformedOrder.reel,
+              hasRestaurant: !!transformedOrder.reel?.Restaurant,
+              hasShop: !!transformedOrder.shop,
+              shopData: transformedOrder.shop
+                ? {
+                    id: transformedOrder.shop.id,
+                    name: transformedOrder.shop.name,
+                    address: transformedOrder.shop.address,
+                    image: transformedOrder.shop.image,
+                    phone: transformedOrder.shop.phone,
+                    latitude: transformedOrder.shop.latitude,
+                    longitude: transformedOrder.shop.longitude,
+                    operating_hours: transformedOrder.shop.operating_hours,
+                  }
+                : null,
+              reelData: transformedOrder.reel
+                ? {
+                    id: transformedOrder.reel.id,
+                    title: transformedOrder.reel.title,
+                    hasRestaurant: !!transformedOrder.reel.Restaurant,
+                    hasShops: !!transformedOrder.reel.Shops,
+                    restaurantData: transformedOrder.reel.Restaurant
+                      ? {
+                          id: transformedOrder.reel.Restaurant.id,
+                          name: transformedOrder.reel.Restaurant.name,
+                          location: transformedOrder.reel.Restaurant.location,
+                          phone: transformedOrder.reel.Restaurant.phone,
+                        }
+                      : null,
+                    shopData: transformedOrder.reel.Shops
+                      ? {
+                          id: transformedOrder.reel.Shops.id,
+                          name: transformedOrder.reel.Shops.name,
+                          address: transformedOrder.reel.Shops.address,
+                          phone: transformedOrder.reel.Shops.phone,
+                        }
+                      : null,
+                  }
+                : null,
+            });
+
+            setOrder(transformedOrder);
+          } else {
+            console.log("❌ [BatchDetails] No order data in response");
           }
         })
         .catch((err) => {
-          console.error("Error fetching complete order data:", err);
+          console.error("❌ [BatchDetails] Error fetching order details:", {
+            error: err,
+            message: err instanceof Error ? err.message : "Unknown error",
+            orderId: order.id,
+          });
         });
     }
-  }, [order?.id]);
+  }, [order?.id, session?.user?.id]);
 
   if (loading && !order) {
     return (
@@ -1354,21 +1648,23 @@ export default function BatchDetails({
         orderType={order?.orderType || "regular"}
       />
 
-      {/* Chat Drawer - will only show on desktop when chat is open */}
+      {/* Shopper Chat Drawer - will only show on desktop when chat is open */}
       {isDrawerOpen &&
         currentChatId === order?.id &&
         order.status !== "delivered" && (
-          <ChatDrawer
+          <ShopperChatDrawer
+            orderId={order.id}
+            customer={{
+              id: order.orderedBy?.id || order.customerId || "",
+              name: order.orderedBy?.name || order.user?.name || "Customer",
+              avatar:
+                order.orderedBy?.profile_picture ||
+                order.user?.profile_picture ||
+                "/images/userProfile.png",
+              phone: order.orderedBy?.phone || order.user?.phone,
+            }}
             isOpen={isDrawerOpen}
             onClose={closeChat}
-            order={order}
-            shopper={session?.user}
-            messages={getMessages(order.id) as any}
-            newMessage={newMessage}
-            setNewMessage={setNewMessage}
-            handleSendMessage={handleSendMessage}
-            isSending={isSending}
-            currentUserId={session?.user?.id || ""}
           />
         )}
 
@@ -1554,14 +1850,39 @@ export default function BatchDetails({
                         </div>
                       </div>
                     </div>
-                    {order.reel?.Restaurant && (
+
+                    {/* Show Restaurant or Shop information based on what's available */}
+                    {(order.reel?.Restaurant || order.reel?.Shops) && (
                       <div className="rounded-lg border border-slate-200 bg-white p-3 dark:border-slate-600 dark:bg-slate-700">
-                        <p className="text-sm font-medium text-slate-900 dark:text-slate-100 sm:text-base">
-                          {order.reel.Restaurant.name}
-                        </p>
-                        <p className="text-xs text-slate-500 dark:text-slate-400">
-                          {order.reel.Restaurant.location}
-                        </p>
+                        {order.reel?.Restaurant ? (
+                          <>
+                            <p className="text-sm font-medium text-slate-900 dark:text-slate-100 sm:text-base">
+                              {order.reel.Restaurant.name}
+                            </p>
+                            <p className="text-xs text-slate-500 dark:text-slate-400">
+                              {order.reel.Restaurant.location}
+                            </p>
+                            {order.reel.Restaurant.phone && (
+                              <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
+                                📞 {order.reel.Restaurant.phone}
+                              </p>
+                            )}
+                          </>
+                        ) : order.reel?.Shops ? (
+                          <>
+                            <p className="text-sm font-medium text-slate-900 dark:text-slate-100 sm:text-base">
+                              {order.reel.Shops.name}
+                            </p>
+                            <p className="text-xs text-slate-500 dark:text-slate-400">
+                              {order.reel.Shops.address}
+                            </p>
+                            {order.reel.Shops.phone && (
+                              <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
+                                📞 {order.reel.Shops.phone}
+                              </p>
+                            )}
+                          </>
+                        ) : null}
                       </div>
                     )}
                   </div>
@@ -1724,35 +2045,32 @@ export default function BatchDetails({
 
                 <div className="mb-3 flex flex-col items-center gap-3 sm:mb-4 sm:flex-row sm:items-start">
                   <div className="h-8 w-8 overflow-hidden rounded-full bg-slate-200 sm:h-12 sm:w-12">
-                    {order.user.profile_picture ? (
-                      <Image
-                        src={order.user.profile_picture}
-                        alt={order.user.name}
-                        width={48}
-                        height={48}
-                        className="h-full w-full object-cover"
-                      />
-                    ) : (
-                      <div className="flex h-full w-full items-center justify-center bg-slate-200 text-slate-400">
-                        <svg
-                          viewBox="0 0 24 24"
-                          fill="none"
-                          stroke="currentColor"
-                          strokeWidth="2"
-                          className="h-5 w-5 sm:h-6 sm:w-6"
-                        >
-                          <circle cx="12" cy="8" r="4" />
-                          <path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2" />
-                        </svg>
-                      </div>
-                    )}
+                    <Image
+                      src={
+                        (order as any).orderedBy?.profile_picture ||
+                        order.user?.profile_picture ||
+                        "/images/userProfile.png"
+                      }
+                      alt={
+                        (order as any).orderedBy?.name ||
+                        order.user?.name ||
+                        "Customer"
+                      }
+                      width={48}
+                      height={48}
+                      className="h-full w-full object-cover"
+                    />
                   </div>
                   <div className="text-center sm:text-left">
                     <h4 className="text-base font-medium text-slate-900 dark:text-slate-100 sm:text-lg">
-                      {order.user.name}
+                      {(order as any).orderedBy?.name ||
+                        order.user?.name ||
+                        "Unknown Customer"}
                     </h4>
                     <p className="text-sm text-slate-500 dark:text-slate-400 sm:text-base">
-                      {order.user.phone || "N/A"}
+                      {(order as any).orderedBy?.phone ||
+                        order.user?.phone ||
+                        "N/A"}
                     </p>
                   </div>
                 </div>
@@ -1763,8 +2081,9 @@ export default function BatchDetails({
                       Delivery Address
                     </p>
                     <p className="text-sm text-slate-900 dark:text-slate-100 sm:text-base">
-                      {order.address.street}, {order.address.city}
-                      {order.address.postal_code
+                      {order.address?.street || "No street"},{" "}
+                      {order.address?.city || "No city"}
+                      {order.address?.postal_code
                         ? `, ${order.address.postal_code}`
                         : ""}
                     </p>
@@ -1775,8 +2094,10 @@ export default function BatchDetails({
                       className="flex items-center rounded-full border border-green-400 px-3 py-1.5 text-xs text-green-600 transition-colors hover:border-green-300 hover:bg-green-50 hover:text-green-700 dark:border-green-700 dark:text-green-400 dark:hover:border-green-600 dark:hover:bg-green-900/20 sm:text-sm"
                       onClick={() =>
                         handleDirectionsClick(
-                          `${order.address.street}, ${order.address.city}${
-                            order.address.postal_code
+                          `${order.address?.street || "No street"}, ${
+                            order.address?.city || "No city"
+                          }${
+                            order.address?.postal_code
                               ? `, ${order.address.postal_code}`
                               : ""
                           }`
@@ -1796,11 +2117,13 @@ export default function BatchDetails({
                       Directions to Customer
                     </button>
 
-                    {order.user.phone && (
+                    {((order as any).orderedBy?.phone || order.user?.phone) && (
                       <button
                         className="flex items-center rounded-full border border-green-400 px-3 py-1.5 text-xs text-green-600 transition-colors hover:border-green-300 hover:bg-green-50 hover:text-green-700 dark:border-green-700 dark:text-green-400 dark:hover:border-green-600 dark:hover:bg-green-900/20 sm:text-sm"
                         onClick={() =>
-                          (window.location.href = `tel:${order.user.phone}`)
+                          (window.location.href = `tel:${
+                            (order as any).orderedBy?.phone || order.user?.phone
+                          }`)
                         }
                       >
                         <svg
@@ -1847,6 +2170,27 @@ export default function BatchDetails({
                           <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
                         </svg>
                         Chat Closed
+                      </button>
+                    )}
+
+                    {/* Shopper Arrived Button - Only show when delivering */}
+                    {(order.status === "on_the_way" ||
+                      order.status === "at_customer") && (
+                      <button
+                        className="flex items-center rounded-full border border-blue-400 px-3 py-1.5 text-xs text-blue-600 transition-colors hover:border-blue-300 hover:bg-blue-50 hover:text-blue-700 dark:border-blue-700 dark:text-blue-400 dark:hover:border-blue-600 dark:hover:bg-blue-900/20 sm:text-sm"
+                        onClick={handleShopperArrived}
+                        disabled={loading}
+                      >
+                        <svg
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          stroke="currentColor"
+                          strokeWidth="2"
+                          className="mr-1 h-4 w-4 sm:h-5 sm:w-5"
+                        >
+                          <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
+                        </svg>
+                        {loading ? "Notifying..." : "Notify the Customer"}
                       </button>
                     )}
                   </div>

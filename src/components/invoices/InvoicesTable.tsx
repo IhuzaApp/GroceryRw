@@ -1,5 +1,4 @@
 import React from "react";
-import { Button } from "rsuite";
 import { useTheme } from "../../context/ThemeContext";
 import { Invoice } from "./types";
 import { formatCurrencySync } from "../../utils/formatCurrency";
@@ -21,9 +20,27 @@ const InvoicesTable: React.FC<InvoicesTableProps> = ({
 
   const getStatusBadge = (status: string) => {
     const statusConfig = {
-      paid: { color: "bg-green-100 text-green-800", text: "Paid" },
-      pending: { color: "bg-yellow-100 text-yellow-800", text: "Pending" },
-      overdue: { color: "bg-red-100 text-red-800", text: "Overdue" },
+      paid: {
+        color:
+          theme === "dark"
+            ? "bg-green-900/30 text-green-400 border-green-500/50"
+            : "bg-green-50 text-green-700 border-green-200",
+        text: "Paid",
+      },
+      pending: {
+        color:
+          theme === "dark"
+            ? "bg-yellow-900/30 text-yellow-400 border-yellow-500/50"
+            : "bg-yellow-50 text-yellow-700 border-yellow-200",
+        text: "Pending",
+      },
+      overdue: {
+        color:
+          theme === "dark"
+            ? "bg-red-900/30 text-red-400 border-red-500/50"
+            : "bg-red-50 text-red-700 border-red-200",
+        text: "Overdue",
+      },
     };
 
     const config =
@@ -31,8 +48,17 @@ const InvoicesTable: React.FC<InvoicesTableProps> = ({
 
     return (
       <span
-        className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${config.color}`}
+        className={`inline-flex items-center rounded-full border px-3 py-1 text-xs font-medium ${config.color}`}
       >
+        <div
+          className={`mr-2 h-2 w-2 rounded-full ${
+            status === "paid"
+              ? "bg-green-500"
+              : status === "pending"
+              ? "bg-yellow-500"
+              : "bg-red-500"
+          }`}
+        />
         {config.text}
       </span>
     );
@@ -48,23 +74,41 @@ const InvoicesTable: React.FC<InvoicesTableProps> = ({
 
   const hasProof = (invoice: Invoice): boolean => {
     if (invoice.order_type === "reel") {
-      // For reel orders, check delivery_photo_url field
       const proof = invoice.delivery_photo_url;
       return proof !== null && proof !== undefined && proof.trim() !== "";
     } else {
-      // For regular orders, check Proof field
       const proof = invoice.Proof;
       return proof !== null && proof !== undefined && proof.trim() !== "";
     }
   };
 
+  const downloadInvoice = (invoice: Invoice) => {
+    const isMobile =
+      /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(
+        navigator.userAgent
+      );
+    const baseUrl =
+      process.env.NODE_ENV === "production"
+        ? process.env.NEXT_PUBLIC_APP_URL || "https://plas.rw"
+        : window.location.origin;
+
+    if (isMobile) {
+      const pdfUrl = `${baseUrl}/api/invoices/${invoice.id}?pdf=true`;
+      window.open(pdfUrl, "_blank");
+    } else {
+      const hash = invoice.order_type === "reel" ? "#reel" : "#regularOrder";
+      const invoiceUrl = `${baseUrl}/Plasa/invoices/${invoice.id}${hash}`;
+      window.open(invoiceUrl, "_blank");
+    }
+  };
+
   if (loading) {
     return (
-      <div className="flex items-center justify-center py-8">
+      <div className="flex items-center justify-center py-12">
         <div className="text-center">
-          <div className="mx-auto h-8 w-8 animate-spin rounded-full border-b-2 border-green-600"></div>
+          <div className="mx-auto h-10 w-10 animate-spin rounded-full border-4 border-gray-300 border-t-blue-600"></div>
           <p
-            className={`mt-2 text-sm ${
+            className={`mt-4 text-sm ${
               theme === "dark" ? "text-gray-400" : "text-gray-600"
             }`}
           >
@@ -78,16 +122,16 @@ const InvoicesTable: React.FC<InvoicesTableProps> = ({
   if (invoices.length === 0) {
     return (
       <div
-        className={`overflow-hidden rounded-lg border ${
+        className={`rounded-2xl border ${
           theme === "dark"
-            ? "border-gray-700 bg-gray-800"
-            : "border-gray-200 bg-white"
+            ? "border-gray-700 bg-gray-800/50"
+            : "border-gray-200 bg-white shadow-sm"
         }`}
       >
-        <div className="px-6 py-8 text-center">
-          <div className="text-gray-500">
+        <div className="px-8 py-16 text-center">
+          <div className="mx-auto mb-6 flex h-20 w-20 items-center justify-center rounded-full bg-gray-100 dark:bg-gray-700">
             <svg
-              className="mx-auto h-12 w-12 text-gray-400"
+              className="h-10 w-10 text-gray-400"
               fill="none"
               viewBox="0 0 24 24"
               stroke="currentColor"
@@ -95,25 +139,25 @@ const InvoicesTable: React.FC<InvoicesTableProps> = ({
               <path
                 strokeLinecap="round"
                 strokeLinejoin="round"
-                strokeWidth={2}
+                strokeWidth={1.5}
                 d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
               />
             </svg>
-            <h3
-              className={`mt-2 text-sm font-medium ${
-                theme === "dark" ? "text-gray-100" : "text-gray-900"
-              }`}
-            >
-              No invoices found
-            </h3>
-            <p
-              className={`mt-1 text-sm ${
-                theme === "dark" ? "text-gray-400" : "text-gray-500"
-              }`}
-            >
-              You haven't completed any orders yet
-            </p>
           </div>
+          <h3
+            className={`text-lg font-semibold ${
+              theme === "dark" ? "text-gray-100" : "text-gray-900"
+            }`}
+          >
+            No invoices found
+          </h3>
+          <p
+            className={`mt-2 text-sm ${
+              theme === "dark" ? "text-gray-400" : "text-gray-500"
+            }`}
+          >
+            You haven't completed any orders yet
+          </p>
         </div>
       </div>
     );
@@ -121,71 +165,73 @@ const InvoicesTable: React.FC<InvoicesTableProps> = ({
 
   return (
     <div
-      className={`overflow-hidden rounded-lg border ${
+      className={`rounded-2xl border ${
         theme === "dark"
-          ? "border-gray-700 bg-gray-800"
-          : "border-gray-200 bg-white"
+          ? "border-gray-700 bg-gray-800/50"
+          : "border-gray-200 bg-white shadow-sm"
       }`}
     >
       {/* Desktop Table */}
       <div className="hidden overflow-x-auto lg:block">
         <table className="w-full">
           <thead
-            className={`${theme === "dark" ? "bg-gray-700" : "bg-gray-50"}`}
+            className={`${
+              theme === "dark" ? "bg-gray-700/50" : "bg-gray-50/80"
+            }`}
           >
             <tr>
               <th
-                className={`px-6 py-3 text-left text-xs font-medium ${
-                  theme === "dark" ? "text-gray-300" : "text-gray-700"
+                className={`px-6 py-4 text-left text-xs font-semibold uppercase tracking-wide ${
+                  theme === "dark" ? "text-gray-300" : "text-gray-600"
                 }`}
               >
                 Invoice #
               </th>
               <th
-                className={`px-6 py-3 text-left text-xs font-medium ${
-                  theme === "dark" ? "text-gray-300" : "text-gray-700"
+                className={`px-6 py-4 text-left text-xs font-semibold uppercase tracking-wide ${
+                  theme === "dark" ? "text-gray-300" : "text-gray-600"
                 }`}
               >
                 Customer
               </th>
               <th
-                className={`px-6 py-3 text-left text-xs font-medium ${
-                  theme === "dark" ? "text-gray-300" : "text-gray-700"
+                className={`px-6 py-4 text-left text-xs font-semibold uppercase tracking-wide ${
+                  theme === "dark" ? "text-gray-300" : "text-gray-600"
                 }`}
               >
                 Shop/Order
               </th>
               <th
-                className={`px-6 py-3 text-left text-xs font-medium ${
-                  theme === "dark" ? "text-gray-300" : "text-gray-700"
+                className={`px-6 py-4 text-left text-xs font-semibold uppercase tracking-wide ${
+                  theme === "dark" ? "text-gray-300" : "text-gray-600"
                 }`}
               >
                 Date
               </th>
               <th
-                className={`px-6 py-3 text-left text-xs font-medium ${
-                  theme === "dark" ? "text-gray-300" : "text-gray-700"
+                className={`px-6 py-4 text-left text-xs font-semibold uppercase tracking-wide ${
+                  theme === "dark" ? "text-gray-300" : "text-gray-600"
                 }`}
               >
                 Status
               </th>
               <th
-                className={`px-6 py-3 text-right text-xs font-medium ${
-                  theme === "dark" ? "text-gray-300" : "text-gray-700"
+                className={`px-6 py-4 text-right text-xs font-semibold uppercase tracking-wide ${
+                  theme === "dark" ? "text-gray-300" : "text-gray-600"
                 }`}
               >
                 Total
               </th>
               <th
-                className={`px-6 py-3 text-center text-xs font-medium ${
-                  theme === "dark" ? "text-gray-300" : "text-gray-700"
+                className={`px-6 py-4 text-center text-xs font-semibold uppercase tracking-wide ${
+                  theme === "dark" ? "text-gray-300" : "text-gray-600"
                 }`}
               >
                 Proof
               </th>
               <th
-                className={`px-6 py-3 text-center text-xs font-medium ${
-                  theme === "dark" ? "text-gray-300" : "text-gray-700"
+                className={`px-6 py-4 text-center text-xs font-semibold uppercase tracking-wide ${
+                  theme === "dark" ? "text-gray-300" : "text-gray-600"
                 }`}
               >
                 Actions
@@ -194,52 +240,54 @@ const InvoicesTable: React.FC<InvoicesTableProps> = ({
           </thead>
           <tbody
             className={`divide-y ${
-              theme === "dark" ? "divide-gray-700" : "divide-gray-200"
+              theme === "dark" ? "divide-gray-700/50" : "divide-gray-200"
             }`}
           >
-            {invoices.map((invoice) => (
+            {invoices.map((invoice, index) => (
               <tr
                 key={invoice.id}
                 className={`${
                   theme === "dark"
-                    ? "bg-gray-800 hover:bg-gray-700"
-                    : "bg-white hover:bg-gray-50"
-                } cursor-pointer transition-colors`}
+                    ? "bg-gray-800/30 hover:bg-gray-700/50"
+                    : "bg-white hover:bg-gray-50/80"
+                } transition-all duration-200 hover:shadow-sm`}
                 onClick={() => onViewDetails(invoice.id, invoice.order_type)}
               >
-                <td className="px-6 py-4 text-sm">
-                  <span
-                    className={`font-medium ${
-                      theme === "dark" ? "text-white" : "text-gray-900"
-                    }`}
-                  >
-                    #{invoice.invoice_number}
-                  </span>
+                <td className="px-6 py-4">
+                  <div className="flex items-center">
+                    <span
+                      className={`text-sm font-semibold ${
+                        theme === "dark" ? "text-white" : "text-gray-900"
+                      }`}
+                    >
+                      #{invoice.invoice_number}
+                    </span>
+                  </div>
                 </td>
-                <td className="px-6 py-4 text-sm">
+                <td className="px-6 py-4">
                   <div>
                     <p
-                      className={
+                      className={`text-sm font-medium ${
                         theme === "dark" ? "text-gray-100" : "text-gray-900"
-                      }
+                      }`}
                     >
                       {invoice.customer_name}
                     </p>
                     <p
                       className={`text-xs ${
-                        theme === "dark" ? "text-gray-400" : "text-gray-600"
+                        theme === "dark" ? "text-gray-400" : "text-gray-500"
                       }`}
                     >
                       {invoice.customer_email}
                     </p>
                   </div>
                 </td>
-                <td className="px-6 py-4 text-sm">
+                <td className="px-6 py-4">
                   <div>
                     <p
-                      className={
+                      className={`text-sm font-medium ${
                         theme === "dark" ? "text-gray-100" : "text-gray-900"
-                      }
+                      }`}
                     >
                       {invoice.order_type === "regular"
                         ? invoice.shop_name || "Shop"
@@ -247,85 +295,149 @@ const InvoicesTable: React.FC<InvoicesTableProps> = ({
                     </p>
                     <p
                       className={`text-xs ${
-                        theme === "dark" ? "text-gray-400" : "text-gray-600"
+                        theme === "dark" ? "text-gray-400" : "text-gray-500"
                       }`}
                     >
                       {invoice.items_count} items
                     </p>
                   </div>
                 </td>
-                <td className="px-6 py-4 text-sm">
-                  {formatDate(invoice.created_at)}
+                <td className="px-6 py-4">
+                  <span
+                    className={`text-sm ${
+                      theme === "dark" ? "text-gray-300" : "text-gray-600"
+                    }`}
+                  >
+                    {formatDate(invoice.created_at)}
+                  </span>
                 </td>
-                <td className="px-6 py-4 text-sm">
-                  {getStatusBadge(invoice.status)}
-                </td>
-                <td className="px-6 py-4 text-right text-sm">
-                  <span className="font-semibold text-green-600">
+                <td className="px-6 py-4">{getStatusBadge(invoice.status)}</td>
+                <td className="px-6 py-4 text-right">
+                  <span
+                    className={`text-sm font-semibold ${
+                      theme === "dark" ? "text-green-400" : "text-green-600"
+                    }`}
+                  >
                     {formatCurrencySync(invoice.total_amount)}
                   </span>
                 </td>
-                <td className="px-6 py-4 text-center text-sm">
+                <td className="px-6 py-4 text-center">
                   {hasProof(invoice) ? (
-                    <span className="font-medium text-green-600">✓</span>
+                    <div className="flex items-center justify-center">
+                      <div className="flex h-6 w-6 items-center justify-center rounded-full bg-green-100 dark:bg-green-900/30">
+                        <svg
+                          className="h-3 w-3 text-green-600 dark:text-green-400"
+                          fill="currentColor"
+                          viewBox="0 0 20 20"
+                        >
+                          <path
+                            fillRule="evenodd"
+                            d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                            clipRule="evenodd"
+                          />
+                        </svg>
+                      </div>
+                    </div>
                   ) : (
-                    <span className="font-medium text-red-600">✗</span>
+                    <div className="flex items-center justify-center">
+                      <div className="flex h-6 w-6 items-center justify-center rounded-full bg-red-100 dark:bg-red-900/30">
+                        <svg
+                          className="h-3 w-3 text-red-600 dark:text-red-400"
+                          fill="currentColor"
+                          viewBox="0 0 20 20"
+                        >
+                          <path
+                            fillRule="evenodd"
+                            d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"
+                            clipRule="evenodd"
+                          />
+                        </svg>
+                      </div>
+                    </div>
                   )}
                 </td>
-                <td className="px-6 py-4 text-center text-sm">
-                  <div className="flex justify-center space-x-1">
-                    <Button
-                      size="xs"
-                      appearance="default"
+                <td className="px-6 py-4">
+                  <div className="flex justify-center space-x-2">
+                    <button
                       onClick={(e) => {
                         e.stopPropagation();
-                        // Download invoice functionality
-                        const isMobile =
-                          /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(
-                            navigator.userAgent
-                          );
-                        const baseUrl =
-                          process.env.NODE_ENV === "production"
-                            ? process.env.NEXT_PUBLIC_APP_URL ||
-                              "https://plas.rw"
-                            : window.location.origin;
-
-                        console.log("InvoicesTable Desktop Click:", {
-                          invoiceId: invoice.id,
-                          orderType: invoice.order_type,
-                          isMobile,
-                        });
-
-                        if (isMobile) {
-                          // For mobile, open PDF directly
-                          const pdfUrl = `${baseUrl}/api/invoices/${invoice.id}?pdf=true`;
-                          console.log("Opening PDF URL:", pdfUrl);
-                          window.open(pdfUrl, "_blank");
-                        } else {
-                          // For desktop, open invoice page with hash
-                          const hash =
-                            invoice.order_type === "reel"
-                              ? "#reel"
-                              : "#regularOrder";
-                          const invoiceUrl = `${baseUrl}/Plasa/invoices/${invoice.id}${hash}`;
-                          console.log("Opening invoice URL:", invoiceUrl);
-                          window.open(invoiceUrl, "_blank");
-                        }
+                        downloadInvoice(invoice);
                       }}
+                      className={`inline-flex items-center rounded-lg px-3 py-1.5 text-xs font-medium transition-colors ${
+                        theme === "dark"
+                          ? "bg-gray-700 text-gray-300 hover:bg-gray-600"
+                          : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                      }`}
                     >
-                      📄 View
-                    </Button>
-                    <Button
-                      size="xs"
-                      appearance="primary"
+                      <svg
+                        className="mr-1 h-3 w-3"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                        />
+                      </svg>
+                      View
+                    </button>
+                    <button
                       onClick={(e) => {
                         e.stopPropagation();
                         onUploadProof(invoice);
                       }}
                       disabled={hasProof(invoice)}
+                      className={`inline-flex items-center rounded-lg px-3 py-1.5 text-xs font-medium transition-colors ${
+                        hasProof(invoice)
+                          ? "cursor-not-allowed bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400"
+                          : theme === "dark"
+                          ? "bg-blue-600 text-white hover:bg-blue-700"
+                          : "bg-blue-600 text-white hover:bg-blue-700"
+                      }`}
                     >
-                      {hasProof(invoice) ? "✓" : "Upload"}
-                    </Button>
+                      {hasProof(invoice) ? (
+                        <>
+                          <svg
+                            className="mr-1 h-3 w-3"
+                            fill="currentColor"
+                            viewBox="0 0 20 20"
+                          >
+                            <path
+                              fillRule="evenodd"
+                              d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                              clipRule="evenodd"
+                            />
+                          </svg>
+                          Done
+                        </>
+                      ) : (
+                        <>
+                          <svg
+                            className="mr-1 h-3 w-3"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"
+                            />
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"
+                            />
+                          </svg>
+                          Upload
+                        </>
+                      )}
+                    </button>
                   </div>
                 </td>
               </tr>
@@ -335,54 +447,48 @@ const InvoicesTable: React.FC<InvoicesTableProps> = ({
       </div>
 
       {/* Mobile Cards */}
-      <div className="lg:hidden">
+      <div className="space-y-4 p-4 lg:hidden">
         {invoices.map((invoice) => (
           <div
             key={invoice.id}
-            className={`border-b ${
-              theme === "dark" ? "border-gray-700" : "border-gray-200"
-            } last:border-b-0`}
+            className={`rounded-xl border ${
+              theme === "dark"
+                ? "border-gray-700 bg-gray-800/50"
+                : "border-gray-200 bg-white shadow-sm"
+            } transition-all duration-200 hover:shadow-md`}
+            onClick={() => onViewDetails(invoice.id, invoice.order_type)}
           >
-            <div className="p-3">
-              {/* Invoice ID Row */}
-              <div className="mb-2 grid grid-cols-2 gap-3">
+            <div className="p-5">
+              {/* Header */}
+              <div className="mb-4 flex items-center justify-between">
                 <div>
-                  <span
-                    className={`text-xs font-medium ${
-                      theme === "dark" ? "text-gray-400" : "text-gray-600"
-                    }`}
-                  >
-                    Invoice #
-                  </span>
-                  <p
-                    className={`text-sm font-medium ${
+                  <h3
+                    className={`text-lg font-semibold ${
                       theme === "dark" ? "text-white" : "text-gray-900"
                     }`}
                   >
                     #{invoice.invoice_number}
-                  </p>
-                </div>
-                <div className="text-right">
-                  <span
-                    className={`text-xs font-medium ${
-                      theme === "dark" ? "text-gray-400" : "text-gray-600"
+                  </h3>
+                  <p
+                    className={`text-sm ${
+                      theme === "dark" ? "text-gray-400" : "text-gray-500"
                     }`}
                   >
-                    Status
-                  </span>
-                  <div className="mt-1">{getStatusBadge(invoice.status)}</div>
+                    {formatDate(invoice.created_at)}
+                  </p>
                 </div>
+                {getStatusBadge(invoice.status)}
               </div>
 
-              {/* Customer Row */}
-              <div className="mb-2">
-                <span
-                  className={`text-xs font-medium ${
-                    theme === "dark" ? "text-gray-400" : "text-gray-600"
+              {/* Customer Info */}
+              <div className="mb-4">
+                <h4
+                  className={`text-sm font-medium ${
+                    theme === "dark" ? "text-gray-300" : "text-gray-700"
                   }`}
                 >
                   Customer
-                </span>
+                </h4>
                 <p
                   className={`text-sm ${
                     theme === "dark" ? "text-gray-100" : "text-gray-900"
@@ -392,108 +498,201 @@ const InvoicesTable: React.FC<InvoicesTableProps> = ({
                 </p>
                 <p
                   className={`text-xs ${
-                    theme === "dark" ? "text-gray-400" : "text-gray-600"
+                    theme === "dark" ? "text-gray-400" : "text-gray-500"
                   }`}
                 >
                   {invoice.customer_email}
                 </p>
               </div>
 
-              {/* Shop/Order Row */}
-              <div className="mb-3">
-                <span
-                  className={`text-xs font-medium ${
-                    theme === "dark" ? "text-gray-400" : "text-gray-600"
-                  }`}
-                >
-                  Shop/Order
-                </span>
-                <p
-                  className={`text-sm ${
-                    theme === "dark" ? "text-gray-100" : "text-gray-900"
-                  }`}
-                >
-                  {invoice.order_type === "regular"
-                    ? invoice.shop_name || "Shop"
-                    : invoice.reel_title || "Reel Order"}
-                </p>
+              {/* Order Info */}
+              <div className="mb-4 grid grid-cols-2 gap-4">
+                <div>
+                  <h4
+                    className={`text-sm font-medium ${
+                      theme === "dark" ? "text-gray-300" : "text-gray-700"
+                    }`}
+                  >
+                    {invoice.order_type === "regular" ? "Shop" : "Order"}
+                  </h4>
+                  <p
+                    className={`text-sm ${
+                      theme === "dark" ? "text-gray-100" : "text-gray-900"
+                    }`}
+                  >
+                    {invoice.order_type === "regular"
+                      ? invoice.shop_name || "Shop"
+                      : invoice.reel_title || "Reel Order"}
+                  </p>
+                </div>
+                <div>
+                  <h4
+                    className={`text-sm font-medium ${
+                      theme === "dark" ? "text-gray-300" : "text-gray-700"
+                    }`}
+                  >
+                    Items
+                  </h4>
+                  <p
+                    className={`text-sm ${
+                      theme === "dark" ? "text-gray-100" : "text-gray-900"
+                    }`}
+                  >
+                    {invoice.items_count} items
+                  </p>
+                </div>
               </div>
 
-              {/* Actions Row */}
-              <div className="flex items-center justify-between border-t border-gray-100 pt-2 dark:border-gray-700">
-                <div className="flex items-center space-x-2">
-                  <span
-                    className={`text-xs ${
-                      theme === "dark" ? "text-gray-400" : "text-gray-600"
-                    }`}
+              {/* Total Amount */}
+              <div className="mb-4 flex items-center justify-between">
+                <span
+                  className={`text-sm font-medium ${
+                    theme === "dark" ? "text-gray-300" : "text-gray-700"
+                  }`}
+                >
+                  Total Amount
+                </span>
+                <span
+                  className={`text-lg font-bold ${
+                    theme === "dark" ? "text-green-400" : "text-green-600"
+                  }`}
+                >
+                  {formatCurrencySync(invoice.total_amount)}
+                </span>
+              </div>
+
+              {/* Proof Status */}
+              <div className="mb-4 flex items-center justify-between">
+                <span
+                  className={`text-sm font-medium ${
+                    theme === "dark" ? "text-gray-300" : "text-gray-700"
+                  }`}
+                >
+                  Proof Status
+                </span>
+                {hasProof(invoice) ? (
+                  <div className="flex items-center">
+                    <div className="mr-2 flex h-5 w-5 items-center justify-center rounded-full bg-green-100 dark:bg-green-900/30">
+                      <svg
+                        className="h-3 w-3 text-green-600 dark:text-green-400"
+                        fill="currentColor"
+                        viewBox="0 0 20 20"
+                      >
+                        <path
+                          fillRule="evenodd"
+                          d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                          clipRule="evenodd"
+                        />
+                      </svg>
+                    </div>
+                    <span className="text-sm font-medium text-green-600 dark:text-green-400">
+                      Uploaded
+                    </span>
+                  </div>
+                ) : (
+                  <div className="flex items-center">
+                    <div className="mr-2 flex h-5 w-5 items-center justify-center rounded-full bg-red-100 dark:bg-red-900/30">
+                      <svg
+                        className="h-3 w-3 text-red-600 dark:text-red-400"
+                        fill="currentColor"
+                        viewBox="0 0 20 20"
+                      >
+                        <path
+                          fillRule="evenodd"
+                          d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"
+                          clipRule="evenodd"
+                        />
+                      </svg>
+                    </div>
+                    <span className="text-sm font-medium text-red-600 dark:text-red-400">
+                      Pending
+                    </span>
+                  </div>
+                )}
+              </div>
+
+              {/* Actions */}
+              <div className="flex space-x-3">
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    downloadInvoice(invoice);
+                  }}
+                  className={`inline-flex flex-1 items-center justify-center rounded-lg px-4 py-2.5 text-sm font-medium transition-colors ${
+                    theme === "dark"
+                      ? "bg-gray-700 text-gray-300 hover:bg-gray-600"
+                      : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                  }`}
+                >
+                  <svg
+                    className="mr-2 h-4 w-4"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
                   >
-                    Proof:
-                  </span>
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                    />
+                  </svg>
+                  View Invoice
+                </button>
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onUploadProof(invoice);
+                  }}
+                  disabled={hasProof(invoice)}
+                  className={`inline-flex flex-1 items-center justify-center rounded-lg px-4 py-2.5 text-sm font-medium transition-colors ${
+                    hasProof(invoice)
+                      ? "cursor-not-allowed bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400"
+                      : theme === "dark"
+                      ? "bg-blue-600 text-white hover:bg-blue-700"
+                      : "bg-blue-600 text-white hover:bg-blue-700"
+                  }`}
+                >
                   {hasProof(invoice) ? (
-                    <span className="text-sm font-medium text-green-600">
-                      ✓ Uploaded
-                    </span>
+                    <>
+                      <svg
+                        className="mr-2 h-4 w-4"
+                        fill="currentColor"
+                        viewBox="0 0 20 20"
+                      >
+                        <path
+                          fillRule="evenodd"
+                          d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                          clipRule="evenodd"
+                        />
+                      </svg>
+                      Done
+                    </>
                   ) : (
-                    <span className="text-sm font-medium text-red-600">
-                      ✗ Pending
-                    </span>
+                    <>
+                      <svg
+                        className="mr-2 h-4 w-4"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"
+                        />
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"
+                        />
+                      </svg>
+                      Upload Proof
+                    </>
                   )}
-                </div>
-                <div className="flex space-x-2">
-                  <button
-                    className="rounded border border-gray-300 bg-gray-100 px-3 py-1 text-xs text-gray-700 transition-colors hover:bg-gray-200"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      // Download invoice functionality
-                      const isMobile =
-                        /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(
-                          navigator.userAgent
-                        );
-                      const baseUrl =
-                        process.env.NODE_ENV === "production"
-                          ? process.env.NEXT_PUBLIC_APP_URL || "https://plas.rw"
-                          : window.location.origin;
-
-                      console.log("InvoicesTable Mobile Click:", {
-                        invoiceId: invoice.id,
-                        orderType: invoice.order_type,
-                        isMobile,
-                      });
-
-                      if (isMobile) {
-                        // For mobile, open PDF directly
-                        const pdfUrl = `${baseUrl}/api/invoices/${invoice.id}?pdf=true`;
-                        console.log("Opening PDF URL:", pdfUrl);
-                        window.open(pdfUrl, "_blank");
-                      } else {
-                        // For desktop, open invoice page with hash
-                        const hash =
-                          invoice.order_type === "reel"
-                            ? "#reel"
-                            : "#regularOrder";
-                        const invoiceUrl = `${baseUrl}/Plasa/invoices/${invoice.id}${hash}`;
-                        console.log("Opening invoice URL:", invoiceUrl);
-                        window.open(invoiceUrl, "_blank");
-                      }
-                    }}
-                  >
-                    📄 Download
-                  </button>
-                  <button
-                    className={`rounded border px-3 py-1 text-xs transition-colors ${
-                      hasProof(invoice)
-                        ? "cursor-not-allowed border-green-300 bg-green-100 text-green-700"
-                        : "border-green-600 bg-green-600 text-white hover:bg-green-700"
-                    }`}
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      onUploadProof(invoice);
-                    }}
-                    disabled={hasProof(invoice)}
-                  >
-                    {hasProof(invoice) ? "✓" : "📷 Upload"}
-                  </button>
-                </div>
+                </button>
               </div>
             </div>
           </div>

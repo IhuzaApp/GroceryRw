@@ -4,11 +4,14 @@ import { Message, Button } from "rsuite";
 import toast from "react-hot-toast";
 import { logger } from "../../utils/logger";
 import { formatCurrencySync } from "../../utils/formatCurrency";
+import { useTheme } from "../../context/ThemeContext";
+import { useWebSocket } from "../../hooks/useWebSocket";
 
 interface Order {
   id: string;
   shopName: string;
   distance: number;
+  travelTimeMinutes?: number;
   createdAt: string;
   customerAddress: string;
   itemsCount?: number;
@@ -16,6 +19,15 @@ interface Order {
   orderType?: "regular" | "reel";
   // Add other order properties as needed
 }
+
+// Calculate estimated travel time in minutes
+const calculateTravelTime = (distanceKm: number): number => {
+  // Assuming average speed of 20 km/h for city driving
+  // This can be adjusted based on your city's traffic conditions
+  const averageSpeedKmh = 20;
+  const travelTimeHours = distanceKm / averageSpeedKmh;
+  return Math.round(travelTimeHours * 60); // Convert to minutes
+};
 
 interface BatchAssignment {
   shopperId: string;
@@ -49,6 +61,7 @@ export default function NotificationSystem({
   onViewBatchDetails,
 }: NotificationSystemProps) {
   const { data: session } = useSession();
+  const { theme } = useTheme();
   const [isListening, setIsListening] = useState(false);
   const [notificationPermission, setNotificationPermission] =
     useState<NotificationPermission>("default");
@@ -60,11 +73,119 @@ export default function NotificationSystem({
   const lastOrderIds = useRef<Set<string>>(new Set());
   const activeToasts = useRef<Map<string, any>>(new Map()); // Track active toasts by order ID
 
+  // WebSocket integration
+  const { isConnected, sendLocation, acceptOrder, rejectOrder } =
+    useWebSocket();
+
+  // Show WebSocket connection status
+  useEffect(() => {
+    // WebSocket connection status changed - no logging needed
+  }, [isConnected]);
+
+  // Send location updates to WebSocket when location changes
+  useEffect(() => {
+    if (isConnected && currentLocation) {
+      sendLocation(currentLocation);
+    }
+  }, [isConnected, currentLocation, sendLocation]);
+
+  // WebSocket event listeners
+  useEffect(() => {
+    const handleWebSocketNewOrder = (event: CustomEvent) => {
+      const { order } = event.detail;
+
+      // Convert to Order format and show notification
+      const orderForNotification: Order = {
+        id: order.id,
+        shopName: order.shopName,
+        distance: order.distance,
+        createdAt: order.createdAt,
+        customerAddress: order.customerAddress,
+        itemsCount: order.itemsCount || 0,
+        estimatedEarnings: order.estimatedEarnings || 0,
+        orderType: order.orderType || "regular",
+      };
+
+      // Show notification
+      showToast(orderForNotification);
+      showDesktopNotification(orderForNotification);
+      sendFirebaseNotification(orderForNotification, "batch");
+    };
+
+    const handleWebSocketBatchOrders = (event: CustomEvent) => {
+      const { orders } = event.detail;
+
+      // Show notifications for each order
+      orders.forEach((order: any) => {
+        const orderForNotification: Order = {
+          id: order.id,
+          shopName: order.shopName,
+          distance: order.distance,
+          createdAt: order.createdAt,
+          customerAddress: order.customerAddress,
+          itemsCount: order.itemsCount || 0,
+          estimatedEarnings: order.estimatedEarnings || 0,
+          orderType: order.orderType || "regular",
+        };
+
+        showToast(orderForNotification);
+        showDesktopNotification(orderForNotification);
+        sendFirebaseNotification(orderForNotification, "batch");
+      });
+    };
+
+    const handleWebSocketOrderExpired = (event: CustomEvent) => {
+      const { orderId } = event.detail;
+
+      // Remove expired order from active assignments
+      batchAssignments.current = batchAssignments.current.filter(
+        (assignment) => assignment.orderId !== orderId
+      );
+
+      // Dismiss toast
+      const existingToast = activeToasts.current.get(orderId);
+      if (existingToast) {
+        toast.dismiss(existingToast);
+        activeToasts.current.delete(orderId);
+      }
+    };
+
+    // Add event listeners
+    window.addEventListener(
+      "websocket-new-order",
+      handleWebSocketNewOrder as EventListener
+    );
+    window.addEventListener(
+      "websocket-batch-orders",
+      handleWebSocketBatchOrders as EventListener
+    );
+    window.addEventListener(
+      "websocket-order-expired",
+      handleWebSocketOrderExpired as EventListener
+    );
+
+    // Cleanup
+    return () => {
+      window.removeEventListener(
+        "websocket-new-order",
+        handleWebSocketNewOrder as EventListener
+      );
+      window.removeEventListener(
+        "websocket-batch-orders",
+        handleWebSocketBatchOrders as EventListener
+      );
+      window.removeEventListener(
+        "websocket-order-expired",
+        handleWebSocketOrderExpired as EventListener
+      );
+    };
+  }, []);
+
   // Initialize audio immediately
   useEffect(() => {
     if (typeof window !== "undefined") {
       try {
-        logger.info("Initializing notification sound...", "NotificationSystem");
+        // Initializing notification sound
         const audio = new Audio("/notifySound.mp3");
 
         // Set audio properties
@@ -73,10 +194,7 @@ export default function NotificationSystem({
 
         // Add event listeners
         audio.addEventListener("canplaythrough", () => {
-          logger.info(
-            "Notification sound loaded successfully",
-            "NotificationSystem"
-          );
+          // Notification sound loaded successfully
           setAudioLoaded(true);
         });
 
@@ -162,16 +280,62 @@ export default function NotificationSystem({
     if (existingToast) {
       toast.dismiss(existingToast);
       activeToasts.current.delete(orderId);
-      logger.info(
-        `Removed toast for accepted order ${orderId}`,
-        "NotificationSystem"
-      );
+      // Removed toast for accepted order
     }
 
     // Also remove from batch assignments
     batchAssignments.current = batchAssignments.current.filter(
       (assignment) => assignment.orderId !== orderId
     );
+  };
+
+  const sendFirebaseNotification = async (
+    order: Order,
+    type: "batch" | "warning" = "batch"
+  ) => {
+    try {
+      if (!session?.user?.id) return;
+
+      const payload = {
+        shopperId: session.user.id,
+        orderId: order.id,
+        shopName: order.shopName,
+        customerAddress: order.customerAddress,
+        distance: order.distance,
+        itemsCount: order.itemsCount || 0,
+        estimatedEarnings: order.estimatedEarnings || 0,
+        orderType: order.orderType || "regular",
+        ...(type === "warning" && { timeRemaining: 20 }),
+      };
+
+      const endpoint =
+        type === "warning"
+          ? "/api/fcm/send-warning-notification"
+          : "/api/fcm/send-batch-notification";
+
+      const response = await fetch(endpoint, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(payload),
+      });
+
+      if (response.ok) {
+        // Firebase notification sent successfully
+      } else {
+        logger.warn(
+          `Failed to send Firebase ${type} notification: ${response.statusText}`,
+          "NotificationSystem"
+        );
+      }
+    } catch (error) {
+      logger.error(
+        `Error sending Firebase ${type} notification:`,
+        "NotificationSystem",
+        error
+      );
+    }
   };
 
   const showToast = (
@@ -190,144 +354,226 @@ export default function NotificationSystem({
         <div
           className={`${
             t.visible ? "animate-enter" : "animate-leave"
-          } pointer-events-auto flex w-full max-w-md rounded-lg bg-white shadow-lg ring-1 ring-black ring-opacity-5`}
+          } pointer-events-auto w-full max-w-sm rounded-2xl shadow-xl ${
+            theme === "dark"
+              ? "border border-gray-700 bg-gray-800"
+              : "border border-gray-200 bg-white"
+          }`}
         >
-          <div className="w-0 flex-1 p-4">
-            <div className="flex items-start">
-              <div className="flex-shrink-0">
-                {type === "success" && (
-                  <svg
-                    className="h-6 w-6 text-green-400"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth="2"
-                      d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
-                    />
-                  </svg>
-                )}
-                {type === "warning" && (
-                  <svg
-                    className="h-6 w-6 text-yellow-400"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth="2"
-                      d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z"
-                    />
-                  </svg>
-                )}
-                {type === "error" && (
-                  <svg
-                    className="h-6 w-6 text-red-400"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth="2"
-                      d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                    />
-                  </svg>
-                )}
-                {type === "info" && (
-                  <svg
-                    className="h-6 w-6 text-blue-400"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth="2"
-                      d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                    />
-                  </svg>
-                )}
+          {/* Header */}
+          <div
+            className={`rounded-t-2xl px-4 py-3 ${
+              theme === "dark" ? "bg-green-600" : "bg-green-500"
+            }`}
+          >
+            <div className="flex items-center justify-between">
+              <div className="flex items-center space-x-2">
+                <div className="h-2 w-2 animate-pulse rounded-full bg-white"></div>
+                <p className="text-sm font-semibold text-white">
+                  New Order Available
+                </p>
               </div>
-              <div className="ml-3 flex-1">
-                <p className="text-sm font-medium text-gray-900">New Batch!</p>
-                <div className="mt-1 text-sm text-gray-500">
-                  <div>{order.customerAddress}</div>
-                  <div>
-                    {order.shopName} ({order.distance}km)
-                  </div>
-                  <div className="mt-1 font-medium text-green-600">
-                    📦 {order.itemsCount || 0} items • 💰{" "}
-                    {formatCurrencySync(order.estimatedEarnings || 0)}
-                  </div>
-                </div>
-                <div className="mt-3 flex gap-2">
-                  <button
-                    onClick={() => {
-                      removeToastForOrder(order.id);
-                      onAcceptBatch?.(order.id);
-                      toast.dismiss(t.id);
-                    }}
-                    className="rounded bg-blue-600 px-3 py-1 text-sm text-white hover:bg-blue-700"
-                  >
-                    Accept Batch
-                  </button>
-                  <button
-                    onClick={() => {
-                      removeToastForOrder(order.id);
-                      // Remove assignment to allow other shoppers to get this order
-                      batchAssignments.current =
-                        batchAssignments.current.filter(
-                          (assignment) => assignment.orderId !== order.id
-                        );
-                      toast.dismiss(t.id);
-                      logger.info(
-                        `Skipped order ${order.id} - allowing other shoppers`,
-                        "NotificationSystem"
-                      );
-                    }}
-                    className="rounded bg-gray-300 px-3 py-1 text-sm text-gray-700 hover:bg-gray-400"
-                  >
-                    Skip
-                  </button>
-                </div>
-              </div>
+              <button
+                onClick={() => {
+                  removeToastForOrder(order.id);
+                  toast.dismiss(t.id);
+                }}
+                className="text-white/80 transition-colors hover:text-white"
+              >
+                <svg
+                  className="h-4 w-4"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M6 18L18 6M6 6l12 12"
+                  />
+                </svg>
+              </button>
             </div>
           </div>
-          <div className="flex border-l border-gray-200">
-            <button
-              onClick={() => {
-                removeToastForOrder(order.id);
-                toast.dismiss(t.id);
-              }}
-              className="flex w-full items-center justify-center rounded-none rounded-r-lg border border-transparent p-4 text-sm font-medium text-gray-400 hover:text-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
+
+          {/* Content */}
+          <div className="p-4">
+            {/* Shop Info */}
+            <div className="mb-3 flex items-start space-x-3">
+              <div
+                className={`flex h-10 w-10 items-center justify-center rounded-lg ${
+                  theme === "dark" ? "bg-gray-700" : "bg-gray-100"
+                }`}
+              >
+                <svg
+                  className="h-5 w-5 text-gray-600"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"
+                  />
+                </svg>
+              </div>
+              <div className="min-w-0 flex-1">
+                <p
+                  className={`text-sm font-medium ${
+                    theme === "dark" ? "text-white" : "text-gray-900"
+                  }`}
+                >
+                  {order.shopName}
+                </p>
+                <p
+                  className={`text-xs ${
+                    theme === "dark" ? "text-gray-400" : "text-gray-500"
+                  }`}
+                >
+                  {order.travelTimeMinutes ||
+                    calculateTravelTime(order.distance)}{" "}
+                  min away
+                </p>
+              </div>
+            </div>
+
+            {/* Order Details */}
+            <div
+              className={`mb-4 space-y-2 rounded-lg p-3 ${
+                theme === "dark" ? "bg-gray-700/50" : "bg-gray-50"
+              }`}
             >
-              <svg className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                <path
-                  fillRule="evenodd"
-                  d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"
-                  clipRule="evenodd"
-                />
-              </svg>
-            </button>
+              <div className="flex items-center justify-between text-sm">
+                <span
+                  className={`${
+                    theme === "dark" ? "text-gray-300" : "text-gray-600"
+                  } flex items-center gap-1`}
+                >
+                  <svg
+                    className="h-4 w-4"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth="2"
+                      d="M20 12v6a2 2 0 01-2 2h-3m-6 0H6a2 2 0 01-2-2v-6m16-4l-8-4-8 4m16 0l-8 4-8-4m16 0v2m-16-2v2"
+                    />
+                  </svg>
+                  Items
+                </span>
+                <span
+                  className={`font-medium ${
+                    theme === "dark" ? "text-white" : "text-gray-900"
+                  }`}
+                >
+                  {order.itemsCount || 0}
+                </span>
+              </div>
+              <div className="flex items-center justify-between text-sm">
+                <span
+                  className={`${
+                    theme === "dark" ? "text-gray-300" : "text-gray-600"
+                  } flex items-center gap-1`}
+                >
+                  <svg
+                    className="h-4 w-4"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth="2"
+                      d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-10V4m0 12v2m8-6a8 8 0 11-16 0 8 8 0 0116 0z"
+                    />
+                  </svg>
+                  Earnings
+                </span>
+                <span
+                  className={`font-semibold ${
+                    theme === "dark" ? "text-green-400" : "text-green-600"
+                  }`}
+                >
+                  {formatCurrencySync(order.estimatedEarnings || 0)}
+                </span>
+              </div>
+              <div className="flex items-center gap-1 truncate text-xs text-gray-500">
+                <svg
+                  className="h-4 w-4"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth="2"
+                    d="M12 11c1.657 0 3-1.343 3-3S13.657 5 12 5 9 6.343 9 8s1.343 3 3 3zm0 0c-4 0-7 2.5-7 5v1h14v-1c0-2.5-3-5-7-5z"
+                  />
+                </svg>
+                {order.customerAddress}
+              </div>
+            </div>
+
+            {/* Action Buttons */}
+            <div className="flex space-x-2">
+              <button
+                onClick={() => {
+                  removeToastForOrder(order.id);
+                  // Use WebSocket if connected, otherwise fallback to API
+                  if (isConnected) {
+                    acceptOrder(order.id);
+                  } else {
+                    onAcceptBatch?.(order.id);
+                  }
+                  toast.dismiss(t.id);
+                }}
+                className="flex-1 rounded-lg bg-green-500 px-4 py-2.5 text-sm font-medium text-white transition-colors duration-200 hover:bg-green-600 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2"
+              >
+                Accept Order
+              </button>
+              <button
+                onClick={() => {
+                  removeToastForOrder(order.id);
+                  // Use WebSocket if connected, otherwise fallback to local state
+                  if (isConnected) {
+                    rejectOrder(order.id);
+                  } else {
+                    batchAssignments.current = batchAssignments.current.filter(
+                      (assignment) => assignment.orderId !== order.id
+                    );
+                  }
+                  toast.dismiss(t.id);
+                  // Skipped order - allowing other shoppers
+                }}
+                className="flex-1 rounded-lg bg-gray-500 px-4 py-2.5 text-sm font-medium text-white transition-colors duration-200 hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2"
+              >
+                Skip Order
+              </button>
+            </div>
           </div>
         </div>
       ),
       {
-        duration: Infinity, // Never auto-dismiss
+        duration: 60000, // 1 minute
         position: "top-right",
       }
     );
 
     // Store the toast key for this order
     activeToasts.current.set(order.id, toastKey);
+
+    // Send Firebase push notification for batch notifications
+    if (type === "info") {
+      sendFirebaseNotification(order, "batch");
+    }
 
     return toastKey;
   };
@@ -338,10 +584,7 @@ export default function NotificationSystem({
   }) => {
     // Check if sound is enabled in settings
     if (soundSettings && !soundSettings.enabled) {
-      logger.info(
-        "Sound notifications disabled in settings",
-        "NotificationSystem"
-      );
+      // Sound notifications disabled in settings
       return;
     }
 
@@ -362,10 +605,7 @@ export default function NotificationSystem({
       soundInstance.volume = soundSettings?.volume || 0.7;
 
       await soundInstance.play();
-      logger.info(
-        "Notification sound played successfully",
-        "NotificationSystem"
-      );
+      // Notification sound played successfully
 
       // Clean up after playing
       soundInstance.addEventListener("ended", () => {
@@ -418,7 +658,7 @@ export default function NotificationSystem({
           notification.close();
         }, 10000);
 
-        logger.info("Desktop notification shown", "NotificationSystem");
+        // Desktop notification shown
       } catch (error) {
         logger.error(
           "Error showing desktop notification",
@@ -454,82 +694,163 @@ export default function NotificationSystem({
         <div
           className={`${
             t.visible ? "animate-enter" : "animate-leave"
-          } pointer-events-auto flex w-full max-w-md rounded-lg border-l-4 border-yellow-400 bg-white shadow-lg ring-1 ring-black ring-opacity-5`}
+          } pointer-events-auto flex w-full max-w-md rounded-xl shadow-2xl backdrop-blur-lg ${
+            theme === "dark"
+              ? "bg-gradient-to-r from-orange-500 to-red-500 ring-1 ring-white ring-opacity-20"
+              : "bg-gradient-to-r from-orange-400 to-red-400 ring-1 ring-black ring-opacity-10"
+          }`}
+          style={{
+            background:
+              theme === "dark"
+                ? "linear-gradient(135deg, #f59e0b 0%, #ef4444 100%)"
+                : "linear-gradient(135deg, #fb923c 0%, #f87171 100%)",
+            backdropFilter: "blur(10px)",
+            border:
+              theme === "dark"
+                ? "1px solid rgba(255,255,255,0.2)"
+                : "1px solid rgba(0,0,0,0.1)",
+          }}
         >
           <div className="w-0 flex-1 p-4">
             <div className="flex items-start">
               <div className="flex-shrink-0">
-                <svg
-                  className="h-6 w-6 text-yellow-400"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
+                <div
+                  className={`flex h-12 w-12 items-center justify-center rounded-full backdrop-blur-sm ${
+                    theme === "dark" ? "bg-white/20" : "bg-white/30"
+                  }`}
                 >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth="2"
-                    d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z"
-                  />
-                </svg>
+                  <svg
+                    className="h-6 w-6 text-white"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth="2"
+                      d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z"
+                    />
+                  </svg>
+                </div>
               </div>
               <div className="ml-3 flex-1">
-                <p className="text-sm font-medium text-gray-900">
-                  ⚠️ Batch Expiring Soon!
+                <p className="flex items-center gap-2 text-sm font-bold text-white">
+                  <svg
+                    className="h-4 w-4"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth="2"
+                      d="M12 9v2m0 4h.01M10.29 3.86l-7.6 13.15A2 2 0 004.29 20h15.42a2 2 0 001.71-2.99l-7.6-13.15a2 2 0 00-3.52 0z"
+                    />
+                  </svg>
+                  Order Expiring Soon!
                 </p>
-                <div className="mt-1 text-sm text-gray-500">
-                  <div>{order.customerAddress}</div>
-                  <div>
-                    {order.shopName} ({order.distance}km)
+                <div className="mt-1 text-sm text-white/90">
+                  <div className="font-medium">{order.customerAddress}</div>
+                  <div className="text-white/80">
+                    {order.shopName} (
+                    {order.travelTimeMinutes ||
+                      calculateTravelTime(order.distance)}{" "}
+                    min)
                   </div>
-                  <div className="mt-1 font-medium text-green-600">
-                    📦 {order.itemsCount || 0} items • 💰{" "}
-                    {formatCurrencySync(order.estimatedEarnings || 0)}
+                  <div className="mt-2 grid grid-cols-2 gap-3">
+                    <div className="flex items-center gap-1 text-sm text-white/90">
+                      <svg
+                        className="h-4 w-4"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth="2"
+                          d="M20 12v6a2 2 0 01-2 2h-3m-6 0H6a2 2 0 01-2-2v-6m16-4l-8-4-8 4m16 0l-8 4-8-4m16 0v2m-16-2v2"
+                        />
+                      </svg>
+                      {order.itemsCount || 0} items
+                    </div>
+                    <div className="flex items-center gap-1 text-sm font-semibold text-white">
+                      <svg
+                        className="h-4 w-4"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth="2"
+                          d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-10V4m0 12v2m8-6a8 8 0 11-16 0 8 8 0 0116 0z"
+                        />
+                      </svg>
+                      {formatCurrencySync(order.estimatedEarnings || 0)}
+                    </div>
                   </div>
-                  <div className="mt-1 font-medium text-orange-600">
-                    ⚠️ This batch will be reassigned in 20 seconds!
+                  <div className="mt-1 animate-pulse font-bold text-white">
+                    ⏰ This batch will be reassigned in 20 seconds!
                   </div>
                 </div>
                 <div className="mt-3 flex gap-2">
                   <button
                     onClick={() => {
                       removeToastForOrder(order.id);
-                      onAcceptBatch?.(order.id);
+                      // Use WebSocket if connected, otherwise fallback to API
+                      if (isConnected) {
+                        acceptOrder(order.id);
+                      } else {
+                        onAcceptBatch?.(order.id);
+                      }
                       toast.dismiss(t.id);
                     }}
-                    className="rounded bg-orange-600 px-3 py-1 text-sm text-white hover:bg-orange-700"
+                    className={`animate-pulse rounded-lg px-4 py-2 text-sm font-medium text-white backdrop-blur-sm transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-white/50 ${
+                      theme === "dark"
+                        ? "bg-white/20 hover:bg-white/30"
+                        : "bg-white/25 hover:bg-white/35"
+                    }`}
                   >
                     Accept Now
                   </button>
                   <button
                     onClick={() => {
                       removeToastForOrder(order.id);
-                      // Remove assignment to allow other shoppers to get this order
-                      batchAssignments.current =
-                        batchAssignments.current.filter(
-                          (assignment) => assignment.orderId !== order.id
-                        );
+                      // Use WebSocket if connected, otherwise fallback to local state
+                      if (isConnected) {
+                        rejectOrder(order.id);
+                      } else {
+                        batchAssignments.current =
+                          batchAssignments.current.filter(
+                            (assignment) => assignment.orderId !== order.id
+                          );
+                      }
                       toast.dismiss(t.id);
-                      logger.info(
-                        `Skipped expiring order ${order.id} - allowing other shoppers`,
-                        "NotificationSystem"
-                      );
+                      // Skipped expiring order - allowing other shoppers
                     }}
-                    className="rounded bg-gray-300 px-3 py-1 text-sm text-gray-700 hover:bg-gray-400"
+                    className={`rounded-lg px-4 py-2 text-sm font-medium text-white/80 backdrop-blur-sm transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-white/50 ${
+                      theme === "dark"
+                        ? "bg-white/10 hover:bg-white/20"
+                        : "bg-white/15 hover:bg-white/25"
+                    }`}
                   >
-                    Skip
+                    ⏭️ Skip Order
                   </button>
                 </div>
               </div>
             </div>
           </div>
-          <div className="flex border-l border-gray-200">
+          <div className="flex border-l border-white/20">
             <button
               onClick={() => {
                 removeToastForOrder(order.id);
                 toast.dismiss(t.id);
               }}
-              className="flex w-full items-center justify-center rounded-none rounded-r-lg border border-transparent p-4 text-sm font-medium text-gray-400 hover:text-gray-500 focus:outline-none focus:ring-2 focus:ring-orange-500"
+              className="flex w-full items-center justify-center rounded-none rounded-r-xl border border-transparent p-4 text-sm font-medium text-white/70 transition-all duration-200 hover:bg-white/10 hover:text-white focus:outline-none focus:ring-2 focus:ring-white/50"
             >
               <svg className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
                 <path
@@ -544,12 +865,22 @@ export default function NotificationSystem({
       ),
       {
         duration: Infinity, // Never auto-dismiss
-        position: "top-right",
+        position: "top-center",
+        style: {
+          background: "transparent",
+          boxShadow: "none",
+          maxWidth: "420px",
+          margin: "0 auto",
+        },
+        className: "batch-warning-toast",
       }
     );
 
     // Store the warning toast key for this order
     activeToasts.current.set(order.id, warningToastKey);
+
+    // Send Firebase push notification for warning
+    sendFirebaseNotification(order, "warning");
 
     // Show warning desktop notification
     if (
@@ -578,7 +909,7 @@ export default function NotificationSystem({
           notification.close();
         }, 20000);
 
-        logger.info("Warning desktop notification shown", "NotificationSystem");
+        // Warning desktop notification shown
       } catch (error) {
         logger.error(
           "Error showing warning desktop notification",
@@ -591,10 +922,7 @@ export default function NotificationSystem({
     // Play warning sound
     playNotificationSound({ enabled: true, volume: 0.8 });
 
-    logger.info(
-      `Warning notification shown for order ${order.id} - expires in 20 seconds`,
-      "NotificationSystem"
-    );
+    // Warning notification shown for order - expires in 20 seconds
   };
 
   const isWithinSchedule = async (): Promise<boolean> => {
@@ -685,182 +1013,126 @@ export default function NotificationSystem({
     const now = new Date();
     const currentTime = now.getTime();
 
-    // Check if we should skip this check (60-second cooldown)
-    if (currentTime - lastNotificationTime.current < 60000) {
+    // Check if we should skip this check (30-second cooldown for smart order finder)
+    if (currentTime - lastNotificationTime.current < 30000) {
       logger.debug(
-        `Skipping notification check - ${Math.floor(
-          (60000 - (currentTime - lastNotificationTime.current)) / 1000
+        `Skipping smart order finder check - ${Math.floor(
+          (30000 - (currentTime - lastNotificationTime.current)) / 1000
         )}s until next check`,
         "NotificationSystem"
       );
       return;
     }
 
-    logger.info(
-      "Checking for pending orders with settings (API handles all conditions)",
-      "NotificationSystem"
-    );
+    // Using smart order finder system to find best order
 
     try {
-      // Use the new API that respects notification settings
-      const response = await fetch(
-        "/api/shopper/check-notifications-with-settings",
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            user_id: session.user.id,
-            current_location: currentLocation,
-          }),
-        }
-      );
+      // Use smart order finder API instead of polling
+      const response = await fetch("/api/shopper/smart-assign-order", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          current_location: currentLocation,
+          user_id: session.user.id,
+        }),
+      });
 
       const data = await response.json();
 
-      if (data.success && data.notifications && data.notifications.length > 0) {
-        logger.info(
-          `Found ${data.notifications.length} notifications based on settings`,
+      if (!response.ok) {
+        logger.error(
+          `Smart order finder API error: ${response.status} - ${
+            data.error || "Unknown error"
+          }`,
           "NotificationSystem"
         );
+        return;
+      }
 
-        // Clean up expired assignments and clear warning timeouts
+      if (data.success && data.order) {
+        // Smart order finder found order
+
+        // Clean up expired order reviews
         const oneMinuteAgo = currentTime - 60000;
         batchAssignments.current = batchAssignments.current.filter(
           (assignment) => {
             if (assignment.expiresAt <= currentTime) {
-              // Clear warning timeout if assignment is expired
               if (assignment.warningTimeout) {
                 clearTimeout(assignment.warningTimeout);
               }
-
-              // Remove toast for expired order
               const existingToast = activeToasts.current.get(
                 assignment.orderId
               );
               if (existingToast) {
                 toast.dismiss(existingToast);
                 activeToasts.current.delete(assignment.orderId);
-                logger.info(
-                  `Removed toast for expired order ${assignment.orderId}`,
-                  "NotificationSystem"
-                );
               }
-
-              logger.info(
-                `Assignment expired for order ${assignment.orderId} - reassigning to next shopper`,
-                "NotificationSystem"
-              );
-              return false; // Remove expired assignment
+              return false;
             }
-            return true; // Keep active assignment
+            return true;
           }
         );
 
-        // Sort notifications by creation time (oldest first)
-        const sortedNotifications = [...data.notifications].sort(
-          (a, b) =>
-            new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
+        // Check if user already has an active order review
+        const currentUserAssignment = batchAssignments.current.find(
+          (assignment) => assignment.shopperId === session.user.id
         );
 
-        const assignedOrderIds = new Set(
-          batchAssignments.current.map((a) => a.orderId)
-        );
-        const availableNotifications = sortedNotifications.filter(
-          (notification) => !assignedOrderIds.has(notification.id)
-        );
+        if (!currentUserAssignment) {
+          const order = data.order;
+          const newAssignment: BatchAssignment = {
+            shopperId: session.user.id,
+            orderId: order.id,
+            assignedAt: currentTime,
+            expiresAt: currentTime + 60000, // Expires in 1 minute
+            warningShown: false,
+            warningTimeout: null,
+          };
+          batchAssignments.current.push(newAssignment);
 
-        if (availableNotifications.length > 0) {
-          const currentUserAssignment = batchAssignments.current.find(
-            (assignment) => assignment.shopperId === session.user.id
-          );
+          // Convert to Order format for compatibility
+          const orderForNotification: Order = {
+            id: order.id,
+            shopName: order.shopName,
+            distance: order.distance,
+            createdAt: order.createdAt,
+            customerAddress: order.customerAddress,
+            itemsCount: order.itemsCount || 0,
+            estimatedEarnings: order.estimatedEarnings || 0,
+            orderType: order.orderType || "regular",
+          };
 
-          if (!currentUserAssignment) {
-            const nextNotification = availableNotifications[0];
+          await playNotificationSound({ enabled: true, volume: 0.7 });
+          showToast(orderForNotification);
+          showDesktopNotification(orderForNotification);
+          sendFirebaseNotification(orderForNotification, "batch");
 
-            const newAssignment: BatchAssignment = {
-              shopperId: session.user.id,
-              orderId: nextNotification.id,
-              assignedAt: currentTime,
-              expiresAt: currentTime + 60000, // Expires in 1 minute
-              warningShown: false,
-              warningTimeout: null,
-            };
-            batchAssignments.current.push(newAssignment);
+          // Set up warning notification after 40 seconds
+          const warningTimeout = setTimeout(() => {
+            showWarningNotification(orderForNotification);
+          }, 40000);
 
-            // Convert notification to Order format for compatibility
-            const orderForNotification: Order = {
-              id: nextNotification.id,
-              shopName: nextNotification.shopName,
-              distance: nextNotification.distance,
-              createdAt: nextNotification.createdAt,
-              customerAddress: nextNotification.customerAddress,
-              itemsCount:
-                nextNotification.itemCount ||
-                nextNotification.itemsCount ||
-                nextNotification.totalItems ||
-                nextNotification.quantity ||
-                0,
-              estimatedEarnings:
-                nextNotification.estimatedEarnings ||
-                nextNotification.totalEarnings ||
-                (nextNotification.serviceFee && nextNotification.deliveryFee
-                  ? parseFloat(nextNotification.serviceFee) +
-                    parseFloat(nextNotification.deliveryFee)
-                  : 0) ||
-                (nextNotification.total
-                  ? parseFloat(nextNotification.total)
-                  : 0),
-              orderType: nextNotification.type === "reel" ? "reel" : "regular",
-            };
+          newAssignment.warningTimeout = warningTimeout;
+          lastNotificationTime.current = currentTime;
 
-            await playNotificationSound(data.settings?.sound_settings);
-            showToast(orderForNotification);
-            showDesktopNotification(orderForNotification);
-
-            // Set up warning notification after 40 seconds
-            const warningTimeout = setTimeout(() => {
-              showWarningNotification(orderForNotification);
-            }, 40000); // 40 seconds
-
-            // Update assignment with warning timeout
-            newAssignment.warningTimeout = warningTimeout;
-
-            lastNotificationTime.current = currentTime;
-            logger.info(
-              `Showing initial notification for ${nextNotification.type} from ${nextNotification.shopName} (${nextNotification.locationName}) - warning in 40s, expires in 1 minute`,
-              "NotificationSystem",
-              nextNotification
-            );
-          } else {
-            logger.debug(
-              "User already has an active batch assignment, skipping notification",
-              "NotificationSystem"
-            );
-          }
+          // Smart order finder: Order shown to shopper for review
         } else {
           logger.debug(
-            "No available notifications (all assigned or expired)",
+            "User already has an active order review, skipping smart order finder",
             "NotificationSystem"
           );
         }
-
-        // Don't call onNewOrder to prevent page refreshes
-        // The notification system should be independent
-        logger.info(
-          "Notification shown, not triggering page refresh",
-          "NotificationSystem"
-        );
       } else {
         logger.debug(
-          "No notifications found based on settings",
+          data.message || "No suitable orders available for review",
           "NotificationSystem"
         );
       }
     } catch (error) {
       logger.error(
-        "Error checking for notifications with settings",
+        "Error in smart order finder system",
         "NotificationSystem",
         error
       );
@@ -878,30 +1150,22 @@ export default function NotificationSystem({
     // Reset notification state
     lastNotificationTime.current = 0;
 
-    logger.info("Starting notification system", "NotificationSystem");
-    logger.info(
-      "Will check for pending orders every 60 seconds with 1-minute assignment timeout",
-      "NotificationSystem"
-    );
+    // Starting smart notification system
 
     // Initial check
     checkForNewOrders();
 
-    // Set up interval for checking
+    // Set up interval for checking (less frequent when WebSocket is connected)
+    const intervalTime = isConnected ? 120000 : 30000; // 2 minutes with WebSocket, 30 seconds without
     checkInterval.current = setInterval(() => {
-      const now = new Date();
-      logger.debug(
-        `Interval triggered at ${now.toLocaleTimeString()}`,
-        "NotificationSystem"
-      );
       checkForNewOrders();
-    }, 60000); // Check every 60 seconds
+    }, intervalTime);
 
     setIsListening(true);
   };
 
   const stopNotificationSystem = () => {
-    logger.info("Stopping notification system", "NotificationSystem");
+    // Stopping notification system
     if (checkInterval.current) {
       clearInterval(checkInterval.current);
       checkInterval.current = null;
@@ -926,22 +1190,16 @@ export default function NotificationSystem({
   };
 
   useEffect(() => {
-    logger.info("NotificationSystem component mounted", "NotificationSystem");
+    // NotificationSystem component mounted
     return () => {
-      logger.info(
-        "NotificationSystem component unmounting",
-        "NotificationSystem"
-      );
+      // NotificationSystem component unmounting
       stopNotificationSystem();
     };
   }, []);
 
   useEffect(() => {
     if (session && currentLocation) {
-      logger.info(
-        "User logged in and location available, starting notification system",
-        "NotificationSystem"
-      );
+      // User logged in and location available, starting notification system
       startNotificationSystem();
     } else {
       logger.warn(
@@ -957,5 +1215,22 @@ export default function NotificationSystem({
   }, [session, currentLocation]);
 
   // The component doesn't render anything visible
+  // WebSocket connection status indicator (optional UI element)
+  if (process.env.NODE_ENV === "development") {
+    return (
+      <div className="fixed right-4 top-4 z-50">
+        <div
+          className={`rounded-lg px-3 py-2 text-xs font-medium ${
+            isConnected
+              ? "border border-green-200 bg-green-100 text-green-800"
+              : "border border-red-200 bg-red-100 text-red-800"
+          }`}
+        >
+          {isConnected ? "🔌 WebSocket Connected" : "📡 Polling Mode"}
+        </div>
+      </div>
+    );
+  }
+
   return null;
 }

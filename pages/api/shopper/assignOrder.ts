@@ -10,6 +10,7 @@ const ASSIGN_ORDER = gql`
     $id: uuid!
     $shopper_id: uuid!
     $updated_at: timestamptz!
+    $assigned_at: timestamptz!
   ) {
     update_Orders_by_pk(
       pk_columns: { id: $id }
@@ -17,12 +18,14 @@ const ASSIGN_ORDER = gql`
         shopper_id: $shopper_id
         status: "accepted"
         updated_at: $updated_at
+        assigned_at: $assigned_at
       }
     ) {
       id
       shopper_id
       status
       updated_at
+      assigned_at
     }
   }
 `;
@@ -33,6 +36,7 @@ const ASSIGN_REEL_ORDER = gql`
     $id: uuid!
     $shopper_id: uuid!
     $updated_at: timestamptz!
+    $assigned_at: timestamptz!
   ) {
     update_reel_orders_by_pk(
       pk_columns: { id: $id }
@@ -40,12 +44,40 @@ const ASSIGN_REEL_ORDER = gql`
         shopper_id: $shopper_id
         status: "accepted"
         updated_at: $updated_at
+        assigned_at: $assigned_at
       }
     ) {
       id
       shopper_id
       status
       updated_at
+      assigned_at
+    }
+  }
+`;
+
+// GraphQL mutation to assign a shopper and update status for restaurant orders
+const ASSIGN_RESTAURANT_ORDER = gql`
+  mutation AssignRestaurantOrder(
+    $id: uuid!
+    $shopper_id: uuid!
+    $updated_at: timestamptz!
+    $assigned_at: timestamptz!
+  ) {
+    update_restaurant_orders_by_pk(
+      pk_columns: { id: $id }
+      _set: {
+        shopper_id: $shopper_id
+        status: "accepted"
+        updated_at: $updated_at
+        assigned_at: $assigned_at
+      }
+    ) {
+      id
+      shopper_id
+      status
+      updated_at
+      assigned_at
     }
   }
 `;
@@ -135,6 +167,16 @@ interface ReelOrderResponse {
   };
 }
 
+// Define interface for restaurant order response
+interface RestaurantOrderResponse {
+  update_restaurant_orders_by_pk: {
+    id: string;
+    shopper_id: string;
+    status: string;
+    updated_at: string;
+  };
+}
+
 // Define interface for wallet response
 interface WalletResponse {
   Wallets: Array<{
@@ -180,10 +222,14 @@ export default async function handler(
     return res.status(400).json({ error: "Missing or invalid orderId" });
   }
 
-  if (orderType !== "regular" && orderType !== "reel") {
-    return res
-      .status(400)
-      .json({ error: "Invalid orderType. Must be 'regular' or 'reel'" });
+  if (
+    orderType !== "regular" &&
+    orderType !== "reel" &&
+    orderType !== "restaurant"
+  ) {
+    return res.status(400).json({
+      error: "Invalid orderType. Must be 'regular', 'reel', or 'restaurant'",
+    });
   }
 
   try {
@@ -204,10 +250,11 @@ export default async function handler(
       return res.status(400).json({ error: "no_wallet" });
     }
 
-    // Get current timestamp for updated_at
+    // Get current timestamp for updated_at and assigned_at
     const currentTimestamp = new Date().toISOString();
+    const assignedAt = new Date().toISOString();
 
-    let data: OrderResponse | ReelOrderResponse;
+    let data: OrderResponse | ReelOrderResponse | RestaurantOrderResponse;
 
     if (orderType === "reel") {
       // For reel orders, we need to update wallet balances during assignment
@@ -281,19 +328,34 @@ export default async function handler(
         id: orderId,
         shopper_id: userId,
         updated_at: currentTimestamp,
+        assigned_at: assignedAt,
       });
+    } else if (orderType === "restaurant") {
+      // Assign restaurant order (no wallet updates here, they happen during delivery)
+      data = await hasuraClient.request<RestaurantOrderResponse>(
+        ASSIGN_RESTAURANT_ORDER,
+        {
+          id: orderId,
+          shopper_id: userId,
+          updated_at: currentTimestamp,
+          assigned_at: assignedAt,
+        }
+      );
     } else {
       // Assign regular order (no wallet updates here, they happen during shopping status)
       data = await hasuraClient.request<OrderResponse>(ASSIGN_ORDER, {
         id: orderId,
         shopper_id: userId,
         updated_at: currentTimestamp,
+        assigned_at: assignedAt,
       });
     }
 
     const result =
       orderType === "reel"
         ? (data as ReelOrderResponse).update_reel_orders_by_pk
+        : orderType === "restaurant"
+        ? (data as RestaurantOrderResponse).update_restaurant_orders_by_pk
         : (data as OrderResponse).update_Orders_by_pk;
 
     // Clean up notifications for this order

@@ -16,7 +16,7 @@ const GET_ORDER_DETAILS_FOR_INVOICE = gql`
       delivery_fee
       created_at
       updated_at
-      userByUserId {
+      orderedBy {
         id
         name
         email
@@ -131,7 +131,7 @@ interface OrderDetails {
     delivery_fee: string;
     created_at: string;
     updated_at: string;
-    userByUserId: {
+    orderedBy: {
       id: string;
       name: string;
       email: string;
@@ -233,20 +233,24 @@ export default async function handler(
 
     // Get order details for invoice based on order type
     let orderDetails: any;
-    if (isReelOrder) {
-      orderDetails = await hasuraClient.request<ReelOrderDetails>(
-        GET_REEL_ORDER_DETAILS_FOR_INVOICE,
-        {
-          order_id: orderId,
-        }
-      );
-    } else {
-      orderDetails = await hasuraClient.request<OrderDetails>(
-        GET_ORDER_DETAILS_FOR_INVOICE,
-        {
-          order_id: orderId,
-        }
-      );
+    try {
+      if (isReelOrder) {
+        orderDetails = await hasuraClient.request<ReelOrderDetails>(
+          GET_REEL_ORDER_DETAILS_FOR_INVOICE,
+          {
+            order_id: orderId,
+          }
+        );
+      } else {
+        orderDetails = await hasuraClient.request<OrderDetails>(
+          GET_ORDER_DETAILS_FOR_INVOICE,
+          {
+            order_id: orderId,
+          }
+        );
+      }
+    } catch (error) {
+      return res.status(500).json({ error: "Failed to fetch order details" });
     }
 
     const order = isReelOrder
@@ -258,10 +262,12 @@ export default async function handler(
     }
 
     // Verify the user is authorized to access this order (either as customer or shopper)
-    if (
-      order.shopper_id !== session.user.id &&
-      (isReelOrder ? order.User.id : order.userByUserId.id) !== session.user.id
-    ) {
+    const isShopper = order.shopper_id === session.user.id;
+    const isCustomer = isReelOrder
+      ? order.User.id === session.user.id
+      : order.orderedBy.id === session.user.id;
+
+    if (!isShopper && !isCustomer) {
       return res
         .status(403)
         .json({ error: "Not authorized to access this order" });
@@ -276,6 +282,7 @@ export default async function handler(
     if (isReelOrder) {
       // For reel orders, use the reel price and product info
       const reel = order.Reel;
+
       itemsTotal = parseFloat(reel.Price);
       shopName = reel.Restaurant.name;
       shopAddress = reel.Restaurant.location;
@@ -296,6 +303,7 @@ export default async function handler(
     } else {
       // For regular orders, use the order items
       const items = order.Order_Items;
+
       itemsTotal = items.reduce((total: number, item: any) => {
         return total + parseFloat(item.price) * item.quantity;
       }, 0);
@@ -331,10 +339,10 @@ export default async function handler(
     const totalAmount = (itemsTotal + serviceFee + deliveryFee).toFixed(2);
 
     // Save invoice data to the database
-    const saveResult = await hasuraClient.request<AddInvoiceResult>(
-      ADD_INVOICE,
-      {
-        customer_id: isReelOrder ? order.User.id : order.userByUserId.id,
+    let saveResult;
+    try {
+      saveResult = await hasuraClient.request<AddInvoiceResult>(ADD_INVOICE, {
+        customer_id: isReelOrder ? order.User.id : order.orderedBy.id,
         delivery_fee: deliveryFeeStr,
         discount: discountStr,
         invoice_items: invoiceItems,
@@ -346,8 +354,12 @@ export default async function handler(
         subtotal: subtotalStr,
         tax: taxStr,
         total_amount: totalAmount,
-      }
-    );
+      });
+    } catch (error) {
+      return res
+        .status(500)
+        .json({ error: "Failed to save invoice to database" });
+    }
 
     // Generate invoice data for the response
     const invoiceData = {
@@ -355,8 +367,8 @@ export default async function handler(
       invoiceNumber: invoiceNumber,
       orderId: order.id,
       orderNumber: order.OrderID || order.id.slice(-8),
-      customer: isReelOrder ? order.User.name : order.userByUserId.name,
-      customerEmail: isReelOrder ? order.User.email : order.userByUserId.email,
+      customer: isReelOrder ? order.User.name : order.orderedBy.name,
+      customerEmail: isReelOrder ? order.User.email : order.orderedBy.email,
       shop: shopName,
       shopAddress: shopAddress,
       dateCreated: new Date(order.created_at).toLocaleString(),

@@ -1,4 +1,4 @@
-import React, { createContext, useState, useContext } from "react";
+import React, { createContext, useState, useContext, useEffect } from "react";
 import { useSession } from "next-auth/react";
 
 interface CartContextType {
@@ -18,8 +18,12 @@ const CartContext = createContext<CartContextType>({
 export const CartProvider: React.FC<{ children: React.ReactNode }> = ({
   children,
 }) => {
-  const [count, setCount] = useState(0);
+  const [shopCartCount, setShopCartCount] = useState(0);
+  const [foodCartCount, setFoodCartCount] = useState(0);
   const { data: session, status } = useSession();
+
+  // Combined count from both shop and food carts
+  const count = shopCartCount + foodCartCount;
 
   const addItem = async (
     shopId: string,
@@ -45,7 +49,7 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({
     if (!res.ok) {
       throw new Error(data.error || "Add to cart failed");
     }
-    setCount(data.count ?? 0);
+    setShopCartCount(data.count ?? 0);
     // Notify other components that cart has changed
     window.dispatchEvent(new Event("cartChanged"));
   };
@@ -61,7 +65,7 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({
             (sum, c) => sum + (c.count ?? 0),
             0
           );
-          setCount(totalCount);
+          setShopCartCount(totalCount);
         })
         .catch((err) => console.error("Failed to fetch cart counts:", err));
     }
@@ -78,13 +82,49 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({
             (sum, c) => sum + (c.count ?? 0),
             0
           );
-          setCount(totalCount);
+          setShopCartCount(totalCount);
         })
         .catch((err) => console.error("Failed to refresh cart counts:", err));
     };
     window.addEventListener("cartChanged", handleCartChanged);
     return () => window.removeEventListener("cartChanged", handleCartChanged);
   }, [status]);
+
+  // Listen for food cart changes
+  useEffect(() => {
+    const handleFoodCartChanged = () => {
+      // Get food cart count from localStorage
+      try {
+        const foodCartData = JSON.parse(
+          localStorage.getItem("foodCarts") || "{}"
+        );
+        const foodCarts = foodCartData.restaurants || [];
+
+        const totalFoodItems = foodCarts.reduce(
+          (sum: number, restaurant: any) => {
+            return sum + (restaurant.totalItems || 0);
+          },
+          0
+        );
+        setFoodCartCount(totalFoodItems);
+      } catch (error) {
+        console.error("Error reading food cart from localStorage:", error);
+        setFoodCartCount(0);
+      }
+    };
+
+    // Initial load
+    handleFoodCartChanged();
+
+    // Listen for food cart changes
+    window.addEventListener("foodCartChanged", handleFoodCartChanged);
+    window.addEventListener("storage", handleFoodCartChanged);
+
+    return () => {
+      window.removeEventListener("foodCartChanged", handleFoodCartChanged);
+      window.removeEventListener("storage", handleFoodCartChanged);
+    };
+  }, []);
 
   return (
     <CartContext.Provider value={{ count, addItem }}>

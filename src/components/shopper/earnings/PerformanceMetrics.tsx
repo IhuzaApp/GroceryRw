@@ -70,14 +70,16 @@ const PerformanceMetrics: React.FC<PerformanceMetricsProps> = ({
   };
 
   return (
-    <Panel shaded bordered bodyFill className="p-4">
-      <h3 className="mb-4 text-lg font-semibold">Performance Metrics</h3>
+    <Panel shaded bordered bodyFill className="p-3 sm:p-4">
+      <h3 className="mb-3 text-base font-semibold sm:mb-4 sm:text-lg">
+        Performance Metrics
+      </h3>
 
       {!metrics ? (
-        <div className="py-8 text-center">
-          <div className="mb-4 text-red-500">
+        <div className="py-6 text-center sm:py-8">
+          <div className="mb-3 text-red-500 sm:mb-4">
             <svg
-              className="mx-auto h-12 w-12"
+              className="mx-auto h-8 w-8 sm:h-12 sm:w-12"
               fill="none"
               viewBox="0 0 24 24"
               stroke="currentColor"
@@ -90,28 +92,30 @@ const PerformanceMetrics: React.FC<PerformanceMetricsProps> = ({
               />
             </svg>
           </div>
-          <h4 className="mb-2 text-lg font-semibold text-gray-900">
+          <h4 className="mb-2 text-base font-semibold text-gray-900 sm:text-lg">
             Something went wrong
           </h4>
-          <p className="mb-4 text-gray-600">
+          <p className="mb-3 text-sm text-gray-600 sm:mb-4 sm:text-base">
             We couldn&apos;t load your performance metrics.
           </p>
-          <p className="text-sm text-gray-500">
+          <p className="text-xs text-gray-500 sm:text-sm">
             Please try again after 1 hour or contact support if the issue
             persists.
           </p>
         </div>
       ) : (
-        <div className="space-y-6">
+        <div className="space-y-4 sm:space-y-6">
           {metrics.map((item, index) => (
             <div key={index}>
               <div className="mb-1 flex items-center justify-between">
-                <span className="text-sm font-medium">{item.metric}</span>
-                <span className="text-sm">{formatRating(item)}</span>
+                <span className="text-xs font-medium sm:text-sm">
+                  {item.metric}
+                </span>
+                <span className="text-xs sm:text-sm">{formatRating(item)}</span>
               </div>
-              <div className="h-2 w-full rounded-full bg-gray-200">
+              <div className="h-1.5 w-full rounded-full bg-gray-200 sm:h-2">
                 <div
-                  className={`h-2 rounded-full ${
+                  className={`h-1.5 rounded-full sm:h-2 ${
                     item.percentage >= 90
                       ? "bg-green-500"
                       : item.percentage >= 70
@@ -126,13 +130,17 @@ const PerformanceMetrics: React.FC<PerformanceMetricsProps> = ({
         </div>
       )}
 
-      <div className="mt-8 border-t pt-4">
-        <h3 className="mb-3 font-medium">Delivery Stats</h3>
-        <div className="grid grid-cols-2 gap-4">
+      <div className="mt-6 border-t pt-3 sm:mt-8 sm:pt-4">
+        <h3 className="mb-2 text-sm font-medium sm:mb-3 sm:text-base">
+          Delivery Stats
+        </h3>
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-4">
           {deliveryStats.map((stat, index) => (
-            <div key={index} className="rounded-lg bg-gray-50 p-3">
-              <div className="text-sm text-gray-500">{stat.title}</div>
-              <div className="flex items-center text-xl font-bold">
+            <div key={index} className="rounded-lg bg-gray-50 p-2.5 sm:p-3">
+              <div className="text-xs text-gray-500 sm:text-sm">
+                {stat.title}
+              </div>
+              <div className="flex items-center text-lg font-bold sm:text-xl">
                 <span className={`mr-1 ${stat.iconColor}`}>{stat.icon}</span>
                 {stat.value}
               </div>

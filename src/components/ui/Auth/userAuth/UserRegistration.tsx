@@ -13,19 +13,39 @@ export default function UserRegistration() {
   const [agreeTerms, setAgreeTerms] = useState(false);
   const [phone, setPhone] = useState("");
   const [gender, setGender] = useState("male");
+  const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
   const { redirect } = router.query as { redirect?: string };
 
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!phone) {
+
+    // Validation checks
+    if (!name.trim()) {
+      toast.error("Please enter your full name");
+      return;
+    }
+    if (!email.trim()) {
+      toast.error("Please enter your email address");
+      return;
+    }
+    if (!phone.trim()) {
       toast.error("Please enter your phone number");
+      return;
+    }
+    if (password.length < 8) {
+      toast.error("Password must be at least 8 characters long");
       return;
     }
     if (password !== confirmPassword) {
       toast.error("Passwords do not match");
       return;
     }
+    if (!agreeTerms) {
+      toast.error("Please agree to the Terms of Service and Privacy Policy");
+      return;
+    }
+    setIsLoading(true);
     try {
       const res = await fetch("/api/auth/register", {
         method: "POST",
@@ -36,14 +56,17 @@ export default function UserRegistration() {
       if (!res.ok) {
         throw new Error(data.error || "Registration failed");
       }
-      toast.success("Account created successfully");
+      toast.success("Account created successfully! Please sign in.");
       if (redirect) {
-        router.push(`/auth/login?redirect=${encodeURIComponent(redirect)}`);
+        router.push(`/Auth/Login?redirect=${encodeURIComponent(redirect)}`);
       } else {
-        router.push("/auth/login");
+        router.push("/Auth/Login");
       }
     } catch (err: any) {
-      toast.error(err.message);
+      console.error("Registration error:", err);
+      toast.error(err.message || "Registration failed. Please try again.");
+    } finally {
+      setIsLoading(false);
     }
   };
   return (
@@ -192,9 +215,10 @@ export default function UserRegistration() {
         appearance="primary"
         type="submit"
         className="mb-4 w-full rounded-md bg-green-500 py-3 text-white hover:bg-green-600"
-        disabled={!agreeTerms}
+        disabled={!agreeTerms || isLoading}
+        loading={isLoading}
       >
-        Create Account
+        {isLoading ? "Creating Account..." : "Create Account"}
       </Button>
       <Button
         appearance="default"

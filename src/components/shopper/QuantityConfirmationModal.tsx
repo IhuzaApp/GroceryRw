@@ -51,8 +51,14 @@ export default function QuantityConfirmationModal({
   // Check if item is weight-based
   useEffect(() => {
     if (currentItem) {
-      const unit =
-        currentItem.product.measurement_unit?.toLowerCase().trim() || "";
+      // Access measurement_unit from the correct path based on GraphQL schema
+      let unit = "";
+
+      // The measurement_unit is at currentItem.product.measurement_unit according to the GraphQL schema
+      if (currentItem.product.measurement_unit) {
+        unit = currentItem.product.measurement_unit.toLowerCase().trim();
+      }
+
       const isWeight = [
         "kg",
         "g",
@@ -65,6 +71,7 @@ export default function QuantityConfirmationModal({
         "pound",
         "ounce",
       ].includes(unit);
+
       setIsWeightBased(isWeight);
       setMeasurementUnit(unit);
 
@@ -120,9 +127,6 @@ export default function QuantityConfirmationModal({
 
   // Function to handle barcode scan result
   const handleBarcodeScanned = (scannedBarcode: string) => {
-    console.log("🔍 Barcode scanned:", scannedBarcode);
-    console.log("🔍 Current item:", currentItem);
-
     if (!currentItem) {
       setBarcodeValidation({
         isValid: false,
@@ -134,10 +138,6 @@ export default function QuantityConfirmationModal({
 
     const itemBarcode = currentItem.product.ProductName?.barcode;
     const itemSku = currentItem.product.ProductName?.sku;
-
-    console.log("🔍 Item barcode from ProductName table:", itemBarcode);
-    console.log("🔍 Item SKU from ProductName table:", itemSku);
-    console.log("🔍 Scanned barcode:", scannedBarcode);
 
     // Check if the item has a barcode or SKU in the database
     if (itemBarcode || itemSku) {
@@ -258,6 +258,8 @@ export default function QuantityConfirmationModal({
           } px-4 py-4`}
         >
           <div className="space-y-4">
+            {/* Debug info removed */}
+
             {/* Barcode Scanning Section - Only for non-weight-based items */}
             {!isWeightBased && (
               <div

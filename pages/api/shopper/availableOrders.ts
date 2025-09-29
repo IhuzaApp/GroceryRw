@@ -3,11 +3,15 @@ import { hasuraClient } from "../../../src/lib/hasuraClient";
 import { gql } from "graphql-request";
 import { logger } from "../../../src/utils/logger";
 
-// Modify the query to ensure we're only filtering by PENDING status, with no date filtering
+// Filter for orders 30+ minutes old and unassigned
 const GET_AVAILABLE_ORDERS = gql`
-  query GetAvailableOrders {
+  query GetAvailableOrders($thirtyMinutesAgo: timestamptz!) {
     Orders(
-      where: { user_id: { _is_null: true }, status: { _eq: "PENDING" } }
+      where: {
+        shopper_id: { _is_null: true }
+        status: { _eq: "PENDING" }
+        created_at: { _lte: $thirtyMinutesAgo }
+      }
       order_by: { created_at: desc }
     ) {
       id
@@ -36,11 +40,15 @@ const GET_AVAILABLE_ORDERS = gql`
   }
 `;
 
-// Add query for available reel orders
+// Add query for available reel orders (30+ minutes old)
 const GET_AVAILABLE_REEL_ORDERS = gql`
-  query GetAvailableReelOrders {
+  query GetAvailableReelOrders($thirtyMinutesAgo: timestamptz!) {
     reel_orders(
-      where: { shopper_id: { _is_null: true }, status: { _eq: "PENDING" } }
+      where: {
+        shopper_id: { _is_null: true }
+        status: { _eq: "PENDING" }
+        created_at: { _lte: $thirtyMinutesAgo }
+      }
       order_by: { created_at: desc }
     ) {
       id
@@ -71,6 +79,60 @@ const GET_AVAILABLE_REEL_ORDERS = gql`
         longitude
         street
         city
+      }
+    }
+  }
+`;
+
+// Add query for available restaurant orders (30+ minutes old and unassigned)
+const GET_AVAILABLE_RESTAURANT_ORDERS = gql`
+  query GetAvailableRestaurantOrders($thirtyMinutesAgo: timestamptz!) {
+    restaurant_orders(
+      where: {
+        shopper_id: { _is_null: true }
+        status: { _eq: "PENDING" }
+        updated_at: { _lte: $thirtyMinutesAgo }
+        assigned_at: { _is_null: true }
+      }
+      order_by: { updated_at: desc_nulls_last, created_at: desc }
+    ) {
+      id
+      created_at
+      updated_at
+      delivery_fee
+      total
+      delivery_time
+      delivery_notes
+      status
+      assigned_at
+      Restaurant {
+        id
+        name
+        logo
+        lat
+        long
+      }
+      orderedBy {
+        id
+        name
+        phone
+        email
+      }
+      Address {
+        latitude
+        longitude
+        street
+        city
+      }
+      restaurant_dishe_orders {
+        id
+        quantity
+        price
+        restaurant_dishes {
+          id
+          name
+          description
+        }
       }
     }
   }
@@ -141,73 +203,142 @@ export default async function handler(
       throw new Error("Hasura client is not initialized");
     }
 
-    logger.debug("Querying Hasura for all PENDING orders", "AvailableOrders");
+    // Calculate timestamp for 30 minutes ago (for aged orders on map)
+    const thirtyMinutesAgo = new Date(
+      Date.now() - 30 * 60 * 1000
+    ).toISOString();
 
-    // Fetch both regular orders and reel orders in parallel
-    const [regularOrdersData, reelOrdersData] = await Promise.all([
-      hasuraClient.request<{
-        Orders: Array<{
+    // Debug: Test restaurant orders query first
+    try {
+      const testRestaurantQuery = await hasuraClient.request<{
+        restaurant_orders: Array<{
           id: string;
+          updated_at: string | null;
           created_at: string;
-          service_fee: string | null;
-          delivery_fee: string | null;
+          assigned_at: string | null;
           status: string;
-          shop: {
+          Restaurant: {
             name: string;
-            address: string;
-            latitude: string;
-            longitude: string;
-          };
-          address: {
-            latitude: string;
-            longitude: string;
-            street: string;
-            city: string;
-          };
-          Order_Items_aggregate: { aggregate: { count: number | null } | null };
+          } | null;
         }>;
-      }>(GET_AVAILABLE_ORDERS),
-      hasuraClient.request<{
-        reel_orders: Array<{
-          id: string;
-          created_at: string;
-          service_fee: string | null;
-          delivery_fee: string | null;
-          total: string;
-          quantity: string;
-          delivery_note: string | null;
-          status: string;
-          Reel: {
+      }>(GET_AVAILABLE_RESTAURANT_ORDERS, { thirtyMinutesAgo });
+    } catch (error) {
+      console.error("❌ Restaurant orders query failed:", error);
+      logger.error("Restaurant orders query failed", "AvailableOrders", error);
+    }
+
+    // Fetch regular orders, reel orders, and restaurant orders in parallel
+    const [regularOrdersData, reelOrdersData, restaurantOrdersData] =
+      await Promise.all([
+        hasuraClient.request<{
+          Orders: Array<{
             id: string;
-            title: string;
-            description: string;
-            Price: string;
-            Product: string;
-            type: string;
-            video_url: string;
-            user_id: string;
-          };
-          user: {
+            created_at: string;
+            service_fee: string | null;
+            delivery_fee: string | null;
+            status: string;
+            shop: {
+              name: string;
+              address: string;
+              latitude: string;
+              longitude: string;
+            };
+            address: {
+              latitude: string;
+              longitude: string;
+              street: string;
+              city: string;
+            };
+            Order_Items_aggregate: {
+              aggregate: { count: number | null } | null;
+            };
+          }>;
+        }>(GET_AVAILABLE_ORDERS, { thirtyMinutesAgo }),
+        hasuraClient.request<{
+          reel_orders: Array<{
             id: string;
-            name: string;
-            phone: string;
-          };
-          address: {
-            latitude: string;
-            longitude: string;
-            street: string;
-            city: string;
-          };
-        }>;
-      }>(GET_AVAILABLE_REEL_ORDERS),
-    ]);
+            created_at: string;
+            service_fee: string | null;
+            delivery_fee: string | null;
+            total: string;
+            quantity: string;
+            delivery_note: string | null;
+            status: string;
+            Reel: {
+              id: string;
+              title: string;
+              description: string;
+              Price: string;
+              Product: string;
+              type: string;
+              video_url: string;
+              user_id: string;
+            };
+            user: {
+              id: string;
+              name: string;
+              phone: string;
+            };
+            address: {
+              latitude: string;
+              longitude: string;
+              street: string;
+              city: string;
+            };
+          }>;
+        }>(GET_AVAILABLE_REEL_ORDERS, { thirtyMinutesAgo }),
+        hasuraClient.request<{
+          restaurant_orders: Array<{
+            id: string;
+            created_at: string;
+            updated_at: string | null;
+            delivery_fee: string | null;
+            total: string;
+            delivery_time: string;
+            delivery_notes: string | null;
+            status: string;
+            assigned_at: string | null;
+            Restaurant: {
+              id: string;
+              name: string;
+              logo: string | null;
+              lat: string;
+              long: string;
+            };
+            orderedBy: {
+              id: string;
+              name: string;
+              phone: string;
+              email: string;
+            };
+            Address: {
+              latitude: string;
+              longitude: string;
+              street: string;
+              city: string;
+            };
+            restaurant_dishe_orders: Array<{
+              id: string;
+              quantity: number;
+              price: string;
+              restaurant_dishes: {
+                id: string;
+                name: string;
+                description: string;
+              };
+            }>;
+          }>;
+        }>(GET_AVAILABLE_RESTAURANT_ORDERS, { thirtyMinutesAgo }),
+      ]);
 
     const regularOrders = regularOrdersData.Orders;
     const reelOrders = reelOrdersData.reel_orders;
+    const restaurantOrders = restaurantOrdersData.restaurant_orders;
 
     logger.info("Retrieved orders from database", "AvailableOrders", {
       regularOrderCount: regularOrders.length,
       reelOrderCount: reelOrders.length,
+      restaurantOrderCount: restaurantOrders.length,
     });
 
     // Transform regular orders to make it easier to use on the client
@@ -360,7 +491,7 @@ export default async function handler(
         deliveryFee: parseFloat(order.delivery_fee || "0"),
         earnings:
           parseFloat(order.service_fee || "0") +
-          parseFloat(order.delivery_fee || "0"),
+          parseFloat(order.delivery_fee || "0"), // Service + delivery fee for reel orders
         pendingMinutes,
         priorityLevel,
         status: order.status,
@@ -378,10 +509,120 @@ export default async function handler(
       };
     });
 
-    // Combine both types of orders
+    // Transform restaurant orders
+    const availableRestaurantOrders = restaurantOrders.map((order) => {
+      // Calculate metrics for sorting and filtering
+      // For aged orders, use updated_at if available, otherwise created_at
+      const referenceDate = order.updated_at
+        ? new Date(order.updated_at)
+        : new Date(order.created_at);
+      const pendingMinutes = Math.floor(
+        (Date.now() - referenceDate.getTime()) / 60000
+      );
+
+      // Get coordinates from relationships
+      const restaurantLatitude = order.Restaurant?.lat
+        ? parseFloat(order.Restaurant.lat)
+        : 0;
+      const restaurantLongitude = order.Restaurant?.long
+        ? parseFloat(order.Restaurant.long)
+        : 0;
+      const customerLatitude = order.Address?.latitude
+        ? parseFloat(order.Address.latitude)
+        : 0;
+      const customerLongitude = order.Address?.longitude
+        ? parseFloat(order.Address.longitude)
+        : 0;
+
+      // Calculate distance from shopper to restaurant in kilometers
+      const distanceToRestaurantKm = calculateDistanceKm(
+        shopperLatitude,
+        shopperLongitude,
+        restaurantLatitude,
+        restaurantLongitude
+      );
+
+      // Calculate distance between restaurant and customer in kilometers
+      const restaurantToCustomerDistanceKm = calculateDistanceKm(
+        restaurantLatitude,
+        restaurantLongitude,
+        customerLatitude,
+        customerLongitude
+      );
+
+      // Calculate travel time from shopper to restaurant
+      const travelTimeMinutes = estimateTravelTimeMinutes(
+        distanceToRestaurantKm
+      );
+
+      // Round distances to 1 decimal place
+      const formattedDistanceToRestaurant =
+        Math.round(distanceToRestaurantKm * 10) / 10;
+      const formattedRestaurantToCustomerDistance =
+        Math.round(restaurantToCustomerDistanceKm * 10) / 10;
+
+      // Calculate priority level (1-5) for UI highlighting
+      let priorityLevel = 1;
+      if (pendingMinutes >= 24 * 60) {
+        priorityLevel = 5; // Critical - pending for 24+ hours
+      } else if (pendingMinutes >= 4 * 60) {
+        priorityLevel = 4; // High - pending for 4+ hours
+      } else if (pendingMinutes >= 60) {
+        priorityLevel = 3; // Medium - pending for 1+ hour
+      } else if (pendingMinutes >= 30) {
+        priorityLevel = 2; // Low - pending for 30+ minutes
+      }
+
+      // Calculate total items count from dish orders
+      const totalItems =
+        order.restaurant_dishe_orders?.reduce(
+          (sum, dish) => sum + (dish.quantity || 0),
+          0
+        ) || 1;
+
+      return {
+        id: order.id,
+        createdAt: order.created_at,
+        updatedAt: order.updated_at, // Add updatedAt for restaurant orders
+        shopName: order.Restaurant?.name || "Unknown Restaurant",
+        shopAddress: "Restaurant Location",
+        shopLatitude: restaurantLatitude,
+        shopLongitude: restaurantLongitude,
+        customerLatitude,
+        customerLongitude,
+        customerAddress: order.Address
+          ? `${order.Address.street || ""}, ${order.Address.city || ""}`
+          : "No Address",
+        itemsCount: totalItems,
+        serviceFee: 0, // Restaurant orders don't have service fee
+        deliveryFee: parseFloat(order.delivery_fee || "0"),
+        earnings: parseFloat(order.delivery_fee || "0"), // Only delivery fee for restaurant orders
+        pendingMinutes,
+        priorityLevel,
+        status: order.status,
+        // Add new fields for distance and travel time
+        distance: formattedDistanceToRestaurant,
+        shopToCustomerDistance: formattedRestaurantToCustomerDistance,
+        travelTimeMinutes: travelTimeMinutes,
+        orderType: "restaurant" as const,
+        // Add restaurant-specific fields
+        restaurant: order.Restaurant,
+        deliveryTime: order.delivery_time,
+        deliveryNotes: order.delivery_notes,
+        customerName: order.orderedBy?.name || "Unknown Customer",
+        customerPhone: order.orderedBy?.phone || "",
+        customerEmail: order.orderedBy?.email || "",
+        dishes: order.restaurant_dishe_orders || [],
+        total: parseFloat(order.total || "0"),
+        assignedAt: order.assigned_at,
+      };
+    });
+
+    // Combine all types of orders
     const allAvailableOrders = [
       ...availableRegularOrders,
       ...availableReelOrders,
+      ...availableRestaurantOrders,
     ];
 
     // Filter orders by travel time - only show orders within 15 minutes travel time
@@ -389,13 +630,15 @@ export default async function handler(
       (order) => order.travelTimeMinutes <= maxTravelTime
     );
 
-    // Log the filtered orders
     logger.info("Filtered orders", "AvailableOrders", {
       filteredOrderCount: filteredOrders.length,
       regularOrderCount: filteredOrders.filter((o) => o.orderType === "regular")
         .length,
       reelOrderCount: filteredOrders.filter((o) => o.orderType === "reel")
         .length,
+      restaurantOrderCount: filteredOrders.filter(
+        (o) => o.orderType === "restaurant"
+      ).length,
       maxTravelTime: `${maxTravelTime} minutes`,
     });
 

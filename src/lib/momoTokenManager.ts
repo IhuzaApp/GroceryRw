@@ -18,25 +18,38 @@ class MomoTokenManager {
    * Get a valid access token, generating a new one if needed
    */
   async getValidToken(): Promise<string> {
+    console.log("🔑 [MoMo Token Manager] Getting valid token...");
     try {
       // Check if we have a cached token
       const cachedToken = this.getCachedToken();
+      console.log("🔑 [MoMo Token Manager] Cached token check:", {
+        hasCachedToken: !!cachedToken,
+        tokenExpiresAt: cachedToken
+          ? new Date(cachedToken.expiresAt).toISOString()
+          : null,
+        isTokenValid: cachedToken ? this.isTokenValid(cachedToken) : false,
+      });
 
       if (cachedToken && this.isTokenValid(cachedToken)) {
-        console.log("Using cached MoMo token");
+        console.log("✅ [MoMo Token Manager] Using cached MoMo token");
         return cachedToken.token;
       }
 
       // Generate new token
-      console.log("Generating new MoMo token");
+      console.log("🔄 [MoMo Token Manager] Generating new MoMo token");
       const newToken = await this.generateNewToken();
 
       // Cache the new token
       this.cacheToken(newToken);
+      console.log("💾 [MoMo Token Manager] Token cached successfully");
 
       return newToken.access_token;
     } catch (error) {
-      console.error("Error getting MoMo token:", error);
+      console.error("💥 [MoMo Token Manager] Error getting MoMo token:", {
+        error: error instanceof Error ? error.message : String(error),
+        stack: error instanceof Error ? error.stack : undefined,
+        timestamp: new Date().toISOString(),
+      });
       throw error;
     }
   }
@@ -45,6 +58,7 @@ class MomoTokenManager {
    * Generate a new token from MoMo API
    */
   private async generateNewToken(): Promise<TokenData> {
+    console.log("🔄 [MoMo Token Manager] Generating new token from API...");
     try {
       const response = await fetch("/api/momo/token", {
         method: "POST",
@@ -53,12 +67,25 @@ class MomoTokenManager {
         },
       });
 
+      console.log("🔄 [MoMo Token Manager] Token API Response:", {
+        status: response.status,
+        statusText: response.statusText,
+        ok: response.ok,
+      });
+
       if (!response.ok) {
         const errorText = await response.text();
+        console.error("❌ [MoMo Token Manager] Token generation failed:", {
+          status: response.status,
+          statusText: response.statusText,
+          error: errorText,
+        });
 
         // Check if it's a credentials issue (401/403)
         if (response.status === 401 || response.status === 403) {
-          console.log("MoMo credentials not configured, using test token");
+          console.log(
+            "🧪 [MoMo Token Manager] Credentials not configured, using test token"
+          );
           // Return a test token for development
           return this.generateTestToken();
         }
@@ -71,13 +98,28 @@ class MomoTokenManager {
       // Add generation timestamp
       tokenData.generated_at = Date.now();
 
+      console.log("✅ [MoMo Token Manager] Token generated successfully:", {
+        access_token: tokenData.access_token
+          ? "***TOKEN_RECEIVED***"
+          : "NO_TOKEN",
+        token_type: tokenData.token_type,
+        expires_in: tokenData.expires_in,
+        generated_at: new Date(tokenData.generated_at).toISOString(),
+      });
+
       return tokenData;
     } catch (error) {
-      console.error("Error generating MoMo token:", error);
+      console.error("💥 [MoMo Token Manager] Error generating MoMo token:", {
+        error: error instanceof Error ? error.message : String(error),
+        stack: error instanceof Error ? error.stack : undefined,
+        timestamp: new Date().toISOString(),
+      });
 
       // If it's a network error or credentials issue, use test token
       if (error instanceof Error && error.message.includes("401")) {
-        console.log("Using test token due to credentials issue");
+        console.log(
+          "🧪 [MoMo Token Manager] Using test token due to credentials issue"
+        );
         return this.generateTestToken();
       }
 
@@ -96,7 +138,15 @@ class MomoTokenManager {
       generated_at: Date.now(),
     };
 
-    console.log("Generated test MoMo token for development");
+    console.log(
+      "🧪 [MoMo Token Manager] Generated test MoMo token for development:",
+      {
+        access_token: testToken.access_token,
+        token_type: testToken.token_type,
+        expires_in: testToken.expires_in,
+        generated_at: new Date(testToken.generated_at).toISOString(),
+      }
+    );
     return testToken;
   }
 

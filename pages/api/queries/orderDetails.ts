@@ -73,7 +73,24 @@ const GET_ORDER_DETAILS = gql`
       assignedTo: User {
         id
         name
+        email
+        phone
         profile_picture
+        Ratings {
+          created_at
+          customer_id
+          delivery_experience
+          id
+          order_id
+          packaging_quality
+          professionalism
+          rating
+          reel_order_id
+          review
+          reviewed_at
+          shopper_id
+          updated_at
+        }
       }
       address: Address {
         id
@@ -122,10 +139,110 @@ export default async function handler(
       throw new Error("Hasura client is not initialized");
     }
 
-    const data = await hasuraClient.request<{ Orders: any[] }>(
-      GET_ORDER_DETAILS,
-      { id: orderId }
-    );
+    const data = await hasuraClient.request<{
+      Orders: Array<{
+        id: string;
+        OrderID: string;
+        placedAt: string;
+        estimatedDelivery: string | null;
+        deliveryNotes: string | null;
+        total: string;
+        serviceFee: string;
+        deliveryFee: string;
+        status: string;
+        deliveryPhotoUrl: string | null;
+        discount: string | null;
+        combinedOrderId: string | null;
+        voucherCode: string | null;
+        shop_id: string;
+        user: {
+          id: string;
+          name: string;
+          email: string;
+          phone: string;
+          profile_picture: string | null;
+        };
+        shop: {
+          id: string;
+          name: string;
+          address: string;
+          image: string | null;
+          phone: string;
+          latitude: number;
+          longitude: number;
+          operating_hours: string | null;
+        };
+        Order_Items: Array<{
+          id: string;
+          product_id: string;
+          quantity: number;
+          price: string;
+          product: {
+            id: string;
+            price: string;
+            final_price: string;
+            measurement_unit: string;
+            category: string;
+            quantity: number;
+            sku: string;
+            image: string | null;
+            productName_id: string;
+            ProductName: {
+              barcode: string | null;
+              create_at: string;
+              description: string | null;
+              id: string;
+              image: string | null;
+              name: string;
+              sku: string | null;
+            };
+            created_at: string;
+            is_active: boolean;
+            reorder_point: number;
+            shop_id: string;
+            supplier: string | null;
+            updated_at: string;
+          };
+          order_id: string;
+        }>;
+        assignedTo: {
+          id: string;
+          name: string;
+          email: string;
+          phone: string;
+          profile_picture: string | null;
+          Ratings: Array<{
+            created_at: string;
+            customer_id: string;
+            delivery_experience: string;
+            id: string;
+            order_id: string | null;
+            packaging_quality: string;
+            professionalism: string;
+            rating: string;
+            reel_order_id: string | null;
+            review: string | null;
+            reviewed_at: string | null;
+            shopper_id: string;
+            updated_at: string;
+          }>;
+        } | null;
+        address: {
+          id: string;
+          street: string;
+          city: string;
+          postal_code: string;
+          latitude: number;
+          longitude: number;
+          is_default: boolean;
+        } | null;
+        delivery_address_id: string | null;
+        found: boolean;
+        shopper_id: string | null;
+        updated_at: string;
+        user_id: string;
+      }>;
+    }>(GET_ORDER_DETAILS, { id: orderId });
 
     // Check if order exists
     if (!data.Orders || data.Orders.length === 0) {
@@ -144,6 +261,24 @@ export default async function handler(
       // Handle case where estimatedDelivery might be null
       estimatedDelivery: order.estimatedDelivery
         ? new Date(order.estimatedDelivery).toISOString()
+        : null,
+      // Calculate average rating and order count for assignedTo if available
+      assignedTo: order.assignedTo
+        ? {
+            ...order.assignedTo,
+            rating:
+              order.assignedTo.Ratings.length > 0
+                ? order.assignedTo.Ratings.reduce(
+                    (sum, rating) => sum + parseFloat(rating.rating),
+                    0
+                  ) / order.assignedTo.Ratings.length
+                : 0,
+            orders_aggregate: {
+              aggregate: {
+                count: order.assignedTo.Ratings.length,
+              },
+            },
+          }
         : null,
     };
 

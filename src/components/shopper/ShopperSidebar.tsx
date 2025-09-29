@@ -10,9 +10,12 @@ import { signOut } from "next-auth/react";
 import { useAuth } from "../../context/AuthContext";
 import { initiateRoleSwitch } from "../../lib/sessionRefresh";
 import { useTheme } from "../../context/ThemeContext";
+import { useSession } from "next-auth/react";
 import { logger } from "../../utils/logger";
 import TelegramStatusButton from "./TelegramStatusButton";
 import { authenticatedFetch } from "@lib/authenticatedFetch";
+import { collection, query, where, onSnapshot } from "firebase/firestore";
+import { db } from "../../lib/firebase";
 
 // Define interface for earnings response
 interface EarningsResponse {
@@ -31,10 +34,12 @@ interface EarningsResponse {
 
 export default function ShopperSidebar() {
   const router = useRouter();
+  const { data: session } = useSession();
   const [isMobile, setIsMobile] = useState(false);
   const [dailyEarnings, setDailyEarnings] = useState(0);
   const [loadingEarnings, setLoadingEarnings] = useState(true);
   const [isSwitchingRole, setIsSwitchingRole] = useState(false);
+  const [unreadMessageCount, setUnreadMessageCount] = useState(0);
   const pathname = usePathname();
   const { toggleRole } = useAuth();
   const { theme, setTheme } = useTheme();
@@ -94,6 +99,28 @@ export default function ShopperSidebar() {
     const interval = setInterval(fetchDailyEarnings, 5 * 60 * 1000);
     return () => clearInterval(interval);
   }, []);
+
+  // Fetch unread message count
+  useEffect(() => {
+    if (!session?.user?.id) return;
+
+    const conversationsRef = collection(db, "chat_conversations");
+    const q = query(
+      conversationsRef,
+      where("shopperId", "==", session.user.id)
+    );
+
+    const unsubscribe = onSnapshot(q, (snapshot) => {
+      let totalUnread = 0;
+      snapshot.docs.forEach((doc) => {
+        const data = doc.data();
+        totalUnread += data.unreadCount || 0;
+      });
+      setUnreadMessageCount(totalUnread);
+    });
+
+    return () => unsubscribe();
+  }, [session?.user?.id]);
 
   const handleSwitchToCustomer = async () => {
     setIsSwitchingRole(true);
@@ -179,7 +206,8 @@ export default function ShopperSidebar() {
         !isActive("/Plasa/Earnings") &&
         !isActive("/Plasa/Settings") &&
         !isActive("/Plasa/ShopperProfile") &&
-        !isActive("/Plasa/invoices"),
+        !isActive("/Plasa/invoices") &&
+        !isActive("/Plasa/chat"),
     },
     {
       path: "/Plasa/active-batches",
@@ -198,18 +226,24 @@ export default function ShopperSidebar() {
       ),
     },
     {
-      path: "/Plasa/ShopperProfile",
-      label: "Profile",
+      path: "/Plasa/chat",
+      label: "Chat",
       icon: (
-        <svg
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          strokeWidth="2.5"
-        >
-          <path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2" />
-          <circle cx="12" cy="7" r="4" />
-        </svg>
+        <div className="relative">
+          <svg
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2.5"
+          >
+            <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
+          </svg>
+          {unreadMessageCount > 0 && (
+            <div className="absolute -right-1 -top-1 flex h-5 w-5 items-center justify-center rounded-full bg-red-500 text-xs font-bold text-white">
+              {unreadMessageCount > 9 ? "9+" : unreadMessageCount}
+            </div>
+          )}
+        </div>
       ),
     },
     {
@@ -250,6 +284,21 @@ export default function ShopperSidebar() {
   ];
 
   const moreMenuItems = [
+    {
+      path: "/Plasa/ShopperProfile",
+      label: "My Profile",
+      icon: (
+        <svg
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="2.5"
+        >
+          <path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2" />
+          <circle cx="12" cy="7" r="4" />
+        </svg>
+      ),
+    },
     {
       path: "/Plasa/Earnings",
       label: (
@@ -390,18 +439,7 @@ export default function ShopperSidebar() {
                       : "text-gray-700 hover:bg-gray-100 hover:shadow-md"
                   }`}
                 >
-                  <div
-                    className={`mr-3 rounded-md p-1.5 ${
-                      isActive("/") &&
-                      !isActive("/Plasa/active-batches") &&
-                      !isActive("/Plasa/Earnings") &&
-                      !isActive("/Plasa/Settings")
-                        ? "bg-white/20"
-                        : theme === "dark"
-                        ? "bg-gray-700"
-                        : "bg-gray-100"
-                    }`}
-                  >
+                  <div className="mr-3 p-1.5">
                     <svg
                       viewBox="0 0 24 24"
                       fill="none"
@@ -430,15 +468,7 @@ export default function ShopperSidebar() {
                       : "text-gray-700 hover:bg-gray-100 hover:shadow-md"
                   }`}
                 >
-                  <div
-                    className={`mr-3 rounded-md p-1.5 ${
-                      isActive("/Plasa/active-batches")
-                        ? "bg-white/20"
-                        : theme === "dark"
-                        ? "bg-gray-700"
-                        : "bg-gray-100"
-                    }`}
-                  >
+                  <div className="mr-3 p-1.5">
                     <svg
                       viewBox="0 0 24 24"
                       fill="none"
@@ -470,15 +500,7 @@ export default function ShopperSidebar() {
                   }`}
                 >
                   <div className="flex items-center">
-                    <div
-                      className={`mr-3 rounded-md p-1.5 ${
-                        isActive("/Plasa/Earnings")
-                          ? "bg-white/20"
-                          : theme === "dark"
-                          ? "bg-gray-700"
-                          : "bg-gray-100"
-                      }`}
-                    >
+                    <div className="mr-3 p-1.5">
                       <svg
                         viewBox="0 0 24 24"
                         fill="none"
@@ -520,27 +542,19 @@ export default function ShopperSidebar() {
                   </div>
                 </div>
               </Link>
-              <Link href="/Plasa/ShopperProfile" passHref>
+              <Link href="/Plasa/chat" passHref>
                 <div
                   className={`flex items-center rounded-xl px-4 py-3 transition-all duration-200 ${
-                    isActive("/Plasa/ShopperProfile")
+                    isActive("/Plasa/chat")
                       ? theme === "dark"
-                        ? "bg-gradient-to-r from-purple-600 to-pink-600 text-white shadow-lg shadow-purple-500/25"
-                        : "bg-gradient-to-r from-purple-500 to-pink-500 text-white shadow-lg shadow-purple-500/25"
+                        ? "bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-lg shadow-blue-500/25"
+                        : "bg-gradient-to-r from-blue-500 to-indigo-500 text-white shadow-lg shadow-blue-500/25"
                       : theme === "dark"
                       ? "text-gray-300 hover:bg-gray-800 hover:text-white hover:shadow-md"
                       : "text-gray-700 hover:bg-gray-100 hover:shadow-md"
                   }`}
                 >
-                  <div
-                    className={`mr-3 rounded-md p-1.5 ${
-                      isActive("/Plasa/ShopperProfile")
-                        ? "bg-white/20"
-                        : theme === "dark"
-                        ? "bg-gray-700"
-                        : "bg-gray-100"
-                    }`}
-                  >
+                  <div className="relative mr-3 p-1.5">
                     <svg
                       viewBox="0 0 24 24"
                       fill="none"
@@ -548,11 +562,15 @@ export default function ShopperSidebar() {
                       strokeWidth="2"
                       className="h-5 w-5"
                     >
-                      <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
-                      <circle cx="12" cy="7" r="4" />
+                      <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
                     </svg>
+                    {unreadMessageCount > 0 && (
+                      <div className="absolute -right-1 -top-1 flex h-4 w-4 items-center justify-center rounded-full bg-red-500 text-xs font-bold text-white">
+                        {unreadMessageCount > 9 ? "9+" : unreadMessageCount}
+                      </div>
+                    )}
                   </div>
-                  <span className="font-medium">My Profile</span>
+                  <span className="font-medium">Chat</span>
                 </div>
               </Link>
               <Link href="/Plasa/invoices" passHref>
@@ -567,15 +585,7 @@ export default function ShopperSidebar() {
                       : "text-gray-700 hover:bg-gray-100 hover:shadow-md"
                   }`}
                 >
-                  <div
-                    className={`mr-3 rounded-md p-1.5 ${
-                      isActive("/Plasa/invoices")
-                        ? "bg-white/20"
-                        : theme === "dark"
-                        ? "bg-gray-700"
-                        : "bg-gray-100"
-                    }`}
-                  >
+                  <div className="mr-3 p-1.5">
                     <svg
                       viewBox="0 0 24 24"
                       fill="none"
@@ -602,6 +612,33 @@ export default function ShopperSidebar() {
               theme === "dark" ? "border-gray-700" : "border-gray-200"
             }`}
           >
+            <Link href="/Plasa/ShopperProfile" passHref>
+              <div
+                className={`flex items-center rounded-xl px-4 py-3 transition-all duration-200 ${
+                  isActive("/Plasa/ShopperProfile")
+                    ? theme === "dark"
+                      ? "bg-gradient-to-r from-purple-600 to-pink-600 text-white shadow-lg shadow-purple-500/25"
+                      : "bg-gradient-to-r from-purple-500 to-pink-500 text-white shadow-lg shadow-purple-500/25"
+                    : theme === "dark"
+                    ? "text-gray-300 hover:bg-gray-800 hover:text-white hover:shadow-md"
+                    : "text-gray-700 hover:bg-gray-100 hover:shadow-md"
+                }`}
+              >
+                <div className="mr-3 p-1.5">
+                  <svg
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    className="h-5 w-5"
+                  >
+                    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+                    <circle cx="12" cy="7" r="4" />
+                  </svg>
+                </div>
+                <span className="font-medium">My Profile</span>
+              </div>
+            </Link>
             <Link href="/Plasa/Settings" passHref>
               <div
                 className={`flex items-center rounded-xl px-4 py-3 transition-all duration-200 ${
@@ -614,15 +651,7 @@ export default function ShopperSidebar() {
                     : "text-gray-700 hover:bg-gray-100 hover:shadow-md"
                 }`}
               >
-                <div
-                  className={`mr-3 rounded-md p-1.5 ${
-                    isActive("/Plasa/Settings")
-                      ? "bg-white/20"
-                      : theme === "dark"
-                      ? "bg-gray-700"
-                      : "bg-gray-100"
-                  }`}
-                >
+                <div className="mr-3 p-1.5">
                   <svg
                     viewBox="0 0 24 24"
                     fill="none"
@@ -645,11 +674,7 @@ export default function ShopperSidebar() {
                   : "text-gray-700 hover:bg-gray-100 hover:shadow-md"
               }`}
             >
-              <div
-                className={`mr-3 rounded-md p-1.5 ${
-                  theme === "dark" ? "bg-gray-700" : "bg-gray-100"
-                }`}
-              >
+              <div className="mr-3 p-1.5">
                 <svg
                   viewBox="0 0 24 24"
                   fill="none"
@@ -674,11 +699,7 @@ export default function ShopperSidebar() {
                   : "text-gray-700 hover:bg-red-50 hover:text-red-600 hover:shadow-md"
               }`}
             >
-              <div
-                className={`mr-3 rounded-md p-1.5 ${
-                  theme === "dark" ? "bg-gray-700" : "bg-gray-100"
-                }`}
-              >
+              <div className="mr-3 p-1.5">
                 <svg
                   viewBox="0 0 24 24"
                   fill="none"
@@ -729,12 +750,8 @@ export default function ShopperSidebar() {
                   ></div>
                 )}
 
-                {/* Icon with enhanced styling */}
-                <div
-                  className={`rounded-lg p-2 transition-all duration-300 ${
-                    theme === "dark" ? "bg-gray-800/50" : "bg-gray-100/50"
-                  }`}
-                >
+                {/* Icon */}
+                <div className="p-2">
                   {React.cloneElement(item.icon, {
                     className: `h-5 w-5 transition-all duration-300 ${
                       isActive(item.path) && item.condition

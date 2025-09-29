@@ -175,6 +175,7 @@ export default function UserPayment() {
             color="green"
             onClick={handleAdd}
             size="sm"
+            className="dark:!bg-green-600 dark:!text-white dark:hover:!bg-green-700"
           >
             Add Payment Method
           </Button>
@@ -335,7 +336,12 @@ export default function UserPayment() {
           <Button onClick={() => setShowModal(false)} appearance="subtle">
             Cancel
           </Button>
-          <Button onClick={handleSave} appearance="primary" color="green">
+          <Button
+            onClick={handleSave}
+            appearance="primary"
+            color="green"
+            className="dark:!bg-green-600 dark:!text-white dark:hover:!bg-green-700"
+          >
             Save
           </Button>
         </Modal.Footer>

@@ -26,10 +26,11 @@ import {
   updateDoc,
   getDocs,
 } from "firebase/firestore";
-import { db, storage } from "../../src/lib/firebase";
+import { db } from "../../src/lib/firebase";
 import { formatCurrency } from "../../src/lib/formatCurrency";
-import { getStorage, ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import { AuthGuard } from "../../src/components/AuthGuard";
+import CustomerChatDrawer from "../../src/components/chat/CustomerChatDrawer";
+import soundNotification from "../../src/utils/soundNotification";
 
 // Helper to format date for messages
 function formatMessageDate(timestamp: any) {
@@ -79,7 +80,6 @@ interface Message {
   recipientId: string;
   timestamp: any;
   read: boolean;
-  image?: string;
 }
 
 // Message component
@@ -117,11 +117,6 @@ const Message: React.FC<MessageProps> = ({
           </div>
         )}
         <div className="whitespace-pre-wrap text-sm">{messageContent}</div>
-        {message.image && (
-          <div className="mt-2">
-            <Avatar color="blue" circle />
-          </div>
-        )}
       </div>
       {isCurrentUser && <Avatar color="green" circle size="xs" />}
     </div>
@@ -138,18 +133,30 @@ function ChatPage() {
   const [newMessage, setNewMessage] = useState("");
   const [loading, setLoading] = useState(true);
   const [isSending, setIsSending] = useState(false);
-  const [showAttachmentOptions, setShowAttachmentOptions] = useState(false);
-  const [uploadingImage, setUploadingImage] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const [shopper, setShopper] = useState<any>(null);
-  const fileInputRef = useRef<HTMLInputElement>(null);
   const [conversationId, setConversationId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [isMobile, setIsMobile] = useState(false);
 
   // Scroll to bottom of messages
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   };
+
+  // Mobile detection
+  useEffect(() => {
+    const checkIfMobile = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+
+    checkIfMobile();
+    window.addEventListener("resize", checkIfMobile);
+
+    return () => {
+      window.removeEventListener("resize", checkIfMobile);
+    };
+  }, []);
 
   // Fetch order details
   useEffect(() => {
@@ -172,12 +179,13 @@ function ChatPage() {
                 name: data.order.assignedTo?.name || "Shopper",
                 avatar:
                   data.order.assignedTo?.profile_picture ||
-                  "/placeholder.svg?height=80&width=80",
+                  "/images/ProfileImage.png",
+                phone: data.order.assignedTo?.phone,
               });
 
               // Get or create conversation immediately if we have shopper ID
               if (session?.user?.id) {
-                getOrCreateConversation(shopperId);
+                getOrCreateConversation(shopperId, data.order.orderedBy?.id);
               }
             } else {
               console.error("No shopper assigned to this order");
@@ -196,16 +204,16 @@ function ChatPage() {
   }, [orderId, status, session?.user?.id]);
 
   // Get or create conversation
-  const getOrCreateConversation = async (shopperId: string) => {
+  const getOrCreateConversation = async (
+    shopperId: string,
+    customerId?: string
+  ) => {
     if (!orderId || !session?.user?.id) return;
 
-    try {
-      console.log("Creating conversation with:", {
-        orderId,
-        customerId: session.user.id,
-        shopperId,
-      });
+    // Use the actual customer ID from orderedBy, or fallback to session user ID
+    const actualCustomerId = customerId || session.user.id;
 
+    try {
       // Check if conversation exists
       const conversationsRef = collection(db, "chat_conversations");
       const q = query(conversationsRef, where("orderId", "==", orderId));
@@ -215,13 +223,12 @@ function ChatPage() {
       if (!querySnapshot.empty) {
         // Conversation exists
         const conversationDoc = querySnapshot.docs[0];
-        console.log("Found existing conversation:", conversationDoc.id);
         setConversationId(conversationDoc.id);
       } else {
         // Create new conversation
         const newConversation = {
           orderId,
-          customerId: session.user.id,
+          customerId: actualCustomerId,
           shopperId: shopperId,
           createdAt: serverTimestamp(),
           lastMessage: "",
@@ -229,9 +236,7 @@ function ChatPage() {
           unreadCount: 0,
         };
 
-        console.log("Creating new conversation:", newConversation);
         const docRef = await addDoc(conversationsRef, newConversation);
-        console.log("Created conversation:", docRef.id);
         setConversationId(docRef.id);
       }
     } catch (error) {
@@ -243,11 +248,6 @@ function ChatPage() {
   // Set up messages listener
   useEffect(() => {
     if (!conversationId || !session?.user?.id) return;
-
-    console.log(
-      "Setting up message listener for conversation:",
-      conversationId
-    );
 
     // Set up listener for messages in this conversation
     const messagesRef = collection(
@@ -261,8 +261,6 @@ function ChatPage() {
     const unsubscribe = onSnapshot(
       q,
       (snapshot) => {
-        console.log("Messages snapshot received, count:", snapshot.docs.length);
-
         const messagesList = snapshot.docs.map((doc) => ({
           id: doc.id,
           ...doc.data(),
@@ -273,7 +271,20 @@ function ChatPage() {
               : doc.data().timestamp,
         })) as Message[];
 
-        console.log("Processed messages:", messagesList);
+        // Check for new unread messages from shopper and play sound
+        const previousMessageCount = messages.length;
+        const newMessages = messagesList.slice(previousMessageCount);
+        const newUnreadShopperMessages = newMessages.filter(
+          (message) =>
+            message.senderType === "shopper" &&
+            message.senderId !== session?.user?.id &&
+            !message.read
+        );
+
+        if (newUnreadShopperMessages.length > 0) {
+          soundNotification.play();
+        }
+
         setMessages(messagesList);
 
         // Mark messages as read if they were sent to the current user
@@ -323,24 +334,11 @@ function ChatPage() {
       !conversationId ||
       !shopper?.id
     ) {
-      console.log("Cannot send message, missing data:", {
-        hasMessage: !!newMessage.trim(),
-        hasUser: !!session?.user?.id,
-        hasConversation: !!conversationId,
-        hasShopperId: !!shopper?.id,
-      });
       return;
     }
 
     try {
       setIsSending(true);
-
-      console.log("Sending message:", {
-        text: newMessage.trim(),
-        senderId: session.user.id,
-        senderName: session.user.name || "Customer",
-        recipientId: shopper.id,
-      });
 
       // Add new message to Firestore
       const messagesRef = collection(
@@ -368,6 +366,34 @@ function ChatPage() {
         unreadCount: 1, // Increment unread count for shopper
       });
 
+      // Send FCM notification to the shopper
+      try {
+        const response = await fetch("/api/fcm/send-notification", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            recipientId: shopper.id,
+            senderName: session.user.name || "Customer",
+            message: newMessage.trim(),
+            orderId: orderId,
+            conversationId: conversationId,
+          }),
+        });
+
+        if (response.ok) {
+          // FCM notification sent successfully
+        } else {
+          // FCM notification failed (non-critical)
+        }
+      } catch (fcmError) {
+        console.error(
+          "⚠️ [Customer Chat] FCM notification error (non-critical):",
+          fcmError
+        );
+      }
+
       // Clear input
       setNewMessage("");
     } catch (error) {
@@ -385,249 +411,296 @@ function ChatPage() {
     }
   };
 
-  const handleAttachmentClick = () => {
-    setShowAttachmentOptions(!showAttachmentOptions);
-  };
-
-  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (
-      !e.target.files ||
-      !e.target.files[0] ||
-      !session?.user?.id ||
-      !conversationId ||
-      !shopper?.id
-    )
-      return;
-
-    try {
-      setUploadingImage(true);
-      const file = e.target.files[0];
-
-      console.log("Uploading image for conversation:", conversationId);
-
-      // Upload image to Firebase Storage
-      const storageRef = ref(
-        storage,
-        `chat_images/${orderId}/${Date.now()}_${file.name}`
-      );
-      const snapshot = await uploadBytes(storageRef, file);
-      const downloadURL = await getDownloadURL(snapshot.ref);
-
-      console.log("Image uploaded, URL:", downloadURL);
-
-      // Add message with image
-      const messagesRef = collection(
-        db,
-        "chat_conversations",
-        conversationId,
-        "messages"
-      );
-      await addDoc(messagesRef, {
-        text: "", // Use text field for customer messages
-        message: "", // Also include message field for compatibility
-        senderId: session.user.id,
-        senderName: session.user.name || "Customer",
-        senderType: "customer",
-        recipientId: shopper.id,
-        timestamp: serverTimestamp(),
-        read: false,
-        image: downloadURL,
-      });
-
-      // Update conversation
-      const convRef = doc(db, "chat_conversations", conversationId);
-      await updateDoc(convRef, {
-        lastMessage: "📷 Image",
-        lastMessageTime: serverTimestamp(),
-        unreadCount: 1, // Increment unread count for shopper
-      });
-
-      setShowAttachmentOptions(false);
-    } catch (error) {
-      console.error("Error uploading image:", error);
-      setError("Error uploading image. Please try again later.");
-    } finally {
-      setUploadingImage(false);
-    }
-  };
-
   return (
     <AuthGuard requireAuth={true}>
-      <div className="fixed inset-0 flex flex-col overflow-hidden bg-gray-50 dark:bg-gray-900">
-        {/* Chat Header */}
-        <div className="flex items-center justify-between border-b border-gray-200 bg-white px-4 py-3 dark:border-gray-700 dark:bg-gray-800">
-          <div className="flex items-center gap-3">
-            <Link href="/Messages" className="text-gray-600 dark:text-gray-400">
-              <svg
-                width="24"
-                height="24"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-              >
-                <path d="M19 12H5M12 19l-7-7 7-7" />
-              </svg>
-            </Link>
-            {shopper && (
-              <div className="flex items-center gap-2">
-                <Avatar
-                  src={shopper.avatar}
-                  alt={shopper.name}
-                  circle
-                  size="sm"
-                />
-                <div>
-                  <h2 className="text-sm font-medium text-gray-900 dark:text-white">
-                    {shopper.name}
+      {isMobile ? (
+        // Mobile: Full-screen chat interface
+        <div className="flex h-screen flex-col bg-gray-50 dark:bg-gray-900">
+          {shopper ? (
+            <>
+              {/* Mobile Header */}
+              <div className="flex items-center justify-between border-b border-gray-200 bg-white px-4 py-3 dark:border-gray-700 dark:bg-gray-800">
+                <div className="flex items-center gap-3">
+                  <Link
+                    href="/Messages"
+                    className="text-gray-600 dark:text-gray-400"
+                  >
+                    <svg
+                      width="24"
+                      height="24"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                    >
+                      <path d="M19 12H5M12 19l-7-7 7-7" />
+                    </svg>
+                  </Link>
+                  <div className="flex items-center gap-2">
+                    <Avatar
+                      src={shopper.avatar}
+                      alt={shopper.name}
+                      circle
+                      size="sm"
+                    />
+                    <div>
+                      <h2 className="text-sm font-medium text-gray-900 dark:text-white">
+                        {shopper.name}
+                      </h2>
+                      <p className="text-xs text-gray-500 dark:text-gray-400">
+                        Order #{formatOrderID(order?.OrderID)}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+                {shopper.phone && (
+                  <button
+                    onClick={() => window.open(`tel:${shopper.phone}`, "_self")}
+                    className="rounded-full bg-green-500 p-2 text-white hover:bg-green-600"
+                  >
+                    <svg
+                      width="16"
+                      height="16"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                    >
+                      <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1 .45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z" />
+                    </svg>
+                  </button>
+                )}
+              </div>
+
+              {/* Mobile Messages */}
+              <div className="flex-1 overflow-y-auto bg-gray-50 px-4 py-2 dark:bg-gray-900">
+                {messages.length === 0 ? (
+                  <div className="flex h-full items-center justify-center">
+                    <div className="text-center">
+                      <div className="mb-2 text-4xl">💬</div>
+                      <p className="text-sm text-gray-500 dark:text-gray-400">
+                        Start chatting with your shopper
+                      </p>
+                    </div>
+                  </div>
+                ) : (
+                  messages.map((message) => (
+                    <Message
+                      key={message.id}
+                      message={message}
+                      isCurrentUser={message.senderId === session?.user?.id}
+                      senderName={
+                        message.senderType === "shopper" ? shopper.name : "You"
+                      }
+                    />
+                  ))
+                )}
+                <div ref={messagesEndRef} />
+              </div>
+
+              {/* Mobile Input */}
+              <div className="border-t border-gray-200 bg-white px-4 py-3 dark:border-gray-700 dark:bg-gray-800">
+                <form
+                  onSubmit={handleSendMessage}
+                  className="flex items-end space-x-3"
+                >
+                  <div className="flex-1">
+                    <input
+                      type="text"
+                      value={newMessage}
+                      onChange={(e) => setNewMessage(e.target.value)}
+                      onKeyPress={handleKeyPress}
+                      placeholder="Type your message..."
+                      className="w-full rounded-full border border-gray-300 bg-gray-50 px-4 py-3 text-sm focus:border-green-500 focus:bg-white focus:outline-none focus:ring-2 focus:ring-green-500/20 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:placeholder-gray-400 dark:focus:border-green-400 dark:focus:bg-gray-600"
+                    />
+                  </div>
+                  <button
+                    type="submit"
+                    disabled={isSending || !newMessage.trim()}
+                    className="flex-shrink-0 rounded-full bg-green-500 p-3 text-white shadow-lg transition-all duration-200 hover:bg-green-600 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 dark:focus:ring-offset-gray-800"
+                  >
+                    {isSending ? (
+                      <div className="flex items-center">
+                        <svg
+                          className="h-4 w-4 animate-spin"
+                          fill="none"
+                          viewBox="0 0 24 24"
+                        >
+                          <circle
+                            className="opacity-25"
+                            cx="12"
+                            cy="12"
+                            r="10"
+                            stroke="currentColor"
+                            strokeWidth="4"
+                          ></circle>
+                          <path
+                            className="opacity-75"
+                            fill="currentColor"
+                            d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                          ></path>
+                        </svg>
+                      </div>
+                    ) : (
+                      <svg
+                        className="h-4 w-4"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"
+                        />
+                      </svg>
+                    )}
+                  </button>
+                </form>
+              </div>
+            </>
+          ) : (
+            <div className="flex h-full items-center justify-center">
+              <div className="text-center">
+                <div className="mb-4 text-6xl">⏳</div>
+                <h3 className="mb-2 text-lg font-semibold text-gray-900 dark:text-white">
+                  Loading...
+                </h3>
+                <p className="text-gray-500 dark:text-gray-400">
+                  Setting up your chat
+                </p>
+              </div>
+            </div>
+          )}
+        </div>
+      ) : (
+        // Desktop: Sidebar layout with drawer
+        <div className="flex h-screen bg-gray-50 dark:bg-gray-900">
+          {/* Main Content Area */}
+          <div className="flex-1 overflow-hidden">
+            {shopper ? (
+              <div className="flex h-full flex-col">
+                {/* Header */}
+                <div className="flex items-center justify-between border-b border-gray-200 bg-white px-4 py-3 dark:border-gray-700 dark:bg-gray-800">
+                  <div className="flex items-center gap-3">
+                    <Link
+                      href="/Messages"
+                      className="text-gray-600 dark:text-gray-400"
+                    >
+                      <svg
+                        width="24"
+                        height="24"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                      >
+                        <path d="M19 12H5M12 19l-7-7 7-7" />
+                      </svg>
+                    </Link>
+                    <div className="flex items-center gap-2">
+                      <Avatar
+                        src={shopper.avatar}
+                        alt={shopper.name}
+                        circle
+                        size="sm"
+                      />
+                      <div>
+                        <h2 className="text-sm font-medium text-gray-900 dark:text-white">
+                          {shopper.name}
+                        </h2>
+                        <p className="text-xs text-gray-500 dark:text-gray-400">
+                          Order #{formatOrderID(order?.OrderID)}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Order Details */}
+                <div className="flex-1 overflow-y-auto bg-white px-4 py-3 dark:bg-gray-800">
+                  <h2 className="mb-4 text-lg font-semibold text-gray-900 dark:text-white">
+                    Order Details
                   </h2>
-                  <p className="text-xs text-gray-500 dark:text-gray-400">
-                    Order #{formatOrderID(order?.OrderID)}
+                  <div className="space-y-4">
+                    <div>
+                      <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400">
+                        Status
+                      </h3>
+                      <p className="text-gray-900 dark:text-white">
+                        {order?.status?.charAt(0).toUpperCase() +
+                          order?.status?.slice(1)}
+                      </p>
+                    </div>
+                    <div>
+                      <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400">
+                        Total
+                      </h3>
+                      <p className="text-gray-900 dark:text-white">
+                        {formatCurrency(order?.total)}
+                      </p>
+                    </div>
+                    <div>
+                      <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400">
+                        Delivery Address
+                      </h3>
+                      <p className="text-gray-900 dark:text-white">
+                        {order?.delivery_address}
+                      </p>
+                    </div>
+                    {shopper && (
+                      <div>
+                        <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400">
+                          Shopper
+                        </h3>
+                        <div className="mt-1 flex items-center gap-2">
+                          <Avatar
+                            src={shopper.avatar}
+                            alt={shopper.name}
+                            circle
+                            size="sm"
+                          />
+                          <span className="text-gray-900 dark:text-white">
+                            {shopper.name}
+                          </span>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+            ) : (
+              <div className="flex h-full items-center justify-center">
+                <div className="text-center">
+                  <div className="mb-4 text-6xl">⏳</div>
+                  <h3 className="mb-2 text-lg font-semibold text-gray-900 dark:text-white">
+                    Loading...
+                  </h3>
+                  <p className="text-gray-500 dark:text-gray-400">
+                    Setting up your chat
                   </p>
                 </div>
               </div>
             )}
           </div>
 
-          <Dropdown
-            placement="bottomEnd"
-            renderToggle={(props, ref) => (
-              <IconButton
-                {...props}
-                ref={ref}
-                icon={
-                  <svg
-                    width="24"
-                    height="24"
-                    viewBox="0 0 24 24"
-                    fill="currentColor"
-                    className="text-gray-600 dark:text-gray-400"
-                  >
-                    <path d="M12 8c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2zm0 2c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm0 6c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2z" />
-                  </svg>
-                }
-                circle
-                size="sm"
-                appearance="subtle"
-              />
-            )}
-          >
-            <Dropdown.Item
-              onClick={() =>
-                router.push(
-                  `/CurrentPendingOrders/viewOrderDetails/${order?.id}`
-                )
-              }
-            >
-              View Order Details
-            </Dropdown.Item>
-          </Dropdown>
+          {/* Chat Drawer - Desktop Only */}
+          {shopper && (
+            <CustomerChatDrawer
+              orderId={orderId as string}
+              shopper={{
+                id: shopper.id,
+                name: shopper.name,
+                avatar: shopper.avatar,
+                phone: shopper.phone,
+              }}
+              isOpen={true}
+              onClose={() => router.push("/Messages")}
+            />
+          )}
         </div>
-
-        {/* Main Chat Area */}
-        <div className="flex flex-1 overflow-hidden">
-          {/* Messages Section */}
-          <div className="flex flex-1 flex-col">
-            <div
-              className="flex-1 overflow-y-auto bg-gray-50 px-4 py-2 dark:bg-gray-900"
-              ref={messagesEndRef}
-            >
-              {messages.map((message, index) => (
-                <Message
-                  key={message.id}
-                  message={message}
-                  isCurrentUser={message.senderId === session?.user?.id}
-                  senderName={
-                    message.senderId === session?.user?.id
-                      ? "You"
-                      : shopper?.name || "Shopper"
-                  }
-                />
-              ))}
-            </div>
-
-            {/* Message Input */}
-            <div className="border-t border-gray-200 bg-white px-4 py-3 dark:border-gray-700 dark:bg-gray-800">
-              <form onSubmit={handleSendMessage} className="flex gap-2">
-                <Input
-                  value={newMessage}
-                  onChange={(value) => setNewMessage(value)}
-                  placeholder="Type a message..."
-                  className="flex-1"
-                />
-                <Button
-                  appearance="primary"
-                  color="green"
-                  type="submit"
-                  loading={isSending}
-                >
-                  Send
-                </Button>
-              </form>
-            </div>
-          </div>
-
-          {/* Order Details Section - Only visible on desktop */}
-          <div className="hidden border-l border-gray-200 dark:border-gray-700 lg:block lg:w-96">
-            {order && (
-              <div className="h-full overflow-y-auto bg-white px-4 py-3 dark:bg-gray-800">
-                <h2 className="mb-4 text-lg font-semibold text-gray-900 dark:text-white">
-                  Order Details
-                </h2>
-
-                <div className="space-y-4">
-                  <div>
-                    <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400">
-                      Status
-                    </h3>
-                    <p className="text-gray-900 dark:text-white">
-                      {order.status.charAt(0).toUpperCase() +
-                        order.status.slice(1)}
-                    </p>
-                  </div>
-
-                  <div>
-                    <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400">
-                      Total
-                    </h3>
-                    <p className="text-gray-900 dark:text-white">
-                      {formatCurrency(order.total)}
-                    </p>
-                  </div>
-
-                  <div>
-                    <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400">
-                      Delivery Address
-                    </h3>
-                    <p className="text-gray-900 dark:text-white">
-                      {order.delivery_address}
-                    </p>
-                  </div>
-
-                  {shopper && (
-                    <div>
-                      <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400">
-                        Shopper
-                      </h3>
-                      <div className="mt-1 flex items-center gap-2">
-                        <Avatar
-                          src={shopper.avatar}
-                          alt={shopper.name}
-                          circle
-                          size="sm"
-                        />
-                        <span className="text-gray-900 dark:text-white">
-                          {shopper.name}
-                        </span>
-                      </div>
-                    </div>
-                  )}
-                </div>
-              </div>
-            )}
-          </div>
-        </div>
-      </div>
+      )}
     </AuthGuard>
   );
 }

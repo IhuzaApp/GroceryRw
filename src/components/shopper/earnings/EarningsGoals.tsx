@@ -111,23 +111,25 @@ const EarningsGoals: React.FC<EarningsGoalsProps> = ({
   // Show error message if goals data is missing
   if (!goals) {
     return (
-      <Panel shaded bordered bodyFill className="p-4">
-        <h3 className="mb-4 text-lg font-semibold">Earnings Goals</h3>
-        <div className="flex flex-col items-center justify-center py-8 text-center">
+      <Panel shaded bordered bodyFill className="p-3 sm:p-4">
+        <h3 className="mb-3 text-base font-semibold sm:mb-4 sm:text-lg">
+          Earnings Goals
+        </h3>
+        <div className="flex flex-col items-center justify-center py-6 text-center sm:py-8">
           <svg
             viewBox="0 0 24 24"
             fill="none"
             stroke="currentColor"
             strokeWidth="2"
-            className="mb-4 h-12 w-12 text-gray-400"
+            className="mb-3 h-8 w-8 text-gray-400 sm:mb-4 sm:h-12 sm:w-12"
           >
             <path d="M9.172 16.172a4 4 0 015.656 0M9 12h6m-6-4h6m2 5.291A7.962 7.962 0 0112 15c-2.34 0-4.47-.881-6.08-2.33" />
             <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2z" />
           </svg>
-          <h4 className="mb-2 text-lg font-medium text-gray-900">
+          <h4 className="mb-2 text-base font-medium text-gray-900 sm:text-lg">
             Goals Data Unavailable
           </h4>
-          <p className="text-gray-600">
+          <p className="text-sm text-gray-600 sm:text-base">
             Unable to load your earnings goals at the moment. Please try again
             in about 1 hour.
           </p>
@@ -138,19 +140,23 @@ const EarningsGoals: React.FC<EarningsGoalsProps> = ({
 
   return (
     <>
-      <Panel shaded bordered bodyFill className="p-4">
-        <h3 className="mb-4 text-lg font-semibold">Earnings Goals</h3>
-        <div className="space-y-6">
+      <Panel shaded bordered bodyFill className="p-3 sm:p-4">
+        <h3 className="mb-3 text-base font-semibold sm:mb-4 sm:text-lg">
+          Earnings Goals
+        </h3>
+        <div className="space-y-4 sm:space-y-6">
           {goals.map((item, index) => (
             <div key={index}>
               <div className="mb-1 flex items-center justify-between">
-                <div className="flex items-center">
-                  <span className="text-sm font-medium">{item.goal}</span>
+                <div className="flex min-w-0 flex-1 items-center">
+                  <span className="truncate text-xs font-medium sm:text-sm">
+                    {item.goal}
+                  </span>
                   <Button
                     appearance="link"
                     size="xs"
                     onClick={() => handleEditGoal(item)}
-                    className="ml-2 p-0 text-blue-500"
+                    className="ml-2 flex-shrink-0 p-0 text-blue-500"
                   >
                     <svg
                       viewBox="0 0 24 24"
@@ -163,13 +169,13 @@ const EarningsGoals: React.FC<EarningsGoalsProps> = ({
                     </svg>
                   </Button>
                 </div>
-                <span className="text-sm">
+                <span className="ml-2 flex-shrink-0 text-xs sm:text-sm">
                   {formatCurrency(item.current)} / {formatCurrency(item.target)}
                 </span>
               </div>
-              <div className="h-2 w-full rounded-full bg-gray-200">
+              <div className="h-1.5 w-full rounded-full bg-gray-200 sm:h-2">
                 <div
-                  className={`h-2 rounded-full ${
+                  className={`h-1.5 rounded-full sm:h-2 ${
                     item.percentage >= 90
                       ? "bg-green-500"
                       : item.percentage >= 70
@@ -187,24 +193,26 @@ const EarningsGoals: React.FC<EarningsGoalsProps> = ({
             </div>
           ))}
 
-          <div className="mt-6 border-t pt-4">
-            <h3 className="mb-3 font-medium">Tips to Increase Earnings</h3>
+          <div className="mt-4 border-t pt-3 sm:mt-6 sm:pt-4">
+            <h3 className="mb-2 text-sm font-medium sm:mb-3 sm:text-base">
+              Tips to Increase Earnings
+            </h3>
             {loadingTips ? (
               <div className="space-y-2">
                 {[1, 2, 3, 4].map((i) => (
                   <div key={i} className="flex items-start gap-2">
-                    <div className="mt-0.5 flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-full bg-gray-100 text-gray-400">
+                    <div className="mt-0.5 flex h-4 w-4 flex-shrink-0 items-center justify-center rounded-full bg-gray-100 text-gray-400 sm:h-5 sm:w-5">
                       {i}
                     </div>
-                    <div className="h-4 w-48 animate-pulse rounded bg-gray-200"></div>
+                    <div className="h-3 w-32 animate-pulse rounded bg-gray-200 sm:h-4 sm:w-48"></div>
                   </div>
                 ))}
               </div>
             ) : earningsTips ? (
-              <ul className="space-y-2 text-sm">
+              <ul className="space-y-2 text-xs sm:text-sm">
                 {earningsTips.tips.map((tip, index) => (
                   <li key={index} className="flex items-start gap-2">
-                    <div className="mt-0.5 flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-full bg-green-100 text-green-600">
+                    <div className="mt-0.5 flex h-4 w-4 flex-shrink-0 items-center justify-center rounded-full bg-green-100 text-green-600 sm:h-5 sm:w-5">
                       {index + 1}
                     </div>
                     <span>{tip}</span>
@@ -212,9 +220,9 @@ const EarningsGoals: React.FC<EarningsGoalsProps> = ({
                 ))}
               </ul>
             ) : (
-              <ul className="space-y-2 text-sm">
+              <ul className="space-y-2 text-xs sm:text-sm">
                 <li className="flex items-start gap-2">
-                  <div className="mt-0.5 flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-full bg-green-100 text-green-600">
+                  <div className="mt-0.5 flex h-4 w-4 flex-shrink-0 items-center justify-center rounded-full bg-green-100 text-green-600 sm:h-5 sm:w-5">
                     1
                   </div>
                   <span>
@@ -223,7 +231,7 @@ const EarningsGoals: React.FC<EarningsGoalsProps> = ({
                   </span>
                 </li>
                 <li className="flex items-start gap-2">
-                  <div className="mt-0.5 flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-full bg-green-100 text-green-600">
+                  <div className="mt-0.5 flex h-4 w-4 flex-shrink-0 items-center justify-center rounded-full bg-green-100 text-green-600 sm:h-5 sm:w-5">
                     2
                   </div>
                   <span>
@@ -232,7 +240,7 @@ const EarningsGoals: React.FC<EarningsGoalsProps> = ({
                   </span>
                 </li>
                 <li className="flex items-start gap-2">
-                  <div className="mt-0.5 flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-full bg-green-100 text-green-600">
+                  <div className="mt-0.5 flex h-4 w-4 flex-shrink-0 items-center justify-center rounded-full bg-green-100 text-green-600 sm:h-5 sm:w-5">
                     3
                   </div>
                   <span>
@@ -240,7 +248,7 @@ const EarningsGoals: React.FC<EarningsGoalsProps> = ({
                   </span>
                 </li>
                 <li className="flex items-start gap-2">
-                  <div className="mt-0.5 flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-full bg-green-100 text-green-600">
+                  <div className="mt-0.5 flex h-4 w-4 flex-shrink-0 items-center justify-center rounded-full bg-green-100 text-green-600 sm:h-5 sm:w-5">
                     4
                   </div>
                   <span>

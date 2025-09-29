@@ -34,3 +34,10 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 # next-env.d.ts
+
+# standalone test files (not part of application)
+test-*.js
+test-*.html
+*test*.js
+*test*.html
+simple-*.js

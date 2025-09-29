@@ -37,17 +37,19 @@ const EarningsSummaryCard: React.FC<EarningsSummaryCardProps> = ({
       : amount;
 
   return (
-    <Panel shaded bordered bodyFill className="p-4">
-      <div className="pb-2">
-        <div className="text-sm text-gray-500">{title}</div>
-        <div className="flex items-center text-2xl font-bold">
-          <span className={`mr-1 h-5 w-5 ${iconColor}`}>{icon}</span>
+    <Panel shaded bordered bodyFill className="p-4 sm:p-6">
+      <div className="pb-3">
+        <div className="text-sm text-gray-500 sm:text-base">{title}</div>
+        <div className="flex items-center text-xl font-bold sm:text-3xl">
+          <span className={`mr-2 h-5 w-5 sm:h-6 sm:w-6 ${iconColor}`}>
+            {icon}
+          </span>
           {displayAmount}
         </div>
       </div>
       <div>
         {trend && (
-          <div className="flex items-center text-xs text-gray-500">
+          <div className="flex items-center text-sm text-gray-500">
             <svg
               viewBox="0 0 24 24"
               fill="none"
@@ -55,13 +57,14 @@ const EarningsSummaryCard: React.FC<EarningsSummaryCardProps> = ({
               strokeWidth="2"
               strokeLinecap="round"
               strokeLinejoin="round"
-              className="mr-1 h-3 w-3 text-green-500"
+              className="mr-1 h-4 w-4 text-green-500"
             >
               <polyline points="23 6 13.5 15.5 8.5 10.5 1 18"></polyline>
               <polyline points="17 6 23 6 23 12"></polyline>
             </svg>
             <span className="mr-1 font-medium text-green-500">{trend}</span>{" "}
-            {trendText}
+            <span className="hidden sm:inline">{trendText}</span>
+            <span className="sm:hidden">vs last week</span>
           </div>
         )}
       </div>

@@ -29,7 +29,7 @@ type Order = {
   shopper_id: string | null;
   service_fee?: number;
   delivery_fee?: number;
-  orderType?: "regular" | "reel";
+  orderType?: "regular" | "reel" | "restaurant";
   reel?: {
     id: string;
     title: string;
@@ -41,6 +41,9 @@ type Order = {
   };
   quantity?: number;
   delivery_note?: string;
+  discount?: number;
+  voucher_code?: string;
+  found?: boolean;
 };
 
 // Props for the UserRecentOrders component
@@ -193,7 +196,7 @@ export default function UserRecentOrders({
             className="mb-4 rounded-xl border border-gray-200 bg-white p-4 shadow-md transition-colors duration-200 dark:border-gray-700 dark:bg-gray-800"
           >
             {/* Shop Profile for Regular Orders */}
-            {order.shop ? (
+            {order.shop && order.orderType === "regular" ? (
               <div className="mb-4 flex items-center gap-3">
                 <svg
                   className="text-green-500 dark:text-green-400"
@@ -215,6 +218,37 @@ export default function UserRecentOrders({
                   <div className="text-sm text-gray-500 dark:text-gray-400">
                     {order?.shop?.address}
                   </div>
+                </div>
+              </div>
+            ) : null}
+
+            {/* Restaurant Profile for Restaurant Orders */}
+            {order.shop && order.orderType === "restaurant" ? (
+              <div className="mb-4 flex items-center gap-3">
+                <svg
+                  className="text-orange-500 dark:text-orange-400"
+                  width="20px"
+                  height="20px"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                >
+                  <path d="M3 2h7l4 9H8l-2 4.5c-.3.8-1.5.8-1.8 0L3 11H2a1 1 0 0 1-1-1V3a1 1 0 0 1 1-1z" />
+                  <path d="M12 2h7l-4 9h4l-2 4.5c-.3.8-1.5.8-1.8 0L12 11h1a1 1 0 0 0 1-1V3a1 1 0 0 0-1-1z" />
+                </svg>
+                <div>
+                  <div className="font-semibold text-gray-900 dark:text-white">
+                    {order?.shop?.name}
+                  </div>
+                  <div className="text-sm text-gray-500 dark:text-gray-400">
+                    {order?.shop?.address}
+                  </div>
+                  {order.delivery_note && (
+                    <div className="mt-1 text-xs text-gray-400 dark:text-gray-500">
+                      Note: {order.delivery_note}
+                    </div>
+                  )}
                 </div>
               </div>
             ) : null}
@@ -289,6 +323,8 @@ export default function UserRecentOrders({
               <span className="font-bold text-green-600 dark:text-green-400">
                 {order.orderType === "reel"
                   ? `${order.quantity || 1} quantity`
+                  : order.orderType === "restaurant"
+                  ? `${order.itemsCount} dishes (${order.unitsCount} items)`
                   : `${order.itemsCount} items (${order.unitsCount} units)`}
               </span>
               <span className="font-bold text-gray-900 dark:text-white">
@@ -312,6 +348,8 @@ export default function UserRecentOrders({
                 className={`inline-flex items-center rounded-lg px-4 py-2 text-sm font-medium text-white transition duration-150 focus:outline-none focus:ring-2 focus:ring-offset-2 dark:focus:ring-offset-gray-900 ${
                   order.orderType === "reel"
                     ? "bg-purple-500 hover:bg-purple-600 focus:ring-purple-500 dark:bg-purple-600 dark:hover:bg-purple-700"
+                    : order.orderType === "restaurant"
+                    ? "bg-orange-500 hover:bg-orange-600 focus:ring-orange-500 dark:bg-orange-600 dark:hover:bg-orange-700"
                     : "bg-green-500 hover:bg-green-600 focus:ring-green-500 dark:bg-green-600 dark:hover:bg-green-700"
                 }`}
               >

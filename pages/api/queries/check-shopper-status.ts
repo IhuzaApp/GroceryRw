@@ -11,6 +11,8 @@ const CHECK_SHOPPER_STATUS = gql`
       status
       active
       onboarding_step
+      collection_comment
+      needCollection
     }
   }
 `;
@@ -21,6 +23,8 @@ interface CheckShopperResponse {
     status: string;
     active: boolean;
     onboarding_step: string;
+    collection_comment?: string;
+    needCollection?: boolean;
   }>;
 }
 

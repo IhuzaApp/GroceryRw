@@ -4,6 +4,29 @@ import { gql } from "graphql-request";
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "../auth/[...nextauth]";
 
+// Helper function to calculate overall performance score
+const calculatePerformanceScore = (metrics: {
+  customerRating: number;
+  onTimeDelivery: number;
+  orderAccuracy: number;
+  acceptanceRate: number;
+}): number => {
+  const weights = {
+    customerRating: 0.3, // 30%
+    onTimeDelivery: 0.25, // 25%
+    orderAccuracy: 0.2, // 20%
+    acceptanceRate: 0.25, // 25%
+  };
+
+  const score =
+    metrics.customerRating * 20 * weights.customerRating + // 1-5 → 20-100
+    metrics.onTimeDelivery * weights.onTimeDelivery + // 0-100
+    metrics.orderAccuracy * weights.orderAccuracy + // 0-100
+    metrics.acceptanceRate * weights.acceptanceRate; // 0-100
+
+  return Math.min(100, Math.max(0, Math.round(score)));
+};
+
 // GraphQL query to fetch earnings and orders statistics for a shopper
 const GET_EARNINGS_STATS = gql`
   query GetEarningsStats($shopperId: uuid!) {
@@ -83,6 +106,32 @@ const GET_EARNINGS_STATS = gql`
         count
       }
     }
+
+    # Get completed regular orders with delivery photos (representing "offered and completed" orders)
+    CompletedOrdersWithPhotos: Orders_aggregate(
+      where: {
+        shopper_id: { _eq: $shopperId }
+        status: { _eq: "delivered" }
+        delivery_photo_url: { _is_null: false }
+      }
+    ) {
+      aggregate {
+        count
+      }
+    }
+
+    # Get completed reel orders with delivery photos
+    CompletedReelOrdersWithPhotos: reel_orders_aggregate(
+      where: {
+        shopper_id: { _eq: $shopperId }
+        status: { _eq: "delivered" }
+        delivery_photo_url: { _is_null: false }
+      }
+    ) {
+      aggregate {
+        count
+      }
+    }
   }
 `;
 
@@ -134,6 +183,11 @@ interface GraphQLResponse {
     };
   };
   AssignedOrders: {
+    aggregate: {
+      count: number;
+    };
+  };
+  CompletedOrdersWithPhotos: {
     aggregate: {
       count: number;
     };
@@ -277,22 +331,31 @@ export default async function handler(
 
     // Calculate performance metrics
     const averageRating = data.Ratings_aggregate.aggregate.avg?.rating || 0;
-
-    // For simplicity, we'll assume 97% on-time delivery rate initially
-    // In a real implementation, this would compare estimated vs actual delivery times
-    const onTimeRate = 97;
-
-    // Assume 99% order accuracy initially
-    // In a real implementation, this would be based on reported issues/complaints
-    const orderAccuracy = 99;
-
-    // Calculate acceptance rate based on assigned vs. total orders
     const assignedOrdersCount = data.AssignedOrders.aggregate.count || 0;
-    const totalOrdersOffered = data.TotalOrders.aggregate.count || 0;
+
+    // Get completed orders with delivery photos from both regular and reel orders
+    const completedRegularOrdersWithPhotos =
+      data.CompletedOrdersWithPhotos?.aggregate?.count || 0;
+    const completedReelOrdersWithPhotos =
+      (data as any).CompletedReelOrdersWithPhotos?.aggregate?.count || 0;
+    const completedOrdersWithPhotos =
+      completedRegularOrdersWithPhotos + completedReelOrdersWithPhotos;
+
+    // Calculate acceptance rate using completed orders with photos as "offered orders"
     const acceptanceRate =
-      totalOrdersOffered > 0
-        ? Math.round((assignedOrdersCount / totalOrdersOffered) * 100)
+      completedOrdersWithPhotos > 0
+        ? Math.round((completedOrdersWithPhotos / assignedOrdersCount) * 100)
         : 0;
+
+    // Calculate order accuracy based on completed vs assigned orders
+    const orderAccuracy =
+      assignedOrdersCount > 0
+        ? Math.round((completedOrdersWithPhotos / assignedOrdersCount) * 100)
+        : 100;
+
+    // For now, use a placeholder for on-time delivery rate
+    // This will be calculated properly in the new performance-metrics API
+    const onTimeRate = 97;
 
     // Default goals data
     const weeklyTarget = 50000;
@@ -367,6 +430,12 @@ export default async function handler(
           onTimeDelivery: onTimeRate,
           orderAccuracy: orderAccuracy,
           acceptanceRate: acceptanceRate || 82,
+          performanceScore: calculatePerformanceScore({
+            customerRating: parseFloat(averageRating.toFixed(2)) || 4.92,
+            onTimeDelivery: onTimeRate,
+            orderAccuracy: orderAccuracy,
+            acceptanceRate: acceptanceRate || 82,
+          }),
         },
         goals: {
           weekly: {

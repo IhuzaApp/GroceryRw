@@ -2,7 +2,7 @@
 
 ## Overview
 
-A comprehensive grocery delivery platform with advanced revenue tracking, wallet management, order processing systems, and intelligent delivery time management. The system supports both regular orders and reel-based orders with sophisticated payment, revenue management, and real-time delivery tracking.
+A comprehensive grocery delivery platform with advanced revenue tracking, wallet management, order processing systems, and intelligent delivery time management. The system supports three order types: regular orders, reel-based orders, and restaurant orders with sophisticated payment, revenue management, and real-time delivery tracking.
 
 ## Key Systems
 
@@ -17,6 +17,728 @@ A comprehensive grocery delivery platform with advanced revenue tracking, wallet
 ### 5. Reel Orders System
 
 ### 6. Delivery Time Management System
+
+### 7. Smart Notification & Assignment System
+
+### 8. Firebase Cloud Messaging (FCM) System
+
+---
+
+# Smart Notification & Assignment System
+
+## Overview
+
+The Smart Notification & Assignment System provides real-time order distribution to shoppers using WebSocket technology, intelligent assignment algorithms, and optimized batch processing. The system supports three order types: regular orders, reel orders, and restaurant orders, ensuring efficient order allocation while preventing conflicts and providing instant notifications.
+
+## Key Features
+
+- **Real-Time WebSocket Notifications**: Instant order updates instead of polling
+- **Smart Assignment Algorithm**: Prioritizes orders based on shopper performance and proximity
+- **Assignment Locking**: Prevents multiple shoppers from being assigned the same order
+- **Optimized Batch Processing**: Groups orders by location for efficient distribution
+- **Aged Order Filtering**: Shows only orders 30+ minutes old and unassigned on the map
+- **Travel Time Display**: Shows estimated minutes away instead of raw distance
+- **Multi-Order Type Support**: Handles regular orders, reel orders, and restaurant orders
+- **Restaurant Order Workflow**: Special handling for restaurant confirmation process
+- **Smart Notification Timing**: Notifies shoppers for orders created within last 29 minutes
+- **Order-Specific Earnings**: Different calculation methods for regular, reel, and restaurant orders
+
+## System Architecture
+
+```mermaid
+graph TB
+    A[Order Created] --> B[Smart Assignment Algorithm]
+    B --> C{Order Age Check}
+    C -->|30+ minutes| D[Add to Aged Orders Map]
+    C -->|< 30 minutes| E[Regular Processing]
+
+    B --> F[Calculate Priority Score]
+    F --> G[Find Best Shopper]
+    G --> H[Send WebSocket Notification]
+    H --> I[Shopper Receives Toast]
+    I --> J{Shopper Action}
+    J -->|Accept| K[Assign Order]
+    J -->|Skip| L[Find Next Shopper]
+    J -->|Timeout| M[Reassign to Others]
+
+    D --> N[Map Section Display]
+    N --> O[WebSocket Updates]
+    O --> P[Real-time Map Updates]
+```
+
+## Restaurant Orders Integration
+
+### Order Workflow
+
+Restaurant orders follow a unique workflow that differs from regular and reel orders:
+
+```mermaid
+graph TB
+    A[Customer Places Order] --> B[Status: WAITING_FOR_CONFIRMATION]
+    B --> C{Restaurant Accepts?}
+    C -->|Yes| D[Status: PENDING + updated_at set]
+    C -->|No| E[Order Remains Unavailable]
+    D --> F[Available for Shopper Assignment]
+    F --> G[WebSocket Notification Sent]
+    G --> H[Shopper Sees Order on Map/Dashboard]
+    H --> I{Shopper Action}
+    I -->|Accept| J[Order Assigned to Shopper]
+    I -->|Skip| K[Order Goes to Next Shopper]
+    J --> L[Status: shopping → delivered]
+```
+
+### Key Differences
+
+1. **Two-Phase Process**:
+
+   - Phase 1: `WAITING_FOR_CONFIRMATION` (restaurant hasn't accepted)
+   - Phase 2: `PENDING` (restaurant accepted, available for shoppers)
+
+2. **Time Filtering**:
+
+   - Uses `updated_at` field instead of `created_at`
+   - Only orders updated within last 29 minutes are shown for notifications
+   - Falls back to `created_at` if `updated_at` is null
+
+3. **Earnings Calculation**:
+
+   - **Regular Orders**: `service_fee + delivery_fee`
+   - **Reel Orders**: `service_fee + delivery_fee`
+   - **Restaurant Orders**: `delivery_fee` only (no `service_fee`)
+   - Restaurant sets final price (no markup model)
+
+4. **UI Styling**:
+   - Orange color scheme for restaurant orders
+   - "🍽️ RESTAURANT ORDER" indicator
+   - "X dishes" instead of "X items"
+
+### Database Queries
+
+```sql
+-- Get available restaurant orders
+SELECT * FROM restaurant_orders
+WHERE status = 'PENDING'
+  AND shopper_id IS NULL
+  AND (
+    updated_at >= NOW() - INTERVAL '29 minutes'
+    OR (updated_at IS NULL AND created_at >= NOW() - INTERVAL '29 minutes')
+  )
+ORDER BY updated_at DESC NULLS LAST, created_at DESC;
+```
+
+### Earnings Calculation System
+
+The system uses different earnings calculation methods based on order type:
+
+1. **Regular Orders**:
+
+   - **Formula**: `service_fee + delivery_fee`
+   - **Reason**: Platform charges both service and delivery fees
+   - **Example**: Service fee (RF 200) + Delivery fee (RF 300) = RF 500
+
+2. **Reel Orders**:
+
+   - **Formula**: `service_fee + delivery_fee`
+   - **Reason**: Platform charges both service and delivery fees
+   - **Example**: Service fee (RF 200) + Delivery fee (RF 300) = RF 500
+
+3. **Restaurant Orders**:
+   - **Formula**: `delivery_fee` only
+   - **Reason**: Restaurant sets final price, no platform service fee
+   - **Example**: Delivery fee (RF 250) = RF 250
+
+### Notification Timing System
+
+The system uses a two-tier timing approach:
+
+1. **Fresh Orders (0-29 minutes)**:
+
+   - Shoppers receive real-time notifications
+   - Orders appear in smart assignment algorithm
+   - WebSocket notifications sent immediately
+   - Orders are actively distributed to shoppers
+
+2. **Aged Orders (30+ minutes)**:
+   - Orders appear on map for manual selection
+   - No active notifications sent
+   - Shoppers can manually accept from map
+   - Used for orders that need special attention
+
+### API Integration
+
+All notification and assignment APIs support restaurant orders:
+
+- **`/api/shopper/availableOrders`**: Includes restaurant orders in aged order filtering
+- **`/api/shopper/smart-assign-order`**: Considers restaurant orders in assignment algorithm
+- **`/api/websocket/distribute-order`**: Sends restaurant orders via WebSocket
+- **`/api/shopper/process-orders-batch`**: Includes restaurant orders in batch processing
+
+## Components
+
+### 1. Notification System (`NotificationSystem.tsx`)
+
+**Purpose**: Frontend component that manages order notifications, batch assignments, and user interactions.
+
+**Key Features**:
+
+- WebSocket integration for real-time updates
+- Toast notifications with SVG icons
+- Travel time calculation and display
+- Batch acceptance/skipping functionality
+- Firebase push notifications
+
+**Flow**:
+
+```mermaid
+sequenceDiagram
+    participant NS as NotificationSystem
+    participant WS as WebSocket
+    participant API as Smart Assignment API
+    participant DB as Database
+
+    NS->>WS: Connect to WebSocket
+    WS-->>NS: Connection established
+    NS->>API: Request smart assignment
+    API->>DB: Query available orders
+    DB-->>API: Return orders with priority scores
+    API-->>NS: Return best order for review
+    NS->>NS: Display toast notification
+    NS->>WS: Send location updates
+    WS-->>NS: Receive real-time order updates
+```
+
+### 2. Smart Assignment API (`/api/shopper/smart-assign-order`)
+
+**Purpose**: Implements the intelligent assignment algorithm that finds the best order for a shopper.
+
+**Algorithm**:
+
+1. **Fetch Available Orders**: Get unassigned orders from database
+2. **Calculate Priority Score**: For each order, calculate score based on:
+   - Shopper performance (rating, completion rate, response time)
+   - Distance from shopper location
+   - Order age and priority
+3. **Return Best Order**: Return the highest-scoring order for shopper review
+
+**Priority Score Calculation**:
+
+```typescript
+const priorityScore =
+  performanceScore * 0.4 + // 40% performance
+  distanceScore * 0.3 + // 30% proximity
+  ageScore * 0.2 + // 20% order age
+  orderPriority * 0.1; // 10% order priority
+```
+
+### 3. WebSocket System
+
+**Components**:
+
+- **Server** (`server.js`): Custom Node.js server hosting both Next.js and Socket.IO
+- **Manager** (`websocketManager.ts`): Client-side connection management
+- **Hook** (`useWebSocket.ts`): React hook for WebSocket integration
+
+**Events**:
+
+- `shopper-register`: Shopper connects and registers
+- `location-update`: Real-time location tracking
+- `new-order`: New order available for assignment
+- `order-expired`: Order removed from available pool
+- `accept-order`: Shopper accepts an order
+- `reject-order`: Shopper skips an order
+
+### 4. Batch Processing (`/api/shopper/process-orders-batch`)
+
+**Purpose**: Optimized batch processing that groups shoppers and orders by location.
+
+**Process**:
+
+1. **Cluster Shoppers**: Group nearby shoppers by location
+2. **Find Nearby Orders**: For each cluster, find orders within radius
+3. **Send Batch Notifications**: Send grouped orders to shopper clusters
+4. **WebSocket Distribution**: Use WebSocket to notify clusters in real-time
+
+### 5. Map Integration (`MapSection.tsx`)
+
+**Purpose**: Displays aged, unassigned orders on an interactive map.
+
+**Features**:
+
+- **Aged Order Filtering**: Shows only orders 30+ minutes old with `shopper_id = null`
+- **WebSocket Integration**: Real-time updates when orders are added/removed
+- **Visual Markers**: Custom markers for different order types
+- **Interactive Popups**: Order details and acceptance buttons
+
+**Filtering Logic**:
+
+```typescript
+const filterAgedUnassignedOrders = (orders) => {
+  const thirtyMinutesAgo = new Date(Date.now() - 30 * 60 * 1000);
+
+  return orders.filter((order) => {
+    const orderCreatedAt = new Date(order.createdAt);
+    const isAged = orderCreatedAt <= thirtyMinutesAgo;
+    const isUnassigned = !order.shopper_id || order.shopper_id === null;
+
+    return isAged && isUnassigned;
+  });
+};
+```
+
+## Assignment Flow
+
+### 1. Order Creation
+
+```mermaid
+flowchart TD
+    A[Order Created] --> B[Add to Available Orders]
+    B --> C[Trigger Smart Assignment]
+    C --> D[Calculate Priority Scores]
+    D --> E[Find Best Shopper]
+    E --> F[Send WebSocket Notification]
+```
+
+### 2. Shopper Response
+
+```mermaid
+flowchart TD
+    A[Shopper Receives Notification] --> B{Action}
+    B -->|Accept| C[Assign Order Atomically]
+    B -->|Skip| D[Find Next Best Shopper]
+    B -->|Timeout| E[Reassign to Others]
+
+    C --> F[Update Order Status]
+    F --> G[Remove from Available Pool]
+    G --> H[Send Confirmation]
+
+    D --> I[Send to Next Shopper]
+    E --> I
+```
+
+### 3. Real-time Updates
+
+```mermaid
+sequenceDiagram
+    participant O as Order System
+    participant WS as WebSocket Server
+    participant C1 as Shopper 1
+    participant C2 as Shopper 2
+    participant M as Map Section
+
+    O->>WS: New order created
+    WS->>C1: Send notification
+    WS->>M: Update map display
+
+    C1->>WS: Skip order
+    WS->>C2: Send to next shopper
+    WS->>M: Update map
+
+    C2->>WS: Accept order
+    WS->>O: Confirm assignment
+    WS->>M: Remove from map
+```
+
+## Database Schema
+
+### Orders Table
+
+```sql
+CREATE TABLE Orders (
+  id UUID PRIMARY KEY,
+  shopper_id UUID NULL,           -- NULL = unassigned
+  assigned_at TIMESTAMP NULL,     -- When order was assigned
+  created_at TIMESTAMP,           -- Order creation time
+  status VARCHAR(50),             -- Order status
+  -- ... other fields
+);
+```
+
+### Reel Orders Table
+
+```sql
+CREATE TABLE reel_orders (
+  id UUID PRIMARY KEY,
+  shopper_id UUID NULL,           -- NULL = unassigned
+  assigned_at TIMESTAMP NULL,     -- When order was assigned
+  created_at TIMESTAMP,           -- Order creation time
+  -- ... other fields
+);
+```
+
+### Restaurant Orders Table
+
+```sql
+CREATE TABLE restaurant_orders (
+  id UUID PRIMARY KEY,
+  OrderID INTEGER,
+  user_id UUID,                   -- Customer who placed the order
+  restaurant_id UUID,             -- Foreign key to Restaurants
+  shopper_id UUID NULL,           -- NULL = unassigned
+  assigned_at TIMESTAMP NULL,     -- When order was assigned
+  created_at TIMESTAMP,           -- Order creation time
+  updated_at TIMESTAMP NULL,      -- When restaurant accepted (used for filtering)
+  status VARCHAR(50),             -- "WAITING_FOR_CONFIRMATION" | "PENDING" | "shopping" | "delivered"
+  total STRING,                   -- Order total
+  delivery_fee STRING,            -- Delivery fee (no service_fee)
+  delivery_time TIMESTAMP,        -- Expected delivery time
+  delivery_notes TEXT,            -- Delivery instructions
+  delivery_address_id UUID,       -- Foreign key to Addresses
+  -- ... other fields
+);
+```
+
+## Configuration
+
+### WebSocket Settings
+
+```typescript
+// Server configuration
+const io = new Server(server, {
+  cors: {
+    origin: ["http://localhost:3000", "http://127.0.0.1:3000"],
+    methods: ["GET", "POST"],
+  },
+  allowEIO3: true,
+  transports: ["polling", "websocket"],
+});
+
+// Client configuration
+const socket = io(
+  process.env.NEXT_PUBLIC_WEBSOCKET_URL || "http://localhost:3000",
+  {
+    transports: ["polling", "websocket"],
+    forceNew: false,
+    reconnectionAttempts: 5,
+    reconnectionDelay: 1000,
+  }
+);
+```
+
+### Assignment Parameters
+
+```typescript
+const ASSIGNMENT_CONFIG = {
+  MAX_DISTANCE_KM: 10, // Maximum distance for assignment
+  TIMEOUT_MINUTES: 2, // Timeout for shopper response
+  BATCH_SIZE: 5, // Maximum orders per batch
+  CLUSTER_RADIUS_KM: 2, // Radius for location clustering
+  AGED_ORDER_MINUTES: 30, // Age threshold for map display
+};
+```
+
+## Performance Optimizations
+
+### 1. Polling Reduction
+
+- **Before**: 30-second polling for all orders
+- **After**: WebSocket real-time updates + 2-minute fallback polling
+
+### 2. Batch Processing
+
+- Groups orders by location to reduce database queries
+- Sends notifications to shopper clusters instead of individuals
+- Reduces server load and improves response times
+
+### 3. Smart Caching
+
+- Caches shopper performance data
+- Reuses distance calculations
+- Optimizes database queries with proper indexing
+
+## Error Handling
+
+### WebSocket Connection Issues
+
+- Automatic reconnection with exponential backoff
+- Fallback to polling when WebSocket fails
+- Graceful degradation of real-time features
+
+### Assignment Conflicts
+
+- Atomic database operations prevent double-assignment
+- Locking mechanism ensures only one shopper can accept an order
+- Automatic cleanup of stale assignments
+
+### Network Failures
+
+- Retry logic for failed API calls
+- Offline mode with local state management
+- Queue system for pending operations
+
+## Monitoring & Analytics
+
+### Key Metrics
+
+- **Assignment Success Rate**: Percentage of successful order assignments
+- **Response Time**: Average time for shopper response
+- **WebSocket Uptime**: Connection stability metrics
+- **Order Age Distribution**: How long orders wait before assignment
+
+### Logging
+
+- WebSocket connection events
+- Assignment attempts and results
+- Performance metrics and bottlenecks
+- Error tracking and debugging information
+
+---
+
+# Firebase Cloud Messaging (FCM) System
+
+## Overview
+
+The Firebase Cloud Messaging system provides push notifications for real-time communication between shoppers, customers, and the platform. It enables background notifications when the app is not active and supports multi-platform messaging.
+
+## Current Status
+
+✅ **Chat messaging is working**  
+✅ **Sound notifications are working**  
+✅ **Real-time WebSocket notifications are working**  
+❌ **Push notifications are disabled** (missing Firebase credentials)
+
+## Features Implemented
+
+- **FCM Token Management**: Save and manage user FCM tokens
+- **Push Notifications**: Send notifications when messages are received
+- **Background Notifications**: Handle notifications when app is not active
+- **Notification Actions**: Click to open chat or close notification
+- **Token Cleanup**: Remove invalid tokens automatically
+- **Multi-platform Support**: Support for web, Android, and iOS
+- **Real-time Chat**: WebSocket-based messaging with FCM fallback
+
+## Setup Guide
+
+### Step 1: Firebase Console Setup
+
+1. Go to [Firebase Console](https://console.firebase.google.com/)
+2. Select your project or create a new one
+3. Go to Project Settings > Cloud Messaging
+4. Generate a new Web Push certificate (VAPID key)
+5. Copy the VAPID key for later use
+
+### Step 2: Environment Variables
+
+Add these environment variables to your `.env.local` file:
+
+```bash
+# Firebase Configuration (Client-side)
+NEXT_PUBLIC_FIREBASE_API_KEY=your_api_key_here
+NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN=your_project_id.firebaseapp.com
+NEXT_PUBLIC_FIREBASE_PROJECT_ID=your_project_id
+NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET=your_project_id.appspot.com
+NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID=your_messaging_sender_id
+NEXT_PUBLIC_FIREBASE_APP_ID=your_app_id
+NEXT_PUBLIC_FIREBASE_VAPID_KEY=your_vapid_key_here
+
+# Firebase Admin SDK (Server-side)
+FIREBASE_PROJECT_ID=your_project_id
+FIREBASE_CLIENT_EMAIL=your_service_account_email
+FIREBASE_PRIVATE_KEY="-----BEGIN PRIVATE KEY-----\nyour_private_key_here\n-----END PRIVATE KEY-----\n"
+```
+
+### Step 3: Firebase Admin SDK Setup
+
+1. Go to Firebase Console > Project Settings > Service Accounts
+2. Click "Generate new private key"
+3. Download the JSON file
+4. Extract the values and add them to your environment variables
+
+### Step 4: Update Service Worker
+
+Update the `public/firebase-messaging-sw.js` file with your actual Firebase config:
+
+```javascript
+const firebaseConfig = {
+  apiKey: "YOUR_ACTUAL_API_KEY",
+  authDomain: "YOUR_ACTUAL_AUTH_DOMAIN",
+  projectId: "YOUR_ACTUAL_PROJECT_ID",
+  storageBucket: "YOUR_ACTUAL_STORAGE_BUCKET",
+  messagingSenderId: "YOUR_ACTUAL_MESSAGING_SENDER_ID",
+  appId: "YOUR_ACTUAL_APP_ID",
+};
+```
+
+### Step 5: Test the Setup
+
+1. Start your development server: `npm run dev`
+2. Open the browser console
+3. Look for FCM initialization logs
+4. Send a test message in the chat
+5. Check if notifications appear
+
+## System Architecture
+
+```mermaid
+graph TB
+    A[User Sends Message] --> B[WebSocket Server]
+    B --> C[Real-time Delivery]
+    C --> D[Recipient Online?]
+    D -->|Yes| E[WebSocket Notification]
+    D -->|No| F[FCM Push Notification]
+
+    E --> G[Sound + Toast Notification]
+    F --> H[Background Push Notification]
+
+    H --> I[User Clicks Notification]
+    I --> J[Open Chat Interface]
+
+    G --> K[User Sees Message]
+    J --> K
+```
+
+## Components
+
+### 1. FCM Service (`src/services/fcmService.ts`)
+
+**Purpose**: Server-side FCM service for sending push notifications.
+
+**Key Features**:
+
+- Send notifications to specific users
+- Handle token management
+- Batch notification sending
+- Error handling and retry logic
+
+### 2. FCM Client (`src/services/fcmClient.ts`)
+
+**Purpose**: Client-side FCM service for managing tokens and permissions.
+
+**Key Features**:
+
+- Request notification permissions
+- Generate and manage FCM tokens
+- Handle notification clicks
+- Token cleanup on logout
+
+### 3. Service Worker (`public/firebase-messaging-sw.js`)
+
+**Purpose**: Handles background notifications when the app is not active.
+
+**Key Features**:
+
+- Background message handling
+- Notification display
+- Click action handling
+- Firebase configuration
+
+## API Endpoints
+
+### 1. Save FCM Token (`/api/fcm/save-token`)
+
+**POST** - Save user's FCM token for push notifications
+
+```typescript
+POST /api/fcm/save-token
+{
+  token: string,
+  userId: string
+}
+```
+
+### 2. Remove FCM Token (`/api/fcm/remove-token`)
+
+**POST** - Remove user's FCM token
+
+```typescript
+POST /api/fcm/remove-token
+{
+  token: string,
+  userId: string
+}
+```
+
+### 3. Send Notification (`/api/fcm/send-notification`)
+
+**POST** - Send push notification to user
+
+```typescript
+POST /api/fcm/send-notification
+{
+  userId: string,
+  title: string,
+  body: string,
+  data?: object
+}
+```
+
+## Integration Points
+
+### 1. Chat System Integration
+
+- **Real-time Messaging**: WebSocket for instant delivery
+- **FCM Fallback**: Push notifications when user is offline
+- **Sound Notifications**: Audio alerts for new messages
+- **Visual Indicators**: Toast notifications and UI updates
+
+### 2. Order Notifications
+
+- **New Order Alerts**: Notify shoppers of available orders
+- **Order Updates**: Status changes and assignments
+- **Batch Notifications**: Grouped order notifications
+- **Priority Alerts**: High-priority order notifications
+
+### 3. System Notifications
+
+- **Maintenance Alerts**: System downtime notifications
+- **Feature Updates**: New feature announcements
+- **Security Alerts**: Account security notifications
+- **Earnings Updates**: Payment and earnings notifications
+
+## Testing
+
+### 1. Permission Request
+
+- The app requests notification permission on first load
+- Users can enable/disable notifications in browser settings
+
+### 2. Token Generation
+
+- FCM tokens are automatically generated and saved
+- Tokens are refreshed when needed
+- Invalid tokens are automatically cleaned up
+
+### 3. Message Notifications
+
+- When a message is sent, the recipient gets a push notification
+- Notifications work even when the app is not active
+- Clicking notifications opens the relevant chat
+
+### 4. Background Notifications
+
+- Notifications appear in the system notification tray
+- Click actions open the app to the relevant screen
+- Notifications persist until user interaction
+
+## Troubleshooting
+
+### Common Issues
+
+- **No notifications**: Check browser console for errors
+- **Permission denied**: User needs to manually enable notifications in browser settings
+- **Token errors**: Check Firebase configuration and environment variables
+- **Service worker issues**: Ensure the service worker file is accessible at `/firebase-messaging-sw.js`
+
+### Debug Steps
+
+1. Check browser console for FCM initialization errors
+2. Verify environment variables are correctly set
+3. Test with a simple notification first
+4. Check Firebase console for delivery reports
+5. Verify service worker is registered correctly
+
+## Files Created/Modified
+
+- `src/services/fcmService.ts` - Server-side FCM service
+- `src/services/fcmClient.ts` - Client-side FCM service
+- `pages/api/fcm/save-token.ts` - API to save FCM tokens
+- `pages/api/fcm/remove-token.ts` - API to remove FCM tokens
+- `pages/api/fcm/send-notification.ts` - API to send FCM notifications
+- `public/firebase-messaging-sw.js` - Service worker for background notifications
+- `src/context/ChatContext.tsx` - Updated to initialize FCM and send notifications
+- `pages/Plasa/chat/[orderId].tsx` - Updated to send FCM notifications
+- `pages/Messages/[orderId].tsx` - Updated to send FCM notifications
+- `src/components/chat/CustomerChatDrawer.tsx` - Updated to send FCM notifications
+- `src/components/chat/ShopperChatDrawer.tsx` - Updated to send FCM notifications
 
 ---
 
@@ -414,8 +1136,8 @@ POST /api/shopper/updateOrderStatus
 Orders {
   id: uuid (primary key)
   OrderID: string
-  user_id: uuid (foreign key to Users)
-  shopper_id: uuid (foreign key to Users)
+  user_id: uuid (foreign key to Users) -- Customer who placed the order
+  shopper_id: uuid (foreign key to Users) -- Assigned shopper (NULL = unassigned)
   shop_id: uuid (foreign key to Shops)
   total: string
   service_fee: string
@@ -1814,6 +2536,85 @@ Total Revenue: 19,932 RWF (27,330 - 7,398)
    - Shop receives their original price amount (stored in Orders table)
    - System calculates and records revenue when order is completed
 
+### Restaurant Order Calculation Logic
+
+Restaurant orders use a **single-price model** with **tax inclusion**:
+
+1. **Price Structure**:
+
+   - `price`: Individual dish price (what customer pays per item)
+   - `quantity`: Number of items ordered
+   - `delivery_fee`: Fixed delivery fee
+   - `total`: Final amount customer paid (includes dishes + tax + delivery fee)
+
+2. **Calculation Breakdown**:
+
+```typescript
+// Example Restaurant Order
+const orderData = {
+  total: "21000",        // What customer paid (final amount)
+  delivery_fee: "2500",  // Delivery fee
+  dishes: [
+    { price: "4000", quantity: "1" },  // Chocolate Lava Cake
+    { price: "4500", quantity: "2" },  // Classic Cheeseburger
+    { price: "6000", quantity: "1" }   // Beef Brochette
+  ]
+}
+
+// Step 1: Calculate dishes total (excluding delivery fee)
+const dishesTotal = 21000 - 2500 = 18500
+
+// Step 2: Calculate tax (18% of dishes total)
+const tax = 18500 * 0.18 = 3330
+
+// Step 3: Calculate pre-tax subtotal (dishes total - tax)
+const subtotal = 18500 - 3330 = 15170
+
+// Final breakdown:
+// Subtotal (pre-tax): 15170 RWF
+// Tax (18%): 3330 RWF
+// Delivery Fee: 2500 RWF
+// Total (what customer paid): 21000 RWF
+
+// Verification: 15170 + 3330 + 2500 = 21000 ✅
+```
+
+3. **Order Summary Display**:
+
+```typescript
+// Order summary shows:
+{
+  subtotal: 15170,     // Pre-tax dishes amount
+  tax: 3330,           // 18% of dishes total
+  delivery_fee: 2500,  // Delivery fee
+  total: 21000         // Final amount (what customer paid)
+}
+```
+
+4. **Key Differences from Regular Orders**:
+
+   - **Single Price**: No markup model (restaurant sets final price)
+   - **Tax Inclusive**: Tax is calculated and included in total
+   - **Direct Payment**: Customer pays restaurant directly (no revenue sharing)
+   - **Fixed Structure**: Tax rate is always 18% of dishes total
+
+5. **API Implementation** (`pages/api/queries/restaurant-order-details.ts`):
+
+```typescript
+// Calculate order breakdown
+const baseTotal = parseFloat(restaurantOrder.total || "0");
+const deliveryFee = parseFloat(restaurantOrder.delivery_fee || "0");
+
+// Calculate subtotal (dishes total excluding delivery fee)
+const dishesTotal = baseTotal - deliveryFee;
+// Calculate tax (18% of dishes total)
+const tax = dishesTotal * 0.18;
+// Calculate pre-tax subtotal (dishes total - tax)
+const subtotal = dishesTotal - tax;
+// The total is what customer paid (already includes everything)
+const grandTotal = baseTotal;
+```
+
 ### Revenue Calculation Triggers
 
 #### 1. Order Status Update Trigger
@@ -2297,6 +3098,10 @@ Before showing any notifications, the system checks:
 4. `/api/shopper/availableOrders`
    - Returns available orders for assignment
    - Includes location-based filtering
+   - **Filtering Logic:**
+     - Regular Orders: `status = "PENDING" AND shopper_id IS NULL`
+     - Reel Orders: `status = "PENDING" AND shopper_id IS NULL`
+     - **Note:** `user_id` is the customer who placed the order, `shopper_id` is the assigned shopper
    - Format: `Array<Order>`
 
 ### Key Interfaces
@@ -4721,7 +5526,7 @@ Response:
 
 ## Overview
 
-A comprehensive grocery delivery platform with advanced revenue tracking, wallet management, order processing systems, and intelligent delivery time management. The system supports both regular orders and reel-based orders with sophisticated payment, revenue management, and real-time delivery tracking.
+A comprehensive grocery delivery platform with advanced revenue tracking, wallet management, order processing systems, and intelligent delivery time management. The system supports three order types: regular orders, reel-based orders, and restaurant orders with sophisticated payment, revenue management, and real-time delivery tracking.
 
 ## Key Systems
 
@@ -4910,7 +5715,7 @@ GET / api / queries / system - configuration;
 **GET** - Fetch orders with calculated travel times
 
 ```typescript
-GET /api/shopper/availableOrders?latitude=1.234&longitude=5.678
+GET /api/shopper/availableOrders?latitude=1.234&longitude=5.678&maxTravelTime=15
 
 // Response includes travel time calculations
 {
@@ -4922,6 +5727,224 @@ GET /api/shopper/availableOrders?latitude=1.234&longitude=5.678
   }]
 }
 ```
+
+**Database Query Logic:**
+
+- **Regular Orders:** `WHERE status = 'PENDING' AND shopper_id IS NULL`
+- **Reel Orders:** `WHERE status = 'PENDING' AND shopper_id IS NULL`
+- **Field Clarification:**
+  - `user_id`: Customer who placed the order (always present)
+  - `shopper_id`: Assigned shopper (NULL for unassigned orders)
+- **Location Filtering:** Orders filtered by travel time from shopper location to shop
+
+**⚠️ Common Mistake:**
+
+- **Incorrect:** `WHERE user_id IS NULL` (would find orders with no customer)
+- **Correct:** `WHERE shopper_id IS NULL` (finds orders with no assigned shopper)
+
+**Troubleshooting:**
+
+- **Issue:** "No orders showing on dashboard despite pending orders in database"
+- **Cause:** Querying for `user_id IS NULL` instead of `shopper_id IS NULL`
+- **Solution:** Update GraphQL query to use `shopper_id: { _is_null: true }`
+- **Verification:** Check that `user_id` is populated (customer) and `shopper_id` is NULL (unassigned)
+
+### 3. Shopper Performance Metrics API (`/api/shopper/performance-metrics`)
+
+**GET** - Calculate comprehensive shopper performance metrics
+
+```typescript
+GET /api/shopper/performance-metrics?shopperId=uuid
+
+// Response includes comprehensive performance data
+{
+  customerRating: 4.5,           // 1-5 stars
+  ratingCount: 25,               // Number of ratings received
+  onTimeDelivery: 97,            // Percentage (0-100)
+  responseTime: 180,             // Average response time in seconds
+  acceptanceRate: 85,            // Percentage (0-100)
+  cancellationRate: 3,           // Percentage (0-100)
+  orderAccuracy: 99,             // Percentage (0-100)
+  totalOrders: 50,               // Total assigned orders
+  completedOrders: 42,           // Completed orders with delivery photos
+  performanceScore: 93,          // Overall performance score (0-100)
+  recentPerformance: {
+    last7Days: 8,                // Orders completed in last 7 days
+    last30Days: 35               // Orders completed in last 30 days
+  },
+  breakdown: {
+    deliveryExperience: 4.8,     // Delivery experience rating
+    packagingQuality: 4.6,       // Packaging quality rating
+    professionalism: 4.9         // Professionalism rating
+  }
+}
+```
+
+**Performance Calculation Logic:**
+
+The system calculates comprehensive performance metrics that include **both regular orders and reel orders**:
+
+#### **Overall Performance Score (0-100):**
+
+```typescript
+const weights = {
+  customerRating: 0.3, // 30% weight
+  onTimeDelivery: 0.25, // 25% weight
+  orderAccuracy: 0.2, // 20% weight
+  acceptanceRate: 0.25, // 25% weight
+};
+
+const score =
+  customerRating * 20 * 0.3 + // 1-5 stars → 20-100 points
+  onTimeDelivery * 0.25 + // 0-100%
+  orderAccuracy * 0.2 + // 0-100%
+  acceptanceRate * 0.25; // 0-100%
+```
+
+#### **Example Calculation:**
+
+```typescript
+// Shopper with these metrics:
+customerRating: 4.5/5 stars
+onTimeDelivery: 97%
+orderAccuracy: 99%
+acceptanceRate: 100%
+
+// Calculation:
+(4.5 * 20) * 0.30 +    // 90 * 0.30 = 27 points
+97 * 0.25 +            // 97 * 0.25 = 24.25 points
+99 * 0.20 +            // 99 * 0.20 = 19.8 points
+100 * 0.25             // 100 * 0.25 = 25 points
+= 96.05 → 96/100
+```
+
+#### **Key Metrics Explained:**
+
+1. **Customer Rating (1-5 stars)**
+
+   - Based on ratings from both regular and reel orders
+   - Weighted 30% in overall performance score
+
+2. **On-Time Delivery (0-100%)**
+
+   - **Regular Orders**: Compares `delivery_time` vs `updated_at` (within 15 minutes)
+   - **Reel Orders**: Assumes on-time if delivered (no delivery_time field)
+   - Weighted 25% in overall performance score
+
+3. **Order Accuracy (0-100%)**
+
+   - **Formula**: `(Completed Orders with Photos / Total Assigned Orders) × 100`
+   - **"Offered Orders"**: Orders with `delivery_photo_url IS NOT NULL`
+   - **Includes**: Both regular and reel orders with delivery photos
+   - Weighted 20% in overall performance score
+
+4. **Acceptance Rate (0-100%)**
+   - **Formula**: `(Completed Orders with Photos / Total Assigned Orders) × 100`
+   - **Purpose**: Measures reliability and commitment
+   - **Includes**: Both regular and reel orders with delivery photos
+   - Weighted 25% in overall performance score
+
+#### **Database Queries:**
+
+The API performs comprehensive queries to gather data from both order types:
+
+```sql
+-- Regular Orders
+SELECT * FROM Orders WHERE shopper_id = ?;
+
+-- Reel Orders
+SELECT * FROM reel_orders WHERE shopper_id = ?;
+
+-- Completed Orders with Photos (Regular)
+SELECT COUNT(*) FROM Orders
+WHERE shopper_id = ? AND status = 'delivered'
+AND delivery_photo_url IS NOT NULL;
+
+-- Completed Orders with Photos (Reel)
+SELECT COUNT(*) FROM reel_orders
+WHERE shopper_id = ? AND status = 'delivered'
+AND delivery_photo_url IS NOT NULL;
+
+-- Ratings (covers both order types)
+SELECT AVG(rating), COUNT(*) FROM Ratings WHERE shopper_id = ?;
+```
+
+#### **Performance Score Interpretation:**
+
+| Score Range | Performance Level | Description                                  |
+| ----------- | ----------------- | -------------------------------------------- |
+| 90-100      | 🟢 Excellent      | Top performers get priority in notifications |
+| 80-89       | 🟡 Good           | Above average performance                    |
+| 70-79       | 🟡 Fair           | Average performance                          |
+| 60-69       | 🔴 Poor           | Below average, needs improvement             |
+| 0-59        | 🔴 Critical       | Poor performance, may need support           |
+
+#### **Integration with Notification System:**
+
+High-performing shoppers (90+ score) receive **priority** for new order notifications:
+
+```typescript
+// Future notification system will sort like this:
+const sortedShoppers = shoppers.sort((a, b) => {
+  // Primary: Overall Performance Score (higher = better)
+  if (a.performanceScore !== b.performanceScore) {
+    return b.performanceScore - a.performanceScore;
+  }
+
+  // Secondary: Distance (closer = better)
+  return a.distance - b.distance;
+});
+```
+
+### 4. Shopper Earnings Stats API (`/api/shopper/earningsStats`)
+
+**GET** - Fetch comprehensive earnings and performance statistics
+
+```typescript
+GET /api/shopper/earningsStats?shopperId=uuid
+
+// Response includes earnings data with performance metrics
+{
+  earnings: {
+    today: 4500,
+    thisWeek: 32000,
+    thisMonth: 125000,
+    total: 450000
+  },
+  performance: {
+    customerRating: 4.92,
+    onTimeDelivery: 97,
+    orderAccuracy: 99,
+    acceptanceRate: 85,
+    performanceScore: 96    // Overall performance score
+  },
+  orders: {
+    today: 3,
+    thisWeek: 18,
+    thisMonth: 72,
+    total: 285
+  },
+  goals: {
+    weekly: {
+      current: 32000,
+      target: 40000,
+      percentage: 80
+    },
+    monthly: {
+      current: 125000,
+      target: 150000,
+      percentage: 83
+    }
+  }
+}
+```
+
+**Key Features:**
+
+- **Combined Metrics**: Includes both regular and reel orders
+- **Performance Integration**: Uses the same calculation logic as performance-metrics API
+- **Real-time Updates**: Reflects current performance in earnings display
+- **Goal Tracking**: Weekly and monthly earnings targets
 
 ## Database Schema
 
@@ -5060,6 +6083,118 @@ useEffect(() => {
    - Multi-stop delivery optimization
    - Route planning for batch orders
    - Real-time route adjustments
+
+---
+
+# Food Cart Preparation Time System
+
+## Overview
+
+The Food Cart Preparation Time System calculates realistic preparation time estimates for restaurant orders by considering multiple dishes that are prepared simultaneously. The system uses a sophisticated algorithm that accounts for the longest dish (bottleneck) plus the efficiency gained from preparing other dishes at the same time.
+
+## Preparation Time Calculation Algorithm
+
+### Formula
+
+```
+Preparation Time = Highest Dish Time + (Average of Lower Times × Efficiency Factor)
+```
+
+### Efficiency Factors
+
+- **Short Preparation Times (≤30 minutes)**: 100% efficiency (full average added)
+- **Long Preparation Times (>30 minutes)**: 70% efficiency (conservative estimate)
+
+### Maximum Cap
+
+- **Preparation time is capped at 90 minutes (1.5 hours)**
+- **Dishes above 1 hour can have exceptions but never exceed 1.5 hours**
+
+## Calculation Examples
+
+### Example 1: Pizza + Salad
+
+```
+Pizza: 20min, Salad: 10min
+Highest: 20min, Lower times: [10min]
+Average of lower: 10min
+Since maxTime ≤ 30min: 20 + 10 = 30min
+Total: 30min prep + 15min delivery = 45min total
+```
+
+### Example 2: Burger + Fries + Drink
+
+```
+Burger: 25min, Fries: 15min, Drink: 5min
+Highest: 25min, Lower times: [15min, 5min]
+Average of lower: (15 + 5) ÷ 2 = 10min
+Since maxTime ≤ 30min: 25 + 10 = 35min
+Total: 35min prep + 15min delivery = 50min total
+```
+
+### Example 3: Long Preparation Times
+
+```
+Steak: 75min, Pasta: 45min, Salad: 15min
+Highest: 75min, Lower times: [45min, 15min]
+Average of lower: (45 + 15) ÷ 2 = 30min
+Since maxTime > 30min: 75 + (30 × 0.7) = 75 + 21 = 96min
+Capped at 90min: 90min (1.5 hours)
+Total: 90min prep + 15min delivery = 105min total
+```
+
+## Implementation Details
+
+### Core Components
+
+- **Location**: `src/components/UserCarts/checkout/checkoutCard.tsx`
+- **Function**: `parsePreparationTimeString()` - Parses time strings from database
+- **Logic**: Weighted calculation with efficiency factors
+
+### Time String Parsing
+
+The system handles various time formats from the database:
+
+- **Minutes**: "15min", "30min" → 15, 30 minutes
+- **Hours**: "1hr", "2hr" → 60, 120 minutes
+- **Mixed**: "2hr30min", "1hr15min" → 150, 75 minutes
+- **Empty**: "" → 0 minutes (immediately available)
+- **Numbers**: "15", "30" → 15, 30 minutes
+
+### API Integration
+
+- **Endpoint**: `/api/food-checkout`
+- **Data**: Includes `preparingTime` for each dish
+- **Display**: Shows preparation + delivery time breakdown
+
+## Delivery Time Display
+
+### Food Orders
+
+```
+"Estimated delivery: 45 minutes (prep: 30min + delivery: 15min)"
+```
+
+### Regular Shop Orders
+
+```
+"Will be delivered in 45 minutes"
+```
+
+## Benefits
+
+1. **Realistic Estimates**: Accounts for simultaneous preparation
+2. **Bottleneck Awareness**: Never underestimates the longest dish
+3. **Efficiency Calculation**: Considers kitchen workflow optimization
+4. **User Experience**: Clear preparation time expectations
+5. **Scalable**: Works for any number of dishes
+
+## Future Enhancements
+
+1. **Restaurant-Specific Factors**: Different efficiency rates per restaurant
+2. **Time-of-Day Adjustments**: Rush hour vs. off-peak preparation times
+3. **Dish Complexity Scoring**: Weighted preparation times based on dish complexity
+4. **Historical Data**: Machine learning for more accurate estimates
 
 ---
 
@@ -5457,8 +6592,8 @@ POST /api/shopper/updateOrderStatus
 Orders {
   id: uuid (primary key)
   OrderID: string
-  user_id: uuid (foreign key to Users)
-  shopper_id: uuid (foreign key to Users)
+  user_id: uuid (foreign key to Users) -- Customer who placed the order
+  shopper_id: uuid (foreign key to Users) -- Assigned shopper (NULL = unassigned)
   shop_id: uuid (foreign key to Shops)
   total: string
   service_fee: string
@@ -6650,7 +7785,7 @@ interface Message {
   - Customer address display in header
   - Bottom padding for mobile navigation
 
-### 2. Chat Drawer (`src/components/chat/ChatDrawer.tsx`)
+### 2. Chat Drawers (`src/components/chat/`)
 
 - **Purpose**: Slide-out chat interface for desktop
 - **Features**:
@@ -7622,3 +8757,547 @@ The Wallet Operations API is automatically called by the Order Status Update API
 - **"cancelled"**: Calls wallet operations with `operation: "cancelled"`
 
 This ensures that wallet operations are properly handled whenever order status changes occur.
+
+---
+
+# MTN MoMo Wallet Integration
+
+## Overview
+
+This section covers the integration with MTN Mobile Money (MoMo) API for payment processing in the grocery delivery system.
+
+## 📌 MTN MoMo Wallet Types
+
+### Collection Wallet
+
+- **Purpose**: Used by merchants/shops to collect money from customers (customer → you)
+- **Use Case**: Payment collection during checkout
+- **API Endpoint**: `/collection/v1_0/requesttopay`
+
+### Disbursement Wallet
+
+- **Purpose**: Used by businesses to pay out money (you → customer/agent/supplier)
+- **Use Case**: Refunds, payouts to shoppers
+- **API Endpoint**: `/disbursement/v1_0/transfer`
+
+### Remittance Wallet
+
+- **Purpose**: Used for cross-border transactions
+- **Use Case**: International money transfers
+
+## 🚨 Important Notes
+
+### Collection vs Disbursement
+
+- **To receive money from customers**: Use Collection API (`requesttopay`)
+- **To send money to users**: Use Disbursement API (`transfer`)
+- **You cannot use Disbursement API to receive money from customers**
+
+### Disbursement API Only Supports:
+
+- `transfer` → send money to user (MSISDN)
+- `refund` → return money
+- `deposit` → put money into another wallet
+- **❌ There is no "request money" in Disbursement**
+
+## ✅ Payment Collection (Checkout)
+
+### Use Collection API → RequestToPay Endpoint
+
+**Endpoint:**
+
+```
+POST https://sandbox.momodeveloper.mtn.com/collection/v1_0/requesttopay
+```
+
+**Headers:**
+
+```
+Authorization: Bearer {{access_token}} (from collection/token/)
+X-Reference-Id: {{$guid}}
+X-Target-Environment: sandbox
+Ocp-Apim-Subscription-Key: {{COLLECTION_SUBSCRIPTION_KEY}}
+Content-Type: application/json
+```
+
+**Request Body:**
+
+```json
+{
+  "amount": "500",
+  "currency": "EUR",
+  "externalId": "ORDER-1001",
+  "payer": {
+    "partyIdType": "MSISDN",
+    "partyId": "250788123456"
+  },
+  "payerMessage": "Checkout at MyShop",
+  "payeeNote": "Thanks for shopping with us"
+}
+```
+
+**Response:**
+
+- `202 Accepted` - Request initiated, user will approve in MoMo app/USSD
+
+**Check Payment Status:**
+
+```
+GET /collection/v1_0/requesttopay/{{referenceId}}
+```
+
+## 🔑 Token Management
+
+### Collection Tokens (for receiving payments)
+
+```
+POST /collection/token/
+```
+
+- Use Collection wallet credentials
+- Only works with `/collection/...` endpoints
+
+### Disbursement Tokens (for sending payments)
+
+```
+POST /disbursement/token/
+```
+
+- Use Disbursement wallet credentials
+- Only works with `/disbursement/...` endpoints
+
+## ⚠️ Critical Rules
+
+1. **Cannot mix wallet types**: Collection wallet credentials only work on `/collection/...` endpoints
+2. **Cannot mix wallet types**: Disbursement wallet credentials only work on `/disbursement/...` endpoints
+3. **For checkout/payment collection**: Always use Collection API
+4. **For refunds/payouts**: Always use Disbursement API
+
+## Implementation in Grocery System
+
+### Payment Collection Flow
+
+1. Customer initiates checkout
+2. System calls Collection API `requesttopay`
+3. Customer approves payment in MoMo app
+4. System checks payment status
+5. Order confirmed upon successful payment
+
+### Refund Flow
+
+1. Missing items detected during shopping
+2. System calculates refund amount
+3. System calls Disbursement API `transfer`
+4. Refund sent to customer's MoMo account
+
+---
+
+# Order Types and Fetching Logic Documentation
+
+## Overview
+
+The grocery delivery system supports three distinct order types, each with different aging logic, fetching criteria, and visual representation. This documentation details the implementation differences and how each order type is handled throughout the system.
+
+## Order Types
+
+### 1. Regular Orders
+
+- **Database Table**: `Orders`
+- **Aging Logic**: Based on `created_at` timestamp
+- **Fetching Criteria**: Orders 30+ minutes old since creation
+- **Visual Representation**: Green markers on map (`#10b981`)
+- **Order Card Color**: Green background
+- **Query Filter**: `created_at <= thirtyMinutesAgo`
+- **Assignment**: Direct assignment to shoppers
+
+### 2. Reel Orders
+
+- **Database Table**: `reel_orders`
+- **Aging Logic**: Based on `created_at` timestamp
+- **Fetching Criteria**: Orders 30+ minutes old since creation
+- **Visual Representation**: Purple markers on map (`#8b5cf6`)
+- **Order Card Color**: Purple background
+- **Query Filter**: `created_at <= thirtyMinutesAgo`
+- **Assignment**: Direct assignment to shoppers
+
+### 3. Restaurant Orders
+
+- **Database Table**: `restaurant_orders`
+- **Aging Logic**: Based on `updated_at` timestamp (NOT `created_at`)
+- **Fetching Criteria**: Orders 30+ minutes old since last update
+- **Visual Representation**: Orange markers on map (`#f97316`)
+- **Order Card Color**: Orange background
+- **Query Filter**: `updated_at <= thirtyMinutesAgo`
+- **Assignment**: Requires restaurant confirmation workflow
+
+## Key Implementation Differences
+
+### Database Queries
+
+#### Regular Orders Query
+
+```sql
+SELECT * FROM Orders
+WHERE created_at <= thirtyMinutesAgo
+AND shopper_id IS NULL
+AND status = 'PENDING'
+ORDER BY created_at DESC
+```
+
+#### Reel Orders Query
+
+```sql
+SELECT * FROM reel_orders
+WHERE created_at <= thirtyMinutesAgo
+AND shopper_id IS NULL
+AND status = 'PENDING'
+ORDER BY created_at DESC
+```
+
+#### Restaurant Orders Query
+
+```sql
+SELECT * FROM restaurant_orders
+WHERE updated_at <= thirtyMinutesAgo  -- Different timestamp field!
+AND shopper_id IS NULL
+AND status = 'PENDING'
+AND assigned_at IS NULL  -- Additional check for restaurant orders
+ORDER BY updated_at DESC
+```
+
+### Frontend Filtering Logic
+
+The `MapSection.tsx` component uses different timestamp fields based on order type:
+
+```typescript
+// MapSection.tsx - filterAgedUnassignedOrders function
+const filtered = orders.filter((order) => {
+  let referenceTimestamp;
+
+  if (order.orderType === "restaurant") {
+    // Restaurant orders use updatedAt for aging
+    const updatedAt = order.updatedAt;
+    referenceTimestamp =
+      updatedAt && updatedAt !== "null" && updatedAt !== ""
+        ? updatedAt
+        : order.createdAt; // Fallback to createdAt if updatedAt is invalid
+  } else {
+    // Regular and reel orders use rawCreatedAt (ISO timestamp)
+    referenceTimestamp = order.rawCreatedAt || order.createdAt;
+  }
+
+  const orderTimestamp = new Date(referenceTimestamp);
+
+  // Check if the date is valid to prevent RangeError
+  if (isNaN(orderTimestamp.getTime())) {
+    console.error(
+      `❌ Invalid timestamp for order ${order.id}:`,
+      referenceTimestamp
+    );
+    return false;
+  }
+
+  const isAged = orderTimestamp <= thirtyMinutesAgo;
+  const isUnassigned = !order.shopper_id;
+
+  return isAged && isUnassigned;
+});
+```
+
+### Data Pipeline
+
+#### 1. API Layer (`/api/shopper/availableOrders.ts`)
+
+- Fetches all three order types with different GraphQL queries
+- Transforms data to include `updatedAt` for restaurant orders
+- Returns unified format with `orderType` field
+- Handles timestamp validation and error logging
+
+#### 2. Dashboard Layer (`ShopperDashboard.tsx`)
+
+- Receives unified order data from API
+- Formats display properties (relative time, earnings, etc.)
+- Passes `rawCreatedAt` for regular/reel orders and `updatedAt` for restaurant orders
+- Ensures all required fields are available for map rendering
+
+#### 3. Map Layer (`MapSection.tsx`)
+
+- Uses different timestamp fields based on order type
+- Applies appropriate color coding for markers
+- Handles coordinate validation and marker creation
+- Implements fallback logic for invalid timestamps
+
+### Visual Distinctions
+
+| Order Type | Map Marker Color | Order Card Background | Icon         | Hex Color |
+| ---------- | ---------------- | --------------------- | ------------ | --------- |
+| Regular    | Green            | Green gradient        | Shopping bag | `#10b981` |
+| Reel       | Purple           | Purple gradient       | Video reel   | `#8b5cf6` |
+| Restaurant | Orange           | Orange gradient       | Restaurant   | `#f97316` |
+
+### Marker Creation Implementation
+
+```typescript
+// MapSection.tsx - createOrderMarkerIcon function
+const createOrderMarkerIcon = (
+  earnings: string,
+  orderType: "regular" | "reel" | "restaurant" = "regular"
+) => {
+  const simplifiedEarnings = formatEarningsDisplay(earnings);
+  const bgColor =
+    orderType === "reel"
+      ? theme === "dark"
+        ? "#7c3aed"
+        : "#8b5cf6"
+      : orderType === "restaurant"
+      ? theme === "dark"
+        ? "#ea580c"
+        : "#f97316" // Orange for restaurant
+      : theme === "dark"
+      ? "#065f46"
+      : "#10b981"; // Green for regular
+
+  const borderColor =
+    orderType === "reel"
+      ? theme === "dark"
+        ? "#6d28d9"
+        : "#7c3aed"
+      : orderType === "restaurant"
+      ? theme === "dark"
+        ? "#c2410c"
+        : "#ea580c" // Orange border
+      : theme === "dark"
+      ? "#047857"
+      : "#059669"; // Green border
+
+  // Returns styled div icon with appropriate colors
+};
+```
+
+## Special Considerations
+
+### Restaurant Orders
+
+- **Critical Difference**: Use `updated_at` instead of `created_at` for aging logic
+- **Additional Field**: Require `assigned_at` to be null for unassigned status
+- **Timestamp Validation**: Must validate `updated_at` is a valid ISO string
+- **Fallback Logic**: Fall back to `created_at` if `updated_at` is invalid
+
+### Timestamp Validation
+
+- All timestamps must be valid ISO strings to prevent `RangeError: Invalid time value`
+- Implement validation checks before creating Date objects
+- Log errors for debugging invalid timestamp issues
+- Provide fallback mechanisms for invalid data
+
+### Assignment Workflow
+
+- **Regular/Reel Orders**: Direct assignment to shoppers
+- **Restaurant Orders**: May require restaurant confirmation process
+- All order types check for `shopper_id` being null for unassigned status
+
+### Error Handling
+
+- Implement comprehensive error logging for debugging
+- Handle invalid timestamps gracefully
+- Provide fallback mechanisms for missing data
+- Validate coordinates before marker creation
+
+## Debugging and Monitoring
+
+### Console Logs
+
+The system includes extensive logging for debugging:
+
+- API query results and parameters
+- Order processing in dashboard layer
+- Map filtering and marker creation
+- Timestamp validation and error handling
+
+### Key Log Messages
+
+- `🔍 Restaurant orders query result:` - API query debugging
+- `🍽️ Processing restaurant order:` - Dashboard processing
+- `🗺️ MapSection received orders:` - Map data reception
+- `❌ Invalid timestamp for order:` - Error handling
+
+This documentation ensures developers understand the differences between order types and can maintain the system effectively.
+
+## Restaurant Order Management System
+
+### 1. Restaurant Order Assignment (`pages/api/shopper/assignOrder.ts`)
+
+**Features:**
+
+- Support for restaurant order assignment to shoppers
+- Validation for restaurant order types
+- GraphQL mutations for restaurant order updates
+- Proper error handling and response formatting
+
+**API Endpoint:**
+
+- Accepts POST requests to `/api/shopper/assignOrder`
+- Requires orderId, orderType set to "restaurant", and shopperId
+- Returns success status with complete order information including restaurant details and dish list
+
+**Order Type Validation:**
+
+- Validates that orderType is one of: "regular", "reel", or "restaurant"
+- Returns 400 error for invalid order types
+- Ensures proper restaurant order assignment flow
+
+### 2. Restaurant Order Display (`src/components/shopper/activeBatchesCard.tsx`)
+
+**Features:**
+
+- Visual distinction for restaurant orders
+- Restaurant-specific styling and icons
+- Dish count and restaurant information display
+- Orange/red gradient styling for restaurant orders
+
+**Restaurant Order Styling:**
+
+- Orange and red gradient badge with restaurant icon to identify restaurant orders
+- Special card styling with orange borders and gradient backgrounds
+- Visual distinction from regular and reel orders
+- Restaurant icon and "Restaurant Order" text indicator
+
+### 3. Restaurant Order Details (`pages/Plasa/active-batches/batch/[id]/index.tsx`)
+
+**Features:**
+
+- Complete restaurant order information display
+- Restaurant and customer details
+- Dish-by-dish breakdown
+- Delivery instructions and timing
+- Shopper assignment information
+
+**Restaurant Order Data Structure:**
+
+- Order ID and type identification
+- Complete restaurant information including name, location, phone, and logo
+- Customer details with name, phone, and delivery address
+- Array of dishes with individual quantities, prices, descriptions, and images
+- Delivery fee, total amount, and estimated delivery time
+- Delivery notes and special instructions
+- Order status tracking from pending to delivered
+
+### 4. Restaurant Order API (`pages/api/shopper/orderDetails.ts`)
+
+**Features:**
+
+- Complete restaurant order fetching
+- Restaurant-specific GraphQL queries
+- Proper data formatting for frontend
+- Support for all restaurant order fields
+
+**GraphQL Query:**
+
+- Fetches complete restaurant order details by order ID
+- Retrieves restaurant information, customer details, and delivery address
+- Includes all dish orders with individual dish information
+- Returns assigned shopper details and order status
+- Handles all restaurant-specific fields and relationships
+
+### 5. Map Integration for Restaurant Orders
+
+**Features:**
+
+- Restaurant orders appear on shopper map
+- Restaurant location markers
+- Customer delivery location markers
+- Route optimization for restaurant deliveries
+- Real-time order status updates
+
+**Map Component Integration:**
+
+- Restaurant orders appear as special markers on the shopper map
+- Each marker shows restaurant location with custom restaurant icon
+- Popup displays restaurant name, dish count, and potential earnings
+- One-click order acceptance directly from map interface
+- Real-time updates when orders are accepted or completed
+
+### 6. Restaurant Order Workflow
+
+**Complete Flow:**
+
+1. **Order Creation**: Customer places restaurant order
+2. **Shopper Assignment**: Order appears on shopper dashboard and map
+3. **Order Acceptance**: Shopper accepts restaurant order
+4. **Restaurant Pickup**: Shopper goes to restaurant location
+5. **Order Collection**: Shopper collects prepared dishes
+6. **Delivery**: Shopper delivers to customer
+7. **Completion**: Order marked as delivered
+
+**Status Progression:**
+
+- PENDING: Order created and waiting for shopper assignment
+- shopping: Shopper accepted and heading to restaurant
+- packing: Restaurant preparing the order
+- on_the_way: Shopper collected order and en route to customer
+- delivered: Order successfully delivered to customer
+
+### 7. Restaurant Order Benefits
+
+**For Shoppers:**
+
+- Additional earning opportunities
+- Restaurant-specific delivery experience
+- Higher delivery fees (no service fee deduction)
+- Clear restaurant and customer information
+
+**For Customers:**
+
+- Access to restaurant food delivery
+- Real-time order tracking
+- Professional delivery service
+- Contact with assigned shopper
+
+**For Restaurants:**
+
+- Expanded delivery reach
+- Professional delivery service
+- Real-time order tracking
+- Customer feedback system
+
+### 8. Database Schema for Restaurant Orders
+
+**Restaurant Orders Table:**
+
+- Primary key with unique order ID
+- Links to user who placed the order and restaurant
+- Stores delivery fee, total amount, and delivery timing
+- Tracks order status and assigned shopper
+- Includes delivery notes and timestamps
+
+**Restaurant Dishes Orders Table:**
+
+- Links each dish to specific restaurant orders
+- Tracks quantity and individual dish pricing
+- Maintains relationship between orders and restaurant menu items
+- Stores creation timestamps for order tracking
+
+### 9. Implementation Status
+
+**✅ Completed Features:**
+
+- Restaurant order assignment API
+- Restaurant order display in active batches
+- Restaurant order details page
+- Restaurant order API for fetching details
+- Visual styling and indicators
+- GraphQL queries and mutations
+- Error handling and validation
+
+**🔄 In Progress:**
+
+- Map integration for restaurant orders
+- Real-time status updates
+- Notification system for restaurant orders
+
+**📋 Planned Features:**
+
+- Restaurant order analytics
+- Performance metrics for restaurant deliveries
+- Advanced filtering and search
+- Restaurant order history and reporting
