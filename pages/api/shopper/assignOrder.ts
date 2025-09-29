@@ -227,11 +227,9 @@ export default async function handler(
     orderType !== "reel" &&
     orderType !== "restaurant"
   ) {
-    return res
-      .status(400)
-      .json({
-        error: "Invalid orderType. Must be 'regular', 'reel', or 'restaurant'",
-      });
+    return res.status(400).json({
+      error: "Invalid orderType. Must be 'regular', 'reel', or 'restaurant'",
+    });
   }
 
   try {

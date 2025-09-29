@@ -12,9 +12,7 @@ const UPDATE_SHOPPER_PHOTO = gql`
   ) {
     update_shoppers(
       where: { user_id: { _eq: $user_id } }
-      _set: { 
-        profile_photo: $photo_data
-      }
+      _set: { profile_photo: $photo_data }
     ) {
       affected_rows
       returning {
@@ -33,7 +31,7 @@ const UPDATE_SHOPPER_ID_PHOTOS = gql`
   ) {
     update_shoppers(
       where: { user_id: { _eq: $user_id } }
-      _set: { 
+      _set: {
         national_id_photo_front: $national_id_photo_front
         national_id_photo_back: $national_id_photo_back
       }
@@ -48,15 +46,10 @@ const UPDATE_SHOPPER_ID_PHOTOS = gql`
 `;
 
 const UPDATE_SHOPPER_LICENSE = gql`
-  mutation UpdateShopperLicense(
-    $user_id: uuid!
-    $driving_license: String
-  ) {
+  mutation UpdateShopperLicense($user_id: uuid!, $driving_license: String) {
     update_shoppers(
       where: { user_id: { _eq: $user_id } }
-      _set: { 
-        driving_license: $driving_license
-      }
+      _set: { driving_license: $driving_license }
     ) {
       affected_rows
       returning {
@@ -68,15 +61,10 @@ const UPDATE_SHOPPER_LICENSE = gql`
 `;
 
 const UPDATE_SHOPPER_SIGNATURE = gql`
-  mutation UpdateShopperSignature(
-    $user_id: uuid!
-    $signature: String!
-  ) {
+  mutation UpdateShopperSignature($user_id: uuid!, $signature: String!) {
     update_shoppers(
       where: { user_id: { _eq: $user_id } }
-      _set: { 
-        signature: $signature
-      }
+      _set: { signature: $signature }
     ) {
       affected_rows
       returning {
@@ -138,16 +126,17 @@ export default async function handler(
 
     // Validate required fields
     if (!photoType || !photoData || !user_id) {
-      return res.status(400).json({ 
+      return res.status(400).json({
         error: "Missing required fields",
-        message: "photoType, photoData, and user_id are required"
+        message: "photoType, photoData, and user_id are required",
       });
     }
 
     // Verify the user ID matches the authenticated user
     if (user_id !== session.user.id) {
       return res.status(403).json({
-        error: "User ID mismatch. You can only upload photos for your own account.",
+        error:
+          "User ID mismatch. You can only upload photos for your own account.",
       });
     }
 
@@ -164,13 +153,13 @@ export default async function handler(
           photo_data: photoData,
         };
         break;
-      
+
       case "national_id_front":
       case "national_id_back":
         // For ID photos, we need to update both fields
         const frontPhoto = photoType === "national_id_front" ? photoData : null;
         const backPhoto = photoType === "national_id_back" ? photoData : null;
-        
+
         mutation = UPDATE_SHOPPER_ID_PHOTOS;
         variables = {
           user_id,
@@ -178,7 +167,7 @@ export default async function handler(
           national_id_photo_back: backPhoto,
         };
         break;
-      
+
       case "driving_license":
         mutation = UPDATE_SHOPPER_LICENSE;
         variables = {
@@ -186,7 +175,7 @@ export default async function handler(
           driving_license: photoData,
         };
         break;
-      
+
       case "signature":
         mutation = UPDATE_SHOPPER_SIGNATURE;
         variables = {
@@ -194,11 +183,12 @@ export default async function handler(
           signature: photoData,
         };
         break;
-      
+
       default:
-        return res.status(400).json({ 
+        return res.status(400).json({
           error: "Invalid photo type",
-          message: "Supported photo types: profile_photo, national_id_front, national_id_back, driving_license, signature"
+          message:
+            "Supported photo types: profile_photo, national_id_front, national_id_back, driving_license, signature",
         });
     }
 
@@ -219,7 +209,8 @@ export default async function handler(
       console.log(`No shopper record found for user ${user_id}`);
       return res.status(404).json({
         error: "Shopper record not found",
-        message: "No shopper application found for this user. Please complete the registration first.",
+        message:
+          "No shopper application found for this user. Please complete the registration first.",
       });
     }
   } catch (error: any) {

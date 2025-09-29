@@ -9135,11 +9135,13 @@ This documentation ensures developers understand the differences between order t
 - Proper error handling and response formatting
 
 **API Endpoint:**
+
 - Accepts POST requests to `/api/shopper/assignOrder`
 - Requires orderId, orderType set to "restaurant", and shopperId
 - Returns success status with complete order information including restaurant details and dish list
 
 **Order Type Validation:**
+
 - Validates that orderType is one of: "regular", "reel", or "restaurant"
 - Returns 400 error for invalid order types
 - Ensures proper restaurant order assignment flow
@@ -9154,6 +9156,7 @@ This documentation ensures developers understand the differences between order t
 - Orange/red gradient styling for restaurant orders
 
 **Restaurant Order Styling:**
+
 - Orange and red gradient badge with restaurant icon to identify restaurant orders
 - Special card styling with orange borders and gradient backgrounds
 - Visual distinction from regular and reel orders
@@ -9170,6 +9173,7 @@ This documentation ensures developers understand the differences between order t
 - Shopper assignment information
 
 **Restaurant Order Data Structure:**
+
 - Order ID and type identification
 - Complete restaurant information including name, location, phone, and logo
 - Customer details with name, phone, and delivery address
@@ -9188,6 +9192,7 @@ This documentation ensures developers understand the differences between order t
 - Support for all restaurant order fields
 
 **GraphQL Query:**
+
 - Fetches complete restaurant order details by order ID
 - Retrieves restaurant information, customer details, and delivery address
 - Includes all dish orders with individual dish information
@@ -9205,6 +9210,7 @@ This documentation ensures developers understand the differences between order t
 - Real-time order status updates
 
 **Map Component Integration:**
+
 - Restaurant orders appear as special markers on the shopper map
 - Each marker shows restaurant location with custom restaurant icon
 - Popup displays restaurant name, dish count, and potential earnings
@@ -9224,6 +9230,7 @@ This documentation ensures developers understand the differences between order t
 7. **Completion**: Order marked as delivered
 
 **Status Progression:**
+
 - PENDING: Order created and waiting for shopper assignment
 - shopping: Shopper accepted and heading to restaurant
 - packing: Restaurant preparing the order
@@ -9233,18 +9240,21 @@ This documentation ensures developers understand the differences between order t
 ### 7. Restaurant Order Benefits
 
 **For Shoppers:**
+
 - Additional earning opportunities
 - Restaurant-specific delivery experience
 - Higher delivery fees (no service fee deduction)
 - Clear restaurant and customer information
 
 **For Customers:**
+
 - Access to restaurant food delivery
 - Real-time order tracking
 - Professional delivery service
 - Contact with assigned shopper
 
 **For Restaurants:**
+
 - Expanded delivery reach
 - Professional delivery service
 - Real-time order tracking
@@ -9253,6 +9263,7 @@ This documentation ensures developers understand the differences between order t
 ### 8. Database Schema for Restaurant Orders
 
 **Restaurant Orders Table:**
+
 - Primary key with unique order ID
 - Links to user who placed the order and restaurant
 - Stores delivery fee, total amount, and delivery timing
@@ -9260,6 +9271,7 @@ This documentation ensures developers understand the differences between order t
 - Includes delivery notes and timestamps
 
 **Restaurant Dishes Orders Table:**
+
 - Links each dish to specific restaurant orders
 - Tracks quantity and individual dish pricing
 - Maintains relationship between orders and restaurant menu items
@@ -9268,6 +9280,7 @@ This documentation ensures developers understand the differences between order t
 ### 9. Implementation Status
 
 **✅ Completed Features:**
+
 - Restaurant order assignment API
 - Restaurant order display in active batches
 - Restaurant order details page
@@ -9277,11 +9290,13 @@ This documentation ensures developers understand the differences between order t
 - Error handling and validation
 
 **🔄 In Progress:**
+
 - Map integration for restaurant orders
 - Real-time status updates
 - Notification system for restaurant orders
 
 **📋 Planned Features:**
+
 - Restaurant order analytics
 - Performance metrics for restaurant deliveries
 - Advanced filtering and search

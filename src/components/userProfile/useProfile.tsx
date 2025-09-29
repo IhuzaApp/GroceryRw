@@ -117,7 +117,10 @@ export default function UserProfile() {
   // Handle click on "Become a Plasa" button
   const handleBecomePlasa = (e: React.MouseEvent) => {
     // If button is disabled (under review), don't do anything
-    if (shopperStatus?.status === "pending" || shopperStatus?.status === "under_review") {
+    if (
+      shopperStatus?.status === "pending" ||
+      shopperStatus?.status === "under_review"
+    ) {
       e.preventDefault();
       return;
     }
@@ -254,7 +257,8 @@ export default function UserProfile() {
                 </h3>
                 <div className="mt-2 text-sm text-orange-700 dark:text-orange-300">
                   <p>
-                    Your shopper application requires some changes. Please review the feedback below and update your application.
+                    Your shopper application requires some changes. Please
+                    review the feedback below and update your application.
                   </p>
                   {shopperStatus.collection_comment && (
                     <div className="mt-2 rounded-md bg-orange-100 p-3 dark:bg-orange-800/30">
@@ -353,7 +357,6 @@ export default function UserProfile() {
                   ) : null}
                 </div>
 
-
                 {/* Default address under profile */}
                 <div className="mt-4 w-full text-center">
                   <h3 className="font-medium text-inherit">Default Address</h3>
@@ -434,7 +437,7 @@ export default function UserProfile() {
         </Panel>
 
         {/* Shopper Button and Logout Button Panel */}
-        <div className="p-4 space-y-3">
+        <div className="space-y-3 p-4">
           {/* Show either Become a Shopper button or Switch Profile button based on shopperStatus */}
           {loadingShopper ? (
             <div className="h-10 w-full animate-pulse rounded bg-gray-200" />
@@ -445,14 +448,10 @@ export default function UserProfile() {
                 const nextRole = role === "user" ? "shopper" : "user";
                 setIsSwitchingRole(true);
                 try {
-                  await initiateRoleSwitch(
-                    nextRole as "user" | "shopper"
-                  );
+                  await initiateRoleSwitch(nextRole as "user" | "shopper");
                   toggleRole();
                   toast.success(
-                    `Switched to ${
-                      nextRole === "user" ? "User" : "Shopper"
-                    }`
+                    `Switched to ${nextRole === "user" ? "User" : "Shopper"}`
                   );
                 } catch (error) {
                   console.error("Error updating role:", error);
@@ -485,12 +484,16 @@ export default function UserProfile() {
               className={`flex w-full items-center justify-center rounded-md px-4 py-2 text-sm text-white transition-colors duration-200 ${
                 shopperStatus?.needCollection
                   ? "bg-orange-500 hover:bg-orange-600 dark:bg-orange-600 dark:hover:bg-orange-700"
-                  : shopperStatus?.status === "pending" || shopperStatus?.status === "under_review"
-                  ? "bg-blue-500 cursor-not-allowed opacity-75 dark:bg-blue-600"
+                  : shopperStatus?.status === "pending" ||
+                    shopperStatus?.status === "under_review"
+                  ? "cursor-not-allowed bg-blue-500 opacity-75 dark:bg-blue-600"
                   : "bg-green-500 hover:bg-green-600 dark:bg-green-600 dark:hover:bg-green-700"
               }`}
               onClick={handleBecomePlasa}
-              disabled={shopperStatus?.status === "pending" || shopperStatus?.status === "under_review"}
+              disabled={
+                shopperStatus?.status === "pending" ||
+                shopperStatus?.status === "under_review"
+              }
             >
               <svg
                 className="mr-2 h-4 w-4"
@@ -505,7 +508,8 @@ export default function UserProfile() {
                     strokeWidth={2}
                     d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
                   />
-                ) : (shopperStatus?.status === "pending" || shopperStatus?.status === "under_review") ? (
+                ) : shopperStatus?.status === "pending" ||
+                  shopperStatus?.status === "under_review" ? (
                   <path
                     strokeLinecap="round"
                     strokeLinejoin="round"
@@ -521,12 +525,16 @@ export default function UserProfile() {
                   />
                 )}
               </svg>
-              {shopperStatus?.needCollection 
-                ? "Update Application" 
-                : (shopperStatus?.status === "pending" || shopperStatus?.status === "under_review")
-                ? `Application ${shopperStatus.status === "pending" ? "Pending" : "Under Review"}`
-                : "Become a Shopper"
-              }
+              {shopperStatus?.needCollection
+                ? "Update Application"
+                : shopperStatus?.status === "pending" ||
+                  shopperStatus?.status === "under_review"
+                ? `Application ${
+                    shopperStatus.status === "pending"
+                      ? "Pending"
+                      : "Under Review"
+                  }`
+                : "Become a Shopper"}
             </button>
           )}
 

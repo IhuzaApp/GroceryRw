@@ -234,7 +234,6 @@ export default async function handler(
   req: NextApiRequest,
   res: NextApiResponse
 ) {
-  
   // Only allow POST requests
   if (req.method !== "POST") {
     return res.status(405).json({ error: "Method not allowed" });
@@ -262,7 +261,11 @@ export default async function handler(
 
     // Log the request data size for debugging
     const requestDataSize = JSON.stringify(req.body).length;
-    console.log(`Received shopper registration request, data size: ${(requestDataSize / 1024).toFixed(2)} KB`);
+    console.log(
+      `Received shopper registration request, data size: ${(
+        requestDataSize / 1024
+      ).toFixed(2)} KB`
+    );
 
     const {
       full_name,
@@ -291,7 +294,6 @@ export default async function handler(
       needCollection,
     } = req.body as RegisterShopperInput;
 
-
     // Validate required fields
     if (
       !full_name ||
@@ -301,9 +303,9 @@ export default async function handler(
       !transport_mode ||
       !user_id
     ) {
-      return res.status(400).json({ 
+      return res.status(400).json({
         error: "Missing required fields",
-        message: "All required fields must be provided"
+        message: "All required fields must be provided",
       });
     }
 
@@ -319,7 +321,12 @@ export default async function handler(
       const phoneCheckData = await hasuraClient.request<CheckPhoneResponse>(
         gql`
           query CheckPhoneNumber($phone_number: String!, $user_id: uuid!) {
-            shoppers(where: {phone_number: {_eq: $phone_number}, user_id: {_neq: $user_id}}) {
+            shoppers(
+              where: {
+                phone_number: { _eq: $phone_number }
+                user_id: { _neq: $user_id }
+              }
+            ) {
               id
               user_id
               full_name
@@ -330,13 +337,13 @@ export default async function handler(
         `,
         { phone_number, user_id }
       );
-      
+
       if (phoneCheckData.shoppers.length > 0) {
         const existingPhoneUser = phoneCheckData.shoppers[0];
-        return res.status(409).json({ 
-          error: 'Phone number already registered', 
+        return res.status(409).json({
+          error: "Phone number already registered",
           message: `This phone number is already registered by another user. Please use a different phone number.`,
-          existing_user: existingPhoneUser.user_id
+          existing_user: existingPhoneUser.user_id,
         });
       }
     } catch (phoneCheckError) {
@@ -393,49 +400,50 @@ export default async function handler(
         return res.status(500).json({
           error: "Failed to update shopper application",
           message: updateError.message,
-          details: updateError.response?.errors || "No additional details available"
+          details:
+            updateError.response?.errors || "No additional details available",
         });
       }
     }
 
-        // Register new shopper with all data in one operation
-        const data = await hasuraClient.request<RegisterShopperResponse>(
-          REGISTER_SHOPPER,
-          {
-            Police_Clearance_Cert: Police_Clearance_Cert || "",
-            address,
-            driving_license: driving_license || "",
-            drivingLicense_Image: drivingLicense_Image || "",
-            full_name,
-            guarantor: guarantor || "",
-            guarantorPhone: guarantorPhone || "",
-            guarantorRelationship: guarantorRelationship || "",
-            latitude: latitude || "",
-            longitude: longitude || "",
-            mutual_StatusCertificate: mutual_StatusCertificate || "",
-            mutual_status: mutual_status || "",
-            national_id,
-            national_id_photo_back: national_id_photo_back || "",
-            national_id_photo_front: national_id_photo_front || "",
-            onboarding_step: "application_submitted",
-            phone: "",
-            phone_number,
-            profile_photo: profile_photo || "",
-            proofOfResidency: proofOfResidency || "",
-            signature: signature || "",
-            status: "pending",
-            transport_mode,
-            user_id,
-          }
-        );
-    res.status(200).json({ 
-      success: true, 
+    // Register new shopper with all data in one operation
+    const data = await hasuraClient.request<RegisterShopperResponse>(
+      REGISTER_SHOPPER,
+      {
+        Police_Clearance_Cert: Police_Clearance_Cert || "",
+        address,
+        driving_license: driving_license || "",
+        drivingLicense_Image: drivingLicense_Image || "",
+        full_name,
+        guarantor: guarantor || "",
+        guarantorPhone: guarantorPhone || "",
+        guarantorRelationship: guarantorRelationship || "",
+        latitude: latitude || "",
+        longitude: longitude || "",
+        mutual_StatusCertificate: mutual_StatusCertificate || "",
+        mutual_status: mutual_status || "",
+        national_id,
+        national_id_photo_back: national_id_photo_back || "",
+        national_id_photo_front: national_id_photo_front || "",
+        onboarding_step: "application_submitted",
+        phone: "",
+        phone_number,
+        profile_photo: profile_photo || "",
+        proofOfResidency: proofOfResidency || "",
+        signature: signature || "",
+        status: "pending",
+        transport_mode,
+        user_id,
+      }
+    );
+    res.status(200).json({
+      success: true,
       affected_rows: data.insert_shoppers.affected_rows,
       shopper: {
         status: "pending",
         active: false,
-        onboarding_step: "application_submitted"
-      }
+        onboarding_step: "application_submitted",
+      },
     });
   } catch (error: any) {
     // Log the error for debugging
@@ -443,15 +451,15 @@ export default async function handler(
     console.error("Error details:", {
       message: error.message,
       stack: error.stack,
-      response: error.response?.errors
+      response: error.response?.errors,
     });
-    
+
     // Return a more detailed error message
     res.status(500).json({
       error: "Failed to register shopper",
       message: error.message,
       details: error.response?.errors || "No additional details available",
-      stack: process.env.NODE_ENV === 'development' ? error.stack : undefined
+      stack: process.env.NODE_ENV === "development" ? error.stack : undefined,
     });
   }
 }
