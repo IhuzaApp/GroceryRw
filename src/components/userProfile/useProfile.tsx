@@ -46,6 +46,8 @@ export default function UserProfile() {
   const [shopperStatus, setShopperStatus] = useState<{
     active: boolean;
     status: string;
+    collection_comment?: string;
+    needCollection?: boolean;
   } | null>(null);
   const [loadingShopper, setLoadingShopper] = useState<boolean>(true);
   // Role switching state
@@ -98,6 +100,8 @@ export default function UserProfile() {
           setShopperStatus({
             active: data.shopper.active,
             status: data.shopper.status,
+            collection_comment: data.shopper.collection_comment,
+            needCollection: data.shopper.needCollection,
           });
         } else {
           setShopperStatus(null);
@@ -113,6 +117,12 @@ export default function UserProfile() {
   // Handle click on "Become a Plasa" button
   const handleBecomePlasa = (e: React.MouseEvent) => {
     if (shopperStatus) {
+      // If needCollection is true, allow editing the application
+      if (shopperStatus.needCollection) {
+        router.push("/Myprofile/become-shopper");
+        return;
+      }
+
       e.preventDefault();
 
       // Show toast with current status
@@ -214,6 +224,59 @@ export default function UserProfile() {
 
   return (
     <div className="grid grid-cols-1 gap-6 md:grid-cols-12">
+      {/* Collection Notification Banner */}
+      {shopperStatus?.needCollection && (
+        <div className="md:col-span-12">
+          <div className="rounded-lg border-l-4 border-orange-400 bg-orange-50 p-4 dark:bg-orange-900/20">
+            <div className="flex">
+              <div className="flex-shrink-0">
+                <svg
+                  className="h-5 w-5 text-orange-400"
+                  viewBox="0 0 20 20"
+                  fill="currentColor"
+                >
+                  <path
+                    fillRule="evenodd"
+                    d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z"
+                    clipRule="evenodd"
+                  />
+                </svg>
+              </div>
+              <div className="ml-3">
+                <h3 className="text-sm font-medium text-orange-800 dark:text-orange-200">
+                  Application Update Required
+                </h3>
+                <div className="mt-2 text-sm text-orange-700 dark:text-orange-300">
+                  <p>
+                    Your shopper application requires some changes. Please review the feedback below and update your application.
+                  </p>
+                  {shopperStatus.collection_comment && (
+                    <div className="mt-2 rounded-md bg-orange-100 p-3 dark:bg-orange-800/30">
+                      <p className="font-medium text-orange-800 dark:text-orange-200">
+                        Plas Agent Feedback:
+                      </p>
+                      <p className="mt-1 text-orange-700 dark:text-orange-300">
+                        {shopperStatus.collection_comment}
+                      </p>
+                    </div>
+                  )}
+                </div>
+                <div className="mt-4">
+                  <div className="-mx-2 -my-1.5 flex">
+                    <button
+                      type="button"
+                      className="rounded-md bg-orange-50 px-2 py-1.5 text-sm font-medium text-orange-800 hover:bg-orange-100 focus:outline-none focus:ring-2 focus:ring-orange-600 focus:ring-offset-2 focus:ring-offset-orange-50 dark:bg-orange-800/30 dark:text-orange-200 dark:hover:bg-orange-800/50"
+                      onClick={() => router.push("/Myprofile/become-shopper")}
+                    >
+                      Update Application
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
       {/* Left Column - User Info */}
       <div className="w-full md:col-span-3">
         <Panel
@@ -284,49 +347,6 @@ export default function UserProfile() {
                   ) : null}
                 </div>
 
-                {/* Show either Become a Plasa button or Switch Profile button based on shopperStatus */}
-                {loadingShopper ? (
-                  <div className="mt-5 h-8 w-full animate-pulse rounded bg-gray-200" />
-                ) : shopperStatus?.active ? (
-                  <Button
-                    appearance="primary"
-                    className="mt-5 w-full !bg-green-500 text-white hover:!bg-green-600 sm:w-auto"
-                    onClick={async () => {
-                      const nextRole = role === "user" ? "shopper" : "user";
-                      setIsSwitchingRole(true);
-                      try {
-                        await initiateRoleSwitch(
-                          nextRole as "user" | "shopper"
-                        );
-                        toggleRole();
-                        toast.success(
-                          `Switched to ${
-                            nextRole === "user" ? "User" : "Shopper"
-                          }`
-                        );
-                      } catch (error) {
-                        console.error("Error updating role:", error);
-                        toast.error("Failed to switch account");
-                      } finally {
-                        setIsSwitchingRole(false);
-                      }
-                    }}
-                    disabled={isSwitchingRole}
-                  >
-                    {isSwitchingRole
-                      ? "Switching..."
-                      : `Switch to ${role === "user" ? "Shopper" : "User"}`}
-                  </Button>
-                ) : (
-                  <Button
-                    appearance="primary"
-                    color="green"
-                    className="mt-5 w-full !bg-green-500 text-white hover:!bg-green-600 sm:w-auto"
-                    onClick={handleBecomePlasa}
-                  >
-                    Become a Plasa
-                  </Button>
-                )}
 
                 {/* Default address under profile */}
                 <div className="mt-4 w-full text-center">
@@ -407,9 +427,89 @@ export default function UserProfile() {
           )}
         </Panel>
 
-        {/* Logout Button Panel */}
+        {/* Shopper Button and Logout Button Panel */}
+        <div className="p-4 space-y-3">
+          {/* Show either Become a Shopper button or Switch Profile button based on shopperStatus */}
+          {loadingShopper ? (
+            <div className="h-10 w-full animate-pulse rounded bg-gray-200" />
+          ) : shopperStatus?.active ? (
+            <button
+              className="flex w-full items-center justify-center rounded-md bg-green-500 px-4 py-2 text-sm text-white transition-colors duration-200 hover:bg-green-600 dark:bg-green-600 dark:hover:bg-green-700"
+              onClick={async () => {
+                const nextRole = role === "user" ? "shopper" : "user";
+                setIsSwitchingRole(true);
+                try {
+                  await initiateRoleSwitch(
+                    nextRole as "user" | "shopper"
+                  );
+                  toggleRole();
+                  toast.success(
+                    `Switched to ${
+                      nextRole === "user" ? "User" : "Shopper"
+                    }`
+                  );
+                } catch (error) {
+                  console.error("Error updating role:", error);
+                  toast.error("Failed to switch account");
+                } finally {
+                  setIsSwitchingRole(false);
+                }
+              }}
+              disabled={isSwitchingRole}
+            >
+              <svg
+                className="mr-2 h-4 w-4"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"
+                />
+              </svg>
+              {isSwitchingRole
+                ? "Switching..."
+                : `Switch to ${role === "user" ? "Shopper" : "User"}`}
+            </button>
+          ) : (
+            <button
+              className={`flex w-full items-center justify-center rounded-md px-4 py-2 text-sm text-white transition-colors duration-200 ${
+                shopperStatus?.needCollection
+                  ? "bg-orange-500 hover:bg-orange-600 dark:bg-orange-600 dark:hover:bg-orange-700"
+                  : "bg-green-500 hover:bg-green-600 dark:bg-green-600 dark:hover:bg-green-700"
+              }`}
+              onClick={handleBecomePlasa}
+            >
+              <svg
+                className="mr-2 h-4 w-4"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                {shopperStatus?.needCollection ? (
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
+                  />
+                ) : (
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
+                  />
+                )}
+              </svg>
+              {shopperStatus?.needCollection ? "Update Application" : "Become a Shopper"}
+            </button>
+          )}
 
-        <div className="p-4">
+          {/* Logout Button */}
           <button
             className="flex w-full items-center justify-center rounded-md bg-red-500 px-4 py-2 text-sm text-white transition-colors duration-200 hover:bg-red-600 dark:bg-red-600 dark:hover:bg-red-700"
             onClick={async () => {

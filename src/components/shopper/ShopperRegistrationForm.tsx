@@ -363,6 +363,7 @@ export default function ShopperRegistrationForm() {
   } | null>(null);
   const [registrationSuccess, setRegistrationSuccess] = useState(false);
   const [isUpdating, setIsUpdating] = useState(false);
+  const [loadingExistingData, setLoadingExistingData] = useState(false);
   const [currentStep, setCurrentStep] = useState(0);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [autoSaved, setAutoSaved] = useState(false);
@@ -549,6 +550,105 @@ export default function ShopperRegistrationForm() {
     }
   }, [session]);
 
+  // Load existing shopper application data
+  useEffect(() => {
+    const loadExistingApplication = async () => {
+      if (!session?.user?.id) return;
+
+      setLoadingExistingData(true);
+      try {
+        const response = await fetch("/api/queries/get-shopper-application");
+        if (response.ok) {
+          const data = await response.json();
+          if (data.shopper) {
+            const shopper = data.shopper;
+            
+            // Check if this is an update scenario (needCollection is true)
+            if (shopper.needCollection) {
+              setIsUpdating(true);
+              toast("Loading your existing application for updates...", {
+                icon: "ℹ️",
+                duration: 3000,
+              });
+            }
+
+            // Load all the form data
+            setFormValue({
+              full_name: shopper.full_name || "",
+              address: shopper.address || "",
+              phone_number: shopper.phone_number || "",
+              national_id: shopper.national_id || "",
+              driving_license: shopper.driving_license || "",
+              transport_mode: shopper.transport_mode || "",
+              guarantor: shopper.guarantor || "",
+              guarantorPhone: shopper.guarantorPhone || "",
+              guarantorRelationship: shopper.guarantorRelationship || "",
+              latitude: shopper.latitude || "",
+              longitude: shopper.longitude || "",
+              mutual_status: shopper.mutual_status || "",
+            });
+
+            // Load images if they exist
+            if (shopper.profile_photo) {
+              setCapturedPhoto(shopper.profile_photo);
+            }
+            if (shopper.national_id_photo_front) {
+              setCapturedNationalIdFront(shopper.national_id_photo_front);
+            }
+            if (shopper.national_id_photo_back) {
+              setCapturedNationalIdBack(shopper.national_id_photo_back);
+            }
+            if (shopper.driving_license) {
+              setCapturedLicense(shopper.driving_license);
+            }
+            if (shopper.signature) {
+              setCapturedSignature(shopper.signature);
+            }
+
+            // Load files by converting base64 strings to File objects
+            if (shopper.Police_Clearance_Cert) {
+              try {
+                const file = await base64ToFile(shopper.Police_Clearance_Cert, "police_clearance.pdf", "application/pdf");
+                setPoliceClearanceFile(file);
+              } catch (error) {
+                console.error("Error loading Police Clearance file:", error);
+              }
+            }
+            if (shopper.proofOfResidency) {
+              try {
+                const file = await base64ToFile(shopper.proofOfResidency, "proof_of_residency.pdf", "application/pdf");
+                setProofOfResidencyFile(file);
+              } catch (error) {
+                console.error("Error loading Proof of Residency file:", error);
+              }
+            }
+            if (shopper.mutual_StatusCertificate) {
+              try {
+                const file = await base64ToFile(shopper.mutual_StatusCertificate, "marital_status_certificate.pdf", "application/pdf");
+                setMaritalStatusFile(file);
+              } catch (error) {
+                console.error("Error loading Marital Status Certificate file:", error);
+              }
+            }
+
+            // Show collection comment if it exists
+            if (shopper.collection_comment) {
+              toast.error(`Plas Agent Feedback: ${shopper.collection_comment}`, {
+                duration: 8000,
+              });
+            }
+          }
+        }
+      } catch (error) {
+        console.error("Error loading existing application:", error);
+      } finally {
+        setLoadingExistingData(false);
+      }
+    };
+
+    loadExistingApplication();
+  }, [session?.user?.id]);
+
   // Initialize signature canvas when signature pad is shown
   useEffect(() => {
     if (showSignaturePad && signatureCanvasRef.current) {
@@ -575,21 +675,27 @@ export default function ShopperRegistrationForm() {
   // Function to start camera for profile or license
   const startCamera = async (mode: "profile" | "license" | "national_id_front" | "national_id_back") => {
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({
+      // Stop any existing camera stream first
+      if (stream) {
+        stream.getTracks().forEach((track) => track.stop());
+        setStream(null);
+      }
+
+      const newStream = await navigator.mediaDevices.getUserMedia({
         video: { 
           facingMode: (mode === "license" || mode === "national_id_front" || mode === "national_id_back") ? "environment" : "user" 
         },
         audio: false,
       });
 
-      setStream(stream);
+      setStream(newStream);
       setShowCamera(true);
       setCaptureMode(mode);
 
       // When the modal is shown, attach the stream to the video element
       setTimeout(() => {
         if (videoRef.current) {
-          videoRef.current.srcObject = stream;
+          videoRef.current.srcObject = newStream;
         }
       }, 100);
     } catch (err) {
@@ -623,19 +729,15 @@ export default function ShopperRegistrationForm() {
             switch (captureMode) {
               case "profile":
               setCapturedPhoto(compressedImage);
-              console.log("Profile photo captured and compressed");
                 break;
               case "license":
               setCapturedLicense(compressedImage);
-              console.log("License photo captured and compressed");
                 break;
               case "national_id_front":
                 setCapturedNationalIdFront(compressedImage);
-                console.log("National ID front captured and compressed");
                 break;
               case "national_id_back":
                 setCapturedNationalIdBack(compressedImage);
-                console.log("National ID back captured and compressed");
                 break;
             }
 
@@ -659,6 +761,15 @@ export default function ShopperRegistrationForm() {
     setShowCamera(false);
   };
 
+  // Cleanup camera on component unmount
+  useEffect(() => {
+    return () => {
+      if (stream) {
+        stream.getTracks().forEach((track) => track.stop());
+      }
+    };
+  }, [stream]);
+
   // Function to retake photo
   const retakePhoto = () => {
     switch (captureMode) {
@@ -675,6 +786,32 @@ export default function ShopperRegistrationForm() {
         setCapturedNationalIdBack("");
         break;
     }
+    
+    // Restart the camera stream for retaking
+    setTimeout(() => {
+      if (stream) {
+        stream.getTracks().forEach((track) => track.stop());
+        setStream(null);
+      }
+      
+      // Get a new camera stream
+      navigator.mediaDevices.getUserMedia({
+        video: { 
+          facingMode: (captureMode === "license" || captureMode === "national_id_front" || captureMode === "national_id_back") ? "environment" : "user" 
+        },
+        audio: false,
+      }).then((newStream) => {
+        setStream(newStream);
+        setTimeout(() => {
+          if (videoRef.current) {
+            videoRef.current.srcObject = newStream;
+          }
+        }, 100);
+      }).catch((err) => {
+        console.error("Error restarting camera:", err);
+        toast.error("Could not restart camera. Please try again.");
+      });
+    }, 100);
   };
 
   // Function to confirm photo and close camera
@@ -698,19 +835,54 @@ export default function ShopperRegistrationForm() {
     }
   };
 
+  // Helper function to convert base64 string to File object
+  const base64ToFile = async (base64String: string, filename: string, mimeType: string): Promise<File> => {
+    // Remove data URL prefix if present
+    const base64Data = base64String.includes(',') ? base64String.split(',')[1] : base64String;
+    
+    // Convert base64 to binary
+    const binaryString = atob(base64Data);
+    const bytes = new Uint8Array(binaryString.length);
+    
+    for (let i = 0; i < binaryString.length; i++) {
+      bytes[i] = binaryString.charCodeAt(i);
+    }
+    
+    // Create File object
+    const file = new File([bytes], filename, { type: mimeType });
+    return file;
+  };
+
   // Form validation before submission
   const validateForm = () => {
+    // For new applications, require all photos
+    if (!isUpdating) {
     if (!capturedPhoto) {
       toast.error("Please take a profile photo");
       return false;
-    }
-    if (!capturedNationalIdFront) {
-      toast.error("Please take a photo of your National ID front");
-      return false;
-    }
-    if (!capturedNationalIdBack) {
-      toast.error("Please take a photo of your National ID back");
-      return false;
+      }
+      if (!capturedNationalIdFront) {
+        toast.error("Please take a photo of your National ID front");
+        return false;
+      }
+      if (!capturedNationalIdBack) {
+        toast.error("Please take a photo of your National ID back");
+        return false;
+      }
+    } else {
+      // For updates, only validate if photos are missing (user might have cleared them)
+      if (!capturedPhoto && !loadingExistingData) {
+        toast.error("Please take a profile photo");
+        return false;
+      }
+      if (!capturedNationalIdFront && !loadingExistingData) {
+        toast.error("Please take a photo of your National ID front");
+        return false;
+      }
+      if (!capturedNationalIdBack && !loadingExistingData) {
+        toast.error("Please take a photo of your National ID back");
+        return false;
+      }
     }
 
     return true;
@@ -979,6 +1151,7 @@ export default function ShopperRegistrationForm() {
     setIsUpdating(true);
   };
 
+
   // Handle form submission
   const handleSubmit = async () => {
     // Clear any previous errors
@@ -1038,36 +1211,22 @@ export default function ShopperRegistrationForm() {
         });
       };
 
-      // Prepare the data for submission
+      // Prepare the data for submission (including photos)
       const shopperData = {
         ...formValue,
-        profile_photo: capturedPhoto || "",
-        driving_license: capturedLicense || "",
-        national_id_photo_front: capturedNationalIdFront || "",
-        national_id_photo_back: capturedNationalIdBack || "",
         Police_Clearance_Cert: await convertFileToBase64(policeClearanceFile),
         proofOfResidency: await convertFileToBase64(proofOfResidencyFile),
         mutual_StatusCertificate: await convertFileToBase64(maritalStatusFile),
-        signature: capturedSignature || "",
+        profile_photo: capturedPhoto,
+        national_id_photo_front: capturedNationalIdFront,
+        national_id_photo_back: capturedNationalIdBack,
+        driving_license: capturedLicense,
+        signature: capturedSignature,
         user_id: userId,
         force_update: isUpdating, // Set force_update to true if we're updating an existing application
       };
 
-      console.log("Submitting shopper registration with user ID:", userId);
-      console.log("Shopper data being submitted:", {
-        ...shopperData,
-        profile_photo: capturedPhoto ? `${Math.round(capturedPhoto.length / 1024)}KB` : "None",
-        driving_license: capturedLicense ? `${Math.round(capturedLicense.length / 1024)}KB` : "None",
-        national_id_photo_front: capturedNationalIdFront ? `${Math.round(capturedNationalIdFront.length / 1024)}KB` : "None",
-        national_id_photo_back: capturedNationalIdBack ? `${Math.round(capturedNationalIdBack.length / 1024)}KB` : "None",
-        Police_Clearance_Cert: policeClearanceFile ? `${policeClearanceFile.name} (${(policeClearanceFile.size / 1024 / 1024).toFixed(1)}MB)` : "None",
-        proofOfResidency: proofOfResidencyFile ? `${proofOfResidencyFile.name} (${(proofOfResidencyFile.size / 1024 / 1024).toFixed(1)}MB)` : "None",
-        mutual_StatusCertificate: maritalStatusFile ? `${maritalStatusFile.name} (${(maritalStatusFile.size / 1024 / 1024).toFixed(1)}MB)` : "None",
-        signature: capturedSignature ? `${Math.round(capturedSignature.length / 1024)}KB` : "None"
-      });
-
       // Submit data to our API endpoint
-      console.log("Making API request to /api/queries/register-shopper");
       const response = await fetch("/api/queries/register-shopper", {
         method: "POST",
         headers: {
@@ -1076,11 +1235,7 @@ export default function ShopperRegistrationForm() {
         body: JSON.stringify(shopperData),
       });
 
-      console.log("API Response status:", response.status);
-      console.log("API Response headers:", Object.fromEntries(response.headers.entries()));
-
       const data = await response.json();
-      console.log("API Response data:", data);
 
       if (!response.ok) {
         // Handle specific error cases
@@ -1124,20 +1279,11 @@ export default function ShopperRegistrationForm() {
         }, 3000);
       }
     } catch (error: any) {
-      console.error("Error submitting shopper application:", error);
-      console.error("Error details:", {
-        message: error.message,
-        stack: error.stack,
-        name: error.name,
-        cause: error.cause
-      });
-      
       // Check if it's a network error or API error
       if (error.name === 'TypeError' && error.message.includes('fetch')) {
-        console.error("Network error - check if API endpoint is running");
         toast.error("Network error: Unable to connect to server");
       } else {
-      toast.error(`Failed to submit application: ${error.message}`);
+        toast.error(`Failed to submit application: ${error.message}`);
       }
 
       setApiError({
@@ -1257,6 +1403,33 @@ export default function ShopperRegistrationForm() {
   }
 
   // If registration was successful, show a success message
+  if (loadingExistingData) {
+    return (
+      <div className="p-8 text-center">
+        <div className="flex flex-col items-center justify-center">
+          <div className={`inline-flex items-center justify-center w-16 h-16 rounded-full mb-4 ${
+            theme === "dark" ? "bg-blue-600/20" : "bg-blue-100"
+          }`}>
+            <svg className="h-8 w-8 text-blue-600 animate-spin" fill="none" viewBox="0 0 24 24">
+              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+            </svg>
+          </div>
+          <h2 className={`mb-2 text-2xl font-bold ${
+            theme === "dark" ? "text-white" : "text-gray-900"
+          }`}>
+            Loading Application...
+          </h2>
+          <p className={`${
+            theme === "dark" ? "text-gray-400" : "text-gray-600"
+          }`}>
+            Please wait while we load your existing application data.
+          </p>
+        </div>
+      </div>
+    );
+  }
+
   if (registrationSuccess) {
     return (
       <div className="p-8 text-center">

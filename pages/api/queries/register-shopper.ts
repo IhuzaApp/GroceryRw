@@ -6,42 +6,38 @@ import { authOptions } from "../../api/auth/[...nextauth]";
 
 const REGISTER_SHOPPER = gql`
   mutation RegisterShopper(
-    $full_name: String!
-    $address: String!
-    $phone_number: String!
-    $national_id: String!
-    $driving_license: String
-    $transport_mode: String!
-    $profile_photo: String
-    $user_id: uuid!
-    $Police_Clearance_Cert: String
-    $guarantor: String
-    $guarantorPhone: String
-    $guarantorRelationship: String
-    $latitude: String
-    $longitude: String
-    $mutual_StatusCertificate: String
-    $mutual_status: String
-    $national_id_photo_back: String
-    $national_id_photo_front: String
-    $proofOfResidency: String
-    $signature: String
+    $Police_Clearance_Cert: String = ""
+    $address: String = ""
+    $driving_license: String = ""
+    $full_name: String = ""
+    $guarantor: String = ""
+    $guarantorPhone: String = ""
+    $guarantorRelationship: String = ""
+    $latitude: String = ""
+    $longitude: String = ""
+    $mutual_StatusCertificate: String = ""
+    $mutual_status: String = ""
+    $national_id: String = ""
+    $national_id_photo_back: String = ""
+    $national_id_photo_front: String = ""
+    $onboarding_step: String = ""
+    $phone: String = ""
+    $phone_number: String = ""
+    $profile_photo: String = ""
+    $proofOfResidency: String = ""
+    $signature: String = ""
+    $status: String = ""
+    $transport_mode: String = ""
+    $user_id: uuid = ""
   ) {
-    insert_shoppers_one(
-      object: {
-        full_name: $full_name
-        address: $address
-        phone_number: $phone_number
-        national_id: $national_id
-        driving_license: $driving_license
-        transport_mode: $transport_mode
-        profile_photo: $profile_photo
-        status: "pending"
-        active: false
-        background_check_completed: false
-        onboarding_step: "application_submitted"
-        user_id: $user_id
+    insert_shoppers(
+      objects: {
         Police_Clearance_Cert: $Police_Clearance_Cert
+        active: false
+        address: $address
+        background_check_completed: false
+        driving_license: $driving_license
+        full_name: $full_name
         guarantor: $guarantor
         guarantorPhone: $guarantorPhone
         guarantorRelationship: $guarantorRelationship
@@ -49,40 +45,22 @@ const REGISTER_SHOPPER = gql`
         longitude: $longitude
         mutual_StatusCertificate: $mutual_StatusCertificate
         mutual_status: $mutual_status
+        national_id: $national_id
         national_id_photo_back: $national_id_photo_back
         national_id_photo_front: $national_id_photo_front
+        needCollection: false
+        onboarding_step: $onboarding_step
+        phone: $phone
+        phone_number: $phone_number
+        profile_photo: $profile_photo
         proofOfResidency: $proofOfResidency
         signature: $signature
+        status: $status
+        transport_mode: $transport_mode
+        user_id: $user_id
       }
     ) {
-      id
-      status
-      active
-      onboarding_step
-      Employment_id
-      Police_Clearance_Cert
-      address
-      background_check_completed
-      created_at
-      driving_license
-      full_name
-      guarantor
-      guarantorPhone
-      guarantorRelationship
-      latitude
-      longitude
-      mutual_StatusCertificate
-      mutual_status
-      national_id
-      national_id_photo_back
-      national_id_photo_front
-      phone_number
-      profile_photo
-      proofOfResidency
-      signature
-      transport_mode
-      updated_at
-      user_id
+      affected_rows
     }
   }
 `;
@@ -110,6 +88,8 @@ const UPDATE_SHOPPER = gql`
     $national_id_photo_front: String
     $proofOfResidency: String
     $signature: String
+    $collection_comment: String
+    $needCollection: Boolean
   ) {
     update_shoppers_by_pk(
       pk_columns: { id: $shopper_id }
@@ -133,6 +113,8 @@ const UPDATE_SHOPPER = gql`
         national_id_photo_front: $national_id_photo_front
         proofOfResidency: $proofOfResidency
         signature: $signature
+        collection_comment: $collection_comment
+        needCollection: $needCollection
         status: "pending"
         updated_at: "now()"
       }
@@ -184,14 +166,13 @@ interface RegisterShopperInput {
   national_id_photo_front?: string;
   proofOfResidency?: string;
   signature?: string;
+  collection_comment?: string;
+  needCollection?: boolean;
 }
 
 interface RegisterShopperResponse {
-  insert_shoppers_one: {
-    id: string;
-    status: string;
-    active: boolean;
-    onboarding_step: string;
+  insert_shoppers: {
+    affected_rows: number;
   };
 }
 
@@ -218,6 +199,16 @@ interface CheckShopperResponse {
   }>;
 }
 
+interface CheckPhoneResponse {
+  shoppers: Array<{
+    id: string;
+    user_id: string;
+    full_name: string;
+    phone_number: string;
+    status: string;
+  }>;
+}
+
 // Define the session user type
 interface SessionUser {
   id: string;
@@ -237,13 +228,9 @@ export default async function handler(
   req: NextApiRequest,
   res: NextApiResponse
 ) {
-  console.log("=== REGISTER SHOPPER API CALLED ===");
-  console.log("Request method:", req.method);
-  console.log("Request body size:", JSON.stringify(req.body).length, "characters");
   
   // Only allow POST requests
   if (req.method !== "POST") {
-    console.log("Method not allowed:", req.method);
     return res.status(405).json({ error: "Method not allowed" });
   }
 
@@ -262,13 +249,6 @@ export default async function handler(
     }
 
     if (!hasuraClient) {
-      console.error(
-        "Hasura client is not initialized. Check environment variables."
-      );
-      console.log(
-        "HASURA_GRAPHQL_URL:",
-        process.env.HASURA_GRAPHQL_URL || "Not set"
-      );
       throw new Error(
         "Hasura client is not initialized. Please check server configuration."
       );
@@ -296,41 +276,10 @@ export default async function handler(
       national_id_photo_front,
       proofOfResidency,
       signature,
+      collection_comment,
+      needCollection,
     } = req.body as RegisterShopperInput;
 
-    console.log("Request data summary:", {
-      full_name: full_name ? "✓" : "✗",
-      address: address ? "✓" : "✗", 
-      phone_number: phone_number ? "✓" : "✗",
-      national_id: national_id ? "✓" : "✗",
-      driving_license: driving_license ? "✓" : "✗",
-      transport_mode: transport_mode ? "✓" : "✗",
-      profile_photo: profile_photo ? `✓ (${Math.round(profile_photo.length / 1024)}KB)` : "✗",
-      Police_Clearance_Cert: Police_Clearance_Cert ? "✓" : "✗",
-      guarantor: guarantor ? "✓" : "✗",
-      guarantorPhone: guarantorPhone ? "✓" : "✗",
-      guarantorRelationship: guarantorRelationship ? "✓" : "✗",
-      latitude: latitude ? "✓" : "✗",
-      longitude: longitude ? "✓" : "✗",
-      mutual_StatusCertificate: mutual_StatusCertificate ? "✓" : "✗",
-      mutual_status: mutual_status ? "✓" : "✗",
-      national_id_photo_back: national_id_photo_back ? `✓ (${Math.round(national_id_photo_back.length / 1024)}KB)` : "✗",
-      national_id_photo_front: national_id_photo_front ? `✓ (${Math.round(national_id_photo_front.length / 1024)}KB)` : "✗",
-      proofOfResidency: proofOfResidency ? "✓" : "✗",
-      signature: signature ? `✓ (${Math.round(signature.length / 1024)}KB)` : "✗",
-      force_update: force_update
-    });
-
-    // Check for problematic values
-    const problematicFields = [];
-    if (profile_photo && profile_photo.length > 1000000) problematicFields.push(`profile_photo (${Math.round(profile_photo.length / 1024)}KB)`);
-    if (national_id_photo_front && national_id_photo_front.length > 1000000) problematicFields.push(`national_id_photo_front (${Math.round(national_id_photo_front.length / 1024)}KB)`);
-    if (national_id_photo_back && national_id_photo_back.length > 1000000) problematicFields.push(`national_id_photo_back (${Math.round(national_id_photo_back.length / 1024)}KB)`);
-    if (signature && signature.length > 1000000) problematicFields.push(`signature (${Math.round(signature.length / 1024)}KB)`);
-    
-    if (problematicFields.length > 0) {
-      console.log("Warning: Large fields detected:", problematicFields);
-    }
 
     // Validate required fields
     if (
@@ -339,51 +288,62 @@ export default async function handler(
       !phone_number ||
       !national_id ||
       !transport_mode ||
-      !profile_photo ||
       !user_id
     ) {
-      console.log("Missing required fields:", {
-        full_name: !!full_name,
-        address: !!address,
-        phone_number: !!phone_number,
-        national_id: !!national_id,
-        transport_mode: !!transport_mode,
-        profile_photo: !!profile_photo,
-        user_id: !!user_id
-      });
       return res.status(400).json({ 
         error: "Missing required fields",
-        message: "All required fields including profile_photo must be provided"
+        message: "All required fields must be provided"
       });
     }
 
     // Verify the user ID in the request matches the authenticated user
     if (user_id !== session.user.id) {
-      console.error("User ID mismatch:", {
-        requestUserId: user_id,
-        sessionUserId: session.user.id,
-      });
       return res.status(403).json({
         error: "User ID mismatch. You can only register yourself as a shopper.",
       });
     }
 
+    // Check if the phone number is already registered by another user
+    try {
+      const phoneCheckData = await hasuraClient.request<CheckPhoneResponse>(
+        gql`
+          query CheckPhoneNumber($phone_number: String!) {
+            shoppers(where: {phone_number: {_eq: $phone_number}}) {
+              id
+              user_id
+              full_name
+              phone_number
+              status
+            }
+          }
+        `,
+        { phone_number }
+      );
+      
+      if (phoneCheckData.shoppers.length > 0) {
+        const existingPhoneUser = phoneCheckData.shoppers[0];
+        if (existingPhoneUser.user_id !== user_id) {
+          return res.status(409).json({ 
+            error: 'Phone number already registered', 
+            message: `This phone number is already registered by another user. Please use a different phone number.`,
+            existing_user: existingPhoneUser.user_id
+          });
+        }
+      }
+    } catch (phoneCheckError) {
+      // Continue with registration attempt if phone check fails
+    }
+
     // Check if the user is already registered as a shopper
-    console.log("Checking if shopper already exists for user:", user_id);
     const existingShopperData =
       await hasuraClient.request<CheckShopperResponse>(CHECK_SHOPPER_EXISTS, {
         user_id,
       });
-    console.log("Existing shopper check result:", existingShopperData);
 
     if (existingShopperData.shoppers.length > 0) {
       const existingShopper = existingShopperData.shoppers[0];
 
-      // If force_update is true, update the existing shopper
-      if (force_update) {
-        console.log(
-          `Updating existing shopper record for user ${user_id} with ID ${existingShopper.id}`
-        );
+      // Always update the existing shopper record (automatic update for existing users)
 
         const updateData = await hasuraClient.request<UpdateShopperResponse>(
           UPDATE_SHOPPER,
@@ -391,23 +351,25 @@ export default async function handler(
             shopper_id: existingShopper.id,
             full_name,
             address,
-            phone_number,
+            phone_number: existingShopper.phone_number, // Keep existing phone number to avoid uniqueness violation
             national_id,
-            driving_license,
+            driving_license: driving_license || "",
             transport_mode,
-            profile_photo,
-            Police_Clearance_Cert,
-            guarantor,
-            guarantorPhone,
-            guarantorRelationship,
-            latitude,
-            longitude,
-            mutual_StatusCertificate,
-            mutual_status,
-            national_id_photo_back,
-            national_id_photo_front,
-            proofOfResidency,
-            signature,
+            profile_photo: profile_photo || "",
+            Police_Clearance_Cert: Police_Clearance_Cert || "",
+            guarantor: guarantor || "",
+            guarantorPhone: guarantorPhone || "",
+            guarantorRelationship: guarantorRelationship || "",
+            latitude: latitude || "",
+            longitude: longitude || "",
+            mutual_StatusCertificate: mutual_StatusCertificate || "",
+            mutual_status: mutual_status || "",
+            national_id_photo_back: national_id_photo_back || "",
+            national_id_photo_front: national_id_photo_front || "",
+            proofOfResidency: proofOfResidency || "",
+            signature: signature || "",
+            collection_comment: "", // Clear the collection comment after update
+            needCollection: false, // Set needCollection to false after update
           }
         );
 
@@ -415,114 +377,39 @@ export default async function handler(
           shopper: updateData.update_shoppers_by_pk,
           updated: true,
         });
-      }
-
-      // Otherwise, return that they're already registered
-      return res.status(409).json({
-        error: "Already registered as a shopper",
-        message: `You are already registered as a shopper with status: ${existingShopper.status}`,
-        shopper: existingShopper,
-      });
     }
 
-    console.log("Registering new shopper with data:", {
-      full_name,
-      address,
-      phone_number: phone_number.substring(0, 4) + "****", // Log partial for privacy
-      national_id: national_id.substring(0, 4) + "****", // Log partial for privacy
-      transport_mode,
-      user_id,
-    });
-
-    // Try minimal mutation first to isolate the issue
-    const minimalMutation = gql`
-      mutation RegisterShopperMinimal(
-        $full_name: String!
-        $address: String!
-        $phone_number: String!
-        $national_id: String!
-        $transport_mode: String!
-        $profile_photo: String!
-        $user_id: uuid!
-      ) {
-        insert_shoppers_one(
-          object: {
-            full_name: $full_name
-            address: $address
-            phone_number: $phone_number
-            national_id: $national_id
-            transport_mode: $transport_mode
-            profile_photo: $profile_photo
-            status: "pending"
-            active: false
-            background_check_completed: false
-            onboarding_step: "application_submitted"
-            user_id: $user_id
+        // Register new shopper with all data in one operation
+        const data = await hasuraClient.request<RegisterShopperResponse>(
+          REGISTER_SHOPPER,
+          {
+            Police_Clearance_Cert: Police_Clearance_Cert || "",
+            address,
+            driving_license: driving_license || "",
+            full_name,
+            guarantor: guarantor || "",
+            guarantorPhone: guarantorPhone || "",
+            guarantorRelationship: guarantorRelationship || "",
+            latitude: latitude || "",
+            longitude: longitude || "",
+            mutual_StatusCertificate: mutual_StatusCertificate || "",
+            mutual_status: mutual_status || "",
+            national_id,
+            national_id_photo_back: national_id_photo_back || "",
+            national_id_photo_front: national_id_photo_front || "",
+            onboarding_step: "application_submitted",
+            phone: "",
+            phone_number,
+            profile_photo: profile_photo || "",
+            proofOfResidency: proofOfResidency || "",
+            signature: signature || "",
+            status: "pending",
+            transport_mode,
+            user_id,
           }
-        ) {
-          id
-          status
-          active
-          onboarding_step
-        }
-      }
-    `;
-    
-    console.log("Trying minimal mutation first...");
-    const minimalData = await hasuraClient.request(minimalMutation, {
-      full_name,
-      address,
-      phone_number,
-      national_id,
-      transport_mode,
-      profile_photo,
-      user_id,
-    });
-    console.log("Minimal mutation successful:", minimalData);
-    
-    // If minimal works, try the full mutation
-    console.log("Making full GraphQL request to register new shopper...");
-    const data = await hasuraClient.request<RegisterShopperResponse>(
-      REGISTER_SHOPPER,
-      {
-        full_name,
-        address,
-        phone_number,
-        national_id,
-        driving_license,
-        transport_mode,
-        profile_photo,
-        user_id,
-        Police_Clearance_Cert,
-        guarantor,
-        guarantorPhone,
-        guarantorRelationship,
-        latitude,
-        longitude,
-        mutual_StatusCertificate,
-        mutual_status,
-        national_id_photo_back,
-        national_id_photo_front,
-        proofOfResidency,
-        signature,
-      }
-    );
-    console.log("Full GraphQL request successful, response:", data);
-
-    console.log(
-      "Shopper registration successful:",
-      data.insert_shoppers_one.id
-    );
-    res.status(200).json({ shopper: data.insert_shoppers_one });
+        );
+    res.status(200).json({ success: true, affected_rows: data.insert_shoppers.affected_rows });
   } catch (error: any) {
-    console.error("=== ERROR REGISTERING SHOPPER ===");
-    console.error("Error object:", error);
-    console.error("Error message:", error.message);
-    console.error("Error stack:", error.stack);
-    console.error("Error name:", error.name);
-    console.error("GraphQL errors:", error.response?.errors);
-    console.error("Response data:", error.response?.data);
-    
     // Return a more detailed error message
     res.status(500).json({
       error: "Failed to register shopper",
