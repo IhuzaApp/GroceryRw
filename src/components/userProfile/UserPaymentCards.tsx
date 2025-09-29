@@ -411,7 +411,7 @@ export default function UserPaymentCards({
         {balances.paymentCards.length > 0 && (
           <button
             onClick={() => setShowAddCard(true)}
-            className="inline-flex items-center rounded-md bg-green-50 px-4 py-2 text-sm font-medium text-green-600 hover:bg-green-100"
+            className="inline-flex items-center rounded-md bg-green-50 px-4 py-2 text-sm font-medium text-green-600 hover:bg-green-100 dark:!bg-green-600 dark:!text-white dark:hover:!bg-green-700"
           >
             <svg
               className="mr-2 h-4 w-4"
@@ -685,7 +685,7 @@ export default function UserPaymentCards({
                 Add your card for contactless NFC payments
               </p>
               <button
-                className="mt-4 inline-flex items-center rounded-md bg-green-50 px-4 py-2 text-sm font-medium text-green-600 hover:bg-green-100"
+                className="mt-4 inline-flex items-center rounded-md bg-green-50 px-4 py-2 text-sm font-medium text-green-600 hover:bg-green-100 dark:!bg-green-600 dark:!text-white dark:hover:!bg-green-700"
                 onClick={(e) => {
                   e.stopPropagation();
                   setShowAddCard(true);
