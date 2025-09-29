@@ -306,7 +306,7 @@ export default function UserProfile() {
                     src={
                       user?.profile_picture ||
                       (role === "shopper"
-                        ? "/images/ProfileImage.png"
+                        ? "/images/userProfile.png"
                         : "/assets/images/profile.jpg")
                     }
                     alt="Profile"
