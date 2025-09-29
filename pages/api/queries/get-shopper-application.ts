@@ -12,7 +12,7 @@ const GET_SHOPPER_APPLICATION = gql`
       address
       phone_number
       national_id
-      driving_license
+      drivingLicense_Image
       transport_mode
       profile_photo
       Police_Clearance_Cert
@@ -45,7 +45,7 @@ interface GetShopperApplicationResponse {
     address: string;
     phone_number: string;
     national_id: string;
-    driving_license?: string;
+    drivingLicense_Image?: string;
     transport_mode: string;
     profile_photo?: string;
     Police_Clearance_Cert?: string;
