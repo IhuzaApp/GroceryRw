@@ -1,4 +1,4 @@
-import { initializeApp } from "firebase/app";
+import { initializeApp, getApps } from "firebase/app";
 import { getFirestore } from "firebase/firestore";
 import { getStorage } from "firebase/storage";
 import { getAuth, signInWithCustomToken } from "firebase/auth";
@@ -14,21 +14,31 @@ const firebaseConfig = {
   measurementId: process.env.NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID,
 };
 
-// Initialize Firebase
-const app = initializeApp(firebaseConfig);
+// Initialize Firebase with proper guards to prevent duplicate apps
+let app;
+try {
+  app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApps()[0];
+} catch (error) {
+  console.warn("Firebase initialization failed:", error);
+  app = null;
+}
 
 // Initialize Firestore
-export const db = getFirestore(app);
+export const db = app ? getFirestore(app) : null;
 
 // Initialize Storage
-export const storage = getStorage(app);
+export const storage = app ? getStorage(app) : null;
 
 // Initialize Firebase Auth
-export const auth = getAuth(app);
+export const auth = app ? getAuth(app) : null;
 
 // Function to authenticate with Firebase using a custom token
 export const authenticateWithFirebase = async (customToken: string) => {
   try {
+    if (!auth) {
+      console.warn("Firebase Auth not initialized");
+      return;
+    }
     await signInWithCustomToken(auth, customToken);
     console.log("Successfully authenticated with Firebase");
   } catch (error) {

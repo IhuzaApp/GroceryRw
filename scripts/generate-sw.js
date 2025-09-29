@@ -1,4 +1,18 @@
-// Import Firebase scripts
+const fs = require('fs');
+const path = require('path');
+
+// Read environment variables
+const firebaseConfig = {
+  apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY || "AIzaSyA-w5VgsITsGws1DEBoFl3SrVgn_62H_nU",
+  authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN || "bokiee-2e726.firebaseapp.com",
+  projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID || "bokiee-2e726",
+  storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET || "bokiee-2e726.firebasestorage.app",
+  messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID || "421990441361",
+  appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID || "1:421990441361:web:475e3c34284122e0157a30",
+};
+
+// Generate service worker content
+const swContent = `// Import Firebase scripts
 importScripts(
   "https://www.gstatic.com/firebasejs/9.0.0/firebase-app-compat.js"
 );
@@ -7,14 +21,7 @@ importScripts(
 );
 
 // Initialize Firebase
-const firebaseConfig = {
-  "apiKey": "AIzaSyA-w5VgsITsGws1DEBoFl3SrVgn_62H_nU",
-  "authDomain": "bokiee-2e726.firebaseapp.com",
-  "projectId": "bokiee-2e726",
-  "storageBucket": "bokiee-2e726.firebasestorage.app",
-  "messagingSenderId": "421990441361",
-  "appId": "1:421990441361:web:475e3c34284122e0157a30"
-};
+const firebaseConfig = ${JSON.stringify(firebaseConfig, null, 2)};
 
 firebase.initializeApp(firebaseConfig);
 
@@ -60,7 +67,7 @@ self.addEventListener("notificationclick", (event) => {
     const conversationId = event.notification.data?.conversationId;
 
     // Open the chat page
-    const urlToOpen = orderId ? `/Messages/${orderId}` : "/Messages";
+    const urlToOpen = orderId ? \`/Messages/\${orderId}\` : "/Messages";
 
     event.waitUntil(
       clients
@@ -86,3 +93,10 @@ self.addEventListener("notificationclick", (event) => {
 self.addEventListener("notificationclose", (event) => {
   // Notification closed
 });
+`;
+
+// Write the service worker file
+const swPath = path.join(__dirname, '..', 'public', 'firebase-messaging-sw.js');
+fs.writeFileSync(swPath, swContent);
+
+console.log('Service worker generated successfully with environment variables');
