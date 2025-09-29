@@ -9,6 +9,7 @@ const REGISTER_SHOPPER = gql`
     $Police_Clearance_Cert: String = ""
     $address: String = ""
     $driving_license: String = ""
+    $drivingLicense_Image: String = ""
     $full_name: String = ""
     $guarantor: String = ""
     $guarantorPhone: String = ""
@@ -37,6 +38,7 @@ const REGISTER_SHOPPER = gql`
         address: $address
         background_check_completed: false
         driving_license: $driving_license
+        drivingLicense_Image: $drivingLicense_Image
         full_name: $full_name
         guarantor: $guarantor
         guarantorPhone: $guarantorPhone
@@ -74,6 +76,7 @@ const UPDATE_SHOPPER = gql`
     $phone_number: String!
     $national_id: String!
     $driving_license: String
+    $drivingLicense_Image: String
     $transport_mode: String!
     $profile_photo: String
     $Police_Clearance_Cert: String
@@ -99,6 +102,7 @@ const UPDATE_SHOPPER = gql`
         phone_number: $phone_number
         national_id: $national_id
         driving_license: $driving_license
+        drivingLicense_Image: $drivingLicense_Image
         transport_mode: $transport_mode
         profile_photo: $profile_photo
         Police_Clearance_Cert: $Police_Clearance_Cert
@@ -138,6 +142,7 @@ const CHECK_SHOPPER_EXISTS = gql`
       phone_number
       national_id
       driving_license
+      drivingLicense_Image
       transport_mode
       profile_photo
     }
@@ -150,6 +155,7 @@ interface RegisterShopperInput {
   phone_number: string;
   national_id: string;
   driving_license?: string;
+  drivingLicense_Image?: string;
   transport_mode: string;
   profile_photo?: string;
   user_id: string;
@@ -254,12 +260,17 @@ export default async function handler(
       );
     }
 
+    // Log the request data size for debugging
+    const requestDataSize = JSON.stringify(req.body).length;
+    console.log(`Received shopper registration request, data size: ${(requestDataSize / 1024).toFixed(2)} KB`);
+
     const {
       full_name,
       address,
       phone_number,
       national_id,
       driving_license,
+      drivingLicense_Image,
       transport_mode,
       profile_photo,
       user_id,
@@ -307,8 +318,8 @@ export default async function handler(
     try {
       const phoneCheckData = await hasuraClient.request<CheckPhoneResponse>(
         gql`
-          query CheckPhoneNumber($phone_number: String!) {
-            shoppers(where: {phone_number: {_eq: $phone_number}}) {
+          query CheckPhoneNumber($phone_number: String!, $user_id: uuid!) {
+            shoppers(where: {phone_number: {_eq: $phone_number}, user_id: {_neq: $user_id}}) {
               id
               user_id
               full_name
@@ -317,18 +328,16 @@ export default async function handler(
             }
           }
         `,
-        { phone_number }
+        { phone_number, user_id }
       );
       
       if (phoneCheckData.shoppers.length > 0) {
         const existingPhoneUser = phoneCheckData.shoppers[0];
-        if (existingPhoneUser.user_id !== user_id) {
-          return res.status(409).json({ 
-            error: 'Phone number already registered', 
-            message: `This phone number is already registered by another user. Please use a different phone number.`,
-            existing_user: existingPhoneUser.user_id
-          });
-        }
+        return res.status(409).json({ 
+          error: 'Phone number already registered', 
+          message: `This phone number is already registered by another user. Please use a different phone number.`,
+          existing_user: existingPhoneUser.user_id
+        });
       }
     } catch (phoneCheckError) {
       // Continue with registration attempt if phone check fails
@@ -344,16 +353,17 @@ export default async function handler(
       const existingShopper = existingShopperData.shoppers[0];
 
       // Always update the existing shopper record (automatic update for existing users)
-
+      try {
         const updateData = await hasuraClient.request<UpdateShopperResponse>(
           UPDATE_SHOPPER,
           {
             shopper_id: existingShopper.id,
             full_name,
             address,
-            phone_number: existingShopper.phone_number, // Keep existing phone number to avoid uniqueness violation
+            phone_number: existingShopper.phone_number || phone_number, // Use existing phone number or new one
             national_id,
             driving_license: driving_license || "",
+            drivingLicense_Image: drivingLicense_Image || "",
             transport_mode,
             profile_photo: profile_photo || "",
             Police_Clearance_Cert: Police_Clearance_Cert || "",
@@ -374,9 +384,18 @@ export default async function handler(
         );
 
         return res.status(200).json({
+          success: true,
           shopper: updateData.update_shoppers_by_pk,
           updated: true,
         });
+      } catch (updateError: any) {
+        console.error("Error updating existing shopper:", updateError);
+        return res.status(500).json({
+          error: "Failed to update shopper application",
+          message: updateError.message,
+          details: updateError.response?.errors || "No additional details available"
+        });
+      }
     }
 
         // Register new shopper with all data in one operation
@@ -386,6 +405,7 @@ export default async function handler(
             Police_Clearance_Cert: Police_Clearance_Cert || "",
             address,
             driving_license: driving_license || "",
+            drivingLicense_Image: drivingLicense_Image || "",
             full_name,
             guarantor: guarantor || "",
             guarantorPhone: guarantorPhone || "",
@@ -408,8 +428,24 @@ export default async function handler(
             user_id,
           }
         );
-    res.status(200).json({ success: true, affected_rows: data.insert_shoppers.affected_rows });
+    res.status(200).json({ 
+      success: true, 
+      affected_rows: data.insert_shoppers.affected_rows,
+      shopper: {
+        status: "pending",
+        active: false,
+        onboarding_step: "application_submitted"
+      }
+    });
   } catch (error: any) {
+    // Log the error for debugging
+    console.error("Shopper registration error:", error);
+    console.error("Error details:", {
+      message: error.message,
+      stack: error.stack,
+      response: error.response?.errors
+    });
+    
     // Return a more detailed error message
     res.status(500).json({
       error: "Failed to register shopper",

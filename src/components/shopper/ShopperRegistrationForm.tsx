@@ -269,7 +269,7 @@ const compressImage = (base64: string, maxSizeKB = 100): Promise<string> => {
       // Calculate new dimensions while maintaining aspect ratio
       let width = img.width;
       let height = img.height;
-      const maxDimension = 800; // Max width or height
+      const maxDimension = 600; // Reduced max width or height for better compression
 
       if (width > height && width > maxDimension) {
         height = Math.round((height * maxDimension) / width);
@@ -293,13 +293,13 @@ const compressImage = (base64: string, maxSizeKB = 100): Promise<string> => {
       ctx.drawImage(img, 0, 0, width, height);
 
       // Get compressed image as base64
-      let quality = 0.7; // Initial quality
+      let quality = 0.5; // Start with lower quality
       let compressedBase64 = canvas.toDataURL("image/jpeg", quality);
 
       // If still too large, reduce quality until we get under target size
       const maxSize = maxSizeKB * 1024;
       while (compressedBase64.length > maxSize && quality > 0.1) {
-        quality -= 0.1;
+        quality -= 0.05; // Smaller steps for better control
         compressedBase64 = canvas.toDataURL("image/jpeg", quality);
       }
 
@@ -578,7 +578,7 @@ export default function ShopperRegistrationForm() {
               address: shopper.address || "",
               phone_number: shopper.phone_number || "",
               national_id: shopper.national_id || "",
-              driving_license: shopper.driving_license || "",
+              driving_license: shopper.drivingLicense_Image || "",
               transport_mode: shopper.transport_mode || "",
               guarantor: shopper.guarantor || "",
               guarantorPhone: shopper.guarantorPhone || "",
@@ -598,8 +598,8 @@ export default function ShopperRegistrationForm() {
             if (shopper.national_id_photo_back) {
               setCapturedNationalIdBack(shopper.national_id_photo_back);
             }
-            if (shopper.driving_license) {
-              setCapturedLicense(shopper.driving_license);
+            if (shopper.drivingLicense_Image) {
+              setCapturedLicense(shopper.drivingLicense_Image);
             }
             if (shopper.signature) {
               setCapturedSignature(shopper.signature);
@@ -723,7 +723,7 @@ export default function ShopperRegistrationForm() {
         const imageData = canvas.toDataURL("image/jpeg");
 
         // Compress the image before storing
-        compressImage(imageData, 50) // Compress to ~50KB
+        compressImage(imageData, 100) // Compress to ~100KB
           .then((compressedImage) => {
             // Store the compressed image based on capture mode
             switch (captureMode) {
@@ -1211,20 +1211,42 @@ export default function ShopperRegistrationForm() {
         });
       };
 
+      // Helper function to check and compress images if needed
+      const compressImageIfNeeded = async (imageData: string, maxSizeKB: number = 100): Promise<string> => {
+        if (!imageData) return imageData;
+        
+        // Check if image is already small enough
+        const sizeKB = (imageData.length * 0.75) / 1024; // Approximate size in KB
+        if (sizeKB <= maxSizeKB) return imageData;
+        
+        // Compress the image
+        try {
+          return await compressImage(imageData, maxSizeKB);
+        } catch (error) {
+          console.error("Error compressing image:", error);
+          return imageData; // Return original if compression fails
+        }
+      };
+
       // Prepare the data for submission (including photos)
       const shopperData = {
         ...formValue,
         Police_Clearance_Cert: await convertFileToBase64(policeClearanceFile),
         proofOfResidency: await convertFileToBase64(proofOfResidencyFile),
         mutual_StatusCertificate: await convertFileToBase64(maritalStatusFile),
-        profile_photo: capturedPhoto,
-        national_id_photo_front: capturedNationalIdFront,
-        national_id_photo_back: capturedNationalIdBack,
-        driving_license: capturedLicense,
-        signature: capturedSignature,
+        profile_photo: await compressImageIfNeeded(capturedPhoto, 100),
+        national_id_photo_front: await compressImageIfNeeded(capturedNationalIdFront, 100),
+        national_id_photo_back: await compressImageIfNeeded(capturedNationalIdBack, 100),
+        driving_license: formValue.driving_license,
+        drivingLicense_Image: await compressImageIfNeeded(capturedLicense, 100),
+        signature: await compressImageIfNeeded(capturedSignature, 50),
         user_id: userId,
         force_update: isUpdating, // Set force_update to true if we're updating an existing application
       };
+
+      // Log the data size for debugging
+      const dataSize = JSON.stringify(shopperData).length;
+      console.log(`Submitting shopper data, size: ${(dataSize / 1024).toFixed(2)} KB`);
 
       // Submit data to our API endpoint
       const response = await fetch("/api/queries/register-shopper", {
@@ -1256,13 +1278,13 @@ export default function ShopperRegistrationForm() {
         return;
       }
 
-      if (data && data.shopper) {
+      if (data && data.success) {
         // Show success toast
         const isUpdate = data.updated === true;
         toast.success(
           isUpdate
             ? `Your shopper application has been updated!`
-            : `Your application has been submitted! Status: ${data.shopper.status}`,
+            : `Your application has been submitted successfully! 🎉`,
           {
             duration: 5000,
             position: "top-center",
