@@ -4,27 +4,69 @@ import { gql } from "graphql-request";
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "../../api/auth/[...nextauth]";
 
-const CHECK_SHOPPER_STATUS = gql`
-  query CheckShopperStatus($user_id: uuid!) {
+const GET_SHOPPER_APPLICATION = gql`
+  query GetShopperApplication($user_id: uuid!) {
     shoppers(where: { user_id: { _eq: $user_id } }) {
       id
+      full_name
+      address
+      phone_number
+      national_id
+      driving_license
+      transport_mode
+      profile_photo
+      Police_Clearance_Cert
+      guarantor
+      guarantorPhone
+      guarantorRelationship
+      latitude
+      longitude
+      mutual_StatusCertificate
+      mutual_status
+      national_id_photo_back
+      national_id_photo_front
+      proofOfResidency
+      signature
       status
       active
       onboarding_step
       collection_comment
       needCollection
+      created_at
+      updated_at
     }
   }
 `;
 
-interface CheckShopperResponse {
+interface GetShopperApplicationResponse {
   shoppers: Array<{
     id: string;
+    full_name: string;
+    address: string;
+    phone_number: string;
+    national_id: string;
+    driving_license?: string;
+    transport_mode: string;
+    profile_photo?: string;
+    Police_Clearance_Cert?: string;
+    guarantor?: string;
+    guarantorPhone?: string;
+    guarantorRelationship?: string;
+    latitude?: string;
+    longitude?: string;
+    mutual_StatusCertificate?: string;
+    mutual_status?: string;
+    national_id_photo_back?: string;
+    national_id_photo_front?: string;
+    proofOfResidency?: string;
+    signature?: string;
     status: string;
     active: boolean;
     onboarding_step: string;
     collection_comment?: string;
     needCollection?: boolean;
+    created_at: string;
+    updated_at: string;
   }>;
 }
 
@@ -47,8 +89,8 @@ export default async function handler(
   req: NextApiRequest,
   res: NextApiResponse
 ) {
-  // Allow both GET and POST requests
-  if (req.method !== "POST" && req.method !== "GET") {
+  // Only allow GET requests
+  if (req.method !== "GET") {
     return res.status(405).json({ error: "Method not allowed" });
   }
 
@@ -63,7 +105,7 @@ export default async function handler(
     if (!session || !session.user) {
       return res
         .status(401)
-        .json({ error: "You must be authenticated to check shopper status" });
+        .json({ error: "You must be authenticated to get shopper application" });
     }
 
     if (!hasuraClient) {
@@ -75,36 +117,11 @@ export default async function handler(
       );
     }
 
-    let user_id: string;
+    const user_id = session.user.id;
 
-    if (req.method === "GET") {
-      // For GET requests, use the authenticated user's ID
-      user_id = session.user.id;
-    } else {
-      // For POST requests, use the user_id from the request body
-      user_id = req.body.user_id;
-
-      // Validate required fields
-      if (!user_id) {
-        return res.status(400).json({ error: "Missing user_id" });
-      }
-
-      // Verify the user ID in the request matches the authenticated user
-      if (user_id !== session.user.id) {
-        console.error("User ID mismatch:", {
-          requestUserId: user_id,
-          sessionUserId: session.user.id,
-        });
-        return res.status(403).json({
-          error:
-            "User ID mismatch. You can only check your own shopper status.",
-        });
-      }
-    }
-
-    // Check if the user is a shopper
-    const shopperData = await hasuraClient.request<CheckShopperResponse>(
-      CHECK_SHOPPER_STATUS,
+    // Get the full shopper application data
+    const shopperData = await hasuraClient.request<GetShopperApplicationResponse>(
+      GET_SHOPPER_APPLICATION,
       { user_id }
     );
 
@@ -112,12 +129,12 @@ export default async function handler(
       const shopper = shopperData.shoppers[0];
       return res.status(200).json({ shopper });
     } else {
-      return res.status(200).json({ shopper: null });
+      return res.status(404).json({ error: "No shopper application found" });
     }
   } catch (error: any) {
-    console.error("Error checking shopper status:", error);
+    console.error("Error getting shopper application:", error);
     res.status(500).json({
-      error: "Failed to check shopper status",
+      error: "Failed to get shopper application",
       message: error.message,
       details: error.response?.errors || "No additional details available",
     });
