@@ -2,8 +2,8 @@ import React, { useEffect, useState } from "react";
 import { useRouter } from "next/router";
 import { useSession } from "next-auth/react";
 import { Button, Message, Panel, Steps } from "rsuite";
-import { formatCurrency } from "../../../src/utils/formatCurrency";
-import { logger } from "../../../src/utils/logger";
+import { formatCurrency } from "@utils/formatCurrency";
+import { logger } from "@utils/logger";
 
 interface BatchDetails {
   id: string;
