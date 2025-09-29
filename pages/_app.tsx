@@ -133,6 +133,10 @@ const getPageTitle = (
     return `${baseTitle} - Reels`;
   }
 
+  if (pathname.startsWith("/plasBusiness")) {
+    return `${baseTitle} - Business Marketplace`;
+  }
+
   if (pathname.startsWith("/Auth/Login")) {
     return `${baseTitle} - Login`;
   }
