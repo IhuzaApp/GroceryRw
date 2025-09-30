@@ -66,8 +66,8 @@ export default function PlasBusinessPage() {
 
   return (
     <RootLayout>
-      <div className="min-h-screen  via-white to-gray-100 dark:from-gray-900 ">
-        <div className="container mx-auto px-4 py-8">
+      <div className="min-h-screen via-white to-gray-100 dark:from-gray-900 ">
+        <div className="container mx-auto max-w-8xl">
           <BuyerDashboardContent 
             selectedQuote={selectedQuote}
             setSelectedQuote={setSelectedQuote}
