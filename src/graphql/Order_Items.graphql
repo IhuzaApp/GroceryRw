@@ -9,16 +9,28 @@ query GetOrderItems {
     Product {
       category
       created_at
-      description
       id
       image
       is_active
       measurement_unit
-      name
       price
       quantity
       shop_id
       updated_at
+      final_price
+      productName_id
+      reorder_point
+      sku
+      supplier
+      ProductName {
+        sku
+        name
+        image
+        id
+        description
+        create_at
+        barcode
+      }
     }
     Order {
       user_id
@@ -33,6 +45,14 @@ query GetOrderItems {
       delivery_address_id
       created_at
       combined_order_id
+      assigned_at
+      voucher_code
+      shop_id
+      service_fee
+      discount
+      found
+      delivery_fee
+      OrderID
     }
   }
 }

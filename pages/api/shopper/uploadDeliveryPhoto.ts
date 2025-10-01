@@ -36,6 +36,22 @@ const UPDATE_REEL_ORDER_DELIVERY_PHOTO = gql`
   }
 `;
 
+// GraphQL mutation to update restaurant order with delivery photo and updated_at
+const UPDATE_RESTAURANT_ORDER_DELIVERY_PHOTO = gql`
+  mutation UpdateRestaurantOrderDeliveryPhoto(
+    $order_id: uuid!
+    $delivery_photo_url: String!
+    $updated_at: timestamptz!
+  ) {
+    update_restaurant_orders(
+      where: { id: { _eq: $order_id } }
+      _set: { delivery_photo_url: $delivery_photo_url, updated_at: $updated_at }
+    ) {
+      affected_rows
+    }
+  }
+`;
+
 // GraphQL query to check if order is delivered
 const CHECK_ORDER_STATUS = gql`
   query CheckOrderStatus($orderId: uuid!) {
@@ -94,6 +110,7 @@ export default async function handler(
     }
 
     const isReelOrder = orderType === "reel";
+    const isRestaurantOrder = orderType === "restaurant";
 
     // Update the order with the delivery photo and updated_at based on order type
     let data: any;
@@ -107,6 +124,21 @@ export default async function handler(
       };
       data = await hasuraClient.request<UpdateReelOrderDeliveryPhotoResponse>(
         UPDATE_REEL_ORDER_DELIVERY_PHOTO,
+        {
+          order_id: orderId,
+          delivery_photo_url: photoUrl,
+          updated_at: updatedAt,
+        }
+      );
+    } else if (isRestaurantOrder) {
+      // Update restaurant order
+      type UpdateRestaurantOrderDeliveryPhotoResponse = {
+        update_restaurant_orders: {
+          affected_rows: number;
+        };
+      };
+      data = await hasuraClient.request<UpdateRestaurantOrderDeliveryPhotoResponse>(
+        UPDATE_RESTAURANT_ORDER_DELIVERY_PHOTO,
         {
           order_id: orderId,
           delivery_photo_url: photoUrl,
@@ -133,6 +165,8 @@ export default async function handler(
     // Check if the update was successful
     const affectedRows = isReelOrder
       ? data.update_reel_orders.affected_rows
+      : isRestaurantOrder
+      ? data.update_restaurant_orders.affected_rows
       : data.update_Orders.affected_rows;
 
     if (affectedRows === 0) {

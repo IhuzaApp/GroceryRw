@@ -184,7 +184,7 @@ interface OrderDetailsType {
     };
   };
   // Add order type and reel-specific fields
-  orderType?: "regular" | "reel";
+  orderType?: "regular" | "reel" | "restaurant";
   reel?: {
     id: string;
     title: string;
@@ -274,16 +274,19 @@ export default function BatchDetails({
   const [currentStep, setCurrentStep] = useState(() => {
     if (!orderData) return 0;
 
+    // For restaurant orders, skip the shopping step
+    const isRestaurantOrder = orderData.orderType === "restaurant";
+
     switch (orderData.status) {
       case "accepted":
-        return 0;
+        return isRestaurantOrder ? 1 : 0; // Restaurant orders start at step 1 (delivery)
       case "shopping":
         return 1;
       case "on_the_way":
       case "at_customer":
-        return 2;
+        return isRestaurantOrder ? 2 : 2; // Both types go to step 2
       case "delivered":
-        return 3;
+        return isRestaurantOrder ? 3 : 3; // Both types end at step 3
       default:
         return 0;
     }
@@ -935,9 +938,41 @@ export default function BatchDetails({
     }
   };
 
+  // Handle restaurant delivery confirmation - show modal without updating status
+  const handleRestaurantDeliveryConfirmation = () => {
+    if (!order) return;
+
+    // For restaurant orders, create minimal invoice data for delivery confirmation modal
+    const restaurantOrder = order as any; // Type assertion for restaurant order fields
+    const mockInvoiceData = {
+      id: `restaurant_${order.id}_${Date.now()}`,
+      invoiceNumber: `REST-${order.id.slice(-8)}-${new Date().getTime().toString().slice(-6)}`,
+      orderId: order.id,
+      orderNumber: order.OrderID || order.id.slice(-8),
+      customer: order.orderedBy?.name || "Restaurant Customer",
+      customerEmail: order.orderedBy?.email || "",
+      shop: restaurantOrder.Restaurant?.name || "Restaurant",
+      shopAddress: restaurantOrder.Restaurant?.location || "",
+      dateCreated: new Date().toLocaleString(),
+      dateCompleted: new Date().toLocaleString(),
+      status: "delivered", // This will be updated after photo upload
+      items: [],
+      subtotal: 0,
+      serviceFee: 0,
+      deliveryFee: parseFloat(order.deliveryFee || "0"),
+      total: parseFloat(order.deliveryFee || "0"),
+      orderType: "restaurant",
+      isReelOrder: false,
+      isRestaurantOrder: true,
+    };
+    setInvoiceData(mockInvoiceData);
+    setShowInvoiceModal(true);
+  };
+
   const handleUpdateStatus = async (newStatus: string) => {
     // For the "on_the_way" status, we'll show the payment modal instead of immediately updating
-    if (newStatus === "on_the_way" && !showPaymentModal) {
+    // BUT skip payment modal for restaurant orders since they don't require payment processing
+    if (newStatus === "on_the_way" && !showPaymentModal && order?.orderType !== "restaurant") {
       handleShowPaymentModal();
       return;
     }
@@ -957,9 +992,10 @@ export default function BatchDetails({
       }
 
       // Update step
+      const isRestaurantOrder = order?.orderType === "restaurant";
       switch (newStatus) {
         case "accepted":
-          setCurrentStep(0);
+          setCurrentStep(isRestaurantOrder ? 1 : 0);
           break;
         case "shopping":
           setCurrentStep(1);
@@ -975,7 +1011,7 @@ export default function BatchDetails({
             closeChat();
           }
 
-          // Generate invoice and show the delivery photo modal
+          // Generate invoice and show the delivery photo modal (restaurant orders handled separately)
           const invoiceGenerated = await generateInvoiceAndRedirect(order.id);
 
           // Show success notification when order is delivered
@@ -1172,6 +1208,8 @@ export default function BatchDetails({
   const getActionButton = () => {
     if (!order) return null;
 
+    const isRestaurantOrder = order.orderType === "restaurant";
+
     switch (order.status) {
       case "accepted":
         return (
@@ -1180,11 +1218,11 @@ export default function BatchDetails({
             color="green"
             size="lg"
             block
-            onClick={() => handleUpdateStatus("shopping")}
+            onClick={() => handleUpdateStatus(isRestaurantOrder ? "on_the_way" : "shopping")}
             loading={loading}
             className="rounded-lg py-4 text-xl font-bold sm:rounded-xl sm:py-6 sm:text-3xl"
           >
-            Start Shopping
+            {isRestaurantOrder ? "Start Delivery" : "Start Shopping"}
           </Button>
         );
       case "shopping":
@@ -1231,7 +1269,15 @@ export default function BatchDetails({
             color="green"
             size="lg"
             block
-            onClick={() => handleUpdateStatus("delivered")}
+            onClick={() => {
+              if (isRestaurantOrder) {
+                // For restaurant orders, show modal without updating status
+                handleRestaurantDeliveryConfirmation();
+              } else {
+                // For regular/reel orders, update status immediately
+                handleUpdateStatus("delivered");
+              }
+            }}
             loading={loading}
             className="rounded-lg py-4 text-xl font-bold sm:rounded-xl sm:py-6 sm:text-3xl"
           >
