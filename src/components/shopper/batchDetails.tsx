@@ -193,6 +193,9 @@ interface OrderDetailsType {
     Product: string;
     type: string;
     video_url: string;
+    restaurant_id?: string | null;
+    user_id?: string | null;
+    isRestaurantUserReel?: boolean;
     Restaurant?: {
       id: string;
       name: string;
@@ -276,17 +279,22 @@ export default function BatchDetails({
 
     // For restaurant orders, skip the shopping step
     const isRestaurantOrder = orderData.orderType === "restaurant";
+    // Skip shopping if EITHER restaurant_id OR user_id is not null
+    const isRestaurantUserReel = orderData.reel?.restaurant_id || orderData.reel?.user_id;
 
     switch (orderData.status) {
       case "accepted":
+        if (isRestaurantUserReel) {
+          return 1; // Restaurant/user reels skip shopping and start at delivery step
+        }
         return isRestaurantOrder ? 1 : 0; // Restaurant orders start at step 1 (delivery)
       case "shopping":
         return 1;
       case "on_the_way":
       case "at_customer":
-        return isRestaurantOrder ? 2 : 2; // Both types go to step 2
+        return isRestaurantOrder || isRestaurantUserReel ? 2 : 2; // Both types go to step 2
       case "delivered":
-        return isRestaurantOrder ? 3 : 3; // Both types end at step 3
+        return isRestaurantOrder || isRestaurantUserReel ? 3 : 3; // Both types end at step 3
       default:
         return 0;
     }
@@ -955,15 +963,49 @@ export default function BatchDetails({
     setShowInvoiceModal(true);
   };
 
+  // Handle restaurant/user reel delivery confirmation - show modal without generating invoice
+  const handleReelDeliveryConfirmation = () => {
+    if (!order) return;
+
+    // For restaurant/user reel orders, create minimal invoice data for delivery confirmation modal
+    const mockInvoiceData = {
+      id: `reel_${order.id}_${Date.now()}`,
+      invoiceNumber: `REEL-${order.id.slice(-8)}-${new Date().getTime().toString().slice(-6)}`,
+      orderId: order.id,
+      orderNumber: order.OrderID || order.id.slice(-8),
+      customer: order.orderedBy?.name || order.user?.name || "Reel Customer",
+      customerEmail: order.orderedBy?.email || order.user?.email || "",
+      shop: order.reel?.Restaurant?.name || "Restaurant/User Reel",
+      shopAddress: order.reel?.Restaurant?.location || "From Restaurant/User",
+      dateCreated: new Date().toLocaleString(),
+      dateCompleted: new Date().toLocaleString(),
+      status: "delivered", // This will be updated after photo upload
+      items: [],
+      subtotal: parseFloat(order.reel?.Price || "0") * (order.quantity || 1),
+      serviceFee: parseFloat(order.serviceFee || "0"),
+      deliveryFee: parseFloat(order.deliveryFee || "0"),
+      total: parseFloat(order.total?.toString() || "0"),
+      orderType: "reel",
+      isReelOrder: true,
+      isRestaurantOrder: false,
+    };
+    setInvoiceData(mockInvoiceData);
+    setShowInvoiceModal(true);
+  };
+
   const handleUpdateStatus = async (newStatus: string) => {
+    if (!order?.id || loading) return; // Prevent multiple calls while loading
+
     // For the "on_the_way" status, we'll show the payment modal instead of immediately updating
-    // BUT skip payment modal for restaurant orders since they don't require payment processing
-    if (newStatus === "on_the_way" && !showPaymentModal && order?.orderType !== "restaurant") {
+    // BUT skip payment modal for restaurant orders and restaurant/user reels since they don't require payment processing
+    // Skip shopping if EITHER restaurant_id OR user_id is not null
+    const isRestaurantUserReel = order?.reel?.restaurant_id || order?.reel?.user_id;
+    const isRestaurantOrder = order?.orderType === "restaurant";
+    
+    if (newStatus === "on_the_way" && !showPaymentModal && !isRestaurantOrder && !isRestaurantUserReel) {
       handleShowPaymentModal();
       return;
     }
-
-    if (!order?.id || loading) return; // Prevent multiple calls while loading
 
     try {
       setLoading(true);
@@ -979,9 +1021,15 @@ export default function BatchDetails({
 
       // Update step
       const isRestaurantOrder = order?.orderType === "restaurant";
+      // Skip shopping if EITHER restaurant_id OR user_id is not null
+      const isRestaurantUserReel = order?.reel?.restaurant_id || order?.reel?.user_id;
       switch (newStatus) {
         case "accepted":
-          setCurrentStep(isRestaurantOrder ? 1 : 0);
+          if (isRestaurantUserReel) {
+            setCurrentStep(1); // Restaurant/user reels skip shopping
+          } else {
+            setCurrentStep(isRestaurantOrder ? 1 : 0);
+          }
           break;
         case "shopping":
           setCurrentStep(1);
@@ -997,8 +1045,21 @@ export default function BatchDetails({
             closeChat();
           }
 
-          // Generate invoice and show the delivery photo modal (restaurant orders handled separately)
-          const invoiceGenerated = await generateInvoiceAndRedirect(order.id);
+          // Check if this is a reel order with restaurant_id OR user_id not null
+          
+          // Only generate invoice for regular orders and regular reel orders (not restaurant/user reels)
+          if (!isRestaurantOrder && !(order?.orderType === "reel" && isRestaurantUserReel)) {
+            // Generate invoice and show the delivery photo modal
+            const invoiceGenerated = await generateInvoiceAndRedirect(order.id);
+          } else {
+            // For restaurant orders and restaurant/user reel orders, show delivery confirmation modal directly
+            if (isRestaurantOrder) {
+              handleRestaurantDeliveryConfirmation();
+            } else {
+              // For restaurant/user reel orders, show delivery confirmation modal without generating invoice
+              handleReelDeliveryConfirmation();
+            }
+          }
 
           // Show success notification when order is delivered
           toaster.push(
@@ -1195,6 +1256,8 @@ export default function BatchDetails({
     if (!order) return null;
 
     const isRestaurantOrder = order.orderType === "restaurant";
+    // Skip shopping if EITHER restaurant_id OR user_id is not null
+    const isRestaurantUserReel = order.reel?.restaurant_id || order.reel?.user_id;
 
     switch (order.status) {
       case "accepted":
@@ -1204,29 +1267,58 @@ export default function BatchDetails({
             color="green"
             size="lg"
             block
-            onClick={() => handleUpdateStatus(isRestaurantOrder ? "on_the_way" : "shopping")}
+            onClick={() => {
+              if (order.orderType === "reel" && isRestaurantUserReel) {
+                // Skip shopping and go straight to delivery for restaurant/user reels
+                handleUpdateStatus("on_the_way");
+              } else {
+                handleUpdateStatus(isRestaurantOrder ? "on_the_way" : "shopping");
+              }
+            }}
             loading={loading}
             className="rounded-lg py-4 text-xl font-bold sm:rounded-xl sm:py-6 sm:text-3xl"
           >
-            {isRestaurantOrder ? "Start Delivery" : "Start Shopping"}
+            {order.orderType === "reel" && isRestaurantUserReel 
+              ? "Start Delivery" 
+              : isRestaurantOrder 
+              ? "Start Delivery" 
+              : "Start Shopping"}
           </Button>
         );
       case "shopping":
-        // For reel orders, no need to check found items since there's only one item
+        // For restaurant/user reel orders, they shouldn't be in shopping status
+        // For regular reel orders, no need to check found items since there's only one item
         if (order.orderType === "reel") {
-          return (
-            <Button
-              appearance="primary"
-              color="green"
-              size="lg"
-              block
-              onClick={() => handleUpdateStatus("on_the_way")}
-              loading={loading}
-              className="rounded-lg py-4 text-xl font-bold sm:rounded-xl sm:py-6 sm:text-3xl"
-            >
-              Make Payment
-            </Button>
-          );
+          if (isRestaurantUserReel) {
+            // This shouldn't happen, but handle gracefully
+            return (
+              <Button
+                appearance="primary"
+                color="green"
+                size="lg"
+                block
+                onClick={() => handleUpdateStatus("on_the_way")}
+                loading={loading}
+                className="rounded-lg py-4 text-xl font-bold sm:rounded-xl sm:py-6 sm:text-3xl"
+              >
+                Complete Delivery
+              </Button>
+            );
+          } else {
+            return (
+              <Button
+                appearance="primary"
+                color="green"
+                size="lg"
+                block
+                onClick={() => handleUpdateStatus("on_the_way")}
+                loading={loading}
+                className="rounded-lg py-4 text-xl font-bold sm:rounded-xl sm:py-6 sm:text-3xl"
+              >
+                Make Payment
+              </Button>
+            );
+          }
         }
 
         // For regular orders, check if any items are marked as found
@@ -1648,11 +1740,13 @@ export default function BatchDetails({
                     description="Order has been assigned to you"
                     status={currentStep >= 0 ? "finish" : "wait"}
                   />
-                  <Steps.Item
-                    title="Shopping"
-                    description="Collecting items from the store"
-                    status={currentStep >= 1 ? "finish" : "wait"}
-                  />
+                  {!((order?.reel?.restaurant_id || order?.reel?.user_id) || order?.orderType === "restaurant") && (
+                    <Steps.Item
+                      title="Shopping"
+                      description="Collecting items from the store"
+                      status={currentStep >= 1 ? "finish" : "wait"}
+                    />
+                  )}
                   <Steps.Item
                     title="On The Way"
                     description="Delivering to customer"
@@ -2360,7 +2454,13 @@ export default function BatchDetails({
                         )}
                         <Divider />
                         <div className="flex justify-between text-lg font-bold sm:text-xl">
-                          <span>Total</span>
+                          <span>Order Total (excluding fees)</span>
+                          <span>{formatCurrency(
+                            parseFloat(order.reel?.Price || "0") * (order.quantity || 1)
+                          )}</span>
+                        </div>
+                        <div className="flex justify-between text-sm text-slate-600 dark:text-slate-400">
+                          <span>Total with fees</span>
                           <span>{formatCurrency(order.total)}</span>
                         </div>
                       </>
