@@ -9301,3 +9301,185 @@ This documentation ensures developers understand the differences between order t
 - Performance metrics for restaurant deliveries
 - Advanced filtering and search
 - Restaurant order history and reporting
+
+## Restaurant Order Workflow Improvements (Latest Updates)
+
+### Recent System Enhancements
+
+The restaurant order system has been significantly improved to provide a seamless workflow from order placement to delivery completion. The following enhancements ensure restaurant orders operate with optimal efficiency and reliability.
+
+### 1. Streamlined Order Status Flow
+
+**Previous Issue**: Restaurant orders were following the same workflow as regular grocery orders, including an unnecessary "shopping" phase.
+
+**Solution Implemented**: Restaurant orders now follow a direct pickup-and-delivery workflow:
+
+```
+Order Status Flow for Restaurant Orders:
+accepted → on_the_way → delivered
+
+(No "shopping" phase - restaurants prepare food, shoppers only pick up and deliver)
+```
+
+**Technical Implementation**:
+- Modified `batchDetails.tsx` to show "Start Delivery" instead of "Start Shopping" for restaurant orders
+- Updated `updateOrderStatus.ts` to prevent restaurant orders from being updated to "shopping" status
+- Added validation to skip wallet operations for restaurant orders during shopping phase
+
+### 2. Wallet Operations Integration
+
+**Previous Issue**: Restaurant orders were not properly integrated with the wallet system, causing foreign key constraint violations.
+
+**Solution Implemented**: Complete wallet transaction support for restaurant orders:
+
+**Wallet Transaction Structure**:
+```typescript
+// Restaurant Order Wallet Transaction
+{
+  wallet_id: "shopper-wallet-id",
+  amount: "2500.00",                    // Delivery fee only
+  type: "earnings",
+  status: "completed",
+  related_order_id: null,               // Explicitly null
+  related_reel_orderId: null,           // Explicitly null
+  related_restaurant_order_id: "order-id", // Restaurant order reference
+  description: "Delivery fee earnings after platform fee deduction"
+}
+```
+
+**Key Improvements**:
+- Restaurant orders only earn delivery fees (no service fees)
+- Proper foreign key field usage (`related_restaurant_order_id`)
+- Explicit null values for unused foreign key fields
+- Consistent wallet transaction creation across all order types
+
+### 3. Delivery Confirmation System
+
+**Previous Issue**: Restaurant orders were attempting to generate invoices during delivery confirmation, which was unnecessary for restaurant orders.
+
+**Solution Implemented**: Streamlined delivery confirmation for restaurant orders:
+
+**Delivery Confirmation Flow**:
+1. **Photo Upload**: Shopper takes delivery confirmation photo
+2. **Wallet Processing**: Delivery fee is added to shopper's wallet
+3. **Status Update**: Order status changes to "delivered"
+4. **No Invoice Generation**: Restaurant orders skip invoice creation (restaurants handle their own billing)
+
+**Technical Implementation**:
+- Modified `DeliveryConfirmationModal.tsx` to handle restaurant orders appropriately
+- Updated `batchDetails.tsx` to show delivery photo modal without invoice generation
+- Ensured proper status update timing (only after photo upload completion)
+
+### 4. Payment Processing Improvements
+
+**Previous Issue**: Payment processing was failing due to foreign key constraint violations and duplicate refund creation.
+
+**Solution Implemented**: Robust payment processing with proper error handling:
+
+**Payment Flow Enhancements**:
+- **Foreign Key Management**: All wallet transactions explicitly set foreign key fields
+- **Duplicate Prevention**: Check for existing refunds before creating new ones
+- **Error Recovery**: Graceful handling of partial payment completions
+- **Transaction Integrity**: Consistent wallet transaction structure across all APIs
+
+**Files Updated**:
+- `pages/api/shopper/walletOperations.ts` - Complete wallet operations for all order types
+- `pages/api/shopper/processPayment.ts` - Payment processing with duplicate refund prevention
+- `pages/api/shopper/recordTransaction.ts` - Transaction recording with proper foreign keys
+- `src/lib/walletTransactions.ts` - Wallet transaction utilities with foreign key support
+
+### 5. Database Schema Optimization
+
+**Schema Updates**:
+- **Foreign Key Fields**: Added `related_restaurant_order_id` field to `Wallet_Transactions` table
+- **Constraint Management**: Proper foreign key constraints for all order types
+- **Data Integrity**: Unique constraints on refund records to prevent duplicates
+
+**GraphQL Schema**:
+- Regenerated GraphQL types to include new foreign key fields
+- Updated all wallet transaction mutations to support restaurant orders
+- Consistent schema across all order types
+
+### 6. User Experience Improvements
+
+**UI/UX Enhancements**:
+- **Clear Status Indicators**: Restaurant orders show appropriate status transitions
+- **Proper Button Labels**: "Start Delivery" instead of "Start Shopping" for restaurant orders
+- **Modal Behavior**: Clean delivery confirmation modal without premature "uploading" messages
+- **Error Handling**: Clear error messages and proper error recovery
+
+**Visual Distinctions**:
+- Orange color scheme for restaurant orders
+- Restaurant-specific icons and indicators
+- Clear order type identification throughout the system
+
+### 7. System Reliability
+
+**Error Prevention**:
+- **Foreign Key Violations**: Eliminated through proper field management
+- **Duplicate Records**: Prevented through existence checks
+- **Status Conflicts**: Resolved through order-type-specific validation
+- **Transaction Failures**: Minimized through comprehensive error handling
+
+**Performance Optimizations**:
+- **Efficient Queries**: Optimized GraphQL queries for restaurant orders
+- **Reduced API Calls**: Streamlined wallet operations
+- **Better Caching**: Improved data fetching and state management
+
+### 8. Testing and Validation
+
+**Comprehensive Testing**:
+- **Order Flow Testing**: Verified complete restaurant order workflow
+- **Wallet Integration**: Tested all wallet operations for restaurant orders
+- **Payment Processing**: Validated payment and refund creation
+- **Error Scenarios**: Tested error handling and recovery mechanisms
+
+**Quality Assurance**:
+- **Type Safety**: Full TypeScript support for all restaurant order operations
+- **Data Validation**: Proper input validation and error handling
+- **Consistency Checks**: Ensured consistent behavior across all order types
+
+### 9. Future Enhancements
+
+**Planned Improvements**:
+- **Advanced Analytics**: Restaurant-specific performance metrics
+- **Dynamic Pricing**: Restaurant-specific delivery fee calculations
+- **Integration APIs**: Direct integration with restaurant POS systems
+- **Real-time Updates**: Enhanced WebSocket support for restaurant orders
+
+**Scalability Considerations**:
+- **Database Optimization**: Index optimization for restaurant order queries
+- **API Performance**: Caching strategies for frequently accessed data
+- **Load Balancing**: Distribution strategies for high-volume restaurant orders
+
+### 10. Technical Architecture
+
+**System Components**:
+```
+Restaurant Order System
+├── Order Management
+│   ├── Status Updates (updateOrderStatus.ts)
+│   ├── Order Details (orderDetails.ts)
+│   └── Batch Processing (batchDetails.tsx)
+├── Wallet Operations
+│   ├── Transaction Creation (walletOperations.ts)
+│   ├── Payment Processing (processPayment.ts)
+│   └── Transaction Recording (recordTransaction.ts)
+├── Delivery Confirmation
+│   ├── Photo Upload (uploadDeliveryPhoto.ts)
+│   ├── Modal Management (DeliveryConfirmationModal.tsx)
+│   └── Status Updates (batchDetails.tsx)
+└── Database Integration
+    ├── GraphQL Queries
+    ├── Foreign Key Management
+    └── Constraint Handling
+```
+
+**Key Benefits**:
+- **Streamlined Workflow**: Direct pickup-and-delivery process
+- **Reliable Payments**: Robust wallet integration and payment processing
+- **Data Integrity**: Proper foreign key management and constraint handling
+- **User Experience**: Clear status indicators and smooth delivery confirmation
+- **System Reliability**: Comprehensive error handling and recovery mechanisms
+
+This comprehensive update ensures that restaurant orders operate with the same reliability and efficiency as regular grocery orders, while maintaining their unique workflow requirements.
