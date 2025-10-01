@@ -305,7 +305,7 @@ export const getServerSideProps: GetServerSideProps = async () => {
       },
     };
   } catch (error) {
-    console.error("Error fetching data:", error);
+
     return {
       props: {
         initialData: {
