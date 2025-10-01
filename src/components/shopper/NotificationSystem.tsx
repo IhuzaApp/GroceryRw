@@ -66,6 +66,7 @@ export default function NotificationSystem({
   const [notificationPermission, setNotificationPermission] =
     useState<NotificationPermission>("default");
   const [audioLoaded, setAudioLoaded] = useState(false);
+  const [acceptingOrders, setAcceptingOrders] = useState<Set<string>>(new Set()); // Track orders being accepted
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const checkInterval = useRef<NodeJS.Timeout | null>(null);
   const lastNotificationTime = useRef<number>(0);
@@ -287,6 +288,79 @@ export default function NotificationSystem({
     batchAssignments.current = batchAssignments.current.filter(
       (assignment) => assignment.orderId !== orderId
     );
+  };
+
+  const handleAcceptOrder = async (orderId: string) => {
+    if (!session?.user?.id) {
+      toast.error("You must be logged in to accept orders");
+      return false;
+    }
+
+    // Prevent multiple acceptance attempts
+    if (acceptingOrders.has(orderId)) {
+      return false;
+    }
+
+    setAcceptingOrders(prev => new Set(prev).add(orderId));
+
+    try {
+      let success = false;
+
+      // Try WebSocket first if connected
+      if (isConnected) {
+        try {
+          await acceptOrder(orderId);
+          success = true;
+        } catch (wsError) {
+          // WebSocket failed, try API fallback
+        }
+      }
+
+      // If WebSocket failed or not connected, try API
+      if (!success) {
+        const response = await fetch("/api/shopper/accept-batch", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            orderId,
+            userId: session.user.id,
+          }),
+        });
+
+        const data = await response.json();
+
+        if (!response.ok) {
+          throw new Error(data.error || "Failed to accept order");
+        }
+
+        success = true;
+      }
+
+      if (success) {
+        // Remove toast and show success message
+        removeToastForOrder(orderId);
+        toast.success("Order accepted successfully! 🎉");
+        
+        // Call parent callback if provided
+        onAcceptBatch?.(orderId);
+        
+        return true;
+      }
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : "Failed to accept order";
+      toast.error(errorMessage);
+      return false;
+    } finally {
+      setAcceptingOrders(prev => {
+        const newSet = new Set(prev);
+        newSet.delete(orderId);
+        return newSet;
+      });
+    }
+
+    return false;
   };
 
   const sendFirebaseNotification = async (
@@ -525,19 +599,20 @@ export default function NotificationSystem({
             {/* Action Buttons */}
             <div className="flex space-x-2">
               <button
-                onClick={() => {
-                  removeToastForOrder(order.id);
-                  // Use WebSocket if connected, otherwise fallback to API
-                  if (isConnected) {
-                    acceptOrder(order.id);
-                  } else {
-                    onAcceptBatch?.(order.id);
+                onClick={async () => {
+                  const success = await handleAcceptOrder(order.id);
+                  if (success) {
+                    toast.dismiss(t.id);
                   }
-                  toast.dismiss(t.id);
                 }}
-                className="flex-1 rounded-lg bg-green-500 px-4 py-2.5 text-sm font-medium text-white transition-colors duration-200 hover:bg-green-600 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2"
+                disabled={acceptingOrders.has(order.id)}
+                className={`flex-1 rounded-lg px-4 py-2.5 text-sm font-medium text-white transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 ${
+                  acceptingOrders.has(order.id)
+                    ? "bg-gray-400 cursor-not-allowed"
+                    : "bg-green-500 hover:bg-green-600"
+                }`}
               >
-                Accept Order
+                {acceptingOrders.has(order.id) ? "Accepting..." : "Accept Order"}
               </button>
               <button
                 onClick={() => {
@@ -799,23 +874,22 @@ export default function NotificationSystem({
                 </div>
                 <div className="mt-3 flex gap-2">
                   <button
-                    onClick={() => {
-                      removeToastForOrder(order.id);
-                      // Use WebSocket if connected, otherwise fallback to API
-                      if (isConnected) {
-                        acceptOrder(order.id);
-                      } else {
-                        onAcceptBatch?.(order.id);
+                    onClick={async () => {
+                      const success = await handleAcceptOrder(order.id);
+                      if (success) {
+                        toast.dismiss(t.id);
                       }
-                      toast.dismiss(t.id);
                     }}
-                    className={`animate-pulse rounded-lg px-4 py-2 text-sm font-medium text-white backdrop-blur-sm transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-white/50 ${
-                      theme === "dark"
-                        ? "bg-white/20 hover:bg-white/30"
-                        : "bg-white/25 hover:bg-white/35"
+                    disabled={acceptingOrders.has(order.id)}
+                    className={`rounded-lg px-4 py-2 text-sm font-medium text-white backdrop-blur-sm transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-white/50 ${
+                      acceptingOrders.has(order.id)
+                        ? "bg-gray-400 cursor-not-allowed"
+                        : theme === "dark"
+                        ? "bg-white/20 hover:bg-white/30 animate-pulse"
+                        : "bg-white/25 hover:bg-white/35 animate-pulse"
                     }`}
                   >
-                    Accept Now
+                    {acceptingOrders.has(order.id) ? "Accepting..." : "Accept Now"}
                   </button>
                   <button
                     onClick={() => {

@@ -48,6 +48,9 @@ interface Order {
     Product: string;
     type: string;
     video_url: string;
+    restaurant_id?: string | null;
+    user_id?: string | null;
+    isRestaurantUserReel?: boolean;
   };
   quantity?: number;
   deliveryNote?: string | null;
@@ -640,8 +643,12 @@ function ActiveOrderCard({
       ? "rounded-lg bg-gradient-to-r from-orange-600 to-red-600 px-4 py-2 text-xs font-semibold text-white transition-all duration-200 hover:from-orange-700 hover:to-red-700 shadow-md hover:shadow-orange-500/25 flex items-center gap-1"
       : "rounded-lg bg-gradient-to-r from-emerald-600 to-green-600 px-4 py-2 text-xs font-semibold text-white transition-all duration-200 hover:from-emerald-700 hover:to-green-700 shadow-md hover:shadow-emerald-500/25 flex items-center gap-1";
 
+    // Check if this is a restaurant/user reel that should skip shopping
+    // Skip shopping if EITHER restaurant_id OR user_id is not null
+    const isRestaurantUserReel = order.reel?.restaurant_id || order.reel?.user_id;
+
     switch (status) {
-      case "ACCEPTED":
+      case "accepted":
         return (
           <Link href={`/Plasa/active-batches/batch/${order.id}`}>
             <button className={buttonClass}>
@@ -651,14 +658,23 @@ function ActiveOrderCard({
                 stroke="currentColor"
                 viewBox="0 0 24 24"
               >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"
-                />
+                {isRestaurantUserReel ? (
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M13 10V3L4 14h7v7l9-11h-7z"
+                  />
+                ) : (
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"
+                  />
+                )}
               </svg>
-              Start Shopping
+              {isRestaurantUserReel ? "Start Delivery" : "Start Shopping"}
             </button>
           </Link>
         );
@@ -804,7 +820,7 @@ function ActiveOrderCard({
         {!isReelOrder && !isRestaurantOrder && (
           <div
             className={`flex items-center gap-1 rounded-full px-3 py-1 text-center text-xs font-bold shadow-md ${
-              order.status === "ACCEPTED"
+              order.status === "accepted"
                 ? "bg-gradient-to-r from-cyan-600 to-teal-600 text-white"
                 : order.status === "picked" || order.status === "shopping"
                 ? "bg-gradient-to-r from-amber-600 to-yellow-600 text-white"
@@ -820,7 +836,7 @@ function ActiveOrderCard({
               stroke="currentColor"
               viewBox="0 0 24 24"
             >
-              {order.status === "ACCEPTED" ? (
+              {order.status === "accepted" ? (
                 <path
                   strokeLinecap="round"
                   strokeLinejoin="round"
@@ -851,7 +867,7 @@ function ActiveOrderCard({
                 />
               )}
             </svg>
-            {order.status === "ACCEPTED"
+            {order.status === "accepted"
               ? "Ready to Start"
               : order.status === "picked"
               ? "Shopping"

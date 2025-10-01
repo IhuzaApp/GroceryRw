@@ -211,6 +211,8 @@ const GET_REEL_ORDER_DETAILS = gql`
         Product
         type
         video_url
+        restaurant_id
+        user_id
         Restaurant {
           id
           name
@@ -757,7 +759,11 @@ export default async function handler(
         deliveryFee,
         total: parseFloat(orderData.total || "0"),
         estimatedEarnings: totalEarnings,
-        reel: orderData.Reel,
+        reel: {
+          ...orderData.Reel,
+          restaurant_id: orderData.Reel?.restaurant_id,
+          user_id: orderData.Reel?.user_id,
+        },
         quantity: quantity,
         deliveryNote: orderData.delivery_note,
         deliveryNotes: orderData.delivery_note, // Add deliveryNotes for compatibility
