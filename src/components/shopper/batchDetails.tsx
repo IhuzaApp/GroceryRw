@@ -344,7 +344,7 @@ export default function BatchDetails({
           setSystemConfig(data.config);
         }
       } catch (error) {
-        console.error("Error fetching system configuration:", error);
+        // Error fetching system configuration
       }
     };
 
@@ -508,7 +508,7 @@ export default function BatchDetails({
       setWalletData(data.wallet);
       return data.wallet;
     } catch (error) {
-      console.error("Error fetching wallet:", error);
+      // Error fetching wallet
       return null;
     } finally {
       setWalletLoading(false);
@@ -531,7 +531,7 @@ export default function BatchDetails({
       setShowInvoiceModal(true);
       return true;
     } catch (invoiceError) {
-      console.error("Error generating invoice:", invoiceError);
+      // Error generating invoice
       toaster.push(
         <Notification type="warning" header="Invoice Warning" closable>
           {invoiceError instanceof Error
@@ -556,10 +556,7 @@ export default function BatchDetails({
         orderType: orderData?.orderType || "regular", // Pass order type to API
       };
 
-      console.log(
-        "🔍 [Batch Details] Generating invoice with data:",
-        requestData
-      );
+      // Generating invoice with data
 
       // Make API request to generate invoice and save to database
       const invoiceResponse = await fetch("/api/invoices/generate", {
@@ -570,25 +567,17 @@ export default function BatchDetails({
         body: JSON.stringify(requestData),
       });
 
-      console.log(
-        "🔍 [Batch Details] Invoice response status:",
-        invoiceResponse.status
-      );
+      // Invoice response status
 
       if (!invoiceResponse.ok) {
         const errorText = await invoiceResponse.text();
-        console.error("❌ [Batch Details] Invoice generation failed:", {
-          status: invoiceResponse.status,
-          statusText: invoiceResponse.statusText,
-          errorText,
-        });
+        // Invoice generation failed
         throw new Error(
           `Failed to generate invoice: ${invoiceResponse.statusText}`
         );
       }
 
       const invoiceResult = await invoiceResponse.json();
-      console.log("🔍 [Batch Details] Invoice result:", invoiceResult);
 
       if (invoiceResult.success && invoiceResult.invoice) {
         setInvoiceData(invoiceResult.invoice);
@@ -603,7 +592,7 @@ export default function BatchDetails({
         throw new Error("Invalid invoice data returned from API");
       }
     } catch (invoiceError) {
-      console.error("Error generating invoice:", invoiceError);
+      // Error generating invoice
       toaster.push(
         <Notification type="warning" header="Invoice Warning" closable>
           {invoiceError instanceof Error
@@ -655,7 +644,7 @@ export default function BatchDetails({
       // Keep payment modal open - it will handle OTP step internally
       setPaymentLoading(false);
     } catch (err) {
-      console.error("Payment processing error:", err);
+      // Payment processing error
       toaster.push(
         <Notification type="error" header="Payment Failed" closable>
           {err instanceof Error
@@ -763,7 +752,7 @@ export default function BatchDetails({
                 throw new Error(statusData.error || "MoMo status check failed");
               }
             } catch (error) {
-              console.error("MoMo status polling error:", error);
+              // MoMo status polling error
               if (attempt === maxAttempts - 1) {
                 throw error; // Re-throw on last attempt
               }
@@ -778,7 +767,7 @@ export default function BatchDetails({
           throw new Error(momoData.error || "MoMo payment initiation failed");
         }
       } catch (momoError) {
-        console.error("MoMo payment error:", momoError);
+        // MoMo payment error
         toaster.push(
           <Notification type="error" header="MoMo Payment Failed" closable>
             {momoError instanceof Error
@@ -834,7 +823,7 @@ export default function BatchDetails({
         paymentSuccess = true;
         walletUpdated = true;
       } catch (paymentError) {
-        console.error("Payment processing error:", paymentError);
+        // Payment processing error
         // Show error and stop the flow
         toaster.push(
           <Notification type="error" header="Payment Failed" closable>
@@ -891,10 +880,7 @@ export default function BatchDetails({
               }),
             });
           } catch (notificationError) {
-            console.error(
-              "Error sending on-the-way notification:",
-              notificationError
-            );
+            // Error sending on-the-way notification
             // Don't show error to user as payment was successful
           }
 
@@ -910,7 +896,7 @@ export default function BatchDetails({
             { placement: "topEnd", duration: 5000 }
           );
         } catch (updateError) {
-          console.error("Error updating order status:", updateError);
+          // Error updating order status
           toaster.push(
             <Notification type="error" header="Status Update Failed" closable>
               {updateError instanceof Error
@@ -924,7 +910,7 @@ export default function BatchDetails({
         }
       }
     } catch (err) {
-      console.error("OTP verification error:", err);
+      // OTP verification error
       toaster.push(
         <Notification type="error" header="Verification Failed" closable>
           {err instanceof Error
@@ -1025,7 +1011,7 @@ export default function BatchDetails({
           break;
       }
     } catch (err) {
-      console.error("Error updating order status:", err);
+      // Error updating order status
       // Display toast notification for error
       toaster.push(
         <Notification type="error" header="Update Failed" closable>
@@ -1309,16 +1295,7 @@ export default function BatchDetails({
     const customerId =
       orderWithNewFields.customerId || orderWithNewFields.orderedBy?.id;
     if (!customerId) {
-      console.error(
-        "🔍 [Batch Details] Cannot start chat - missing customer data:",
-        {
-          hasOrder: !!order,
-          customerId,
-          orderedBy: orderWithNewFields.orderedBy,
-          user: order.user,
-          orderId: order.id,
-        }
-      );
+      // Cannot start chat - missing customer data
       if (typeof window !== "undefined") {
         alert(
           "Cannot start chat: Customer information is missing. Please refresh the page and try again."
@@ -1327,13 +1304,7 @@ export default function BatchDetails({
       return;
     }
 
-    console.log("🔍 [Batch Details] Opening chat with:", {
-      orderId: order.id,
-      customerId:
-        orderWithNewFields.customerId || orderWithNewFields.orderedBy?.id,
-      customerName: orderWithNewFields.orderedBy?.name || order.user?.name,
-      shopperId: session?.user?.id,
-    });
+    // Opening chat
 
     openChat(
       order.id,
@@ -1359,7 +1330,7 @@ export default function BatchDetails({
       await sendMessage(order.id, newMessage.trim());
       setNewMessage("");
     } catch (error) {
-      console.error("Error sending message:", error);
+      // Error sending message
     } finally {
       setIsSending(false);
     }
@@ -1399,7 +1370,7 @@ export default function BatchDetails({
         { placement: "topEnd" }
       );
     } catch (error) {
-      console.error("Error sending shopper arrived notification:", error);
+      // Error sending shopper arrived notification
       toaster.push(
         <Notification type="error" header="Notification Failed" closable>
           Failed to notify customer. Please try again.
@@ -1433,72 +1404,17 @@ export default function BatchDetails({
   // Fetch complete order data when component mounts
   useEffect(() => {
     if (order?.id) {
-      console.log("🔍 [BatchDetails] Initial order data from SSR:", {
-        orderId: order.id,
-        orderType: order.orderType,
-        hasShop: !!order.shop,
-        shopData: order.shop
-          ? {
-              id: order.shop.id,
-              name: order.shop.name,
-              address: order.shop.address,
-              image: order.shop.image,
-              phone: order.shop.phone,
-              latitude: order.shop.latitude,
-              longitude: order.shop.longitude,
-              operating_hours: order.shop.operating_hours,
-            }
-          : null,
-        hasReel: !!order.reel,
-        reelData: order.reel
-          ? {
-              id: order.reel.id,
-              title: order.reel.title,
-              hasRestaurant: !!order.reel.Restaurant,
-              hasShops: !!order.reel.Shops,
-            }
-          : null,
-      });
+      // Initial order data from SSR
 
-      console.log("🔍 [BatchDetails] Fetching order details for ID:", order.id);
+      // Fetching order details for ID
 
       fetch(`/api/shopper/orderDetails?id=${order.id}`)
         .then((res) => {
-          console.log("🔍 [BatchDetails] API response status:", res.status);
+          // API response status
           return res.json();
         })
         .then((data) => {
-          console.log("🔍 [BatchDetails] API response data:", {
-            success: data.success,
-            hasOrder: !!data.order,
-            orderId: data.order?.id,
-            orderType: data.order?.orderType,
-            status: data.order?.status,
-            hasItems: !!data.order?.items,
-            itemsLength: data.order?.items?.length || 0,
-            hasShop: !!data.order?.shop,
-            shopData: data.order?.shop
-              ? {
-                  id: data.order.shop.id,
-                  name: data.order.shop.name,
-                  address: data.order.shop.address,
-                  image: data.order.shop.image,
-                  phone: data.order.shop.phone,
-                  latitude: data.order.shop.latitude,
-                  longitude: data.order.shop.longitude,
-                  operating_hours: data.order.shop.operating_hours,
-                }
-              : null,
-            hasReel: !!data.order?.reel,
-            reelData: data.order?.reel
-              ? {
-                  id: data.order.reel.id,
-                  title: data.order.reel.title,
-                  hasRestaurant: !!data.order.reel.Restaurant,
-                  hasShops: !!data.order.reel.Shops,
-                }
-              : null,
-          });
+          // API response data
 
           if (data.order) {
             // Transform the API response to match BatchDetails expected structure
@@ -1531,64 +1447,15 @@ export default function BatchDetails({
                 })) || [],
             };
 
-            console.log("✅ [BatchDetails] Transformed order:", {
-              id: transformedOrder.id,
-              orderType: transformedOrder.orderType,
-              status: transformedOrder.status,
-              hasOrderItems: !!transformedOrder.Order_Items,
-              orderItemsLength: transformedOrder.Order_Items?.length || 0,
-              hasReel: !!transformedOrder.reel,
-              hasRestaurant: !!transformedOrder.reel?.Restaurant,
-              hasShop: !!transformedOrder.shop,
-              shopData: transformedOrder.shop
-                ? {
-                    id: transformedOrder.shop.id,
-                    name: transformedOrder.shop.name,
-                    address: transformedOrder.shop.address,
-                    image: transformedOrder.shop.image,
-                    phone: transformedOrder.shop.phone,
-                    latitude: transformedOrder.shop.latitude,
-                    longitude: transformedOrder.shop.longitude,
-                    operating_hours: transformedOrder.shop.operating_hours,
-                  }
-                : null,
-              reelData: transformedOrder.reel
-                ? {
-                    id: transformedOrder.reel.id,
-                    title: transformedOrder.reel.title,
-                    hasRestaurant: !!transformedOrder.reel.Restaurant,
-                    hasShops: !!transformedOrder.reel.Shops,
-                    restaurantData: transformedOrder.reel.Restaurant
-                      ? {
-                          id: transformedOrder.reel.Restaurant.id,
-                          name: transformedOrder.reel.Restaurant.name,
-                          location: transformedOrder.reel.Restaurant.location,
-                          phone: transformedOrder.reel.Restaurant.phone,
-                        }
-                      : null,
-                    shopData: transformedOrder.reel.Shops
-                      ? {
-                          id: transformedOrder.reel.Shops.id,
-                          name: transformedOrder.reel.Shops.name,
-                          address: transformedOrder.reel.Shops.address,
-                          phone: transformedOrder.reel.Shops.phone,
-                        }
-                      : null,
-                  }
-                : null,
-            });
+            // Transformed order
 
             setOrder(transformedOrder);
           } else {
-            console.log("❌ [BatchDetails] No order data in response");
+            // No order data in response
           }
         })
         .catch((err) => {
-          console.error("❌ [BatchDetails] Error fetching order details:", {
-            error: err,
-            message: err instanceof Error ? err.message : "Unknown error",
-            orderId: order.id,
-          });
+          // Error fetching order details
         });
     }
   }, [order?.id, session?.user?.id]);
