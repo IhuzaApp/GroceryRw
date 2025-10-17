@@ -30,7 +30,7 @@ interface QuoteDetailsModalProps {
   onMessage: (supplierId: string) => void;
 }
 
-export function QuoteDetailsModal({
+export default function QuoteDetailsModal({
   quote,
   isOpen,
   onClose,
