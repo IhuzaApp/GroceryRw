@@ -23,7 +23,7 @@ import {
 } from "../src/types";
 
 import ShopperDashboard from "@components/shopper/dashboard/ShopperDashboard";
-import UserDashboard from "@components/user/dashboard/UserDashboard";
+import ResponsiveUserDashboard from "@components/user/dashboard/ResponsiveUserDashboard";
 import MainBanners from "@components/ui/banners";
 import LoadingScreen from "@components/ui/LoadingScreen";
 
@@ -90,7 +90,7 @@ export default function Home({ initialData }: { initialData: Data }) {
   return (
     <RootLayout>
       <MainBanners />
-      <UserDashboard initialData={safeInitialData} />
+      <ResponsiveUserDashboard initialData={safeInitialData} />
     </RootLayout>
   );
 }
