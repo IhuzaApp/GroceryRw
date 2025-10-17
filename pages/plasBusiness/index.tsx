@@ -16,7 +16,7 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/router";
 import RootLayout from "../../src/components/ui/layout";
 import { useAuth } from "../../src/context/AuthContext";
-import { QuoteDetailsModal } from "./quote-details-modal";
+import QuoteDetailsModal from "./quote-details-modal";
 import { BusinessHeader } from "../../src/components/business/BusinessHeader";
 import { StatsCards } from "../../src/components/business/StatsCards";
 import { SuppliersSection } from "../../src/components/business/SuppliersSection";
