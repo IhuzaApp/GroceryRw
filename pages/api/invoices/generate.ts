@@ -374,8 +374,8 @@ export default async function handler(
       const reel = order.Reel;
 
       itemsTotal = parseFloat(reel.Price);
-      shopName = reel.Restaurant.name;
-      shopAddress = reel.Restaurant.location;
+      shopName = reel.Restaurant?.name || "Reel Order";
+      shopAddress = reel.Restaurant?.location || "From Reel Creator";
 
       // Create invoice items for reel orders
       invoiceItems = [

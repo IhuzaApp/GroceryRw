@@ -1918,6 +1918,101 @@ For technical issues or questions about the Reels and Reel Orders system:
    - API rate limiting
    - Load balancing
 
+## Reel Order Types & Workflows
+
+The system supports three distinct types of reel orders based on the `restaurant_id` and `user_id` fields in the `reels` table:
+
+### 1. Regular Reel Orders
+**Condition**: Both `restaurant_id` AND `user_id` are `null`
+
+**Workflow**:
+- ✅ **Full Shopping Flow**: Shopper must collect items from store
+- ✅ **Payment Required**: Shopper pays for items using wallet/MoMo
+- ✅ **Invoice Generation**: Full invoice is generated upon delivery
+- ✅ **Complete Order Process**: Shopping → Payment → Delivery → Invoice
+
+**Use Cases**: Independent creators, personal recommendations, general product showcases
+
+### 2. Restaurant/User Reel Orders
+**Condition**: Either `restaurant_id` OR `user_id` is NOT `null` (or both)
+
+**Workflow**:
+- ❌ **Skip Shopping**: No item collection required
+- ❌ **Skip Payment**: No payment processing needed
+- ❌ **Skip Invoice**: No invoice generation
+- ✅ **Direct Delivery**: Go straight to delivery confirmation
+- ✅ **Transaction Recording**: Wallet transactions still recorded
+
+**Use Cases**: 
+- **Restaurant Reels** (`restaurant_id` not null): Restaurant-prepared items
+- **User Reels** (`user_id` not null): User-prepared items, homemade products
+
+### 3. Order Flow Logic
+
+```typescript
+// Button Logic
+const isRestaurantUserReel = order.reel?.restaurant_id || order.reel?.user_id;
+
+if (order.status === "accepted") {
+  if (isRestaurantUserReel) {
+    // Show "Start Delivery" button
+    handleUpdateStatus("on_the_way");
+  } else {
+    // Show "Start Shopping" button
+    handleUpdateStatus("shopping");
+  }
+}
+
+// Invoice Generation Logic
+if (isRestaurantUserReel) {
+  // Skip invoice generation, show delivery confirmation modal
+  handleReelDeliveryConfirmation();
+} else {
+  // Generate full invoice
+  generateInvoiceAndRedirect(order.id);
+}
+```
+
+### 4. UI/UX Differences
+
+| Feature | Regular Reels | Restaurant/User Reels |
+|---------|---------------|----------------------|
+| Initial Button | "Start Shopping" | "Start Delivery" |
+| Progress Steps | 4 steps (Accepted → Shopping → On The Way → Delivered) | 3 steps (Accepted → On The Way → Delivered) |
+| Payment Modal | Required | Skipped |
+| Invoice Generation | Full invoice | Delivery confirmation only |
+| Order Summary | Shows item total + fees | Shows item total excluding fees |
+
+### 5. Database Considerations
+
+```sql
+-- Reel orders with restaurant_id or user_id are treated as "prepared" orders
+SELECT * FROM reel_orders ro
+JOIN reels r ON ro.reel_id = r.id
+WHERE r.restaurant_id IS NOT NULL OR r.user_id IS NOT NULL;
+
+-- These orders skip shopping and payment steps
+-- They behave similarly to restaurant orders in the workflow
+```
+
+### 6. Implementation Details
+
+**Frontend Components**:
+- `batchDetails.tsx`: Handles button logic and order flow
+- `activeBatchesCard.tsx`: Shows appropriate button text based on order type
+- `DeliveryConfirmationModal.tsx`: Handles both invoice and delivery confirmation
+
+**Backend APIs**:
+- `/api/shopper/activeBatches.ts`: Fetches order data with restaurant_id/user_id
+- `/api/shopper/orderDetails.ts`: Returns order details with reel information
+- `/api/invoices/generate.ts`: Handles invoice generation with null checks
+
+**Key Logic Points**:
+1. **Button Display**: `order.reel?.restaurant_id || order.reel?.user_id` determines button text
+2. **Payment Skipping**: Same condition skips payment modal
+3. **Invoice Skipping**: Same condition skips invoice generation
+4. **Step Progression**: Restaurant/user reels start at step 1 (delivery) instead of step 0 (shopping)
+
 ## Deploy on Vercel
 
 The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
