@@ -4,6 +4,7 @@ import { Data } from "../../../types";
 import ShopCard from "./ShopCard";
 import SortDropdown from "./SortDropdown";
 import LoadingScreen from "../../ui/LoadingScreen";
+import MobileSearchModal from "../../ui/MobileSearchModal";
 import {
   CategoryIcon,
   getShopImageUrl,
@@ -13,6 +14,8 @@ import {
 
 export default function MobileUserDashboard({ initialData }: { initialData: Data }) {
   const [searchTerm, setSearchTerm] = useState("");
+  const [searchOpen, setSearchOpen] = useState(false);
+  const [shopSearchTerm, setShopSearchTerm] = useState("");
   
   const {
     data,
@@ -48,15 +51,38 @@ export default function MobileUserDashboard({ initialData }: { initialData: Data
     category.name.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
+  // Filter shops based on search term when in category view
+  const filteredShopsBySearch = selectedCategory && filteredShops ? 
+    filteredShops.filter(shop => 
+      shop.name.toLowerCase().includes(shopSearchTerm.toLowerCase()) ||
+      shop.description?.toLowerCase().includes(shopSearchTerm.toLowerCase()) ||
+      shop.address?.toLowerCase().includes(shopSearchTerm.toLowerCase())
+    ) : filteredShops;
+
   // If no category is selected, show only categories
   if (!selectedCategory) {
     return (
       <div className="p-0">
-        <div className="container mx-auto">
-          {/* Categories View */}
-          <div className="mt-0">
-            {/* Search Input */}
-            <div className="mb-6">
+        {/* Mobile Header with Background */}
+        <div className="relative mb-6 h-40 overflow-hidden rounded-b-3xl" style={{ 
+          marginTop: '-44px',
+          marginLeft: '-16px',
+          marginRight: '-16px'
+        }}>
+          {/* Background Image */}
+          <div 
+            className="absolute inset-0 bg-cover bg-center bg-no-repeat"
+            style={{
+              backgroundImage: 'url(/assets/images/mobileheaderbg.jpg)',
+            }}
+          >
+            {/* Overlay for better text readability */}
+            <div className="absolute inset-0 bg-black/20"></div>
+          </div>
+          
+          {/* Search Input - Centered */}
+          <div className="relative z-10 flex h-full items-center justify-center px-4">
+            <div className="w-full max-w-sm">
               <div className="relative">
                 <div className="absolute inset-y-0 left-0 flex items-center pl-4">
                   <svg
@@ -78,13 +104,14 @@ export default function MobileUserDashboard({ initialData }: { initialData: Data
                   placeholder="Search categories..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  className="w-full rounded-2xl border-0 bg-gray-50 py-4 pl-12 pr-4 text-gray-900 placeholder-gray-500 shadow-sm transition-all duration-200 focus:bg-white focus:ring-2 focus:ring-green-500 focus:ring-offset-2 dark:bg-gray-800 dark:text-white dark:placeholder-gray-400 dark:focus:bg-gray-700 dark:focus:ring-green-400"
+                  onFocus={() => setSearchOpen(true)}
+                  className="w-full rounded-2xl border-0 bg-white/90 py-4 pl-12 pr-4 text-gray-900 placeholder-gray-500 shadow-lg backdrop-blur-sm transition-all duration-200 focus:bg-white focus:ring-2 focus:ring-green-500 focus:ring-offset-2"
                 />
                 <div className="absolute inset-y-0 right-0 flex items-center pr-4">
                   {searchTerm ? (
                     <button
                       onClick={() => setSearchTerm("")}
-                      className="flex h-6 w-6 items-center justify-center rounded-full bg-red-100 text-red-600 transition-colors duration-200 hover:bg-red-200 dark:bg-red-800 dark:text-red-300 dark:hover:bg-red-700"
+                      className="flex h-6 w-6 items-center justify-center rounded-full bg-red-100 text-red-600 transition-colors duration-200 hover:bg-red-200"
                     >
                       <svg
                         className="h-3 w-3"
@@ -101,7 +128,7 @@ export default function MobileUserDashboard({ initialData }: { initialData: Data
                       </svg>
                     </button>
                   ) : (
-                    <div className="flex h-6 w-6 items-center justify-center rounded-full bg-green-100 text-green-600 dark:bg-green-800 dark:text-green-300">
+                    <div className="flex h-6 w-6 items-center justify-center rounded-full bg-green-100 text-green-600">
                       <svg
                         className="h-3 w-3"
                         fill="none"
@@ -120,6 +147,12 @@ export default function MobileUserDashboard({ initialData }: { initialData: Data
                 </div>
               </div>
             </div>
+          </div>
+        </div>
+
+        <div className="container mx-auto">
+          {/* Categories View */}
+          <div className="mt-0">
 
             {error && (
               <div className="mb-4 rounded-lg bg-red-100 p-3 text-sm text-red-700 dark:bg-red-900 dark:text-red-100">
@@ -240,18 +273,26 @@ export default function MobileUserDashboard({ initialData }: { initialData: Data
   }
 
   // If category is selected, show shops for that category
+  const selectedCategoryData = data?.categories?.find((c) => c.id === selectedCategory);
+  
   return (
     <div className="p-0">
-      <div className="container mx-auto">
-        {/* Header with back button */}
-        <div className="mb-4 flex items-center justify-between">
+      {/* Mobile Header with Category Name */}
+      <div className="mb-6" style={{ 
+        marginTop: '-44px',
+        marginLeft: '-16px',
+        marginRight: '-16px'
+      }}>
+        {/* Category Header */}
+        <div className="flex items-center justify-between bg-white px-4 py-4 shadow-sm dark:bg-gray-800">
+          {/* Left side - Back button and Category name */}
           <div className="flex items-center gap-3">
             <button
               onClick={clearFilter}
-              className="flex h-8 w-8 items-center justify-center rounded-full bg-gray-100 text-gray-600 transition-colors duration-200 hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600"
+              className="flex h-10 w-10 items-center justify-center rounded-full bg-gray-100 text-gray-600 transition-colors duration-200 hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600"
             >
               <svg
-                className="h-4 w-4"
+                className="h-5 w-5"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
@@ -266,23 +307,124 @@ export default function MobileUserDashboard({ initialData }: { initialData: Data
             </button>
             <div>
               <h2 className="text-xl font-bold text-gray-900 dark:text-white">
-                {data?.categories?.find((c) => c.id === selectedCategory)
-                  ?.name || "Selected Category"}
+                {selectedCategoryData?.name || "Selected Category"}
               </h2>
               <p className="text-sm text-gray-600 dark:text-gray-400">
-                {filteredShops?.length || 0} shops available
+                {shopSearchTerm ? 
+                  `${filteredShopsBySearch?.length || 0} shops found` : 
+                  `${filteredShops?.length || 0} shops available`
+                }
               </p>
             </div>
           </div>
           
-          {/* Sort Dropdown */}
-          <SortDropdown
-            sortBy={sortBy}
-            onSortChange={handleSortChange}
-            onNearbyClick={handleNearbyClick}
-            isNearbyActive={isNearbyActive}
-          />
+          {/* Right side - Icon-only Sort and Nearby buttons */}
+          <div className="flex items-center gap-2">
+            {/* Nearby Button */}
+            <button
+              onClick={handleNearbyClick}
+              className={`flex h-10 w-10 items-center justify-center rounded-full transition-colors duration-200 ${
+                isNearbyActive
+                  ? 'bg-green-100 text-green-600 dark:bg-green-800 dark:text-green-300'
+                  : 'bg-gray-100 text-gray-600 hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600'
+              }`}
+              title="Nearby shops"
+            >
+              <svg
+                className="h-5 w-5"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"
+                />
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"
+                />
+              </svg>
+            </button>
+            
+            {/* Sort Button */}
+            <div className="relative">
+              <button
+                className="flex h-10 w-10 items-center justify-center rounded-full bg-gray-100 text-gray-600 transition-colors duration-200 hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600"
+                title="Sort options"
+              >
+                <svg
+                  className="h-5 w-5"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M3 4h13M3 8h9m-9 4h6m4 0l4-4m0 0l4 4m-4-4v12"
+                  />
+                </svg>
+              </button>
+            </div>
+          </div>
         </div>
+        
+        {/* Search Input */}
+        <div className="bg-white px-4 pb-4 dark:bg-gray-800">
+          <div className="relative">
+            <div className="absolute inset-y-0 left-0 flex items-center pl-3">
+              <svg
+                className="h-4 w-4 text-gray-400"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+                />
+              </svg>
+            </div>
+            <input
+              type="text"
+              placeholder="Search shops..."
+              value={shopSearchTerm}
+              onChange={(e) => setShopSearchTerm(e.target.value)}
+              className="w-full rounded-2xl border border-gray-200 bg-gray-50 py-3 pl-10 pr-10 text-gray-900 placeholder-gray-500 transition-all duration-200 focus:border-green-500 focus:bg-white focus:ring-2 focus:ring-green-500 focus:ring-offset-2 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:placeholder-gray-400 dark:focus:border-green-500 dark:focus:bg-gray-600"
+            />
+            {shopSearchTerm && (
+              <button
+                onClick={() => setShopSearchTerm("")}
+                className="absolute inset-y-0 right-0 flex items-center pr-3"
+              >
+                <svg
+                  className="h-4 w-4 text-gray-400 hover:text-gray-600"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M6 18L18 6M6 6l12 12"
+                  />
+                </svg>
+              </button>
+            )}
+          </div>
+        </div>
+      </div>
+
+      <div className="container mx-auto">
 
         {error && (
           <div className="mb-4 rounded-lg bg-red-100 p-3 text-sm text-red-700 dark:bg-red-900 dark:text-red-100">
@@ -301,8 +443,8 @@ export default function MobileUserDashboard({ initialData }: { initialData: Data
           </div>
         ) : (
           <div className="grid grid-cols-2 gap-3">
-            {filteredShops?.length ? (
-              filteredShops.map((shop) => {
+            {filteredShopsBySearch?.length ? (
+              filteredShopsBySearch.map((shop) => {
                 const dyn = shopDynamics[shop.id] || {
                   distance: "N/A",
                   time: "N/A",
@@ -322,12 +464,20 @@ export default function MobileUserDashboard({ initialData }: { initialData: Data
               <div className="col-span-2 mt-8 text-center text-gray-500 dark:text-gray-400">
                 {isFetchingData
                   ? "Loading shops..."
+                  : shopSearchTerm
+                  ? "No shops found matching your search"
                   : "No shops found in this category"}
               </div>
             )}
           </div>
         )}
       </div>
+      
+      {/* Mobile Search Modal */}
+      <MobileSearchModal
+        open={searchOpen}
+        onClose={() => setSearchOpen(false)}
+      />
     </div>
   );
 }

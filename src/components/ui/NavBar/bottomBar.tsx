@@ -5,7 +5,6 @@ import { useCart } from "../../../context/CartContext";
 import { useTheme } from "../../../context/ThemeContext";
 import { Input, Modal, Button, Loader } from "rsuite";
 import { useSession, signOut } from "next-auth/react";
-import MobileSearchModal from "../MobileSearchModal";
 
 interface NavItemProps {
   icon: React.ReactNode;
@@ -124,7 +123,6 @@ const DesktopActionButton = ({
 export default function BottomBar() {
   const [open, setOpen] = useState(false);
   const [moreOpen, setMoreOpen] = useState(false);
-  const [searchOpen, setSearchOpen] = useState(false);
   const router = useRouter();
   const { count } = useCart();
   const { theme, setTheme } = useTheme();
@@ -136,9 +134,6 @@ export default function BottomBar() {
     setTheme(newTheme);
   };
 
-  const handleSearchOpen = () => {
-    setSearchOpen(true);
-  };
 
   const handleAddToCart = async (productId: string) => {
     try {
@@ -448,7 +443,7 @@ export default function BottomBar() {
       {/* Bottom Navigation Bar */}
       <nav className="fixed bottom-0 left-0 z-[9999] flex w-full items-center justify-around border-t border-gray-200 bg-white py-4 shadow-lg transition-colors duration-200 dark:border-gray-700 dark:bg-gray-800 md:hidden">
         <NavItem
-          href="/"
+          href="/Messages"
           icon={
             <svg
               width="30px"
@@ -465,23 +460,16 @@ export default function BottomBar() {
                 strokeLinejoin="round"
               ></g>
               <g id="SVGRepo_iconCarrier">
-                {" "}
                 <path
-                  d="M22 12.2039V13.725C22 17.6258 22 19.5763 20.8284 20.7881C19.6569 22 17.7712 22 14 22H10C6.22876 22 4.34315 22 3.17157 20.7881C2 19.5763 2 17.6258 2 13.725V12.2039C2 9.91549 2 8.77128 2.5192 7.82274C3.0384 6.87421 3.98695 6.28551 5.88403 5.10813L7.88403 3.86687C9.88939 2.62229 10.8921 2 12 2C13.1079 2 14.1106 2.62229 16.116 3.86687L18.116 5.10812C20.0131 6.28551 20.9616 6.87421 21.4808 7.82274"
+                  d="M8 10.5H16M8 14H13.5M17 3.33782C15.5291 2.48697 13.8214 2 12 2C6.47715 2 2 6.47715 2 12C2 13.5997 2.37562 15.1116 3.04346 16.4525C3.22094 16.8088 3.28001 17.2161 3.17712 17.6006L2.58151 19.8267C2.32295 20.793 3.20701 21.677 4.17335 21.4185L6.39939 20.8229C6.78393 20.72 7.19121 20.7791 7.54753 20.9565C8.88837 21.6244 10.4003 22 12 22C17.5228 22 22 17.5228 22 12C22 10.1786 21.513 8.47087 20.6622 7"
                   stroke="currentColor"
                   strokeWidth="1.5"
                   strokeLinecap="round"
-                ></path>{" "}
-                <path
-                  d="M15 18H9"
-                  stroke="currentColor"
-                  strokeWidth="1.5"
-                  strokeLinecap="round"
-                ></path>{" "}
+                ></path>
               </g>
             </svg>
           }
-          label="Dashboard"
+          label="Messages"
         />
         <NavItem
           href="/CurrentPendingOrders"
@@ -529,37 +517,41 @@ export default function BottomBar() {
           label="My Orders"
         />
 
-        {/* Central Search Button */}
+        {/* Central Home Button */}
         <div className="z-50 -mt-12">
-          <button
-            className="flex h-16 w-16 flex-col items-center justify-center rounded-full border-2 border-green-500 bg-white text-2xl text-green-500 shadow-lg dark:bg-gray-800"
-            onClick={handleSearchOpen}
-          >
-            <svg
-              width="24px"
-              height="24px"
-              viewBox="0 0 24 24"
-              fill="none"
-              xmlns="http://www.w3.org/2000/svg"
-              className="text-green-500 dark:text-green-400"
-            >
-              <g id="SVGRepo_bgCarrier" strokeWidth="0"></g>
-              <g
-                id="SVGRepo_tracerCarrier"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              ></g>
-              <g id="SVGRepo_iconCarrier">
-                <path
-                  d="M21 21L16.514 16.506L21 21ZM19 10.5C19 15.194 15.194 19 10.5 19C5.806 19 2 15.194 2 10.5C2 5.806 5.806 2 10.5 2C15.194 2 19 5.806 19 10.5Z"
-                  stroke="currentColor"
-                  strokeWidth="1.5"
+          <Link href="/" passHref>
+            <div className="flex h-16 w-16 flex-col items-center justify-center rounded-full border-2 border-green-500 bg-white text-2xl text-green-500 shadow-lg dark:bg-gray-800">
+              <svg
+                width="24px"
+                height="24px"
+                viewBox="0 0 24 24"
+                fill="none"
+                xmlns="http://www.w3.org/2000/svg"
+                className="text-green-500 dark:text-green-400"
+              >
+                <g id="SVGRepo_bgCarrier" strokeWidth="0"></g>
+                <g
+                  id="SVGRepo_tracerCarrier"
                   strokeLinecap="round"
                   strokeLinejoin="round"
-                />
-              </g>
-            </svg>
-          </button>
+                ></g>
+                <g id="SVGRepo_iconCarrier">
+                  <path
+                    d="M22 12.2039V13.725C22 17.6258 22 19.5763 20.8284 20.7881C19.6569 22 17.7712 22 14 22H10C6.22876 22 4.34315 22 3.17157 20.7881C2 19.5763 2 17.6258 2 13.725V12.2039C2 9.91549 2 8.77128 2.5192 7.82274C3.0384 6.87421 3.98695 6.28551 5.88403 5.10813L7.88403 3.86687C9.88939 2.62229 10.8921 2 12 2C13.1079 2 14.1106 2.62229 16.116 3.86687L18.116 5.10812C20.0131 6.28551 20.9616 6.87421 21.4808 7.82274"
+                    stroke="currentColor"
+                    strokeWidth="1.5"
+                    strokeLinecap="round"
+                  ></path>
+                  <path
+                    d="M15 18H9"
+                    stroke="currentColor"
+                    strokeWidth="1.5"
+                    strokeLinecap="round"
+                  ></path>
+                </g>
+              </svg>
+            </div>
+          </Link>
         </div>
         <NavItem
           href="/Reels"
@@ -1018,10 +1010,6 @@ export default function BottomBar() {
         </div>
       </nav>
 
-      <MobileSearchModal
-        open={searchOpen}
-        onClose={() => setSearchOpen(false)}
-      />
     </>
   );
 }
