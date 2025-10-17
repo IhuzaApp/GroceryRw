@@ -565,13 +565,11 @@ export default async function handler(
       return;
     }
 
-
     // Format the order data for the frontend based on order type
     let formattedOrder: any;
 
     if (orderType === "regular") {
       // Handle regular orders
-
 
       const formattedOrderItems = orderData.Order_Items.map((item: any) => {
         const formattedItem = {
@@ -585,7 +583,6 @@ export default async function handler(
           productImage:
             item.Product?.ProductName?.image || item.Product?.image || null,
         };
-
 
         return formattedItem;
       });
@@ -648,7 +645,6 @@ export default async function handler(
       const quantity = parseInt(orderData.quantity || "1");
       const subTotal = reelPrice * quantity;
 
-
       formattedOrder = {
         id: orderData.id,
         OrderID: orderData.OrderID || orderData.id, // Add OrderID field
@@ -702,7 +698,6 @@ export default async function handler(
         discount: orderData.discount || 0, // Add discount field
         deliveryPhotoUrl: orderData.delivery_photo_url, // Add delivery photo URL
       };
-
     } else if (orderType === "restaurant") {
       // Handle restaurant orders
 
@@ -775,9 +770,7 @@ export default async function handler(
         deliveryPhotoUrl: orderData.delivery_photo_url,
         deliveryTime: orderData.delivery_time,
       };
-
     }
-
 
     res.status(200).json({
       success: true,

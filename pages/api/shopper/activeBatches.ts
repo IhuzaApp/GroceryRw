@@ -347,7 +347,7 @@ export default async function handler(
       // Determine if this is a restaurant/user reel (skip shopping) or regular reel (full flow)
       // Skip shopping if EITHER restaurant_id OR user_id is not null
       const isRestaurantUserReel = o.Reel.restaurant_id || o.Reel.user_id;
-      
+
       return {
         id: o.id,
         OrderID: o.id,
@@ -355,7 +355,9 @@ export default async function handler(
         createdAt: o.created_at,
         deliveryTime: o.delivery_time || undefined,
         shopName: isRestaurantUserReel ? "Restaurant/User Reel" : "Reel Order",
-        shopAddress: isRestaurantUserReel ? "From Restaurant/User" : "From Reel Creator",
+        shopAddress: isRestaurantUserReel
+          ? "From Restaurant/User"
+          : "From Reel Creator",
         shopLat: parseFloat(o.Address.latitude), // Use customer location as pickup point
         shopLng: parseFloat(o.Address.longitude),
         customerName: o.user.name,

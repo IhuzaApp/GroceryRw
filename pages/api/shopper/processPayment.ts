@@ -370,10 +370,16 @@ export default async function handler(
           order_id: orderId,
         });
 
-        if (existingRefundResponse.Refunds && existingRefundResponse.Refunds.length > 0) {
+        if (
+          existingRefundResponse.Refunds &&
+          existingRefundResponse.Refunds.length > 0
+        ) {
           // Refund already exists, use the existing one
           refundData = existingRefundResponse.Refunds[0];
-          console.log(`Using existing refund for order ${orderId}:`, refundData.id);
+          console.log(
+            `Using existing refund for order ${orderId}:`,
+            refundData.id
+          );
         } else {
           // Create new refund record with all required fields
           const refundRecord = {

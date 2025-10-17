@@ -1,6 +1,6 @@
-"use client"
+"use client";
 
-import { useState } from "react"
+import { useState } from "react";
 import {
   Search,
   Filter,
@@ -11,7 +11,7 @@ import {
   Eye,
   MessageSquare,
   DollarSign,
-} from "lucide-react"
+} from "lucide-react";
 
 const suppliers = [
   {
@@ -50,49 +50,54 @@ const suppliers = [
     specialties: ["Fresh", "Sustainable", "Wild-caught"],
     image: "/assorted-seafood-display.png",
   },
-]
+];
 
 interface SuppliersSectionProps {
-  className?: string
+  className?: string;
 }
 
 export function SuppliersSection({ className = "" }: SuppliersSectionProps) {
-  const [searchTerm, setSearchTerm] = useState("")
-  const [selectedCategory, setSelectedCategory] = useState("")
-  const [selectedLocation, setSelectedLocation] = useState("")
+  const [searchTerm, setSearchTerm] = useState("");
+  const [selectedCategory, setSelectedCategory] = useState("");
+  const [selectedLocation, setSelectedLocation] = useState("");
 
-  const filteredSuppliers = suppliers.filter(supplier => {
-    const matchesSearch = supplier.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         supplier.category.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         supplier.location.toLowerCase().includes(searchTerm.toLowerCase())
-    const matchesCategory = !selectedCategory || supplier.category.toLowerCase().includes(selectedCategory.toLowerCase())
-    const matchesLocation = !selectedLocation || supplier.location.toLowerCase().includes(selectedLocation.toLowerCase())
-    
-    return matchesSearch && matchesCategory && matchesLocation
-  })
+  const filteredSuppliers = suppliers.filter((supplier) => {
+    const matchesSearch =
+      supplier.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      supplier.category.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      supplier.location.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesCategory =
+      !selectedCategory ||
+      supplier.category.toLowerCase().includes(selectedCategory.toLowerCase());
+    const matchesLocation =
+      !selectedLocation ||
+      supplier.location.toLowerCase().includes(selectedLocation.toLowerCase());
+
+    return matchesSearch && matchesCategory && matchesLocation;
+  });
 
   return (
     <div className={`space-y-8 ${className}`}>
       {/* Search and Filters */}
-      <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-lg border border-gray-100 dark:border-gray-700 p-8">
-        <div className="flex flex-col lg:flex-row gap-6">
+      <div className="rounded-2xl border border-gray-100 bg-white p-8 shadow-lg dark:border-gray-700 dark:bg-gray-800">
+        <div className="flex flex-col gap-6 lg:flex-row">
           <div className="flex-1">
-            <div className="relative group">
-              <Search className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-gray-400 group-focus-within:text-green-500 transition-colors" />
-              <input 
-                placeholder="Search suppliers by name, category, or location..." 
+            <div className="group relative">
+              <Search className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-gray-400 transition-colors group-focus-within:text-green-500" />
+              <input
+                placeholder="Search suppliers by name, category, or location..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full pl-12 pr-4 py-4 border-2 border-gray-200 dark:border-gray-600 rounded-2xl bg-gray-50 dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-4 focus:ring-green-500/20 focus:border-green-500 transition-all duration-300 placeholder-gray-400"
+                className="w-full rounded-2xl border-2 border-gray-200 bg-gray-50 py-4 pl-12 pr-4 text-gray-900 placeholder-gray-400 transition-all duration-300 focus:border-green-500 focus:ring-4 focus:ring-green-500/20 dark:border-gray-600 dark:bg-gray-700 dark:text-white"
               />
             </div>
           </div>
           <div className="flex flex-wrap gap-3">
             <div className="relative">
-              <select 
+              <select
                 value={selectedCategory}
                 onChange={(e) => setSelectedCategory(e.target.value)}
-                className="appearance-none px-4 py-4 pr-8 border-2 border-gray-200 dark:border-gray-600 rounded-2xl bg-gray-50 dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-4 focus:ring-green-500/20 focus:border-green-500 transition-all duration-300 min-w-[140px]"
+                className="min-w-[140px] appearance-none rounded-2xl border-2 border-gray-200 bg-gray-50 px-4 py-4 pr-8 text-gray-900 transition-all duration-300 focus:border-green-500 focus:ring-4 focus:ring-green-500/20 dark:border-gray-600 dark:bg-gray-700 dark:text-white"
               >
                 <option value="">Category</option>
                 <option value="vegetables">Vegetables</option>
@@ -100,30 +105,50 @@ export function SuppliersSection({ className = "" }: SuppliersSectionProps) {
                 <option value="seafood">Seafood</option>
                 <option value="dairy">Dairy</option>
               </select>
-              <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
-                <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+              <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-3">
+                <svg
+                  className="h-4 w-4 text-gray-400"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M19 9l-7 7-7-7"
+                  />
                 </svg>
               </div>
             </div>
             <div className="relative">
-              <select 
+              <select
                 value={selectedLocation}
                 onChange={(e) => setSelectedLocation(e.target.value)}
-                className="appearance-none px-4 py-4 pr-8 border-2 border-gray-200 dark:border-gray-600 rounded-2xl bg-gray-50 dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-4 focus:ring-green-500/20 focus:border-green-500 transition-all duration-300 min-w-[120px]"
+                className="min-w-[120px] appearance-none rounded-2xl border-2 border-gray-200 bg-gray-50 px-4 py-4 pr-8 text-gray-900 transition-all duration-300 focus:border-green-500 focus:ring-4 focus:ring-green-500/20 dark:border-gray-600 dark:bg-gray-700 dark:text-white"
               >
                 <option value="">Location</option>
                 <option value="local">Local</option>
                 <option value="regional">Regional</option>
                 <option value="national">National</option>
               </select>
-              <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
-                <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+              <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-3">
+                <svg
+                  className="h-4 w-4 text-gray-400"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M19 9l-7 7-7-7"
+                  />
                 </svg>
               </div>
             </div>
-            <button className="px-6 py-4 border-2 border-gray-200 dark:border-gray-600 rounded-2xl text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 hover:border-green-500 transition-all duration-300 font-medium flex items-center gap-2">
+            <button className="flex items-center gap-2 rounded-2xl border-2 border-gray-200 px-6 py-4 font-medium text-gray-700 transition-all duration-300 hover:border-green-500 hover:bg-gray-50 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-700">
               <Filter className="h-4 w-4" />
               More Filters
             </button>
@@ -132,18 +157,21 @@ export function SuppliersSection({ className = "" }: SuppliersSectionProps) {
       </div>
 
       {/* Supplier Listings */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+      <div className="grid grid-cols-1 gap-8 lg:grid-cols-2">
         {filteredSuppliers.map((supplier) => (
-          <div key={supplier.id} className="group bg-white dark:bg-gray-800 rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 p-8 border border-gray-100 dark:border-gray-700 hover:-translate-y-2">
+          <div
+            key={supplier.id}
+            className="group rounded-2xl border border-gray-100 bg-white p-8 shadow-lg transition-all duration-300 hover:-translate-y-2 hover:shadow-2xl dark:border-gray-700 dark:bg-gray-800"
+          >
             <div className="flex items-start space-x-6">
               <div className="relative">
                 <img
                   src={supplier.image || "/placeholder.svg"}
                   alt={supplier.name}
-                  className="h-20 w-20 rounded-2xl object-cover shadow-md group-hover:scale-110 transition-transform duration-300"
+                  className="h-20 w-20 rounded-2xl object-cover shadow-md transition-transform duration-300 group-hover:scale-110"
                 />
                 {supplier.verified && (
-                  <div className="absolute -top-2 -right-2 bg-green-500 rounded-full p-1">
+                  <div className="absolute -right-2 -top-2 rounded-full bg-green-500 p-1">
                     <CheckCircle className="h-4 w-4 text-white" />
                   </div>
                 )}
@@ -151,17 +179,21 @@ export function SuppliersSection({ className = "" }: SuppliersSectionProps) {
               <div className="flex-1 space-y-4">
                 <div className="flex items-start justify-between">
                   <div>
-                    <h3 className="font-bold text-xl text-gray-900 dark:text-white group-hover:text-green-600 transition-colors">{supplier.name}</h3>
-                    <p className="text-sm text-gray-500 dark:text-gray-400 font-medium">{supplier.category}</p>
+                    <h3 className="text-xl font-bold text-gray-900 transition-colors group-hover:text-green-600 dark:text-white">
+                      {supplier.name}
+                    </h3>
+                    <p className="text-sm font-medium text-gray-500 dark:text-gray-400">
+                      {supplier.category}
+                    </p>
                   </div>
                   {supplier.verified && (
-                    <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-gradient-to-r from-green-100 to-emerald-100 text-green-800 dark:from-green-900 dark:to-emerald-900 dark:text-green-200">
+                    <span className="inline-flex items-center rounded-full bg-gradient-to-r from-green-100 to-emerald-100 px-3 py-1 text-xs font-bold text-green-800 dark:from-green-900 dark:to-emerald-900 dark:text-green-200">
                       <CheckCircle className="mr-1 h-3 w-3" />
                       Verified
                     </span>
                   )}
                 </div>
-                
+
                 <div className="flex items-center gap-6 text-sm">
                   <div className="flex items-center gap-2">
                     <div className="flex items-center">
@@ -171,37 +203,51 @@ export function SuppliersSection({ className = "" }: SuppliersSectionProps) {
                       <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
                       <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
                     </div>
-                    <span className="font-semibold text-gray-900 dark:text-white">{supplier.rating}</span>
+                    <span className="font-semibold text-gray-900 dark:text-white">
+                      {supplier.rating}
+                    </span>
                   </div>
                   <div className="flex items-center gap-2">
                     <MapPin className="h-4 w-4 text-green-500" />
-                    <span className="text-gray-600 dark:text-gray-400">{supplier.location}</span>
+                    <span className="text-gray-600 dark:text-gray-400">
+                      {supplier.location}
+                    </span>
                   </div>
                   <div className="flex items-center gap-2">
                     <Clock className="h-4 w-4 text-blue-500" />
-                    <span className="text-gray-600 dark:text-gray-400">{supplier.deliveryTime}</span>
+                    <span className="text-gray-600 dark:text-gray-400">
+                      {supplier.deliveryTime}
+                    </span>
                   </div>
                 </div>
-                
+
                 <div className="flex flex-wrap gap-2">
                   {supplier.specialties.map((specialty, index) => (
-                    <span key={index} className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-gradient-to-r from-gray-100 to-gray-200 text-gray-700 dark:from-gray-700 dark:to-gray-600 dark:text-gray-300 hover:from-green-100 hover:to-emerald-100 hover:text-green-700 transition-all duration-300">
+                    <span
+                      key={index}
+                      className="inline-flex items-center rounded-full bg-gradient-to-r from-gray-100 to-gray-200 px-3 py-1 text-xs font-medium text-gray-700 transition-all duration-300 hover:from-green-100 hover:to-emerald-100 hover:text-green-700 dark:from-gray-700 dark:to-gray-600 dark:text-gray-300"
+                    >
                       {specialty}
                     </span>
                   ))}
                 </div>
-                
-                <div className="flex items-center justify-between pt-4 border-t border-gray-100 dark:border-gray-700">
+
+                <div className="flex items-center justify-between border-t border-gray-100 pt-4 dark:border-gray-700">
                   <div className="flex items-center gap-2">
                     <DollarSign className="h-4 w-4 text-green-500" />
-                    <span className="text-sm font-semibold text-gray-600 dark:text-gray-400">Min Order: <span className="text-green-600 font-bold">{supplier.minOrder}</span></span>
+                    <span className="text-sm font-semibold text-gray-600 dark:text-gray-400">
+                      Min Order:{" "}
+                      <span className="font-bold text-green-600">
+                        {supplier.minOrder}
+                      </span>
+                    </span>
                   </div>
                   <div className="flex gap-3">
-                    <button className="px-4 py-2 border-2 border-gray-200 dark:border-gray-600 rounded-xl text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 hover:border-green-500 transition-all duration-300 text-sm font-medium flex items-center gap-2">
+                    <button className="flex items-center gap-2 rounded-xl border-2 border-gray-200 px-4 py-2 text-sm font-medium text-gray-700 transition-all duration-300 hover:border-green-500 hover:bg-gray-50 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-700">
                       <Eye className="h-4 w-4" />
                       View
                     </button>
-                    <button className="px-4 py-2 bg-gradient-to-r from-green-500 to-emerald-500 text-white rounded-xl hover:from-green-600 hover:to-emerald-600 transition-all duration-300 text-sm font-medium shadow-lg hover:shadow-xl flex items-center gap-2">
+                    <button className="flex items-center gap-2 rounded-xl bg-gradient-to-r from-green-500 to-emerald-500 px-4 py-2 text-sm font-medium text-white shadow-lg transition-all duration-300 hover:from-green-600 hover:to-emerald-600 hover:shadow-xl">
                       <MessageSquare className="h-4 w-4" />
                       Contact
                     </button>
@@ -214,14 +260,18 @@ export function SuppliersSection({ className = "" }: SuppliersSectionProps) {
       </div>
 
       {filteredSuppliers.length === 0 && (
-        <div className="text-center py-12">
-          <div className="w-16 h-16 mx-auto mb-4 bg-gray-100 dark:bg-gray-700 rounded-2xl flex items-center justify-center">
+        <div className="py-12 text-center">
+          <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-gray-100 dark:bg-gray-700">
             <Search className="h-8 w-8 text-gray-400" />
           </div>
-          <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">No suppliers found</h3>
-          <p className="text-gray-600 dark:text-gray-400">Try adjusting your search criteria</p>
+          <h3 className="mb-2 text-lg font-semibold text-gray-900 dark:text-white">
+            No suppliers found
+          </h3>
+          <p className="text-gray-600 dark:text-gray-400">
+            Try adjusting your search criteria
+          </p>
         </div>
       )}
     </div>
-  )
+  );
 }

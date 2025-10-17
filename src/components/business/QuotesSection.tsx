@@ -1,10 +1,6 @@
-"use client"
+"use client";
 
-import {
-  Star,
-  Truck,
-  Clock,
-} from "lucide-react"
+import { Star, Truck, Clock } from "lucide-react";
 
 const quotes = [
   {
@@ -63,41 +59,48 @@ const quotes = [
     submittedDate: "2024-01-15",
     status: "pending" as const,
   },
-]
+];
 
 interface QuotesSectionProps {
-  className?: string
-  onViewQuoteDetails?: (quote: any) => void
+  className?: string;
+  onViewQuoteDetails?: (quote: any) => void;
 }
 
-export function QuotesSection({ className = "", onViewQuoteDetails }: QuotesSectionProps) {
+export function QuotesSection({
+  className = "",
+  onViewQuoteDetails,
+}: QuotesSectionProps) {
   const handleCompareSelected = () => {
-    console.log("Comparing selected quotes")
+    console.log("Comparing selected quotes");
     // Handle compare selected logic
-  }
+  };
 
   const handleViewDetails = (quote: any) => {
     if (onViewQuoteDetails) {
-      onViewQuoteDetails(quote)
+      onViewQuoteDetails(quote);
     }
-  }
+  };
 
   const handleAcceptQuote = (quoteId: string) => {
-    console.log("Accepting quote:", quoteId)
+    console.log("Accepting quote:", quoteId);
     // Handle accept quote logic
-  }
+  };
 
   return (
     <div className={`space-y-8 ${className}`}>
-      <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-lg border border-gray-100 dark:border-gray-700 overflow-hidden">
-        <div className="flex items-center justify-between p-8 border-b border-gray-100 dark:border-gray-700 bg-gradient-to-r from-gray-50 to-white dark:from-gray-700 dark:to-gray-800">
+      <div className="overflow-hidden rounded-2xl border border-gray-100 bg-white shadow-lg dark:border-gray-700 dark:bg-gray-800">
+        <div className="flex items-center justify-between border-b border-gray-100 bg-gradient-to-r from-gray-50 to-white p-8 dark:border-gray-700 dark:from-gray-700 dark:to-gray-800">
           <div>
-            <h2 className="text-2xl font-bold text-gray-900 dark:text-white">Received Quotes</h2>
-            <p className="text-gray-600 dark:text-gray-400 mt-1">Review and compare supplier quotes</p>
+            <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
+              Received Quotes
+            </h2>
+            <p className="mt-1 text-gray-600 dark:text-gray-400">
+              Review and compare supplier quotes
+            </p>
           </div>
-          <button 
+          <button
             onClick={handleCompareSelected}
-            className="px-6 py-3 border-2 border-gray-200 dark:border-gray-600 rounded-xl text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 hover:border-green-500 transition-all duration-300 font-medium"
+            className="rounded-xl border-2 border-gray-200 px-6 py-3 font-medium text-gray-700 transition-all duration-300 hover:border-green-500 hover:bg-gray-50 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-700"
           >
             Compare Selected
           </button>
@@ -105,16 +108,26 @@ export function QuotesSection({ className = "", onViewQuoteDetails }: QuotesSect
         <div className="p-8">
           <div className="space-y-6">
             {quotes.map((quote) => (
-              <div key={quote.id} className="group p-6 rounded-2xl border-2 border-gray-100 dark:border-gray-700 hover:border-green-200 dark:hover:border-green-800 hover:shadow-lg transition-all duration-300 bg-gradient-to-r from-white to-gray-50 dark:from-gray-800 dark:to-gray-700">
+              <div
+                key={quote.id}
+                className="group rounded-2xl border-2 border-gray-100 bg-gradient-to-r from-white to-gray-50 p-6 transition-all duration-300 hover:border-green-200 hover:shadow-lg dark:border-gray-700 dark:from-gray-800 dark:to-gray-700 dark:hover:border-green-800"
+              >
                 <div className="flex items-center justify-between">
-                  <div className="space-y-4 flex-1">
+                  <div className="flex-1 space-y-4">
                     <div className="flex items-center gap-3">
-                      <h3 className="font-bold text-lg text-gray-900 dark:text-white group-hover:text-green-600 transition-colors">{quote.title}</h3>
-                      <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-gradient-to-r from-blue-100 to-cyan-100 text-blue-800 dark:from-blue-900 dark:to-cyan-900 dark:text-blue-200">
+                      <h3 className="text-lg font-bold text-gray-900 transition-colors group-hover:text-green-600 dark:text-white">
+                        {quote.title}
+                      </h3>
+                      <span className="inline-flex items-center rounded-full bg-gradient-to-r from-blue-100 to-cyan-100 px-3 py-1 text-xs font-bold text-blue-800 dark:from-blue-900 dark:to-cyan-900 dark:text-blue-200">
                         {quote.items.length} items
                       </span>
                     </div>
-                    <p className="text-gray-600 dark:text-gray-400">From: <span className="font-semibold text-gray-900 dark:text-white">{quote.supplier.name}</span></p>
+                    <p className="text-gray-600 dark:text-gray-400">
+                      From:{" "}
+                      <span className="font-semibold text-gray-900 dark:text-white">
+                        {quote.supplier.name}
+                      </span>
+                    </p>
                     <div className="flex items-center gap-6 text-sm">
                       <span className="flex items-center gap-2 text-gray-600 dark:text-gray-400">
                         <div className="flex items-center">
@@ -124,33 +137,43 @@ export function QuotesSection({ className = "", onViewQuoteDetails }: QuotesSect
                           <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
                           <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
                         </div>
-                        <span className="font-semibold">{quote.supplier.rating}</span>
+                        <span className="font-semibold">
+                          {quote.supplier.rating}
+                        </span>
                       </span>
                       <span className="flex items-center gap-2 text-gray-600 dark:text-gray-400">
                         <Truck className="h-4 w-4 text-green-500" />
-                        <span className="font-semibold">{quote.deliveryTime}</span>
+                        <span className="font-semibold">
+                          {quote.deliveryTime}
+                        </span>
                       </span>
                       <span className="flex items-center gap-2 text-gray-600 dark:text-gray-400">
                         <Clock className="h-4 w-4 text-orange-500" />
-                        <span className="font-semibold">Valid until: {quote.validUntil}</span>
+                        <span className="font-semibold">
+                          Valid until: {quote.validUntil}
+                        </span>
                       </span>
                     </div>
                   </div>
-                  <div className="text-right space-y-4 ml-6">
+                  <div className="ml-6 space-y-4 text-right">
                     <div>
-                      <p className="text-3xl font-bold text-gray-900 dark:text-white">{quote.totalPrice}</p>
-                      <p className="text-sm text-gray-500 dark:text-gray-400">Total Quote Value</p>
+                      <p className="text-3xl font-bold text-gray-900 dark:text-white">
+                        {quote.totalPrice}
+                      </p>
+                      <p className="text-sm text-gray-500 dark:text-gray-400">
+                        Total Quote Value
+                      </p>
                     </div>
                     <div className="flex gap-3">
-                      <button 
+                      <button
                         onClick={() => handleViewDetails(quote)}
-                        className="px-4 py-2 border-2 border-gray-200 dark:border-gray-600 rounded-xl text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 hover:border-green-500 transition-all duration-300 text-sm font-medium"
+                        className="rounded-xl border-2 border-gray-200 px-4 py-2 text-sm font-medium text-gray-700 transition-all duration-300 hover:border-green-500 hover:bg-gray-50 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-700"
                       >
                         View Details
                       </button>
-                      <button 
+                      <button
                         onClick={() => handleAcceptQuote(quote.id)}
-                        className="px-4 py-2 bg-gradient-to-r from-green-500 to-emerald-500 text-white rounded-xl hover:from-green-600 hover:to-emerald-600 transition-all duration-300 text-sm font-medium shadow-lg hover:shadow-xl"
+                        className="rounded-xl bg-gradient-to-r from-green-500 to-emerald-500 px-4 py-2 text-sm font-medium text-white shadow-lg transition-all duration-300 hover:from-green-600 hover:to-emerald-600 hover:shadow-xl"
                       >
                         Accept Quote
                       </button>
@@ -163,5 +186,5 @@ export function QuotesSection({ className = "", onViewQuoteDetails }: QuotesSect
         </div>
       </div>
     </div>
-  )
+  );
 }

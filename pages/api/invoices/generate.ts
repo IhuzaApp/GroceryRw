@@ -433,7 +433,9 @@ export default async function handler(
       }));
     }
 
-    const serviceFee = isRestaurantOrder ? 0 : parseFloat(order.service_fee || "0");
+    const serviceFee = isRestaurantOrder
+      ? 0
+      : parseFloat(order.service_fee || "0");
     const deliveryFee = parseFloat(order.delivery_fee);
 
     // Create a unique invoice number
@@ -453,10 +455,10 @@ export default async function handler(
     let saveResult;
     try {
       saveResult = await hasuraClient.request<AddInvoiceResult>(ADD_INVOICE, {
-        customer_id: isReelOrder 
-          ? order.User.id 
-          : isRestaurantOrder 
-          ? order.User.id 
+        customer_id: isReelOrder
+          ? order.User.id
+          : isRestaurantOrder
+          ? order.User.id
           : order.orderedBy.id,
         delivery_fee: deliveryFeeStr,
         discount: discountStr,
@@ -482,15 +484,15 @@ export default async function handler(
       invoiceNumber: invoiceNumber,
       orderId: order.id,
       orderNumber: order.OrderID || order.id.slice(-8),
-      customer: isReelOrder 
-        ? order.User.name 
-        : isRestaurantOrder 
-        ? order.User.name 
+      customer: isReelOrder
+        ? order.User.name
+        : isRestaurantOrder
+        ? order.User.name
         : order.orderedBy.name,
-      customerEmail: isReelOrder 
-        ? order.User.email 
-        : isRestaurantOrder 
-        ? order.User.email 
+      customerEmail: isReelOrder
+        ? order.User.email
+        : isRestaurantOrder
+        ? order.User.email
         : order.orderedBy.email,
       shop: shopName,
       shopAddress: shopAddress,
@@ -507,7 +509,11 @@ export default async function handler(
         order.status === "shopping"
           ? itemsTotal
           : itemsTotal + serviceFee + deliveryFee,
-      orderType: isReelOrder ? "reel" : isRestaurantOrder ? "restaurant" : "regular",
+      orderType: isReelOrder
+        ? "reel"
+        : isRestaurantOrder
+        ? "restaurant"
+        : "regular",
       isReelOrder,
       isRestaurantOrder,
     };

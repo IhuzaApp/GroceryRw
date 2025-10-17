@@ -280,7 +280,8 @@ export default function BatchDetails({
     // For restaurant orders, skip the shopping step
     const isRestaurantOrder = orderData.orderType === "restaurant";
     // Skip shopping if EITHER restaurant_id OR user_id is not null
-    const isRestaurantUserReel = orderData.reel?.restaurant_id || orderData.reel?.user_id;
+    const isRestaurantUserReel =
+      orderData.reel?.restaurant_id || orderData.reel?.user_id;
 
     switch (orderData.status) {
       case "accepted":
@@ -940,7 +941,10 @@ export default function BatchDetails({
     const restaurantOrder = order as any; // Type assertion for restaurant order fields
     const mockInvoiceData = {
       id: `restaurant_${order.id}_${Date.now()}`,
-      invoiceNumber: `REST-${order.id.slice(-8)}-${new Date().getTime().toString().slice(-6)}`,
+      invoiceNumber: `REST-${order.id.slice(-8)}-${new Date()
+        .getTime()
+        .toString()
+        .slice(-6)}`,
       orderId: order.id,
       orderNumber: order.OrderID || order.id.slice(-8),
       customer: order.orderedBy?.name || "Restaurant Customer",
@@ -970,7 +974,10 @@ export default function BatchDetails({
     // For restaurant/user reel orders, create minimal invoice data for delivery confirmation modal
     const mockInvoiceData = {
       id: `reel_${order.id}_${Date.now()}`,
-      invoiceNumber: `REEL-${order.id.slice(-8)}-${new Date().getTime().toString().slice(-6)}`,
+      invoiceNumber: `REEL-${order.id.slice(-8)}-${new Date()
+        .getTime()
+        .toString()
+        .slice(-6)}`,
       orderId: order.id,
       orderNumber: order.OrderID || order.id.slice(-8),
       customer: order.orderedBy?.name || order.user?.name || "Reel Customer",
@@ -999,10 +1006,16 @@ export default function BatchDetails({
     // For the "on_the_way" status, we'll show the payment modal instead of immediately updating
     // BUT skip payment modal for restaurant orders and restaurant/user reels since they don't require payment processing
     // Skip shopping if EITHER restaurant_id OR user_id is not null
-    const isRestaurantUserReel = order?.reel?.restaurant_id || order?.reel?.user_id;
+    const isRestaurantUserReel =
+      order?.reel?.restaurant_id || order?.reel?.user_id;
     const isRestaurantOrder = order?.orderType === "restaurant";
-    
-    if (newStatus === "on_the_way" && !showPaymentModal && !isRestaurantOrder && !isRestaurantUserReel) {
+
+    if (
+      newStatus === "on_the_way" &&
+      !showPaymentModal &&
+      !isRestaurantOrder &&
+      !isRestaurantUserReel
+    ) {
       handleShowPaymentModal();
       return;
     }
@@ -1022,7 +1035,8 @@ export default function BatchDetails({
       // Update step
       const isRestaurantOrder = order?.orderType === "restaurant";
       // Skip shopping if EITHER restaurant_id OR user_id is not null
-      const isRestaurantUserReel = order?.reel?.restaurant_id || order?.reel?.user_id;
+      const isRestaurantUserReel =
+        order?.reel?.restaurant_id || order?.reel?.user_id;
       switch (newStatus) {
         case "accepted":
           if (isRestaurantUserReel) {
@@ -1046,9 +1060,12 @@ export default function BatchDetails({
           }
 
           // Check if this is a reel order with restaurant_id OR user_id not null
-          
+
           // Only generate invoice for regular orders and regular reel orders (not restaurant/user reels)
-          if (!isRestaurantOrder && !(order?.orderType === "reel" && isRestaurantUserReel)) {
+          if (
+            !isRestaurantOrder &&
+            !(order?.orderType === "reel" && isRestaurantUserReel)
+          ) {
             // Generate invoice and show the delivery photo modal
             const invoiceGenerated = await generateInvoiceAndRedirect(order.id);
           } else {
@@ -1257,7 +1274,8 @@ export default function BatchDetails({
 
     const isRestaurantOrder = order.orderType === "restaurant";
     // Skip shopping if EITHER restaurant_id OR user_id is not null
-    const isRestaurantUserReel = order.reel?.restaurant_id || order.reel?.user_id;
+    const isRestaurantUserReel =
+      order.reel?.restaurant_id || order.reel?.user_id;
 
     switch (order.status) {
       case "accepted":
@@ -1272,16 +1290,18 @@ export default function BatchDetails({
                 // Skip shopping and go straight to delivery for restaurant/user reels
                 handleUpdateStatus("on_the_way");
               } else {
-                handleUpdateStatus(isRestaurantOrder ? "on_the_way" : "shopping");
+                handleUpdateStatus(
+                  isRestaurantOrder ? "on_the_way" : "shopping"
+                );
               }
             }}
             loading={loading}
             className="rounded-lg py-4 text-xl font-bold sm:rounded-xl sm:py-6 sm:text-3xl"
           >
-            {order.orderType === "reel" && isRestaurantUserReel 
-              ? "Start Delivery" 
-              : isRestaurantOrder 
-              ? "Start Delivery" 
+            {order.orderType === "reel" && isRestaurantUserReel
+              ? "Start Delivery"
+              : isRestaurantOrder
+              ? "Start Delivery"
               : "Start Shopping"}
           </Button>
         );
@@ -1740,7 +1760,11 @@ export default function BatchDetails({
                     description="Order has been assigned to you"
                     status={currentStep >= 0 ? "finish" : "wait"}
                   />
-                  {!((order?.reel?.restaurant_id || order?.reel?.user_id) || order?.orderType === "restaurant") && (
+                  {!(
+                    order?.reel?.restaurant_id ||
+                    order?.reel?.user_id ||
+                    order?.orderType === "restaurant"
+                  ) && (
                     <Steps.Item
                       title="Shopping"
                       description="Collecting items from the store"
@@ -2455,9 +2479,12 @@ export default function BatchDetails({
                         <Divider />
                         <div className="flex justify-between text-lg font-bold sm:text-xl">
                           <span>Order Total (excluding fees)</span>
-                          <span>{formatCurrency(
-                            parseFloat(order.reel?.Price || "0") * (order.quantity || 1)
-                          )}</span>
+                          <span>
+                            {formatCurrency(
+                              parseFloat(order.reel?.Price || "0") *
+                                (order.quantity || 1)
+                            )}
+                          </span>
                         </div>
                         <div className="flex justify-between text-sm text-slate-600 dark:text-slate-400">
                           <span>Total with fees</span>

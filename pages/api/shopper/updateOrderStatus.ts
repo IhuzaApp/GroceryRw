@@ -173,7 +173,10 @@ export default async function handler(
           shopperId: userId,
         });
 
-        if (restaurantOrderCheck.restaurant_orders && restaurantOrderCheck.restaurant_orders.length > 0) {
+        if (
+          restaurantOrderCheck.restaurant_orders &&
+          restaurantOrderCheck.restaurant_orders.length > 0
+        ) {
           // Found restaurant order assignment
           isRestaurantOrder = true;
           orderType = "restaurant";
@@ -190,8 +193,9 @@ export default async function handler(
 
     // Prevent restaurant orders from being updated to "shopping" status
     if (isRestaurantOrder && status === "shopping") {
-      return res.status(400).json({ 
-        error: "Restaurant orders cannot be updated to 'shopping' status. Use 'on_the_way' instead." 
+      return res.status(400).json({
+        error:
+          "Restaurant orders cannot be updated to 'shopping' status. Use 'on_the_way' instead.",
       });
     }
 
