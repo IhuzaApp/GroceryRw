@@ -66,7 +66,9 @@ export default function NotificationSystem({
   const [notificationPermission, setNotificationPermission] =
     useState<NotificationPermission>("default");
   const [audioLoaded, setAudioLoaded] = useState(false);
-  const [acceptingOrders, setAcceptingOrders] = useState<Set<string>>(new Set()); // Track orders being accepted
+  const [acceptingOrders, setAcceptingOrders] = useState<Set<string>>(
+    new Set()
+  ); // Track orders being accepted
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const checkInterval = useRef<NodeJS.Timeout | null>(null);
   const lastNotificationTime = useRef<number>(0);
@@ -301,7 +303,7 @@ export default function NotificationSystem({
       return false;
     }
 
-    setAcceptingOrders(prev => new Set(prev).add(orderId));
+    setAcceptingOrders((prev) => new Set(prev).add(orderId));
 
     try {
       let success = false;
@@ -342,18 +344,19 @@ export default function NotificationSystem({
         // Remove toast and show success message
         removeToastForOrder(orderId);
         toast.success("Order accepted successfully! 🎉");
-        
+
         // Call parent callback if provided
         onAcceptBatch?.(orderId);
-        
+
         return true;
       }
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : "Failed to accept order";
+      const errorMessage =
+        error instanceof Error ? error.message : "Failed to accept order";
       toast.error(errorMessage);
       return false;
     } finally {
-      setAcceptingOrders(prev => {
+      setAcceptingOrders((prev) => {
         const newSet = new Set(prev);
         newSet.delete(orderId);
         return newSet;
@@ -608,11 +611,13 @@ export default function NotificationSystem({
                 disabled={acceptingOrders.has(order.id)}
                 className={`flex-1 rounded-lg px-4 py-2.5 text-sm font-medium text-white transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 ${
                   acceptingOrders.has(order.id)
-                    ? "bg-gray-400 cursor-not-allowed"
+                    ? "cursor-not-allowed bg-gray-400"
                     : "bg-green-500 hover:bg-green-600"
                 }`}
               >
-                {acceptingOrders.has(order.id) ? "Accepting..." : "Accept Order"}
+                {acceptingOrders.has(order.id)
+                  ? "Accepting..."
+                  : "Accept Order"}
               </button>
               <button
                 onClick={() => {
@@ -883,13 +888,15 @@ export default function NotificationSystem({
                     disabled={acceptingOrders.has(order.id)}
                     className={`rounded-lg px-4 py-2 text-sm font-medium text-white backdrop-blur-sm transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-white/50 ${
                       acceptingOrders.has(order.id)
-                        ? "bg-gray-400 cursor-not-allowed"
+                        ? "cursor-not-allowed bg-gray-400"
                         : theme === "dark"
-                        ? "bg-white/20 hover:bg-white/30 animate-pulse"
-                        : "bg-white/25 hover:bg-white/35 animate-pulse"
+                        ? "animate-pulse bg-white/20 hover:bg-white/30"
+                        : "animate-pulse bg-white/25 hover:bg-white/35"
                     }`}
                   >
-                    {acceptingOrders.has(order.id) ? "Accepting..." : "Accept Now"}
+                    {acceptingOrders.has(order.id)
+                      ? "Accepting..."
+                      : "Accept Now"}
                   </button>
                   <button
                     onClick={() => {

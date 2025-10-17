@@ -103,11 +103,9 @@ export default async function handler(
     )) as Session | null;
 
     if (!session || !session.user) {
-      return res
-        .status(401)
-        .json({
-          error: "You must be authenticated to get shopper application",
-        });
+      return res.status(401).json({
+        error: "You must be authenticated to get shopper application",
+      });
     }
 
     if (!hasuraClient) {

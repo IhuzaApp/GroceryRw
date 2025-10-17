@@ -1923,9 +1923,11 @@ For technical issues or questions about the Reels and Reel Orders system:
 The system supports three distinct types of reel orders based on the `restaurant_id` and `user_id` fields in the `reels` table:
 
 ### 1. Regular Reel Orders
+
 **Condition**: Both `restaurant_id` AND `user_id` are `null`
 
 **Workflow**:
+
 - ✅ **Full Shopping Flow**: Shopper must collect items from store
 - ✅ **Payment Required**: Shopper pays for items using wallet/MoMo
 - ✅ **Invoice Generation**: Full invoice is generated upon delivery
@@ -1934,16 +1936,19 @@ The system supports three distinct types of reel orders based on the `restaurant
 **Use Cases**: Independent creators, personal recommendations, general product showcases
 
 ### 2. Restaurant/User Reel Orders
+
 **Condition**: Either `restaurant_id` OR `user_id` is NOT `null` (or both)
 
 **Workflow**:
+
 - ❌ **Skip Shopping**: No item collection required
 - ❌ **Skip Payment**: No payment processing needed
 - ❌ **Skip Invoice**: No invoice generation
 - ✅ **Direct Delivery**: Go straight to delivery confirmation
 - ✅ **Transaction Recording**: Wallet transactions still recorded
 
-**Use Cases**: 
+**Use Cases**:
+
 - **Restaurant Reels** (`restaurant_id` not null): Restaurant-prepared items
 - **User Reels** (`user_id` not null): User-prepared items, homemade products
 
@@ -1975,13 +1980,13 @@ if (isRestaurantUserReel) {
 
 ### 4. UI/UX Differences
 
-| Feature | Regular Reels | Restaurant/User Reels |
-|---------|---------------|----------------------|
-| Initial Button | "Start Shopping" | "Start Delivery" |
-| Progress Steps | 4 steps (Accepted → Shopping → On The Way → Delivered) | 3 steps (Accepted → On The Way → Delivered) |
-| Payment Modal | Required | Skipped |
-| Invoice Generation | Full invoice | Delivery confirmation only |
-| Order Summary | Shows item total + fees | Shows item total excluding fees |
+| Feature            | Regular Reels                                          | Restaurant/User Reels                       |
+| ------------------ | ------------------------------------------------------ | ------------------------------------------- |
+| Initial Button     | "Start Shopping"                                       | "Start Delivery"                            |
+| Progress Steps     | 4 steps (Accepted → Shopping → On The Way → Delivered) | 3 steps (Accepted → On The Way → Delivered) |
+| Payment Modal      | Required                                               | Skipped                                     |
+| Invoice Generation | Full invoice                                           | Delivery confirmation only                  |
+| Order Summary      | Shows item total + fees                                | Shows item total excluding fees             |
 
 ### 5. Database Considerations
 
@@ -1998,16 +2003,19 @@ WHERE r.restaurant_id IS NOT NULL OR r.user_id IS NOT NULL;
 ### 6. Implementation Details
 
 **Frontend Components**:
+
 - `batchDetails.tsx`: Handles button logic and order flow
 - `activeBatchesCard.tsx`: Shows appropriate button text based on order type
 - `DeliveryConfirmationModal.tsx`: Handles both invoice and delivery confirmation
 
 **Backend APIs**:
+
 - `/api/shopper/activeBatches.ts`: Fetches order data with restaurant_id/user_id
 - `/api/shopper/orderDetails.ts`: Returns order details with reel information
 - `/api/invoices/generate.ts`: Handles invoice generation with null checks
 
 **Key Logic Points**:
+
 1. **Button Display**: `order.reel?.restaurant_id || order.reel?.user_id` determines button text
 2. **Payment Skipping**: Same condition skips payment modal
 3. **Invoice Skipping**: Same condition skips invoice generation
@@ -9417,6 +9425,7 @@ accepted → on_the_way → delivered
 ```
 
 **Technical Implementation**:
+
 - Modified `batchDetails.tsx` to show "Start Delivery" instead of "Start Shopping" for restaurant orders
 - Updated `updateOrderStatus.ts` to prevent restaurant orders from being updated to "shopping" status
 - Added validation to skip wallet operations for restaurant orders during shopping phase
@@ -9428,6 +9437,7 @@ accepted → on_the_way → delivered
 **Solution Implemented**: Complete wallet transaction support for restaurant orders:
 
 **Wallet Transaction Structure**:
+
 ```typescript
 // Restaurant Order Wallet Transaction
 {
@@ -9443,6 +9453,7 @@ accepted → on_the_way → delivered
 ```
 
 **Key Improvements**:
+
 - Restaurant orders only earn delivery fees (no service fees)
 - Proper foreign key field usage (`related_restaurant_order_id`)
 - Explicit null values for unused foreign key fields
@@ -9455,12 +9466,14 @@ accepted → on_the_way → delivered
 **Solution Implemented**: Streamlined delivery confirmation for restaurant orders:
 
 **Delivery Confirmation Flow**:
+
 1. **Photo Upload**: Shopper takes delivery confirmation photo
 2. **Wallet Processing**: Delivery fee is added to shopper's wallet
 3. **Status Update**: Order status changes to "delivered"
 4. **No Invoice Generation**: Restaurant orders skip invoice creation (restaurants handle their own billing)
 
 **Technical Implementation**:
+
 - Modified `DeliveryConfirmationModal.tsx` to handle restaurant orders appropriately
 - Updated `batchDetails.tsx` to show delivery photo modal without invoice generation
 - Ensured proper status update timing (only after photo upload completion)
@@ -9472,12 +9485,14 @@ accepted → on_the_way → delivered
 **Solution Implemented**: Robust payment processing with proper error handling:
 
 **Payment Flow Enhancements**:
+
 - **Foreign Key Management**: All wallet transactions explicitly set foreign key fields
 - **Duplicate Prevention**: Check for existing refunds before creating new ones
 - **Error Recovery**: Graceful handling of partial payment completions
 - **Transaction Integrity**: Consistent wallet transaction structure across all APIs
 
 **Files Updated**:
+
 - `pages/api/shopper/walletOperations.ts` - Complete wallet operations for all order types
 - `pages/api/shopper/processPayment.ts` - Payment processing with duplicate refund prevention
 - `pages/api/shopper/recordTransaction.ts` - Transaction recording with proper foreign keys
@@ -9486,11 +9501,13 @@ accepted → on_the_way → delivered
 ### 5. Database Schema Optimization
 
 **Schema Updates**:
+
 - **Foreign Key Fields**: Added `related_restaurant_order_id` field to `Wallet_Transactions` table
 - **Constraint Management**: Proper foreign key constraints for all order types
 - **Data Integrity**: Unique constraints on refund records to prevent duplicates
 
 **GraphQL Schema**:
+
 - Regenerated GraphQL types to include new foreign key fields
 - Updated all wallet transaction mutations to support restaurant orders
 - Consistent schema across all order types
@@ -9498,12 +9515,14 @@ accepted → on_the_way → delivered
 ### 6. User Experience Improvements
 
 **UI/UX Enhancements**:
+
 - **Clear Status Indicators**: Restaurant orders show appropriate status transitions
 - **Proper Button Labels**: "Start Delivery" instead of "Start Shopping" for restaurant orders
 - **Modal Behavior**: Clean delivery confirmation modal without premature "uploading" messages
 - **Error Handling**: Clear error messages and proper error recovery
 
 **Visual Distinctions**:
+
 - Orange color scheme for restaurant orders
 - Restaurant-specific icons and indicators
 - Clear order type identification throughout the system
@@ -9511,12 +9530,14 @@ accepted → on_the_way → delivered
 ### 7. System Reliability
 
 **Error Prevention**:
+
 - **Foreign Key Violations**: Eliminated through proper field management
 - **Duplicate Records**: Prevented through existence checks
 - **Status Conflicts**: Resolved through order-type-specific validation
 - **Transaction Failures**: Minimized through comprehensive error handling
 
 **Performance Optimizations**:
+
 - **Efficient Queries**: Optimized GraphQL queries for restaurant orders
 - **Reduced API Calls**: Streamlined wallet operations
 - **Better Caching**: Improved data fetching and state management
@@ -9524,12 +9545,14 @@ accepted → on_the_way → delivered
 ### 8. Testing and Validation
 
 **Comprehensive Testing**:
+
 - **Order Flow Testing**: Verified complete restaurant order workflow
 - **Wallet Integration**: Tested all wallet operations for restaurant orders
 - **Payment Processing**: Validated payment and refund creation
 - **Error Scenarios**: Tested error handling and recovery mechanisms
 
 **Quality Assurance**:
+
 - **Type Safety**: Full TypeScript support for all restaurant order operations
 - **Data Validation**: Proper input validation and error handling
 - **Consistency Checks**: Ensured consistent behavior across all order types
@@ -9537,12 +9560,14 @@ accepted → on_the_way → delivered
 ### 9. Future Enhancements
 
 **Planned Improvements**:
+
 - **Advanced Analytics**: Restaurant-specific performance metrics
 - **Dynamic Pricing**: Restaurant-specific delivery fee calculations
 - **Integration APIs**: Direct integration with restaurant POS systems
 - **Real-time Updates**: Enhanced WebSocket support for restaurant orders
 
 **Scalability Considerations**:
+
 - **Database Optimization**: Index optimization for restaurant order queries
 - **API Performance**: Caching strategies for frequently accessed data
 - **Load Balancing**: Distribution strategies for high-volume restaurant orders
@@ -9550,6 +9575,7 @@ accepted → on_the_way → delivered
 ### 10. Technical Architecture
 
 **System Components**:
+
 ```
 Restaurant Order System
 ├── Order Management
@@ -9571,6 +9597,7 @@ Restaurant Order System
 ```
 
 **Key Benefits**:
+
 - **Streamlined Workflow**: Direct pickup-and-delivery process
 - **Reliable Payments**: Robust wallet integration and payment processing
 - **Data Integrity**: Proper foreign key management and constraint handling

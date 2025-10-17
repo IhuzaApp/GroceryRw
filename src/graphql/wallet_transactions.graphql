@@ -42,9 +42,22 @@ query getAllWallettTtransactions {
   }
 }
 
-
-mutation createWalletTransaction($amount: String!, $type: String!, $status: String!, $wallet_id: uuid!, $related_order_id: uuid) {
-  insert_Wallet_Transactions_one(object: {amount: $amount, type: $type, status: $status, wallet_id: $wallet_id, related_order_id: $related_order_id}) {
+mutation createWalletTransaction(
+  $amount: String!
+  $type: String!
+  $status: String!
+  $wallet_id: uuid!
+  $related_order_id: uuid
+) {
+  insert_Wallet_Transactions_one(
+    object: {
+      amount: $amount
+      type: $type
+      status: $status
+      wallet_id: $wallet_id
+      related_order_id: $related_order_id
+    }
+  ) {
     id
     amount
     type
@@ -58,7 +71,9 @@ mutation createWalletTransaction($amount: String!, $type: String!, $status: Stri
   }
 }
 
-mutation createMultipleWalletTransactions($transactions: [Wallet_Transactions_insert_input!]!) {
+mutation createMultipleWalletTransactions(
+  $transactions: [Wallet_Transactions_insert_input!]!
+) {
   insert_Wallet_Transactions(objects: $transactions) {
     returning {
       id

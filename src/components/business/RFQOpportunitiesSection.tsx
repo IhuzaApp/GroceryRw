@@ -1,6 +1,6 @@
-"use client"
+"use client";
 
-import { useState } from "react"
+import { useState } from "react";
 import {
   Search,
   Filter,
@@ -12,13 +12,14 @@ import {
   Calendar,
   MapPin,
   User,
-} from "lucide-react"
+} from "lucide-react";
 
 const mockRFQOpportunities = [
   {
     id: "1",
     title: "Office Furniture Supply",
-    description: "Looking for complete office furniture setup for new office space",
+    description:
+      "Looking for complete office furniture setup for new office space",
     budget: "$15,000 - $25,000",
     category: "Furniture",
     location: "New York, NY",
@@ -32,7 +33,8 @@ const mockRFQOpportunities = [
   {
     id: "2",
     title: "IT Equipment Procurement",
-    description: "Need laptops, desktops, and networking equipment for 50 employees",
+    description:
+      "Need laptops, desktops, and networking equipment for 50 employees",
     budget: "$50,000 - $75,000",
     category: "Technology",
     location: "San Francisco, CA",
@@ -71,73 +73,86 @@ const mockRFQOpportunities = [
     responses: 6,
     isInterested: true,
   },
-]
+];
 
 interface RFQOpportunitiesSectionProps {
-  onMessageCustomer?: (customerId: string) => void
+  onMessageCustomer?: (customerId: string) => void;
 }
 
-export function RFQOpportunitiesSection({ onMessageCustomer }: RFQOpportunitiesSectionProps) {
-  const [searchTerm, setSearchTerm] = useState("")
-  const [selectedCategory, setSelectedCategory] = useState("all")
-  const [selectedRFQ, setSelectedRFQ] = useState<any>(null)
-  const [isQuoteModalOpen, setIsQuoteModalOpen] = useState(false)
+export function RFQOpportunitiesSection({
+  onMessageCustomer,
+}: RFQOpportunitiesSectionProps) {
+  const [searchTerm, setSearchTerm] = useState("");
+  const [selectedCategory, setSelectedCategory] = useState("all");
+  const [selectedRFQ, setSelectedRFQ] = useState<any>(null);
+  const [isQuoteModalOpen, setIsQuoteModalOpen] = useState(false);
 
-  const categories = ["all", "Furniture", "Technology", "Services", "Marketing", "Office Supplies"]
+  const categories = [
+    "all",
+    "Furniture",
+    "Technology",
+    "Services",
+    "Marketing",
+    "Office Supplies",
+  ];
 
-  const filteredRFQs = mockRFQOpportunities.filter(rfq => {
-    const matchesSearch = rfq.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         rfq.description.toLowerCase().includes(searchTerm.toLowerCase())
-    const matchesCategory = selectedCategory === "all" || rfq.category === selectedCategory
-    return matchesSearch && matchesCategory
-  })
+  const filteredRFQs = mockRFQOpportunities.filter((rfq) => {
+    const matchesSearch =
+      rfq.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      rfq.description.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesCategory =
+      selectedCategory === "all" || rfq.category === selectedCategory;
+    return matchesSearch && matchesCategory;
+  });
 
   const handleViewRFQ = (rfq: any) => {
-    setSelectedRFQ(rfq)
-    setIsQuoteModalOpen(true)
-  }
+    setSelectedRFQ(rfq);
+    setIsQuoteModalOpen(true);
+  };
 
   const handleShareQuote = (rfqId: string) => {
-    console.log("Sharing quote for RFQ:", rfqId)
-  }
+    console.log("Sharing quote for RFQ:", rfqId);
+  };
 
   const handleAcceptRFQ = (rfqId: string) => {
-    console.log("Accepting RFQ:", rfqId)
-  }
+    console.log("Accepting RFQ:", rfqId);
+  };
 
   const handleMessageCustomer = (customerId: string) => {
     if (onMessageCustomer) {
-      onMessageCustomer(customerId)
+      onMessageCustomer(customerId);
     } else {
-      console.log("Messaging customer:", customerId)
+      console.log("Messaging customer:", customerId);
     }
-  }
+  };
 
   const handleToggleInterest = (rfqId: string) => {
-    console.log("Toggling interest for RFQ:", rfqId)
-  }
+    console.log("Toggling interest for RFQ:", rfqId);
+  };
 
   return (
     <div className="space-y-6">
       {/* Header */}
       <div className="flex items-center justify-between">
-        <h3 className="text-xl font-semibold text-gray-900 dark:text-white">RFQ Opportunities</h3>
+        <h3 className="text-xl font-semibold text-gray-900 dark:text-white">
+          RFQ Opportunities
+        </h3>
         <div className="text-sm text-gray-500 dark:text-gray-400">
           {filteredRFQs.length} opportunities found
         </div>
       </div>
 
       {/* Search and Filter */}
-      <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 p-4">
-        <div className="flex flex-col md:flex-row gap-4">
-          <div className="flex-1 relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+      <div className="rounded-xl border border-gray-100 bg-white p-4 shadow-sm dark:border-gray-700 dark:bg-gray-800">
+        <div className="flex flex-col gap-4 md:flex-row">
+          <div className="relative flex-1">
+            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 transform text-gray-400" />
             <input
               type="text"
               placeholder="Search RFQ opportunities..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-10 pr-4 py-2 border border-gray-200 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
+              className="w-full rounded-lg border border-gray-200 py-2 pl-10 pr-4 focus:border-transparent focus:ring-2 focus:ring-green-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white"
             />
           </div>
           <div className="flex items-center gap-2">
@@ -145,9 +160,9 @@ export function RFQOpportunitiesSection({ onMessageCustomer }: RFQOpportunitiesS
             <select
               value={selectedCategory}
               onChange={(e) => setSelectedCategory(e.target.value)}
-              className="px-3 py-2 border border-gray-200 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
+              className="rounded-lg border border-gray-200 px-3 py-2 focus:border-transparent focus:ring-2 focus:ring-green-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white"
             >
-              {categories.map(category => (
+              {categories.map((category) => (
                 <option key={category} value={category}>
                   {category === "all" ? "All Categories" : category}
                 </option>
@@ -160,22 +175,31 @@ export function RFQOpportunitiesSection({ onMessageCustomer }: RFQOpportunitiesS
       {/* RFQ Opportunities List */}
       <div className="space-y-4">
         {filteredRFQs.map((rfq) => (
-          <div key={rfq.id} className="bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-100 dark:border-gray-700 p-6 hover:shadow-xl transition-all duration-300">
-            <div className="flex items-start justify-between mb-4">
+          <div
+            key={rfq.id}
+            className="rounded-xl border border-gray-100 bg-white p-6 shadow-lg transition-all duration-300 hover:shadow-xl dark:border-gray-700 dark:bg-gray-800"
+          >
+            <div className="mb-4 flex items-start justify-between">
               <div className="flex-1">
-                <div className="flex items-center gap-2 mb-2">
-                  <h4 className="text-lg font-semibold text-gray-900 dark:text-white">{rfq.title}</h4>
-                  <span className={`text-xs px-2 py-1 rounded-full ${
-                    rfq.status === "Urgent" 
-                      ? "bg-red-100 text-red-600 dark:bg-red-900 dark:text-red-300"
-                      : "bg-green-100 text-green-600 dark:bg-green-900 dark:text-green-300"
-                  }`}>
+                <div className="mb-2 flex items-center gap-2">
+                  <h4 className="text-lg font-semibold text-gray-900 dark:text-white">
+                    {rfq.title}
+                  </h4>
+                  <span
+                    className={`rounded-full px-2 py-1 text-xs ${
+                      rfq.status === "Urgent"
+                        ? "bg-red-100 text-red-600 dark:bg-red-900 dark:text-red-300"
+                        : "bg-green-100 text-green-600 dark:bg-green-900 dark:text-green-300"
+                    }`}
+                  >
                     {rfq.status}
                   </span>
                 </div>
-                <p className="text-gray-600 dark:text-gray-400 mb-3">{rfq.description}</p>
-                
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
+                <p className="mb-3 text-gray-600 dark:text-gray-400">
+                  {rfq.description}
+                </p>
+
+                <div className="grid grid-cols-1 gap-4 text-sm md:grid-cols-3">
                   <div className="flex items-center gap-2 text-gray-600 dark:text-gray-400">
                     <DollarSign className="h-4 w-4" />
                     <span className="font-medium">{rfq.budget}</span>
@@ -190,10 +214,12 @@ export function RFQOpportunitiesSection({ onMessageCustomer }: RFQOpportunitiesS
                   </div>
                 </div>
               </div>
-              
+
               <div className="text-right">
-                <div className="text-2xl font-bold text-gray-900 dark:text-white mb-1">{rfq.budget}</div>
-                <div className="text-sm text-gray-500 dark:text-gray-400 mb-2">
+                <div className="mb-1 text-2xl font-bold text-gray-900 dark:text-white">
+                  {rfq.budget}
+                </div>
+                <div className="mb-2 text-sm text-gray-500 dark:text-gray-400">
                   {rfq.responses} responses
                 </div>
                 <div className="text-xs text-gray-500 dark:text-gray-400">
@@ -202,23 +228,23 @@ export function RFQOpportunitiesSection({ onMessageCustomer }: RFQOpportunitiesS
               </div>
             </div>
 
-            <div className="flex items-center justify-between mb-4">
+            <div className="mb-4 flex items-center justify-between">
               <div className="flex items-center gap-4 text-sm text-gray-500 dark:text-gray-400">
                 <div className="flex items-center gap-1">
                   <Calendar className="h-4 w-4" />
                   <span>Deadline: {rfq.deadline}</span>
                 </div>
-                <span className="px-2 py-1 bg-gray-100 dark:bg-gray-700 rounded-full">
+                <span className="rounded-full bg-gray-100 px-2 py-1 dark:bg-gray-700">
                   {rfq.category}
                 </span>
               </div>
-              
+
               <button
                 onClick={() => handleToggleInterest(rfq.id)}
-                className={`px-3 py-1 rounded-full text-xs font-medium transition-colors ${
+                className={`rounded-full px-3 py-1 text-xs font-medium transition-colors ${
                   rfq.isInterested
                     ? "bg-green-100 text-green-600 dark:bg-green-900 dark:text-green-300"
-                    : "bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-300 hover:bg-green-100 hover:text-green-600"
+                    : "bg-gray-100 text-gray-600 hover:bg-green-100 hover:text-green-600 dark:bg-gray-700 dark:text-gray-300"
                 }`}
               >
                 {rfq.isInterested ? "Interested" : "Mark Interest"}
@@ -228,28 +254,28 @@ export function RFQOpportunitiesSection({ onMessageCustomer }: RFQOpportunitiesS
             <div className="flex gap-2">
               <button
                 onClick={() => handleViewRFQ(rfq)}
-                className="flex-1 flex items-center justify-center gap-2 px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors font-medium"
+                className="flex flex-1 items-center justify-center gap-2 rounded-lg bg-blue-500 px-4 py-2 font-medium text-white transition-colors hover:bg-blue-600"
               >
                 <Eye className="h-4 w-4" />
                 View Details
               </button>
               <button
                 onClick={() => handleShareQuote(rfq.id)}
-                className="flex-1 flex items-center justify-center gap-2 px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors font-medium"
+                className="flex flex-1 items-center justify-center gap-2 rounded-lg bg-green-500 px-4 py-2 font-medium text-white transition-colors hover:bg-green-600"
               >
                 <CheckCircle className="h-4 w-4" />
                 Share Quote
               </button>
               <button
                 onClick={() => handleAcceptRFQ(rfq.id)}
-                className="flex-1 flex items-center justify-center gap-2 px-4 py-2 bg-emerald-500 text-white rounded-lg hover:bg-emerald-600 transition-colors font-medium"
+                className="flex flex-1 items-center justify-center gap-2 rounded-lg bg-emerald-500 px-4 py-2 font-medium text-white transition-colors hover:bg-emerald-600"
               >
                 <CheckCircle className="h-4 w-4" />
                 Accept
               </button>
               <button
                 onClick={() => handleMessageCustomer(rfq.id)}
-                className="flex-1 flex items-center justify-center gap-2 px-4 py-2 bg-purple-500 text-white rounded-lg hover:bg-purple-600 transition-colors font-medium"
+                className="flex flex-1 items-center justify-center gap-2 rounded-lg bg-purple-500 px-4 py-2 font-medium text-white transition-colors hover:bg-purple-600"
               >
                 <MessageSquare className="h-4 w-4" />
                 Message
@@ -261,11 +287,13 @@ export function RFQOpportunitiesSection({ onMessageCustomer }: RFQOpportunitiesS
 
       {/* Quote Modal */}
       {isQuoteModalOpen && selectedRFQ && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white dark:bg-gray-800 rounded-xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 p-4">
+          <div className="max-h-[90vh] w-full max-w-2xl overflow-y-auto rounded-xl bg-white shadow-2xl dark:bg-gray-800">
             <div className="p-6">
-              <div className="flex items-center justify-between mb-4">
-                <h3 className="text-xl font-semibold text-gray-900 dark:text-white">RFQ Details</h3>
+              <div className="mb-4 flex items-center justify-between">
+                <h3 className="text-xl font-semibold text-gray-900 dark:text-white">
+                  RFQ Details
+                </h3>
                 <button
                   onClick={() => setIsQuoteModalOpen(false)}
                   className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
@@ -273,42 +301,62 @@ export function RFQOpportunitiesSection({ onMessageCustomer }: RFQOpportunitiesS
                   ✕
                 </button>
               </div>
-              
+
               <div className="space-y-4">
                 <div>
-                  <h4 className="text-lg font-medium text-gray-900 dark:text-white mb-2">{selectedRFQ.title}</h4>
-                  <p className="text-gray-600 dark:text-gray-400">{selectedRFQ.description}</p>
+                  <h4 className="mb-2 text-lg font-medium text-gray-900 dark:text-white">
+                    {selectedRFQ.title}
+                  </h4>
+                  <p className="text-gray-600 dark:text-gray-400">
+                    {selectedRFQ.description}
+                  </p>
                 </div>
-                
+
                 <div className="grid grid-cols-2 gap-4 text-sm">
                   <div>
-                    <span className="font-medium text-gray-700 dark:text-gray-300">Budget:</span>
-                    <p className="text-gray-600 dark:text-gray-400">{selectedRFQ.budget}</p>
+                    <span className="font-medium text-gray-700 dark:text-gray-300">
+                      Budget:
+                    </span>
+                    <p className="text-gray-600 dark:text-gray-400">
+                      {selectedRFQ.budget}
+                    </p>
                   </div>
                   <div>
-                    <span className="font-medium text-gray-700 dark:text-gray-300">Location:</span>
-                    <p className="text-gray-600 dark:text-gray-400">{selectedRFQ.location}</p>
+                    <span className="font-medium text-gray-700 dark:text-gray-300">
+                      Location:
+                    </span>
+                    <p className="text-gray-600 dark:text-gray-400">
+                      {selectedRFQ.location}
+                    </p>
                   </div>
                   <div>
-                    <span className="font-medium text-gray-700 dark:text-gray-300">Posted By:</span>
-                    <p className="text-gray-600 dark:text-gray-400">{selectedRFQ.postedBy}</p>
+                    <span className="font-medium text-gray-700 dark:text-gray-300">
+                      Posted By:
+                    </span>
+                    <p className="text-gray-600 dark:text-gray-400">
+                      {selectedRFQ.postedBy}
+                    </p>
                   </div>
                   <div>
-                    <span className="font-medium text-gray-700 dark:text-gray-300">Deadline:</span>
-                    <p className="text-gray-600 dark:text-gray-400">{selectedRFQ.deadline}</p>
+                    <span className="font-medium text-gray-700 dark:text-gray-300">
+                      Deadline:
+                    </span>
+                    <p className="text-gray-600 dark:text-gray-400">
+                      {selectedRFQ.deadline}
+                    </p>
                   </div>
                 </div>
-                
+
                 <div className="flex gap-2 pt-4">
                   <button
                     onClick={() => handleShareQuote(selectedRFQ.id)}
-                    className="flex-1 px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors font-medium"
+                    className="flex-1 rounded-lg bg-green-500 px-4 py-2 font-medium text-white transition-colors hover:bg-green-600"
                   >
                     Share Quote
                   </button>
                   <button
                     onClick={() => handleMessageCustomer(selectedRFQ.id)}
-                    className="flex-1 px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors font-medium"
+                    className="flex-1 rounded-lg bg-blue-500 px-4 py-2 font-medium text-white transition-colors hover:bg-blue-600"
                   >
                     Message Customer
                   </button>
@@ -319,5 +367,5 @@ export function RFQOpportunitiesSection({ onMessageCustomer }: RFQOpportunitiesS
         </div>
       )}
     </div>
-  )
+  );
 }

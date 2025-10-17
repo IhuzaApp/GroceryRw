@@ -119,7 +119,12 @@ export default async function handler(
     return res.status(401).json({ error: "Unauthorized" });
   }
 
-  const { orderId, operation, isReelOrder = false, isRestaurantOrder = false } = req.body;
+  const {
+    orderId,
+    operation,
+    isReelOrder = false,
+    isRestaurantOrder = false,
+  } = req.body;
 
   if (!orderId || !operation) {
     return res
@@ -375,9 +380,11 @@ async function handleDeliveredOperation(
   const orderTotal = parseFloat(order.total);
   const serviceFee = parseFloat(order.service_fee || "0");
   const deliveryFee = parseFloat(order.delivery_fee || "0");
-  
+
   // For restaurant orders, only delivery fee is earned (no service fee)
-  const totalEarnings = isRestaurantOrder ? deliveryFee : serviceFee + deliveryFee;
+  const totalEarnings = isRestaurantOrder
+    ? deliveryFee
+    : serviceFee + deliveryFee;
   const platformFee = (totalEarnings * deliveryCommissionPercentage) / 100;
   const remainingEarnings = totalEarnings - platformFee;
 

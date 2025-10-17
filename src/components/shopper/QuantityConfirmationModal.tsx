@@ -136,8 +136,10 @@ export default function QuantityConfirmationModal({
       return;
     }
 
-    const itemBarcode = currentItem.product.barcode || currentItem.product.ProductName?.barcode;
-    const itemSku = currentItem.product.sku || currentItem.product.ProductName?.sku;
+    const itemBarcode =
+      currentItem.product.barcode || currentItem.product.ProductName?.barcode;
+    const itemSku =
+      currentItem.product.sku || currentItem.product.ProductName?.sku;
 
     // Check if the item has a barcode or SKU in the database
     if (itemBarcode || itemSku) {
@@ -297,9 +299,11 @@ export default function QuantityConfirmationModal({
                         theme === "dark" ? "text-gray-100" : "text-gray-800"
                       }`}
                     >
-                      {(currentItem?.product.barcode || currentItem?.product.ProductName?.barcode)
+                      {currentItem?.product.barcode ||
+                      currentItem?.product.ProductName?.barcode
                         ? "Scan Barcode"
-                        : (currentItem?.product.sku || currentItem?.product.ProductName?.sku)
+                        : currentItem?.product.sku ||
+                          currentItem?.product.ProductName?.sku
                         ? "Enter SKU"
                         : "Scan Barcode or Enter SKU"}
                     </h3>
@@ -308,9 +312,11 @@ export default function QuantityConfirmationModal({
                         theme === "dark" ? "text-gray-300" : "text-gray-600"
                       }`}
                     >
-                      {(currentItem?.product.barcode || currentItem?.product.ProductName?.barcode)
+                      {currentItem?.product.barcode ||
+                      currentItem?.product.ProductName?.barcode
                         ? "Scan the barcode from the physical product"
-                        : (currentItem?.product.sku || currentItem?.product.ProductName?.sku)
+                        : currentItem?.product.sku ||
+                          currentItem?.product.ProductName?.sku
                         ? "Enter the product SKU from the physical product"
                         : "This product has no barcode/SKU in our system"}
                     </p>
@@ -323,16 +329,24 @@ export default function QuantityConfirmationModal({
                   <div
                     onClick={() => {
                       if (
-                        (currentItem?.product.barcode || currentItem?.product.ProductName?.barcode) ||
-                        (currentItem?.product.sku || currentItem?.product.ProductName?.sku)
+                        currentItem?.product.barcode ||
+                        currentItem?.product.ProductName?.barcode ||
+                        currentItem?.product.sku ||
+                        currentItem?.product.ProductName?.sku
                       ) {
                         setShowManualInput(false);
                         setShowBarcodeScanner(true);
                       }
                     }}
                     className={`rounded-xl border-2 p-4 transition-all duration-200 ${
-                      !(currentItem?.product.barcode || currentItem?.product.ProductName?.barcode) &&
-                      !(currentItem?.product.sku || currentItem?.product.ProductName?.sku)
+                      !(
+                        currentItem?.product.barcode ||
+                        currentItem?.product.ProductName?.barcode
+                      ) &&
+                      !(
+                        currentItem?.product.sku ||
+                        currentItem?.product.ProductName?.sku
+                      )
                         ? "cursor-not-allowed border-gray-200 bg-gray-50 dark:border-gray-700 dark:bg-gray-800"
                         : showBarcodeScanner
                         ? "cursor-pointer border-purple-500 bg-purple-100 shadow-lg dark:bg-purple-900/30"
@@ -393,16 +407,24 @@ export default function QuantityConfirmationModal({
                   <div
                     onClick={() => {
                       if (
-                        (currentItem?.product.barcode || currentItem?.product.ProductName?.barcode) ||
-                        (currentItem?.product.sku || currentItem?.product.ProductName?.sku)
+                        currentItem?.product.barcode ||
+                        currentItem?.product.ProductName?.barcode ||
+                        currentItem?.product.sku ||
+                        currentItem?.product.ProductName?.sku
                       ) {
                         setShowBarcodeScanner(false);
                         setShowManualInput(true);
                       }
                     }}
                     className={`rounded-xl border-2 p-4 transition-all duration-200 ${
-                      !(currentItem?.product.barcode || currentItem?.product.ProductName?.barcode) &&
-                      !(currentItem?.product.sku || currentItem?.product.ProductName?.sku)
+                      !(
+                        currentItem?.product.barcode ||
+                        currentItem?.product.ProductName?.barcode
+                      ) &&
+                      !(
+                        currentItem?.product.sku ||
+                        currentItem?.product.ProductName?.sku
+                      )
                         ? "cursor-not-allowed border-gray-200 bg-gray-50 dark:border-gray-700 dark:bg-gray-800"
                         : showManualInput
                         ? "cursor-pointer border-green-500 bg-green-100 shadow-lg dark:bg-green-900/30"
@@ -494,9 +516,11 @@ export default function QuantityConfirmationModal({
                             value={manualSku}
                             onChange={(e) => setManualSku(e.target.value)}
                             placeholder={
-                              (currentItem?.product.barcode || currentItem?.product.ProductName?.barcode)
+                              currentItem?.product.barcode ||
+                              currentItem?.product.ProductName?.barcode
                                 ? "Enter the barcode from the product"
-                                : (currentItem?.product.sku || currentItem?.product.ProductName?.sku)
+                                : currentItem?.product.sku ||
+                                  currentItem?.product.ProductName?.sku
                                 ? "Enter the SKU from the product"
                                 : "Enter SKU or barcode"
                             }

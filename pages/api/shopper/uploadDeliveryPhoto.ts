@@ -137,14 +137,15 @@ export default async function handler(
           affected_rows: number;
         };
       };
-      data = await hasuraClient.request<UpdateRestaurantOrderDeliveryPhotoResponse>(
-        UPDATE_RESTAURANT_ORDER_DELIVERY_PHOTO,
-        {
-          order_id: orderId,
-          delivery_photo_url: photoUrl,
-          updated_at: updatedAt,
-        }
-      );
+      data =
+        await hasuraClient.request<UpdateRestaurantOrderDeliveryPhotoResponse>(
+          UPDATE_RESTAURANT_ORDER_DELIVERY_PHOTO,
+          {
+            order_id: orderId,
+            delivery_photo_url: photoUrl,
+            updated_at: updatedAt,
+          }
+        );
     } else {
       // Update regular order
       type UpdateOrderDeliveryPhotoResponse = {

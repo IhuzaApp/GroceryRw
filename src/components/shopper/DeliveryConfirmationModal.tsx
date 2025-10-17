@@ -81,7 +81,7 @@ const DeliveryConfirmationModal: React.FC<DeliveryConfirmationModalProps> = ({
     if (open && invoiceData?.orderId) {
       // Clear any previous upload state when modal opens fresh
       localStorage.removeItem(`delivery_upload_${invoiceData.orderId}`);
-      
+
       // Reset all upload-related states when modal opens
       setPhotoUploading(false);
       setPhotoUploaded(false);

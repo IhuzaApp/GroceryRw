@@ -167,11 +167,14 @@ export default async function handler(
     let acceptResponse;
 
     if (isRestaurantOrder) {
-      acceptResponse = (await hasuraClient.request(ACCEPT_RESTAURANT_BATCH_MUTATION, {
-        orderId,
-        shopperId: userId,
-        assigned_at: assignedAt,
-      })) as any;
+      acceptResponse = (await hasuraClient.request(
+        ACCEPT_RESTAURANT_BATCH_MUTATION,
+        {
+          orderId,
+          shopperId: userId,
+          assigned_at: assignedAt,
+        }
+      )) as any;
     } else if (isReelOrder) {
       acceptResponse = (await hasuraClient.request(ACCEPT_REEL_BATCH_MUTATION, {
         orderId,
@@ -198,7 +201,11 @@ export default async function handler(
         message: "Batch accepted successfully",
         orderId,
         shopperId: userId,
-        orderType: isRestaurantOrder ? "restaurant" : isReelOrder ? "reel" : "regular",
+        orderType: isRestaurantOrder
+          ? "restaurant"
+          : isReelOrder
+          ? "reel"
+          : "regular",
       });
     } else {
       return res.status(500).json({ error: "Failed to accept batch" });

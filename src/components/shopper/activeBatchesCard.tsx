@@ -645,7 +645,8 @@ function ActiveOrderCard({
 
     // Check if this is a restaurant/user reel that should skip shopping
     // Skip shopping if EITHER restaurant_id OR user_id is not null
-    const isRestaurantUserReel = order.reel?.restaurant_id || order.reel?.user_id;
+    const isRestaurantUserReel =
+      order.reel?.restaurant_id || order.reel?.user_id;
 
     switch (status) {
       case "accepted":
