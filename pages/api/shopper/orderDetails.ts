@@ -565,43 +565,13 @@ export default async function handler(
       return;
     }
 
-    console.log("✅ [API] Order data found, formatting for frontend:", {
-      orderId: orderData.id,
-      orderType,
-      status: orderData.status,
-      hasReel: !!orderData.Reel,
-      hasRestaurant: !!orderData.Reel?.Restaurant,
-      hasUser: !!orderData.user,
-    });
 
     // Format the order data for the frontend based on order type
     let formattedOrder: any;
 
     if (orderType === "regular") {
       // Handle regular orders
-      console.log("🔍 [API] Processing regular order data:", {
-        orderId: orderData.id,
-        hasShop: !!orderData.shop,
-        shopData: orderData.shop
-          ? {
-              id: orderData.shop.id,
-              name: orderData.shop.name,
-              address: orderData.shop.address,
-              image: orderData.shop.image,
-              phone: orderData.shop.phone,
-              latitude: orderData.shop.latitude,
-              longitude: orderData.shop.longitude,
-              operating_hours: orderData.shop.operating_hours,
-            }
-          : null,
-        hasOrderItems: !!orderData.Order_Items,
-        orderItemsLength: orderData.Order_Items?.length || 0,
-      });
 
-      console.log(
-        "🔍 [API] Raw Order_Items from database:",
-        JSON.stringify(orderData.Order_Items, null, 2)
-      );
 
       const formattedOrderItems = orderData.Order_Items.map((item: any) => {
         const formattedItem = {
@@ -616,14 +586,6 @@ export default async function handler(
             item.Product?.ProductName?.image || item.Product?.image || null,
         };
 
-        console.log("🔍 [API] Formatted item:", {
-          id: formattedItem.id,
-          name: formattedItem.name,
-          measurement_unit: formattedItem.measurement_unit,
-          barcode: formattedItem.barcode,
-          sku: formattedItem.sku,
-          rawProduct: item.Product,
-        });
 
         return formattedItem;
       });
@@ -678,33 +640,6 @@ export default async function handler(
       };
     } else if (orderType === "reel") {
       // Handle reel orders
-      console.log("🔍 [API] Processing reel order data:", {
-        orderId: orderData.id,
-        serviceFee: orderData.service_fee,
-        deliveryFee: orderData.delivery_fee,
-        total: orderData.total,
-        quantity: orderData.quantity,
-        reelPrice: orderData.Reel?.Price,
-        hasReel: !!orderData.Reel,
-        hasRestaurant: !!orderData.Reel?.Restaurant,
-        hasShops: !!orderData.Reel?.Shops,
-        restaurantData: orderData.Reel?.Restaurant
-          ? {
-              id: orderData.Reel.Restaurant.id,
-              name: orderData.Reel.Restaurant.name,
-              location: orderData.Reel.Restaurant.location,
-              phone: orderData.Reel.Restaurant.phone,
-            }
-          : null,
-        shopData: orderData.Reel?.Shops
-          ? {
-              id: orderData.Reel.Shops.id,
-              name: orderData.Reel.Shops.name,
-              address: orderData.Reel.Shops.address,
-              phone: orderData.Reel.Shops.phone,
-            }
-          : null,
-      });
 
       const serviceFee = parseFloat(orderData.service_fee || "0");
       const deliveryFee = parseFloat(orderData.delivery_fee || "0");
@@ -713,15 +648,6 @@ export default async function handler(
       const quantity = parseInt(orderData.quantity || "1");
       const subTotal = reelPrice * quantity;
 
-      console.log("🔍 [API] Calculated reel order values:", {
-        serviceFee,
-        deliveryFee,
-        totalEarnings,
-        reelPrice,
-        quantity,
-        subTotal,
-        orderTotal: orderData.total,
-      });
 
       formattedOrder = {
         id: orderData.id,
@@ -777,27 +703,8 @@ export default async function handler(
         deliveryPhotoUrl: orderData.delivery_photo_url, // Add delivery photo URL
       };
 
-      console.log("✅ [API] Formatted reel order:", {
-        id: formattedOrder.id,
-        orderType: formattedOrder.orderType,
-        status: formattedOrder.status,
-        total: formattedOrder.total,
-        hasReel: !!formattedOrder.reel,
-        hasRestaurant: !!formattedOrder.reel?.Restaurant,
-        customerName: formattedOrder.customerName,
-      });
     } else if (orderType === "restaurant") {
       // Handle restaurant orders
-      console.log("🔍 [API] Processing restaurant order data:", {
-        orderId: orderData.id,
-        deliveryFee: orderData.delivery_fee,
-        total: orderData.total,
-        hasRestaurant: !!orderData.Restaurant,
-        hasOrderedBy: !!orderData.orderedBy,
-        hasAddress: !!orderData.address,
-        hasDishes: !!orderData.restaurant_dishe_orders,
-        dishesCount: orderData.restaurant_dishe_orders?.length || 0,
-      });
 
       const deliveryFee = parseFloat(orderData.delivery_fee || "0");
       const totalEarnings = deliveryFee; // Restaurant orders don't have service fee
@@ -869,23 +776,8 @@ export default async function handler(
         deliveryTime: orderData.delivery_time,
       };
 
-      console.log("✅ [API] Formatted restaurant order:", {
-        id: formattedOrder.id,
-        orderType: formattedOrder.orderType,
-        status: formattedOrder.status,
-        total: formattedOrder.total,
-        hasRestaurant: !!formattedOrder.restaurant,
-        customerName: formattedOrder.customerName,
-        dishesCount: formattedOrder.itemCount,
-      });
     }
 
-    console.log("✅ [API] Sending response to frontend:", {
-      success: true,
-      orderId: formattedOrder.id,
-      orderType: formattedOrder.orderType || "unknown",
-      status: formattedOrder.status,
-    });
 
     res.status(200).json({
       success: true,
