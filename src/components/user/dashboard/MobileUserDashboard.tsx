@@ -147,26 +147,33 @@ export default function MobileUserDashboard({
       // Search both shops and restaurants
       const [shopsResponse, restaurantsResponse] = await Promise.all([
         fetch(`/api/search?q=${encodeURIComponent(query)}`),
-        fetch(`/api/queries/restaurants`)
+        fetch(`/api/queries/restaurants`),
       ]);
 
       const shopsData = await shopsResponse.json();
       const restaurantsData = await restaurantsResponse.json();
 
       // Filter restaurants based on search query
-      const filteredRestaurants = restaurantsData.restaurants?.filter((restaurant: any) =>
-        restaurant.name?.toLowerCase().includes(query.toLowerCase()) ||
-        restaurant.location?.toLowerCase().includes(query.toLowerCase())
-      ).map((restaurant: any) => ({
-        ...restaurant,
-        type: 'restaurant',
-        category: 'Restaurant'
-      })) || [];
+      const filteredRestaurants =
+        restaurantsData.restaurants
+          ?.filter(
+            (restaurant: any) =>
+              restaurant.name?.toLowerCase().includes(query.toLowerCase()) ||
+              restaurant.location?.toLowerCase().includes(query.toLowerCase())
+          )
+          .map((restaurant: any) => ({
+            ...restaurant,
+            type: "restaurant",
+            category: "Restaurant",
+          })) || [];
 
       // Combine and format results
       const allResults = [
-        ...(shopsData.results || []).map((item: any) => ({ ...item, type: 'shop' })),
-        ...filteredRestaurants
+        ...(shopsData.results || []).map((item: any) => ({
+          ...item,
+          type: "shop",
+        })),
+        ...filteredRestaurants,
       ];
 
       setSearchResults(allResults);
@@ -334,7 +341,7 @@ export default function MobileUserDashboard({
                     {/* Content */}
                     <div className="relative z-10">
                       {/* Icon Container - Enhanced for light theme */}
-                      <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-br from-green-500 to-green-600 shadow-lg transition-all duration-300 group-hover:scale-110 group-hover:shadow-xl group-hover:from-green-600 group-hover:to-green-700 dark:from-green-800 dark:to-green-700 dark:group-hover:from-green-700 dark:group-hover:to-green-800">
+                      <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-br from-green-500 to-green-600 shadow-lg transition-all duration-300 group-hover:scale-110 group-hover:from-green-600 group-hover:to-green-700 group-hover:shadow-xl dark:from-green-800 dark:to-green-700 dark:group-hover:from-green-700 dark:group-hover:to-green-800">
                         <CategoryIcon category={category.name} />
                       </div>
 

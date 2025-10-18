@@ -145,8 +145,16 @@ export default async function handler(
   }
 
   if (req.method === "POST") {
-    const { street, city, postal_code, is_default, latitude, longitude, type, placeDetails } =
-      req.body;
+    const {
+      street,
+      city,
+      postal_code,
+      is_default,
+      latitude,
+      longitude,
+      type,
+      placeDetails,
+    } = req.body;
     if (
       !street ||
       !city ||
