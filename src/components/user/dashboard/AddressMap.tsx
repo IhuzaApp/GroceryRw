@@ -92,7 +92,7 @@ export default function AddressMap({
           center: address
             ? [parseFloat(address.latitude), parseFloat(address.longitude)]
             : [0, 0],
-          zoom: address ? 15 : 2,
+          zoom: address ? 18 : 2,
           zoomControl: true,
           attributionControl: false,
         });
@@ -175,7 +175,7 @@ export default function AddressMap({
           timeoutRef.current = setTimeout(() => {
             try {
               if (map && mapInstanceRef.current === map) {
-                map.setView([lat, lng], 15);
+                map.setView([lat, lng], 18);
               }
             } catch (error) {
               console.error("Error centering map:", error);
