@@ -6,7 +6,7 @@ interface SearchResult {
   name: string;
   type: "product" | "shop" | "recipe";
   price?: string;
-  image?: string;
+  image_url?: string;
   shop_name?: string;
   address?: string;
   description?: string;
@@ -82,7 +82,7 @@ export default function SearchModal({ isOpen, onClose, searchQuery, onSearch, se
                       <div className="flex-shrink-0">
                         <div className="h-16 w-16 rounded-xl overflow-hidden bg-gray-100 shadow-sm">
                           <img
-                            src={result.image}
+                            src={result.image_url || '/images/groceryPlaceholder.png'}
                             alt={result.name}
                             className="h-full w-full object-cover group-hover:scale-105 transition-transform duration-300"
                           />
