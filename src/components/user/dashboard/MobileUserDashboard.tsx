@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useUserDashboardLogic } from "./shared/UserDashboardLogic";
 import { Data } from "../../../types";
 import ShopCard from "./ShopCard";
@@ -31,6 +31,8 @@ export default function MobileUserDashboard({
   const [shopSearchTerm, setShopSearchTerm] = useState("");
   const [searchResults, setSearchResults] = useState<any[]>([]);
   const [isSearching, setIsSearching] = useState(false);
+  const [topShops, setTopShops] = useState<any[]>([]);
+  const [isLoadingTopShops, setIsLoadingTopShops] = useState(false);
   
   
   const {
@@ -51,6 +53,73 @@ export default function MobileUserDashboard({
     handleNearbyClick,
   } = useUserDashboardLogic(initialData);
 
+  // Function to fetch top shops based on ALL users' order history
+  const fetchTopShops = async (categoryId: string) => {
+    if (!categoryId) return;
+    
+    setIsLoadingTopShops(true);
+    try {
+      // Get ALL orders from the system (not just current user)
+      const ordersResponse = await fetch('/api/queries/all-orders');
+      const ordersData = await ordersResponse.json();
+      
+      if (!ordersData.orders || ordersData.orders.length === 0) {
+        setTopShops([]);
+        return;
+      }
+
+      // Get shops in the selected category
+      const categoryShops = data?.shops?.filter(shop => 
+        shop.category_id === categoryId
+      ) || [];
+
+      if (categoryShops.length === 0) {
+        setTopShops([]);
+        return;
+      }
+
+      // Create a map of shop IDs for quick lookup
+      const categoryShopIds = new Set(categoryShops.map(shop => shop.id));
+
+      // Count orders per shop across ALL users
+      const shopOrderCounts = new Map<string, number>();
+      
+      ordersData.orders.forEach((order: any) => {
+        if (categoryShopIds.has(order.shop_id)) {
+          const currentCount = shopOrderCounts.get(order.shop_id) || 0;
+          shopOrderCounts.set(order.shop_id, currentCount + 1);
+        }
+      });
+
+      // Sort shops by order count and get top 6
+      const sortedShops = categoryShops
+        .map(shop => ({
+          ...shop,
+          orderCount: shopOrderCounts.get(shop.id) || 0
+        }))
+        .filter(shop => shop.orderCount > 0)
+        .sort((a, b) => b.orderCount - a.orderCount)
+        .slice(0, 6);
+
+
+      setTopShops(sortedShops);
+    } catch (error) {
+      console.error('Error fetching top shops:', error);
+      setTopShops([]);
+    } finally {
+      setIsLoadingTopShops(false);
+    }
+  };
+
+  // Effect to fetch top shops when category changes
+  useEffect(() => {
+    if (selectedCategory) {
+      fetchTopShops(selectedCategory);
+    } else {
+      setTopShops([]);
+    }
+  }, [selectedCategory, data?.shops]);
+
   if (!authReady || !dataLoaded) {
     return <LoadingScreen />;
   }
@@ -61,6 +130,13 @@ export default function MobileUserDashboard({
   }
 
   const allCategories = getAllCategories(data);
+
+  // Safe wrapper for getShopImageUrl to handle non-string values
+  const getSafeShopImageUrl = (shop: any) => {
+    const imageUrl = shop.image || shop.logo;
+    // Ensure we always pass a string to getShopImageUrl
+    return getShopImageUrl(typeof imageUrl === 'string' ? imageUrl : undefined);
+  };
 
   // Search function for SearchModal
   const handleSearch = async (query: string) => {
@@ -407,7 +483,7 @@ export default function MobileUserDashboard({
         </div>
         
         {/* Search Input */}
-        <div className="bg-white px-4 pb-4 dark:bg-gray-800">
+        <div className="bg-white px-4 pb-2 dark:bg-gray-800">
           <div className="relative">
             <div className="absolute inset-y-0 left-0 flex items-center pl-3">
               <svg
@@ -455,8 +531,58 @@ export default function MobileUserDashboard({
         </div>
       </div>
 
-      <div className="container mx-auto">
+      {topShops.length > 0 && (
+        <div className="mb-3  ">
+          <h5 className="text-lg font-bold text-gray-900 pb-2 dark:text-white">Top Shops</h5>
+          {isLoadingTopShops ? (
+            <div className="flex space-x-3">
+              {Array(6).fill(0).map((_, index) => (
+                <div
+                  key={index}
+                  className="h-16 w-16 animate-pulse rounded-full bg-gray-200 dark:bg-gray-600"
+                />
+              ))}
+            </div>
+          ) : (
+            <div className="flex space-x-3 overflow-x-auto">
+              {topShops.map((shop, index) => (
+                <div
+                  key={shop.id}
+                  className="flex-shrink-0 cursor-pointer"
+                  onClick={() => {
+                    // You can add navigation to shop details here
+                    // TODO: Add navigation to shop details
+                  }}
+                >
+                  <div className="group mt-2 relative">
+                    {/* Shop Logo - Only show if logo exists */}
+                    {shop.logo && shop.logo.trim() !== "" && (
+                      <div className="h-16 w-16 overflow-hidden rounded-full border-2 border-green-700 bg-white shadow-sm transition-all duration-200 group-hover:border-green-500 group-hover:shadow-lg dark:border-gray-600 dark:group-hover:border-green-400">
+                        <img
+                          src={shop.logo}
+                          alt={`${shop.name} logo`}
+                          className="h-full w-full object-cover transition-transform duration-200 group-hover:scale-110"
+                          onError={(e) => {
+                            e.currentTarget.style.display = "none";
+                          }}
+                        />
+                      </div>
+                    )}
+                    
+                    {/* Order count badge */}
+                    <div className="absolute -top-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full bg-green-500 text-xs font-bold text-white">
+                      {shop.orderCount}
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
 
+      <div className="container mx-auto">
+<h5 className="text-lg font-bold text-gray-900 pb-2 dark:text-white">All Shops</h5>
         {error && (
           <div className="mb-4 rounded-lg bg-red-100 p-3 text-sm text-red-700 dark:bg-red-900 dark:text-red-100">
             {error}

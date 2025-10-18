@@ -94,7 +94,7 @@ const MobileShopCard: React.FC<MobileShopCardProps> = ({
 
   return (
     <Link href={isRestaurant ? `/restaurant/${shop.id}` : `/shops/${shop.id}`}>
-      <div className="relative mb-3 h-24 w-full transform cursor-pointer overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm transition-all duration-300 hover:shadow-md">
+      <div className="relative mb-3 h-28 w-full transform cursor-pointer overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm transition-all duration-300 hover:shadow-md">
         {/* Background Image */}
         <div className="absolute inset-0">
           <Image
