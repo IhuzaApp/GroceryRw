@@ -31,26 +31,29 @@ export const useAddress = (): UseAddressReturn => {
   const fetchAddresses = async () => {
     setLoading(true);
     setError(null);
-    
+
     try {
       const response = await authenticatedFetch("/api/queries/addresses");
-      
+
       if (!response.ok) {
         throw new Error(`Failed to fetch addresses: ${response.status}`);
       }
-      
+
       const data = await response.json();
       const addressesList = data.addresses || [];
-      
+
       setAddresses(addressesList);
-      
+
       // Find the default address
-      const defaultAddr = addressesList.find((addr: Address) => addr.is_default);
+      const defaultAddr = addressesList.find(
+        (addr: Address) => addr.is_default
+      );
       setDefaultAddress(defaultAddr || null);
-      
     } catch (err) {
       console.error("Error fetching addresses:", err);
-      setError(err instanceof Error ? err.message : "Failed to fetch addresses");
+      setError(
+        err instanceof Error ? err.message : "Failed to fetch addresses"
+      );
       setAddresses([]);
       setDefaultAddress(null);
     } finally {

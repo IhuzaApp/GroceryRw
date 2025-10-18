@@ -275,7 +275,10 @@ export default function MobileUserDashboard({
                 {error}
               </div>
             )}
-<h5 className="pb-2 text-lg font-bold text-gray-900 dark:text-white"> Categories</h5>
+            <h5 className="pb-2 text-lg font-bold text-gray-900 dark:text-white">
+              {" "}
+              Categories
+            </h5>
             {/* Categories Grid */}
             <div className="grid grid-cols-2 gap-4">
               {isLoading ? (

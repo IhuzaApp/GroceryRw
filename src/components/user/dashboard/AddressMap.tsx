@@ -11,10 +11,10 @@ interface AddressMapProps {
   className?: string;
 }
 
-export default function AddressMap({ 
-  address, 
-  height = "h-full", 
-  className = "" 
+export default function AddressMap({
+  address,
+  height = "h-full",
+  className = "",
 }: AddressMapProps) {
   const mapRef = useRef<HTMLDivElement>(null);
   const mapInstanceRef = useRef<any>(null);
@@ -28,13 +28,17 @@ export default function AddressMap({
       try {
         // Import Leaflet dynamically
         const L = (await import("leaflet")).default;
-        
+
         // Import Leaflet CSS only once
-        if (typeof document !== "undefined" && !document.querySelector('link[href*="leaflet"]')) {
+        if (
+          typeof document !== "undefined" &&
+          !document.querySelector('link[href*="leaflet"]')
+        ) {
           const link = document.createElement("link");
           link.rel = "stylesheet";
           link.href = "https://unpkg.com/leaflet@1.9.4/dist/leaflet.css";
-          link.integrity = "sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=";
+          link.integrity =
+            "sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=";
           link.crossOrigin = "anonymous";
           document.head.appendChild(link);
         }
@@ -47,12 +51,14 @@ export default function AddressMap({
 
         // Clear the container
         if (mapRef.current) {
-          mapRef.current.innerHTML = '';
+          mapRef.current.innerHTML = "";
         }
 
         // Create map instance
         const map = L.map(mapRef.current!, {
-          center: address ? [parseFloat(address.latitude), parseFloat(address.longitude)] : [0, 0],
+          center: address
+            ? [parseFloat(address.latitude), parseFloat(address.longitude)]
+            : [0, 0],
           zoom: address ? 15 : 2,
           zoomControl: true,
           attributionControl: false,
@@ -60,7 +66,8 @@ export default function AddressMap({
 
         // Add tile layer
         L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
-          attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+          attribution:
+            '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
           maxZoom: 19,
         }).addTo(map);
 
@@ -68,7 +75,7 @@ export default function AddressMap({
         if (address) {
           const lat = parseFloat(address.latitude);
           const lng = parseFloat(address.longitude);
-          
+
           // Create custom marker icon
           const markerIcon = L.divIcon({
             className: "custom-marker",
@@ -85,7 +92,7 @@ export default function AddressMap({
           });
 
           const marker = L.marker([lat, lng], { icon: markerIcon }).addTo(map);
-          
+
           // Add popup with address info
           marker.bindPopup(`
             <div class="p-2">
@@ -115,7 +122,6 @@ export default function AddressMap({
         }
 
         mapInstanceRef.current = map;
-
       } catch (error) {
         console.error("Error initializing map:", error);
       }
@@ -145,18 +151,36 @@ export default function AddressMap({
     };
   }, [address]);
 
-
   if (!address) {
     return (
-      <div className={`${height} ${className} flex items-center justify-center bg-gray-100 dark:bg-gray-800`}>
+      <div
+        className={`${height} ${className} flex items-center justify-center bg-gray-100 dark:bg-gray-800`}
+      >
         <div className="text-center">
-          <div className="w-16 h-16 mx-auto mb-4 bg-green-100 dark:bg-green-900/30 rounded-full flex items-center justify-center">
-            <svg className="w-8 h-8 text-green-600 dark:text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+          <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-green-100 dark:bg-green-900/30">
+            <svg
+              className="h-8 w-8 text-green-600 dark:text-green-400"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"
+              />
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"
+              />
             </svg>
           </div>
-          <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">No Address Selected</h3>
+          <h3 className="mb-2 text-lg font-semibold text-gray-900 dark:text-white">
+            No Address Selected
+          </h3>
           <p className="text-sm text-gray-600 dark:text-gray-400">
             Select an address to see it on the map
           </p>
@@ -167,22 +191,24 @@ export default function AddressMap({
 
   return (
     <div className={`${height} ${className} relative`}>
-      <div ref={mapRef} className="w-full h-full rounded-lg" />
-      
+      <div ref={mapRef} className="h-full w-full rounded-lg" />
+
       {/* Custom styles for the marker */}
       <style jsx global>{`
         .custom-marker {
           background: transparent !important;
           border: none !important;
         }
-        
+
         .leaflet-popup-content-wrapper {
           border-radius: 8px;
-          box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+          box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1),
+            0 2px 4px -1px rgba(0, 0, 0, 0.06);
         }
-        
+
         .leaflet-popup-tip {
-          box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+          box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1),
+            0 2px 4px -1px rgba(0, 0, 0, 0.06);
         }
       `}</style>
     </div>
