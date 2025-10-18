@@ -4,7 +4,21 @@ import MobileUserDashboard from "./MobileUserDashboard";
 import DesktopUserDashboard from "./DesktopUserDashboard";
 import LoadingScreen from "../../ui/LoadingScreen";
 
-export default function ResponsiveUserDashboard({ initialData }: { initialData: Data }) {
+interface ResponsiveUserDashboardProps {
+  initialData: Data;
+  searchOpen: boolean;
+  setSearchOpen: (open: boolean) => void;
+  searchQuery: string;
+  setSearchQuery: (query: string) => void;
+}
+
+export default function ResponsiveUserDashboard({ 
+  initialData, 
+  searchOpen, 
+  setSearchOpen, 
+  searchQuery, 
+  setSearchQuery 
+}: ResponsiveUserDashboardProps) {
   const [isMobile, setIsMobile] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -31,7 +45,13 @@ export default function ResponsiveUserDashboard({ initialData }: { initialData: 
 
   // Render appropriate component based on screen size
   return isMobile ? (
-    <MobileUserDashboard initialData={initialData} />
+    <MobileUserDashboard 
+      initialData={initialData} 
+      searchOpen={searchOpen}
+      setSearchOpen={setSearchOpen}
+      searchQuery={searchQuery}
+      setSearchQuery={setSearchQuery}
+    />
   ) : (
     <DesktopUserDashboard initialData={initialData} />
   );
