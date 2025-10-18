@@ -81,25 +81,11 @@ export default function SearchModal({ isOpen, onClose, searchQuery, onSearch, se
                       {/* Image */}
                       <div className="flex-shrink-0">
                         <div className="h-16 w-16 rounded-xl overflow-hidden bg-gray-100 shadow-sm">
-                          {result.image ? (
-                            <img
-                              src={result.image}
-                              alt={result.name}
-                              className="h-full w-full object-cover group-hover:scale-105 transition-transform duration-300"
-                              onError={(e) => {
-                                e.currentTarget.style.display = 'none';
-                                const fallback = e.currentTarget.nextElementSibling as HTMLElement;
-                                if (fallback) {
-                                  fallback.style.display = 'flex';
-                                }
-                              }}
-                            />
-                          ) : null}
-                          <div className="h-full w-full flex items-center justify-center bg-gradient-to-br from-green-100 to-green-200" style={{ display: result.image ? 'none' : 'flex' }}>
-                            {result.type === "product" && <span className="text-2xl">🛍️</span>}
-                            {result.type === "shop" && <span className="text-2xl">🏪</span>}
-                            {result.type === "recipe" && <span className="text-2xl">📖</span>}
-                          </div>
+                          <img
+                            src={result.image}
+                            alt={result.name}
+                            className="h-full w-full object-cover group-hover:scale-105 transition-transform duration-300"
+                          />
                         </div>
                       </div>
                       
