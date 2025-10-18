@@ -40,6 +40,44 @@ export default function AddressBubble({ className = "" }: AddressBubbleProps) {
     }
   };
 
+  const handleAddAddress = async (addressData: {
+    latitude: string;
+    longitude: string;
+    street: string;
+    city: string;
+    postal_code: string;
+    is_default: boolean;
+    type: string;
+    placeDetails: any;
+  }) => {
+    try {
+      const response = await fetch("/api/queries/addresses", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          latitude: addressData.latitude,
+          longitude: addressData.longitude,
+          street: addressData.street,
+          city: addressData.city,
+          postal_code: addressData.postal_code,
+          is_default: addressData.is_default,
+          type: addressData.type,
+          placeDetails: addressData.placeDetails,
+        }),
+      });
+
+      if (response.ok) {
+        await refetch();
+        // Show success message or notification
+        console.log("Address added successfully!");
+      }
+    } catch (error) {
+      console.error("Error adding address:", error);
+    }
+  };
+
   const handleAddressClick = (address: any) => {
     if (address.id === defaultAddress?.id) {
       // Already default, just close dropdown
@@ -235,9 +273,9 @@ export default function AddressBubble({ className = "" }: AddressBubbleProps) {
               >
                 {/* Dropdown Header */}
                 <div className="flex items-center justify-between border-b border-gray-200 bg-white p-6 dark:border-gray-700 dark:bg-gray-900">
-                  <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
+                  <h5 className="text-2xl font-bold text-gray-900 dark:text-white">
                     Select Address
-                  </h2>
+                  </h5>
                   <button
                     onClick={() => setIsDropdownOpen(false)}
                     className="rounded-full p-2 transition-colors duration-200 hover:bg-gray-100 dark:hover:bg-gray-700"
@@ -258,44 +296,45 @@ export default function AddressBubble({ className = "" }: AddressBubbleProps) {
                   </button>
                 </div>
 
-                {/* Full Height Content - Vertical Layout */}
-                <div className="flex h-[calc(100vh-80px)] flex-col">
-                  {/* Map Section - Header */}
-                  <div className="h-1/2 border-b border-gray-200 dark:border-gray-700">
-                    <AddressMap
-                      address={
-                        defaultAddress
-                          ? {
-                              latitude: defaultAddress.latitude,
-                              longitude: defaultAddress.longitude,
-                              street: defaultAddress.street,
-                              city: defaultAddress.city,
-                            }
-                          : null
-                      }
-                      height="h-full"
-                      className="bg-gray-100 dark:bg-gray-800"
-                    />
-                  </div>
+                 {/* Full Height Content - Vertical Layout */}
+                 <div className="flex h-[calc(100vh-80px)] flex-col">
+                   {/* Map Section - Header */}
+                   <div className="h-3/5 border-b border-gray-200 dark:border-gray-700">
+                     <AddressMap
+                       address={
+                         defaultAddress
+                           ? {
+                               latitude: defaultAddress.latitude,
+                               longitude: defaultAddress.longitude,
+                               street: defaultAddress.street,
+                               city: defaultAddress.city,
+                             }
+                           : null
+                       }
+                       height="h-full"
+                       className="bg-gray-100 dark:bg-gray-800"
+                       onAddAddress={handleAddAddress}
+                     />
+                   </div>
 
-                  {/* Address List Section - Below Map */}
-                  <div className="flex flex-1 flex-col">
-                    <div className="border-b border-gray-200 p-6 dark:border-gray-700">
-                      <h3 className="mb-2 text-lg font-semibold text-gray-900 dark:text-white">
-                        Your Addresses
-                      </h3>
-                      <p className="text-sm text-gray-600 dark:text-gray-400">
-                        Select an address to set as default
-                      </p>
-                    </div>
+                   {/* Address List Section - Below Map */}
+                   <div className="flex h-2/5 flex-col">
+                     <div className="border-b border-gray-200 p-4 dark:border-gray-700">
+                       <h3 className="mb-1 text-lg font-semibold text-gray-900 dark:text-white">
+                         Your Addresses
+                       </h3>
+                       <p className="text-sm text-gray-600 dark:text-gray-400">
+                         Select an address to set as default
+                       </p>
+                     </div>
 
-                    <div className="flex-1 overflow-y-auto p-6">
-                      <div className="space-y-4">
+                     <div className="flex-1 overflow-y-auto p-4 scrollbar-thin scrollbar-thumb-gray-300 dark:scrollbar-thumb-gray-600 scrollbar-track-transparent">
+                      <div className="space-y-3">
                         {addresses.map((address) => (
                           <button
                             key={address.id}
                             onClick={() => handleAddressClick(address)}
-                            className={`w-full rounded-xl border-2 p-4 text-left transition-all duration-200 ${
+                            className={`w-full rounded-xl border-2 p-3 text-left transition-all duration-200 ${
                               address.is_default
                                 ? "border-green-500 bg-green-50 dark:bg-green-900/20"
                                 : "border-gray-200 hover:border-gray-300 dark:border-gray-600 dark:hover:border-gray-500"
@@ -303,9 +342,9 @@ export default function AddressBubble({ className = "" }: AddressBubbleProps) {
                           >
                             <div className="flex items-start justify-between">
                               <div className="flex-1">
-                                <div className="mb-2 flex items-center gap-2">
+                                <div className="mb-1 flex items-center gap-2">
                                   <div
-                                    className={`h-3 w-3 rounded-full ${
+                                    className={`h-2.5 w-2.5 rounded-full ${
                                       address.is_default
                                         ? "bg-green-500"
                                         : "bg-gray-300 dark:bg-gray-600"
@@ -315,17 +354,13 @@ export default function AddressBubble({ className = "" }: AddressBubbleProps) {
                                     {address.street}
                                   </span>
                                   {address.is_default && (
-                                    <span className="rounded-full bg-green-100 px-2 py-1 text-xs font-medium text-green-800 dark:bg-green-900/30 dark:text-green-200">
+                                    <span className="rounded-full bg-green-100 px-1.5 py-0.5 text-xs font-medium text-green-800 dark:bg-green-900/30 dark:text-green-200">
                                       Default
                                     </span>
                                   )}
                                 </div>
-                                <div className="mb-2 text-sm text-gray-600 dark:text-gray-400">
+                                <div className="text-xs text-gray-600 dark:text-gray-400">
                                   {address.city}, {address.postal_code}
-                                </div>
-                                <div className="text-xs text-gray-500 dark:text-gray-500">
-                                  Coordinates: {address.latitude},{" "}
-                                  {address.longitude}
                                 </div>
                               </div>
                             </div>
@@ -333,18 +368,18 @@ export default function AddressBubble({ className = "" }: AddressBubbleProps) {
                         ))}
 
                         {/* Add New Address Button */}
-                        <div className="mt-6">
+                        <div className="mt-4">
                           <button
                             onClick={() => {
                               // TODO: Implement add new address functionality
                               console.log("Add new address clicked");
                             }}
-                            className="group w-full rounded-xl border-2 border-dashed border-gray-300 p-4 transition-all duration-200 hover:border-green-500 hover:bg-green-50 dark:border-gray-600 dark:hover:border-green-400 dark:hover:bg-green-900/10"
+                            className="group w-full rounded-xl border-2 border-dashed border-gray-300 p-3 transition-all duration-200 hover:border-green-500 hover:bg-green-50 dark:border-gray-600 dark:hover:border-green-400 dark:hover:bg-green-900/10"
                           >
-                            <div className="flex flex-col items-center gap-2">
-                              <div className="flex h-8 w-8 items-center justify-center rounded-full bg-gray-100 transition-colors duration-200 group-hover:bg-green-100 dark:bg-gray-700 dark:group-hover:bg-green-900/20">
+                            <div className="flex items-center justify-center gap-2">
+                              <div className="flex h-6 w-6 items-center justify-center rounded-full bg-gray-100 transition-colors duration-200 group-hover:bg-green-100 dark:bg-gray-700 dark:group-hover:bg-green-900/20">
                                 <svg
-                                  className="h-4 w-4 text-gray-500 group-hover:text-green-500 dark:text-gray-400 dark:group-hover:text-green-400"
+                                  className="h-3 w-3 text-gray-500 group-hover:text-green-500 dark:text-gray-400 dark:group-hover:text-green-400"
                                   fill="none"
                                   stroke="currentColor"
                                   viewBox="0 0 24 24"
@@ -366,15 +401,15 @@ export default function AddressBubble({ className = "" }: AddressBubbleProps) {
                       </div>
                     </div>
 
-                    {/* Footer */}
-                    <div className="border-t border-gray-200 bg-gray-50 p-6 dark:border-gray-700 dark:bg-gray-800">
-                      <button
-                        onClick={() => setIsDropdownOpen(false)}
-                        className="w-full rounded-xl bg-green-600 px-4 py-3 font-medium text-white transition-colors duration-200 hover:bg-green-700"
-                      >
-                        Done
-                      </button>
-                    </div>
+                     {/* Footer */}
+                     <div className="border-t border-gray-200 bg-gray-50 p-4 dark:border-gray-700 dark:bg-gray-800">
+                       <button
+                         onClick={() => setIsDropdownOpen(false)}
+                         className="w-full rounded-xl bg-green-600 px-4 py-3 font-medium text-white transition-colors duration-200 hover:bg-green-700"
+                       >
+                         Done
+                       </button>
+                     </div>
                   </div>
                 </div>
               </div>
@@ -423,22 +458,23 @@ export default function AddressBubble({ className = "" }: AddressBubbleProps) {
               {/* Modal Content - Full Height */}
               <div className="flex h-[calc(100vh-80px)]">
                 {/* Map Section */}
-                <div className="w-1/2 border-r border-gray-200 dark:border-gray-700">
-                  <AddressMap
-                    address={
-                      defaultAddress
-                        ? {
-                            latitude: defaultAddress.latitude,
-                            longitude: defaultAddress.longitude,
-                            street: defaultAddress.street,
-                            city: defaultAddress.city,
-                          }
-                        : null
-                    }
-                    height="h-full"
-                    className="bg-gray-100 dark:bg-gray-800"
-                  />
-                </div>
+                 <div className="w-1/2 border-r border-gray-200 dark:border-gray-700">
+                   <AddressMap
+                     address={
+                       defaultAddress
+                         ? {
+                             latitude: defaultAddress.latitude,
+                             longitude: defaultAddress.longitude,
+                             street: defaultAddress.street,
+                             city: defaultAddress.city,
+                           }
+                         : null
+                     }
+                     height="h-full"
+                     className="bg-gray-100 dark:bg-gray-800"
+                     onAddAddress={handleAddAddress}
+                   />
+                 </div>
 
                 {/* Address List Section */}
                 <div className="flex w-1/2 flex-col">
