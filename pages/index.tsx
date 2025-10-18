@@ -52,6 +52,8 @@ const CategoryIcon = ({ category }: { category: string }) => {
 export default function Home({ initialData }: { initialData: Data }) {
   const { role, authReady, isLoggedIn } = useAuth();
   const [dataLoaded, setDataLoaded] = useState(false);
+  const [searchOpen, setSearchOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
 
   useEffect(() => {
     // Allow guest access - don't wait for auth to be ready
@@ -90,7 +92,13 @@ export default function Home({ initialData }: { initialData: Data }) {
   return (
     <RootLayout>
       <MainBanners />
-      <ResponsiveUserDashboard initialData={safeInitialData} />
+      <ResponsiveUserDashboard 
+        initialData={safeInitialData} 
+        searchOpen={searchOpen}
+        setSearchOpen={setSearchOpen}
+        searchQuery={searchQuery}
+        setSearchQuery={setSearchQuery}
+      />
     </RootLayout>
   );
 }

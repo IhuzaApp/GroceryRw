@@ -4,7 +4,7 @@ import { Data } from "../../../types";
 import ShopCard from "./ShopCard";
 import SortDropdown from "./SortDropdown";
 import LoadingScreen from "../../ui/LoadingScreen";
-import MobileSearchModal from "../../ui/MobileSearchModal";
+import SearchModal from "./SearchModal";
 import {
   CategoryIcon,
   getShopImageUrl,
@@ -12,10 +12,25 @@ import {
   getAllCategories,
 } from "./shared/SharedComponents";
 
-export default function MobileUserDashboard({ initialData }: { initialData: Data }) {
-  const [searchTerm, setSearchTerm] = useState("");
-  const [searchOpen, setSearchOpen] = useState(false);
+interface MobileUserDashboardProps {
+  initialData: Data;
+  searchOpen: boolean;
+  setSearchOpen: (open: boolean) => void;
+  searchQuery: string;
+  setSearchQuery: (query: string) => void;
+}
+
+export default function MobileUserDashboard({ 
+  initialData, 
+  searchOpen, 
+  setSearchOpen, 
+  searchQuery, 
+  setSearchQuery 
+}: MobileUserDashboardProps) {
   const [shopSearchTerm, setShopSearchTerm] = useState("");
+  const [searchResults, setSearchResults] = useState<any[]>([]);
+  const [isSearching, setIsSearching] = useState(false);
+  
   
   const {
     data,
@@ -45,11 +60,28 @@ export default function MobileUserDashboard({ initialData }: { initialData: Data
   }
 
   const allCategories = getAllCategories(data);
-  
-  // Filter categories based on search term
-  const filteredCategories = allCategories.filter(category =>
-    category.name.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+
+  // Search function for SearchModal
+  const handleSearch = async (query: string) => {
+    setIsSearching(true);
+    try {
+      const response = await fetch(`/api/search?q=${encodeURIComponent(query)}`);
+      const data = await response.json();
+      setSearchResults(data.results || []);
+    } catch (error) {
+      console.error("Search error:", error);
+      setSearchResults([]);
+    } finally {
+      setIsSearching(false);
+    }
+  };
+
+  const handleSearchSubmit = () => {
+    if (searchQuery.trim()) {
+      setSearchOpen(true);
+      handleSearch(searchQuery);
+    }
+  };
 
   // Filter shops based on search term when in category view
   const filteredShopsBySearch = selectedCategory && filteredShops ? 
@@ -101,16 +133,24 @@ export default function MobileUserDashboard({ initialData }: { initialData: Data
                 </div>
                 <input
                   type="text"
-                  placeholder="Search categories..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  onFocus={() => setSearchOpen(true)}
+                  placeholder="Search everything..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  onKeyPress={(e) => {
+                    if (e.key === "Enter") {
+                      handleSearchSubmit();
+                    }
+                  }}
                   className="w-full rounded-2xl border-0 bg-white/90 py-4 pl-12 pr-4 text-gray-900 placeholder-gray-500 shadow-lg backdrop-blur-sm transition-all duration-200 focus:bg-white focus:ring-2 focus:ring-green-500 focus:ring-offset-2"
                 />
                 <div className="absolute inset-y-0 right-0 flex items-center pr-4">
-                  {searchTerm ? (
+                  {searchQuery && (
                     <button
-                      onClick={() => setSearchTerm("")}
+                      onClick={() => {
+                        setSearchQuery("");
+                        setSearchResults([]);
+                        setSearchOpen(false);
+                      }}
                       className="flex h-6 w-6 items-center justify-center rounded-full bg-red-100 text-red-600 transition-colors duration-200 hover:bg-red-200"
                     >
                       <svg
@@ -127,22 +167,6 @@ export default function MobileUserDashboard({ initialData }: { initialData: Data
                         />
                       </svg>
                     </button>
-                  ) : (
-                    <div className="flex h-6 w-6 items-center justify-center rounded-full bg-green-100 text-green-600">
-                      <svg
-                        className="h-3 w-3"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
-                        />
-                      </svg>
-                    </div>
                   )}
                 </div>
               </div>
@@ -175,8 +199,8 @@ export default function MobileUserDashboard({ initialData }: { initialData: Data
                         <div className="mt-2 h-3 w-1/2 rounded bg-gray-200 dark:bg-gray-600"></div>
                       </div>
                     ))
-                : filteredCategories.length > 0 ? (
-                    filteredCategories.map((category, index) => (
+                : allCategories.length > 0 ? (
+                    allCategories.map((category, index) => (
                     <div
                       key={category.id}
                       onClick={() => handleCategoryClick(category.id)}
@@ -250,24 +274,30 @@ export default function MobileUserDashboard({ initialData }: { initialData: Data
                       </svg>
                     </div>
                     <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
-                      No categories found
+                      No categories available
                     </h3>
                     <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
-                      Try searching with different keywords
+                      Check back later for new categories
                     </p>
-                    {searchTerm && (
-                      <button
-                        onClick={() => setSearchTerm("")}
-                        className="mt-3 rounded-lg bg-green-600 px-4 py-2 text-sm text-white transition-colors duration-200 hover:bg-green-700 dark:bg-green-700 dark:hover:bg-green-800"
-                      >
-                        Clear search
-                      </button>
-                    )}
                   </div>
                 )}
             </div>
           </div>
+
         </div>
+        
+        {/* Search Modal */}
+        <SearchModal
+          isOpen={searchOpen}
+          onClose={() => {
+            setSearchOpen(false);
+            setSearchResults([]);
+          }}
+          searchQuery={searchQuery}
+          onSearch={handleSearch}
+          searchResults={searchResults}
+          isSearching={isSearching}
+        />
       </div>
     );
   }
@@ -473,11 +503,19 @@ export default function MobileUserDashboard({ initialData }: { initialData: Data
         )}
       </div>
       
-      {/* Mobile Search Modal */}
-      <MobileSearchModal
-        open={searchOpen}
-        onClose={() => setSearchOpen(false)}
+      {/* Search Modal */}
+      <SearchModal
+        isOpen={searchOpen}
+        onClose={() => {
+          setSearchOpen(false);
+          setSearchResults([]);
+        }}
+        searchQuery={searchQuery}
+        onSearch={handleSearch}
+        searchResults={searchResults}
+        isSearching={isSearching}
       />
+      
     </div>
   );
 }
