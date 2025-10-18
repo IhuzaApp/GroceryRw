@@ -6,11 +6,10 @@ import { authOptions } from "../auth/[...nextauth]";
 import type { Session } from "next-auth";
 import { logger } from "../../../src/utils/logger";
 
-// Fetch regular orders including item aggregates, fees, and shopper assignment
-const GET_ORDERS = gql`
-  query GetOrders($user_id: uuid!) {
+// Fetch ALL orders including item aggregates, fees, and shopper assignment
+const GET_ALL_ORDERS = gql`
+  query GetAllOrders {
     Orders(
-      where: { user_id: { _eq: $user_id } }
       order_by: { created_at: desc }
     ) {
       id
@@ -32,122 +31,6 @@ const GET_ORDERS = gql`
           }
         }
       }
-      Order_Items {
-        quantity
-        product: Product {
-          final_price
-        }
-      }
-    }
-  }
-`;
-
-// Fetch reel orders
-const GET_REEL_ORDERS = gql`
-  query GetReelOrders($user_id: uuid!) {
-    reel_orders(
-      where: { user_id: { _eq: $user_id } }
-      order_by: { created_at: desc }
-    ) {
-      id
-      OrderID
-      user_id
-      status
-      created_at
-      total
-      service_fee
-      delivery_fee
-      reel_id
-      shopper_id
-      delivery_time
-      quantity
-      delivery_note
-      Reel {
-        id
-        title
-        description
-        Price
-        Product
-        type
-        video_url
-      }
-    }
-  }
-`;
-
-// Fetch restaurant orders
-const GET_RESTAURANT_ORDERS = gql`
-  query GetRestaurantOrders($user_id: uuid!) {
-    restaurant_orders(
-      where: { user_id: { _eq: $user_id } }
-      order_by: { created_at: desc }
-    ) {
-      id
-      OrderID
-      user_id
-      status
-      created_at
-      total
-      delivery_fee
-      restaurant_id
-      shopper_id
-      delivery_time
-      delivery_notes
-      discount
-      voucher_code
-      found
-      restaurant_dishe_orders {
-        quantity
-        price
-        dish_id
-        id
-        order_id
-        created_at
-      }
-      combined_order_id
-      delivery_address_id
-      delivery_photo_url
-      updated_at
-      orderedBy {
-        created_at
-        email
-        gender
-        id
-        is_active
-        name
-        phone
-        role
-        updated_at
-      }
-      Address {
-        city
-        created_at
-        id
-        is_default
-        latitude
-        longitude
-        postal_code
-        street
-        updated_at
-        user_id
-      }
-      Restaurant {
-        created_at
-        is_active
-        email
-        id
-        lat
-        location
-        logo
-        long
-        name
-        phone
-        profile
-        relatedTo
-        tin
-        ussd
-        verified
-      }
     }
   }
 `;
@@ -160,11 +43,11 @@ const GET_SHOPS_BY_IDS = gql`
       name
       address
       image
+      logo
+      category_id
     }
   }
 `;
-
-// Restaurant details are now fetched directly in the restaurant orders query
 
 interface OrdersResponse {
   Orders: Array<{
@@ -187,110 +70,6 @@ interface OrdersResponse {
         } | null;
       } | null;
     };
-    Order_Items: Array<{
-      quantity: number;
-      product: {
-        final_price: string;
-      };
-    }>;
-  }>;
-}
-
-interface ReelOrdersResponse {
-  reel_orders: Array<{
-    id: string;
-    OrderID: string;
-    user_id: string;
-    status: string;
-    created_at: string;
-    total: string;
-    service_fee: string;
-    delivery_fee: string;
-    reel_id: string;
-    shopper_id: string | null;
-    delivery_time: string;
-    quantity: string;
-    delivery_note: string;
-    Reel: {
-      id: string;
-      title: string;
-      description: string;
-      Price: string;
-      Product: string;
-      type: string;
-      video_url: string;
-    };
-  }>;
-}
-
-interface RestaurantOrdersResponse {
-  restaurant_orders: Array<{
-    id: string;
-    OrderID: string;
-    user_id: string;
-    status: string;
-    created_at: string;
-    total: string;
-    delivery_fee: string;
-    restaurant_id: string;
-    shopper_id: string | null;
-    delivery_time: string;
-    delivery_notes: string;
-    discount: string;
-    voucher_code: string;
-    found: boolean;
-    restaurant_dishe_orders: Array<{
-      quantity: string;
-      price: string;
-      dish_id: string;
-      id: string;
-      order_id: string;
-      created_at: string;
-    }>;
-    combined_order_id: string | null;
-    delivery_address_id: string;
-    delivery_photo_url: string | null;
-    updated_at: string;
-    orderedBy: {
-      created_at: string;
-      email: string;
-      gender: string;
-      id: string;
-      is_active: boolean;
-      name: string;
-      phone: string;
-      role: string;
-      updated_at: string;
-    };
-    Address: {
-      city: string;
-      created_at: string;
-      id: string;
-      is_default: boolean;
-      latitude: string;
-      longitude: string;
-      postal_code: string;
-      street: string;
-      updated_at: string;
-      user_id: string;
-    };
-    Restaurant: {
-      created_at: string;
-      is_active: boolean;
-      email: string;
-      id: string;
-      lat: string;
-      location: string;
-      logo: string;
-      long: string;
-      name: string;
-      phone: string;
-      profile: string;
-      relatedTo: string;
-      tin: string;
-      ussd: string;
-      verified: boolean;
-    };
   }>;
 }
 
@@ -303,7 +82,7 @@ export default async function handler(
       throw new Error("Hasura client is not initialized");
     }
 
-    // Get the user ID from the session
+    // Get the user ID from the session for authentication
     const session = (await getServerSession(
       req,
       res,
@@ -313,85 +92,65 @@ export default async function handler(
       return res.status(401).json({ error: "Unauthorized" });
     }
 
-    // Extract user ID from session
-    const userId = (session.user as any).id;
-    if (!userId) {
-      return res.status(400).json({ error: "Missing user ID in session" });
+    // 1. Fetch ALL orders
+    const data = await hasuraClient.request<OrdersResponse>(GET_ALL_ORDERS);
+    const orders = data.Orders;
+
+    // If no orders found, return empty array
+    if (!orders || orders.length === 0) {
+      return res.status(200).json({ orders: [] });
     }
 
-    logger.info("Fetching all orders for user", "AllOrdersAPI", { userId });
-
-    // 1. Fetch regular orders
-    const ordersData = await hasuraClient.request<OrdersResponse>(GET_ORDERS, {
-      user_id: userId,
-    });
-    const orders = ordersData.Orders;
-
-    // 2. Fetch reel orders
-    const reelOrdersData = await hasuraClient.request<ReelOrdersResponse>(
-      GET_REEL_ORDERS,
-      {
-        user_id: userId,
-      }
-    );
-    const reelOrders = reelOrdersData.reel_orders;
-
-    // 3. Fetch restaurant orders
-    const restaurantOrdersData =
-      await hasuraClient.request<RestaurantOrdersResponse>(
-        GET_RESTAURANT_ORDERS,
-        {
-          user_id: userId,
-        }
-      );
-    const restaurantOrders = restaurantOrdersData.restaurant_orders;
-
-    logger.info(
-      `Found ${orders?.length || 0} regular orders, ${
-        reelOrders?.length || 0
-      } reel orders, and ${restaurantOrders?.length || 0} restaurant orders`,
-      "AllOrdersAPI"
-    );
-
-    // 4. Fetch shops for regular orders
+    // 2. Fetch shops for these orders
     const shopIds = Array.from(new Set(orders.map((o) => o.shop_id))).filter(
       Boolean
     );
 
-    let shopMap = new Map();
-    if (shopIds.length > 0) {
-      const shopsData = await hasuraClient.request<{
-        Shops: Array<{
-          id: string;
-          name: string;
-          address: string;
-          image: string;
-        }>;
-      }>(GET_SHOPS_BY_IDS, { ids: shopIds });
-      shopMap = new Map(shopsData.Shops.map((s) => [s.id, s]));
+    if (shopIds.length === 0) {
+      // If no shop IDs, return orders without shop data
+      const enriched = orders.map((o) => ({
+        id: o.id,
+        OrderID: o.OrderID,
+        user_id: o.user_id,
+        status: o.status,
+        created_at: o.created_at,
+        delivery_time: o.delivery_time,
+        total:
+          parseFloat(o.total || "0") +
+          parseFloat(o.service_fee || "0") +
+          parseFloat(o.delivery_fee || "0"),
+        shop_id: o.shop_id,
+        shopper_id: o.shopper_id,
+        shop: null,
+        itemsCount: o.Order_Items_aggregate.aggregate?.count ?? 0,
+        unitsCount: o.Order_Items_aggregate.aggregate?.sum?.quantity ?? 0,
+      }));
+      return res.status(200).json({ orders: enriched });
     }
 
-    // 5. Restaurant data is already included in the restaurant orders query, no need for separate fetch
-
-    // 6. Enrich regular orders with shop details and item counts
-    const enrichedRegularOrders = orders.map((o) => {
+    // Proceed with shop data fetching
+    const shopsData = await hasuraClient.request<{
+      Shops: Array<{
+        id: string;
+        name: string;
+        address: string;
+        image: string;
+        logo: string;
+        category_id: string;
+      }>;
+    }>(GET_SHOPS_BY_IDS, { ids: shopIds });
+    const shopMap = new Map(shopsData.Shops.map((s) => [s.id, s]));
+    
+    // 3. Enrich orders with shop details and item counts
+    const enriched = orders.map((o) => {
       const agg = o.Order_Items_aggregate.aggregate;
       const itemsCount = agg?.count ?? 0;
       const unitsCount = agg?.sum?.quantity ?? 0;
-
-      // Calculate subtotal based on final prices (what customer pays)
-      const finalPriceSubtotal =
-        o.Order_Items?.reduce((sum: number, item: any) => {
-          return (
-            sum + parseFloat(item.product.final_price || "0") * item.quantity
-          );
-        }, 0) || 0;
-
       // Compute grand total including fees
+      const baseTotal = parseFloat(o.total || "0");
       const serviceFee = parseFloat(o.service_fee || "0");
       const deliveryFee = parseFloat(o.delivery_fee || "0");
-      const grandTotal = finalPriceSubtotal + serviceFee + deliveryFee;
-
+      const grandTotal = baseTotal + serviceFee + deliveryFee;
       return {
         id: o.id,
         OrderID: o.OrderID,
@@ -405,97 +164,11 @@ export default async function handler(
         shop: shopMap.get(o.shop_id) || null,
         itemsCount,
         unitsCount,
-        orderType: "regular" as const,
       };
     });
-
-    // 7. Enrich reel orders
-    const enrichedReelOrders = reelOrders.map((ro) => {
-      const baseTotal = parseFloat(ro.total || "0");
-      const serviceFee = parseFloat(ro.service_fee || "0");
-      const deliveryFee = parseFloat(ro.delivery_fee || "0");
-      const grandTotal = baseTotal + serviceFee + deliveryFee;
-
-      return {
-        id: ro.id,
-        OrderID: ro.OrderID,
-        user_id: ro.user_id,
-        status: ro.status,
-        created_at: ro.created_at,
-        delivery_time: ro.delivery_time,
-        total: grandTotal,
-        shopper_id: ro.shopper_id,
-        shop: null, // Reel orders don't have shops
-        itemsCount: 1, // Reel orders have 1 item
-        unitsCount: parseInt(ro.quantity) || 1,
-        orderType: "reel" as const,
-        reel: ro.Reel,
-        quantity: parseInt(ro.quantity) || 1,
-        delivery_note: ro.delivery_note,
-      };
-    });
-
-    // 8. Enrich restaurant orders with restaurant details and item counts
-    const enrichedRestaurantOrders = restaurantOrders.map((ro) => {
-      // Calculate counts manually from the restaurant_dishe_orders array
-      const itemsCount = ro.restaurant_dishe_orders?.length ?? 0;
-      const unitsCount =
-        ro.restaurant_dishe_orders?.reduce((sum, item) => {
-          return sum + parseInt(item.quantity || "0");
-        }, 0) ?? 0;
-
-      const baseTotal = parseFloat(ro.total || "0");
-      const deliveryFee = parseFloat(ro.delivery_fee || "0");
-      const discountAmount = parseFloat(ro.discount || "0");
-      const grandTotal = baseTotal + deliveryFee - discountAmount;
-
-      return {
-        id: ro.id,
-        OrderID: ro.OrderID || ro.id, // Use OrderID if available, otherwise fall back to id
-        user_id: ro.user_id,
-        status: ro.status,
-        created_at: ro.created_at,
-        delivery_time: ro.delivery_time,
-        total: grandTotal,
-        shopper_id: ro.shopper_id,
-        shop: ro.Restaurant
-          ? {
-              id: ro.Restaurant.id,
-              name: ro.Restaurant.name,
-              address: ro.Restaurant.location,
-              image: ro.Restaurant.profile,
-            }
-          : null, // Use restaurant as shop for compatibility
-        itemsCount,
-        unitsCount,
-        orderType: "restaurant" as const,
-        delivery_note: ro.delivery_notes,
-        discount: discountAmount,
-        voucher_code: ro.voucher_code,
-        found: ro.found,
-        // Additional restaurant order specific fields
-        combined_order_id: ro.combined_order_id,
-        delivery_photo_url: ro.delivery_photo_url,
-        updated_at: ro.updated_at,
-        orderedBy: ro.orderedBy,
-        Address: ro.Address,
-        Restaurant: ro.Restaurant,
-      };
-    });
-
-    // 9. Combine and sort all orders by creation date (newest first)
-    const allOrders = [
-      ...enrichedRegularOrders,
-      ...enrichedReelOrders,
-      ...enrichedRestaurantOrders,
-    ].sort(
-      (a, b) =>
-        new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
-    );
-
-    res.status(200).json({ orders: allOrders });
+    res.status(200).json({ orders: enriched });
   } catch (error) {
     logger.error("Error fetching all orders", "AllOrdersAPI", error);
-    res.status(500).json({ error: "Failed to fetch orders" });
+    res.status(500).json({ error: "Failed to fetch all orders" });
   }
 }
