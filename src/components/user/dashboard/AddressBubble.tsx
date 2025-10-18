@@ -272,16 +272,16 @@ export default function AddressBubble({ className = "" }: AddressBubbleProps) {
                 onClick={(e) => e.stopPropagation()}
               >
                 {/* Dropdown Header */}
-                <div className="flex items-center justify-between border-b border-gray-200 bg-white p-6 dark:border-gray-700 dark:bg-gray-900">
-                  <h5 className="text-2xl font-bold text-gray-900 dark:text-white">
+                <div className="flex items-center justify-between border-b border-gray-200 bg-white p-4 dark:border-gray-700 dark:bg-gray-900">
+                  <h5 className="text-lg font-semibold text-gray-900 dark:text-white">
                     Select Address
                   </h5>
                   <button
                     onClick={() => setIsDropdownOpen(false)}
-                    className="rounded-full p-2 transition-colors duration-200 hover:bg-gray-100 dark:hover:bg-gray-700"
+                    className="rounded-full p-1.5 transition-colors duration-200 hover:bg-gray-100 dark:hover:bg-gray-700"
                   >
                     <svg
-                      className="h-6 w-6 text-gray-500 dark:text-gray-400"
+                      className="h-5 w-5 text-gray-500 dark:text-gray-400"
                       fill="none"
                       stroke="currentColor"
                       viewBox="0 0 24 24"
@@ -353,6 +353,16 @@ export default function AddressBubble({ className = "" }: AddressBubbleProps) {
                                   <span className="text-sm font-semibold text-gray-900 dark:text-white">
                                     {address.street}
                                   </span>
+                                  {address.type && (
+                                    <span className={`rounded-full px-1.5 py-0.5 text-xs font-medium ${
+                                      address.type === 'house' ? 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-200' :
+                                      address.type === 'apartment' ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-200' :
+                                      address.type === 'office' ? 'bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-200' :
+                                      'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-200'
+                                    }`}>
+                                      {address.type.charAt(0).toUpperCase() + address.type.slice(1)}
+                                    </span>
+                                  )}
                                   {address.is_default && (
                                     <span className="rounded-full bg-green-100 px-1.5 py-0.5 text-xs font-medium text-green-800 dark:bg-green-900/30 dark:text-green-200">
                                       Default
@@ -431,16 +441,16 @@ export default function AddressBubble({ className = "" }: AddressBubbleProps) {
               onClick={(e) => e.stopPropagation()}
             >
               {/* Modal Header */}
-              <div className="flex items-center justify-between border-b border-gray-200 bg-white p-6 dark:border-gray-700 dark:bg-gray-900">
-                <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
+              <div className="flex items-center justify-between border-b border-gray-200 bg-white p-4 dark:border-gray-700 dark:bg-gray-900">
+                <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
                   Manage Addresses
                 </h2>
                 <button
                   onClick={() => setIsModalOpen(false)}
-                  className="rounded-full p-2 transition-colors duration-200 hover:bg-gray-100 dark:hover:bg-gray-700"
+                  className="rounded-full p-1.5 transition-colors duration-200 hover:bg-gray-100 dark:hover:bg-gray-700"
                 >
                   <svg
-                    className="h-6 w-6 text-gray-500 dark:text-gray-400"
+                    className="h-5 w-5 text-gray-500 dark:text-gray-400"
                     fill="none"
                     stroke="currentColor"
                     viewBox="0 0 24 24"
@@ -503,23 +513,33 @@ export default function AddressBubble({ className = "" }: AddressBubbleProps) {
                         >
                           <div className="flex items-start justify-between">
                             <div className="flex-1">
-                              <div className="mb-2 flex items-center gap-2">
-                                <div
-                                  className={`h-3 w-3 rounded-full ${
-                                    address.is_default
-                                      ? "bg-green-500"
-                                      : "bg-gray-300 dark:bg-gray-600"
-                                  }`}
-                                ></div>
-                                <span className="text-sm font-semibold text-gray-900 dark:text-white">
-                                  {address.street}
-                                </span>
-                                {address.is_default && (
-                                  <span className="rounded-full bg-green-100 px-2 py-1 text-xs font-medium text-green-800 dark:bg-green-900/30 dark:text-green-200">
-                                    Default
-                                  </span>
-                                )}
-                              </div>
+                               <div className="mb-2 flex items-center gap-2">
+                                 <div
+                                   className={`h-3 w-3 rounded-full ${
+                                     address.is_default
+                                       ? "bg-green-500"
+                                       : "bg-gray-300 dark:bg-gray-600"
+                                   }`}
+                                 ></div>
+                                 <span className="text-sm font-semibold text-gray-900 dark:text-white">
+                                   {address.street}
+                                 </span>
+                                 {address.type && (
+                                   <span className={`rounded-full px-2 py-1 text-xs font-medium ${
+                                     address.type === 'house' ? 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-200' :
+                                     address.type === 'apartment' ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-200' :
+                                     address.type === 'office' ? 'bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-200' :
+                                     'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-200'
+                                   }`}>
+                                     {address.type.charAt(0).toUpperCase() + address.type.slice(1)}
+                                   </span>
+                                 )}
+                                 {address.is_default && (
+                                   <span className="rounded-full bg-green-100 px-2 py-1 text-xs font-medium text-green-800 dark:bg-green-900/30 dark:text-green-200">
+                                     Default
+                                   </span>
+                                 )}
+                               </div>
                               <div className="mb-2 text-sm text-gray-600 dark:text-gray-400">
                                 {address.city}, {address.postal_code}
                               </div>

@@ -10,6 +10,8 @@ interface Address {
   is_default: boolean;
   latitude: string;
   longitude: string;
+  type: string; // Address type: house, apartment, office, other
+  placeDetails: any; // Type-specific details as jsonb
   created_at: string;
   updated_at: string;
 }
