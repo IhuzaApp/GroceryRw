@@ -12,6 +12,7 @@ import {
   ShopSkeleton,
   getAllCategories,
 } from "./shared/SharedComponents";
+import { useAddress } from "../../../hooks/useAddress";
 
 interface MobileUserDashboardProps {
   initialData: Data;
@@ -33,6 +34,9 @@ export default function MobileUserDashboard({
   const [isSearching, setIsSearching] = useState(false);
   const [topShops, setTopShops] = useState<any[]>([]);
   const [isLoadingTopShops, setIsLoadingTopShops] = useState(false);
+
+  // Get user's default address
+  const { defaultAddress, loading: addressLoading } = useAddress();
 
   const {
     data,
@@ -196,8 +200,39 @@ export default function MobileUserDashboard({
             <div className="absolute inset-0 bg-black/20"></div>
           </div>
 
-          {/* Search Input - Centered */}
-          <div className="relative z-10 flex h-full items-center justify-center px-4">
+          {/* Header Content - Address Bubble and Search Input */}
+          <div className="relative z-10 flex h-full flex-col items-center justify-center px-4">
+            {/* Address Bubble */}
+            {defaultAddress && (
+              <div className="mb-3">
+                <div className="inline-flex items-center gap-2 rounded-full bg-white px-4 py-2 shadow-sm border border-gray-200 dark:bg-gray-800 dark:border-gray-600">
+                  <svg
+                    className="h-4 w-4 text-gray-500 dark:text-gray-400"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"
+                    />
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"
+                    />
+                  </svg>
+                  <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                    {defaultAddress.street}, {defaultAddress.city}
+                  </span>
+                </div>
+              </div>
+            )}
+
+            {/* Search Input */}
             <div className="w-full max-w-sm">
               <div className="relative">
                 <div className="absolute inset-y-0 left-0 flex items-center pl-4">
@@ -266,7 +301,7 @@ export default function MobileUserDashboard({
                 {error}
               </div>
             )}
-
+<h5 className="pb-2 text-lg font-bold text-gray-900 dark:text-white"> Categories</h5>
             {/* Categories Grid */}
             <div className="grid grid-cols-2 gap-4">
               {isLoading ? (
