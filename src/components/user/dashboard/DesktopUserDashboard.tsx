@@ -10,7 +10,11 @@ import {
   getAllCategories,
 } from "./shared/SharedComponents";
 
-export default function DesktopUserDashboard({ initialData }: { initialData: Data }) {
+export default function DesktopUserDashboard({
+  initialData,
+}: {
+  initialData: Data;
+}) {
   const {
     data,
     selectedCategory,

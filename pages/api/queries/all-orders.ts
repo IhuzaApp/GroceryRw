@@ -9,9 +9,7 @@ import { logger } from "../../../src/utils/logger";
 // Fetch ALL orders including item aggregates, fees, and shopper assignment
 const GET_ALL_ORDERS = gql`
   query GetAllOrders {
-    Orders(
-      order_by: { created_at: desc }
-    ) {
+    Orders(order_by: { created_at: desc }) {
       id
       OrderID
       user_id
@@ -140,7 +138,7 @@ export default async function handler(
       }>;
     }>(GET_SHOPS_BY_IDS, { ids: shopIds });
     const shopMap = new Map(shopsData.Shops.map((s) => [s.id, s]));
-    
+
     // 3. Enrich orders with shop details and item counts
     const enriched = orders.map((o) => {
       const agg = o.Order_Items_aggregate.aggregate;

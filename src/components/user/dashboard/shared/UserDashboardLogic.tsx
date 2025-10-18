@@ -514,10 +514,10 @@ export function useUserDashboardLogic(initialData: Data) {
     isFetchingData,
     authReady,
     role,
-    
+
     // Computed values
     filteredShops,
-    
+
     // Actions
     handleCategoryClick,
     clearFilter,

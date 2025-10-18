@@ -134,7 +134,6 @@ export default function BottomBar() {
     setTheme(newTheme);
   };
 
-
   const handleAddToCart = async (productId: string) => {
     try {
       const response = await fetch("/api/cart-items", {
@@ -1009,7 +1008,6 @@ export default function BottomBar() {
           )}
         </div>
       </nav>
-
     </>
   );
 }

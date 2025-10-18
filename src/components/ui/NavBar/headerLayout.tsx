@@ -148,7 +148,7 @@ export default function HeaderLayout() {
 
   return (
     <>
-      <header className="container sticky top-0 z-50 mx-auto rounded-full border-b border-gray-200 bg-white p-2 shadow-lg transition-all duration-200 dark:border-gray-700 dark:bg-gray-800 hidden md:block">
+      <header className="container sticky top-0 z-50 mx-auto hidden rounded-full border-b border-gray-200 bg-white p-2 shadow-lg transition-all duration-200 dark:border-gray-700 dark:bg-gray-800 md:block">
         <div className="flex items-center justify-between gap-4 px-2 sm:px-4">
           {/* Left section (address + icon) - Desktop only */}
           <div className="flex items-center gap-3">
@@ -183,7 +183,7 @@ export default function HeaderLayout() {
           </div>
 
           {/* Center search - Desktop only */}
-          <div className="mx-2 max-w-md flex-1 mx-4">
+          <div className="mx-2 mx-4 max-w-md flex-1">
             <SearchBar />
           </div>
 
@@ -330,9 +330,7 @@ export default function HeaderLayout() {
             </Link>
           </div>
         </div>
-
       </header>
-
 
       <AddressManagementModal
         open={showAddressModal}

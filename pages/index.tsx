@@ -92,8 +92,8 @@ export default function Home({ initialData }: { initialData: Data }) {
   return (
     <RootLayout>
       <MainBanners />
-      <ResponsiveUserDashboard 
-        initialData={safeInitialData} 
+      <ResponsiveUserDashboard
+        initialData={safeInitialData}
         searchOpen={searchOpen}
         setSearchOpen={setSearchOpen}
         searchQuery={searchQuery}
