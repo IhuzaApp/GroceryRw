@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useUserDashboardLogic } from "./shared/UserDashboardLogic";
 import { Data } from "../../../types";
 import ShopCard from "./ShopCard";
+import MobileShopCard from "./MobileShopCard";
 import SortDropdown from "./SortDropdown";
 import LoadingScreen from "../../ui/LoadingScreen";
 import SearchModal from "./SearchModal";
@@ -462,17 +463,17 @@ export default function MobileUserDashboard({
           </div>
         )}
 
-        {/* Shops Grid */}
+        {/* Shops List */}
         {isLoading || isFetchingData ? (
-          <div className="grid grid-cols-2 gap-3">
+          <div className="space-y-3">
             {Array(6)
               .fill(0)
               .map((_, index) => (
-                <ShopSkeleton key={index} />
+                <div key={index} className="h-24 w-full animate-pulse rounded-xl bg-gray-200"></div>
               ))}
           </div>
         ) : (
-          <div className="grid grid-cols-2 gap-3">
+          <div className="space-y-3">
             {filteredShopsBySearch?.length ? (
               filteredShopsBySearch.map((shop) => {
                 const dyn = shopDynamics[shop.id] || {
@@ -482,7 +483,7 @@ export default function MobileUserDashboard({
                   open: false,
                 };
                 return (
-                  <ShopCard
+                  <MobileShopCard
                     key={shop.id}
                     shop={shop}
                     dynamics={dyn}
@@ -491,7 +492,7 @@ export default function MobileUserDashboard({
                 );
               })
             ) : (
-              <div className="col-span-2 mt-8 text-center text-gray-500 dark:text-gray-400">
+              <div className="mt-8 text-center text-gray-500 dark:text-gray-400">
                 {isFetchingData
                   ? "Loading shops..."
                   : shopSearchTerm
