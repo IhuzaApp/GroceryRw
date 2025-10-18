@@ -144,11 +144,32 @@ export default function MobileUserDashboard({
   const handleSearch = async (query: string) => {
     setIsSearching(true);
     try {
-      const response = await fetch(
-        `/api/search?q=${encodeURIComponent(query)}`
-      );
-      const data = await response.json();
-      setSearchResults(data.results || []);
+      // Search both shops and restaurants
+      const [shopsResponse, restaurantsResponse] = await Promise.all([
+        fetch(`/api/search?q=${encodeURIComponent(query)}`),
+        fetch(`/api/queries/restaurants`)
+      ]);
+
+      const shopsData = await shopsResponse.json();
+      const restaurantsData = await restaurantsResponse.json();
+
+      // Filter restaurants based on search query
+      const filteredRestaurants = restaurantsData.restaurants?.filter((restaurant: any) =>
+        restaurant.name?.toLowerCase().includes(query.toLowerCase()) ||
+        restaurant.location?.toLowerCase().includes(query.toLowerCase())
+      ).map((restaurant: any) => ({
+        ...restaurant,
+        type: 'restaurant',
+        category: 'Restaurant'
+      })) || [];
+
+      // Combine and format results
+      const allResults = [
+        ...(shopsData.results || []).map((item: any) => ({ ...item, type: 'shop' })),
+        ...filteredRestaurants
+      ];
+
+      setSearchResults(allResults);
     } catch (error) {
       console.error("Search error:", error);
       setSearchResults([]);
@@ -234,7 +255,7 @@ export default function MobileUserDashboard({
                       handleSearchSubmit();
                     }
                   }}
-                  className="w-full rounded-2xl border-0 bg-white/90 py-4 pl-12 pr-4 text-gray-900 placeholder-gray-500 shadow-lg backdrop-blur-sm transition-all duration-200 focus:bg-white focus:ring-2 focus:ring-green-500 focus:ring-offset-2"
+                  className="w-full rounded-2xl border-0 bg-white/90 py-4 pl-12 pr-4 text-gray-900 placeholder-gray-500 shadow-lg backdrop-blur-sm transition-all duration-200 focus:bg-white focus:ring-2 focus:ring-green-500 focus:ring-offset-2 dark:bg-gray-800/90 dark:text-white dark:placeholder-gray-400 dark:focus:bg-gray-800"
                 />
                 <div className="absolute inset-y-0 right-0 flex items-center pr-4">
                   {searchQuery && (

@@ -4,13 +4,17 @@ import { formatCurrencySync } from "../../../utils/formatCurrency";
 interface SearchResult {
   id: string;
   name: string;
-  type: "product" | "shop" | "recipe";
+  type: "product" | "shop" | "recipe" | "restaurant";
   price?: string;
   image_url?: string;
   shop_name?: string;
   address?: string;
+  location?: string;
   description?: string;
   shop_id?: string;
+  category?: string;
+  profile?: string;
+  verified?: boolean;
 }
 
 interface SearchModalProps {
@@ -37,6 +41,8 @@ export default function SearchModal({
       window.location.href = `/shops/${result.id}`;
     } else if (result.type === "recipe") {
       window.location.href = `/Recipes/${result.id}`;
+    } else if (result.type === "restaurant") {
+      window.location.href = `/restaurant/${result.id}`;
     }
   };
 
@@ -100,12 +106,28 @@ export default function SearchModal({
                       <div className="flex-shrink-0">
                         <div className="h-16 w-16 overflow-hidden rounded-xl bg-gray-100 shadow-sm">
                           <img
-                            src={
-                              result.image_url ||
-                              "/images/groceryPlaceholder.png"
-                            }
+                            src={(() => {
+                              // Use image_url if available
+                              if (result.image_url) return result.image_url;
+                              
+                              // Handle restaurant profile field
+                              if (result.profile) {
+                                // If it's a full URL, use it
+                                if (result.profile.startsWith('http')) return result.profile;
+                                // If it's a relative path, try to construct a proper path
+                                if (result.profile.startsWith('/')) return result.profile;
+                                // If it's just a filename, assume it's in a restaurant images folder
+                                return `/images/restaurants/${result.profile}`;
+                              }
+                              
+                              // Fallback to restaurant placeholder or general placeholder
+                              return result.type === "restaurant" ? "/images/restaurantDish.png" : "/images/groceryPlaceholder.png";
+                            })()}
                             alt={result.name}
                             className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
+                            onError={(e) => {
+                              e.currentTarget.src = result.type === "restaurant" ? "/images/restaurantDish.png" : "/images/groceryPlaceholder.png";
+                            }}
                           />
                         </div>
                       </div>
@@ -125,17 +147,20 @@ export default function SearchModal({
                                     ? "bg-blue-100 text-blue-700"
                                     : result.type === "shop"
                                     ? "bg-purple-100 text-purple-700"
+                                    : result.type === "restaurant"
+                                    ? "bg-red-100 text-red-700"
                                     : "bg-orange-100 text-orange-700"
                                 }`}
                               >
                                 {result.type === "product" && "Product"}
                                 {result.type === "shop" && "Shop"}
+                                {result.type === "restaurant" && "Restaurant"}
                                 {result.type === "recipe" && "Recipe"}
                               </span>
                             </div>
 
                             {/* Location Info */}
-                            {(result.shop_name || result.address) && (
+                            {(result.shop_name || result.address || result.location) && (
                               <div className="mb-2 flex items-center text-sm text-gray-600">
                                 <svg
                                   className="mr-2 h-4 w-4 flex-shrink-0 text-gray-400"
@@ -157,7 +182,7 @@ export default function SearchModal({
                                   />
                                 </svg>
                                 <span className="truncate">
-                                  {result.shop_name || result.address}
+                                  {result.shop_name || result.address || result.location}
                                 </span>
                               </div>
                             )}
@@ -203,6 +228,8 @@ export default function SearchModal({
                               ? "view product"
                               : result.type === "shop"
                               ? "visit shop"
+                              : result.type === "restaurant"
+                              ? "visit restaurant"
                               : "view recipe"}
                           </div>
                           <svg
