@@ -12,12 +12,12 @@ interface ResponsiveUserDashboardProps {
   setSearchQuery: (query: string) => void;
 }
 
-export default function ResponsiveUserDashboard({ 
-  initialData, 
-  searchOpen, 
-  setSearchOpen, 
-  searchQuery, 
-  setSearchQuery 
+export default function ResponsiveUserDashboard({
+  initialData,
+  searchOpen,
+  setSearchOpen,
+  searchQuery,
+  setSearchQuery,
 }: ResponsiveUserDashboardProps) {
   const [isMobile, setIsMobile] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
@@ -32,10 +32,10 @@ export default function ResponsiveUserDashboard({
     checkScreenSize();
 
     // Add event listener for window resize
-    window.addEventListener('resize', checkScreenSize);
+    window.addEventListener("resize", checkScreenSize);
 
     // Cleanup event listener on component unmount
-    return () => window.removeEventListener('resize', checkScreenSize);
+    return () => window.removeEventListener("resize", checkScreenSize);
   }, []);
 
   // Show loading screen while determining screen size
@@ -45,8 +45,8 @@ export default function ResponsiveUserDashboard({
 
   // Render appropriate component based on screen size
   return isMobile ? (
-    <MobileUserDashboard 
-      initialData={initialData} 
+    <MobileUserDashboard
+      initialData={initialData}
       searchOpen={searchOpen}
       setSearchOpen={setSearchOpen}
       searchQuery={searchQuery}

@@ -115,7 +115,7 @@ const MobileShopCard: React.FC<MobileShopCardProps> = ({
               target.onerror = null;
             }}
           />
-          
+
           {/* Dark overlay for better text readability */}
           <div className="absolute inset-0 bg-black bg-opacity-30"></div>
         </div>
@@ -137,38 +137,44 @@ const MobileShopCard: React.FC<MobileShopCardProps> = ({
                 />
               </div>
             )}
-            
+
             {/* Shop Name */}
-            <div className="flex-1 min-w-0">
-              <h3 className="truncate text-lg font-bold drop-shadow-md" style={{ color: 'white' }}>
+            <div className="min-w-0 flex-1">
+              <h3
+                className="truncate text-lg font-bold drop-shadow-md"
+                style={{ color: "white" }}
+              >
                 {shop.name}
               </h3>
-              
+
               {/* Distance and Time (if logged in) */}
               {isLoggedIn && (
-                <div className="mt-1 flex items-center space-x-3 text-xs drop-shadow-sm" style={{ color: 'white' }}>
-                  <div className="flex items-center" style={{ color: 'white' }}>
+                <div
+                  className="mt-1 flex items-center space-x-3 text-xs drop-shadow-sm"
+                  style={{ color: "white" }}
+                >
+                  <div className="flex items-center" style={{ color: "white" }}>
                     <svg
                       viewBox="0 0 24 24"
                       fill="none"
                       stroke="currentColor"
                       strokeWidth="2"
                       className="mr-1 h-3 w-3"
-                      style={{ color: 'white' }}
+                      style={{ color: "white" }}
                     >
                       <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z" />
                       <circle cx="12" cy="10" r="3" />
                     </svg>
                     {dynamics.distance}
                   </div>
-                  <div className="flex items-center" style={{ color: 'white' }}>
+                  <div className="flex items-center" style={{ color: "white" }}>
                     <svg
                       viewBox="0 0 24 24"
                       fill="none"
                       stroke="currentColor"
                       strokeWidth="2"
                       className="mr-1 h-3 w-3"
-                      style={{ color: 'white' }}
+                      style={{ color: "white" }}
                     >
                       <circle cx="12" cy="12" r="10" />
                       <polyline points="12 6 12 12 16 14" />

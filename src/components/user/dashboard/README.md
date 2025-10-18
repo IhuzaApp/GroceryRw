@@ -19,12 +19,14 @@ This directory contains the responsive user dashboard components for the grocery
 ## Features
 
 ### Mobile Dashboard
+
 - Touch-friendly category dropdown
 - Compact 2-column grid layout
 - Simplified navigation
 - Optimized for small screens
 
 ### Desktop Dashboard
+
 - Full category grid with icons
 - 6-column shop grid layout
 - Refresh button
@@ -37,7 +39,7 @@ This directory contains the responsive user dashboard components for the grocery
 import ResponsiveUserDashboard from "@components/user/dashboard/ResponsiveUserDashboard";
 
 // In your page component
-<ResponsiveUserDashboard initialData={data} />
+<ResponsiveUserDashboard initialData={data} />;
 ```
 
 ## Benefits
