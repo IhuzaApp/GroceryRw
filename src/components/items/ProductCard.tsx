@@ -130,15 +130,16 @@ export default function ProductCard({
           }
         }}
       >
-        <div className="relative aspect-square">
+        <div className="relative aspect-square overflow-hidden rounded-2xl shadow-lg ring-1 ring-gray-200/50 dark:ring-gray-700/50">
           <Image
             src={
+              productName?.image ||
               image ||
               "https://www.thedailymeal.com/img/gallery/you-should-think-twice-about-bagging-your-own-groceries-at-the-store/intro-1681220544.jpg"
             }
             alt={name}
             fill
-            className="object-cover"
+            className="object-cover transition-transform duration-300 hover:scale-105"
           />
           {sale && (
             <div className="absolute left-1 top-1 rounded bg-red-500 px-1.5 py-0.5 text-xs font-bold !text-white">
