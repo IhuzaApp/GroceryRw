@@ -255,6 +255,37 @@ export default function ItemsSection({
             </p>
           </div>
         </div>
+
+        {/* Category Filter Section */}
+        <div className="space-y-3">
+
+          
+          <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-thin scrollbar-thumb-gray-300 dark:scrollbar-thumb-gray-600">
+            <button
+              onClick={() => setActiveCategory("all")}
+              className={`flex-shrink-0 rounded-full px-3 py-1.5 text-xs font-medium transition-all duration-200 ${
+                activeCategory === "all"
+                  ? "bg-gradient-to-r from-green-500 to-emerald-500 !text-white shadow-lg shadow-green-500/25"
+                  : "bg-gray-100 text-gray-700 hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600"
+              }`}
+            >
+              All
+            </button>
+            {categories.slice(1).map((category: string) => (
+              <button
+                key={category}
+                onClick={() => setActiveCategory(category)}
+                className={`flex-shrink-0 rounded-full px-3 py-1.5 text-xs font-medium transition-all duration-200 ${
+                  activeCategory === category
+                    ? "bg-gradient-to-r from-green-500 to-emerald-500 !text-white shadow-lg shadow-green-500/25"
+                    : "bg-gray-100 text-gray-700 hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600"
+                }`}
+              >
+                {category.charAt(0).toUpperCase() + category.slice(1)}
+              </button>
+            ))}
+          </div>
+        </div>
         {/* Products Grid - Mobile optimized */}
         <div className="grid grid-cols-3 gap-2 transition-all duration-300 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 xl:grid-cols-8">
           {loadingProducts
