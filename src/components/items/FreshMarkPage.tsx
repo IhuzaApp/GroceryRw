@@ -256,7 +256,15 @@ const FreshMarkPage: React.FC<FreshMarkPageProps> = ({ shop, products }) => {
     <RootLayout>
       <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
         {/* Mobile Header - Full width cover image with circular logo */}
-        <div className="relative h-32 w-full sm:hidden" style={{ marginTop: '-44px', marginLeft: '-16px', marginRight: '-16px', width: 'calc(100% + 32px)' }}>
+        <div
+          className="relative h-32 w-full sm:hidden"
+          style={{
+            marginTop: "-44px",
+            marginLeft: "-16px",
+            marginRight: "-16px",
+            width: "calc(100% + 32px)",
+          }}
+        >
           {/* Shop Cover Image */}
           <Image
             src={sanitizeSrc(shopData.image)}
@@ -265,10 +273,10 @@ const FreshMarkPage: React.FC<FreshMarkPageProps> = ({ shop, products }) => {
             className="object-cover"
             priority
           />
-          
+
           {/* Gradient Overlay for better text readability */}
           <div className="absolute inset-0 bg-gradient-to-b from-black/20 via-black/40 to-black/70" />
-          
+
           {/* Back Button */}
           <button
             onClick={() => router.back()}
@@ -287,12 +295,14 @@ const FreshMarkPage: React.FC<FreshMarkPageProps> = ({ shop, products }) => {
 
           {/* Shop Status Badge */}
           <div className="absolute right-4 top-7 z-20">
-            <div className={`rounded-full px-3 py-1.5 text-xs font-semibold backdrop-blur-md ${
-              isCurrentlyOpen 
-                ? 'bg-green-500/90 !text-white' 
-                : 'bg-red-500/90 !text-white'
-            }`}>
-              {isCurrentlyOpen ? 'Open' : 'Closed'}
+            <div
+              className={`rounded-full px-3 py-1.5 text-xs font-semibold backdrop-blur-md ${
+                isCurrentlyOpen
+                  ? "bg-green-500/90 !text-white"
+                  : "bg-red-500/90 !text-white"
+              }`}
+            >
+              {isCurrentlyOpen ? "Open" : "Closed"}
             </div>
           </div>
 
@@ -315,33 +325,62 @@ const FreshMarkPage: React.FC<FreshMarkPageProps> = ({ shop, products }) => {
             <h1 className="mb-1 text-xl font-bold !text-white drop-shadow-lg">
               {shopData?.name}
             </h1>
-            
+
             {/* Shop Details */}
             <div className="flex flex-wrap justify-center gap-2 text-xs !text-white/90">
               {/* Distance */}
               {isMounted && (
                 <div className="flex items-center gap-1">
-                  <svg className="h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                  <svg
+                    className="h-3 w-3"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"
+                    />
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"
+                    />
                   </svg>
                   <span>{dynamicDistance}</span>
                 </div>
               )}
-              
+
               {/* Delivery Time */}
               {isMounted && (
                 <div className="flex items-center gap-1">
-                  <svg className="h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  <svg
+                    className="h-3 w-3"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
+                    />
                   </svg>
                   <span>{dynamicDeliveryTime}</span>
                 </div>
               )}
-              
+
               {/* Rating */}
               <div className="flex items-center gap-1">
-                <svg className="h-3 w-3 text-yellow-400" fill="currentColor" viewBox="0 0 20 20">
+                <svg
+                  className="h-3 w-3 text-yellow-400"
+                  fill="currentColor"
+                  viewBox="0 0 20 20"
+                >
                   <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
                 </svg>
                 <span>4.5</span>
@@ -592,7 +631,7 @@ const FreshMarkPage: React.FC<FreshMarkPageProps> = ({ shop, products }) => {
           </div>
 
           {/* Mobile Search */}
-        <div className="bg-white p-4 dark:bg-gray-800 sm:hidden">
+          <div className="bg-white p-4 dark:bg-gray-800 sm:hidden">
             <div className="relative">
               <div className="absolute inset-y-0 left-0 flex items-center pl-3">
                 <svg
@@ -617,39 +656,39 @@ const FreshMarkPage: React.FC<FreshMarkPageProps> = ({ shop, products }) => {
             </div>
           </div>
 
-        {/* Mobile Categories - Sticky */}
-        <div className="sticky top-0 z-10 bg-white px-4 py-3 pt-12 shadow-sm dark:bg-gray-800 sm:hidden">
-          <div className="flex gap-2 overflow-x-auto pb-2">
-            <button
-              onClick={() => setActiveCategory("all")}
-              className={`flex-shrink-0 rounded-full px-4 py-2 text-sm font-medium transition-all duration-200 ${
-                activeCategory === "all"
-                  ? "bg-gradient-to-r from-green-500 to-emerald-500 text-white shadow-lg shadow-green-500/25"
-                  : "bg-gray-100 text-gray-700 hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600"
-              }`}
-            >
-              All Products
-            </button>
-            {Array.from(
-              new Set(shopData.products.map((p: any) => p.category))
-            ).map((category: string) => (
+          {/* Mobile Categories - Sticky */}
+          <div className="sticky top-0 z-10 bg-white px-4 py-3 pt-12 shadow-sm dark:bg-gray-800 sm:hidden">
+            <div className="flex gap-2 overflow-x-auto pb-2">
               <button
-                key={category}
-                onClick={() => setActiveCategory(category)}
+                onClick={() => setActiveCategory("all")}
                 className={`flex-shrink-0 rounded-full px-4 py-2 text-sm font-medium transition-all duration-200 ${
-                  activeCategory === category
+                  activeCategory === "all"
                     ? "bg-gradient-to-r from-green-500 to-emerald-500 text-white shadow-lg shadow-green-500/25"
                     : "bg-gray-100 text-gray-700 hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600"
                 }`}
               >
-                {category.charAt(0).toUpperCase() + category.slice(1)}
+                All Products
               </button>
-            ))}
+              {Array.from(
+                new Set(shopData.products.map((p: any) => p.category))
+              ).map((category: string) => (
+                <button
+                  key={category}
+                  onClick={() => setActiveCategory(category)}
+                  className={`flex-shrink-0 rounded-full px-4 py-2 text-sm font-medium transition-all duration-200 ${
+                    activeCategory === category
+                      ? "bg-gradient-to-r from-green-500 to-emerald-500 text-white shadow-lg shadow-green-500/25"
+                      : "bg-gray-100 text-gray-700 hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600"
+                  }`}
+                >
+                  {category.charAt(0).toUpperCase() + category.slice(1)}
+                </button>
+              ))}
+            </div>
           </div>
-        </div>
 
-        {/* Desktop Categories */}
-        <div className="hidden bg-white px-4 pb-4 dark:bg-gray-800 sm:block">
+          {/* Desktop Categories */}
+          <div className="hidden bg-white px-4 pb-4 dark:bg-gray-800 sm:block">
             <div className="flex gap-2 overflow-x-auto pb-2">
               <button
                 onClick={() => setActiveCategory("all")}

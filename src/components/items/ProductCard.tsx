@@ -133,9 +133,7 @@ export default function ProductCard({
         <div className="relative aspect-square overflow-hidden rounded-2xl shadow-lg ring-1 ring-gray-200/50 dark:ring-gray-700/50">
           <Image
             src={
-              productName?.image ||
-              image ||
-              "/images/groceryPlaceholder.png"
+              productName?.image || image || "/images/groceryPlaceholder.png"
             }
             alt={name}
             fill
@@ -147,17 +145,17 @@ export default function ProductCard({
             </div>
           )}
           {measurement_unit && (
-            <div className="absolute top-1 right-1 rounded bg-gray-800 px-1.5 py-0.5 text-xs font-bold !text-white">
+            <div className="absolute right-1 top-1 rounded bg-gray-800 px-1.5 py-0.5 text-xs font-bold !text-white">
               {measurement_unit}
             </div>
           )}
-          
+
           {/* Cart Buttons Overlay on Product Image */}
           <div className="absolute bottom-2 right-2 flex gap-2">
             <Button
               appearance="primary"
               size="sm"
-              className="flex h-8 w-8 items-center justify-center rounded-full border-0 !bg-green-500 p-0 !text-white hover:!bg-green-600 shadow-lg"
+              className="flex h-8 w-8 items-center justify-center rounded-full border-0 !bg-green-500 p-0 !text-white shadow-lg hover:!bg-green-600"
               onClick={handleQuickAdd}
               disabled={isAdding}
             >
@@ -180,7 +178,7 @@ export default function ProductCard({
             <Button
               appearance="subtle"
               size="sm"
-              className="flex h-8 w-8 items-center justify-center rounded-full border-0 !bg-green-100 p-0 !text-green-700 hover:!bg-green-200 dark:!bg-gray-700 dark:!text-gray-300 dark:hover:!bg-gray-600 shadow-lg"
+              className="flex h-8 w-8 items-center justify-center rounded-full border-0 !bg-green-100 p-0 !text-green-700 shadow-lg hover:!bg-green-200 dark:!bg-gray-700 dark:!text-gray-300 dark:hover:!bg-gray-600"
               onClick={() => {
                 setShowModal(true);
                 setSelectedQuantity(1);
@@ -199,7 +197,7 @@ export default function ProductCard({
             </Button>
           </div>
         </div>
-        <div className="p-1.5 sm:p-2 bg-transparent">
+        <div className="bg-transparent p-1.5 sm:p-2">
           <h3 className="mb-1 line-clamp-2 text-xs font-medium text-gray-600 dark:text-gray-400 sm:text-sm">
             {name}
           </h3>

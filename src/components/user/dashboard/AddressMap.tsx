@@ -101,43 +101,59 @@ export default function AddressMap({
         });
 
         // Detect theme and add appropriate tile layer
-        const isDarkTheme = document.documentElement.classList.contains('dark') || 
-                           (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches);
-        
+        const isDarkTheme =
+          document.documentElement.classList.contains("dark") ||
+          (window.matchMedia &&
+            window.matchMedia("(prefers-color-scheme: dark)").matches);
+
         // Add tile layer based on theme with enhanced styling
-        const tileLayer = isDarkTheme 
+        const tileLayer = isDarkTheme
           ? L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
-              attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+              attribution:
+                '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
               maxZoom: 19,
             })
           : L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
-              attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+              attribution:
+                '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
               maxZoom: 19,
             });
-        
+
         tileLayer.addTo(map);
 
         // Add additional layers for enhanced visualization
         if (isDarkTheme) {
           // Dark theme: Add water bodies layer
-          const waterLayer = L.tileLayer("https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png", {
-            attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors © <a href="https://carto.com/attributions">CARTO</a>',
-            maxZoom: 19,
-            subdomains: 'abcd',
-          });
-          
+          const waterLayer = L.tileLayer(
+            "https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png",
+            {
+              attribution:
+                '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors © <a href="https://carto.com/attributions">CARTO</a>',
+              maxZoom: 19,
+              subdomains: "abcd",
+            }
+          );
+
           // Add buildings layer for dark theme
-          const buildingsLayer = L.tileLayer("https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png", {
-            attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors © <a href="https://carto.com/attributions">CARTO</a>',
-            maxZoom: 19,
-            subdomains: 'abcd',
-          });
+          const buildingsLayer = L.tileLayer(
+            "https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png",
+            {
+              attribution:
+                '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors © <a href="https://carto.com/attributions">CARTO</a>',
+              maxZoom: 19,
+              subdomains: "abcd",
+            }
+          );
         } else {
           // Light theme: Add detailed OpenStreetMap layers
-          const waterLayer = L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
-            attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
-            maxZoom: 19,
-          });
+          const waterLayer = L.tileLayer(
+            "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
+            {
+              attribution:
+                '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+              maxZoom: 19,
+            }
+          );
         }
 
         // Add click handler to map for adding new addresses
@@ -179,8 +195,12 @@ export default function AddressMap({
           // Add popup with address info
           marker.bindPopup(`
             <div class="p-2 dark:bg-gray-800 dark:text-white">
-              <h3 class="font-semibold text-gray-900 dark:text-white">${address.street}</h3>
-              <p class="text-sm text-gray-600 dark:text-gray-400">${address.city}</p>
+              <h3 class="font-semibold text-gray-900 dark:text-white">${
+                address.street
+              }</h3>
+              <p class="text-sm text-gray-600 dark:text-gray-400">${
+                address.city
+              }</p>
               ${
                 onAddAddress
                   ? '<p class="text-xs text-blue-600 dark:text-blue-400 mt-1">Drag to move or click map to add new address</p>'
@@ -229,29 +249,39 @@ export default function AddressMap({
         // Listen for theme changes and update map tiles
         const updateMapTheme = () => {
           if (mapInstanceRef.current) {
-            const isDarkTheme = document.documentElement.classList.contains('dark') || 
-                               (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches);
-            
+            const isDarkTheme =
+              document.documentElement.classList.contains("dark") ||
+              (window.matchMedia &&
+                window.matchMedia("(prefers-color-scheme: dark)").matches);
+
             // Remove existing tile layer
             mapInstanceRef.current.eachLayer((layer: any) => {
               if (layer instanceof L.TileLayer) {
                 mapInstanceRef.current.removeLayer(layer);
               }
             });
-            
+
             // Add new tile layer based on current theme with enhanced styling
-            const newTileLayer = isDarkTheme 
-              ? L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
-                  attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
-                  maxZoom: 19,
-                })
-              : L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
-                  attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
-                  maxZoom: 19,
-                });
-            
+            const newTileLayer = isDarkTheme
+              ? L.tileLayer(
+                  "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
+                  {
+                    attribution:
+                      '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+                    maxZoom: 19,
+                  }
+                )
+              : L.tileLayer(
+                  "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
+                  {
+                    attribution:
+                      '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+                    maxZoom: 19,
+                  }
+                );
+
             newTileLayer.addTo(mapInstanceRef.current);
-            
+
             // Force re-render to apply new CSS filters
             setTimeout(() => {
               if (mapInstanceRef.current) {
@@ -262,19 +292,19 @@ export default function AddressMap({
         };
 
         // Listen for theme changes
-        const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
-        mediaQuery.addEventListener('change', updateMapTheme);
-        
+        const mediaQuery = window.matchMedia("(prefers-color-scheme: dark)");
+        mediaQuery.addEventListener("change", updateMapTheme);
+
         // Listen for class changes on document element
         const observer = new MutationObserver(updateMapTheme);
         observer.observe(document.documentElement, {
           attributes: true,
-          attributeFilter: ['class']
+          attributeFilter: ["class"],
         });
 
         // Store cleanup functions
         mapInstanceRef.current._themeCleanup = () => {
-          mediaQuery.removeEventListener('change', updateMapTheme);
+          mediaQuery.removeEventListener("change", updateMapTheme);
           observer.disconnect();
         };
       } catch (error) {
@@ -452,7 +482,9 @@ export default function AddressMap({
   }
 
   return (
-    <div className={`${height} ${className} relative bg-gray-100 dark:bg-gray-100`}>
+    <div
+      className={`${height} ${className} relative bg-gray-100 dark:bg-gray-100`}
+    >
       <div ref={mapRef} className="relative z-0 h-full w-full rounded-lg" />
 
       {/* Add Address Form Modal */}
