@@ -100,12 +100,45 @@ export default function AddressMap({
           attributionControl: false,
         });
 
-        // Add tile layer
-        L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
-          attribution:
-            '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
-          maxZoom: 19,
-        }).addTo(map);
+        // Detect theme and add appropriate tile layer
+        const isDarkTheme = document.documentElement.classList.contains('dark') || 
+                           (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches);
+        
+        // Add tile layer based on theme with enhanced styling
+        const tileLayer = isDarkTheme 
+          ? L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+              attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+              maxZoom: 19,
+            })
+          : L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+              attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+              maxZoom: 19,
+            });
+        
+        tileLayer.addTo(map);
+
+        // Add additional layers for enhanced visualization
+        if (isDarkTheme) {
+          // Dark theme: Add water bodies layer
+          const waterLayer = L.tileLayer("https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png", {
+            attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors © <a href="https://carto.com/attributions">CARTO</a>',
+            maxZoom: 19,
+            subdomains: 'abcd',
+          });
+          
+          // Add buildings layer for dark theme
+          const buildingsLayer = L.tileLayer("https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png", {
+            attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors © <a href="https://carto.com/attributions">CARTO</a>',
+            maxZoom: 19,
+            subdomains: 'abcd',
+          });
+        } else {
+          // Light theme: Add detailed OpenStreetMap layers
+          const waterLayer = L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+            attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+            maxZoom: 19,
+          });
+        }
 
         // Add click handler to map for adding new addresses
         map.on("click", (e) => {
@@ -145,12 +178,12 @@ export default function AddressMap({
 
           // Add popup with address info
           marker.bindPopup(`
-            <div class="p-2">
-              <h3 class="font-semibold text-gray-900">${address.street}</h3>
-              <p class="text-sm text-gray-600">${address.city}</p>
+            <div class="p-2 dark:bg-gray-800 dark:text-white">
+              <h3 class="font-semibold text-gray-900 dark:text-white">${address.street}</h3>
+              <p class="text-sm text-gray-600 dark:text-gray-400">${address.city}</p>
               ${
                 onAddAddress
-                  ? '<p class="text-xs text-blue-600 mt-1">Drag to move or click map to add new address</p>'
+                  ? '<p class="text-xs text-blue-600 dark:text-blue-400 mt-1">Drag to move or click map to add new address</p>'
                   : ""
               }
             </div>
@@ -192,6 +225,58 @@ export default function AddressMap({
         }
 
         mapInstanceRef.current = map;
+
+        // Listen for theme changes and update map tiles
+        const updateMapTheme = () => {
+          if (mapInstanceRef.current) {
+            const isDarkTheme = document.documentElement.classList.contains('dark') || 
+                               (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches);
+            
+            // Remove existing tile layer
+            mapInstanceRef.current.eachLayer((layer: any) => {
+              if (layer instanceof L.TileLayer) {
+                mapInstanceRef.current.removeLayer(layer);
+              }
+            });
+            
+            // Add new tile layer based on current theme with enhanced styling
+            const newTileLayer = isDarkTheme 
+              ? L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+                  attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+                  maxZoom: 19,
+                })
+              : L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+                  attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+                  maxZoom: 19,
+                });
+            
+            newTileLayer.addTo(mapInstanceRef.current);
+            
+            // Force re-render to apply new CSS filters
+            setTimeout(() => {
+              if (mapInstanceRef.current) {
+                mapInstanceRef.current.invalidateSize();
+              }
+            }, 100);
+          }
+        };
+
+        // Listen for theme changes
+        const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
+        mediaQuery.addEventListener('change', updateMapTheme);
+        
+        // Listen for class changes on document element
+        const observer = new MutationObserver(updateMapTheme);
+        observer.observe(document.documentElement, {
+          attributes: true,
+          attributeFilter: ['class']
+        });
+
+        // Store cleanup functions
+        mapInstanceRef.current._themeCleanup = () => {
+          mediaQuery.removeEventListener('change', updateMapTheme);
+          observer.disconnect();
+        };
       } catch (error) {
         console.error("Error initializing map:", error);
       }
@@ -209,6 +294,10 @@ export default function AddressMap({
 
       if (mapInstanceRef.current) {
         try {
+          // Clean up theme listeners
+          if (mapInstanceRef.current._themeCleanup) {
+            mapInstanceRef.current._themeCleanup();
+          }
           mapInstanceRef.current.remove();
         } catch (error) {
           console.error("Error removing map:", error);
@@ -363,7 +452,7 @@ export default function AddressMap({
   }
 
   return (
-    <div className={`${height} ${className} relative`}>
+    <div className={`${height} ${className} relative bg-gray-100 dark:bg-gray-100`}>
       <div ref={mapRef} className="relative z-0 h-full w-full rounded-lg" />
 
       {/* Add Address Form Modal */}
@@ -791,7 +880,7 @@ export default function AddressMap({
         </div>
       )}
 
-      {/* Custom styles for the marker */}
+      {/* Custom styles for the marker and map elements */}
       <style jsx global>{`
         .custom-marker {
           background: transparent !important;
@@ -807,6 +896,49 @@ export default function AddressMap({
         .leaflet-popup-tip {
           box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1),
             0 2px 4px -1px rgba(0, 0, 0, 0.06);
+        }
+
+        /* Light theme map element styling */
+        .leaflet-container {
+          background-color: #f8fafc !important;
+        }
+
+        /* Remove all filters for better visibility */
+        .leaflet-tile-pane .leaflet-tile {
+          filter: none !important;
+        }
+
+        /* Dark theme map styles */
+        .dark .leaflet-container {
+          background-color: #f8fafc !important;
+        }
+
+        .dark .leaflet-popup-content-wrapper {
+          background-color: #1f2937 !important;
+          color: #f9fafb !important;
+        }
+
+        .dark .leaflet-popup-tip {
+          background-color: #1f2937 !important;
+        }
+
+        .dark .leaflet-control-zoom a {
+          background-color: #374151 !important;
+          color: #f9fafb !important;
+          border: 1px solid #4b5563 !important;
+        }
+
+        .dark .leaflet-control-zoom a:hover {
+          background-color: #4b5563 !important;
+        }
+
+        .dark .leaflet-control-attribution {
+          background-color: rgba(31, 41, 55, 0.8) !important;
+          color: #9ca3af !important;
+        }
+
+        .dark .leaflet-control-attribution a {
+          color: #60a5fa !important;
         }
       `}</style>
     </div>
