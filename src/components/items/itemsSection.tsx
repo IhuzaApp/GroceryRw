@@ -50,34 +50,36 @@ export default function ItemsSection({
     if (!session?.user || !shop?.id) {
       return;
     }
-    
+
     setLoadingFavorites(true);
     try {
-      const response = await fetch('/api/queries/orders');
+      const response = await fetch("/api/queries/orders");
       const data = await response.json();
-      
+
       // For demo purposes, let's always show some favorite products
       const allProducts = shop.products || [];
-      
+
       if (allProducts.length > 0) {
         const randomFavorites = allProducts
           .sort(() => Math.random() - 0.5) // Randomize for demo
           .slice(0, 6)
           .map((product: any, index: number) => ({
             ...product,
-            orderCount: Math.floor(Math.random() * 10) + 1 // Random order count for demo
+            orderCount: Math.floor(Math.random() * 10) + 1, // Random order count for demo
           }));
-        
+
         setFavoriteProducts(randomFavorites);
       }
-      
+
       // Original logic for when we have real order data
       if (data.orders && data.orders.length > 0) {
         // Filter orders for this specific shop
-        const shopOrders = data.orders.filter((order: any) => order.shop_id === shop.id);
+        const shopOrders = data.orders.filter(
+          (order: any) => order.shop_id === shop.id
+        );
       }
     } catch (error) {
-      console.error('Error fetching favorite products:', error);
+      console.error("Error fetching favorite products:", error);
     } finally {
       setLoadingFavorites(false);
     }
@@ -131,7 +133,7 @@ export default function ItemsSection({
       {/* Products Grid */}
       <div className="space-y-6">
         {/* Search Input */}
-        <div className="relative w-full mt-2">
+        <div className="relative mt-2 w-full">
           <div className="relative">
             <div className="absolute inset-y-0 left-0 flex items-center pl-4">
               <svg
@@ -183,7 +185,11 @@ export default function ItemsSection({
           <div className="space-y-4">
             <div className="flex items-center gap-2">
               <div className="flex h-8 w-8 items-center justify-center rounded-full bg-green-100 dark:bg-green-900/30">
-                <svg className="h-4 w-4 text-green-600 dark:text-green-400" fill="currentColor" viewBox="0 0 20 20">
+                <svg
+                  className="h-4 w-4 text-green-600 dark:text-green-400"
+                  fill="currentColor"
+                  viewBox="0 0 20 20"
+                >
                   <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
                 </svg>
               </div>
@@ -194,23 +200,25 @@ export default function ItemsSection({
                 ({favoriteProducts.length} items)
               </span>
             </div>
-            
+
             {loadingFavorites ? (
-              <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-thin scrollbar-thumb-gray-300 dark:scrollbar-thumb-gray-600">
-                {Array(6).fill(0).map((_, idx) => (
-                  <div key={idx} className="flex-shrink-0 animate-pulse">
-                    <div className="aspect-square w-24 rounded-2xl bg-gray-200 dark:bg-gray-600" />
-                    <div className="mt-2 space-y-1">
-                      <div className="h-3 w-3/4 rounded bg-gray-200 dark:bg-gray-600" />
-                      <div className="h-2 w-1/2 rounded bg-gray-200 dark:bg-gray-600" />
+              <div className="scrollbar-thin scrollbar-thumb-gray-300 dark:scrollbar-thumb-gray-600 flex gap-3 overflow-x-auto pb-2">
+                {Array(6)
+                  .fill(0)
+                  .map((_, idx) => (
+                    <div key={idx} className="flex-shrink-0 animate-pulse">
+                      <div className="aspect-square w-24 rounded-2xl bg-gray-200 dark:bg-gray-600" />
+                      <div className="mt-2 space-y-1">
+                        <div className="h-3 w-3/4 rounded bg-gray-200 dark:bg-gray-600" />
+                        <div className="h-2 w-1/2 rounded bg-gray-200 dark:bg-gray-600" />
+                      </div>
                     </div>
-                  </div>
-                ))}
+                  ))}
               </div>
             ) : (
-              <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-thin scrollbar-thumb-gray-300 dark:scrollbar-thumb-gray-600">
+              <div className="scrollbar-thin scrollbar-thumb-gray-300 dark:scrollbar-thumb-gray-600 flex gap-3 overflow-x-auto pb-2">
                 {favoriteProducts.map((product: any) => (
-                  <div key={product.id} className="flex-shrink-0 w-24">
+                  <div key={product.id} className="w-24 flex-shrink-0">
                     <ProductCard
                       id={product.id}
                       shopId={shop.id}

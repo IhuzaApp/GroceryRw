@@ -23,11 +23,11 @@ interface MobileUserDashboardProps {
   setSearchQuery: (query: string) => void;
 }
 
-export default function MobileUserDashboard({ 
-  initialData, 
-  searchOpen, 
-  setSearchOpen, 
-  searchQuery, 
+export default function MobileUserDashboard({
+  initialData,
+  searchOpen,
+  setSearchOpen,
+  searchQuery,
   setSearchQuery,
 }: MobileUserDashboardProps) {
   const [shopSearchTerm, setShopSearchTerm] = useState("");
@@ -35,10 +35,10 @@ export default function MobileUserDashboard({
   const [isSearching, setIsSearching] = useState(false);
   const [topShops, setTopShops] = useState<any[]>([]);
   const [isLoadingTopShops, setIsLoadingTopShops] = useState(false);
-  
+
   // Get user's default address
   const { defaultAddress } = useAddress();
-  
+
   const {
     data,
     selectedCategory,
@@ -197,11 +197,11 @@ export default function MobileUserDashboard({
     selectedCategory && filteredShops
       ? filteredShops.filter(
           (shop) =>
-      shop.name.toLowerCase().includes(shopSearchTerm.toLowerCase()) ||
+            shop.name.toLowerCase().includes(shopSearchTerm.toLowerCase()) ||
             shop.description
               ?.toLowerCase()
               .includes(shopSearchTerm.toLowerCase()) ||
-      shop.address?.toLowerCase().includes(shopSearchTerm.toLowerCase())
+            shop.address?.toLowerCase().includes(shopSearchTerm.toLowerCase())
         )
       : filteredShops;
 
@@ -219,7 +219,7 @@ export default function MobileUserDashboard({
           }}
         >
           {/* Background Image */}
-          <div 
+          <div
             className="absolute inset-0 bg-cover bg-center bg-no-repeat"
             style={{
               backgroundImage: "url(/assets/images/mobileheaderbg.jpg)",
@@ -228,7 +228,7 @@ export default function MobileUserDashboard({
             {/* Overlay for better text readability */}
             <div className="absolute inset-0 bg-black/20"></div>
           </div>
-          
+
           {/* Header Content - Address Bubble and Search Input */}
           <div className="relative z-10 flex h-full flex-col items-center justify-center px-4">
             {/* Address Bubble */}
@@ -311,103 +311,103 @@ export default function MobileUserDashboard({
             <div className="grid grid-cols-2 gap-4">
               {isLoading ? (
                 Array(6)
-                    .fill(0)
-                    .map((_, index) => (
-                      <div
-                        key={index}
-                        className="animate-pulse rounded-2xl bg-gradient-to-br from-gray-100 to-gray-200 p-6 dark:from-gray-800 dark:to-gray-700"
-                      >
-                        <div className="mb-4 h-16 w-16 rounded-2xl bg-gray-200 dark:bg-gray-600"></div>
-                        <div className="h-4 w-3/4 rounded bg-gray-200 dark:bg-gray-600"></div>
-                        <div className="mt-2 h-3 w-1/2 rounded bg-gray-200 dark:bg-gray-600"></div>
-                      </div>
-                    ))
-              ) : allCategories.length > 0 ? (
-                    allCategories.map((category, index) => (
+                  .fill(0)
+                  .map((_, index) => (
                     <div
-                      key={category.id}
-                      onClick={() => handleCategoryClick(category.id)}
-                    className="group relative overflow-hidden rounded-2xl bg-white p-6 shadow-lg transition-all duration-300 hover:-translate-y-2 hover:shadow-2xl hover:shadow-green-500/25 dark:bg-gradient-to-br dark:from-gray-800 dark:to-gray-900 dark:hover:shadow-green-400/20"
-                      style={{
-                        animationDelay: `${index * 100}ms`,
-                      animation: "fadeInUp 0.6s ease-out forwards",
-                        opacity: 0,
-                      transform: "translateY(20px)",
-                      }}
+                      key={index}
+                      className="animate-pulse rounded-2xl bg-gradient-to-br from-gray-100 to-gray-200 p-6 dark:from-gray-800 dark:to-gray-700"
                     >
-                    {/* Background Pattern - Enhanced for light theme */}
-                    <div className="absolute inset-0 bg-gradient-to-br from-green-50/80 to-blue-50/80 opacity-100 transition-opacity duration-300 group-hover:opacity-100 dark:from-green-900/20 dark:to-blue-900/20 dark:opacity-0 dark:group-hover:opacity-100"></div>
-                      
-                      {/* Content */}
-                      <div className="relative z-10">
-                      {/* Icon Container - Enhanced for light theme */}
-                      <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-br from-green-500 to-green-600 shadow-lg transition-all duration-300 group-hover:scale-110 group-hover:from-green-600 group-hover:to-green-700 group-hover:shadow-xl dark:from-green-800 dark:to-green-700 dark:group-hover:from-green-700 dark:group-hover:to-green-800">
-                          <CategoryIcon category={category.name} />
-                        </div>
-                        
-                      {/* Category Name - Enhanced contrast for light theme */}
-                      <h3 className="mb-1 text-sm font-bold text-gray-900 transition-colors duration-300 group-hover:text-green-700 dark:text-white dark:group-hover:text-green-400">
-                          {category.name}
-                        </h3>
-                        
-                      {/* Description - Enhanced contrast for light theme */}
-                      <p className="text-xs font-medium text-gray-600 transition-colors duration-300 group-hover:text-green-600 dark:text-gray-400 dark:group-hover:text-green-300">
-                          Browse shops
-                        </p>
-                        
-                      {/* Arrow Icon - Enhanced for light theme */}
-                        <div className="mt-3 flex justify-end">
-                        <div className="flex h-6 w-6 items-center justify-center rounded-full bg-green-500 text-white transition-all duration-300 group-hover:scale-110 group-hover:bg-green-600 dark:bg-green-800 dark:text-green-300 dark:group-hover:bg-green-700">
-                            <svg
-                              className="h-3 w-3 transition-transform duration-300 group-hover:translate-x-0.5"
-                              fill="none"
-                              stroke="currentColor"
-                              viewBox="0 0 24 24"
-                            >
-                              <path
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                strokeWidth={2}
-                                d="M9 5l7 7-7 7"
-                              />
-                            </svg>
-                          </div>
-                        </div>
-                      </div>
-                      
-                    {/* Hover Effect Border - Enhanced for light theme */}
-                    <div className="absolute inset-0 rounded-2xl border-2 border-transparent transition-all duration-300 group-hover:border-green-300 dark:group-hover:border-green-700"></div>
+                      <div className="mb-4 h-16 w-16 rounded-2xl bg-gray-200 dark:bg-gray-600"></div>
+                      <div className="h-4 w-3/4 rounded bg-gray-200 dark:bg-gray-600"></div>
+                      <div className="mt-2 h-3 w-1/2 rounded bg-gray-200 dark:bg-gray-600"></div>
                     </div>
                   ))
-                ) : (
-                  <div className="col-span-2 mt-8 text-center">
-                    <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-gray-100 dark:bg-gray-800">
-                      <svg
-                        className="h-8 w-8 text-gray-400"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
-                        />
-                      </svg>
+              ) : allCategories.length > 0 ? (
+                allCategories.map((category, index) => (
+                  <div
+                    key={category.id}
+                    onClick={() => handleCategoryClick(category.id)}
+                    className="group relative overflow-hidden rounded-2xl bg-white p-6 shadow-lg transition-all duration-300 hover:-translate-y-2 hover:shadow-2xl hover:shadow-green-500/25 dark:bg-gradient-to-br dark:from-gray-800 dark:to-gray-900 dark:hover:shadow-green-400/20"
+                    style={{
+                      animationDelay: `${index * 100}ms`,
+                      animation: "fadeInUp 0.6s ease-out forwards",
+                      opacity: 0,
+                      transform: "translateY(20px)",
+                    }}
+                  >
+                    {/* Background Pattern - Enhanced for light theme */}
+                    <div className="absolute inset-0 bg-gradient-to-br from-green-50/80 to-blue-50/80 opacity-100 transition-opacity duration-300 group-hover:opacity-100 dark:from-green-900/20 dark:to-blue-900/20 dark:opacity-0 dark:group-hover:opacity-100"></div>
+
+                    {/* Content */}
+                    <div className="relative z-10">
+                      {/* Icon Container - Enhanced for light theme */}
+                      <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-br from-green-500 to-green-600 shadow-lg transition-all duration-300 group-hover:scale-110 group-hover:from-green-600 group-hover:to-green-700 group-hover:shadow-xl dark:from-green-800 dark:to-green-700 dark:group-hover:from-green-700 dark:group-hover:to-green-800">
+                        <CategoryIcon category={category.name} />
+                      </div>
+
+                      {/* Category Name - Enhanced contrast for light theme */}
+                      <h3 className="mb-1 text-sm font-bold text-gray-900 transition-colors duration-300 group-hover:text-green-700 dark:text-white dark:group-hover:text-green-400">
+                        {category.name}
+                      </h3>
+
+                      {/* Description - Enhanced contrast for light theme */}
+                      <p className="text-xs font-medium text-gray-600 transition-colors duration-300 group-hover:text-green-600 dark:text-gray-400 dark:group-hover:text-green-300">
+                        Browse shops
+                      </p>
+
+                      {/* Arrow Icon - Enhanced for light theme */}
+                      <div className="mt-3 flex justify-end">
+                        <div className="flex h-6 w-6 items-center justify-center rounded-full bg-green-500 text-white transition-all duration-300 group-hover:scale-110 group-hover:bg-green-600 dark:bg-green-800 dark:text-green-300 dark:group-hover:bg-green-700">
+                          <svg
+                            className="h-3 w-3 transition-transform duration-300 group-hover:translate-x-0.5"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M9 5l7 7-7 7"
+                            />
+                          </svg>
+                        </div>
+                      </div>
                     </div>
-                    <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
-                      No categories available
-                    </h3>
-                    <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
-                      Check back later for new categories
-                    </p>
+
+                    {/* Hover Effect Border - Enhanced for light theme */}
+                    <div className="absolute inset-0 rounded-2xl border-2 border-transparent transition-all duration-300 group-hover:border-green-300 dark:group-hover:border-green-700"></div>
                   </div>
-                )}
+                ))
+              ) : (
+                <div className="col-span-2 mt-8 text-center">
+                  <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-gray-100 dark:bg-gray-800">
+                    <svg
+                      className="h-8 w-8 text-gray-400"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+                      />
+                    </svg>
+                  </div>
+                  <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+                    No categories available
+                  </h3>
+                  <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
+                    Check back later for new categories
+                  </p>
+                </div>
+              )}
             </div>
           </div>
         </div>
-        
+
         {/* Search Modal */}
         <SearchModal
           isOpen={searchOpen}
@@ -428,7 +428,7 @@ export default function MobileUserDashboard({
   const selectedCategoryData = data?.categories?.find(
     (c) => c.id === selectedCategory
   );
-  
+
   return (
     <div className="p-0">
       {/* Mobile Header with Category Name */}
@@ -473,7 +473,7 @@ export default function MobileUserDashboard({
               </p>
             </div>
           </div>
-          
+
           {/* Right side - Icon-only Sort and Nearby buttons */}
           <div className="flex items-center gap-2">
             {/* Nearby Button */}
@@ -506,7 +506,7 @@ export default function MobileUserDashboard({
                 />
               </svg>
             </button>
-            
+
             {/* Sort Button */}
             <div className="relative">
               <button
@@ -530,7 +530,7 @@ export default function MobileUserDashboard({
             </div>
           </div>
         </div>
-        
+
         {/* Search Input */}
         <div className="bg-white px-4 pb-2 dark:bg-gray-800">
           <div className="relative">
@@ -687,7 +687,7 @@ export default function MobileUserDashboard({
           </div>
         )}
       </div>
-      
+
       {/* Search Modal */}
       <SearchModal
         isOpen={searchOpen}
