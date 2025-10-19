@@ -688,7 +688,7 @@ const FreshMarkPage: React.FC<FreshMarkPageProps> = ({ shop, products }) => {
           </div>
 
           {/* Desktop Categories */}
-          <div className="hidden bg-white px-4 pb-4 dark:bg-gray-800 sm:block">
+          <div className="hidden bg-white px-4 pb-4 dark:bg-gray-800 sm:hidden">
             <div className="flex gap-2 overflow-x-auto pb-2">
               <button
                 onClick={() => setActiveCategory("all")}
