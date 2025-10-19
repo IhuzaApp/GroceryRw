@@ -135,7 +135,7 @@ export default function ProductCard({
             src={
               productName?.image ||
               image ||
-              "https://www.thedailymeal.com/img/gallery/you-should-think-twice-about-bagging-your-own-groceries-at-the-store/intro-1681220544.jpg"
+              "/images/groceryPlaceholder.png"
             }
             alt={name}
             fill
