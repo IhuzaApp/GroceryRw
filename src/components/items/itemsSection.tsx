@@ -98,8 +98,8 @@ export default function ItemsSection({
             </p>
           </div>
         </div>
-        {/* Products Grid */}
-        <div className="grid grid-cols-2 gap-2 transition-all duration-300 sm:grid-cols-6 md:grid-cols-8 lg:grid-cols-10 xl:grid-cols-10">
+        {/* Products Grid - Mobile optimized */}
+        <div className="grid grid-cols-2 gap-3 transition-all duration-300 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 xl:grid-cols-8">
           {loadingProducts
             ? Array(30)
                 .fill(0)

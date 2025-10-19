@@ -115,7 +115,7 @@ export default function ProductCard({
   return (
     <>
       <div
-        className={`cursor-pointer overflow-hidden rounded-xl border border-gray-200 bg-white shadow-md shadow-black/5 transition-all duration-300 ease-in-out hover:-translate-y-1 hover:shadow-lg hover:shadow-black/10 dark:border-gray-700 dark:bg-gray-800 dark:shadow-gray-400/10 dark:hover:shadow-gray-300/15 ${
+        className={`cursor-pointer overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm transition-all duration-300 ease-in-out hover:shadow-md dark:border-gray-700 dark:bg-gray-800 ${
           highlighted
             ? "scale-105 transform shadow-2xl shadow-yellow-500/50"
             : ""
@@ -130,16 +130,15 @@ export default function ProductCard({
           }
         }}
       >
-        <div className="relative">
+        <div className="relative aspect-square">
           <Image
             src={
               image ||
               "https://www.thedailymeal.com/img/gallery/you-should-think-twice-about-bagging-your-own-groceries-at-the-store/intro-1681220544.jpg"
             }
             alt={name}
-            width={120}
-            height={120}
-            className="h-20 w-full object-cover"
+            fill
+            className="object-cover"
           />
           {sale && (
             <div className="absolute left-1 top-1 rounded bg-red-500 px-1.5 py-0.5 text-xs font-bold !text-white">
