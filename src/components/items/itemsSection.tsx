@@ -132,8 +132,8 @@ export default function ItemsSection({
     <>
       {/* Products Grid */}
       <div className="space-y-6">
-        {/* Search Input */}
-        <div className="relative mt-2 w-full">
+        {/* Search Input - Mobile Only */}
+        <div className="relative mt-2 w-full sm:hidden">
           <div className="relative">
             <div className="absolute inset-y-0 left-0 flex items-center pl-4">
               <svg
@@ -256,8 +256,8 @@ export default function ItemsSection({
           </div>
         </div>
 
-        {/* Category Filter Section */}
-        <div className="space-y-3">
+        {/* Category Filter Section - Mobile Only */}
+        <div className="space-y-3 sm:hidden">
 
           
           <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-thin scrollbar-thumb-gray-300 dark:scrollbar-thumb-gray-600">
