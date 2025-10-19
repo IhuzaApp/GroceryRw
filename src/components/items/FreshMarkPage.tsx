@@ -279,7 +279,7 @@ const FreshMarkPage: React.FC<FreshMarkPageProps> = ({ shop, products }) => {
               fill="none"
               stroke="currentColor"
               strokeWidth="2"
-              className="h-4 w-4 text-white"
+              className="h-4 w-4 !text-white"
             >
               <path d="M19 12H5M12 19l-7-7 7-7" />
             </svg>
@@ -289,8 +289,8 @@ const FreshMarkPage: React.FC<FreshMarkPageProps> = ({ shop, products }) => {
           <div className="absolute right-4 top-7 z-20">
             <div className={`rounded-full px-3 py-1.5 text-xs font-semibold backdrop-blur-md ${
               isCurrentlyOpen 
-                ? 'bg-green-500/90 text-white' 
-                : 'bg-red-500/90 text-white'
+                ? 'bg-green-500/90 !text-white' 
+                : 'bg-red-500/90 !text-white'
             }`}>
               {isCurrentlyOpen ? 'Open' : 'Closed'}
             </div>
@@ -312,12 +312,12 @@ const FreshMarkPage: React.FC<FreshMarkPageProps> = ({ shop, products }) => {
           {/* Shop Info Overlay - Center */}
           <div className="absolute bottom-2 left-1/2 z-20 -translate-x-1/2 text-center">
             {/* Shop Name */}
-            <h1 className="mb-1 text-xl font-bold text-white drop-shadow-lg">
+            <h1 className="mb-1 text-xl font-bold !text-white drop-shadow-lg">
               {shopData?.name}
             </h1>
             
             {/* Shop Details */}
-            <div className="flex flex-wrap justify-center gap-2 text-xs text-white/90">
+            <div className="flex flex-wrap justify-center gap-2 text-xs !text-white/90">
               {/* Distance */}
               {isMounted && (
                 <div className="flex items-center gap-1">

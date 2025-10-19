@@ -48,21 +48,16 @@ export default function ItemsSection({
   // Fetch favorite products based on user's order history for this shop
   const fetchFavoriteProducts = async () => {
     if (!session?.user || !shop?.id) {
-      console.log('Missing session or shop ID');
       return;
     }
     
     setLoadingFavorites(true);
     try {
-      console.log('Fetching orders...');
       const response = await fetch('/api/queries/orders');
       const data = await response.json();
       
-      console.log('Orders response:', data);
-      
       // For demo purposes, let's always show some favorite products
       const allProducts = shop.products || [];
-      console.log('Shop products:', allProducts.length);
       
       if (allProducts.length > 0) {
         const randomFavorites = allProducts
@@ -73,7 +68,6 @@ export default function ItemsSection({
             orderCount: Math.floor(Math.random() * 10) + 1 // Random order count for demo
           }));
         
-        console.log('Setting favorite products:', randomFavorites.length);
         setFavoriteProducts(randomFavorites);
       }
       
@@ -81,7 +75,6 @@ export default function ItemsSection({
       if (data.orders && data.orders.length > 0) {
         // Filter orders for this specific shop
         const shopOrders = data.orders.filter((order: any) => order.shop_id === shop.id);
-        console.log('Found orders for this shop:', shopOrders.length);
       }
     } catch (error) {
       console.error('Error fetching favorite products:', error);
@@ -92,7 +85,6 @@ export default function ItemsSection({
 
   // Fetch favorite products when component mounts or shop changes
   useEffect(() => {
-    console.log('Fetching favorite products for shop:', shop?.id, 'user:', session?.user?.id);
     fetchFavoriteProducts();
   }, [session?.user, shop?.id]);
 
