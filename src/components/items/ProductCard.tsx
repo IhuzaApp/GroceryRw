@@ -115,7 +115,7 @@ export default function ProductCard({
   return (
     <>
       <div
-        className={`cursor-pointer overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm transition-all duration-300 ease-in-out hover:shadow-md dark:border-gray-700 dark:bg-gray-800 ${
+        className={`cursor-pointer overflow-hidden transition-all duration-300 ease-in-out ${
           highlighted
             ? "scale-105 transform shadow-2xl shadow-yellow-500/50"
             : ""
@@ -145,63 +145,24 @@ export default function ProductCard({
               SALE
             </div>
           )}
-          {quantity !== undefined && (
-            <div className="absolute right-1 top-1 rounded-full bg-purple-500 px-1.5 py-0.5 text-xs font-bold !text-white">
+          {measurement_unit && (
+            <div className="absolute top-1 right-1 rounded bg-gray-800 px-1.5 py-0.5 text-xs font-bold !text-white">
               {measurement_unit}
             </div>
           )}
-        </div>
-        <div className="p-2">
-          <h3 className="mb-1 line-clamp-2 text-sm font-medium text-gray-900 dark:text-gray-100">
-            {name}
-          </h3>
-          <p className="mb-2 text-xs text-gray-500 dark:text-gray-400">
-            {unit}
-          </p>
-          <div className="flex items-center justify-between">
-            <div>
-              <span className="text-sm font-bold text-gray-900 dark:text-gray-100">
-                {formatCurrency(parseFloat(final_price || "0"))}
-              </span>
-              {sale && originalPrice && (
-                <span className="ml-1 text-xs text-gray-500 line-through dark:text-gray-400">
-                  {formatCurrency(parseFloat(originalPrice || "0"))}
-                </span>
-              )}
-            </div>
-            <div className="flex items-center gap-1">
-              <Button
-                appearance="primary"
-                size="sm"
-                className="flex h-8 w-8 items-center justify-center rounded-full border-0 !bg-green-500 p-0 !text-white hover:!bg-green-600 dark:!bg-green-600 dark:hover:!bg-green-700"
-                onClick={handleQuickAdd}
-                disabled={isAdding}
-              >
-                {isAdding ? (
-                  <div className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent"></div>
-                ) : (
-                  <svg
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="2"
-                    className="h-4 w-4"
-                  >
-                    <path d="M3 6h19l-3 10H6L3 6z" />
-                    <path d="M8 18a2 2 0 100 4 2 2 0 000-4z" />
-                    <path d="M19 18a2 2 0 100 4 2 2 0 000-4z" />
-                  </svg>
-                )}
-              </Button>
-              <Button
-                appearance="subtle"
-                size="sm"
-                className="flex h-8 w-8 items-center justify-center rounded-full border-0 !bg-green-100 p-0 !text-green-700 hover:!bg-green-200 dark:!bg-gray-700 dark:!text-gray-300 dark:hover:!bg-gray-600"
-                onClick={() => {
-                  setShowModal(true);
-                  setSelectedQuantity(1);
-                }}
-              >
+          
+          {/* Cart Buttons Overlay on Product Image */}
+          <div className="absolute bottom-2 right-2 flex gap-2">
+            <Button
+              appearance="primary"
+              size="sm"
+              className="flex h-8 w-8 items-center justify-center rounded-full border-0 !bg-green-500 p-0 !text-white hover:!bg-green-600 shadow-lg"
+              onClick={handleQuickAdd}
+              disabled={isAdding}
+            >
+              {isAdding ? (
+                <div className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent"></div>
+              ) : (
                 <svg
                   viewBox="0 0 24 24"
                   fill="none"
@@ -209,10 +170,51 @@ export default function ProductCard({
                   strokeWidth="2"
                   className="h-4 w-4"
                 >
-                  <line x1="12" y1="5" x2="12" y2="19" />
-                  <line x1="5" y1="12" x2="19" y2="12" />
+                  <path d="M3 6h19l-3 10H6L3 6z" />
+                  <path d="M8 18a2 2 0 100 4 2 2 0 000-4z" />
+                  <path d="M19 18a2 2 0 100 4 2 2 0 000-4z" />
                 </svg>
-              </Button>
+              )}
+            </Button>
+            <Button
+              appearance="subtle"
+              size="sm"
+              className="flex h-8 w-8 items-center justify-center rounded-full border-0 !bg-green-100 p-0 !text-green-700 hover:!bg-green-200 dark:!bg-gray-700 dark:!text-gray-300 dark:hover:!bg-gray-600 shadow-lg"
+              onClick={() => {
+                setShowModal(true);
+                setSelectedQuantity(1);
+              }}
+            >
+              <svg
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                className="h-4 w-4"
+              >
+                <line x1="12" y1="5" x2="12" y2="19" />
+                <line x1="5" y1="12" x2="19" y2="12" />
+              </svg>
+            </Button>
+          </div>
+        </div>
+        <div className="p-1.5 sm:p-2 bg-transparent">
+          <h3 className="mb-1 line-clamp-2 text-xs font-medium text-gray-600 dark:text-gray-400 sm:text-sm">
+            {name}
+          </h3>
+          <p className="mb-1 text-xs text-gray-500 dark:text-gray-400 sm:mb-2">
+            {unit}
+          </p>
+          <div className="flex items-center justify-between">
+            <div>
+              <span className="text-sm font-bold text-gray-900 dark:text-white sm:text-base">
+                {formatCurrency(parseFloat(final_price || "0"))}
+              </span>
+              {sale && originalPrice && (
+                <span className="ml-1 text-xs text-gray-500 line-through dark:text-gray-400">
+                  {formatCurrency(parseFloat(originalPrice || "0"))}
+                </span>
+              )}
             </div>
           </div>
         </div>

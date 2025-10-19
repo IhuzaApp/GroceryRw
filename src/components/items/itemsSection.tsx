@@ -99,7 +99,7 @@ export default function ItemsSection({
           </div>
         </div>
         {/* Products Grid - Mobile optimized */}
-        <div className="grid grid-cols-2 gap-3 transition-all duration-300 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 xl:grid-cols-8">
+        <div className="grid grid-cols-3 gap-2 transition-all duration-300 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 xl:grid-cols-8">
           {loadingProducts
             ? Array(30)
                 .fill(0)

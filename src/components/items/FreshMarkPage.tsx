@@ -256,7 +256,7 @@ const FreshMarkPage: React.FC<FreshMarkPageProps> = ({ shop, products }) => {
     <RootLayout>
       <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
         {/* Mobile Header - Full width cover image with circular logo */}
-        <div className="relative h-40 w-full overflow-hidden sm:hidden" style={{ marginTop: '-24px', marginLeft: '-16px', marginRight: '-16px', width: 'calc(100% + 32px)' }}>
+        <div className="relative h-32 w-full sm:hidden" style={{ marginTop: '-44px', marginLeft: '-16px', marginRight: '-16px', width: 'calc(100% + 32px)' }}>
           {/* Shop Cover Image */}
           <Image
             src={sanitizeSrc(shopData.image)}
@@ -272,21 +272,21 @@ const FreshMarkPage: React.FC<FreshMarkPageProps> = ({ shop, products }) => {
           {/* Back Button */}
           <button
             onClick={() => router.back()}
-            className="absolute left-4 top-4 z-20 flex h-10 w-10 items-center justify-center rounded-full bg-white/20 backdrop-blur-md transition-all duration-200 hover:scale-105 hover:bg-white/30"
+            className="absolute left-4 top-7 z-20 flex h-10 w-10 items-center justify-center rounded-full bg-white/20 backdrop-blur-md transition-all duration-200 hover:scale-105 hover:bg-white/30"
           >
             <svg
               viewBox="0 0 24 24"
               fill="none"
               stroke="currentColor"
               strokeWidth="2"
-              className="h-5 w-5 text-white"
+              className="h-4 w-4 text-white"
             >
               <path d="M19 12H5M12 19l-7-7 7-7" />
             </svg>
           </button>
 
           {/* Shop Status Badge */}
-          <div className="absolute right-4 top-4 z-20">
+          <div className="absolute right-4 top-7 z-20">
             <div className={`rounded-full px-3 py-1.5 text-xs font-semibold backdrop-blur-md ${
               isCurrentlyOpen 
                 ? 'bg-green-500/90 text-white' 
@@ -297,13 +297,13 @@ const FreshMarkPage: React.FC<FreshMarkPageProps> = ({ shop, products }) => {
           </div>
 
           {/* Shop Logo - Circular at bottom left */}
-          <div className="absolute bottom-2 left-3 z-20">
-            <div className="h-12 w-12 overflow-hidden rounded-full border-3 border-white shadow-lg">
+          <div className="absolute -bottom-4 left-3 z-50">
+            <div className="h-16 w-16 overflow-hidden rounded-full border-4 border-green-500 shadow-lg">
               <Image
                 src={sanitizeSrc(shopData.logo)}
                 alt={`${shopData?.name} logo`}
-                width={48}
-                height={48}
+                width={64}
+                height={64}
                 className="h-full w-full object-cover"
               />
             </div>
@@ -317,11 +317,11 @@ const FreshMarkPage: React.FC<FreshMarkPageProps> = ({ shop, products }) => {
             </h1>
             
             {/* Shop Details */}
-            <div className="flex flex-wrap justify-center gap-3 text-sm text-white/90">
+            <div className="flex flex-wrap justify-center gap-2 text-xs text-white/90">
               {/* Distance */}
               {isMounted && (
                 <div className="flex items-center gap-1">
-                  <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg className="h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
                   </svg>
@@ -332,7 +332,7 @@ const FreshMarkPage: React.FC<FreshMarkPageProps> = ({ shop, products }) => {
               {/* Delivery Time */}
               {isMounted && (
                 <div className="flex items-center gap-1">
-                  <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg className="h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                   </svg>
                   <span>{dynamicDeliveryTime}</span>
@@ -341,7 +341,7 @@ const FreshMarkPage: React.FC<FreshMarkPageProps> = ({ shop, products }) => {
               
               {/* Rating */}
               <div className="flex items-center gap-1">
-                <svg className="h-4 w-4 text-yellow-400" fill="currentColor" viewBox="0 0 20 20">
+                <svg className="h-3 w-3 text-yellow-400" fill="currentColor" viewBox="0 0 20 20">
                   <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
                 </svg>
                 <span>4.5</span>
@@ -618,7 +618,7 @@ const FreshMarkPage: React.FC<FreshMarkPageProps> = ({ shop, products }) => {
           </div>
 
         {/* Mobile Categories - Sticky */}
-        <div className="sticky top-0 z-10 bg-white px-4 py-3 shadow-sm dark:bg-gray-800 sm:hidden">
+        <div className="sticky top-0 z-10 bg-white px-4 py-3 pt-12 shadow-sm dark:bg-gray-800 sm:hidden">
           <div className="flex gap-2 overflow-x-auto pb-2">
             <button
               onClick={() => setActiveCategory("all")}
