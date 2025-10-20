@@ -80,6 +80,8 @@ const GET_ACTIVE_REEL_ORDERS = gql`
         Product
         type
         video_url
+        restaurant_id
+        user_id
       }
       user: User {
         id
@@ -246,6 +248,8 @@ export default async function handler(
                 Product: string;
                 type: string;
                 video_url: string;
+                restaurant_id: string | null;
+                user_id: string | null;
               };
               user: {
                 id: string;
@@ -339,31 +343,44 @@ export default async function handler(
     }));
 
     // Transform reel orders
-    const transformedReelOrders = reelOrders.map((o) => ({
-      id: o.id,
-      OrderID: o.id,
-      status: o.status,
-      createdAt: o.created_at,
-      deliveryTime: o.delivery_time || undefined,
-      shopName: "Reel Order", // Reel orders don't have shops
-      shopAddress: "From Reel Creator", // Reel orders come from reel creators
-      shopLat: parseFloat(o.Address.latitude), // Use customer location as pickup point
-      shopLng: parseFloat(o.Address.longitude),
-      customerName: o.user.name,
-      customerAddress: `${o.Address.street}, ${o.Address.city}`,
-      customerLat: parseFloat(o.Address.latitude),
-      customerLng: parseFloat(o.Address.longitude),
-      items: 1, // Reel orders have 1 item
-      total: parseFloat(o.total || "0"),
-      estimatedEarnings: (
-        parseFloat(o.service_fee || "0") + parseFloat(o.delivery_fee || "0")
-      ).toFixed(2),
-      orderType: "reel" as const,
-      reel: o.Reel,
-      quantity: parseInt(o.quantity) || 1,
-      deliveryNote: o.delivery_note,
-      customerPhone: o.user.phone,
-    }));
+    const transformedReelOrders = reelOrders.map((o) => {
+      // Determine if this is a restaurant/user reel (skip shopping) or regular reel (full flow)
+      // Skip shopping if EITHER restaurant_id OR user_id is not null
+      const isRestaurantUserReel = o.Reel.restaurant_id || o.Reel.user_id;
+
+      return {
+        id: o.id,
+        OrderID: o.id,
+        status: o.status,
+        createdAt: o.created_at,
+        deliveryTime: o.delivery_time || undefined,
+        shopName: isRestaurantUserReel ? "Restaurant/User Reel" : "Reel Order",
+        shopAddress: isRestaurantUserReel
+          ? "From Restaurant/User"
+          : "From Reel Creator",
+        shopLat: parseFloat(o.Address.latitude), // Use customer location as pickup point
+        shopLng: parseFloat(o.Address.longitude),
+        customerName: o.user.name,
+        customerAddress: `${o.Address.street}, ${o.Address.city}`,
+        customerLat: parseFloat(o.Address.latitude),
+        customerLng: parseFloat(o.Address.longitude),
+        items: 1, // Reel orders have 1 item
+        total: parseFloat(o.total || "0"),
+        estimatedEarnings: (
+          parseFloat(o.service_fee || "0") + parseFloat(o.delivery_fee || "0")
+        ).toFixed(2),
+        orderType: "reel" as const,
+        reel: {
+          ...o.Reel,
+          restaurant_id: o.Reel.restaurant_id,
+          user_id: o.Reel.user_id,
+          isRestaurantUserReel, // Add flag to identify the flow type
+        },
+        quantity: parseInt(o.quantity) || 1,
+        deliveryNote: o.delivery_note,
+        customerPhone: o.user.phone,
+      };
+    });
 
     // Transform restaurant orders
     const transformedRestaurantOrders = restaurantOrders.map((o) => ({

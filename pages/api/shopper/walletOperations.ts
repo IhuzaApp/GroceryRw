@@ -32,6 +32,19 @@ const GET_REEL_ORDER_DETAILS = gql`
   }
 `;
 
+// GraphQL query to get restaurant order details with fees
+const GET_RESTAURANT_ORDER_DETAILS = gql`
+  query GetRestaurantOrderDetails($orderId: uuid!) {
+    restaurant_orders_by_pk(id: $orderId) {
+      id
+      total
+      delivery_fee
+      shopper_id
+      user_id
+    }
+  }
+`;
+
 // GraphQL query to get shopper wallet
 const GET_SHOPPER_WALLET = gql`
   query GetShopperWallet($shopper_id: uuid!) {
@@ -106,7 +119,12 @@ export default async function handler(
     return res.status(401).json({ error: "Unauthorized" });
   }
 
-  const { orderId, operation, isReelOrder = false } = req.body;
+  const {
+    orderId,
+    operation,
+    isReelOrder = false,
+    isRestaurantOrder = false,
+  } = req.body;
 
   if (!orderId || !operation) {
     return res
@@ -128,7 +146,7 @@ export default async function handler(
     // Get order details with fees
     let orderDetails: any;
     if (isReelOrder) {
-      orderDetails = await hasuraClient.request<{
+      orderDetails = await hasuraClient!.request<{
         reel_orders_by_pk: {
           id: string;
           total: string;
@@ -140,8 +158,20 @@ export default async function handler(
       }>(GET_REEL_ORDER_DETAILS, {
         orderId,
       });
+    } else if (isRestaurantOrder) {
+      orderDetails = await hasuraClient!.request<{
+        restaurant_orders_by_pk: {
+          id: string;
+          total: string;
+          delivery_fee: string;
+          shopper_id: string;
+          user_id: string;
+        };
+      }>(GET_RESTAURANT_ORDER_DETAILS, {
+        orderId,
+      });
     } else {
-      orderDetails = await hasuraClient.request<{
+      orderDetails = await hasuraClient!.request<{
         Orders_by_pk: {
           id: string;
           total: string;
@@ -157,6 +187,8 @@ export default async function handler(
 
     const order = isReelOrder
       ? orderDetails.reel_orders_by_pk
+      : isRestaurantOrder
+      ? orderDetails.restaurant_orders_by_pk
       : orderDetails.Orders_by_pk;
 
     if (!order) {
@@ -164,7 +196,7 @@ export default async function handler(
     }
 
     // Get shopper wallet
-    const walletData = await hasuraClient.request<{
+    const walletData = await hasuraClient!.request<{
       Wallets: Array<{
         id: string;
         available_balance: string;
@@ -193,6 +225,7 @@ export default async function handler(
           orderTotal,
           orderId,
           isReelOrder,
+          isRestaurantOrder,
           req
         );
         break;
@@ -203,6 +236,7 @@ export default async function handler(
           order,
           orderId,
           isReelOrder,
+          isRestaurantOrder,
           req
         );
         break;
@@ -213,7 +247,8 @@ export default async function handler(
           order,
           orderTotal,
           orderId,
-          isReelOrder
+          isReelOrder,
+          isRestaurantOrder
         );
         break;
 
@@ -244,20 +279,21 @@ async function handleShoppingOperation(
   orderTotal: number,
   orderId: string,
   isReelOrder: boolean,
+  isRestaurantOrder: boolean,
   req: NextApiRequest
 ) {
   const currentReservedBalance = parseFloat(wallet.reserved_balance);
   const newReservedBalance = (currentReservedBalance + orderTotal).toFixed(2);
 
   // Update wallet balances (only reserved balance changes)
-  await hasuraClient.request(UPDATE_WALLET_BALANCES, {
+  await hasuraClient!.request(UPDATE_WALLET_BALANCES, {
     wallet_id: wallet.id,
     available_balance: wallet.available_balance,
     reserved_balance: newReservedBalance,
   });
 
   // Create wallet transactions
-  if (!isReelOrder) {
+  if (!isReelOrder && !isRestaurantOrder) {
     const transactions = [
       {
         wallet_id: wallet.id,
@@ -265,17 +301,19 @@ async function handleShoppingOperation(
         type: "reserve",
         status: "completed",
         related_order_id: orderId,
+        related_reel_orderId: null,
+        related_restaurant_order_id: null,
         description: "Reserved balance for order goods",
       },
     ];
 
-    await hasuraClient.request(CREATE_WALLET_TRANSACTIONS, {
+    await hasuraClient!.request(CREATE_WALLET_TRANSACTIONS, {
       transactions,
     });
   }
 
   // Add commission revenue when shopping starts
-  if (!isReelOrder) {
+  if (!isReelOrder && !isRestaurantOrder) {
     try {
       const commissionResponse = await fetch(
         `${
@@ -317,10 +355,11 @@ async function handleDeliveredOperation(
   order: any,
   orderId: string,
   isReelOrder: boolean,
+  isRestaurantOrder: boolean,
   req: NextApiRequest
 ) {
   // Get system configuration for platform fee calculation
-  const systemConfigResponse = await hasuraClient.request<{
+  const systemConfigResponse = await hasuraClient!.request<{
     System_configuratioins: Array<{
       deliveryCommissionPercentage: string;
     }>;
@@ -341,7 +380,11 @@ async function handleDeliveredOperation(
   const orderTotal = parseFloat(order.total);
   const serviceFee = parseFloat(order.service_fee || "0");
   const deliveryFee = parseFloat(order.delivery_fee || "0");
-  const totalEarnings = serviceFee + deliveryFee;
+
+  // For restaurant orders, only delivery fee is earned (no service fee)
+  const totalEarnings = isRestaurantOrder
+    ? deliveryFee
+    : serviceFee + deliveryFee;
   const platformFee = (totalEarnings * deliveryCommissionPercentage) / 100;
   const remainingEarnings = totalEarnings - platformFee;
 
@@ -353,25 +396,28 @@ async function handleDeliveredOperation(
   ).toFixed(2);
 
   // Calculate reserved balance: never go below 0
-  let newReservedBalance = "0.00";
+  let newReservedBalance = wallet.reserved_balance; // Keep existing for restaurant orders
   let refundAmount = 0;
 
-  if (currentReservedBalance >= orderTotal) {
-    newReservedBalance = (currentReservedBalance - orderTotal).toFixed(2);
-  } else {
-    newReservedBalance = "0.00";
-    refundAmount = orderTotal - currentReservedBalance;
+  // Only adjust reserved balance for regular orders (not restaurant or reel orders)
+  if (!isRestaurantOrder && !isReelOrder) {
+    if (currentReservedBalance >= orderTotal) {
+      newReservedBalance = (currentReservedBalance - orderTotal).toFixed(2);
+    } else {
+      newReservedBalance = "0.00";
+      refundAmount = orderTotal - currentReservedBalance;
+    }
   }
 
   // Update wallet balances
-  await hasuraClient.request(UPDATE_WALLET_BALANCES, {
+  await hasuraClient!.request(UPDATE_WALLET_BALANCES, {
     wallet_id: wallet.id,
     available_balance: newAvailableBalance,
     reserved_balance: newReservedBalance,
   });
 
   // Create wallet transactions for delivered order
-  if (!isReelOrder) {
+  if (!isReelOrder && !isRestaurantOrder) {
     const transactions = [
       {
         wallet_id: wallet.id,
@@ -379,6 +425,8 @@ async function handleDeliveredOperation(
         type: "earnings",
         status: "completed",
         related_order_id: orderId,
+        related_reel_orderId: null,
+        related_restaurant_order_id: null,
         description: "Earnings after platform fee deduction",
       },
       {
@@ -389,6 +437,8 @@ async function handleDeliveredOperation(
         type: "expense",
         status: "completed",
         related_order_id: orderId,
+        related_reel_orderId: null,
+        related_restaurant_order_id: null,
         description: "Reserved balance used for order goods",
       },
     ];
@@ -400,17 +450,37 @@ async function handleDeliveredOperation(
         type: "refund",
         status: "completed",
         related_order_id: orderId,
+        related_reel_orderId: null,
+        related_restaurant_order_id: null,
         description: "Refund for excess reserved balance",
       });
     }
 
-    await hasuraClient.request(CREATE_WALLET_TRANSACTIONS, {
+    await hasuraClient!.request(CREATE_WALLET_TRANSACTIONS, {
+      transactions,
+    });
+  } else if (isRestaurantOrder) {
+    // For restaurant orders, create earnings transaction for delivery fee
+    const transactions = [
+      {
+        wallet_id: wallet.id,
+        amount: remainingEarnings.toFixed(2),
+        type: "earnings",
+        status: "completed",
+        related_order_id: null,
+        related_reel_orderId: null,
+        related_restaurant_order_id: orderId,
+        description: "Delivery fee earnings after platform fee deduction",
+      },
+    ];
+
+    await hasuraClient!.request(CREATE_WALLET_TRANSACTIONS, {
       transactions,
     });
   }
 
   // Add plasa fee revenue when order is delivered
-  if (!isReelOrder) {
+  if (!isReelOrder && !isRestaurantOrder) {
     try {
       const plasaFeeResponse = await fetch(
         `${
@@ -455,13 +525,14 @@ async function handleCancelledOperation(
   order: any,
   orderTotal: number,
   orderId: string,
-  isReelOrder: boolean
+  isReelOrder: boolean,
+  isRestaurantOrder: boolean
 ) {
   const currentReservedBalance = parseFloat(wallet.reserved_balance);
   const newReservedBalance = (currentReservedBalance - orderTotal).toFixed(2);
 
   // Update wallet balances
-  await hasuraClient.request(UPDATE_WALLET_BALANCES, {
+  await hasuraClient!.request(UPDATE_WALLET_BALANCES, {
     wallet_id: wallet.id,
     available_balance: wallet.available_balance,
     reserved_balance: newReservedBalance,
@@ -478,12 +549,12 @@ async function handleCancelledOperation(
     paid: false,
   };
 
-  await hasuraClient.request(CREATE_REFUND, {
+  await hasuraClient!.request(CREATE_REFUND, {
     refund: refundRecord,
   });
 
   // Create wallet transaction for refund
-  if (!isReelOrder) {
+  if (!isReelOrder && !isRestaurantOrder) {
     const transactions = [
       {
         wallet_id: wallet.id,
@@ -491,11 +562,13 @@ async function handleCancelledOperation(
         type: "refund",
         status: "completed",
         related_order_id: orderId,
+        related_reel_orderId: null,
+        related_restaurant_order_id: null,
         description: "Refund for cancelled order",
       },
     ];
 
-    await hasuraClient.request(CREATE_WALLET_TRANSACTIONS, {
+    await hasuraClient!.request(CREATE_WALLET_TRANSACTIONS, {
       transactions,
     });
   }

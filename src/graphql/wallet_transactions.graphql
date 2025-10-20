@@ -34,7 +34,11 @@ query getAllWallettTtransactions {
       delivery_address_id
       created_at
       combined_order_id
+      assigned_at
     }
+    description
+    related_reel_orderId
+    related_restaurant_order_id
   }
 }
 
@@ -61,6 +65,9 @@ mutation createWalletTransaction(
     created_at
     wallet_id
     related_order_id
+    related_reel_orderId
+    related_restaurant_order_id
+    description
   }
 }
 
@@ -76,6 +83,9 @@ mutation createMultipleWalletTransactions(
       created_at
       wallet_id
       related_order_id
+      description
+      related_reel_orderId
+      related_restaurant_order_id
     }
     affected_rows
   }

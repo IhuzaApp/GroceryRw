@@ -198,6 +198,8 @@ export const recordPaymentTransactions = async (
         type: "payment",
         status: "completed",
         related_order_id: orderId,
+        related_reel_orderId: null,
+        related_restaurant_order_id: null,
         description: description,
       },
     ];

@@ -31,6 +31,7 @@ interface InvoiceData {
   deliveryFee: number;
   total: number;
   isReelOrder?: boolean;
+  isRestaurantOrder?: boolean;
 }
 
 interface DeliveryConfirmationModalProps {
@@ -38,7 +39,7 @@ interface DeliveryConfirmationModalProps {
   onClose: () => void;
   invoiceData: InvoiceData | null;
   loading: boolean;
-  orderType?: "regular" | "reel";
+  orderType?: "regular" | "reel" | "restaurant";
 }
 
 const DeliveryConfirmationModal: React.FC<DeliveryConfirmationModalProps> = ({
@@ -75,18 +76,25 @@ const DeliveryConfirmationModal: React.FC<DeliveryConfirmationModalProps> = ({
   ];
   const maxFileSize = 5 * 1024 * 1024; // 5MB
 
-  // Check localStorage on mount
+  // Reset modal state when it opens
   useEffect(() => {
-    if (invoiceData?.orderId) {
-      const uploadState = localStorage.getItem(
-        `delivery_upload_${invoiceData.orderId}`
-      );
-      if (uploadState === "pending") {
-        setForceOpen(true);
-        setPhotoUploading(true);
-      }
+    if (open && invoiceData?.orderId) {
+      // Clear any previous upload state when modal opens fresh
+      localStorage.removeItem(`delivery_upload_${invoiceData.orderId}`);
+
+      // Reset all upload-related states when modal opens
+      setPhotoUploading(false);
+      setPhotoUploaded(false);
+      setUploadError(null);
+      setSelectedFileName(null);
+      setCapturedImage(null);
+      setShowCamera(false);
+      setShowPreview(false);
+      setForceOpen(false);
+      setConfirmingDelivery(false);
+      setDeliveryConfirmed(false);
     }
-  }, [invoiceData?.orderId]);
+  }, [open, invoiceData?.orderId]);
 
   // Save upload state to localStorage
   useEffect(() => {
@@ -123,6 +131,7 @@ const DeliveryConfirmationModal: React.FC<DeliveryConfirmationModalProps> = ({
           orderId: invoiceData.orderId,
           operation: "delivered",
           isReelOrder: invoiceData.isReelOrder || false,
+          isRestaurantOrder: invoiceData.isRestaurantOrder || false,
         }),
       });
 

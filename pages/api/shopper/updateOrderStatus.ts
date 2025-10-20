@@ -40,6 +40,24 @@ const UPDATE_REEL_ORDER_STATUS = gql`
   }
 `;
 
+// GraphQL mutation to update restaurant order status
+const UPDATE_RESTAURANT_ORDER_STATUS = gql`
+  mutation UpdateRestaurantOrderStatus(
+    $id: uuid!
+    $status: String!
+    $updated_at: timestamptz!
+  ) {
+    update_restaurant_orders_by_pk(
+      pk_columns: { id: $id }
+      _set: { status: $status, updated_at: $updated_at }
+    ) {
+      id
+      status
+      updated_at
+    }
+  }
+`;
+
 export default async function handler(
   req: NextApiRequest,
   res: NextApiResponse
@@ -104,6 +122,17 @@ export default async function handler(
       }
     `;
 
+    const CHECK_RESTAURANT_ORDER = gql`
+      query CheckRestaurantOrder($orderId: uuid!, $shopperId: uuid!) {
+        restaurant_orders(
+          where: { id: { _eq: $orderId }, shopper_id: { _eq: $shopperId } }
+        ) {
+          id
+          status
+        }
+      }
+    `;
+
     if (!hasuraClient) {
       throw new Error("Hasura client is not initialized");
     }
@@ -117,6 +146,7 @@ export default async function handler(
     });
 
     let isReelOrder = false;
+    let isRestaurantOrder = false;
     let orderType = "regular";
 
     if (regularOrderCheck.Orders && regularOrderCheck.Orders.length > 0) {
@@ -135,17 +165,43 @@ export default async function handler(
         isReelOrder = true;
         orderType = "reel";
       } else {
-        console.error(
-          "Authorization failed: Shopper not assigned to this order"
-        );
-        return res
-          .status(403)
-          .json({ error: "You are not assigned to this order" });
+        // Check restaurant orders
+        const restaurantOrderCheck = await hasuraClient.request<{
+          restaurant_orders: Array<{ id: string; status: string }>;
+        }>(CHECK_RESTAURANT_ORDER, {
+          orderId,
+          shopperId: userId,
+        });
+
+        if (
+          restaurantOrderCheck.restaurant_orders &&
+          restaurantOrderCheck.restaurant_orders.length > 0
+        ) {
+          // Found restaurant order assignment
+          isRestaurantOrder = true;
+          orderType = "restaurant";
+        } else {
+          console.error(
+            "Authorization failed: Shopper not assigned to this order"
+          );
+          return res
+            .status(403)
+            .json({ error: "You are not assigned to this order" });
+        }
       }
     }
 
+    // Prevent restaurant orders from being updated to "shopping" status
+    if (isRestaurantOrder && status === "shopping") {
+      return res.status(400).json({
+        error:
+          "Restaurant orders cannot be updated to 'shopping' status. Use 'on_the_way' instead.",
+      });
+    }
+
     // Handle shopping status - delegate to wallet operations API
-    if (status === "shopping") {
+    // Skip wallet operations for restaurant orders as they don't have shopping phase
+    if (status === "shopping" && !isRestaurantOrder) {
       try {
         const walletResponse = await fetch(
           `${
@@ -163,6 +219,7 @@ export default async function handler(
               orderId,
               operation: "shopping",
               isReelOrder,
+              isRestaurantOrder,
             }),
           }
         );
@@ -208,6 +265,18 @@ export default async function handler(
         status,
         updated_at: currentTimestamp,
       });
+    } else if (isRestaurantOrder) {
+      updateResult = await hasuraClient.request<{
+        update_restaurant_orders_by_pk: {
+          id: string;
+          status: string;
+          updated_at: string;
+        };
+      }>(UPDATE_RESTAURANT_ORDER_STATUS, {
+        id: orderId,
+        status,
+        updated_at: currentTimestamp,
+      });
     } else {
       updateResult = await hasuraClient.request<{
         update_Orders_by_pk: {
@@ -224,6 +293,8 @@ export default async function handler(
 
     const updatedOrder = isReelOrder
       ? updateResult.update_reel_orders_by_pk
+      : isRestaurantOrder
+      ? updateResult.update_restaurant_orders_by_pk
       : updateResult.update_Orders_by_pk;
 
     // Handle cancelled status - delegate to wallet operations API
@@ -245,6 +316,7 @@ export default async function handler(
               orderId,
               operation: "cancelled",
               isReelOrder,
+              isRestaurantOrder,
             }),
           }
         );

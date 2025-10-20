@@ -79,6 +79,46 @@ const GET_REEL_ORDER_DETAILS_FOR_INVOICE = gql`
   }
 `;
 
+// GraphQL query to get restaurant order details for invoice
+const GET_RESTAURANT_ORDER_DETAILS_FOR_INVOICE = gql`
+  query GetRestaurantOrderDetailsForInvoice($order_id: uuid!) {
+    restaurant_orders_by_pk(id: $order_id) {
+      id
+      OrderID
+      status
+      total
+      delivery_fee
+      created_at
+      updated_at
+      User {
+        id
+        name
+        email
+      }
+      Restaurant {
+        id
+        name
+        location
+        phone
+        logo
+      }
+      restaurant_dishe_orders {
+        id
+        quantity
+        price
+        restaurant_dishes {
+          id
+          name
+          description
+          image
+          price
+        }
+      }
+      shopper_id
+    }
+  }
+`;
+
 // GraphQL mutation to insert invoice data into the Invoices table
 const ADD_INVOICE = gql`
   mutation addInvoiceDetails(
@@ -189,6 +229,44 @@ interface ReelOrderDetails {
   } | null;
 }
 
+// Type definition for restaurant order details
+interface RestaurantOrderDetails {
+  restaurant_orders_by_pk: {
+    id: string;
+    OrderID: string;
+    status: string;
+    total: number;
+    delivery_fee: string;
+    created_at: string;
+    updated_at: string;
+    User: {
+      id: string;
+      name: string;
+      email: string;
+    };
+    Restaurant: {
+      id: string;
+      name: string;
+      location: string;
+      phone?: string;
+      logo?: string;
+    };
+    restaurant_dishe_orders: Array<{
+      id: string;
+      quantity: number;
+      price: string;
+      restaurant_dishes: {
+        id: string;
+        name: string;
+        description: string;
+        image?: string;
+        price: string;
+      };
+    }>;
+    shopper_id: string;
+  } | null;
+}
+
 // GraphQL mutation return type
 interface AddInvoiceResult {
   insert_Invoices: {
@@ -230,6 +308,7 @@ export default async function handler(
     }
 
     const isReelOrder = orderType === "reel";
+    const isRestaurantOrder = orderType === "restaurant";
 
     // Get order details for invoice based on order type
     let orderDetails: any;
@@ -237,6 +316,13 @@ export default async function handler(
       if (isReelOrder) {
         orderDetails = await hasuraClient.request<ReelOrderDetails>(
           GET_REEL_ORDER_DETAILS_FOR_INVOICE,
+          {
+            order_id: orderId,
+          }
+        );
+      } else if (isRestaurantOrder) {
+        orderDetails = await hasuraClient.request<RestaurantOrderDetails>(
+          GET_RESTAURANT_ORDER_DETAILS_FOR_INVOICE,
           {
             order_id: orderId,
           }
@@ -255,6 +341,8 @@ export default async function handler(
 
     const order = isReelOrder
       ? orderDetails.reel_orders_by_pk
+      : isRestaurantOrder
+      ? orderDetails.restaurant_orders_by_pk
       : orderDetails.Orders_by_pk;
 
     if (!order) {
@@ -264,6 +352,8 @@ export default async function handler(
     // Verify the user is authorized to access this order (either as customer or shopper)
     const isShopper = order.shopper_id === session.user.id;
     const isCustomer = isReelOrder
+      ? order.User.id === session.user.id
+      : isRestaurantOrder
       ? order.User.id === session.user.id
       : order.orderedBy.id === session.user.id;
 
@@ -284,8 +374,8 @@ export default async function handler(
       const reel = order.Reel;
 
       itemsTotal = parseFloat(reel.Price);
-      shopName = reel.Restaurant.name;
-      shopAddress = reel.Restaurant.location;
+      shopName = reel.Restaurant?.name || "Reel Order";
+      shopAddress = reel.Restaurant?.location || "From Reel Creator";
 
       // Create invoice items for reel orders
       invoiceItems = [
@@ -300,6 +390,27 @@ export default async function handler(
           type: reel.type,
         },
       ];
+    } else if (isRestaurantOrder) {
+      // For restaurant orders, use the dish orders
+      const dishOrders = order.restaurant_dishe_orders;
+
+      itemsTotal = dishOrders.reduce((total: number, dishOrder: any) => {
+        return total + parseFloat(dishOrder.price) * dishOrder.quantity;
+      }, 0);
+
+      shopName = order.Restaurant.name;
+      shopAddress = order.Restaurant.location;
+
+      // Create invoice items for restaurant orders
+      invoiceItems = dishOrders.map((dishOrder: any) => ({
+        id: dishOrder.id,
+        name: dishOrder.restaurant_dishes.name,
+        quantity: dishOrder.quantity,
+        unit_price: parseFloat(dishOrder.price),
+        total: parseFloat(dishOrder.price) * dishOrder.quantity,
+        unit: "dish",
+        description: dishOrder.restaurant_dishes.description,
+      }));
     } else {
       // For regular orders, use the order items
       const items = order.Order_Items;
@@ -322,7 +433,9 @@ export default async function handler(
       }));
     }
 
-    const serviceFee = parseFloat(order.service_fee);
+    const serviceFee = isRestaurantOrder
+      ? 0
+      : parseFloat(order.service_fee || "0");
     const deliveryFee = parseFloat(order.delivery_fee);
 
     // Create a unique invoice number
@@ -342,12 +455,16 @@ export default async function handler(
     let saveResult;
     try {
       saveResult = await hasuraClient.request<AddInvoiceResult>(ADD_INVOICE, {
-        customer_id: isReelOrder ? order.User.id : order.orderedBy.id,
+        customer_id: isReelOrder
+          ? order.User.id
+          : isRestaurantOrder
+          ? order.User.id
+          : order.orderedBy.id,
         delivery_fee: deliveryFeeStr,
         discount: discountStr,
         invoice_items: invoiceItems,
         invoice_number: invoiceNumber,
-        order_id: isReelOrder ? null : order.id,
+        order_id: isReelOrder || isRestaurantOrder ? null : order.id,
         reel_order_id: isReelOrder ? order.id : null,
         service_fee: serviceFeeStr,
         status: "completed",
@@ -367,8 +484,16 @@ export default async function handler(
       invoiceNumber: invoiceNumber,
       orderId: order.id,
       orderNumber: order.OrderID || order.id.slice(-8),
-      customer: isReelOrder ? order.User.name : order.orderedBy.name,
-      customerEmail: isReelOrder ? order.User.email : order.orderedBy.email,
+      customer: isReelOrder
+        ? order.User.name
+        : isRestaurantOrder
+        ? order.User.name
+        : order.orderedBy.name,
+      customerEmail: isReelOrder
+        ? order.User.email
+        : isRestaurantOrder
+        ? order.User.email
+        : order.orderedBy.email,
       shop: shopName,
       shopAddress: shopAddress,
       dateCreated: new Date(order.created_at).toLocaleString(),
@@ -384,7 +509,13 @@ export default async function handler(
         order.status === "shopping"
           ? itemsTotal
           : itemsTotal + serviceFee + deliveryFee,
-      orderType: isReelOrder ? "reel" : "regular",
+      orderType: isReelOrder
+        ? "reel"
+        : isRestaurantOrder
+        ? "restaurant"
+        : "regular",
+      isReelOrder,
+      isRestaurantOrder,
     };
 
     return res.status(200).json({

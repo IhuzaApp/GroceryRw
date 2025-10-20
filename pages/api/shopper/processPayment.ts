@@ -100,6 +100,21 @@ const CREATE_WALLET_TRANSACTIONS = gql`
   }
 `;
 
+// GraphQL query to check existing refund
+const CHECK_EXISTING_REFUND = gql`
+  query CheckExistingRefund($order_id: uuid!) {
+    Refunds(where: { order_id: { _eq: $order_id } }) {
+      id
+      amount
+      order_id
+      status
+      reason
+      generated_by
+      paid
+    }
+  }
+`;
+
 // GraphQL mutation to create refund record
 const CREATE_REFUND = gql`
   mutation CreateRefund($refund: Refunds_insert_input!) {
@@ -340,31 +355,58 @@ export default async function handler(
     // Handle refund creation first if needed
     if (refundNeeded && refundAmount > 0) {
       try {
-        // Create refund record with all required fields
-        const refundRecord = {
+        // Check if refund already exists for this order
+        const existingRefundResponse = await hasuraClient.request<{
+          Refunds: Array<{
+            id: string;
+            amount: string;
+            order_id: string;
+            status: string;
+            reason: string;
+            generated_by: string;
+            paid: boolean;
+          }>;
+        }>(CHECK_EXISTING_REFUND, {
           order_id: orderId,
-          amount: refundAmount.toString(),
-          status: "pending",
-          reason: refundReason,
-          user_id: orderData.user_id,
-          generated_by: "System",
-          paid: false,
-        };
+        });
 
-        const refundResponse = await hasuraClient.request<RefundResponse>(
-          CREATE_REFUND,
-          {
-            refund: refundRecord,
-          }
-        );
-
-        if (!refundResponse || !refundResponse.insert_Refunds_one) {
-          throw new Error(
-            "Refund creation failed: Empty response from database"
+        if (
+          existingRefundResponse.Refunds &&
+          existingRefundResponse.Refunds.length > 0
+        ) {
+          // Refund already exists, use the existing one
+          refundData = existingRefundResponse.Refunds[0];
+          console.log(
+            `Using existing refund for order ${orderId}:`,
+            refundData.id
           );
-        }
+        } else {
+          // Create new refund record with all required fields
+          const refundRecord = {
+            order_id: orderId,
+            amount: refundAmount.toString(),
+            status: "pending",
+            reason: refundReason,
+            user_id: orderData.user_id,
+            generated_by: "System",
+            paid: false,
+          };
 
-        refundData = refundResponse.insert_Refunds_one;
+          const refundResponse = await hasuraClient.request<RefundResponse>(
+            CREATE_REFUND,
+            {
+              refund: refundRecord,
+            }
+          );
+
+          if (!refundResponse || !refundResponse.insert_Refunds_one) {
+            throw new Error(
+              "Refund creation failed: Empty response from database"
+            );
+          }
+
+          refundData = refundResponse.insert_Refunds_one;
+        }
       } catch (refundError) {
         console.error("Error creating refund record:", refundError);
         // Add more detailed error logging to help diagnose the issue
@@ -413,6 +455,8 @@ export default async function handler(
           type: "payment",
           status: "completed",
           related_order_id: orderId,
+          related_reel_orderId: null,
+          related_restaurant_order_id: null,
           description: description,
         },
       ];
