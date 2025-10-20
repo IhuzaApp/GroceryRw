@@ -178,7 +178,7 @@ export default function UserRecentOrders({
           {[1, 2, 3].map((i) => (
             <div
               key={i}
-              className="mb-4 animate-pulse rounded-xl border border-gray-200 bg-white p-4 shadow-md transition-colors duration-200 dark:border-gray-700 dark:bg-gray-800"
+              className="mb-4 animate-pulse rounded-xl border border-gray-200 bg-transparent p-4 shadow-md transition-colors duration-200 dark:border-gray-700 dark:bg-transparent"
             >
               <div className="mb-2 h-4 w-1/3 rounded bg-gray-200 dark:bg-gray-700"></div>
               <div className="mb-4 h-3 w-1/4 rounded bg-gray-200 dark:bg-gray-700"></div>
@@ -193,7 +193,7 @@ export default function UserRecentOrders({
         visibleOrders.map((order: Order) => (
           <div
             key={order.id}
-            className="mb-4 rounded-xl border border-gray-200 bg-white p-4 shadow-md transition-colors duration-200 dark:border-gray-700 dark:bg-gray-800"
+            className="mb-4 rounded-xl border border-gray-200 bg-transparent p-4 shadow-md transition-colors duration-200 dark:border-gray-700 dark:bg-transparent"
           >
             {/* Shop Profile for Regular Orders */}
             {order.shop && order.orderType === "regular" ? (

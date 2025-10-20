@@ -17,11 +17,11 @@ function MyProfilePage() {
   return (
     <AuthGuard requireAuth={true}>
       <RootLayout>
-        <div className="p-4 md:ml-16">
+        <div className="pb-4 pt-0 md:ml-16 md:px-4 md:pb-4 md:pt-4">
           {/* Adjust ml-* to match your sidebar width */}
-          <div className="container mx-auto">
-            {/* Profile Header */}
-            <div className="mb-6 flex items-center">
+          <div className="md:container md:mx-auto">
+            {/* Profile Header - Hidden on mobile */}
+            <div className="mb-6 hidden md:flex items-center">
               <Link
                 href="/"
                 className="flex items-center text-inherit transition-colors duration-200"
