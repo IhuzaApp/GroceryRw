@@ -149,9 +149,9 @@ const AddPaymentCard: React.FC<AddPaymentCardProps> = ({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 dark:bg-black/60 backdrop-blur-sm p-4">
-      <div className="w-full max-w-md rounded-2xl bg-white dark:bg-gray-900 dark:text-white p-6 shadow-2xl">
+      <div className="w-full max-w-md max-h-[80vh] overflow-y-auto rounded-2xl bg-white dark:bg-gray-900 dark:text-white p-5 shadow-2xl">
         {/* Modal Header */}
-        <div className="-mx-6 -mt-6 mb-6 rounded-t-2xl bg-gradient-to-r from-emerald-500 to-green-600 px-6 py-4 text-white">
+        <div className="-mx-6 -mt-6 mb-6 rounded-t-2xl bg-gradient-to-r from-emerald-500 to-green-600 px-6 py-3 text-white">
           <div className="flex items-center justify-between">
             <h3 className="text-lg font-bold">
               {existingCard ? "Update Payment Card" : "Add Payment Card"}
