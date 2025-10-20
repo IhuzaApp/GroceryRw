@@ -153,7 +153,7 @@ const AddPaymentCard: React.FC<AddPaymentCardProps> = ({
         {/* Modal Header */}
         <div className="-mx-6 -mt-6 mb-6 rounded-t-2xl bg-gradient-to-r from-emerald-500 to-green-600 px-6 py-3 text-white">
           <div className="flex items-center justify-between">
-            <h3 className="text-lg font-bold">
+            <h3 className="text-lg font-bold !text-white">
               {existingCard ? "Update Payment Card" : "Add Payment Card"}
             </h3>
             <button
@@ -196,14 +196,14 @@ const AddPaymentCard: React.FC<AddPaymentCardProps> = ({
                 onClick={() => setShowCamera(false)}
                 className="rounded-xl border border-gray-300 px-4 py-2 text-sm font-semibold text-gray-700 hover:bg-gray-50 transition-colors dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-800"
               >
-                Cancel
+                <span className="!text-white">Cancel</span>
               </button>
               <button
                 type="button"
                 onClick={handleCapture}
                 className="rounded-xl bg-gradient-to-r from-emerald-500 to-green-600 px-4 py-2 text-sm font-semibold text-white shadow-lg hover:shadow-xl transition-all duration-200 hover:scale-[1.02] active:scale-[0.98] focus:outline-none focus:ring-2 focus:ring-emerald-500/50"
               >
-                Capture
+                <span className="!text-white">Capture</span>
               </button>
             </div>
           </div>
@@ -316,7 +316,7 @@ const AddPaymentCard: React.FC<AddPaymentCardProps> = ({
                     d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"
                   />
                 </svg>
-                Take Card Photo
+                <span className="!text-white">Take Card Photo</span>
               </button>
               {cardImage && (
                 <div className="mt-2">
@@ -342,20 +342,22 @@ const AddPaymentCard: React.FC<AddPaymentCardProps> = ({
                 onClick={onClose}
                 className="rounded-xl border border-gray-300 px-4 py-2 text-sm font-semibold text-gray-700 hover:bg-gray-50 transition-colors dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-800"
               >
-                Cancel
+                <span className="!text-white">Cancel</span>
               </button>
               <button
                 type="submit"
                 disabled={loading}
                 className="rounded-xl bg-gradient-to-r from-emerald-500 to-green-600 px-4 py-2 text-sm font-semibold text-white shadow-lg hover:shadow-xl transition-all duration-200 hover:scale-[1.02] active:scale-[0.98] focus:outline-none focus:ring-2 focus:ring-emerald-500/50 disabled:opacity-50"
               >
-                {loading
-                  ? existingCard
-                    ? "Updating..."
-                    : "Adding..."
-                  : existingCard
-                  ? "Update Card"
-                  : "Add Card"}
+                <span className="!text-white">
+                  {loading
+                    ? existingCard
+                      ? "Updating..."
+                      : "Adding..."
+                    : existingCard
+                    ? "Update Card"
+                    : "Add Card"}
+                </span>
               </button>
             </div>
           </form>
