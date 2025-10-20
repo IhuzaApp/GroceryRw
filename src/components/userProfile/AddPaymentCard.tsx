@@ -148,34 +148,37 @@ const AddPaymentCard: React.FC<AddPaymentCardProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
-      <div className="w-full max-w-md rounded-lg bg-white p-6 shadow-xl">
-        <div className="mb-4 flex items-center justify-between">
-          <h3 className="text-lg font-bold">
-            {existingCard ? "Update Payment Card" : "Add Payment Card"}
-          </h3>
-          <button
-            onClick={onClose}
-            className="text-gray-500 hover:text-gray-700"
-          >
-            <svg
-              className="h-6 w-6"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 dark:bg-black/60 backdrop-blur-sm p-4">
+      <div className="w-full max-w-md rounded-2xl bg-white dark:bg-gray-900 dark:text-white p-6 shadow-2xl">
+        {/* Modal Header */}
+        <div className="-mx-6 -mt-6 mb-6 rounded-t-2xl bg-gradient-to-r from-emerald-500 to-green-600 px-6 py-4 text-white">
+          <div className="flex items-center justify-between">
+            <h3 className="text-lg font-bold">
+              {existingCard ? "Update Payment Card" : "Add Payment Card"}
+            </h3>
+            <button
+              onClick={onClose}
+              className="rounded-full bg-white/10 p-1.5 text-white hover:bg-white/20 transition-colors"
             >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M6 18L18 6M6 6l12 12"
-              />
-            </svg>
-          </button>
+              <svg
+                className="h-5 w-5"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M6 18L18 6M6 6l12 12"
+                />
+              </svg>
+            </button>
+          </div>
         </div>
 
         {error && (
-          <div className="mb-4 rounded-md bg-red-50 p-3 text-sm text-red-600">
+          <div className="mb-4 rounded-xl border border-red-200 bg-red-50 p-3 text-sm text-red-700 dark:border-red-700/50 dark:bg-red-900/30 dark:text-red-300">
             {error}
           </div>
         )}
@@ -185,20 +188,20 @@ const AddPaymentCard: React.FC<AddPaymentCardProps> = ({
             <Webcam
               ref={webcamRef}
               screenshotFormat="image/jpeg"
-              className="rounded-lg"
+              className="rounded-xl shadow-sm"
             />
             <div className="mt-4 flex justify-end gap-2">
               <button
                 type="button"
                 onClick={() => setShowCamera(false)}
-                className="rounded-md border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
+                className="rounded-xl border border-gray-300 px-4 py-2 text-sm font-semibold text-gray-700 hover:bg-gray-50 transition-colors dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-800"
               >
                 Cancel
               </button>
               <button
                 type="button"
                 onClick={handleCapture}
-                className="rounded-md bg-green-600 px-4 py-2 text-sm font-medium text-white hover:bg-green-700 dark:!bg-green-600 dark:!text-white dark:hover:!bg-green-700"
+                className="rounded-xl bg-gradient-to-r from-emerald-500 to-green-600 px-4 py-2 text-sm font-semibold text-white shadow-lg hover:shadow-xl transition-all duration-200 hover:scale-[1.02] active:scale-[0.98] focus:outline-none focus:ring-2 focus:ring-emerald-500/50"
               >
                 Capture
               </button>
@@ -207,7 +210,7 @@ const AddPaymentCard: React.FC<AddPaymentCardProps> = ({
         ) : (
           <form onSubmit={handleSubmit}>
             <div className="mb-4">
-              <label className="mb-1 block text-sm font-medium text-gray-700">
+              <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">
                 Card Number
               </label>
               <input
@@ -222,14 +225,14 @@ const AddPaymentCard: React.FC<AddPaymentCardProps> = ({
                       .trim(),
                   })
                 }
-                className="w-full rounded-md border border-gray-300 p-2 focus:border-green-500 focus:outline-none"
+                className="w-full rounded-xl border-0 bg-gray-50 p-3 shadow-sm focus:ring-2 focus:ring-emerald-500 focus:outline-none text-gray-900 placeholder-gray-400 dark:bg-gray-800 dark:text-white dark:placeholder-gray-500"
                 placeholder="1234 5678 9012 3456"
                 maxLength={19}
               />
             </div>
 
             <div className="mb-4">
-              <label className="mb-1 block text-sm font-medium text-gray-700">
+              <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">
                 Card Holder Name
               </label>
               <input
@@ -238,14 +241,14 @@ const AddPaymentCard: React.FC<AddPaymentCardProps> = ({
                 onChange={(e) =>
                   setCardForm({ ...cardForm, cardHolder: e.target.value })
                 }
-                className="w-full rounded-md border border-gray-300 p-2 focus:border-green-500 focus:outline-none"
+                className="w-full rounded-xl border-0 bg-gray-50 p-3 shadow-sm focus:ring-2 focus:ring-emerald-500 focus:outline-none text-gray-900 placeholder-gray-400 dark:bg-gray-800 dark:text-white dark:placeholder-gray-500"
                 placeholder="John Doe"
               />
             </div>
 
             <div className="mb-4 grid grid-cols-2 gap-4">
               <div>
-                <label className="mb-1 block text-sm font-medium text-gray-700">
+                <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">
                   Expiry Date
                 </label>
                 <input
@@ -263,13 +266,13 @@ const AddPaymentCard: React.FC<AddPaymentCardProps> = ({
                       });
                     }
                   }}
-                  className="w-full rounded-md border border-gray-300 p-2 focus:border-green-500 focus:outline-none"
+                  className="w-full rounded-xl border-0 bg-gray-50 p-3 shadow-sm focus:ring-2 focus:ring-emerald-500 focus:outline-none text-gray-900 placeholder-gray-400 dark:bg-gray-800 dark:text-white dark:placeholder-gray-500"
                   placeholder="MM/YY"
                   maxLength={5}
                 />
               </div>
               <div>
-                <label className="mb-1 block text-sm font-medium text-gray-700">
+                <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">
                   CVV
                 </label>
                 <input
@@ -281,7 +284,7 @@ const AddPaymentCard: React.FC<AddPaymentCardProps> = ({
                       cvv: e.target.value.replace(/\D/g, ""),
                     })
                   }
-                  className="w-full rounded-md border border-gray-300 p-2 focus:border-green-500 focus:outline-none"
+                  className="w-full rounded-xl border-0 bg-gray-50 p-3 shadow-sm focus:ring-2 focus:ring-emerald-500 focus:outline-none text-gray-900 placeholder-gray-400 dark:bg-gray-800 dark:text-white dark:placeholder-gray-500"
                   placeholder="123"
                   maxLength={4}
                 />
@@ -292,7 +295,7 @@ const AddPaymentCard: React.FC<AddPaymentCardProps> = ({
               <button
                 type="button"
                 onClick={() => setShowCamera(true)}
-                className="inline-flex items-center rounded-md border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
+                className="inline-flex items-center rounded-xl border border-emerald-200 px-4 py-2 text-sm font-semibold text-emerald-700 hover:bg-emerald-50 transition-colors dark:border-emerald-700 dark:text-emerald-300 dark:hover:bg-emerald-900/30"
               >
                 <svg
                   className="mr-2 h-4 w-4"
@@ -325,7 +328,7 @@ const AddPaymentCard: React.FC<AddPaymentCardProps> = ({
                   <button
                     type="button"
                     onClick={() => setCardImage(null)}
-                    className="mt-2 text-sm text-red-600 hover:text-red-700"
+                    className="mt-2 text-sm font-semibold text-red-600 hover:text-red-700"
                   >
                     Remove photo
                   </button>
@@ -337,14 +340,14 @@ const AddPaymentCard: React.FC<AddPaymentCardProps> = ({
               <button
                 type="button"
                 onClick={onClose}
-                className="rounded-md border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
+                className="rounded-xl border border-gray-300 px-4 py-2 text-sm font-semibold text-gray-700 hover:bg-gray-50 transition-colors dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-800"
               >
                 Cancel
               </button>
               <button
                 type="submit"
                 disabled={loading}
-                className="rounded-md bg-green-600 px-4 py-2 text-sm font-medium text-white hover:bg-green-700 disabled:opacity-50 dark:!bg-green-600 dark:!text-white dark:hover:!bg-green-700"
+                className="rounded-xl bg-gradient-to-r from-emerald-500 to-green-600 px-4 py-2 text-sm font-semibold text-white shadow-lg hover:shadow-xl transition-all duration-200 hover:scale-[1.02] active:scale-[0.98] focus:outline-none focus:ring-2 focus:ring-emerald-500/50 disabled:opacity-50"
               >
                 {loading
                   ? existingCard

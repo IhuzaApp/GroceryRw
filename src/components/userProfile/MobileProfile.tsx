@@ -170,7 +170,7 @@ export default function MobileProfile({
         </div>
 
         {/* Full-page content */}
-        <div className="min-h-screen rounded-t-3xl -mt-4 relative z-10 shadow-2xl">
+        <div className="min-h-screen -mt-4 relative z-10">
           <div className="py-6">
             {activeTab === "account" && <UserAccount />}
             {activeTab === "orders" && (
