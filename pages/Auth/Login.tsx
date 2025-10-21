@@ -52,56 +52,117 @@ export default function LoginPage() {
 
   return (
     <ThemeProvider>
-      <div className="flex min-h-screen bg-white text-gray-900 transition-colors duration-200 dark:bg-gray-900 dark:text-white">
-        {/* Left Side - Login Form */}
-        <div className="flex w-full flex-col items-center justify-center p-8 lg:w-1/2 lg:p-16">
-          <div className="w-full max-w-md">
-            {/* Logo */}
-            <ThemeAwareLogo />
-
-            {/* Heading */}
-            <h1 className="mb-2 text-3xl font-bold">Welcome back</h1>
-            <p className="mb-8 text-gray-500">
-              Please enter your login details below
-            </p>
-
-            <UserLogin />
-
-            <div className="mt-8 text-center">
-              <p className="text-gray-600">
-                Don&apos;t have an account?{" "}
-                <Link
-                  href="/Auth/Register"
-                  className="font-medium text-green-600 hover:text-green-800"
-                >
-                  Sign up for free
-                </Link>
-              </p>
-            </div>
-          </div>
+      <div className="h-screen overflow-hidden bg-gradient-to-br from-green-50 via-white to-blue-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
+        {/* Mobile Header */}
+        <div className="flex items-center justify-center p-3 lg:hidden">
+          <ThemeAwareLogo />
         </div>
 
-        {/* Right Side - Image */}
-        <div className="relative hidden bg-gray-100 lg:block lg:w-1/2">
-          <div className="absolute inset-0 bg-black bg-opacity-20"></div>
-          <Image
-            src="/assets/images/shopping.jpg"
-            alt="Grocery shopping"
-            fill
-            className="object-cover"
-            quality={75}
-            sizes="(max-width: 768px) 0vw, 50vw"
-            placeholder="blur"
-            blurDataURL="data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAYEBQYFBAYGBQYHBwYIChAKCgkJChQODwwQFxQYGBcUFhYaHSUfGhsjHBYWICwgIyYnKSopGR8tMC0oMCUoKSj/2wBDAQcHBwoIChMKChMoGhYaKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCj/wAARCAABAAEDASIAAhEBAxEB/8QAFQABAQAAAAAAAAAAAAAAAAAAAAv/xAAUEAEAAAAAAAAAAAAAAAAAAAAA/8QAFQEBAQAAAAAAAAAAAAAAAAAAAAX/xAAUEQEAAAAAAAAAAAAAAAAAAAAA/9oADAMBAAIRAxEAPwCdABmX/9k="
-          />
-          <div className="absolute bottom-8 left-8 max-w-md rounded-lg bg-white bg-opacity-90 p-6 dark:bg-gray-800 dark:bg-opacity-90">
-            <h2 className="mb-2 text-xl font-bold text-gray-900 dark:text-white">
-              Fresh groceries delivered to your door
-            </h2>
-            <p className="text-gray-600 dark:text-gray-300">
-              Shop from a wide selection of fresh produce, pantry essentials,
-              and household items with fast delivery.
-            </p>
+        <div className="flex h-full lg:h-screen">
+          {/* Left Side - Login Form */}
+          <div className="flex w-full flex-col items-center justify-start px-4 py-4 overflow-y-auto lg:justify-center lg:w-1/2 lg:px-16 lg:py-8">
+            <div className="w-full max-w-md">
+              {/* Desktop Logo */}
+              <div className="hidden lg:block">
+                <ThemeAwareLogo />
+              </div>
+
+              {/* Heading */}
+              <div className="mb-4 text-center lg:mb-8 lg:text-left">
+                <h1 className="mb-2 text-2xl font-bold text-gray-900 dark:text-white lg:text-4xl">
+                  Welcome back
+                </h1>
+                <p className="text-sm text-gray-600 dark:text-gray-400 lg:text-base">
+                  Sign in to your account to continue shopping
+                </p>
+              </div>
+
+              {/* Login Form */}
+              <div className="rounded-2xl bg-white/80 p-4 shadow-xl backdrop-blur-sm dark:bg-gray-800/80 lg:p-8">
+                <UserLogin />
+              </div>
+
+              {/* Footer Links */}
+              <div className="mt-4 text-center lg:mt-6">
+                <p className="text-sm text-gray-600 dark:text-gray-400">
+                  Don&apos;t have an account?{" "}
+                  <Link
+                    href="/Auth/Register"
+                    className="font-semibold text-green-600 hover:text-green-700 dark:text-green-400 dark:hover:text-green-300 transition-colors duration-200"
+                  >
+                    Sign up for free
+                  </Link>
+                </p>
+              </div>
+            </div>
+          </div>
+
+          {/* Right Side - Image with Gradient Overlay */}
+          <div className="relative hidden bg-gray-100 lg:block lg:w-1/2">
+            {/* Multiple Gradient Overlays for Depth */}
+            <div className="absolute inset-0 bg-gradient-to-br from-green-600/60 via-green-500/50 to-blue-600/60"></div>
+            <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-black/20"></div>
+            <div className="absolute inset-0 bg-gradient-to-r from-black/30 via-black/50 to-black/70"></div>
+            
+            {/* Background Image */}
+            <Image
+              src="/assets/images/shopping.jpg"
+              alt="Grocery shopping"
+              fill
+              className="object-cover"
+              quality={75}
+              sizes="(max-width: 768px) 0vw, 50vw"
+              placeholder="blur"
+              blurDataURL="data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAYEBQYFBAYGBQYHBwYIChAKCgkJChQODwwQFxQYGBcUFhYaHSUfGhsjHBYWICwgIyYnKSopGR8tMC0oMCUoKSj/2wBDAQcHBwoIChMKChMoGhYaKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCj/wAARCAABAAEDASIAAhEBAxEB/8QAFQABAQAAAAAAAAAAAAAAAAAAAAv/xAAUEAEAAAAAAAAAAAAAAAAAAAAA/8QAFQEBAQAAAAAAAAAAAAAAAAAAAAX/xAAUEQEAAAAAAAAAAAAAAAAAAAAA/9oADAMBAAIRAxEAPwCdABmX/9k="
+            />
+            
+            {/* Content Overlay */}
+            <div className="absolute inset-0 flex items-center justify-center p-8">
+              <div className="text-center text-white max-w-md">
+                <div className="mb-8">
+                  <div className="mx-auto mb-6 h-20 w-20 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center">
+                    <svg className="h-10 w-10 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 3h2l.4 2M7 13h10l4-8H5.4m0 0L7 13m0 0l-2.5 5M7 13l2.5 5m6-5v6a2 2 0 01-2 2H9a2 2 0 01-2-2v-6m8 0V9a2 2 0 00-2-2H9a2 2 0 00-2 2v4.01" />
+                    </svg>
+                  </div>
+                  <h2 className="mb-4 text-3xl font-bold drop-shadow-lg">
+                    Fresh groceries delivered to your door
+                  </h2>
+                  <p className="text-lg text-white/90 drop-shadow-md">
+                    Shop from a wide selection of fresh produce, pantry essentials,
+                    and household items with fast delivery.
+                  </p>
+                </div>
+                
+                {/* Feature List */}
+                <div className="grid grid-cols-1 gap-4 text-left max-w-sm mx-auto">
+                  <div className="flex items-center space-x-3 bg-white/10 backdrop-blur-sm rounded-lg p-3">
+                    <div className="flex-shrink-0 w-8 h-8 bg-white/20 rounded-full flex items-center justify-center">
+                      <svg className="w-4 h-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                      </svg>
+                    </div>
+                    <span className="text-white/90 font-medium">Fast delivery in 30 minutes</span>
+                  </div>
+                  <div className="flex items-center space-x-3 bg-white/10 backdrop-blur-sm rounded-lg p-3">
+                    <div className="flex-shrink-0 w-8 h-8 bg-white/20 rounded-full flex items-center justify-center">
+                      <svg className="w-4 h-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                      </svg>
+                    </div>
+                    <span className="text-white/90 font-medium">Fresh quality guaranteed</span>
+                  </div>
+                  <div className="flex items-center space-x-3 bg-white/10 backdrop-blur-sm rounded-lg p-3">
+                    <div className="flex-shrink-0 w-8 h-8 bg-white/20 rounded-full flex items-center justify-center">
+                      <svg className="w-4 h-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                      </svg>
+                    </div>
+                    <span className="text-white/90 font-medium">24/7 customer support</span>
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </div>
