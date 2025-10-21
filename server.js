@@ -168,6 +168,8 @@ if (dev) {
   cron.schedule("0 * * * *", async () => {
     try {
       console.log("🧹 Running automatic cleanup in development...");
+      // Set the correct API URL for development
+      process.env.API_BASE_URL = `http://localhost:${port}`;
       const { cleanupSystemLogs } = require("./scripts/cleanup-logs.js");
       await cleanupSystemLogs();
     } catch (error) {
