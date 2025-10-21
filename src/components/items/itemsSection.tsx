@@ -258,9 +258,7 @@ export default function ItemsSection({
 
         {/* Category Filter Section - Mobile Only */}
         <div className="space-y-3 sm:hidden">
-
-          
-          <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-thin scrollbar-thumb-gray-300 dark:scrollbar-thumb-gray-600">
+          <div className="scrollbar-thin scrollbar-thumb-gray-300 dark:scrollbar-thumb-gray-600 flex gap-2 overflow-x-auto pb-2">
             <button
               onClick={() => setActiveCategory("all")}
               className={`flex-shrink-0 rounded-full px-3 py-1.5 text-xs font-medium transition-all duration-200 ${

@@ -174,7 +174,7 @@ if (dev) {
       console.error("❌ Development cleanup failed:", error.message);
     }
   });
-  
+
   console.log("📅 Development cleanup scheduled to run every hour");
 }
 

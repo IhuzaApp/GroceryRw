@@ -89,9 +89,15 @@ export default async function handler(
   const expectedToken = process.env.CLEANUP_API_TOKEN;
 
   // Skip authentication in development mode (localhost)
-  const isDevelopment = req.headers.host?.includes('localhost') || req.headers.host?.includes('127.0.0.1');
-  
-  if (expectedToken && !isDevelopment && authHeader !== `Bearer ${expectedToken}`) {
+  const isDevelopment =
+    req.headers.host?.includes("localhost") ||
+    req.headers.host?.includes("127.0.0.1");
+
+  if (
+    expectedToken &&
+    !isDevelopment &&
+    authHeader !== `Bearer ${expectedToken}`
+  ) {
     return res.status(401).json({ error: "Unauthorized" });
   }
 
