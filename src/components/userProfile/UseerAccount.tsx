@@ -2,8 +2,10 @@ import React, { useState, useEffect } from "react";
 import { Button } from "rsuite";
 import UserPaymentCards from "./UserPaymentCards";
 import toast from "react-hot-toast";
+import { useMediaQuery } from "../../hooks/useMediaQuery";
 
 export default function UserAccount() {
+  const isMobile = useMediaQuery("(max-width: 768px)");
   const [user, setUser] = useState({
     name: "",
     email: "",
@@ -156,9 +158,9 @@ export default function UserAccount() {
 
   return (
     <>
-      <UserPaymentCards />
+      {!isMobile && <UserPaymentCards />}
 
-      <div className="hidden sm:block">
+      <div className="block">
         <h3 className="mb-4 mt-3 text-lg font-bold text-inherit">
           Account Information
         </h3>
