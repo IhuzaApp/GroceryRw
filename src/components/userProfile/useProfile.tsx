@@ -237,14 +237,14 @@ export default function UserProfile() {
 
   // Show loading state while determining screen size
   if (loading) {
-  return (
-      <div className="flex items-center justify-center min-h-screen">
+    return (
+      <div className="flex min-h-screen items-center justify-center">
         <div className="text-center">
-          <div className="h-24 w-24 animate-pulse rounded-full bg-gray-200 mx-auto mb-4" />
-          <div className="h-6 w-32 animate-pulse rounded bg-gray-200 mx-auto mb-2" />
-          <div className="h-4 w-24 animate-pulse rounded bg-gray-200 mx-auto" />
-              </div>
-            </div>
+          <div className="mx-auto mb-4 h-24 w-24 animate-pulse rounded-full bg-gray-200" />
+          <div className="mx-auto mb-2 h-6 w-32 animate-pulse rounded bg-gray-200" />
+          <div className="mx-auto h-4 w-24 animate-pulse rounded bg-gray-200" />
+        </div>
+      </div>
     );
   }
 

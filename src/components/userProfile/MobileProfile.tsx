@@ -136,7 +136,7 @@ export default function MobileProfile({
           }}
         >
           {/* Background Image */}
-          <div 
+          <div
             className="absolute inset-0 bg-cover bg-center bg-no-repeat"
             style={{
               backgroundImage: "url(/assets/images/mobileheaderbg.jpg)",
@@ -145,32 +145,44 @@ export default function MobileProfile({
             {/* Overlay for better text readability */}
             <div className="absolute inset-0 bg-black/20"></div>
           </div>
-          
+
           {/* Header Content - Back button and section title */}
           <div className="relative z-10 flex h-full items-center px-6">
             <div className="flex items-center space-x-4">
               <button
                 onClick={handleBack}
-                className="flex items-center !text-white hover:!text-white transition-colors duration-200"
+                className="flex items-center !text-white transition-colors duration-200 hover:!text-white"
               >
-                <div className="h-10 w-10 rounded-full bg-white/20 flex items-center justify-center backdrop-blur-sm">
-                  <svg className="h-5 w-5 !text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                <div className="flex h-10 w-10 items-center justify-center rounded-full bg-white/20 backdrop-blur-sm">
+                  <svg
+                    className="h-5 w-5 !text-white"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M15 19l-7-7 7-7"
+                    />
                   </svg>
                 </div>
               </button>
               <div>
-                <h1 className="text-xl font-bold !text-white capitalize drop-shadow-sm">
+                <h1 className="text-xl font-bold capitalize !text-white drop-shadow-sm">
                   {activeTab}
                 </h1>
-                <p className="!text-white text-sm">Manage your {activeTab} settings</p>
+                <p className="text-sm !text-white">
+                  Manage your {activeTab} settings
+                </p>
               </div>
             </div>
           </div>
         </div>
 
         {/* Full-page content */}
-        <div className="-mt-4 relative z-10">
+        <div className="relative z-10 -mt-4">
           <div className="py-4">
             {activeTab === "account" && <UserAccount />}
             {activeTab === "orders" && (
@@ -203,7 +215,7 @@ export default function MobileProfile({
         }}
       >
         {/* Background Image */}
-        <div 
+        <div
           className="absolute inset-0 bg-cover bg-center bg-no-repeat"
           style={{
             backgroundImage: "url(/assets/images/mobileheaderbg.jpg)",
@@ -212,13 +224,13 @@ export default function MobileProfile({
           {/* Overlay for better text readability */}
           <div className="absolute inset-0 bg-black/20"></div>
         </div>
-        
+
         {/* Header Content - Profile Info */}
         <div className="relative z-10 flex h-full items-center px-6">
           {/* Profile Header */}
           <div className="flex items-center space-x-4">
             <div className="relative">
-              <div className="h-20 w-20 overflow-hidden rounded-full border-4 border-white/20 bg-white/10 backdrop-blur-sm shadow-xl">
+              <div className="h-20 w-20 overflow-hidden rounded-full border-4 border-white/20 bg-white/10 shadow-xl backdrop-blur-sm">
                 <Image
                   src={
                     user?.profile_picture ||
@@ -235,14 +247,14 @@ export default function MobileProfile({
               {/* Online indicator */}
               <div className="absolute -bottom-1 -right-1 h-6 w-6 rounded-full border-2 border-white bg-green-500"></div>
             </div>
-            <div className="flex-1 min-w-0">
-              <h1 className="text-2xl font-bold !text-white truncate drop-shadow-sm">
+            <div className="min-w-0 flex-1">
+              <h1 className="truncate text-2xl font-bold !text-white drop-shadow-sm">
                 {user?.name || "Loading..."}
               </h1>
-              <p className="!text-white truncate text-sm">
+              <p className="truncate text-sm !text-white">
                 {user?.email || "Loading..."}
               </p>
-              <div className="flex items-center mt-1">
+              <div className="mt-1 flex items-center">
                 <div className="flex items-center space-x-1">
                   <div className="h-2 w-2 rounded-full bg-green-400"></div>
                   <span className="text-xs !text-white">Active</span>
@@ -309,30 +321,58 @@ export default function MobileProfile({
       )}
 
       {/* Stats Cards */}
-      <div className="px-4 -mt-12 mb-4">
+      <div className="-mt-12 mb-4 px-4">
         <div className="grid grid-cols-2 gap-3">
-          <div className="bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm rounded-2xl p-4 shadow-lg border border-white/20">
+          <div className="rounded-2xl border border-white/20 bg-white/90 p-4 shadow-lg backdrop-blur-sm dark:bg-gray-800/90">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-2xl font-bold text-gray-900 dark:text-white">{orderCount}</p>
-                <p className="text-sm text-gray-600 dark:text-gray-400">Total Orders</p>
+                <p className="text-2xl font-bold text-gray-900 dark:text-white">
+                  {orderCount}
+                </p>
+                <p className="text-sm text-gray-600 dark:text-gray-400">
+                  Total Orders
+                </p>
               </div>
-              <div className="h-12 w-12 rounded-full bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center">
-                <svg className="h-6 w-6 text-blue-600 dark:text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+              <div className="flex h-12 w-12 items-center justify-center rounded-full bg-blue-100 dark:bg-blue-900/30">
+                <svg
+                  className="h-6 w-6 text-blue-600 dark:text-blue-400"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"
+                  />
                 </svg>
               </div>
             </div>
           </div>
-          <div className="bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm rounded-2xl p-4 shadow-lg border border-white/20">
+          <div className="rounded-2xl border border-white/20 bg-white/90 p-4 shadow-lg backdrop-blur-sm dark:bg-gray-800/90">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-2xl font-bold text-gray-900 dark:text-white">{formatCurrency(walletBalance)}</p>
-                <p className="text-sm text-gray-600 dark:text-gray-400">Wallet Balance</p>
+                <p className="text-2xl font-bold text-gray-900 dark:text-white">
+                  {formatCurrency(walletBalance)}
+                </p>
+                <p className="text-sm text-gray-600 dark:text-gray-400">
+                  Wallet Balance
+                </p>
               </div>
-              <div className="h-12 w-12 rounded-full bg-green-100 dark:bg-green-900/30 flex items-center justify-center">
-                <svg className="h-6 w-6 text-green-600 dark:text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1" />
+              <div className="flex h-12 w-12 items-center justify-center rounded-full bg-green-100 dark:bg-green-900/30">
+                <svg
+                  className="h-6 w-6 text-green-600 dark:text-green-400"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1"
+                  />
                 </svg>
               </div>
             </div>
@@ -345,26 +385,50 @@ export default function MobileProfile({
         {/* Orders */}
         <button
           onClick={() => handleNavigation("orders")}
-          className="w-full bg-white dark:bg-gray-800 rounded-none p-3 shadow-lg hover:shadow-xl transition-all duration-200 hover:scale-[1.02] active:scale-[0.98] border border-gray-100 dark:border-gray-700"
+          className="w-full rounded-none border border-gray-100 bg-white p-3 shadow-lg transition-all duration-200 hover:scale-[1.02] hover:shadow-xl active:scale-[0.98] dark:border-gray-700 dark:bg-gray-800"
         >
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-4">
-              <div className="h-12 w-12 rounded-2xl bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center shadow-lg">
-                <svg className="h-6 w-6 !text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+              <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-blue-500 to-blue-600 shadow-lg">
+                <svg
+                  className="h-6 w-6 !text-white"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"
+                  />
                 </svg>
               </div>
               <div className="text-left">
-                <p className="text-lg font-semibold text-gray-900 dark:text-white">Orders</p>
-                <p className="text-sm text-gray-500 dark:text-gray-400">View your order history</p>
+                <p className="text-lg font-semibold text-gray-900 dark:text-white">
+                  Orders
+                </p>
+                <p className="text-sm text-gray-500 dark:text-gray-400">
+                  View your order history
+                </p>
               </div>
             </div>
             <div className="flex items-center space-x-2">
-              <span className="bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 text-xs font-medium px-2 py-1 rounded-full">
+              <span className="rounded-full bg-blue-100 px-2 py-1 text-xs font-medium text-blue-600 dark:bg-blue-900/30 dark:text-blue-400">
                 {orderCount}
               </span>
-              <svg className="h-5 w-5 !text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+              <svg
+                className="h-5 w-5 !text-gray-400"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M9 5l7 7-7 7"
+                />
               </svg>
             </div>
           </div>
@@ -373,25 +437,54 @@ export default function MobileProfile({
         {/* Addresses */}
         <button
           onClick={() => handleNavigation("addresses")}
-          className="w-full bg-white dark:bg-gray-800 rounded-none p-3 shadow-lg hover:shadow-xl transition-all duration-200 hover:scale-[1.02] active:scale-[0.98] border border-gray-100 dark:border-gray-700"
+          className="w-full rounded-none border border-gray-100 bg-white p-3 shadow-lg transition-all duration-200 hover:scale-[1.02] hover:shadow-xl active:scale-[0.98] dark:border-gray-700 dark:bg-gray-800"
         >
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-4">
-              <div className="h-12 w-12 rounded-2xl bg-gradient-to-br from-green-500 to-green-600 flex items-center justify-center shadow-lg">
-                <svg className="h-6 w-6 !text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+              <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-green-500 to-green-600 shadow-lg">
+                <svg
+                  className="h-6 w-6 !text-white"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"
+                  />
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"
+                  />
                 </svg>
               </div>
               <div className="text-left">
-                <p className="text-lg font-semibold text-gray-900 dark:text-white">Addresses</p>
+                <p className="text-lg font-semibold text-gray-900 dark:text-white">
+                  Addresses
+                </p>
                 <p className="text-sm text-gray-500 dark:text-gray-400">
-                  {selectedAddr || defaultAddr ? "Manage your addresses" : "Add your address"}
+                  {selectedAddr || defaultAddr
+                    ? "Manage your addresses"
+                    : "Add your address"}
                 </p>
               </div>
             </div>
-            <svg className="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+            <svg
+              className="h-5 w-5 text-gray-400"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M9 5l7 7-7 7"
+              />
             </svg>
           </div>
         </button>
@@ -399,23 +492,52 @@ export default function MobileProfile({
         {/* Account Settings */}
         <button
           onClick={() => handleNavigation("account")}
-          className="w-full bg-white dark:bg-gray-800 rounded-none p-3 shadow-lg hover:shadow-xl transition-all duration-200 hover:scale-[1.02] active:scale-[0.98] border border-gray-100 dark:border-gray-700"
+          className="w-full rounded-none border border-gray-100 bg-white p-3 shadow-lg transition-all duration-200 hover:scale-[1.02] hover:shadow-xl active:scale-[0.98] dark:border-gray-700 dark:bg-gray-800"
         >
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-4">
-              <div className="h-12 w-12 rounded-2xl bg-gradient-to-br from-purple-500 to-purple-600 flex items-center justify-center shadow-lg">
-                <svg className="h-6 w-6 !text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+              <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-purple-500 to-purple-600 shadow-lg">
+                <svg
+                  className="h-6 w-6 !text-white"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"
+                  />
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
+                  />
                 </svg>
               </div>
               <div className="text-left">
-                <p className="text-lg font-semibold text-gray-900 dark:text-white">Account</p>
-                <p className="text-sm text-gray-500 dark:text-gray-400">Manage your account settings</p>
+                <p className="text-lg font-semibold text-gray-900 dark:text-white">
+                  Account
+                </p>
+                <p className="text-sm text-gray-500 dark:text-gray-400">
+                  Manage your account settings
+                </p>
               </div>
             </div>
-            <svg className="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+            <svg
+              className="h-5 w-5 text-gray-400"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M9 5l7 7-7 7"
+              />
             </svg>
           </div>
         </button>
@@ -423,22 +545,46 @@ export default function MobileProfile({
         {/* Payment */}
         <button
           onClick={() => handleNavigation("payment")}
-          className="w-full bg-white dark:bg-gray-800 rounded-none p-3 shadow-lg hover:shadow-xl transition-all duration-200 hover:scale-[1.02] active:scale-[0.98] border border-gray-100 dark:border-gray-700"
+          className="w-full rounded-none border border-gray-100 bg-white p-3 shadow-lg transition-all duration-200 hover:scale-[1.02] hover:shadow-xl active:scale-[0.98] dark:border-gray-700 dark:bg-gray-800"
         >
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-4">
-              <div className="h-12 w-12 rounded-2xl bg-gradient-to-br from-yellow-500 to-orange-500 flex items-center justify-center shadow-lg">
-                <svg className="h-6 w-6 !text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
+              <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-yellow-500 to-orange-500 shadow-lg">
+                <svg
+                  className="h-6 w-6 !text-white"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"
+                  />
                 </svg>
               </div>
               <div className="text-left">
-                <p className="text-lg font-semibold text-gray-900 dark:text-white">Payment</p>
-                <p className="text-sm text-gray-500 dark:text-gray-400">Manage payment methods</p>
+                <p className="text-lg font-semibold text-gray-900 dark:text-white">
+                  Payment
+                </p>
+                <p className="text-sm text-gray-500 dark:text-gray-400">
+                  Manage payment methods
+                </p>
               </div>
             </div>
-            <svg className="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+            <svg
+              className="h-5 w-5 text-gray-400"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M9 5l7 7-7 7"
+              />
             </svg>
           </div>
         </button>
@@ -446,22 +592,46 @@ export default function MobileProfile({
         {/* Preferences */}
         <button
           onClick={() => handleNavigation("preferences")}
-          className="w-full bg-white dark:bg-gray-800 rounded-none p-3 shadow-lg hover:shadow-xl transition-all duration-200 hover:scale-[1.02] active:scale-[0.98] border border-gray-100 dark:border-gray-700"
+          className="w-full rounded-none border border-gray-100 bg-white p-3 shadow-lg transition-all duration-200 hover:scale-[1.02] hover:shadow-xl active:scale-[0.98] dark:border-gray-700 dark:bg-gray-800"
         >
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-4">
-              <div className="h-12 w-12 rounded-2xl bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center shadow-lg">
-                <svg className="h-6 w-6 !text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 100 4m0-4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 100 4m0-4v2m0-6V4" />
+              <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-indigo-500 to-purple-600 shadow-lg">
+                <svg
+                  className="h-6 w-6 !text-white"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 100 4m0-4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 100 4m0-4v2m0-6V4"
+                  />
                 </svg>
               </div>
               <div className="text-left">
-                <p className="text-lg font-semibold text-gray-900 dark:text-white">Preferences</p>
-                <p className="text-sm text-gray-500 dark:text-gray-400">Customize your experience</p>
+                <p className="text-lg font-semibold text-gray-900 dark:text-white">
+                  Preferences
+                </p>
+                <p className="text-sm text-gray-500 dark:text-gray-400">
+                  Customize your experience
+                </p>
               </div>
             </div>
-            <svg className="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+            <svg
+              className="h-5 w-5 text-gray-400"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M9 5l7 7-7 7"
+              />
             </svg>
           </div>
         </button>
@@ -469,26 +639,50 @@ export default function MobileProfile({
         {/* Wallet */}
         <button
           onClick={() => handleNavigation("wallet")}
-          className="w-full bg-white dark:bg-gray-800 rounded-none p-3 shadow-lg hover:shadow-xl transition-all duration-200 hover:scale-[1.02] active:scale-[0.98] border border-gray-100 dark:border-gray-700"
+          className="w-full rounded-none border border-gray-100 bg-white p-3 shadow-lg transition-all duration-200 hover:scale-[1.02] hover:shadow-xl active:scale-[0.98] dark:border-gray-700 dark:bg-gray-800"
         >
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-4">
-              <div className="h-12 w-12 rounded-2xl bg-gradient-to-br from-emerald-500 to-green-600 flex items-center justify-center shadow-lg">
-                <svg className="h-6 w-6 !text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1" />
+              <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-emerald-500 to-green-600 shadow-lg">
+                <svg
+                  className="h-6 w-6 !text-white"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1"
+                  />
                 </svg>
               </div>
               <div className="text-left">
-                <p className="text-lg font-semibold text-gray-900 dark:text-white">Wallet</p>
-                <p className="text-sm text-gray-500 dark:text-gray-400">Manage your wallet balance</p>
+                <p className="text-lg font-semibold text-gray-900 dark:text-white">
+                  Wallet
+                </p>
+                <p className="text-sm text-gray-500 dark:text-gray-400">
+                  Manage your wallet balance
+                </p>
               </div>
             </div>
             <div className="flex items-center space-x-2">
-              <span className="bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-400 text-xs font-medium px-2 py-1 rounded-full">
+              <span className="rounded-full bg-green-100 px-2 py-1 text-xs font-medium text-green-600 dark:bg-green-900/30 dark:text-green-400">
                 {formatCurrency(walletBalance)}
               </span>
-              <svg className="h-5 w-5 !text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+              <svg
+                className="h-5 w-5 !text-gray-400"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M9 5l7 7-7 7"
+                />
               </svg>
             </div>
           </div>
@@ -496,13 +690,13 @@ export default function MobileProfile({
       </div>
 
       {/* Bottom Action Buttons */}
-      <div className="mt-4 mb-6 space-y-4">
+      <div className="mb-6 mt-4 space-y-4">
         {/* Switch Account Button */}
         {loadingShopper ? (
           <div className="h-12 w-full animate-pulse rounded-none bg-gray-200 dark:bg-gray-700" />
         ) : shopperStatus?.active ? (
           <button
-            className="flex w-full items-center justify-center rounded-none bg-gradient-to-r from-green-500 to-green-600 px-4 py-3 text-sm font-semibold !text-white shadow-lg hover:shadow-xl transition-all duration-200 hover:scale-[1.02] active:scale-[0.98]"
+            className="flex w-full items-center justify-center rounded-none bg-gradient-to-r from-green-500 to-green-600 px-4 py-3 text-sm font-semibold !text-white shadow-lg transition-all duration-200 hover:scale-[1.02] hover:shadow-xl active:scale-[0.98]"
             onClick={async () => {
               const nextRole = role === "user" ? "shopper" : "user";
               setIsSwitchingRole(true);
@@ -522,7 +716,7 @@ export default function MobileProfile({
             disabled={isSwitchingRole}
           >
             <div className="flex items-center space-x-3">
-              <div className="h-8 w-8 rounded-full bg-white/20 flex items-center justify-center">
+              <div className="flex h-8 w-8 items-center justify-center rounded-full bg-white/20">
                 <svg
                   className="h-5 w-5 !text-white"
                   fill="none"
@@ -546,7 +740,7 @@ export default function MobileProfile({
           </button>
         ) : (
           <button
-            className={`flex w-full items-center justify-center rounded-none px-4 py-3 text-sm font-semibold !text-white shadow-lg hover:shadow-xl transition-all duration-200 hover:scale-[1.02] active:scale-[0.98] ${
+            className={`flex w-full items-center justify-center rounded-none px-4 py-3 text-sm font-semibold !text-white shadow-lg transition-all duration-200 hover:scale-[1.02] hover:shadow-xl active:scale-[0.98] ${
               shopperStatus?.needCollection
                 ? "bg-gradient-to-r from-orange-500 to-orange-600"
                 : shopperStatus?.status === "pending" ||
@@ -561,7 +755,7 @@ export default function MobileProfile({
             }
           >
             <div className="flex items-center space-x-3">
-              <div className="h-8 w-8 rounded-full bg-white/20 flex items-center justify-center">
+              <div className="flex h-8 w-8 items-center justify-center rounded-full bg-white/20">
                 <svg
                   className="h-5 w-5 !text-white"
                   fill="none"
@@ -611,7 +805,7 @@ export default function MobileProfile({
 
         {/* Logout Button */}
         <button
-          className="flex w-full items-center justify-center rounded-none bg-gradient-to-r from-red-500 to-red-600 px-4 py-3 text-sm font-semibold !text-white shadow-lg hover:shadow-xl transition-all duration-200 hover:scale-[1.02] active:scale-[0.98]"
+          className="flex w-full items-center justify-center rounded-none bg-gradient-to-r from-red-500 to-red-600 px-4 py-3 text-sm font-semibold !text-white shadow-lg transition-all duration-200 hover:scale-[1.02] hover:shadow-xl active:scale-[0.98]"
           onClick={async () => {
             try {
               // Call our custom logout API
@@ -641,7 +835,7 @@ export default function MobileProfile({
           }}
         >
           <div className="flex items-center space-x-3">
-            <div className="h-8 w-8 rounded-full bg-white/20 flex items-center justify-center">
+            <div className="flex h-8 w-8 items-center justify-center rounded-full bg-white/20">
               <svg
                 className="h-5 w-5 !text-white"
                 fill="none"
@@ -669,9 +863,7 @@ export default function MobileProfile({
         className="[&_.rs-modal-content]:dark:bg-gray-800"
       >
         <Modal.Header>
-          <Modal.Title className="text-inherit">
-            Select an Address
-          </Modal.Title>
+          <Modal.Title className="text-inherit">Select an Address</Modal.Title>
         </Modal.Header>
         <Modal.Body>
           {addresses.length ? (

@@ -21,7 +21,7 @@ function MyProfilePage() {
           {/* Adjust ml-* to match your sidebar width */}
           <div className="md:container md:mx-auto">
             {/* Profile Header - Hidden on mobile */}
-            <div className="mb-6 hidden md:flex items-center">
+            <div className="mb-6 hidden items-center md:flex">
               <Link
                 href="/"
                 className="flex items-center text-inherit transition-colors duration-200"
