@@ -8,12 +8,12 @@ importScripts(
 
 // Initialize Firebase
 const firebaseConfig = {
-  apiKey: "AIzaSyA-w5VgsITsGws1DEBoFl3SrVgn_62H_nU",
-  authDomain: "bokiee-2e726.firebaseapp.com",
-  projectId: "bokiee-2e726",
-  storageBucket: "bokiee-2e726.firebasestorage.app",
-  messagingSenderId: "421990441361",
-  appId: "1:421990441361:web:475e3c34284122e0157a30",
+  "apiKey": node.env.NEXT_PUBLIC_FIREBASE_API_KEY,
+  "authDomain": node.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN,
+  "projectId": node.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
+  "storageBucket": node.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET,
+  "messagingSenderId": node.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID,
+  "appId": node.env.NEXT_PUBLIC_FIREBASE_APP_ID
 };
 
 firebase.initializeApp(firebaseConfig);
