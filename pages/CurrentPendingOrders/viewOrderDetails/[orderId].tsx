@@ -7,6 +7,7 @@ import UserRestaurantOrderDetails from "@components/UserCarts/orders/UserRestaur
 import { Button } from "rsuite";
 import Link from "next/link";
 import { AuthGuard } from "@components/AuthGuard";
+import { useTheme } from "../../../src/context/ThemeContext";
 
 function ViewOrderDetailsPage() {
   const router = useRouter();
