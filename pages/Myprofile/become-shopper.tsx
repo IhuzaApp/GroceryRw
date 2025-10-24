@@ -306,13 +306,21 @@ const MobileShopperRegistrationForm = () => {
   const [stream, setStream] = useState<MediaStream | null>(null);
   const [capturedPhoto, setCapturedPhoto] = useState<string>("");
   const [capturedLicense, setCapturedLicense] = useState<string>("");
-  const [capturedNationalIdFront, setCapturedNationalIdFront] = useState<string>("");
-  const [capturedNationalIdBack, setCapturedNationalIdBack] = useState<string>("");
-  const [capturedPoliceClearance, setCapturedPoliceClearance] = useState<string>("");
-  const [capturedProofOfResidency, setCapturedProofOfResidency] = useState<string>("");
+  const [capturedNationalIdFront, setCapturedNationalIdFront] =
+    useState<string>("");
+  const [capturedNationalIdBack, setCapturedNationalIdBack] =
+    useState<string>("");
+  const [capturedPoliceClearance, setCapturedPoliceClearance] =
+    useState<string>("");
+  const [capturedProofOfResidency, setCapturedProofOfResidency] =
+    useState<string>("");
   const [capturedMutualStatus, setCapturedMutualStatus] = useState<string>("");
-  const [policeClearanceFile, setPoliceClearanceFile] = useState<File | null>(null);
-  const [proofOfResidencyFile, setProofOfResidencyFile] = useState<File | null>(null);
+  const [policeClearanceFile, setPoliceClearanceFile] = useState<File | null>(
+    null
+  );
+  const [proofOfResidencyFile, setProofOfResidencyFile] = useState<File | null>(
+    null
+  );
   const [maritalStatusFile, setMaritalStatusFile] = useState<File | null>(null);
   const [capturedSignature, setCapturedSignature] = useState<string>("");
   const [photoFile, setPhotoFile] = useState<File | null>(null);
@@ -324,11 +332,22 @@ const MobileShopperRegistrationForm = () => {
   const [isUpdating, setIsUpdating] = useState(false);
   const [loadingExistingData, setLoadingExistingData] = useState(false);
   const [autoSaved, setAutoSaved] = useState(false);
-  const [locationInputRef] = useState<React.RefObject<HTMLInputElement>>(React.createRef());
-  const [apiError, setApiError] = useState<{ title: string; message: string } | null>(null);
-  const [videoRef] = useState<React.RefObject<HTMLVideoElement>>(React.createRef());
-  const [canvasRef] = useState<React.RefObject<HTMLCanvasElement>>(React.createRef());
-  const [signatureCanvasRef] = useState<React.RefObject<HTMLCanvasElement>>(React.createRef());
+  const [locationInputRef] = useState<React.RefObject<HTMLInputElement>>(
+    React.createRef()
+  );
+  const [apiError, setApiError] = useState<{
+    title: string;
+    message: string;
+  } | null>(null);
+  const [videoRef] = useState<React.RefObject<HTMLVideoElement>>(
+    React.createRef()
+  );
+  const [canvasRef] = useState<React.RefObject<HTMLCanvasElement>>(
+    React.createRef()
+  );
+  const [signatureCanvasRef] = useState<React.RefObject<HTMLCanvasElement>>(
+    React.createRef()
+  );
   const [cameraLoading, setCameraLoading] = useState(false);
   const [cameraError, setCameraError] = useState<string | null>(null);
 
@@ -336,12 +355,12 @@ const MobileShopperRegistrationForm = () => {
   useEffect(() => {
     if (signatureCanvasRef.current) {
       const canvas = signatureCanvasRef.current;
-      const ctx = canvas.getContext('2d');
+      const ctx = canvas.getContext("2d");
       if (ctx) {
-        ctx.strokeStyle = '#000000';
+        ctx.strokeStyle = "#000000";
         ctx.lineWidth = 2;
-        ctx.lineCap = 'round';
-        ctx.lineJoin = 'round';
+        ctx.lineCap = "round";
+        ctx.lineJoin = "round";
       }
     }
   }, [showSignaturePad]);
@@ -358,7 +377,7 @@ const MobileShopperRegistrationForm = () => {
   useEffect(() => {
     return () => {
       if (stream) {
-        stream.getTracks().forEach(track => track.stop());
+        stream.getTracks().forEach((track) => track.stop());
       }
     };
   }, [stream]);
@@ -476,11 +495,17 @@ const MobileShopperRegistrationForm = () => {
         });
         break;
       case 3: // Guarantor
-        if (formValue.guarantor || formValue.guarantorPhone || formValue.guarantorRelationship) {
-          ["guarantor", "guarantorPhone", "guarantorRelationship"].forEach((field) => {
-            const error = validateField(field, formValue[field] || "");
-            if (error) newErrors[field] = error;
-          });
+        if (
+          formValue.guarantor ||
+          formValue.guarantorPhone ||
+          formValue.guarantorRelationship
+        ) {
+          ["guarantor", "guarantorPhone", "guarantorRelationship"].forEach(
+            (field) => {
+              const error = validateField(field, formValue[field] || "");
+              if (error) newErrors[field] = error;
+            }
+          );
         }
         break;
       case 4: // Documents
@@ -508,13 +533,13 @@ const MobileShopperRegistrationForm = () => {
     return new Promise((resolve, reject) => {
       const img = new window.Image();
       img.onload = () => {
-        const canvas = document.createElement('canvas');
-        const ctx = canvas.getContext('2d');
-        
+        const canvas = document.createElement("canvas");
+        const ctx = canvas.getContext("2d");
+
         // Calculate new dimensions
         let { width, height } = img;
         const maxDimension = 800;
-        
+
         if (width > height) {
           if (width > maxDimension) {
             height = (height * maxDimension) / width;
@@ -526,24 +551,24 @@ const MobileShopperRegistrationForm = () => {
             height = maxDimension;
           }
         }
-        
+
         canvas.width = width;
         canvas.height = height;
-        
+
         ctx?.drawImage(img, 0, 0, width, height);
-        
+
         // Try different quality levels to meet size requirement
         let quality = 0.8;
-        let dataURL = canvas.toDataURL('image/jpeg', quality);
-        
+        let dataURL = canvas.toDataURL("image/jpeg", quality);
+
         while (dataURL.length > maxSizeKB * 1024 && quality > 0.1) {
           quality -= 0.1;
-          dataURL = canvas.toDataURL('image/jpeg', quality);
+          dataURL = canvas.toDataURL("image/jpeg", quality);
         }
-        
+
         resolve(dataURL);
       };
-      img.onerror = () => reject(new Error('Failed to load image'));
+      img.onerror = () => reject(new Error("Failed to load image"));
       img.src = base64;
     });
   };
@@ -554,28 +579,30 @@ const MobileShopperRegistrationForm = () => {
       setCameraLoading(true);
       setCameraError(null);
       setCaptureMode(mode);
-      
+
       const mediaStream = await navigator.mediaDevices.getUserMedia({
-        video: { 
-          facingMode: 'environment',
+        video: {
+          facingMode: "environment",
           width: { ideal: 1280 },
-          height: { ideal: 720 }
-        }
+          height: { ideal: 720 },
+        },
       });
-      
+
       setStream(mediaStream);
       setCameraLoading(false);
     } catch (error) {
-      console.error('Error accessing camera:', error);
+      console.error("Error accessing camera:", error);
       setCameraLoading(false);
-      setCameraError('Unable to access camera. Please check permissions and try again.');
-      toast.error('Unable to access camera. Please check permissions.');
+      setCameraError(
+        "Unable to access camera. Please check permissions and try again."
+      );
+      toast.error("Unable to access camera. Please check permissions.");
     }
   };
 
   const stopCamera = () => {
     if (stream) {
-      stream.getTracks().forEach(track => track.stop());
+      stream.getTracks().forEach((track) => track.stop());
       setStream(null);
     }
     setCameraLoading(false);
@@ -586,58 +613,63 @@ const MobileShopperRegistrationForm = () => {
     if (videoRef.current && canvasRef.current) {
       const canvas = canvasRef.current;
       const video = videoRef.current;
-      const ctx = canvas.getContext('2d');
-      
+      const ctx = canvas.getContext("2d");
+
       canvas.width = video.videoWidth;
       canvas.height = video.videoHeight;
-      
+
       ctx?.drawImage(video, 0, 0);
-      
-      const dataURL = canvas.toDataURL('image/jpeg');
-      
+
+      const dataURL = canvas.toDataURL("image/jpeg");
+
       // Compress and set the appropriate state
-      compressImage(dataURL).then(compressedDataURL => {
-        switch (captureMode) {
-          case 'profile':
-            setCapturedPhoto(compressedDataURL);
-            break;
-          case 'national_id_front':
-            setCapturedNationalIdFront(compressedDataURL);
-            break;
-          case 'national_id_back':
-            setCapturedNationalIdBack(compressedDataURL);
-            break;
-          case 'license':
-            setCapturedLicense(compressedDataURL);
-            break;
-        }
-        stopCamera();
-        setCaptureMode('');
-        toast.success('Photo captured successfully!');
-      }).catch(error => {
-        console.error('Error compressing image:', error);
-        toast.error('Error processing image');
-      });
+      compressImage(dataURL)
+        .then((compressedDataURL) => {
+          switch (captureMode) {
+            case "profile":
+              setCapturedPhoto(compressedDataURL);
+              break;
+            case "national_id_front":
+              setCapturedNationalIdFront(compressedDataURL);
+              break;
+            case "national_id_back":
+              setCapturedNationalIdBack(compressedDataURL);
+              break;
+            case "license":
+              setCapturedLicense(compressedDataURL);
+              break;
+          }
+          stopCamera();
+          setCaptureMode("");
+          toast.success("Photo captured successfully!");
+        })
+        .catch((error) => {
+          console.error("Error compressing image:", error);
+          toast.error("Error processing image");
+        });
     }
   };
 
   // File upload handlers
-  const handleFileChange = (name: string, event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileChange = (
+    name: string,
+    event: React.ChangeEvent<HTMLInputElement>
+  ) => {
     const file = event.target.files?.[0];
     if (file) {
       if (file.size > 5 * 1024 * 1024) {
-        toast.error('File size must be less than 5MB');
+        toast.error("File size must be less than 5MB");
         return;
       }
-      
+
       switch (name) {
-        case 'police_clearance':
+        case "police_clearance":
           setPoliceClearanceFile(file);
           break;
-        case 'proof_of_residency':
+        case "proof_of_residency":
           setProofOfResidencyFile(file);
           break;
-        case 'marital_status':
+        case "marital_status":
           setMaritalStatusFile(file);
           break;
       }
@@ -646,13 +678,13 @@ const MobileShopperRegistrationForm = () => {
 
   const removeFile = (name: string) => {
     switch (name) {
-      case 'police_clearance':
+      case "police_clearance":
         setPoliceClearanceFile(null);
         break;
-      case 'proof_of_residency':
+      case "proof_of_residency":
         setProofOfResidencyFile(null);
         break;
-      case 'marital_status':
+      case "marital_status":
         setMaritalStatusFile(null);
         break;
     }
@@ -668,7 +700,7 @@ const MobileShopperRegistrationForm = () => {
     const canvas = signatureCanvasRef.current;
     if (canvas) {
       const rect = canvas.getBoundingClientRect();
-      const ctx = canvas.getContext('2d');
+      const ctx = canvas.getContext("2d");
       if (ctx) {
         ctx.beginPath();
         ctx.moveTo(e.clientX - rect.left, e.clientY - rect.top);
@@ -681,7 +713,7 @@ const MobileShopperRegistrationForm = () => {
     const canvas = signatureCanvasRef.current;
     if (canvas) {
       const rect = canvas.getBoundingClientRect();
-      const ctx = canvas.getContext('2d');
+      const ctx = canvas.getContext("2d");
       if (ctx) {
         ctx.lineTo(e.clientX - rect.left, e.clientY - rect.top);
         ctx.stroke();
@@ -696,17 +728,17 @@ const MobileShopperRegistrationForm = () => {
   const saveSignature = () => {
     const canvas = signatureCanvasRef.current;
     if (canvas) {
-      const dataURL = canvas.toDataURL('image/png');
+      const dataURL = canvas.toDataURL("image/png");
       setCapturedSignature(dataURL);
       setShowSignaturePad(false);
-      toast.success('Signature saved!');
+      toast.success("Signature saved!");
     }
   };
 
   const clearSignature = () => {
     const canvas = signatureCanvasRef.current;
     if (canvas) {
-      const ctx = canvas.getContext('2d');
+      const ctx = canvas.getContext("2d");
       if (ctx) {
         ctx.clearRect(0, 0, canvas.width, canvas.height);
       }
@@ -719,7 +751,7 @@ const MobileShopperRegistrationForm = () => {
     // Add your submission logic here
     setTimeout(() => {
       setLoading(false);
-      router.push('/Plasa');
+      router.push("/Plasa");
     }, 2000);
   };
 
@@ -885,7 +917,8 @@ const MobileShopperRegistrationForm = () => {
               )}
               {formValue.latitude && formValue.longitude && (
                 <p className="mt-1 text-xs text-green-600 dark:text-green-400">
-                  ✓ Location captured: {formValue.latitude}, {formValue.longitude}
+                  ✓ Location captured: {formValue.latitude},{" "}
+                  {formValue.longitude}
                 </p>
               )}
             </div>
@@ -950,7 +983,9 @@ const MobileShopperRegistrationForm = () => {
               name="guarantorRelationship"
               type="select"
               value={formValue.guarantorRelationship}
-              onChange={(value) => handleInputChange("guarantorRelationship", value)}
+              onChange={(value) =>
+                handleInputChange("guarantorRelationship", value)
+              }
               error={errors.guarantorRelationship}
               options={guarantorRelationshipOptions}
             />
@@ -1425,65 +1460,136 @@ const MobileShopperRegistrationForm = () => {
             Review Your Information
           </h3>
           <div className="space-y-4">
-            <div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-4">
-              <h4 className="font-medium text-gray-700 dark:text-gray-300 mb-2">Personal Information</h4>
+            <div className="rounded-lg bg-gray-50 p-4 dark:bg-gray-800">
+              <h4 className="mb-2 font-medium text-gray-700 dark:text-gray-300">
+                Personal Information
+              </h4>
               <div className="space-y-1 text-sm">
-                <p><strong>Name:</strong> {formValue.full_name}</p>
-                <p><strong>National ID:</strong> {formValue.national_id}</p>
-                <p><strong>Transport:</strong> {
-                  transportOptions.find(t => t.value === formValue.transport_mode)?.label
-                }</p>
+                <p>
+                  <strong>Name:</strong> {formValue.full_name}
+                </p>
+                <p>
+                  <strong>National ID:</strong> {formValue.national_id}
+                </p>
+                <p>
+                  <strong>Transport:</strong>{" "}
+                  {
+                    transportOptions.find(
+                      (t) => t.value === formValue.transport_mode
+                    )?.label
+                  }
+                </p>
                 {formValue.driving_license && (
-                  <p><strong>Driving License:</strong> {formValue.driving_license}</p>
+                  <p>
+                    <strong>Driving License:</strong>{" "}
+                    {formValue.driving_license}
+                  </p>
                 )}
               </div>
             </div>
 
-            <div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-4">
-              <h4 className="font-medium text-gray-700 dark:text-gray-300 mb-2">Contact Details</h4>
+            <div className="rounded-lg bg-gray-50 p-4 dark:bg-gray-800">
+              <h4 className="mb-2 font-medium text-gray-700 dark:text-gray-300">
+                Contact Details
+              </h4>
               <div className="space-y-1 text-sm">
-                <p><strong>Phone:</strong> {formValue.phone_number}</p>
+                <p>
+                  <strong>Phone:</strong> {formValue.phone_number}
+                </p>
               </div>
             </div>
 
-            <div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-4">
-              <h4 className="font-medium text-gray-700 dark:text-gray-300 mb-2">Address</h4>
+            <div className="rounded-lg bg-gray-50 p-4 dark:bg-gray-800">
+              <h4 className="mb-2 font-medium text-gray-700 dark:text-gray-300">
+                Address
+              </h4>
               <div className="space-y-1 text-sm">
-                <p><strong>Address:</strong> {formValue.address}</p>
+                <p>
+                  <strong>Address:</strong> {formValue.address}
+                </p>
                 {formValue.latitude && formValue.longitude && (
-                  <p><strong>Coordinates:</strong> {formValue.latitude}, {formValue.longitude}</p>
+                  <p>
+                    <strong>Coordinates:</strong> {formValue.latitude},{" "}
+                    {formValue.longitude}
+                  </p>
                 )}
                 {formValue.mutual_status && (
-                  <p><strong>Marital Status:</strong> {
-                    mutualStatusOptions.find(m => m.value === formValue.mutual_status)?.label
-                  }</p>
+                  <p>
+                    <strong>Marital Status:</strong>{" "}
+                    {
+                      mutualStatusOptions.find(
+                        (m) => m.value === formValue.mutual_status
+                      )?.label
+                    }
+                  </p>
                 )}
               </div>
             </div>
 
-            {(formValue.guarantor || formValue.guarantorPhone || formValue.guarantorRelationship) && (
-              <div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-4">
-                <h4 className="font-medium text-gray-700 dark:text-gray-300 mb-2">Guarantor Information</h4>
+            {(formValue.guarantor ||
+              formValue.guarantorPhone ||
+              formValue.guarantorRelationship) && (
+              <div className="rounded-lg bg-gray-50 p-4 dark:bg-gray-800">
+                <h4 className="mb-2 font-medium text-gray-700 dark:text-gray-300">
+                  Guarantor Information
+                </h4>
                 <div className="space-y-1 text-sm">
-                  <p><strong>Name:</strong> {formValue.guarantor}</p>
-                  <p><strong>Phone:</strong> {formValue.guarantorPhone}</p>
-                  <p><strong>Relationship:</strong> {
-                    guarantorRelationshipOptions.find(g => g.value === formValue.guarantorRelationship)?.label
-                  }</p>
+                  <p>
+                    <strong>Name:</strong> {formValue.guarantor}
+                  </p>
+                  <p>
+                    <strong>Phone:</strong> {formValue.guarantorPhone}
+                  </p>
+                  <p>
+                    <strong>Relationship:</strong>{" "}
+                    {
+                      guarantorRelationshipOptions.find(
+                        (g) => g.value === formValue.guarantorRelationship
+                      )?.label
+                    }
+                  </p>
                 </div>
               </div>
             )}
 
-            <div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-4">
-              <h4 className="font-medium text-gray-700 dark:text-gray-300 mb-2">Documents Status</h4>
+            <div className="rounded-lg bg-gray-50 p-4 dark:bg-gray-800">
+              <h4 className="mb-2 font-medium text-gray-700 dark:text-gray-300">
+                Documents Status
+              </h4>
               <div className="space-y-2 text-sm">
-                <p>✅ Profile Photo: {capturedPhoto ? "Uploaded" : "Missing"}</p>
-                <p>✅ National ID Front: {capturedNationalIdFront ? "Uploaded" : "Missing"}</p>
-                <p>✅ National ID Back: {capturedNationalIdBack ? "Uploaded" : "Missing"}</p>
-                <p>📄 Driving License: {capturedLicense ? "Uploaded" : "Not provided"}</p>
-                <p>📄 Police Clearance: {policeClearanceFile ? `Uploaded (${policeClearanceFile.name})` : "Not provided"}</p>
-                <p>📄 Proof of Residency: {proofOfResidencyFile ? `Uploaded (${proofOfResidencyFile.name})` : "Not provided"}</p>
-                <p>📄 Marital Status Certificate: {maritalStatusFile ? `Uploaded (${maritalStatusFile.name})` : "Not provided"}</p>
+                <p>
+                  ✅ Profile Photo: {capturedPhoto ? "Uploaded" : "Missing"}
+                </p>
+                <p>
+                  ✅ National ID Front:{" "}
+                  {capturedNationalIdFront ? "Uploaded" : "Missing"}
+                </p>
+                <p>
+                  ✅ National ID Back:{" "}
+                  {capturedNationalIdBack ? "Uploaded" : "Missing"}
+                </p>
+                <p>
+                  📄 Driving License:{" "}
+                  {capturedLicense ? "Uploaded" : "Not provided"}
+                </p>
+                <p>
+                  📄 Police Clearance:{" "}
+                  {policeClearanceFile
+                    ? `Uploaded (${policeClearanceFile.name})`
+                    : "Not provided"}
+                </p>
+                <p>
+                  📄 Proof of Residency:{" "}
+                  {proofOfResidencyFile
+                    ? `Uploaded (${proofOfResidencyFile.name})`
+                    : "Not provided"}
+                </p>
+                <p>
+                  📄 Marital Status Certificate:{" "}
+                  {maritalStatusFile
+                    ? `Uploaded (${maritalStatusFile.name})`
+                    : "Not provided"}
+                </p>
               </div>
             </div>
           </div>
@@ -1493,24 +1599,33 @@ const MobileShopperRegistrationForm = () => {
   };
 
   return (
-    <div className="h-full flex flex-col -mx-4 -mt-6">
+    <div className="-mx-4 -mt-6 flex h-full flex-col">
       {/* Mobile Header */}
-      <div className="w-full px-4 py-4 border-b border-gray-200 dark:border-gray-700">
+      <div className="w-full border-b border-gray-200 px-4 py-4 dark:border-gray-700">
         <div className="flex items-center justify-between">
           <button
             onClick={prevStep}
             disabled={currentStep === 0}
-            className={`p-2 rounded-lg transition-colors ${
-              currentStep === 0 
-                ? 'text-gray-400 cursor-not-allowed' 
-                : 'text-gray-600 hover:bg-gray-100 active:bg-gray-200 dark:text-gray-400 dark:hover:bg-gray-800 dark:active:bg-gray-700'
+            className={`rounded-lg p-2 transition-colors ${
+              currentStep === 0
+                ? "cursor-not-allowed text-gray-400"
+                : "text-gray-600 hover:bg-gray-100 active:bg-gray-200 dark:text-gray-400 dark:hover:bg-gray-800 dark:active:bg-gray-700"
             }`}
           >
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+            <svg
+              className="h-5 w-5"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M15 19l-7-7 7-7"
+              />
             </svg>
           </button>
-          
           <div className="text-center">
             <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
               {steps[currentStep].title}
@@ -1518,30 +1633,27 @@ const MobileShopperRegistrationForm = () => {
             <p className="text-sm text-gray-500 dark:text-gray-400">
               {steps[currentStep].description}
             </p>
-            <p className="text-xs text-gray-400 dark:text-gray-500 mt-1">
+            <p className="mt-1 text-xs text-gray-400 dark:text-gray-500">
               {currentStep + 1} of {steps.length}
             </p>
           </div>
-          
           <div className="w-9"></div> {/* Spacer for centering */}
         </div>
       </div>
 
       {/* Mobile Content */}
-      <div className="flex-1 px-4 py-6 mx-4">
-        {renderStepContent()}
-      </div>
+      <div className="mx-4 flex-1 px-4 py-6">{renderStepContent()}</div>
 
       {/* Mobile Footer */}
-      <div className="px-4 py-4 border-t border-gray-200 dark:border-gray-700 mx-4">
+      <div className="mx-4 border-t border-gray-200 px-4 py-4 dark:border-gray-700">
         {currentStep < steps.length - 1 ? (
           <button
             onClick={nextStep}
             disabled={Object.keys(errors).length > 0}
-            className={`w-full py-3 px-4 rounded-lg font-medium transition-colors ${
+            className={`w-full rounded-lg px-4 py-3 font-medium transition-colors ${
               Object.keys(errors).length > 0
-                ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
-                : 'bg-green-600 !text-white hover:bg-green-700'
+                ? "cursor-not-allowed bg-gray-300 text-gray-500"
+                : "bg-green-600 !text-white hover:bg-green-700"
             }`}
           >
             Next
@@ -1550,21 +1662,21 @@ const MobileShopperRegistrationForm = () => {
           <button
             onClick={handleSubmit}
             disabled={loading}
-            className={`w-full py-3 px-4 rounded-lg font-medium transition-colors ${
+            className={`w-full rounded-lg px-4 py-3 font-medium transition-colors ${
               loading
-                ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
-                : 'bg-green-600 !text-white hover:bg-green-700'
+                ? "cursor-not-allowed bg-gray-300 text-gray-500"
+                : "bg-green-600 !text-white hover:bg-green-700"
             }`}
           >
-            {loading ? 'Submitting...' : 'Submit Application'}
+            {loading ? "Submitting..." : "Submit Application"}
           </button>
         )}
       </div>
 
       {/* Camera Modal */}
       {(stream || cameraLoading) && (
-        <div className="fixed inset-0 z-50 bg-black bg-opacity-75 flex items-center justify-center">
-          <div className="bg-white dark:bg-gray-800 rounded-lg p-4 w-full max-w-md mx-4">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-75">
+          <div className="mx-4 w-full max-w-md rounded-lg bg-white p-4 dark:bg-gray-800">
             <div className="mb-4">
               <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
                 Take Photo
@@ -1573,25 +1685,35 @@ const MobileShopperRegistrationForm = () => {
                 Position the document/yourself in the frame and tap capture
               </p>
             </div>
-            
+
             <div className="relative mb-4">
               {cameraLoading ? (
-                <div className="w-full h-64 bg-gray-900 rounded-lg flex items-center justify-center">
+                <div className="flex h-64 w-full items-center justify-center rounded-lg bg-gray-900">
                   <div className="text-center">
-                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-white mx-auto mb-2"></div>
-                    <p className="text-white text-sm">Starting camera...</p>
+                    <div className="mx-auto mb-2 h-8 w-8 animate-spin rounded-full border-b-2 border-white"></div>
+                    <p className="text-sm text-white">Starting camera...</p>
                   </div>
                 </div>
               ) : cameraError ? (
-                <div className="w-full h-64 bg-red-900 rounded-lg flex items-center justify-center">
+                <div className="flex h-64 w-full items-center justify-center rounded-lg bg-red-900">
                   <div className="text-center">
-                    <svg className="mx-auto h-12 w-12 text-red-400 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
+                    <svg
+                      className="mx-auto mb-2 h-12 w-12 text-red-400"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z"
+                      />
                     </svg>
-                    <p className="text-red-200 text-sm">{cameraError}</p>
+                    <p className="text-sm text-red-200">{cameraError}</p>
                     <button
                       onClick={() => startCamera(captureMode)}
-                      className="mt-2 px-4 py-2 bg-red-600 text-white rounded-lg text-sm hover:bg-red-700"
+                      className="mt-2 rounded-lg bg-red-600 px-4 py-2 text-sm text-white hover:bg-red-700"
                     >
                       Try Again
                     </button>
@@ -1603,8 +1725,8 @@ const MobileShopperRegistrationForm = () => {
                   autoPlay
                   playsInline
                   muted
-                  className="w-full h-64 object-cover rounded-lg bg-gray-900"
-                  style={{ transform: 'scaleX(-1)' }} // Mirror the video for better UX
+                  className="h-64 w-full rounded-lg bg-gray-900 object-cover"
+                  style={{ transform: "scaleX(-1)" }} // Mirror the video for better UX
                   onLoadedMetadata={() => {
                     if (videoRef.current) {
                       videoRef.current.play().catch(console.error);
@@ -1614,18 +1736,18 @@ const MobileShopperRegistrationForm = () => {
               )}
               <canvas ref={canvasRef} className="hidden" />
             </div>
-            
+
             <div className="flex gap-3">
               <button
                 onClick={stopCamera}
-                className="flex-1 py-2 px-4 bg-gray-500 text-white rounded-lg hover:bg-gray-600"
+                className="flex-1 rounded-lg bg-gray-500 px-4 py-2 text-white hover:bg-gray-600"
                 disabled={cameraLoading}
               >
                 Cancel
               </button>
               <button
                 onClick={capturePhoto}
-                className="flex-1 py-2 px-4 bg-green-600 !text-white rounded-lg hover:bg-green-700 disabled:opacity-50"
+                className="flex-1 rounded-lg bg-green-600 px-4 py-2 !text-white hover:bg-green-700 disabled:opacity-50"
                 disabled={cameraLoading || !stream}
               >
                 Capture
@@ -1637,8 +1759,8 @@ const MobileShopperRegistrationForm = () => {
 
       {/* Signature Pad Modal */}
       {showSignaturePad && (
-        <div className="fixed inset-0 z-50 bg-black bg-opacity-75 flex items-center justify-center">
-          <div className="bg-white dark:bg-gray-800 rounded-lg p-4 w-full max-w-md mx-4">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-75">
+          <div className="mx-4 w-full max-w-md rounded-lg bg-white p-4 dark:bg-gray-800">
             <div className="mb-4">
               <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
                 Digital Signature
@@ -1647,13 +1769,13 @@ const MobileShopperRegistrationForm = () => {
                 Sign using your finger or stylus
               </p>
             </div>
-            
+
             <div className="mb-4">
               <canvas
                 ref={signatureCanvasRef}
                 width={400}
                 height={200}
-                className="border border-gray-300 dark:border-gray-600 rounded-lg w-full"
+                className="w-full rounded-lg border border-gray-300 dark:border-gray-600"
                 onMouseDown={handleSignatureStart}
                 onMouseMove={handleSignatureMove}
                 onMouseUp={handleSignatureEnd}
@@ -1661,7 +1783,7 @@ const MobileShopperRegistrationForm = () => {
                 onTouchStart={(e) => {
                   e.preventDefault();
                   const touch = e.touches[0];
-                  const mouseEvent = new MouseEvent('mousedown', {
+                  const mouseEvent = new MouseEvent("mousedown", {
                     clientX: touch.clientX,
                     clientY: touch.clientY,
                   });
@@ -1670,7 +1792,7 @@ const MobileShopperRegistrationForm = () => {
                 onTouchMove={(e) => {
                   e.preventDefault();
                   const touch = e.touches[0];
-                  const mouseEvent = new MouseEvent('mousemove', {
+                  const mouseEvent = new MouseEvent("mousemove", {
                     clientX: touch.clientX,
                     clientY: touch.clientY,
                   });
@@ -1682,23 +1804,23 @@ const MobileShopperRegistrationForm = () => {
                 }}
               />
             </div>
-            
+
             <div className="flex gap-3">
               <button
                 onClick={clearSignature}
-                className="flex-1 py-2 px-4 bg-gray-500 text-white rounded-lg hover:bg-gray-600"
+                className="flex-1 rounded-lg bg-gray-500 px-4 py-2 text-white hover:bg-gray-600"
               >
                 Clear
               </button>
               <button
                 onClick={() => setShowSignaturePad(false)}
-                className="flex-1 py-2 px-4 bg-gray-500 text-white rounded-lg hover:bg-gray-600"
+                className="flex-1 rounded-lg bg-gray-500 px-4 py-2 text-white hover:bg-gray-600"
               >
                 Cancel
               </button>
               <button
                 onClick={saveSignature}
-                className="flex-1 py-2 px-4 bg-green-600 !text-white rounded-lg hover:bg-green-700"
+                className="flex-1 rounded-lg bg-green-600 px-4 py-2 !text-white hover:bg-green-700"
               >
                 Save
               </button>
@@ -1715,20 +1837,65 @@ const DesktopBecomeShopper = () => {
   const { theme } = useTheme();
 
   return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-green-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-green-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
       <div className="ml-16 p-4">
         <div className="mx-auto max-w-6xl">
           {/* Desktop Header */}
-            <div className="mb-8 text-center">
+          <div className="mb-8 text-center">
+            <div
+              className={`mb-6 inline-flex h-20 w-20 items-center justify-center rounded-full ${
+                theme === "dark"
+                  ? "bg-green-600/20 text-white"
+                  : "bg-green-100 text-white"
+              }`}
+            >
+              <svg
+                className="h-10 w-10"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
+                />
+              </svg>
+            </div>
+            <h1
+              className={`mb-4 text-4xl font-bold ${
+                theme === "dark" ? "text-white" : "text-gray-900"
+              }`}
+            >
+              Become a Plasa
+            </h1>
+            <p
+              className={`mx-auto max-w-2xl text-lg ${
+                theme === "dark" ? "text-gray-300" : "text-gray-600"
+              }`}
+            >
+              Join our community of delivery partners and start earning money by
+              delivering orders to customers in your area.
+            </p>
+          </div>
+
+          {/* Desktop Benefits Section */}
+          <div className="mb-8 grid grid-cols-1 gap-6 md:grid-cols-3">
+            <div
+              className={`rounded-xl border p-6 ${
+                theme === "dark"
+                  ? "border-gray-700 bg-gray-800/50"
+                  : "border-gray-200 bg-white shadow-sm"
+              }`}
+            >
               <div
-                className={`mb-6 inline-flex h-20 w-20 items-center justify-center rounded-full ${
-                  theme === "dark"
-                    ? "bg-green-600/20 text-white"
-                    : "bg-green-100 text-white"
+                className={`mb-4 flex h-12 w-12 items-center justify-center rounded-lg ${
+                  theme === "dark" ? "bg-green-600/20" : "bg-green-100"
                 }`}
               >
                 <svg
-                  className="h-10 w-10"
+                  className="h-6 w-6 text-green-600 dark:text-green-400"
                   fill="none"
                   stroke="currentColor"
                   viewBox="0 0 24 24"
@@ -1737,171 +1904,126 @@ const DesktopBecomeShopper = () => {
                     strokeLinecap="round"
                     strokeLinejoin="round"
                     strokeWidth={2}
-                    d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
+                    d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1"
                   />
                 </svg>
               </div>
-              <h1
-                className={`mb-4 text-4xl font-bold ${
+              <h3
+                className={`mb-2 font-semibold ${
                   theme === "dark" ? "text-white" : "text-gray-900"
                 }`}
               >
-                Become a Plasa
-              </h1>
+                Earn Money
+              </h3>
               <p
-                className={`mx-auto max-w-2xl text-lg ${
-                  theme === "dark" ? "text-gray-300" : "text-gray-600"
+                className={`text-sm ${
+                  theme === "dark" ? "text-gray-400" : "text-gray-600"
                 }`}
               >
-                Join our community of delivery partners and start earning money
-                by delivering orders to customers in your area.
+                Get paid for each delivery you complete. The more you deliver,
+                the more you earn.
               </p>
             </div>
 
-          {/* Desktop Benefits Section */}
-            <div className="mb-8 grid grid-cols-1 gap-6 md:grid-cols-3">
-              <div
-                className={`rounded-xl border p-6 ${
-                  theme === "dark"
-                    ? "border-gray-700 bg-gray-800/50"
-                    : "border-gray-200 bg-white shadow-sm"
-                }`}
-              >
-                <div
-                  className={`mb-4 flex h-12 w-12 items-center justify-center rounded-lg ${
-                    theme === "dark" ? "bg-green-600/20" : "bg-green-100"
-                  }`}
-                >
-                  <svg
-                    className="h-6 w-6 text-green-600 dark:text-green-400"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1"
-                    />
-                  </svg>
-                </div>
-                <h3
-                  className={`mb-2 font-semibold ${
-                    theme === "dark" ? "text-white" : "text-gray-900"
-                  }`}
-                >
-                  Earn Money
-                </h3>
-                <p
-                  className={`text-sm ${
-                    theme === "dark" ? "text-gray-400" : "text-gray-600"
-                  }`}
-                >
-                  Get paid for each delivery you complete. The more you deliver,
-                  the more you earn.
-                </p>
-              </div>
-
-              <div
-                className={`rounded-xl border p-6 ${
-                  theme === "dark"
-                    ? "border-gray-700 bg-gray-800/50"
-                    : "border-gray-200 bg-white shadow-sm"
-                }`}
-              >
-                <div
-                  className={`mb-4 flex h-12 w-12 items-center justify-center rounded-lg ${
-                    theme === "dark" ? "bg-green-600/20" : "bg-green-100"
-                  }`}
-                >
-                  <svg
-                    className="h-6 w-6 text-green-600 dark:text-green-400"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
-                    />
-                  </svg>
-                </div>
-                <h3
-                  className={`mb-2 font-semibold ${
-                    theme === "dark" ? "text-white" : "text-gray-900"
-                  }`}
-                >
-                  Flexible Schedule
-                </h3>
-                <p
-                  className={`text-sm ${
-                    theme === "dark" ? "text-gray-400" : "text-gray-600"
-                  }`}
-                >
-                  Work when you want. Choose your own hours and accept
-                  deliveries that fit your schedule.
-                </p>
-              </div>
-
-              <div
-                className={`rounded-xl border p-6 ${
-                  theme === "dark"
-                    ? "border-gray-700 bg-gray-800/50"
-                    : "border-gray-200 bg-white shadow-sm"
-                }`}
-              >
-                <div
-                  className={`mb-4 flex h-12 w-12 items-center justify-center rounded-lg ${
-                    theme === "dark" ? "bg-purple-600/20" : "bg-purple-100"
-                  }`}
-                >
-                  <svg
-                    className="h-6 w-6 text-purple-600 dark:text-purple-400"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
-                    />
-                  </svg>
-                </div>
-                <h3
-                  className={`mb-2 font-semibold ${
-                    theme === "dark" ? "text-white" : "text-gray-900"
-                  }`}
-                >
-                  Easy Application
-                </h3>
-                <p
-                  className={`text-sm ${
-                    theme === "dark" ? "text-gray-400" : "text-gray-600"
-                  }`}
-                >
-                  Simple step-by-step application process. Get approved quickly
-                  and start delivering.
-                </p>
-              </div>
-            </div>
-
-          {/* Desktop Registration Form */}
             <div
-              className={`rounded-2xl border ${
+              className={`rounded-xl border p-6 ${
                 theme === "dark"
                   ? "border-gray-700 bg-gray-800/50"
-                  : "border-gray-200 bg-white shadow-lg"
+                  : "border-gray-200 bg-white shadow-sm"
               }`}
             >
-              <ShopperRegistrationForm />
+              <div
+                className={`mb-4 flex h-12 w-12 items-center justify-center rounded-lg ${
+                  theme === "dark" ? "bg-green-600/20" : "bg-green-100"
+                }`}
+              >
+                <svg
+                  className="h-6 w-6 text-green-600 dark:text-green-400"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
+                  />
+                </svg>
+              </div>
+              <h3
+                className={`mb-2 font-semibold ${
+                  theme === "dark" ? "text-white" : "text-gray-900"
+                }`}
+              >
+                Flexible Schedule
+              </h3>
+              <p
+                className={`text-sm ${
+                  theme === "dark" ? "text-gray-400" : "text-gray-600"
+                }`}
+              >
+                Work when you want. Choose your own hours and accept deliveries
+                that fit your schedule.
+              </p>
+            </div>
+
+            <div
+              className={`rounded-xl border p-6 ${
+                theme === "dark"
+                  ? "border-gray-700 bg-gray-800/50"
+                  : "border-gray-200 bg-white shadow-sm"
+              }`}
+            >
+              <div
+                className={`mb-4 flex h-12 w-12 items-center justify-center rounded-lg ${
+                  theme === "dark" ? "bg-purple-600/20" : "bg-purple-100"
+                }`}
+              >
+                <svg
+                  className="h-6 w-6 text-purple-600 dark:text-purple-400"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
+                  />
+                </svg>
+              </div>
+              <h3
+                className={`mb-2 font-semibold ${
+                  theme === "dark" ? "text-white" : "text-gray-900"
+                }`}
+              >
+                Easy Application
+              </h3>
+              <p
+                className={`text-sm ${
+                  theme === "dark" ? "text-gray-400" : "text-gray-600"
+                }`}
+              >
+                Simple step-by-step application process. Get approved quickly
+                and start delivering.
+              </p>
             </div>
           </div>
+
+          {/* Desktop Registration Form */}
+          <div
+            className={`rounded-2xl border ${
+              theme === "dark"
+                ? "border-gray-700 bg-gray-800/50"
+                : "border-gray-200 bg-white shadow-lg"
+            }`}
+          >
+            <ShopperRegistrationForm />
+          </div>
         </div>
+      </div>
     </div>
   );
 };
@@ -1913,7 +2035,7 @@ export default function BecomeShopperPage() {
       <div className="block md:hidden">
         <MobileBecomeShopper />
       </div>
-      
+
       {/* Desktop View */}
       <div className="hidden md:block">
         <DesktopBecomeShopper />
