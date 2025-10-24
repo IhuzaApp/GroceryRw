@@ -1493,9 +1493,9 @@ const MobileShopperRegistrationForm = () => {
   };
 
   return (
-    <div className="h-full flex flex-col">
+    <div className="h-full flex flex-col -mx-4 -mt-6">
       {/* Mobile Header */}
-      <div className="px-4 py-4 border-b border-gray-200 dark:border-gray-700">
+      <div className="w-full px-4 py-4 border-b border-gray-200 dark:border-gray-700">
         <div className="flex items-center justify-between">
           <button
             onClick={prevStep}
@@ -1528,12 +1528,12 @@ const MobileShopperRegistrationForm = () => {
       </div>
 
       {/* Mobile Content */}
-      <div className="flex-1 px-4 py-6">
+      <div className="flex-1 px-4 py-6 mx-4">
         {renderStepContent()}
       </div>
 
       {/* Mobile Footer */}
-      <div className="px-4 py-4 border-t border-gray-200 dark:border-gray-700">
+      <div className="px-4 py-4 border-t border-gray-200 dark:border-gray-700 mx-4">
         {currentStep < steps.length - 1 ? (
           <button
             onClick={nextStep}
