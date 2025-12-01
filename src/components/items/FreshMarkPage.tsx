@@ -254,7 +254,7 @@ const FreshMarkPage: React.FC<FreshMarkPageProps> = ({ shop, products }) => {
 
   return (
     <RootLayout>
-      <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 md:ml-16">
         {/* Mobile Header - Full width cover image with circular logo */}
         <div
           className="relative h-32 w-full sm:hidden"

@@ -175,24 +175,6 @@ const MobileOrderDetails = ({
           })()}
         </div>
 
-        {/* Order Info Card */}
-        <div className="mb-6 rounded-2xl bg-gray-50 p-4 dark:bg-gray-800">
-          <div className="flex items-center justify-between">
-            <div>
-              <div className="text-sm text-gray-500 dark:text-gray-400">Order Placed</div>
-              <div className="text-lg font-semibold text-gray-900 dark:text-white">
-                {timeAgo(order?.created_at || order?.placedAt)}
-              </div>
-            </div>
-            <div className="text-right">
-              <div className="text-sm text-gray-500 dark:text-gray-400">Order Type</div>
-              <div className="text-lg font-semibold text-gray-900 dark:text-white">
-                {orderType === "reel" ? "Reel" : orderType === "restaurant" ? "Restaurant" : "Grocery"}
-              </div>
-            </div>
-          </div>
-        </div>
-
         {/* Order Details Component */}
         <div className="rounded-2xl bg-white shadow-sm dark:bg-gray-800">
           {orderType === "reel" ? (
