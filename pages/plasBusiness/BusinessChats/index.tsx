@@ -188,12 +188,12 @@ export default function BusinessChatsPage() {
 
   return (
     <RootLayout>
-      <div className="h-[calc(100vh-6.5rem)] overflow-hidden via-white to-gray-100 dark:from-gray-900 md:h-[calc(100vh-1.5rem)]">
-        <div className="mx-auto h-full max-w-7xl p-4">
-          <div className="grid h-full grid-cols-1 gap-6 lg:grid-cols-3">
+      <div className="h-[calc(100vh-6.5rem)] overflow-hidden via-white to-gray-100 dark:from-gray-900 md:fixed md:left-16 md:right-0 md:top-16 md:h-[calc(100vh-4rem)] md:w-[calc(100%-4rem)]">
+        <div className="mx-auto h-full w-full max-w-full p-4 md:p-6">
+          <div className="grid h-full grid-cols-1 gap-4 lg:grid-cols-3 lg:gap-6">
             {/* Conversations List */}
-            <div className="flex h-full flex-col rounded-2xl border border-gray-100 bg-white shadow dark:border-gray-700 dark:bg-gray-800 lg:col-span-1">
-              <div className="flex items-center justify-between border-b border-gray-100 p-4 dark:border-gray-700">
+            <div className="flex h-full min-h-0 flex-col rounded-2xl border border-gray-100 bg-white shadow dark:border-gray-700 dark:bg-gray-800 lg:col-span-1">
+              <div className="flex flex-shrink-0 items-center justify-between border-b border-gray-100 p-4 dark:border-gray-700">
                 <h2 className="flex items-center gap-2 text-lg font-semibold text-gray-900 dark:text-white">
                   <MessageSquare className="h-5 w-5" /> Business Chats
                 </h2>
@@ -208,7 +208,7 @@ export default function BusinessChatsPage() {
                   />
                 </div>
               </div>
-              <div className="flex-1 divide-y divide-gray-100 overflow-y-auto dark:divide-gray-700">
+              <div className="min-h-0 flex-1 divide-y divide-gray-100 overflow-y-auto dark:divide-gray-700">
                 {conversations.map((c) => (
                   <button
                     key={c.id}
@@ -247,8 +247,8 @@ export default function BusinessChatsPage() {
             </div>
 
             {/* Chat Window */}
-            <div className="flex h-full flex-col rounded-2xl border border-gray-100 bg-white shadow dark:border-gray-700 dark:bg-gray-800 lg:col-span-2">
-              <div className="flex items-center justify-between border-b border-gray-100 p-4 dark:border-gray-700">
+            <div className="flex h-full min-h-0 flex-col rounded-2xl border border-gray-100 bg-white shadow dark:border-gray-700 dark:bg-gray-800 lg:col-span-2">
+              <div className="flex flex-shrink-0 items-center justify-between border-b border-gray-100 p-4 dark:border-gray-700">
                 <div>
                   <p className="font-semibold text-gray-900 dark:text-gray-100">
                     {activeConversation?.title || "Select a conversation"}
@@ -279,7 +279,7 @@ export default function BusinessChatsPage() {
                 </div>
               </div>
 
-              <div className="flex-1 space-y-3 overflow-y-auto p-4">
+              <div className="min-h-0 flex-1 space-y-3 overflow-y-auto p-4">
                 {currentMessages.map((m) => (
                   <div
                     key={m.id}
@@ -310,7 +310,7 @@ export default function BusinessChatsPage() {
                 <div ref={messagesEndRef} />
               </div>
 
-              <div className="border-t border-gray-100 p-3 dark:border-gray-700">
+              <div className="flex-shrink-0 border-t border-gray-100 p-3 dark:border-gray-700">
                 <div className="flex items-center gap-2">
                   <input
                     type="text"
