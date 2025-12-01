@@ -18,6 +18,7 @@ import {
   Users,
   MapPin,
 } from "lucide-react";
+import { CreateProductForm } from "./CreateProductForm";
 
 const mockProducts = [
   {
@@ -177,9 +178,16 @@ export function ProductsBidsSection() {
   const [activeSubTab, setActiveSubTab] = useState("products");
   const [selectedBid, setSelectedBid] = useState<any>(null);
   const [isBidModalOpen, setIsBidModalOpen] = useState(false);
+  const [isCreateProductOpen, setIsCreateProductOpen] = useState(false);
 
   const handleCreateProduct = () => {
-    console.log("Creating new product");
+    setIsCreateProductOpen(true);
+  };
+
+  const handleProductSubmit = (productData: any) => {
+    console.log("Product created:", productData);
+    // Here you would typically send the data to your API
+    // After successful creation, you might want to refresh the products list
   };
 
   const handleEditProduct = (productId: string) => {
@@ -660,6 +668,13 @@ export function ProductsBidsSection() {
           </div>
         </div>
       )}
+
+      {/* Create Product Modal */}
+      <CreateProductForm
+        isOpen={isCreateProductOpen}
+        onClose={() => setIsCreateProductOpen(false)}
+        onSubmit={handleProductSubmit}
+      />
     </div>
   );
 }

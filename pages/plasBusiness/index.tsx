@@ -28,6 +28,7 @@ import { ProductsBidsSection } from "../../src/components/business/ProductsBidsS
 import { RFQOpportunitiesSection } from "../../src/components/business/RFQOpportunitiesSection";
 import { CreateRFQForm } from "../../src/components/business/CreateRFQForm";
 import { ContractsManagement } from "../../src/components/business/ContractsManagement";
+import PlasBusinessOnboarding from "../../src/components/business/PlasBusinessOnboarding";
 
 // Data moved to individual components
 
@@ -37,6 +38,11 @@ export default function PlasBusinessPage() {
   const [selectedQuote, setSelectedQuote] = useState<any>(null);
   const [isQuoteModalOpen, setIsQuoteModalOpen] = useState(false);
   const [isCreateRFQOpen, setIsCreateRFQOpen] = useState(false);
+  const [hasBusinessAccount, setHasBusinessAccount] = useState<boolean | null>(
+    null
+  );
+  const [checkingAccount, setCheckingAccount] = useState(true);
+  const [businessAccount, setBusinessAccount] = useState<any>(null);
 
   // Redirect shoppers away from this page
   useEffect(() => {
@@ -45,8 +51,39 @@ export default function PlasBusinessPage() {
     }
   }, [role, isLoggedIn, authReady, router]);
 
+  // Check if user has business account
+  useEffect(() => {
+    if (authReady && isLoggedIn && role !== "shopper") {
+      checkBusinessAccount();
+    }
+  }, [authReady, isLoggedIn, role]);
+
+  const checkBusinessAccount = async () => {
+    try {
+      const response = await fetch("/api/queries/check-business-account");
+      if (response.ok) {
+        const data = await response.json();
+        setHasBusinessAccount(data.hasAccount);
+        setBusinessAccount(data.account);
+      } else {
+        setHasBusinessAccount(false);
+        setBusinessAccount(null);
+      }
+    } catch (error) {
+      console.error("Error checking business account:", error);
+      setHasBusinessAccount(false);
+      setBusinessAccount(null);
+    } finally {
+      setCheckingAccount(false);
+    }
+  };
+
+  const handleAccountCreated = () => {
+    setHasBusinessAccount(true);
+  };
+
   // Show loading while auth is being determined
-  if (!authReady) {
+  if (!authReady || checkingAccount) {
     return (
       <RootLayout>
         <div className="flex h-screen w-full items-center justify-center">
@@ -64,6 +101,15 @@ export default function PlasBusinessPage() {
     return null;
   }
 
+  // Show onboarding if user doesn't have business account
+  if (!hasBusinessAccount) {
+    return (
+      <RootLayout>
+        <PlasBusinessOnboarding onAccountCreated={handleAccountCreated} />
+      </RootLayout>
+    );
+  }
+
   return (
     <RootLayout>
       <div className="min-h-screen via-white to-gray-100 dark:from-gray-900 md:ml-16">
@@ -76,6 +122,7 @@ export default function PlasBusinessPage() {
             isCreateRFQOpen={isCreateRFQOpen}
             setIsCreateRFQOpen={setIsCreateRFQOpen}
             router={router}
+            businessAccount={businessAccount}
           />
         </div>
       </div>
@@ -91,6 +138,7 @@ function BuyerDashboardContent({
   isCreateRFQOpen,
   setIsCreateRFQOpen,
   router,
+  businessAccount,
 }: {
   selectedQuote: any;
   setSelectedQuote: (quote: any) => void;
@@ -99,6 +147,7 @@ function BuyerDashboardContent({
   isCreateRFQOpen: boolean;
   setIsCreateRFQOpen: (open: boolean) => void;
   router: any;
+  businessAccount?: any;
 }) {
   const [activeTab, setActiveTab] = useState("overview");
   const [isServiceProvider, setIsServiceProvider] = useState(true); // This should come from user data/API
@@ -158,6 +207,7 @@ function BuyerDashboardContent({
       <BusinessHeader
         onCreateRFQ={handleCreateRFQ}
         onFindSuppliers={() => console.log("Finding suppliers")}
+        businessName={businessAccount?.businessName}
       />
 
       {/* Stats Cards */}

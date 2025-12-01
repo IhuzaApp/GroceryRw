@@ -6,12 +6,14 @@ interface BusinessHeaderProps {
   className?: string;
   onCreateRFQ?: () => void;
   onFindSuppliers?: () => void;
+  businessName?: string | null;
 }
 
 export function BusinessHeader({
   className = "",
   onCreateRFQ,
   onFindSuppliers,
+  businessName,
 }: BusinessHeaderProps) {
   const handleCreateRFQ = () => {
     if (onCreateRFQ) {
@@ -39,7 +41,9 @@ export function BusinessHeader({
       <div className="relative z-10">
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="mb-2 text-4xl font-bold">Business Marketplace</h1>
+            <h1 className="mb-2 text-4xl font-bold">
+              {businessName ? `${businessName}` : "Business Marketplace"}
+            </h1>
             <p className="text-lg text-green-100">
               Discover suppliers, manage orders, and streamline procurement
             </p>
