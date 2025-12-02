@@ -1,10 +1,11 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
-import { ArrowLeft, Camera, X, Check, RotateCcw } from "lucide-react";
+import { useState, useEffect } from "react";
+import { ArrowLeft, Camera, X, Check, Upload } from "lucide-react";
 import { useSession } from "next-auth/react";
 import { useAuth } from "../../context/AuthContext";
 import toast from "react-hot-toast";
+import CameraCapture from "../ui/CameraCapture";
 
 interface BusinessAccountFormProps {
   onBack: () => void;
@@ -27,41 +28,11 @@ export default function BusinessAccountForm({
   const [businessLocation, setBusinessLocation] = useState("");
   const [rdbCertificate, setRdbCertificate] = useState<string | null>(null);
   const [faceImage, setFaceImage] = useState<string | null>(null);
-  const [showCamera, setShowCamera] = useState<"rdb" | "face" | null>(null);
-  const [showPreview, setShowPreview] = useState<"rdb" | "face" | null>(null);
-  const [capturedImage, setCapturedImage] = useState<string | null>(null);
-  const [stream, setStream] = useState<MediaStream | null>(null);
-
-  const videoRef = useRef<HTMLVideoElement>(null);
-  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const [showCamera, setShowCamera] = useState<"face" | null>(null);
 
   useEffect(() => {
     fetchUserDetails();
   }, []);
-
-  // Handle video stream when it changes
-  useEffect(() => {
-    if (stream && videoRef.current) {
-      videoRef.current.srcObject = stream;
-      videoRef.current.play().catch((error) => {
-        console.error("Error playing video:", error);
-      });
-    }
-    return () => {
-      if (videoRef.current) {
-        videoRef.current.srcObject = null;
-      }
-    };
-  }, [stream]);
-
-  // Cleanup stream on unmount
-  useEffect(() => {
-    return () => {
-      if (stream) {
-        stream.getTracks().forEach((track) => track.stop());
-      }
-    };
-  }, [stream]);
 
   const fetchUserDetails = async () => {
     try {
@@ -82,122 +53,45 @@ export default function BusinessAccountForm({
     }
   };
 
-  const startCamera = async (type: "rdb" | "face") => {
-    try {
-      const mediaStream = await navigator.mediaDevices.getUserMedia({
-        video: {
-          facingMode: type === "face" ? "user" : "environment",
-          width: { ideal: 1280 },
-          height: { ideal: 720 },
-        },
-      });
-      setStream(mediaStream);
-      setShowCamera(type);
-    } catch (error: any) {
-      console.error("Error accessing camera:", error);
-      toast.error(
-        error.name === "NotAllowedError"
-          ? "Camera permission denied. Please allow camera access."
-          : "Failed to access camera. Please try again."
-      );
-    }
-  };
-
-  const stopCamera = () => {
-    if (stream) {
-      stream.getTracks().forEach((track) => track.stop());
-      setStream(null);
+  const handleCameraCapture = (imageDataUrl: string) => {
+    if (showCamera === "face") {
+      setFaceImage(imageDataUrl);
     }
     setShowCamera(null);
   };
 
-  const capturePhoto = () => {
-    if (!videoRef.current || !canvasRef.current) return;
+  const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
 
-    const video = videoRef.current;
-    const canvas = canvasRef.current;
-    const ctx = canvas.getContext("2d");
-
-    if (!ctx) return;
-
-    // Set canvas dimensions to match video
-    canvas.width = video.videoWidth;
-    canvas.height = video.videoHeight;
-
-    // Draw video frame to canvas
-    ctx.drawImage(video, 0, 0);
-
-    // Compress and convert to base64
-    let quality = 0.9;
-    let dataUrl = canvas.toDataURL("image/jpeg", quality);
-
-    // Compress if needed (max 200KB)
-    const maxSizeKB = 200;
-    while ((dataUrl.length * 0.75) / 1024 > maxSizeKB && quality > 0.1) {
-      quality -= 0.1;
-      dataUrl = canvas.toDataURL("image/jpeg", quality);
+    // Validate file type
+    const validTypes = ["image/jpeg", "image/jpg", "image/png", "image/webp", "application/pdf"];
+    if (!validTypes.includes(file.type)) {
+      toast.error("Please upload a valid image (JPEG, PNG, WebP) or PDF file");
+      return;
     }
 
-    // Resize if dimensions are too large
-    const maxDimension = 1200;
-    if (canvas.width > maxDimension || canvas.height > maxDimension) {
-      const resizedCanvas = document.createElement("canvas");
-      const resizedCtx = resizedCanvas.getContext("2d");
-      if (resizedCtx) {
-        let newWidth = canvas.width;
-        let newHeight = canvas.height;
+    // Validate file size (max 5MB)
+    const maxSizeMB = 5;
+    const maxSizeBytes = maxSizeMB * 1024 * 1024;
+    if (file.size > maxSizeBytes) {
+      toast.error(`File size must be less than ${maxSizeMB}MB`);
+      return;
+    }
 
-        if (newWidth > newHeight) {
-          if (newWidth > maxDimension) {
-            newHeight = (newHeight * maxDimension) / newWidth;
-            newWidth = maxDimension;
-          }
-        } else {
-          if (newHeight > maxDimension) {
-            newWidth = (newWidth * maxDimension) / newHeight;
-            newHeight = maxDimension;
-          }
-        }
-
-        resizedCanvas.width = newWidth;
-        resizedCanvas.height = newHeight;
-        resizedCtx.drawImage(canvas, 0, 0, newWidth, newHeight);
-        dataUrl = resizedCanvas.toDataURL("image/jpeg", quality);
+    // Convert to base64
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const result = e.target?.result;
+      if (typeof result === "string") {
+        setRdbCertificate(result);
+        toast.success("File uploaded successfully!");
       }
-    }
-
-    // Stop camera and show preview
-    stopCamera();
-    setCapturedImage(dataUrl);
-    setShowPreview(showCamera);
-  };
-
-  const confirmPhoto = () => {
-    if (!capturedImage || !showPreview) return;
-
-    // Save the captured image
-    if (showPreview === "rdb") {
-      setRdbCertificate(capturedImage);
-    } else if (showPreview === "face") {
-      setFaceImage(capturedImage);
-    }
-
-    // Close preview
-    setShowPreview(null);
-    setCapturedImage(null);
-    toast.success("Photo saved successfully!");
-  };
-
-  const retakePhoto = () => {
-    const currentType = showPreview;
-    setShowPreview(null);
-    setCapturedImage(null);
-    // Restart camera
-    if (currentType) {
-      setTimeout(() => {
-        startCamera(currentType);
-      }, 100);
-    }
+    };
+    reader.onerror = () => {
+      toast.error("Failed to read file. Please try again.");
+    };
+    reader.readAsDataURL(file);
   };
 
   const handleSubmit = async () => {
@@ -357,23 +251,30 @@ export default function BusinessAccountForm({
         </div>
       </div>
 
-      {/* RDB Certificate Capture */}
+      {/* RDB Certificate Upload */}
       <div className="space-y-2 sm:space-y-3">
         <label className="block text-xs sm:text-sm font-medium text-gray-900 dark:text-white">
           RDB Certificate <span className="text-red-500">*</span>
         </label>
         <p className="text-xs text-gray-500 dark:text-gray-400">
-          Take a clear photo of your RDB (Rwanda Development Board)
-          certificate
+          Upload a clear photo or PDF of your RDB (Rwanda Development Board)
+          certificate (Max 5MB)
         </p>
         <div className="flex items-center space-x-3 sm:space-x-4">
           {rdbCertificate ? (
             <div className="relative">
-              <img
-                src={rdbCertificate}
-                alt="RDB Certificate"
-                className="h-24 w-24 sm:h-32 sm:w-32 rounded-lg object-cover"
-              />
+              {rdbCertificate.startsWith("data:image") ? (
+                <img
+                  src={rdbCertificate}
+                  alt="RDB Certificate"
+                  className="h-24 w-24 sm:h-32 sm:w-32 rounded-lg object-cover"
+                />
+              ) : (
+                <div className="flex h-24 w-24 sm:h-32 sm:w-32 flex-col items-center justify-center rounded-lg border-2 border-gray-300 bg-gray-50 dark:border-gray-600 dark:bg-gray-800">
+                  <Upload className="h-6 w-6 sm:h-8 sm:w-8 text-gray-400" />
+                  <span className="mt-1 text-xs text-gray-500">PDF</span>
+                </div>
+              )}
               <button
                 onClick={() => {
                   setRdbCertificate(null);
@@ -384,13 +285,16 @@ export default function BusinessAccountForm({
               </button>
             </div>
           ) : (
-            <button
-              onClick={() => startCamera("rdb")}
-              className="flex h-24 w-24 sm:h-32 sm:w-32 flex-col items-center justify-center rounded-lg border-2 border-dashed border-gray-300 bg-gray-50 transition-colors hover:border-green-500 hover:bg-green-50 dark:border-gray-600 dark:bg-gray-800 dark:hover:border-green-500"
-            >
-              <Camera className="h-6 w-6 sm:h-8 sm:w-8 text-gray-400" />
-              <span className="mt-1 sm:mt-2 text-xs text-gray-500">Capture</span>
-            </button>
+            <label className="flex h-24 w-24 sm:h-32 sm:w-32 flex-col items-center justify-center rounded-lg border-2 border-dashed border-gray-300 bg-gray-50 transition-colors hover:border-green-500 hover:bg-green-50 dark:border-gray-600 dark:bg-gray-800 dark:hover:border-green-500 cursor-pointer">
+              <Upload className="h-6 w-6 sm:h-8 sm:w-8 text-gray-400" />
+              <span className="mt-1 sm:mt-2 text-xs text-gray-500">Upload</span>
+              <input
+                type="file"
+                accept="image/jpeg,image/jpg,image/png,image/webp,application/pdf"
+                onChange={handleFileUpload}
+                className="hidden"
+              />
+            </label>
           )}
         </div>
       </div>
@@ -422,7 +326,7 @@ export default function BusinessAccountForm({
             </div>
           ) : (
             <button
-              onClick={() => startCamera("face")}
+              onClick={() => setShowCamera("face")}
               className="flex h-24 w-24 sm:h-32 sm:w-32 flex-col items-center justify-center rounded-lg border-2 border-dashed border-gray-300 bg-gray-50 transition-colors hover:border-green-500 hover:bg-green-50 dark:border-gray-600 dark:bg-gray-800 dark:hover:border-green-500"
             >
               <Camera className="h-6 w-6 sm:h-8 sm:w-8 text-gray-400" />
@@ -432,73 +336,15 @@ export default function BusinessAccountForm({
         </div>
       </div>
 
-      {/* Camera Modal */}
-      {showCamera && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black">
-          <div className="relative h-full w-full bg-black">
-            <video
-              ref={videoRef}
-              autoPlay
-              playsInline
-              muted
-              className="h-full w-full object-cover"
-              style={{ transform: showCamera === "face" ? "scaleX(-1)" : "none" }}
-            />
-            <canvas ref={canvasRef} className="hidden" />
-            <div className="absolute bottom-0 left-0 right-0 flex items-center justify-center space-x-3 sm:space-x-4 bg-black bg-opacity-50 p-4 sm:p-6">
-              <button
-                onClick={stopCamera}
-                className="rounded-full bg-gray-600 p-3 sm:p-4 text-white hover:bg-gray-700"
-              >
-                <X className="h-5 w-5 sm:h-6 sm:w-6" />
-              </button>
-              <button
-                onClick={capturePhoto}
-                className="rounded-full bg-green-500 p-4 sm:p-6 text-white hover:bg-green-600"
-              >
-                <Camera className="h-6 w-6 sm:h-8 sm:w-8" />
-              </button>
-              <button
-                onClick={stopCamera}
-                className="rounded-full bg-gray-600 p-3 sm:p-4 text-white hover:bg-gray-700"
-              >
-                <RotateCcw className="h-5 w-5 sm:h-6 sm:w-6" />
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Preview Modal */}
-      {showPreview && capturedImage && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-75 p-2 sm:p-4">
-          <div className="relative w-full max-w-2xl h-full max-h-[90vh] bg-black rounded-lg overflow-hidden">
-            <div className="relative h-full flex flex-col">
-              <img
-                src={capturedImage}
-                alt="Preview"
-                className="flex-1 w-full object-contain"
-              />
-              <div className="absolute bottom-0 left-0 right-0 flex items-center justify-center gap-3 sm:space-x-4 bg-black bg-opacity-50 p-4 sm:p-6">
-                <button
-                  onClick={retakePhoto}
-                  className="flex items-center space-x-2 rounded-lg bg-gray-600 px-4 sm:px-6 py-2.5 sm:py-3 text-sm sm:text-base text-white hover:bg-gray-700"
-                >
-                  <RotateCcw className="h-4 w-4 sm:h-5 sm:w-5" />
-                  <span>Retake</span>
-                </button>
-                <button
-                  onClick={confirmPhoto}
-                  className="flex items-center space-x-2 rounded-lg bg-green-500 px-4 sm:px-6 py-2.5 sm:py-3 text-sm sm:text-base text-white hover:bg-green-600"
-                >
-                  <Check className="h-4 w-4 sm:h-5 sm:w-5" />
-                  <span>Use Photo</span>
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
+      {/* Camera Capture Component */}
+      <CameraCapture
+        isOpen={showCamera === "face"}
+        onClose={() => setShowCamera(null)}
+        onCapture={handleCameraCapture}
+        cameraType="user"
+        title="Capture Face Photo"
+        mirrorVideo={true}
+      />
 
       {/* Submit Button */}
       <div className="flex flex-col sm:flex-row justify-end gap-3 sm:space-x-4 border-t border-gray-200 pt-4 sm:pt-6 dark:border-gray-700">

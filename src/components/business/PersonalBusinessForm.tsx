@@ -1,10 +1,11 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
-import { ArrowLeft, Camera, X, Check, RotateCcw } from "lucide-react";
+import { useState, useEffect } from "react";
+import { ArrowLeft, Camera, X, Check } from "lucide-react";
 import { useSession } from "next-auth/react";
 import { useAuth } from "../../context/AuthContext";
 import toast from "react-hot-toast";
+import CameraCapture from "../ui/CameraCapture";
 
 interface PersonalBusinessFormProps {
   onBack: () => void;
@@ -24,12 +25,6 @@ export default function PersonalBusinessForm({
   const [faceImage, setFaceImage] = useState<string | null>(null);
   const [idImage, setIdImage] = useState<string | null>(null);
   const [showCamera, setShowCamera] = useState<"face" | "id" | null>(null);
-  const [showPreview, setShowPreview] = useState<"face" | "id" | null>(null);
-  const [capturedImage, setCapturedImage] = useState<string | null>(null);
-  const [stream, setStream] = useState<MediaStream | null>(null);
-
-  const videoRef = useRef<HTMLVideoElement>(null);
-  const canvasRef = useRef<HTMLCanvasElement>(null);
 
   useEffect(() => {
     fetchUserDetails();
@@ -68,146 +63,13 @@ export default function PersonalBusinessForm({
     }
   };
 
-  // Handle video stream when it changes
-  useEffect(() => {
-    if (stream && videoRef.current) {
-      videoRef.current.srcObject = stream;
-      videoRef.current.play().catch((error) => {
-        console.error("Error playing video:", error);
-      });
-    }
-    return () => {
-      if (videoRef.current) {
-        videoRef.current.srcObject = null;
-      }
-    };
-  }, [stream]);
-
-  // Cleanup stream on unmount
-  useEffect(() => {
-    return () => {
-      if (stream) {
-        stream.getTracks().forEach((track) => track.stop());
-      }
-    };
-  }, [stream]);
-
-  const startCamera = async (type: "face" | "id") => {
-    try {
-      const mediaStream = await navigator.mediaDevices.getUserMedia({
-        video: {
-          facingMode: type === "face" ? "user" : "environment",
-          width: { ideal: 1280 },
-          height: { ideal: 720 },
-        },
-      });
-      setStream(mediaStream);
-      setShowCamera(type);
-    } catch (error: any) {
-      console.error("Error accessing camera:", error);
-      toast.error(
-        error.name === "NotAllowedError"
-          ? "Camera permission denied. Please allow camera access."
-          : "Failed to access camera. Please try again."
-      );
-    }
-  };
-
-  const stopCamera = () => {
-    if (stream) {
-      stream.getTracks().forEach((track) => track.stop());
-      setStream(null);
+  const handleCameraCapture = (imageDataUrl: string) => {
+    if (showCamera === "face") {
+      setFaceImage(imageDataUrl);
+    } else if (showCamera === "id") {
+      setIdImage(imageDataUrl);
     }
     setShowCamera(null);
-  };
-
-  const capturePhoto = () => {
-    if (!videoRef.current || !canvasRef.current) return;
-
-    const video = videoRef.current;
-    const canvas = canvasRef.current;
-    const ctx = canvas.getContext("2d");
-
-    if (!ctx) return;
-
-    // Set canvas dimensions to match video
-    canvas.width = video.videoWidth;
-    canvas.height = video.videoHeight;
-
-    // Draw video frame to canvas
-    ctx.drawImage(video, 0, 0);
-
-    // Compress and convert to base64
-    let quality = 0.9;
-    let dataUrl = canvas.toDataURL("image/jpeg", quality);
-
-    // Compress if needed (max 200KB)
-    const maxSizeKB = 200;
-    while ((dataUrl.length * 0.75) / 1024 > maxSizeKB && quality > 0.1) {
-      quality -= 0.1;
-      dataUrl = canvas.toDataURL("image/jpeg", quality);
-    }
-
-    // Resize if dimensions are too large
-    const maxDimension = 1200;
-    if (canvas.width > maxDimension || canvas.height > maxDimension) {
-      const resizedCanvas = document.createElement("canvas");
-      const resizedCtx = resizedCanvas.getContext("2d");
-      if (resizedCtx) {
-        let newWidth = canvas.width;
-        let newHeight = canvas.height;
-
-        if (newWidth > newHeight) {
-          if (newWidth > maxDimension) {
-            newHeight = (newHeight * maxDimension) / newWidth;
-            newWidth = maxDimension;
-          }
-        } else {
-          if (newHeight > maxDimension) {
-            newWidth = (newWidth * maxDimension) / newHeight;
-            newHeight = maxDimension;
-          }
-        }
-
-        resizedCanvas.width = newWidth;
-        resizedCanvas.height = newHeight;
-        resizedCtx.drawImage(canvas, 0, 0, newWidth, newHeight);
-        dataUrl = resizedCanvas.toDataURL("image/jpeg", quality);
-      }
-    }
-
-    // Stop camera and show preview
-    stopCamera();
-    setCapturedImage(dataUrl);
-    setShowPreview(showCamera);
-  };
-
-  const confirmPhoto = () => {
-    if (!capturedImage || !showPreview) return;
-
-    // Save the captured image
-    if (showPreview === "face") {
-      setFaceImage(capturedImage);
-    } else if (showPreview === "id") {
-      setIdImage(capturedImage);
-    }
-
-    // Close preview
-    setShowPreview(null);
-    setCapturedImage(null);
-    toast.success("Photo saved successfully!");
-  };
-
-  const retakePhoto = () => {
-    const currentType = showPreview;
-    setShowPreview(null);
-    setCapturedImage(null);
-    // Restart camera
-    if (currentType) {
-      setTimeout(() => {
-        startCamera(currentType);
-      }, 100);
-    }
   };
 
   const handleSubmit = async () => {
@@ -343,7 +205,7 @@ export default function PersonalBusinessForm({
             </div>
           ) : (
             <button
-              onClick={() => startCamera("face")}
+              onClick={() => setShowCamera("face")}
               className="flex h-24 w-24 sm:h-32 sm:w-32 flex-col items-center justify-center rounded-lg border-2 border-dashed border-gray-300 bg-gray-50 transition-colors hover:border-green-500 hover:bg-green-50 dark:border-gray-600 dark:bg-gray-800 dark:hover:border-green-500"
             >
               <Camera className="h-6 w-6 sm:h-8 sm:w-8 text-gray-400" />
@@ -380,7 +242,7 @@ export default function PersonalBusinessForm({
             </div>
           ) : (
             <button
-              onClick={() => startCamera("id")}
+              onClick={() => setShowCamera("id")}
               className="flex h-24 w-24 sm:h-32 sm:w-32 flex-col items-center justify-center rounded-lg border-2 border-dashed border-gray-300 bg-gray-50 transition-colors hover:border-green-500 hover:bg-green-50 dark:border-gray-600 dark:bg-gray-800 dark:hover:border-green-500"
             >
               <Camera className="h-6 w-6 sm:h-8 sm:w-8 text-gray-400" />
@@ -390,73 +252,23 @@ export default function PersonalBusinessForm({
         </div>
       </div>
 
-      {/* Camera Modal */}
-      {showCamera && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black">
-          <div className="relative h-full w-full bg-black">
-            <video
-              ref={videoRef}
-              autoPlay
-              playsInline
-              muted
-              className="h-full w-full object-cover"
-              style={{ transform: "scaleX(-1)" }}
-            />
-            <canvas ref={canvasRef} className="hidden" />
-            <div className="absolute bottom-0 left-0 right-0 flex items-center justify-center space-x-3 sm:space-x-4 bg-black bg-opacity-50 p-4 sm:p-6">
-              <button
-                onClick={stopCamera}
-                className="rounded-full bg-gray-600 p-3 sm:p-4 text-white hover:bg-gray-700"
-              >
-                <X className="h-5 w-5 sm:h-6 sm:w-6" />
-              </button>
-              <button
-                onClick={capturePhoto}
-                className="rounded-full bg-green-500 p-4 sm:p-6 text-white hover:bg-green-600"
-              >
-                <Camera className="h-6 w-6 sm:h-8 sm:w-8" />
-              </button>
-              <button
-                onClick={stopCamera}
-                className="rounded-full bg-gray-600 p-3 sm:p-4 text-white hover:bg-gray-700"
-              >
-                <RotateCcw className="h-5 w-5 sm:h-6 sm:w-6" />
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Preview Modal */}
-      {showPreview && capturedImage && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-75 p-2 sm:p-4">
-          <div className="relative w-full max-w-2xl h-full max-h-[90vh] bg-black rounded-lg overflow-hidden">
-            <div className="relative h-full flex flex-col">
-              <img
-                src={capturedImage}
-                alt="Preview"
-                className="flex-1 w-full object-contain"
-              />
-              <div className="absolute bottom-0 left-0 right-0 flex items-center justify-center gap-3 sm:space-x-4 bg-black bg-opacity-50 p-4 sm:p-6">
-                <button
-                  onClick={retakePhoto}
-                  className="flex items-center space-x-2 rounded-lg bg-gray-600 px-4 sm:px-6 py-2.5 sm:py-3 text-sm sm:text-base text-white hover:bg-gray-700"
-                >
-                  <RotateCcw className="h-4 w-4 sm:h-5 sm:w-5" />
-                  <span>Retake</span>
-                </button>
-                <button
-                  onClick={confirmPhoto}
-                  className="flex items-center space-x-2 rounded-lg bg-green-500 px-4 sm:px-6 py-2.5 sm:py-3 text-sm sm:text-base text-white hover:bg-green-600"
-                >
-                  <Check className="h-4 w-4 sm:h-5 sm:w-5" />
-                  <span>Use Photo</span>
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
+      {/* Camera Capture Component */}
+      <CameraCapture
+        isOpen={showCamera === "face"}
+        onClose={() => setShowCamera(null)}
+        onCapture={handleCameraCapture}
+        cameraType="user"
+        title="Capture Face Photo"
+        mirrorVideo={true}
+      />
+      <CameraCapture
+        isOpen={showCamera === "id"}
+        onClose={() => setShowCamera(null)}
+        onCapture={handleCameraCapture}
+        cameraType="environment"
+        title="Capture ID Photo"
+        mirrorVideo={false}
+      />
 
       {/* Submit Button */}
       <div className="flex justify-end space-x-4 border-t border-gray-200 pt-4 dark:border-gray-700">
