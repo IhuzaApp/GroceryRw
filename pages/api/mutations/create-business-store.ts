@@ -261,13 +261,6 @@ export default async function handler(
     }
 
   } catch (error: any) {
-    console.error("Error creating business store:", error);
-    console.error("Error details:", {
-      message: error.message,
-      response: error.response,
-      errors: error.response?.errors,
-    });
-
     const errorMessage = error.response?.errors?.[0]?.message || error.message || "Unknown error";
     const errorCode = error.response?.errors?.[0]?.extensions?.code;
 
