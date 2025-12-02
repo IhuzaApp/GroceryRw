@@ -234,37 +234,40 @@ function BuyerDashboardContent({
       </div>
 
       {/* Main Content Tabs */}
-      <div className="space-y-8">
-        <div className="rounded-2xl border border-gray-100 bg-white p-2 shadow-lg dark:border-gray-700 dark:bg-gray-800">
-          <div className="flex space-x-2 overflow-x-auto">
+      <div className="space-y-4 sm:space-y-6 md:space-y-8">
+        <div className="rounded-xl sm:rounded-2xl border border-gray-100 bg-white p-1.5 sm:p-2 shadow-lg dark:border-gray-700 dark:bg-gray-800">
+          <div className="flex space-x-1.5 sm:space-x-2 overflow-x-auto scrollbar-hide pb-1 sm:pb-0 -mx-1 sm:mx-0 px-1 sm:px-0 scroll-smooth snap-x snap-mandatory">
             {[
               // Service Provider tabs (only visible if user is approved service provider)
               ...(isServiceProvider
                 ? [
-                    { id: "overview", label: "Overview", icon: BarChart3 },
+                    { id: "overview", label: "Overview", shortLabel: "Overview", icon: BarChart3 },
                     {
                       id: "products-bids",
                       label: "Products/Bids",
+                      shortLabel: "Products",
                       icon: Briefcase,
                     },
                     {
                       id: "rfq-opportunities",
                       label: "RFQ Opportunities",
+                      shortLabel: "RFQ",
                       icon: Search,
                     },
-                    { id: "orders", label: "Orders", icon: Truck },
+                    { id: "orders", label: "Orders", shortLabel: "Orders", icon: Truck },
                     {
                       id: "business-chats",
                       label: "Business Chats",
+                      shortLabel: "Chats",
                       icon: MessageSquare,
                     },
                   ]
                 : []),
               // Regular buyer tabs
-              { id: "suppliers", label: "Suppliers", icon: Package },
-              { id: "rfqs", label: "My RFQs", icon: FileText },
-              { id: "quotes", label: "Quotes", icon: ShoppingCart },
-              { id: "contracts", label: "Contracts", icon: FileText },
+              { id: "suppliers", label: "Suppliers", shortLabel: "Suppliers", icon: Package },
+              { id: "rfqs", label: "My RFQs", shortLabel: "RFQs", icon: FileText },
+              { id: "quotes", label: "Quotes", shortLabel: "Quotes", icon: ShoppingCart },
+              { id: "contracts", label: "Contracts", shortLabel: "Contracts", icon: FileText },
             ].map((tab) => (
               <button
                 key={tab.id}
@@ -275,14 +278,15 @@ function BuyerDashboardContent({
                   }
                   setActiveTab(tab.id);
                 }}
-                className={`flex items-center gap-2 rounded-xl px-6 py-3 text-sm font-medium transition-all duration-300 ${
+                className={`flex items-center gap-1.5 sm:gap-2 rounded-lg sm:rounded-xl px-3 sm:px-4 md:px-6 py-2 sm:py-2.5 md:py-3 text-xs sm:text-sm font-medium transition-all duration-300 whitespace-nowrap flex-shrink-0 min-w-fit snap-start touch-manipulation ${
                   activeTab === tab.id
                     ? "scale-105 transform bg-gradient-to-r from-green-500 to-emerald-500 text-white shadow-lg"
                     : "text-gray-500 hover:bg-gray-50 hover:text-gray-700 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-gray-300"
                 }`}
               >
-                <tab.icon className="h-4 w-4" />
-                {tab.label}
+                <tab.icon className="h-3.5 w-3.5 sm:h-4 sm:w-4 flex-shrink-0" />
+                <span className="hidden sm:inline">{tab.label}</span>
+                <span className="sm:hidden">{tab.shortLabel || tab.label}</span>
               </button>
             ))}
           </div>
