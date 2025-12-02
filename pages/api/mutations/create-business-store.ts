@@ -121,16 +121,23 @@ export default async function handler(
 
     const business_id = businessAccountResult.business_accounts[0].id;
 
+    // Note: Business wallet creation is skipped here because the foreign key
+    // business_wallet_business_id_fkey references PlasBusinessProductsOrSerive.id,
+    // not business_accounts.id. The wallet should be created separately when
+    // a product/service is created, or the foreign key constraint needs to be updated.
+
     // Prepare operating hours - convert to JSON if it's a string
-    let operatingHoursJson = null;
+    // Use empty object {} instead of null for GraphQL json type
+    let operatingHoursJson: any = {};
     if (operating_hours) {
       if (typeof operating_hours === "string") {
         try {
           operatingHoursJson = JSON.parse(operating_hours);
         } catch {
-          operatingHoursJson = operating_hours;
+          // If parsing fails, use empty object
+          operatingHoursJson = {};
         }
-      } else {
+      } else if (typeof operating_hours === "object" && operating_hours !== null) {
         operatingHoursJson = operating_hours;
       }
     }
@@ -154,7 +161,7 @@ export default async function handler(
       image: image || "",
       latitude: latitude || "",
       longitude: longitude || "",
-      operating_hours: operatingHoursJson || null,
+      operating_hours: operatingHoursJson,
     });
 
     if (!result.insert_business_stores || result.insert_business_stores.affected_rows === 0) {

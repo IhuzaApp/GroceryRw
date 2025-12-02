@@ -13,6 +13,7 @@ import {
   MapPin,
   User,
 } from "lucide-react";
+import { formatCurrencySync } from "../../utils/formatCurrency";
 
 const mockRFQOpportunities = [
   {
@@ -20,7 +21,7 @@ const mockRFQOpportunities = [
     title: "Office Furniture Supply",
     description:
       "Looking for complete office furniture setup for new office space",
-    budget: "$15,000 - $25,000",
+    budget: `${formatCurrencySync(15000)} - ${formatCurrencySync(25000)}`,
     category: "Furniture",
     location: "New York, NY",
     postedBy: "TechStart Inc",
@@ -35,7 +36,7 @@ const mockRFQOpportunities = [
     title: "IT Equipment Procurement",
     description:
       "Need laptops, desktops, and networking equipment for 50 employees",
-    budget: "$50,000 - $75,000",
+    budget: `${formatCurrencySync(50000)} - ${formatCurrencySync(75000)}`,
     category: "Technology",
     location: "San Francisco, CA",
     postedBy: "Digital Solutions Ltd",
@@ -49,7 +50,7 @@ const mockRFQOpportunities = [
     id: "3",
     title: "Cleaning Services Contract",
     description: "Monthly cleaning services for commercial building",
-    budget: "$3,000 - $5,000/month",
+    budget: `${formatCurrencySync(3000)} - ${formatCurrencySync(5000)}/month`,
     category: "Services",
     location: "Chicago, IL",
     postedBy: "Property Management Co",
@@ -63,7 +64,7 @@ const mockRFQOpportunities = [
     id: "4",
     title: "Marketing Materials Design",
     description: "Design and print marketing materials for product launch",
-    budget: "$8,000 - $12,000",
+    budget: `${formatCurrencySync(8000)} - ${formatCurrencySync(12000)}`,
     category: "Marketing",
     location: "Austin, TX",
     postedBy: "Creative Agency",

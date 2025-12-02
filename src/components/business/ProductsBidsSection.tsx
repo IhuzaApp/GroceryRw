@@ -19,6 +19,7 @@ import {
   MapPin,
 } from "lucide-react";
 import { CreateProductForm } from "./CreateProductForm";
+import { formatCurrencySync } from "../../utils/formatCurrency";
 
 const mockProducts = [
   {
@@ -26,7 +27,7 @@ const mockProducts = [
     name: "Corporate Catering Package",
     description:
       "Complete catering service for corporate events, meetings, and conferences",
-    price: "$45/person",
+    price: `${formatCurrencySync(45)}/person`,
     category: "Catering Services",
     status: "Active",
     bids: 8,
@@ -43,7 +44,7 @@ const mockProducts = [
     name: "Wedding Catering Service",
     description:
       "Premium wedding catering with customizable menus and professional service",
-    price: "$65/person",
+    price: `${formatCurrencySync(65)}/person`,
     category: "Catering Services",
     status: "Active",
     bids: 15,
@@ -60,7 +61,7 @@ const mockProducts = [
     name: "Fresh Grocery Delivery",
     description:
       "Daily fresh grocery delivery service for restaurants and cafes",
-    price: "$200/week",
+    price: `${formatCurrencySync(200)}/week`,
     category: "Grocery Services",
     status: "Active",
     bids: 12,
@@ -76,7 +77,7 @@ const mockProducts = [
     id: "4",
     name: "Event Catering - Buffet Style",
     description: "Buffet-style catering for large events and celebrations",
-    price: "$35/person",
+    price: `${formatCurrencySync(35)}/person`,
     category: "Catering Services",
     status: "Draft",
     bids: 0,
@@ -93,7 +94,7 @@ const mockProducts = [
     name: "Organic Grocery Box",
     description:
       "Weekly organic grocery subscription box for health-conscious customers",
-    price: "$89/week",
+    price: `${formatCurrencySync(89)}/week`,
     category: "Grocery Services",
     status: "Active",
     bids: 6,
@@ -112,7 +113,7 @@ const mockBids = [
     id: "1",
     productName: "Corporate Catering Package",
     bidderName: "Elite Catering Co.",
-    bidAmount: "$42/person",
+    bidAmount: `${formatCurrencySync(42)}/person`,
     status: "Pending",
     submittedAt: "2 hours ago",
     message:
@@ -127,7 +128,7 @@ const mockBids = [
     id: "2",
     productName: "Wedding Catering Service",
     bidderName: "Garden Fresh Catering",
-    bidAmount: "$60/person",
+    bidAmount: `${formatCurrencySync(60)}/person`,
     status: "Accepted",
     submittedAt: "1 day ago",
     message:
@@ -142,7 +143,7 @@ const mockBids = [
     id: "3",
     productName: "Fresh Grocery Delivery",
     bidderName: "Metro Grocery Supply",
-    bidAmount: "$180/week",
+    bidAmount: `${formatCurrencySync(180)}/week`,
     status: "Rejected",
     submittedAt: "3 days ago",
     message:
@@ -157,7 +158,7 @@ const mockBids = [
     id: "4",
     productName: "Corporate Catering Package",
     bidderName: "City Catering Solutions",
-    bidAmount: "$48/person",
+    bidAmount: `${formatCurrencySync(48)}/person`,
     status: "Pending",
     submittedAt: "4 hours ago",
     message:

@@ -1,6 +1,7 @@
 "use client";
 
 import { Star, Truck, Clock } from "lucide-react";
+import { formatCurrencySync } from "../../utils/formatCurrency";
 
 const quotes = [
   {
@@ -23,7 +24,7 @@ const quotes = [
       },
     },
     title: "Weekly Fresh Produce Supply",
-    totalPrice: "$2,750",
+    totalPrice: formatCurrencySync(2750),
     deliveryTime: "2-3 days",
     validUntil: "2024-01-25",
     items: [
@@ -52,7 +53,7 @@ const quotes = [
       paymentTerms: "Net 30 days",
       deliveryTerms: "FOB Destination",
       warranty: "Quality guarantee for 48 hours",
-      minimumOrder: "$500",
+      minimumOrder: formatCurrencySync(500),
     },
     notes: "All produce is certified organic and locally sourced.",
     attachments: ["organic-certificates.pdf"],
