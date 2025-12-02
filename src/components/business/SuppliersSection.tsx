@@ -12,6 +12,7 @@ import {
   MessageSquare,
   DollarSign,
 } from "lucide-react";
+import { formatCurrencySync } from "../../utils/formatCurrency";
 
 const suppliers = [
   {
@@ -20,7 +21,7 @@ const suppliers = [
     category: "Vegetables & Fruits",
     rating: 4.8,
     location: "California, USA",
-    minOrder: "$500",
+    minOrder: formatCurrencySync(500),
     deliveryTime: "2-3 days",
     verified: true,
     specialties: ["Organic", "Local", "Seasonal"],
@@ -32,7 +33,7 @@ const suppliers = [
     category: "Meat & Poultry",
     rating: 4.9,
     location: "Texas, USA",
-    minOrder: "$1,000",
+    minOrder: formatCurrencySync(1000),
     deliveryTime: "1-2 days",
     verified: true,
     specialties: ["Premium", "Grass-fed", "Halal"],
@@ -44,7 +45,7 @@ const suppliers = [
     category: "Seafood",
     rating: 4.7,
     location: "Maine, USA",
-    minOrder: "$750",
+    minOrder: formatCurrencySync(750),
     deliveryTime: "1 day",
     verified: true,
     specialties: ["Fresh", "Sustainable", "Wild-caught"],

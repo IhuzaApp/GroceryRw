@@ -1,6 +1,7 @@
 "use client";
 
 import { FileText, ShoppingCart, DollarSign, Package } from "lucide-react";
+import { formatCurrencySync } from "../../utils/formatCurrency";
 
 const stats = [
   {
@@ -19,7 +20,7 @@ const stats = [
   },
   {
     title: "Monthly Spend",
-    value: "$18,450",
+    value: formatCurrencySync(18450),
     change: "+8.2%",
     icon: DollarSign,
     color: "text-green-600",

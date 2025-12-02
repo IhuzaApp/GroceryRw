@@ -15,6 +15,7 @@ import {
 } from "lucide-react";
 import toast from "react-hot-toast";
 import { useGoogleMap } from "../../context/GoogleMapProvider";
+import { formatCurrencySync } from "../../utils/formatCurrency";
 
 interface BusinessOverviewProps {
   businessAccount?: any;
@@ -71,7 +72,31 @@ export function BusinessOverview({ businessAccount }: BusinessOverviewProps) {
     address: "",
     latitude: "",
     longitude: "",
+    operating_hours: "",
   });
+
+  // Operating hours state
+  const [operatingHours, setOperatingHours] = useState<{
+    [key: string]: { open: boolean; from: string; to: string };
+  }>({
+    monday: { open: true, from: "09:00", to: "17:00" },
+    tuesday: { open: true, from: "09:00", to: "17:00" },
+    wednesday: { open: true, from: "09:00", to: "17:00" },
+    thursday: { open: true, from: "09:00", to: "17:00" },
+    friday: { open: true, from: "09:00", to: "17:00" },
+    saturday: { open: false, from: "09:00", to: "17:00" },
+    sunday: { open: false, from: "09:00", to: "17:00" },
+  });
+
+  const days = [
+    { key: "monday", label: "Monday" },
+    { key: "tuesday", label: "Tuesday" },
+    { key: "wednesday", label: "Wednesday" },
+    { key: "thursday", label: "Thursday" },
+    { key: "friday", label: "Friday" },
+    { key: "saturday", label: "Saturday" },
+    { key: "sunday", label: "Sunday" },
+  ];
 
   // Initialize Google Maps services
   useEffect(() => {
@@ -170,9 +195,89 @@ export function BusinessOverview({ businessAccount }: BusinessOverviewProps) {
       address: "",
       latitude: "",
       longitude: "",
+      operating_hours: "",
+    });
+    // Reset operating hours to default
+    setOperatingHours({
+      monday: { open: true, from: "09:00", to: "17:00" },
+      tuesday: { open: true, from: "09:00", to: "17:00" },
+      wednesday: { open: true, from: "09:00", to: "17:00" },
+      thursday: { open: true, from: "09:00", to: "17:00" },
+      friday: { open: true, from: "09:00", to: "17:00" },
+      saturday: { open: false, from: "09:00", to: "17:00" },
+      sunday: { open: false, from: "09:00", to: "17:00" },
     });
     setSuggestions([]);
     setShowSuggestions(false);
+  };
+
+  const handleOperatingHoursChange = (
+    day: string,
+    field: "open" | "from" | "to",
+    value: boolean | string
+  ) => {
+    setOperatingHours((prev) => ({
+      ...prev,
+      [day]: {
+        ...prev[day],
+        [field]: value,
+      },
+    }));
+  };
+
+  const applyToAllDays = (from: string, to: string) => {
+    const updatedHours: typeof operatingHours = {};
+    days.forEach((day) => {
+      updatedHours[day.key] = {
+        open: operatingHours[day.key].open,
+        from,
+        to,
+      };
+    });
+    setOperatingHours(updatedHours);
+  };
+
+  const applyToDayRange = (startDay: string, endDay: string, from: string, to: string) => {
+    const startIndex = days.findIndex((d) => d.key === startDay);
+    const endIndex = days.findIndex((d) => d.key === endDay);
+    
+    if (startIndex === -1 || endIndex === -1) return;
+    
+    const updatedHours = { ...operatingHours };
+    const range = startIndex <= endIndex 
+      ? days.slice(startIndex, endIndex + 1)
+      : [...days.slice(startIndex), ...days.slice(0, endIndex + 1)];
+    
+    range.forEach((day) => {
+      updatedHours[day.key] = {
+        open: true,
+        from,
+        to,
+      };
+    });
+    
+    setOperatingHours(updatedHours);
+  };
+
+  const formatOperatingHoursForAPI = () => {
+    const formatted: { [key: string]: string } = {};
+    days.forEach((day) => {
+      const hours = operatingHours[day.key];
+      if (hours.open) {
+        // Format time from 24h to 12h format
+        const formatTime = (time: string) => {
+          const [hours, minutes] = time.split(":");
+          const hour = parseInt(hours);
+          const ampm = hour >= 12 ? "PM" : "AM";
+          const displayHour = hour % 12 || 12;
+          return `${displayHour}:${minutes} ${ampm}`;
+        };
+        formatted[day.key] = `${formatTime(hours.from)} - ${formatTime(hours.to)}`;
+      } else {
+        formatted[day.key] = "closed";
+      }
+    });
+    return formatted;
   };
 
   const handleSubmitCreateStore = async () => {
@@ -191,11 +296,15 @@ export function BusinessOverview({ businessAccount }: BusinessOverviewProps) {
       return;
     }
 
+    // Format operating hours from state
+    const operatingHoursJson = formatOperatingHoursForAPI();
+
     await createBusinessStore({
       name: newStoreData.name.trim(),
       description: newStoreData.description.trim() || undefined,
       latitude: newStoreData.latitude.trim(),
       longitude: newStoreData.longitude.trim(),
+      operating_hours: operatingHoursJson,
     });
 
     handleCloseCreateModal();
@@ -243,15 +352,15 @@ export function BusinessOverview({ businessAccount }: BusinessOverviewProps) {
   const stats = [
     {
       title: "Total Revenue",
-      value: "$45,230",
+      value: formatCurrencySync(45230),
       change: "+12.5%",
       icon: DollarSign,
       color: "text-green-600",
       bgColor: "from-green-100 to-green-200",
       detailed: [
-        { label: "This Month", value: "$12,450" },
-        { label: "Last Month", value: "$10,850" },
-        { label: "This Year", value: "$45,230" },
+        { label: "This Month", value: formatCurrencySync(12450) },
+        { label: "Last Month", value: formatCurrencySync(10850) },
+        { label: "This Year", value: formatCurrencySync(45230) },
       ],
     },
     {
@@ -557,6 +666,100 @@ export function BusinessOverview({ businessAccount }: BusinessOverviewProps) {
                     Coordinates: {newStoreData.latitude}, {newStoreData.longitude}
                   </p>
                 )}
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-900 dark:text-white mb-2">
+                  Operating Hours <span className="text-xs text-gray-500">(Optional)</span>
+                </label>
+                
+                {/* Quick Actions */}
+                <div className="mb-3 flex flex-wrap gap-2">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const defaultFrom = "09:00";
+                      const defaultTo = "17:00";
+                      applyToAllDays(defaultFrom, defaultTo);
+                    }}
+                    className="rounded-lg border border-gray-300 bg-white px-3 py-1.5 text-xs font-medium text-gray-700 transition-colors hover:bg-gray-50 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600"
+                  >
+                    Apply 9 AM - 5 PM to All
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const updatedHours: typeof operatingHours = {};
+                      days.forEach((day) => {
+                        updatedHours[day.key] = {
+                          ...operatingHours[day.key],
+                          open: ["monday", "tuesday", "wednesday", "thursday", "friday"].includes(day.key),
+                        };
+                      });
+                      setOperatingHours(updatedHours);
+                    }}
+                    className="rounded-lg border border-gray-300 bg-white px-3 py-1.5 text-xs font-medium text-gray-700 transition-colors hover:bg-gray-50 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600"
+                  >
+                    Weekdays Only
+                  </button>
+                </div>
+
+                {/* Days List */}
+                <div className="space-y-2 max-h-64 overflow-y-auto pr-2">
+                  {days.map((day) => {
+                    const hours = operatingHours[day.key];
+                    return (
+                      <div
+                        key={day.key}
+                        className="flex items-center gap-3 rounded-lg border border-gray-200 bg-gray-50 p-3 dark:border-gray-700 dark:bg-gray-900"
+                      >
+                        <div className="flex items-center gap-2 min-w-[100px]">
+                          <input
+                            type="checkbox"
+                            checked={hours.open}
+                            onChange={(e) =>
+                              handleOperatingHoursChange(day.key, "open", e.target.checked)
+                            }
+                            className="h-4 w-4 rounded border-gray-300 text-green-600 focus:ring-green-500 dark:border-gray-600 dark:bg-gray-700"
+                          />
+                          <label className="text-sm font-medium text-gray-900 dark:text-white">
+                            {day.label}
+                          </label>
+                        </div>
+
+                        {hours.open ? (
+                          <div className="flex flex-1 items-center gap-2">
+                            <div className="flex items-center gap-1">
+                              <label className="text-xs text-gray-600 dark:text-gray-400">From:</label>
+                              <input
+                                type="time"
+                                value={hours.from}
+                                onChange={(e) =>
+                                  handleOperatingHoursChange(day.key, "from", e.target.value)
+                                }
+                                className="rounded border border-gray-300 px-2 py-1 text-xs focus:border-green-500 focus:outline-none focus:ring-1 focus:ring-green-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white"
+                              />
+                            </div>
+                            <span className="text-gray-400">-</span>
+                            <div className="flex items-center gap-1">
+                              <label className="text-xs text-gray-600 dark:text-gray-400">To:</label>
+                              <input
+                                type="time"
+                                value={hours.to}
+                                onChange={(e) =>
+                                  handleOperatingHoursChange(day.key, "to", e.target.value)
+                                }
+                                className="rounded border border-gray-300 px-2 py-1 text-xs focus:border-green-500 focus:outline-none focus:ring-1 focus:ring-green-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white"
+                              />
+                            </div>
+                          </div>
+                        ) : (
+                          <span className="text-xs text-gray-500 dark:text-gray-400 italic">Closed</span>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
               </div>
 
               <div className="flex justify-end gap-3 pt-4">

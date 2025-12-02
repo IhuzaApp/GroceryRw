@@ -18,6 +18,7 @@ import {
   ArrowRight,
 } from "lucide-react";
 import toast from "react-hot-toast";
+import { formatCurrencySync } from "../../utils/formatCurrency";
 
 const mockServices = [
   {
@@ -30,7 +31,7 @@ const mockServices = [
     location: "Kigali, Rwanda",
     rating: 4.8,
     reviews: 124,
-    priceRange: "$200 - $500/month",
+    priceRange: `${formatCurrencySync(200)} - ${formatCurrencySync(500)}/month`,
     availability: "Available",
     specialties: ["Office Cleaning", "Residential", "Deep Cleaning"],
     contact: "+250 788 123 456",
@@ -47,7 +48,7 @@ const mockServices = [
     location: "Kigali, Rwanda",
     rating: 4.9,
     reviews: 89,
-    priceRange: "$300 - $800/month",
+    priceRange: `${formatCurrencySync(300)} - ${formatCurrencySync(800)}/month`,
     availability: "Available",
     specialties: ["Network Setup", "Hardware Support", "Software Installation"],
     contact: "+250 789 234 567",
@@ -64,7 +65,7 @@ const mockServices = [
     location: "Kigali, Rwanda",
     rating: 4.7,
     reviews: 156,
-    priceRange: "$500 - $2000/month",
+    priceRange: `${formatCurrencySync(500)} - ${formatCurrencySync(2000)}/month`,
     availability: "Available",
     specialties: ["Branding", "Social Media", "Content Creation"],
     contact: "+250 788 345 678",
@@ -81,7 +82,7 @@ const mockServices = [
     location: "Kigali, Rwanda",
     rating: 4.6,
     reviews: 67,
-    priceRange: "$400 - $1000/month",
+    priceRange: `${formatCurrencySync(400)} - ${formatCurrencySync(1000)}/month`,
     availability: "Available",
     specialties: ["Bookkeeping", "Tax Preparation", "Financial Consulting"],
     contact: "+250 789 456 789",

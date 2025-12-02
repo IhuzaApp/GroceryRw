@@ -3,13 +3,14 @@
 import { useState } from "react";
 import { Plus, DollarSign, FileText, Clock } from "lucide-react";
 import { RFQResponsesView } from "./RFQResponsesView";
+import { formatCurrencySync } from "../../utils/formatCurrency";
 
 const activeRFQs = [
   {
     id: "RFQ-001",
     title: "Weekly Fresh Produce Supply",
     category: "Vegetables",
-    budget: "$2,000-3,000",
+    budget: `${formatCurrencySync(2000)}-${formatCurrencySync(3000)}`,
     responses: 8,
     deadline: "2024-01-20",
     status: "Open",
@@ -20,7 +21,7 @@ const activeRFQs = [
     id: "RFQ-002",
     title: "Premium Meat Selection",
     category: "Meat",
-    budget: "$5,000-8,000",
+    budget: `${formatCurrencySync(5000)}-${formatCurrencySync(8000)}`,
     responses: 12,
     deadline: "2024-01-25",
     status: "Reviewing",
@@ -30,7 +31,7 @@ const activeRFQs = [
     id: "RFQ-003",
     title: "Dairy Products Bundle",
     category: "Dairy",
-    budget: "$1,500-2,500",
+    budget: `${formatCurrencySync(1500)}-${formatCurrencySync(2500)}`,
     responses: 6,
     deadline: "2024-01-22",
     status: "Open",

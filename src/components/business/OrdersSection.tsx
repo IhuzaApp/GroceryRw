@@ -1,13 +1,14 @@
 "use client";
 
 import { CheckCircle, AlertCircle, Truck } from "lucide-react";
+import { formatCurrencySync } from "../../utils/formatCurrency";
 
 const recentOrders = [
   {
     id: "ORD-001",
     supplier: "Fresh Farm Distributors",
     items: "Organic Vegetables Mix",
-    value: "$1,250",
+    value: formatCurrencySync(1250),
     status: "Delivered",
     deliveryDate: "2024-01-12",
     tracking: "TRK-12345",
@@ -16,7 +17,7 @@ const recentOrders = [
     id: "ORD-002",
     supplier: "Premium Meat Co.",
     items: "Prime Beef Selection",
-    value: "$3,200",
+    value: formatCurrencySync(3200),
     status: "In Transit",
     deliveryDate: "2024-01-15",
     tracking: "TRK-12346",
@@ -25,7 +26,7 @@ const recentOrders = [
     id: "ORD-003",
     supplier: "Ocean Fresh Seafood",
     items: "Daily Fresh Fish",
-    value: "$890",
+    value: formatCurrencySync(890),
     status: "Processing",
     deliveryDate: "2024-01-16",
     tracking: "TRK-12347",
