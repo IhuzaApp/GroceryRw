@@ -66,6 +66,10 @@ export function BusinessOverview({ businessAccount }: BusinessOverviewProps) {
   };
 
   const [showCreateStoreModal, setShowCreateStoreModal] = useState(false);
+  const [isCreatingStore, setIsCreatingStore] = useState(false);
+  const [categories, setCategories] = useState<any[]>([]);
+  const [loadingCategories, setLoadingCategories] = useState(false);
+  const [storeImage, setStoreImage] = useState<string>("");
   const [newStoreData, setNewStoreData] = useState({
     name: "",
     description: "",
@@ -73,6 +77,7 @@ export function BusinessOverview({ businessAccount }: BusinessOverviewProps) {
     latitude: "",
     longitude: "",
     operating_hours: "",
+    category_id: "",
   });
 
   // Operating hours state
@@ -183,8 +188,24 @@ export function BusinessOverview({ businessAccount }: BusinessOverviewProps) {
     }
   };
 
-  const handleCreateStore = () => {
+  const handleCreateStore = async () => {
     setShowCreateStoreModal(true);
+    // Fetch categories when modal opens
+    if (categories.length === 0) {
+      setLoadingCategories(true);
+      try {
+        const response = await fetch("/api/queries/categories");
+        if (response.ok) {
+          const data = await response.json();
+          setCategories(data.categories || []);
+        }
+      } catch (error) {
+        console.error("Error fetching categories:", error);
+        toast.error("Failed to load categories");
+      } finally {
+        setLoadingCategories(false);
+      }
+    }
   };
 
   const handleCloseCreateModal = () => {
@@ -196,7 +217,9 @@ export function BusinessOverview({ businessAccount }: BusinessOverviewProps) {
       latitude: "",
       longitude: "",
       operating_hours: "",
+      category_id: "",
     });
+    setStoreImage("");
     // Reset operating hours to default
     setOperatingHours({
       monday: { open: true, from: "09:00", to: "17:00" },
@@ -209,6 +232,91 @@ export function BusinessOverview({ businessAccount }: BusinessOverviewProps) {
     });
     setSuggestions([]);
     setShowSuggestions(false);
+  };
+
+  // Image compression function
+  const compressImage = (base64: string, maxSizeKB = 200): Promise<string> => {
+    return new Promise((resolve, reject) => {
+      const img = new Image();
+      img.onload = () => {
+        const canvas = document.createElement("canvas");
+        const ctx = canvas.getContext("2d");
+        if (!ctx) {
+          reject(new Error("Could not get canvas context"));
+          return;
+        }
+
+        // Calculate new dimensions while maintaining aspect ratio
+        let width = img.width;
+        let height = img.height;
+        const maxDimension = 1200;
+
+        if (width > height && width > maxDimension) {
+          height = Math.round((height * maxDimension) / width);
+          width = maxDimension;
+        } else if (height > maxDimension) {
+          width = Math.round((width * maxDimension) / height);
+          height = maxDimension;
+        }
+
+        canvas.width = width;
+        canvas.height = height;
+        ctx.drawImage(img, 0, 0, width, height);
+
+        // Compress with quality adjustment
+        let quality = 0.9;
+        let compressedBase64 = canvas.toDataURL("image/jpeg", quality);
+        const maxSize = maxSizeKB * 1024;
+
+        while (compressedBase64.length > maxSize && quality > 0.1) {
+          quality -= 0.1;
+          compressedBase64 = canvas.toDataURL("image/jpeg", quality);
+        }
+
+        resolve(compressedBase64);
+      };
+      img.onerror = () => reject(new Error("Failed to load image"));
+      img.src = base64;
+    });
+  };
+
+  const handleImageUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    // Validate file type
+    if (!file.type.startsWith("image/")) {
+      toast.error("Please select a valid image file");
+      return;
+    }
+
+    // Validate file size (max 5MB before compression)
+    const maxSizeMB = 5;
+    if (file.size > maxSizeMB * 1024 * 1024) {
+      toast.error(`File size must be less than ${maxSizeMB}MB`);
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = async (e) => {
+      const result = e.target?.result as string;
+      if (result) {
+        try {
+          // Compress the image
+          const compressed = await compressImage(result, 200);
+          setStoreImage(compressed);
+          toast.success("Image uploaded successfully!");
+        } catch (error) {
+          console.error("Error compressing image:", error);
+          setStoreImage(result); // Use original if compression fails
+          toast.success("Image uploaded successfully!");
+        }
+      }
+    };
+    reader.onerror = () => {
+      toast.error("Failed to read file. Please try again.");
+    };
+    reader.readAsDataURL(file);
   };
 
   const handleOperatingHoursChange = (
@@ -305,6 +413,8 @@ export function BusinessOverview({ businessAccount }: BusinessOverviewProps) {
       latitude: newStoreData.latitude.trim(),
       longitude: newStoreData.longitude.trim(),
       operating_hours: operatingHoursJson,
+      category_id: newStoreData.category_id || undefined,
+      image: storeImage || undefined,
     });
 
     handleCloseCreateModal();
@@ -319,6 +429,7 @@ export function BusinessOverview({ businessAccount }: BusinessOverviewProps) {
     longitude?: string;
     operating_hours?: any;
   }) => {
+    setIsCreatingStore(true);
     try {
       const response = await fetch("/api/mutations/create-business-store", {
         method: "POST",
@@ -332,14 +443,17 @@ export function BusinessOverview({ businessAccount }: BusinessOverviewProps) {
 
       if (response.ok && data.success) {
         toast.success("Store created successfully!");
+        handleCloseCreateModal();
         // Refresh stores list
         fetchUserStores();
       } else {
-        toast.error(data.error || "Failed to create store");
+        toast.error(data.error || data.message || "Failed to create store");
       }
     } catch (error: any) {
       console.error("Error creating store:", error);
       toast.error("Failed to create store. Please try again.");
+    } finally {
+      setIsCreatingStore(false);
     }
   };
 
@@ -568,21 +682,21 @@ export function BusinessOverview({ businessAccount }: BusinessOverviewProps) {
 
       {/* Create Store Modal */}
       {showCreateStoreModal && (
-        <div className="fixed inset-0 z-[10000] flex items-center justify-center bg-black bg-opacity-50 p-4">
-          <div className="relative w-full max-w-md rounded-xl bg-white shadow-2xl dark:bg-gray-800">
-            <div className="border-b border-gray-200 bg-gradient-to-r from-green-500 to-emerald-500 px-6 py-4 dark:border-gray-700">
+        <div className="fixed inset-0 z-[10000] flex items-center justify-center bg-black bg-opacity-50 p-2 sm:p-4" style={{ paddingBottom: 'env(safe-area-inset-bottom, 0px)' }}>
+          <div className="relative w-full max-w-2xl max-h-[95vh] sm:max-h-[90vh] rounded-xl bg-white shadow-2xl dark:bg-gray-800 flex flex-col overflow-hidden">
+            <div className="border-b border-gray-200 bg-gradient-to-r from-green-500 to-emerald-500 px-4 sm:px-6 py-3 sm:py-4 dark:border-gray-700 flex-shrink-0">
               <div className="flex items-center justify-between">
-                <h3 className="text-xl font-bold text-white">Create New Store</h3>
+                <h3 className="text-lg sm:text-xl font-bold text-white">Create New Store</h3>
                 <button
                   onClick={handleCloseCreateModal}
-                  className="rounded-full p-1 text-white transition-colors hover:bg-white/20"
+                  className="rounded-full p-1.5 sm:p-1 text-white transition-colors hover:bg-white/20 active:bg-white/30"
                 >
-                  <X className="h-5 w-5" />
+                  <X className="h-5 w-5 sm:h-5 sm:w-5" />
                 </button>
               </div>
             </div>
 
-            <div className="p-6 space-y-4">
+            <div className="p-4 sm:p-6 space-y-4 sm:space-y-6 overflow-y-auto flex-1">
               <div>
                 <label className="block text-sm font-medium text-gray-900 dark:text-white mb-1">
                   Store Name <span className="text-red-500">*</span>
@@ -592,7 +706,8 @@ export function BusinessOverview({ businessAccount }: BusinessOverviewProps) {
                   value={newStoreData.name}
                   onChange={(e) => setNewStoreData({ ...newStoreData, name: e.target.value })}
                   placeholder="Enter store name"
-                  className="w-full rounded-lg border border-gray-300 px-4 py-2 text-sm focus:border-green-500 focus:outline-none focus:ring-2 focus:ring-green-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white"
+                  disabled={isCreatingStore}
+                  className="w-full rounded-lg border border-gray-300 px-4 py-2 text-sm focus:border-green-500 focus:outline-none focus:ring-2 focus:ring-green-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white disabled:opacity-50 disabled:cursor-not-allowed"
                 />
               </div>
 
@@ -605,8 +720,103 @@ export function BusinessOverview({ businessAccount }: BusinessOverviewProps) {
                   onChange={(e) => setNewStoreData({ ...newStoreData, description: e.target.value })}
                   placeholder="Enter store description (optional)"
                   rows={3}
-                  className="w-full rounded-lg border border-gray-300 px-4 py-2 text-sm focus:border-green-500 focus:outline-none focus:ring-2 focus:ring-green-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white"
+                  disabled={isCreatingStore}
+                  className="w-full rounded-lg border border-gray-300 px-4 py-2 text-sm focus:border-green-500 focus:outline-none focus:ring-2 focus:ring-green-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white disabled:opacity-50 disabled:cursor-not-allowed"
                 />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-900 dark:text-white mb-1">
+                  Category <span className="text-xs text-gray-500">(Optional)</span>
+                </label>
+                {loadingCategories ? (
+                  <div className="flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400">
+                    <div className="h-4 w-4 animate-spin rounded-full border-2 border-gray-300 border-t-green-500"></div>
+                    <span>Loading categories...</span>
+                  </div>
+                ) : (
+                  <select
+                    value={newStoreData.category_id}
+                    onChange={(e) => setNewStoreData({ ...newStoreData, category_id: e.target.value })}
+                    disabled={isCreatingStore}
+                    className="w-full rounded-lg border border-gray-300 px-4 py-2 text-sm focus:border-green-500 focus:outline-none focus:ring-2 focus:ring-green-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    <option value="">Select a category (optional)</option>
+                    {categories.map((category) => (
+                      <option key={category.id} value={category.id}>
+                        {category.name}
+                      </option>
+                    ))}
+                  </select>
+                )}
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-900 dark:text-white mb-1">
+                  Store Image <span className="text-xs text-gray-500">(Optional)</span>
+                </label>
+                {storeImage ? (
+                  <div className="space-y-2">
+                    <div className="relative w-full h-48 sm:h-64 rounded-lg overflow-hidden border border-gray-300 dark:border-gray-600">
+                      <img
+                        src={storeImage}
+                        alt="Store preview"
+                        className="w-full h-full object-cover"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setStoreImage("")}
+                        disabled={isCreatingStore}
+                        className="absolute top-2 right-2 rounded-full bg-red-500 p-1.5 text-white hover:bg-red-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                      >
+                        <X className="h-4 w-4" />
+                      </button>
+                    </div>
+                    <label className="block">
+                      <span className="sr-only">Change image</span>
+                      <input
+                        type="file"
+                        accept="image/*"
+                        onChange={handleImageUpload}
+                        disabled={isCreatingStore}
+                        className="block w-full text-sm text-gray-500 dark:text-gray-400 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-medium file:bg-green-50 file:text-green-700 hover:file:bg-green-100 dark:file:bg-gray-700 dark:file:text-gray-300 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                      />
+                    </label>
+                  </div>
+                ) : (
+                  <label className="flex flex-col items-center justify-center w-full h-32 sm:h-40 border-2 border-gray-300 border-dashed rounded-lg cursor-pointer bg-gray-50 hover:bg-gray-100 dark:border-gray-600 dark:bg-gray-700 dark:hover:bg-gray-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
+                    <div className="flex flex-col items-center justify-center pt-5 pb-6">
+                      <svg
+                        className="w-8 h-8 mb-2 text-gray-500 dark:text-gray-400"
+                        aria-hidden="true"
+                        xmlns="http://www.w3.org/2000/svg"
+                        fill="none"
+                        viewBox="0 0 20 16"
+                      >
+                        <path
+                          stroke="currentColor"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth="2"
+                          d="M13 13h3a3 3 0 0 0 0-6h-.025A5.56 5.56 0 0 0 16 6.5 5.5 5.5 0 0 0 5.207 5.021C5.137 5.017 5.071 5 5 5a4 4 0 0 0 0 8h2.167M10 15V6m0 0L8 8m2-2 2 2"
+                        />
+                      </svg>
+                      <p className="mb-2 text-sm text-gray-500 dark:text-gray-400">
+                        <span className="font-semibold">Click to upload</span> or drag and drop
+                      </p>
+                      <p className="text-xs text-gray-500 dark:text-gray-400">
+                        PNG, JPG, GIF up to 5MB
+                      </p>
+                    </div>
+                    <input
+                      type="file"
+                      accept="image/*"
+                      onChange={handleImageUpload}
+                      disabled={isCreatingStore}
+                      className="hidden"
+                    />
+                  </label>
+                )}
               </div>
 
               <div>
@@ -628,7 +838,7 @@ export function BusinessOverview({ businessAccount }: BusinessOverviewProps) {
                       }
                     }}
                     placeholder="Enter store address (e.g., Kigali, Rwanda)"
-                    disabled={!isGoogleMapsLoaded}
+                    disabled={!isGoogleMapsLoaded || isCreatingStore}
                     className="w-full rounded-lg border border-gray-300 px-4 py-2 text-sm focus:border-green-500 focus:outline-none focus:ring-2 focus:ring-green-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white disabled:opacity-50 disabled:cursor-not-allowed"
                   />
                   {!isGoogleMapsLoaded && (
@@ -669,12 +879,12 @@ export function BusinessOverview({ businessAccount }: BusinessOverviewProps) {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-900 dark:text-white mb-2">
-                  Operating Hours <span className="text-xs text-gray-500">(Optional)</span>
+                <label className="block text-sm sm:text-base font-semibold text-gray-900 dark:text-white mb-3">
+                  Operating Hours <span className="text-xs font-normal text-gray-500">(Optional)</span>
                 </label>
                 
                 {/* Quick Actions */}
-                <div className="mb-3 flex flex-wrap gap-2">
+                <div className="mb-4 flex flex-wrap gap-2 sm:gap-3">
                   <button
                     type="button"
                     onClick={() => {
@@ -682,9 +892,11 @@ export function BusinessOverview({ businessAccount }: BusinessOverviewProps) {
                       const defaultTo = "17:00";
                       applyToAllDays(defaultFrom, defaultTo);
                     }}
-                    className="rounded-lg border border-gray-300 bg-white px-3 py-1.5 text-xs font-medium text-gray-700 transition-colors hover:bg-gray-50 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600"
+                    disabled={isCreatingStore}
+                    className="flex-1 sm:flex-none rounded-lg border border-gray-300 bg-white px-3 sm:px-4 py-2 text-xs sm:text-sm font-medium text-gray-700 transition-all hover:border-green-500 hover:bg-green-50 hover:text-green-700 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-300 dark:hover:border-green-600 dark:hover:bg-gray-600 disabled:opacity-50 disabled:cursor-not-allowed"
                   >
-                    Apply 9 AM - 5 PM to All
+                    <span className="hidden sm:inline">Apply 9 AM - 5 PM to All</span>
+                    <span className="sm:hidden">9 AM - 5 PM All</span>
                   </button>
                   <button
                     type="button"
@@ -698,63 +910,77 @@ export function BusinessOverview({ businessAccount }: BusinessOverviewProps) {
                       });
                       setOperatingHours(updatedHours);
                     }}
-                    className="rounded-lg border border-gray-300 bg-white px-3 py-1.5 text-xs font-medium text-gray-700 transition-colors hover:bg-gray-50 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600"
+                    disabled={isCreatingStore}
+                    className="flex-1 sm:flex-none rounded-lg border border-gray-300 bg-white px-3 sm:px-4 py-2 text-xs sm:text-sm font-medium text-gray-700 transition-all hover:border-green-500 hover:bg-green-50 hover:text-green-700 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-300 dark:hover:border-green-600 dark:hover:bg-gray-600 disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     Weekdays Only
                   </button>
                 </div>
 
                 {/* Days List */}
-                <div className="space-y-2 max-h-64 overflow-y-auto pr-2">
+                <div className="space-y-2.5 sm:space-y-3 max-h-[280px] sm:max-h-64 overflow-y-auto pr-1 sm:pr-2 scrollbar-thin scrollbar-thumb-gray-300 dark:scrollbar-thumb-gray-600">
                   {days.map((day) => {
                     const hours = operatingHours[day.key];
                     return (
                       <div
                         key={day.key}
-                        className="flex items-center gap-3 rounded-lg border border-gray-200 bg-gray-50 p-3 dark:border-gray-700 dark:bg-gray-900"
+                        className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3 rounded-lg border border-gray-200 bg-gray-50 p-3 sm:p-3.5 transition-all hover:border-green-300 hover:shadow-sm dark:border-gray-700 dark:bg-gray-900 dark:hover:border-gray-600"
                       >
-                        <div className="flex items-center gap-2 min-w-[100px]">
+                        {/* Day Label and Toggle */}
+                        <div className="flex items-center gap-2.5 sm:min-w-[110px] sm:max-w-[110px]">
                           <input
                             type="checkbox"
                             checked={hours.open}
                             onChange={(e) =>
                               handleOperatingHoursChange(day.key, "open", e.target.checked)
                             }
-                            className="h-4 w-4 rounded border-gray-300 text-green-600 focus:ring-green-500 dark:border-gray-600 dark:bg-gray-700"
+                            disabled={isCreatingStore}
+                            className="h-4 w-4 sm:h-5 sm:w-5 rounded border-gray-300 text-green-600 focus:ring-2 focus:ring-green-500 focus:ring-offset-0 dark:border-gray-600 dark:bg-gray-700 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
                           />
-                          <label className="text-sm font-medium text-gray-900 dark:text-white">
+                          <label className="text-sm sm:text-base font-semibold text-gray-900 dark:text-white cursor-pointer flex-1">
                             {day.label}
                           </label>
                         </div>
 
+                        {/* Time Inputs or Closed Status */}
                         {hours.open ? (
-                          <div className="flex flex-1 items-center gap-2">
-                            <div className="flex items-center gap-1">
-                              <label className="text-xs text-gray-600 dark:text-gray-400">From:</label>
+                          <div className="flex flex-1 items-center gap-2 sm:gap-3 pl-6 sm:pl-0">
+                            <div className="flex items-center gap-1.5 sm:gap-2 flex-1">
+                              <label className="text-xs sm:text-sm font-medium text-gray-600 dark:text-gray-400 whitespace-nowrap">
+                                From:
+                              </label>
                               <input
                                 type="time"
                                 value={hours.from}
                                 onChange={(e) =>
                                   handleOperatingHoursChange(day.key, "from", e.target.value)
                                 }
-                                className="rounded border border-gray-300 px-2 py-1 text-xs focus:border-green-500 focus:outline-none focus:ring-1 focus:ring-green-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white"
+                                disabled={isCreatingStore}
+                                className="flex-1 sm:flex-none w-full sm:w-auto rounded-lg border border-gray-300 px-2.5 sm:px-3 py-2 sm:py-1.5 text-xs sm:text-sm focus:border-green-500 focus:outline-none focus:ring-2 focus:ring-green-500/20 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:focus:border-green-500 disabled:opacity-50 disabled:cursor-not-allowed"
                               />
                             </div>
-                            <span className="text-gray-400">-</span>
-                            <div className="flex items-center gap-1">
-                              <label className="text-xs text-gray-600 dark:text-gray-400">To:</label>
+                            <span className="text-gray-400 font-medium">-</span>
+                            <div className="flex items-center gap-1.5 sm:gap-2 flex-1">
+                              <label className="text-xs sm:text-sm font-medium text-gray-600 dark:text-gray-400 whitespace-nowrap">
+                                To:
+                              </label>
                               <input
                                 type="time"
                                 value={hours.to}
                                 onChange={(e) =>
                                   handleOperatingHoursChange(day.key, "to", e.target.value)
                                 }
-                                className="rounded border border-gray-300 px-2 py-1 text-xs focus:border-green-500 focus:outline-none focus:ring-1 focus:ring-green-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white"
+                                disabled={isCreatingStore}
+                                className="flex-1 sm:flex-none w-full sm:w-auto rounded-lg border border-gray-300 px-2.5 sm:px-3 py-2 sm:py-1.5 text-xs sm:text-sm focus:border-green-500 focus:outline-none focus:ring-2 focus:ring-green-500/20 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:focus:border-green-500 disabled:opacity-50 disabled:cursor-not-allowed"
                               />
                             </div>
                           </div>
                         ) : (
-                          <span className="text-xs text-gray-500 dark:text-gray-400 italic">Closed</span>
+                          <div className="pl-6 sm:pl-0">
+                            <span className="inline-flex items-center rounded-full bg-gray-200 px-3 py-1 text-xs sm:text-sm font-medium text-gray-600 dark:bg-gray-700 dark:text-gray-400">
+                              Closed
+                            </span>
+                          </div>
                         )}
                       </div>
                     );
@@ -762,19 +988,26 @@ export function BusinessOverview({ businessAccount }: BusinessOverviewProps) {
                 </div>
               </div>
 
-              <div className="flex justify-end gap-3 pt-4">
+              <div className="flex flex-col sm:flex-row justify-end gap-2 sm:gap-3 pt-4 sm:pt-6 border-t border-gray-200 dark:border-gray-700">
                 <button
                   onClick={handleCloseCreateModal}
-                  className="rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-50 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700"
+                  className="w-full sm:w-auto rounded-lg border border-gray-300 bg-white px-4 sm:px-6 py-2.5 sm:py-2 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-50 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700"
                 >
                   Cancel
                 </button>
                 <button
                   onClick={handleSubmitCreateStore}
-                  disabled={!newStoreData.name.trim() || !newStoreData.address.trim() || !isGoogleMapsLoaded}
-                  className="rounded-lg bg-gradient-to-r from-green-500 to-emerald-500 px-4 py-2 text-sm font-semibold text-white transition-all hover:from-green-600 hover:to-emerald-600 disabled:cursor-not-allowed disabled:opacity-50"
+                  disabled={!newStoreData.name.trim() || !newStoreData.address.trim() || !isGoogleMapsLoaded || isCreatingStore}
+                  className="w-full sm:w-auto rounded-lg bg-gradient-to-r from-green-500 to-emerald-500 px-4 sm:px-6 py-2.5 sm:py-2 text-sm font-semibold text-white transition-all hover:from-green-600 hover:to-emerald-600 disabled:cursor-not-allowed disabled:opacity-50 shadow-lg flex items-center justify-center gap-2"
                 >
-                  Create Store
+                  {isCreatingStore ? (
+                    <>
+                      <div className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent"></div>
+                      <span>Creating...</span>
+                    </>
+                  ) : (
+                    "Create Store"
+                  )}
                 </button>
               </div>
             </div>
