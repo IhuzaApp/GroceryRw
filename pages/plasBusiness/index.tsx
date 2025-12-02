@@ -30,6 +30,8 @@ import { CreateRFQForm } from "../../src/components/business/CreateRFQForm";
 import { ContractsManagement } from "../../src/components/business/ContractsManagement";
 import PlasBusinessOnboarding from "../../src/components/business/PlasBusinessOnboarding";
 import { BusinessOverview } from "../../src/components/business/BusinessOverview";
+import { ServicesSection } from "../../src/components/business/ServicesSection";
+import toast from "react-hot-toast";
 
 // Data moved to individual components
 
@@ -162,9 +164,20 @@ function BuyerDashboardContent({
   useEffect(() => {
     console.log("🏢 BuyerDashboardContent - Business Account:", businessAccount);
     console.log("📝 Business Name:", businessAccount?.businessName);
+    console.log("📋 Account Type:", businessAccount?.accountType);
   }, [businessAccount]);
+  
   const [activeTab, setActiveTab] = useState("overview");
-  const [isServiceProvider, setIsServiceProvider] = useState(true); // This should come from user data/API
+  const isPersonalAccount = businessAccount?.accountType === "personal";
+  const isBusinessAccount = businessAccount?.accountType === "business";
+  // Service provider status should come from user data/API
+  // For now, only business accounts can be service providers
+  const [isServiceProvider, setIsServiceProvider] = useState(isBusinessAccount);
+  
+  useEffect(() => {
+    // Only business accounts can be service providers
+    setIsServiceProvider(isBusinessAccount);
+  }, [isBusinessAccount]);
 
   const handleViewQuoteDetails = (quote: any) => {
     setSelectedQuote(quote);
@@ -238,8 +251,8 @@ function BuyerDashboardContent({
         <div className="rounded-xl sm:rounded-2xl border border-gray-100 bg-white p-1.5 sm:p-2 shadow-lg dark:border-gray-700 dark:bg-gray-800">
           <div className="flex space-x-1.5 sm:space-x-2 overflow-x-auto scrollbar-hide pb-1 sm:pb-0 -mx-1 sm:mx-0 px-1 sm:px-0 scroll-smooth snap-x snap-mandatory">
             {[
-              // Service Provider tabs (only visible if user is approved service provider)
-              ...(isServiceProvider
+              // Service Provider tabs (only visible for business accounts that are service providers)
+              ...(isServiceProvider && isBusinessAccount
                 ? [
                     { id: "overview", label: "Overview", shortLabel: "Overview", icon: BarChart3 },
                     {
@@ -263,7 +276,20 @@ function BuyerDashboardContent({
                     },
                   ]
                 : []),
-              // Regular buyer tabs
+              // Personal account tabs (only for personal accounts)
+              ...(isPersonalAccount
+                ? [
+                    { id: "overview", label: "Overview", shortLabel: "Overview", icon: BarChart3 },
+                    { id: "services", label: "Services", shortLabel: "Services", icon: Package },
+                    {
+                      id: "business-chats",
+                      label: "Business Chats",
+                      shortLabel: "Chats",
+                      icon: MessageSquare,
+                    },
+                  ]
+                : []),
+              // Regular buyer tabs (for all account types)
               { id: "suppliers", label: "Suppliers", shortLabel: "Suppliers", icon: Package },
               { id: "rfqs", label: "My RFQs", shortLabel: "RFQs", icon: FileText },
               { id: "quotes", label: "Quotes", shortLabel: "Quotes", icon: ShoppingCart },
@@ -292,18 +318,32 @@ function BuyerDashboardContent({
           </div>
         </div>
 
-        {/* Service Provider Tabs */}
-        {isServiceProvider && activeTab === "overview" && (
+        {/* Service Provider Tabs (Business Accounts Only) */}
+        {isServiceProvider && isBusinessAccount && activeTab === "overview" && (
           <BusinessOverview businessAccount={businessAccount} />
         )}
 
-        {isServiceProvider && activeTab === "products-bids" && (
+        {isServiceProvider && isBusinessAccount && activeTab === "products-bids" && (
           <ProductsBidsSection />
         )}
 
-        {isServiceProvider && activeTab === "rfq-opportunities" && (
+        {isServiceProvider && isBusinessAccount && activeTab === "rfq-opportunities" && (
           <RFQOpportunitiesSection
             onMessageCustomer={handleMessageQuoteSupplier}
+          />
+        )}
+
+        {/* Personal Account Tabs */}
+        {isPersonalAccount && activeTab === "overview" && (
+          <BusinessOverview businessAccount={businessAccount} />
+        )}
+
+        {isPersonalAccount && activeTab === "services" && (
+          <ServicesSection
+            onRequestQuotation={(serviceId) => {
+              console.log("Requesting quotation for service:", serviceId);
+              toast.success("Quotation request sent! The service provider will contact you soon.");
+            }}
           />
         )}
 
