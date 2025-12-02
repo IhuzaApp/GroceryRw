@@ -4,16 +4,52 @@ import { authOptions } from "../auth/[...nextauth]";
 import { hasuraClient } from "../../../src/lib/hasuraClient";
 import { gql } from "graphql-request";
 
-const CREATE_BUSINESS_STORE = gql`
+// Base mutation without category_id
+const CREATE_BUSINESS_STORE_BASE = gql`
   mutation CreateBusinessStore(
     $business_id: uuid!
-    $category_id: uuid = ""
     $description: String = ""
     $image: String = ""
     $latitude: String = ""
     $longitude: String = ""
     $name: String!
-    $operating_hours: json = ""
+    $operating_hours: json = "{}"
+  ) {
+    insert_business_stores(
+      objects: {
+        business_id: $business_id
+        description: $description
+        image: $image
+        is_active: false
+        latitude: $latitude
+        longitude: $longitude
+        name: $name
+        operating_hours: $operating_hours
+      }
+    ) {
+      affected_rows
+      returning {
+        id
+        name
+        description
+        business_id
+        created_at
+      }
+    }
+  }
+`;
+
+// Mutation with category_id
+const CREATE_BUSINESS_STORE_WITH_CATEGORY = gql`
+  mutation CreateBusinessStore(
+    $business_id: uuid!
+    $category_id: uuid!
+    $description: String = ""
+    $image: String = ""
+    $latitude: String = ""
+    $longitude: String = ""
+    $name: String!
+    $operating_hours: json = "{}"
   ) {
     insert_business_stores(
       objects: {
@@ -142,44 +178,88 @@ export default async function handler(
       }
     }
 
-    const result = await hasuraClient.request<{
-      insert_business_stores: {
-        affected_rows: number;
-        returning: Array<{
-          id: string;
-          name: string;
-          description: string | null;
-          business_id: string;
-          created_at: string;
-        }>;
-      };
-    }>(CREATE_BUSINESS_STORE, {
+    // Check if category_id is provided and valid
+    const hasValidCategoryId = category_id && 
+      category_id.trim() !== "" && 
+      /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(category_id.trim());
+
+    // Build variables object
+    const variables: Record<string, any> = {
       business_id,
       name: name.trim(),
       description: description?.trim() || "",
-      category_id: category_id || "",
       image: image || "",
       latitude: latitude || "",
       longitude: longitude || "",
       operating_hours: operatingHoursJson,
-    });
+    };
 
-    if (!result.insert_business_stores || result.insert_business_stores.affected_rows === 0) {
-      throw new Error("Failed to create business store");
+    // Choose the appropriate mutation based on whether category_id is provided
+    // Add category_id to variables only if it's valid
+    if (hasValidCategoryId) {
+      variables.category_id = category_id.trim();
+      const result = await hasuraClient.request<{
+        insert_business_stores: {
+          affected_rows: number;
+          returning: Array<{
+            id: string;
+            name: string;
+            description: string | null;
+            business_id: string;
+            created_at: string;
+          }>;
+        };
+      }>(CREATE_BUSINESS_STORE_WITH_CATEGORY, variables);
+      
+      if (!result.insert_business_stores || result.insert_business_stores.affected_rows === 0) {
+        throw new Error("Failed to create business store");
+      }
+
+      const createdStore = result.insert_business_stores.returning[0];
+
+      return res.status(200).json({
+        success: true,
+        store: {
+          id: createdStore.id,
+          name: createdStore.name,
+          description: createdStore.description,
+          businessId: createdStore.business_id,
+          createdAt: createdStore.created_at,
+        },
+      });
+    } else {
+      // Use mutation without category_id
+      const result = await hasuraClient.request<{
+        insert_business_stores: {
+          affected_rows: number;
+          returning: Array<{
+            id: string;
+            name: string;
+            description: string | null;
+            business_id: string;
+            created_at: string;
+          }>;
+        };
+      }>(CREATE_BUSINESS_STORE_BASE, variables);
+      
+      if (!result.insert_business_stores || result.insert_business_stores.affected_rows === 0) {
+        throw new Error("Failed to create business store");
+      }
+
+      const createdStore = result.insert_business_stores.returning[0];
+
+      return res.status(200).json({
+        success: true,
+        store: {
+          id: createdStore.id,
+          name: createdStore.name,
+          description: createdStore.description,
+          businessId: createdStore.business_id,
+          createdAt: createdStore.created_at,
+        },
+      });
     }
 
-    const createdStore = result.insert_business_stores.returning[0];
-
-    return res.status(200).json({
-      success: true,
-      store: {
-        id: createdStore.id,
-        name: createdStore.name,
-        description: createdStore.description,
-        businessId: createdStore.business_id,
-        createdAt: createdStore.created_at,
-      },
-    });
   } catch (error: any) {
     console.error("Error creating business store:", error);
     console.error("Error details:", {
