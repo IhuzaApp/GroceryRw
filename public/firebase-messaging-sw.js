@@ -7,14 +7,7 @@ importScripts(
 );
 
 // Initialize Firebase
-const firebaseConfig = {
-  apiKey: node.env.NEXT_PUBLIC_FIREBASE_API_KEY,
-  authDomain: node.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN,
-  projectId: node.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
-  storageBucket: node.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET,
-  messagingSenderId: node.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID,
-  appId: node.env.NEXT_PUBLIC_FIREBASE_APP_ID,
-};
+const firebaseConfig = {};
 
 firebase.initializeApp(firebaseConfig);
 
