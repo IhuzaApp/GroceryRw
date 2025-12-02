@@ -21,6 +21,7 @@ export default function PersonalBusinessForm({
   const [loading, setLoading] = useState(false);
   const [userDetails, setUserDetails] = useState<any>(null);
   const [defaultAddress, setDefaultAddress] = useState<any>(null);
+  const [businessName, setBusinessName] = useState("");
   const [businessLocation, setBusinessLocation] = useState("");
   const [faceImage, setFaceImage] = useState<string | null>(null);
   const [idImage, setIdImage] = useState<string | null>(null);
@@ -73,6 +74,10 @@ export default function PersonalBusinessForm({
   };
 
   const handleSubmit = async () => {
+    if (!businessName.trim()) {
+      toast.error("Business name is required");
+      return;
+    }
     if (!faceImage || !idImage) {
       toast.error("Please capture both face and ID images");
       return;
@@ -92,6 +97,7 @@ export default function PersonalBusinessForm({
         },
         body: JSON.stringify({
           account_type: "personal",
+          business_name: businessName.trim(),
           face_image: faceImage,
           id_image: idImage,
           business_location: businessLocation.trim(),
@@ -150,9 +156,34 @@ export default function PersonalBusinessForm({
         </div>
       )}
 
+      {/* Business Name */}
+      <div className="space-y-2 sm:space-y-3">
+        <label
+          htmlFor="businessName"
+          className="block text-xs sm:text-sm font-medium text-gray-900 dark:text-white"
+        >
+          Business Name <span className="text-red-500">*</span>
+        </label>
+        <p className="text-xs text-gray-500 dark:text-gray-400">
+          Enter the name of your personal business
+        </p>
+        <input
+          id="businessName"
+          type="text"
+          value={businessName}
+          onChange={(e) => setBusinessName(e.target.value)}
+          placeholder="e.g., John's Grocery Store"
+          className="block w-full rounded-lg border border-gray-300 px-3 sm:px-4 py-2 text-sm sm:text-base text-gray-900 placeholder-gray-400 focus:border-green-500 focus:outline-none focus:ring-2 focus:ring-green-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:placeholder-gray-500"
+          required
+        />
+      </div>
+
       {/* Operating Address */}
-      <div className="space-y-3">
-        <label className="block text-sm font-medium text-gray-900 dark:text-white">
+      <div className="space-y-2 sm:space-y-3">
+        <label
+          htmlFor="businessLocation"
+          className="block text-xs sm:text-sm font-medium text-gray-900 dark:text-white"
+        >
           Operating Address <span className="text-red-500">*</span>
         </label>
         <p className="text-xs text-gray-500 dark:text-gray-400">
@@ -280,7 +311,7 @@ export default function PersonalBusinessForm({
         </button>
         <button
           onClick={handleSubmit}
-          disabled={loading || !faceImage || !idImage}
+          disabled={loading || !businessName.trim() || !faceImage || !idImage || !businessLocation.trim()}
           className="flex items-center space-x-2 rounded-lg bg-gradient-to-r from-green-500 to-emerald-500 px-6 py-2 font-semibold text-white transition-all hover:from-green-600 hover:to-emerald-600 disabled:cursor-not-allowed disabled:opacity-50"
         >
           {loading ? (

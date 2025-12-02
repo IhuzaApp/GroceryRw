@@ -115,10 +115,11 @@ export default async function handler(
         });
       }
     } else {
-      if (!face_image || !id_image || !business_location) {
+      // Personal account
+      if (!business_name || !face_image || !id_image || !business_location) {
         return res.status(400).json({
           error: "Missing required fields for personal account",
-          required: ["face_image", "id_image", "business_location"],
+          required: ["business_name", "face_image", "id_image", "business_location"],
         });
       }
     }
