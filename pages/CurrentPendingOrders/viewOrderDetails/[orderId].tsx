@@ -18,22 +18,24 @@ function formatOrderID(id?: string | number): string {
 // Helper to display timestamps as relative time ago
 function timeAgo(timestamp: string): string {
   if (!timestamp) return "Unknown";
-  
+
   try {
     const now = Date.now();
     const past = new Date(timestamp).getTime();
-    
+
     // Check if the date is valid
     if (isNaN(past)) {
       return new Date().toLocaleDateString();
     }
-    
+
     const diffInSeconds = Math.floor((now - past) / 1000);
 
     if (diffInSeconds < 60) return "just now";
     if (diffInSeconds < 3600) return `${Math.floor(diffInSeconds / 60)}m ago`;
-    if (diffInSeconds < 86400) return `${Math.floor(diffInSeconds / 3600)}h ago`;
-    if (diffInSeconds < 2592000) return `${Math.floor(diffInSeconds / 86400)}d ago`;
+    if (diffInSeconds < 86400)
+      return `${Math.floor(diffInSeconds / 3600)}h ago`;
+    if (diffInSeconds < 2592000)
+      return `${Math.floor(diffInSeconds / 86400)}d ago`;
     return new Date(timestamp).toLocaleDateString();
   } catch (error) {
     console.error("Error parsing timestamp:", error);
@@ -45,20 +47,20 @@ function timeAgo(timestamp: string): string {
 function getOrderStatusInfo(order: any) {
   const isDone = order?.status === "delivered";
   const isAssigned = !!order?.shopper_id || !!order?.assignedTo;
-  
+
   if (isDone) {
     return {
       status: "Delivered",
       color: "green",
       icon: "✓",
-      description: "Order completed successfully"
+      description: "Order completed successfully",
     };
   } else if (!isAssigned) {
     return {
       status: "Pending",
       color: "yellow",
       icon: "⏳",
-      description: "Waiting for shopper assignment"
+      description: "Waiting for shopper assignment",
     };
   } else {
     switch (order?.status) {
@@ -67,37 +69,37 @@ function getOrderStatusInfo(order: any) {
           status: "Shopping",
           color: "blue",
           icon: "🛒",
-          description: "Shopper is picking your items"
+          description: "Shopper is picking your items",
         };
       case "packing":
         return {
           status: "Packing",
           color: "purple",
           icon: "📦",
-          description: "Preparing for delivery"
+          description: "Preparing for delivery",
         };
       case "on_the_way":
         return {
           status: "On the Way",
           color: "orange",
           icon: "🚚",
-          description: "Heading to your location"
+          description: "Heading to your location",
         };
       default:
         return {
           status: "Ongoing",
           color: "blue",
           icon: "🔄",
-          description: "Order in progress"
+          description: "Order in progress",
         };
     }
   }
 }
 
 // Mobile Component - Clean, minimal design
-const MobileOrderDetails = ({ 
-  order, 
-  orderType 
+const MobileOrderDetails = ({
+  order,
+  orderType,
 }: {
   order: any;
   orderType: "regular" | "reel" | "restaurant" | null;
@@ -107,7 +109,7 @@ const MobileOrderDetails = ({
   return (
     <div className="min-h-screen bg-white dark:bg-gray-900">
       {/* Mobile Header */}
-      <div className="border-b border-gray-200 px-4 py-4 dark:border-gray-700 -mx-4 -mt-6">
+      <div className="-mx-4 -mt-6 border-b border-gray-200 px-4 py-4 dark:border-gray-700">
         <div className="flex items-center justify-between">
           <Link
             href="/CurrentPendingOrders"
@@ -123,7 +125,6 @@ const MobileOrderDetails = ({
               <path d="M19 12H5M12 19l-7-7 7-7" />
             </svg>
           </Link>
-          
           <div className="text-center">
             <h1 className="text-lg font-semibold text-gray-900 dark:text-white">
               Order Details
@@ -134,7 +135,6 @@ const MobileOrderDetails = ({
               </span>
             </div>
           </div>
-          
           <div className="w-6"></div> {/* Spacer for centering */}
         </div>
       </div>
@@ -146,27 +146,39 @@ const MobileOrderDetails = ({
           {(() => {
             const statusInfo = getOrderStatusInfo(order);
             const colorClasses = {
-              green: "from-green-400 to-green-600 shadow-green-200 dark:shadow-green-900/50",
-              yellow: "from-yellow-400 to-yellow-600 shadow-yellow-200 dark:shadow-yellow-900/50",
+              green:
+                "from-green-400 to-green-600 shadow-green-200 dark:shadow-green-900/50",
+              yellow:
+                "from-yellow-400 to-yellow-600 shadow-yellow-200 dark:shadow-yellow-900/50",
               blue: "from-blue-400 to-blue-600 shadow-blue-200 dark:shadow-blue-900/50",
-              purple: "from-purple-400 to-purple-600 shadow-purple-200 dark:shadow-purple-900/50",
-              orange: "from-orange-400 to-orange-600 shadow-orange-200 dark:shadow-orange-900/50"
+              purple:
+                "from-purple-400 to-purple-600 shadow-purple-200 dark:shadow-purple-900/50",
+              orange:
+                "from-orange-400 to-orange-600 shadow-orange-200 dark:shadow-orange-900/50",
             };
-            
+
             return (
-              <div className={`relative overflow-hidden rounded-2xl bg-gradient-to-r ${colorClasses[statusInfo.color as keyof typeof colorClasses]} p-6 text-white shadow-lg`}>
+              <div
+                className={`relative overflow-hidden rounded-2xl bg-gradient-to-r ${
+                  colorClasses[statusInfo.color as keyof typeof colorClasses]
+                } p-6 text-white shadow-lg`}
+              >
                 {/* Animated background elements */}
-                <div className="absolute -top-4 -right-4 h-16 w-16 rounded-full bg-white opacity-10 animate-pulse"></div>
-                <div className="absolute -bottom-2 -left-2 h-12 w-12 rounded-full bg-white opacity-5 animate-bounce"></div>
-                
+                <div className="absolute -right-4 -top-4 h-16 w-16 animate-pulse rounded-full bg-white opacity-10"></div>
+                <div className="absolute -bottom-2 -left-2 h-12 w-12 animate-bounce rounded-full bg-white opacity-5"></div>
+
                 <div className="relative z-10">
                   <div className="flex items-center gap-4">
                     <div className="flex h-16 w-16 items-center justify-center rounded-full bg-white bg-opacity-20 text-3xl">
                       {statusInfo.icon}
                     </div>
                     <div className="flex-1">
-                      <h2 className="text-2xl font-bold">{statusInfo.status}</h2>
-                      <p className="text-sm opacity-90">{statusInfo.description}</p>
+                      <h2 className="text-2xl font-bold">
+                        {statusInfo.status}
+                      </h2>
+                      <p className="text-sm opacity-90">
+                        {statusInfo.description}
+                      </p>
                     </div>
                   </div>
                 </div>
@@ -191,9 +203,9 @@ const MobileOrderDetails = ({
 };
 
 // Desktop Component - Original design
-const DesktopOrderDetails = ({ 
-  order, 
-  orderType 
+const DesktopOrderDetails = ({
+  order,
+  orderType,
 }: {
   order: any;
   orderType: "regular" | "reel" | "restaurant" | null;
@@ -391,18 +403,12 @@ function ViewOrderDetailsPage() {
       <RootLayout>
         {/* Mobile View */}
         <div className="block md:hidden">
-          <MobileOrderDetails
-            order={order}
-            orderType={orderType}
-          />
+          <MobileOrderDetails order={order} orderType={orderType} />
         </div>
-        
+
         {/* Desktop View */}
         <div className="hidden md:block">
-          <DesktopOrderDetails
-            order={order}
-            orderType={orderType}
-          />
+          <DesktopOrderDetails order={order} orderType={orderType} />
         </div>
       </RootLayout>
     </AuthGuard>

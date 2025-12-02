@@ -162,18 +162,21 @@ function BuyerDashboardContent({
 }) {
   // Log business account data when component receives it
   useEffect(() => {
-    console.log("🏢 BuyerDashboardContent - Business Account:", businessAccount);
+    console.log(
+      "🏢 BuyerDashboardContent - Business Account:",
+      businessAccount
+    );
     console.log("📝 Business Name:", businessAccount?.businessName);
     console.log("📋 Account Type:", businessAccount?.accountType);
   }, [businessAccount]);
-  
+
   const [activeTab, setActiveTab] = useState("overview");
   const isPersonalAccount = businessAccount?.accountType === "personal";
   const isBusinessAccount = businessAccount?.accountType === "business";
   // Service provider status should come from user data/API
   // For now, only business accounts can be service providers
   const [isServiceProvider, setIsServiceProvider] = useState(isBusinessAccount);
-  
+
   useEffect(() => {
     // Only business accounts can be service providers
     setIsServiceProvider(isBusinessAccount);
@@ -248,13 +251,18 @@ function BuyerDashboardContent({
 
       {/* Main Content Tabs */}
       <div className="space-y-4 sm:space-y-6 md:space-y-8">
-        <div className="rounded-xl sm:rounded-2xl border border-gray-100 bg-white p-1.5 sm:p-2 shadow-lg dark:border-gray-700 dark:bg-gray-800">
-          <div className="flex space-x-1.5 sm:space-x-2 overflow-x-auto scrollbar-hide pb-1 sm:pb-0 -mx-1 sm:mx-0 px-1 sm:px-0 scroll-smooth snap-x snap-mandatory">
+        <div className="rounded-xl border border-gray-100 bg-white p-1.5 shadow-lg dark:border-gray-700 dark:bg-gray-800 sm:rounded-2xl sm:p-2">
+          <div className="scrollbar-hide -mx-1 flex snap-x snap-mandatory space-x-1.5 overflow-x-auto scroll-smooth px-1 pb-1 sm:mx-0 sm:space-x-2 sm:px-0 sm:pb-0">
             {[
               // Service Provider tabs (only visible for business accounts that are service providers)
               ...(isServiceProvider && isBusinessAccount
                 ? [
-                    { id: "overview", label: "Overview", shortLabel: "Overview", icon: BarChart3 },
+                    {
+                      id: "overview",
+                      label: "Overview",
+                      shortLabel: "Overview",
+                      icon: BarChart3,
+                    },
                     {
                       id: "products-bids",
                       label: "Products/Bids",
@@ -267,7 +275,12 @@ function BuyerDashboardContent({
                       shortLabel: "RFQ",
                       icon: Search,
                     },
-                    { id: "orders", label: "Orders", shortLabel: "Orders", icon: Truck },
+                    {
+                      id: "orders",
+                      label: "Orders",
+                      shortLabel: "Orders",
+                      icon: Truck,
+                    },
                     {
                       id: "business-chats",
                       label: "Business Chats",
@@ -279,8 +292,18 @@ function BuyerDashboardContent({
               // Personal account tabs (only for personal accounts)
               ...(isPersonalAccount
                 ? [
-                    { id: "overview", label: "Overview", shortLabel: "Overview", icon: BarChart3 },
-                    { id: "services", label: "Services", shortLabel: "Services", icon: Package },
+                    {
+                      id: "overview",
+                      label: "Overview",
+                      shortLabel: "Overview",
+                      icon: BarChart3,
+                    },
+                    {
+                      id: "services",
+                      label: "Services",
+                      shortLabel: "Services",
+                      icon: Package,
+                    },
                     {
                       id: "business-chats",
                       label: "Business Chats",
@@ -290,10 +313,30 @@ function BuyerDashboardContent({
                   ]
                 : []),
               // Regular buyer tabs (for all account types)
-              { id: "suppliers", label: "Suppliers", shortLabel: "Suppliers", icon: Package },
-              { id: "rfqs", label: "My RFQs", shortLabel: "RFQs", icon: FileText },
-              { id: "quotes", label: "Quotes", shortLabel: "Quotes", icon: ShoppingCart },
-              { id: "contracts", label: "Contracts", shortLabel: "Contracts", icon: FileText },
+              {
+                id: "suppliers",
+                label: "Suppliers",
+                shortLabel: "Suppliers",
+                icon: Package,
+              },
+              {
+                id: "rfqs",
+                label: "My RFQs",
+                shortLabel: "RFQs",
+                icon: FileText,
+              },
+              {
+                id: "quotes",
+                label: "Quotes",
+                shortLabel: "Quotes",
+                icon: ShoppingCart,
+              },
+              {
+                id: "contracts",
+                label: "Contracts",
+                shortLabel: "Contracts",
+                icon: FileText,
+              },
             ].map((tab) => (
               <button
                 key={tab.id}
@@ -304,13 +347,13 @@ function BuyerDashboardContent({
                   }
                   setActiveTab(tab.id);
                 }}
-                className={`flex items-center gap-1.5 sm:gap-2 rounded-lg sm:rounded-xl px-3 sm:px-4 md:px-6 py-2 sm:py-2.5 md:py-3 text-xs sm:text-sm font-medium transition-all duration-300 whitespace-nowrap flex-shrink-0 min-w-fit snap-start touch-manipulation ${
+                className={`flex min-w-fit flex-shrink-0 touch-manipulation snap-start items-center gap-1.5 whitespace-nowrap rounded-lg px-3 py-2 text-xs font-medium transition-all duration-300 sm:gap-2 sm:rounded-xl sm:px-4 sm:py-2.5 sm:text-sm md:px-6 md:py-3 ${
                   activeTab === tab.id
                     ? "scale-105 transform bg-gradient-to-r from-green-500 to-emerald-500 text-white shadow-lg"
                     : "text-gray-500 hover:bg-gray-50 hover:text-gray-700 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-gray-300"
                 }`}
               >
-                <tab.icon className="h-3.5 w-3.5 sm:h-4 sm:w-4 flex-shrink-0" />
+                <tab.icon className="h-3.5 w-3.5 flex-shrink-0 sm:h-4 sm:w-4" />
                 <span className="hidden sm:inline">{tab.label}</span>
                 <span className="sm:hidden">{tab.shortLabel || tab.label}</span>
               </button>
@@ -323,15 +366,17 @@ function BuyerDashboardContent({
           <BusinessOverview businessAccount={businessAccount} />
         )}
 
-        {isServiceProvider && isBusinessAccount && activeTab === "products-bids" && (
-          <ProductsBidsSection />
-        )}
+        {isServiceProvider &&
+          isBusinessAccount &&
+          activeTab === "products-bids" && <ProductsBidsSection />}
 
-        {isServiceProvider && isBusinessAccount && activeTab === "rfq-opportunities" && (
-          <RFQOpportunitiesSection
-            onMessageCustomer={handleMessageQuoteSupplier}
-          />
-        )}
+        {isServiceProvider &&
+          isBusinessAccount &&
+          activeTab === "rfq-opportunities" && (
+            <RFQOpportunitiesSection
+              onMessageCustomer={handleMessageQuoteSupplier}
+            />
+          )}
 
         {/* Personal Account Tabs */}
         {isPersonalAccount && activeTab === "overview" && (
@@ -342,7 +387,9 @@ function BuyerDashboardContent({
           <ServicesSection
             onRequestQuotation={(serviceId) => {
               console.log("Requesting quotation for service:", serviceId);
-              toast.success("Quotation request sent! The service provider will contact you soon.");
+              toast.success(
+                "Quotation request sent! The service provider will contact you soon."
+              );
             }}
           />
         )}

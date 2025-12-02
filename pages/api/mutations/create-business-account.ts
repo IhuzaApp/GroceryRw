@@ -103,15 +103,32 @@ export default async function handler(
     } = req.body as CreateBusinessAccountInput;
 
     // Validate required fields based on account type
-    if (!account_type || (account_type !== "personal" && account_type !== "business")) {
+    if (
+      !account_type ||
+      (account_type !== "personal" && account_type !== "business")
+    ) {
       return res.status(400).json({ error: "Invalid account type" });
     }
 
     if (account_type === "business") {
-      if (!business_name || !business_email || !business_phone || !business_location || !rdb_certificate || !face_image) {
+      if (
+        !business_name ||
+        !business_email ||
+        !business_phone ||
+        !business_location ||
+        !rdb_certificate ||
+        !face_image
+      ) {
         return res.status(400).json({
           error: "Missing required fields for business account",
-          required: ["business_name", "business_email", "business_phone", "business_location", "rdb_certificate", "face_image"],
+          required: [
+            "business_name",
+            "business_email",
+            "business_phone",
+            "business_location",
+            "rdb_certificate",
+            "face_image",
+          ],
         });
       }
     } else {
@@ -119,7 +136,12 @@ export default async function handler(
       if (!business_name || !face_image || !id_image || !business_location) {
         return res.status(400).json({
           error: "Missing required fields for personal account",
-          required: ["business_name", "face_image", "id_image", "business_location"],
+          required: [
+            "business_name",
+            "face_image",
+            "id_image",
+            "business_location",
+          ],
         });
       }
     }
@@ -152,7 +174,10 @@ export default async function handler(
       };
     }>(CREATE_BUSINESS_ACCOUNT, variables);
 
-    if (!result.insert_business_accounts || result.insert_business_accounts.affected_rows === 0) {
+    if (
+      !result.insert_business_accounts ||
+      result.insert_business_accounts.affected_rows === 0
+    ) {
       throw new Error("Failed to create business account");
     }
 
@@ -175,11 +200,12 @@ export default async function handler(
       response: error.response,
       errors: error.response?.errors,
     });
-    
+
     // Return more detailed error information
-    const errorMessage = error.response?.errors?.[0]?.message || error.message || "Unknown error";
+    const errorMessage =
+      error.response?.errors?.[0]?.message || error.message || "Unknown error";
     const errorCode = error.response?.errors?.[0]?.extensions?.code;
-    
+
     return res.status(500).json({
       error: "Failed to create business account",
       message: errorMessage,
@@ -188,4 +214,3 @@ export default async function handler(
     });
   }
 }
-

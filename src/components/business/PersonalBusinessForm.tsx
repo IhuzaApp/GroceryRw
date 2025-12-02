@@ -55,7 +55,11 @@ export default function PersonalBusinessForm({
         if (defaultAddr) {
           setDefaultAddress(defaultAddr);
           // Pre-fill with default address if available
-          const addressString = `${defaultAddr.street || ""}, ${defaultAddr.city || ""}${defaultAddr.postal_code ? `, ${defaultAddr.postal_code}` : ""}`.trim().replace(/^,\s*|,\s*$/g, '');
+          const addressString = `${defaultAddr.street || ""}, ${
+            defaultAddr.city || ""
+          }${defaultAddr.postal_code ? `, ${defaultAddr.postal_code}` : ""}`
+            .trim()
+            .replace(/^,\s*|,\s*$/g, "");
           setBusinessLocation(addressString);
         }
       }
@@ -123,13 +127,13 @@ export default function PersonalBusinessForm({
   return (
     <div className="space-y-4 sm:space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between border-b border-gray-200 pb-3 sm:pb-4 dark:border-gray-700">
-        <h3 className="text-lg sm:text-xl font-semibold text-gray-900 dark:text-white">
+      <div className="flex items-center justify-between border-b border-gray-200 pb-3 dark:border-gray-700 sm:pb-4">
+        <h3 className="text-lg font-semibold text-gray-900 dark:text-white sm:text-xl">
           Personal Account Registration
         </h3>
         <button
           onClick={onBack}
-          className="flex items-center space-x-1 sm:space-x-2 text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-200 text-sm sm:text-base"
+          className="flex items-center space-x-1 text-sm text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-200 sm:space-x-2 sm:text-base"
         >
           <ArrowLeft className="h-4 w-4 sm:h-5 sm:w-5" />
           <span className="hidden sm:inline">Back</span>
@@ -138,11 +142,11 @@ export default function PersonalBusinessForm({
 
       {/* User Details Display */}
       {userDetails && (
-        <div className="rounded-lg border border-gray-200 bg-gray-50 p-3 sm:p-4 dark:border-gray-700 dark:bg-gray-900">
-          <h4 className="mb-2 sm:mb-3 text-sm sm:text-base font-semibold text-gray-900 dark:text-white">
+        <div className="rounded-lg border border-gray-200 bg-gray-50 p-3 dark:border-gray-700 dark:bg-gray-900 sm:p-4">
+          <h4 className="mb-2 text-sm font-semibold text-gray-900 dark:text-white sm:mb-3 sm:text-base">
             Your Details
           </h4>
-          <div className="grid gap-1.5 sm:gap-2 text-xs sm:text-sm text-gray-700 dark:text-gray-300">
+          <div className="grid gap-1.5 text-xs text-gray-700 dark:text-gray-300 sm:gap-2 sm:text-sm">
             <div>
               <span className="font-medium">Name:</span> {userDetails.name}
             </div>
@@ -160,7 +164,7 @@ export default function PersonalBusinessForm({
       <div className="space-y-2 sm:space-y-3">
         <label
           htmlFor="businessName"
-          className="block text-xs sm:text-sm font-medium text-gray-900 dark:text-white"
+          className="block text-xs font-medium text-gray-900 dark:text-white sm:text-sm"
         >
           Business Name <span className="text-red-500">*</span>
         </label>
@@ -173,7 +177,7 @@ export default function PersonalBusinessForm({
           value={businessName}
           onChange={(e) => setBusinessName(e.target.value)}
           placeholder="e.g., John's Grocery Store"
-          className="block w-full rounded-lg border border-gray-300 px-3 sm:px-4 py-2 text-sm sm:text-base text-gray-900 placeholder-gray-400 focus:border-green-500 focus:outline-none focus:ring-2 focus:ring-green-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:placeholder-gray-500"
+          className="block w-full rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-900 placeholder-gray-400 focus:border-green-500 focus:outline-none focus:ring-2 focus:ring-green-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:placeholder-gray-500 sm:px-4 sm:text-base"
           required
         />
       </div>
@@ -182,7 +186,7 @@ export default function PersonalBusinessForm({
       <div className="space-y-2 sm:space-y-3">
         <label
           htmlFor="businessLocation"
-          className="block text-xs sm:text-sm font-medium text-gray-900 dark:text-white"
+          className="block text-xs font-medium text-gray-900 dark:text-white sm:text-sm"
         >
           Operating Address <span className="text-red-500">*</span>
         </label>
@@ -194,7 +198,13 @@ export default function PersonalBusinessForm({
           onChange={(e) => setBusinessLocation(e.target.value)}
           placeholder={
             defaultAddress
-              ? `${defaultAddress.street || ""}, ${defaultAddress.city || ""}${defaultAddress.postal_code ? `, ${defaultAddress.postal_code}` : ""}`.trim().replace(/^,\s*|,\s*$/g, '')
+              ? `${defaultAddress.street || ""}, ${defaultAddress.city || ""}${
+                  defaultAddress.postal_code
+                    ? `, ${defaultAddress.postal_code}`
+                    : ""
+                }`
+                  .trim()
+                  .replace(/^,\s*|,\s*$/g, "")
               : "Enter your operating address (e.g., Street, City, Postal Code)"
           }
           rows={3}
@@ -203,7 +213,8 @@ export default function PersonalBusinessForm({
         />
         {defaultAddress && (
           <p className="text-xs text-gray-500 dark:text-gray-400">
-            <span className="font-medium">Default address:</span> {defaultAddress.street}, {defaultAddress.city}
+            <span className="font-medium">Default address:</span>{" "}
+            {defaultAddress.street}, {defaultAddress.city}
             {defaultAddress.postal_code && `, ${defaultAddress.postal_code}`}
           </p>
         )}
@@ -211,7 +222,7 @@ export default function PersonalBusinessForm({
 
       {/* Face Image Capture */}
       <div className="space-y-2 sm:space-y-3">
-        <label className="block text-xs sm:text-sm font-medium text-gray-900 dark:text-white">
+        <label className="block text-xs font-medium text-gray-900 dark:text-white sm:text-sm">
           Face Photo <span className="text-red-500">*</span>
         </label>
         <p className="text-xs text-gray-500 dark:text-gray-400">
@@ -223,13 +234,13 @@ export default function PersonalBusinessForm({
               <img
                 src={faceImage}
                 alt="Face"
-                className="h-24 w-24 sm:h-32 sm:w-32 rounded-lg object-cover"
+                className="h-24 w-24 rounded-lg object-cover sm:h-32 sm:w-32"
               />
               <button
                 onClick={() => {
                   setFaceImage(null);
                 }}
-                className="absolute -right-1 -top-1 sm:-right-2 sm:-top-2 rounded-full bg-red-500 p-1 text-white hover:bg-red-600"
+                className="absolute -right-1 -top-1 rounded-full bg-red-500 p-1 text-white hover:bg-red-600 sm:-right-2 sm:-top-2"
               >
                 <X className="h-3 w-3 sm:h-4 sm:w-4" />
               </button>
@@ -237,10 +248,12 @@ export default function PersonalBusinessForm({
           ) : (
             <button
               onClick={() => setShowCamera("face")}
-              className="flex h-24 w-24 sm:h-32 sm:w-32 flex-col items-center justify-center rounded-lg border-2 border-dashed border-gray-300 bg-gray-50 transition-colors hover:border-green-500 hover:bg-green-50 dark:border-gray-600 dark:bg-gray-800 dark:hover:border-green-500"
+              className="flex h-24 w-24 flex-col items-center justify-center rounded-lg border-2 border-dashed border-gray-300 bg-gray-50 transition-colors hover:border-green-500 hover:bg-green-50 dark:border-gray-600 dark:bg-gray-800 dark:hover:border-green-500 sm:h-32 sm:w-32"
             >
-              <Camera className="h-6 w-6 sm:h-8 sm:w-8 text-gray-400" />
-              <span className="mt-1 sm:mt-2 text-xs text-gray-500">Capture</span>
+              <Camera className="h-6 w-6 text-gray-400 sm:h-8 sm:w-8" />
+              <span className="mt-1 text-xs text-gray-500 sm:mt-2">
+                Capture
+              </span>
             </button>
           )}
         </div>
@@ -248,7 +261,7 @@ export default function PersonalBusinessForm({
 
       {/* ID Image Capture */}
       <div className="space-y-2 sm:space-y-3">
-        <label className="block text-xs sm:text-sm font-medium text-gray-900 dark:text-white">
+        <label className="block text-xs font-medium text-gray-900 dark:text-white sm:text-sm">
           ID Photo <span className="text-red-500">*</span>
         </label>
         <p className="text-xs text-gray-500 dark:text-gray-400">
@@ -260,13 +273,13 @@ export default function PersonalBusinessForm({
               <img
                 src={idImage}
                 alt="ID"
-                className="h-24 w-24 sm:h-32 sm:w-32 rounded-lg object-cover"
+                className="h-24 w-24 rounded-lg object-cover sm:h-32 sm:w-32"
               />
               <button
                 onClick={() => {
                   setIdImage(null);
                 }}
-                className="absolute -right-1 -top-1 sm:-right-2 sm:-top-2 rounded-full bg-red-500 p-1 text-white hover:bg-red-600"
+                className="absolute -right-1 -top-1 rounded-full bg-red-500 p-1 text-white hover:bg-red-600 sm:-right-2 sm:-top-2"
               >
                 <X className="h-3 w-3 sm:h-4 sm:w-4" />
               </button>
@@ -274,10 +287,12 @@ export default function PersonalBusinessForm({
           ) : (
             <button
               onClick={() => setShowCamera("id")}
-              className="flex h-24 w-24 sm:h-32 sm:w-32 flex-col items-center justify-center rounded-lg border-2 border-dashed border-gray-300 bg-gray-50 transition-colors hover:border-green-500 hover:bg-green-50 dark:border-gray-600 dark:bg-gray-800 dark:hover:border-green-500"
+              className="flex h-24 w-24 flex-col items-center justify-center rounded-lg border-2 border-dashed border-gray-300 bg-gray-50 transition-colors hover:border-green-500 hover:bg-green-50 dark:border-gray-600 dark:bg-gray-800 dark:hover:border-green-500 sm:h-32 sm:w-32"
             >
-              <Camera className="h-6 w-6 sm:h-8 sm:w-8 text-gray-400" />
-              <span className="mt-1 sm:mt-2 text-xs text-gray-500">Capture</span>
+              <Camera className="h-6 w-6 text-gray-400 sm:h-8 sm:w-8" />
+              <span className="mt-1 text-xs text-gray-500 sm:mt-2">
+                Capture
+              </span>
             </button>
           )}
         </div>
@@ -311,7 +326,13 @@ export default function PersonalBusinessForm({
         </button>
         <button
           onClick={handleSubmit}
-          disabled={loading || !businessName.trim() || !faceImage || !idImage || !businessLocation.trim()}
+          disabled={
+            loading ||
+            !businessName.trim() ||
+            !faceImage ||
+            !idImage ||
+            !businessLocation.trim()
+          }
           className="flex items-center space-x-2 rounded-lg bg-gradient-to-r from-green-500 to-emerald-500 px-6 py-2 font-semibold text-white transition-all hover:from-green-600 hover:to-emerald-600 disabled:cursor-not-allowed disabled:opacity-50"
         >
           {loading ? (
@@ -330,5 +351,3 @@ export default function PersonalBusinessForm({
     </div>
   );
 }
-
-

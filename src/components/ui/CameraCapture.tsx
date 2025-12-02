@@ -209,26 +209,26 @@ export default function CameraCapture({
             />
             <canvas ref={canvasRef} className="hidden" />
             <div
-              className="absolute bottom-0 left-0 right-0 flex items-center justify-center space-x-3 sm:space-x-4 bg-black bg-opacity-90 backdrop-blur-sm p-4 sm:p-6 z-10"
+              className="absolute bottom-0 left-0 right-0 z-10 flex items-center justify-center space-x-3 bg-black bg-opacity-90 p-4 backdrop-blur-sm sm:space-x-4 sm:p-6"
               style={{
                 paddingBottom: "max(1rem, env(safe-area-inset-bottom, 1rem))",
               }}
             >
               <button
                 onClick={handleClose}
-                className="rounded-full bg-gray-600 p-3 sm:p-4 text-white hover:bg-gray-700 z-10"
+                className="z-10 rounded-full bg-gray-600 p-3 text-white hover:bg-gray-700 sm:p-4"
               >
                 <X className="h-5 w-5 sm:h-6 sm:w-6" />
               </button>
               <button
                 onClick={capturePhoto}
-                className="rounded-full bg-green-500 p-4 sm:p-6 text-white hover:bg-green-600 z-10 shadow-lg"
+                className="z-10 rounded-full bg-green-500 p-4 text-white shadow-lg hover:bg-green-600 sm:p-6"
               >
                 <Camera className="h-6 w-6 sm:h-8 sm:w-8" />
               </button>
               <button
                 onClick={handleClose}
-                className="rounded-full bg-gray-600 p-3 sm:p-4 text-white hover:bg-gray-700 z-10"
+                className="z-10 rounded-full bg-gray-600 p-3 text-white hover:bg-gray-700 sm:p-4"
               >
                 <RotateCcw className="h-5 w-5 sm:h-6 sm:w-6" />
               </button>
@@ -243,29 +243,29 @@ export default function CameraCapture({
           className="fixed inset-0 z-[10000] flex items-center justify-center bg-black bg-opacity-75 p-2 sm:p-4"
           style={{ paddingBottom: "env(safe-area-inset-bottom, 0px)" }}
         >
-          <div className="relative w-full max-w-2xl h-full max-h-[90vh] bg-black rounded-lg overflow-hidden">
-            <div className="relative h-full flex flex-col">
+          <div className="relative h-full max-h-[90vh] w-full max-w-2xl overflow-hidden rounded-lg bg-black">
+            <div className="relative flex h-full flex-col">
               <img
                 src={capturedImage}
                 alt="Preview"
-                className="flex-1 w-full object-contain"
+                className="w-full flex-1 object-contain"
               />
               <div
-                className="absolute bottom-0 left-0 right-0 flex items-center justify-center gap-3 sm:space-x-4 bg-black bg-opacity-90 backdrop-blur-sm p-4 sm:p-6 z-10"
+                className="absolute bottom-0 left-0 right-0 z-10 flex items-center justify-center gap-3 bg-black bg-opacity-90 p-4 backdrop-blur-sm sm:space-x-4 sm:p-6"
                 style={{
                   paddingBottom: "max(1rem, env(safe-area-inset-bottom, 1rem))",
                 }}
               >
                 <button
                   onClick={retakePhoto}
-                  className="flex items-center space-x-2 rounded-lg bg-gray-600 px-4 sm:px-6 py-2.5 sm:py-3 text-sm sm:text-base text-white hover:bg-gray-700 z-10"
+                  className="z-10 flex items-center space-x-2 rounded-lg bg-gray-600 px-4 py-2.5 text-sm text-white hover:bg-gray-700 sm:px-6 sm:py-3 sm:text-base"
                 >
                   <RotateCcw className="h-4 w-4 sm:h-5 sm:w-5" />
                   <span>Retake</span>
                 </button>
                 <button
                   onClick={confirmPhoto}
-                  className="flex items-center space-x-2 rounded-lg bg-green-500 px-4 sm:px-6 py-2.5 sm:py-3 text-sm sm:text-base text-white hover:bg-green-600 z-10 shadow-lg"
+                  className="z-10 flex items-center space-x-2 rounded-lg bg-green-500 px-4 py-2.5 text-sm text-white shadow-lg hover:bg-green-600 sm:px-6 sm:py-3 sm:text-base"
                 >
                   <Check className="h-4 w-4 sm:h-5 sm:w-5" />
                   <span>Use Photo</span>
@@ -278,4 +278,3 @@ export default function CameraCapture({
     </>
   );
 }
-

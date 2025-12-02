@@ -151,7 +151,10 @@ export default async function handler(
       business_accounts: Array<{ id: string }>;
     }>(businessAccountQuery, { user_id });
 
-    if (!businessAccountResult.business_accounts || businessAccountResult.business_accounts.length === 0) {
+    if (
+      !businessAccountResult.business_accounts ||
+      businessAccountResult.business_accounts.length === 0
+    ) {
       return res.status(400).json({ error: "Business account not found" });
     }
 
@@ -173,15 +176,21 @@ export default async function handler(
           // If parsing fails, use empty object
           operatingHoursJson = {};
         }
-      } else if (typeof operating_hours === "object" && operating_hours !== null) {
+      } else if (
+        typeof operating_hours === "object" &&
+        operating_hours !== null
+      ) {
         operatingHoursJson = operating_hours;
       }
     }
 
     // Check if category_id is provided and valid
-    const hasValidCategoryId = category_id && 
-      category_id.trim() !== "" && 
-      /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(category_id.trim());
+    const hasValidCategoryId =
+      category_id &&
+      category_id.trim() !== "" &&
+      /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(
+        category_id.trim()
+      );
 
     // Build variables object
     const variables: Record<string, any> = {
@@ -210,8 +219,11 @@ export default async function handler(
           }>;
         };
       }>(CREATE_BUSINESS_STORE_WITH_CATEGORY, variables);
-      
-      if (!result.insert_business_stores || result.insert_business_stores.affected_rows === 0) {
+
+      if (
+        !result.insert_business_stores ||
+        result.insert_business_stores.affected_rows === 0
+      ) {
         throw new Error("Failed to create business store");
       }
 
@@ -241,8 +253,11 @@ export default async function handler(
           }>;
         };
       }>(CREATE_BUSINESS_STORE_BASE, variables);
-      
-      if (!result.insert_business_stores || result.insert_business_stores.affected_rows === 0) {
+
+      if (
+        !result.insert_business_stores ||
+        result.insert_business_stores.affected_rows === 0
+      ) {
         throw new Error("Failed to create business store");
       }
 
@@ -259,9 +274,9 @@ export default async function handler(
         },
       });
     }
-
   } catch (error: any) {
-    const errorMessage = error.response?.errors?.[0]?.message || error.message || "Unknown error";
+    const errorMessage =
+      error.response?.errors?.[0]?.message || error.message || "Unknown error";
     const errorCode = error.response?.errors?.[0]?.extensions?.code;
 
     return res.status(500).json({
@@ -272,4 +287,3 @@ export default async function handler(
     });
   }
 }
-

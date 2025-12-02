@@ -8,12 +8,12 @@ import { AuthGuard } from "../../src/components/AuthGuard";
 import { useTheme } from "../../src/context/ThemeContext";
 
 // Mobile Component - Clean, minimal design
-const MobileCurrentOrders = ({ 
-  filter, 
-  setFilter, 
-  orders, 
-  loading, 
-  fetchOrders 
+const MobileCurrentOrders = ({
+  filter,
+  setFilter,
+  orders,
+  loading,
+  fetchOrders,
 }: {
   filter: string;
   setFilter: (filter: string) => void;
@@ -26,7 +26,7 @@ const MobileCurrentOrders = ({
   return (
     <div className="min-h-screen bg-white dark:bg-gray-900">
       {/* Mobile Header */}
-      <div className="border-b border-gray-200 px-4 py-4 dark:border-gray-700 -mx-4 -mt-6">
+      <div className="-mx-4 -mt-6 border-b border-gray-200 px-4 py-4 dark:border-gray-700">
         <div className="flex items-center justify-between">
           <Link
             href="/"
@@ -42,13 +42,11 @@ const MobileCurrentOrders = ({
               <path d="M19 12H5M12 19l-7-7 7-7" />
             </svg>
           </Link>
-          
           <div className="text-center">
             <h1 className="text-lg font-semibold text-gray-900 dark:text-white">
               Order Track
             </h1>
           </div>
-          
           <div className="w-6"></div> {/* Spacer for centering */}
         </div>
       </div>
@@ -68,11 +66,13 @@ const MobileCurrentOrders = ({
                 onClick={() => setFilter("pending")}
               >
                 <div className="flex items-center justify-center">
-                  <div className={`mr-2 rounded-full p-1 ${
-                    filter === "pending"
-                      ? "bg-green-100 dark:bg-green-900/30"
-                      : "bg-gray-200 dark:bg-gray-600"
-                  }`}>
+                  <div
+                    className={`mr-2 rounded-full p-1 ${
+                      filter === "pending"
+                        ? "bg-green-100 dark:bg-green-900/30"
+                        : "bg-gray-200 dark:bg-gray-600"
+                    }`}
+                  >
                     <svg
                       className={`h-3 w-3 ${
                         filter === "pending"
@@ -103,11 +103,13 @@ const MobileCurrentOrders = ({
                 onClick={() => setFilter("done")}
               >
                 <div className="flex items-center justify-center">
-                  <div className={`mr-2 rounded-full p-1 ${
-                    filter === "done"
-                      ? "bg-green-100 dark:bg-green-900/30"
-                      : "bg-gray-200 dark:bg-gray-600"
-                  }`}>
+                  <div
+                    className={`mr-2 rounded-full p-1 ${
+                      filter === "done"
+                        ? "bg-green-100 dark:bg-green-900/30"
+                        : "bg-gray-200 dark:bg-gray-600"
+                    }`}
+                  >
                     <svg
                       className={`h-3 w-3 ${
                         filter === "done"
@@ -148,13 +150,13 @@ const MobileCurrentOrders = ({
 };
 
 // Desktop Component - Original design
-const DesktopCurrentOrders = ({ 
-  filter, 
-  setFilter, 
-  orders, 
-  loading, 
+const DesktopCurrentOrders = ({
+  filter,
+  setFilter,
+  orders,
+  loading,
   fetchOrders,
-  session 
+  session,
 }: {
   filter: string;
   setFilter: (filter: string) => void;
@@ -205,11 +207,13 @@ const DesktopCurrentOrders = ({
                 onClick={() => setFilter("pending")}
               >
                 <div className="flex items-center justify-center">
-                  <div className={`mr-3 rounded-full p-1.5 ${
-                    filter === "pending"
-                      ? "bg-green-100 dark:bg-green-900/30"
-                      : "bg-gray-200 dark:bg-gray-600"
-                  }`}>
+                  <div
+                    className={`mr-3 rounded-full p-1.5 ${
+                      filter === "pending"
+                        ? "bg-green-100 dark:bg-green-900/30"
+                        : "bg-gray-200 dark:bg-gray-600"
+                    }`}
+                  >
                     <svg
                       className={`h-4 w-4 ${
                         filter === "pending"
@@ -240,11 +244,13 @@ const DesktopCurrentOrders = ({
                 onClick={() => setFilter("done")}
               >
                 <div className="flex items-center justify-center">
-                  <div className={`mr-3 rounded-full p-1.5 ${
-                    filter === "done"
-                      ? "bg-green-100 dark:bg-green-900/30"
-                      : "bg-gray-200 dark:bg-gray-600"
-                  }`}>
+                  <div
+                    className={`mr-3 rounded-full p-1.5 ${
+                      filter === "done"
+                        ? "bg-green-100 dark:bg-green-900/30"
+                        : "bg-gray-200 dark:bg-gray-600"
+                    }`}
+                  >
                     <svg
                       className={`h-4 w-4 ${
                         filter === "done"
@@ -369,7 +375,7 @@ function CurrentOrdersPage() {
             fetchOrders={fetchOrders}
           />
         </div>
-        
+
         {/* Desktop View */}
         <div className="hidden md:block">
           <DesktopCurrentOrders

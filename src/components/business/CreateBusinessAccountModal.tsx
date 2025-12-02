@@ -20,9 +20,9 @@ export default function CreateBusinessAccountModal({
     "description"
   );
   const [acceptedTerms, setAcceptedTerms] = useState(false);
-  const [accountType, setAccountType] = useState<"personal" | "business" | null>(
-    null
-  );
+  const [accountType, setAccountType] = useState<
+    "personal" | "business" | null
+  >(null);
 
   if (!isOpen) return null;
 
@@ -57,20 +57,26 @@ export default function CreateBusinessAccountModal({
   };
 
   return (
-    <div className="fixed inset-0 z-[10000] flex items-center justify-center bg-black bg-opacity-50 p-2 sm:p-4" style={{ paddingBottom: 'env(safe-area-inset-bottom, 0px)' }}>
-      <div className="relative w-full max-w-5xl h-[95vh] sm:h-[85vh] md:h-[90vh] max-h-[95vh] sm:max-h-[85vh] md:max-h-[90vh] overflow-hidden rounded-lg sm:rounded-2xl bg-white shadow-2xl dark:bg-gray-800 flex flex-col" style={{ marginBottom: 'env(safe-area-inset-bottom, 0px)' }}>
+    <div
+      className="fixed inset-0 z-[10000] flex items-center justify-center bg-black bg-opacity-50 p-2 sm:p-4"
+      style={{ paddingBottom: "env(safe-area-inset-bottom, 0px)" }}
+    >
+      <div
+        className="relative flex h-[95vh] max-h-[95vh] w-full max-w-5xl flex-col overflow-hidden rounded-lg bg-white shadow-2xl dark:bg-gray-800 sm:h-[85vh] sm:max-h-[85vh] sm:rounded-2xl md:h-[90vh] md:max-h-[90vh]"
+        style={{ marginBottom: "env(safe-area-inset-bottom, 0px)" }}
+      >
         {/* Close Button */}
         <button
           onClick={onClose}
-          className="absolute right-2 top-2 sm:right-4 sm:top-4 z-10 rounded-full p-2 text-gray-500 transition-colors hover:bg-gray-100 hover:text-gray-700 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-gray-300"
+          className="absolute right-2 top-2 z-10 rounded-full p-2 text-gray-500 transition-colors hover:bg-gray-100 hover:text-gray-700 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-gray-300 sm:right-4 sm:top-4"
         >
           <X className="h-5 w-5 sm:h-6 sm:w-6" />
         </button>
 
         <div className="flex h-full flex-col overflow-hidden">
           {/* Header */}
-          <div className="border-b border-gray-200 bg-gradient-to-r from-green-500 to-emerald-500 px-4 py-3 sm:px-6 sm:py-4 dark:border-gray-700 flex-shrink-0">
-            <h2 className="text-lg sm:text-2xl font-bold text-white">
+          <div className="flex-shrink-0 border-b border-gray-200 bg-gradient-to-r from-green-500 to-emerald-500 px-4 py-3 dark:border-gray-700 sm:px-6 sm:py-4">
+            <h2 className="text-lg font-bold text-white sm:text-2xl">
               Create PlasBusiness Account
             </h2>
           </div>
@@ -81,10 +87,10 @@ export default function CreateBusinessAccountModal({
               <div className="space-y-4 sm:space-y-6">
                 {/* Description */}
                 <div className="space-y-3 sm:space-y-4">
-                  <h3 className="text-lg sm:text-xl font-semibold text-gray-900 dark:text-white">
+                  <h3 className="text-lg font-semibold text-gray-900 dark:text-white sm:text-xl">
                     About PlasBusiness
                   </h3>
-                  <div className="space-y-2 sm:space-y-3 text-sm sm:text-base text-gray-700 dark:text-gray-300">
+                  <div className="space-y-2 text-sm text-gray-700 dark:text-gray-300 sm:space-y-3 sm:text-base">
                     <p>
                       PlasBusiness is a comprehensive B2B marketplace platform
                       designed to connect businesses with suppliers, streamline
@@ -92,10 +98,10 @@ export default function CreateBusinessAccountModal({
                       efficiently.
                     </p>
                     <div className="space-y-2">
-                      <h4 className="font-semibold text-gray-900 dark:text-white text-sm sm:text-base">
+                      <h4 className="text-sm font-semibold text-gray-900 dark:text-white sm:text-base">
                         Key Features:
                       </h4>
-                      <ul className="ml-4 sm:ml-6 list-disc space-y-1 text-sm sm:text-base">
+                      <ul className="ml-4 list-disc space-y-1 text-sm sm:ml-6 sm:text-base">
                         <li>Create and manage Request for Quotations (RFQs)</li>
                         <li>Connect with verified suppliers</li>
                         <li>Receive and compare quotes</li>
@@ -105,10 +111,10 @@ export default function CreateBusinessAccountModal({
                       </ul>
                     </div>
                     <div className="space-y-2">
-                      <h4 className="font-semibold text-gray-900 dark:text-white text-sm sm:text-base">
+                      <h4 className="text-sm font-semibold text-gray-900 dark:text-white sm:text-base">
                         Account Types:
                       </h4>
-                      <ul className="ml-4 sm:ml-6 list-disc space-y-1 text-sm sm:text-base">
+                      <ul className="ml-4 list-disc space-y-1 text-sm sm:ml-6 sm:text-base">
                         <li>
                           <strong>Personal:</strong> For individual
                           entrepreneurs and freelancers
@@ -124,13 +130,13 @@ export default function CreateBusinessAccountModal({
 
                 {/* Account Type Selection */}
                 <div className="space-y-3 sm:space-y-4">
-                  <h3 className="text-lg sm:text-xl font-semibold text-gray-900 dark:text-white">
+                  <h3 className="text-lg font-semibold text-gray-900 dark:text-white sm:text-xl">
                     Select Account Type
                   </h3>
-                  <div className="grid gap-3 sm:gap-4 grid-cols-1 sm:grid-cols-2">
+                  <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-4">
                     <button
                       onClick={() => handleAccountTypeSelect("personal")}
-                      className={`rounded-lg sm:rounded-xl border-2 p-4 sm:p-6 text-left transition-all ${
+                      className={`rounded-lg border-2 p-4 text-left transition-all sm:rounded-xl sm:p-6 ${
                         accountType === "personal"
                           ? "border-green-500 bg-green-50 dark:bg-green-900/20"
                           : "border-gray-200 hover:border-gray-300 dark:border-gray-700 dark:hover:border-gray-600"
@@ -138,13 +144,13 @@ export default function CreateBusinessAccountModal({
                     >
                       <div className="mb-2 flex items-center">
                         {accountType === "personal" && (
-                          <Check className="mr-2 h-4 w-4 sm:h-5 sm:w-5 text-green-500 flex-shrink-0" />
+                          <Check className="mr-2 h-4 w-4 flex-shrink-0 text-green-500 sm:h-5 sm:w-5" />
                         )}
-                        <h4 className="text-base sm:text-lg font-semibold text-gray-900 dark:text-white">
+                        <h4 className="text-base font-semibold text-gray-900 dark:text-white sm:text-lg">
                           Personal Account
                         </h4>
                       </div>
-                      <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-400">
+                      <p className="text-xs text-gray-600 dark:text-gray-400 sm:text-sm">
                         For individual entrepreneurs and freelancers. Quick
                         verification process.
                       </p>
@@ -152,7 +158,7 @@ export default function CreateBusinessAccountModal({
 
                     <button
                       onClick={() => handleAccountTypeSelect("business")}
-                      className={`rounded-lg sm:rounded-xl border-2 p-4 sm:p-6 text-left transition-all ${
+                      className={`rounded-lg border-2 p-4 text-left transition-all sm:rounded-xl sm:p-6 ${
                         accountType === "business"
                           ? "border-green-500 bg-green-50 dark:bg-green-900/20"
                           : "border-gray-200 hover:border-gray-300 dark:border-gray-700 dark:hover:border-gray-600"
@@ -160,13 +166,13 @@ export default function CreateBusinessAccountModal({
                     >
                       <div className="mb-2 flex items-center">
                         {accountType === "business" && (
-                          <Check className="mr-2 h-4 w-4 sm:h-5 sm:w-5 text-green-500 flex-shrink-0" />
+                          <Check className="mr-2 h-4 w-4 flex-shrink-0 text-green-500 sm:h-5 sm:w-5" />
                         )}
-                        <h4 className="text-base sm:text-lg font-semibold text-gray-900 dark:text-white">
+                        <h4 className="text-base font-semibold text-gray-900 dark:text-white sm:text-lg">
                           Business Account
                         </h4>
                       </div>
-                      <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-400">
+                      <p className="text-xs text-gray-600 dark:text-gray-400 sm:text-sm">
                         For registered businesses. Requires business
                         documentation.
                       </p>
@@ -175,16 +181,16 @@ export default function CreateBusinessAccountModal({
                 </div>
 
                 {/* Terms and Conditions */}
-                <div className="rounded-lg border border-gray-200 bg-gray-50 p-3 sm:p-4 dark:border-gray-700 dark:bg-gray-900">
+                <div className="rounded-lg border border-gray-200 bg-gray-50 p-3 dark:border-gray-700 dark:bg-gray-900 sm:p-4">
                   <label className="flex cursor-pointer items-start space-x-2 sm:space-x-3">
                     <input
                       type="checkbox"
                       checked={acceptedTerms}
                       onChange={(e) => setAcceptedTerms(e.target.checked)}
-                      className="mt-0.5 sm:mt-1 h-4 w-4 sm:h-5 sm:w-5 rounded border-gray-300 text-green-600 focus:ring-green-500 flex-shrink-0"
+                      className="mt-0.5 h-4 w-4 flex-shrink-0 rounded border-gray-300 text-green-600 focus:ring-green-500 sm:mt-1 sm:h-5 sm:w-5"
                       disabled={!accountType}
                     />
-                    <span className="text-xs sm:text-sm text-gray-700 dark:text-gray-300">
+                    <span className="text-xs text-gray-700 dark:text-gray-300 sm:text-sm">
                       I accept the{" "}
                       <a
                         href="#"
@@ -209,7 +215,7 @@ export default function CreateBusinessAccountModal({
                   <button
                     onClick={handleAcceptTerms}
                     disabled={!acceptedTerms || !accountType}
-                    className="w-full sm:w-auto rounded-lg bg-gradient-to-r from-green-500 to-emerald-500 px-6 sm:px-8 py-2.5 sm:py-3 text-sm sm:text-base font-semibold text-white transition-all hover:from-green-600 hover:to-emerald-600 disabled:cursor-not-allowed disabled:opacity-50"
+                    className="w-full rounded-lg bg-gradient-to-r from-green-500 to-emerald-500 px-6 py-2.5 text-sm font-semibold text-white transition-all hover:from-green-600 hover:to-emerald-600 disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto sm:px-8 sm:py-3 sm:text-base"
                   >
                     Continue
                   </button>
@@ -236,4 +242,3 @@ export default function CreateBusinessAccountModal({
     </div>
   );
 }
-

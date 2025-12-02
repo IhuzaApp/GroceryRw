@@ -193,7 +193,7 @@ export default function UserRecentOrders({
         visibleOrders.map((order: Order) => (
           <div
             key={order.id}
-            className="group mb-4 overflow-hidden rounded-2xl border border-gray-200 bg-white p-5 shadow-sm transition-all duration-300 hover:shadow-lg hover:border-green-200 dark:border-gray-700 dark:bg-gray-800 dark:hover:border-green-700"
+            className="group mb-4 overflow-hidden rounded-2xl border border-gray-200 bg-white p-5 shadow-sm transition-all duration-300 hover:border-green-200 hover:shadow-lg dark:border-gray-700 dark:bg-gray-800 dark:hover:border-green-700"
           >
             {/* Shop Profile for Regular Orders */}
             {order.shop && order.orderType === "regular" ? (
@@ -332,8 +332,18 @@ export default function UserRecentOrders({
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-green-100 dark:bg-green-900/30">
-                    <svg className="h-4 w-4 text-green-600 dark:text-green-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
+                    <svg
+                      className="h-4 w-4 text-green-600 dark:text-green-400"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth="2"
+                        d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"
+                      />
                     </svg>
                   </div>
                   <div>
@@ -345,7 +355,11 @@ export default function UserRecentOrders({
                         : `${order.itemsCount} items (${order.unitsCount} units)`}
                     </div>
                     <div className="text-xs text-gray-500 dark:text-gray-400">
-                      {order.orderType === "reel" ? "Reel Order" : order.orderType === "restaurant" ? "Restaurant Order" : "Grocery Order"}
+                      {order.orderType === "reel"
+                        ? "Reel Order"
+                        : order.orderType === "restaurant"
+                        ? "Restaurant Order"
+                        : "Grocery Order"}
                     </div>
                   </div>
                 </div>
@@ -353,7 +367,9 @@ export default function UserRecentOrders({
                   <div className="text-lg font-bold text-gray-900 dark:text-white">
                     {formatCurrency(order.total)}
                   </div>
-                  <div className="text-xs text-gray-500 dark:text-gray-400">Total</div>
+                  <div className="text-xs text-gray-500 dark:text-gray-400">
+                    Total
+                  </div>
                 </div>
               </div>
             </div>
@@ -373,23 +389,48 @@ export default function UserRecentOrders({
                 href={`/CurrentPendingOrders/viewOrderDetails/${order.id}`}
                 className={`group flex flex-1 items-center justify-center gap-2 rounded-xl px-4 py-3 text-sm font-semibold !text-white transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 dark:focus:ring-offset-gray-800 ${
                   order.orderType === "reel"
-                    ? "bg-gradient-to-r from-purple-500 to-purple-600 hover:from-purple-600 hover:to-purple-700 focus:ring-purple-500 shadow-lg hover:shadow-purple-200 dark:shadow-purple-900/50"
+                    ? "bg-gradient-to-r from-purple-500 to-purple-600 shadow-lg hover:from-purple-600 hover:to-purple-700 hover:shadow-purple-200 focus:ring-purple-500 dark:shadow-purple-900/50"
                     : order.orderType === "restaurant"
-                    ? "bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 focus:ring-orange-500 shadow-lg hover:shadow-orange-200 dark:shadow-orange-900/50"
-                    : "bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 focus:ring-green-500 shadow-lg hover:shadow-green-200 dark:shadow-green-900/50"
+                    ? "bg-gradient-to-r from-orange-500 to-orange-600 shadow-lg hover:from-orange-600 hover:to-orange-700 hover:shadow-orange-200 focus:ring-orange-500 dark:shadow-orange-900/50"
+                    : "bg-gradient-to-r from-green-500 to-green-600 shadow-lg hover:from-green-600 hover:to-green-700 hover:shadow-green-200 focus:ring-green-500 dark:shadow-green-900/50"
                 }`}
               >
-                <svg className="h-4 w-4 !text-white transition-transform group-hover:scale-110" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                <svg
+                  className="h-4 w-4 !text-white transition-transform group-hover:scale-110"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth="2"
+                    d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
+                  />
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth="2"
+                    d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
+                  />
                 </svg>
                 View Details
               </Link>
 
               {!isPendingOrdersPage && (
-                <button className="flex items-center gap-2 rounded-xl border border-gray-300 px-4 py-3 text-sm font-semibold text-gray-700 transition-all duration-200 hover:bg-gray-50 hover:border-gray-400 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-700 dark:hover:border-gray-500">
-                  <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                <button className="flex items-center gap-2 rounded-xl border border-gray-300 px-4 py-3 text-sm font-semibold text-gray-700 transition-all duration-200 hover:border-gray-400 hover:bg-gray-50 dark:border-gray-600 dark:text-gray-300 dark:hover:border-gray-500 dark:hover:bg-gray-700">
+                  <svg
+                    className="h-4 w-4"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth="2"
+                      d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
+                    />
                   </svg>
                   Reorder
                 </button>

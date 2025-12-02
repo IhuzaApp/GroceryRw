@@ -101,9 +101,8 @@ export default async function handler(
     }>(GET_BUSINESS_PROFILE, { user_id });
 
     const user = result.Users_by_pk;
-    const businessAccount = result.business_accounts.length > 0 
-      ? result.business_accounts[0] 
-      : null;
+    const businessAccount =
+      result.business_accounts.length > 0 ? result.business_accounts[0] : null;
 
     return res.status(200).json({
       user: user
@@ -144,4 +143,3 @@ export default async function handler(
     });
   }
 }
-
