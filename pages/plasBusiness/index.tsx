@@ -86,6 +86,8 @@ export default function PlasBusinessPage() {
 
   const handleAccountCreated = () => {
     setHasBusinessAccount(true);
+    // Re-fetch account details after creation to get the business name
+    checkBusinessAccount();
   };
 
   // Show loading while auth is being determined
