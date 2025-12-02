@@ -1,6 +1,7 @@
 "use client";
 
 import { Search, Plus } from "lucide-react";
+import { useEffect } from "react";
 
 interface BusinessHeaderProps {
   className?: string;
@@ -15,6 +16,11 @@ export function BusinessHeader({
   onFindSuppliers,
   businessName,
 }: BusinessHeaderProps) {
+  // Log business name when it changes
+  useEffect(() => {
+    console.log("🎯 BusinessHeader - Received businessName prop:", businessName);
+  }, [businessName]);
+
   const handleCreateRFQ = () => {
     if (onCreateRFQ) {
       onCreateRFQ();
@@ -41,9 +47,16 @@ export function BusinessHeader({
       <div className="relative z-10">
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="mb-2 text-4xl font-bold">
-              {businessName ? `${businessName}` : "Business Marketplace"}
-            </h1>
+            {businessName ? (
+              <>
+                <h1 className="mb-1 text-4xl font-bold">{businessName}</h1>
+                <p className="mb-2 text-sm font-medium text-green-200">
+                  Business Marketplace
+                </p>
+              </>
+            ) : (
+              <h1 className="mb-2 text-4xl font-bold">Business Marketplace</h1>
+            )}
             <p className="text-lg text-green-100">
               Discover suppliers, manage orders, and streamline procurement
             </p>
