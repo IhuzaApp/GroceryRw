@@ -29,6 +29,7 @@ import { RFQOpportunitiesSection } from "../../src/components/business/RFQOpport
 import { CreateRFQForm } from "../../src/components/business/CreateRFQForm";
 import { ContractsManagement } from "../../src/components/business/ContractsManagement";
 import PlasBusinessOnboarding from "../../src/components/business/PlasBusinessOnboarding";
+import { BusinessOverview } from "../../src/components/business/BusinessOverview";
 
 // Data moved to individual components
 
@@ -227,8 +228,10 @@ function BuyerDashboardContent({
         })()}
       />
 
-      {/* Stats Cards */}
-      <StatsCards />
+      {/* Stats Cards - Hidden on mobile */}
+      <div className="hidden md:block">
+        <StatsCards />
+      </div>
 
       {/* Main Content Tabs */}
       <div className="space-y-8">
@@ -287,88 +290,7 @@ function BuyerDashboardContent({
 
         {/* Service Provider Tabs */}
         {isServiceProvider && activeTab === "overview" && (
-          <div className="space-y-6">
-            <h3 className="text-xl font-semibold text-gray-900 dark:text-white">
-              Business Overview
-            </h3>
-            <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-4">
-              <div className="rounded-2xl border border-gray-100 bg-white p-6 shadow-lg dark:border-gray-700 dark:bg-gray-800">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm font-medium text-gray-500 dark:text-gray-400">
-                      Total Revenue
-                    </p>
-                    <p className="text-3xl font-bold text-gray-900 dark:text-white">
-                      $45,230
-                    </p>
-                    <p className="text-sm font-medium text-green-600">
-                      +12.5% from last month
-                    </p>
-                  </div>
-                  <div className="rounded-2xl bg-gradient-to-br from-green-100 to-green-200 p-4 dark:from-gray-700 dark:to-gray-600">
-                    <DollarSign className="h-8 w-8 text-green-600" />
-                  </div>
-                </div>
-              </div>
-
-              <div className="rounded-2xl border border-gray-100 bg-white p-6 shadow-lg dark:border-gray-700 dark:bg-gray-800">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm font-medium text-gray-500 dark:text-gray-400">
-                      Active Orders
-                    </p>
-                    <p className="text-3xl font-bold text-gray-900 dark:text-white">
-                      23
-                    </p>
-                    <p className="text-sm font-medium text-blue-600">
-                      +5 from last month
-                    </p>
-                  </div>
-                  <div className="rounded-2xl bg-gradient-to-br from-blue-100 to-blue-200 p-4 dark:from-gray-700 dark:to-gray-600">
-                    <ShoppingCart className="h-8 w-8 text-blue-600" />
-                  </div>
-                </div>
-              </div>
-
-              <div className="rounded-2xl border border-gray-100 bg-white p-6 shadow-lg dark:border-gray-700 dark:bg-gray-800">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm font-medium text-gray-500 dark:text-gray-400">
-                      RFQ Responses
-                    </p>
-                    <p className="text-3xl font-bold text-gray-900 dark:text-white">
-                      18
-                    </p>
-                    <p className="text-sm font-medium text-purple-600">
-                      +8 from last month
-                    </p>
-                  </div>
-                  <div className="rounded-2xl bg-gradient-to-br from-purple-100 to-purple-200 p-4 dark:from-gray-700 dark:to-gray-600">
-                    <MessageSquare className="h-8 w-8 text-purple-600" />
-                  </div>
-                </div>
-              </div>
-
-              <div className="rounded-2xl border border-gray-100 bg-white p-6 shadow-lg dark:border-gray-700 dark:bg-gray-800">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm font-medium text-gray-500 dark:text-gray-400">
-                      Average Rating
-                    </p>
-                    <p className="text-3xl font-bold text-gray-900 dark:text-white">
-                      4.8
-                    </p>
-                    <p className="text-sm font-medium text-yellow-600">
-                      +0.2 from last month
-                    </p>
-                  </div>
-                  <div className="rounded-2xl bg-gradient-to-br from-yellow-100 to-yellow-200 p-4 dark:from-gray-700 dark:to-gray-600">
-                    <Star className="h-8 w-8 text-yellow-600" />
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
+          <BusinessOverview businessAccount={businessAccount} />
         )}
 
         {isServiceProvider && activeTab === "products-bids" && (
