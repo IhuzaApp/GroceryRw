@@ -14,7 +14,6 @@ const CREATE_BUSINESS_ACCOUNT = gql`
     $business_phone: String = ""
     $business_location: String = ""
     $rdb_certificate: String = ""
-    $selfie_image: String = ""
     $id_image: String = ""
     $face_image: String = ""
   ) {
@@ -28,7 +27,6 @@ const CREATE_BUSINESS_ACCOUNT = gql`
         business_phone: $business_phone
         business_location: $business_location
         rdb_certificate: $rdb_certificate
-        selfie_image: $selfie_image
         id_image: $id_image
         face_image: $face_image
       }
@@ -65,7 +63,6 @@ interface CreateBusinessAccountInput {
   business_phone?: string;
   business_location?: string;
   rdb_certificate?: string;
-  selfie_image?: string;
   id_image?: string;
   face_image?: string;
 }
@@ -101,7 +98,6 @@ export default async function handler(
       business_phone,
       business_location,
       rdb_certificate,
-      selfie_image,
       id_image,
       face_image,
     } = req.body as CreateBusinessAccountInput;
@@ -112,17 +108,17 @@ export default async function handler(
     }
 
     if (account_type === "business") {
-      if (!business_name || !business_email || !business_phone || !business_location || !rdb_certificate || !selfie_image) {
+      if (!business_name || !business_email || !business_phone || !business_location || !rdb_certificate || !face_image) {
         return res.status(400).json({
           error: "Missing required fields for business account",
-          required: ["business_name", "business_email", "business_phone", "business_location", "rdb_certificate", "selfie_image"],
+          required: ["business_name", "business_email", "business_phone", "business_location", "rdb_certificate", "face_image"],
         });
       }
     } else {
-      if (!face_image || !id_image) {
+      if (!face_image || !id_image || !business_location) {
         return res.status(400).json({
           error: "Missing required fields for personal account",
-          required: ["face_image", "id_image"],
+          required: ["face_image", "id_image", "business_location"],
         });
       }
     }
@@ -138,7 +134,6 @@ export default async function handler(
       business_phone: business_phone?.trim() || "",
       business_location: business_location?.trim() || "",
       rdb_certificate: rdb_certificate || "",
-      selfie_image: selfie_image || "",
       id_image: id_image || "",
       face_image: face_image || "",
     };

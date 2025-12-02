@@ -19,6 +19,8 @@ export default function PersonalBusinessForm({
   const { user } = useAuth();
   const [loading, setLoading] = useState(false);
   const [userDetails, setUserDetails] = useState<any>(null);
+  const [defaultAddress, setDefaultAddress] = useState<any>(null);
+  const [businessLocation, setBusinessLocation] = useState("");
   const [faceImage, setFaceImage] = useState<string | null>(null);
   const [idImage, setIdImage] = useState<string | null>(null);
   const [showCamera, setShowCamera] = useState<"face" | "id" | null>(null);
@@ -31,6 +33,7 @@ export default function PersonalBusinessForm({
 
   useEffect(() => {
     fetchUserDetails();
+    fetchDefaultAddress();
   }, []);
 
   const fetchUserDetails = async () => {
@@ -42,6 +45,26 @@ export default function PersonalBusinessForm({
       }
     } catch (error) {
       console.error("Error fetching user details:", error);
+    }
+  };
+
+  const fetchDefaultAddress = async () => {
+    try {
+      const response = await fetch("/api/queries/addresses");
+      if (response.ok) {
+        const data = await response.json();
+        const defaultAddr = (data.addresses || []).find(
+          (addr: any) => addr.is_default
+        );
+        if (defaultAddr) {
+          setDefaultAddress(defaultAddr);
+          // Pre-fill with default address if available
+          const addressString = `${defaultAddr.street || ""}, ${defaultAddr.city || ""}${defaultAddr.postal_code ? `, ${defaultAddr.postal_code}` : ""}`.trim().replace(/^,\s*|,\s*$/g, '');
+          setBusinessLocation(addressString);
+        }
+      }
+    } catch (error) {
+      console.error("Error fetching default address:", error);
     }
   };
 
@@ -192,6 +215,10 @@ export default function PersonalBusinessForm({
       toast.error("Please capture both face and ID images");
       return;
     }
+    if (!businessLocation.trim()) {
+      toast.error("Operating address is required");
+      return;
+    }
 
     setLoading(true);
 
@@ -205,6 +232,7 @@ export default function PersonalBusinessForm({
           account_type: "personal",
           face_image: faceImage,
           id_image: idImage,
+          business_location: businessLocation.trim(),
         }),
       });
 
@@ -225,28 +253,28 @@ export default function PersonalBusinessForm({
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 sm:space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between border-b border-gray-200 pb-4 dark:border-gray-700">
-        <h3 className="text-xl font-semibold text-gray-900 dark:text-white">
+      <div className="flex items-center justify-between border-b border-gray-200 pb-3 sm:pb-4 dark:border-gray-700">
+        <h3 className="text-lg sm:text-xl font-semibold text-gray-900 dark:text-white">
           Personal Account Registration
         </h3>
         <button
           onClick={onBack}
-          className="flex items-center space-x-2 text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-200"
+          className="flex items-center space-x-1 sm:space-x-2 text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-200 text-sm sm:text-base"
         >
-          <ArrowLeft className="h-5 w-5" />
-          <span>Back</span>
+          <ArrowLeft className="h-4 w-4 sm:h-5 sm:w-5" />
+          <span className="hidden sm:inline">Back</span>
         </button>
       </div>
 
       {/* User Details Display */}
       {userDetails && (
-        <div className="rounded-lg border border-gray-200 bg-gray-50 p-4 dark:border-gray-700 dark:bg-gray-900">
-          <h4 className="mb-3 font-semibold text-gray-900 dark:text-white">
+        <div className="rounded-lg border border-gray-200 bg-gray-50 p-3 sm:p-4 dark:border-gray-700 dark:bg-gray-900">
+          <h4 className="mb-2 sm:mb-3 text-sm sm:text-base font-semibold text-gray-900 dark:text-white">
             Your Details
           </h4>
-          <div className="grid gap-2 text-sm text-gray-700 dark:text-gray-300">
+          <div className="grid gap-1.5 sm:gap-2 text-xs sm:text-sm text-gray-700 dark:text-gray-300">
             <div>
               <span className="font-medium">Name:</span> {userDetails.name}
             </div>
@@ -260,75 +288,103 @@ export default function PersonalBusinessForm({
         </div>
       )}
 
-      {/* Face Image Capture */}
+      {/* Operating Address */}
       <div className="space-y-3">
         <label className="block text-sm font-medium text-gray-900 dark:text-white">
+          Operating Address <span className="text-red-500">*</span>
+        </label>
+        <p className="text-xs text-gray-500 dark:text-gray-400">
+          Enter the address where you will be operating your business
+        </p>
+        <textarea
+          value={businessLocation}
+          onChange={(e) => setBusinessLocation(e.target.value)}
+          placeholder={
+            defaultAddress
+              ? `${defaultAddress.street || ""}, ${defaultAddress.city || ""}${defaultAddress.postal_code ? `, ${defaultAddress.postal_code}` : ""}`.trim().replace(/^,\s*|,\s*$/g, '')
+              : "Enter your operating address (e.g., Street, City, Postal Code)"
+          }
+          rows={3}
+          className="w-full rounded-lg border border-gray-300 bg-white px-4 py-3 text-sm text-gray-900 placeholder-gray-400 focus:border-green-500 focus:outline-none focus:ring-2 focus:ring-green-500 dark:border-gray-600 dark:bg-gray-800 dark:text-white dark:placeholder-gray-500"
+          required
+        />
+        {defaultAddress && (
+          <p className="text-xs text-gray-500 dark:text-gray-400">
+            <span className="font-medium">Default address:</span> {defaultAddress.street}, {defaultAddress.city}
+            {defaultAddress.postal_code && `, ${defaultAddress.postal_code}`}
+          </p>
+        )}
+      </div>
+
+      {/* Face Image Capture */}
+      <div className="space-y-2 sm:space-y-3">
+        <label className="block text-xs sm:text-sm font-medium text-gray-900 dark:text-white">
           Face Photo <span className="text-red-500">*</span>
         </label>
         <p className="text-xs text-gray-500 dark:text-gray-400">
           Take a clear photo of your face for verification
         </p>
-        <div className="flex items-center space-x-4">
+        <div className="flex items-center space-x-3 sm:space-x-4">
           {faceImage ? (
             <div className="relative">
               <img
                 src={faceImage}
                 alt="Face"
-                className="h-32 w-32 rounded-lg object-cover"
+                className="h-24 w-24 sm:h-32 sm:w-32 rounded-lg object-cover"
               />
               <button
                 onClick={() => {
                   setFaceImage(null);
                 }}
-                className="absolute -right-2 -top-2 rounded-full bg-red-500 p-1 text-white hover:bg-red-600"
+                className="absolute -right-1 -top-1 sm:-right-2 sm:-top-2 rounded-full bg-red-500 p-1 text-white hover:bg-red-600"
               >
-                <X className="h-4 w-4" />
+                <X className="h-3 w-3 sm:h-4 sm:w-4" />
               </button>
             </div>
           ) : (
             <button
               onClick={() => startCamera("face")}
-              className="flex h-32 w-32 flex-col items-center justify-center rounded-lg border-2 border-dashed border-gray-300 bg-gray-50 transition-colors hover:border-green-500 hover:bg-green-50 dark:border-gray-600 dark:bg-gray-800 dark:hover:border-green-500"
+              className="flex h-24 w-24 sm:h-32 sm:w-32 flex-col items-center justify-center rounded-lg border-2 border-dashed border-gray-300 bg-gray-50 transition-colors hover:border-green-500 hover:bg-green-50 dark:border-gray-600 dark:bg-gray-800 dark:hover:border-green-500"
             >
-              <Camera className="h-8 w-8 text-gray-400" />
-              <span className="mt-2 text-xs text-gray-500">Capture</span>
+              <Camera className="h-6 w-6 sm:h-8 sm:w-8 text-gray-400" />
+              <span className="mt-1 sm:mt-2 text-xs text-gray-500">Capture</span>
             </button>
           )}
         </div>
       </div>
 
       {/* ID Image Capture */}
-      <div className="space-y-3">
-        <label className="block text-sm font-medium text-gray-900 dark:text-white">
+      <div className="space-y-2 sm:space-y-3">
+        <label className="block text-xs sm:text-sm font-medium text-gray-900 dark:text-white">
           ID Photo <span className="text-red-500">*</span>
         </label>
         <p className="text-xs text-gray-500 dark:text-gray-400">
           Take a clear photo of your ID card (front side)
         </p>
-        <div className="flex items-center space-x-4">
+        <div className="flex items-center space-x-3 sm:space-x-4">
           {idImage ? (
             <div className="relative">
               <img
                 src={idImage}
                 alt="ID"
-                className="h-32 w-32 rounded-lg object-cover"
+                className="h-24 w-24 sm:h-32 sm:w-32 rounded-lg object-cover"
               />
               <button
                 onClick={() => {
                   setIdImage(null);
                 }}
-                className="absolute -right-2 -top-2 rounded-full bg-red-500 p-1 text-white hover:bg-red-600"
+                className="absolute -right-1 -top-1 sm:-right-2 sm:-top-2 rounded-full bg-red-500 p-1 text-white hover:bg-red-600"
               >
-                <X className="h-4 w-4" />
+                <X className="h-3 w-3 sm:h-4 sm:w-4" />
               </button>
             </div>
           ) : (
             <button
               onClick={() => startCamera("id")}
-              className="flex h-32 w-32 flex-col items-center justify-center rounded-lg border-2 border-dashed border-gray-300 bg-gray-50 transition-colors hover:border-green-500 hover:bg-green-50 dark:border-gray-600 dark:bg-gray-800 dark:hover:border-green-500"
+              className="flex h-24 w-24 sm:h-32 sm:w-32 flex-col items-center justify-center rounded-lg border-2 border-dashed border-gray-300 bg-gray-50 transition-colors hover:border-green-500 hover:bg-green-50 dark:border-gray-600 dark:bg-gray-800 dark:hover:border-green-500"
             >
-              <Camera className="h-8 w-8 text-gray-400" />
-              <span className="mt-2 text-xs text-gray-500">Capture</span>
+              <Camera className="h-6 w-6 sm:h-8 sm:w-8 text-gray-400" />
+              <span className="mt-1 sm:mt-2 text-xs text-gray-500">Capture</span>
             </button>
           )}
         </div>
@@ -347,24 +403,24 @@ export default function PersonalBusinessForm({
               style={{ transform: "scaleX(-1)" }}
             />
             <canvas ref={canvasRef} className="hidden" />
-            <div className="absolute bottom-0 left-0 right-0 flex items-center justify-center space-x-4 bg-black bg-opacity-50 p-6">
+            <div className="absolute bottom-0 left-0 right-0 flex items-center justify-center space-x-3 sm:space-x-4 bg-black bg-opacity-50 p-4 sm:p-6">
               <button
                 onClick={stopCamera}
-                className="rounded-full bg-gray-600 p-4 text-white hover:bg-gray-700"
+                className="rounded-full bg-gray-600 p-3 sm:p-4 text-white hover:bg-gray-700"
               >
-                <X className="h-6 w-6" />
+                <X className="h-5 w-5 sm:h-6 sm:w-6" />
               </button>
               <button
                 onClick={capturePhoto}
-                className="rounded-full bg-green-500 p-6 text-white hover:bg-green-600"
+                className="rounded-full bg-green-500 p-4 sm:p-6 text-white hover:bg-green-600"
               >
-                <Camera className="h-8 w-8" />
+                <Camera className="h-6 w-6 sm:h-8 sm:w-8" />
               </button>
               <button
                 onClick={stopCamera}
-                className="rounded-full bg-gray-600 p-4 text-white hover:bg-gray-700"
+                className="rounded-full bg-gray-600 p-3 sm:p-4 text-white hover:bg-gray-700"
               >
-                <RotateCcw className="h-6 w-6" />
+                <RotateCcw className="h-5 w-5 sm:h-6 sm:w-6" />
               </button>
             </div>
           </div>
@@ -373,27 +429,27 @@ export default function PersonalBusinessForm({
 
       {/* Preview Modal */}
       {showPreview && capturedImage && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-75">
-          <div className="relative w-full max-w-2xl bg-black">
-            <div className="relative">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-75 p-2 sm:p-4">
+          <div className="relative w-full max-w-2xl h-full max-h-[90vh] bg-black rounded-lg overflow-hidden">
+            <div className="relative h-full flex flex-col">
               <img
                 src={capturedImage}
                 alt="Preview"
-                className="h-full w-full object-contain"
+                className="flex-1 w-full object-contain"
               />
-              <div className="absolute bottom-0 left-0 right-0 flex items-center justify-center space-x-4 bg-black bg-opacity-50 p-6">
+              <div className="absolute bottom-0 left-0 right-0 flex items-center justify-center gap-3 sm:space-x-4 bg-black bg-opacity-50 p-4 sm:p-6">
                 <button
                   onClick={retakePhoto}
-                  className="flex items-center space-x-2 rounded-lg bg-gray-600 px-6 py-3 text-white hover:bg-gray-700"
+                  className="flex items-center space-x-2 rounded-lg bg-gray-600 px-4 sm:px-6 py-2.5 sm:py-3 text-sm sm:text-base text-white hover:bg-gray-700"
                 >
-                  <RotateCcw className="h-5 w-5" />
+                  <RotateCcw className="h-4 w-4 sm:h-5 sm:w-5" />
                   <span>Retake</span>
                 </button>
                 <button
                   onClick={confirmPhoto}
-                  className="flex items-center space-x-2 rounded-lg bg-green-500 px-6 py-3 text-white hover:bg-green-600"
+                  className="flex items-center space-x-2 rounded-lg bg-green-500 px-4 sm:px-6 py-2.5 sm:py-3 text-sm sm:text-base text-white hover:bg-green-600"
                 >
-                  <Check className="h-5 w-5" />
+                  <Check className="h-4 w-4 sm:h-5 sm:w-5" />
                   <span>Use Photo</span>
                 </button>
               </div>

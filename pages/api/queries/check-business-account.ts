@@ -17,7 +17,6 @@ const CHECK_BUSINESS_ACCOUNT = gql`
       id
       id_image
       rdb_certificate
-      selfie_image
       updated_at
       user_id
       status
@@ -75,7 +74,6 @@ export default async function handler(
         face_image: string | null;
         id_image: string | null;
         rdb_certificate: string | null;
-        selfie_image: string | null;
         updated_at: string;
         user_id: string;
         status: string;
@@ -107,7 +105,6 @@ export default async function handler(
             faceImage: account.face_image,
             idImage: account.id_image,
             rdbCertificate: account.rdb_certificate,
-            selfieImage: account.selfie_image,
             updatedAt: account.updated_at,
             userId: account.user_id,
             status: account.status,
