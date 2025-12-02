@@ -80,16 +80,8 @@ export default async function handler(
       }>;
     }>(CHECK_BUSINESS_ACCOUNT, { user_id });
 
-    console.log("🔍 [API] Checking business account for user_id:", user_id);
-    console.log("📊 [API] GraphQL result:", JSON.stringify(result, null, 2));
-    console.log("📋 [API] Business accounts found:", result.business_accounts.length);
-
     const hasAccount = result.business_accounts.length > 0;
     const account = hasAccount ? result.business_accounts[0] : null;
-    
-    console.log("✅ [API] Has account:", hasAccount);
-    console.log("🏢 [API] Account data:", account);
-    console.log("📝 [API] Business name from DB:", account?.business_name);
 
     const responseData = {
       hasAccount,
@@ -112,12 +104,8 @@ export default async function handler(
         : null,
     };
 
-    console.log("📤 [API] Sending response:", JSON.stringify(responseData, null, 2));
-    console.log("📝 [API] Business name in response:", responseData.account?.businessName);
-
     return res.status(200).json(responseData);
   } catch (error: any) {
-    console.error("Error checking business account:", error);
     return res.status(500).json({
       error: "Failed to check business account",
       message: error.message,

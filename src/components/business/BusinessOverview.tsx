@@ -53,11 +53,9 @@ export function BusinessOverview({ businessAccount }: BusinessOverviewProps) {
         const data = await response.json();
         setUserStores(data.stores || []);
       } else {
-        console.error("Failed to fetch business stores:", response.status);
         setUserStores([]);
       }
     } catch (error) {
-      console.error("Error fetching stores:", error);
       toast.error("Failed to load stores");
       setUserStores([]);
     } finally {
@@ -110,7 +108,7 @@ export function BusinessOverview({ businessAccount }: BusinessOverviewProps) {
         autocompleteServiceRef.current = new google.maps.places.AutocompleteService();
         geocoderRef.current = new google.maps.Geocoder();
       } catch (error) {
-        console.error("Error initializing Google Maps services:", error);
+        // Error initializing Google Maps services
       }
     }
   }, [isGoogleMapsLoaded]);
@@ -153,7 +151,6 @@ export function BusinessOverview({ businessAccount }: BusinessOverviewProps) {
           }
         );
       } catch (error) {
-        console.error("Error getting place predictions:", error);
         setSuggestions([]);
         setShowSuggestions(false);
       }
@@ -200,7 +197,6 @@ export function BusinessOverview({ businessAccount }: BusinessOverviewProps) {
           setCategories(data.categories || []);
         }
       } catch (error) {
-        console.error("Error fetching categories:", error);
         toast.error("Failed to load categories");
       } finally {
         setLoadingCategories(false);
@@ -307,7 +303,6 @@ export function BusinessOverview({ businessAccount }: BusinessOverviewProps) {
           setStoreImage(compressed);
           toast.success("Image uploaded successfully!");
         } catch (error) {
-          console.error("Error compressing image:", error);
           setStoreImage(result); // Use original if compression fails
           toast.success("Image uploaded successfully!");
         }
@@ -450,7 +445,6 @@ export function BusinessOverview({ businessAccount }: BusinessOverviewProps) {
         toast.error(data.error || data.message || "Failed to create store");
       }
     } catch (error: any) {
-      console.error("Error creating store:", error);
       toast.error("Failed to create store. Please try again.");
     } finally {
       setIsCreatingStore(false);
