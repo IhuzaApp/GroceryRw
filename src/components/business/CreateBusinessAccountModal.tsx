@@ -57,8 +57,8 @@ export default function CreateBusinessAccountModal({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 p-2 sm:p-4">
-      <div className="relative w-full max-w-5xl h-[95vh] sm:h-[85vh] md:h-[90vh] max-h-[95vh] sm:max-h-[85vh] md:max-h-[90vh] overflow-hidden rounded-lg sm:rounded-2xl bg-white shadow-2xl dark:bg-gray-800 flex flex-col">
+    <div className="fixed inset-0 z-[10000] flex items-center justify-center bg-black bg-opacity-50 p-2 sm:p-4" style={{ paddingBottom: 'env(safe-area-inset-bottom, 0px)' }}>
+      <div className="relative w-full max-w-5xl h-[95vh] sm:h-[85vh] md:h-[90vh] max-h-[95vh] sm:max-h-[85vh] md:max-h-[90vh] overflow-hidden rounded-lg sm:rounded-2xl bg-white shadow-2xl dark:bg-gray-800 flex flex-col" style={{ marginBottom: 'env(safe-area-inset-bottom, 0px)' }}>
         {/* Close Button */}
         <button
           onClick={onClose}
