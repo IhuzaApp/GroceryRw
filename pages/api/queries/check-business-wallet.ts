@@ -64,7 +64,8 @@ export default async function handler(
       }>;
     }>(CHECK_BUSINESS_WALLET, { business_id });
 
-    const hasWallet = result.business_wallet && result.business_wallet.length > 0;
+    const hasWallet =
+      result.business_wallet && result.business_wallet.length > 0;
     const wallet = hasWallet ? result.business_wallet[0] : null;
 
     return res.status(200).json({
@@ -79,4 +80,3 @@ export default async function handler(
     });
   }
 }
-

@@ -26,12 +26,15 @@ export function BusinessOverview({ businessAccount }: BusinessOverviewProps) {
   const [showDetailedStats, setShowDetailedStats] = useState(false);
   const [userStores, setUserStores] = useState<any[]>([]);
   const [loadingStores, setLoadingStores] = useState(false);
-  
+
   // Google Maps Autocomplete refs
   const addressInputRef = useRef<HTMLInputElement>(null);
-  const autocompleteServiceRef = useRef<google.maps.places.AutocompleteService | null>(null);
+  const autocompleteServiceRef =
+    useRef<google.maps.places.AutocompleteService | null>(null);
   const geocoderRef = useRef<google.maps.Geocoder | null>(null);
-  const [suggestions, setSuggestions] = useState<google.maps.places.AutocompletePrediction[]>([]);
+  const [suggestions, setSuggestions] = useState<
+    google.maps.places.AutocompletePrediction[]
+  >([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
 
   useEffect(() => {
@@ -105,7 +108,8 @@ export function BusinessOverview({ businessAccount }: BusinessOverviewProps) {
   useEffect(() => {
     if (isGoogleMapsLoaded && !autocompleteServiceRef.current) {
       try {
-        autocompleteServiceRef.current = new google.maps.places.AutocompleteService();
+        autocompleteServiceRef.current =
+          new google.maps.places.AutocompleteService();
         geocoderRef.current = new google.maps.Geocoder();
       } catch (error) {
         // Error initializing Google Maps services
@@ -119,16 +123,16 @@ export function BusinessOverview({ businessAccount }: BusinessOverviewProps) {
       if (
         addressInputRef.current &&
         !addressInputRef.current.contains(event.target as Node) &&
-        !(event.target as HTMLElement).closest('.suggestions-dropdown')
+        !(event.target as HTMLElement).closest(".suggestions-dropdown")
       ) {
         setShowSuggestions(false);
       }
     };
 
     if (showSuggestions) {
-      document.addEventListener('mousedown', handleClickOutside);
+      document.addEventListener("mousedown", handleClickOutside);
       return () => {
-        document.removeEventListener('mousedown', handleClickOutside);
+        document.removeEventListener("mousedown", handleClickOutside);
       };
     }
   }, [showSuggestions]);
@@ -161,11 +165,13 @@ export function BusinessOverview({ businessAccount }: BusinessOverviewProps) {
   };
 
   // On selecting an autocomplete suggestion
-  const handleSelectSuggestion = (suggestion: google.maps.places.AutocompletePrediction) => {
+  const handleSelectSuggestion = (
+    suggestion: google.maps.places.AutocompletePrediction
+  ) => {
     setNewStoreData({ ...newStoreData, address: suggestion.description });
     setSuggestions([]);
     setShowSuggestions(false);
-    
+
     // Geocode to get lat/lng
     if (geocoderRef.current) {
       geocoderRef.current.geocode(
@@ -174,7 +180,7 @@ export function BusinessOverview({ businessAccount }: BusinessOverviewProps) {
           if (status === "OK" && results && results[0]) {
             const lat = results[0].geometry.location.lat();
             const lng = results[0].geometry.location.lng();
-            setNewStoreData(prev => ({
+            setNewStoreData((prev) => ({
               ...prev,
               latitude: lat.toString(),
               longitude: lng.toString(),
@@ -276,7 +282,9 @@ export function BusinessOverview({ businessAccount }: BusinessOverviewProps) {
     });
   };
 
-  const handleImageUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleImageUpload = async (
+    event: React.ChangeEvent<HTMLInputElement>
+  ) => {
     const file = event.target.files?.[0];
     if (!file) return;
 
@@ -340,17 +348,23 @@ export function BusinessOverview({ businessAccount }: BusinessOverviewProps) {
     setOperatingHours(updatedHours);
   };
 
-  const applyToDayRange = (startDay: string, endDay: string, from: string, to: string) => {
+  const applyToDayRange = (
+    startDay: string,
+    endDay: string,
+    from: string,
+    to: string
+  ) => {
     const startIndex = days.findIndex((d) => d.key === startDay);
     const endIndex = days.findIndex((d) => d.key === endDay);
-    
+
     if (startIndex === -1 || endIndex === -1) return;
-    
+
     const updatedHours = { ...operatingHours };
-    const range = startIndex <= endIndex 
-      ? days.slice(startIndex, endIndex + 1)
-      : [...days.slice(startIndex), ...days.slice(0, endIndex + 1)];
-    
+    const range =
+      startIndex <= endIndex
+        ? days.slice(startIndex, endIndex + 1)
+        : [...days.slice(startIndex), ...days.slice(0, endIndex + 1)];
+
     range.forEach((day) => {
       updatedHours[day.key] = {
         open: true,
@@ -358,7 +372,7 @@ export function BusinessOverview({ businessAccount }: BusinessOverviewProps) {
         to,
       };
     });
-    
+
     setOperatingHours(updatedHours);
   };
 
@@ -375,7 +389,9 @@ export function BusinessOverview({ businessAccount }: BusinessOverviewProps) {
           const displayHour = hour % 12 || 12;
           return `${displayHour}:${minutes} ${ampm}`;
         };
-        formatted[day.key] = `${formatTime(hours.from)} - ${formatTime(hours.to)}`;
+        formatted[day.key] = `${formatTime(hours.from)} - ${formatTime(
+          hours.to
+        )}`;
       } else {
         formatted[day.key] = "closed";
       }
@@ -515,7 +531,7 @@ export function BusinessOverview({ businessAccount }: BusinessOverviewProps) {
   return (
     <div className="space-y-6">
       {/* Header with Toggle - Hidden on mobile */}
-      <div className="hidden md:flex items-center justify-between">
+      <div className="hidden items-center justify-between md:flex">
         <h3 className="text-xl font-semibold text-gray-900 dark:text-white">
           Business Overview
         </h3>
@@ -538,26 +554,28 @@ export function BusinessOverview({ businessAccount }: BusinessOverviewProps) {
       </div>
 
       {/* Stats Cards - Hidden on mobile */}
-      <div className="hidden md:grid grid-cols-1 gap-4 sm:gap-6 md:grid-cols-2 lg:grid-cols-4">
+      <div className="hidden grid-cols-1 gap-4 sm:gap-6 md:grid md:grid-cols-2 lg:grid-cols-4">
         {stats.map((stat, index) => (
           <div
             key={index}
-            className="group relative rounded-xl sm:rounded-2xl border border-gray-100 bg-white p-4 sm:p-6 shadow-lg transition-all duration-300 hover:-translate-y-1 hover:shadow-xl dark:border-gray-700 dark:bg-gray-800"
+            className="group relative rounded-xl border border-gray-100 bg-white p-4 shadow-lg transition-all duration-300 hover:-translate-y-1 hover:shadow-xl dark:border-gray-700 dark:bg-gray-800 sm:rounded-2xl sm:p-6"
           >
             <div className="flex items-center justify-between">
               <div className="flex-1">
-                <p className="text-xs sm:text-sm font-medium text-gray-500 dark:text-gray-400">
+                <p className="text-xs font-medium text-gray-500 dark:text-gray-400 sm:text-sm">
                   {stat.title}
                 </p>
-                <p className="mt-1 text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white">
+                <p className="mt-1 text-2xl font-bold text-gray-900 dark:text-white sm:text-3xl">
                   {stat.value}
                 </p>
-                <p className={`mt-1 text-xs sm:text-sm font-medium ${stat.color}`}>
+                <p
+                  className={`mt-1 text-xs font-medium sm:text-sm ${stat.color}`}
+                >
                   {stat.change} from last month
                 </p>
               </div>
               <div
-                className={`rounded-xl sm:rounded-2xl bg-gradient-to-br p-3 sm:p-4 ${stat.bgColor} transition-transform duration-300 group-hover:scale-110 dark:from-gray-700 dark:to-gray-600`}
+                className={`rounded-xl bg-gradient-to-br p-3 sm:rounded-2xl sm:p-4 ${stat.bgColor} transition-transform duration-300 group-hover:scale-110 dark:from-gray-700 dark:to-gray-600`}
               >
                 <stat.icon className={`h-6 w-6 sm:h-8 sm:w-8 ${stat.color}`} />
               </div>
@@ -588,7 +606,7 @@ export function BusinessOverview({ businessAccount }: BusinessOverviewProps) {
       </div>
 
       {/* User Stores Section */}
-      <div className="rounded-xl sm:rounded-2xl border border-gray-100 bg-white p-4 sm:p-6 shadow-lg dark:border-gray-700 dark:bg-gray-800">
+      <div className="rounded-xl border border-gray-100 bg-white p-4 shadow-lg dark:border-gray-700 dark:bg-gray-800 sm:rounded-2xl sm:p-6">
         <div className="mb-4 flex items-center justify-between">
           <div>
             <h4 className="text-lg font-semibold text-gray-900 dark:text-white">
@@ -633,7 +651,7 @@ export function BusinessOverview({ businessAccount }: BusinessOverviewProps) {
                         {store.description}
                       </p>
                     )}
-                    {(store.latitude && store.longitude) && (
+                    {store.latitude && store.longitude && (
                       <p className="text-xs text-gray-500 dark:text-gray-500">
                         📍 Location: {store.latitude}, {store.longitude}
                       </p>
@@ -676,52 +694,65 @@ export function BusinessOverview({ businessAccount }: BusinessOverviewProps) {
 
       {/* Create Store Modal */}
       {showCreateStoreModal && (
-        <div className="fixed inset-0 z-[10000] flex items-center justify-center bg-black bg-opacity-50 p-2 sm:p-4" style={{ paddingBottom: 'env(safe-area-inset-bottom, 0px)' }}>
-          <div className="relative w-full max-w-2xl max-h-[95vh] sm:max-h-[90vh] rounded-xl bg-white shadow-2xl dark:bg-gray-800 flex flex-col overflow-hidden">
-            <div className="border-b border-gray-200 bg-gradient-to-r from-green-500 to-emerald-500 px-4 sm:px-6 py-3 sm:py-4 dark:border-gray-700 flex-shrink-0">
+        <div
+          className="fixed inset-0 z-[10000] flex items-center justify-center bg-black bg-opacity-50 p-2 sm:p-4"
+          style={{ paddingBottom: "env(safe-area-inset-bottom, 0px)" }}
+        >
+          <div className="relative flex max-h-[95vh] w-full max-w-2xl flex-col overflow-hidden rounded-xl bg-white shadow-2xl dark:bg-gray-800 sm:max-h-[90vh]">
+            <div className="flex-shrink-0 border-b border-gray-200 bg-gradient-to-r from-green-500 to-emerald-500 px-4 py-3 dark:border-gray-700 sm:px-6 sm:py-4">
               <div className="flex items-center justify-between">
-                <h3 className="text-lg sm:text-xl font-bold text-white">Create New Store</h3>
+                <h3 className="text-lg font-bold text-white sm:text-xl">
+                  Create New Store
+                </h3>
                 <button
                   onClick={handleCloseCreateModal}
-                  className="rounded-full p-1.5 sm:p-1 text-white transition-colors hover:bg-white/20 active:bg-white/30"
+                  className="rounded-full p-1.5 text-white transition-colors hover:bg-white/20 active:bg-white/30 sm:p-1"
                 >
                   <X className="h-5 w-5 sm:h-5 sm:w-5" />
                 </button>
               </div>
             </div>
 
-            <div className="p-4 sm:p-6 space-y-4 sm:space-y-6 overflow-y-auto flex-1">
+            <div className="flex-1 space-y-4 overflow-y-auto p-4 sm:space-y-6 sm:p-6">
               <div>
-                <label className="block text-sm font-medium text-gray-900 dark:text-white mb-1">
+                <label className="mb-1 block text-sm font-medium text-gray-900 dark:text-white">
                   Store Name <span className="text-red-500">*</span>
                 </label>
                 <input
                   type="text"
                   value={newStoreData.name}
-                  onChange={(e) => setNewStoreData({ ...newStoreData, name: e.target.value })}
+                  onChange={(e) =>
+                    setNewStoreData({ ...newStoreData, name: e.target.value })
+                  }
                   placeholder="Enter store name"
                   disabled={isCreatingStore}
-                  className="w-full rounded-lg border border-gray-300 px-4 py-2 text-sm focus:border-green-500 focus:outline-none focus:ring-2 focus:ring-green-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="w-full rounded-lg border border-gray-300 px-4 py-2 text-sm focus:border-green-500 focus:outline-none focus:ring-2 focus:ring-green-500 disabled:cursor-not-allowed disabled:opacity-50 dark:border-gray-600 dark:bg-gray-700 dark:text-white"
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-900 dark:text-white mb-1">
+                <label className="mb-1 block text-sm font-medium text-gray-900 dark:text-white">
                   Description
                 </label>
                 <textarea
                   value={newStoreData.description}
-                  onChange={(e) => setNewStoreData({ ...newStoreData, description: e.target.value })}
+                  onChange={(e) =>
+                    setNewStoreData({
+                      ...newStoreData,
+                      description: e.target.value,
+                    })
+                  }
                   placeholder="Enter store description (optional)"
                   rows={3}
                   disabled={isCreatingStore}
-                  className="w-full rounded-lg border border-gray-300 px-4 py-2 text-sm focus:border-green-500 focus:outline-none focus:ring-2 focus:ring-green-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="w-full rounded-lg border border-gray-300 px-4 py-2 text-sm focus:border-green-500 focus:outline-none focus:ring-2 focus:ring-green-500 disabled:cursor-not-allowed disabled:opacity-50 dark:border-gray-600 dark:bg-gray-700 dark:text-white"
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-900 dark:text-white mb-1">
-                  Category <span className="text-xs text-gray-500">(Optional)</span>
+                <label className="mb-1 block text-sm font-medium text-gray-900 dark:text-white">
+                  Category{" "}
+                  <span className="text-xs text-gray-500">(Optional)</span>
                 </label>
                 {loadingCategories ? (
                   <div className="flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400">
@@ -731,9 +762,14 @@ export function BusinessOverview({ businessAccount }: BusinessOverviewProps) {
                 ) : (
                   <select
                     value={newStoreData.category_id}
-                    onChange={(e) => setNewStoreData({ ...newStoreData, category_id: e.target.value })}
+                    onChange={(e) =>
+                      setNewStoreData({
+                        ...newStoreData,
+                        category_id: e.target.value,
+                      })
+                    }
                     disabled={isCreatingStore}
-                    className="w-full rounded-lg border border-gray-300 px-4 py-2 text-sm focus:border-green-500 focus:outline-none focus:ring-2 focus:ring-green-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="w-full rounded-lg border border-gray-300 px-4 py-2 text-sm focus:border-green-500 focus:outline-none focus:ring-2 focus:ring-green-500 disabled:cursor-not-allowed disabled:opacity-50 dark:border-gray-600 dark:bg-gray-700 dark:text-white"
                   >
                     <option value="">Select a category (optional)</option>
                     {categories.map((category) => (
@@ -746,22 +782,23 @@ export function BusinessOverview({ businessAccount }: BusinessOverviewProps) {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-900 dark:text-white mb-1">
-                  Store Image <span className="text-xs text-gray-500">(Optional)</span>
+                <label className="mb-1 block text-sm font-medium text-gray-900 dark:text-white">
+                  Store Image{" "}
+                  <span className="text-xs text-gray-500">(Optional)</span>
                 </label>
                 {storeImage ? (
                   <div className="space-y-2">
-                    <div className="relative w-full h-48 sm:h-64 rounded-lg overflow-hidden border border-gray-300 dark:border-gray-600">
+                    <div className="relative h-48 w-full overflow-hidden rounded-lg border border-gray-300 dark:border-gray-600 sm:h-64">
                       <img
                         src={storeImage}
                         alt="Store preview"
-                        className="w-full h-full object-cover"
+                        className="h-full w-full object-cover"
                       />
                       <button
                         type="button"
                         onClick={() => setStoreImage("")}
                         disabled={isCreatingStore}
-                        className="absolute top-2 right-2 rounded-full bg-red-500 p-1.5 text-white hover:bg-red-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                        className="absolute right-2 top-2 rounded-full bg-red-500 p-1.5 text-white transition-colors hover:bg-red-600 disabled:cursor-not-allowed disabled:opacity-50"
                       >
                         <X className="h-4 w-4" />
                       </button>
@@ -773,15 +810,15 @@ export function BusinessOverview({ businessAccount }: BusinessOverviewProps) {
                         accept="image/*"
                         onChange={handleImageUpload}
                         disabled={isCreatingStore}
-                        className="block w-full text-sm text-gray-500 dark:text-gray-400 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-medium file:bg-green-50 file:text-green-700 hover:file:bg-green-100 dark:file:bg-gray-700 dark:file:text-gray-300 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                        className="block w-full cursor-pointer text-sm text-gray-500 file:mr-4 file:rounded-lg file:border-0 file:bg-green-50 file:px-4 file:py-2 file:text-sm file:font-medium file:text-green-700 hover:file:bg-green-100 disabled:cursor-not-allowed disabled:opacity-50 dark:text-gray-400 dark:file:bg-gray-700 dark:file:text-gray-300"
                       />
                     </label>
                   </div>
                 ) : (
-                  <label className="flex flex-col items-center justify-center w-full h-32 sm:h-40 border-2 border-gray-300 border-dashed rounded-lg cursor-pointer bg-gray-50 hover:bg-gray-100 dark:border-gray-600 dark:bg-gray-700 dark:hover:bg-gray-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
-                    <div className="flex flex-col items-center justify-center pt-5 pb-6">
+                  <label className="flex h-32 w-full cursor-pointer flex-col items-center justify-center rounded-lg border-2 border-dashed border-gray-300 bg-gray-50 transition-colors hover:bg-gray-100 disabled:cursor-not-allowed disabled:opacity-50 dark:border-gray-600 dark:bg-gray-700 dark:hover:bg-gray-600 sm:h-40">
+                    <div className="flex flex-col items-center justify-center pb-6 pt-5">
                       <svg
-                        className="w-8 h-8 mb-2 text-gray-500 dark:text-gray-400"
+                        className="mb-2 h-8 w-8 text-gray-500 dark:text-gray-400"
                         aria-hidden="true"
                         xmlns="http://www.w3.org/2000/svg"
                         fill="none"
@@ -796,7 +833,8 @@ export function BusinessOverview({ businessAccount }: BusinessOverviewProps) {
                         />
                       </svg>
                       <p className="mb-2 text-sm text-gray-500 dark:text-gray-400">
-                        <span className="font-semibold">Click to upload</span> or drag and drop
+                        <span className="font-semibold">Click to upload</span>{" "}
+                        or drag and drop
                       </p>
                       <p className="text-xs text-gray-500 dark:text-gray-400">
                         PNG, JPG, GIF up to 5MB
@@ -814,10 +852,10 @@ export function BusinessOverview({ businessAccount }: BusinessOverviewProps) {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-900 dark:text-white mb-1">
+                <label className="mb-1 block text-sm font-medium text-gray-900 dark:text-white">
                   Store Location <span className="text-red-500">*</span>
                 </label>
-                <p className="text-xs text-gray-500 dark:text-gray-400 mb-2">
+                <p className="mb-2 text-xs text-gray-500 dark:text-gray-400">
                   Start typing an address and select from suggestions
                 </p>
                 <div className="relative">
@@ -833,30 +871,35 @@ export function BusinessOverview({ businessAccount }: BusinessOverviewProps) {
                     }}
                     placeholder="Enter store address (e.g., Kigali, Rwanda)"
                     disabled={!isGoogleMapsLoaded || isCreatingStore}
-                    className="w-full rounded-lg border border-gray-300 px-4 py-2 text-sm focus:border-green-500 focus:outline-none focus:ring-2 focus:ring-green-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="w-full rounded-lg border border-gray-300 px-4 py-2 text-sm focus:border-green-500 focus:outline-none focus:ring-2 focus:ring-green-500 disabled:cursor-not-allowed disabled:opacity-50 dark:border-gray-600 dark:bg-gray-700 dark:text-white"
                   />
                   {!isGoogleMapsLoaded && (
                     <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
                       Loading Google Maps...
                     </p>
                   )}
-                  
+
                   {/* Suggestions dropdown */}
                   {showSuggestions && suggestions.length > 0 && (
-                    <div className="suggestions-dropdown absolute z-10 mt-1 w-full rounded-lg border border-gray-200 bg-white shadow-lg dark:border-gray-700 dark:bg-gray-800 max-h-60 overflow-y-auto">
+                    <div className="suggestions-dropdown absolute z-10 mt-1 max-h-60 w-full overflow-y-auto rounded-lg border border-gray-200 bg-white shadow-lg dark:border-gray-700 dark:bg-gray-800">
                       {suggestions.map((suggestion, index) => (
                         <button
                           key={index}
                           type="button"
                           onClick={() => handleSelectSuggestion(suggestion)}
-                          className="w-full px-4 py-2 text-left text-sm text-gray-900 hover:bg-gray-100 dark:text-gray-100 dark:hover:bg-gray-700 transition-colors"
+                          className="w-full px-4 py-2 text-left text-sm text-gray-900 transition-colors hover:bg-gray-100 dark:text-gray-100 dark:hover:bg-gray-700"
                         >
                           <div className="flex items-start gap-2">
                             <span className="text-gray-400">📍</span>
                             <div>
-                              <div className="font-medium">{suggestion.structured_formatting.main_text}</div>
+                              <div className="font-medium">
+                                {suggestion.structured_formatting.main_text}
+                              </div>
                               <div className="text-xs text-gray-500 dark:text-gray-400">
-                                {suggestion.structured_formatting.secondary_text}
+                                {
+                                  suggestion.structured_formatting
+                                    .secondary_text
+                                }
                               </div>
                             </div>
                           </div>
@@ -865,18 +908,22 @@ export function BusinessOverview({ businessAccount }: BusinessOverviewProps) {
                     </div>
                   )}
                 </div>
-                {(newStoreData.latitude && newStoreData.longitude) && (
+                {newStoreData.latitude && newStoreData.longitude && (
                   <p className="mt-2 text-xs text-gray-500 dark:text-gray-400">
-                    Coordinates: {newStoreData.latitude}, {newStoreData.longitude}
+                    Coordinates: {newStoreData.latitude},{" "}
+                    {newStoreData.longitude}
                   </p>
                 )}
               </div>
 
               <div>
-                <label className="block text-sm sm:text-base font-semibold text-gray-900 dark:text-white mb-3">
-                  Operating Hours <span className="text-xs font-normal text-gray-500">(Optional)</span>
+                <label className="mb-3 block text-sm font-semibold text-gray-900 dark:text-white sm:text-base">
+                  Operating Hours{" "}
+                  <span className="text-xs font-normal text-gray-500">
+                    (Optional)
+                  </span>
                 </label>
-                
+
                 {/* Quick Actions */}
                 <div className="mb-4 flex flex-wrap gap-2 sm:gap-3">
                   <button
@@ -887,9 +934,11 @@ export function BusinessOverview({ businessAccount }: BusinessOverviewProps) {
                       applyToAllDays(defaultFrom, defaultTo);
                     }}
                     disabled={isCreatingStore}
-                    className="flex-1 sm:flex-none rounded-lg border border-gray-300 bg-white px-3 sm:px-4 py-2 text-xs sm:text-sm font-medium text-gray-700 transition-all hover:border-green-500 hover:bg-green-50 hover:text-green-700 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-300 dark:hover:border-green-600 dark:hover:bg-gray-600 disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="flex-1 rounded-lg border border-gray-300 bg-white px-3 py-2 text-xs font-medium text-gray-700 transition-all hover:border-green-500 hover:bg-green-50 hover:text-green-700 disabled:cursor-not-allowed disabled:opacity-50 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-300 dark:hover:border-green-600 dark:hover:bg-gray-600 sm:flex-none sm:px-4 sm:text-sm"
                   >
-                    <span className="hidden sm:inline">Apply 9 AM - 5 PM to All</span>
+                    <span className="hidden sm:inline">
+                      Apply 9 AM - 5 PM to All
+                    </span>
                     <span className="sm:hidden">9 AM - 5 PM All</span>
                   </button>
                   <button
@@ -899,26 +948,32 @@ export function BusinessOverview({ businessAccount }: BusinessOverviewProps) {
                       days.forEach((day) => {
                         updatedHours[day.key] = {
                           ...operatingHours[day.key],
-                          open: ["monday", "tuesday", "wednesday", "thursday", "friday"].includes(day.key),
+                          open: [
+                            "monday",
+                            "tuesday",
+                            "wednesday",
+                            "thursday",
+                            "friday",
+                          ].includes(day.key),
                         };
                       });
                       setOperatingHours(updatedHours);
                     }}
                     disabled={isCreatingStore}
-                    className="flex-1 sm:flex-none rounded-lg border border-gray-300 bg-white px-3 sm:px-4 py-2 text-xs sm:text-sm font-medium text-gray-700 transition-all hover:border-green-500 hover:bg-green-50 hover:text-green-700 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-300 dark:hover:border-green-600 dark:hover:bg-gray-600 disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="flex-1 rounded-lg border border-gray-300 bg-white px-3 py-2 text-xs font-medium text-gray-700 transition-all hover:border-green-500 hover:bg-green-50 hover:text-green-700 disabled:cursor-not-allowed disabled:opacity-50 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-300 dark:hover:border-green-600 dark:hover:bg-gray-600 sm:flex-none sm:px-4 sm:text-sm"
                   >
                     Weekdays Only
                   </button>
                 </div>
 
                 {/* Days List */}
-                <div className="space-y-2.5 sm:space-y-3 max-h-[280px] sm:max-h-64 overflow-y-auto pr-1 sm:pr-2 scrollbar-thin scrollbar-thumb-gray-300 dark:scrollbar-thumb-gray-600">
+                <div className="scrollbar-thin scrollbar-thumb-gray-300 dark:scrollbar-thumb-gray-600 max-h-[280px] space-y-2.5 overflow-y-auto pr-1 sm:max-h-64 sm:space-y-3 sm:pr-2">
                   {days.map((day) => {
                     const hours = operatingHours[day.key];
                     return (
                       <div
                         key={day.key}
-                        className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3 rounded-lg border border-gray-200 bg-gray-50 p-3 sm:p-3.5 transition-all hover:border-green-300 hover:shadow-sm dark:border-gray-700 dark:bg-gray-900 dark:hover:border-gray-600"
+                        className="flex flex-col gap-2 rounded-lg border border-gray-200 bg-gray-50 p-3 transition-all hover:border-green-300 hover:shadow-sm dark:border-gray-700 dark:bg-gray-900 dark:hover:border-gray-600 sm:flex-row sm:items-center sm:gap-3 sm:p-3.5"
                       >
                         {/* Day Label and Toggle */}
                         <div className="flex items-center gap-2.5 sm:min-w-[110px] sm:max-w-[110px]">
@@ -926,52 +981,64 @@ export function BusinessOverview({ businessAccount }: BusinessOverviewProps) {
                             type="checkbox"
                             checked={hours.open}
                             onChange={(e) =>
-                              handleOperatingHoursChange(day.key, "open", e.target.checked)
+                              handleOperatingHoursChange(
+                                day.key,
+                                "open",
+                                e.target.checked
+                              )
                             }
                             disabled={isCreatingStore}
-                            className="h-4 w-4 sm:h-5 sm:w-5 rounded border-gray-300 text-green-600 focus:ring-2 focus:ring-green-500 focus:ring-offset-0 dark:border-gray-600 dark:bg-gray-700 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                            className="h-4 w-4 cursor-pointer rounded border-gray-300 text-green-600 focus:ring-2 focus:ring-green-500 focus:ring-offset-0 disabled:cursor-not-allowed disabled:opacity-50 dark:border-gray-600 dark:bg-gray-700 sm:h-5 sm:w-5"
                           />
-                          <label className="text-sm sm:text-base font-semibold text-gray-900 dark:text-white cursor-pointer flex-1">
+                          <label className="flex-1 cursor-pointer text-sm font-semibold text-gray-900 dark:text-white sm:text-base">
                             {day.label}
                           </label>
                         </div>
 
                         {/* Time Inputs or Closed Status */}
                         {hours.open ? (
-                          <div className="flex flex-1 items-center gap-2 sm:gap-3 pl-6 sm:pl-0">
-                            <div className="flex items-center gap-1.5 sm:gap-2 flex-1">
-                              <label className="text-xs sm:text-sm font-medium text-gray-600 dark:text-gray-400 whitespace-nowrap">
+                          <div className="flex flex-1 items-center gap-2 pl-6 sm:gap-3 sm:pl-0">
+                            <div className="flex flex-1 items-center gap-1.5 sm:gap-2">
+                              <label className="whitespace-nowrap text-xs font-medium text-gray-600 dark:text-gray-400 sm:text-sm">
                                 From:
                               </label>
                               <input
                                 type="time"
                                 value={hours.from}
                                 onChange={(e) =>
-                                  handleOperatingHoursChange(day.key, "from", e.target.value)
+                                  handleOperatingHoursChange(
+                                    day.key,
+                                    "from",
+                                    e.target.value
+                                  )
                                 }
                                 disabled={isCreatingStore}
-                                className="flex-1 sm:flex-none w-full sm:w-auto rounded-lg border border-gray-300 px-2.5 sm:px-3 py-2 sm:py-1.5 text-xs sm:text-sm focus:border-green-500 focus:outline-none focus:ring-2 focus:ring-green-500/20 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:focus:border-green-500 disabled:opacity-50 disabled:cursor-not-allowed"
+                                className="w-full flex-1 rounded-lg border border-gray-300 px-2.5 py-2 text-xs focus:border-green-500 focus:outline-none focus:ring-2 focus:ring-green-500/20 disabled:cursor-not-allowed disabled:opacity-50 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:focus:border-green-500 sm:w-auto sm:flex-none sm:px-3 sm:py-1.5 sm:text-sm"
                               />
                             </div>
-                            <span className="text-gray-400 font-medium">-</span>
-                            <div className="flex items-center gap-1.5 sm:gap-2 flex-1">
-                              <label className="text-xs sm:text-sm font-medium text-gray-600 dark:text-gray-400 whitespace-nowrap">
+                            <span className="font-medium text-gray-400">-</span>
+                            <div className="flex flex-1 items-center gap-1.5 sm:gap-2">
+                              <label className="whitespace-nowrap text-xs font-medium text-gray-600 dark:text-gray-400 sm:text-sm">
                                 To:
                               </label>
                               <input
                                 type="time"
                                 value={hours.to}
                                 onChange={(e) =>
-                                  handleOperatingHoursChange(day.key, "to", e.target.value)
+                                  handleOperatingHoursChange(
+                                    day.key,
+                                    "to",
+                                    e.target.value
+                                  )
                                 }
                                 disabled={isCreatingStore}
-                                className="flex-1 sm:flex-none w-full sm:w-auto rounded-lg border border-gray-300 px-2.5 sm:px-3 py-2 sm:py-1.5 text-xs sm:text-sm focus:border-green-500 focus:outline-none focus:ring-2 focus:ring-green-500/20 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:focus:border-green-500 disabled:opacity-50 disabled:cursor-not-allowed"
+                                className="w-full flex-1 rounded-lg border border-gray-300 px-2.5 py-2 text-xs focus:border-green-500 focus:outline-none focus:ring-2 focus:ring-green-500/20 disabled:cursor-not-allowed disabled:opacity-50 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:focus:border-green-500 sm:w-auto sm:flex-none sm:px-3 sm:py-1.5 sm:text-sm"
                               />
                             </div>
                           </div>
                         ) : (
                           <div className="pl-6 sm:pl-0">
-                            <span className="inline-flex items-center rounded-full bg-gray-200 px-3 py-1 text-xs sm:text-sm font-medium text-gray-600 dark:bg-gray-700 dark:text-gray-400">
+                            <span className="inline-flex items-center rounded-full bg-gray-200 px-3 py-1 text-xs font-medium text-gray-600 dark:bg-gray-700 dark:text-gray-400 sm:text-sm">
                               Closed
                             </span>
                           </div>
@@ -982,17 +1049,22 @@ export function BusinessOverview({ businessAccount }: BusinessOverviewProps) {
                 </div>
               </div>
 
-              <div className="flex flex-col sm:flex-row justify-end gap-2 sm:gap-3 pt-4 sm:pt-6 border-t border-gray-200 dark:border-gray-700">
+              <div className="flex flex-col justify-end gap-2 border-t border-gray-200 pt-4 dark:border-gray-700 sm:flex-row sm:gap-3 sm:pt-6">
                 <button
                   onClick={handleCloseCreateModal}
-                  className="w-full sm:w-auto rounded-lg border border-gray-300 bg-white px-4 sm:px-6 py-2.5 sm:py-2 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-50 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700"
+                  className="w-full rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-50 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700 sm:w-auto sm:px-6 sm:py-2"
                 >
                   Cancel
                 </button>
                 <button
                   onClick={handleSubmitCreateStore}
-                  disabled={!newStoreData.name.trim() || !newStoreData.address.trim() || !isGoogleMapsLoaded || isCreatingStore}
-                  className="w-full sm:w-auto rounded-lg bg-gradient-to-r from-green-500 to-emerald-500 px-4 sm:px-6 py-2.5 sm:py-2 text-sm font-semibold text-white transition-all hover:from-green-600 hover:to-emerald-600 disabled:cursor-not-allowed disabled:opacity-50 shadow-lg flex items-center justify-center gap-2"
+                  disabled={
+                    !newStoreData.name.trim() ||
+                    !newStoreData.address.trim() ||
+                    !isGoogleMapsLoaded ||
+                    isCreatingStore
+                  }
+                  className="flex w-full items-center justify-center gap-2 rounded-lg bg-gradient-to-r from-green-500 to-emerald-500 px-4 py-2.5 text-sm font-semibold text-white shadow-lg transition-all hover:from-green-600 hover:to-emerald-600 disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto sm:px-6 sm:py-2"
                 >
                   {isCreatingStore ? (
                     <>
@@ -1011,4 +1083,3 @@ export function BusinessOverview({ businessAccount }: BusinessOverviewProps) {
     </div>
   );
 }
-

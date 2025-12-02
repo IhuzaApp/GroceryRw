@@ -6,7 +6,9 @@ import { gql } from "graphql-request";
 
 const CREATE_BUSINESS_WALLET = gql`
   mutation CreateBusinessWallet($amount: String = "", $business_id: uuid = "") {
-    insert_business_wallet(objects: { amount: $amount, business_id: $business_id }) {
+    insert_business_wallet(
+      objects: { amount: $amount, business_id: $business_id }
+    ) {
       affected_rows
       returning {
         id
@@ -73,7 +75,10 @@ export default async function handler(
       amount: amount.toString(),
     });
 
-    if (!result.insert_business_wallet || result.insert_business_wallet.affected_rows === 0) {
+    if (
+      !result.insert_business_wallet ||
+      result.insert_business_wallet.affected_rows === 0
+    ) {
       throw new Error("Failed to create business wallet");
     }
 
@@ -95,7 +100,8 @@ export default async function handler(
       errors: error.response?.errors,
     });
 
-    const errorMessage = error.response?.errors?.[0]?.message || error.message || "Unknown error";
+    const errorMessage =
+      error.response?.errors?.[0]?.message || error.message || "Unknown error";
     const errorCode = error.response?.errors?.[0]?.extensions?.code;
 
     return res.status(500).json({
@@ -106,4 +112,3 @@ export default async function handler(
     });
   }
 }
-

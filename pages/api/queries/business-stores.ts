@@ -73,7 +73,10 @@ export default async function handler(
       business_accounts: Array<{ id: string }>;
     }>(businessAccountQuery, { user_id });
 
-    if (!businessAccountResult.business_accounts || businessAccountResult.business_accounts.length === 0) {
+    if (
+      !businessAccountResult.business_accounts ||
+      businessAccountResult.business_accounts.length === 0
+    ) {
       return res.status(200).json({ stores: [] });
     }
 
@@ -104,4 +107,3 @@ export default async function handler(
     });
   }
 }
-

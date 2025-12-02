@@ -160,9 +160,10 @@ export function CreateProductForm({
 
     try {
       // Format price
-      const formattedPrice = formData.priceUnit === "flat rate"
-        ? `$${formData.price}`
-        : `$${formData.price}${formData.priceUnit}`;
+      const formattedPrice =
+        formData.priceUnit === "flat rate"
+          ? `$${formData.price}`
+          : `$${formData.price}${formData.priceUnit}`;
 
       // Filter out empty specialties
       const filteredSpecialties = formData.specialties.filter(
@@ -232,7 +233,8 @@ export function CreateProductForm({
               Create Product
             </h2>
             <p className="text-gray-600 dark:text-gray-400">
-              Add a new product or service - Step {currentStep} of {steps.length}
+              Add a new product or service - Step {currentStep} of{" "}
+              {steps.length}
             </p>
           </div>
           <button
@@ -752,4 +754,3 @@ export function CreateProductForm({
     </div>
   );
 }
-

@@ -25,7 +25,10 @@ interface UserOrderDetailsProps {
   order: any;
   isMobile?: boolean;
 }
-export default function UserOrderDetails({ order, isMobile = false }: UserOrderDetailsProps) {
+export default function UserOrderDetails({
+  order,
+  isMobile = false,
+}: UserOrderDetailsProps) {
   const [feedbackModal, setFeedbackModal] = useState(false);
   const [rating, setRating] = useState(0);
   const [comment, setComment] = useState("");
@@ -53,7 +56,6 @@ export default function UserOrderDetails({ order, isMobile = false }: UserOrderD
       checkExistingRating();
     }
   }, [order?.id]);
-
 
   const getStatusStep = (status: string, assignedTo: any) => {
     // If no shopper is assigned yet
@@ -151,20 +153,28 @@ export default function UserOrderDetails({ order, isMobile = false }: UserOrderD
           <h2 className="mb-4 text-xl font-bold">Order Status</h2>
           {isMobile ? (
             // Mobile: Simple status display
-            <div className="text-center py-4">
+            <div className="py-4 text-center">
               <div className="text-lg font-semibold text-gray-900 dark:text-white">
-                {order.status === "delivered" ? "Delivered" : 
-                 order.status === "on_the_way" ? "On the Way" :
-                 order.status === "packing" ? "Packing" :
-                 order.status === "shopping" ? "Shopping" :
-                 "Pending Assignment"}
+                {order.status === "delivered"
+                  ? "Delivered"
+                  : order.status === "on_the_way"
+                  ? "On the Way"
+                  : order.status === "packing"
+                  ? "Packing"
+                  : order.status === "shopping"
+                  ? "Shopping"
+                  : "Pending Assignment"}
               </div>
-              <div className="text-sm text-gray-500 dark:text-gray-400 mt-1">
-                {order.status === "delivered" ? "Order completed successfully" :
-                 order.status === "on_the_way" ? "Heading to your location" :
-                 order.status === "packing" ? "Preparing for delivery" :
-                 order.status === "shopping" ? "Picking your items" :
-                 "Waiting for shopper assignment"}
+              <div className="mt-1 text-sm text-gray-500 dark:text-gray-400">
+                {order.status === "delivered"
+                  ? "Order completed successfully"
+                  : order.status === "on_the_way"
+                  ? "Heading to your location"
+                  : order.status === "packing"
+                  ? "Preparing for delivery"
+                  : order.status === "shopping"
+                  ? "Picking your items"
+                  : "Waiting for shopper assignment"}
               </div>
             </div>
           ) : (
