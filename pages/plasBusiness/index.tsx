@@ -60,17 +60,23 @@ export default function PlasBusinessPage() {
 
   const checkBusinessAccount = async () => {
     try {
+      console.log("🔍 Checking business account...");
       const response = await fetch("/api/queries/check-business-account");
       if (response.ok) {
         const data = await response.json();
+        console.log("✅ Business account response:", data);
+        console.log("📊 Has account:", data.hasAccount);
+        console.log("🏢 Business account data:", data.account);
+        console.log("📝 Business name:", data.account?.businessName);
         setHasBusinessAccount(data.hasAccount);
         setBusinessAccount(data.account);
       } else {
+        console.warn("⚠️ Failed to fetch business account:", response.status);
         setHasBusinessAccount(false);
         setBusinessAccount(null);
       }
     } catch (error) {
-      console.error("Error checking business account:", error);
+      console.error("❌ Error checking business account:", error);
       setHasBusinessAccount(false);
       setBusinessAccount(null);
     } finally {
@@ -149,6 +155,11 @@ function BuyerDashboardContent({
   router: any;
   businessAccount?: any;
 }) {
+  // Log business account data when component receives it
+  useEffect(() => {
+    console.log("🏢 BuyerDashboardContent - Business Account:", businessAccount);
+    console.log("📝 Business Name:", businessAccount?.businessName);
+  }, [businessAccount]);
   const [activeTab, setActiveTab] = useState("overview");
   const [isServiceProvider, setIsServiceProvider] = useState(true); // This should come from user data/API
 
@@ -207,7 +218,11 @@ function BuyerDashboardContent({
       <BusinessHeader
         onCreateRFQ={handleCreateRFQ}
         onFindSuppliers={() => console.log("Finding suppliers")}
-        businessName={businessAccount?.businessName}
+        businessName={(() => {
+          const name = businessAccount?.businessName;
+          console.log("🎨 BusinessHeader - Business Name:", name);
+          return name;
+        })()}
       />
 
       {/* Stats Cards */}
