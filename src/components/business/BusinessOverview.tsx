@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
+import { useRouter } from "next/router";
 import {
   DollarSign,
   ShoppingCart,
@@ -22,6 +23,7 @@ interface BusinessOverviewProps {
 }
 
 export function BusinessOverview({ businessAccount }: BusinessOverviewProps) {
+  const router = useRouter();
   const { isLoaded: isGoogleMapsLoaded } = useGoogleMap();
   const [showDetailedStats, setShowDetailedStats] = useState(false);
   const [userStores, setUserStores] = useState<any[]>([]);
@@ -480,9 +482,7 @@ export function BusinessOverview({ businessAccount }: BusinessOverviewProps) {
   };
 
   const handleViewStore = (storeId: string) => {
-    if (typeof window !== "undefined") {
-      window.location.href = `/shops/${storeId}`;
-    }
+    router.push(`/plasBusiness/store/${storeId}`);
   };
 
   const stats = [
