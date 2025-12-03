@@ -1,7 +1,6 @@
 import type { NextApiRequest, NextApiResponse } from "next";
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "../auth/[...nextauth]";
-import { v4 as uuidv4 } from "uuid";
 
 interface SessionUser {
   id: string;
@@ -14,6 +13,21 @@ interface SessionUser {
 interface Session {
   user: SessionUser;
   expires: string;
+}
+
+// Generate a user-friendly product verification ID
+// Format: PB + 6 alphanumeric characters (e.g., PB0384BD, PB59483CF, PB7K9M2N)
+function generateProductQueryId(): string {
+  const prefix = "PB";
+  const chars = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+  let id = prefix;
+  
+  // Generate 6 random alphanumeric characters (numbers and uppercase letters)
+  for (let i = 0; i < 6; i++) {
+    id += chars.charAt(Math.floor(Math.random() * chars.length));
+  }
+  
+  return id;
 }
 
 export default async function handler(
@@ -36,7 +50,8 @@ export default async function handler(
     }
 
     // Generate a unique query ID for product verification
-    const queryId = uuidv4();
+    // Format: PB + 6 alphanumeric characters (e.g., PB0384BD, PB59483CF)
+    const queryId = generateProductQueryId();
 
     return res.status(200).json({
       success: true,

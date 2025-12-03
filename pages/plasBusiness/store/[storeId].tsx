@@ -602,8 +602,8 @@ export default function StoreDetailsPage() {
                       Capture Product Image
                     </span>
                     {queryId && (
-                      <span className="text-xs text-green-600 dark:text-green-400 mt-1">
-                        Verification ID: {queryId.substring(0, 8)}...
+                      <span className="text-xs text-green-600 dark:text-green-400 mt-1 font-mono">
+                        Verification ID: {queryId}
                       </span>
                     )}
                   </button>
