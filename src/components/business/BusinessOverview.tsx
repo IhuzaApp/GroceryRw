@@ -458,10 +458,22 @@ export function BusinessOverview({ businessAccount }: BusinessOverviewProps) {
         // Refresh stores list
         fetchUserStores();
       } else {
-        toast.error(data.error || data.message || "Failed to create store");
+        // Show more detailed error message
+        const errorMsg = data.message || data.error || "Failed to create store";
+        toast.error(errorMsg);
+        // Log full error details for debugging
+        console.error("Store creation error details:", {
+          message: data.message,
+          error: data.error,
+          code: data.code,
+          details: data.details,
+          hint: data.hint,
+          requestBody: data.requestBody,
+        });
       }
     } catch (error: any) {
       toast.error("Failed to create store. Please try again.");
+      console.error("Store creation error:", error);
     } finally {
       setIsCreatingStore(false);
     }
