@@ -14,6 +14,15 @@ import {
   Camera,
   X,
   Check,
+  Edit,
+  ShoppingCart,
+  Truck,
+  Tag,
+  CheckCircle,
+  XCircle,
+  Search,
+  ChevronLeft,
+  ChevronRight,
 } from "lucide-react";
 import RootLayout from "../../../src/components/ui/layout";
 import { useAuth } from "../../../src/context/AuthContext";
@@ -36,12 +45,21 @@ export default function StoreDetailsPage() {
   const [productImage, setProductImage] = useState<string>("");
   const [isCreatingProduct, setIsCreatingProduct] = useState(false);
   const [isGeneratingQueryId, setIsGeneratingQueryId] = useState(false);
+  const [businessAccountId, setBusinessAccountId] = useState<string | null>(null);
+  const [editingProduct, setEditingProduct] = useState<any>(null);
+  const [searchQuery, setSearchQuery] = useState<string>("");
+  const [allProducts, setAllProducts] = useState<any[]>([]);
+  const [currentPage, setCurrentPage] = useState<number>(1);
+  const itemsPerPage = 18;
 
   const [newProduct, setNewProduct] = useState({
     name: "",
     description: "",
     price: "",
     unit: "",
+    minimumOrders: "0",
+    maxOrders: "",
+    deliveryArea: "",
   });
 
   useEffect(() => {
@@ -54,6 +72,7 @@ export default function StoreDetailsPage() {
     if (storeId && authReady && isLoggedIn) {
       fetchStoreDetails();
       fetchProducts();
+      fetchBusinessAccount();
     }
   }, [storeId, authReady, isLoggedIn]);
 
@@ -75,19 +94,83 @@ export default function StoreDetailsPage() {
     }
   };
 
-  const fetchProducts = async () => {
+  const fetchBusinessAccount = async () => {
     try {
-      const response = await fetch("/api/queries/business-products");
+      const response = await fetch("/api/queries/check-business-account");
       if (response.ok) {
         const data = await response.json();
-        setProducts(data.products || []);
+        if (data.hasAccount && data.account) {
+          setBusinessAccountId(data.account.id);
+        }
+      }
+    } catch (error) {
+      // Silently fail - business account ID is optional
+    }
+  };
+
+  const fetchProducts = async () => {
+    if (!storeId) return;
+    try {
+      const response = await fetch(`/api/queries/business-products?store_id=${storeId}`);
+      if (response.ok) {
+        const data = await response.json();
+        const fetchedProducts = data.products || [];
+        setAllProducts(fetchedProducts);
+        setProducts(fetchedProducts);
       }
     } catch (error) {
       // Silently fail - products are optional
     }
   };
 
+  // Filter products based on search query
+  const [filteredProducts, setFilteredProducts] = useState<any[]>([]);
+
+  useEffect(() => {
+    if (!searchQuery.trim()) {
+      setFilteredProducts(allProducts);
+      setCurrentPage(1); // Reset to first page when search is cleared
+      return;
+    }
+
+    const query = searchQuery.toLowerCase().trim();
+    const filtered = allProducts.filter((product) => {
+      const name = (product.name || "").toLowerCase();
+      const description = (product.Description || "").toLowerCase();
+      const price = (product.price || "").toLowerCase();
+      const unit = (product.unit || "").toLowerCase();
+      const queryId = (product.query_id || "").toLowerCase();
+      const deliveryArea = (product.delveryArea || "").toLowerCase();
+      const speciality = (product.speciality || "").toLowerCase();
+
+      return (
+        name.includes(query) ||
+        description.includes(query) ||
+        price.includes(query) ||
+        unit.includes(query) ||
+        queryId.includes(query) ||
+        deliveryArea.includes(query) ||
+        speciality.includes(query)
+      );
+    });
+
+    setFilteredProducts(filtered);
+    setCurrentPage(1); // Reset to first page when search changes
+  }, [searchQuery, allProducts]);
+
+  // Calculate pagination
+  const totalPages = Math.ceil(filteredProducts.length / itemsPerPage);
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const endIndex = startIndex + itemsPerPage;
+  const currentProducts = filteredProducts.slice(startIndex, endIndex);
+
+  // Update displayed products based on pagination
+  useEffect(() => {
+    setProducts(currentProducts);
+  }, [currentPage, filteredProducts]);
+
   const handleAddProduct = async () => {
+    setEditingProduct(null);
     // First, generate a unique query ID
     setIsGeneratingQueryId(true);
     try {
@@ -111,15 +194,34 @@ export default function StoreDetailsPage() {
     }
   };
 
+  const handleEditProduct = (product: any) => {
+    setEditingProduct(product);
+    setQueryId(null); // No query ID needed for editing
+    setNewProduct({
+      name: product.name || "",
+      description: product.Description || "",
+      price: product.price || "",
+      unit: product.unit || "",
+      minimumOrders: product.minimumOrders || "0",
+      maxOrders: product.maxOrders || "",
+      deliveryArea: product.delveryArea || "",
+    });
+    setProductImage(product.Image || "");
+    setShowAddProductModal(true);
+  };
+
   const handleImageCapture = (imageDataUrl: string) => {
     setProductImage(imageDataUrl);
     setShowCamera(false);
   };
 
   const handleSubmitProduct = async () => {
-    if (!queryId) {
-      toast.error("Verification ID is missing. Please try again.");
-      return;
+    if (!editingProduct) {
+      // Creating new product - query ID required
+      if (!queryId) {
+        toast.error("Verification ID is missing. Please try again.");
+        return;
+      }
     }
 
     if (!productImage) {
@@ -129,11 +231,6 @@ export default function StoreDetailsPage() {
 
     if (!newProduct.name.trim()) {
       toast.error("Product name is required");
-      return;
-    }
-
-    if (!newProduct.description.trim()) {
-      toast.error("Product description is required");
       return;
     }
 
@@ -147,39 +244,63 @@ export default function StoreDetailsPage() {
       return;
     }
 
+    if (!newProduct.minimumOrders || newProduct.minimumOrders.trim() === "") {
+      toast.error("Minimum orders is required");
+      return;
+    }
+
     setIsCreatingProduct(true);
 
     try {
-      const response = await fetch("/api/mutations/create-business-product", {
-        method: "POST",
+      const url = editingProduct
+        ? "/api/mutations/update-business-product"
+        : "/api/mutations/create-business-product";
+      
+      const method = editingProduct ? "PUT" : "POST";
+
+      const body: any = {
+        name: newProduct.name,
+        description: newProduct.description,
+        image: productImage,
+        price: newProduct.price,
+        unit: newProduct.unit,
+        status: "active",
+        minimumOrders: newProduct.minimumOrders || "0",
+        maxOrders: newProduct.maxOrders || "",
+        delveryArea: newProduct.deliveryArea || "",
+        store_id: storeId as string,
+        Plasbusiness_id: businessAccountId || "",
+      };
+
+      if (editingProduct) {
+        body.product_id = editingProduct.id;
+      } else {
+        body.query_id = queryId;
+      }
+
+      const response = await fetch(url, {
+        method,
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({
-          name: newProduct.name,
-          description: newProduct.description,
-          image: productImage,
-          price: newProduct.price,
-          unit: newProduct.unit,
-          status: "active",
-          query_id: queryId,
-        }),
+        body: JSON.stringify(body),
       });
 
       if (response.ok) {
         const data = await response.json();
-        toast.success("Product added successfully!");
+        toast.success(editingProduct ? "Product updated successfully!" : "Product added successfully!");
         setShowAddProductModal(false);
-        setNewProduct({ name: "", description: "", price: "", unit: "" });
+        setEditingProduct(null);
+        setNewProduct({ name: "", description: "", price: "", unit: "", minimumOrders: "0", maxOrders: "", deliveryArea: "" });
         setProductImage("");
         setQueryId(null);
         fetchProducts();
       } else {
         const errorData = await response.json();
-        toast.error(errorData.message || "Failed to add product");
+        toast.error(errorData.message || (editingProduct ? "Failed to update product" : "Failed to add product"));
       }
     } catch (error) {
-      toast.error("Failed to add product");
+      toast.error(editingProduct ? "Failed to update product" : "Failed to add product");
     } finally {
       setIsCreatingProduct(false);
     }
@@ -406,97 +527,307 @@ export default function StoreDetailsPage() {
 
         <div className="max-w-7xl mx-auto px-2 sm:px-4 md:px-6 lg:px-8 py-4 sm:py-6 md:py-8">
           {/* Products Section */}
-          <div className="flex items-center justify-between mb-3 sm:mb-4 md:mb-6">
-            <h2 className="text-lg sm:text-xl md:text-2xl font-bold text-gray-900 dark:text-white">
-              Products & Services
-            </h2>
-            <button
-              onClick={handleAddProduct}
-              disabled={isGeneratingQueryId}
-              className="flex items-center space-x-1.5 sm:space-x-2 bg-green-600 hover:bg-green-700 px-3 py-1.5 sm:px-4 sm:py-2 rounded-lg transition-colors text-xs sm:text-sm md:text-base disabled:opacity-50 disabled:cursor-not-allowed"
-              style={{ color: "#ffffff" }}
-            >
-              {isGeneratingQueryId ? (
-                <>
-                  <div className="h-3.5 w-3.5 sm:h-4 sm:w-4 md:h-5 md:w-5 animate-spin rounded-full border-2 border-white border-t-transparent" />
-                  <span 
-                    className="hidden sm:inline" 
-                    style={{ color: "#ffffff" }}
-                  >
-                    Loading...
-                  </span>
-                  <span 
-                    className="sm:hidden" 
-                    style={{ color: "#ffffff" }}
-                  >
-                    Loading...
-                  </span>
-                </>
-              ) : (
-                <>
-                  <Plus 
-                    className="h-3.5 w-3.5 sm:h-4 sm:w-4 md:h-5 md:w-5" 
-                    style={{ color: "#ffffff" }}
-                  />
-                  <span 
-                    className="hidden sm:inline" 
-                    style={{ color: "#ffffff" }}
-                  >
-                    Add Product
-                  </span>
-                  <span 
-                    className="sm:hidden" 
-                    style={{ color: "#ffffff" }}
-                  >
-                    Add
-                  </span>
-                </>
+          <div className="mb-4 sm:mb-6 space-y-3 sm:space-y-4">
+            <div className="flex items-center justify-between">
+              <h2 className="text-lg sm:text-xl md:text-2xl font-bold text-gray-900 dark:text-white">
+                Products & Services
+              </h2>
+              <button
+                onClick={handleAddProduct}
+                disabled={isGeneratingQueryId}
+                className="flex items-center space-x-1.5 sm:space-x-2 bg-green-600 hover:bg-green-700 px-3 py-1.5 sm:px-4 sm:py-2 rounded-lg transition-colors text-xs sm:text-sm md:text-base disabled:opacity-50 disabled:cursor-not-allowed"
+                style={{ color: "#ffffff" }}
+              >
+                {isGeneratingQueryId ? (
+                  <>
+                    <div className="h-3.5 w-3.5 sm:h-4 sm:w-4 md:h-5 md:w-5 animate-spin rounded-full border-2 border-white border-t-transparent" />
+                    <span 
+                      className="hidden sm:inline" 
+                      style={{ color: "#ffffff" }}
+                    >
+                      Loading...
+                    </span>
+                    <span 
+                      className="sm:hidden" 
+                      style={{ color: "#ffffff" }}
+                    >
+                      Loading...
+                    </span>
+                  </>
+                ) : (
+                  <>
+                    <Plus 
+                      className="h-3.5 w-3.5 sm:h-4 sm:w-4 md:h-5 md:w-5" 
+                      style={{ color: "#ffffff" }}
+                    />
+                    <span 
+                      className="hidden sm:inline" 
+                      style={{ color: "#ffffff" }}
+                    >
+                      Add Product
+                    </span>
+                    <span 
+                      className="sm:hidden" 
+                      style={{ color: "#ffffff" }}
+                    >
+                      Add
+                    </span>
+                  </>
+                )}
+              </button>
+            </div>
+
+            {/* Search Bar */}
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 sm:h-5 sm:w-5 text-gray-400" />
+              <input
+                type="text"
+                placeholder="Search products by name, description, price, or verification ID..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="w-full pl-10 sm:pl-12 pr-4 py-2 sm:py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent dark:bg-gray-700 dark:text-white text-sm sm:text-base"
+              />
+              {searchQuery && (
+                <button
+                  onClick={() => setSearchQuery("")}
+                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
+                >
+                  <X className="h-4 w-4 sm:h-5 sm:w-5" />
+                </button>
               )}
-            </button>
+            </div>
           </div>
 
-          {products.length === 0 ? (
+          {filteredProducts.length === 0 ? (
             <div className="text-center py-8 sm:py-10 md:py-12">
               <Package className="h-10 w-10 sm:h-12 sm:w-12 md:h-16 md:w-16 text-gray-400 mx-auto mb-3 sm:mb-4" />
               <p className="text-gray-500 dark:text-gray-400 text-xs sm:text-sm md:text-base">
-                No products yet. Add your first product to get started.
+                {searchQuery
+                  ? `No products found matching "${searchQuery}"`
+                  : "No products yet. Add your first product to get started."}
               </p>
             </div>
           ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 md:gap-6">
-              {products.map((product) => (
+            <>
+              <div className="grid grid-cols-1 sm:grid-cols-3 md:grid-cols-4 gap-3 sm:gap-4 md:gap-6">
+                {currentProducts.map((product) => (
                 <div
                   key={product.id}
-                  className="border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden hover:shadow-lg transition-shadow bg-white dark:bg-gray-800"
+                  className="group relative border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden hover:shadow-lg transition-shadow bg-white dark:bg-gray-800"
                 >
                   {product.Image && (
-                    <div className="h-48 bg-gray-100 dark:bg-gray-700">
+                    <div className="h-48 bg-gray-100 dark:bg-gray-700 relative">
                       <img
                         src={product.Image}
                         alt={product.name}
                         className="w-full h-full object-cover"
                       />
+                      <button
+                        onClick={() => handleEditProduct(product)}
+                        className="absolute top-2 right-2 bg-green-600 hover:bg-green-700 text-white p-2 rounded-full opacity-0 group-hover:opacity-100 transition-opacity shadow-lg"
+                        title="Edit product"
+                      >
+                        <Edit className="h-4 w-4" />
+                      </button>
                     </div>
                   )}
-                  <div className="p-4">
-                    <h3 className="font-semibold text-gray-900 dark:text-white mb-2 text-sm sm:text-base">
-                      {product.name}
-                    </h3>
-                    <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-400 mb-3 line-clamp-2">
-                      {product.Description}
-                    </p>
+                  {!product.Image && (
+                    <div className="h-48 bg-gray-100 dark:bg-gray-700 relative flex items-center justify-center">
+                      <Package className="h-12 w-12 text-gray-400" />
+                      <button
+                        onClick={() => handleEditProduct(product)}
+                        className="absolute top-2 right-2 bg-green-600 hover:bg-green-700 text-white p-2 rounded-full opacity-0 group-hover:opacity-100 transition-opacity shadow-lg"
+                        title="Edit product"
+                      >
+                        <Edit className="h-4 w-4" />
+                      </button>
+                    </div>
+                  )}
+                  <div className="p-3 sm:p-4 space-y-2 sm:space-y-3">
+                    {/* Product Name and Status */}
+                    <div className="flex items-start justify-between gap-2">
+                      <h3 className="font-semibold text-gray-900 dark:text-white text-xs sm:text-sm md:text-base flex-1 line-clamp-2">
+                        {product.name}
+                      </h3>
+                      {product.status && (
+                        <span className={`flex items-center gap-1 px-1.5 sm:px-2 py-0.5 sm:py-1 rounded-full text-[10px] sm:text-xs font-medium flex-shrink-0 ${
+                          product.status === "active"
+                            ? "bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300"
+                            : product.status === "inactive"
+                            ? "bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300"
+                            : "bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-300"
+                        }`}>
+                          {product.status === "active" ? (
+                            <CheckCircle className="h-2.5 w-2.5 sm:h-3 sm:w-3" />
+                          ) : (
+                            <XCircle className="h-2.5 w-2.5 sm:h-3 sm:w-3" />
+                          )}
+                          <span className="hidden sm:inline capitalize">{product.status}</span>
+                        </span>
+                      )}
+                    </div>
+
+                    {/* Description */}
+                    {product.Description && (
+                      <p className="text-[10px] sm:text-xs text-gray-600 dark:text-gray-400 line-clamp-2">
+                        {product.Description}
+                      </p>
+                    )}
+
+                    {/* Price and Unit */}
                     <div className="flex items-center justify-between">
-                      <span className="text-lg font-bold text-green-600">
+                      <span className="text-base sm:text-lg font-bold text-green-600">
                         {formatCurrencySync(parseFloat(product.price))}
                       </span>
-                      <span className="text-xs sm:text-sm text-gray-500 dark:text-gray-400">
+                      <span className="text-[10px] sm:text-xs text-gray-500 dark:text-gray-400">
                         / {product.unit}
                       </span>
                     </div>
+
+                    {/* Divider */}
+                    <div className="border-t border-gray-200 dark:border-gray-700 pt-2 sm:pt-3 space-y-1.5 sm:space-y-2">
+                      {/* Verification ID */}
+                      {product.query_id && (
+                        <div className="flex items-center gap-1.5 sm:gap-2">
+                          <Tag className="h-3 w-3 sm:h-3.5 sm:w-3.5 text-gray-400 flex-shrink-0" />
+                          <div className="flex-1 min-w-0">
+                            <p className="text-[9px] sm:text-[10px] text-gray-500 dark:text-gray-400">Verification ID</p>
+                            <p className="text-[10px] sm:text-xs font-mono font-semibold text-gray-700 dark:text-gray-300 truncate">
+                              {product.query_id}
+                            </p>
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Minimum Orders */}
+                      {product.minimumOrders && parseFloat(product.minimumOrders) > 0 && (
+                        <div className="flex items-center gap-1.5 sm:gap-2">
+                          <ShoppingCart className="h-3 w-3 sm:h-3.5 sm:w-3.5 text-gray-400 flex-shrink-0" />
+                          <div className="flex-1 min-w-0">
+                            <p className="text-[9px] sm:text-[10px] text-gray-500 dark:text-gray-400">Min. Order</p>
+                            <p className="text-[10px] sm:text-xs font-medium text-gray-700 dark:text-gray-300">
+                              {product.minimumOrders} {product.unit}
+                            </p>
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Maximum Orders */}
+                      {product.maxOrders && product.maxOrders.trim() !== "" && parseFloat(product.maxOrders) > 0 && (
+                        <div className="flex items-center gap-1.5 sm:gap-2">
+                          <ShoppingCart className="h-3 w-3 sm:h-3.5 sm:w-3.5 text-gray-400 flex-shrink-0" />
+                          <div className="flex-1 min-w-0">
+                            <p className="text-[9px] sm:text-[10px] text-gray-500 dark:text-gray-400">Max. Order</p>
+                            <p className="text-[10px] sm:text-xs font-medium text-gray-700 dark:text-gray-300">
+                              {product.maxOrders} {product.unit}
+                            </p>
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Delivery Area */}
+                      {product.delveryArea && product.delveryArea.trim() !== "" && (
+                        <div className="flex items-center gap-1.5 sm:gap-2">
+                          <Truck className="h-3 w-3 sm:h-3.5 sm:w-3.5 text-gray-400 flex-shrink-0" />
+                          <div className="flex-1 min-w-0">
+                            <p className="text-[9px] sm:text-[10px] text-gray-500 dark:text-gray-400">Delivery Area</p>
+                            <p className="text-[10px] sm:text-xs font-medium text-gray-700 dark:text-gray-300 line-clamp-1">
+                              {product.delveryArea}
+                            </p>
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Speciality */}
+                      {product.speciality && product.speciality.trim() !== "" && (
+                        <div className="flex items-center gap-1.5 sm:gap-2">
+                          <Tag className="h-3 w-3 sm:h-3.5 sm:w-3.5 text-gray-400 flex-shrink-0" />
+                          <div className="flex-1 min-w-0">
+                            <p className="text-[9px] sm:text-[10px] text-gray-500 dark:text-gray-400">Speciality</p>
+                            <p className="text-[10px] sm:text-xs font-medium text-gray-700 dark:text-gray-300 line-clamp-1">
+                              {product.speciality}
+                            </p>
+                          </div>
+                        </div>
+                      )}
+                    </div>
                   </div>
                 </div>
-              ))}
-            </div>
+                ))}
+              </div>
+
+              {/* Pagination */}
+              {totalPages > 1 && (
+                <div className="mt-6 sm:mt-8 flex flex-col sm:flex-row items-center justify-between gap-4">
+                  <div className="text-sm text-gray-600 dark:text-gray-400">
+                    Showing {startIndex + 1} to {Math.min(endIndex, filteredProducts.length)} of {filteredProducts.length} products
+                  </div>
+                  
+                  <div className="flex items-center gap-2">
+                    {/* Previous Button */}
+                    <button
+                      onClick={() => setCurrentPage((prev) => Math.max(1, prev - 1))}
+                      disabled={currentPage === 1}
+                      className="flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors text-sm sm:text-base"
+                    >
+                      <ChevronLeft className="h-4 w-4" />
+                      <span className="hidden sm:inline">Previous</span>
+                      <span className="sm:hidden">Prev</span>
+                    </button>
+
+                    {/* Page Numbers */}
+                    <div className="flex items-center gap-1 sm:gap-2">
+                      {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => {
+                        // Show first page, last page, current page, and pages around current
+                        if (
+                          page === 1 ||
+                          page === totalPages ||
+                          (page >= currentPage - 1 && page <= currentPage + 1)
+                        ) {
+                          return (
+                            <button
+                              key={page}
+                              onClick={() => setCurrentPage(page)}
+                              className={`px-3 sm:px-4 py-2 rounded-lg text-sm sm:text-base font-medium transition-colors ${
+                                currentPage === page
+                                  ? "bg-green-600 text-white"
+                                  : "bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 border border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700"
+                              }`}
+                            >
+                              {page}
+                            </button>
+                          );
+                        } else if (
+                          page === currentPage - 2 ||
+                          page === currentPage + 2
+                        ) {
+                          return (
+                            <span
+                              key={page}
+                              className="px-2 text-gray-500 dark:text-gray-400"
+                            >
+                              ...
+                            </span>
+                          );
+                        }
+                        return null;
+                      })}
+                    </div>
+
+                    {/* Next Button */}
+                    <button
+                      onClick={() => setCurrentPage((prev) => Math.min(totalPages, prev + 1))}
+                      disabled={currentPage === totalPages}
+                      className="flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors text-sm sm:text-base"
+                    >
+                      <span className="hidden sm:inline">Next</span>
+                      <span className="sm:hidden">Next</span>
+                      <ChevronRight className="h-4 w-4" />
+                    </button>
+                  </div>
+                </div>
+              )}
+            </>
           )}
         </div>
       </div>
@@ -507,12 +838,13 @@ export default function StoreDetailsPage() {
           <div className="bg-white dark:bg-gray-800 rounded-lg sm:rounded-xl shadow-xl max-w-2xl w-full max-h-[95vh] sm:max-h-[90vh] overflow-y-auto">
             <div className="sticky top-0 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 px-3 sm:px-4 md:px-6 py-3 sm:py-4 flex items-center justify-between z-10">
               <h3 className="text-base sm:text-lg md:text-xl font-bold text-gray-900 dark:text-white">
-                Add New Product
+                {editingProduct ? "Edit Product" : "Add New Product"}
               </h3>
               <button
                 onClick={() => {
                   setShowAddProductModal(false);
-                  setNewProduct({ name: "", description: "", price: "", unit: "" });
+                  setEditingProduct(null);
+                  setNewProduct({ name: "", description: "", price: "", unit: "", minimumOrders: "0", maxOrders: "", deliveryArea: "" });
                   setProductImage("");
                   setQueryId(null);
                 }}
@@ -523,15 +855,15 @@ export default function StoreDetailsPage() {
             </div>
 
             <div className="p-3 sm:p-4 md:p-6 space-y-3 sm:space-y-4 md:space-y-6">
-              {queryId && (
-                <div className="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg p-3 sm:p-4">
-                  <p className="text-xs sm:text-sm text-green-800 dark:text-green-200 font-medium mb-1">
+              {queryId && !editingProduct && (
+                <div className="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg p-4 sm:p-5 md:p-6">
+                  <p className="text-sm sm:text-base text-green-800 dark:text-green-200 font-medium mb-2 sm:mb-3">
                     Verification ID Generated
                   </p>
-                  <p className="text-xs text-green-600 dark:text-green-300 font-mono">
+                  <p className="text-2xl sm:text-3xl md:text-4xl text-green-600 dark:text-green-300 font-mono font-bold mb-2 sm:mb-3 text-center tracking-wider">
                     {queryId}
                   </p>
-                  <p className="text-xs text-green-600 dark:text-green-300 mt-2">
+                  <p className="text-xs sm:text-sm text-green-600 dark:text-green-300 mt-2 text-center">
                     Use this ID when taking the product photo for verification.
                   </p>
                 </div>
@@ -554,7 +886,7 @@ export default function StoreDetailsPage() {
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                  Description *
+                  Description
                 </label>
                 <textarea
                   value={newProduct.description}
@@ -588,16 +920,97 @@ export default function StoreDetailsPage() {
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                     Unit *
                   </label>
-                  <input
-                    type="text"
+                  <select
                     value={newProduct.unit}
                     onChange={(e) =>
                       setNewProduct({ ...newProduct, unit: e.target.value })
                     }
                     className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent dark:bg-gray-700 dark:text-white text-sm sm:text-base"
-                    placeholder="e.g., kg, piece, box"
-                  />
+                  >
+                    <option value="">Select unit</option>
+                    <option value="kg">kg (Kilogram)</option>
+                    <option value="g">g (Gram)</option>
+                    <option value="lb">lb (Pound)</option>
+                    <option value="oz">oz (Ounce)</option>
+                    <option value="piece">Piece</option>
+                    <option value="box">Box</option>
+                    <option value="pack">Pack</option>
+                    <option value="bundle">Bundle</option>
+                    <option value="dozen">Dozen</option>
+                    <option value="liter">Liter (L)</option>
+                    <option value="ml">Milliliter (mL)</option>
+                    <option value="gallon">Gallon</option>
+                    <option value="meter">Meter (m)</option>
+                    <option value="cm">Centimeter (cm)</option>
+                    <option value="ft">Foot (ft)</option>
+                    <option value="yard">Yard</option>
+                    <option value="sqft">Square Foot (sq ft)</option>
+                    <option value="sqm">Square Meter (sq m)</option>
+                    <option value="hour">Hour</option>
+                    <option value="day">Day</option>
+                    <option value="week">Week</option>
+                    <option value="month">Month</option>
+                    <option value="other">Other</option>
+                  </select>
                 </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    Minimum Orders *
+                  </label>
+                  <input
+                    type="number"
+                    min="0"
+                    value={newProduct.minimumOrders}
+                    onChange={(e) =>
+                      setNewProduct({ ...newProduct, minimumOrders: e.target.value })
+                    }
+                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent dark:bg-gray-700 dark:text-white text-sm sm:text-base"
+                    placeholder="0"
+                  />
+                  <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                    Minimum quantity required for order
+                  </p>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    Maximum Orders
+                  </label>
+                  <input
+                    type="number"
+                    min="0"
+                    value={newProduct.maxOrders}
+                    onChange={(e) =>
+                      setNewProduct({ ...newProduct, maxOrders: e.target.value })
+                    }
+                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent dark:bg-gray-700 dark:text-white text-sm sm:text-base"
+                    placeholder="Optional"
+                  />
+                  <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                    Maximum quantity per order (optional)
+                  </p>
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  Delivery Area
+                </label>
+                <input
+                  type="text"
+                  value={newProduct.deliveryArea}
+                  onChange={(e) =>
+                    setNewProduct({ ...newProduct, deliveryArea: e.target.value })
+                  }
+                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent dark:bg-gray-700 dark:text-white text-sm sm:text-base"
+                  placeholder="e.g., Kigali, Rwanda or specific areas"
+                />
+                <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                  Areas where you can deliver this product (optional)
+                </p>
               </div>
 
               <div>
@@ -640,7 +1053,8 @@ export default function StoreDetailsPage() {
                 <button
                   onClick={() => {
                     setShowAddProductModal(false);
-                    setNewProduct({ name: "", description: "", price: "", unit: "" });
+                    setEditingProduct(null);
+                    setNewProduct({ name: "", description: "", price: "", unit: "", minimumOrders: "0", maxOrders: "", deliveryArea: "" });
                     setProductImage("");
                     setQueryId(null);
                   }}
@@ -653,7 +1067,9 @@ export default function StoreDetailsPage() {
                   disabled={isCreatingProduct}
                   className="flex-1 px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg disabled:opacity-50 disabled:cursor-not-allowed transition-colors text-sm sm:text-base"
                 >
-                  {isCreatingProduct ? "Adding..." : "Add Product"}
+                  {isCreatingProduct 
+                    ? (editingProduct ? "Updating..." : "Adding...") 
+                    : (editingProduct ? "Update Product" : "Add Product")}
                 </button>
               </div>
             </div>
