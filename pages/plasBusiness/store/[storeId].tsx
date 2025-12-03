@@ -35,6 +35,7 @@ export default function StoreDetailsPage() {
   const [queryId, setQueryId] = useState<string | null>(null);
   const [productImage, setProductImage] = useState<string>("");
   const [isCreatingProduct, setIsCreatingProduct] = useState(false);
+  const [isGeneratingQueryId, setIsGeneratingQueryId] = useState(false);
 
   const [newProduct, setNewProduct] = useState({
     name: "",
@@ -88,6 +89,7 @@ export default function StoreDetailsPage() {
 
   const handleAddProduct = async () => {
     // First, generate a unique query ID
+    setIsGeneratingQueryId(true);
     try {
       const queryResponse = await fetch("/api/queries/generate-product-query-id", {
         method: "POST",
@@ -95,14 +97,17 @@ export default function StoreDetailsPage() {
 
       if (!queryResponse.ok) {
         toast.error("Failed to generate verification ID");
+        setIsGeneratingQueryId(false);
         return;
       }
 
       const queryData = await queryResponse.json();
       setQueryId(queryData.queryId);
       setShowAddProductModal(true);
+      setIsGeneratingQueryId(false);
     } catch (error) {
       toast.error("Failed to generate verification ID");
+      setIsGeneratingQueryId(false);
     }
   };
 
@@ -407,25 +412,46 @@ export default function StoreDetailsPage() {
             </h2>
             <button
               onClick={handleAddProduct}
-              className="flex items-center space-x-1.5 sm:space-x-2 bg-green-600 hover:bg-green-700 px-3 py-1.5 sm:px-4 sm:py-2 rounded-lg transition-colors text-xs sm:text-sm md:text-base"
+              disabled={isGeneratingQueryId}
+              className="flex items-center space-x-1.5 sm:space-x-2 bg-green-600 hover:bg-green-700 px-3 py-1.5 sm:px-4 sm:py-2 rounded-lg transition-colors text-xs sm:text-sm md:text-base disabled:opacity-50 disabled:cursor-not-allowed"
               style={{ color: "#ffffff" }}
             >
-              <Plus 
-                className="h-3.5 w-3.5 sm:h-4 sm:w-4 md:h-5 md:w-5" 
-                style={{ color: "#ffffff" }}
-              />
-              <span 
-                className="hidden sm:inline" 
-                style={{ color: "#ffffff" }}
-              >
-                Add Product
-              </span>
-              <span 
-                className="sm:hidden" 
-                style={{ color: "#ffffff" }}
-              >
-                Add
-              </span>
+              {isGeneratingQueryId ? (
+                <>
+                  <div className="h-3.5 w-3.5 sm:h-4 sm:w-4 md:h-5 md:w-5 animate-spin rounded-full border-2 border-white border-t-transparent" />
+                  <span 
+                    className="hidden sm:inline" 
+                    style={{ color: "#ffffff" }}
+                  >
+                    Loading...
+                  </span>
+                  <span 
+                    className="sm:hidden" 
+                    style={{ color: "#ffffff" }}
+                  >
+                    Loading...
+                  </span>
+                </>
+              ) : (
+                <>
+                  <Plus 
+                    className="h-3.5 w-3.5 sm:h-4 sm:w-4 md:h-5 md:w-5" 
+                    style={{ color: "#ffffff" }}
+                  />
+                  <span 
+                    className="hidden sm:inline" 
+                    style={{ color: "#ffffff" }}
+                  >
+                    Add Product
+                  </span>
+                  <span 
+                    className="sm:hidden" 
+                    style={{ color: "#ffffff" }}
+                  >
+                    Add
+                  </span>
+                </>
+              )}
             </button>
           </div>
 
