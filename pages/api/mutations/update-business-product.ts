@@ -4,8 +4,9 @@ import { authOptions } from "../auth/[...nextauth]";
 import { hasuraClient } from "../../../src/lib/hasuraClient";
 import { gql } from "graphql-request";
 
-const CREATE_BUSINESS_PRODUCT = gql`
-  mutation CreateBusinessProduct(
+const UPDATE_BUSINESS_PRODUCT = gql`
+  mutation UpdateBusinessProduct(
+    $product_id: uuid!
     $Description: String = ""
     $Image: String = ""
     $Plasbusiness_id: uuid = ""
@@ -19,10 +20,10 @@ const CREATE_BUSINESS_PRODUCT = gql`
     $unit: String = ""
     $user_id: uuid = ""
     $store_id: uuid = ""
-    $query_id: String = ""
   ) {
-    insert_PlasBusinessProductsOrSerive(
-      objects: {
+    update_PlasBusinessProductsOrSerive(
+      where: { id: { _eq: $product_id } }
+      _set: {
         Description: $Description
         Image: $Image
         Plasbusiness_id: $Plasbusiness_id
@@ -36,7 +37,6 @@ const CREATE_BUSINESS_PRODUCT = gql`
         unit: $unit
         user_id: $user_id
         store_id: $store_id
-        query_id: $query_id
       }
     ) {
       affected_rows
@@ -67,14 +67,14 @@ interface Session {
   expires: string;
 }
 
-interface CreateBusinessProductInput {
+interface UpdateBusinessProductInput {
+  product_id: string;
   name: string;
   description?: string;
   image?: string;
   price: string;
   unit?: string;
   status?: string;
-  query_id?: string;
   minimumOrders?: string;
   maxOrders?: string;
   delveryArea?: string;
@@ -88,7 +88,7 @@ export default async function handler(
   req: NextApiRequest,
   res: NextApiResponse
 ) {
-  if (req.method !== "POST") {
+  if (req.method !== "PUT") {
     return res.status(405).json({ error: "Method not allowed" });
   }
 
@@ -108,13 +108,13 @@ export default async function handler(
     }
 
     const {
+      product_id,
       name,
       description = "",
       image = "",
       price,
       unit = "",
       status = "active",
-      query_id = "",
       minimumOrders: minOrders = "0",
       maxOrders = "",
       delveryArea = "",
@@ -122,9 +122,13 @@ export default async function handler(
       store_id = "",
       user_id = "",
       Plasbusiness_id = "",
-    } = req.body as CreateBusinessProductInput;
+    } = req.body as UpdateBusinessProductInput;
 
     // Validate required fields
+    if (!product_id || !product_id.trim()) {
+      return res.status(400).json({ error: "Product ID is required" });
+    }
+
     if (!name || !name.trim()) {
       return res.status(400).json({ error: "Product name is required" });
     }
@@ -140,14 +144,14 @@ export default async function handler(
     const final_user_id = user_id || session?.user?.id || "";
 
     const variables: Record<string, any> = {
+      product_id: product_id.trim(),
       name: name.trim(),
       Description: description ? description.trim() : "",
       Image: image ? image.trim() : "",
       price: price.trim(),
       unit: unit ? unit.trim() : "",
       status: status ? status.trim() : "active",
-      query_id: query_id ? query_id.trim() : "",
-      minimumOrders: minimumOrders.trim(),
+      minimumOrders: minimumOrders,
       maxOrders: maxOrders ? maxOrders.trim() : "",
       delveryArea: delveryArea ? delveryArea.trim() : "",
       speciality: speciality ? speciality.trim() : "",
@@ -157,7 +161,7 @@ export default async function handler(
     };
 
     const result = await hasuraClient.request<{
-      insert_PlasBusinessProductsOrSerive: {
+      update_PlasBusinessProductsOrSerive: {
         affected_rows: number;
         returning: Array<{
           id: string;
@@ -170,29 +174,28 @@ export default async function handler(
           created_at: string;
         }>;
       };
-    }>(CREATE_BUSINESS_PRODUCT, variables);
+    }>(UPDATE_BUSINESS_PRODUCT, variables);
 
     if (
-      !result.insert_PlasBusinessProductsOrSerive ||
-      result.insert_PlasBusinessProductsOrSerive.affected_rows === 0
+      !result.update_PlasBusinessProductsOrSerive ||
+      result.update_PlasBusinessProductsOrSerive.affected_rows === 0
     ) {
-      throw new Error("Failed to create business product");
+      throw new Error("Failed to update business product");
     }
 
-    const createdProduct = result.insert_PlasBusinessProductsOrSerive.returning[0];
+    const updatedProduct = result.update_PlasBusinessProductsOrSerive.returning[0];
 
     return res.status(200).json({
       success: true,
       product: {
-        id: createdProduct.id,
-        name: createdProduct.name,
-        description: createdProduct.Description,
-        image: createdProduct.Image,
-        price: createdProduct.price,
-        unit: createdProduct.unit,
-        status: createdProduct.status,
-        queryId: query_id || "",
-        createdAt: createdProduct.created_at,
+        id: updatedProduct.id,
+        name: updatedProduct.name,
+        description: updatedProduct.Description,
+        image: updatedProduct.Image,
+        price: updatedProduct.price,
+        unit: updatedProduct.unit,
+        status: updatedProduct.status,
+        createdAt: updatedProduct.created_at,
       },
     });
   } catch (error: any) {
@@ -203,7 +206,7 @@ export default async function handler(
     const allErrors = error.response?.errors || [];
 
     return res.status(500).json({
-      error: "Failed to create business product",
+      error: "Failed to update business product",
       message: errorMessage,
       code: errorCode,
       path: errorPath,

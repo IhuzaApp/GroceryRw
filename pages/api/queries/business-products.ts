@@ -5,8 +5,8 @@ import { hasuraClient } from "../../../src/lib/hasuraClient";
 import { gql } from "graphql-request";
 
 const GET_BUSINESS_PRODUCTS = gql`
-  query GetBusinessProducts {
-    PlasBusinessProductsOrSerive {
+  query GetBusinessProducts($store_id: uuid) {
+    PlasBusinessProductsOrSerive(where: { store_id: { _eq: $store_id } }) {
       id
       name
       Description
@@ -15,6 +15,11 @@ const GET_BUSINESS_PRODUCTS = gql`
       unit
       status
       created_at
+      minimumOrders
+      maxOrders
+      delveryArea
+      query_id
+      speciality
     }
   }
 `;
@@ -55,6 +60,13 @@ export default async function handler(
       throw new Error("Hasura client is not initialized");
     }
 
+    const { store_id } = req.query;
+
+    const variables: any = {};
+    if (store_id && typeof store_id === "string") {
+      variables.store_id = store_id;
+    }
+
     const result = await hasuraClient.request<{
       PlasBusinessProductsOrSerive: Array<{
         id: string;
@@ -65,8 +77,13 @@ export default async function handler(
         unit: string;
         status: string;
         created_at: string;
+        minimumOrders: string;
+        maxOrders: string;
+        delveryArea: string;
+        query_id: string;
+        speciality: string;
       }>;
-    }>(GET_BUSINESS_PRODUCTS);
+    }>(GET_BUSINESS_PRODUCTS, variables);
 
     return res.status(200).json({
       products: result.PlasBusinessProductsOrSerive || [],
