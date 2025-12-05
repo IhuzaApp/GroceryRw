@@ -22,6 +22,8 @@ A comprehensive grocery delivery platform with advanced revenue tracking, wallet
 
 ### 8. Firebase Cloud Messaging (FCM) System
 
+### 9. PlasBusiness Management System
+
 ---
 
 # Smart Notification & Assignment System
@@ -9605,3 +9607,805 @@ Restaurant Order System
 - **System Reliability**: Comprehensive error handling and recovery mechanisms
 
 This comprehensive update ensures that restaurant orders operate with the same reliability and efficiency as regular grocery orders, while maintaining their unique workflow requirements.
+
+---
+
+# PlasBusiness Management System
+
+## Overview
+
+The PlasBusiness Management System is a comprehensive B2B platform that enables businesses to create accounts, manage stores, list products, create and respond to RFQs (Request for Quotations), and interact with suppliers. The system supports both buyers (creating RFQs) and suppliers (submitting quotes) with a complete workflow from RFQ creation to quote acceptance.
+
+## Key Features
+
+- **Business Account Management**: Create and manage business accounts (business or personal types)
+- **Store Management**: Create and manage multiple stores per business
+- **Product Management**: Add, edit, and manage products with unique verification IDs
+- **RFQ Creation**: Create detailed RFQs with requirements, budgets, and deadlines
+- **RFQ Opportunities**: Browse and respond to open RFQ opportunities
+- **Quote Submission**: Submit detailed quotes with attachments, terms, and pricing
+- **Response Management**: View and manage responses to your RFQs
+- **Supplier Directory**: Browse all businesses (excluding personal accounts)
+- **Quote Tracking**: Track submitted quotes and their status
+
+## System Architecture
+
+```mermaid
+graph TB
+    A[User] --> B[Business Account Creation]
+    B --> C{Account Type}
+    C -->|Business| D[Create Stores]
+    C -->|Personal| E[Personal Account]
+    D --> F[Add Products]
+    D --> G[Create RFQs]
+    G --> H[RFQ Opportunities]
+    H --> I[Suppliers Submit Quotes]
+    I --> J[View Responses]
+    J --> K[Accept/Reject Quotes]
+    
+    E --> L[Browse RFQ Opportunities]
+    L --> M[Submit Quotes]
+    M --> N[Track Submitted Quotes]
+```
+
+## Database Schema
+
+### Core Tables
+
+#### 1. `business_accounts`
+Stores business account information.
+
+**Key Fields**:
+- `id` (uuid, primary key)
+- `user_id` (uuid, foreign key to Users)
+- `account_type` (String: "business" or "personal")
+- `business_name` (String)
+- `business_email` (String)
+- `business_phone` (String)
+- `business_location` (String)
+- `status` (String: "pending_review", "approved", "rejected")
+- `face_image` (String, base64)
+- `id_image` (String, base64)
+- `rdb_certificate` (String, base64)
+
+#### 2. `business_stores`
+Stores store information for businesses.
+
+**Key Fields**:
+- `id` (uuid, primary key)
+- `business_id` (uuid, foreign key to business_accounts)
+- `name` (String)
+- `description` (String)
+- `image` (String, base64)
+- `category_id` (uuid, optional)
+- `latitude` (String)
+- `longitude` (String)
+- `operating_hours` (json)
+- `is_active` (Boolean)
+
+#### 3. `PlasBusinessProductsOrSerive`
+Stores products/services for stores.
+
+**Key Fields**:
+- `id` (uuid, primary key)
+- `store_id` (uuid, foreign key to business_stores)
+- `Plasbusiness_id` (uuid, foreign key to business_accounts)
+- `user_id` (uuid, foreign key to Users)
+- `name` (String)
+- `Description` (String)
+- `Image` (String, base64)
+- `price` (String)
+- `unit` (String)
+- `status` (String: "active", "inactive")
+- `query_id` (String, unique verification ID format: PB######)
+- `minimumOrders` (String)
+- `maxOrders` (String)
+- `delveryArea` (String)
+- `speciality` (String)
+
+#### 4. `bussines_RFQ`
+Stores RFQ (Request for Quotation) information.
+
+**Key Fields**:
+- `id` (uuid, primary key)
+- `business_id` (uuid, foreign key to business_accounts)
+- `user_id` (uuid, foreign key to Users)
+- `title` (String)
+- `description` (String)
+- `category` (String)
+- `min_budget` (String)
+- `max_budget` (String)
+- `location` (String)
+- `response_date` (String, deadline)
+- `urgency_level` (String)
+- `estimated_quantity` (String)
+- `expected_delivery_date` (String)
+- `payment_terms` (String)
+- `requirements` (json)
+- `notes` (String)
+- `contact_name` (String)
+- `email` (String)
+- `phone` (String)
+- `attachment` (String, base64)
+- `open` (Boolean)
+
+#### 5. `BusinessQoute`
+Stores quotes submitted by suppliers for RFQs.
+
+**Key Fields**:
+- `id` (uuid, primary key)
+- `businessRfq_id` (uuid, foreign key to bussines_RFQ)
+- `respond_business_id` (uuid, foreign key to business_accounts)
+- `qouteAmount` (String)
+- `currency` (String, default from System_configuratioins)
+- `delivery_time` (String)
+- `quote_validity` (String)
+- `message` (String)
+- `PaymentTerms` (String)
+- `DeliveryTerms` (String)
+- `warrantly` (String)
+- `cancellatioinTerms` (String)
+- `attachement` (String, base64)
+- `attachment_1` (String, base64)
+- `attachment_2` (String, base64)
+- `status` (String: "pending", "accepted", "rejected")
+
+#### 6. `business_wallet`
+Stores wallet information for businesses.
+
+**Key Fields**:
+- `id` (uuid, primary key)
+- `business_id` (uuid, foreign key to business_accounts)
+- `amount` (String)
+
+## Workflows
+
+### 1. Business Account Creation
+
+**Flow**:
+1. User navigates to business dashboard
+2. Creates business account with type selection (business or personal)
+3. Uploads required documents (ID, face image, RDB certificate for business type)
+4. Account status set to "pending_review"
+5. Admin reviews and approves/rejects
+
+**API Endpoint**: `/api/mutations/create-business-account`
+
+**Key Features**:
+- Account type validation
+- Document upload (base64 encoding)
+- Automatic wallet creation
+- Status management
+
+### 2. Store Creation
+
+**Flow**:
+1. Business owner navigates to store management
+2. Clicks "Create Store"
+3. Fills store details (name, description, location, category)
+4. Uploads store image
+5. Sets operating hours
+6. Store created with `is_active: false` by default
+7. Wallet automatically created for business if not exists
+
+**API Endpoint**: `/api/mutations/create-business-store`
+
+**Key Features**:
+- Google Maps integration for location
+- Operating hours as JSON
+- Automatic wallet creation
+- Category association
+
+### 3. Product Management
+
+**Flow**:
+1. Business owner opens store details page
+2. Clicks "Add Product"
+3. System generates unique verification ID (format: PB######)
+4. User fills product details:
+   - Name, description, price, unit
+   - Minimum/maximum orders
+   - Delivery area
+   - Speciality
+   - Image (with client-side compression)
+5. Product saved to `PlasBusinessProductsOrSerive` table
+
+**API Endpoints**:
+- Create: `/api/mutations/create-business-product`
+- Update: `/api/mutations/update-business-product`
+- Generate ID: `/api/queries/generate-product-query-id`
+
+**Key Features**:
+- Unique verification ID generation (PB + 6 alphanumeric characters)
+- Image compression before upload
+- Product editing capability
+- Search and pagination (18 products per page)
+- Responsive grid layout (1 col mobile, 3 cols small, 4 cols medium+)
+
+### 4. RFQ Creation (Buyer Workflow)
+
+**Flow**:
+1. Business owner navigates to "My RFQs" section
+2. Clicks "Create New RFQ"
+3. Multi-step form:
+   - Step 1: Basic info (title, description, category)
+   - Step 2: Budget and timeline
+   - Step 3: Requirements and attachments
+   - Step 4: Contact information
+4. RFQ created with `open: true`
+5. Appears in "RFQ Opportunities" for suppliers
+
+**API Endpoint**: `/api/mutations/create-business-rfq`
+
+**Key Features**:
+- Multi-step form with validation
+- Requirements as JSON array
+- Attachment support (base64)
+- Budget range (min/max)
+- Deadline management
+- Urgency levels
+
+### 5. RFQ Opportunities (Supplier Workflow)
+
+**Flow**:
+1. Supplier navigates to "RFQ Opportunities" tab
+2. Views all RFQs where `open = true`
+3. Filters by category, searches by keyword
+4. Views RFQ details
+5. Checks if already submitted quote
+6. If not submitted: Opens quote submission form
+7. If submitted: Views submitted quote details
+
+**API Endpoint**: `/api/queries/rfq-opportunities`
+
+**Key Features**:
+- Filters out current user's own RFQs
+- Shows RFQ status (Open/Closed based on deadline)
+- Posted by information (business name or contact name)
+- Category filtering
+- Search functionality
+
+### 6. Quote Submission (Supplier Workflow)
+
+**Flow**:
+1. Supplier clicks "Submit Quote" on an RFQ
+2. Fills quote form:
+   - Quote amount and currency (default from system config)
+   - Delivery time (dropdown)
+   - Quote validity (dropdown)
+   - Message
+   - Payment terms (dropdown)
+   - Delivery terms (dropdown)
+   - Warranty (dropdown)
+   - Cancellation terms (dropdown)
+   - Up to 3 attachments (with compression)
+3. Quote submitted with `status: "pending"`
+4. Currency defaults from `System_configuratioins` table
+5. Prevents duplicate submissions (checks existing quotes)
+
+**API Endpoint**: `/api/mutations/submit-rfq-quote`
+
+**Key Features**:
+- Client-side image compression (max 2.5MB per image, compressed to 1.5MB)
+- Total payload limit: 4MB after base64 encoding
+- Dynamic currency from system configuration
+- Duplicate prevention
+- Multiple attachment support (3 max)
+
+### 7. Viewing RFQ Responses (Buyer Workflow)
+
+**Flow**:
+1. Business owner navigates to "My RFQs"
+2. Clicks "View Responses" on an RFQ
+3. System fetches:
+   - Complete RFQ details
+   - All submitted quotes/responses
+   - Supplier information for each quote
+4. Displays:
+   - RFQ overview (title, description, budget, location, deadline, requirements)
+   - All responses with:
+     - Supplier details (name, company, location, contact)
+     - Quote amount and currency
+     - Delivery time and validity
+     - Terms and conditions
+     - Attachments
+     - Status
+5. Buyer can:
+   - Filter responses by status
+   - Sort by price, rating, or submission date
+   - Search suppliers
+   - Accept/Reject quotes
+   - Assign contracts
+
+**API Endpoint**: `/api/queries/rfq-details-and-responses`
+
+**Key Features**:
+- Complete RFQ information display
+- All responses with full supplier details
+- Filtering and sorting
+- Attachment download
+- Status management
+
+### 8. Viewing Submitted Quotes (Supplier Workflow)
+
+**Flow**:
+1. Supplier navigates to "Quotes" section
+2. Views all quotes submitted by their business
+3. Each quote shows:
+   - RFQ title and category
+   - Posting business information
+   - Quote amount and currency
+   - Delivery time and validity
+   - Status
+   - Submission date
+4. Click "View Details" to see:
+   - Complete RFQ details
+   - RFQ requester company information
+   - Full quote details
+   - Terms and conditions
+   - Attachments
+
+**API Endpoint**: `/api/queries/business-submitted-quotes`
+
+**Key Features**:
+- Shows all quotes where `respond_business_id` = current business
+- Includes RFQ and requester information
+- Complete quote details with attachments
+- Status tracking
+
+### 9. Suppliers Directory
+
+**Flow**:
+1. User navigates to "Suppliers" section
+2. Views all businesses (excluding personal accounts and current user's business)
+3. Filters by category and location
+4. Searches suppliers
+5. Views supplier details
+6. Contacts suppliers
+
+**API Endpoint**: `/api/queries/all-businesses`
+
+**Key Features**:
+- Excludes personal businesses (`account_type != "personal"`)
+- Excludes current user's business
+- Shows business name, location, account type
+- Verified status based on approval
+- Search and filter functionality
+
+## API Endpoints
+
+### Business Account Management
+
+#### Create Business Account
+- **Endpoint**: `POST /api/mutations/create-business-account`
+- **Description**: Creates a new business account
+- **Body**: Account type, business details, documents (base64)
+- **Returns**: Created account with ID
+
+### Store Management
+
+#### Create Store
+- **Endpoint**: `POST /api/mutations/create-business-store`
+- **Description**: Creates a new store for a business
+- **Body**: Store details, location, category, operating hours
+- **Returns**: Created store with ID
+- **Side Effects**: Creates wallet if not exists
+
+#### Get Store Details
+- **Endpoint**: `GET /api/queries/business-store?storeId={id}`
+- **Description**: Fetches store details by ID
+- **Returns**: Complete store information
+
+#### Get Business Stores
+- **Endpoint**: `GET /api/queries/business-stores`
+- **Description**: Fetches all stores for current business
+- **Returns**: Array of stores
+
+### Product Management
+
+#### Generate Product Query ID
+- **Endpoint**: `GET /api/queries/generate-product-query-id`
+- **Description**: Generates unique verification ID (PB######)
+- **Returns**: Unique ID string
+
+#### Create Product
+- **Endpoint**: `POST /api/mutations/create-business-product`
+- **Description**: Creates a new product for a store
+- **Body**: Product details, image (base64), verification ID
+- **Returns**: Created product
+
+#### Update Product
+- **Endpoint**: `PUT /api/mutations/update-business-product`
+- **Description**: Updates existing product
+- **Body**: Product ID and updated fields
+- **Returns**: Updated product
+
+#### Get Store Products
+- **Endpoint**: `GET /api/queries/business-products?storeId={id}`
+- **Description**: Fetches all products for a store
+- **Returns**: Array of products
+
+### RFQ Management
+
+#### Create RFQ
+- **Endpoint**: `POST /api/mutations/create-business-rfq`
+- **Description**: Creates a new RFQ
+- **Body**: RFQ details, requirements (JSON), attachments
+- **Returns**: Created RFQ with ID
+
+#### Get Business RFQs
+- **Endpoint**: `GET /api/queries/business-rfqs`
+- **Description**: Fetches all RFQs created by current business/user
+- **Returns**: Array of RFQs
+
+#### Get RFQ Opportunities
+- **Endpoint**: `GET /api/queries/rfq-opportunities`
+- **Description**: Fetches all open RFQs (for suppliers)
+- **Filters**: `open = true`, excludes current user's RFQs
+- **Returns**: Array of open RFQs with business account info
+
+#### Get RFQ Details and Responses
+- **Endpoint**: `GET /api/queries/rfq-details-and-responses?rfq_id={id}`
+- **Description**: Fetches complete RFQ details and all responses
+- **Returns**: RFQ details and array of quotes/responses
+
+### Quote Management
+
+#### Submit Quote
+- **Endpoint**: `POST /api/mutations/submit-rfq-quote`
+- **Description**: Submits a quote for an RFQ
+- **Body**: Quote details, terms, attachments (up to 3, base64)
+- **Side Effects**: Sets default currency from system config
+- **Returns**: Created quote with ID
+
+#### Get User RFQ Quote
+- **Endpoint**: `GET /api/queries/user-rfq-quote?rfqId={id}`
+- **Description**: Checks if user has already submitted a quote for an RFQ
+- **Returns**: Quote if exists, null otherwise
+
+#### Get Business Submitted Quotes
+- **Endpoint**: `GET /api/queries/business-submitted-quotes`
+- **Description**: Fetches all quotes submitted by current business
+- **Filters**: `respond_business_id` = current business ID
+- **Returns**: Array of quotes with RFQ and requester info
+
+### Suppliers
+
+#### Get All Businesses
+- **Endpoint**: `GET /api/queries/all-businesses`
+- **Description**: Fetches all businesses (excluding personal and current user's)
+- **Filters**: `account_type != "personal"`, `id != current_business_id`
+- **Returns**: Array of business accounts
+
+### System Configuration
+
+#### Get System Configuration
+- **Endpoint**: `GET /api/queries/system-configuration`
+- **Description**: Fetches system-wide settings
+- **Returns**: Configuration including default currency
+
+## Components
+
+### Business Dashboard Components
+
+#### BusinessOverview
+- **Location**: `src/components/business/BusinessOverview.tsx`
+- **Purpose**: Main dashboard showing stores, RFQs, and quick actions
+- **Features**: Store creation, navigation to stores, RFQ creation
+
+#### CreateProductForm
+- **Location**: `src/components/business/CreateProductForm.tsx`
+- **Purpose**: Form for adding/editing products
+- **Features**: Image upload, verification ID display, unit dropdown, validation
+
+#### Store Details Page
+- **Location**: `pages/plasBusiness/store/[storeId].tsx`
+- **Purpose**: Store details with product listing
+- **Features**: Product grid, search, pagination, add/edit products
+
+#### CreateRFQForm
+- **Location**: `src/components/business/CreateRFQForm.tsx`
+- **Purpose**: Multi-step form for creating RFQs
+- **Features**: Step-by-step wizard, attachment upload, requirements management
+
+#### MyRFQsSection
+- **Location**: `src/components/business/MyRFQsSection.tsx`
+- **Purpose**: Displays RFQs created by current business
+- **Features**: RFQ listing, status display, view responses
+
+#### RFQOpportunitiesSection
+- **Location**: `src/components/business/RFQOpportunitiesSection.tsx`
+- **Purpose**: Displays open RFQs for suppliers to respond to
+- **Features**: Filtering, search, quote submission, duplicate prevention
+
+#### RFQResponsesView
+- **Location**: `src/components/business/RFQResponsesView.tsx`
+- **Purpose**: Displays all responses to an RFQ
+- **Features**: Complete RFQ details, all responses, filtering, sorting, accept/reject
+
+#### QuoteSubmissionForm
+- **Location**: `src/components/business/QuoteSubmissionForm.tsx`
+- **Purpose**: Form for submitting quotes to RFQs
+- **Features**: Terms dropdowns, attachment upload (3 max), image compression
+
+#### QuotesSection
+- **Location**: `src/components/business/QuotesSection.tsx`
+- **Purpose**: Displays quotes submitted by current business
+- **Features**: Quote listing, status tracking, view details
+
+#### SubmittedQuoteDetails
+- **Location**: `src/components/business/SubmittedQuoteDetails.tsx`
+- **Purpose**: Modal showing details of a submitted quote
+- **Features**: Complete quote information, RFQ details, attachments
+
+#### SuppliersSection
+- **Location**: `src/components/business/SuppliersSection.tsx`
+- **Purpose**: Directory of all businesses/suppliers
+- **Features**: Search, filter, business listing, contact options
+
+## Key Features & Logic
+
+### 1. Product Verification ID Generation
+
+**Format**: `PB` + 6 alphanumeric characters (0-9, A-Z)
+
+**Example**: `PB0384BD`, `PB59483CF`
+
+**Purpose**: Unique, user-friendly ID for product verification when taking photos
+
+**Implementation**:
+- Character set: `0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ`
+- Random generation with collision checking
+- Displayed prominently in product creation form
+
+### 2. Image Compression
+
+**Purpose**: Reduce payload size for API requests
+
+**Implementation**:
+- Client-side compression before base64 encoding
+- Max dimensions: 1920px width
+- Quality: 0.7
+- Per-file limits:
+  - Images: 2.5MB original, compressed to 1.5MB
+  - Non-images: 1.5MB
+- Total payload limit: 4MB after base64 encoding
+
+**Location**: `QuoteSubmissionForm.tsx`, `CreateProductForm.tsx`
+
+### 3. Currency Management
+
+**Default Currency**: Fetched from `System_configuratioins` table
+
+**Fallback**: "RWF" if not configured
+
+**Usage**: 
+- Quote submission default currency
+- Currency display throughout the system
+- Formatting via `formatCurrencySync()` utility
+
+### 4. Duplicate Quote Prevention
+
+**Logic**: 
+- Before showing quote submission form, check if quote exists
+- Query: `BusinessQoute` where `businessRfq_id = rfqId` AND `respond_business_id = currentBusinessId`
+- If exists: Show "View Quote" button instead of "Submit Quote"
+- If not exists: Show submission form
+
+**API**: `/api/queries/user-rfq-quote`
+
+### 5. RFQ Status Management
+
+**Open/Closed Logic**:
+- `open = true` in database: RFQ is open
+- Deadline check: If `response_date < today`, status shows as "Closed"
+- Visual indicators: Green badge for "Open", Blue badge for "Closed"
+
+### 6. Quote Status Flow
+
+**Statuses**:
+- `pending`: Default when quote is submitted
+- `accepted`: Buyer accepts the quote
+- `rejected`: Buyer rejects the quote
+- `negotiating`: Quote is under negotiation
+
+**Visual Indicators**:
+- Pending: Blue badge
+- Accepted: Green badge
+- Rejected: Red badge
+- Negotiating: Yellow badge
+
+### 7. Responsive Design
+
+**Product Grid**:
+- Mobile: 1 column
+- Small screens: 3 columns
+- Medium+ screens: 4 columns
+
+**Store Details Page**:
+- Mobile: Full-width cover image, circular logo
+- Desktop: Side-by-side layout
+- Consistent padding and margins
+
+### 8. Search & Filtering
+
+**Product Search**:
+- Searches: name, description, price, unit, query ID, delivery area, speciality
+- Real-time filtering
+- Client-side pagination (18 products per page)
+
+**RFQ Opportunities Filtering**:
+- Category filter
+- Search by keyword
+- Status filter (Open/Closed)
+
+**Suppliers Filtering**:
+- Category filter
+- Location filter
+- Search by name, category, location
+
+## Data Transformations
+
+### RFQ to Display Format
+
+```typescript
+{
+  id: rfq.id,
+  title: rfq.title,
+  category: rfq.category || "Uncategorized",
+  budget: `${formatCurrency(min)}-${formatCurrency(max)}`,
+  responses: count,
+  deadline: rfq.response_date,
+  status: deadline < today ? "Closed" : "Open"
+}
+```
+
+### Quote to Modal Format
+
+```typescript
+{
+  id: quote.id,
+  title: rfq.title,
+  totalPrice: formatCurrency(quote.qouteAmount, quote.currency),
+  deliveryTime: quote.delivery_time,
+  validUntil: quote.quote_validity,
+  status: quote.status,
+  rfqRequester: {
+    name: business_account.business_name,
+    email: business_account.business_email,
+    phone: business_account.business_phone,
+    location: business_account.business_location
+  },
+  terms: {
+    paymentTerms: quote.PaymentTerms,
+    deliveryTerms: quote.DeliveryTerms,
+    warranty: quote.warrantly,
+    cancellationTerms: quote.cancellatioinTerms
+  },
+  attachments: [attachement, attachment_1, attachment_2]
+}
+```
+
+## Error Handling
+
+### Common Errors & Solutions
+
+1. **Foreign Key Violations**
+   - **Cause**: Missing business_id or incorrect relationships
+   - **Solution**: Ensure business_account exists before creating stores/products
+
+2. **Not-NULL Constraint Violations**
+   - **Cause**: Required fields not provided
+   - **Solution**: Provide defaults for all required fields (empty strings, "0", etc.)
+
+3. **413 Payload Too Large**
+   - **Cause**: Image files too large
+   - **Solution**: Client-side compression, increased API body limit to 4MB
+
+4. **Duplicate Quote Submissions**
+   - **Cause**: User tries to submit multiple quotes
+   - **Solution**: Check existing quotes before showing submission form
+
+## Security Considerations
+
+1. **Authentication**: All API endpoints require valid session
+2. **Authorization**: Users can only access their own business data
+3. **File Upload**: Base64 encoding, size limits, type validation
+4. **Data Validation**: Input validation on all forms
+5. **SQL Injection**: GraphQL parameterized queries prevent injection
+
+## Performance Optimizations
+
+1. **Image Compression**: Reduces payload size by 60-70%
+2. **Pagination**: Client-side pagination for products (18 per page)
+3. **Lazy Loading**: Components load data on demand
+4. **Caching**: Currency configuration cached
+5. **Efficient Queries**: GraphQL queries fetch only needed fields
+
+## Future Enhancements
+
+1. **Rating System**: Supplier ratings and reviews
+2. **Contract Management**: Digital contract signing
+3. **Messaging System**: Direct communication between buyers and suppliers
+4. **Analytics Dashboard**: RFQ performance, quote acceptance rates
+5. **Notifications**: Real-time notifications for RFQ updates, new quotes
+6. **Advanced Search**: Full-text search across products, RFQs, suppliers
+7. **Bulk Operations**: Bulk product upload, bulk RFQ creation
+8. **Export Functionality**: Export quotes, RFQs to PDF/Excel
+
+## Testing Checklist
+
+- [ ] Business account creation (business and personal types)
+- [ ] Store creation with location and category
+- [ ] Product creation with verification ID generation
+- [ ] Product editing
+- [ ] RFQ creation with all fields
+- [ ] RFQ opportunities display
+- [ ] Quote submission with attachments
+- [ ] Duplicate quote prevention
+- [ ] Viewing RFQ responses
+- [ ] Viewing submitted quotes
+- [ ] Suppliers directory
+- [ ] Search and filtering
+- [ ] Image compression
+- [ ] Currency formatting
+- [ ] Responsive design (mobile, tablet, desktop)
+
+## Technical Notes
+
+### File Structure
+
+```
+pages/
+  api/
+    mutations/
+      create-business-account.ts
+      create-business-store.ts
+      create-business-product.ts
+      update-business-product.ts
+      create-business-rfq.ts
+      submit-rfq-quote.ts
+    queries/
+      business-stores.ts
+      business-store.ts
+      business-products.ts
+      generate-product-query-id.ts
+      business-rfqs.ts
+      rfq-opportunities.ts
+      rfq-details-and-responses.ts
+      business-submitted-quotes.ts
+      user-rfq-quote.ts
+      all-businesses.ts
+      system-configuration.ts
+  plasBusiness/
+    index.tsx
+    store/
+      [storeId].tsx
+
+src/
+  components/
+    business/
+      BusinessOverview.tsx
+      CreateProductForm.tsx
+      CreateRFQForm.tsx
+      MyRFQsSection.tsx
+      RFQOpportunitiesSection.tsx
+      RFQResponsesView.tsx
+      QuoteSubmissionForm.tsx
+      QuotesSection.tsx
+      SubmittedQuoteDetails.tsx
+      SuppliersSection.tsx
+  utils/
+    formatCurrency.ts
+```
+
+### Dependencies
+
+- Next.js API routes for backend
+- GraphQL (Hasura) for database queries
+- React hooks for state management
+- Tailwind CSS for styling
+- react-hot-toast for notifications
+- lucide-react for icons
+
+This comprehensive system enables businesses to efficiently manage their operations, connect with suppliers, and streamline the RFQ and quotation process.
