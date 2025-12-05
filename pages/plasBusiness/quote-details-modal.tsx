@@ -20,6 +20,19 @@ import {
   Phone,
   Mail,
 } from "lucide-react";
+import { formatCurrencySync } from "../../src/utils/formatCurrency";
+
+const formatDate = (dateString: string) => {
+  if (!dateString) return "Not specified";
+  const date = new Date(dateString);
+  return date.toLocaleDateString("en-US", {
+    year: "numeric",
+    month: "long",
+    day: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+};
 
 interface QuoteDetailsModalProps {
   quote: any;
@@ -42,29 +55,23 @@ export default function QuoteDetailsModal({
 
   const [activeTab, setActiveTab] = useState("overview");
 
-  const handleAccept = () => {
-    onAccept(quote.id);
-  };
-
-  const handleReject = () => {
-    onReject(quote.id);
-  };
-
   const handleMessage = () => {
-    onMessage(quote.supplier.contact.email);
+    if (quote.rfqRequester?.email || quote.rfqEmail) {
+      onMessage(quote.rfqRequester?.email || quote.rfqEmail);
+    }
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
-      <div className="max-h-[90vh] w-full max-w-6xl overflow-hidden rounded-3xl border border-gray-200 bg-white shadow-2xl dark:border-gray-700 dark:bg-gray-900">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+      <div className="flex max-h-[90vh] w-full max-w-6xl flex-col overflow-hidden rounded-3xl border border-gray-200 bg-white shadow-2xl dark:border-gray-700 dark:bg-gray-900">
         {/* Header */}
-        <div className="relative bg-gradient-to-r from-green-600 via-emerald-600 to-teal-600 p-8 text-white">
+        <div className="relative flex-shrink-0 bg-gradient-to-r from-green-600 via-emerald-600 to-teal-600 p-8 text-white">
           <div className="absolute inset-0 bg-black/10"></div>
           <div className="relative z-10 flex items-center justify-between">
             <div>
               <h2 className="mb-2 text-3xl font-bold">{quote.title}</h2>
               <p className="text-lg text-green-100">
-                From: {quote.supplier.name}
+                RFQ from: {quote.rfqRequester?.name || "Unknown Business"}
               </p>
             </div>
             <div className="flex items-center gap-3">
@@ -95,8 +102,9 @@ export default function QuoteDetailsModal({
               <div className="flex space-x-2">
                 {[
                   { id: "overview", label: "Overview", icon: FileText },
-                  { id: "items", label: "Items", icon: Package },
-                  { id: "supplier", label: "Supplier Info", icon: Building },
+                  { id: "rfq", label: "RFQ Details", icon: FileText },
+                  { id: "requester", label: "RFQ Requester", icon: Building },
+                  { id: "quote", label: "My Quote", icon: DollarSign },
                   { id: "terms", label: "Terms & Conditions", icon: FileText },
                 ].map((tab) => (
                   <button
@@ -152,27 +160,41 @@ export default function QuoteDetailsModal({
                       </div>
                       <div className="flex items-center justify-between">
                         <span className="text-sm font-medium text-gray-500 dark:text-gray-400">
-                          Items Count
+                          Currency
                         </span>
-                        <span className="inline-flex items-center rounded-full bg-gray-100 px-2 py-1 text-xs font-medium text-gray-800 dark:bg-gray-700 dark:text-gray-200">
-                          {quote.items.length} items
+                        <span className="text-sm font-semibold text-gray-900 dark:text-white">
+                          {quote.currency || "RWF"}
                         </span>
                       </div>
                       <div className="flex items-center justify-between">
                         <span className="text-sm font-medium text-gray-500 dark:text-gray-400">
                           Status
                         </span>
-                        <span className="inline-flex items-center rounded-full bg-blue-100 px-2 py-1 text-xs font-medium text-blue-800 dark:bg-blue-900 dark:text-blue-200">
-                          {quote.status}
+                        <span className={`inline-flex items-center rounded-full px-2 py-1 text-xs font-medium ${
+                          quote.status === "accepted"
+                            ? "bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300"
+                            : quote.status === "rejected"
+                            ? "bg-red-100 text-red-700 dark:bg-red-900 dark:text-red-300"
+                            : "bg-yellow-100 text-yellow-700 dark:bg-yellow-900 dark:text-yellow-300"
+                        }`}>
+                          {quote.status?.charAt(0).toUpperCase() + quote.status?.slice(1) || "Pending"}
+                        </span>
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <span className="text-sm font-medium text-gray-500 dark:text-gray-400">
+                          Submitted
+                        </span>
+                        <span className="text-sm text-gray-900 dark:text-white">
+                          {quote.submittedDate}
                         </span>
                       </div>
                     </div>
                   </div>
 
-                  {/* Supplier Quick Info */}
+                  {/* RFQ Requester Quick Info */}
                   <div className="rounded-2xl border border-gray-100 bg-white p-8 shadow-lg dark:border-gray-700 dark:bg-gray-800">
                     <h3 className="mb-6 text-xl font-bold text-gray-900 dark:text-white">
-                      Supplier Information
+                      RFQ Requester
                     </h3>
                     <div className="space-y-4">
                       <div className="flex items-center gap-3">
@@ -181,39 +203,24 @@ export default function QuoteDetailsModal({
                         </div>
                         <div>
                           <h4 className="font-semibold text-gray-900 dark:text-white">
-                            {quote.supplier.name}
+                            {quote.rfqRequester?.name || "Unknown Business"}
                           </h4>
-                          <div className="flex items-center gap-1">
-                            <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
-                            <span className="text-sm text-gray-600 dark:text-gray-400">
-                              {quote.supplier.rating}
-                            </span>
-                            <span className="text-sm text-gray-500 dark:text-gray-400">
-                              •
-                            </span>
-                            <span className="text-sm text-gray-500 dark:text-gray-400">
-                              {quote.supplier.location}
-                            </span>
-                          </div>
+                          <span className="text-sm text-gray-500 dark:text-gray-400">
+                            {quote.rfqRequester?.location || "Not specified"}
+                          </span>
                         </div>
                       </div>
                       <div className="space-y-2">
                         <div className="flex items-center gap-2">
-                          <User className="h-4 w-4 text-gray-500" />
-                          <span className="text-sm text-gray-600 dark:text-gray-400">
-                            {quote.supplier.contact.name}
-                          </span>
-                        </div>
-                        <div className="flex items-center gap-2">
                           <Mail className="h-4 w-4 text-gray-500" />
                           <span className="text-sm text-gray-600 dark:text-gray-400">
-                            {quote.supplier.contact.email}
+                            {quote.rfqRequester?.email || "Not provided"}
                           </span>
                         </div>
                         <div className="flex items-center gap-2">
                           <Phone className="h-4 w-4 text-gray-500" />
                           <span className="text-sm text-gray-600 dark:text-gray-400">
-                            {quote.supplier.contact.phone}
+                            {quote.rfqRequester?.phone || "Not provided"}
                           </span>
                         </div>
                       </div>
@@ -221,14 +228,14 @@ export default function QuoteDetailsModal({
                   </div>
                 </div>
 
-                {/* Notes */}
-                {quote.notes && (
+                {/* Quote Message */}
+                {quote.quoteMessage && (
                   <div className="rounded-lg bg-white p-6 shadow-md dark:bg-gray-800">
                     <h3 className="mb-4 text-lg font-semibold text-gray-900 dark:text-white">
-                      Notes
+                      Quote Message
                     </h3>
-                    <p className="text-sm text-gray-600 dark:text-gray-400">
-                      {quote.notes}
+                    <p className="text-sm text-gray-600 dark:text-gray-400 whitespace-pre-wrap">
+                      {quote.quoteMessage}
                     </p>
                   </div>
                 )}
@@ -237,25 +244,45 @@ export default function QuoteDetailsModal({
                 {quote.attachments && quote.attachments.length > 0 && (
                   <div className="rounded-lg bg-white p-6 shadow-md dark:bg-gray-800">
                     <h3 className="mb-4 text-lg font-semibold text-gray-900 dark:text-white">
-                      Attachments
+                      Attachments ({quote.attachments.length})
                     </h3>
                     <div className="space-y-2">
                       {quote.attachments.map(
                         (attachment: string, index: number) => (
-                          <div
+                          <button
                             key={index}
-                            className="flex items-center justify-between rounded border border-gray-200 p-2 dark:border-gray-700"
+                            onClick={() => {
+                              try {
+                                const [mimeType, base64Data] = attachment.split(",");
+                                const byteCharacters = atob(base64Data);
+                                const byteNumbers = new Array(byteCharacters.length);
+                                for (let i = 0; i < byteCharacters.length; i++) {
+                                  byteNumbers[i] = byteCharacters.charCodeAt(i);
+                                }
+                                const byteArray = new Uint8Array(byteNumbers);
+                                const blob = new Blob([byteArray], { type: mimeType.split(":")[1].split(";")[0] });
+                                const url = URL.createObjectURL(blob);
+                                const link = document.createElement("a");
+                                link.href = url;
+                                link.download = `quote-attachment-${index + 1}.${blob.type.includes("pdf") ? "pdf" : "jpg"}`;
+                                document.body.appendChild(link);
+                                link.click();
+                                document.body.removeChild(link);
+                                URL.revokeObjectURL(url);
+                              } catch (error) {
+                                console.error("Error downloading attachment:", error);
+                              }
+                            }}
+                            className="flex w-full items-center justify-between rounded-lg border border-gray-200 bg-white p-3 transition-colors hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-800 dark:hover:bg-gray-700"
                           >
                             <div className="flex items-center gap-2">
-                              <FileText className="h-4 w-4 text-gray-500" />
-                              <span className="text-sm text-gray-900 dark:text-white">
-                                {attachment}
+                              <FileText className="h-4 w-4 text-gray-400" />
+                              <span className="text-sm text-gray-700 dark:text-gray-300">
+                                Attachment {index + 1}
                               </span>
                             </div>
-                            <button className="rounded border border-gray-300 px-2 py-1 text-sm text-gray-700 transition-colors hover:bg-gray-50 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-800">
-                              <Download className="h-4 w-4" />
-                            </button>
-                          </div>
+                            <Download className="h-4 w-4 text-gray-400" />
+                          </button>
                         )
                       )}
                     </div>
@@ -264,94 +291,166 @@ export default function QuoteDetailsModal({
               </div>
             )}
 
-            {activeTab === "items" && (
+            {activeTab === "rfq" && (
               <div className="space-y-6">
                 <div className="rounded-lg bg-white p-6 shadow-md dark:bg-gray-800">
-                  <h3 className="mb-4 text-lg font-semibold text-gray-900 dark:text-white">
-                    Quote Items
+                  <h3 className="mb-6 text-xl font-bold text-gray-900 dark:text-white">
+                    RFQ Details
                   </h3>
-                  <div className="space-y-4">
-                    {quote.items.map((item: any, index: number) => (
-                      <div
-                        key={index}
-                        className="rounded-lg border border-gray-200 p-4 dark:border-gray-700"
-                      >
-                        <div className="flex items-center justify-between">
-                          <div className="space-y-1">
-                            <h4 className="font-medium text-gray-900 dark:text-white">
-                              {item.name}
-                            </h4>
-                            <p className="text-sm text-gray-500 dark:text-gray-400">
-                              {item.category}
-                            </p>
-                            <p className="text-sm text-gray-600 dark:text-gray-400">
-                              {item.specifications}
-                            </p>
-                          </div>
-                          <div className="space-y-1 text-right">
-                            <div className="flex items-center gap-4">
-                              <span className="text-sm text-gray-600 dark:text-gray-400">
-                                {item.quantity} {item.unit}
-                              </span>
-                              <span className="text-sm text-gray-600 dark:text-gray-400">
-                                @ ${item.unitPrice}
-                              </span>
-                              <span className="font-semibold text-gray-900 dark:text-white">
-                                ${item.totalPrice}
-                              </span>
-                            </div>
-                          </div>
+                  <div className="space-y-6">
+                    <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+                      <div className="space-y-4">
+                        <div>
+                          <span className="text-sm font-medium text-gray-500 dark:text-gray-400">
+                            Title:
+                          </span>
+                          <p className="mt-1 text-sm font-semibold text-gray-900 dark:text-white">
+                            {quote.title}
+                          </p>
+                        </div>
+                        <div>
+                          <span className="text-sm font-medium text-gray-500 dark:text-gray-400">
+                            Description:
+                          </span>
+                          <p className="mt-1 text-sm text-gray-900 dark:text-white whitespace-pre-wrap">
+                            {quote.description || "Not provided"}
+                          </p>
+                        </div>
+                        <div>
+                          <span className="text-sm font-medium text-gray-500 dark:text-gray-400">
+                            Category:
+                          </span>
+                          <p className="mt-1 text-sm text-gray-900 dark:text-white">
+                            {quote.category || "Not specified"}
+                          </p>
+                        </div>
+                        <div>
+                          <span className="text-sm font-medium text-gray-500 dark:text-gray-400">
+                            Location:
+                          </span>
+                          <p className="mt-1 text-sm text-gray-900 dark:text-white">
+                            {quote.location || "Not specified"}
+                          </p>
                         </div>
                       </div>
-                    ))}
+                      <div className="space-y-4">
+                        <div>
+                          <span className="text-sm font-medium text-gray-500 dark:text-gray-400">
+                            Budget Range:
+                          </span>
+                          <p className="mt-1 text-sm text-gray-900 dark:text-white">
+                            {quote.minBudget && quote.maxBudget
+                              ? `${formatCurrencySync(parseFloat(quote.minBudget))} - ${formatCurrencySync(parseFloat(quote.maxBudget))}`
+                              : quote.minBudget
+                              ? `Min: ${formatCurrencySync(parseFloat(quote.minBudget))}`
+                              : quote.maxBudget
+                              ? `Max: ${formatCurrencySync(parseFloat(quote.maxBudget))}`
+                              : "Not specified"}
+                          </p>
+                        </div>
+                        <div>
+                          <span className="text-sm font-medium text-gray-500 dark:text-gray-400">
+                            Response Deadline:
+                          </span>
+                          <p className="mt-1 text-sm text-gray-900 dark:text-white">
+                            {quote.responseDate ? formatDate(quote.responseDate) : "Not specified"}
+                          </p>
+                        </div>
+                        <div>
+                          <span className="text-sm font-medium text-gray-500 dark:text-gray-400">
+                            Expected Delivery:
+                          </span>
+                          <p className="mt-1 text-sm text-gray-900 dark:text-white">
+                            {quote.expectedDeliveryDate ? formatDate(quote.expectedDeliveryDate) : "Not specified"}
+                          </p>
+                        </div>
+                        <div>
+                          <span className="text-sm font-medium text-gray-500 dark:text-gray-400">
+                            Urgency Level:
+                          </span>
+                          <p className="mt-1 text-sm text-gray-900 dark:text-white">
+                            {quote.urgencyLevel || "Not specified"}
+                          </p>
+                        </div>
+                        <div>
+                          <span className="text-sm font-medium text-gray-500 dark:text-gray-400">
+                            Estimated Quantity:
+                          </span>
+                          <p className="mt-1 text-sm text-gray-900 dark:text-white">
+                            {quote.estimatedQuantity || "Not specified"}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                    {quote.notes && (
+                      <div className="rounded-lg border border-gray-200 bg-gray-50 p-4 dark:border-gray-700 dark:bg-gray-900">
+                        <span className="text-sm font-medium text-gray-500 dark:text-gray-400">
+                          Additional Notes:
+                        </span>
+                        <p className="mt-2 text-sm text-gray-900 dark:text-white whitespace-pre-wrap">
+                          {quote.notes}
+                        </p>
+                      </div>
+                    )}
+                    {quote.requirements && (
+                      <div className="rounded-lg border border-gray-200 bg-gray-50 p-4 dark:border-gray-700 dark:bg-gray-900">
+                        <span className="text-sm font-medium text-gray-500 dark:text-gray-400">
+                          Requirements:
+                        </span>
+                        <div className="mt-2 text-sm text-gray-900 dark:text-white">
+                          {typeof quote.requirements === 'string' 
+                            ? <p className="whitespace-pre-wrap">{quote.requirements}</p>
+                            : Array.isArray(quote.requirements)
+                            ? <ul className="list-disc list-inside space-y-1">
+                                {quote.requirements.map((req: any, idx: number) => (
+                                  <li key={idx}>{typeof req === 'string' ? req : JSON.stringify(req)}</li>
+                                ))}
+                              </ul>
+                            : <p>{JSON.stringify(quote.requirements)}</p>
+                          }
+                        </div>
+                      </div>
+                    )}
                   </div>
                 </div>
               </div>
             )}
 
-            {activeTab === "supplier" && (
+            {activeTab === "requester" && (
               <div className="space-y-6">
                 <div className="rounded-lg bg-white p-6 shadow-md dark:bg-gray-800">
-                  <h3 className="mb-4 text-lg font-semibold text-gray-900 dark:text-white">
-                    Supplier Details
+                  <h3 className="mb-6 text-xl font-bold text-gray-900 dark:text-white">
+                    RFQ Requester Company Information
                   </h3>
                   <div className="space-y-6">
                     <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
                       <div className="space-y-4">
                         <h4 className="font-semibold text-gray-900 dark:text-white">
-                          Company Information
+                          Company Details
                         </h4>
-                        <div className="space-y-2">
+                        <div className="space-y-3">
                           <div>
                             <span className="text-sm font-medium text-gray-500 dark:text-gray-400">
-                              Company Name:
+                              Business Name:
                             </span>
-                            <p className="text-sm text-gray-900 dark:text-white">
-                              {quote.supplier.name}
+                            <p className="mt-1 text-sm text-gray-900 dark:text-white">
+                              {quote.rfqRequester?.name || "Not provided"}
                             </p>
                           </div>
                           <div>
                             <span className="text-sm font-medium text-gray-500 dark:text-gray-400">
-                              Address:
+                              Account Type:
                             </span>
-                            <p className="text-sm text-gray-900 dark:text-white">
-                              {quote.supplier.company.address}
+                            <p className="mt-1 text-sm text-gray-900 dark:text-white">
+                              {quote.rfqRequester?.accountType || "Not specified"}
                             </p>
                           </div>
                           <div>
                             <span className="text-sm font-medium text-gray-500 dark:text-gray-400">
-                              Established:
+                              Status:
                             </span>
-                            <p className="text-sm text-gray-900 dark:text-white">
-                              {quote.supplier.company.established}
-                            </p>
-                          </div>
-                          <div>
-                            <span className="text-sm font-medium text-gray-500 dark:text-gray-400">
-                              Employees:
-                            </span>
-                            <p className="text-sm text-gray-900 dark:text-white">
-                              {quote.supplier.company.employees}
+                            <p className="mt-1 text-sm text-gray-900 dark:text-white">
+                              {quote.rfqRequester?.status || "Not specified"}
                             </p>
                           </div>
                         </div>
@@ -360,39 +459,41 @@ export default function QuoteDetailsModal({
                         <h4 className="font-semibold text-gray-900 dark:text-white">
                           Contact Information
                         </h4>
-                        <div className="space-y-2">
-                          <div>
-                            <span className="text-sm font-medium text-gray-500 dark:text-gray-400">
-                              Contact Person:
-                            </span>
-                            <p className="text-sm text-gray-900 dark:text-white">
-                              {quote.supplier.contact.name}
-                            </p>
-                          </div>
+                        <div className="space-y-3">
                           <div>
                             <span className="text-sm font-medium text-gray-500 dark:text-gray-400">
                               Email:
                             </span>
-                            <p className="text-sm text-gray-900 dark:text-white">
-                              {quote.supplier.contact.email}
+                            <p className="mt-1 text-sm text-gray-900 dark:text-white">
+                              {quote.rfqRequester?.email || quote.rfqEmail || "Not provided"}
                             </p>
                           </div>
                           <div>
                             <span className="text-sm font-medium text-gray-500 dark:text-gray-400">
                               Phone:
                             </span>
-                            <p className="text-sm text-gray-900 dark:text-white">
-                              {quote.supplier.contact.phone}
+                            <p className="mt-1 text-sm text-gray-900 dark:text-white">
+                              {quote.rfqRequester?.phone || quote.rfqPhone || "Not provided"}
                             </p>
                           </div>
                           <div>
                             <span className="text-sm font-medium text-gray-500 dark:text-gray-400">
                               Location:
                             </span>
-                            <p className="text-sm text-gray-900 dark:text-white">
-                              {quote.supplier.location}
+                            <p className="mt-1 text-sm text-gray-900 dark:text-white">
+                              {quote.rfqRequester?.location || quote.location || "Not provided"}
                             </p>
                           </div>
+                          {quote.rfqContactName && (
+                            <div>
+                              <span className="text-sm font-medium text-gray-500 dark:text-gray-400">
+                                Contact Person:
+                              </span>
+                              <p className="mt-1 text-sm text-gray-900 dark:text-white">
+                                {quote.rfqContactName}
+                              </p>
+                            </div>
+                          )}
                         </div>
                       </div>
                     </div>
@@ -401,29 +502,176 @@ export default function QuoteDetailsModal({
               </div>
             )}
 
+            {activeTab === "quote" && (
+              <div className="space-y-6">
+                <div className="rounded-lg bg-white p-6 shadow-md dark:bg-gray-800">
+                  <h3 className="mb-6 text-xl font-bold text-gray-900 dark:text-white">
+                    My Quote Details
+                  </h3>
+                  <div className="space-y-6">
+                    <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+                      <div className="space-y-4">
+                        <h4 className="font-semibold text-gray-900 dark:text-white">
+                          Quote Information
+                        </h4>
+                        <div className="space-y-3">
+                          <div>
+                            <span className="text-sm font-medium text-gray-500 dark:text-gray-400">
+                              Quote Amount:
+                            </span>
+                            <p className="mt-1 text-lg font-bold text-green-600">
+                              {quote.totalPrice}
+                            </p>
+                          </div>
+                          <div>
+                            <span className="text-sm font-medium text-gray-500 dark:text-gray-400">
+                              Currency:
+                            </span>
+                            <p className="mt-1 text-sm text-gray-900 dark:text-white">
+                              {quote.currency || "RWF"}
+                            </p>
+                          </div>
+                          <div>
+                            <span className="text-sm font-medium text-gray-500 dark:text-gray-400">
+                              Delivery Time:
+                            </span>
+                            <p className="mt-1 text-sm text-gray-900 dark:text-white">
+                              {quote.deliveryTime || "Not specified"}
+                            </p>
+                          </div>
+                          <div>
+                            <span className="text-sm font-medium text-gray-500 dark:text-gray-400">
+                              Quote Validity:
+                            </span>
+                            <p className="mt-1 text-sm text-gray-900 dark:text-white">
+                              {quote.validUntil || "Not specified"}
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                      <div className="space-y-4">
+                        <h4 className="font-semibold text-gray-900 dark:text-white">
+                          Status & Dates
+                        </h4>
+                        <div className="space-y-3">
+                          <div>
+                            <span className="text-sm font-medium text-gray-500 dark:text-gray-400">
+                              Status:
+                            </span>
+                            <p className={`mt-1 inline-flex items-center rounded-full px-2 py-1 text-xs font-medium ${
+                              quote.status === "accepted"
+                                ? "bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300"
+                                : quote.status === "rejected"
+                                ? "bg-red-100 text-red-700 dark:bg-red-900 dark:text-red-300"
+                                : "bg-yellow-100 text-yellow-700 dark:bg-yellow-900 dark:text-yellow-300"
+                            }`}>
+                              {quote.status?.charAt(0).toUpperCase() + quote.status?.slice(1) || "Pending"}
+                            </p>
+                          </div>
+                          <div>
+                            <span className="text-sm font-medium text-gray-500 dark:text-gray-400">
+                              Submitted Date:
+                            </span>
+                            <p className="mt-1 text-sm text-gray-900 dark:text-white">
+                              {quote.submittedDate || "Not available"}
+                            </p>
+                          </div>
+                          {quote.updatedDate && quote.updatedDate !== quote.submittedDate && (
+                            <div>
+                              <span className="text-sm font-medium text-gray-500 dark:text-gray-400">
+                                Last Updated:
+                              </span>
+                              <p className="mt-1 text-sm text-gray-900 dark:text-white">
+                                {quote.updatedDate}
+                              </p>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                    {quote.quoteMessage && (
+                      <div className="rounded-lg border border-gray-200 bg-gray-50 p-4 dark:border-gray-700 dark:bg-gray-900">
+                        <span className="text-sm font-medium text-gray-500 dark:text-gray-400">
+                          Quote Message:
+                        </span>
+                        <p className="mt-2 text-sm text-gray-900 dark:text-white whitespace-pre-wrap">
+                          {quote.quoteMessage}
+                        </p>
+                      </div>
+                    )}
+                    {quote.attachments && quote.attachments.length > 0 && (
+                      <div className="rounded-lg border border-gray-200 bg-gray-50 p-4 dark:border-gray-700 dark:bg-gray-900">
+                        <span className="text-sm font-medium text-gray-500 dark:text-gray-400">
+                          Attachments ({quote.attachments.length}):
+                        </span>
+                        <div className="mt-3 space-y-2">
+                          {quote.attachments.map((attachment: string, index: number) => (
+                            <button
+                              key={index}
+                              onClick={() => {
+                                try {
+                                  const [mimeType, base64Data] = attachment.split(",");
+                                  const byteCharacters = atob(base64Data);
+                                  const byteNumbers = new Array(byteCharacters.length);
+                                  for (let i = 0; i < byteCharacters.length; i++) {
+                                    byteNumbers[i] = byteCharacters.charCodeAt(i);
+                                  }
+                                  const byteArray = new Uint8Array(byteNumbers);
+                                  const blob = new Blob([byteArray], { type: mimeType.split(":")[1].split(";")[0] });
+                                  const url = URL.createObjectURL(blob);
+                                  const link = document.createElement("a");
+                                  link.href = url;
+                                  link.download = `quote-attachment-${index + 1}.${blob.type.includes("pdf") ? "pdf" : "jpg"}`;
+                                  document.body.appendChild(link);
+                                  link.click();
+                                  document.body.removeChild(link);
+                                  URL.revokeObjectURL(url);
+                                } catch (error) {
+                                  console.error("Error downloading attachment:", error);
+                                }
+                              }}
+                              className="flex w-full items-center justify-between rounded-lg border border-gray-200 bg-white p-3 transition-colors hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-800 dark:hover:bg-gray-700"
+                            >
+                              <div className="flex items-center gap-2">
+                                <FileText className="h-4 w-4 text-gray-400" />
+                                <span className="text-sm text-gray-700 dark:text-gray-300">
+                                  Attachment {index + 1}
+                                </span>
+                              </div>
+                              <Download className="h-4 w-4 text-gray-400" />
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+            )}
+
             {activeTab === "terms" && (
               <div className="space-y-6">
                 <div className="rounded-lg bg-white p-6 shadow-md dark:bg-gray-800">
-                  <h3 className="mb-4 text-lg font-semibold text-gray-900 dark:text-white">
+                  <h3 className="mb-6 text-xl font-bold text-gray-900 dark:text-white">
                     Terms & Conditions
                   </h3>
-                  <div className="space-y-4">
+                  <div className="space-y-6">
                     <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
                       <div className="space-y-4">
                         <div>
                           <span className="text-sm font-medium text-gray-500 dark:text-gray-400">
                             Payment Terms:
                           </span>
-                          <p className="text-sm text-gray-900 dark:text-white">
-                            {quote.terms.paymentTerms}
+                          <p className="mt-1 text-sm text-gray-900 dark:text-white">
+                            {quote.terms?.paymentTerms || "Not specified"}
                           </p>
                         </div>
                         <div>
                           <span className="text-sm font-medium text-gray-500 dark:text-gray-400">
                             Delivery Terms:
                           </span>
-                          <p className="text-sm text-gray-900 dark:text-white">
-                            {quote.terms.deliveryTerms}
+                          <p className="mt-1 text-sm text-gray-900 dark:text-white">
+                            {quote.terms?.deliveryTerms || "Not specified"}
                           </p>
                         </div>
                       </div>
@@ -432,16 +680,16 @@ export default function QuoteDetailsModal({
                           <span className="text-sm font-medium text-gray-500 dark:text-gray-400">
                             Warranty:
                           </span>
-                          <p className="text-sm text-gray-900 dark:text-white">
-                            {quote.terms.warranty}
+                          <p className="mt-1 text-sm text-gray-900 dark:text-white">
+                            {quote.terms?.warranty || "Not specified"}
                           </p>
                         </div>
                         <div>
                           <span className="text-sm font-medium text-gray-500 dark:text-gray-400">
-                            Minimum Order:
+                            Cancellation Terms:
                           </span>
-                          <p className="text-sm text-gray-900 dark:text-white">
-                            {quote.terms.minimumOrder}
+                          <p className="mt-1 text-sm text-gray-900 dark:text-white">
+                            {quote.terms?.cancellationTerms || "Not specified"}
                           </p>
                         </div>
                       </div>
@@ -453,8 +701,8 @@ export default function QuoteDetailsModal({
           </div>
         </div>
 
-        {/* Footer Actions */}
-        <div className="flex items-center justify-between border-t border-gray-200 bg-gradient-to-r from-gray-50 to-white p-8 dark:border-gray-700 dark:from-gray-800 dark:to-gray-700">
+        {/* Footer */}
+        <div className="flex-shrink-0 flex items-center justify-between border-t border-gray-200 bg-gradient-to-r from-gray-50 to-white p-8 dark:border-gray-700 dark:from-gray-800 dark:to-gray-700">
           <div className="flex items-center gap-4">
             <div className="text-sm text-gray-500 dark:text-gray-400">
               Submitted on{" "}
@@ -470,20 +718,12 @@ export default function QuoteDetailsModal({
               </span>
             </div>
           </div>
-          <div className="flex gap-4">
-            <button
-              onClick={handleReject}
-              className="rounded-xl border-2 border-gray-200 px-6 py-3 font-medium text-gray-700 transition-all duration-300 hover:border-red-500 hover:bg-gray-50 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-700"
-            >
-              Reject Quote
-            </button>
-            <button
-              onClick={handleAccept}
-              className="rounded-xl bg-gradient-to-r from-green-500 to-emerald-500 px-6 py-3 font-medium text-white shadow-lg transition-all duration-300 hover:from-green-600 hover:to-emerald-600 hover:shadow-xl"
-            >
-              Accept Quote
-            </button>
-          </div>
+          <button
+            onClick={onClose}
+            className="rounded-xl bg-gray-200 px-6 py-3 font-medium text-gray-700 transition-all duration-300 hover:bg-gray-300 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600"
+          >
+            Close
+          </button>
         </div>
       </div>
     </div>

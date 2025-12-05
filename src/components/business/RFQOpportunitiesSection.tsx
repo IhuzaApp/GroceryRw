@@ -78,9 +78,6 @@ export function RFQOpportunitiesSection({
       const response = await fetch("/api/queries/rfq-opportunities");
       if (response.ok) {
         const data = await response.json();
-        console.log("RFQ Opportunities API Response:", data);
-        console.log("Number of RFQs received:", data.rfqs?.length || 0);
-        console.log("RFQ IDs:", data.rfqs?.map((rfq: any) => rfq.id));
         setRfqs(data.rfqs || []);
       } else {
         const errorData = await response.json();
@@ -163,10 +160,6 @@ export function RFQOpportunitiesSection({
   };
 
   const displayRFQs = rfqs.map(formatRFQForDisplay);
-  
-  console.log("Total RFQs from API:", rfqs.length);
-  console.log("Display RFQs after formatting:", displayRFQs.length);
-  console.log("Display RFQ IDs:", displayRFQs.map((rfq) => rfq.id));
 
   // Get unique categories from RFQs
   const categories = [
@@ -184,9 +177,6 @@ export function RFQOpportunitiesSection({
       selectedCategory === "all" || rfq.category === selectedCategory;
     return matchesSearch && matchesCategory;
   });
-  
-  console.log("Filtered RFQs count:", filteredRFQs.length);
-  console.log("Filtered RFQ IDs:", filteredRFQs.map((rfq) => rfq.id));
 
   const handleViewRFQ = (rfq: any) => {
     setSelectedRFQ(rfq);
