@@ -15,6 +15,8 @@ import {
 } from "lucide-react";
 import { formatCurrencySync } from "../../utils/formatCurrency";
 import toast from "react-hot-toast";
+import { QuoteSubmissionForm } from "./QuoteSubmissionForm";
+import { SubmittedQuoteDetails } from "./SubmittedQuoteDetails";
 
 interface RFQOpportunitiesSectionProps {
   onMessageCustomer?: (customerId: string) => void;
@@ -27,12 +29,48 @@ export function RFQOpportunitiesSection({
   const [selectedCategory, setSelectedCategory] = useState("all");
   const [selectedRFQ, setSelectedRFQ] = useState<any>(null);
   const [isQuoteModalOpen, setIsQuoteModalOpen] = useState(false);
+  const [isQuoteFormOpen, setIsQuoteFormOpen] = useState(false);
+  const [selectedRFQForQuote, setSelectedRFQForQuote] = useState<any>(null);
   const [rfqs, setRfqs] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [submittedQuotes, setSubmittedQuotes] = useState<Record<string, any>>({});
+  const [isQuoteDetailsOpen, setIsQuoteDetailsOpen] = useState(false);
+  const [selectedQuote, setSelectedQuote] = useState<any>(null);
 
   useEffect(() => {
     fetchRFQOpportunities();
   }, []);
+
+  // Check for existing quotes when RFQs are loaded
+  useEffect(() => {
+    if (rfqs.length > 0) {
+      checkExistingQuotes();
+    }
+  }, [rfqs]);
+
+  const checkExistingQuotes = async () => {
+    const quotePromises = rfqs.map(async (rfq) => {
+      try {
+        const response = await fetch(`/api/queries/user-rfq-quote?rfqId=${rfq.id}`);
+        if (response.ok) {
+          const data = await response.json();
+          return { rfqId: rfq.id, quote: data.quote };
+        }
+      } catch (error) {
+        console.error(`Error checking quote for RFQ ${rfq.id}:`, error);
+      }
+      return { rfqId: rfq.id, quote: null };
+    });
+
+    const results = await Promise.all(quotePromises);
+    const quotesMap: Record<string, any> = {};
+    results.forEach(({ rfqId, quote }) => {
+      if (quote) {
+        quotesMap[rfqId] = quote;
+      }
+    });
+    setSubmittedQuotes(quotesMap);
+  };
 
   const fetchRFQOpportunities = async () => {
     try {
@@ -155,12 +193,30 @@ export function RFQOpportunitiesSection({
     setIsQuoteModalOpen(true);
   };
 
-  const handleShareQuote = (rfqId: string) => {
-    console.log("Sharing quote for RFQ:", rfqId);
+  const handleShareQuote = async (rfq: any) => {
+    // Check if quote already exists
+    const existingQuote = submittedQuotes[rfq.id];
+    
+    if (existingQuote) {
+      // Show quote details instead of form
+      setSelectedRFQForQuote(rfq); // Set RFQ for title
+      setSelectedQuote(existingQuote);
+      setIsQuoteDetailsOpen(true);
+    } else {
+      // Show submission form
+      setSelectedRFQForQuote(rfq);
+      setIsQuoteFormOpen(true);
+    }
   };
 
-  const handleAcceptRFQ = (rfqId: string) => {
-    console.log("Accepting RFQ:", rfqId);
+  const handleQuoteSubmitted = () => {
+    toast.success("Quote submitted successfully!");
+    setIsQuoteFormOpen(false);
+    setSelectedRFQForQuote(null);
+    // Refresh the quotes map
+    checkExistingQuotes();
+    // Optionally refresh the RFQs list
+    fetchRFQOpportunities();
   };
 
   const handleMessageCustomer = (customerId: string) => {
@@ -328,18 +384,15 @@ export function RFQOpportunitiesSection({
                 View Details
               </button>
               <button
-                onClick={() => handleShareQuote(rfq.id)}
-                className="flex flex-1 items-center justify-center gap-2 rounded-lg bg-green-500 px-4 py-2 font-medium text-white transition-colors hover:bg-green-600"
+                onClick={() => handleShareQuote(rfq)}
+                className={`flex flex-1 items-center justify-center gap-2 rounded-lg px-4 py-2 font-medium text-white transition-colors ${
+                  submittedQuotes[rfq.id]
+                    ? "bg-blue-500 hover:bg-blue-600"
+                    : "bg-green-500 hover:bg-green-600"
+                }`}
               >
                 <CheckCircle className="h-4 w-4" />
-                Share Quote
-              </button>
-              <button
-                onClick={() => handleAcceptRFQ(rfq.id)}
-                className="flex flex-1 items-center justify-center gap-2 rounded-lg bg-emerald-500 px-4 py-2 font-medium text-white transition-colors hover:bg-emerald-600"
-              >
-                <CheckCircle className="h-4 w-4" />
-                Accept
+                {submittedQuotes[rfq.id] ? "View Quote" : "Submit Quote"}
               </button>
               <button
                 onClick={() => handleMessageCustomer(rfq.id)}
@@ -418,10 +471,17 @@ export function RFQOpportunitiesSection({
 
                 <div className="flex gap-2 pt-4">
                   <button
-                    onClick={() => handleShareQuote(selectedRFQ.id)}
-                    className="flex-1 rounded-lg bg-green-500 px-4 py-2 font-medium text-white transition-colors hover:bg-green-600"
+                    onClick={() => {
+                      setIsQuoteModalOpen(false);
+                      handleShareQuote(selectedRFQ);
+                    }}
+                    className={`flex-1 rounded-lg px-4 py-2 font-medium text-white transition-colors ${
+                      submittedQuotes[selectedRFQ.id]
+                        ? "bg-blue-500 hover:bg-blue-600"
+                        : "bg-green-500 hover:bg-green-600"
+                    }`}
                   >
-                    Share Quote
+                    {submittedQuotes[selectedRFQ.id] ? "View Quote" : "Submit Quote"}
                   </button>
                   <button
                     onClick={() => handleMessageCustomer(selectedRFQ.id)}
@@ -434,6 +494,34 @@ export function RFQOpportunitiesSection({
             </div>
           </div>
         </div>
+      )}
+
+      {/* Quote Submission Form */}
+      {isQuoteFormOpen && selectedRFQForQuote && (
+        <QuoteSubmissionForm
+          isOpen={isQuoteFormOpen}
+          onClose={() => {
+            setIsQuoteFormOpen(false);
+            setSelectedRFQForQuote(null);
+          }}
+          rfqId={selectedRFQForQuote.id}
+          rfqTitle={selectedRFQForQuote.title}
+          onSuccess={handleQuoteSubmitted}
+        />
+      )}
+
+      {/* Submitted Quote Details */}
+      {isQuoteDetailsOpen && selectedQuote && selectedRFQForQuote && (
+        <SubmittedQuoteDetails
+          isOpen={isQuoteDetailsOpen}
+          onClose={() => {
+            setIsQuoteDetailsOpen(false);
+            setSelectedQuote(null);
+            setSelectedRFQForQuote(null);
+          }}
+          quote={selectedQuote}
+          rfqTitle={selectedRFQForQuote.title || "RFQ"}
+        />
       )}
     </div>
   );
