@@ -134,9 +134,9 @@ export default function PlasBusinessPage() {
             isCreateRFQOpen={isCreateRFQOpen}
             setIsCreateRFQOpen={setIsCreateRFQOpen}
             router={router}
-          businessAccount={businessAccount}
-          rfqCreated={rfqCreated}
-          setRfqCreated={setRfqCreated}
+            businessAccount={businessAccount}
+            rfqCreated={rfqCreated}
+            setRfqCreated={setRfqCreated}
           />
         </div>
       </div>
@@ -254,7 +254,7 @@ function BuyerDashboardContent({
 
       {/* Stats Cards - Hidden on mobile */}
       <div className="hidden md:block">
-      <StatsCards />
+        <StatsCards />
       </div>
 
       {/* Main Content Tabs */}

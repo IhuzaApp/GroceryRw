@@ -94,7 +94,10 @@ export default async function handler(
       }>(CHECK_BUSINESS_ACCOUNT, {
         user_id: user_id,
       });
-      if (accountResult.business_accounts && accountResult.business_accounts.length > 0) {
+      if (
+        accountResult.business_accounts &&
+        accountResult.business_accounts.length > 0
+      ) {
         business_id = accountResult.business_accounts[0].id;
       }
     } catch (error) {
@@ -132,9 +135,10 @@ export default async function handler(
       respond_business_id: business_id,
     });
 
-    const quote = result.BusinessQoute && result.BusinessQoute.length > 0 
-      ? result.BusinessQoute[0] 
-      : null;
+    const quote =
+      result.BusinessQoute && result.BusinessQoute.length > 0
+        ? result.BusinessQoute[0]
+        : null;
 
     return res.status(200).json({ quote });
   } catch (error: any) {
@@ -145,4 +149,3 @@ export default async function handler(
     });
   }
 }
-

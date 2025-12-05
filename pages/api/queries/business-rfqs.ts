@@ -94,7 +94,10 @@ export default async function handler(
       }>(CHECK_BUSINESS_ACCOUNT, {
         user_id: user_id,
       });
-      if (accountResult.business_accounts && accountResult.business_accounts.length > 0) {
+      if (
+        accountResult.business_accounts &&
+        accountResult.business_accounts.length > 0
+      ) {
         business_id = accountResult.business_accounts[0].id;
       }
     } catch (error) {
@@ -114,7 +117,7 @@ export default async function handler(
       const GET_RFQS_BY_USER = gql`
         query GetRFQsByUser($user_id: uuid!) {
           bussines_RFQ(
-            where: { 
+            where: {
               _and: [
                 { user_id: { _eq: $user_id } }
                 { business_id: { _is_null: true } }
@@ -216,4 +219,3 @@ export default async function handler(
     });
   }
 }
-

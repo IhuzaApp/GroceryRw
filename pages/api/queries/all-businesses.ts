@@ -82,7 +82,10 @@ export default async function handler(
       }>(CHECK_BUSINESS_ACCOUNT, {
         user_id: user_id,
       });
-      if (accountResult.business_accounts && accountResult.business_accounts.length > 0) {
+      if (
+        accountResult.business_accounts &&
+        accountResult.business_accounts.length > 0
+      ) {
         exclude_business_id = accountResult.business_accounts[0].id;
       }
     } catch (error) {
@@ -119,4 +122,3 @@ export default async function handler(
     });
   }
 }
-

@@ -1,6 +1,13 @@
 "use client";
 
-import { X, FileText, Download, Calendar, DollarSign, CheckCircle } from "lucide-react";
+import {
+  X,
+  FileText,
+  Download,
+  Calendar,
+  DollarSign,
+  CheckCircle,
+} from "lucide-react";
 import { formatCurrencySync } from "../../utils/formatCurrency";
 
 interface SubmittedQuoteDetailsProps {
@@ -61,11 +68,15 @@ export function SubmittedQuoteDetails({
         byteNumbers[i] = byteCharacters.charCodeAt(i);
       }
       const byteArray = new Uint8Array(byteNumbers);
-      const blob = new Blob([byteArray], { type: mimeType.split(":")[1].split(";")[0] });
+      const blob = new Blob([byteArray], {
+        type: mimeType.split(":")[1].split(";")[0],
+      });
       const url = URL.createObjectURL(blob);
       const link = document.createElement("a");
       link.href = url;
-      link.download = `quote-attachment-${index + 1}.${blob.type.includes("pdf") ? "pdf" : "jpg"}`;
+      link.download = `quote-attachment-${index + 1}.${
+        blob.type.includes("pdf") ? "pdf" : "jpg"
+      }`;
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
@@ -109,7 +120,8 @@ export function SubmittedQuoteDetails({
               }`}
             >
               <CheckCircle className="h-4 w-4" />
-              Status: {quote.status.charAt(0).toUpperCase() + quote.status.slice(1)}
+              Status:{" "}
+              {quote.status.charAt(0).toUpperCase() + quote.status.slice(1)}
             </span>
           </div>
 
@@ -159,7 +171,7 @@ export function SubmittedQuoteDetails({
                 <h4 className="mb-2 text-sm font-medium text-gray-700 dark:text-gray-300">
                   Message
                 </h4>
-                <p className="text-gray-600 dark:text-gray-400 whitespace-pre-wrap">
+                <p className="whitespace-pre-wrap text-gray-600 dark:text-gray-400">
                   {quote.message}
                 </p>
               </div>
@@ -204,16 +216,17 @@ export function SubmittedQuoteDetails({
                 </div>
               )}
 
-              {quote.cancellatioinTerms && quote.cancellatioinTerms.trim() !== "" && (
-                <div className="rounded-lg border border-gray-200 p-4 dark:border-gray-700">
-                  <h5 className="mb-2 text-sm font-medium text-gray-700 dark:text-gray-300">
-                    Cancellation Terms
-                  </h5>
-                  <p className="text-gray-600 dark:text-gray-400">
-                    {quote.cancellatioinTerms}
-                  </p>
-                </div>
-              )}
+              {quote.cancellatioinTerms &&
+                quote.cancellatioinTerms.trim() !== "" && (
+                  <div className="rounded-lg border border-gray-200 p-4 dark:border-gray-700">
+                    <h5 className="mb-2 text-sm font-medium text-gray-700 dark:text-gray-300">
+                      Cancellation Terms
+                    </h5>
+                    <p className="text-gray-600 dark:text-gray-400">
+                      {quote.cancellatioinTerms}
+                    </p>
+                  </div>
+                )}
             </div>
 
             {/* Attachments */}
@@ -248,7 +261,9 @@ export function SubmittedQuoteDetails({
               <div className="text-sm text-gray-500 dark:text-gray-400">
                 <p>Submitted: {formatDate(quote.created_at)}</p>
                 {quote.updated_at !== quote.created_at && (
-                  <p className="mt-1">Last updated: {formatDate(quote.updated_at)}</p>
+                  <p className="mt-1">
+                    Last updated: {formatDate(quote.updated_at)}
+                  </p>
                 )}
               </div>
             </div>
@@ -268,4 +283,3 @@ export function SubmittedQuoteDetails({
     </div>
   );
 }
-

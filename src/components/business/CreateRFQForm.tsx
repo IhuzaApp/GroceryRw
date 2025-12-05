@@ -198,7 +198,9 @@ export function CreateRFQForm({
       }
 
       // Prepare requirements array (filter out empty strings)
-      const requirementsArray = formData.requirements.filter((r) => r.trim() !== "");
+      const requirementsArray = formData.requirements.filter(
+        (r) => r.trim() !== ""
+      );
 
       // Call the API
       const response = await fetch("/api/mutations/create-business-rfq", {
@@ -233,15 +235,15 @@ export function CreateRFQForm({
       }
 
       const data = await response.json();
-      
+
       // Call the onSubmit callback with the created RFQ data
       onSubmit(data.rfq || formData);
-      
+
       // Show success message
       toast.success("RFQ created successfully!");
-      
+
       onClose();
-      
+
       // Reset form
       setFormData({
         title: "",

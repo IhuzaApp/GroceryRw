@@ -62,7 +62,7 @@ export default function QuoteDetailsModal({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm">
       <div className="flex max-h-[90vh] w-full max-w-6xl flex-col overflow-hidden rounded-3xl border border-gray-200 bg-white shadow-2xl dark:border-gray-700 dark:bg-gray-900">
         {/* Header */}
         <div className="relative flex-shrink-0 bg-gradient-to-r from-green-600 via-emerald-600 to-teal-600 p-8 text-white">
@@ -170,14 +170,17 @@ export default function QuoteDetailsModal({
                         <span className="text-sm font-medium text-gray-500 dark:text-gray-400">
                           Status
                         </span>
-                        <span className={`inline-flex items-center rounded-full px-2 py-1 text-xs font-medium ${
-                          quote.status === "accepted"
-                            ? "bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300"
-                            : quote.status === "rejected"
-                            ? "bg-red-100 text-red-700 dark:bg-red-900 dark:text-red-300"
-                            : "bg-yellow-100 text-yellow-700 dark:bg-yellow-900 dark:text-yellow-300"
-                        }`}>
-                          {quote.status?.charAt(0).toUpperCase() + quote.status?.slice(1) || "Pending"}
+                        <span
+                          className={`inline-flex items-center rounded-full px-2 py-1 text-xs font-medium ${
+                            quote.status === "accepted"
+                              ? "bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300"
+                              : quote.status === "rejected"
+                              ? "bg-red-100 text-red-700 dark:bg-red-900 dark:text-red-300"
+                              : "bg-yellow-100 text-yellow-700 dark:bg-yellow-900 dark:text-yellow-300"
+                          }`}
+                        >
+                          {quote.status?.charAt(0).toUpperCase() +
+                            quote.status?.slice(1) || "Pending"}
                         </span>
                       </div>
                       <div className="flex items-center justify-between">
@@ -234,7 +237,7 @@ export default function QuoteDetailsModal({
                     <h3 className="mb-4 text-lg font-semibold text-gray-900 dark:text-white">
                       Quote Message
                     </h3>
-                    <p className="text-sm text-gray-600 dark:text-gray-400 whitespace-pre-wrap">
+                    <p className="whitespace-pre-wrap text-sm text-gray-600 dark:text-gray-400">
                       {quote.quoteMessage}
                     </p>
                   </div>
@@ -253,24 +256,38 @@ export default function QuoteDetailsModal({
                             key={index}
                             onClick={() => {
                               try {
-                                const [mimeType, base64Data] = attachment.split(",");
+                                const [mimeType, base64Data] =
+                                  attachment.split(",");
                                 const byteCharacters = atob(base64Data);
-                                const byteNumbers = new Array(byteCharacters.length);
-                                for (let i = 0; i < byteCharacters.length; i++) {
+                                const byteNumbers = new Array(
+                                  byteCharacters.length
+                                );
+                                for (
+                                  let i = 0;
+                                  i < byteCharacters.length;
+                                  i++
+                                ) {
                                   byteNumbers[i] = byteCharacters.charCodeAt(i);
                                 }
                                 const byteArray = new Uint8Array(byteNumbers);
-                                const blob = new Blob([byteArray], { type: mimeType.split(":")[1].split(";")[0] });
+                                const blob = new Blob([byteArray], {
+                                  type: mimeType.split(":")[1].split(";")[0],
+                                });
                                 const url = URL.createObjectURL(blob);
                                 const link = document.createElement("a");
                                 link.href = url;
-                                link.download = `quote-attachment-${index + 1}.${blob.type.includes("pdf") ? "pdf" : "jpg"}`;
+                                link.download = `quote-attachment-${
+                                  index + 1
+                                }.${blob.type.includes("pdf") ? "pdf" : "jpg"}`;
                                 document.body.appendChild(link);
                                 link.click();
                                 document.body.removeChild(link);
                                 URL.revokeObjectURL(url);
                               } catch (error) {
-                                console.error("Error downloading attachment:", error);
+                                console.error(
+                                  "Error downloading attachment:",
+                                  error
+                                );
                               }
                             }}
                             className="flex w-full items-center justify-between rounded-lg border border-gray-200 bg-white p-3 transition-colors hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-800 dark:hover:bg-gray-700"
@@ -312,7 +329,7 @@ export default function QuoteDetailsModal({
                           <span className="text-sm font-medium text-gray-500 dark:text-gray-400">
                             Description:
                           </span>
-                          <p className="mt-1 text-sm text-gray-900 dark:text-white whitespace-pre-wrap">
+                          <p className="mt-1 whitespace-pre-wrap text-sm text-gray-900 dark:text-white">
                             {quote.description || "Not provided"}
                           </p>
                         </div>
@@ -340,11 +357,19 @@ export default function QuoteDetailsModal({
                           </span>
                           <p className="mt-1 text-sm text-gray-900 dark:text-white">
                             {quote.minBudget && quote.maxBudget
-                              ? `${formatCurrencySync(parseFloat(quote.minBudget))} - ${formatCurrencySync(parseFloat(quote.maxBudget))}`
+                              ? `${formatCurrencySync(
+                                  parseFloat(quote.minBudget)
+                                )} - ${formatCurrencySync(
+                                  parseFloat(quote.maxBudget)
+                                )}`
                               : quote.minBudget
-                              ? `Min: ${formatCurrencySync(parseFloat(quote.minBudget))}`
+                              ? `Min: ${formatCurrencySync(
+                                  parseFloat(quote.minBudget)
+                                )}`
                               : quote.maxBudget
-                              ? `Max: ${formatCurrencySync(parseFloat(quote.maxBudget))}`
+                              ? `Max: ${formatCurrencySync(
+                                  parseFloat(quote.maxBudget)
+                                )}`
                               : "Not specified"}
                           </p>
                         </div>
@@ -353,7 +378,9 @@ export default function QuoteDetailsModal({
                             Response Deadline:
                           </span>
                           <p className="mt-1 text-sm text-gray-900 dark:text-white">
-                            {quote.responseDate ? formatDate(quote.responseDate) : "Not specified"}
+                            {quote.responseDate
+                              ? formatDate(quote.responseDate)
+                              : "Not specified"}
                           </p>
                         </div>
                         <div>
@@ -361,7 +388,9 @@ export default function QuoteDetailsModal({
                             Expected Delivery:
                           </span>
                           <p className="mt-1 text-sm text-gray-900 dark:text-white">
-                            {quote.expectedDeliveryDate ? formatDate(quote.expectedDeliveryDate) : "Not specified"}
+                            {quote.expectedDeliveryDate
+                              ? formatDate(quote.expectedDeliveryDate)
+                              : "Not specified"}
                           </p>
                         </div>
                         <div>
@@ -387,7 +416,7 @@ export default function QuoteDetailsModal({
                         <span className="text-sm font-medium text-gray-500 dark:text-gray-400">
                           Additional Notes:
                         </span>
-                        <p className="mt-2 text-sm text-gray-900 dark:text-white whitespace-pre-wrap">
+                        <p className="mt-2 whitespace-pre-wrap text-sm text-gray-900 dark:text-white">
                           {quote.notes}
                         </p>
                       </div>
@@ -398,16 +427,25 @@ export default function QuoteDetailsModal({
                           Requirements:
                         </span>
                         <div className="mt-2 text-sm text-gray-900 dark:text-white">
-                          {typeof quote.requirements === 'string' 
-                            ? <p className="whitespace-pre-wrap">{quote.requirements}</p>
-                            : Array.isArray(quote.requirements)
-                            ? <ul className="list-disc list-inside space-y-1">
-                                {quote.requirements.map((req: any, idx: number) => (
-                                  <li key={idx}>{typeof req === 'string' ? req : JSON.stringify(req)}</li>
-                                ))}
-                              </ul>
-                            : <p>{JSON.stringify(quote.requirements)}</p>
-                          }
+                          {typeof quote.requirements === "string" ? (
+                            <p className="whitespace-pre-wrap">
+                              {quote.requirements}
+                            </p>
+                          ) : Array.isArray(quote.requirements) ? (
+                            <ul className="list-inside list-disc space-y-1">
+                              {quote.requirements.map(
+                                (req: any, idx: number) => (
+                                  <li key={idx}>
+                                    {typeof req === "string"
+                                      ? req
+                                      : JSON.stringify(req)}
+                                  </li>
+                                )
+                              )}
+                            </ul>
+                          ) : (
+                            <p>{JSON.stringify(quote.requirements)}</p>
+                          )}
                         </div>
                       </div>
                     )}
@@ -442,7 +480,8 @@ export default function QuoteDetailsModal({
                               Account Type:
                             </span>
                             <p className="mt-1 text-sm text-gray-900 dark:text-white">
-                              {quote.rfqRequester?.accountType || "Not specified"}
+                              {quote.rfqRequester?.accountType ||
+                                "Not specified"}
                             </p>
                           </div>
                           <div>
@@ -465,7 +504,9 @@ export default function QuoteDetailsModal({
                               Email:
                             </span>
                             <p className="mt-1 text-sm text-gray-900 dark:text-white">
-                              {quote.rfqRequester?.email || quote.rfqEmail || "Not provided"}
+                              {quote.rfqRequester?.email ||
+                                quote.rfqEmail ||
+                                "Not provided"}
                             </p>
                           </div>
                           <div>
@@ -473,7 +514,9 @@ export default function QuoteDetailsModal({
                               Phone:
                             </span>
                             <p className="mt-1 text-sm text-gray-900 dark:text-white">
-                              {quote.rfqRequester?.phone || quote.rfqPhone || "Not provided"}
+                              {quote.rfqRequester?.phone ||
+                                quote.rfqPhone ||
+                                "Not provided"}
                             </p>
                           </div>
                           <div>
@@ -481,7 +524,9 @@ export default function QuoteDetailsModal({
                               Location:
                             </span>
                             <p className="mt-1 text-sm text-gray-900 dark:text-white">
-                              {quote.rfqRequester?.location || quote.location || "Not provided"}
+                              {quote.rfqRequester?.location ||
+                                quote.location ||
+                                "Not provided"}
                             </p>
                           </div>
                           {quote.rfqContactName && (
@@ -558,14 +603,17 @@ export default function QuoteDetailsModal({
                             <span className="text-sm font-medium text-gray-500 dark:text-gray-400">
                               Status:
                             </span>
-                            <p className={`mt-1 inline-flex items-center rounded-full px-2 py-1 text-xs font-medium ${
-                              quote.status === "accepted"
-                                ? "bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300"
-                                : quote.status === "rejected"
-                                ? "bg-red-100 text-red-700 dark:bg-red-900 dark:text-red-300"
-                                : "bg-yellow-100 text-yellow-700 dark:bg-yellow-900 dark:text-yellow-300"
-                            }`}>
-                              {quote.status?.charAt(0).toUpperCase() + quote.status?.slice(1) || "Pending"}
+                            <p
+                              className={`mt-1 inline-flex items-center rounded-full px-2 py-1 text-xs font-medium ${
+                                quote.status === "accepted"
+                                  ? "bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300"
+                                  : quote.status === "rejected"
+                                  ? "bg-red-100 text-red-700 dark:bg-red-900 dark:text-red-300"
+                                  : "bg-yellow-100 text-yellow-700 dark:bg-yellow-900 dark:text-yellow-300"
+                              }`}
+                            >
+                              {quote.status?.charAt(0).toUpperCase() +
+                                quote.status?.slice(1) || "Pending"}
                             </p>
                           </div>
                           <div>
@@ -576,16 +624,17 @@ export default function QuoteDetailsModal({
                               {quote.submittedDate || "Not available"}
                             </p>
                           </div>
-                          {quote.updatedDate && quote.updatedDate !== quote.submittedDate && (
-                            <div>
-                              <span className="text-sm font-medium text-gray-500 dark:text-gray-400">
-                                Last Updated:
-                              </span>
-                              <p className="mt-1 text-sm text-gray-900 dark:text-white">
-                                {quote.updatedDate}
-                              </p>
-                            </div>
-                          )}
+                          {quote.updatedDate &&
+                            quote.updatedDate !== quote.submittedDate && (
+                              <div>
+                                <span className="text-sm font-medium text-gray-500 dark:text-gray-400">
+                                  Last Updated:
+                                </span>
+                                <p className="mt-1 text-sm text-gray-900 dark:text-white">
+                                  {quote.updatedDate}
+                                </p>
+                              </div>
+                            )}
                         </div>
                       </div>
                     </div>
@@ -594,7 +643,7 @@ export default function QuoteDetailsModal({
                         <span className="text-sm font-medium text-gray-500 dark:text-gray-400">
                           Quote Message:
                         </span>
-                        <p className="mt-2 text-sm text-gray-900 dark:text-white whitespace-pre-wrap">
+                        <p className="mt-2 whitespace-pre-wrap text-sm text-gray-900 dark:text-white">
                           {quote.quoteMessage}
                         </p>
                       </div>
@@ -605,42 +654,65 @@ export default function QuoteDetailsModal({
                           Attachments ({quote.attachments.length}):
                         </span>
                         <div className="mt-3 space-y-2">
-                          {quote.attachments.map((attachment: string, index: number) => (
-                            <button
-                              key={index}
-                              onClick={() => {
-                                try {
-                                  const [mimeType, base64Data] = attachment.split(",");
-                                  const byteCharacters = atob(base64Data);
-                                  const byteNumbers = new Array(byteCharacters.length);
-                                  for (let i = 0; i < byteCharacters.length; i++) {
-                                    byteNumbers[i] = byteCharacters.charCodeAt(i);
+                          {quote.attachments.map(
+                            (attachment: string, index: number) => (
+                              <button
+                                key={index}
+                                onClick={() => {
+                                  try {
+                                    const [mimeType, base64Data] =
+                                      attachment.split(",");
+                                    const byteCharacters = atob(base64Data);
+                                    const byteNumbers = new Array(
+                                      byteCharacters.length
+                                    );
+                                    for (
+                                      let i = 0;
+                                      i < byteCharacters.length;
+                                      i++
+                                    ) {
+                                      byteNumbers[i] =
+                                        byteCharacters.charCodeAt(i);
+                                    }
+                                    const byteArray = new Uint8Array(
+                                      byteNumbers
+                                    );
+                                    const blob = new Blob([byteArray], {
+                                      type: mimeType
+                                        .split(":")[1]
+                                        .split(";")[0],
+                                    });
+                                    const url = URL.createObjectURL(blob);
+                                    const link = document.createElement("a");
+                                    link.href = url;
+                                    link.download = `quote-attachment-${
+                                      index + 1
+                                    }.${
+                                      blob.type.includes("pdf") ? "pdf" : "jpg"
+                                    }`;
+                                    document.body.appendChild(link);
+                                    link.click();
+                                    document.body.removeChild(link);
+                                    URL.revokeObjectURL(url);
+                                  } catch (error) {
+                                    console.error(
+                                      "Error downloading attachment:",
+                                      error
+                                    );
                                   }
-                                  const byteArray = new Uint8Array(byteNumbers);
-                                  const blob = new Blob([byteArray], { type: mimeType.split(":")[1].split(";")[0] });
-                                  const url = URL.createObjectURL(blob);
-                                  const link = document.createElement("a");
-                                  link.href = url;
-                                  link.download = `quote-attachment-${index + 1}.${blob.type.includes("pdf") ? "pdf" : "jpg"}`;
-                                  document.body.appendChild(link);
-                                  link.click();
-                                  document.body.removeChild(link);
-                                  URL.revokeObjectURL(url);
-                                } catch (error) {
-                                  console.error("Error downloading attachment:", error);
-                                }
-                              }}
-                              className="flex w-full items-center justify-between rounded-lg border border-gray-200 bg-white p-3 transition-colors hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-800 dark:hover:bg-gray-700"
-                            >
-                              <div className="flex items-center gap-2">
-                                <FileText className="h-4 w-4 text-gray-400" />
-                                <span className="text-sm text-gray-700 dark:text-gray-300">
-                                  Attachment {index + 1}
-                                </span>
-                              </div>
-                              <Download className="h-4 w-4 text-gray-400" />
-                            </button>
-                          ))}
+                                }}
+                                className="flex w-full items-center justify-between rounded-lg border border-gray-200 bg-white p-3 transition-colors hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-800 dark:hover:bg-gray-700"
+                              >
+                                <div className="flex items-center gap-2">
+                                  <FileText className="h-4 w-4 text-gray-400" />
+                                  <span className="text-sm text-gray-700 dark:text-gray-300">
+                                    Attachment {index + 1}
+                                  </span>
+                                </div>
+                                <Download className="h-4 w-4 text-gray-400" />
+                              </button>
+                            )
+                          )}
                         </div>
                       </div>
                     )}
@@ -702,7 +774,7 @@ export default function QuoteDetailsModal({
         </div>
 
         {/* Footer */}
-        <div className="flex-shrink-0 flex items-center justify-between border-t border-gray-200 bg-gradient-to-r from-gray-50 to-white p-8 dark:border-gray-700 dark:from-gray-800 dark:to-gray-700">
+        <div className="flex flex-shrink-0 items-center justify-between border-t border-gray-200 bg-gradient-to-r from-gray-50 to-white p-8 dark:border-gray-700 dark:from-gray-800 dark:to-gray-700">
           <div className="flex items-center gap-4">
             <div className="text-sm text-gray-500 dark:text-gray-400">
               Submitted on{" "}

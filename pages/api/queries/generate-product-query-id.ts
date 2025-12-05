@@ -21,12 +21,12 @@ function generateProductQueryId(): string {
   const prefix = "PB";
   const chars = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ";
   let id = prefix;
-  
+
   // Generate 6 random alphanumeric characters (numbers and uppercase letters)
   for (let i = 0; i < 6; i++) {
     id += chars.charAt(Math.floor(Math.random() * chars.length));
   }
-  
+
   return id;
 }
 
@@ -64,4 +64,3 @@ export default async function handler(
     });
   }
 }
-

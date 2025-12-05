@@ -754,4 +754,3 @@ export function CreateProductForm({
     </div>
   );
 }
-

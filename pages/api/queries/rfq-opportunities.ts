@@ -7,9 +7,7 @@ import { gql } from "graphql-request";
 const GET_RFQ_OPPORTUNITIES = gql`
   query GetRFQOpportunities {
     bussines_RFQ(
-      where: {
-        open: { _eq: true }
-      }
+      where: { open: { _eq: true } }
       order_by: { created_at: desc }
     ) {
       id
@@ -119,8 +117,14 @@ export default async function handler(
     }>(GET_RFQ_OPPORTUNITIES);
 
     console.log("API: Total RFQs fetched:", result.bussines_RFQ?.length || 0);
-    console.log("API: RFQ IDs:", result.bussines_RFQ?.map((rfq) => rfq.id));
-    console.log("API: RFQ open status:", result.bussines_RFQ?.map((rfq) => ({ id: rfq.id, open: rfq.open })));
+    console.log(
+      "API: RFQ IDs:",
+      result.bussines_RFQ?.map((rfq) => rfq.id)
+    );
+    console.log(
+      "API: RFQ open status:",
+      result.bussines_RFQ?.map((rfq) => ({ id: rfq.id, open: rfq.open }))
+    );
 
     return res.status(200).json({
       rfqs: result.bussines_RFQ || [],
@@ -132,4 +136,3 @@ export default async function handler(
     });
   }
 }
-
