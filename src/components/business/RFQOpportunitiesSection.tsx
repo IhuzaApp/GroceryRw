@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   Search,
   Filter,
@@ -14,67 +14,7 @@ import {
   User,
 } from "lucide-react";
 import { formatCurrencySync } from "../../utils/formatCurrency";
-
-const mockRFQOpportunities = [
-  {
-    id: "1",
-    title: "Office Furniture Supply",
-    description:
-      "Looking for complete office furniture setup for new office space",
-    budget: `${formatCurrencySync(15000)} - ${formatCurrencySync(25000)}`,
-    category: "Furniture",
-    location: "New York, NY",
-    postedBy: "TechStart Inc",
-    postedAt: "2 hours ago",
-    deadline: "Dec 15, 2024",
-    status: "Open",
-    responses: 8,
-    isInterested: false,
-  },
-  {
-    id: "2",
-    title: "IT Equipment Procurement",
-    description:
-      "Need laptops, desktops, and networking equipment for 50 employees",
-    budget: `${formatCurrencySync(50000)} - ${formatCurrencySync(75000)}`,
-    category: "Technology",
-    location: "San Francisco, CA",
-    postedBy: "Digital Solutions Ltd",
-    postedAt: "5 hours ago",
-    deadline: "Dec 20, 2024",
-    status: "Open",
-    responses: 12,
-    isInterested: true,
-  },
-  {
-    id: "3",
-    title: "Cleaning Services Contract",
-    description: "Monthly cleaning services for commercial building",
-    budget: `${formatCurrencySync(3000)} - ${formatCurrencySync(5000)}/month`,
-    category: "Services",
-    location: "Chicago, IL",
-    postedBy: "Property Management Co",
-    postedAt: "1 day ago",
-    deadline: "Dec 10, 2024",
-    status: "Open",
-    responses: 15,
-    isInterested: false,
-  },
-  {
-    id: "4",
-    title: "Marketing Materials Design",
-    description: "Design and print marketing materials for product launch",
-    budget: `${formatCurrencySync(8000)} - ${formatCurrencySync(12000)}`,
-    category: "Marketing",
-    location: "Austin, TX",
-    postedBy: "Creative Agency",
-    postedAt: "2 days ago",
-    deadline: "Dec 8, 2024",
-    status: "Urgent",
-    responses: 6,
-    isInterested: true,
-  },
-];
+import toast from "react-hot-toast";
 
 interface RFQOpportunitiesSectionProps {
   onMessageCustomer?: (customerId: string) => void;
@@ -87,24 +27,128 @@ export function RFQOpportunitiesSection({
   const [selectedCategory, setSelectedCategory] = useState("all");
   const [selectedRFQ, setSelectedRFQ] = useState<any>(null);
   const [isQuoteModalOpen, setIsQuoteModalOpen] = useState(false);
+  const [rfqs, setRfqs] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
 
+  useEffect(() => {
+    fetchRFQOpportunities();
+  }, []);
+
+  const fetchRFQOpportunities = async () => {
+    try {
+      setLoading(true);
+      const response = await fetch("/api/queries/rfq-opportunities");
+      if (response.ok) {
+        const data = await response.json();
+        console.log("RFQ Opportunities API Response:", data);
+        console.log("Number of RFQs received:", data.rfqs?.length || 0);
+        console.log("RFQ IDs:", data.rfqs?.map((rfq: any) => rfq.id));
+        setRfqs(data.rfqs || []);
+      } else {
+        const errorData = await response.json();
+        console.error("API Error Response:", errorData);
+        toast.error("Failed to load RFQ opportunities");
+      }
+    } catch (error) {
+      console.error("Error fetching RFQ opportunities:", error);
+      toast.error("Failed to load RFQ opportunities");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Format RFQ data for display
+  const formatRFQForDisplay = (rfq: any) => {
+    const minBudget = rfq.min_budget ? parseFloat(rfq.min_budget) : 0;
+    const maxBudget = rfq.max_budget ? parseFloat(rfq.max_budget) : 0;
+    const budgetDisplay = 
+      minBudget > 0 && maxBudget > 0
+        ? `${formatCurrencySync(minBudget)} - ${formatCurrencySync(maxBudget)}`
+        : minBudget > 0
+        ? `${formatCurrencySync(minBudget)}+`
+        : maxBudget > 0
+        ? `Up to ${formatCurrencySync(maxBudget)}`
+        : "Not specified";
+
+    // Calculate time ago from created_at
+    const getTimeAgo = (dateString: string) => {
+      const date = new Date(dateString);
+      const now = new Date();
+      const diffInMs = now.getTime() - date.getTime();
+      const diffInHours = Math.floor(diffInMs / (1000 * 60 * 60));
+      const diffInDays = Math.floor(diffInHours / 24);
+
+      if (diffInHours < 1) {
+        return "Just now";
+      } else if (diffInHours < 24) {
+        return `${diffInHours} ${diffInHours === 1 ? "hour" : "hours"} ago`;
+      } else if (diffInDays < 7) {
+        return `${diffInDays} ${diffInDays === 1 ? "day" : "days"} ago`;
+      } else {
+        return date.toLocaleDateString();
+      }
+    };
+
+    // Format deadline
+    const formatDeadline = (dateString: string) => {
+      if (!dateString) return "Not specified";
+      const date = new Date(dateString);
+      return date.toLocaleDateString("en-US", {
+        month: "short",
+        day: "numeric",
+        year: "numeric",
+      });
+    };
+
+    // Determine status based on response_date
+    const today = new Date();
+    const deadline = rfq.response_date ? new Date(rfq.response_date) : null;
+    const isUrgent = deadline && deadline.getTime() - today.getTime() < 3 * 24 * 60 * 60 * 1000; // Less than 3 days
+    const isClosed = deadline && deadline < today;
+    const status = isClosed ? "Closed" : isUrgent ? "Urgent" : "Open";
+
+    return {
+      id: rfq.id,
+      title: rfq.title || "Untitled RFQ",
+      description: rfq.description || "No description provided",
+      budget: budgetDisplay,
+      category: rfq.category || "Uncategorized",
+      location: rfq.location || "Not specified",
+      postedBy: rfq.business_account?.business_name || rfq.contact_name || "Unknown Business",
+      postedAt: getTimeAgo(rfq.created_at),
+      deadline: formatDeadline(rfq.response_date),
+      status: status,
+      responses: 0, // TODO: Get actual response count
+      isInterested: false,
+      ...rfq, // Include all original fields
+    };
+  };
+
+  const displayRFQs = rfqs.map(formatRFQForDisplay);
+  
+  console.log("Total RFQs from API:", rfqs.length);
+  console.log("Display RFQs after formatting:", displayRFQs.length);
+  console.log("Display RFQ IDs:", displayRFQs.map((rfq) => rfq.id));
+
+  // Get unique categories from RFQs
   const categories = [
     "all",
-    "Furniture",
-    "Technology",
-    "Services",
-    "Marketing",
-    "Office Supplies",
+    ...Array.from(new Set(displayRFQs.map((rfq) => rfq.category).filter(Boolean))),
   ];
 
-  const filteredRFQs = mockRFQOpportunities.filter((rfq) => {
+  const filteredRFQs = displayRFQs.filter((rfq) => {
     const matchesSearch =
       rfq.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      rfq.description.toLowerCase().includes(searchTerm.toLowerCase());
+      rfq.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      rfq.category.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      rfq.location.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesCategory =
       selectedCategory === "all" || rfq.category === selectedCategory;
     return matchesSearch && matchesCategory;
   });
+  
+  console.log("Filtered RFQs count:", filteredRFQs.length);
+  console.log("Filtered RFQ IDs:", filteredRFQs.map((rfq) => rfq.id));
 
   const handleViewRFQ = (rfq: any) => {
     setSelectedRFQ(rfq);
@@ -131,6 +175,16 @@ export function RFQOpportunitiesSection({
     console.log("Toggling interest for RFQ:", rfqId);
   };
 
+  if (loading) {
+    return (
+      <div className="space-y-6">
+        <div className="flex items-center justify-center py-12">
+          <div className="h-8 w-8 animate-spin rounded-full border-4 border-green-500 border-t-transparent"></div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -139,7 +193,7 @@ export function RFQOpportunitiesSection({
           RFQ Opportunities
         </h3>
         <div className="text-sm text-gray-500 dark:text-gray-400">
-          {filteredRFQs.length} opportunities found
+          {filteredRFQs.length} {filteredRFQs.length === 1 ? "opportunity" : "opportunities"} found
         </div>
       </div>
 
@@ -175,7 +229,20 @@ export function RFQOpportunitiesSection({
 
       {/* RFQ Opportunities List */}
       <div className="space-y-4">
-        {filteredRFQs.map((rfq) => (
+        {filteredRFQs.length === 0 ? (
+          <div className="rounded-xl border border-gray-100 bg-white p-12 text-center shadow-sm dark:border-gray-700 dark:bg-gray-800">
+            <User className="mx-auto h-12 w-12 text-gray-400 mb-4" />
+            <p className="text-gray-500 dark:text-gray-400 text-lg mb-2">
+              No RFQ opportunities found
+            </p>
+            <p className="text-gray-400 dark:text-gray-500 text-sm">
+              {searchTerm || selectedCategory !== "all"
+                ? "Try adjusting your search or filters"
+                : "Check back later for new opportunities"}
+            </p>
+          </div>
+        ) : (
+          filteredRFQs.map((rfq) => (
           <div
             key={rfq.id}
             className="rounded-xl border border-gray-100 bg-white p-6 shadow-lg transition-all duration-300 hover:shadow-xl dark:border-gray-700 dark:bg-gray-800"
@@ -283,7 +350,8 @@ export function RFQOpportunitiesSection({
               </button>
             </div>
           </div>
-        ))}
+          ))
+        )}
       </div>
 
       {/* Quote Modal */}

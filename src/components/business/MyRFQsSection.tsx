@@ -1,49 +1,17 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Plus, DollarSign, FileText, Clock } from "lucide-react";
 import { RFQResponsesView } from "./RFQResponsesView";
 import { formatCurrencySync } from "../../utils/formatCurrency";
-
-const activeRFQs = [
-  {
-    id: "RFQ-001",
-    title: "Weekly Fresh Produce Supply",
-    category: "Vegetables",
-    budget: `${formatCurrencySync(2000)}-${formatCurrencySync(3000)}`,
-    responses: 8,
-    deadline: "2024-01-20",
-    status: "Open",
-    description:
-      "Looking for reliable supplier for weekly fresh produce delivery",
-  },
-  {
-    id: "RFQ-002",
-    title: "Premium Meat Selection",
-    category: "Meat",
-    budget: `${formatCurrencySync(5000)}-${formatCurrencySync(8000)}`,
-    responses: 12,
-    deadline: "2024-01-25",
-    status: "Reviewing",
-    description: "High-quality meat products for upscale restaurant chain",
-  },
-  {
-    id: "RFQ-003",
-    title: "Dairy Products Bundle",
-    category: "Dairy",
-    budget: `${formatCurrencySync(1500)}-${formatCurrencySync(2500)}`,
-    responses: 6,
-    deadline: "2024-01-22",
-    status: "Open",
-    description: "Various dairy products for bakery operations",
-  },
-];
+import toast from "react-hot-toast";
 
 interface MyRFQsSectionProps {
   className?: string;
   onCreateRFQ?: () => void;
   onAssignContract?: (contractData: any) => void;
   onMessageSupplier?: (supplierId: string) => void;
+  onRFQCreated?: boolean;
 }
 
 export function MyRFQsSection({
@@ -51,8 +19,40 @@ export function MyRFQsSection({
   onCreateRFQ,
   onAssignContract,
   onMessageSupplier,
+  onRFQCreated,
 }: MyRFQsSectionProps) {
   const [viewingResponses, setViewingResponses] = useState<string | null>(null);
+  const [rfqs, setRfqs] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetchRFQs();
+  }, []);
+
+  // Refresh RFQs when a new one is created
+  useEffect(() => {
+    if (onRFQCreated !== undefined) {
+      fetchRFQs();
+    }
+  }, [onRFQCreated]);
+
+  const fetchRFQs = async () => {
+    try {
+      setLoading(true);
+      const response = await fetch("/api/queries/business-rfqs");
+      if (response.ok) {
+        const data = await response.json();
+        setRfqs(data.rfqs || []);
+      } else {
+        toast.error("Failed to load RFQs");
+      }
+    } catch (error) {
+      console.error("Error fetching RFQs:", error);
+      toast.error("Failed to load RFQs");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleCreateRFQ = () => {
     if (onCreateRFQ) {
@@ -109,6 +109,52 @@ export function MyRFQsSection({
     );
   }
 
+  // Format RFQ data for display
+  const formatRFQForDisplay = (rfq: any) => {
+    const minBudget = rfq.min_budget ? parseFloat(rfq.min_budget) : 0;
+    const maxBudget = rfq.max_budget ? parseFloat(rfq.max_budget) : 0;
+    const budgetDisplay = 
+      minBudget > 0 && maxBudget > 0
+        ? `${formatCurrencySync(minBudget)}-${formatCurrencySync(maxBudget)}`
+        : minBudget > 0
+        ? `${formatCurrencySync(minBudget)}+`
+        : maxBudget > 0
+        ? `Up to ${formatCurrencySync(maxBudget)}`
+        : "Not specified";
+
+    // Determine status based on response_date
+    const today = new Date();
+    const deadline = new Date(rfq.response_date);
+    const status = deadline < today ? "Closed" : "Open";
+
+    return {
+      id: rfq.id,
+      title: rfq.title,
+      category: rfq.category || "Uncategorized",
+      budget: budgetDisplay,
+      responses: 0, // TODO: Get actual response count
+      deadline: rfq.response_date,
+      status: status,
+      description: rfq.description || "",
+      urgency: rfq.urgency_level || "Medium",
+      location: rfq.location || "",
+      estimatedQuantity: rfq.estimated_quantity || "",
+      expectedDeliveryDate: rfq.expected_delivery_date || "",
+    };
+  };
+
+  const displayRFQs = rfqs.map(formatRFQForDisplay);
+
+  if (loading) {
+    return (
+      <div className={`space-y-8 ${className}`}>
+        <div className="flex items-center justify-center py-12">
+          <div className="h-8 w-8 animate-spin rounded-full border-4 border-green-500 border-t-transparent"></div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className={`space-y-8 ${className}`}>
       <div className="overflow-hidden rounded-2xl border border-gray-100 bg-white shadow-lg dark:border-gray-700 dark:bg-gray-800">
@@ -131,7 +177,27 @@ export function MyRFQsSection({
         </div>
         <div className="p-8">
           <div className="space-y-6">
-            {activeRFQs.map((rfq) => (
+            {displayRFQs.length === 0 ? (
+              <div className="text-center py-12">
+                <FileText className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                <p className="text-gray-500 dark:text-gray-400 text-lg mb-2">
+                  No RFQs yet
+                </p>
+                <p className="text-gray-400 dark:text-gray-500 text-sm mb-6">
+                  Create your first RFQ to get started
+                </p>
+                {onCreateRFQ && (
+                  <button
+                    onClick={handleCreateRFQ}
+                    className="inline-flex items-center gap-2 px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg transition-colors"
+                  >
+                    <Plus className="h-5 w-5" />
+                    Create RFQ
+                  </button>
+                )}
+              </div>
+            ) : (
+              displayRFQs.map((rfq) => (
               <div
                 key={rfq.id}
                 className="group rounded-2xl border-2 border-gray-100 bg-gradient-to-r from-white to-gray-50 p-6 transition-all duration-300 hover:border-green-200 hover:shadow-lg dark:border-gray-700 dark:from-gray-800 dark:to-gray-700 dark:hover:border-green-800"
@@ -190,7 +256,8 @@ export function MyRFQsSection({
                   </div>
                 </div>
               </div>
-            ))}
+              ))
+            )}
           </div>
         </div>
       </div>
