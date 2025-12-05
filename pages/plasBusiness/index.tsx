@@ -126,18 +126,18 @@ export default function PlasBusinessPage() {
     <RootLayout>
       <div className="min-h-screen via-white to-gray-100 dark:from-gray-900 md:ml-16">
         <div className="max-w-8xl container mx-auto">
-        <BuyerDashboardContent
-          selectedQuote={selectedQuote}
-          setSelectedQuote={setSelectedQuote}
-          isQuoteModalOpen={isQuoteModalOpen}
-          setIsQuoteModalOpen={setIsQuoteModalOpen}
-          isCreateRFQOpen={isCreateRFQOpen}
-          setIsCreateRFQOpen={setIsCreateRFQOpen}
-          router={router}
+          <BuyerDashboardContent
+            selectedQuote={selectedQuote}
+            setSelectedQuote={setSelectedQuote}
+            isQuoteModalOpen={isQuoteModalOpen}
+            setIsQuoteModalOpen={setIsQuoteModalOpen}
+            isCreateRFQOpen={isCreateRFQOpen}
+            setIsCreateRFQOpen={setIsCreateRFQOpen}
+            router={router}
           businessAccount={businessAccount}
           rfqCreated={rfqCreated}
           setRfqCreated={setRfqCreated}
-        />
+          />
         </div>
       </div>
     </RootLayout>
@@ -254,7 +254,7 @@ function BuyerDashboardContent({
 
       {/* Stats Cards - Hidden on mobile */}
       <div className="hidden md:block">
-        <StatsCards />
+      <StatsCards />
       </div>
 
       {/* Main Content Tabs */}
