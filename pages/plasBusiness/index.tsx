@@ -46,6 +46,7 @@ export default function PlasBusinessPage() {
   );
   const [checkingAccount, setCheckingAccount] = useState(true);
   const [businessAccount, setBusinessAccount] = useState<any>(null);
+  const [rfqCreated, setRfqCreated] = useState(false);
 
   // Redirect shoppers away from this page
   useEffect(() => {
@@ -125,16 +126,18 @@ export default function PlasBusinessPage() {
     <RootLayout>
       <div className="min-h-screen via-white to-gray-100 dark:from-gray-900 md:ml-16">
         <div className="max-w-8xl container mx-auto">
-          <BuyerDashboardContent
-            selectedQuote={selectedQuote}
-            setSelectedQuote={setSelectedQuote}
-            isQuoteModalOpen={isQuoteModalOpen}
-            setIsQuoteModalOpen={setIsQuoteModalOpen}
-            isCreateRFQOpen={isCreateRFQOpen}
-            setIsCreateRFQOpen={setIsCreateRFQOpen}
-            router={router}
-            businessAccount={businessAccount}
-          />
+        <BuyerDashboardContent
+          selectedQuote={selectedQuote}
+          setSelectedQuote={setSelectedQuote}
+          isQuoteModalOpen={isQuoteModalOpen}
+          setIsQuoteModalOpen={setIsQuoteModalOpen}
+          isCreateRFQOpen={isCreateRFQOpen}
+          setIsCreateRFQOpen={setIsCreateRFQOpen}
+          router={router}
+          businessAccount={businessAccount}
+          rfqCreated={rfqCreated}
+          setRfqCreated={setRfqCreated}
+        />
         </div>
       </div>
     </RootLayout>
@@ -150,6 +153,8 @@ function BuyerDashboardContent({
   setIsCreateRFQOpen,
   router,
   businessAccount,
+  rfqCreated,
+  setRfqCreated,
 }: {
   selectedQuote: any;
   setSelectedQuote: (quote: any) => void;
@@ -159,6 +164,8 @@ function BuyerDashboardContent({
   setIsCreateRFQOpen: (open: boolean) => void;
   router: any;
   businessAccount?: any;
+  rfqCreated: boolean;
+  setRfqCreated: (value: boolean | ((prev: boolean) => boolean)) => void;
 }) {
   // Log business account data when component receives it
   useEffect(() => {
@@ -211,9 +218,10 @@ function BuyerDashboardContent({
     setIsCreateRFQOpen(true);
   };
 
-  const handleRFQSubmit = (rfqData: any) => {
+  const handleRFQSubmit = async (rfqData: any) => {
     console.log("RFQ created:", rfqData);
-    // Here you would typically send the data to your API
+    // Trigger refresh of RFQs list
+    setRfqCreated((prev: boolean) => !prev);
   };
 
   const handleAssignContract = (contractData: any) => {
@@ -402,6 +410,7 @@ function BuyerDashboardContent({
             onCreateRFQ={handleCreateRFQ}
             onAssignContract={handleAssignContract}
             onMessageSupplier={handleMessageQuoteSupplier}
+            onRFQCreated={rfqCreated}
           />
         )}
 
