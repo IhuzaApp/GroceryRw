@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   ArrowLeft,
   Star,
@@ -22,8 +22,11 @@ import {
   Filter,
   Search,
   SortAsc,
+  Loader2,
 } from "lucide-react";
 import { ContractAssignmentModal } from "./ContractAssignmentModal";
+import { formatCurrencySync } from "../../utils/formatCurrency";
+import toast from "react-hot-toast";
 
 interface RFQResponse {
   id: string;
@@ -250,8 +253,103 @@ export function RFQResponsesView({
   const [contractResponse, setContractResponse] = useState<RFQResponse | null>(
     null
   );
+  const [rfqDetails, setRfqDetails] = useState<RFQDetails | null>(null);
+  const [responses, setResponses] = useState<RFQResponse[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  const filteredResponses = mockResponses
+  useEffect(() => {
+    fetchRFQData();
+  }, [rfqId]);
+
+  const fetchRFQData = async () => {
+    try {
+      setLoading(true);
+      const response = await fetch(`/api/queries/rfq-details-and-responses?rfq_id=${rfqId}`);
+      if (response.ok) {
+        const data = await response.json();
+        
+        // Transform RFQ details
+        const rfq = data.rfq;
+        const requirements = rfq.requirements 
+          ? (typeof rfq.requirements === 'string' 
+              ? JSON.parse(rfq.requirements) 
+              : Array.isArray(rfq.requirements) 
+              ? rfq.requirements 
+              : [])
+          : [];
+
+        const transformedRFQ: RFQDetails = {
+          id: rfq.id,
+          title: rfq.title || "Untitled RFQ",
+          description: rfq.description || "",
+          category: rfq.category || "General",
+          budget: {
+            min: rfq.min_budget ? parseFloat(rfq.min_budget) : 0,
+            max: rfq.max_budget ? parseFloat(rfq.max_budget) : 0,
+          },
+          location: rfq.location || "Not specified",
+          deadline: rfq.response_date || "",
+          status: rfq.open ? "Open" : "Closed",
+          created: rfq.created_at,
+          requirements: requirements,
+        };
+        setRfqDetails(transformedRFQ);
+
+        // Transform responses
+        const transformedResponses: RFQResponse[] = (data.responses || []).map((quote: any) => {
+          const attachments = [];
+          if (quote.attachement) attachments.push({ name: "Attachment 1", type: "PDF", size: "N/A", url: quote.attachement });
+          if (quote.attachment_1) attachments.push({ name: "Attachment 2", type: "PDF", size: "N/A", url: quote.attachment_1 });
+          if (quote.attachment_2) attachments.push({ name: "Attachment 3", type: "PDF", size: "N/A", url: quote.attachment_2 });
+
+          return {
+            id: quote.id,
+            supplierId: quote.respond_business_id,
+            supplierName: quote.business_account?.Users?.name || quote.business_account?.business_name || "Unknown",
+            supplierCompany: quote.business_account?.business_name || "Unknown Company",
+            supplierRating: 4.5, // Default - can be enhanced with actual ratings
+            supplierReviews: 0, // Default - can be enhanced with actual reviews
+            supplierLocation: quote.business_account?.business_location || "Not specified",
+            supplierImage: quote.business_account?.face_image || "/images/shop-placeholder.jpg",
+            quoteAmount: parseFloat(quote.qouteAmount || "0"),
+            currency: quote.currency || "RWF",
+            deliveryTime: quote.delivery_time || "Not specified",
+            validity: quote.quote_validity || "Not specified",
+            status: (quote.status || "pending") as "pending" | "accepted" | "rejected" | "negotiating",
+            submittedAt: quote.created_at,
+            message: quote.message || "",
+            attachments: attachments,
+            certifications: [], // Can be enhanced later
+            experience: "", // Can be enhanced later
+            previousClients: [], // Can be enhanced later
+            terms: {
+              payment: quote.PaymentTerms || "Not specified",
+              warranty: quote.warrantly || "Not specified",
+              delivery: quote.DeliveryTerms || "Not specified",
+              cancellation: quote.cancellatioinTerms || "Not specified",
+            },
+            contactInfo: {
+              name: quote.business_account?.Users?.name || quote.business_account?.business_name || "N/A",
+              email: quote.business_account?.business_email || quote.business_account?.Users?.email || "N/A",
+              phone: quote.business_account?.business_phone || quote.business_account?.Users?.phone || "N/A",
+              position: "Contact",
+            },
+          };
+        });
+        setResponses(transformedResponses);
+      } else {
+        const errorData = await response.json();
+        toast.error("Failed to load RFQ details");
+      }
+    } catch (error) {
+      console.error("Error fetching RFQ data:", error);
+      toast.error("Failed to load RFQ details");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const filteredResponses = responses
     .filter((response) => {
       const matchesSearch =
         response.supplierCompany
@@ -279,7 +377,7 @@ export function RFQResponsesView({
     });
 
   const handleAcceptResponse = (responseId: string) => {
-    const response = mockResponses.find((r) => r.id === responseId);
+    const response = responses.find((r) => r.id === responseId);
     if (response) {
       setContractResponse(response);
       setIsContractModalOpen(true);
@@ -326,6 +424,29 @@ export function RFQResponsesView({
     }
   };
 
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center py-12">
+        <Loader2 className="h-8 w-8 animate-spin text-green-500" />
+        <span className="ml-3 text-gray-600 dark:text-gray-400">Loading RFQ details...</span>
+      </div>
+    );
+  }
+
+  if (!rfqDetails) {
+    return (
+      <div className="text-center py-12">
+        <p className="text-gray-600 dark:text-gray-400">RFQ not found</p>
+        <button
+          onClick={onBack}
+          className="mt-4 rounded-lg bg-green-500 px-4 py-2 text-white hover:bg-green-600"
+        >
+          Go Back
+        </button>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -342,7 +463,7 @@ export function RFQResponsesView({
               RFQ Responses
             </h2>
             <p className="text-gray-600 dark:text-gray-400">
-              {mockRFQDetails.title}
+              {rfqDetails.title}
             </p>
           </div>
         </div>
@@ -362,8 +483,13 @@ export function RFQResponsesView({
               Budget:
             </span>
             <p className="text-gray-900 dark:text-white">
-              ${mockRFQDetails.budget.min.toLocaleString()} - $
-              {mockRFQDetails.budget.max.toLocaleString()}
+              {rfqDetails.budget.min > 0 && rfqDetails.budget.max > 0
+                ? `${formatCurrencySync(rfqDetails.budget.min)} - ${formatCurrencySync(rfqDetails.budget.max)}`
+                : rfqDetails.budget.min > 0
+                ? `${formatCurrencySync(rfqDetails.budget.min)}+`
+                : rfqDetails.budget.max > 0
+                ? `Up to ${formatCurrencySync(rfqDetails.budget.max)}`
+                : "Not specified"}
             </p>
           </div>
           <div>
@@ -371,7 +497,7 @@ export function RFQResponsesView({
               Location:
             </span>
             <p className="text-gray-900 dark:text-white">
-              {mockRFQDetails.location}
+              {rfqDetails.location}
             </p>
           </div>
           <div>
@@ -379,7 +505,7 @@ export function RFQResponsesView({
               Deadline:
             </span>
             <p className="text-gray-900 dark:text-white">
-              {mockRFQDetails.deadline}
+              {rfqDetails.deadline ? new Date(rfqDetails.deadline).toLocaleDateString() : "Not specified"}
             </p>
           </div>
         </div>
@@ -743,9 +869,9 @@ export function RFQResponsesView({
           onAssignContract={handleContractAssignment}
           rfqData={{
             id: rfqId,
-            title: mockRFQDetails.title,
-            description: mockRFQDetails.description,
-            budget: mockRFQDetails.budget,
+            title: rfqDetails.title,
+            description: rfqDetails.description,
+            budget: rfqDetails.budget,
           }}
           supplierData={{
             id: contractResponse.supplierId,

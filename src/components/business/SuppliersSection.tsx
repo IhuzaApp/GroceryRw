@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   Search,
   Filter,
@@ -11,56 +11,82 @@ import {
   Eye,
   MessageSquare,
   DollarSign,
+  Loader2,
 } from "lucide-react";
 import { formatCurrencySync } from "../../utils/formatCurrency";
+import toast from "react-hot-toast";
 
-const suppliers = [
-  {
-    id: "SUP-001",
-    name: "Fresh Farm Distributors",
-    category: "Vegetables & Fruits",
-    rating: 4.8,
-    location: "California, USA",
-    minOrder: formatCurrencySync(500),
-    deliveryTime: "2-3 days",
-    verified: true,
-    specialties: ["Organic", "Local", "Seasonal"],
-    image: "/idyllic-farm.png",
-  },
-  {
-    id: "SUP-002",
-    name: "Premium Meat Co.",
-    category: "Meat & Poultry",
-    rating: 4.9,
-    location: "Texas, USA",
-    minOrder: formatCurrencySync(1000),
-    deliveryTime: "1-2 days",
-    verified: true,
-    specialties: ["Premium", "Grass-fed", "Halal"],
-    image: "/meat.jpg",
-  },
-  {
-    id: "SUP-003",
-    name: "Ocean Fresh Seafood",
-    category: "Seafood",
-    rating: 4.7,
-    location: "Maine, USA",
-    minOrder: formatCurrencySync(750),
-    deliveryTime: "1 day",
-    verified: true,
-    specialties: ["Fresh", "Sustainable", "Wild-caught"],
-    image: "/assorted-seafood-display.png",
-  },
-];
+interface Supplier {
+  id: string;
+  name: string;
+  category: string;
+  rating: number;
+  location: string;
+  minOrder: string;
+  deliveryTime: string;
+  verified: boolean;
+  specialties: string[];
+  image: string;
+}
 
 interface SuppliersSectionProps {
   className?: string;
 }
 
 export function SuppliersSection({ className = "" }: SuppliersSectionProps) {
+  const [suppliers, setSuppliers] = useState<Supplier[]>([]);
+  const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("");
   const [selectedLocation, setSelectedLocation] = useState("");
+
+  useEffect(() => {
+    fetchSuppliers();
+  }, []);
+
+  const fetchSuppliers = async () => {
+    try {
+      setLoading(true);
+      const response = await fetch("/api/queries/all-businesses");
+      if (response.ok) {
+        const data = await response.json();
+        // Transform business accounts to supplier format
+        const transformedSuppliers: Supplier[] = (data.businesses || []).map((business: any) => {
+          // Handle image - could be base64 or URL
+          let imageUrl = "/images/shop-placeholder.jpg";
+          if (business.face_image) {
+            if (business.face_image.startsWith("data:") || business.face_image.startsWith("http")) {
+              imageUrl = business.face_image;
+            } else {
+              imageUrl = business.face_image;
+            }
+          }
+
+          return {
+            id: business.id,
+            name: business.business_name || "Unknown Business",
+            category: business.account_type || "General",
+            rating: 4.5, // Default rating - can be enhanced later with actual ratings
+            location: business.business_location || "Not specified",
+            minOrder: formatCurrencySync(0), // Default - can be enhanced with actual min order data
+            deliveryTime: "Contact for details", // Default - can be enhanced with actual delivery data
+            verified: business.status === "approved" || business.status === "active" || business.status === "pending_review",
+            specialties: business.account_type ? [business.account_type.charAt(0).toUpperCase() + business.account_type.slice(1)] : [],
+            image: imageUrl,
+          };
+        });
+        setSuppliers(transformedSuppliers);
+      } else {
+        const errorData = await response.json();
+        toast.error("Failed to load suppliers");
+      }
+    } catch (error) {
+      console.error("Error fetching suppliers:", error);
+      toast.error("Failed to load suppliers");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const filteredSuppliers = suppliers.filter((supplier) => {
     const matchesSearch =
@@ -100,11 +126,12 @@ export function SuppliersSection({ className = "" }: SuppliersSectionProps) {
                 onChange={(e) => setSelectedCategory(e.target.value)}
                 className="w-full appearance-none rounded-xl border-2 border-gray-200 bg-gray-50 px-3 py-2.5 pr-7 text-sm text-gray-900 transition-all duration-300 focus:border-green-500 focus:ring-2 focus:ring-green-500/20 dark:border-gray-600 dark:bg-gray-700 dark:text-white sm:min-w-[140px] sm:rounded-2xl sm:px-4 sm:py-3 sm:pr-8 sm:text-base sm:focus:ring-4 md:py-4"
               >
-                <option value="">Category</option>
-                <option value="vegetables">Vegetables</option>
-                <option value="meat">Meat & Poultry</option>
-                <option value="seafood">Seafood</option>
-                <option value="dairy">Dairy</option>
+                <option value="">All Categories</option>
+                <option value="business">Business</option>
+                <option value="supplier">Supplier</option>
+                <option value="retailer">Retailer</option>
+                <option value="wholesaler">Wholesaler</option>
+                <option value="manufacturer">Manufacturer</option>
               </select>
               <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-2 sm:pr-3">
                 <svg
@@ -159,8 +186,14 @@ export function SuppliersSection({ className = "" }: SuppliersSectionProps) {
       </div>
 
       {/* Supplier Listings */}
-      <div className="grid grid-cols-1 gap-4 sm:gap-6 md:gap-8 lg:grid-cols-2">
-        {filteredSuppliers.map((supplier) => (
+      {loading ? (
+        <div className="flex items-center justify-center py-12">
+          <Loader2 className="h-8 w-8 animate-spin text-green-500" />
+          <span className="ml-3 text-gray-600 dark:text-gray-400">Loading suppliers...</span>
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 gap-4 sm:gap-6 md:gap-8 lg:grid-cols-2">
+          {filteredSuppliers.map((supplier) => (
           <div
             key={supplier.id}
             className="group rounded-xl border border-gray-100 bg-white p-4 shadow-lg transition-all duration-300 hover:-translate-y-1 hover:shadow-xl dark:border-gray-700 dark:bg-gray-800 sm:rounded-2xl sm:p-6 sm:hover:-translate-y-2 sm:hover:shadow-2xl md:p-8"
@@ -168,9 +201,13 @@ export function SuppliersSection({ className = "" }: SuppliersSectionProps) {
             <div className="flex flex-col items-start gap-4 sm:flex-row sm:gap-6">
               <div className="relative flex-shrink-0">
                 <img
-                  src={supplier.image || "/placeholder.svg"}
+                  src={supplier.image || "/images/shop-placeholder.jpg"}
                   alt={supplier.name}
                   className="h-16 w-16 rounded-xl object-cover shadow-md transition-transform duration-300 group-hover:scale-110 sm:h-20 sm:w-20 sm:rounded-2xl"
+                  onError={(e) => {
+                    const target = e.target as HTMLImageElement;
+                    target.src = "/images/shop-placeholder.jpg";
+                  }}
                 />
                 {supplier.verified && (
                   <div className="absolute -right-1 -top-1 rounded-full bg-green-500 p-0.5 sm:-right-2 sm:-top-2 sm:p-1">
@@ -259,9 +296,10 @@ export function SuppliersSection({ className = "" }: SuppliersSectionProps) {
             </div>
           </div>
         ))}
-      </div>
+        </div>
+      )}
 
-      {filteredSuppliers.length === 0 && (
+      {!loading && filteredSuppliers.length === 0 && (
         <div className="py-8 text-center sm:py-12">
           <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-xl bg-gray-100 dark:bg-gray-700 sm:mb-4 sm:h-16 sm:w-16 sm:rounded-2xl">
             <Search className="h-6 w-6 text-gray-400 sm:h-8 sm:w-8" />
