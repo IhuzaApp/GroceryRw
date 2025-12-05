@@ -9642,7 +9642,7 @@ graph TB
     H --> I[Suppliers Submit Quotes]
     I --> J[View Responses]
     J --> K[Accept/Reject Quotes]
-    
+
     E --> L[Browse RFQ Opportunities]
     L --> M[Submit Quotes]
     M --> N[Track Submitted Quotes]
@@ -9653,9 +9653,11 @@ graph TB
 ### Core Tables
 
 #### 1. `business_accounts`
+
 Stores business account information.
 
 **Key Fields**:
+
 - `id` (uuid, primary key)
 - `user_id` (uuid, foreign key to Users)
 - `account_type` (String: "business" or "personal")
@@ -9669,9 +9671,11 @@ Stores business account information.
 - `rdb_certificate` (String, base64)
 
 #### 2. `business_stores`
+
 Stores store information for businesses.
 
 **Key Fields**:
+
 - `id` (uuid, primary key)
 - `business_id` (uuid, foreign key to business_accounts)
 - `name` (String)
@@ -9684,9 +9688,11 @@ Stores store information for businesses.
 - `is_active` (Boolean)
 
 #### 3. `PlasBusinessProductsOrSerive`
+
 Stores products/services for stores.
 
 **Key Fields**:
+
 - `id` (uuid, primary key)
 - `store_id` (uuid, foreign key to business_stores)
 - `Plasbusiness_id` (uuid, foreign key to business_accounts)
@@ -9704,9 +9710,11 @@ Stores products/services for stores.
 - `speciality` (String)
 
 #### 4. `bussines_RFQ`
+
 Stores RFQ (Request for Quotation) information.
 
 **Key Fields**:
+
 - `id` (uuid, primary key)
 - `business_id` (uuid, foreign key to business_accounts)
 - `user_id` (uuid, foreign key to Users)
@@ -9730,9 +9738,11 @@ Stores RFQ (Request for Quotation) information.
 - `open` (Boolean)
 
 #### 5. `BusinessQoute`
+
 Stores quotes submitted by suppliers for RFQs.
 
 **Key Fields**:
+
 - `id` (uuid, primary key)
 - `businessRfq_id` (uuid, foreign key to bussines_RFQ)
 - `respond_business_id` (uuid, foreign key to business_accounts)
@@ -9751,9 +9761,11 @@ Stores quotes submitted by suppliers for RFQs.
 - `status` (String: "pending", "accepted", "rejected")
 
 #### 6. `business_wallet`
+
 Stores wallet information for businesses.
 
 **Key Fields**:
+
 - `id` (uuid, primary key)
 - `business_id` (uuid, foreign key to business_accounts)
 - `amount` (String)
@@ -9763,6 +9775,7 @@ Stores wallet information for businesses.
 ### 1. Business Account Creation
 
 **Flow**:
+
 1. User navigates to business dashboard
 2. Creates business account with type selection (business or personal)
 3. Uploads required documents (ID, face image, RDB certificate for business type)
@@ -9772,6 +9785,7 @@ Stores wallet information for businesses.
 **API Endpoint**: `/api/mutations/create-business-account`
 
 **Key Features**:
+
 - Account type validation
 - Document upload (base64 encoding)
 - Automatic wallet creation
@@ -9780,6 +9794,7 @@ Stores wallet information for businesses.
 ### 2. Store Creation
 
 **Flow**:
+
 1. Business owner navigates to store management
 2. Clicks "Create Store"
 3. Fills store details (name, description, location, category)
@@ -9791,6 +9806,7 @@ Stores wallet information for businesses.
 **API Endpoint**: `/api/mutations/create-business-store`
 
 **Key Features**:
+
 - Google Maps integration for location
 - Operating hours as JSON
 - Automatic wallet creation
@@ -9799,6 +9815,7 @@ Stores wallet information for businesses.
 ### 3. Product Management
 
 **Flow**:
+
 1. Business owner opens store details page
 2. Clicks "Add Product"
 3. System generates unique verification ID (format: PB######)
@@ -9811,11 +9828,13 @@ Stores wallet information for businesses.
 5. Product saved to `PlasBusinessProductsOrSerive` table
 
 **API Endpoints**:
+
 - Create: `/api/mutations/create-business-product`
 - Update: `/api/mutations/update-business-product`
 - Generate ID: `/api/queries/generate-product-query-id`
 
 **Key Features**:
+
 - Unique verification ID generation (PB + 6 alphanumeric characters)
 - Image compression before upload
 - Product editing capability
@@ -9825,6 +9844,7 @@ Stores wallet information for businesses.
 ### 4. RFQ Creation (Buyer Workflow)
 
 **Flow**:
+
 1. Business owner navigates to "My RFQs" section
 2. Clicks "Create New RFQ"
 3. Multi-step form:
@@ -9838,6 +9858,7 @@ Stores wallet information for businesses.
 **API Endpoint**: `/api/mutations/create-business-rfq`
 
 **Key Features**:
+
 - Multi-step form with validation
 - Requirements as JSON array
 - Attachment support (base64)
@@ -9848,6 +9869,7 @@ Stores wallet information for businesses.
 ### 5. RFQ Opportunities (Supplier Workflow)
 
 **Flow**:
+
 1. Supplier navigates to "RFQ Opportunities" tab
 2. Views all RFQs where `open = true`
 3. Filters by category, searches by keyword
@@ -9859,6 +9881,7 @@ Stores wallet information for businesses.
 **API Endpoint**: `/api/queries/rfq-opportunities`
 
 **Key Features**:
+
 - Filters out current user's own RFQs
 - Shows RFQ status (Open/Closed based on deadline)
 - Posted by information (business name or contact name)
@@ -9868,6 +9891,7 @@ Stores wallet information for businesses.
 ### 6. Quote Submission (Supplier Workflow)
 
 **Flow**:
+
 1. Supplier clicks "Submit Quote" on an RFQ
 2. Fills quote form:
    - Quote amount and currency (default from system config)
@@ -9886,6 +9910,7 @@ Stores wallet information for businesses.
 **API Endpoint**: `/api/mutations/submit-rfq-quote`
 
 **Key Features**:
+
 - Client-side image compression (max 2.5MB per image, compressed to 1.5MB)
 - Total payload limit: 4MB after base64 encoding
 - Dynamic currency from system configuration
@@ -9895,6 +9920,7 @@ Stores wallet information for businesses.
 ### 7. Viewing RFQ Responses (Buyer Workflow)
 
 **Flow**:
+
 1. Business owner navigates to "My RFQs"
 2. Clicks "View Responses" on an RFQ
 3. System fetches:
@@ -9920,6 +9946,7 @@ Stores wallet information for businesses.
 **API Endpoint**: `/api/queries/rfq-details-and-responses`
 
 **Key Features**:
+
 - Complete RFQ information display
 - All responses with full supplier details
 - Filtering and sorting
@@ -9929,6 +9956,7 @@ Stores wallet information for businesses.
 ### 8. Viewing Submitted Quotes (Supplier Workflow)
 
 **Flow**:
+
 1. Supplier navigates to "Quotes" section
 2. Views all quotes submitted by their business
 3. Each quote shows:
@@ -9948,6 +9976,7 @@ Stores wallet information for businesses.
 **API Endpoint**: `/api/queries/business-submitted-quotes`
 
 **Key Features**:
+
 - Shows all quotes where `respond_business_id` = current business
 - Includes RFQ and requester information
 - Complete quote details with attachments
@@ -9956,6 +9985,7 @@ Stores wallet information for businesses.
 ### 9. Suppliers Directory
 
 **Flow**:
+
 1. User navigates to "Suppliers" section
 2. Views all businesses (excluding personal accounts and current user's business)
 3. Filters by category and location
@@ -9966,6 +9996,7 @@ Stores wallet information for businesses.
 **API Endpoint**: `/api/queries/all-businesses`
 
 **Key Features**:
+
 - Excludes personal businesses (`account_type != "personal"`)
 - Excludes current user's business
 - Shows business name, location, account type
@@ -9977,6 +10008,7 @@ Stores wallet information for businesses.
 ### Business Account Management
 
 #### Create Business Account
+
 - **Endpoint**: `POST /api/mutations/create-business-account`
 - **Description**: Creates a new business account
 - **Body**: Account type, business details, documents (base64)
@@ -9985,6 +10017,7 @@ Stores wallet information for businesses.
 ### Store Management
 
 #### Create Store
+
 - **Endpoint**: `POST /api/mutations/create-business-store`
 - **Description**: Creates a new store for a business
 - **Body**: Store details, location, category, operating hours
@@ -9992,11 +10025,13 @@ Stores wallet information for businesses.
 - **Side Effects**: Creates wallet if not exists
 
 #### Get Store Details
+
 - **Endpoint**: `GET /api/queries/business-store?storeId={id}`
 - **Description**: Fetches store details by ID
 - **Returns**: Complete store information
 
 #### Get Business Stores
+
 - **Endpoint**: `GET /api/queries/business-stores`
 - **Description**: Fetches all stores for current business
 - **Returns**: Array of stores
@@ -10004,23 +10039,27 @@ Stores wallet information for businesses.
 ### Product Management
 
 #### Generate Product Query ID
+
 - **Endpoint**: `GET /api/queries/generate-product-query-id`
 - **Description**: Generates unique verification ID (PB######)
 - **Returns**: Unique ID string
 
 #### Create Product
+
 - **Endpoint**: `POST /api/mutations/create-business-product`
 - **Description**: Creates a new product for a store
 - **Body**: Product details, image (base64), verification ID
 - **Returns**: Created product
 
 #### Update Product
+
 - **Endpoint**: `PUT /api/mutations/update-business-product`
 - **Description**: Updates existing product
 - **Body**: Product ID and updated fields
 - **Returns**: Updated product
 
 #### Get Store Products
+
 - **Endpoint**: `GET /api/queries/business-products?storeId={id}`
 - **Description**: Fetches all products for a store
 - **Returns**: Array of products
@@ -10028,23 +10067,27 @@ Stores wallet information for businesses.
 ### RFQ Management
 
 #### Create RFQ
+
 - **Endpoint**: `POST /api/mutations/create-business-rfq`
 - **Description**: Creates a new RFQ
 - **Body**: RFQ details, requirements (JSON), attachments
 - **Returns**: Created RFQ with ID
 
 #### Get Business RFQs
+
 - **Endpoint**: `GET /api/queries/business-rfqs`
 - **Description**: Fetches all RFQs created by current business/user
 - **Returns**: Array of RFQs
 
 #### Get RFQ Opportunities
+
 - **Endpoint**: `GET /api/queries/rfq-opportunities`
 - **Description**: Fetches all open RFQs (for suppliers)
 - **Filters**: `open = true`, excludes current user's RFQs
 - **Returns**: Array of open RFQs with business account info
 
 #### Get RFQ Details and Responses
+
 - **Endpoint**: `GET /api/queries/rfq-details-and-responses?rfq_id={id}`
 - **Description**: Fetches complete RFQ details and all responses
 - **Returns**: RFQ details and array of quotes/responses
@@ -10052,6 +10095,7 @@ Stores wallet information for businesses.
 ### Quote Management
 
 #### Submit Quote
+
 - **Endpoint**: `POST /api/mutations/submit-rfq-quote`
 - **Description**: Submits a quote for an RFQ
 - **Body**: Quote details, terms, attachments (up to 3, base64)
@@ -10059,11 +10103,13 @@ Stores wallet information for businesses.
 - **Returns**: Created quote with ID
 
 #### Get User RFQ Quote
+
 - **Endpoint**: `GET /api/queries/user-rfq-quote?rfqId={id}`
 - **Description**: Checks if user has already submitted a quote for an RFQ
 - **Returns**: Quote if exists, null otherwise
 
 #### Get Business Submitted Quotes
+
 - **Endpoint**: `GET /api/queries/business-submitted-quotes`
 - **Description**: Fetches all quotes submitted by current business
 - **Filters**: `respond_business_id` = current business ID
@@ -10072,6 +10118,7 @@ Stores wallet information for businesses.
 ### Suppliers
 
 #### Get All Businesses
+
 - **Endpoint**: `GET /api/queries/all-businesses`
 - **Description**: Fetches all businesses (excluding personal and current user's)
 - **Filters**: `account_type != "personal"`, `id != current_business_id`
@@ -10080,6 +10127,7 @@ Stores wallet information for businesses.
 ### System Configuration
 
 #### Get System Configuration
+
 - **Endpoint**: `GET /api/queries/system-configuration`
 - **Description**: Fetches system-wide settings
 - **Returns**: Configuration including default currency
@@ -10089,56 +10137,67 @@ Stores wallet information for businesses.
 ### Business Dashboard Components
 
 #### BusinessOverview
+
 - **Location**: `src/components/business/BusinessOverview.tsx`
 - **Purpose**: Main dashboard showing stores, RFQs, and quick actions
 - **Features**: Store creation, navigation to stores, RFQ creation
 
 #### CreateProductForm
+
 - **Location**: `src/components/business/CreateProductForm.tsx`
 - **Purpose**: Form for adding/editing products
 - **Features**: Image upload, verification ID display, unit dropdown, validation
 
 #### Store Details Page
+
 - **Location**: `pages/plasBusiness/store/[storeId].tsx`
 - **Purpose**: Store details with product listing
 - **Features**: Product grid, search, pagination, add/edit products
 
 #### CreateRFQForm
+
 - **Location**: `src/components/business/CreateRFQForm.tsx`
 - **Purpose**: Multi-step form for creating RFQs
 - **Features**: Step-by-step wizard, attachment upload, requirements management
 
 #### MyRFQsSection
+
 - **Location**: `src/components/business/MyRFQsSection.tsx`
 - **Purpose**: Displays RFQs created by current business
 - **Features**: RFQ listing, status display, view responses
 
 #### RFQOpportunitiesSection
+
 - **Location**: `src/components/business/RFQOpportunitiesSection.tsx`
 - **Purpose**: Displays open RFQs for suppliers to respond to
 - **Features**: Filtering, search, quote submission, duplicate prevention
 
 #### RFQResponsesView
+
 - **Location**: `src/components/business/RFQResponsesView.tsx`
 - **Purpose**: Displays all responses to an RFQ
 - **Features**: Complete RFQ details, all responses, filtering, sorting, accept/reject
 
 #### QuoteSubmissionForm
+
 - **Location**: `src/components/business/QuoteSubmissionForm.tsx`
 - **Purpose**: Form for submitting quotes to RFQs
 - **Features**: Terms dropdowns, attachment upload (3 max), image compression
 
 #### QuotesSection
+
 - **Location**: `src/components/business/QuotesSection.tsx`
 - **Purpose**: Displays quotes submitted by current business
 - **Features**: Quote listing, status tracking, view details
 
 #### SubmittedQuoteDetails
+
 - **Location**: `src/components/business/SubmittedQuoteDetails.tsx`
 - **Purpose**: Modal showing details of a submitted quote
 - **Features**: Complete quote information, RFQ details, attachments
 
 #### SuppliersSection
+
 - **Location**: `src/components/business/SuppliersSection.tsx`
 - **Purpose**: Directory of all businesses/suppliers
 - **Features**: Search, filter, business listing, contact options
@@ -10154,6 +10213,7 @@ Stores wallet information for businesses.
 **Purpose**: Unique, user-friendly ID for product verification when taking photos
 
 **Implementation**:
+
 - Character set: `0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ`
 - Random generation with collision checking
 - Displayed prominently in product creation form
@@ -10163,6 +10223,7 @@ Stores wallet information for businesses.
 **Purpose**: Reduce payload size for API requests
 
 **Implementation**:
+
 - Client-side compression before base64 encoding
 - Max dimensions: 1920px width
 - Quality: 0.7
@@ -10179,14 +10240,16 @@ Stores wallet information for businesses.
 
 **Fallback**: "RWF" if not configured
 
-**Usage**: 
+**Usage**:
+
 - Quote submission default currency
 - Currency display throughout the system
 - Formatting via `formatCurrencySync()` utility
 
 ### 4. Duplicate Quote Prevention
 
-**Logic**: 
+**Logic**:
+
 - Before showing quote submission form, check if quote exists
 - Query: `BusinessQoute` where `businessRfq_id = rfqId` AND `respond_business_id = currentBusinessId`
 - If exists: Show "View Quote" button instead of "Submit Quote"
@@ -10197,6 +10260,7 @@ Stores wallet information for businesses.
 ### 5. RFQ Status Management
 
 **Open/Closed Logic**:
+
 - `open = true` in database: RFQ is open
 - Deadline check: If `response_date < today`, status shows as "Closed"
 - Visual indicators: Green badge for "Open", Blue badge for "Closed"
@@ -10204,12 +10268,14 @@ Stores wallet information for businesses.
 ### 6. Quote Status Flow
 
 **Statuses**:
+
 - `pending`: Default when quote is submitted
 - `accepted`: Buyer accepts the quote
 - `rejected`: Buyer rejects the quote
 - `negotiating`: Quote is under negotiation
 
 **Visual Indicators**:
+
 - Pending: Blue badge
 - Accepted: Green badge
 - Rejected: Red badge
@@ -10218,11 +10284,13 @@ Stores wallet information for businesses.
 ### 7. Responsive Design
 
 **Product Grid**:
+
 - Mobile: 1 column
 - Small screens: 3 columns
 - Medium+ screens: 4 columns
 
 **Store Details Page**:
+
 - Mobile: Full-width cover image, circular logo
 - Desktop: Side-by-side layout
 - Consistent padding and margins
@@ -10230,16 +10298,19 @@ Stores wallet information for businesses.
 ### 8. Search & Filtering
 
 **Product Search**:
+
 - Searches: name, description, price, unit, query ID, delivery area, speciality
 - Real-time filtering
 - Client-side pagination (18 products per page)
 
 **RFQ Opportunities Filtering**:
+
 - Category filter
 - Search by keyword
 - Status filter (Open/Closed)
 
 **Suppliers Filtering**:
+
 - Category filter
 - Location filter
 - Search by name, category, location
@@ -10291,14 +10362,17 @@ Stores wallet information for businesses.
 ### Common Errors & Solutions
 
 1. **Foreign Key Violations**
+
    - **Cause**: Missing business_id or incorrect relationships
    - **Solution**: Ensure business_account exists before creating stores/products
 
 2. **Not-NULL Constraint Violations**
+
    - **Cause**: Required fields not provided
    - **Solution**: Provide defaults for all required fields (empty strings, "0", etc.)
 
 3. **413 Payload Too Large**
+
    - **Cause**: Image files too large
    - **Solution**: Client-side compression, increased API body limit to 4MB
 

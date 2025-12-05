@@ -45,7 +45,9 @@ export default function StoreDetailsPage() {
   const [productImage, setProductImage] = useState<string>("");
   const [isCreatingProduct, setIsCreatingProduct] = useState(false);
   const [isGeneratingQueryId, setIsGeneratingQueryId] = useState(false);
-  const [businessAccountId, setBusinessAccountId] = useState<string | null>(null);
+  const [businessAccountId, setBusinessAccountId] = useState<string | null>(
+    null
+  );
   const [editingProduct, setEditingProduct] = useState<any>(null);
   const [searchQuery, setSearchQuery] = useState<string>("");
   const [allProducts, setAllProducts] = useState<any[]>([]);
@@ -78,7 +80,9 @@ export default function StoreDetailsPage() {
 
   const fetchStoreDetails = async () => {
     try {
-      const response = await fetch(`/api/queries/business-store?storeId=${storeId}`);
+      const response = await fetch(
+        `/api/queries/business-store?storeId=${storeId}`
+      );
       if (response.ok) {
         const data = await response.json();
         setStore(data.store);
@@ -111,7 +115,9 @@ export default function StoreDetailsPage() {
   const fetchProducts = async () => {
     if (!storeId) return;
     try {
-      const response = await fetch(`/api/queries/business-products?store_id=${storeId}`);
+      const response = await fetch(
+        `/api/queries/business-products?store_id=${storeId}`
+      );
       if (response.ok) {
         const data = await response.json();
         const fetchedProducts = data.products || [];
@@ -174,9 +180,12 @@ export default function StoreDetailsPage() {
     // First, generate a unique query ID
     setIsGeneratingQueryId(true);
     try {
-      const queryResponse = await fetch("/api/queries/generate-product-query-id", {
-        method: "POST",
-      });
+      const queryResponse = await fetch(
+        "/api/queries/generate-product-query-id",
+        {
+          method: "POST",
+        }
+      );
 
       if (!queryResponse.ok) {
         toast.error("Failed to generate verification ID");
@@ -255,7 +264,7 @@ export default function StoreDetailsPage() {
       const url = editingProduct
         ? "/api/mutations/update-business-product"
         : "/api/mutations/create-business-product";
-      
+
       const method = editingProduct ? "PUT" : "POST";
 
       const body: any = {
@@ -288,19 +297,38 @@ export default function StoreDetailsPage() {
 
       if (response.ok) {
         const data = await response.json();
-        toast.success(editingProduct ? "Product updated successfully!" : "Product added successfully!");
+        toast.success(
+          editingProduct
+            ? "Product updated successfully!"
+            : "Product added successfully!"
+        );
         setShowAddProductModal(false);
         setEditingProduct(null);
-        setNewProduct({ name: "", description: "", price: "", unit: "", minimumOrders: "0", maxOrders: "", deliveryArea: "" });
+        setNewProduct({
+          name: "",
+          description: "",
+          price: "",
+          unit: "",
+          minimumOrders: "0",
+          maxOrders: "",
+          deliveryArea: "",
+        });
         setProductImage("");
         setQueryId(null);
         fetchProducts();
       } else {
         const errorData = await response.json();
-        toast.error(errorData.message || (editingProduct ? "Failed to update product" : "Failed to add product"));
+        toast.error(
+          errorData.message ||
+            (editingProduct
+              ? "Failed to update product"
+              : "Failed to add product")
+        );
       }
     } catch (error) {
-      toast.error(editingProduct ? "Failed to update product" : "Failed to add product");
+      toast.error(
+        editingProduct ? "Failed to update product" : "Failed to add product"
+      );
     } finally {
       setIsCreatingProduct(false);
     }
@@ -404,7 +432,7 @@ export default function StoreDetailsPage() {
           {/* Store Info Overlay - Center */}
           <div className="absolute bottom-2 left-1/2 z-20 -translate-x-1/2 text-center">
             {/* Store Name */}
-            <h1 
+            <h1
               className="mb-1 text-xl font-bold drop-shadow-lg"
               style={{ color: "#ffffff" }}
             >
@@ -413,8 +441,8 @@ export default function StoreDetailsPage() {
 
             {/* Store Details */}
             {store.description && (
-              <p 
-                className="text-xs line-clamp-1"
+              <p
+                className="line-clamp-1 text-xs"
                 style={{ color: "rgba(255, 255, 255, 0.9)" }}
               >
                 {store.description}
@@ -475,14 +503,14 @@ export default function StoreDetailsPage() {
 
                   {/* Store Details */}
                   <div className="flex-1" style={{ color: "#ffffff" }}>
-                    <h1 
+                    <h1
                       className="text-2xl font-bold sm:text-3xl lg:text-4xl"
                       style={{ color: "#ffffff" }}
                     >
                       {store.name}
                     </h1>
                     {store.description && (
-                      <p 
+                      <p
                         className="mt-2 text-sm sm:text-base"
                         style={{ color: "rgba(255, 255, 255, 0.9)" }}
                       >
@@ -494,8 +522,14 @@ export default function StoreDetailsPage() {
                     <div className="mt-4 flex flex-wrap gap-3">
                       {store.latitude && store.longitude && (
                         <div className="flex items-center rounded-full bg-white/20 px-3 py-1.5 backdrop-blur-sm">
-                          <MapPin className="mr-1.5 h-4 w-4" style={{ color: "#ffffff" }} />
-                          <span className="text-xs sm:text-sm" style={{ color: "#ffffff" }}>
+                          <MapPin
+                            className="mr-1.5 h-4 w-4"
+                            style={{ color: "#ffffff" }}
+                          />
+                          <span
+                            className="text-xs sm:text-sm"
+                            style={{ color: "#ffffff" }}
+                          >
                             {store.latitude}, {store.longitude}
                           </span>
                         </div>
@@ -503,14 +537,28 @@ export default function StoreDetailsPage() {
 
                       {store.operating_hours && (
                         <div className="flex items-center rounded-full bg-white/20 px-3 py-1.5 backdrop-blur-sm">
-                          <Clock className="mr-1.5 h-4 w-4" style={{ color: "#ffffff" }} />
-                          <span className="text-xs sm:text-sm" style={{ color: "#ffffff" }}>Custom hours</span>
+                          <Clock
+                            className="mr-1.5 h-4 w-4"
+                            style={{ color: "#ffffff" }}
+                          />
+                          <span
+                            className="text-xs sm:text-sm"
+                            style={{ color: "#ffffff" }}
+                          >
+                            Custom hours
+                          </span>
                         </div>
                       )}
 
                       <div className="flex items-center rounded-full bg-white/20 px-3 py-1.5 backdrop-blur-sm">
-                        <Store className="mr-1.5 h-4 w-4" style={{ color: "#ffffff" }} />
-                        <span className="text-xs sm:text-sm" style={{ color: "#ffffff" }}>
+                        <Store
+                          className="mr-1.5 h-4 w-4"
+                          style={{ color: "#ffffff" }}
+                        />
+                        <span
+                          className="text-xs sm:text-sm"
+                          style={{ color: "#ffffff" }}
+                        >
                           {store.is_active ? "Active" : "Inactive"}
                         </span>
                       </div>
@@ -525,51 +573,45 @@ export default function StoreDetailsPage() {
         {/* Spacing for mobile logo */}
         <div className="h-8 sm:hidden"></div>
 
-        <div className="max-w-7xl mx-auto px-2 sm:px-4 md:px-6 lg:px-8 py-4 sm:py-6 md:py-8">
+        <div className="mx-auto max-w-7xl px-2 py-4 sm:px-4 sm:py-6 md:px-6 md:py-8 lg:px-8">
           {/* Products Section */}
-          <div className="mb-4 sm:mb-6 space-y-3 sm:space-y-4">
+          <div className="mb-4 space-y-3 sm:mb-6 sm:space-y-4">
             <div className="flex items-center justify-between">
-              <h2 className="text-lg sm:text-xl md:text-2xl font-bold text-gray-900 dark:text-white">
+              <h2 className="text-lg font-bold text-gray-900 dark:text-white sm:text-xl md:text-2xl">
                 Products & Services
               </h2>
               <button
                 onClick={handleAddProduct}
                 disabled={isGeneratingQueryId}
-                className="flex items-center space-x-1.5 sm:space-x-2 bg-green-600 hover:bg-green-700 px-3 py-1.5 sm:px-4 sm:py-2 rounded-lg transition-colors text-xs sm:text-sm md:text-base disabled:opacity-50 disabled:cursor-not-allowed"
+                className="flex items-center space-x-1.5 rounded-lg bg-green-600 px-3 py-1.5 text-xs transition-colors hover:bg-green-700 disabled:cursor-not-allowed disabled:opacity-50 sm:space-x-2 sm:px-4 sm:py-2 sm:text-sm md:text-base"
                 style={{ color: "#ffffff" }}
               >
                 {isGeneratingQueryId ? (
                   <>
-                    <div className="h-3.5 w-3.5 sm:h-4 sm:w-4 md:h-5 md:w-5 animate-spin rounded-full border-2 border-white border-t-transparent" />
-                    <span 
-                      className="hidden sm:inline" 
+                    <div className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-white border-t-transparent sm:h-4 sm:w-4 md:h-5 md:w-5" />
+                    <span
+                      className="hidden sm:inline"
                       style={{ color: "#ffffff" }}
                     >
                       Loading...
                     </span>
-                    <span 
-                      className="sm:hidden" 
-                      style={{ color: "#ffffff" }}
-                    >
+                    <span className="sm:hidden" style={{ color: "#ffffff" }}>
                       Loading...
                     </span>
                   </>
                 ) : (
                   <>
-                    <Plus 
-                      className="h-3.5 w-3.5 sm:h-4 sm:w-4 md:h-5 md:w-5" 
+                    <Plus
+                      className="h-3.5 w-3.5 sm:h-4 sm:w-4 md:h-5 md:w-5"
                       style={{ color: "#ffffff" }}
                     />
-                    <span 
-                      className="hidden sm:inline" 
+                    <span
+                      className="hidden sm:inline"
                       style={{ color: "#ffffff" }}
                     >
                       Add Product
                     </span>
-                    <span 
-                      className="sm:hidden" 
-                      style={{ color: "#ffffff" }}
-                    >
+                    <span className="sm:hidden" style={{ color: "#ffffff" }}>
                       Add
                     </span>
                   </>
@@ -579,18 +621,18 @@ export default function StoreDetailsPage() {
 
             {/* Search Bar */}
             <div className="relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 sm:h-5 sm:w-5 text-gray-400" />
+              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 transform text-gray-400 sm:h-5 sm:w-5" />
               <input
                 type="text"
                 placeholder="Search products by name, description, price, or verification ID..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full pl-10 sm:pl-12 pr-4 py-2 sm:py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent dark:bg-gray-700 dark:text-white text-sm sm:text-base"
+                className="w-full rounded-lg border border-gray-300 py-2 pl-10 pr-4 text-sm focus:border-transparent focus:ring-2 focus:ring-green-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white sm:py-2.5 sm:pl-12 sm:text-base"
               />
               {searchQuery && (
                 <button
                   onClick={() => setSearchQuery("")}
-                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 transform text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
                 >
                   <X className="h-4 w-4 sm:h-5 sm:w-5" />
                 </button>
@@ -599,9 +641,9 @@ export default function StoreDetailsPage() {
           </div>
 
           {filteredProducts.length === 0 ? (
-            <div className="text-center py-8 sm:py-10 md:py-12">
-              <Package className="h-10 w-10 sm:h-12 sm:w-12 md:h-16 md:w-16 text-gray-400 mx-auto mb-3 sm:mb-4" />
-              <p className="text-gray-500 dark:text-gray-400 text-xs sm:text-sm md:text-base">
+            <div className="py-8 text-center sm:py-10 md:py-12">
+              <Package className="mx-auto mb-3 h-10 w-10 text-gray-400 sm:mb-4 sm:h-12 sm:w-12 md:h-16 md:w-16" />
+              <p className="text-xs text-gray-500 dark:text-gray-400 sm:text-sm md:text-base">
                 {searchQuery
                   ? `No products found matching "${searchQuery}"`
                   : "No products yet. Add your first product to get started."}
@@ -609,166 +651,189 @@ export default function StoreDetailsPage() {
             </div>
           ) : (
             <>
-              <div className="grid grid-cols-1 sm:grid-cols-3 md:grid-cols-4 gap-3 sm:gap-4 md:gap-6">
+              <div className="grid grid-cols-1 gap-3 sm:grid-cols-3 sm:gap-4 md:grid-cols-4 md:gap-6">
                 {currentProducts.map((product) => (
-                <div
-                  key={product.id}
-                  className="group relative border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden hover:shadow-lg transition-shadow bg-white dark:bg-gray-800"
-                >
-                  {product.Image && (
-                    <div className="h-48 bg-gray-100 dark:bg-gray-700 relative">
-                      <img
-                        src={product.Image}
-                        alt={product.name}
-                        className="w-full h-full object-cover"
-                      />
-                      <button
-                        onClick={() => handleEditProduct(product)}
-                        className="absolute top-2 right-2 bg-green-600 hover:bg-green-700 text-white p-2 rounded-full opacity-0 group-hover:opacity-100 transition-opacity shadow-lg"
-                        title="Edit product"
-                      >
-                        <Edit className="h-4 w-4" />
-                      </button>
-                    </div>
-                  )}
-                  {!product.Image && (
-                    <div className="h-48 bg-gray-100 dark:bg-gray-700 relative flex items-center justify-center">
-                      <Package className="h-12 w-12 text-gray-400" />
-                      <button
-                        onClick={() => handleEditProduct(product)}
-                        className="absolute top-2 right-2 bg-green-600 hover:bg-green-700 text-white p-2 rounded-full opacity-0 group-hover:opacity-100 transition-opacity shadow-lg"
-                        title="Edit product"
-                      >
-                        <Edit className="h-4 w-4" />
-                      </button>
-                    </div>
-                  )}
-                  <div className="p-3 sm:p-4 space-y-2 sm:space-y-3">
-                    {/* Product Name and Status */}
-                    <div className="flex items-start justify-between gap-2">
-                      <h3 className="font-semibold text-gray-900 dark:text-white text-xs sm:text-sm md:text-base flex-1 line-clamp-2">
-                        {product.name}
-                      </h3>
-                      {product.status && (
-                        <span className={`flex items-center gap-1 px-1.5 sm:px-2 py-0.5 sm:py-1 rounded-full text-[10px] sm:text-xs font-medium flex-shrink-0 ${
-                          product.status === "active"
-                            ? "bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300"
-                            : product.status === "inactive"
-                            ? "bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300"
-                            : "bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-300"
-                        }`}>
-                          {product.status === "active" ? (
-                            <CheckCircle className="h-2.5 w-2.5 sm:h-3 sm:w-3" />
-                          ) : (
-                            <XCircle className="h-2.5 w-2.5 sm:h-3 sm:w-3" />
-                          )}
-                          <span className="hidden sm:inline capitalize">{product.status}</span>
-                        </span>
-                      )}
-                    </div>
-
-                    {/* Description */}
-                    {product.Description && (
-                      <p className="text-[10px] sm:text-xs text-gray-600 dark:text-gray-400 line-clamp-2">
-                        {product.Description}
-                      </p>
+                  <div
+                    key={product.id}
+                    className="group relative overflow-hidden rounded-lg border border-gray-200 bg-white transition-shadow hover:shadow-lg dark:border-gray-700 dark:bg-gray-800"
+                  >
+                    {product.Image && (
+                      <div className="relative h-48 bg-gray-100 dark:bg-gray-700">
+                        <img
+                          src={product.Image}
+                          alt={product.name}
+                          className="h-full w-full object-cover"
+                        />
+                        <button
+                          onClick={() => handleEditProduct(product)}
+                          className="absolute right-2 top-2 rounded-full bg-green-600 p-2 text-white opacity-0 shadow-lg transition-opacity hover:bg-green-700 group-hover:opacity-100"
+                          title="Edit product"
+                        >
+                          <Edit className="h-4 w-4" />
+                        </button>
+                      </div>
                     )}
+                    {!product.Image && (
+                      <div className="relative flex h-48 items-center justify-center bg-gray-100 dark:bg-gray-700">
+                        <Package className="h-12 w-12 text-gray-400" />
+                        <button
+                          onClick={() => handleEditProduct(product)}
+                          className="absolute right-2 top-2 rounded-full bg-green-600 p-2 text-white opacity-0 shadow-lg transition-opacity hover:bg-green-700 group-hover:opacity-100"
+                          title="Edit product"
+                        >
+                          <Edit className="h-4 w-4" />
+                        </button>
+                      </div>
+                    )}
+                    <div className="space-y-2 p-3 sm:space-y-3 sm:p-4">
+                      {/* Product Name and Status */}
+                      <div className="flex items-start justify-between gap-2">
+                        <h3 className="line-clamp-2 flex-1 text-xs font-semibold text-gray-900 dark:text-white sm:text-sm md:text-base">
+                          {product.name}
+                        </h3>
+                        {product.status && (
+                          <span
+                            className={`flex flex-shrink-0 items-center gap-1 rounded-full px-1.5 py-0.5 text-[10px] font-medium sm:px-2 sm:py-1 sm:text-xs ${
+                              product.status === "active"
+                                ? "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300"
+                                : product.status === "inactive"
+                                ? "bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-300"
+                                : "bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-300"
+                            }`}
+                          >
+                            {product.status === "active" ? (
+                              <CheckCircle className="h-2.5 w-2.5 sm:h-3 sm:w-3" />
+                            ) : (
+                              <XCircle className="h-2.5 w-2.5 sm:h-3 sm:w-3" />
+                            )}
+                            <span className="hidden capitalize sm:inline">
+                              {product.status}
+                            </span>
+                          </span>
+                        )}
+                      </div>
 
-                    {/* Price and Unit */}
-                    <div className="flex items-center justify-between">
-                      <span className="text-base sm:text-lg font-bold text-green-600">
-                        {formatCurrencySync(parseFloat(product.price))}
-                      </span>
-                      <span className="text-[10px] sm:text-xs text-gray-500 dark:text-gray-400">
-                        / {product.unit}
-                      </span>
-                    </div>
-
-                    {/* Divider */}
-                    <div className="border-t border-gray-200 dark:border-gray-700 pt-2 sm:pt-3 space-y-1.5 sm:space-y-2">
-                      {/* Verification ID */}
-                      {product.query_id && (
-                        <div className="flex items-center gap-1.5 sm:gap-2">
-                          <Tag className="h-3 w-3 sm:h-3.5 sm:w-3.5 text-gray-400 flex-shrink-0" />
-                          <div className="flex-1 min-w-0">
-                            <p className="text-[9px] sm:text-[10px] text-gray-500 dark:text-gray-400">Verification ID</p>
-                            <p className="text-[10px] sm:text-xs font-mono font-semibold text-gray-700 dark:text-gray-300 truncate">
-                              {product.query_id}
-                            </p>
-                          </div>
-                        </div>
+                      {/* Description */}
+                      {product.Description && (
+                        <p className="line-clamp-2 text-[10px] text-gray-600 dark:text-gray-400 sm:text-xs">
+                          {product.Description}
+                        </p>
                       )}
 
-                      {/* Minimum Orders */}
-                      {product.minimumOrders && parseFloat(product.minimumOrders) > 0 && (
-                        <div className="flex items-center gap-1.5 sm:gap-2">
-                          <ShoppingCart className="h-3 w-3 sm:h-3.5 sm:w-3.5 text-gray-400 flex-shrink-0" />
-                          <div className="flex-1 min-w-0">
-                            <p className="text-[9px] sm:text-[10px] text-gray-500 dark:text-gray-400">Min. Order</p>
-                            <p className="text-[10px] sm:text-xs font-medium text-gray-700 dark:text-gray-300">
-                              {product.minimumOrders} {product.unit}
-                            </p>
-                          </div>
-                        </div>
-                      )}
+                      {/* Price and Unit */}
+                      <div className="flex items-center justify-between">
+                        <span className="text-base font-bold text-green-600 sm:text-lg">
+                          {formatCurrencySync(parseFloat(product.price))}
+                        </span>
+                        <span className="text-[10px] text-gray-500 dark:text-gray-400 sm:text-xs">
+                          / {product.unit}
+                        </span>
+                      </div>
 
-                      {/* Maximum Orders */}
-                      {product.maxOrders && product.maxOrders.trim() !== "" && parseFloat(product.maxOrders) > 0 && (
-                        <div className="flex items-center gap-1.5 sm:gap-2">
-                          <ShoppingCart className="h-3 w-3 sm:h-3.5 sm:w-3.5 text-gray-400 flex-shrink-0" />
-                          <div className="flex-1 min-w-0">
-                            <p className="text-[9px] sm:text-[10px] text-gray-500 dark:text-gray-400">Max. Order</p>
-                            <p className="text-[10px] sm:text-xs font-medium text-gray-700 dark:text-gray-300">
-                              {product.maxOrders} {product.unit}
-                            </p>
+                      {/* Divider */}
+                      <div className="space-y-1.5 border-t border-gray-200 pt-2 dark:border-gray-700 sm:space-y-2 sm:pt-3">
+                        {/* Verification ID */}
+                        {product.query_id && (
+                          <div className="flex items-center gap-1.5 sm:gap-2">
+                            <Tag className="h-3 w-3 flex-shrink-0 text-gray-400 sm:h-3.5 sm:w-3.5" />
+                            <div className="min-w-0 flex-1">
+                              <p className="text-[9px] text-gray-500 dark:text-gray-400 sm:text-[10px]">
+                                Verification ID
+                              </p>
+                              <p className="truncate font-mono text-[10px] font-semibold text-gray-700 dark:text-gray-300 sm:text-xs">
+                                {product.query_id}
+                              </p>
+                            </div>
                           </div>
-                        </div>
-                      )}
+                        )}
 
-                      {/* Delivery Area */}
-                      {product.delveryArea && product.delveryArea.trim() !== "" && (
-                        <div className="flex items-center gap-1.5 sm:gap-2">
-                          <Truck className="h-3 w-3 sm:h-3.5 sm:w-3.5 text-gray-400 flex-shrink-0" />
-                          <div className="flex-1 min-w-0">
-                            <p className="text-[9px] sm:text-[10px] text-gray-500 dark:text-gray-400">Delivery Area</p>
-                            <p className="text-[10px] sm:text-xs font-medium text-gray-700 dark:text-gray-300 line-clamp-1">
-                              {product.delveryArea}
-                            </p>
-                          </div>
-                        </div>
-                      )}
+                        {/* Minimum Orders */}
+                        {product.minimumOrders &&
+                          parseFloat(product.minimumOrders) > 0 && (
+                            <div className="flex items-center gap-1.5 sm:gap-2">
+                              <ShoppingCart className="h-3 w-3 flex-shrink-0 text-gray-400 sm:h-3.5 sm:w-3.5" />
+                              <div className="min-w-0 flex-1">
+                                <p className="text-[9px] text-gray-500 dark:text-gray-400 sm:text-[10px]">
+                                  Min. Order
+                                </p>
+                                <p className="text-[10px] font-medium text-gray-700 dark:text-gray-300 sm:text-xs">
+                                  {product.minimumOrders} {product.unit}
+                                </p>
+                              </div>
+                            </div>
+                          )}
 
-                      {/* Speciality */}
-                      {product.speciality && product.speciality.trim() !== "" && (
-                        <div className="flex items-center gap-1.5 sm:gap-2">
-                          <Tag className="h-3 w-3 sm:h-3.5 sm:w-3.5 text-gray-400 flex-shrink-0" />
-                          <div className="flex-1 min-w-0">
-                            <p className="text-[9px] sm:text-[10px] text-gray-500 dark:text-gray-400">Speciality</p>
-                            <p className="text-[10px] sm:text-xs font-medium text-gray-700 dark:text-gray-300 line-clamp-1">
-                              {product.speciality}
-                            </p>
-                          </div>
-                        </div>
-                      )}
+                        {/* Maximum Orders */}
+                        {product.maxOrders &&
+                          product.maxOrders.trim() !== "" &&
+                          parseFloat(product.maxOrders) > 0 && (
+                            <div className="flex items-center gap-1.5 sm:gap-2">
+                              <ShoppingCart className="h-3 w-3 flex-shrink-0 text-gray-400 sm:h-3.5 sm:w-3.5" />
+                              <div className="min-w-0 flex-1">
+                                <p className="text-[9px] text-gray-500 dark:text-gray-400 sm:text-[10px]">
+                                  Max. Order
+                                </p>
+                                <p className="text-[10px] font-medium text-gray-700 dark:text-gray-300 sm:text-xs">
+                                  {product.maxOrders} {product.unit}
+                                </p>
+                              </div>
+                            </div>
+                          )}
+
+                        {/* Delivery Area */}
+                        {product.delveryArea &&
+                          product.delveryArea.trim() !== "" && (
+                            <div className="flex items-center gap-1.5 sm:gap-2">
+                              <Truck className="h-3 w-3 flex-shrink-0 text-gray-400 sm:h-3.5 sm:w-3.5" />
+                              <div className="min-w-0 flex-1">
+                                <p className="text-[9px] text-gray-500 dark:text-gray-400 sm:text-[10px]">
+                                  Delivery Area
+                                </p>
+                                <p className="line-clamp-1 text-[10px] font-medium text-gray-700 dark:text-gray-300 sm:text-xs">
+                                  {product.delveryArea}
+                                </p>
+                              </div>
+                            </div>
+                          )}
+
+                        {/* Speciality */}
+                        {product.speciality &&
+                          product.speciality.trim() !== "" && (
+                            <div className="flex items-center gap-1.5 sm:gap-2">
+                              <Tag className="h-3 w-3 flex-shrink-0 text-gray-400 sm:h-3.5 sm:w-3.5" />
+                              <div className="min-w-0 flex-1">
+                                <p className="text-[9px] text-gray-500 dark:text-gray-400 sm:text-[10px]">
+                                  Speciality
+                                </p>
+                                <p className="line-clamp-1 text-[10px] font-medium text-gray-700 dark:text-gray-300 sm:text-xs">
+                                  {product.speciality}
+                                </p>
+                              </div>
+                            </div>
+                          )}
+                      </div>
                     </div>
                   </div>
-                </div>
                 ))}
               </div>
 
               {/* Pagination */}
               {totalPages > 1 && (
-                <div className="mt-6 sm:mt-8 flex flex-col sm:flex-row items-center justify-between gap-4">
+                <div className="mt-6 flex flex-col items-center justify-between gap-4 sm:mt-8 sm:flex-row">
                   <div className="text-sm text-gray-600 dark:text-gray-400">
-                    Showing {startIndex + 1} to {Math.min(endIndex, filteredProducts.length)} of {filteredProducts.length} products
+                    Showing {startIndex + 1} to{" "}
+                    {Math.min(endIndex, filteredProducts.length)} of{" "}
+                    {filteredProducts.length} products
                   </div>
-                  
+
                   <div className="flex items-center gap-2">
                     {/* Previous Button */}
                     <button
-                      onClick={() => setCurrentPage((prev) => Math.max(1, prev - 1))}
+                      onClick={() =>
+                        setCurrentPage((prev) => Math.max(1, prev - 1))
+                      }
                       disabled={currentPage === 1}
-                      className="flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors text-sm sm:text-base"
+                      className="flex items-center gap-1.5 rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-700 transition-colors hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700 sm:gap-2 sm:px-4 sm:text-base"
                     >
                       <ChevronLeft className="h-4 w-4" />
                       <span className="hidden sm:inline">Previous</span>
@@ -777,48 +842,52 @@ export default function StoreDetailsPage() {
 
                     {/* Page Numbers */}
                     <div className="flex items-center gap-1 sm:gap-2">
-                      {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => {
-                        // Show first page, last page, current page, and pages around current
-                        if (
-                          page === 1 ||
-                          page === totalPages ||
-                          (page >= currentPage - 1 && page <= currentPage + 1)
-                        ) {
-                          return (
-                            <button
-                              key={page}
-                              onClick={() => setCurrentPage(page)}
-                              className={`px-3 sm:px-4 py-2 rounded-lg text-sm sm:text-base font-medium transition-colors ${
-                                currentPage === page
-                                  ? "bg-green-600 text-white"
-                                  : "bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 border border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700"
-                              }`}
-                            >
-                              {page}
-                            </button>
-                          );
-                        } else if (
-                          page === currentPage - 2 ||
-                          page === currentPage + 2
-                        ) {
-                          return (
-                            <span
-                              key={page}
-                              className="px-2 text-gray-500 dark:text-gray-400"
-                            >
-                              ...
-                            </span>
-                          );
+                      {Array.from({ length: totalPages }, (_, i) => i + 1).map(
+                        (page) => {
+                          // Show first page, last page, current page, and pages around current
+                          if (
+                            page === 1 ||
+                            page === totalPages ||
+                            (page >= currentPage - 1 && page <= currentPage + 1)
+                          ) {
+                            return (
+                              <button
+                                key={page}
+                                onClick={() => setCurrentPage(page)}
+                                className={`rounded-lg px-3 py-2 text-sm font-medium transition-colors sm:px-4 sm:text-base ${
+                                  currentPage === page
+                                    ? "bg-green-600 text-white"
+                                    : "border border-gray-300 bg-white text-gray-700 hover:bg-gray-50 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700"
+                                }`}
+                              >
+                                {page}
+                              </button>
+                            );
+                          } else if (
+                            page === currentPage - 2 ||
+                            page === currentPage + 2
+                          ) {
+                            return (
+                              <span
+                                key={page}
+                                className="px-2 text-gray-500 dark:text-gray-400"
+                              >
+                                ...
+                              </span>
+                            );
+                          }
+                          return null;
                         }
-                        return null;
-                      })}
+                      )}
                     </div>
 
                     {/* Next Button */}
                     <button
-                      onClick={() => setCurrentPage((prev) => Math.min(totalPages, prev + 1))}
+                      onClick={() =>
+                        setCurrentPage((prev) => Math.min(totalPages, prev + 1))
+                      }
                       disabled={currentPage === totalPages}
-                      className="flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors text-sm sm:text-base"
+                      className="flex items-center gap-1.5 rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-700 transition-colors hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700 sm:gap-2 sm:px-4 sm:text-base"
                     >
                       <span className="hidden sm:inline">Next</span>
                       <span className="sm:hidden">Next</span>
@@ -834,17 +903,25 @@ export default function StoreDetailsPage() {
 
       {/* Add Product Modal */}
       {showAddProductModal && (
-        <div className="fixed inset-0 bg-black/50 z-[10000] flex items-center justify-center p-2 sm:p-4">
-          <div className="bg-white dark:bg-gray-800 rounded-lg sm:rounded-xl shadow-xl max-w-2xl w-full max-h-[95vh] sm:max-h-[90vh] overflow-y-auto">
-            <div className="sticky top-0 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 px-3 sm:px-4 md:px-6 py-3 sm:py-4 flex items-center justify-between z-10">
-              <h3 className="text-base sm:text-lg md:text-xl font-bold text-gray-900 dark:text-white">
+        <div className="fixed inset-0 z-[10000] flex items-center justify-center bg-black/50 p-2 sm:p-4">
+          <div className="max-h-[95vh] w-full max-w-2xl overflow-y-auto rounded-lg bg-white shadow-xl dark:bg-gray-800 sm:max-h-[90vh] sm:rounded-xl">
+            <div className="sticky top-0 z-10 flex items-center justify-between border-b border-gray-200 bg-white px-3 py-3 dark:border-gray-700 dark:bg-gray-800 sm:px-4 sm:py-4 md:px-6">
+              <h3 className="text-base font-bold text-gray-900 dark:text-white sm:text-lg md:text-xl">
                 {editingProduct ? "Edit Product" : "Add New Product"}
               </h3>
               <button
                 onClick={() => {
                   setShowAddProductModal(false);
                   setEditingProduct(null);
-                  setNewProduct({ name: "", description: "", price: "", unit: "", minimumOrders: "0", maxOrders: "", deliveryArea: "" });
+                  setNewProduct({
+                    name: "",
+                    description: "",
+                    price: "",
+                    unit: "",
+                    minimumOrders: "0",
+                    maxOrders: "",
+                    deliveryArea: "",
+                  });
                   setProductImage("");
                   setQueryId(null);
                 }}
@@ -854,23 +931,23 @@ export default function StoreDetailsPage() {
               </button>
             </div>
 
-            <div className="p-3 sm:p-4 md:p-6 space-y-3 sm:space-y-4 md:space-y-6">
+            <div className="space-y-3 p-3 sm:space-y-4 sm:p-4 md:space-y-6 md:p-6">
               {queryId && !editingProduct && (
-                <div className="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg p-4 sm:p-5 md:p-6">
-                  <p className="text-sm sm:text-base text-green-800 dark:text-green-200 font-medium mb-2 sm:mb-3">
+                <div className="rounded-lg border border-green-200 bg-green-50 p-4 dark:border-green-800 dark:bg-green-900/20 sm:p-5 md:p-6">
+                  <p className="mb-2 text-sm font-medium text-green-800 dark:text-green-200 sm:mb-3 sm:text-base">
                     Verification ID Generated
                   </p>
-                  <p className="text-2xl sm:text-3xl md:text-4xl text-green-600 dark:text-green-300 font-mono font-bold mb-2 sm:mb-3 text-center tracking-wider">
+                  <p className="mb-2 text-center font-mono text-2xl font-bold tracking-wider text-green-600 dark:text-green-300 sm:mb-3 sm:text-3xl md:text-4xl">
                     {queryId}
                   </p>
-                  <p className="text-xs sm:text-sm text-green-600 dark:text-green-300 mt-2 text-center">
+                  <p className="mt-2 text-center text-xs text-green-600 dark:text-green-300 sm:text-sm">
                     Use this ID when taking the product photo for verification.
                   </p>
                 </div>
               )}
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                <label className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">
                   Product Name *
                 </label>
                 <input
@@ -879,29 +956,32 @@ export default function StoreDetailsPage() {
                   onChange={(e) =>
                     setNewProduct({ ...newProduct, name: e.target.value })
                   }
-                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent dark:bg-gray-700 dark:text-white text-sm sm:text-base"
+                  className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-transparent focus:ring-2 focus:ring-green-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white sm:text-base"
                   placeholder="Enter product name"
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                <label className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">
                   Description
                 </label>
                 <textarea
                   value={newProduct.description}
                   onChange={(e) =>
-                    setNewProduct({ ...newProduct, description: e.target.value })
+                    setNewProduct({
+                      ...newProduct,
+                      description: e.target.value,
+                    })
                   }
                   rows={3}
-                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent dark:bg-gray-700 dark:text-white text-sm sm:text-base"
+                  className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-transparent focus:ring-2 focus:ring-green-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white sm:text-base"
                   placeholder="Enter product description"
                 />
               </div>
 
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  <label className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">
                     Price *
                   </label>
                   <input
@@ -911,13 +991,13 @@ export default function StoreDetailsPage() {
                     onChange={(e) =>
                       setNewProduct({ ...newProduct, price: e.target.value })
                     }
-                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent dark:bg-gray-700 dark:text-white text-sm sm:text-base"
+                    className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-transparent focus:ring-2 focus:ring-green-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white sm:text-base"
                     placeholder="0.00"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  <label className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">
                     Unit *
                   </label>
                   <select
@@ -925,7 +1005,7 @@ export default function StoreDetailsPage() {
                     onChange={(e) =>
                       setNewProduct({ ...newProduct, unit: e.target.value })
                     }
-                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent dark:bg-gray-700 dark:text-white text-sm sm:text-base"
+                    className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-transparent focus:ring-2 focus:ring-green-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white sm:text-base"
                   >
                     <option value="">Select unit</option>
                     <option value="kg">kg (Kilogram)</option>
@@ -957,7 +1037,7 @@ export default function StoreDetailsPage() {
 
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  <label className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">
                     Minimum Orders *
                   </label>
                   <input
@@ -965,9 +1045,12 @@ export default function StoreDetailsPage() {
                     min="0"
                     value={newProduct.minimumOrders}
                     onChange={(e) =>
-                      setNewProduct({ ...newProduct, minimumOrders: e.target.value })
+                      setNewProduct({
+                        ...newProduct,
+                        minimumOrders: e.target.value,
+                      })
                     }
-                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent dark:bg-gray-700 dark:text-white text-sm sm:text-base"
+                    className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-transparent focus:ring-2 focus:ring-green-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white sm:text-base"
                     placeholder="0"
                   />
                   <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
@@ -976,7 +1059,7 @@ export default function StoreDetailsPage() {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  <label className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">
                     Maximum Orders
                   </label>
                   <input
@@ -984,9 +1067,12 @@ export default function StoreDetailsPage() {
                     min="0"
                     value={newProduct.maxOrders}
                     onChange={(e) =>
-                      setNewProduct({ ...newProduct, maxOrders: e.target.value })
+                      setNewProduct({
+                        ...newProduct,
+                        maxOrders: e.target.value,
+                      })
                     }
-                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent dark:bg-gray-700 dark:text-white text-sm sm:text-base"
+                    className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-transparent focus:ring-2 focus:ring-green-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white sm:text-base"
                     placeholder="Optional"
                   />
                   <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
@@ -996,16 +1082,19 @@ export default function StoreDetailsPage() {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                <label className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">
                   Delivery Area
                 </label>
                 <input
                   type="text"
                   value={newProduct.deliveryArea}
                   onChange={(e) =>
-                    setNewProduct({ ...newProduct, deliveryArea: e.target.value })
+                    setNewProduct({
+                      ...newProduct,
+                      deliveryArea: e.target.value,
+                    })
                   }
-                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent dark:bg-gray-700 dark:text-white text-sm sm:text-base"
+                  className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-transparent focus:ring-2 focus:ring-green-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white sm:text-base"
                   placeholder="e.g., Kigali, Rwanda or specific areas"
                 />
                 <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
@@ -1014,7 +1103,7 @@ export default function StoreDetailsPage() {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                <label className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">
                   Product Image *
                 </label>
                 {productImage ? (
@@ -1022,11 +1111,11 @@ export default function StoreDetailsPage() {
                     <img
                       src={productImage}
                       alt="Product preview"
-                      className="w-full h-48 object-cover rounded-lg"
+                      className="h-48 w-full rounded-lg object-cover"
                     />
                     <button
                       onClick={() => setProductImage("")}
-                      className="absolute top-2 right-2 bg-red-500 text-white p-2 rounded-full hover:bg-red-600"
+                      className="absolute right-2 top-2 rounded-full bg-red-500 p-2 text-white hover:bg-red-600"
                     >
                       <X className="h-4 w-4" />
                     </button>
@@ -1034,14 +1123,14 @@ export default function StoreDetailsPage() {
                 ) : (
                   <button
                     onClick={() => setShowCamera(true)}
-                    className="w-full h-48 border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg flex flex-col items-center justify-center hover:border-green-500 transition-colors"
+                    className="flex h-48 w-full flex-col items-center justify-center rounded-lg border-2 border-dashed border-gray-300 transition-colors hover:border-green-500 dark:border-gray-600"
                   >
-                    <Camera className="h-8 w-8 sm:h-12 sm:w-12 text-gray-400 mb-2" />
-                    <span className="text-sm sm:text-base text-gray-600 dark:text-gray-400">
+                    <Camera className="mb-2 h-8 w-8 text-gray-400 sm:h-12 sm:w-12" />
+                    <span className="text-sm text-gray-600 dark:text-gray-400 sm:text-base">
                       Capture Product Image
                     </span>
                     {queryId && (
-                      <span className="text-xs text-green-600 dark:text-green-400 mt-1 font-mono">
+                      <span className="mt-1 font-mono text-xs text-green-600 dark:text-green-400">
                         Verification ID: {queryId}
                       </span>
                     )}
@@ -1054,22 +1143,34 @@ export default function StoreDetailsPage() {
                   onClick={() => {
                     setShowAddProductModal(false);
                     setEditingProduct(null);
-                    setNewProduct({ name: "", description: "", price: "", unit: "", minimumOrders: "0", maxOrders: "", deliveryArea: "" });
+                    setNewProduct({
+                      name: "",
+                      description: "",
+                      price: "",
+                      unit: "",
+                      minimumOrders: "0",
+                      maxOrders: "",
+                      deliveryArea: "",
+                    });
                     setProductImage("");
                     setQueryId(null);
                   }}
-                  className="flex-1 px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors text-sm sm:text-base"
+                  className="flex-1 rounded-lg border border-gray-300 px-4 py-2 text-sm text-gray-700 transition-colors hover:bg-gray-50 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-700 sm:text-base"
                 >
                   Cancel
                 </button>
                 <button
                   onClick={handleSubmitProduct}
                   disabled={isCreatingProduct}
-                  className="flex-1 px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg disabled:opacity-50 disabled:cursor-not-allowed transition-colors text-sm sm:text-base"
+                  className="flex-1 rounded-lg bg-green-600 px-4 py-2 text-sm text-white transition-colors hover:bg-green-700 disabled:cursor-not-allowed disabled:opacity-50 sm:text-base"
                 >
-                  {isCreatingProduct 
-                    ? (editingProduct ? "Updating..." : "Adding...") 
-                    : (editingProduct ? "Update Product" : "Add Product")}
+                  {isCreatingProduct
+                    ? editingProduct
+                      ? "Updating..."
+                      : "Adding..."
+                    : editingProduct
+                    ? "Update Product"
+                    : "Add Product"}
                 </button>
               </div>
             </div>
@@ -1088,4 +1189,3 @@ export default function StoreDetailsPage() {
     </RootLayout>
   );
 }
-

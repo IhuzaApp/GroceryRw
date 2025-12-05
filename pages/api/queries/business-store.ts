@@ -7,10 +7,7 @@ import { gql } from "graphql-request";
 const GET_BUSINESS_STORE = gql`
   query GetBusinessStore($store_id: uuid!, $business_id: uuid!) {
     business_stores(
-      where: {
-        id: { _eq: $store_id }
-        business_id: { _eq: $business_id }
-      }
+      where: { id: { _eq: $store_id }, business_id: { _eq: $business_id } }
     ) {
       id
       name
@@ -120,4 +117,3 @@ export default async function handler(
     });
   }
 }
-

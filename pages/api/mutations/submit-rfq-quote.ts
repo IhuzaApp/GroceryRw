@@ -62,10 +62,10 @@ interface Session {
 export const config = {
   api: {
     bodyParser: {
-      sizeLimit: '10mb',
+      sizeLimit: "10mb",
     },
   },
-}
+};
 
 export default async function handler(
   req: NextApiRequest,
@@ -103,12 +103,19 @@ export default async function handler(
       const configResult = await hasuraClient.request<{
         System_configuratioins: Array<{ currency: string }>;
       }>(GET_SYSTEM_CONFIG);
-      if (configResult.System_configuratioins && configResult.System_configuratioins.length > 0) {
-        defaultCurrency = configResult.System_configuratioins[0].currency || "RWF";
+      if (
+        configResult.System_configuratioins &&
+        configResult.System_configuratioins.length > 0
+      ) {
+        defaultCurrency =
+          configResult.System_configuratioins[0].currency || "RWF";
       }
     } catch (error) {
       // Use fallback default if config fetch fails (matches formatCurrency.ts behavior)
-      console.warn("Failed to fetch system configuration, using default currency:", error);
+      console.warn(
+        "Failed to fetch system configuration, using default currency:",
+        error
+      );
     }
 
     const user_id = session.user.id;
@@ -152,7 +159,10 @@ export default async function handler(
       }>(CHECK_BUSINESS_ACCOUNT, {
         user_id: user_id,
       });
-      if (accountResult.business_accounts && accountResult.business_accounts.length > 0) {
+      if (
+        accountResult.business_accounts &&
+        accountResult.business_accounts.length > 0
+      ) {
         business_id = accountResult.business_accounts[0].id;
       }
     } catch (error) {
@@ -162,8 +172,11 @@ export default async function handler(
     // Validate attachment sizes before sending to GraphQL
     // GraphQL and database may have limits on string field sizes
     const maxAttachmentSize = 3 * 1024 * 1024; // 3MB base64 string limit
-    
-    const validateAttachment = (attachment: string | undefined, fieldName: string) => {
+
+    const validateAttachment = (
+      attachment: string | undefined,
+      fieldName: string
+    ) => {
       if (!attachment) return "";
       if (attachment.length > maxAttachmentSize) {
         throw new Error(`${fieldName} is too large. Maximum size is 3MB.`);
@@ -172,8 +185,14 @@ export default async function handler(
     };
 
     const validatedAttachement = validateAttachment(attachement, "Attachment");
-    const validatedAttachment1 = validateAttachment(attachment_1, "Attachment 1");
-    const validatedAttachment2 = validateAttachment(attachment_2, "Attachment 2");
+    const validatedAttachment1 = validateAttachment(
+      attachment_1,
+      "Attachment 1"
+    );
+    const validatedAttachment2 = validateAttachment(
+      attachment_2,
+      "Attachment 2"
+    );
 
     const result = await hasuraClient.request<{
       insert_BusinessQoute: {
@@ -208,11 +227,13 @@ export default async function handler(
       response: error.response,
       request: error.request,
     });
-    
+
     // Extract GraphQL errors if present
     const graphqlErrors = error.response?.errors || [];
-    const errorMessages = graphqlErrors.map((err: any) => err.message).join(", ");
-    
+    const errorMessages = graphqlErrors
+      .map((err: any) => err.message)
+      .join(", ");
+
     return res.status(500).json({
       error: "Failed to submit quote",
       message: error.message || "Unknown error",
@@ -221,4 +242,3 @@ export default async function handler(
     });
   }
 }
-

@@ -189,7 +189,10 @@ export default async function handler(
         }>(CHECK_BUSINESS_ACCOUNT, {
           user_id: final_user_id,
         });
-        if (accountResult.business_accounts && accountResult.business_accounts.length > 0) {
+        if (
+          accountResult.business_accounts &&
+          accountResult.business_accounts.length > 0
+        ) {
           final_business_id = accountResult.business_accounts[0].id;
         }
       } catch (error) {
@@ -201,7 +204,9 @@ export default async function handler(
     let requirementsJson = "";
     if (requirements) {
       if (Array.isArray(requirements)) {
-        requirementsJson = JSON.stringify(requirements.filter((r) => r.trim() !== ""));
+        requirementsJson = JSON.stringify(
+          requirements.filter((r) => r.trim() !== "")
+        );
       } else if (typeof requirements === "string") {
         requirementsJson = requirements;
       } else {
@@ -221,7 +226,9 @@ export default async function handler(
       max_budget: max_budget ? max_budget.trim() : "",
       urgency_level: urgency_level ? urgency_level.trim() : "",
       estimated_quantity: estimated_quantity ? estimated_quantity.trim() : "",
-      expected_delivery_date: expected_delivery_date ? expected_delivery_date.trim() : "",
+      expected_delivery_date: expected_delivery_date
+        ? expected_delivery_date.trim()
+        : "",
       payment_terms: payment_terms ? payment_terms.trim() : "",
       requirements: requirementsJson || "[]",
       notes: notes ? notes.trim() : "",
@@ -279,4 +286,3 @@ export default async function handler(
     });
   }
 }
-

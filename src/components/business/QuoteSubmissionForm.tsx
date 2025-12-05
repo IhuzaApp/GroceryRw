@@ -57,7 +57,9 @@ export function QuoteSubmissionForm({
   if (!isOpen) return null;
 
   const handleInputChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
+    e: React.ChangeEvent<
+      HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement
+    >
   ) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
@@ -68,15 +70,17 @@ export function QuoteSubmissionForm({
       const files = Array.from(e.target.files);
       const currentCount = attachments.length;
       const remainingSlots = 3 - currentCount;
-      
+
       if (remainingSlots <= 0) {
         toast.error("Maximum 3 attachments allowed");
         return;
       }
-      
+
       const filesToProcess = files.slice(0, remainingSlots);
       if (files.length > remainingSlots) {
-        toast.error(`Only ${remainingSlots} more attachment(s) allowed (max 3 total)`);
+        toast.error(
+          `Only ${remainingSlots} more attachment(s) allowed (max 3 total)`
+        );
       }
 
       // Validate and compress files before adding
@@ -84,35 +88,43 @@ export function QuoteSubmissionForm({
       for (const file of filesToProcess) {
         // Check original file size (max 2MB before compression for non-images, 3MB for images)
         // Base64 encoding increases size by ~33%, so we need to be conservative
-        const maxOriginalSize = file.type.startsWith('image/') 
+        const maxOriginalSize = file.type.startsWith("image/")
           ? 2.5 * 1024 * 1024 // 2.5MB for images (will be compressed)
           : 1.5 * 1024 * 1024; // 1.5MB for non-images (PDFs, etc. - no compression)
-        
+
         if (file.size > maxOriginalSize) {
-          toast.error(`File "${file.name}" is too large. Maximum size is ${file.type.startsWith('image/') ? '2.5MB' : '1.5MB'} per file.`);
+          toast.error(
+            `File "${file.name}" is too large. Maximum size is ${
+              file.type.startsWith("image/") ? "2.5MB" : "1.5MB"
+            } per file.`
+          );
           continue;
         }
 
         // Compress images
         try {
-          const processedFile = file.type.startsWith('image/') 
+          const processedFile = file.type.startsWith("image/")
             ? await compressImage(file, 1920, 0.7) // Lower quality for better compression
             : file;
-          
+
           // Check size after compression (max 1.5MB per file to account for base64 overhead)
           const maxCompressedSize = 1.5 * 1024 * 1024; // 1.5MB
           if (processedFile.size > maxCompressedSize) {
-            toast.error(`File "${file.name}" is still too large after compression. Maximum size is 1.5MB per file.`);
+            toast.error(
+              `File "${file.name}" is still too large after compression. Maximum size is 1.5MB per file.`
+            );
             continue;
           }
-          
+
           processedFiles.push(processedFile);
         } catch (error) {
           console.error(`Error processing file ${file.name}:`, error);
-          toast.error(`Error processing "${file.name}". Please try a different file.`);
+          toast.error(
+            `Error processing "${file.name}". Please try a different file.`
+          );
         }
       }
-      
+
       setAttachments((prev) => [...prev, ...processedFiles]);
     }
   };
@@ -121,9 +133,13 @@ export function QuoteSubmissionForm({
     setAttachments((prev) => prev.filter((_, i) => i !== index));
   };
 
-  const compressImage = (file: File, maxWidth: number = 1920, quality: number = 0.8): Promise<File> => {
+  const compressImage = (
+    file: File,
+    maxWidth: number = 1920,
+    quality: number = 0.8
+  ): Promise<File> => {
     return new Promise((resolve, reject) => {
-      if (!file.type.startsWith('image/')) {
+      if (!file.type.startsWith("image/")) {
         // Not an image, return as is
         resolve(file);
         return;
@@ -134,7 +150,7 @@ export function QuoteSubmissionForm({
       reader.onload = (e) => {
         const img = new Image();
         img.onload = () => {
-          const canvas = document.createElement('canvas');
+          const canvas = document.createElement("canvas");
           let width = img.width;
           let height = img.height;
 
@@ -147,7 +163,7 @@ export function QuoteSubmissionForm({
           canvas.width = width;
           canvas.height = height;
 
-          const ctx = canvas.getContext('2d');
+          const ctx = canvas.getContext("2d");
           if (!ctx) {
             resolve(file);
             return;
@@ -205,18 +221,28 @@ export function QuoteSubmissionForm({
       const estimatedBase64Size = totalSize * 1.4; // Estimate base64 size
       const maxTotalSize = 4 * 1024 * 1024; // 4MB total base64 (reduced to be safer)
       const maxPerFileBase64 = 2 * 1024 * 1024; // 2MB base64 per file max
-      
+
       // Check individual file sizes (already validated in handleFileChange, but double-check)
       for (const file of attachments) {
         if (file.size > 1.5 * 1024 * 1024) {
-          toast.error(`File "${file.name}" is too large. Maximum size is 1.5MB per file.`);
+          toast.error(
+            `File "${file.name}" is too large. Maximum size is 1.5MB per file.`
+          );
           setIsSubmitting(false);
           return;
         }
       }
-      
+
       if (estimatedBase64Size > maxTotalSize) {
-        toast.error(`Total attachment size is too large (${(estimatedBase64Size / 1024 / 1024).toFixed(2)}MB). Maximum total size is 4MB. Please reduce file sizes or remove some attachments.`);
+        toast.error(
+          `Total attachment size is too large (${(
+            estimatedBase64Size /
+            1024 /
+            1024
+          ).toFixed(
+            2
+          )}MB). Maximum total size is 4MB. Please reduce file sizes or remove some attachments.`
+        );
         setIsSubmitting(false);
         return;
       }
@@ -227,7 +253,15 @@ export function QuoteSubmissionForm({
         const base64 = await convertFileToBase64(file);
         // Validate actual base64 size (2MB limit per file)
         if (base64.length > maxPerFileBase64) {
-          throw new Error(`File "${file.name}" is too large after encoding (${(base64.length / 1024 / 1024).toFixed(2)}MB). Maximum size is 2MB per file. Please use a smaller file.`);
+          throw new Error(
+            `File "${file.name}" is too large after encoding (${(
+              base64.length /
+              1024 /
+              1024
+            ).toFixed(
+              2
+            )}MB). Maximum size is 2MB per file. Please use a smaller file.`
+          );
         }
         return base64;
       });
@@ -295,7 +329,11 @@ export function QuoteSubmissionForm({
         onClose();
       } else {
         console.error("API Error Response:", data);
-        const errorMessage = data.graphqlErrors || data.message || data.error || "Failed to submit quote";
+        const errorMessage =
+          data.graphqlErrors ||
+          data.message ||
+          data.error ||
+          "Failed to submit quote";
         toast.error(errorMessage);
       }
     } catch (error) {
@@ -402,7 +440,7 @@ export function QuoteSubmissionForm({
                   name="validity"
                   value={formData.validity}
                   onChange={handleInputChange}
-                  className="w-full rounded-lg border border-gray-300 py-2 px-4 focus:border-green-500 focus:ring-2 focus:ring-green-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white"
+                  className="w-full rounded-lg border border-gray-300 px-4 py-2 focus:border-green-500 focus:ring-2 focus:ring-green-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white"
                 >
                   <option value="">Select validity period</option>
                   <option value="7 days">7 days</option>
@@ -427,7 +465,7 @@ export function QuoteSubmissionForm({
                 value={formData.message}
                 onChange={handleInputChange}
                 rows={4}
-                className="w-full rounded-lg border border-gray-300 py-2 px-4 focus:border-green-500 focus:ring-2 focus:ring-green-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white"
+                className="w-full rounded-lg border border-gray-300 px-4 py-2 focus:border-green-500 focus:ring-2 focus:ring-green-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white"
                 placeholder="Describe your proposal, capabilities, and why you're the best fit..."
               />
             </div>
@@ -446,18 +484,26 @@ export function QuoteSubmissionForm({
                     name="payment_terms"
                     value={formData.payment_terms}
                     onChange={handleInputChange}
-                    className="w-full rounded-lg border border-gray-300 py-2 px-4 focus:border-green-500 focus:ring-2 focus:ring-green-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white"
+                    className="w-full rounded-lg border border-gray-300 px-4 py-2 focus:border-green-500 focus:ring-2 focus:ring-green-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white"
                   >
                     <option value="">Select payment terms</option>
-                    <option value="Cash on Delivery (COD)">Cash on Delivery (COD)</option>
+                    <option value="Cash on Delivery (COD)">
+                      Cash on Delivery (COD)
+                    </option>
                     <option value="Net 7 days">Net 7 days</option>
                     <option value="Net 15 days">Net 15 days</option>
                     <option value="Net 30 days">Net 30 days</option>
                     <option value="Net 45 days">Net 45 days</option>
                     <option value="Net 60 days">Net 60 days</option>
-                    <option value="50% advance, 50% on delivery">50% advance, 50% on delivery</option>
-                    <option value="100% advance payment">100% advance payment</option>
-                    <option value="Letter of Credit (L/C)">Letter of Credit (L/C)</option>
+                    <option value="50% advance, 50% on delivery">
+                      50% advance, 50% on delivery
+                    </option>
+                    <option value="100% advance payment">
+                      100% advance payment
+                    </option>
+                    <option value="Letter of Credit (L/C)">
+                      Letter of Credit (L/C)
+                    </option>
                     <option value="Bank Transfer">Bank Transfer</option>
                     <option value="Credit Card">Credit Card</option>
                   </select>
@@ -470,7 +516,7 @@ export function QuoteSubmissionForm({
                     name="warranty"
                     value={formData.warranty}
                     onChange={handleInputChange}
-                    className="w-full rounded-lg border border-gray-300 py-2 px-4 focus:border-green-500 focus:ring-2 focus:ring-green-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white"
+                    className="w-full rounded-lg border border-gray-300 px-4 py-2 focus:border-green-500 focus:ring-2 focus:ring-green-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white"
                   >
                     <option value="">Select warranty</option>
                     <option value="No warranty">No warranty</option>
@@ -482,7 +528,9 @@ export function QuoteSubmissionForm({
                     <option value="3 years warranty">3 years warranty</option>
                     <option value="5 years warranty">5 years warranty</option>
                     <option value="Lifetime warranty">Lifetime warranty</option>
-                    <option value="Manufacturer warranty">Manufacturer warranty</option>
+                    <option value="Manufacturer warranty">
+                      Manufacturer warranty
+                    </option>
                   </select>
                 </div>
                 <div>
@@ -493,19 +541,31 @@ export function QuoteSubmissionForm({
                     name="delivery_terms"
                     value={formData.delivery_terms}
                     onChange={handleInputChange}
-                    className="w-full rounded-lg border border-gray-300 py-2 px-4 focus:border-green-500 focus:ring-2 focus:ring-green-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white"
+                    className="w-full rounded-lg border border-gray-300 px-4 py-2 focus:border-green-500 focus:ring-2 focus:ring-green-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white"
                   >
                     <option value="">Select delivery terms</option>
-                    <option value="FOB Origin (Free On Board)">FOB Origin (Free On Board)</option>
+                    <option value="FOB Origin (Free On Board)">
+                      FOB Origin (Free On Board)
+                    </option>
                     <option value="FOB Destination">FOB Destination</option>
-                    <option value="CIF (Cost, Insurance, Freight)">CIF (Cost, Insurance, Freight)</option>
+                    <option value="CIF (Cost, Insurance, Freight)">
+                      CIF (Cost, Insurance, Freight)
+                    </option>
                     <option value="EXW (Ex Works)">EXW (Ex Works)</option>
-                    <option value="DDP (Delivered Duty Paid)">DDP (Delivered Duty Paid)</option>
+                    <option value="DDP (Delivered Duty Paid)">
+                      DDP (Delivered Duty Paid)
+                    </option>
                     <option value="Free delivery">Free delivery</option>
                     <option value="Customer pickup">Customer pickup</option>
-                    <option value="Delivery charges apply">Delivery charges apply</option>
-                    <option value="Free delivery within city">Free delivery within city</option>
-                    <option value="Free delivery within 50km">Free delivery within 50km</option>
+                    <option value="Delivery charges apply">
+                      Delivery charges apply
+                    </option>
+                    <option value="Free delivery within city">
+                      Free delivery within city
+                    </option>
+                    <option value="Free delivery within 50km">
+                      Free delivery within 50km
+                    </option>
                   </select>
                 </div>
                 <div>
@@ -516,18 +576,36 @@ export function QuoteSubmissionForm({
                     name="cancellation_terms"
                     value={formData.cancellation_terms}
                     onChange={handleInputChange}
-                    className="w-full rounded-lg border border-gray-300 py-2 px-4 focus:border-green-500 focus:ring-2 focus:ring-green-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white"
+                    className="w-full rounded-lg border border-gray-300 px-4 py-2 focus:border-green-500 focus:ring-2 focus:ring-green-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white"
                   >
                     <option value="">Select cancellation terms</option>
-                    <option value="No cancellation allowed">No cancellation allowed</option>
-                    <option value="24 hours notice required">24 hours notice required</option>
-                    <option value="48 hours notice required">48 hours notice required</option>
-                    <option value="7 days notice required">7 days notice required</option>
-                    <option value="14 days notice required">14 days notice required</option>
-                    <option value="30 days notice required">30 days notice required</option>
-                    <option value="50% cancellation fee">50% cancellation fee</option>
-                    <option value="Full refund if cancelled before delivery">Full refund if cancelled before delivery</option>
-                    <option value="Partial refund based on work completed">Partial refund based on work completed</option>
+                    <option value="No cancellation allowed">
+                      No cancellation allowed
+                    </option>
+                    <option value="24 hours notice required">
+                      24 hours notice required
+                    </option>
+                    <option value="48 hours notice required">
+                      48 hours notice required
+                    </option>
+                    <option value="7 days notice required">
+                      7 days notice required
+                    </option>
+                    <option value="14 days notice required">
+                      14 days notice required
+                    </option>
+                    <option value="30 days notice required">
+                      30 days notice required
+                    </option>
+                    <option value="50% cancellation fee">
+                      50% cancellation fee
+                    </option>
+                    <option value="Full refund if cancelled before delivery">
+                      Full refund if cancelled before delivery
+                    </option>
+                    <option value="Partial refund based on work completed">
+                      Partial refund based on work completed
+                    </option>
                   </select>
                 </div>
               </div>
@@ -536,19 +614,24 @@ export function QuoteSubmissionForm({
             {/* Attachments */}
             <div>
               <label className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">
-                Attachments <span className="text-xs text-gray-500">(Max 3 files)</span>
+                Attachments{" "}
+                <span className="text-xs text-gray-500">(Max 3 files)</span>
               </label>
               <div className="space-y-2">
-                <label className={`flex cursor-pointer items-center justify-center gap-2 rounded-lg border-2 border-dashed px-4 py-6 transition-colors ${
-                  attachments.length >= 3
-                    ? "border-gray-300 bg-gray-100 cursor-not-allowed opacity-50 dark:border-gray-600 dark:bg-gray-800"
-                    : "border-gray-300 bg-gray-50 hover:border-green-500 hover:bg-gray-100 dark:border-gray-600 dark:bg-gray-700/50 dark:hover:border-green-500"
-                }`}>
+                <label
+                  className={`flex cursor-pointer items-center justify-center gap-2 rounded-lg border-2 border-dashed px-4 py-6 transition-colors ${
+                    attachments.length >= 3
+                      ? "cursor-not-allowed border-gray-300 bg-gray-100 opacity-50 dark:border-gray-600 dark:bg-gray-800"
+                      : "border-gray-300 bg-gray-50 hover:border-green-500 hover:bg-gray-100 dark:border-gray-600 dark:bg-gray-700/50 dark:hover:border-green-500"
+                  }`}
+                >
                   <Upload className="h-5 w-5 text-gray-400" />
                   <span className="text-sm text-gray-600 dark:text-gray-400">
                     {attachments.length >= 3
                       ? "Maximum 3 attachments reached"
-                      : `Click to upload files (${3 - attachments.length} slot${3 - attachments.length > 1 ? "s" : ""} remaining)`}
+                      : `Click to upload files (${3 - attachments.length} slot${
+                          3 - attachments.length > 1 ? "s" : ""
+                        } remaining)`}
                   </span>
                   <input
                     type="file"
@@ -559,7 +642,8 @@ export function QuoteSubmissionForm({
                     disabled={attachments.length >= 3}
                   />
                   <p className="mt-2 text-xs text-gray-500 dark:text-gray-400">
-                    Max 1.5MB per file, 4MB total. Images will be automatically compressed. PDFs and other documents must be under 1.5MB.
+                    Max 1.5MB per file, 4MB total. Images will be automatically
+                    compressed. PDFs and other documents must be under 1.5MB.
                   </p>
                 </label>
                 {attachments.length > 0 && (
@@ -625,4 +709,3 @@ export function QuoteSubmissionForm({
     </div>
   );
 }
-

@@ -134,8 +134,9 @@ export default async function handler(
     }
 
     // minimumOrders is required by the database, default to "0" if not provided
-    const minimumOrders = minOrders && minOrders.trim() !== "" ? minOrders.trim() : "0";
-    
+    const minimumOrders =
+      minOrders && minOrders.trim() !== "" ? minOrders.trim() : "0";
+
     // Get user_id from session if not provided
     const final_user_id = user_id || session?.user?.id || "";
 
@@ -179,7 +180,8 @@ export default async function handler(
       throw new Error("Failed to create business product");
     }
 
-    const createdProduct = result.insert_PlasBusinessProductsOrSerive.returning[0];
+    const createdProduct =
+      result.insert_PlasBusinessProductsOrSerive.returning[0];
 
     return res.status(200).json({
       success: true,
@@ -211,4 +213,3 @@ export default async function handler(
     });
   }
 }
-

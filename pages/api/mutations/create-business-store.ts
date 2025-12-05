@@ -105,11 +105,15 @@ export default async function handler(
     }
 
     if (!latitude || !latitude.trim()) {
-      return res.status(400).json({ error: "Store location (latitude) is required" });
+      return res
+        .status(400)
+        .json({ error: "Store location (latitude) is required" });
     }
 
     if (!longitude || !longitude.trim()) {
-      return res.status(400).json({ error: "Store location (longitude) is required" });
+      return res
+        .status(400)
+        .json({ error: "Store location (longitude) is required" });
     }
 
     // Get the business account for this user
@@ -161,7 +165,10 @@ export default async function handler(
       if (!hasWallet) {
         // Create wallet with amount "0"
         const createWalletMutation = gql`
-          mutation CreateBusinessWallet($amount: String = "", $business_id: uuid!) {
+          mutation CreateBusinessWallet(
+            $amount: String = ""
+            $business_id: uuid!
+          ) {
             insert_business_wallet(
               objects: { amount: $amount, business_id: $business_id }
             ) {

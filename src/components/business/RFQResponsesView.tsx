@@ -264,18 +264,20 @@ export function RFQResponsesView({
   const fetchRFQData = async () => {
     try {
       setLoading(true);
-      const response = await fetch(`/api/queries/rfq-details-and-responses?rfq_id=${rfqId}`);
+      const response = await fetch(
+        `/api/queries/rfq-details-and-responses?rfq_id=${rfqId}`
+      );
       if (response.ok) {
         const data = await response.json();
-        
+
         // Transform RFQ details
         const rfq = data.rfq;
-        const requirements = rfq.requirements 
-          ? (typeof rfq.requirements === 'string' 
-              ? JSON.parse(rfq.requirements) 
-              : Array.isArray(rfq.requirements) 
-              ? rfq.requirements 
-              : [])
+        const requirements = rfq.requirements
+          ? typeof rfq.requirements === "string"
+            ? JSON.parse(rfq.requirements)
+            : Array.isArray(rfq.requirements)
+            ? rfq.requirements
+            : []
           : [];
 
         const transformedRFQ: RFQDetails = {
@@ -296,46 +298,86 @@ export function RFQResponsesView({
         setRfqDetails(transformedRFQ);
 
         // Transform responses
-        const transformedResponses: RFQResponse[] = (data.responses || []).map((quote: any) => {
-          const attachments = [];
-          if (quote.attachement) attachments.push({ name: "Attachment 1", type: "PDF", size: "N/A", url: quote.attachement });
-          if (quote.attachment_1) attachments.push({ name: "Attachment 2", type: "PDF", size: "N/A", url: quote.attachment_1 });
-          if (quote.attachment_2) attachments.push({ name: "Attachment 3", type: "PDF", size: "N/A", url: quote.attachment_2 });
+        const transformedResponses: RFQResponse[] = (data.responses || []).map(
+          (quote: any) => {
+            const attachments = [];
+            if (quote.attachement)
+              attachments.push({
+                name: "Attachment 1",
+                type: "PDF",
+                size: "N/A",
+                url: quote.attachement,
+              });
+            if (quote.attachment_1)
+              attachments.push({
+                name: "Attachment 2",
+                type: "PDF",
+                size: "N/A",
+                url: quote.attachment_1,
+              });
+            if (quote.attachment_2)
+              attachments.push({
+                name: "Attachment 3",
+                type: "PDF",
+                size: "N/A",
+                url: quote.attachment_2,
+              });
 
-          return {
-            id: quote.id,
-            supplierId: quote.respond_business_id,
-            supplierName: quote.business_account?.Users?.name || quote.business_account?.business_name || "Unknown",
-            supplierCompany: quote.business_account?.business_name || "Unknown Company",
-            supplierRating: 4.5, // Default - can be enhanced with actual ratings
-            supplierReviews: 0, // Default - can be enhanced with actual reviews
-            supplierLocation: quote.business_account?.business_location || "Not specified",
-            supplierImage: quote.business_account?.face_image || "/images/shop-placeholder.jpg",
-            quoteAmount: parseFloat(quote.qouteAmount || "0"),
-            currency: quote.currency || "RWF",
-            deliveryTime: quote.delivery_time || "Not specified",
-            validity: quote.quote_validity || "Not specified",
-            status: (quote.status || "pending") as "pending" | "accepted" | "rejected" | "negotiating",
-            submittedAt: quote.created_at,
-            message: quote.message || "",
-            attachments: attachments,
-            certifications: [], // Can be enhanced later
-            experience: "", // Can be enhanced later
-            previousClients: [], // Can be enhanced later
-            terms: {
-              payment: quote.PaymentTerms || "Not specified",
-              warranty: quote.warrantly || "Not specified",
-              delivery: quote.DeliveryTerms || "Not specified",
-              cancellation: quote.cancellatioinTerms || "Not specified",
-            },
-            contactInfo: {
-              name: quote.business_account?.Users?.name || quote.business_account?.business_name || "N/A",
-              email: quote.business_account?.business_email || quote.business_account?.Users?.email || "N/A",
-              phone: quote.business_account?.business_phone || quote.business_account?.Users?.phone || "N/A",
-              position: "Contact",
-            },
-          };
-        });
+            return {
+              id: quote.id,
+              supplierId: quote.respond_business_id,
+              supplierName:
+                quote.business_account?.Users?.name ||
+                quote.business_account?.business_name ||
+                "Unknown",
+              supplierCompany:
+                quote.business_account?.business_name || "Unknown Company",
+              supplierRating: 4.5, // Default - can be enhanced with actual ratings
+              supplierReviews: 0, // Default - can be enhanced with actual reviews
+              supplierLocation:
+                quote.business_account?.business_location || "Not specified",
+              supplierImage:
+                quote.business_account?.face_image ||
+                "/images/shop-placeholder.jpg",
+              quoteAmount: parseFloat(quote.qouteAmount || "0"),
+              currency: quote.currency || "RWF",
+              deliveryTime: quote.delivery_time || "Not specified",
+              validity: quote.quote_validity || "Not specified",
+              status: (quote.status || "pending") as
+                | "pending"
+                | "accepted"
+                | "rejected"
+                | "negotiating",
+              submittedAt: quote.created_at,
+              message: quote.message || "",
+              attachments: attachments,
+              certifications: [], // Can be enhanced later
+              experience: "", // Can be enhanced later
+              previousClients: [], // Can be enhanced later
+              terms: {
+                payment: quote.PaymentTerms || "Not specified",
+                warranty: quote.warrantly || "Not specified",
+                delivery: quote.DeliveryTerms || "Not specified",
+                cancellation: quote.cancellatioinTerms || "Not specified",
+              },
+              contactInfo: {
+                name:
+                  quote.business_account?.Users?.name ||
+                  quote.business_account?.business_name ||
+                  "N/A",
+                email:
+                  quote.business_account?.business_email ||
+                  quote.business_account?.Users?.email ||
+                  "N/A",
+                phone:
+                  quote.business_account?.business_phone ||
+                  quote.business_account?.Users?.phone ||
+                  "N/A",
+                position: "Contact",
+              },
+            };
+          }
+        );
         setResponses(transformedResponses);
       } else {
         const errorData = await response.json();
@@ -428,14 +470,16 @@ export function RFQResponsesView({
     return (
       <div className="flex items-center justify-center py-12">
         <Loader2 className="h-8 w-8 animate-spin text-green-500" />
-        <span className="ml-3 text-gray-600 dark:text-gray-400">Loading RFQ details...</span>
+        <span className="ml-3 text-gray-600 dark:text-gray-400">
+          Loading RFQ details...
+        </span>
       </div>
     );
   }
 
   if (!rfqDetails) {
     return (
-      <div className="text-center py-12">
+      <div className="py-12 text-center">
         <p className="text-gray-600 dark:text-gray-400">RFQ not found</p>
         <button
           onClick={onBack}
@@ -484,7 +528,9 @@ export function RFQResponsesView({
             </span>
             <p className="text-gray-900 dark:text-white">
               {rfqDetails.budget.min > 0 && rfqDetails.budget.max > 0
-                ? `${formatCurrencySync(rfqDetails.budget.min)} - ${formatCurrencySync(rfqDetails.budget.max)}`
+                ? `${formatCurrencySync(
+                    rfqDetails.budget.min
+                  )} - ${formatCurrencySync(rfqDetails.budget.max)}`
                 : rfqDetails.budget.min > 0
                 ? `${formatCurrencySync(rfqDetails.budget.min)}+`
                 : rfqDetails.budget.max > 0
@@ -505,7 +551,9 @@ export function RFQResponsesView({
               Deadline:
             </span>
             <p className="text-gray-900 dark:text-white">
-              {rfqDetails.deadline ? new Date(rfqDetails.deadline).toLocaleDateString() : "Not specified"}
+              {rfqDetails.deadline
+                ? new Date(rfqDetails.deadline).toLocaleDateString()
+                : "Not specified"}
             </p>
           </div>
         </div>
