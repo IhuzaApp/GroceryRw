@@ -360,10 +360,11 @@ function BuyerDashboardContent({
                     ? "scale-105 transform bg-gradient-to-r from-green-500 to-emerald-500 text-white shadow-lg"
                     : "text-gray-500 hover:bg-gray-50 hover:text-gray-700 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-gray-300"
                 }`}
+                style={activeTab === tab.id ? { color: "#ffffff" } : undefined}
               >
-                <tab.icon className="h-3.5 w-3.5 flex-shrink-0 sm:h-4 sm:w-4" />
-                <span className="hidden sm:inline">{tab.label}</span>
-                <span className="sm:hidden">{tab.shortLabel || tab.label}</span>
+                <tab.icon className="h-3.5 w-3.5 flex-shrink-0 sm:h-4 sm:w-4" style={activeTab === tab.id ? { color: "#ffffff" } : undefined} />
+                <span className="hidden sm:inline" style={activeTab === tab.id ? { color: "#ffffff" } : undefined}>{tab.label}</span>
+                <span className="sm:hidden" style={activeTab === tab.id ? { color: "#ffffff" } : undefined}>{tab.shortLabel || tab.label}</span>
               </button>
             ))}
           </div>

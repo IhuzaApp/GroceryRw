@@ -392,9 +392,10 @@ export function RFQOpportunitiesSection({
                       ? "bg-blue-500 hover:bg-blue-600"
                       : "bg-green-500 hover:bg-green-600"
                   }`}
+                  style={{ color: "#ffffff" }}
                 >
-                  <CheckCircle className="h-4 w-4" />
-                  {submittedQuotes[rfq.id] ? "View Quote" : "Submit Quote"}
+                  <CheckCircle className="h-4 w-4" style={{ color: "#ffffff" }} />
+                  <span style={{ color: "#ffffff" }}>{submittedQuotes[rfq.id] ? "View Quote" : "Submit Quote"}</span>
                 </button>
                 <button
                   onClick={() => handleMessageCustomer(rfq.id)}

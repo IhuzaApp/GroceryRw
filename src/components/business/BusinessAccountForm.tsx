@@ -366,6 +366,7 @@ export default function BusinessAccountForm({
           onClick={handleSubmit}
           disabled={loading}
           className="flex w-full items-center justify-center space-x-2 rounded-lg bg-gradient-to-r from-green-500 to-emerald-500 px-4 py-2.5 text-sm font-semibold text-white transition-all hover:from-green-600 hover:to-emerald-600 disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto sm:px-6 sm:text-base"
+          style={{ color: "#ffffff" }}
         >
           {loading ? (
             <>

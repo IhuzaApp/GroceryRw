@@ -334,6 +334,7 @@ export default function PersonalBusinessForm({
             !businessLocation.trim()
           }
           className="flex items-center space-x-2 rounded-lg bg-gradient-to-r from-green-500 to-emerald-500 px-6 py-2 font-semibold text-white transition-all hover:from-green-600 hover:to-emerald-600 disabled:cursor-not-allowed disabled:opacity-50"
+          style={{ color: "#ffffff" }}
         >
           {loading ? (
             <>

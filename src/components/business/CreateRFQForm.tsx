@@ -316,6 +316,7 @@ export function CreateRFQForm({
                       ? "bg-green-500 text-white"
                       : "bg-gray-200 text-gray-600 dark:bg-gray-600 dark:text-gray-400"
                   }`}
+                  style={currentStep >= step.id ? { color: "#ffffff" } : undefined}
                 >
                   {step.id}
                 </div>
@@ -836,6 +837,7 @@ export function CreateRFQForm({
                 type="submit"
                 disabled={isSubmitting}
                 className="flex items-center gap-2 rounded-lg bg-green-500 px-6 py-2 font-medium text-white transition-colors hover:bg-green-600 disabled:cursor-not-allowed disabled:opacity-50"
+                style={{ color: "#ffffff" }}
                 onClick={handleSubmit}
               >
                 {isSubmitting ? (

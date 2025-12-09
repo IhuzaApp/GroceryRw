@@ -631,6 +631,7 @@ export function BusinessOverview({ businessAccount }: BusinessOverviewProps) {
           <button
             onClick={handleCreateStore}
             className="flex items-center gap-2 rounded-lg bg-gradient-to-r from-green-500 to-emerald-500 px-4 py-2 text-sm font-medium text-white transition-all hover:from-green-600 hover:to-emerald-600"
+            style={{ color: "#ffffff" }}
           >
             <Plus className="h-4 w-4" />
             <span className="hidden sm:inline">Create Store</span>
@@ -697,8 +698,9 @@ export function BusinessOverview({ businessAccount }: BusinessOverviewProps) {
             <button
               onClick={handleCreateStore}
               className="mt-4 rounded-lg bg-gradient-to-r from-green-500 to-emerald-500 px-6 py-2 text-sm font-medium text-white transition-all hover:from-green-600 hover:to-emerald-600"
+              style={{ color: "#ffffff" }}
             >
-              Create Your First Store
+              <span style={{ color: "#ffffff" }}>Create Your First Store</span>
             </button>
           </div>
         )}
@@ -1077,6 +1079,7 @@ export function BusinessOverview({ businessAccount }: BusinessOverviewProps) {
                     isCreatingStore
                   }
                   className="flex w-full items-center justify-center gap-2 rounded-lg bg-gradient-to-r from-green-500 to-emerald-500 px-4 py-2.5 text-sm font-semibold text-white shadow-lg transition-all hover:from-green-600 hover:to-emerald-600 disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto sm:px-6 sm:py-2"
+                  style={{ color: "#ffffff" }}
                 >
                   {isCreatingStore ? (
                     <>

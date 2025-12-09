@@ -410,6 +410,7 @@ export default function StoreDetailsPage() {
                   ? "bg-green-500/90 !text-white"
                   : "bg-red-500/90 !text-white"
               }`}
+              style={{ color: "#ffffff" }}
             >
               {store.is_active ? "Active" : "Inactive"}
             </div>
@@ -668,9 +669,10 @@ export default function StoreDetailsPage() {
                         <button
                           onClick={() => handleEditProduct(product)}
                           className="absolute right-2 top-2 rounded-full bg-green-600 p-2 text-white opacity-0 shadow-lg transition-opacity hover:bg-green-700 group-hover:opacity-100"
+                          style={{ color: "#ffffff" }}
                           title="Edit product"
                         >
-                          <Edit className="h-4 w-4" />
+                          <Edit className="h-4 w-4" style={{ color: "#ffffff" }} />
                         </button>
                       </div>
                     )}
@@ -680,9 +682,10 @@ export default function StoreDetailsPage() {
                         <button
                           onClick={() => handleEditProduct(product)}
                           className="absolute right-2 top-2 rounded-full bg-green-600 p-2 text-white opacity-0 shadow-lg transition-opacity hover:bg-green-700 group-hover:opacity-100"
+                          style={{ color: "#ffffff" }}
                           title="Edit product"
                         >
-                          <Edit className="h-4 w-4" />
+                          <Edit className="h-4 w-4" style={{ color: "#ffffff" }} />
                         </button>
                       </div>
                     )}
@@ -861,6 +864,7 @@ export default function StoreDetailsPage() {
                                     ? "bg-green-600 text-white"
                                     : "border border-gray-300 bg-white text-gray-700 hover:bg-gray-50 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700"
                                 }`}
+                                style={currentPage === page ? { color: "#ffffff" } : undefined}
                               >
                                 {page}
                               </button>
@@ -1164,6 +1168,7 @@ export default function StoreDetailsPage() {
                   onClick={handleSubmitProduct}
                   disabled={isCreatingProduct}
                   className="flex-1 rounded-lg bg-green-600 px-4 py-2 text-sm text-white transition-colors hover:bg-green-700 disabled:cursor-not-allowed disabled:opacity-50 sm:text-base"
+                  style={{ color: "#ffffff" }}
                 >
                   {isCreatingProduct
                     ? editingProduct

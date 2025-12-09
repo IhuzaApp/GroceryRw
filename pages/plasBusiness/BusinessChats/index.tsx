@@ -235,7 +235,7 @@ export default function BusinessChatsPage() {
                           {c.lastTime}
                         </p>
                         {c.unread > 0 && (
-                          <span className="inline-flex h-5 min-w-[20px] items-center justify-center rounded-full bg-green-500 px-1 text-xs font-semibold text-white">
+                          <span className="inline-flex h-5 min-w-[20px] items-center justify-center rounded-full bg-green-500 px-1 text-xs font-semibold text-white" style={{ color: "#ffffff" }}>
                             {c.unread}
                           </span>
                         )}
@@ -293,6 +293,7 @@ export default function BusinessChatsPage() {
                           ? "bg-green-500 text-white"
                           : "bg-gray-100 text-gray-900 dark:bg-gray-700 dark:text-gray-100"
                       }`}
+                      style={m.sender === "me" ? { color: "#ffffff" } : undefined}
                     >
                       <p>{m.text}</p>
                       <p
@@ -325,6 +326,7 @@ export default function BusinessChatsPage() {
                   <button
                     onClick={handleSend}
                     className="flex items-center gap-2 rounded-xl bg-green-500 px-4 py-2 text-white transition hover:bg-green-600"
+                    style={{ color: "#ffffff" }}
                   >
                     <Send className="h-4 w-4" />
                     Send

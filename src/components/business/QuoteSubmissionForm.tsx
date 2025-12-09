@@ -690,6 +690,7 @@ export function QuoteSubmissionForm({
               type="submit"
               disabled={isSubmitting}
               className="flex flex-1 items-center justify-center gap-2 rounded-lg bg-green-600 px-4 py-2 font-medium text-white transition-colors hover:bg-green-700 disabled:opacity-50"
+              style={{ color: "#ffffff" }}
             >
               {isSubmitting ? (
                 <>
