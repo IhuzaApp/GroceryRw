@@ -10202,6 +10202,31 @@ Stores wallet information for businesses.
 - **Purpose**: Directory of all businesses/suppliers
 - **Features**: Search, filter, business listing, contact options
 
+### UI Components
+
+#### RichTextEditor
+
+- **Location**: `src/components/ui/RichTextEditor.tsx`
+- **Purpose**: Rich text editor component for formatted text input
+- **Features**:
+  - **Toolbar Formatting**: Bold, Italic, Underline buttons
+  - **Keyboard Shortcuts**: 
+    - `Ctrl+B` (or `Cmd+B` on Mac) for Bold
+    - `Ctrl+I` for Italic
+    - `Ctrl+U` for Underline
+  - **Auto-Numbering**: Automatically continues numbered lists (1. → 2. → 3. etc.) when pressing Enter
+  - **Auto-Bullets**: Automatically continues bullet points (- or *) when pressing Enter
+  - **Format Preservation**: Preserves formatting (line breaks, bullets, numbers) when pasting text
+  - **HTML Storage**: Stores content as HTML in the database
+  - **HTML Rendering**: Displays formatted content using `dangerouslySetInnerHTML`
+- **Usage**: Used in product/service descriptions and RFQ descriptions throughout the PlasBusiness feature
+- **Props**:
+  - `value: string` - HTML content value
+  - `onChange: (value: string) => void` - Callback when content changes
+  - `placeholder?: string` - Placeholder text
+  - `rows?: number` - Number of rows (default: 8)
+  - `className?: string` - Additional CSS classes
+
 ## Key Features & Logic
 
 ### 1. Product Verification ID Generation
@@ -10295,7 +10320,50 @@ Stores wallet information for businesses.
 - Desktop: Side-by-side layout
 - Consistent padding and margins
 
-### 8. Search & Filtering
+### 8. Rich Text Editor
+
+**Component**: `RichTextEditor` (`src/components/ui/RichTextEditor.tsx`)
+
+**Purpose**: Provides rich text editing capabilities for descriptions and other text fields
+
+**Features**:
+
+1. **Formatting Tools**:
+   - Bold, Italic, Underline via toolbar buttons
+   - Keyboard shortcuts (Ctrl+B, Ctrl+I, Ctrl+U)
+   - Bullet lists and numbered lists via toolbar
+
+2. **Auto-Formatting**:
+   - **Auto-Numbering**: When you type `1. ` and press Enter, it automatically creates `2. ` on the next line
+   - **Auto-Bullets**: When you type `- ` (or `* `) and press Enter, it automatically creates `- ` on the next line
+   - Works with or without spaces after the dash/number
+
+3. **Content Handling**:
+   - Preserves formatting when pasting (line breaks, bullets, numbers)
+   - Stores content as HTML in the database
+   - Renders HTML content using `dangerouslySetInnerHTML` for display
+
+4. **Usage Locations**:
+   - Product/Service descriptions in `CreateProductForm`
+   - Product descriptions in store pages
+   - Service descriptions in `ProductsBidsSection`
+   - Anywhere formatted text input is needed
+
+**Example Usage**:
+```tsx
+<RichTextEditor
+  value={description}
+  onChange={(html) => setDescription(html)}
+  placeholder="Enter description with formatting..."
+  rows={8}
+/>
+```
+
+**Storage**: Content is stored as HTML string in the database (e.g., `"1. Item one<br>2. Item two"`)
+
+**Display**: Content is rendered using `dangerouslySetInnerHTML` to preserve formatting
+
+### 9. Search & Filtering
 
 **Product Search**:
 
