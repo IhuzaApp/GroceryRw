@@ -115,49 +115,58 @@ export default async function handler(
       unit = "",
       status = "active",
       query_id = "",
-      minimumOrders: minOrders = "0",
-      maxOrders = "",
-      delveryArea = "",
-      speciality = "",
+      minimumOrders: minOrders,
+      maxOrders,
+      delveryArea,
+      speciality,
       store_id,
       user_id = "",
       Plasbusiness_id = "",
     } = req.body as CreateBusinessProductInput;
 
     // Validate required fields
-    if (!name || !name.trim()) {
+    if (!name || (typeof name === "string" && !name.trim())) {
       return res.status(400).json({ error: "Product name is required" });
     }
 
-    if (!price || !price.trim()) {
+    // Convert price to string and validate
+    const priceStr = price !== null && price !== undefined ? String(price).trim() : "";
+    if (!priceStr) {
       return res.status(400).json({ error: "Product price is required" });
     }
 
     // minimumOrders is required by the database, default to "0" if not provided
+    // Convert to string first to handle numbers or other types
     const minimumOrders =
-      minOrders && minOrders.trim() !== "" ? minOrders.trim() : "0";
+      minOrders !== null && minOrders !== undefined
+        ? String(minOrders).trim() !== ""
+          ? String(minOrders).trim()
+          : "0"
+        : "0";
 
     // Get user_id from session if not provided
     const final_user_id = user_id || session?.user?.id || "";
 
     const variables: Record<string, any> = {
-      name: name.trim(),
-      Description: description ? description.trim() : "",
-      Image: image ? image.trim() : "",
-      price: price.trim(),
-      unit: unit ? unit.trim() : "",
-      status: status ? status.trim() : "active",
-      query_id: query_id ? query_id.trim() : "",
-      minimumOrders: minimumOrders.trim(),
-      maxOrders: maxOrders ? maxOrders.trim() : "",
-      delveryArea: delveryArea ? delveryArea.trim() : "",
-      speciality: speciality ? speciality.trim() : "",
+      name: typeof name === "string" ? name.trim() : String(name || ""),
+      Description: description !== null && description !== undefined ? String(description).trim() : "",
+      Image: image !== null && image !== undefined ? String(image).trim() : "",
+      price: priceStr,
+      unit: unit !== null && unit !== undefined ? String(unit).trim() : "",
+      status: status !== null && status !== undefined ? String(status).trim() : "active",
+      query_id: query_id !== null && query_id !== undefined ? String(query_id).trim() : "",
+      minimumOrders: minimumOrders,
+      maxOrders: maxOrders !== null && maxOrders !== undefined ? String(maxOrders).trim() : "",
+      delveryArea: delveryArea !== null && delveryArea !== undefined ? String(delveryArea).trim() : "",
+      speciality: speciality !== null && speciality !== undefined ? String(speciality).trim() : "",
       user_id: final_user_id,
-      Plasbusiness_id: Plasbusiness_id ? Plasbusiness_id.trim() : "",
+      Plasbusiness_id: Plasbusiness_id !== null && Plasbusiness_id !== undefined ? String(Plasbusiness_id).trim() : "",
     };
 
-    // Only include store_id if it's provided (not null/empty for services)
-    if (store_id && store_id.trim() !== "") {
+    // Handle store_id: null for services, or a valid UUID for products
+    if (store_id === null || store_id === undefined) {
+      variables.store_id = null;
+    } else if (typeof store_id === "string" && store_id.trim() !== "") {
       variables.store_id = store_id.trim();
     } else {
       variables.store_id = null;
