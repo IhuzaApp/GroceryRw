@@ -19,6 +19,7 @@ import {
   MapPin,
   Briefcase,
   Loader2,
+  Tag,
 } from "lucide-react";
 import { CreateProductForm } from "./CreateProductForm";
 import { formatCurrencySync } from "../../utils/formatCurrency";
@@ -183,6 +184,8 @@ export function ProductsBidsSection() {
   const [selectedBid, setSelectedBid] = useState<any>(null);
   const [isBidModalOpen, setIsBidModalOpen] = useState(false);
   const [isCreateServiceOpen, setIsCreateServiceOpen] = useState(false);
+  const [isServiceDetailsOpen, setIsServiceDetailsOpen] = useState(false);
+  const [selectedService, setSelectedService] = useState<any>(null);
   const [businessAccount, setBusinessAccount] = useState<any>(null);
   const [services, setServices] = useState<any[]>([]);
   const [loadingServices, setLoadingServices] = useState(false);
@@ -252,8 +255,14 @@ export function ProductsBidsSection() {
       // Generate query ID first (only for new services)
       let queryId = "";
       if (!editingService) {
-        const idResponse = await fetch("/api/queries/generate-product-query-id");
+        const idResponse = await fetch("/api/queries/generate-product-query-id", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+        });
         const idData = await idResponse.json();
+        if (!idResponse.ok) {
+          throw new Error(idData.error || "Failed to generate query ID");
+        }
         queryId = idData.queryId;
       } else {
         queryId = editingService.query_id || "";
@@ -316,11 +325,12 @@ export function ProductsBidsSection() {
         fetchServices();
       } else {
         const errorData = await response.json();
-        toast.error(errorData.error || "Failed to save service");
+        console.error("Service creation error:", errorData);
+        toast.error(errorData.message || errorData.error || "Failed to save service");
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error saving service:", error);
-      toast.error("Failed to save service");
+      toast.error(error.message || "Failed to save service");
     }
   };
 
@@ -449,12 +459,6 @@ export function ProductsBidsSection() {
                           {service.name}
                         </h4>
                       </div>
-                      {service.Description && (
-                        <div 
-                          className="mb-3 text-sm text-gray-600 dark:text-gray-400"
-                          dangerouslySetInnerHTML={{ __html: service.Description }}
-                        />
-                      )}
                       <div className="mb-3 flex items-center gap-2">
                         <span
                           className={`rounded-full px-2 py-1 text-xs ${
@@ -516,6 +520,16 @@ export function ProductsBidsSection() {
                     </div>
 
                     <div className="flex gap-2 pt-2">
+                      <button
+                        onClick={() => {
+                          setSelectedService(service);
+                          setIsServiceDetailsOpen(true);
+                        }}
+                        className="flex flex-1 items-center justify-center gap-1 rounded-lg bg-green-100 px-3 py-2 text-sm text-green-700 transition-colors hover:bg-green-200 dark:bg-green-900 dark:text-green-300 dark:hover:bg-green-800"
+                      >
+                        <Eye className="h-4 w-4" />
+                        View Details
+                      </button>
                       <button
                         onClick={() => handleEditService(service)}
                         className="flex flex-1 items-center justify-center gap-1 rounded-lg bg-blue-100 px-3 py-2 text-sm text-blue-700 transition-colors hover:bg-blue-200 dark:bg-blue-900 dark:text-blue-300 dark:hover:bg-blue-800"
@@ -838,6 +852,220 @@ export function ProductsBidsSection() {
         editingProduct={editingService}
         isService={true}
       />
+
+      {/* Service Details Modal */}
+      {isServiceDetailsOpen && selectedService && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 p-4">
+          <div className="max-h-[90vh] w-full max-w-3xl overflow-y-auto rounded-xl bg-white shadow-2xl dark:bg-gray-800">
+            <div className="flex flex-col">
+              {/* Header */}
+              <div className="flex-shrink-0 flex items-center justify-between border-b border-gray-200 p-6 dark:border-gray-700">
+                <div className="flex items-center gap-3">
+                  <Briefcase className="h-6 w-6 text-blue-500" />
+                  <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
+                    Service Details
+                  </h2>
+                </div>
+                <button
+                  onClick={() => {
+                    setIsServiceDetailsOpen(false);
+                    setSelectedService(null);
+                  }}
+                  className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
+                >
+                  <svg
+                    className="h-6 w-6"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M6 18L18 6M6 6l12 12"
+                    />
+                  </svg>
+                </button>
+              </div>
+
+              {/* Content */}
+              <div className="flex-1 overflow-y-auto p-6">
+                <div className="space-y-6">
+                  {/* Service Name & Status */}
+                  <div>
+                    <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">
+                      {selectedService.name}
+                    </h3>
+                    <div className="flex items-center gap-2">
+                      <span
+                        className={`rounded-full px-3 py-1 text-sm font-medium ${
+                          selectedService.status === "active"
+                            ? "bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300"
+                            : "bg-yellow-100 text-yellow-600 dark:bg-yellow-900 dark:text-yellow-300"
+                        }`}
+                      >
+                        {selectedService.status === "active" ? "Active" : "Inactive"}
+                      </span>
+                      {selectedService.query_id && (
+                        <span className="rounded-full bg-gray-100 px-3 py-1 text-sm text-gray-600 dark:bg-gray-700 dark:text-gray-300">
+                          ID: {selectedService.query_id}
+                        </span>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Price */}
+                  <div className="flex items-center justify-between rounded-lg border border-gray-200 bg-gray-50 p-4 dark:border-gray-700 dark:bg-gray-700/50">
+                    <span className="text-sm font-medium text-gray-600 dark:text-gray-400">
+                      Price
+                    </span>
+                    <div className="text-right">
+                      <span className="text-2xl font-bold text-gray-900 dark:text-white">
+                        {formatCurrencySync(parseFloat(selectedService.price || "0"))}
+                      </span>
+                      <span className="ml-2 text-sm text-gray-500 dark:text-gray-400">
+                        / {selectedService.unit || "unit"}
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Description */}
+                  {selectedService.Description && (
+                    <div>
+                      <h4 className="mb-2 text-sm font-semibold text-gray-700 dark:text-gray-300">
+                        Description
+                      </h4>
+                      <div
+                        className="rounded-lg border border-gray-200 bg-white p-4 text-sm text-gray-700 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-300"
+                        dangerouslySetInnerHTML={{ __html: selectedService.Description }}
+                        style={{ whiteSpace: "pre-wrap", wordBreak: "break-word" }}
+                      />
+                    </div>
+                  )}
+
+                  {/* Service Details Grid */}
+                  <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                    {selectedService.minimumOrders && (
+                      <div className="rounded-lg border border-gray-200 bg-gray-50 p-4 dark:border-gray-700 dark:bg-gray-700/50">
+                        <div className="flex items-center gap-2 mb-1">
+                          <Users className="h-4 w-4 text-gray-500" />
+                          <span className="text-xs font-medium text-gray-600 dark:text-gray-400">
+                            Minimum Orders
+                          </span>
+                        </div>
+                        <p className="text-lg font-semibold text-gray-900 dark:text-white">
+                          {selectedService.minimumOrders} {selectedService.unit || ""}
+                        </p>
+                      </div>
+                    )}
+
+                    {selectedService.maxOrders && (
+                      <div className="rounded-lg border border-gray-200 bg-gray-50 p-4 dark:border-gray-700 dark:bg-gray-700/50">
+                        <div className="flex items-center gap-2 mb-1">
+                          <Users className="h-4 w-4 text-gray-500" />
+                          <span className="text-xs font-medium text-gray-600 dark:text-gray-400">
+                            Maximum Orders
+                          </span>
+                        </div>
+                        <p className="text-lg font-semibold text-gray-900 dark:text-white">
+                          {selectedService.maxOrders} {selectedService.unit || ""}
+                        </p>
+                      </div>
+                    )}
+
+                    {selectedService.delveryArea && (
+                      <div className="rounded-lg border border-gray-200 bg-gray-50 p-4 dark:border-gray-700 dark:bg-gray-700/50">
+                        <div className="flex items-center gap-2 mb-1">
+                          <MapPin className="h-4 w-4 text-gray-500" />
+                          <span className="text-xs font-medium text-gray-600 dark:text-gray-400">
+                            Delivery Area
+                          </span>
+                        </div>
+                        <p className="text-lg font-semibold text-gray-900 dark:text-white">
+                          {selectedService.delveryArea}
+                        </p>
+                      </div>
+                    )}
+
+                    {selectedService.speciality && (
+                      <div className="rounded-lg border border-gray-200 bg-gray-50 p-4 dark:border-gray-700 dark:bg-gray-700/50">
+                        <div className="flex items-center gap-2 mb-2">
+                          <Tag className="h-4 w-4 text-gray-500" />
+                          <span className="text-xs font-medium text-gray-600 dark:text-gray-400">
+                            Specialities
+                          </span>
+                        </div>
+                        <div className="flex flex-wrap gap-1">
+                          {selectedService.speciality.split(", ").map((specialty: string, index: number) => (
+                            <span
+                              key={index}
+                              className="rounded-full bg-blue-100 px-2 py-1 text-xs text-blue-600 dark:bg-blue-900 dark:text-blue-300"
+                            >
+                              {specialty}
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Service Image */}
+                  {selectedService.Image && (
+                    <div>
+                      <h4 className="mb-2 text-sm font-semibold text-gray-700 dark:text-gray-300">
+                        Service Image/Attachment
+                      </h4>
+                      <div className="rounded-lg border border-gray-200 overflow-hidden dark:border-gray-700">
+                        <img
+                          src={selectedService.Image}
+                          alt={selectedService.name}
+                          className="w-full h-auto max-h-96 object-contain"
+                          onError={(e) => {
+                            const target = e.target as HTMLImageElement;
+                            target.style.display = "none";
+                            const parent = target.parentElement;
+                            if (parent) {
+                              parent.innerHTML = `
+                                <div class="flex items-center justify-center p-8 bg-gray-100 dark:bg-gray-700">
+                                  <span class="text-gray-500 dark:text-gray-400">Document/Image not available</span>
+                                </div>
+                              `;
+                            }
+                          }}
+                        />
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Footer */}
+              <div className="flex-shrink-0 flex items-center justify-end gap-3 border-t border-gray-200 p-6 dark:border-gray-700">
+                <button
+                  onClick={() => {
+                    setIsServiceDetailsOpen(false);
+                    setSelectedService(null);
+                  }}
+                  className="rounded-lg border border-gray-300 bg-white px-4 py-2 font-medium text-gray-700 transition-colors hover:bg-gray-50 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600"
+                >
+                  Close
+                </button>
+                <button
+                  onClick={() => {
+                    setIsServiceDetailsOpen(false);
+                    handleEditService(selectedService);
+                  }}
+                  className="rounded-lg bg-blue-500 px-4 py-2 font-medium text-white transition-colors hover:bg-blue-600"
+                  style={{ color: "#ffffff" }}
+                >
+                  Edit Service
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
