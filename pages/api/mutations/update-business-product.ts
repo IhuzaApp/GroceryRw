@@ -19,7 +19,7 @@ const UPDATE_BUSINESS_PRODUCT = gql`
     $status: String = ""
     $unit: String = ""
     $user_id: uuid = ""
-    $store_id: uuid = ""
+    $store_id: uuid
   ) {
     update_PlasBusinessProductsOrSerive(
       where: { id: { _eq: $product_id } }
@@ -119,7 +119,7 @@ export default async function handler(
       maxOrders = "",
       delveryArea = "",
       speciality = "",
-      store_id = "",
+      store_id,
       user_id = "",
       Plasbusiness_id = "",
     } = req.body as UpdateBusinessProductInput;
@@ -156,10 +156,16 @@ export default async function handler(
       maxOrders: maxOrders ? maxOrders.trim() : "",
       delveryArea: delveryArea ? delveryArea.trim() : "",
       speciality: speciality ? speciality.trim() : "",
-      store_id: store_id ? store_id.trim() : "",
       user_id: final_user_id,
       Plasbusiness_id: Plasbusiness_id ? Plasbusiness_id.trim() : "",
     };
+
+    // Only include store_id if it's provided (not null/empty for services)
+    if (store_id && store_id.trim() !== "") {
+      variables.store_id = store_id.trim();
+    } else {
+      variables.store_id = null;
+    }
 
     const result = await hasuraClient.request<{
       update_PlasBusinessProductsOrSerive: {

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   X,
   Plus,
@@ -19,6 +19,8 @@ interface CreateProductFormProps {
   isOpen: boolean;
   onClose: () => void;
   onSubmit: (productData: any) => void;
+  editingProduct?: any;
+  isService?: boolean;
 }
 
 interface ProductFormData {
@@ -61,11 +63,11 @@ const priceUnits = [
   "flat rate",
 ];
 
-const steps = [
+const getSteps = (isService: boolean) => [
   {
     id: 1,
     title: "Basic Information",
-    description: "Product name and description",
+    description: isService ? "Service name and description" : "Product name and description",
   },
   {
     id: 2,
@@ -88,6 +90,8 @@ export function CreateProductForm({
   isOpen,
   onClose,
   onSubmit,
+  editingProduct,
+  isService = false,
 }: CreateProductFormProps) {
   const [formData, setFormData] = useState<ProductFormData>({
     name: "",
@@ -105,6 +109,44 @@ export function CreateProductForm({
 
   const [currentStep, setCurrentStep] = useState(1);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const steps = getSteps(isService);
+
+  // Populate form when editing
+  useEffect(() => {
+    if (editingProduct && isOpen) {
+      setFormData({
+        name: editingProduct.name || "",
+        description: editingProduct.Description || "",
+        category: editingProduct.category || "",
+        price: editingProduct.price || "",
+        priceUnit: editingProduct.unit || "/person",
+        status: editingProduct.status === "active" ? "Active" : "Draft",
+        minOrder: editingProduct.minimumOrders || "",
+        maxOrder: editingProduct.maxOrders || "",
+        deliveryArea: editingProduct.delveryArea || "",
+        specialties: editingProduct.speciality
+          ? editingProduct.speciality.split(", ").filter((s: string) => s.trim())
+          : [""],
+        image: null,
+      });
+    } else if (!editingProduct && isOpen) {
+      // Reset form when creating new
+      setFormData({
+        name: "",
+        description: "",
+        category: "",
+        price: "",
+        priceUnit: "/person",
+        status: "Draft",
+        minOrder: "",
+        maxOrder: "",
+        deliveryArea: "",
+        specialties: [""],
+        image: null,
+      });
+      setCurrentStep(1);
+    }
+  }, [editingProduct, isOpen]);
 
   const handleInputChange = (field: string, value: any) => {
     setFormData((prev) => ({
@@ -203,7 +245,7 @@ export function CreateProductForm({
       });
       setCurrentStep(1);
     } catch (error) {
-      console.error("Error creating product:", error);
+      console.error(`Error ${editingProduct ? "updating" : "creating"} ${isService ? "service" : "product"}:`, error);
     } finally {
       setIsSubmitting(false);
     }
@@ -230,10 +272,14 @@ export function CreateProductForm({
         <div className="flex items-center justify-between border-b border-gray-200 p-6 dark:border-gray-700">
           <div>
             <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
-              Create Product
+              {editingProduct
+                ? `Edit ${isService ? "Service" : "Product"}`
+                : `Create ${isService ? "Service" : "Product"}`}
             </h2>
             <p className="text-gray-600 dark:text-gray-400">
-              Add a new product or service - Step {currentStep} of{" "}
+              {editingProduct
+                ? `Edit ${isService ? "service" : "product"} details - Step ${currentStep} of`
+                : `Add a new ${isService ? "service" : "product"} - Step ${currentStep} of`}{" "}
               {steps.length}
             </p>
           </div>
@@ -297,14 +343,14 @@ export function CreateProductForm({
             <div className="space-y-6">
               <div>
                 <label className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">
-                  Product Name *
+                  {isService ? "Service Name *" : "Product Name *"}
                 </label>
                 <input
                   type="text"
                   value={formData.name}
                   onChange={(e) => handleInputChange("name", e.target.value)}
                   className="w-full rounded-lg border border-gray-300 px-4 py-3 focus:border-transparent focus:ring-2 focus:ring-green-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white"
-                  placeholder="e.g., Corporate Catering Package"
+                  placeholder={isService ? "e.g., Corporate Catering Service" : "e.g., Corporate Catering Package"}
                   required
                 />
               </div>
@@ -320,14 +366,14 @@ export function CreateProductForm({
                   }
                   rows={4}
                   className="w-full rounded-lg border border-gray-300 px-4 py-3 focus:border-transparent focus:ring-2 focus:ring-green-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white"
-                  placeholder="Provide a detailed description of your product or service"
+                  placeholder={isService ? "Provide a detailed description of your service" : "Provide a detailed description of your product or service"}
                   required
                 />
               </div>
 
               <div>
                 <label className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">
-                  Product Image
+                  {isService ? "Service Attachment Documents" : "Product Image"}
                 </label>
                 <div className="rounded-lg border-2 border-dashed border-gray-300 p-6 dark:border-gray-600">
                   {formData.image ? (
@@ -350,7 +396,7 @@ export function CreateProductForm({
                     <>
                       <input
                         type="file"
-                        accept="image/*"
+                        accept={isService ? ".pdf,.doc,.docx,.txt,.jpg,.jpeg,.png" : "image/*"}
                         onChange={handleImageUpload}
                         className="hidden"
                         id="image-upload"
@@ -361,10 +407,14 @@ export function CreateProductForm({
                       >
                         <Upload className="mb-2 h-8 w-8 text-gray-400" />
                         <span className="text-sm text-gray-600 dark:text-gray-400">
-                          Click to upload image or drag and drop
+                          {isService
+                            ? "Click to upload documents or drag and drop"
+                            : "Click to upload image or drag and drop"}
                         </span>
                         <span className="mt-1 text-xs text-gray-500">
-                          PNG, JPG, WEBP (max 5MB)
+                          {isService
+                            ? "PDF, DOC, DOCX, TXT, JPG, PNG (max 5MB)"
+                            : "PNG, JPG, WEBP (max 5MB)"}
                         </span>
                       </label>
                     </>
@@ -486,8 +536,9 @@ export function CreateProductForm({
                   </label>
                 </div>
                 <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
-                  Active products are visible to buyers, Draft products are
-                  saved but not published
+                  {isService
+                    ? "Active services are visible to buyers, Draft services are saved but not published"
+                    : "Active products are visible to buyers, Draft products are saved but not published"}
                 </p>
               </div>
             </div>
@@ -566,7 +617,7 @@ export function CreateProductForm({
                   Specialties
                 </label>
                 <p className="mb-3 text-xs text-gray-500 dark:text-gray-400">
-                  Add tags that describe your product's specialties or key
+                  Add tags that describe your {isService ? "service's" : "product's"} specialties or key
                   features
                 </p>
                 <div className="space-y-3">
@@ -608,7 +659,7 @@ export function CreateProductForm({
 
               <div>
                 <h3 className="mb-4 text-lg font-semibold text-gray-900 dark:text-white">
-                  Product Summary
+                  {isService ? "Service Summary" : "Product Summary"}
                 </h3>
                 <div className="space-y-3 rounded-lg bg-gray-50 p-4 dark:bg-gray-700">
                   <div className="flex justify-between">
@@ -743,7 +794,9 @@ export function CreateProductForm({
                 ) : (
                   <>
                     <Send className="h-4 w-4" />
-                    Create Product
+                    {editingProduct
+                      ? `Update ${isService ? "Service" : "Product"}`
+                      : `Create ${isService ? "Service" : "Product"}`}
                   </>
                 )}
               </button>
