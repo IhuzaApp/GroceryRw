@@ -303,6 +303,7 @@ export function CreateProductForm({
                       ? "bg-green-500 text-white"
                       : "bg-gray-200 text-gray-600 dark:bg-gray-600 dark:text-gray-400"
                   }`}
+                  style={currentStep >= step.id ? { color: "#ffffff" } : undefined}
                 >
                   {step.id}
                 </div>
@@ -782,6 +783,7 @@ export function CreateProductForm({
                 type="button"
                 onClick={nextStep}
                 className="rounded-lg bg-green-500 px-6 py-2 font-medium text-white transition-colors hover:bg-green-600"
+                style={{ color: "#ffffff" }}
               >
                 Next
               </button>
@@ -790,6 +792,7 @@ export function CreateProductForm({
                 type="submit"
                 disabled={isSubmitting}
                 className="flex items-center gap-2 rounded-lg bg-green-500 px-6 py-2 font-medium text-white transition-colors hover:bg-green-600 disabled:cursor-not-allowed disabled:opacity-50"
+                style={{ color: "#ffffff" }}
                 onClick={handleSubmit}
               >
                 {isSubmitting ? (

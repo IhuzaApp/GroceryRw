@@ -182,6 +182,7 @@ export function ServicesSection({ onRequestQuotation }: ServicesSectionProps) {
                   ? "bg-gradient-to-r from-green-500 to-emerald-500 text-white shadow-lg"
                   : "border border-gray-300 bg-white text-gray-700 hover:bg-gray-50 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600"
               }`}
+              style={selectedCategory === category ? { color: "#ffffff" } : undefined}
             >
               {category === "all" ? "All Categories" : category}
             </button>
@@ -403,9 +404,10 @@ export function ServicesSection({ onRequestQuotation }: ServicesSectionProps) {
                 <button
                   onClick={() => handleRequestQuotation(selectedService.id)}
                   className="flex-1 rounded-lg bg-gradient-to-r from-green-500 to-emerald-500 px-4 py-2.5 text-sm font-semibold text-white transition-all hover:from-green-600 hover:to-emerald-600"
+                  style={{ color: "#ffffff" }}
                 >
-                  Request Quotation
-                  <ArrowRight className="ml-1 inline h-4 w-4" />
+                  <span style={{ color: "#ffffff" }}>Request Quotation</span>
+                  <ArrowRight className="ml-1 inline h-4 w-4" style={{ color: "#ffffff" }} />
                 </button>
               </div>
             </div>

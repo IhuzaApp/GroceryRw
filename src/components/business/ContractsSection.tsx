@@ -42,8 +42,9 @@ export function ContractsSection({ className = "" }: ContractsSectionProps) {
             <button
               onClick={handleViewAcceptedQuotes}
               className="rounded-xl bg-gradient-to-r from-green-500 to-emerald-500 px-6 py-3 font-medium text-white shadow-lg transition-all duration-300 hover:from-green-600 hover:to-emerald-600 hover:shadow-xl"
+              style={{ color: "#ffffff" }}
             >
-              View Accepted Quotes
+              <span style={{ color: "#ffffff" }}>View Accepted Quotes</span>
             </button>
           </div>
         </div>

@@ -115,9 +115,10 @@ export default function QuoteDetailsModal({
                         ? "scale-105 transform bg-gradient-to-r from-green-500 to-emerald-500 text-white shadow-lg"
                         : "text-gray-500 hover:bg-gray-50 hover:text-gray-700 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-gray-300"
                     }`}
+                    style={activeTab === tab.id ? { color: "#ffffff" } : undefined}
                   >
-                    <tab.icon className="h-4 w-4" />
-                    {tab.label}
+                    <tab.icon className="h-4 w-4" style={activeTab === tab.id ? { color: "#ffffff" } : undefined} />
+                    <span style={activeTab === tab.id ? { color: "#ffffff" } : undefined}>{tab.label}</span>
                   </button>
                 ))}
               </div>

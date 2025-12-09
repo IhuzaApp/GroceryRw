@@ -381,9 +381,10 @@ export function ProductsBidsSection() {
                   ? "bg-gradient-to-r from-green-500 to-emerald-500 text-white shadow-lg"
                   : "text-gray-500 hover:bg-gray-50 hover:text-gray-700 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-gray-300"
               }`}
+              style={activeSubTab === tab.id ? { color: "#ffffff" } : undefined}
             >
-              <tab.icon className="h-4 w-4" />
-              {tab.label}
+              <tab.icon className="h-4 w-4" style={activeSubTab === tab.id ? { color: "#ffffff" } : undefined} />
+              <span style={activeSubTab === tab.id ? { color: "#ffffff" } : undefined}>{tab.label}</span>
             </button>
           ))}
         </div>
@@ -400,9 +401,10 @@ export function ProductsBidsSection() {
             <button
               onClick={handleCreateService}
               className="flex items-center gap-2 rounded-lg bg-gradient-to-r from-green-500 to-emerald-500 px-4 py-2 text-white shadow-lg transition-all duration-300 hover:from-green-600 hover:to-emerald-600"
+              style={{ color: "#ffffff" }}
             >
-              <Plus className="h-4 w-4" />
-              Add Service
+              <Plus className="h-4 w-4" style={{ color: "#ffffff" }} />
+              <span style={{ color: "#ffffff" }}>Add Service</span>
             </button>
           </div>
 
@@ -426,9 +428,10 @@ export function ProductsBidsSection() {
               <button
                 onClick={handleCreateService}
                 className="inline-flex items-center gap-2 px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg transition-colors"
+                style={{ color: "#ffffff" }}
               >
-                <Plus className="h-5 w-5" />
-                Add Service
+                <Plus className="h-5 w-5" style={{ color: "#ffffff" }} />
+                <span style={{ color: "#ffffff" }}>Add Service</span>
               </button>
             </div>
           ) : (
@@ -630,6 +633,7 @@ export function ProductsBidsSection() {
                       <button
                         onClick={() => handleAcceptBid(bid.id)}
                         className="flex-1 rounded-lg bg-green-500 px-3 py-2 text-sm font-medium text-white transition-colors hover:bg-green-600"
+                        style={{ color: "#ffffff" }}
                       >
                         Accept
                       </button>
@@ -793,6 +797,7 @@ export function ProductsBidsSection() {
                         setIsBidModalOpen(false);
                       }}
                       className="flex-1 rounded-lg bg-green-500 px-4 py-2 font-medium text-white transition-colors hover:bg-green-600"
+                      style={{ color: "#ffffff" }}
                     >
                       Accept Bid
                     </button>

@@ -484,6 +484,7 @@ export function RFQResponsesView({
         <button
           onClick={onBack}
           className="mt-4 rounded-lg bg-green-500 px-4 py-2 text-white hover:bg-green-600"
+          style={{ color: "#ffffff" }}
         >
           Go Back
         </button>
@@ -681,6 +682,7 @@ export function RFQResponsesView({
                     <button
                       onClick={() => handleAcceptResponse(response.id)}
                       className="rounded-lg bg-green-500 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-green-600"
+                      style={{ color: "#ffffff" }}
                     >
                       Accept
                     </button>
@@ -878,6 +880,7 @@ export function RFQResponsesView({
                           handleAcceptResponse(selectedResponse.id)
                         }
                         className="flex-1 rounded-lg bg-green-500 px-4 py-2 font-medium text-white transition-colors hover:bg-green-600"
+                        style={{ color: "#ffffff" }}
                       >
                         Accept Response
                       </button>

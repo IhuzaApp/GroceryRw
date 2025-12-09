@@ -575,6 +575,7 @@ export function ContractAssignmentModal({
                       ? "bg-green-500 text-white"
                       : "bg-gray-200 text-gray-600 dark:bg-gray-600 dark:text-gray-400"
                   }`}
+                  style={currentStep >= step.id ? { color: "#ffffff" } : undefined}
                 >
                   {step.id}
                 </div>
@@ -850,6 +851,7 @@ export function ContractAssignmentModal({
                   type="button"
                   onClick={addDeliverable}
                   className="rounded-lg bg-green-500 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-green-600"
+                  style={{ color: "#ffffff" }}
                 >
                   Add Deliverable
                 </button>
@@ -1169,6 +1171,7 @@ export function ContractAssignmentModal({
                 type="button"
                 onClick={nextStep}
                 className="rounded-lg bg-green-500 px-6 py-2 font-medium text-white transition-colors hover:bg-green-600"
+                style={{ color: "#ffffff" }}
               >
                 Next
               </button>
@@ -1177,6 +1180,7 @@ export function ContractAssignmentModal({
                 type="submit"
                 disabled={isSubmitting}
                 className="flex items-center gap-2 rounded-lg bg-green-500 px-6 py-2 font-medium text-white transition-colors hover:bg-green-600 disabled:cursor-not-allowed disabled:opacity-50"
+                style={{ color: "#ffffff" }}
               >
                 {isSubmitting ? (
                   <>

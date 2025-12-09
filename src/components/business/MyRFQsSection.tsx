@@ -170,9 +170,10 @@ export function MyRFQsSection({
           <button
             onClick={handleCreateRFQ}
             className="flex items-center gap-2 rounded-xl bg-gradient-to-r from-green-500 to-emerald-500 px-6 py-3 font-medium text-white shadow-lg transition-all duration-300 hover:from-green-600 hover:to-emerald-600 hover:shadow-xl"
+            style={{ color: "#ffffff" }}
           >
-            <Plus className="h-5 w-5" />
-            Create New RFQ
+            <Plus className="h-5 w-5" style={{ color: "#ffffff" }} />
+            <span style={{ color: "#ffffff" }}>Create New RFQ</span>
           </button>
         </div>
         <div className="p-8">
@@ -190,9 +191,10 @@ export function MyRFQsSection({
                   <button
                     onClick={handleCreateRFQ}
                     className="inline-flex items-center gap-2 rounded-lg bg-green-600 px-4 py-2 text-white transition-colors hover:bg-green-700"
+                    style={{ color: "#ffffff" }}
                   >
-                    <Plus className="h-5 w-5" />
-                    Create RFQ
+                    <Plus className="h-5 w-5" style={{ color: "#ffffff" }} />
+                    <span style={{ color: "#ffffff" }}>Create RFQ</span>
                   </button>
                 )}
               </div>

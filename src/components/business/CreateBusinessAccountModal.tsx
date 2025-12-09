@@ -216,8 +216,9 @@ export default function CreateBusinessAccountModal({
                     onClick={handleAcceptTerms}
                     disabled={!acceptedTerms || !accountType}
                     className="w-full rounded-lg bg-gradient-to-r from-green-500 to-emerald-500 px-6 py-2.5 text-sm font-semibold text-white transition-all hover:from-green-600 hover:to-emerald-600 disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto sm:px-8 sm:py-3 sm:text-base"
+                    style={{ color: "#ffffff" }}
                   >
-                    Continue
+                    <span style={{ color: "#ffffff" }}>Continue</span>
                   </button>
                 </div>
               </div>
