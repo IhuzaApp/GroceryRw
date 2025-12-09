@@ -447,9 +447,10 @@ export function ProductsBidsSection() {
                         </h4>
                       </div>
                       {service.Description && (
-                        <p className="mb-3 text-sm text-gray-600 dark:text-gray-400">
-                          {service.Description}
-                        </p>
+                        <div 
+                          className="mb-3 text-sm text-gray-600 dark:text-gray-400"
+                          dangerouslySetInnerHTML={{ __html: service.Description }}
+                        />
                       )}
                       <div className="mb-3 flex items-center gap-2">
                         <span
