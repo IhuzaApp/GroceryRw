@@ -14,6 +14,7 @@ import {
   Package,
   Tag,
 } from "lucide-react";
+import { RichTextEditor } from "../ui/RichTextEditor";
 
 interface CreateProductFormProps {
   isOpen: boolean;
@@ -359,15 +360,11 @@ export function CreateProductForm({
                 <label className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">
                   Description *
                 </label>
-                <textarea
+                <RichTextEditor
                   value={formData.description}
-                  onChange={(e) =>
-                    handleInputChange("description", e.target.value)
-                  }
-                  rows={4}
-                  className="w-full rounded-lg border border-gray-300 px-4 py-3 focus:border-transparent focus:ring-2 focus:ring-green-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white"
-                  placeholder={isService ? "Provide a detailed description of your service" : "Provide a detailed description of your product or service"}
-                  required
+                  onChange={(value) => handleInputChange("description", value)}
+                  rows={8}
+                  placeholder={isService ? "Provide a detailed description of your service. You can use:\n- Bullet points\n- Sub headers\n- Line breaks\n- Bold, italic, underline\n- Any formatting you need" : "Provide a detailed description of your product or service. You can use:\n- Bullet points\n- Sub headers\n- Line breaks\n- Bold, italic, underline\n- Any formatting you need"}
                 />
               </div>
 
@@ -669,6 +666,15 @@ export function CreateProductForm({
                     <span className="text-gray-900 dark:text-white">
                       {formData.name || "Not specified"}
                     </span>
+                  </div>
+                  <div>
+                    <span className="font-medium text-gray-700 dark:text-gray-300">
+                      Description:
+                    </span>
+                    <div 
+                      className="mt-2 text-sm text-gray-900 dark:text-white"
+                      dangerouslySetInnerHTML={{ __html: formData.description || "Not specified" }}
+                    />
                   </div>
                   <div className="flex justify-between">
                     <span className="font-medium text-gray-700 dark:text-gray-300">

@@ -30,6 +30,7 @@ import { useTheme } from "../../../src/context/ThemeContext";
 import toast from "react-hot-toast";
 import CameraCapture from "../../../src/components/ui/CameraCapture";
 import { formatCurrencySync } from "../../../src/utils/formatCurrency";
+import { RichTextEditor } from "../../../src/components/ui/RichTextEditor";
 
 export default function StoreDetailsPage() {
   const router = useRouter();
@@ -715,9 +716,10 @@ export default function StoreDetailsPage() {
 
                       {/* Description */}
                       {product.Description && (
-                        <p className="line-clamp-2 text-[10px] text-gray-600 dark:text-gray-400 sm:text-xs">
-                          {product.Description}
-                        </p>
+                        <div 
+                          className="line-clamp-2 text-[10px] text-gray-600 dark:text-gray-400 sm:text-xs"
+                          dangerouslySetInnerHTML={{ __html: product.Description }}
+                        />
                       )}
 
                       {/* Price and Unit */}
@@ -965,17 +967,16 @@ export default function StoreDetailsPage() {
                 <label className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">
                   Description
                 </label>
-                <textarea
+                <RichTextEditor
                   value={newProduct.description}
-                  onChange={(e) =>
+                  onChange={(value) =>
                     setNewProduct({
                       ...newProduct,
-                      description: e.target.value,
+                      description: value,
                     })
                   }
-                  rows={3}
-                  className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-transparent focus:ring-2 focus:ring-green-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white sm:text-base"
-                  placeholder="Enter product description"
+                  rows={8}
+                  placeholder="Provide a detailed description of your product. You can use:\n- Bullet points\n- Sub headers\n- Line breaks\n- Bold, italic, underline\n- Any formatting you need"
                 />
               </div>
 
