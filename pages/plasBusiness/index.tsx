@@ -254,7 +254,7 @@ function BuyerDashboardContent({
 
       {/* Stats Cards - Hidden on mobile */}
       <div className="hidden md:block">
-        <StatsCards />
+      <StatsCards />
       </div>
 
       {/* Main Content Tabs */}
