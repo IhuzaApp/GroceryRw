@@ -189,6 +189,7 @@ export function useUserDashboardLogic(initialData: Data) {
 
     let shops = data.shops || [];
     let restaurants = data.restaurants || [];
+    let stores = data.stores || [];
 
     const restaurantsAsShops = restaurants.map((restaurant) => ({
       ...restaurant,
@@ -203,16 +204,35 @@ export function useUserDashboardLogic(initialData: Data) {
       is_restaurant: true,
     }));
 
+    // Convert stores to shop format for consistent rendering
+    const storesAsShops = stores.map((store) => ({
+      ...store,
+      id: store.id,
+      name: store.name,
+      description: store.description || "Store",
+      image: store.image,
+      category_id: store.category_id || "store-category",
+      latitude: store.latitude,
+      longitude: store.longitude,
+      operating_hours: store.operating_hours,
+      is_store: true,
+      address: null, // Stores may not have address field
+      logo: store.image, // Use image as logo
+    }));
+
     if (selectedCategory) {
       if (selectedCategory === "restaurant-category") {
         return restaurantsAsShops;
+      } else if (selectedCategory === "store-category") {
+        return storesAsShops;
       } else {
         shops = shops.filter((shop) => shop.category_id === selectedCategory);
-        return shops;
+        const categoryStores = storesAsShops.filter((store) => store.category_id === selectedCategory);
+        return [...shops, ...categoryStores];
       }
     }
 
-    let allShops = [...shops, ...restaurantsAsShops];
+    let allShops = [...shops, ...restaurantsAsShops, ...storesAsShops];
 
     if (isNearbyActive && userLocation) {
       allShops = allShops.filter((shop) => {
@@ -268,6 +288,7 @@ export function useUserDashboardLogic(initialData: Data) {
     role,
     selectedCategory,
     data.shops,
+    data.stores,
     data.restaurants,
     data.categories,
     sortBy,
@@ -281,6 +302,7 @@ export function useUserDashboardLogic(initialData: Data) {
 
     let shops = data.shops || [];
     let restaurants = data.restaurants || [];
+    let stores = data.stores || [];
 
     const restaurantsAsShops = restaurants.map((restaurant) => ({
       ...restaurant,
@@ -295,16 +317,35 @@ export function useUserDashboardLogic(initialData: Data) {
       is_restaurant: true,
     }));
 
+    // Convert stores to shop format for consistent rendering
+    const storesAsShops = stores.map((store) => ({
+      ...store,
+      id: store.id,
+      name: store.name,
+      description: store.description || "Store",
+      image: store.image,
+      category_id: store.category_id || "store-category",
+      latitude: store.latitude,
+      longitude: store.longitude,
+      operating_hours: store.operating_hours,
+      is_store: true,
+      address: null,
+      logo: store.image,
+    }));
+
     if (selectedCategory) {
       if (selectedCategory === "restaurant-category") {
         return restaurantsAsShops;
+      } else if (selectedCategory === "store-category") {
+        return storesAsShops;
       } else {
         shops = shops.filter((shop) => shop.category_id === selectedCategory);
-        return shops;
+        const categoryStores = storesAsShops.filter((store) => store.category_id === selectedCategory);
+        return [...shops, ...categoryStores];
       }
     }
 
-    let allShops = [...shops, ...restaurantsAsShops];
+    let allShops = [...shops, ...restaurantsAsShops, ...storesAsShops];
 
     if (isNearbyActive && userLocation) {
       allShops = allShops.filter((shop) => {
@@ -329,6 +370,7 @@ export function useUserDashboardLogic(initialData: Data) {
     role,
     selectedCategory,
     data.shops,
+    data.stores,
     data.restaurants,
     data.categories,
     isNearbyActive,

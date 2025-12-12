@@ -2,6 +2,7 @@ export interface Data {
   users?: any[];
   categories?: any[];
   shops?: any[];
+  stores?: any[];
   products?: any[];
   addresses?: any[];
   carts?: any[];

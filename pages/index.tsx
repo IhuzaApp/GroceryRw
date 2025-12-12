@@ -109,10 +109,30 @@ export const getServerSideProps: GetServerSideProps = async () => {
       throw new Error("Hasura client is not initialized");
     }
 
+    // Fetch stores query
+    const storesQuery = gql`
+      query GetAllStores {
+        business_stores(where: { is_active: { _eq: true } }) {
+          id
+          name
+          description
+          category_id
+          image
+          latitude
+          longitude
+          operating_hours
+          is_active
+          created_at
+          business_id
+        }
+      }
+    `;
+
     const [
       users,
       categories,
       shops,
+      stores,
       products,
       addresses,
       carts,
@@ -165,6 +185,7 @@ export const getServerSideProps: GetServerSideProps = async () => {
           }
         }
       `),
+      hasuraClient.request<any>(storesQuery),
       hasuraClient.request<ProductsResponse>(gql`
         query GetProducts {
           Products {
@@ -298,6 +319,7 @@ export const getServerSideProps: GetServerSideProps = async () => {
           users: users?.Users || [],
           categories: categories?.Categories || [],
           shops: shops?.Shops || [],
+          stores: stores?.business_stores || [],
           products: products?.Products || [],
           addresses: addresses?.Addresses || [],
           carts: carts?.Carts || [],
@@ -319,6 +341,7 @@ export const getServerSideProps: GetServerSideProps = async () => {
           users: [],
           categories: [],
           shops: [],
+          stores: [],
           products: [],
           addresses: [],
           carts: [],

@@ -92,12 +92,39 @@ const ShopCard: React.FC<ShopCardProps> = ({
   // Use calculated status instead of dynamics.open
   const isShopOpen = calculateShopStatus();
 
+  // Determine if this is a store
+  const isStore = (shop as any).is_store === true;
+
+  // Determine navigation path
+  const getNavigationPath = () => {
+    if (isRestaurant) return `/restaurant/${shop.id}`;
+    if (isStore) return `/plasBusiness/store/${shop.id}`;
+    return `/shops/${shop.id}`;
+  };
+
+  // Get image URL - for stores, use the image directly; for shops, use getShopImageUrl
+  const getImageUrl = () => {
+    if (isStore && shop.image) {
+      // For stores, use the image directly (it's already a base64 or full URL)
+      return shop.image;
+    }
+    return getShopImageUrl(shop.image);
+  };
+
+  // Get placeholder image
+  const getPlaceholderImage = () => {
+    if (isStore) {
+      return "/images/store-placeholder.jpg";
+    }
+    return "/images/shop-placeholder.jpg";
+  };
+
   return (
-    <Link href={isRestaurant ? `/restaurant/${shop.id}` : `/shops/${shop.id}`}>
+    <Link href={getNavigationPath()}>
       <div className="relative transform cursor-pointer overflow-hidden rounded-2xl border shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-lg">
         <div className="relative h-48 w-full bg-gray-100 dark:bg-gray-800">
           <Image
-            src={getShopImageUrl(shop.image)}
+            src={getImageUrl()}
             alt={shop.name}
             fill
             sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
@@ -110,11 +137,18 @@ const ShopCard: React.FC<ShopCardProps> = ({
             loading="lazy"
             onError={(e) => {
               const target = e.target as HTMLImageElement;
-              target.src = "/images/shop-placeholder.jpg";
+              target.src = getPlaceholderImage();
               target.onerror = null;
             }}
             onLoad={() => {}}
           />
+
+          {/* Store badge */}
+          {isStore && (
+            <span className="absolute left-2 top-2 rounded-full bg-blue-500 px-2 py-1 text-xs font-semibold text-white shadow-md">
+              Store
+            </span>
+          )}
 
           {isShopOpen ? (
             <span className="absolute right-2 top-2 rounded-full bg-green-100 px-2 py-1 text-xs font-semibold text-green-800 dark:bg-green-900 dark:text-green-100">
