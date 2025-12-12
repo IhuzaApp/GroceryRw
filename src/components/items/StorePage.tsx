@@ -87,6 +87,7 @@ const StorePage: React.FC<StorePageProps> = ({ store, products }) => {
   const [searchQuery, setSearchQuery] = useState("");
   const [dynamicDistance, setDynamicDistance] = useState("N/A");
   const [isMounted, setIsMounted] = useState(false);
+  const [isCartExpanded, setIsCartExpanded] = useState(false);
 
   useEffect(() => {
     setIsMounted(true);
@@ -279,9 +280,18 @@ const StorePage: React.FC<StorePageProps> = ({ store, products }) => {
 
   return (
     <RootLayout>
-      <div className="bg-gradient-to-br from-gray-50 via-white to-gray-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 md:ml-16">
-        {/* Header */}
-        <div className="relative h-40 w-full overflow-hidden sm:h-48 lg:h-56">
+      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 md:ml-16">
+        {/* Mobile Header - Full width cover image with circular logo */}
+        <div
+          className="relative h-32 w-full sm:hidden"
+          style={{
+            marginTop: "-44px",
+            marginLeft: "-16px",
+            marginRight: "-16px",
+            width: "calc(100% + 32px)",
+          }}
+        >
+          {/* Store Cover Image */}
           <Image
             src={store.image || "/images/store-placeholder.jpg"}
             alt={store.name}
@@ -289,106 +299,218 @@ const StorePage: React.FC<StorePageProps> = ({ store, products }) => {
             className="object-cover"
             priority
           />
-          <div className="absolute inset-0 bg-gradient-to-b from-black/30 via-black/50 to-black/80" />
+
+          {/* Gradient Overlay for better text readability */}
+          <div className="absolute inset-0 bg-gradient-to-b from-black/20 via-black/40 to-black/70" />
 
           {/* Back Button */}
           <button
             onClick={() => router.back()}
-            className="absolute left-4 top-4 z-20 flex h-11 w-11 items-center justify-center rounded-full bg-white/90 backdrop-blur-md shadow-lg transition-all duration-200 hover:scale-110 hover:bg-white dark:bg-gray-800/90"
+            className="absolute left-4 top-7 z-20 flex h-10 w-10 items-center justify-center rounded-full bg-white/20 backdrop-blur-md transition-all duration-200 hover:scale-105 hover:bg-white/30"
           >
             <svg
               viewBox="0 0 24 24"
               fill="none"
               stroke="currentColor"
-              strokeWidth="2.5"
-              className="h-5 w-5 text-gray-900 dark:text-white"
+              strokeWidth="2"
+              className="h-4 w-4 !text-white"
             >
               <path d="M19 12H5M12 19l-7-7 7-7" />
             </svg>
           </button>
 
-          {/* Store Info */}
-          <div className="absolute bottom-0 left-0 right-0 z-20 p-4 sm:p-5 lg:p-6">
-            <div className="flex items-end gap-3 sm:gap-4">
-              {/* Store Logo/Badge */}
-              <div className="flex h-12 w-12 items-center justify-center rounded-xl border-3 border-white bg-white shadow-xl sm:h-14 sm:w-14 lg:h-16 lg:w-16">
-                <Image
-                  src={store.image || "/images/store-placeholder.jpg"}
-                  alt={store.name}
-                  width={64}
-                  height={64}
-                  className="h-full w-full rounded-lg object-cover"
-                />
-              </div>
+          {/* Store Status Badge */}
+          <div className="absolute right-4 top-7 z-20">
+            <div
+              className={`flex items-center gap-1 rounded-full px-3 py-1.5 text-xs font-semibold backdrop-blur-md ${
+                store.is_active && storeStatus.isOpen
+                  ? "bg-green-500/90 !text-white"
+                  : store.is_active && !storeStatus.isOpen
+                  ? "bg-orange-500/90 !text-white"
+                  : "bg-red-500/90 !text-white"
+              }`}
+            >
+              {store.is_active ? (
+                <>
+                  <CheckCircle className="h-3 w-3" />
+                  <span>{storeStatus.statusText}</span>
+                </>
+              ) : (
+                <>
+                  <X className="h-3 w-3" />
+                  <span>Inactive</span>
+                </>
+              )}
+            </div>
+          </div>
 
-              {/* Store Details */}
-              <div className="flex-1">
-                <div className="mb-1.5 flex items-center gap-2">
-                  <h1 className="text-xl font-bold !text-white drop-shadow-2xl sm:text-2xl lg:text-3xl">
-                    {store.name}
-                  </h1>
-                  {/* Status Badge */}
-                  <div className={`flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-semibold !text-white backdrop-blur-sm sm:px-2.5 sm:text-xs ${
-                    store.is_active 
-                      ? storeStatus.isOpen 
-                        ? 'bg-green-500/90' 
-                        : 'bg-orange-500/90'
-                      : 'bg-red-500/90'
-                  }`}>
-                    {store.is_active ? (
-                      <>
-                        <CheckCircle className="h-2.5 w-2.5 sm:h-3 sm:w-3" />
-                        <span>{storeStatus.statusText}</span>
-                      </>
-                    ) : (
-                      <>
-                        <X className="h-2.5 w-2.5 sm:h-3 sm:w-3" />
-                        <span>Inactive</span>
-                      </>
-                    )}
-                  </div>
+          {/* Store Logo - Circular at bottom left */}
+          <div className="absolute -bottom-4 left-3 z-50">
+            <div className="h-16 w-16 overflow-hidden rounded-full border-4 border-green-500 shadow-lg">
+              <Image
+                src={store.image || "/images/store-placeholder.jpg"}
+                alt={`${store.name} logo`}
+                width={64}
+                height={64}
+                className="h-full w-full object-cover"
+              />
+            </div>
+          </div>
+
+          {/* Store Info Overlay - Center */}
+          <div className="absolute bottom-2 left-1/2 z-20 -translate-x-1/2 text-center">
+            {/* Store Name */}
+            <h1 className="mb-1 text-xl font-bold !text-white drop-shadow-lg">
+              {store.name}
+            </h1>
+
+            {/* Store Details */}
+            <div className="flex flex-wrap justify-center gap-2 text-xs !text-white/90">
+              {/* Owner - Only for personal businesses */}
+              {store.businessAccount?.account_type === "personal" && store.businessAccount.owner?.name && (
+                <div className="flex items-center gap-1">
+                  <UserCircle className="h-3 w-3" />
+                  <span>{store.businessAccount.owner.name}</span>
                 </div>
-                
-                {store.description && (
-                  <p className="mb-2 line-clamp-1 text-xs !text-white/90 sm:text-sm">
-                    {store.description}
-                  </p>
-                )}
-                
-                {/* Info Badges Row */}
-                <div className="flex flex-wrap items-center gap-2">
-                  {/* Owner - Only for personal businesses */}
-                  {store.businessAccount?.account_type === "personal" && store.businessAccount.owner?.name && (
+              )}
+              
+              {/* Distance */}
+              {isMounted && dynamicDistance !== "N/A" && (
+                <div className="flex items-center gap-1">
+                  <MapPin className="h-3 w-3" />
+                  <span>{dynamicDistance}</span>
+                </div>
+              )}
+              
+              {/* Operating Hours */}
+              {storeStatus.hours && (
+                <div className="flex items-center gap-1">
+                  <Clock className="h-3 w-3" />
+                  <span>{storeStatus.hours}</span>
+                </div>
+              )}
+              
+              {/* Products Count */}
+              <div className="flex items-center gap-1">
+                <Package className="h-3 w-3" />
+                <span>{products.length} {products.length === 1 ? 'Product' : 'Products'}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Desktop Banner - Hidden on mobile */}
+        <div className="relative hidden sm:block">
+          {/* Hero Banner */}
+          <div className="relative h-40 overflow-hidden sm:h-48 lg:h-56">
+            <Image
+              src={store.image || "/images/store-placeholder.jpg"}
+              alt={store.name}
+              fill
+              className="object-cover"
+              priority
+            />
+            <div className="absolute inset-0 bg-gradient-to-b from-black/30 via-black/50 to-black/80" />
+
+            {/* Back Button */}
+            <button
+              onClick={() => router.back()}
+              className="absolute left-4 top-4 z-20 flex h-11 w-11 items-center justify-center rounded-full bg-white/90 backdrop-blur-md shadow-lg transition-all duration-200 hover:scale-110 hover:bg-white dark:bg-gray-800/90"
+            >
+              <svg
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2.5"
+                className="h-5 w-5 text-gray-900 dark:text-white"
+              >
+                <path d="M19 12H5M12 19l-7-7 7-7" />
+              </svg>
+            </button>
+
+            {/* Store Info */}
+            <div className="absolute bottom-0 left-0 right-0 z-20 p-4 sm:p-5 lg:p-6">
+              <div className="flex items-end gap-3 sm:gap-4">
+                {/* Store Logo/Badge */}
+                <div className="flex h-12 w-12 items-center justify-center rounded-xl border-3 border-white bg-white shadow-xl sm:h-14 sm:w-14 lg:h-16 lg:w-16">
+                  <Image
+                    src={store.image || "/images/store-placeholder.jpg"}
+                    alt={store.name}
+                    width={64}
+                    height={64}
+                    className="h-full w-full rounded-lg object-cover"
+                  />
+                </div>
+
+                {/* Store Details */}
+                <div className="flex-1">
+                  <div className="mb-1.5 flex items-center gap-2">
+                    <h1 className="text-xl font-bold !text-white drop-shadow-2xl sm:text-2xl lg:text-3xl">
+                      {store.name}
+                    </h1>
+                    {/* Status Badge */}
+                    <div className={`flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-semibold !text-white backdrop-blur-sm sm:px-2.5 sm:text-xs ${
+                      store.is_active 
+                        ? storeStatus.isOpen 
+                          ? 'bg-green-500/90' 
+                          : 'bg-orange-500/90'
+                        : 'bg-red-500/90'
+                    }`}>
+                      {store.is_active ? (
+                        <>
+                          <CheckCircle className="h-2.5 w-2.5 sm:h-3 sm:w-3" />
+                          <span>{storeStatus.statusText}</span>
+                        </>
+                      ) : (
+                        <>
+                          <X className="h-2.5 w-2.5 sm:h-3 sm:w-3" />
+                          <span>Inactive</span>
+                        </>
+                      )}
+                    </div>
+                  </div>
+                  
+                  {store.description && (
+                    <p className="mb-2 line-clamp-1 text-xs !text-white/90 sm:text-sm">
+                      {store.description}
+                    </p>
+                  )}
+                  
+                  {/* Info Badges Row */}
+                  <div className="flex flex-wrap items-center gap-2">
+                    {/* Owner - Only for personal businesses */}
+                    {store.businessAccount?.account_type === "personal" && store.businessAccount.owner?.name && (
+                      <div className="flex items-center gap-1.5 rounded-full bg-white/20 px-2.5 py-1 backdrop-blur-md sm:gap-2 sm:px-3 sm:py-1.5">
+                        <UserCircle className="h-3 w-3 !text-white sm:h-3.5 sm:w-3.5" />
+                        <span className="text-xs font-medium !text-white sm:text-sm">
+                          Owner: {store.businessAccount.owner.name}
+                        </span>
+                      </div>
+                    )}
+                    
+                    {/* Distance */}
+                    {isMounted && dynamicDistance !== "N/A" && (
+                      <div className="flex items-center gap-1.5 rounded-full bg-white/20 px-2.5 py-1 backdrop-blur-md sm:gap-2 sm:px-3 sm:py-1.5">
+                        <MapPin className="h-3 w-3 !text-white sm:h-3.5 sm:w-3.5" />
+                        <span className="text-xs font-medium !text-white sm:text-sm">{dynamicDistance}</span>
+                      </div>
+                    )}
+                    
+                    {/* Operating Hours */}
+                    {storeStatus.hours && (
+                      <div className="flex items-center gap-1.5 rounded-full bg-white/20 px-2.5 py-1 backdrop-blur-md sm:gap-2 sm:px-3 sm:py-1.5">
+                        <Clock className="h-3 w-3 !text-white sm:h-3.5 sm:w-3.5" />
+                        <span className="text-xs font-medium !text-white sm:text-sm">{storeStatus.hours}</span>
+                      </div>
+                    )}
+                    
+                    {/* Products Count */}
                     <div className="flex items-center gap-1.5 rounded-full bg-white/20 px-2.5 py-1 backdrop-blur-md sm:gap-2 sm:px-3 sm:py-1.5">
-                      <UserCircle className="h-3 w-3 !text-white sm:h-3.5 sm:w-3.5" />
+                      <Package className="h-3 w-3 !text-white sm:h-3.5 sm:w-3.5" />
                       <span className="text-xs font-medium !text-white sm:text-sm">
-                        Owner: {store.businessAccount.owner.name}
+                        {products.length} {products.length === 1 ? 'Product' : 'Products'}
                       </span>
                     </div>
-                  )}
-                  
-                  {/* Distance */}
-                  {isMounted && dynamicDistance !== "N/A" && (
-                    <div className="flex items-center gap-1.5 rounded-full bg-white/20 px-2.5 py-1 backdrop-blur-md sm:gap-2 sm:px-3 sm:py-1.5">
-                      <MapPin className="h-3 w-3 !text-white sm:h-3.5 sm:w-3.5" />
-                      <span className="text-xs font-medium !text-white sm:text-sm">{dynamicDistance}</span>
-                    </div>
-                  )}
-                  
-                  {/* Operating Hours */}
-                  {storeStatus.hours && (
-                    <div className="flex items-center gap-1.5 rounded-full bg-white/20 px-2.5 py-1 backdrop-blur-md sm:gap-2 sm:px-3 sm:py-1.5">
-                      <Clock className="h-3 w-3 !text-white sm:h-3.5 sm:w-3.5" />
-                      <span className="text-xs font-medium !text-white sm:text-sm">{storeStatus.hours}</span>
-                    </div>
-                  )}
-                  
-                  {/* Products Count */}
-                  <div className="flex items-center gap-1.5 rounded-full bg-white/20 px-2.5 py-1 backdrop-blur-md sm:gap-2 sm:px-3 sm:py-1.5">
-                    <Package className="h-3 w-3 !text-white sm:h-3.5 sm:w-3.5" />
-                    <span className="text-xs font-medium !text-white sm:text-sm">
-                      {products.length} {products.length === 1 ? 'Product' : 'Products'}
-                    </span>
                   </div>
                 </div>
               </div>
@@ -398,7 +520,7 @@ const StorePage: React.FC<StorePageProps> = ({ store, products }) => {
 
         <div className="flex flex-col lg:flex-row">
           {/* Main Content */}
-          <div className="flex-1 p-4 lg:p-6 xl:p-8">
+          <div className="flex-1 p-4 pb-24 sm:mt-0 lg:pb-4 lg:p-6 xl:p-8" style={{ marginTop: "24px" }}>
             {/* Search */}
             <div className="mb-6">
               <div className="relative">
@@ -479,8 +601,8 @@ const StorePage: React.FC<StorePageProps> = ({ store, products }) => {
             )}
           </div>
 
-          {/* Favorites/Sidebar */}
-          <div className="w-full border-t border-gray-200 bg-white shadow-xl dark:border-gray-700 dark:bg-gray-800 lg:sticky lg:top-0 lg:h-fit lg:max-h-screen lg:w-80 lg:border-l lg:border-t-0 lg:overflow-y-auto lg:shadow-2xl xl:w-96">
+          {/* Favorites/Sidebar - Desktop Only */}
+          <div className="hidden w-full border-t border-gray-200 bg-white shadow-xl dark:border-gray-700 dark:bg-gray-800 lg:sticky lg:top-0 lg:block lg:h-fit lg:max-h-screen lg:w-80 lg:border-l lg:border-t-0 lg:overflow-y-auto lg:shadow-2xl xl:w-96">
             <div className="flex h-full flex-col p-4 lg:p-6">
               {/* Header */}
               <div className="mb-6 flex items-center justify-between border-b border-gray-200 pb-4 dark:border-gray-700">
@@ -597,6 +719,184 @@ const StorePage: React.FC<StorePageProps> = ({ store, products }) => {
               )}
             </div>
           </div>
+
+          {/* Mobile Cart Card - Fixed at Bottom */}
+          {selectedProducts.length > 0 && (
+            <>
+              {/* Backdrop overlay when expanded */}
+              {isCartExpanded && (
+                <div
+                  className="fixed inset-0 z-40 bg-black/80 backdrop-blur-lg transition-all duration-300 lg:hidden"
+                  onClick={() => setIsCartExpanded(false)}
+                />
+              )}
+
+              <div
+                className={`fixed bottom-16 left-0 right-0 z-50 w-full transition-all duration-300 lg:hidden ${
+                  isCartExpanded
+                    ? "border-2 border-white/10 shadow-[0_25px_50px_-12px_rgba(0,0,0,0.8)] ring-4 ring-white/20"
+                    : "shadow-2xl"
+                } rounded-t-2xl bg-white dark:bg-gray-800`}
+                style={{
+                  maxHeight: isCartExpanded ? "calc(90vh - 64px)" : "160px",
+                  overflow: "hidden",
+                }}
+              >
+                {/* Header with toggle button */}
+                <div
+                  className="flex items-center justify-between border-b border-gray-200 p-4 dark:border-gray-700"
+                  onClick={() => setIsCartExpanded(!isCartExpanded)}
+                >
+                  <div className="flex items-center">
+                    <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-green-500 to-emerald-500 !text-white shadow-md">
+                      <ShoppingBag className="h-4 w-4" />
+                    </div>
+                    <span className="ml-3 text-lg font-bold text-gray-900 dark:text-white">
+                      Cart
+                    </span>
+                    <span className="ml-2 rounded-full bg-green-500 px-2 py-0.5 text-xs font-semibold !text-white">
+                      {selectedProducts.length}
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className="font-bold text-green-600 dark:text-green-400">
+                      {formatCurrencySync(totalPrice)}
+                    </span>
+                    <button className="flex h-8 w-8 items-center justify-center rounded-full bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-300">
+                      {isCartExpanded ? (
+                        <svg
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          stroke="currentColor"
+                          strokeWidth="2"
+                          className="h-5 w-5"
+                        >
+                          <polyline points="18 15 12 9 6 15" />
+                        </svg>
+                      ) : (
+                        <svg
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          stroke="currentColor"
+                          strokeWidth="2"
+                          className="h-5 w-5"
+                        >
+                          <polyline points="6 9 12 15 18 9" />
+                        </svg>
+                      )}
+                    </button>
+                  </div>
+                </div>
+
+                {/* Continue button when collapsed */}
+                {!isCartExpanded && (
+                  <div className="p-4">
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleContinue();
+                      }}
+                      disabled={selectedProducts.length === 0}
+                      className="w-full rounded-xl bg-gradient-to-r from-green-500 to-emerald-500 px-6 py-3 text-base font-bold !text-white shadow-lg transition-all disabled:cursor-not-allowed disabled:opacity-50"
+                    >
+                      Continue ({selectedProducts.length})
+                    </button>
+                  </div>
+                )}
+
+                {/* Expanded content */}
+                <div
+                  className={`p-4 ${isCartExpanded ? "block" : "hidden"} overflow-y-auto`}
+                  style={{ maxHeight: "calc(90vh - 124px)" }}
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  {/* Cart Items */}
+                  <div className="mb-6 space-y-3">
+                    <h3 className="text-base font-bold text-gray-900 dark:text-white">
+                      Selected Products
+                    </h3>
+                    {selectedProducts.map((product) => (
+                      <div
+                        key={product.id}
+                        className="group rounded-xl border border-gray-200 bg-gradient-to-br from-white to-gray-50 p-3 shadow-sm transition-all duration-200 hover:shadow-md dark:border-gray-700 dark:from-gray-800 dark:to-gray-700/50"
+                      >
+                        <div className="flex items-start gap-3">
+                          {product.image && (
+                            <div className="h-14 w-14 flex-shrink-0 overflow-hidden rounded-lg ring-2 ring-gray-100 dark:ring-gray-700">
+                              <Image
+                                src={product.image}
+                                alt={product.name}
+                                width={56}
+                                height={56}
+                                className="h-full w-full object-cover"
+                              />
+                            </div>
+                          )}
+                          <div className="flex-1 min-w-0">
+                            <h3 className="mb-1 truncate text-sm font-bold text-gray-900 dark:text-white">
+                              {product.name}
+                            </h3>
+                            <p className="mb-2 text-xs font-semibold text-green-600 dark:text-green-400">
+                              {formatCurrencySync(parseFloat(product.price))} / {product.unit}
+                            </p>
+                            <div className="flex items-center gap-2">
+                              <button
+                                onClick={() =>
+                                  handleUpdateQuantity(product.id, product.quantity - 1)
+                                }
+                                className="flex h-7 w-7 items-center justify-center rounded-lg border border-gray-300 bg-white text-gray-700 shadow-sm transition-all hover:scale-110 hover:bg-gray-50 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-300"
+                              >
+                                <span className="text-sm font-bold">-</span>
+                              </button>
+                              <span className="min-w-[2rem] text-center text-sm font-bold text-gray-900 dark:text-white">
+                                {product.quantity}
+                              </span>
+                              <button
+                                onClick={() =>
+                                  handleUpdateQuantity(product.id, product.quantity + 1)
+                                }
+                                className="flex h-7 w-7 items-center justify-center rounded-lg border border-gray-300 bg-white text-gray-700 shadow-sm transition-all hover:scale-110 hover:bg-gray-50 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-300"
+                              >
+                                <span className="text-sm font-bold">+</span>
+                              </button>
+                              <span className="ml-auto text-sm font-bold text-gray-900 dark:text-white">
+                                {formatCurrencySync(parseFloat(product.price) * product.quantity)}
+                              </span>
+                            </div>
+                          </div>
+                          <button
+                            onClick={() => handleRemoveProduct(product.id)}
+                            className="flex-shrink-0 rounded-lg p-1.5 text-gray-400 transition-all hover:bg-red-50 hover:text-red-500 dark:hover:bg-red-900/20 dark:hover:text-red-400"
+                          >
+                            <X className="h-4 w-4" />
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+
+                  {/* Subtotal */}
+                  <div className="mb-6 flex items-center justify-between rounded-xl bg-gradient-to-r from-green-50 to-emerald-50 p-4 dark:from-green-900/20 dark:to-emerald-900/20">
+                    <span className="text-base font-semibold text-gray-700 dark:text-gray-300">
+                      Subtotal:
+                    </span>
+                    <span className="text-xl font-bold text-green-600 dark:text-green-400">
+                      {formatCurrencySync(totalPrice)}
+                    </span>
+                  </div>
+
+                  {/* Continue Button */}
+                  <button
+                    onClick={handleContinue}
+                    disabled={selectedProducts.length === 0}
+                    className="w-full rounded-xl bg-gradient-to-r from-green-500 to-emerald-500 px-6 py-4 text-base font-bold !text-white shadow-lg shadow-green-500/25 transition-all duration-200 hover:scale-105 hover:from-green-600 hover:to-emerald-600 hover:shadow-xl hover:shadow-green-500/40 disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:scale-100"
+                  >
+                    Continue to Checkout ({selectedProducts.length})
+                  </button>
+                </div>
+              </div>
+            </>
+          )}
         </div>
       </div>
     </RootLayout>
