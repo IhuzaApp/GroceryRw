@@ -248,44 +248,57 @@ export default function StoreCheckoutPage() {
 
   return (
     <RootLayout>
-      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 md:ml-16">
-        <div className="container mx-auto px-4 py-6">
+      <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 md:ml-16">
+        <div className="container mx-auto px-4 py-6 lg:px-6 lg:py-8">
+          {/* Back Button */}
           <button
             onClick={() => router.back()}
-            className="mb-4 flex items-center gap-2 text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-100"
+            className="mb-6 flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium text-gray-600 transition-colors hover:bg-gray-100 hover:text-gray-900 dark:text-gray-400 dark:hover:bg-gray-800 dark:hover:text-gray-100"
           >
-            <ArrowLeft className="h-5 w-5" />
-            Back
+            <ArrowLeft className="h-4 w-4" />
+            Back to Store
           </button>
+
+          {/* Store Name Header */}
+          <div className="mb-6 rounded-xl bg-gradient-to-r from-green-500 to-emerald-500 p-4 shadow-lg sm:p-5">
+            <h1 className="text-xl font-bold !text-white sm:text-2xl">
+              Checkout - {checkoutData.storeName}
+            </h1>
+          </div>
 
           <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
             {/* Order Summary */}
             <div className="lg:col-span-2">
-              <div className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm dark:border-gray-700 dark:bg-gray-800">
-                <h2 className="mb-6 text-2xl font-bold text-gray-900 dark:text-white">
-                  Order Summary
-                </h2>
+              <div className="rounded-2xl border border-gray-200 bg-white p-6 shadow-lg dark:border-gray-700 dark:bg-gray-800 lg:p-8">
+                <div className="mb-6 flex items-center gap-3">
+                  <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-green-500 to-emerald-500 !text-white shadow-lg">
+                    <CreditCard className="h-5 w-5" />
+                  </div>
+                  <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
+                    Order Summary
+                  </h2>
+                </div>
 
                 {/* Products List */}
-                <div className="space-y-4">
+                <div className="mb-8 space-y-3">
                   {checkoutData.products.map((product) => (
                     <div
                       key={product.id}
-                      className="flex items-center gap-4 rounded-lg border border-gray-200 p-4 dark:border-gray-700"
+                      className="group flex items-center gap-4 rounded-xl border border-gray-200 bg-gradient-to-r from-gray-50 to-gray-100 p-4 shadow-sm transition-all duration-200 hover:border-green-300 hover:shadow-md dark:border-gray-700 dark:from-gray-700/50 dark:to-gray-800/50 dark:hover:border-green-600"
                     >
                       {product.image && (
-                        <div className="h-16 w-16 flex-shrink-0 overflow-hidden rounded-lg">
+                        <div className="h-16 w-16 flex-shrink-0 overflow-hidden rounded-xl border-2 border-gray-200 shadow-sm dark:border-gray-600 lg:h-20 lg:w-20">
                           <Image
                             src={product.image}
                             alt={product.name}
-                            width={64}
-                            height={64}
-                            className="h-full w-full object-cover"
+                            width={80}
+                            height={80}
+                            className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-110"
                           />
                         </div>
                       )}
-                      <div className="flex-1">
-                        <h3 className="font-medium text-gray-900 dark:text-white">
+                      <div className="flex-1 min-w-0">
+                        <h3 className="mb-1 truncate font-semibold text-gray-900 dark:text-white">
                           {product.name}
                         </h3>
                         <p className="text-sm text-gray-500 dark:text-gray-400">
@@ -293,7 +306,7 @@ export default function StoreCheckoutPage() {
                         </p>
                       </div>
                       <div className="text-right">
-                        <p className="font-semibold text-gray-900 dark:text-white">
+                        <p className="text-lg font-bold text-green-600 dark:text-green-400">
                           {formatCurrencySync(
                             parseFloat(product.price) * product.quantity
                           )}
@@ -304,45 +317,49 @@ export default function StoreCheckoutPage() {
                 </div>
 
                 {/* Delivery Address */}
-                <div className="mt-6 rounded-lg border border-gray-200 p-4 dark:border-gray-700">
+                <div className="mb-4 rounded-xl border border-gray-200 bg-gradient-to-br from-gray-50 to-gray-100 p-4 shadow-sm dark:border-gray-700 dark:from-gray-700/50 dark:to-gray-800/50">
                   <div className="mb-3 flex items-center justify-between">
                     <h3 className="flex items-center gap-2 font-semibold text-gray-900 dark:text-white">
-                      <MapPin className="h-5 w-5" />
+                      <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-green-500/10">
+                        <MapPin className="h-4 w-4 text-green-600 dark:text-green-400" />
+                      </div>
                       Delivery Address
                     </h3>
                     <button
                       onClick={handleChangeAddress}
-                      className="text-sm text-green-600 hover:text-green-700 dark:text-green-400"
+                      className="rounded-lg bg-gradient-to-r from-green-500 to-emerald-500 px-4 py-2 text-sm font-semibold !text-white shadow-md transition-all hover:from-green-600 hover:to-emerald-600 hover:shadow-lg"
                     >
                       Change
                     </button>
                   </div>
-                  <p className="text-sm text-gray-600 dark:text-gray-400">
+                  <p className="ml-10 text-sm font-medium text-gray-700 dark:text-gray-300">
                     {addressInput || "No address set"}
                   </p>
                 </div>
 
                 {/* Delivery Time */}
-                <div className="mt-4 rounded-lg border border-gray-200 p-4 dark:border-gray-700">
+                <div className="mb-6 rounded-xl border border-gray-200 bg-gradient-to-br from-gray-50 to-gray-100 p-4 shadow-sm dark:border-gray-700 dark:from-gray-700/50 dark:to-gray-800/50">
                   <h3 className="mb-2 flex items-center gap-2 font-semibold text-gray-900 dark:text-white">
-                    <Clock className="h-5 w-5" />
+                    <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-green-500/10">
+                      <Clock className="h-4 w-4 text-green-600 dark:text-green-400" />
+                    </div>
                     Estimated Delivery
                   </h3>
-                  <p className="text-sm text-gray-600 dark:text-gray-400">
+                  <p className="ml-10 text-sm font-medium text-gray-700 dark:text-gray-300">
                     {deliveryTime} ({distance})
                   </p>
                 </div>
 
                 {/* Comment */}
-                <div className="mt-4">
-                  <label className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">
+                <div>
+                  <label className="mb-2 block text-sm font-semibold text-gray-700 dark:text-gray-300">
                     Order Comment (Optional)
                   </label>
                   <textarea
                     value={comment}
                     onChange={(e) => setComment(e.target.value)}
-                    placeholder="Any special instructions..."
-                    className="w-full rounded-lg border border-gray-200 px-4 py-2 text-sm focus:border-green-500 focus:outline-none focus:ring-2 focus:ring-green-500/20 dark:border-gray-600 dark:bg-gray-700 dark:text-white"
+                    placeholder="Any special instructions or notes for the delivery..."
+                    className="w-full rounded-xl border border-gray-200 bg-white px-4 py-3 text-sm shadow-sm transition-all focus:border-green-500 focus:bg-white focus:outline-none focus:ring-2 focus:ring-green-500/20 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:focus:border-green-400"
                     rows={3}
                   />
                 </div>
@@ -351,57 +368,61 @@ export default function StoreCheckoutPage() {
 
             {/* Payment Summary Sidebar */}
             <div className="lg:col-span-1">
-              <div className="sticky top-4 rounded-xl border border-gray-200 bg-white p-6 shadow-sm dark:border-gray-700 dark:bg-gray-800">
-                <h2 className="mb-4 flex items-center gap-2 text-xl font-bold text-gray-900 dark:text-white">
-                  <CreditCard className="h-5 w-5" />
-                  Payment Summary
-                </h2>
+              <div className="sticky top-4 rounded-2xl border border-gray-200 bg-white p-6 shadow-xl dark:border-gray-700 dark:bg-gray-800 lg:p-8">
+                <div className="mb-6 flex items-center gap-3">
+                  <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-green-500 to-emerald-500 !text-white shadow-lg">
+                    <CreditCard className="h-5 w-5" />
+                  </div>
+                  <h2 className="text-xl font-bold text-gray-900 dark:text-white">
+                    Payment Summary
+                  </h2>
+                </div>
 
-                <div className="space-y-3 border-b border-gray-200 pb-4 dark:border-gray-700">
-                  <div className="flex justify-between text-sm">
-                    <span className="text-gray-600 dark:text-gray-400">
+                <div className="space-y-4 border-b border-gray-200 pb-6 dark:border-gray-700">
+                  <div className="flex justify-between">
+                    <span className="text-sm font-medium text-gray-600 dark:text-gray-400">
                       Subtotal:
                     </span>
-                    <span className="font-medium text-gray-900 dark:text-white">
+                    <span className="text-sm font-bold text-gray-900 dark:text-white">
                       {formatCurrencySync(checkoutData.total)}
                     </span>
                   </div>
-                  <div className="flex justify-between text-sm">
-                    <span className="text-gray-600 dark:text-gray-400">
+                  <div className="flex justify-between">
+                    <span className="text-sm font-medium text-gray-600 dark:text-gray-400">
                       Transportation:
                     </span>
-                    <span className="font-medium text-gray-900 dark:text-white">
+                    <span className="text-sm font-bold text-gray-900 dark:text-white">
                       {formatCurrencySync(transportationFee)}
                     </span>
                   </div>
-                  <div className="flex justify-between text-sm">
-                    <span className="text-gray-600 dark:text-gray-400">
-                      Service Fee:
+                  <div className="flex justify-between">
+                    <span className="text-sm font-medium text-gray-600 dark:text-gray-400">
+                      Service Fee (5%):
                     </span>
-                    <span className="font-medium text-gray-900 dark:text-white">
+                    <span className="text-sm font-bold text-gray-900 dark:text-white">
                       {formatCurrencySync(serviceFee)}
                     </span>
                   </div>
                 </div>
 
-                <div className="my-4 flex justify-between border-b border-gray-200 pb-4 dark:border-gray-700">
+                <div className="my-6 flex justify-between rounded-xl bg-gradient-to-r from-green-50 to-emerald-50 p-4 dark:from-green-900/20 dark:to-emerald-900/20">
                   <span className="text-lg font-bold text-gray-900 dark:text-white">
                     Total:
                   </span>
-                  <span className="text-lg font-bold text-green-600 dark:text-green-400">
+                  <span className="text-xl font-bold text-green-600 dark:text-green-400">
                     {formatCurrencySync(totalAmount)}
                   </span>
                 </div>
 
                 {/* Payment Method */}
-                <div className="mb-4">
-                  <label className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">
+                <div className="mb-6">
+                  <label className="mb-2 block text-sm font-semibold text-gray-700 dark:text-gray-300">
                     Payment Method
                   </label>
                   <select
                     value={paymentMethod}
                     onChange={(e) => setPaymentMethod(e.target.value)}
-                    className="w-full rounded-lg border border-gray-200 px-4 py-2 text-sm focus:border-green-500 focus:outline-none focus:ring-2 focus:ring-green-500/20 dark:border-gray-600 dark:bg-gray-700 dark:text-white"
+                    className="w-full rounded-xl border border-gray-200 bg-white px-4 py-3 text-sm shadow-sm transition-all focus:border-green-500 focus:bg-white focus:outline-none focus:ring-2 focus:ring-green-500/20 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:focus:border-green-400"
                   >
                     <option value="mobile_money">Mobile Money</option>
                     <option value="cash">Cash on Delivery</option>
@@ -413,9 +434,9 @@ export default function StoreCheckoutPage() {
                 <button
                   onClick={handlePlaceOrder}
                   disabled={isProcessing || !userAddress}
-                  className="w-full rounded-lg bg-gradient-to-r from-green-500 to-emerald-500 px-4 py-3 font-semibold text-white shadow-lg transition-all hover:from-green-600 hover:to-emerald-600 disabled:cursor-not-allowed disabled:opacity-50"
+                  className="w-full rounded-xl bg-gradient-to-r from-green-500 to-emerald-500 px-6 py-4 text-base font-bold !text-white shadow-lg shadow-green-500/25 transition-all duration-200 hover:scale-[1.02] hover:from-green-600 hover:to-emerald-600 hover:shadow-xl hover:shadow-green-500/40 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:scale-100"
                 >
-                  {isProcessing ? "Processing..." : "Make Payment"}
+                  {isProcessing ? "Processing..." : "Place Order"}
                 </button>
               </div>
             </div>
@@ -425,22 +446,30 @@ export default function StoreCheckoutPage() {
         {/* Address Selection Modal */}
         {showAddressModal && (
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 px-4 backdrop-blur-sm">
-            <div className="w-full max-w-md rounded-xl border border-gray-200 bg-white p-6 shadow-xl dark:border-gray-700 dark:bg-gray-800">
-              <div className="mb-4 flex items-center justify-between">
-                <h3 className="text-xl font-bold text-gray-900 dark:text-white">
-                  Select Delivery Address
-                </h3>
+            <div className="w-full max-w-lg rounded-2xl border border-gray-200 bg-white p-6 shadow-2xl dark:border-gray-700 dark:bg-gray-800">
+              <div className="mb-6 flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-green-500 to-emerald-500 !text-white shadow-lg">
+                    <MapPin className="h-5 w-5" />
+                  </div>
+                  <h3 className="text-xl font-bold text-gray-900 dark:text-white">
+                    Select Delivery Address
+                  </h3>
+                </div>
                 <button
                   onClick={() => setShowAddressModal(false)}
-                  className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
+                  className="rounded-lg p-2 text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-600 dark:hover:bg-gray-700 dark:hover:text-gray-300"
                 >
                   <X className="h-6 w-6" />
                 </button>
               </div>
 
               {savedAddresses.length === 0 ? (
-                <div className="py-8 text-center">
-                  <p className="text-gray-500 dark:text-gray-400">
+                <div className="py-12 text-center">
+                  <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-gradient-to-br from-gray-100 to-gray-200 dark:from-gray-700 dark:to-gray-800">
+                    <MapPin className="h-8 w-8 text-gray-400" />
+                  </div>
+                  <p className="mb-4 text-gray-600 dark:text-gray-400">
                     No saved addresses. Please add an address in your profile.
                   </p>
                   <button
@@ -448,25 +477,32 @@ export default function StoreCheckoutPage() {
                       router.push("/profile");
                       setShowAddressModal(false);
                     }}
-                    className="mt-4 text-green-600 hover:text-green-700 dark:text-green-400"
+                    className="rounded-xl bg-gradient-to-r from-green-500 to-emerald-500 px-6 py-3 font-semibold !text-white shadow-lg transition-all hover:from-green-600 hover:to-emerald-600 hover:shadow-xl"
                   >
                     Go to Profile
                   </button>
                 </div>
               ) : (
-                <div className="max-h-96 space-y-2 overflow-y-auto">
+                <div className="max-h-96 space-y-3 overflow-y-auto">
                   {savedAddresses.map((address) => (
                     <button
                       key={address.id}
                       onClick={() => handleSelectAddress(address)}
-                      className="w-full rounded-lg border border-gray-200 p-4 text-left transition-colors hover:bg-gray-50 dark:border-gray-700 dark:hover:bg-gray-700/50"
+                      className="group w-full rounded-xl border-2 border-gray-200 bg-gradient-to-r from-gray-50 to-gray-100 p-4 text-left transition-all duration-200 hover:border-green-400 hover:shadow-md dark:border-gray-700 dark:from-gray-700/50 dark:to-gray-800/50 dark:hover:border-green-600"
                     >
-                      <p className="font-medium text-gray-900 dark:text-white">
-                        {address.street}
-                      </p>
-                      <p className="text-sm text-gray-500 dark:text-gray-400">
-                        {address.city}, {address.postal_code || ""}
-                      </p>
+                      <div className="flex items-start gap-3">
+                        <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-lg bg-green-500/10">
+                          <MapPin className="h-5 w-5 text-green-600 dark:text-green-400" />
+                        </div>
+                        <div className="flex-1">
+                          <p className="mb-1 font-semibold text-gray-900 dark:text-white">
+                            {address.street}
+                          </p>
+                          <p className="text-sm text-gray-600 dark:text-gray-400">
+                            {address.city}, {address.postal_code || ""}
+                          </p>
+                        </div>
+                      </div>
                     </button>
                   ))}
                 </div>
