@@ -49,7 +49,8 @@ export default async function handler(
     res.status(200).json({ stores: data.business_stores || [] });
   } catch (error: any) {
     console.error("Error fetching stores:", error);
-    res.status(500).json({ error: "Failed to fetch stores", message: error.message });
+    res
+      .status(500)
+      .json({ error: "Failed to fetch stores", message: error.message });
   }
 }
-

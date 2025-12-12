@@ -54,7 +54,9 @@ export default function PaymentMethodSelector({
           setSelectedMethod(defaultMethod.id);
           onSelectRef.current({
             type:
-              defaultMethod.method.toLowerCase() === "mtn momo" ? "momo" : "card",
+              defaultMethod.method.toLowerCase() === "mtn momo"
+                ? "momo"
+                : "card",
             id: defaultMethod.id,
             number: defaultMethod.number,
           });

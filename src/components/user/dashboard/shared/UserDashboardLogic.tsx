@@ -227,7 +227,9 @@ export function useUserDashboardLogic(initialData: Data) {
         return storesAsShops;
       } else {
         shops = shops.filter((shop) => shop.category_id === selectedCategory);
-        const categoryStores = storesAsShops.filter((store) => store.category_id === selectedCategory);
+        const categoryStores = storesAsShops.filter(
+          (store) => store.category_id === selectedCategory
+        );
         return [...shops, ...categoryStores];
       }
     }
@@ -340,7 +342,9 @@ export function useUserDashboardLogic(initialData: Data) {
         return storesAsShops;
       } else {
         shops = shops.filter((shop) => shop.category_id === selectedCategory);
-        const categoryStores = storesAsShops.filter((store) => store.category_id === selectedCategory);
+        const categoryStores = storesAsShops.filter(
+          (store) => store.category_id === selectedCategory
+        );
         return [...shops, ...categoryStores];
       }
     }
