@@ -15,10 +15,11 @@ interface Session {
   expires: string;
 }
 
-// Generate a user-friendly product verification ID
-// Format: PB + 6 alphanumeric characters (e.g., PB0384BD, PB59483CF, PB7K9M2N)
-function generateProductQueryId(): string {
-  const prefix = "PB";
+// Generate a user-friendly product/service verification ID
+// Format: PB + 6 alphanumeric characters for products (e.g., PB0384BD, PB59483CF, PB7K9M2N)
+// Format: SP + 6 alphanumeric characters for services (e.g., SP0384BD, SP59483CF, SP7K9M2N)
+function generateQueryId(type: "product" | "service" = "product"): string {
+  const prefix = type === "service" ? "SP" : "PB";
   const chars = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ";
   let id = prefix;
 
@@ -49,9 +50,14 @@ export default async function handler(
       return res.status(401).json({ error: "Unauthorized" });
     }
 
-    // Generate a unique query ID for product verification
-    // Format: PB + 6 alphanumeric characters (e.g., PB0384BD, PB59483CF)
-    const queryId = generateProductQueryId();
+    // Get type from request body (defaults to "product" for backward compatibility)
+    const { type } = req.body || {};
+    const queryType = type === "service" ? "service" : "product";
+
+    // Generate a unique query ID for product/service verification
+    // Format: PB + 6 alphanumeric characters for products (e.g., PB0384BD, PB59483CF)
+    // Format: SP + 6 alphanumeric characters for services (e.g., SP0384BD, SP59483CF)
+    const queryId = generateQueryId(queryType);
 
     return res.status(200).json({
       success: true,
