@@ -898,7 +898,7 @@ export default function StoreDetailsPage() {
       {showAddProductModal && (
         <div className="fixed inset-0 z-[10000] flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm sm:p-6">
           <div className="max-h-[95vh] w-full max-w-2xl overflow-y-auto rounded-2xl border border-gray-200 bg-white shadow-2xl dark:border-gray-700 dark:bg-gray-800 sm:max-h-[90vh]">
-            <div className="sticky top-0 z-10 flex items-center justify-between border-b border-gray-200 bg-gradient-to-r from-gray-50 to-white px-4 py-4 dark:from-gray-800 dark:to-gray-800 dark:border-gray-700 sm:px-6 sm:py-5 md:px-8">
+            <div className="sticky top-0 z-10 flex items-center justify-between border-b border-gray-200 bg-gradient-to-r from-gray-50 to-white px-4 py-4 dark:border-gray-700 dark:from-gray-800 dark:to-gray-800 sm:px-6 sm:py-5 md:px-8">
               <h3 className="text-lg font-bold text-gray-900 dark:text-white sm:text-xl md:text-2xl">
                 {editingProduct ? "Edit Product" : "Add New Product"}
               </h3>

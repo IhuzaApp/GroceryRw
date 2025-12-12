@@ -803,7 +803,9 @@ export default function UserDashboard({ initialData }: { initialData: Data }) {
       } else {
         // Filter shops by category
         shops = shops.filter((shop) => shop.category_id === selectedCategory);
-        const categoryStores = storesAsShops.filter((store) => store.category_id === selectedCategory);
+        const categoryStores = storesAsShops.filter(
+          (store) => store.category_id === selectedCategory
+        );
         return [...shops, ...categoryStores];
       }
     }

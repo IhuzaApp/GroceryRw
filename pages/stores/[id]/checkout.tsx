@@ -57,14 +57,18 @@ function getDistanceFromLatLonInKm(
 export default function StoreCheckoutPage() {
   const router = useRouter();
   const [checkoutData, setCheckoutData] = useState<CheckoutData | null>(null);
-  const [storeLocation, setStoreLocation] = useState<{ lat: number; lng: number } | null>(null);
+  const [storeLocation, setStoreLocation] = useState<{
+    lat: number;
+    lng: number;
+  } | null>(null);
   const [userAddress, setUserAddress] = useState<any>(null);
   const [deliveryTime, setDeliveryTime] = useState("N/A");
   const [distance, setDistance] = useState("N/A");
   const [transportationFee, setTransportationFee] = useState(0);
   const [serviceFee, setServiceFee] = useState(0);
   const [totalAmount, setTotalAmount] = useState(0);
-  const [selectedPaymentMethod, setSelectedPaymentMethod] = useState<PaymentMethod | null>(null);
+  const [selectedPaymentMethod, setSelectedPaymentMethod] =
+    useState<PaymentMethod | null>(null);
   const [loadingPayment, setLoadingPayment] = useState(true);
   const [comment, setComment] = useState("");
   const [deliveredTime, setDeliveredTime] = useState("");
@@ -74,7 +78,10 @@ export default function StoreCheckoutPage() {
   const [addressInput, setAddressInput] = useState("");
   const [savedAddresses, setSavedAddresses] = useState<any[]>([]);
   const [isExpanded, setIsExpanded] = useState(true); // Auto-expand on mobile by default
-  const [storeDetails, setStoreDetails] = useState<{ image?: string; name?: string } | null>(null);
+  const [storeDetails, setStoreDetails] = useState<{
+    image?: string;
+    name?: string;
+  } | null>(null);
   const [isMounted, setIsMounted] = useState(false);
 
   useEffect(() => {
@@ -194,7 +201,8 @@ export default function StoreCheckoutPage() {
       }
 
       // Calculate transportation fee
-      const transportFee = distKm <= 3 ? 1000 : 1000 + Math.ceil((distKm - 3) * 300);
+      const transportFee =
+        distKm <= 3 ? 1000 : 1000 + Math.ceil((distKm - 3) * 300);
       setTransportationFee(transportFee);
     }
   }, [checkoutData, storeLocation, userAddress]);
@@ -265,26 +273,29 @@ export default function StoreCheckoutPage() {
         paymentMethodString = "mobile_money";
       }
 
-      const response = await fetch("/api/mutations/create-business-product-order", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          store_id: checkoutData.storeId,
-          allProducts: productsJsonb,
-          total: totalAmount.toString(),
-          transportation_fee: transportationFee.toString(),
-          service_fee: serviceFee.toString(),
-          units: totalUnits.toString(),
-          latitude: userAddress.latitude || "",
-          longitude: userAddress.longitude || "",
-          deliveryAddress: addressInput || "Current Location",
-          comment: comment || "",
-          delivered_time: deliveredTime || "",
-          timeRange: timeRange || "",
-          payment_method: paymentMethodString,
-          payment_method_id: selectedPaymentMethod.id || null,
-        }),
-      });
+      const response = await fetch(
+        "/api/mutations/create-business-product-order",
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            store_id: checkoutData.storeId,
+            allProducts: productsJsonb,
+            total: totalAmount.toString(),
+            transportation_fee: transportationFee.toString(),
+            service_fee: serviceFee.toString(),
+            units: totalUnits.toString(),
+            latitude: userAddress.latitude || "",
+            longitude: userAddress.longitude || "",
+            deliveryAddress: addressInput || "Current Location",
+            comment: comment || "",
+            delivered_time: deliveredTime || "",
+            timeRange: timeRange || "",
+            payment_method: paymentMethodString,
+            payment_method_id: selectedPaymentMethod.id || null,
+          }),
+        }
+      );
 
       if (response.ok) {
         toast.success("Order placed successfully!");
@@ -332,13 +343,15 @@ export default function StoreCheckoutPage() {
 
     return (
       <div className="flex items-center">
-        <div className={`mr-2 flex items-center justify-center rounded p-2 text-xs !text-white ${
-          selectedPaymentMethod.type === "refund"
-            ? "bg-purple-600"
-            : selectedPaymentMethod.type === "momo"
-            ? "bg-yellow-600"
-            : "bg-blue-600"
-        }`}>
+        <div
+          className={`mr-2 flex items-center justify-center rounded p-2 text-xs !text-white ${
+            selectedPaymentMethod.type === "refund"
+              ? "bg-purple-600"
+              : selectedPaymentMethod.type === "momo"
+              ? "bg-yellow-600"
+              : "bg-blue-600"
+          }`}
+        >
           {selectedPaymentMethod.type === "refund"
             ? "WALLET"
             : selectedPaymentMethod.type === "momo"
@@ -370,7 +383,8 @@ export default function StoreCheckoutPage() {
     setIsExpanded(!isExpanded);
   };
 
-  const totalItems = checkoutData?.products.reduce((sum, p) => sum + p.quantity, 0) || 0;
+  const totalItems =
+    checkoutData?.products.reduce((sum, p) => sum + p.quantity, 0) || 0;
 
   return (
     <RootLayout>
@@ -447,7 +461,10 @@ export default function StoreCheckoutPage() {
         )}
 
         {/* Desktop Header */}
-        <div className="container mx-auto px-4 pb-24 pt-6 md:pb-6 lg:px-6 lg:py-8" style={{ marginTop: storeDetails && isMounted ? "24px" : "0" }}>
+        <div
+          className="container mx-auto px-4 pb-24 pt-6 md:pb-6 lg:px-6 lg:py-8"
+          style={{ marginTop: storeDetails && isMounted ? "24px" : "0" }}
+        >
           {/* Back Button - Desktop */}
           <button
             onClick={() => router.back()}
@@ -492,12 +509,14 @@ export default function StoreCheckoutPage() {
                         />
                       </div>
                     )}
-                    <div className="flex-1 min-w-0">
+                    <div className="min-w-0 flex-1">
                       <h3 className="mb-1 truncate text-sm font-semibold text-gray-900 dark:text-white">
                         {product.name}
                       </h3>
                       <p className="text-xs text-gray-500 dark:text-gray-400">
-                        {product.quantity} × {formatCurrencySync(parseFloat(product.price))} / {product.unit}
+                        {product.quantity} ×{" "}
+                        {formatCurrencySync(parseFloat(product.price))} /{" "}
+                        {product.unit}
                       </p>
                     </div>
                     <div className="text-right">
@@ -544,12 +563,14 @@ export default function StoreCheckoutPage() {
                           />
                         </div>
                       )}
-                      <div className="flex-1 min-w-0">
+                      <div className="min-w-0 flex-1">
                         <h3 className="mb-1 truncate font-semibold text-gray-900 dark:text-white">
                           {product.name}
                         </h3>
                         <p className="text-sm text-gray-500 dark:text-gray-400">
-                          {product.quantity} × {formatCurrencySync(parseFloat(product.price))} / {product.unit}
+                          {product.quantity} ×{" "}
+                          {formatCurrencySync(parseFloat(product.price))} /{" "}
+                          {product.unit}
                         </p>
                       </div>
                       <div className="text-right">
@@ -679,7 +700,9 @@ export default function StoreCheckoutPage() {
 
                 <button
                   onClick={handlePlaceOrder}
-                  disabled={isProcessing || !userAddress || !selectedPaymentMethod}
+                  disabled={
+                    isProcessing || !userAddress || !selectedPaymentMethod
+                  }
                   className="w-full rounded-xl bg-gradient-to-r from-green-500 to-emerald-500 px-6 py-4 text-base font-bold !text-white shadow-lg shadow-green-500/25 transition-all duration-200 hover:scale-[1.02] hover:from-green-600 hover:to-emerald-600 hover:shadow-xl hover:shadow-green-500/40 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:scale-100"
                 >
                   {isProcessing ? "Processing..." : "Place Order"}
@@ -768,7 +791,9 @@ export default function StoreCheckoutPage() {
                       }
                       handlePlaceOrder();
                     }}
-                    disabled={isProcessing || !userAddress || !selectedPaymentMethod}
+                    disabled={
+                      isProcessing || !userAddress || !selectedPaymentMethod
+                    }
                     className="w-full rounded-xl bg-gradient-to-r from-green-500 to-emerald-500 px-6 py-4 text-base font-bold !text-white shadow-lg transition-all disabled:cursor-not-allowed disabled:opacity-50"
                   >
                     {isProcessing ? "Processing..." : "Place Order"}
@@ -778,7 +803,9 @@ export default function StoreCheckoutPage() {
 
               {/* Expanded content */}
               <div
-                className={`p-4 ${isExpanded ? "block" : "hidden"} overflow-y-auto`}
+                className={`p-4 ${
+                  isExpanded ? "block" : "hidden"
+                } overflow-y-auto`}
                 style={{ maxHeight: "calc(90vh - 124px)" }}
                 onClick={(e) => e.stopPropagation()}
               >
@@ -789,25 +816,33 @@ export default function StoreCheckoutPage() {
                   </h3>
                   <div className="space-y-2">
                     <div className="flex justify-between text-sm">
-                      <span className="text-gray-600 dark:text-gray-400">Subtotal:</span>
+                      <span className="text-gray-600 dark:text-gray-400">
+                        Subtotal:
+                      </span>
                       <span className="font-medium text-gray-900 dark:text-white">
                         {formatCurrencySync(checkoutData.total)}
                       </span>
                     </div>
                     <div className="flex justify-between text-sm">
-                      <span className="text-gray-600 dark:text-gray-400">Transportation:</span>
+                      <span className="text-gray-600 dark:text-gray-400">
+                        Transportation:
+                      </span>
                       <span className="font-medium text-gray-900 dark:text-white">
                         {formatCurrencySync(transportationFee)}
                       </span>
                     </div>
                     <div className="flex justify-between text-sm">
-                      <span className="text-gray-600 dark:text-gray-400">Service Fee (5%):</span>
+                      <span className="text-gray-600 dark:text-gray-400">
+                        Service Fee (5%):
+                      </span>
                       <span className="font-medium text-gray-900 dark:text-white">
                         {formatCurrencySync(serviceFee)}
                       </span>
                     </div>
                     <div className="mt-3 flex justify-between rounded-xl bg-gradient-to-r from-green-50 to-emerald-50 p-4 dark:from-green-900/20 dark:to-emerald-900/20">
-                      <span className="text-lg font-bold text-gray-900 dark:text-white">Total:</span>
+                      <span className="text-lg font-bold text-gray-900 dark:text-white">
+                        Total:
+                      </span>
                       <span className="text-xl font-bold text-green-600 dark:text-green-400">
                         {formatCurrencySync(totalAmount)}
                       </span>
@@ -865,9 +900,7 @@ export default function StoreCheckoutPage() {
                       }}
                     />
                   </div>
-                  <div className="mt-2">
-                    {renderPaymentMethod()}
-                  </div>
+                  <div className="mt-2">{renderPaymentMethod()}</div>
                 </div>
 
                 {/* Comment */}
@@ -891,7 +924,9 @@ export default function StoreCheckoutPage() {
                     e.stopPropagation();
                     handlePlaceOrder();
                   }}
-                  disabled={isProcessing || !userAddress || !selectedPaymentMethod}
+                  disabled={
+                    isProcessing || !userAddress || !selectedPaymentMethod
+                  }
                   className="w-full rounded-xl bg-gradient-to-r from-green-500 to-emerald-500 px-6 py-4 text-base font-bold !text-white shadow-lg shadow-green-500/25 transition-all duration-200 hover:scale-[1.02] hover:from-green-600 hover:to-emerald-600 hover:shadow-xl hover:shadow-green-500/40 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:scale-100"
                 >
                   {isProcessing ? "Processing..." : "Place Order"}
@@ -972,4 +1007,3 @@ export default function StoreCheckoutPage() {
     </RootLayout>
   );
 }
-

@@ -119,10 +119,7 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
   const productsQuery = gql`
     query GetProductsByStore($store_id: uuid!) {
       PlasBusinessProductsOrSerive(
-        where: { 
-          store_id: { _eq: $store_id }
-          status: { _eq: "active" }
-        }
+        where: { store_id: { _eq: $store_id }, status: { _eq: "active" } }
       ) {
         id
         name
@@ -172,14 +169,19 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
       businessAccount: storeData.business_stores_by_pk.business_account
         ? {
             id: storeData.business_stores_by_pk.business_account.id,
-            account_type: storeData.business_stores_by_pk.business_account.account_type,
-            business_name: storeData.business_stores_by_pk.business_account.business_name,
+            account_type:
+              storeData.business_stores_by_pk.business_account.account_type,
+            business_name:
+              storeData.business_stores_by_pk.business_account.business_name,
             user_id: storeData.business_stores_by_pk.business_account.user_id,
             owner: storeData.business_stores_by_pk.business_account.Users
               ? {
                   id: storeData.business_stores_by_pk.business_account.Users.id,
-                  name: storeData.business_stores_by_pk.business_account.Users.name,
-                  email: storeData.business_stores_by_pk.business_account.Users.email,
+                  name: storeData.business_stores_by_pk.business_account.Users
+                    .name,
+                  email:
+                    storeData.business_stores_by_pk.business_account.Users
+                      .email,
                 }
               : undefined,
           }

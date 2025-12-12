@@ -50,10 +50,13 @@ export default function StoreProductCard({
 
   return (
     <>
-      <div className="group relative overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-lg transition-all duration-300 hover:-translate-y-1 hover:shadow-2xl hover:shadow-green-500/10 dark:border-gray-700 dark:bg-gray-800 dark:hover:shadow-green-500/20" onClick={(e) => e.stopPropagation()}>
+      <div
+        className="group relative overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-lg transition-all duration-300 hover:-translate-y-1 hover:shadow-2xl hover:shadow-green-500/10 dark:border-gray-700 dark:bg-gray-800 dark:hover:shadow-green-500/20"
+        onClick={(e) => e.stopPropagation()}
+      >
         {/* Gradient overlay on hover */}
         <div className="absolute inset-0 bg-gradient-to-br from-green-50/0 via-emerald-50/0 to-green-50/0 transition-all duration-300 group-hover:from-green-50/50 group-hover:via-emerald-50/30 group-hover:to-green-50/50 dark:group-hover:from-green-900/10 dark:group-hover:via-emerald-900/5 dark:group-hover:to-green-900/10" />
-        
+
         {/* Image Section */}
         <div className="relative aspect-square overflow-hidden bg-gradient-to-br from-gray-50 via-gray-100 to-gray-50 dark:from-gray-700 dark:via-gray-800 dark:to-gray-700">
           <Image
@@ -64,27 +67,27 @@ export default function StoreProductCard({
           />
           {/* Overlay gradient */}
           <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-black/10 to-black/0 transition-opacity duration-300 group-hover:from-black/60" />
-          
+
           {/* Measurement unit badge - top right */}
           {measurement_unit && (
             <div className="absolute right-2 top-2 rounded-full bg-gradient-to-r from-green-600 to-emerald-600 px-2 py-1 text-[10px] font-bold !text-white shadow-lg backdrop-blur-sm transition-transform duration-200 group-hover:scale-110">
               {measurement_unit}
             </div>
           )}
-          
+
           {/* Product Name Badge - bottom overlay */}
           <div className="absolute bottom-0 left-0 right-0 p-2 sm:p-3">
-            <div className="rounded-lg bg-black/60 backdrop-blur-md px-2.5 py-1.5 sm:px-3 sm:py-2">
+            <div className="rounded-lg bg-black/60 px-2.5 py-1.5 backdrop-blur-md sm:px-3 sm:py-2">
               <h3 className="line-clamp-2 text-xs font-bold leading-tight !text-white drop-shadow-lg sm:text-sm">
                 {name}
               </h3>
             </div>
           </div>
-          
+
           {/* Shine effect on hover */}
           <div className="absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-white/20 to-transparent transition-transform duration-1000 group-hover:translate-x-full" />
         </div>
-        
+
         {/* Content Section */}
         <div className="relative bg-transparent p-3 sm:p-4">
           {/* Unit */}
@@ -96,14 +99,14 @@ export default function StoreProductCard({
               {unit}
             </span>
           </div>
-          
+
           {/* Price - On its own line */}
           <div className="mb-3">
             <span className="text-xs font-bold leading-none text-green-600 dark:text-green-400 sm:text-sm">
               {formatCurrencySync(parseFloat(price || "0"))}
             </span>
           </div>
-          
+
           {/* Add Button - Full Width at Bottom */}
           <button
             type="button"
@@ -117,7 +120,7 @@ export default function StoreProductCard({
             <span className="whitespace-nowrap">Add to Cart</span>
           </button>
         </div>
-        
+
         {/* Border glow on hover */}
         <div className="absolute inset-0 rounded-2xl border-2 border-green-500/0 transition-all duration-300 group-hover:border-green-500/30" />
       </div>
@@ -157,9 +160,8 @@ export default function StoreProductCard({
                 </button>
               </div>
             </div>
-            
-            <div className="p-6">
 
+            <div className="p-6">
               <div className="mb-6 space-y-4">
                 <div>
                   <label className="mb-2 block text-sm font-semibold text-gray-700 dark:text-gray-300">
@@ -200,7 +202,7 @@ export default function StoreProductCard({
                         onClick={() => setSelectedQuantity(qty)}
                         className={`rounded-xl border-2 px-4 py-2.5 text-sm font-bold transition-all duration-200 ${
                           selectedQuantity === qty
-                            ? "border-green-500 bg-gradient-to-r from-green-500 to-emerald-500 !text-white shadow-lg shadow-green-500/30 scale-105"
+                            ? "scale-105 border-green-500 bg-gradient-to-r from-green-500 to-emerald-500 !text-white shadow-lg shadow-green-500/30"
                             : "border-gray-200 bg-white text-gray-700 hover:border-green-300 hover:bg-green-50 hover:shadow-md dark:border-gray-600 dark:bg-gray-700 dark:text-gray-300 dark:hover:border-green-500 dark:hover:bg-green-900/20"
                         }`}
                       >
@@ -231,4 +233,3 @@ export default function StoreProductCard({
     </>
   );
 }
-

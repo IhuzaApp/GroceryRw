@@ -5,7 +5,17 @@ import { useRouter } from "next/router";
 import Image from "next/image";
 import RootLayout from "@components/ui/layout";
 import StoreProductCard from "./StoreProductCard";
-import { Heart, X, ShoppingBag, Package, Clock, MapPin, CheckCircle, Store, UserCircle } from "lucide-react";
+import {
+  Heart,
+  X,
+  ShoppingBag,
+  Package,
+  Clock,
+  MapPin,
+  CheckCircle,
+  Store,
+  UserCircle,
+} from "lucide-react";
 import Cookies from "js-cookie";
 import { formatCurrencySync } from "../../utils/formatCurrency";
 
@@ -144,7 +154,9 @@ const StorePage: React.FC<StorePageProps> = ({ store, products }) => {
       return;
     }
     setSelectedProducts((prev) =>
-      prev.map((p) => (p.id === productId ? { ...p, quantity: newQuantity } : p))
+      prev.map((p) =>
+        p.id === productId ? { ...p, quantity: newQuantity } : p
+      )
     );
   };
 
@@ -169,7 +181,9 @@ const StorePage: React.FC<StorePageProps> = ({ store, products }) => {
   }, [products, activeCategory, searchQuery]);
 
   const categories = useMemo(() => {
-    const cats = Array.from(new Set(products.map((p) => p.category || "General")));
+    const cats = Array.from(
+      new Set(products.map((p) => p.category || "General"))
+    );
     return ["all", ...cats];
   }, [products]);
 
@@ -213,16 +227,18 @@ const StorePage: React.FC<StorePageProps> = ({ store, products }) => {
 
   // Calculate if store is currently open
   const calculateStoreStatus = () => {
-    if (!store.operating_hours || typeof store.operating_hours !== 'object') {
-      return { isOpen: false, statusText: 'Hours not available' };
+    if (!store.operating_hours || typeof store.operating_hours !== "object") {
+      return { isOpen: false, statusText: "Hours not available" };
     }
 
     const now = new Date();
-    const dayKey = now.toLocaleDateString("en-US", { weekday: "long" }).toLowerCase();
+    const dayKey = now
+      .toLocaleDateString("en-US", { weekday: "long" })
+      .toLowerCase();
     const todaysHours = (store.operating_hours as any)[dayKey];
 
     if (!todaysHours || todaysHours.toLowerCase() === "closed") {
-      return { isOpen: false, statusText: 'Closed' };
+      return { isOpen: false, statusText: "Closed" };
     }
 
     // Parse time format like "9am - 5pm"
@@ -258,7 +274,11 @@ const StorePage: React.FC<StorePageProps> = ({ store, products }) => {
       isOpen = nowMins >= openMins || nowMins <= closeMins;
     }
 
-    return { isOpen, statusText: isOpen ? 'Open' : 'Closed', hours: todaysHours };
+    return {
+      isOpen,
+      statusText: isOpen ? "Open" : "Closed",
+      hours: todaysHours,
+    };
   };
 
   const storeStatus = calculateStoreStatus();
@@ -367,13 +387,14 @@ const StorePage: React.FC<StorePageProps> = ({ store, products }) => {
             {/* Store Details */}
             <div className="flex flex-wrap justify-center gap-2 text-xs !text-white/90">
               {/* Owner - Only for personal businesses */}
-              {store.businessAccount?.account_type === "personal" && store.businessAccount.owner?.name && (
-                <div className="flex items-center gap-1">
-                  <UserCircle className="h-3 w-3" />
-                  <span>{store.businessAccount.owner.name}</span>
-                </div>
-              )}
-              
+              {store.businessAccount?.account_type === "personal" &&
+                store.businessAccount.owner?.name && (
+                  <div className="flex items-center gap-1">
+                    <UserCircle className="h-3 w-3" />
+                    <span>{store.businessAccount.owner.name}</span>
+                  </div>
+                )}
+
               {/* Distance */}
               {isMounted && dynamicDistance !== "N/A" && (
                 <div className="flex items-center gap-1">
@@ -381,7 +402,7 @@ const StorePage: React.FC<StorePageProps> = ({ store, products }) => {
                   <span>{dynamicDistance}</span>
                 </div>
               )}
-              
+
               {/* Operating Hours */}
               {storeStatus.hours && (
                 <div className="flex items-center gap-1">
@@ -389,11 +410,14 @@ const StorePage: React.FC<StorePageProps> = ({ store, products }) => {
                   <span>{storeStatus.hours}</span>
                 </div>
               )}
-              
+
               {/* Products Count */}
               <div className="flex items-center gap-1">
                 <Package className="h-3 w-3" />
-                <span>{products.length} {products.length === 1 ? 'Product' : 'Products'}</span>
+                <span>
+                  {products.length}{" "}
+                  {products.length === 1 ? "Product" : "Products"}
+                </span>
               </div>
             </div>
           </div>
@@ -415,7 +439,7 @@ const StorePage: React.FC<StorePageProps> = ({ store, products }) => {
             {/* Back Button */}
             <button
               onClick={() => router.back()}
-              className="absolute left-4 top-4 z-20 flex h-11 w-11 items-center justify-center rounded-full bg-white/90 backdrop-blur-md shadow-lg transition-all duration-200 hover:scale-110 hover:bg-white dark:bg-gray-800/90"
+              className="absolute left-4 top-4 z-20 flex h-11 w-11 items-center justify-center rounded-full bg-white/90 shadow-lg backdrop-blur-md transition-all duration-200 hover:scale-110 hover:bg-white dark:bg-gray-800/90"
             >
               <svg
                 viewBox="0 0 24 24"
@@ -432,7 +456,7 @@ const StorePage: React.FC<StorePageProps> = ({ store, products }) => {
             <div className="absolute bottom-0 left-0 right-0 z-20 p-4 sm:p-5 lg:p-6">
               <div className="flex items-end gap-3 sm:gap-4">
                 {/* Store Logo/Badge */}
-                <div className="flex h-12 w-12 items-center justify-center rounded-xl border-3 border-white bg-white shadow-xl sm:h-14 sm:w-14 lg:h-16 lg:w-16">
+                <div className="border-3 flex h-12 w-12 items-center justify-center rounded-xl border-white bg-white shadow-xl sm:h-14 sm:w-14 lg:h-16 lg:w-16">
                   <Image
                     src={store.image || "/images/store-placeholder.jpg"}
                     alt={store.name}
@@ -449,13 +473,15 @@ const StorePage: React.FC<StorePageProps> = ({ store, products }) => {
                       {store.name}
                     </h1>
                     {/* Status Badge */}
-                    <div className={`flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-semibold !text-white backdrop-blur-sm sm:px-2.5 sm:text-xs ${
-                      store.is_active 
-                        ? storeStatus.isOpen 
-                          ? 'bg-green-500/90' 
-                          : 'bg-orange-500/90'
-                        : 'bg-red-500/90'
-                    }`}>
+                    <div
+                      className={`flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-semibold !text-white backdrop-blur-sm sm:px-2.5 sm:text-xs ${
+                        store.is_active
+                          ? storeStatus.isOpen
+                            ? "bg-green-500/90"
+                            : "bg-orange-500/90"
+                          : "bg-red-500/90"
+                      }`}
+                    >
                       {store.is_active ? (
                         <>
                           <CheckCircle className="h-2.5 w-2.5 sm:h-3 sm:w-3" />
@@ -469,46 +495,52 @@ const StorePage: React.FC<StorePageProps> = ({ store, products }) => {
                       )}
                     </div>
                   </div>
-                  
+
                   {store.description && (
                     <p className="mb-2 line-clamp-1 text-xs !text-white/90 sm:text-sm">
                       {store.description}
                     </p>
                   )}
-                  
+
                   {/* Info Badges Row */}
                   <div className="flex flex-wrap items-center gap-2">
                     {/* Owner - Only for personal businesses */}
-                    {store.businessAccount?.account_type === "personal" && store.businessAccount.owner?.name && (
-                      <div className="flex items-center gap-1.5 rounded-full bg-white/20 px-2.5 py-1 backdrop-blur-md sm:gap-2 sm:px-3 sm:py-1.5">
-                        <UserCircle className="h-3 w-3 !text-white sm:h-3.5 sm:w-3.5" />
-                        <span className="text-xs font-medium !text-white sm:text-sm">
-                          Owner: {store.businessAccount.owner.name}
-                        </span>
-                      </div>
-                    )}
-                    
+                    {store.businessAccount?.account_type === "personal" &&
+                      store.businessAccount.owner?.name && (
+                        <div className="flex items-center gap-1.5 rounded-full bg-white/20 px-2.5 py-1 backdrop-blur-md sm:gap-2 sm:px-3 sm:py-1.5">
+                          <UserCircle className="h-3 w-3 !text-white sm:h-3.5 sm:w-3.5" />
+                          <span className="text-xs font-medium !text-white sm:text-sm">
+                            Owner: {store.businessAccount.owner.name}
+                          </span>
+                        </div>
+                      )}
+
                     {/* Distance */}
                     {isMounted && dynamicDistance !== "N/A" && (
                       <div className="flex items-center gap-1.5 rounded-full bg-white/20 px-2.5 py-1 backdrop-blur-md sm:gap-2 sm:px-3 sm:py-1.5">
                         <MapPin className="h-3 w-3 !text-white sm:h-3.5 sm:w-3.5" />
-                        <span className="text-xs font-medium !text-white sm:text-sm">{dynamicDistance}</span>
+                        <span className="text-xs font-medium !text-white sm:text-sm">
+                          {dynamicDistance}
+                        </span>
                       </div>
                     )}
-                    
+
                     {/* Operating Hours */}
                     {storeStatus.hours && (
                       <div className="flex items-center gap-1.5 rounded-full bg-white/20 px-2.5 py-1 backdrop-blur-md sm:gap-2 sm:px-3 sm:py-1.5">
                         <Clock className="h-3 w-3 !text-white sm:h-3.5 sm:w-3.5" />
-                        <span className="text-xs font-medium !text-white sm:text-sm">{storeStatus.hours}</span>
+                        <span className="text-xs font-medium !text-white sm:text-sm">
+                          {storeStatus.hours}
+                        </span>
                       </div>
                     )}
-                    
+
                     {/* Products Count */}
                     <div className="flex items-center gap-1.5 rounded-full bg-white/20 px-2.5 py-1 backdrop-blur-md sm:gap-2 sm:px-3 sm:py-1.5">
                       <Package className="h-3 w-3 !text-white sm:h-3.5 sm:w-3.5" />
                       <span className="text-xs font-medium !text-white sm:text-sm">
-                        {products.length} {products.length === 1 ? 'Product' : 'Products'}
+                        {products.length}{" "}
+                        {products.length === 1 ? "Product" : "Products"}
                       </span>
                     </div>
                   </div>
@@ -520,7 +552,10 @@ const StorePage: React.FC<StorePageProps> = ({ store, products }) => {
 
         <div className="flex flex-col lg:flex-row">
           {/* Main Content */}
-          <div className="flex-1 p-4 pb-24 sm:mt-0 lg:pb-4 lg:p-6 xl:p-8" style={{ marginTop: "24px" }}>
+          <div
+            className="flex-1 p-4 pb-24 sm:mt-0 lg:p-6 lg:pb-4 xl:p-8"
+            style={{ marginTop: "24px" }}
+          >
             {/* Search */}
             <div className="mb-6">
               <div className="relative">
@@ -530,7 +565,12 @@ const StorePage: React.FC<StorePageProps> = ({ store, products }) => {
                   viewBox="0 0 24 24"
                   stroke="currentColor"
                 >
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+                  />
                 </svg>
                 <input
                   type="text"
@@ -602,7 +642,7 @@ const StorePage: React.FC<StorePageProps> = ({ store, products }) => {
           </div>
 
           {/* Favorites/Sidebar - Desktop Only */}
-          <div className="hidden w-full border-t border-gray-200 bg-white shadow-xl dark:border-gray-700 dark:bg-gray-800 lg:sticky lg:top-0 lg:block lg:h-fit lg:max-h-screen lg:w-80 lg:border-l lg:border-t-0 lg:overflow-y-auto lg:shadow-2xl xl:w-96">
+          <div className="hidden w-full border-t border-gray-200 bg-white shadow-xl dark:border-gray-700 dark:bg-gray-800 lg:sticky lg:top-0 lg:block lg:h-fit lg:max-h-screen lg:w-80 lg:overflow-y-auto lg:border-l lg:border-t-0 lg:shadow-2xl xl:w-96">
             <div className="flex h-full flex-col p-4 lg:p-6">
               {/* Header */}
               <div className="mb-6 flex items-center justify-between border-b border-gray-200 pb-4 dark:border-gray-700">
@@ -654,17 +694,21 @@ const StorePage: React.FC<StorePageProps> = ({ store, products }) => {
                               />
                             </div>
                           )}
-                          <div className="flex-1 min-w-0">
+                          <div className="min-w-0 flex-1">
                             <h3 className="mb-1 truncate text-sm font-bold text-gray-900 dark:text-white">
                               {product.name}
                             </h3>
                             <p className="mb-2 text-xs font-semibold text-green-600 dark:text-green-400">
-                              {formatCurrencySync(parseFloat(product.price))} / {product.unit}
+                              {formatCurrencySync(parseFloat(product.price))} /{" "}
+                              {product.unit}
                             </p>
                             <div className="flex items-center gap-2">
                               <button
                                 onClick={() =>
-                                  handleUpdateQuantity(product.id, product.quantity - 1)
+                                  handleUpdateQuantity(
+                                    product.id,
+                                    product.quantity - 1
+                                  )
                                 }
                                 className="flex h-7 w-7 items-center justify-center rounded-lg border border-gray-300 bg-white text-gray-700 shadow-sm transition-all hover:scale-110 hover:bg-gray-50 hover:shadow-md dark:border-gray-600 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600"
                               >
@@ -675,14 +719,19 @@ const StorePage: React.FC<StorePageProps> = ({ store, products }) => {
                               </span>
                               <button
                                 onClick={() =>
-                                  handleUpdateQuantity(product.id, product.quantity + 1)
+                                  handleUpdateQuantity(
+                                    product.id,
+                                    product.quantity + 1
+                                  )
                                 }
                                 className="flex h-7 w-7 items-center justify-center rounded-lg border border-gray-300 bg-white text-gray-700 shadow-sm transition-all hover:scale-110 hover:bg-gray-50 hover:shadow-md dark:border-gray-600 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600"
                               >
                                 <span className="text-sm font-bold">+</span>
                               </button>
                               <span className="ml-auto text-sm font-bold text-gray-900 dark:text-white">
-                                {formatCurrencySync(parseFloat(product.price) * product.quantity)}
+                                {formatCurrencySync(
+                                  parseFloat(product.price) * product.quantity
+                                )}
                               </span>
                             </div>
                           </div>
@@ -806,7 +855,9 @@ const StorePage: React.FC<StorePageProps> = ({ store, products }) => {
 
                 {/* Expanded content */}
                 <div
-                  className={`p-4 ${isCartExpanded ? "block" : "hidden"} overflow-y-auto`}
+                  className={`p-4 ${
+                    isCartExpanded ? "block" : "hidden"
+                  } overflow-y-auto`}
                   style={{ maxHeight: "calc(90vh - 124px)" }}
                   onClick={(e) => e.stopPropagation()}
                 >
@@ -832,17 +883,21 @@ const StorePage: React.FC<StorePageProps> = ({ store, products }) => {
                               />
                             </div>
                           )}
-                          <div className="flex-1 min-w-0">
+                          <div className="min-w-0 flex-1">
                             <h3 className="mb-1 truncate text-sm font-bold text-gray-900 dark:text-white">
                               {product.name}
                             </h3>
                             <p className="mb-2 text-xs font-semibold text-green-600 dark:text-green-400">
-                              {formatCurrencySync(parseFloat(product.price))} / {product.unit}
+                              {formatCurrencySync(parseFloat(product.price))} /{" "}
+                              {product.unit}
                             </p>
                             <div className="flex items-center gap-2">
                               <button
                                 onClick={() =>
-                                  handleUpdateQuantity(product.id, product.quantity - 1)
+                                  handleUpdateQuantity(
+                                    product.id,
+                                    product.quantity - 1
+                                  )
                                 }
                                 className="flex h-7 w-7 items-center justify-center rounded-lg border border-gray-300 bg-white text-gray-700 shadow-sm transition-all hover:scale-110 hover:bg-gray-50 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-300"
                               >
@@ -853,14 +908,19 @@ const StorePage: React.FC<StorePageProps> = ({ store, products }) => {
                               </span>
                               <button
                                 onClick={() =>
-                                  handleUpdateQuantity(product.id, product.quantity + 1)
+                                  handleUpdateQuantity(
+                                    product.id,
+                                    product.quantity + 1
+                                  )
                                 }
                                 className="flex h-7 w-7 items-center justify-center rounded-lg border border-gray-300 bg-white text-gray-700 shadow-sm transition-all hover:scale-110 hover:bg-gray-50 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-300"
                               >
                                 <span className="text-sm font-bold">+</span>
                               </button>
                               <span className="ml-auto text-sm font-bold text-gray-900 dark:text-white">
-                                {formatCurrencySync(parseFloat(product.price) * product.quantity)}
+                                {formatCurrencySync(
+                                  parseFloat(product.price) * product.quantity
+                                )}
                               </span>
                             </div>
                           </div>
@@ -904,4 +964,3 @@ const StorePage: React.FC<StorePageProps> = ({ store, products }) => {
 };
 
 export default StorePage;
-

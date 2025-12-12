@@ -181,8 +181,10 @@ const mockServiceRequests = [
 
 export function ProductsBidsSection() {
   const [activeSubTab, setActiveSubTab] = useState("products");
-  const [selectedServiceRequest, setSelectedServiceRequest] = useState<any>(null);
-  const [isServiceRequestModalOpen, setIsServiceRequestModalOpen] = useState(false);
+  const [selectedServiceRequest, setSelectedServiceRequest] =
+    useState<any>(null);
+  const [isServiceRequestModalOpen, setIsServiceRequestModalOpen] =
+    useState(false);
   const [isCreateServiceOpen, setIsCreateServiceOpen] = useState(false);
   const [isServiceDetailsOpen, setIsServiceDetailsOpen] = useState(false);
   const [selectedService, setSelectedService] = useState<any>(null);
@@ -389,7 +391,11 @@ export function ProductsBidsSection() {
             ...(isBusinessAccount
               ? [{ id: "products", label: "My Services", icon: Briefcase }]
               : []),
-            { id: "service-requests", label: "Received Service Requests", icon: TrendingUp },
+            {
+              id: "service-requests",
+              label: "Received Service Requests",
+              icon: TrendingUp,
+            },
           ].map((tab) => (
             <button
               key={tab.id}
@@ -601,7 +607,10 @@ export function ProductsBidsSection() {
                       </span>
                     </div>
                     <p className="mb-2 text-sm text-gray-600 dark:text-gray-400">
-                      Requested by <span className="font-medium">{serviceRequest.requesterName}</span>
+                      Requested by{" "}
+                      <span className="font-medium">
+                        {serviceRequest.requesterName}
+                      </span>
                     </p>
                     <p className="mb-3 text-sm text-gray-700 dark:text-gray-300">
                       {serviceRequest.message}
@@ -666,14 +675,18 @@ export function ProductsBidsSection() {
                   {serviceRequest.status === "Pending" && (
                     <>
                       <button
-                        onClick={() => handleAcceptServiceRequest(serviceRequest.id)}
+                        onClick={() =>
+                          handleAcceptServiceRequest(serviceRequest.id)
+                        }
                         className="flex-1 rounded-lg bg-green-500 px-3 py-2 text-sm font-medium text-white transition-colors hover:bg-green-600"
                         style={{ color: "#ffffff" }}
                       >
                         Accept
                       </button>
                       <button
-                        onClick={() => handleRejectServiceRequest(serviceRequest.id)}
+                        onClick={() =>
+                          handleRejectServiceRequest(serviceRequest.id)
+                        }
                         className="flex-1 rounded-lg bg-red-500 px-3 py-2 text-sm font-medium text-white transition-colors hover:bg-red-600"
                       >
                         Reject
@@ -733,13 +746,17 @@ export function ProductsBidsSection() {
                     {selectedServiceRequest.eventDate && (
                       <div className="flex items-center gap-2">
                         <Calendar className="h-4 w-4" />
-                        <span>Event Date: {selectedServiceRequest.eventDate}</span>
+                        <span>
+                          Event Date: {selectedServiceRequest.eventDate}
+                        </span>
                       </div>
                     )}
                     {selectedServiceRequest.estimatedGuests && (
                       <div className="flex items-center gap-2">
                         <Users className="h-4 w-4" />
-                        <span>Guests: {selectedServiceRequest.estimatedGuests}</span>
+                        <span>
+                          Guests: {selectedServiceRequest.estimatedGuests}
+                        </span>
                       </div>
                     )}
                     {selectedServiceRequest.location && (
@@ -754,7 +771,9 @@ export function ProductsBidsSection() {
                     </div>
                     {selectedServiceRequest.email && (
                       <div className="flex items-center gap-2">
-                        <span className="text-xs">Email: {selectedServiceRequest.email}</span>
+                        <span className="text-xs">
+                          Email: {selectedServiceRequest.email}
+                        </span>
                       </div>
                     )}
                   </div>

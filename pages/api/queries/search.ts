@@ -48,10 +48,7 @@ const SEARCH_ITEMS = gql`
       operating_hours
     }
     business_stores(
-      where: { 
-        name: { _ilike: $searchTerm }
-        is_active: { _eq: true }
-      }
+      where: { name: { _ilike: $searchTerm }, is_active: { _eq: true } }
       limit: 5
     ) {
       id
@@ -205,8 +202,10 @@ export default async function handler(
       if (!aExactMatch && bExactMatch) return 1;
 
       // Products before shops/stores
-      if (a.type === "product" && (b.type === "shop" || b.type === "store")) return -1;
-      if ((a.type === "shop" || a.type === "store") && b.type === "product") return 1;
+      if (a.type === "product" && (b.type === "shop" || b.type === "store"))
+        return -1;
+      if ((a.type === "shop" || a.type === "store") && b.type === "product")
+        return 1;
 
       // Then by name
       return a.name.localeCompare(b.name);

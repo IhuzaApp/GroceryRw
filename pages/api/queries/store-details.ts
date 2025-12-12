@@ -22,10 +22,7 @@ const GET_STORE_DETAILS = gql`
 const GET_STORE_PRODUCTS = gql`
   query GetStoreProducts($store_id: uuid!) {
     PlasBusinessProductsOrSerive(
-      where: { 
-        store_id: { _eq: $store_id }
-        status: { _eq: "active" }
-      }
+      where: { store_id: { _eq: $store_id }, status: { _eq: "active" } }
     ) {
       id
       name
@@ -157,4 +154,3 @@ export default async function handler(
     });
   }
 }
-
