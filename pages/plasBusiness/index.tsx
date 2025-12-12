@@ -254,7 +254,7 @@ function BuyerDashboardContent({
 
       {/* Stats Cards - Hidden on mobile */}
       <div className="hidden md:block">
-      <StatsCards />
+        <StatsCards />
       </div>
 
       {/* Main Content Tabs */}
@@ -362,9 +362,28 @@ function BuyerDashboardContent({
                 }`}
                 style={activeTab === tab.id ? { color: "#ffffff" } : undefined}
               >
-                <tab.icon className="h-3.5 w-3.5 flex-shrink-0 sm:h-4 sm:w-4" style={activeTab === tab.id ? { color: "#ffffff" } : undefined} />
-                <span className="hidden sm:inline" style={activeTab === tab.id ? { color: "#ffffff" } : undefined}>{tab.label}</span>
-                <span className="sm:hidden" style={activeTab === tab.id ? { color: "#ffffff" } : undefined}>{tab.shortLabel || tab.label}</span>
+                <tab.icon
+                  className="h-3.5 w-3.5 flex-shrink-0 sm:h-4 sm:w-4"
+                  style={
+                    activeTab === tab.id ? { color: "#ffffff" } : undefined
+                  }
+                />
+                <span
+                  className="hidden sm:inline"
+                  style={
+                    activeTab === tab.id ? { color: "#ffffff" } : undefined
+                  }
+                >
+                  {tab.label}
+                </span>
+                <span
+                  className="sm:hidden"
+                  style={
+                    activeTab === tab.id ? { color: "#ffffff" } : undefined
+                  }
+                >
+                  {tab.shortLabel || tab.label}
+                </span>
               </button>
             ))}
           </div>

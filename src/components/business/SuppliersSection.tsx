@@ -301,8 +301,14 @@ export function SuppliersSection({ className = "" }: SuppliersSectionProps) {
                         <Eye className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
                         <span>View</span>
                       </button>
-                      <button className="flex flex-1 items-center justify-center gap-1.5 rounded-lg bg-gradient-to-r from-green-500 to-emerald-500 px-3 py-2 text-xs font-medium text-white shadow-lg transition-all duration-300 hover:from-green-600 hover:to-emerald-600 hover:shadow-xl sm:flex-none sm:gap-2 sm:rounded-xl sm:px-4 sm:text-sm" style={{ color: "#ffffff" }}>
-                        <MessageSquare className="h-3.5 w-3.5 sm:h-4 sm:w-4" style={{ color: "#ffffff" }} />
+                      <button
+                        className="flex flex-1 items-center justify-center gap-1.5 rounded-lg bg-gradient-to-r from-green-500 to-emerald-500 px-3 py-2 text-xs font-medium text-white shadow-lg transition-all duration-300 hover:from-green-600 hover:to-emerald-600 hover:shadow-xl sm:flex-none sm:gap-2 sm:rounded-xl sm:px-4 sm:text-sm"
+                        style={{ color: "#ffffff" }}
+                      >
+                        <MessageSquare
+                          className="h-3.5 w-3.5 sm:h-4 sm:w-4"
+                          style={{ color: "#ffffff" }}
+                        />
                         <span style={{ color: "#ffffff" }}>Contact</span>
                       </button>
                     </div>

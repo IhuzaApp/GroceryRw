@@ -10210,12 +10210,12 @@ Stores wallet information for businesses.
 - **Purpose**: Rich text editor component for formatted text input
 - **Features**:
   - **Toolbar Formatting**: Bold, Italic, Underline buttons
-  - **Keyboard Shortcuts**: 
+  - **Keyboard Shortcuts**:
     - `Ctrl+B` (or `Cmd+B` on Mac) for Bold
     - `Ctrl+I` for Italic
     - `Ctrl+U` for Underline
   - **Auto-Numbering**: Automatically continues numbered lists (1. → 2. → 3. etc.) when pressing Enter
-  - **Auto-Bullets**: Automatically continues bullet points (- or *) when pressing Enter
+  - **Auto-Bullets**: Automatically continues bullet points (- or \*) when pressing Enter
   - **Format Preservation**: Preserves formatting (line breaks, bullets, numbers) when pasting text
   - **HTML Storage**: Stores content as HTML in the database
   - **HTML Rendering**: Displays formatted content using `dangerouslySetInnerHTML`
@@ -10329,16 +10329,19 @@ Stores wallet information for businesses.
 **Features**:
 
 1. **Formatting Tools**:
+
    - Bold, Italic, Underline via toolbar buttons
    - Keyboard shortcuts (Ctrl+B, Ctrl+I, Ctrl+U)
    - Bullet lists and numbered lists via toolbar
 
 2. **Auto-Formatting**:
+
    - **Auto-Numbering**: When you type `1. ` and press Enter, it automatically creates `2. ` on the next line
    - **Auto-Bullets**: When you type `- ` (or `* `) and press Enter, it automatically creates `- ` on the next line
    - Works with or without spaces after the dash/number
 
 3. **Content Handling**:
+
    - Preserves formatting when pasting (line breaks, bullets, numbers)
    - Stores content as HTML in the database
    - Renders HTML content using `dangerouslySetInnerHTML` for display
@@ -10350,6 +10353,7 @@ Stores wallet information for businesses.
    - Anywhere formatted text input is needed
 
 **Example Usage**:
+
 ```tsx
 <RichTextEditor
   value={description}

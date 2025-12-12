@@ -130,7 +130,8 @@ export default async function handler(
     }
 
     // Convert price to string and validate
-    const priceStr = price !== null && price !== undefined ? String(price).trim() : "";
+    const priceStr =
+      price !== null && price !== undefined ? String(price).trim() : "";
     if (!priceStr) {
       return res.status(400).json({ error: "Product price is required" });
     }
@@ -149,18 +150,39 @@ export default async function handler(
 
     const variables: Record<string, any> = {
       name: typeof name === "string" ? name.trim() : String(name || ""),
-      Description: description !== null && description !== undefined ? String(description).trim() : "",
+      Description:
+        description !== null && description !== undefined
+          ? String(description).trim()
+          : "",
       Image: image !== null && image !== undefined ? String(image).trim() : "",
       price: priceStr,
       unit: unit !== null && unit !== undefined ? String(unit).trim() : "",
-      status: status !== null && status !== undefined ? String(status).trim() : "active",
-      query_id: query_id !== null && query_id !== undefined ? String(query_id).trim() : "",
+      status:
+        status !== null && status !== undefined
+          ? String(status).trim()
+          : "active",
+      query_id:
+        query_id !== null && query_id !== undefined
+          ? String(query_id).trim()
+          : "",
       minimumOrders: minimumOrders,
-      maxOrders: maxOrders !== null && maxOrders !== undefined ? String(maxOrders).trim() : "",
-      delveryArea: delveryArea !== null && delveryArea !== undefined ? String(delveryArea).trim() : "",
-      speciality: speciality !== null && speciality !== undefined ? String(speciality).trim() : "",
+      maxOrders:
+        maxOrders !== null && maxOrders !== undefined
+          ? String(maxOrders).trim()
+          : "",
+      delveryArea:
+        delveryArea !== null && delveryArea !== undefined
+          ? String(delveryArea).trim()
+          : "",
+      speciality:
+        speciality !== null && speciality !== undefined
+          ? String(speciality).trim()
+          : "",
       user_id: final_user_id,
-      Plasbusiness_id: Plasbusiness_id !== null && Plasbusiness_id !== undefined ? String(Plasbusiness_id).trim() : "",
+      Plasbusiness_id:
+        Plasbusiness_id !== null && Plasbusiness_id !== undefined
+          ? String(Plasbusiness_id).trim()
+          : "",
     };
 
     // Handle store_id: null for services, or a valid UUID for products

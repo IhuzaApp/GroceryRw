@@ -575,7 +575,9 @@ export function ContractAssignmentModal({
                       ? "bg-green-500 text-white"
                       : "bg-gray-200 text-gray-600 dark:bg-gray-600 dark:text-gray-400"
                   }`}
-                  style={currentStep >= step.id ? { color: "#ffffff" } : undefined}
+                  style={
+                    currentStep >= step.id ? { color: "#ffffff" } : undefined
+                  }
                 >
                   {step.id}
                 </div>

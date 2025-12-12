@@ -240,7 +240,6 @@ export function ProductsBidsSection() {
     setIsCreateServiceOpen(true);
   };
 
-
   const convertFileToBase64 = (file: File): Promise<string> => {
     return new Promise((resolve, reject) => {
       const reader = new FileReader();
@@ -255,10 +254,13 @@ export function ProductsBidsSection() {
       // Generate query ID first (only for new services)
       let queryId = "";
       if (!editingService) {
-        const idResponse = await fetch("/api/queries/generate-product-query-id", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-        });
+        const idResponse = await fetch(
+          "/api/queries/generate-product-query-id",
+          {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+          }
+        );
         const idData = await idResponse.json();
         if (!idResponse.ok) {
           throw new Error(idData.error || "Failed to generate query ID");
@@ -279,7 +281,10 @@ export function ProductsBidsSection() {
       let imageBase64 = "";
       if (serviceData.image && serviceData.image instanceof File) {
         imageBase64 = await convertFileToBase64(serviceData.image);
-      } else if (typeof serviceData.image === "string" && serviceData.image.startsWith("data:")) {
+      } else if (
+        typeof serviceData.image === "string" &&
+        serviceData.image.startsWith("data:")
+      ) {
         imageBase64 = serviceData.image;
       } else if (editingService?.Image) {
         // Keep existing image if editing and no new image provided
@@ -326,7 +331,9 @@ export function ProductsBidsSection() {
       } else {
         const errorData = await response.json();
         console.error("Service creation error:", errorData);
-        toast.error(errorData.message || errorData.error || "Failed to save service");
+        toast.error(
+          errorData.message || errorData.error || "Failed to save service"
+        );
       }
     } catch (error: any) {
       console.error("Error saving service:", error);
@@ -393,8 +400,19 @@ export function ProductsBidsSection() {
               }`}
               style={activeSubTab === tab.id ? { color: "#ffffff" } : undefined}
             >
-              <tab.icon className="h-4 w-4" style={activeSubTab === tab.id ? { color: "#ffffff" } : undefined} />
-              <span style={activeSubTab === tab.id ? { color: "#ffffff" } : undefined}>{tab.label}</span>
+              <tab.icon
+                className="h-4 w-4"
+                style={
+                  activeSubTab === tab.id ? { color: "#ffffff" } : undefined
+                }
+              />
+              <span
+                style={
+                  activeSubTab === tab.id ? { color: "#ffffff" } : undefined
+                }
+              >
+                {tab.label}
+              </span>
             </button>
           ))}
         </div>
@@ -427,17 +445,17 @@ export function ProductsBidsSection() {
               </span>
             </div>
           ) : services.length === 0 ? (
-            <div className="text-center py-12">
-              <Briefcase className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-              <p className="text-gray-500 dark:text-gray-400 text-lg mb-2">
+            <div className="py-12 text-center">
+              <Briefcase className="mx-auto mb-4 h-12 w-12 text-gray-400" />
+              <p className="mb-2 text-lg text-gray-500 dark:text-gray-400">
                 No services yet
               </p>
-              <p className="text-gray-400 dark:text-gray-500 text-sm mb-6">
+              <p className="mb-6 text-sm text-gray-400 dark:text-gray-500">
                 Add your first service to get started
               </p>
               <button
                 onClick={handleCreateService}
-                className="inline-flex items-center gap-2 px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg transition-colors"
+                className="inline-flex items-center gap-2 rounded-lg bg-green-600 px-4 py-2 text-white transition-colors hover:bg-green-700"
                 style={{ color: "#ffffff" }}
               >
                 <Plus className="h-5 w-5" style={{ color: "#ffffff" }} />
@@ -495,7 +513,10 @@ export function ProductsBidsSection() {
                           <Users className="h-4 w-4" />
                           <span>
                             Min: {service.minimumOrders} {service.unit || ""}
-                            {service.maxOrders && ` | Max: ${service.maxOrders} ${service.unit || ""}`}
+                            {service.maxOrders &&
+                              ` | Max: ${service.maxOrders} ${
+                                service.unit || ""
+                              }`}
                           </span>
                         </div>
                       )}
@@ -507,14 +528,16 @@ export function ProductsBidsSection() {
                       )}
                       {service.speciality && (
                         <div className="flex flex-wrap gap-1">
-                          {service.speciality.split(", ").map((specialty: string, index: number) => (
-                            <span
-                              key={index}
-                              className="rounded-full bg-blue-100 px-2 py-1 text-xs text-blue-600 dark:bg-blue-900 dark:text-blue-300"
-                            >
-                              {specialty}
-                            </span>
-                          ))}
+                          {service.speciality
+                            .split(", ")
+                            .map((specialty: string, index: number) => (
+                              <span
+                                key={index}
+                                className="rounded-full bg-blue-100 px-2 py-1 text-xs text-blue-600 dark:bg-blue-900 dark:text-blue-300"
+                              >
+                                {specialty}
+                              </span>
+                            ))}
                         </div>
                       )}
                     </div>
@@ -859,7 +882,7 @@ export function ProductsBidsSection() {
           <div className="max-h-[90vh] w-full max-w-3xl overflow-y-auto rounded-xl bg-white shadow-2xl dark:bg-gray-800">
             <div className="flex flex-col">
               {/* Header */}
-              <div className="flex-shrink-0 flex items-center justify-between border-b border-gray-200 p-6 dark:border-gray-700">
+              <div className="flex flex-shrink-0 items-center justify-between border-b border-gray-200 p-6 dark:border-gray-700">
                 <div className="flex items-center gap-3">
                   <Briefcase className="h-6 w-6 text-blue-500" />
                   <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
@@ -894,7 +917,7 @@ export function ProductsBidsSection() {
                 <div className="space-y-6">
                   {/* Service Name & Status */}
                   <div>
-                    <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">
+                    <h3 className="mb-2 text-xl font-semibold text-gray-900 dark:text-white">
                       {selectedService.name}
                     </h3>
                     <div className="flex items-center gap-2">
@@ -905,7 +928,9 @@ export function ProductsBidsSection() {
                             : "bg-yellow-100 text-yellow-600 dark:bg-yellow-900 dark:text-yellow-300"
                         }`}
                       >
-                        {selectedService.status === "active" ? "Active" : "Inactive"}
+                        {selectedService.status === "active"
+                          ? "Active"
+                          : "Inactive"}
                       </span>
                       {selectedService.query_id && (
                         <span className="rounded-full bg-gray-100 px-3 py-1 text-sm text-gray-600 dark:bg-gray-700 dark:text-gray-300">
@@ -922,7 +947,9 @@ export function ProductsBidsSection() {
                     </span>
                     <div className="text-right">
                       <span className="text-2xl font-bold text-gray-900 dark:text-white">
-                        {formatCurrencySync(parseFloat(selectedService.price || "0"))}
+                        {formatCurrencySync(
+                          parseFloat(selectedService.price || "0")
+                        )}
                       </span>
                       <span className="ml-2 text-sm text-gray-500 dark:text-gray-400">
                         / {selectedService.unit || "unit"}
@@ -938,8 +965,13 @@ export function ProductsBidsSection() {
                       </h4>
                       <div
                         className="rounded-lg border border-gray-200 bg-white p-4 text-sm text-gray-700 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-300"
-                        dangerouslySetInnerHTML={{ __html: selectedService.Description }}
-                        style={{ whiteSpace: "pre-wrap", wordBreak: "break-word" }}
+                        dangerouslySetInnerHTML={{
+                          __html: selectedService.Description,
+                        }}
+                        style={{
+                          whiteSpace: "pre-wrap",
+                          wordBreak: "break-word",
+                        }}
                       />
                     </div>
                   )}
@@ -948,35 +980,37 @@ export function ProductsBidsSection() {
                   <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                     {selectedService.minimumOrders && (
                       <div className="rounded-lg border border-gray-200 bg-gray-50 p-4 dark:border-gray-700 dark:bg-gray-700/50">
-                        <div className="flex items-center gap-2 mb-1">
+                        <div className="mb-1 flex items-center gap-2">
                           <Users className="h-4 w-4 text-gray-500" />
                           <span className="text-xs font-medium text-gray-600 dark:text-gray-400">
                             Minimum Orders
                           </span>
                         </div>
                         <p className="text-lg font-semibold text-gray-900 dark:text-white">
-                          {selectedService.minimumOrders} {selectedService.unit || ""}
+                          {selectedService.minimumOrders}{" "}
+                          {selectedService.unit || ""}
                         </p>
                       </div>
                     )}
 
                     {selectedService.maxOrders && (
                       <div className="rounded-lg border border-gray-200 bg-gray-50 p-4 dark:border-gray-700 dark:bg-gray-700/50">
-                        <div className="flex items-center gap-2 mb-1">
+                        <div className="mb-1 flex items-center gap-2">
                           <Users className="h-4 w-4 text-gray-500" />
                           <span className="text-xs font-medium text-gray-600 dark:text-gray-400">
                             Maximum Orders
                           </span>
                         </div>
                         <p className="text-lg font-semibold text-gray-900 dark:text-white">
-                          {selectedService.maxOrders} {selectedService.unit || ""}
+                          {selectedService.maxOrders}{" "}
+                          {selectedService.unit || ""}
                         </p>
                       </div>
                     )}
 
                     {selectedService.delveryArea && (
                       <div className="rounded-lg border border-gray-200 bg-gray-50 p-4 dark:border-gray-700 dark:bg-gray-700/50">
-                        <div className="flex items-center gap-2 mb-1">
+                        <div className="mb-1 flex items-center gap-2">
                           <MapPin className="h-4 w-4 text-gray-500" />
                           <span className="text-xs font-medium text-gray-600 dark:text-gray-400">
                             Delivery Area
@@ -990,21 +1024,23 @@ export function ProductsBidsSection() {
 
                     {selectedService.speciality && (
                       <div className="rounded-lg border border-gray-200 bg-gray-50 p-4 dark:border-gray-700 dark:bg-gray-700/50">
-                        <div className="flex items-center gap-2 mb-2">
+                        <div className="mb-2 flex items-center gap-2">
                           <Tag className="h-4 w-4 text-gray-500" />
                           <span className="text-xs font-medium text-gray-600 dark:text-gray-400">
                             Specialities
                           </span>
                         </div>
                         <div className="flex flex-wrap gap-1">
-                          {selectedService.speciality.split(", ").map((specialty: string, index: number) => (
-                            <span
-                              key={index}
-                              className="rounded-full bg-blue-100 px-2 py-1 text-xs text-blue-600 dark:bg-blue-900 dark:text-blue-300"
-                            >
-                              {specialty}
-                            </span>
-                          ))}
+                          {selectedService.speciality
+                            .split(", ")
+                            .map((specialty: string, index: number) => (
+                              <span
+                                key={index}
+                                className="rounded-full bg-blue-100 px-2 py-1 text-xs text-blue-600 dark:bg-blue-900 dark:text-blue-300"
+                              >
+                                {specialty}
+                              </span>
+                            ))}
                         </div>
                       </div>
                     )}
@@ -1016,11 +1052,11 @@ export function ProductsBidsSection() {
                       <h4 className="mb-2 text-sm font-semibold text-gray-700 dark:text-gray-300">
                         Service Image/Attachment
                       </h4>
-                      <div className="rounded-lg border border-gray-200 overflow-hidden dark:border-gray-700">
+                      <div className="overflow-hidden rounded-lg border border-gray-200 dark:border-gray-700">
                         <img
                           src={selectedService.Image}
                           alt={selectedService.name}
-                          className="w-full h-auto max-h-96 object-contain"
+                          className="h-auto max-h-96 w-full object-contain"
                           onError={(e) => {
                             const target = e.target as HTMLImageElement;
                             target.style.display = "none";
@@ -1041,7 +1077,7 @@ export function ProductsBidsSection() {
               </div>
 
               {/* Footer */}
-              <div className="flex-shrink-0 flex items-center justify-end gap-3 border-t border-gray-200 p-6 dark:border-gray-700">
+              <div className="flex flex-shrink-0 items-center justify-end gap-3 border-t border-gray-200 p-6 dark:border-gray-700">
                 <button
                   onClick={() => {
                     setIsServiceDetailsOpen(false);

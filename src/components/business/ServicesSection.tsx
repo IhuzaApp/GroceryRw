@@ -182,7 +182,9 @@ export function ServicesSection({ onRequestQuotation }: ServicesSectionProps) {
                   ? "bg-gradient-to-r from-green-500 to-emerald-500 text-white shadow-lg"
                   : "border border-gray-300 bg-white text-gray-700 hover:bg-gray-50 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600"
               }`}
-              style={selectedCategory === category ? { color: "#ffffff" } : undefined}
+              style={
+                selectedCategory === category ? { color: "#ffffff" } : undefined
+              }
             >
               {category === "all" ? "All Categories" : category}
             </button>
@@ -407,7 +409,10 @@ export function ServicesSection({ onRequestQuotation }: ServicesSectionProps) {
                   style={{ color: "#ffffff" }}
                 >
                   <span style={{ color: "#ffffff" }}>Request Quotation</span>
-                  <ArrowRight className="ml-1 inline h-4 w-4" style={{ color: "#ffffff" }} />
+                  <ArrowRight
+                    className="ml-1 inline h-4 w-4"
+                    style={{ color: "#ffffff" }}
+                  />
                 </button>
               </div>
             </div>
