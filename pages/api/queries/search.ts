@@ -47,6 +47,23 @@ const SEARCH_ITEMS = gql`
       category_id
       operating_hours
     }
+    business_stores(
+      where: { 
+        name: { _ilike: $searchTerm }
+        is_active: { _eq: true }
+      }
+      limit: 5
+    ) {
+      id
+      name
+      description
+      image
+      category_id
+      latitude
+      longitude
+      operating_hours
+      is_active
+    }
   }
 `;
 
@@ -80,6 +97,17 @@ interface SearchResponse {
     address: string;
     category_id: string;
     operating_hours: string;
+  }>;
+  business_stores: Array<{
+    id: string;
+    name: string;
+    description: string | null;
+    image: string | null;
+    category_id: string | null;
+    latitude: string | null;
+    longitude: string | null;
+    operating_hours: any;
+    is_active: boolean;
   }>;
 }
 
@@ -137,6 +165,21 @@ export default async function handler(
       operatingHours: shop.operating_hours,
     }));
 
+    // Transform stores
+    const stores = (data.business_stores || []).map((store) => ({
+      id: store.id,
+      name: store.name,
+      type: "store" as const,
+      logo: store.image,
+      description: store.description || "",
+      isOpen: store.is_active,
+      address: null,
+      categoryId: store.category_id,
+      operatingHours: store.operating_hours,
+      latitude: store.latitude,
+      longitude: store.longitude,
+    }));
+
     // Group products by name to show all supermarkets selling the same product
     const productGroups = new Map<string, typeof products>();
     products.forEach((product) => {
@@ -152,18 +195,18 @@ export default async function handler(
       group.sort((a, b) => a.price! - b.price!);
     });
 
-    // Flatten grouped products and combine with shops
+    // Flatten grouped products and combine with shops and stores
     const sortedProducts = Array.from(productGroups.values()).flat();
-    const results = [...sortedProducts, ...shops].sort((a, b) => {
+    const results = [...sortedProducts, ...shops, ...stores].sort((a, b) => {
       // Exact matches first
       const aExactMatch = a.name.toLowerCase() === searchTerm.toLowerCase();
       const bExactMatch = b.name.toLowerCase() === searchTerm.toLowerCase();
       if (aExactMatch && !bExactMatch) return -1;
       if (!aExactMatch && bExactMatch) return 1;
 
-      // Products before shops
-      if (a.type === "product" && b.type === "shop") return -1;
-      if (a.type === "shop" && b.type === "product") return 1;
+      // Products before shops/stores
+      if (a.type === "product" && (b.type === "shop" || b.type === "store")) return -1;
+      if ((a.type === "shop" || a.type === "store") && b.type === "product") return 1;
 
       // Then by name
       return a.name.localeCompare(b.name);
@@ -173,7 +216,7 @@ export default async function handler(
       results,
       total: results.length,
       productsCount: products.length,
-      shopsCount: shops.length,
+      shopsCount: shops.length + stores.length,
     });
   } catch (error) {
     console.error("Search error:", error);

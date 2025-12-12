@@ -98,7 +98,7 @@ const MobileShopCard: React.FC<MobileShopCardProps> = ({
   // Determine navigation path
   const getNavigationPath = () => {
     if (isRestaurant) return `/restaurant/${shop.id}`;
-    if (isStore) return `/plasBusiness/store/${shop.id}`;
+    if (isStore) return `/stores/${shop.id}`;
     return `/shops/${shop.id}`;
   };
 

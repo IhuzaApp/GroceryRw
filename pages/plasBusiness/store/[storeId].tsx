@@ -585,37 +585,19 @@ export default function StoreDetailsPage() {
               <button
                 onClick={handleAddProduct}
                 disabled={isGeneratingQueryId}
-                className="flex items-center space-x-1.5 rounded-lg bg-green-600 px-3 py-1.5 text-xs transition-colors hover:bg-green-700 disabled:cursor-not-allowed disabled:opacity-50 sm:space-x-2 sm:px-4 sm:py-2 sm:text-sm md:text-base"
-                style={{ color: "#ffffff" }}
+                className="flex items-center gap-2 rounded-xl bg-gradient-to-r from-green-500 to-emerald-500 px-4 py-2.5 text-sm font-semibold text-white shadow-lg shadow-green-500/25 transition-all duration-200 hover:scale-105 hover:from-green-600 hover:to-emerald-600 hover:shadow-green-500/40 disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:scale-100 sm:px-5 sm:py-3 sm:text-base"
               >
                 {isGeneratingQueryId ? (
                   <>
-                    <div className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-white border-t-transparent sm:h-4 sm:w-4 md:h-5 md:w-5" />
-                    <span
-                      className="hidden sm:inline"
-                      style={{ color: "#ffffff" }}
-                    >
-                      Loading...
-                    </span>
-                    <span className="sm:hidden" style={{ color: "#ffffff" }}>
-                      Loading...
-                    </span>
+                    <div className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent sm:h-5 sm:w-5" />
+                    <span className="hidden sm:inline">Loading...</span>
+                    <span className="sm:hidden">Loading...</span>
                   </>
                 ) : (
                   <>
-                    <Plus
-                      className="h-3.5 w-3.5 sm:h-4 sm:w-4 md:h-5 md:w-5"
-                      style={{ color: "#ffffff" }}
-                    />
-                    <span
-                      className="hidden sm:inline"
-                      style={{ color: "#ffffff" }}
-                    >
-                      Add Product
-                    </span>
-                    <span className="sm:hidden" style={{ color: "#ffffff" }}>
-                      Add
-                    </span>
+                    <Plus className="h-4 w-4 sm:h-5 sm:w-5" />
+                    <span className="hidden sm:inline">Add Product</span>
+                    <span className="sm:hidden">Add</span>
                   </>
                 )}
               </button>
@@ -623,87 +605,85 @@ export default function StoreDetailsPage() {
 
             {/* Search Bar */}
             <div className="relative">
-              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 transform text-gray-400 sm:h-5 sm:w-5" />
+              <Search className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 transform text-gray-400 sm:h-6 sm:w-6" />
               <input
                 type="text"
                 placeholder="Search products by name, description, price, or verification ID..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full rounded-lg border border-gray-300 py-2 pl-10 pr-4 text-sm focus:border-transparent focus:ring-2 focus:ring-green-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white sm:py-2.5 sm:pl-12 sm:text-base"
+                className="w-full rounded-xl border border-gray-200 bg-white py-3 pl-12 pr-12 text-sm shadow-sm transition-all duration-200 focus:border-green-500 focus:bg-white focus:outline-none focus:ring-2 focus:ring-green-500/20 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:focus:border-green-400 dark:focus:ring-green-400/20 sm:py-3.5 sm:pl-14 sm:text-base"
               />
               {searchQuery && (
                 <button
                   onClick={() => setSearchQuery("")}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 transform text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
+                  className="absolute right-4 top-1/2 -translate-y-1/2 transform rounded-full p-1 text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-600 dark:hover:bg-gray-600 dark:hover:text-gray-300"
                 >
-                  <X className="h-4 w-4 sm:h-5 sm:w-5" />
+                  <X className="h-5 w-5 sm:h-6 sm:w-6" />
                 </button>
               )}
             </div>
           </div>
 
           {filteredProducts.length === 0 ? (
-            <div className="py-8 text-center sm:py-10 md:py-12">
-              <Package className="mx-auto mb-3 h-10 w-10 text-gray-400 sm:mb-4 sm:h-12 sm:w-12 md:h-16 md:w-16" />
-              <p className="text-xs text-gray-500 dark:text-gray-400 sm:text-sm md:text-base">
+            <div className="py-16 text-center sm:py-20 md:py-24">
+              <div className="mx-auto mb-6 flex h-20 w-20 items-center justify-center rounded-full bg-gradient-to-br from-gray-100 to-gray-200 dark:from-gray-700 dark:to-gray-800 sm:h-24 sm:w-24 md:h-28 md:w-28">
+                <Package className="h-10 w-10 text-gray-400 sm:h-12 sm:w-12 md:h-16 md:w-16" />
+              </div>
+              <h3 className="mb-2 text-lg font-bold text-gray-900 dark:text-white sm:text-xl md:text-2xl">
+                {searchQuery ? "No products found" : "No products yet"}
+              </h3>
+              <p className="text-sm text-gray-500 dark:text-gray-400 sm:text-base">
                 {searchQuery
                   ? `No products found matching "${searchQuery}"`
-                  : "No products yet. Add your first product to get started."}
+                  : "Add your first product to get started."}
               </p>
             </div>
           ) : (
             <>
-              <div className="grid grid-cols-1 gap-3 sm:grid-cols-3 sm:gap-4 md:grid-cols-4 md:gap-6">
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
                 {currentProducts.map((product) => (
                   <div
                     key={product.id}
-                    className="group relative overflow-hidden rounded-lg border border-gray-200 bg-white transition-shadow hover:shadow-lg dark:border-gray-700 dark:bg-gray-800"
+                    className="group relative overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-lg ring-1 ring-gray-200/50 transition-all duration-300 hover:-translate-y-1 hover:shadow-xl hover:ring-gray-300/50 dark:border-gray-700 dark:bg-gray-800 dark:ring-gray-700/50 dark:hover:ring-gray-600/50"
                   >
                     {product.Image && (
-                      <div className="relative h-48 bg-gray-100 dark:bg-gray-700">
+                      <div className="relative h-48 overflow-hidden bg-gray-100 dark:bg-gray-700">
                         <img
                           src={product.Image}
                           alt={product.name}
-                          className="h-full w-full object-cover"
+                          className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
                         />
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/20 via-transparent to-transparent opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
                         <button
                           onClick={() => handleEditProduct(product)}
-                          className="absolute right-2 top-2 rounded-full bg-green-600 p-2 text-white opacity-0 shadow-lg transition-opacity hover:bg-green-700 group-hover:opacity-100"
-                          style={{ color: "#ffffff" }}
+                          className="absolute right-3 top-3 rounded-full bg-gradient-to-r from-green-500 to-emerald-500 p-2.5 text-white opacity-0 shadow-lg shadow-green-500/25 transition-all duration-200 hover:scale-110 hover:from-green-600 hover:to-emerald-600 hover:shadow-green-500/40 group-hover:opacity-100"
                           title="Edit product"
                         >
-                          <Edit
-                            className="h-4 w-4"
-                            style={{ color: "#ffffff" }}
-                          />
+                          <Edit className="h-4 w-4" />
                         </button>
                       </div>
                     )}
                     {!product.Image && (
-                      <div className="relative flex h-48 items-center justify-center bg-gray-100 dark:bg-gray-700">
-                        <Package className="h-12 w-12 text-gray-400" />
+                      <div className="relative flex h-48 items-center justify-center bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-700 dark:to-gray-800">
+                        <Package className="h-16 w-16 text-gray-400" />
                         <button
                           onClick={() => handleEditProduct(product)}
-                          className="absolute right-2 top-2 rounded-full bg-green-600 p-2 text-white opacity-0 shadow-lg transition-opacity hover:bg-green-700 group-hover:opacity-100"
-                          style={{ color: "#ffffff" }}
+                          className="absolute right-3 top-3 rounded-full bg-gradient-to-r from-green-500 to-emerald-500 p-2.5 text-white opacity-0 shadow-lg shadow-green-500/25 transition-all duration-200 hover:scale-110 hover:from-green-600 hover:to-emerald-600 hover:shadow-green-500/40 group-hover:opacity-100"
                           title="Edit product"
                         >
-                          <Edit
-                            className="h-4 w-4"
-                            style={{ color: "#ffffff" }}
-                          />
+                          <Edit className="h-4 w-4" />
                         </button>
                       </div>
                     )}
-                    <div className="space-y-2 p-3 sm:space-y-3 sm:p-4">
+                    <div className="space-y-3 p-4 sm:space-y-4 sm:p-5">
                       {/* Product Name and Status */}
                       <div className="flex items-start justify-between gap-2">
-                        <h3 className="line-clamp-2 flex-1 text-xs font-semibold text-gray-900 dark:text-white sm:text-sm md:text-base">
+                        <h3 className="line-clamp-2 flex-1 text-sm font-bold text-gray-900 dark:text-white sm:text-base">
                           {product.name}
                         </h3>
                         {product.status && (
                           <span
-                            className={`flex flex-shrink-0 items-center gap-1 rounded-full px-1.5 py-0.5 text-[10px] font-medium sm:px-2 sm:py-1 sm:text-xs ${
+                            className={`flex flex-shrink-0 items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-semibold ${
                               product.status === "active"
                                 ? "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300"
                                 : product.status === "inactive"
@@ -712,9 +692,9 @@ export default function StoreDetailsPage() {
                             }`}
                           >
                             {product.status === "active" ? (
-                              <CheckCircle className="h-2.5 w-2.5 sm:h-3 sm:w-3" />
+                              <CheckCircle className="h-3 w-3" />
                             ) : (
-                              <XCircle className="h-2.5 w-2.5 sm:h-3 sm:w-3" />
+                              <XCircle className="h-3 w-3" />
                             )}
                             <span className="hidden capitalize sm:inline">
                               {product.status}
@@ -726,7 +706,7 @@ export default function StoreDetailsPage() {
                       {/* Description */}
                       {product.Description && (
                         <div
-                          className="line-clamp-2 text-[10px] text-gray-600 dark:text-gray-400 sm:text-xs"
+                          className="line-clamp-2 text-xs leading-relaxed text-gray-600 dark:text-gray-400 sm:text-sm"
                           dangerouslySetInnerHTML={{
                             __html: product.Description,
                           }}
@@ -734,26 +714,26 @@ export default function StoreDetailsPage() {
                       )}
 
                       {/* Price and Unit */}
-                      <div className="flex items-center justify-between">
-                        <span className="text-base font-bold text-green-600 sm:text-lg">
+                      <div className="flex items-baseline gap-2">
+                        <span className="text-xl font-bold text-green-600 sm:text-2xl">
                           {formatCurrencySync(parseFloat(product.price))}
                         </span>
-                        <span className="text-[10px] text-gray-500 dark:text-gray-400 sm:text-xs">
+                        <span className="text-xs text-gray-500 dark:text-gray-400">
                           / {product.unit}
                         </span>
                       </div>
 
                       {/* Divider */}
-                      <div className="space-y-1.5 border-t border-gray-200 pt-2 dark:border-gray-700 sm:space-y-2 sm:pt-3">
+                      <div className="space-y-2.5 border-t border-gray-200 pt-3 dark:border-gray-700 sm:space-y-3 sm:pt-4">
                         {/* Verification ID */}
                         {product.query_id && (
-                          <div className="flex items-center gap-1.5 sm:gap-2">
-                            <Tag className="h-3 w-3 flex-shrink-0 text-gray-400 sm:h-3.5 sm:w-3.5" />
+                          <div className="flex items-center gap-2 rounded-lg bg-gray-50 p-2 dark:bg-gray-700/50 sm:gap-2.5 sm:p-2.5">
+                            <Tag className="h-4 w-4 flex-shrink-0 text-gray-400 sm:h-4 sm:w-4" />
                             <div className="min-w-0 flex-1">
-                              <p className="text-[9px] text-gray-500 dark:text-gray-400 sm:text-[10px]">
+                              <p className="text-xs font-medium text-gray-500 dark:text-gray-400 sm:text-xs">
                                 Verification ID
                               </p>
-                              <p className="truncate font-mono text-[10px] font-semibold text-gray-700 dark:text-gray-300 sm:text-xs">
+                              <p className="truncate font-mono text-xs font-bold text-gray-900 dark:text-gray-100 sm:text-sm">
                                 {product.query_id}
                               </p>
                             </div>
@@ -763,13 +743,13 @@ export default function StoreDetailsPage() {
                         {/* Minimum Orders */}
                         {product.minimumOrders &&
                           parseFloat(product.minimumOrders) > 0 && (
-                            <div className="flex items-center gap-1.5 sm:gap-2">
-                              <ShoppingCart className="h-3 w-3 flex-shrink-0 text-gray-400 sm:h-3.5 sm:w-3.5" />
+                            <div className="flex items-center gap-2 rounded-lg bg-blue-50 p-2 dark:bg-blue-900/20 sm:gap-2.5 sm:p-2.5">
+                              <ShoppingCart className="h-4 w-4 flex-shrink-0 text-blue-500 dark:text-blue-400" />
                               <div className="min-w-0 flex-1">
-                                <p className="text-[9px] text-gray-500 dark:text-gray-400 sm:text-[10px]">
+                                <p className="text-xs font-medium text-blue-600 dark:text-blue-400">
                                   Min. Order
                                 </p>
-                                <p className="text-[10px] font-medium text-gray-700 dark:text-gray-300 sm:text-xs">
+                                <p className="text-sm font-semibold text-blue-900 dark:text-blue-200">
                                   {product.minimumOrders} {product.unit}
                                 </p>
                               </div>
@@ -780,13 +760,13 @@ export default function StoreDetailsPage() {
                         {product.maxOrders &&
                           product.maxOrders.trim() !== "" &&
                           parseFloat(product.maxOrders) > 0 && (
-                            <div className="flex items-center gap-1.5 sm:gap-2">
-                              <ShoppingCart className="h-3 w-3 flex-shrink-0 text-gray-400 sm:h-3.5 sm:w-3.5" />
+                            <div className="flex items-center gap-2 rounded-lg bg-purple-50 p-2 dark:bg-purple-900/20 sm:gap-2.5 sm:p-2.5">
+                              <ShoppingCart className="h-4 w-4 flex-shrink-0 text-purple-500 dark:text-purple-400" />
                               <div className="min-w-0 flex-1">
-                                <p className="text-[9px] text-gray-500 dark:text-gray-400 sm:text-[10px]">
+                                <p className="text-xs font-medium text-purple-600 dark:text-purple-400">
                                   Max. Order
                                 </p>
-                                <p className="text-[10px] font-medium text-gray-700 dark:text-gray-300 sm:text-xs">
+                                <p className="text-sm font-semibold text-purple-900 dark:text-purple-200">
                                   {product.maxOrders} {product.unit}
                                 </p>
                               </div>
@@ -796,13 +776,13 @@ export default function StoreDetailsPage() {
                         {/* Delivery Area */}
                         {product.delveryArea &&
                           product.delveryArea.trim() !== "" && (
-                            <div className="flex items-center gap-1.5 sm:gap-2">
-                              <Truck className="h-3 w-3 flex-shrink-0 text-gray-400 sm:h-3.5 sm:w-3.5" />
+                            <div className="flex items-center gap-2 rounded-lg bg-orange-50 p-2 dark:bg-orange-900/20 sm:gap-2.5 sm:p-2.5">
+                              <Truck className="h-4 w-4 flex-shrink-0 text-orange-500 dark:text-orange-400" />
                               <div className="min-w-0 flex-1">
-                                <p className="text-[9px] text-gray-500 dark:text-gray-400 sm:text-[10px]">
+                                <p className="text-xs font-medium text-orange-600 dark:text-orange-400">
                                   Delivery Area
                                 </p>
-                                <p className="line-clamp-1 text-[10px] font-medium text-gray-700 dark:text-gray-300 sm:text-xs">
+                                <p className="line-clamp-1 text-sm font-semibold text-orange-900 dark:text-orange-200">
                                   {product.delveryArea}
                                 </p>
                               </div>
@@ -812,13 +792,13 @@ export default function StoreDetailsPage() {
                         {/* Speciality */}
                         {product.speciality &&
                           product.speciality.trim() !== "" && (
-                            <div className="flex items-center gap-1.5 sm:gap-2">
-                              <Tag className="h-3 w-3 flex-shrink-0 text-gray-400 sm:h-3.5 sm:w-3.5" />
+                            <div className="flex items-center gap-2 rounded-lg bg-indigo-50 p-2 dark:bg-indigo-900/20 sm:gap-2.5 sm:p-2.5">
+                              <Tag className="h-4 w-4 flex-shrink-0 text-indigo-500 dark:text-indigo-400" />
                               <div className="min-w-0 flex-1">
-                                <p className="text-[9px] text-gray-500 dark:text-gray-400 sm:text-[10px]">
+                                <p className="text-xs font-medium text-indigo-600 dark:text-indigo-400">
                                   Speciality
                                 </p>
-                                <p className="line-clamp-1 text-[10px] font-medium text-gray-700 dark:text-gray-300 sm:text-xs">
+                                <p className="line-clamp-1 text-sm font-semibold text-indigo-900 dark:text-indigo-200">
                                   {product.speciality}
                                 </p>
                               </div>
@@ -846,9 +826,9 @@ export default function StoreDetailsPage() {
                         setCurrentPage((prev) => Math.max(1, prev - 1))
                       }
                       disabled={currentPage === 1}
-                      className="flex items-center gap-1.5 rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-700 transition-colors hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700 sm:gap-2 sm:px-4 sm:text-base"
+                      className="flex items-center gap-2 rounded-xl border border-gray-200 bg-white px-4 py-2.5 text-sm font-medium text-gray-700 shadow-sm transition-all duration-200 hover:border-gray-300 hover:bg-gray-50 hover:shadow-md disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:shadow-sm dark:border-gray-600 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700 sm:px-5 sm:text-base"
                     >
-                      <ChevronLeft className="h-4 w-4" />
+                      <ChevronLeft className="h-4 w-4 sm:h-5 sm:w-5" />
                       <span className="hidden sm:inline">Previous</span>
                       <span className="sm:hidden">Prev</span>
                     </button>
@@ -867,16 +847,11 @@ export default function StoreDetailsPage() {
                               <button
                                 key={page}
                                 onClick={() => setCurrentPage(page)}
-                                className={`rounded-lg px-3 py-2 text-sm font-medium transition-colors sm:px-4 sm:text-base ${
+                                className={`rounded-xl px-4 py-2.5 text-sm font-semibold transition-all duration-200 sm:px-5 sm:text-base ${
                                   currentPage === page
-                                    ? "bg-green-600 text-white"
-                                    : "border border-gray-300 bg-white text-gray-700 hover:bg-gray-50 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700"
+                                    ? "bg-gradient-to-r from-green-500 to-emerald-500 text-white shadow-lg shadow-green-500/25"
+                                    : "border border-gray-200 bg-white text-gray-700 shadow-sm hover:border-gray-300 hover:bg-gray-50 hover:shadow-md dark:border-gray-600 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700"
                                 }`}
-                                style={
-                                  currentPage === page
-                                    ? { color: "#ffffff" }
-                                    : undefined
-                                }
                               >
                                 {page}
                               </button>
@@ -905,11 +880,11 @@ export default function StoreDetailsPage() {
                         setCurrentPage((prev) => Math.min(totalPages, prev + 1))
                       }
                       disabled={currentPage === totalPages}
-                      className="flex items-center gap-1.5 rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-700 transition-colors hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700 sm:gap-2 sm:px-4 sm:text-base"
+                      className="flex items-center gap-2 rounded-xl border border-gray-200 bg-white px-4 py-2.5 text-sm font-medium text-gray-700 shadow-sm transition-all duration-200 hover:border-gray-300 hover:bg-gray-50 hover:shadow-md disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:shadow-sm dark:border-gray-600 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700 sm:px-5 sm:text-base"
                     >
                       <span className="hidden sm:inline">Next</span>
                       <span className="sm:hidden">Next</span>
-                      <ChevronRight className="h-4 w-4" />
+                      <ChevronRight className="h-4 w-4 sm:h-5 sm:w-5" />
                     </button>
                   </div>
                 </div>
@@ -921,10 +896,10 @@ export default function StoreDetailsPage() {
 
       {/* Add Product Modal */}
       {showAddProductModal && (
-        <div className="fixed inset-0 z-[10000] flex items-center justify-center bg-black/50 p-2 sm:p-4">
-          <div className="max-h-[95vh] w-full max-w-2xl overflow-y-auto rounded-lg bg-white shadow-xl dark:bg-gray-800 sm:max-h-[90vh] sm:rounded-xl">
-            <div className="sticky top-0 z-10 flex items-center justify-between border-b border-gray-200 bg-white px-3 py-3 dark:border-gray-700 dark:bg-gray-800 sm:px-4 sm:py-4 md:px-6">
-              <h3 className="text-base font-bold text-gray-900 dark:text-white sm:text-lg md:text-xl">
+        <div className="fixed inset-0 z-[10000] flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm sm:p-6">
+          <div className="max-h-[95vh] w-full max-w-2xl overflow-y-auto rounded-2xl border border-gray-200 bg-white shadow-2xl dark:border-gray-700 dark:bg-gray-800 sm:max-h-[90vh]">
+            <div className="sticky top-0 z-10 flex items-center justify-between border-b border-gray-200 bg-gradient-to-r from-gray-50 to-white px-4 py-4 dark:from-gray-800 dark:to-gray-800 dark:border-gray-700 sm:px-6 sm:py-5 md:px-8">
+              <h3 className="text-lg font-bold text-gray-900 dark:text-white sm:text-xl md:text-2xl">
                 {editingProduct ? "Edit Product" : "Add New Product"}
               </h3>
               <button
@@ -943,7 +918,7 @@ export default function StoreDetailsPage() {
                   setProductImage("");
                   setQueryId(null);
                 }}
-                className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
+                className="rounded-full p-2 text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-600 dark:hover:bg-gray-700 dark:hover:text-gray-300"
               >
                 <X className="h-6 w-6" />
               </button>
@@ -951,21 +926,24 @@ export default function StoreDetailsPage() {
 
             <div className="space-y-3 p-3 sm:space-y-4 sm:p-4 md:space-y-6 md:p-6">
               {queryId && !editingProduct && (
-                <div className="rounded-lg border border-green-200 bg-green-50 p-4 dark:border-green-800 dark:bg-green-900/20 sm:p-5 md:p-6">
-                  <p className="mb-2 text-sm font-medium text-green-800 dark:text-green-200 sm:mb-3 sm:text-base">
-                    Verification ID Generated
-                  </p>
-                  <p className="mb-2 text-center font-mono text-2xl font-bold tracking-wider text-green-600 dark:text-green-300 sm:mb-3 sm:text-3xl md:text-4xl">
+                <div className="rounded-xl border-2 border-green-200 bg-gradient-to-br from-green-50 to-emerald-50 p-5 shadow-lg dark:border-green-800 dark:from-green-900/30 dark:to-emerald-900/20 sm:p-6 md:p-8">
+                  <div className="mb-3 flex items-center justify-center gap-2">
+                    <CheckCircle className="h-5 w-5 text-green-600 dark:text-green-400 sm:h-6 sm:w-6" />
+                    <p className="text-base font-bold text-green-800 dark:text-green-200 sm:text-lg">
+                      Verification ID Generated
+                    </p>
+                  </div>
+                  <p className="mb-4 text-center font-mono text-3xl font-bold tracking-wider text-green-700 dark:text-green-300 sm:mb-5 sm:text-4xl md:text-5xl">
                     {queryId}
                   </p>
-                  <p className="mt-2 text-center text-xs text-green-600 dark:text-green-300 sm:text-sm">
+                  <p className="text-center text-sm font-medium text-green-700 dark:text-green-300 sm:text-base">
                     Use this ID when taking the product photo for verification.
                   </p>
                 </div>
               )}
 
               <div>
-                <label className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">
+                <label className="mb-2 block text-sm font-semibold text-gray-700 dark:text-gray-300">
                   Product Name *
                 </label>
                 <input
@@ -974,7 +952,7 @@ export default function StoreDetailsPage() {
                   onChange={(e) =>
                     setNewProduct({ ...newProduct, name: e.target.value })
                   }
-                  className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-transparent focus:ring-2 focus:ring-green-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white sm:text-base"
+                  className="w-full rounded-xl border border-gray-200 bg-white px-4 py-3 text-sm shadow-sm transition-all duration-200 focus:border-green-500 focus:bg-white focus:outline-none focus:ring-2 focus:ring-green-500/20 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:focus:border-green-400 dark:focus:ring-green-400/20 sm:text-base"
                   placeholder="Enter product name"
                 />
               </div>
@@ -1008,7 +986,7 @@ export default function StoreDetailsPage() {
                     onChange={(e) =>
                       setNewProduct({ ...newProduct, price: e.target.value })
                     }
-                    className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-transparent focus:ring-2 focus:ring-green-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white sm:text-base"
+                    className="w-full rounded-xl border border-gray-200 bg-white px-4 py-3 text-sm shadow-sm transition-all duration-200 focus:border-green-500 focus:bg-white focus:outline-none focus:ring-2 focus:ring-green-500/20 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:focus:border-green-400 dark:focus:ring-green-400/20 sm:text-base"
                     placeholder="0.00"
                   />
                 </div>
@@ -1022,7 +1000,7 @@ export default function StoreDetailsPage() {
                     onChange={(e) =>
                       setNewProduct({ ...newProduct, unit: e.target.value })
                     }
-                    className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-transparent focus:ring-2 focus:ring-green-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white sm:text-base"
+                    className="w-full rounded-xl border border-gray-200 bg-white px-4 py-3 text-sm shadow-sm transition-all duration-200 focus:border-green-500 focus:bg-white focus:outline-none focus:ring-2 focus:ring-green-500/20 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:focus:border-green-400 dark:focus:ring-green-400/20 sm:text-base"
                   >
                     <option value="">Select unit</option>
                     <option value="kg">kg (Kilogram)</option>
@@ -1067,7 +1045,7 @@ export default function StoreDetailsPage() {
                         minimumOrders: e.target.value,
                       })
                     }
-                    className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-transparent focus:ring-2 focus:ring-green-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white sm:text-base"
+                    className="w-full rounded-xl border border-gray-200 bg-white px-4 py-3 text-sm shadow-sm transition-all duration-200 focus:border-green-500 focus:bg-white focus:outline-none focus:ring-2 focus:ring-green-500/20 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:focus:border-green-400 dark:focus:ring-green-400/20 sm:text-base"
                     placeholder="0"
                   />
                   <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
@@ -1089,7 +1067,7 @@ export default function StoreDetailsPage() {
                         maxOrders: e.target.value,
                       })
                     }
-                    className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-transparent focus:ring-2 focus:ring-green-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white sm:text-base"
+                    className="w-full rounded-xl border border-gray-200 bg-white px-4 py-3 text-sm shadow-sm transition-all duration-200 focus:border-green-500 focus:bg-white focus:outline-none focus:ring-2 focus:ring-green-500/20 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:focus:border-green-400 dark:focus:ring-green-400/20 sm:text-base"
                     placeholder="Optional"
                   />
                   <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
@@ -1140,14 +1118,14 @@ export default function StoreDetailsPage() {
                 ) : (
                   <button
                     onClick={() => setShowCamera(true)}
-                    className="flex h-48 w-full flex-col items-center justify-center rounded-lg border-2 border-dashed border-gray-300 transition-colors hover:border-green-500 dark:border-gray-600"
+                    className="group flex h-48 w-full flex-col items-center justify-center rounded-xl border-2 border-dashed border-gray-300 bg-gray-50 transition-all duration-200 hover:border-green-500 hover:bg-green-50 dark:border-gray-600 dark:bg-gray-700/50 dark:hover:border-green-400 dark:hover:bg-green-900/20"
                   >
-                    <Camera className="mb-2 h-8 w-8 text-gray-400 sm:h-12 sm:w-12" />
-                    <span className="text-sm text-gray-600 dark:text-gray-400 sm:text-base">
+                    <Camera className="mb-3 h-10 w-10 text-gray-400 transition-colors group-hover:text-green-600 dark:text-gray-500 dark:group-hover:text-green-400 sm:h-12 sm:w-12" />
+                    <span className="text-sm font-medium text-gray-600 transition-colors group-hover:text-green-700 dark:text-gray-400 dark:group-hover:text-green-300 sm:text-base">
                       Capture Product Image
                     </span>
                     {queryId && (
-                      <span className="mt-1 font-mono text-xs text-green-600 dark:text-green-400">
+                      <span className="mt-2 rounded-lg bg-green-100 px-3 py-1 font-mono text-xs font-bold text-green-700 dark:bg-green-900/30 dark:text-green-400">
                         Verification ID: {queryId}
                       </span>
                     )}
@@ -1155,7 +1133,7 @@ export default function StoreDetailsPage() {
                 )}
               </div>
 
-              <div className="flex space-x-3 pt-4">
+              <div className="flex gap-3 pt-4 sm:gap-4">
                 <button
                   onClick={() => {
                     setShowAddProductModal(false);
@@ -1172,15 +1150,14 @@ export default function StoreDetailsPage() {
                     setProductImage("");
                     setQueryId(null);
                   }}
-                  className="flex-1 rounded-lg border border-gray-300 px-4 py-2 text-sm text-gray-700 transition-colors hover:bg-gray-50 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-700 sm:text-base"
+                  className="flex-1 rounded-xl border border-gray-200 bg-white px-4 py-3 text-sm font-semibold text-gray-700 shadow-sm transition-all duration-200 hover:border-gray-300 hover:bg-gray-50 hover:shadow-md dark:border-gray-600 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600 sm:px-5 sm:text-base"
                 >
                   Cancel
                 </button>
                 <button
                   onClick={handleSubmitProduct}
                   disabled={isCreatingProduct}
-                  className="flex-1 rounded-lg bg-green-600 px-4 py-2 text-sm text-white transition-colors hover:bg-green-700 disabled:cursor-not-allowed disabled:opacity-50 sm:text-base"
-                  style={{ color: "#ffffff" }}
+                  className="flex-1 rounded-xl bg-gradient-to-r from-green-500 to-emerald-500 px-4 py-3 text-sm font-semibold text-white shadow-lg shadow-green-500/25 transition-all duration-200 hover:scale-105 hover:from-green-600 hover:to-emerald-600 hover:shadow-green-500/40 disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:scale-100 sm:px-5 sm:text-base"
                 >
                   {isCreatingProduct
                     ? editingProduct
