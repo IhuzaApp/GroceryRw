@@ -8,6 +8,7 @@ import { ArrowLeft, MapPin, Clock, CreditCard, X } from "lucide-react";
 import Cookies from "js-cookie";
 import toast from "react-hot-toast";
 import { formatCurrencySync } from "../../../src/utils/formatCurrency";
+import PaymentMethodSelector from "../../../src/components/UserCarts/checkout/PaymentMethodSelector";
 
 interface SelectedProduct {
   id: string;
@@ -26,6 +27,12 @@ interface CheckoutData {
   total: number;
   transportationFee: number;
   serviceFee: number;
+}
+
+interface PaymentMethod {
+  type: "refund" | "card" | "momo";
+  id?: string;
+  number?: string;
 }
 
 function getDistanceFromLatLonInKm(
@@ -57,7 +64,8 @@ export default function StoreCheckoutPage() {
   const [transportationFee, setTransportationFee] = useState(0);
   const [serviceFee, setServiceFee] = useState(0);
   const [totalAmount, setTotalAmount] = useState(0);
-  const [paymentMethod, setPaymentMethod] = useState("mobile_money");
+  const [selectedPaymentMethod, setSelectedPaymentMethod] = useState<PaymentMethod | null>(null);
+  const [loadingPayment, setLoadingPayment] = useState(true);
   const [comment, setComment] = useState("");
   const [deliveredTime, setDeliveredTime] = useState("");
   const [timeRange, setTimeRange] = useState("");
@@ -115,6 +123,36 @@ export default function StoreCheckoutPage() {
         setSavedAddresses(data.addresses || []);
       })
       .catch(console.error);
+  }, []);
+
+  // Fetch default payment method on component mount
+  useEffect(() => {
+    const fetchDefaultPaymentMethod = async () => {
+      try {
+        const response = await fetch("/api/queries/payment-methods");
+        const data = await response.json();
+        const defaultMethod = data.paymentMethods?.find(
+          (m: any) => m.is_default
+        );
+
+        if (defaultMethod) {
+          setSelectedPaymentMethod({
+            type:
+              defaultMethod.method.toLowerCase() === "mtn momo"
+                ? "momo"
+                : "card",
+            id: defaultMethod.id,
+            number: defaultMethod.number,
+          });
+        }
+      } catch (error) {
+        console.error("Error fetching default payment method:", error);
+      } finally {
+        setLoadingPayment(false);
+      }
+    };
+
+    fetchDefaultPaymentMethod();
   }, []);
 
   useEffect(() => {
@@ -181,6 +219,11 @@ export default function StoreCheckoutPage() {
       return;
     }
 
+    if (!selectedPaymentMethod) {
+      toast.error("Please select a payment method");
+      return;
+    }
+
     setIsProcessing(true);
 
     try {
@@ -201,6 +244,16 @@ export default function StoreCheckoutPage() {
         0
       );
 
+      // Determine payment method string for API
+      let paymentMethodString = "mobile_money";
+      if (selectedPaymentMethod.type === "refund") {
+        paymentMethodString = "wallet";
+      } else if (selectedPaymentMethod.type === "card") {
+        paymentMethodString = "card";
+      } else if (selectedPaymentMethod.type === "momo") {
+        paymentMethodString = "mobile_money";
+      }
+
       const response = await fetch("/api/mutations/create-business-product-order", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -217,6 +270,8 @@ export default function StoreCheckoutPage() {
           comment: comment || "",
           delivered_time: deliveredTime || "",
           timeRange: timeRange || "",
+          payment_method: paymentMethodString,
+          payment_method_id: selectedPaymentMethod.id || null,
         }),
       });
 
@@ -234,6 +289,60 @@ export default function StoreCheckoutPage() {
     } finally {
       setIsProcessing(false);
     }
+  };
+
+  // Render payment method display
+  const renderPaymentMethod = () => {
+    if (loadingPayment) {
+      return (
+        <div className="flex items-center">
+          <div className="mr-2 flex items-center justify-center rounded bg-gray-400 p-2 text-xs !text-white">
+            LOADING
+          </div>
+          <span className="text-sm text-gray-600 dark:text-gray-400">
+            Loading payment method...
+          </span>
+        </div>
+      );
+    }
+
+    if (!selectedPaymentMethod) {
+      return (
+        <div className="flex items-center">
+          <div className="mr-2 flex items-center justify-center rounded bg-gray-400 p-2 text-xs !text-white">
+            NONE
+          </div>
+          <span className="text-sm text-gray-600 dark:text-gray-400">
+            No payment method selected
+          </span>
+        </div>
+      );
+    }
+
+    return (
+      <div className="flex items-center">
+        <div className={`mr-2 flex items-center justify-center rounded p-2 text-xs !text-white ${
+          selectedPaymentMethod.type === "refund"
+            ? "bg-purple-600"
+            : selectedPaymentMethod.type === "momo"
+            ? "bg-yellow-600"
+            : "bg-blue-600"
+        }`}>
+          {selectedPaymentMethod.type === "refund"
+            ? "WALLET"
+            : selectedPaymentMethod.type === "momo"
+            ? "MOMO"
+            : "CARD"}
+        </div>
+        <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
+          {selectedPaymentMethod.type === "refund"
+            ? "Using Wallet Balance"
+            : selectedPaymentMethod.type === "momo"
+            ? `•••• ${selectedPaymentMethod.number?.slice(-3) || ""}`
+            : `•••• ${selectedPaymentMethod.number?.slice(-4) || ""}`}
+        </span>
+      </div>
+    );
   };
 
   if (!checkoutData) {
@@ -419,21 +528,20 @@ export default function StoreCheckoutPage() {
                   <label className="mb-2 block text-sm font-semibold text-gray-700 dark:text-gray-300">
                     Payment Method
                   </label>
-                  <select
-                    value={paymentMethod}
-                    onChange={(e) => setPaymentMethod(e.target.value)}
-                    className="w-full rounded-xl border border-gray-200 bg-white px-4 py-3 text-sm shadow-sm transition-all focus:border-green-500 focus:bg-white focus:outline-none focus:ring-2 focus:ring-green-500/20 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:focus:border-green-400"
-                  >
-                    <option value="mobile_money">Mobile Money</option>
-                    <option value="cash">Cash on Delivery</option>
-                    <option value="bank_transfer">Bank Transfer</option>
-                    <option value="card">Card Payment</option>
-                  </select>
+                  <div className="flex items-center justify-between rounded-xl border border-gray-200 bg-gradient-to-r from-gray-50 to-gray-100 p-4 shadow-sm dark:border-gray-600 dark:from-gray-700/50 dark:to-gray-800/50">
+                    {renderPaymentMethod()}
+                    <PaymentMethodSelector
+                      totalAmount={totalAmount}
+                      onSelect={(method) => {
+                        setSelectedPaymentMethod(method);
+                      }}
+                    />
+                  </div>
                 </div>
 
                 <button
                   onClick={handlePlaceOrder}
-                  disabled={isProcessing || !userAddress}
+                  disabled={isProcessing || !userAddress || !selectedPaymentMethod}
                   className="w-full rounded-xl bg-gradient-to-r from-green-500 to-emerald-500 px-6 py-4 text-base font-bold !text-white shadow-lg shadow-green-500/25 transition-all duration-200 hover:scale-[1.02] hover:from-green-600 hover:to-emerald-600 hover:shadow-xl hover:shadow-green-500/40 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:scale-100"
                 >
                   {isProcessing ? "Processing..." : "Place Order"}
