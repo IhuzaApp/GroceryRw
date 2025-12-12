@@ -73,6 +73,13 @@ export default function StoreCheckoutPage() {
   const [showAddressModal, setShowAddressModal] = useState(false);
   const [addressInput, setAddressInput] = useState("");
   const [savedAddresses, setSavedAddresses] = useState<any[]>([]);
+  const [isExpanded, setIsExpanded] = useState(true); // Auto-expand on mobile by default
+  const [storeDetails, setStoreDetails] = useState<{ image?: string; name?: string } | null>(null);
+  const [isMounted, setIsMounted] = useState(false);
+
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
 
   useEffect(() => {
     const data = localStorage.getItem("storeCheckoutData");
@@ -84,7 +91,7 @@ export default function StoreCheckoutPage() {
     const parsed: CheckoutData = JSON.parse(data);
     setCheckoutData(parsed);
 
-    // Fetch store location
+    // Fetch store location and details
     fetch(`/api/queries/store-details?id=${parsed.storeId}`)
       .then((res) => res.json())
       .then((data) => {
@@ -92,6 +99,10 @@ export default function StoreCheckoutPage() {
           setStoreLocation({
             lat: parseFloat(data.store.latitude || "0"),
             lng: parseFloat(data.store.longitude || "0"),
+          });
+          setStoreDetails({
+            image: data.store.image || "",
+            name: data.store.name || parsed.storeName,
           });
         }
       })
@@ -355,27 +366,154 @@ export default function StoreCheckoutPage() {
     );
   }
 
+  const toggleExpand = () => {
+    setIsExpanded(!isExpanded);
+  };
+
+  const totalItems = checkoutData?.products.reduce((sum, p) => sum + p.quantity, 0) || 0;
+
   return (
     <RootLayout>
-      <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 md:ml-16">
-        <div className="container mx-auto px-4 py-6 lg:px-6 lg:py-8">
-          {/* Back Button */}
+      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 md:ml-16">
+        {/* Mobile Header - Full width cover image with circular logo */}
+        {isMounted && storeDetails && (
+          <div
+            className="relative h-32 w-full sm:hidden"
+            style={{
+              marginTop: "-44px",
+              marginLeft: "-16px",
+              marginRight: "-16px",
+              width: "calc(100% + 32px)",
+            }}
+          >
+            {/* Store Cover Image */}
+            <Image
+              src={storeDetails.image || "/images/store-placeholder.jpg"}
+              alt={checkoutData.storeName}
+              fill
+              className="object-cover"
+              priority
+            />
+
+            {/* Gradient Overlay for better text readability */}
+            <div className="absolute inset-0 bg-gradient-to-b from-black/20 via-black/40 to-black/70" />
+
+            {/* Back Button */}
+            <button
+              onClick={() => router.back()}
+              className="absolute left-4 top-7 z-20 flex h-10 w-10 items-center justify-center rounded-full bg-white/20 backdrop-blur-md transition-all duration-200 hover:scale-105 hover:bg-white/30"
+            >
+              <svg
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                className="h-4 w-4 !text-white"
+              >
+                <path d="M19 12H5M12 19l-7-7 7-7" />
+              </svg>
+            </button>
+
+            {/* Store Logo - Circular at bottom left */}
+            <div className="absolute -bottom-4 left-3 z-50">
+              <div className="h-16 w-16 overflow-hidden rounded-full border-4 border-green-500 shadow-lg">
+                <Image
+                  src={storeDetails.image || "/images/store-placeholder.jpg"}
+                  alt={`${checkoutData.storeName} logo`}
+                  width={64}
+                  height={64}
+                  className="h-full w-full object-cover"
+                />
+              </div>
+            </div>
+
+            {/* Store Info Overlay - Center */}
+            <div className="absolute bottom-2 left-1/2 z-20 -translate-x-1/2 text-center">
+              {/* Store Name */}
+              <h1 className="mb-1 text-xl font-bold !text-white drop-shadow-lg">
+                {checkoutData.storeName}
+              </h1>
+
+              {/* Checkout Badge */}
+              <div className="flex items-center justify-center gap-2 text-xs !text-white/90">
+                <div className="flex items-center gap-1 rounded-full bg-green-500/90 px-2 py-1 backdrop-blur-md">
+                  <CreditCard className="h-3 w-3" />
+                  <span>Checkout</span>
+                </div>
+                <span>{totalItems} items</span>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Desktop Header */}
+        <div className="container mx-auto px-4 pb-24 pt-6 md:pb-6 lg:px-6 lg:py-8" style={{ marginTop: storeDetails && isMounted ? "24px" : "0" }}>
+          {/* Back Button - Desktop */}
           <button
             onClick={() => router.back()}
-            className="mb-6 flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium text-gray-600 transition-colors hover:bg-gray-100 hover:text-gray-900 dark:text-gray-400 dark:hover:bg-gray-800 dark:hover:text-gray-100"
+            className="mb-6 hidden items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium text-gray-600 transition-colors hover:bg-gray-100 hover:text-gray-900 dark:text-gray-400 dark:hover:bg-gray-800 dark:hover:text-gray-100 sm:flex"
           >
             <ArrowLeft className="h-4 w-4" />
             Back to Store
           </button>
 
-          {/* Store Name Header */}
-          <div className="mb-6 rounded-xl bg-gradient-to-r from-green-500 to-emerald-500 p-4 shadow-lg sm:p-5">
+          {/* Store Name Header - Desktop */}
+          <div className="mb-6 hidden rounded-xl bg-gradient-to-r from-green-500 to-emerald-500 p-4 shadow-lg sm:block sm:p-5">
             <h1 className="text-xl font-bold !text-white sm:text-2xl">
               Checkout - {checkoutData.storeName}
             </h1>
           </div>
 
-          <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
+          {/* Products List - Mobile Only */}
+          <div className="mb-6 md:hidden">
+            <div className="rounded-2xl border border-gray-200 bg-white p-4 shadow-lg dark:border-gray-700 dark:bg-gray-800">
+              <div className="mb-4 flex items-center gap-3">
+                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-green-500 to-emerald-500 !text-white shadow-lg">
+                  <CreditCard className="h-5 w-5" />
+                </div>
+                <h2 className="text-xl font-bold text-gray-900 dark:text-white">
+                  Order Items
+                </h2>
+              </div>
+              <div className="space-y-3">
+                {checkoutData.products.map((product) => (
+                  <div
+                    key={product.id}
+                    className="group flex items-center gap-3 rounded-xl border border-gray-200 bg-gradient-to-r from-gray-50 to-gray-100 p-3 shadow-sm transition-all duration-200 hover:border-green-300 hover:shadow-md dark:border-gray-700 dark:from-gray-700/50 dark:to-gray-800/50 dark:hover:border-green-600"
+                  >
+                    {product.image && (
+                      <div className="h-14 w-14 flex-shrink-0 overflow-hidden rounded-xl border-2 border-gray-200 shadow-sm dark:border-gray-600">
+                        <Image
+                          src={product.image}
+                          alt={product.name}
+                          width={56}
+                          height={56}
+                          className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-110"
+                        />
+                      </div>
+                    )}
+                    <div className="flex-1 min-w-0">
+                      <h3 className="mb-1 truncate text-sm font-semibold text-gray-900 dark:text-white">
+                        {product.name}
+                      </h3>
+                      <p className="text-xs text-gray-500 dark:text-gray-400">
+                        {product.quantity} × {formatCurrencySync(parseFloat(product.price))} / {product.unit}
+                      </p>
+                    </div>
+                    <div className="text-right">
+                      <p className="text-sm font-bold text-green-600 dark:text-green-400">
+                        {formatCurrencySync(
+                          parseFloat(product.price) * product.quantity
+                        )}
+                      </p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+
+          <div className="hidden grid-cols-1 gap-6 md:grid lg:grid-cols-3">
             {/* Order Summary */}
             <div className="lg:col-span-2">
               <div className="rounded-2xl border border-gray-200 bg-white p-6 shadow-lg dark:border-gray-700 dark:bg-gray-800 lg:p-8">
@@ -475,7 +613,7 @@ export default function StoreCheckoutPage() {
               </div>
             </div>
 
-            {/* Payment Summary Sidebar */}
+            {/* Payment Summary Sidebar - Desktop */}
             <div className="lg:col-span-1">
               <div className="sticky top-4 rounded-2xl border border-gray-200 bg-white p-6 shadow-xl dark:border-gray-700 dark:bg-gray-800 lg:p-8">
                 <div className="mb-6 flex items-center gap-3">
@@ -541,6 +679,218 @@ export default function StoreCheckoutPage() {
 
                 <button
                   onClick={handlePlaceOrder}
+                  disabled={isProcessing || !userAddress || !selectedPaymentMethod}
+                  className="w-full rounded-xl bg-gradient-to-r from-green-500 to-emerald-500 px-6 py-4 text-base font-bold !text-white shadow-lg shadow-green-500/25 transition-all duration-200 hover:scale-[1.02] hover:from-green-600 hover:to-emerald-600 hover:shadow-xl hover:shadow-green-500/40 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:scale-100"
+                >
+                  {isProcessing ? "Processing..." : "Place Order"}
+                </button>
+              </div>
+            </div>
+          </div>
+
+          {/* Mobile Checkout Card - Fixed at Bottom */}
+          <div className="md:hidden">
+            {/* Backdrop overlay when expanded */}
+            {isExpanded && (
+              <div
+                className="fixed inset-0 z-40 bg-black/80 backdrop-blur-lg transition-all duration-300"
+                onClick={toggleExpand}
+              />
+            )}
+
+            <div
+              className={`fixed bottom-16 left-0 right-0 z-50 w-full transition-all duration-300 ${
+                isExpanded
+                  ? "border-2 border-white/10 shadow-[0_25px_50px_-12px_rgba(0,0,0,0.8)] ring-4 ring-white/20"
+                  : "shadow-2xl"
+              } rounded-t-2xl bg-white dark:bg-gray-800`}
+              style={{
+                maxHeight: isExpanded ? "calc(90vh - 64px)" : "160px",
+                overflow: "hidden",
+              }}
+            >
+              {/* Header with toggle button */}
+              <div
+                className="flex items-center justify-between border-b border-gray-200 p-4 dark:border-gray-700"
+                onClick={toggleExpand}
+              >
+                <div className="flex items-center">
+                  <span className="text-lg font-bold text-gray-900 dark:text-white">
+                    Order Summary
+                  </span>
+                  <span className="ml-2 rounded-full bg-green-100 px-2 py-1 text-xs font-medium !text-green-800 dark:bg-green-900/20 dark:!text-green-300">
+                    {totalItems} items
+                  </span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="font-bold text-green-600 dark:text-green-400">
+                    {formatCurrencySync(totalAmount)}
+                  </span>
+                  <button className="flex h-8 w-8 items-center justify-center rounded-full bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-300">
+                    {isExpanded ? (
+                      <svg
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                        className="h-5 w-5"
+                      >
+                        <polyline points="18 15 12 9 6 15" />
+                      </svg>
+                    ) : (
+                      <svg
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                        className="h-5 w-5"
+                      >
+                        <polyline points="6 9 12 15 18 9" />
+                      </svg>
+                    )}
+                  </button>
+                </div>
+              </div>
+
+              {/* Checkout button when collapsed */}
+              {!isExpanded && (
+                <div className="p-4">
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      if (!userAddress || !selectedPaymentMethod) {
+                        toast.error(
+                          !userAddress
+                            ? "Please set your delivery address"
+                            : "Please select a payment method"
+                        );
+                        return;
+                      }
+                      handlePlaceOrder();
+                    }}
+                    disabled={isProcessing || !userAddress || !selectedPaymentMethod}
+                    className="w-full rounded-xl bg-gradient-to-r from-green-500 to-emerald-500 px-6 py-4 text-base font-bold !text-white shadow-lg transition-all disabled:cursor-not-allowed disabled:opacity-50"
+                  >
+                    {isProcessing ? "Processing..." : "Place Order"}
+                  </button>
+                </div>
+              )}
+
+              {/* Expanded content */}
+              <div
+                className={`p-4 ${isExpanded ? "block" : "hidden"} overflow-y-auto`}
+                style={{ maxHeight: "calc(90vh - 124px)" }}
+                onClick={(e) => e.stopPropagation()}
+              >
+                {/* Cost Breakdown */}
+                <div className="mb-6 space-y-3 border-b border-gray-200 pb-6 dark:border-gray-700">
+                  <h3 className="text-base font-bold text-gray-900 dark:text-white">
+                    Cost Breakdown
+                  </h3>
+                  <div className="space-y-2">
+                    <div className="flex justify-between text-sm">
+                      <span className="text-gray-600 dark:text-gray-400">Subtotal:</span>
+                      <span className="font-medium text-gray-900 dark:text-white">
+                        {formatCurrencySync(checkoutData.total)}
+                      </span>
+                    </div>
+                    <div className="flex justify-between text-sm">
+                      <span className="text-gray-600 dark:text-gray-400">Transportation:</span>
+                      <span className="font-medium text-gray-900 dark:text-white">
+                        {formatCurrencySync(transportationFee)}
+                      </span>
+                    </div>
+                    <div className="flex justify-between text-sm">
+                      <span className="text-gray-600 dark:text-gray-400">Service Fee (5%):</span>
+                      <span className="font-medium text-gray-900 dark:text-white">
+                        {formatCurrencySync(serviceFee)}
+                      </span>
+                    </div>
+                    <div className="mt-3 flex justify-between rounded-xl bg-gradient-to-r from-green-50 to-emerald-50 p-4 dark:from-green-900/20 dark:to-emerald-900/20">
+                      <span className="text-lg font-bold text-gray-900 dark:text-white">Total:</span>
+                      <span className="text-xl font-bold text-green-600 dark:text-green-400">
+                        {formatCurrencySync(totalAmount)}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Delivery Address */}
+                <div className="mb-4 rounded-xl border border-gray-200 bg-gradient-to-br from-gray-50 to-gray-100 p-4 shadow-sm dark:border-gray-700 dark:from-gray-700/50 dark:to-gray-800/50">
+                  <div className="mb-2 flex items-center justify-between">
+                    <h4 className="flex items-center gap-2 text-sm font-semibold text-gray-900 dark:text-white">
+                      <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-green-500/10">
+                        <MapPin className="h-4 w-4 text-green-600 dark:text-green-400" />
+                      </div>
+                      Delivery Address
+                    </h4>
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleChangeAddress();
+                      }}
+                      className="rounded-lg bg-gradient-to-r from-green-500 to-emerald-500 px-3 py-1.5 text-xs font-semibold !text-white shadow-md transition-all hover:from-green-600 hover:to-emerald-600"
+                    >
+                      Change
+                    </button>
+                  </div>
+                  <p className="ml-10 text-sm font-medium text-gray-700 dark:text-gray-300">
+                    {addressInput || "No address set"}
+                  </p>
+                </div>
+
+                {/* Delivery Time */}
+                <div className="mb-4 rounded-xl border border-gray-200 bg-gradient-to-br from-gray-50 to-gray-100 p-4 shadow-sm dark:border-gray-700 dark:from-gray-700/50 dark:to-gray-800/50">
+                  <h4 className="mb-2 flex items-center gap-2 text-sm font-semibold text-gray-900 dark:text-white">
+                    <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-green-500/10">
+                      <Clock className="h-4 w-4 text-green-600 dark:text-green-400" />
+                    </div>
+                    Estimated Delivery
+                  </h4>
+                  <p className="ml-10 text-sm font-medium text-gray-700 dark:text-gray-300">
+                    {deliveryTime} ({distance})
+                  </p>
+                </div>
+
+                {/* Payment Method */}
+                <div className="mb-4 rounded-xl border border-gray-200 bg-gradient-to-br from-gray-50 to-gray-100 p-4 shadow-sm dark:border-gray-700 dark:from-gray-700/50 dark:to-gray-800/50">
+                  <div className="mb-2 flex items-center justify-between">
+                    <h4 className="text-sm font-semibold text-gray-900 dark:text-white">
+                      Payment Method
+                    </h4>
+                    <PaymentMethodSelector
+                      totalAmount={totalAmount}
+                      onSelect={(method) => {
+                        setSelectedPaymentMethod(method);
+                      }}
+                    />
+                  </div>
+                  <div className="mt-2">
+                    {renderPaymentMethod()}
+                  </div>
+                </div>
+
+                {/* Comment */}
+                <div className="mb-6">
+                  <label className="mb-2 block text-sm font-semibold text-gray-900 dark:text-white">
+                    Order Comment (Optional)
+                  </label>
+                  <textarea
+                    value={comment}
+                    onChange={(e) => setComment(e.target.value)}
+                    placeholder="Any special instructions or notes for the delivery..."
+                    className="w-full rounded-xl border border-gray-200 bg-white px-4 py-3 text-sm shadow-sm transition-all focus:border-green-500 focus:bg-white focus:outline-none focus:ring-2 focus:ring-green-500/20 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:focus:border-green-400"
+                    rows={3}
+                    onClick={(e) => e.stopPropagation()}
+                  />
+                </div>
+
+                {/* Place Order Button */}
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handlePlaceOrder();
+                  }}
                   disabled={isProcessing || !userAddress || !selectedPaymentMethod}
                   className="w-full rounded-xl bg-gradient-to-r from-green-500 to-emerald-500 px-6 py-4 text-base font-bold !text-white shadow-lg shadow-green-500/25 transition-all duration-200 hover:scale-[1.02] hover:from-green-600 hover:to-emerald-600 hover:shadow-xl hover:shadow-green-500/40 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:scale-100"
                 >
