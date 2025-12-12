@@ -5,7 +5,7 @@ import { useRouter } from "next/router";
 import Image from "next/image";
 import RootLayout from "@components/ui/layout";
 import StoreProductCard from "./StoreProductCard";
-import { Heart, X, ShoppingBag, Package } from "lucide-react";
+import { Heart, X, ShoppingBag, Package, Clock, MapPin, CheckCircle, Store, UserCircle } from "lucide-react";
 import Cookies from "js-cookie";
 import { formatCurrencySync } from "../../utils/formatCurrency";
 
@@ -19,6 +19,17 @@ interface Store {
   longitude: string;
   operating_hours: any;
   is_active: boolean;
+  businessAccount?: {
+    id: string;
+    account_type: string;
+    business_name: string | null;
+    user_id: string;
+    owner?: {
+      id: string;
+      name: string | null;
+      email: string | null;
+    };
+  };
 }
 
 interface Product {
@@ -199,6 +210,58 @@ const StorePage: React.FC<StorePageProps> = ({ store, products }) => {
     return Math.ceil(totalPrice * 0.05);
   };
 
+  // Calculate if store is currently open
+  const calculateStoreStatus = () => {
+    if (!store.operating_hours || typeof store.operating_hours !== 'object') {
+      return { isOpen: false, statusText: 'Hours not available' };
+    }
+
+    const now = new Date();
+    const dayKey = now.toLocaleDateString("en-US", { weekday: "long" }).toLowerCase();
+    const todaysHours = (store.operating_hours as any)[dayKey];
+
+    if (!todaysHours || todaysHours.toLowerCase() === "closed") {
+      return { isOpen: false, statusText: 'Closed' };
+    }
+
+    // Parse time format like "9am - 5pm"
+    const parts = todaysHours.split("-").map((s: string) => s.trim());
+    if (parts.length !== 2) {
+      return { isOpen: false, statusText: todaysHours };
+    }
+
+    const parseTime = (tp: string): number | null => {
+      const m = tp.match(/(\d{1,2})(?::(\d{2}))?\s*(am|pm)/i);
+      if (!m) return null;
+      let h = parseInt(m[1], 10);
+      const mm = m[2] ? parseInt(m[2], 10) : 0;
+      const ampm = m[3].toLowerCase();
+      if (h === 12) h = 0;
+      if (ampm === "pm") h += 12;
+      return h * 60 + mm;
+    };
+
+    const openMins = parseTime(parts[0]);
+    const closeMins = parseTime(parts[1]);
+
+    if (openMins === null || closeMins === null) {
+      return { isOpen: false, statusText: todaysHours };
+    }
+
+    const nowMins = now.getHours() * 60 + now.getMinutes();
+    let isOpen = false;
+
+    if (openMins < closeMins) {
+      isOpen = nowMins >= openMins && nowMins <= closeMins;
+    } else {
+      isOpen = nowMins >= openMins || nowMins <= closeMins;
+    }
+
+    return { isOpen, statusText: isOpen ? 'Open' : 'Closed', hours: todaysHours };
+  };
+
+  const storeStatus = calculateStoreStatus();
+
   const handleContinue = () => {
     if (selectedProducts.length === 0) return;
     // Navigate to checkout page with store and products data
@@ -260,23 +323,74 @@ const StorePage: React.FC<StorePageProps> = ({ store, products }) => {
 
               {/* Store Details */}
               <div className="flex-1">
-                <h1 className="mb-1 text-xl font-bold !text-white drop-shadow-2xl sm:text-2xl lg:text-3xl">
-                  {store.name}
-                </h1>
+                <div className="mb-1.5 flex items-center gap-2">
+                  <h1 className="text-xl font-bold !text-white drop-shadow-2xl sm:text-2xl lg:text-3xl">
+                    {store.name}
+                  </h1>
+                  {/* Status Badge */}
+                  <div className={`flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-semibold !text-white backdrop-blur-sm sm:px-2.5 sm:text-xs ${
+                    store.is_active 
+                      ? storeStatus.isOpen 
+                        ? 'bg-green-500/90' 
+                        : 'bg-orange-500/90'
+                      : 'bg-red-500/90'
+                  }`}>
+                    {store.is_active ? (
+                      <>
+                        <CheckCircle className="h-2.5 w-2.5 sm:h-3 sm:w-3" />
+                        <span>{storeStatus.statusText}</span>
+                      </>
+                    ) : (
+                      <>
+                        <X className="h-2.5 w-2.5 sm:h-3 sm:w-3" />
+                        <span>Inactive</span>
+                      </>
+                    )}
+                  </div>
+                </div>
+                
                 {store.description && (
                   <p className="mb-2 line-clamp-1 text-xs !text-white/90 sm:text-sm">
                     {store.description}
                   </p>
                 )}
-                {isMounted && dynamicDistance !== "N/A" && (
-                  <div className="flex items-center gap-1.5 rounded-full bg-white/20 px-3 py-1 backdrop-blur-md sm:gap-2 sm:px-3.5 sm:py-1.5">
-                    <svg className="h-3 w-3 !text-white sm:h-3.5 sm:w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-                    </svg>
-                    <span className="text-xs font-medium !text-white sm:text-sm">{dynamicDistance}</span>
+                
+                {/* Info Badges Row */}
+                <div className="flex flex-wrap items-center gap-2">
+                  {/* Owner - Only for personal businesses */}
+                  {store.businessAccount?.account_type === "personal" && store.businessAccount.owner?.name && (
+                    <div className="flex items-center gap-1.5 rounded-full bg-white/20 px-2.5 py-1 backdrop-blur-md sm:gap-2 sm:px-3 sm:py-1.5">
+                      <UserCircle className="h-3 w-3 !text-white sm:h-3.5 sm:w-3.5" />
+                      <span className="text-xs font-medium !text-white sm:text-sm">
+                        Owner: {store.businessAccount.owner.name}
+                      </span>
+                    </div>
+                  )}
+                  
+                  {/* Distance */}
+                  {isMounted && dynamicDistance !== "N/A" && (
+                    <div className="flex items-center gap-1.5 rounded-full bg-white/20 px-2.5 py-1 backdrop-blur-md sm:gap-2 sm:px-3 sm:py-1.5">
+                      <MapPin className="h-3 w-3 !text-white sm:h-3.5 sm:w-3.5" />
+                      <span className="text-xs font-medium !text-white sm:text-sm">{dynamicDistance}</span>
+                    </div>
+                  )}
+                  
+                  {/* Operating Hours */}
+                  {storeStatus.hours && (
+                    <div className="flex items-center gap-1.5 rounded-full bg-white/20 px-2.5 py-1 backdrop-blur-md sm:gap-2 sm:px-3 sm:py-1.5">
+                      <Clock className="h-3 w-3 !text-white sm:h-3.5 sm:w-3.5" />
+                      <span className="text-xs font-medium !text-white sm:text-sm">{storeStatus.hours}</span>
+                    </div>
+                  )}
+                  
+                  {/* Products Count */}
+                  <div className="flex items-center gap-1.5 rounded-full bg-white/20 px-2.5 py-1 backdrop-blur-md sm:gap-2 sm:px-3 sm:py-1.5">
+                    <Package className="h-3 w-3 !text-white sm:h-3.5 sm:w-3.5" />
+                    <span className="text-xs font-medium !text-white sm:text-sm">
+                      {products.length} {products.length === 1 ? 'Product' : 'Products'}
+                    </span>
                   </div>
-                )}
+                </div>
               </div>
             </div>
           </div>

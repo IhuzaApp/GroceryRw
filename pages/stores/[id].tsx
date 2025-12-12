@@ -14,6 +14,17 @@ interface Store {
   longitude: string;
   operating_hours: any;
   is_active: boolean;
+  businessAccount?: {
+    id: string;
+    account_type: string;
+    business_name: string | null;
+    user_id: string;
+    owner?: {
+      id: string;
+      name: string | null;
+      email: string | null;
+    };
+  };
 }
 
 interface StoreResponse {
@@ -28,6 +39,18 @@ interface StoreResponse {
     operating_hours: any;
     is_active: boolean;
     created_at: string;
+    business_id: string;
+    business_account?: {
+      id: string;
+      account_type: string;
+      business_name: string | null;
+      user_id: string;
+      Users?: {
+        id: string;
+        name: string | null;
+        email: string | null;
+      };
+    };
   } | null;
 }
 
@@ -62,7 +85,7 @@ export default function StoreByIdPage({
 export const getServerSideProps: GetServerSideProps = async (context) => {
   const { id } = context.params as { id: string };
 
-  // Fetch store details
+  // Fetch store details with business account info
   const storeQuery = gql`
     query GetStoreById($id: uuid!) {
       business_stores_by_pk(id: $id) {
@@ -76,6 +99,18 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
         operating_hours
         is_active
         created_at
+        business_id
+        business_account {
+          id
+          account_type
+          business_name
+          user_id
+          Users {
+            id
+            name
+            email
+          }
+        }
       }
     }
   `;
@@ -134,6 +169,21 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
       longitude: storeData.business_stores_by_pk.longitude || "",
       operating_hours: storeData.business_stores_by_pk.operating_hours,
       is_active: storeData.business_stores_by_pk.is_active,
+      businessAccount: storeData.business_stores_by_pk.business_account
+        ? {
+            id: storeData.business_stores_by_pk.business_account.id,
+            account_type: storeData.business_stores_by_pk.business_account.account_type,
+            business_name: storeData.business_stores_by_pk.business_account.business_name,
+            user_id: storeData.business_stores_by_pk.business_account.user_id,
+            owner: storeData.business_stores_by_pk.business_account.Users
+              ? {
+                  id: storeData.business_stores_by_pk.business_account.Users.id,
+                  name: storeData.business_stores_by_pk.business_account.Users.name,
+                  email: storeData.business_stores_by_pk.business_account.Users.email,
+                }
+              : undefined,
+          }
+        : undefined,
     };
 
     // Transform products
