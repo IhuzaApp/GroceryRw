@@ -92,13 +92,40 @@ const MobileShopCard: React.FC<MobileShopCardProps> = ({
   // Use calculated status instead of dynamics.open
   const isShopOpen = calculateShopStatus();
 
+  // Determine if this is a store
+  const isStore = (shop as any).is_store === true;
+
+  // Determine navigation path
+  const getNavigationPath = () => {
+    if (isRestaurant) return `/restaurant/${shop.id}`;
+    if (isStore) return `/plasBusiness/store/${shop.id}`;
+    return `/shops/${shop.id}`;
+  };
+
+  // Get image URL - for stores, use the image directly; for shops, use getShopImageUrl
+  const getImageUrl = () => {
+    if (isStore && shop.image) {
+      // For stores, use the image directly (it's already a base64 or full URL)
+      return shop.image;
+    }
+    return getShopImageUrl(shop.image);
+  };
+
+  // Get placeholder image
+  const getPlaceholderImage = () => {
+    if (isStore) {
+      return "/images/store-placeholder.jpg";
+    }
+    return "/images/shop-placeholder.jpg";
+  };
+
   return (
-    <Link href={isRestaurant ? `/restaurant/${shop.id}` : `/shops/${shop.id}`}>
+    <Link href={getNavigationPath()}>
       <div className="relative mb-3 h-28 w-full transform cursor-pointer overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm transition-all duration-300 hover:shadow-md">
         {/* Background Image */}
         <div className="absolute inset-0">
           <Image
-            src={getShopImageUrl(shop.image)}
+            src={getImageUrl()}
             alt={shop.name}
             fill
             sizes="100vw"
@@ -111,7 +138,7 @@ const MobileShopCard: React.FC<MobileShopCardProps> = ({
             loading="lazy"
             onError={(e) => {
               const target = e.target as HTMLImageElement;
-              target.src = "/images/shop-placeholder.jpg";
+              target.src = getPlaceholderImage();
               target.onerror = null;
             }}
           />
@@ -119,6 +146,13 @@ const MobileShopCard: React.FC<MobileShopCardProps> = ({
           {/* Dark overlay for better text readability */}
           <div className="absolute inset-0 bg-black bg-opacity-30"></div>
         </div>
+
+        {/* Store badge */}
+        {isStore && (
+          <span className="absolute left-2 top-2 z-20 rounded-full bg-blue-500 px-2 py-1 text-xs font-semibold text-white shadow-md">
+            Store
+          </span>
+        )}
 
         {/* Content Overlay */}
         <div className="relative z-10 flex h-full items-center justify-between p-4">

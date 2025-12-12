@@ -762,6 +762,7 @@ export default function UserDashboard({ initialData }: { initialData: Data }) {
 
     let shops = data.shops || [];
     let restaurants = data.restaurants || [];
+    let stores = data.stores || [];
 
     // Convert restaurants to shop format for consistent rendering
     const restaurantsAsShops = restaurants.map((restaurant) => ({
@@ -777,19 +778,38 @@ export default function UserDashboard({ initialData }: { initialData: Data }) {
       is_restaurant: true,
     }));
 
+    // Convert stores to shop format for consistent rendering
+    const storesAsShops = stores.map((store) => ({
+      ...store,
+      id: store.id,
+      name: store.name,
+      description: store.description || "Store",
+      image: store.image,
+      category_id: store.category_id || "store-category",
+      latitude: store.latitude,
+      longitude: store.longitude,
+      operating_hours: store.operating_hours,
+      is_store: true,
+      address: null,
+      logo: store.image,
+    }));
+
     if (selectedCategory) {
       // If "Restaurant" category is selected, show only restaurants
       if (selectedCategory === "restaurant-category") {
         return restaurantsAsShops;
+      } else if (selectedCategory === "store-category") {
+        return storesAsShops;
       } else {
         // Filter shops by category
         shops = shops.filter((shop) => shop.category_id === selectedCategory);
-        return shops;
+        const categoryStores = storesAsShops.filter((store) => store.category_id === selectedCategory);
+        return [...shops, ...categoryStores];
       }
     }
 
-    // When no category is selected, show both shops and restaurants
-    let allShops = [...shops, ...restaurantsAsShops];
+    // When no category is selected, show both shops, restaurants, and stores
+    let allShops = [...shops, ...restaurantsAsShops, ...storesAsShops];
 
     // Filter by distance if nearby mode is active
     if (isNearbyActive && userLocation) {
@@ -816,6 +836,7 @@ export default function UserDashboard({ initialData }: { initialData: Data }) {
     role,
     selectedCategory,
     data.shops,
+    data.stores,
     data.restaurants,
     data.categories,
     isNearbyActive,
